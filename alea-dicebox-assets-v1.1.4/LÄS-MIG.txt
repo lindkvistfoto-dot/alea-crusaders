@@ -1,0 +1,14 @@
+Alea Crusaders – DiceBox v1.1.4 assets
+
+Ladda upp mappen 'assets' till roten av GitHub-repot alea-crusaders.
+Slutlig sökväg ska bli:
+
+assets/dice-box/ammo/ammo.wasm.wasm
+assets/dice-box/themes/default/default.json
+assets/dice-box/themes/default/diffuse-dark.png
+assets/dice-box/themes/default/diffuse-light.png
+assets/dice-box/themes/default/normal.png
+assets/dice-box/themes/default/specular.jpg
+assets/dice-box/themes/default/theme.config.json
+
+Paketet är framtaget direkt ur den uppladdade dice-box-main.zip.
