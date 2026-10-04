@@ -1026,10 +1026,11 @@ async function deleteLocationAsset(id){
  let a=currentLocationAssets.find(function(x){return x.id===id});if(!a)return;
  if(!await askConfirm('Ta bort bild','Vill du ta bort bilden från platsen?','Ta bort',true))return;
  try{
+  let r=await locationAssetStorageFetch('object/campaign-location-assets',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:[a.storage_path]})});if(!r.ok){let d=await r.json().catch(function(){return {}});throw new Error(d&&d.message||'Bildfilen kunde inte tas bort från storage.')}
   await dbJson('campaign_location_assets?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-  let r=await locationAssetStorageFetch('object/campaign-location-assets',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:[a.storage_path]})});if(!r.ok)console.warn('Bildfilen kunde inte tas bort från storage');
   let old=locationAssetUrlCache.get(a.storage_path);if(old){URL.revokeObjectURL(old);locationAssetUrlCache.delete(a.storage_path)}
   currentLocationAssets=currentLocationAssets.filter(function(x){return x.id!==id});await renderLocationAssetList();
+  if(mapSelectedAreaId)openMapLocationInfoByArea(mapSelectedAreaId);
  }catch(e){alert('Kunde inte ta bort bilden: '+e.message)}
 }
 
