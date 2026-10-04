@@ -1809,8 +1809,8 @@ function addSelectedSceneCombatants(){
   let kind=document.querySelector('[data-combatant-kind="'+m.id+'"]')?.value||'enemy';
   let first=nextSceneCombatantInstance('monster',m.id);
   for(let i=0;i<qty;i++){
-   let n=first+i,name=(qty>1||first>1)?(m.name+' '+n):m.name;
-   addSceneCombatant('monster',m.id,kind,name,n)
+   let instanceNo=first+i,name=(qty>1||first>1)?(m.name+' '+instanceNo):m.name;
+   addSceneCombatant('monster',m.id,kind,name,instanceNo)
   }
  });
  st.combatantPickerOpen=false;st.dirty=true;renderSceneCombatantsSection()
@@ -2138,8 +2138,9 @@ async function saveEventCombatMapEditor(){
   let hexRows=[...st.hexes.values()].filter(h=>h.movement_mode!=='free'||h.sight_mode!=='clear').map(h=>({scene_id:sceneId,q:h.q,r:h.r,movement_mode:h.movement_mode||'free',sight_mode:h.sight_mode||'clear',movement_cost:Number(h.movement_cost)||1,notes:h.notes||''}));
   if(hexRows.length)await dbJson('campaign_combat_scene_hexes',{method:'POST',body:JSON.stringify(hexRows)});
 
+  let deleteWrites=[...(st.deletedCombatantIds||[])].map(id=>dbJson('campaign_combat_scene_combatants?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}));
+  if(deleteWrites.length)await Promise.all(deleteWrites);
   let writes=[];
-  for(let id of st.deletedCombatantIds||[])writes.push(dbJson('campaign_combat_scene_combatants?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}));
   (st.combatants||[]).forEach((c,i)=>{
    let row={scene_id:sceneId,campaign_id:centralCampaignId,source_type:c.source_type||'custom',source_id:c.source_id||null,combatant_type:c.combatant_type||'npc',instance_no:Math.max(1,Number(c.instance_no)||1),name:c.name||'Kombatant',visible_to_players:c.visible_to_players!==false,sort_order:i,state:c.state&&typeof c.state==='object'?c.state:{}};
    if(c.isNew)writes.push(dbJson('campaign_combat_scene_combatants',{method:'POST',body:JSON.stringify(row)}));
