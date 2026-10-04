@@ -1987,7 +1987,7 @@ function applyEventCombatTerrain(){
  }
  st.selected.clear();st.dirty=true;renderEventCombatHexCanvas()
 }
-async function saveEventCombatMapEditor(){async function saveEventCombatMapEditor(){
+async function saveEventCombatMapEditor(){
  let st=eventCombatEditorState;if(!st)return;
  let name=String($('ecSceneName')?.value||st.sceneName||'').trim();
  if(!name){alert('Namn på stridsscenen måste anges.');return}
