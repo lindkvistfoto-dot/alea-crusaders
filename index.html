@@ -1850,7 +1850,7 @@ async function syncEventEnemies(eventId,eventName,enemies){
   await dbJson('campaign_event_enemies',{method:'POST',body:JSON.stringify({event_id:eventId,campaign_id:centralCampaignId,monster_id:x.monster_id,quantity:x.quantity})})
  }
 }
-async function saveCampaignEvent(id){async function saveCampaignEvent(id){
+async function saveCampaignEvent(id){
  id=id||'';let name=$('ceName').value.trim();if(!name){alert('Namn måste anges.');return}
  let enemies=selectedEventEnemies(),places=selectedEventLocations();
  let body={campaign_id:centralCampaignId,name:name,status:$('ceStatus').value,summary:$('ceSummary').value,read_aloud:$('ceRead').value,trigger_text:$('ceTrigger').value,player_visible:$('ceVisible').checked,updated_at:new Date().toISOString()};if(!id)body.created_by=supabaseSession.user.id;
