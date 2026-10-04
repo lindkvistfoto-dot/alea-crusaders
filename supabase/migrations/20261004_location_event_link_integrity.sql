@@ -43,3 +43,13 @@ alter table public.campaign_location_event_links
   foreign key (event_id,campaign_id)
   references public.campaign_events(id,campaign_id)
   on delete cascade;
+
+
+create index if not exists campaign_location_event_links_campaign_idx
+  on public.campaign_location_event_links(campaign_id);
+
+create index if not exists campaign_location_event_links_event_campaign_idx
+  on public.campaign_location_event_links(event_id,campaign_id);
+
+create index if not exists campaign_location_event_links_location_campaign_idx
+  on public.campaign_location_event_links(location_id,campaign_id);
