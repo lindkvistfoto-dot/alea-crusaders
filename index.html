@@ -1695,7 +1695,7 @@ async function openEventCombatMapEditor(eventId,sceneId){
   $('adminEditorBody').innerHTML='<div class="content-empty">Kunde inte öppna stridsscenen: '+escAttr(e.message)+'</div>'
  }
 }
-async function loadEventCombatEditorMapImage(mapId){async function loadEventCombatEditorMapImage(mapId){
+async function loadEventCombatEditorMapImage(mapId){
  if(!eventCombatEditorState)return;
  let map=campaignMaps.find(m=>m.id===mapId);if(!map)return;
  try{
@@ -1920,7 +1920,7 @@ async function editCampaignEvent(id){
  $('adminEditorBody').innerHTML='<div class="adminform"><label>Namn<input id="ceName" value="'+escAttr(x&&x.name||'')+'"></label><label>Status<select id="ceStatus">'+opts+'</select></label><label>Sammanfattning<textarea id="ceSummary">'+escAttr(x&&x.summary||'')+'</textarea></label><label>Text att läsa upp<textarea id="ceRead">'+escAttr(x&&x.read_aloud||'')+'</textarea></label><label>Trigger / villkor<textarea id="ceTrigger">'+escAttr(x&&x.trigger_text||'')+'</textarea></label><label class="admincheck"><input id="ceVisible" type="checkbox" '+(x&&x.player_visible?'checked':'')+'> Synlig för spelare</label><div class="adminform-section"><div class="admin-subsection-head"><div><h3>Platser</h3><p class="muted" style="margin:3px 0 0">Huvudplatsen är där händelsen främst hör hemma eller normalt startas. Fler platser kan också kopplas till händelsen.</p></div></div><label>Huvudplats<select id="cePrimaryLocation" onchange="syncEventPrimaryPlaceUi()">'+placeOptions+'</select></label>'+placeChecks+'</div>'+sceneHtml+'<div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveCampaignEvent(\''+id+'\')">Spara</button></div></div>';
  $('adminEditor').classList.remove('hidden');syncEventPrimaryPlaceUi();
 }
-function syncEventPrimaryPlaceUi(){function syncEventPrimaryPlaceUi(){
+function syncEventPrimaryPlaceUi(){
  let id=$('cePrimaryLocation')?.value||'';if(!id)return;
  let cb=document.querySelector('[data-event-location="'+id+'"]');if(cb)cb.checked=true
 }
@@ -1948,7 +1948,7 @@ async function saveCampaignEvent(id){
   closeAdminEditor();await Promise.all([loadCampaignContentData(),loadCampaignPlaceData()]);renderAdminCampaignContent();renderAdminMaps();renderAdminOverviewCounts()
  }catch(e){alert('Kunde inte spara händelsen: '+e.message)}
 }
-async function deleteCampaignEvent(id){async function deleteCampaignEvent(id){
+async function deleteCampaignEvent(id){
  let x=campaignEvents.find(function(v){return v.id===id});if(!x)return;if(!await askConfirm('Ta bort händelse','Vill du ta bort '+x.name+'? Kopplingar, stridsscener och deras deltagare tas också bort.','Ta bort',true))return;
  try{
   await dbJson('campaign_events?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
