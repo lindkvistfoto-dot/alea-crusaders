@@ -249,4 +249,25 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".scene-combatant-chip{\n  flex:1 1 120px;\n  min-width:0;");
   });
 
+  test("SLP editor uses blue character-sheet styling and player view uses green", () => {
+    const css = read("src/styles/app.css");
+    expect(css).toContain("#view .tab.active,");
+    expect(css).toContain("background:#1f5138");
+    expect(css).toContain("#admin [data-admin-section=\"people\"].adminbox");
+    expect(css).toContain(".admineditor.slp-editor{\n --slp-bg:#09131c;");
+    expect(css).toContain("--slp-accent:#24678f");
+  });
+
+  test("SLP equipment uses dropdowns and FV defaults to ten", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("function npcKnownWeaponPresets");
+    expect(legacy).toContain("— Välj vapen —");
+    expect(legacy).toContain("function npcShieldOptions");
+    expect(legacy).toContain("— Ingen sköld —");
+    expect(legacy).toContain("adminNpcDraft.skills.push({skill_id:'',name:'',fv:10})");
+    expect(legacy).toContain("adminNpcDraft.weapons.push({weapon_id:'',name:'',fv:10");
+    expect(legacy).toContain("fv:fv==null?10:fv");
+    expect(legacy).toContain("Nya FV börjar alltid på 10.");
+  });
+
 });
