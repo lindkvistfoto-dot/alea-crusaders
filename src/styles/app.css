@@ -1264,3 +1264,54 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .ec-combatant-token .ec-token-fallback{fill:rgba(22,20,18,.92);pointer-events:none}
 .ec-combatant-token .ec-token-glyph{fill:#f6ead2;font-size:18px;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
 .ec-combatant-token image{pointer-events:none}
+
+
+/* v0.31.7 — SLP-administration */
+.admineditor.slp-editor{width:min(1080px,96vw);max-height:94vh}
+.slp-admin-form{gap:12px}
+.slp-top-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
+.slp-basic-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slp-basic-fields label:last-child{grid-column:1/-1}
+.slp-portrait-picker{display:grid;gap:8px}
+.slp-portrait-preview{
+ width:220px;aspect-ratio:4/5;border:1px solid #5a4631;border-radius:12px;overflow:hidden;
+ display:grid;place-items:center;background:#15110e;color:#8f7d65;font-size:56px
+}
+.slp-portrait-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.slp-portrait-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.slp-portrait-actions b,.slp-portrait-actions small{flex-basis:100%}
+.slp-portrait-actions small{color:#9f8c72;font-size:11px}
+.slp-attribute-grid{display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:7px}
+.slp-attribute-grid label{display:grid;gap:4px}
+.slp-attribute-grid span{font-size:11px;color:#a99476}
+.slp-attribute-grid input{text-align:center;font-weight:800}
+.slp-derived-note{margin-top:7px;color:#a99476;font-size:12px}
+.slp-list{display:grid;gap:6px}
+.slp-list-row{display:grid;gap:6px;align-items:center}
+.slp-skill-row{grid-template-columns:minmax(220px,1fr) 80px 36px}
+.slp-weapon-row{grid-template-columns:minmax(180px,1fr) minmax(140px,.8fr) 72px 110px 36px}
+.slp-list-empty{padding:9px;border:1px dashed rgba(184,145,82,.25);border-radius:8px;color:#8f7d65;font-size:12px}
+.slp-equipment-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-top:9px}
+.slp-admin-flags{display:flex;gap:14px;flex-wrap:wrap}
+.npcadmintable{grid-template-columns:minmax(240px,1.3fr) minmax(150px,.8fr) 110px 100px}
+.npc-admin-name{display:flex;align-items:center;gap:9px;min-width:0}
+.npc-admin-name img,.npc-admin-placeholder{
+ width:42px;height:48px;border-radius:7px;object-fit:cover;flex:0 0 auto;
+ border:1px solid #5a4631;background:#171310;display:grid;place-items:center
+}
+.npc-admin-name>span:last-child{display:grid;gap:2px;min-width:0}
+.npc-admin-name b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npc-admin-name small{font-size:10px;color:#9f8c72}
+@media(max-width:760px){
+ .slp-top-grid{grid-template-columns:1fr}
+ .slp-portrait-preview{width:min(220px,100%)}
+ .slp-basic-fields{grid-template-columns:1fr}
+ .slp-basic-fields label:last-child{grid-column:auto}
+ .slp-attribute-grid{grid-template-columns:repeat(4,1fr)}
+ .slp-weapon-row{grid-template-columns:1fr 1fr 70px}
+ .slp-weapon-row input:nth-of-type(2){grid-column:1/3}
+ .slp-weapon-row .deletebtn{grid-column:3;grid-row:1}
+ .slp-equipment-grid{grid-template-columns:1fr 1fr}
+ .slp-equipment-grid label:first-child{grid-column:1/-1}
+ .npcadmintable{grid-template-columns:minmax(200px,1fr) 130px 90px 90px;font-size:12px}
+}
