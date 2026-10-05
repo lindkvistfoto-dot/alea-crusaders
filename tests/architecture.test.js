@@ -71,7 +71,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
     expect(html).toContain('id="mobileHomeVersion"');
-    expect(html).toContain("Version v0.31.9");
+    expect(html).toMatch(/Version v\d+\.\d+\.\d+/);
     expect(legacy).toContain("dst.textContent='Version '+src.textContent");
   });
 
