@@ -318,11 +318,30 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("from public.campaign_monsters m");
   });
 
-  test("enemy and monster administration bumps cache version", () => {
+  test("weapon registry is manageable from administration", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.18");
-    expect(html).toContain("app.css?v=0.31.18");
-    expect(html).toContain("legacy/app.js?v=0.31.18");
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    expect(html).toContain("openAdminSection('weapons')");
+    expect(html).toContain('id="adminCountWeapons"');
+    expect(html).toContain('data-admin-section="weapons"');
+    expect(html).toContain('id="adminWeaponTable"');
+    expect(html).toContain("editRuleWeapon()");
+    expect(legacy).toContain("function renderAdminWeapons");
+    expect(legacy).toContain("function editRuleWeapon");
+    expect(legacy).toContain("async function saveRuleWeapon");
+    expect(legacy).toContain("async function deleteRuleWeapon");
+    expect(legacy).toContain("rule_weapons?id=eq.");
+    expect(legacy).toContain("await loadRuleWeapons(true)");
+    expect(legacy).toContain("set('adminCountWeapons',ruleWeapons.length)");
+    expect(css).toContain(".adminweapontable{display:grid");
+  });
+
+  test("weapon administration bumps cache version", () => {
+    const html = read("index.html");
+    expect(html).toContain("Alea Crusaders v0.31.19");
+    expect(html).toContain("app.css?v=0.31.19");
+    expect(html).toContain("legacy/app.js?v=0.31.19");
   });
 
 });
