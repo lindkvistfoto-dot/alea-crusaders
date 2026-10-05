@@ -661,7 +661,7 @@ function renderAdminCampaignContent(){
   return
  }
  if(et)renderAdminEventList(campaignEvents);
- if(nt)nt.innerHTML='<div class="ahead">SLP</div><div class="ahead">Roll / titel</div><div class="ahead">Synlighet</div><div class="ahead">Åtgärd</div>'+campaignNpcs.map(function(x){return '<div>'+npcPortraitListHtml(x)+'</div><div>'+escAttr(x.title||'—')+'</div><div>'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignNpc(\''+x.id+'\')" title="Redigera SLP">✎</button><button class="deletebtn" onclick="deleteCampaignNpc(\''+x.id+'\')" title="Ta bort SLP">×</button></div>'}).join('');
+ if(nt)nt.innerHTML='<div class="ahead npc-col-name">SLP</div><div class="ahead npc-col-title">Roll / titel</div><div class="ahead npc-col-visibility">Synlighet</div><div class="ahead npc-col-actions">Åtgärd</div>'+campaignNpcs.map(function(x){return '<div class="npc-col-name">'+npcPortraitListHtml(x)+'</div><div class="npc-col-title">'+escAttr(x.title||'—')+'</div><div class="npc-col-visibility">'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions npc-col-actions"><button class="smallbtn" onclick="editCampaignNpc(\''+x.id+'\')" title="Redigera SLP">✎</button><button class="deletebtn" onclick="deleteCampaignNpc(\''+x.id+'\')" title="Ta bort SLP">×</button></div>'}).join('');
  if(mt)mt.innerHTML='<div class="ahead">Namn</div><div class="ahead">Typ / standardantal</div><div class="ahead">Synlighet</div><div class="ahead">Åtgärd</div>'+campaignMonsters.map(function(x){return '<div><b>'+escAttr(x.name||'Namnlös')+'</b></div><div>'+escAttr(x.monster_type||'—')+' · '+(Number(x.quantity)||0)+'</div><div>'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMonster(\''+x.id+'\')">✎</button><button class="deletebtn" onclick="deleteCampaignMonster(\''+x.id+'\')">×</button></div>'}).join('');
 }
 function locationOptions(selected,allowNone){selected=selected||'';if(allowNone===undefined)allowNone=true;let rows=campaignLocations.map(function(l){return '<option value="'+l.id+'" '+(selected===l.id?'selected':'')+'>'+escAttr(sitePath(l.site_id)+' › '+l.location_key+'. '+l.name)+'</option>'}).join('');return (allowNone?'<option value="">Ingen aktuell plats</option>':'')+rows}
@@ -906,7 +906,7 @@ function npcAdminSummary(x){
 }
 function npcPortraitListHtml(x){
  let url=npcPortraitCachedUrl(x?.image_path);
- return '<div class="npc-admin-name">'+(url?'<img src="'+url+'" alt="">':'<span class="npc-admin-placeholder">👤</span>')+'<span><b>'+escAttr(x?.name||'Namnlös')+'</b><small>'+escAttr(npcAdminSummary(x))+'</small></span></div>'
+ return '<div class="npc-admin-name">'+(url?'<img src="'+url+'" alt="">':'<span class="npc-admin-placeholder">👤</span>')+'<span><b>'+escAttr(x?.name||'Namnlös')+'</b><small class="npc-admin-mobile-title">'+escAttr(x?.title||'—')+'</small><small class="npc-admin-summary">'+escAttr(npcAdminSummary(x))+'</small></span></div>'
 }
 function adminNpcEditorHtml(x,id){
  let a=adminNpcDraft?.armor||{},sh=adminNpcDraft?.shield||{};
