@@ -38,7 +38,7 @@ function professionOptions(selected=''){
  selected=String(selected||'');
  let known=ruleProfessions.some(p=>(p.name||'').localeCompare(selected,'sv',{sensitivity:'base'})===0);
  let legacy=selected&&!known?'<option value="'+escAttr(selected)+'" selected>Befintligt: '+escAttr(selected)+'</option>':'';
- return '<option value="">— Välj yrke —</option>'+legacy+ruleProfessions.map(p=>'<option value="'+escAttr(p.name)+'" '+((p.name||'')===selected?'selected':'')+'>'+escAttr(p.name)+'</option>').join('')
+ return '<option value="">— Välj yrke —</option>'+legacy+ruleProfessions.map(p=>'<option value="'+escAttr(p.name)+'" '+((p.name||'').localeCompare(selected,'sv',{sensitivity:'base'})===0?'selected':'')+'>'+escAttr(p.name)+'</option>').join('')
 }
 async function loadRuleArmorRegistry(force=false){
  if(ruleArmorLoaded&&!force)return {types:ruleArmorTypes,materials:ruleArmorMaterials};
