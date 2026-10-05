@@ -5,18 +5,18 @@ Keep the application easy to change without another monolithic `index.html`.
 
 ## Layers
 
-- `index.html` — HTML shell only.
+- `index.html` — HTML shell only. It remains directly serveable without a build step.
 - `src/` — Vite-managed ES modules and styles. New code should normally be added here.
-- `public/features/` — compatibility packages extracted from the historical classic script. These remain classic scripts while inline HTML event handlers are migrated.
-- `public/legacy/app.js` — remaining legacy application code. This file should shrink over time, not grow.
+- `features/` — compatibility packages extracted from the historical classic script. These remain classic scripts while inline HTML event handlers are migrated.
+- `legacy/app.js` — remaining legacy application code. This file should shrink over time, not grow.
 - `supabase/migrations/` — database schema history. Never edit an already-applied migration.
 
 ## Feature ownership
 
 Combat is split into:
 
-- `public/features/combat/admin-scenes.js` — combat-scene administration and hex editor.
-- `public/features/combat/runtime.js` — active combat runtime UI.
+- `features/combat/admin-scenes.js` — combat-scene administration and hex editor.
+- `features/combat/runtime.js` — active combat runtime UI.
 - Future pure/testable combat logic belongs in `src/features/combat/`.
 
 ## Rules for new work
@@ -31,3 +31,7 @@ Combat is split into:
 ## Migration strategy
 
 We are intentionally not rewriting the whole application at once. Existing classic code is moved feature-by-feature into compatibility packages, then pure logic is migrated to ES modules/TypeScript when that feature is next developed. This keeps behavior stable while steadily reducing the legacy surface.
+
+## Hosting compatibility
+
+The source tree can still be served directly as a static site. Vite is the development/build layer, not a runtime requirement. Production builds copy the classic compatibility packages and dice assets into `dist/`, while CSS and ES modules are bundled by Vite.
