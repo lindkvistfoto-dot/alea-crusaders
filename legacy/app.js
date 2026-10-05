@@ -1068,13 +1068,13 @@ async function saveCampaignMonster(id,actorKind='enemy'){
    let rows=await dbJson('campaign_monsters',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||'';
    if(adminNpcDraft)adminNpcDraft.id=savedId;if(adminCombatIconDraft)adminCombatIconDraft.id=savedId
   }
-  if(!savedId)throw new Error('Kunde inte fastställa '+label+'ns id.');
+  if(!savedId)throw new Error('Kunde inte fastställa '+(actorKind==='monster'?'monstrets':'fiendens')+' id.');
   let patch={updated_at:new Date().toISOString()},needsPatch=false;
   if(adminNpcDraft?.portraitChanged){patch.image_path=(await persistAdminNpcPortrait(savedId))||null;needsPatch=true}
   if(adminCombatIconDraft?.changed){patch.combat_icon_path=(await persistAdminCombatIcon(savedId))||null;needsPatch=true}
   if(needsPatch)await dbJson('campaign_monsters?id=eq.'+encodeURIComponent(savedId),{method:'PATCH',body:JSON.stringify(patch)});
   closeAdminEditor();await loadCampaignContentData();renderAdminCampaignContent();renderAdminOverviewCounts()
- }catch(e){alert('Kunde inte spara '+label+'n: '+e.message)}
+ }catch(e){alert('Kunde inte spara '+(actorKind==='monster'?'monstret':'fienden')+': '+e.message)}
 }
 async function deleteCampaignMonster(id){
  let x=campaignMonsters.find(v=>v.id===id);if(!x)return;
