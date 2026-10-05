@@ -401,9 +401,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.22");
-    expect(html).toContain("app.css?v=0.31.22");
-    expect(html).toContain("legacy/app.js?v=0.31.22");
+    expect(html).toContain("Alea Crusaders v0.31.23");
+    expect(html).toContain("app.css?v=0.31.23");
+    expect(html).toContain("legacy/app.js?v=0.31.23");
   });
 
 
@@ -414,8 +414,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.22");
-    expect(html).toContain("./features/shop/store.js?v=0.31.22");
+    expect(html).toContain("./features/shop/store.css?v=0.31.23");
+    expect(html).toContain("./features/shop/store.js?v=0.31.23");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -423,6 +423,24 @@ describe("application architecture smoke checks", () => {
     expect(shop).toContain("function shopChangeQuantity");
     expect(shop).toContain("function shopClearCart");
     expect(css).toContain(".shop-layout{display:grid");
+  });
+
+  test("Targans Gille checkout selects owned characters and moves purchases into inventory", () => {
+    const html = read("index.html");
+    const shop = read("features/shop/store.js");
+    const legacy = read("legacy/app.js");
+    const css = read("features/shop/store.css");
+    expect(html).toContain('id="shopCharacterSelect"');
+    expect(html).toContain('id="shopWallet"');
+    expect(html).toContain('id="shopCheckout"');
+    expect(shop).toContain("function shopAvailableCharacters");
+    expect(shop).toContain("c.ownerId===user.id");
+    expect(shop).toContain("function checkoutShopCart");
+    expect(shop).toContain("copyRuleWeaponToInstance(weapon,rule)");
+    expect(shop).toContain("buyer.coins.carried=shopKmToCoins(balance-total)");
+    expect(shop).toContain("existing.count=Math.max(1,Number(existing.count)||1)+qty");
+    expect(legacy).toContain("bepNumber(x.bep)*Math.max(1,Number(x.count)||1)");
+    expect(css).toContain('url("../../assets/targans-gille-shop.webp")');
   });
 
   test("Targans Gille catalogue is versioned without duplicating weapon masters", () => {
