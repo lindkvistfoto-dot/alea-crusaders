@@ -55,6 +55,18 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("SLP identity includes race gender and profession", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain('id="cnRace"');
+    expect(legacy).toContain('raceOptions(x?.race||\'\')');
+    expect(legacy).toContain('id="cnGender"');
+    expect(legacy).toContain('id="cnProfession"');
+    expect(legacy).toContain('professionOptions(x?.profession||\'\')');
+    expect(legacy).toContain("race:$('cnRace')?.value||''");
+    expect(legacy).toContain("gender:$('cnGender')?.value.trim()||''");
+    expect(legacy).toContain("profession:$('cnProfession')?.value||''");
+  });
+
   test("mobile home shows the current app version below Administration", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
