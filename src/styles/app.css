@@ -1157,3 +1157,21 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .character-rest-row.rest-ok{border-color:#8eaa87;background:#eef5e9}.character-rest-row.rest-ok .character-rest-rule{color:#365b3b}
 .character-rest-row.rest-need .character-rest-rule{color:#8a4b38}
 @media(max-width:560px){.character-rest-row{align-items:flex-start}.character-rest-rule{min-width:112px}}
+
+
+/* v0.31.4 — startpositioner för stridsscener */
+.scene-combatant-row[draggable="true"]{cursor:grab}
+.scene-combatant-row.dragging{opacity:.55}
+.scene-combatant-row.placement-active{border-color:#d2a64f;background:#251e14}
+.scene-combatant-position.placed{color:#a9c48d}.scene-combatant-position.unplaced{color:#bd8a78}
+.scene-placement-count{display:block;color:#9f8c72;margin-top:2px}
+.scene-placement-help{margin:-2px 0 9px;color:#ad9a80;font-size:12px;line-height:1.4}
+.scene-combatant-actions{flex-wrap:wrap;justify-content:flex-end}
+.scene-place-btn.active{border-color:#d7ad58;background:#5c431d;color:#fff2cf}
+.event-combat-canvas.combatant-drop-ready{outline:3px solid rgba(218,172,83,.72);outline-offset:-3px}
+.ec-combatant-token{cursor:pointer}
+.ec-combatant-token circle{stroke:#f5e6c9;stroke-width:2.2;vector-effect:non-scaling-stroke}
+.ec-combatant-token text{fill:#fff;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none;font-size:12px}
+.ec-combatant-token.player circle{fill:#376a92}.ec-combatant-token.npc circle{fill:#6d6b73}.ec-combatant-token.enemy circle{fill:#9a493e}.ec-combatant-token.monster circle{fill:#70478c}
+.ec-combatant-token.active circle{stroke:#ffd36f;stroke-width:4}
+@media(max-width:520px){.scene-combatant-row{grid-template-columns:auto minmax(0,1fr)}.scene-combatant-actions{grid-column:1/-1;justify-content:flex-start}.scene-placement-help{font-size:13px}}
