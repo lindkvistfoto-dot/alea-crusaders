@@ -67,27 +67,68 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("profession:$('cnProfession')?.value||''");
   });
 
-  test("race admin edits roll formulas and typical values", () => {
+  test("race admin shows and saves roll formulas plus typical values", () => {
     const legacy = read("legacy/app.js");
     expect(legacy).toContain("rule_race_attributes?select=*");
     expect(legacy).toContain("function ruleRaceAttributeEditorHtml");
+    expect(legacy).toContain("Egenskap</span><span>Tärningsslag</span><span>Typvärde</span>");
     expect(legacy).toContain("function collectRuleRaceAttributes");
     expect(legacy).toContain("rrRoll_");
     expect(legacy).toContain("rrTypical_");
+    expect(legacy).toContain("rule_race_attributes?race_id=eq.");
   });
 
-  test("SLP can generate attributes from selected race", () => {
+  test("SLP can apply race typical values without partial updates", () => {
     const legacy = read("legacy/app.js");
-    expect(legacy).toContain("Slumpa enligt ras");
-    expect(legacy).toContain("applyNpcRaceAttributes");
-    expect(legacy).toContain("rollRaceAttributeFormula");
+    expect(legacy).toContain("Använd typvärden");
     expect(legacy).toContain("npcRaceTypicalBtn");
-    expect(legacy).toContain("updateNpcRaceRuleAvailability");
+    expect(legacy).toContain("mode==='random'?rollRaceAttributeFormula(r.roll_formula):Number(r.typical_value)");
+    const guard = legacy.indexOf("if(!raceRulesCompleteForMode(info.rows,mode))");
+    const write = legacy.indexOf("info.rows.forEach(r=>", guard);
+    expect(guard).toBeGreaterThan(-1);
+    expect(write).toBeGreaterThan(guard);
+    expect(legacy).toContain("updateNpcKpPreview();");
+    expect(legacy).toContain("ofullständiga rasregler – inga värden ändras");
   });
 
-  test("SLP mobile editor avoids fixed-width overflowing rows", () => {
+  test("SLP rolls supported race formulas through secureDie", () => {
+    const legacy = read("legacy/app.js");
+    const start = legacy.indexOf("function normalizeRaceRollFormula");
+    const end = legacy.indexOf("function raceRulesCompleteForMode", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const parserSource = legacy.slice(start, end);
+    const makeParser = new Function(
+      "secureDie",
+      parserSource + ";return {normalizeRaceRollFormula,rollRaceAttributeFormula};"
+    );
+    const parser = makeParser((sides) => sides);
+    const expected = new Map([
+      ["3T6", 18],
+      ["4T6", 24],
+      ["2T6+6", 18],
+      ["2T6+5", 17],
+      ["2T6+4", 16],
+      ["2T6+3", 15],
+      ["2T6+1", 13],
+      ["1T4+2", 6],
+      ["2T4+2", 10],
+      ["2T3+4", 10],
+      ["2T6-1", 11],
+    ]);
+    for (const [formula, total] of expected) {
+      expect(parser.normalizeRaceRollFormula(formula)).toBe(formula);
+      expect(parser.rollRaceAttributeFormula(formula)).toBe(total);
+    }
+    expect(parserSource).toContain("secureDie(sides)");
+  });
+
+  test("SLP mobile editor prevents horizontal overflow", () => {
     const css = read("src/styles/app.css");
     expect(css).toContain("#adminEditor.modalback{padding:8px}");
+    expect(css).toContain("width:100%;max-width:1080px;min-width:0;box-sizing:border-box;overflow-x:hidden");
+    expect(css).toContain(".slp-admin-form input,.slp-admin-form select,.slp-admin-form textarea{min-width:0;width:100%;max-width:100%;box-sizing:border-box}");
+    expect(css).toContain(".slp-attribute-grid{grid-template-columns:repeat(2,minmax(0,1fr))}");
     expect(css).toContain(".slp-skill-row{grid-template-columns:minmax(0,1fr) 64px 36px}");
     expect(css).toContain(".slp-weapon-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px}");
   });
