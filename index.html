@@ -1799,9 +1799,11 @@ function renderAdminCombatSceneList(){
 async function refreshAdminCombatScenes(){await loadCampaignCombatScenes();renderAdminCombatSceneList();renderAdminOverviewCounts()}
 async function deleteCampaignCombatScene(sceneId){
  let scene=campaignCombatScenes.find(x=>x.id===sceneId);
- if(!await askConfirm('Ta bort stridsscen','Vill du ta bort '+(scene?.name||'stridsscenen')+'? Hexterräng och deltagarkopplingar tas också bort.','Ta bort',true))return;
+ if(!await askConfirm('Ta bort stridsscen','Vill du ta bort '+(scene?.name||'stridsscenen')+'? Hexterräng, kombatanter och eventuell direktuppladdad stridsbild tas också bort.','Ta bort',true))return;
  try{
+  let backgroundPath=scene?.background_image_path||'';
   await dbJson('campaign_combat_scenes?id=eq.'+encodeURIComponent(sceneId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  if(backgroundPath)await deleteCombatSceneStoredImage(backgroundPath).catch(e=>console.warn('Kunde inte rensa stridsbild efter scenborttagning',e));
   campaignCombatScenes=campaignCombatScenes.filter(x=>x.id!==sceneId);renderAdminCombatSceneList();renderAdminOverviewCounts();await refreshAdminCombatScenes()
  }catch(e){alert('Kunde inte ta bort stridsscenen: '+e.message)}
 }
