@@ -55,6 +55,22 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("SLP admin supports full mini-character editing", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    expect(html).toContain("<b>SLP</b>");
+    expect(html).toContain("+ Ny SLP");
+    expect(legacy).toContain("function adminNpcEditorHtml");
+    expect(legacy).toContain("function addAdminNpcSkill");
+    expect(legacy).toContain("function addAdminNpcWeapon");
+    expect(legacy).toContain("function persistAdminNpcPortrait");
+    expect(legacy).toContain("attributes:collectAdminNpcAttributes()");
+    expect(legacy).toContain("skills:sanitizeNpcSkills");
+    expect(legacy).toContain("weapons:sanitizeNpcWeapons");
+    expect(legacy).toContain("shield:collectAdminNpcShield()");
+    expect(legacy).toContain("armor:collectAdminNpcArmor()");
+  });
+
   test("combat icons are sourced from actors and rendered as hex tokens", () => {
     const legacy = read("legacy/app.js");
     const combat = read("features/combat/admin-scenes.js");
