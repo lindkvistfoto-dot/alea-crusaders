@@ -76,7 +76,7 @@ function rollRaceAttributeFormula(formula){
  let total=mod;for(let i=0;i<count;i++)total+=secureDie(sides);return total
 }
 function raceRulesCompleteForMode(rows,mode){
- return Array.isArray(rows)&&rows.length===7&&rows.every(r=>mode==='typical'?Number.isFinite(Number(r.typical_value)):!!normalizeRaceRollFormula(r.roll_formula))
+ return Array.isArray(rows)&&rows.length===7&&rows.every(r=>mode==='typical'?(r.typical_value!==null&&r.typical_value!==''&&Number.isFinite(Number(r.typical_value))):!!normalizeRaceRollFormula(r.roll_formula))
 }
 async function loadRuleArmorRegistry(force=false){
  if(ruleArmorLoaded&&!force)return {types:ruleArmorTypes,materials:ruleArmorMaterials};
@@ -209,7 +209,7 @@ async function saveRuleSkill(id=''){if(!activeUser()?.admin)return;let name=$('r
 async function deleteRuleSkill(id){if(!activeUser()?.admin)return;let r=ruleSkills.find(x=>x.id===id);if(!r)return;let used=(chars||[]).some(c=>(c.skills||[]).some(sk=>sk.skillId===id||(sk.name||'').localeCompare(r.name||'','sv',{sensitivity:'base'})===0));let msg=`Vill du verkligen ta bort ${r.name}?`+(used?'\n\nFärdigheten används av minst en rollfigur. Rollfigurens befintliga rad lämnas kvar, men regelkopplingen försvinner.':'');if(!await askConfirm('Ta bort färdighet',msg,'Ta bort',true))return;try{await dbJson('rule_skills?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadRuleSkills(true);renderAdminSkills();renderSkills()}catch(e){alert('Kunde inte ta bort färdigheten: '+e.message)}}
 function raceIdFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('race')}
 function raceRuleSummary(raceId){
- let rows=raceRuleRows(raceId),rolls=rows.filter(r=>normalizeRaceRollFormula(r.roll_formula)).length,types=rows.filter(r=>Number.isFinite(Number(r.typical_value))).length;
+ let rows=raceRuleRows(raceId),rolls=rows.filter(r=>normalizeRaceRollFormula(r.roll_formula)).length,types=rows.filter(r=>r.typical_value!==null&&r.typical_value!==''&&Number.isFinite(Number(r.typical_value))).length;
  return rolls+'/7 slag · '+types+'/7 typ'
 }
 function ruleRaceAttributeEditorHtml(raceId){
