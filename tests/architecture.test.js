@@ -270,4 +270,59 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("Nya FV börjar alltid på 10.");
   });
 
+
+  test("enemy and monster admin use separate profile tables", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    expect(html).toContain('id="adminEnemyTable"');
+    expect(html).toContain('id="adminMonsterTable"');
+    expect(html).toContain("editCampaignMonster('','enemy')");
+    expect(html).toContain("editCampaignMonster('','monster')");
+    expect(legacy).toContain("function renderAdminActorTable");
+    expect(legacy).toContain("actor_kind:actorKind");
+    expect(legacy).toContain("adminNpcEditorHtml(x,id,{actorKind})");
+    expect(css).toContain(".admineditor.slp-editor.enemy-editor");
+  });
+
+  test("enemy and monster profiles reuse SLP combat data and portraits", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("campaignNpcs.concat(campaignMonsters)");
+    expect(legacy).toContain("attributes:collectAdminNpcAttributes()");
+    expect(legacy).toContain("skills:sanitizeNpcSkills");
+    expect(legacy).toContain("weapons:sanitizeNpcWeapons");
+    expect(legacy).toContain("shield:collectAdminNpcShield()");
+    expect(legacy).toContain("armor:collectAdminNpcArmor()");
+    expect(legacy).toContain("persistAdminNpcPortrait(savedId)");
+    expect(legacy).toContain("storageKind=['npc','enemy','monster']");
+  });
+
+  test("combat picker respects stored enemy or monster kind", () => {
+    const combat = read("features/combat/admin-scenes.js");
+    expect(combat).toContain("m.actor_kind||'enemy'");
+    expect(combat).toContain("data-kind=\"'+kind+'\"");
+    expect(combat).toContain("let enemies=templateRows('enemy'),monsters=templateRows('monster')");
+    expect(combat).toContain("let kind=cb.dataset.kind||m.actor_kind||'enemy'");
+    expect(combat).not.toContain("data-combatant-kind");
+  });
+
+  test("enemy and monster profile migration is versioned", () => {
+    const sql = read("supabase/migrations/20261005171018_enemy_monster_admin_profiles.sql");
+    expect(sql).toContain("actor_kind text not null default 'enemy'");
+    expect(sql).toContain("attributes jsonb");
+    expect(sql).toContain("skills jsonb");
+    expect(sql).toContain("weapons jsonb");
+    expect(sql).toContain("shield jsonb");
+    expect(sql).toContain("armor jsonb");
+    expect(sql).toContain("campaign_actor_images_select");
+    expect(sql).toContain("from public.campaign_monsters m");
+  });
+
+  test("enemy and monster administration bumps cache version", () => {
+    const html = read("index.html");
+    expect(html).toContain("Alea Crusaders v0.31.18");
+    expect(html).toContain("app.css?v=0.31.18");
+    expect(html).toContain("legacy/app.js?v=0.31.18");
+  });
+
 });

@@ -1731,3 +1731,122 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .slp-shield-grid label:nth-last-child(-n+2){grid-column:auto}
  #view .box{border-color:#315441}
 }
+
+
+/* v0.31.18 — fiender och monster som röda profilkort */
+#admin [data-admin-section="enemies"].adminbox{
+ border-color:rgba(151,65,60,.58);
+ background:linear-gradient(145deg,rgba(58,22,21,.96),rgba(31,13,13,.98));
+}
+#admin [data-admin-section="enemies"]>.adminsectionhead h2{color:#ffd9d5}
+.enemy-admin-group{
+ margin-top:14px;
+ padding:12px;
+ border:1px solid rgba(145,61,57,.46);
+ border-radius:14px;
+ background:linear-gradient(145deg,rgba(48,18,18,.92),rgba(27,11,11,.96));
+}
+.enemy-admin-group:first-of-type{margin-top:4px}
+.enemy-admin-group .admin-subsection-head{margin-bottom:10px}
+.enemy-admin-group .admin-subsection-head h3{
+ margin:0;
+ color:#f7d0cc;
+ font:700 18px Georgia,serif;
+}
+.enemyadmintable{
+ width:100%;
+ max-width:100%;
+ border-color:#713431!important;
+ overflow:hidden;
+}
+.enemyadmintable>div:not(.ahead){background:#211010}
+.enemyadmintable .ahead{background:#762723!important;color:#ffe5e1}
+.enemyadmintable .npc-admin-placeholder{border-color:#7a3833;background:#190b0b}
+.enemyadmintable .npc-admin-name img{border-color:#7a3833}
+.enemyadmintable .npc-admin-mobile-title{color:#e1aaa4!important}
+.actor-table-empty{grid-column:1/-1!important}
+
+.admineditor.slp-editor.enemy-editor{
+ --slp-bg:#190909;
+ --slp-panel:#2b1111;
+ --slp-field:#210d0d;
+ --slp-line:#793733;
+ --slp-accent:#8e2d29;
+ --slp-accent-strong:#aa3a34;
+ --slp-text:#fff1ef;
+ --slp-muted:#cda8a3;
+ background:linear-gradient(145deg,#301313,#160909)!important;
+ border-color:#82403a!important;
+ color:var(--slp-text)!important;
+}
+.admineditor.slp-editor.enemy-editor .modalhead{border-bottom-color:rgba(156,69,64,.42)}
+.admineditor.slp-editor.enemy-editor .modalhead h2{color:#ffe1dd!important}
+.admineditor.slp-editor.enemy-editor .modalclose{
+ border-color:#82443e;
+ background:#351817;
+ color:#fff0ee;
+}
+.admineditor.slp-editor.enemy-editor .modalclose:hover{background:#4a201e}
+.admineditor.slp-editor.enemy-editor .slp-portrait-picker,
+.admineditor.slp-editor.enemy-editor .adminform-section{
+ border-color:rgba(145,62,58,.58);
+ background:linear-gradient(145deg,rgba(48,19,18,.97),rgba(27,11,11,.99));
+}
+.admineditor.slp-editor.enemy-editor .slp-portrait-preview{
+ border-color:#7a3a35;
+ background:linear-gradient(145deg,#351615,#160909);
+}
+.admineditor.slp-editor.enemy-editor .slp-basic-fields label,
+.admineditor.slp-editor.enemy-editor .slp-attribute-grid label{
+ background:var(--slp-field);
+ border-color:rgba(145,62,58,.52);
+ color:#dfb8b3;
+}
+.admineditor.slp-editor.enemy-editor input,
+.admineditor.slp-editor.enemy-editor select,
+.admineditor.slp-editor.enemy-editor textarea{
+ background:#190a0a!important;
+ color:#fff3f1!important;
+ border-color:#7b3a35!important;
+}
+.admineditor.slp-editor.enemy-editor input[readonly]{background:#24100f!important}
+.admineditor.slp-editor.enemy-editor .admin-subsection-head h3{color:#f6d4d0}
+.admineditor.slp-editor.enemy-editor .muted,
+.admineditor.slp-editor.enemy-editor .slp-derived-note,
+.admineditor.slp-editor.enemy-editor .slp-portrait-actions small,
+.admineditor.slp-editor.enemy-editor #npcRaceRuleNote{color:var(--slp-muted)!important}
+.admineditor.slp-editor.enemy-editor .smallbtn{
+ border-color:#85453f;
+ background:#3c1a18;
+ color:#fff0ee;
+}
+.admineditor.slp-editor.enemy-editor .smallbtn:hover{
+ background:#582420;
+ border-color:#b15b52;
+}
+.admineditor.slp-editor.enemy-editor .btn.primary{
+ background:linear-gradient(#a43b34,#792823);
+ border-color:#d06960;
+ color:#fff;
+}
+.admineditor.slp-editor.enemy-editor .btn:not(.primary){
+ border-color:#75403b;
+ background:#321716;
+}
+.admineditor.slp-editor.enemy-editor .slp-list-row{
+ border-color:rgba(145,62,58,.48);
+ background:#210e0d;
+}
+.admineditor.slp-editor.enemy-editor .slp-list-empty{
+ border-color:rgba(145,62,58,.44);
+ color:#c49590;
+}
+.admineditor.slp-editor.enemy-editor .admin-combat-icon-picker{
+ border-color:rgba(145,62,58,.5);
+ background:#210e0d;
+}
+@media(max-width:760px){
+ .enemy-admin-group{padding:9px}
+ .enemy-admin-group .admin-subsection-head{align-items:flex-start;gap:8px;flex-wrap:wrap}
+ .enemy-admin-group .admin-subsection-head .smallbtn{flex:0 0 auto}
+}
