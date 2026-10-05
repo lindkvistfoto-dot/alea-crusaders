@@ -1,4 +1,5 @@
 /* Targans Gille */
+.shop-open #dayNavBtn,.shop-open #combatNavBtn,.shop-open #mapNavBtn,.shop-open #diceNavBtn,.shop-open #shopNavBtn{display:none!important}
 .shop-nav{white-space:nowrap}
 #shopPage{width:100%}
 .shop-shell{max-width:1440px;margin:0 auto;padding:18px}
