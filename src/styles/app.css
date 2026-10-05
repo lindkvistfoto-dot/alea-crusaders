@@ -1313,3 +1313,8 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .slp-equipment-grid label:first-child{grid-column:1/-1}
  .npcadmintable{grid-template-columns:minmax(200px,1fr) 130px 90px 90px;font-size:12px}
 }
+
+.admin-overview-version{
+ margin-top:18px;padding-top:12px;border-top:1px solid rgba(184,145,82,.18);
+ text-align:center;font-size:11px;font-weight:700;letter-spacing:.04em;color:#8f806d
+}
