@@ -67,6 +67,14 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("profession:$('cnProfession')?.value||''");
   });
 
+  test("administration overview shows the current app version", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    expect(html).toContain('id="adminOverviewVersion"');
+    expect(html).toMatch(/adminOverviewVersion[^>]*>Version v\d+\.\d+\.\d+/);
+    expect(legacy).toContain("adminOverviewVersion");
+  });
+
   test("mobile home shows the current app version below Administration", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
