@@ -371,11 +371,28 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("Number.isFinite(ownGroup)?ownGroup");
   });
 
+  test("weapon master includes projectile, thrown and campaign weapon data", () => {
+    const sql = read("supabase/migrations/20261005185112_complete_weapon_master_projectile_thrown.sql");
+    expect(sql).toContain("('projectile','2H',2,'Kortbåge','1T6+1'");
+    expect(sql).toContain("('projectile','2H',3,'Arbalest','3T6+3'");
+    expect(sql).toContain("('thrown','1H',1,'Kastspjut','1T6+1'");
+    expect(sql).toContain("('melee','1-2H',4,'Bastardsvärd','1T10+1'");
+    expect(sql).toContain("'Stavslunga','1T8'");
+    expect(sql).toContain(",1,'',60,array['staff_sling','projectile']");
+  });
+
+  test("legacy Stav resolves to Trästav master without renaming the instance", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("let alias=({'stav':'Trästav'})");
+    expect(legacy).toContain("let id=String(row?.weapon_id||row?.weaponTypeId||''),name=String(row?.name||'').trim(),rule=ruleWeaponForItem(row)");
+    expect(legacy).toContain("if(rule)return 'rule:'+rule.id");
+  });
+
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.20");
-    expect(html).toContain("app.css?v=0.31.20");
-    expect(html).toContain("legacy/app.js?v=0.31.20");
+    expect(html).toContain("Alea Crusaders v0.31.21");
+    expect(html).toContain("app.css?v=0.31.21");
+    expect(html).toContain("legacy/app.js?v=0.31.21");
   });
 
 });
