@@ -4,8 +4,8 @@
 #shopPage{width:100%}
 .shop-shell{max-width:1440px;margin:0 auto;padding:18px}
 .shop-hero{position:relative;overflow:hidden;border:1px solid rgba(160,114,57,.55);border-radius:18px;padding:28px;background:
-linear-gradient(135deg,rgba(32,21,13,.96),rgba(79,48,23,.93)),
-repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 2px,transparent 2px 14px);
+linear-gradient(90deg,rgba(24,15,8,.94),rgba(24,15,8,.66) 48%,rgba(24,15,8,.28)),
+url("../../assets/targans-gille-shop.webp") center 42%/cover no-repeat;
 box-shadow:0 18px 42px rgba(0,0,0,.28);display:grid;grid-template-columns:minmax(180px,300px) 1fr auto;gap:24px;align-items:center}
 .shop-sign{justify-self:start;min-width:210px;padding:15px 20px;border:4px ridge #8b5d2f;border-radius:10px;background:
 linear-gradient(180deg,#74502c,#4e321a);box-shadow:inset 0 0 0 2px rgba(35,19,8,.7),0 8px 18px rgba(0,0,0,.35);
@@ -37,7 +37,14 @@ font-family:Georgia,serif;text-align:center;text-transform:uppercase;letter-spac
 .shop-cart-stepper{display:flex;align-items:center;border:1px solid rgba(184,145,82,.3);border-radius:9px;overflow:hidden}.shop-cart-stepper button{width:28px;height:30px;border:0;background:rgba(255,255,255,.06);color:inherit;cursor:pointer}.shop-cart-stepper span{min-width:28px;text-align:center;font-weight:700}
 .shop-cart-remove{width:28px;height:28px;border-radius:999px;border:0;background:rgba(135,50,40,.25);color:#e5b7aa;cursor:pointer}
 .shop-cart-foot{padding:14px 16px;border-top:1px solid rgba(184,145,82,.22)}.shop-cart-total-row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.shop-cart-total-row strong{font-size:18px;color:#edce8e;text-align:right}
-.shop-cart-notice{min-height:20px;margin-top:8px;font-size:12px;color:#cfba90}.shop-checkout-placeholder{margin-top:10px;width:100%;border:1px dashed rgba(184,145,82,.28);border-radius:10px;padding:10px;background:rgba(255,255,255,.025);color:#9f917e;font-size:12px;text-align:center}
+.shop-cart-notice{min-height:20px;margin-top:8px;font-size:12px;color:#cfba90}
+.shop-buyer{display:grid;gap:5px;margin-top:12px;color:#cdbb9e;font-size:12px;font-weight:700}
+.shop-buyer select{width:100%;box-sizing:border-box;border:1px solid rgba(184,145,82,.38);border-radius:9px;background:#17110c;color:#f0e1c2;padding:9px}
+.shop-wallet{display:flex;justify-content:space-between;gap:10px;margin-top:9px;color:#c1b095;font-size:12px}
+.shop-wallet strong{color:#edce8e;white-space:nowrap}
+.shop-checkout{width:100%;margin-top:10px;font-weight:800}
+.shop-checkout:disabled{opacity:.45;cursor:not-allowed}
+.shop-checkout-note{margin-top:7px;color:#978976;font-size:11px;line-height:1.35}
 
 @media(max-width:1100px){
   .shop-items{grid-template-columns:repeat(2,minmax(0,1fr))}
