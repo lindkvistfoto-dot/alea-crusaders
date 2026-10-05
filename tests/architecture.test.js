@@ -25,6 +25,17 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("profession registry is wired into character editing", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    expect(html).toContain("data-admin-section=\"professions\"");
+    expect(html).toContain("adminCountProfessions");
+    expect(legacy).toContain("function loadRuleProfessions");
+    expect(legacy).toContain("rule_professions?select=*&order=sort_order.asc,name.asc");
+    expect(legacy).toContain("professionOptions(i.yrke)");
+    expect(legacy).toContain("function renderAdminProfessions");
+  });
+
   test("combat code is owned by combat packages", () => {
     const legacy = read("legacy/app.js");
     const admin = read("features/combat/admin-scenes.js");
