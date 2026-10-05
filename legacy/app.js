@@ -120,8 +120,11 @@ function weaponMaterialForItem(item){
 }
 function ruleWeaponForItem(item){
  if(!item)return null;
- let id=item.weaponTypeId||item.weapon_id||'';
- return ruleWeapons.find(r=>r.id===id)||ruleWeapons.find(r=>(r.name||'').localeCompare(item.name||'','sv',{sensitivity:'base'})===0)||null
+ let id=item.weaponTypeId||item.weapon_id||'',name=String(item.name||'').trim();
+ let byId=ruleWeapons.find(r=>r.id===id);if(byId)return byId;
+ let exact=ruleWeapons.find(r=>(r.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);if(exact)return exact;
+ let alias=({'stav':'Trästav'})[name.toLocaleLowerCase('sv-SE')];
+ return alias?ruleWeapons.find(r=>(r.name||'').localeCompare(alias,'sv',{sensitivity:'base'})===0)||null:null
 }
 function weaponInstanceMasterId(item){
  let r=ruleWeaponForItem(item);return r?.id||''
@@ -999,8 +1002,8 @@ function npcKnownWeaponPresets(){
  return [...byName.values()].sort((a,b)=>a.name.localeCompare(b.name,'sv'))
 }
 function npcWeaponChoice(row){
- let id=String(row?.weapon_id||row?.weaponTypeId||''),name=String(row?.name||'').trim();
- if(id&&ruleWeapons.some(r=>r.id===id))return 'rule:'+id;
+ let id=String(row?.weapon_id||row?.weaponTypeId||''),name=String(row?.name||'').trim(),rule=ruleWeaponForItem(row);
+ if(rule)return 'rule:'+rule.id;
  if(row?._custom)return '__custom__';
  if(name&&npcKnownWeaponPresets().some(p=>p.name.localeCompare(name,'sv',{sensitivity:'base'})===0))return 'name:'+name;
  return name?'__custom__':''
