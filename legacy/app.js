@@ -197,7 +197,7 @@ async function syncCharacterToCentral(c){if(!centralReady||!centralCampaignId||!
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
 function storeSession(x){supabaseSession=x||null;if(x)localStorage.setItem('alea_supabase_session',JSON.stringify(x));else localStorage.removeItem('alea_supabase_session')}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
-async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}revokeMapImageUrls();revokeCombatIconUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
+async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
 async function restoreSession(){let raw=localStorage.getItem('alea_supabase_session');if(!raw)return false;try{supabaseSession=JSON.parse(raw);if(!supabaseSession?.refresh_token)throw 0;let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
 async function initLogin(){if(await restoreSession())enterApp();else showLogin()}
 function saveAdmin(){localStorage.setItem('dod_admin_v014',JSON.stringify(adminData))}
@@ -286,8 +286,8 @@ function closeAdminEditor(){
  if(st?.pendingUploadPath&&st.pendingUploadPath!==st.originalBackgroundPath){
   deleteCombatSceneStoredImage(st.pendingUploadPath).catch(e=>console.warn('Kunde inte rensa osparad stridsbild',e))
  }
- eventCombatEditorState=null;resetAdminCombatIconDraft();
- let modal=document.querySelector('#adminEditor .admineditor');if(modal)modal.classList.remove('event-combat-editor');
+ eventCombatEditorState=null;resetAdminCombatIconDraft();resetAdminNpcDraft();
+ let modal=document.querySelector('#adminEditor .admineditor');if(modal){modal.classList.remove('event-combat-editor');modal.classList.remove('slp-editor')}
  $('adminEditor').classList.add('hidden')
 }
 function addUser(){editUser('')}
@@ -558,7 +558,7 @@ async function loadCampaignContentData(){
    dbJson('campaign_npcs?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&order=sort_order.asc,name.asc'),
    dbJson('campaign_monsters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&order=sort_order.asc,name.asc')
   ]);
-  campaignEvents=Array.isArray(rows[0])?rows[0]:[];campaignNpcs=Array.isArray(rows[1])?rows[1]:[];campaignMonsters=Array.isArray(rows[2])?rows[2]:[];campaignContentReady=true;
+  campaignEvents=Array.isArray(rows[0])?rows[0]:[];campaignNpcs=Array.isArray(rows[1])?rows[1]:[];campaignMonsters=Array.isArray(rows[2])?rows[2]:[];await preloadNpcPortraits(campaignNpcs);campaignContentReady=true;
  }catch(e){console.warn('Kampanjinnehåll är inte tillgängligt ännu',e);campaignEvents=[];campaignNpcs=[];campaignMonsters=[];campaignContentReady=false}
 }
 function contentVisibilityBadge(v){return v?'<span class="content-badge visible">SPELARE</span>':'<span class="content-badge">SL</span>'}
@@ -591,7 +591,7 @@ function renderAdminCampaignContent(){
   return
  }
  if(et)renderAdminEventList(campaignEvents);
- if(nt)nt.innerHTML='<div class="ahead">Namn</div><div class="ahead">Roll / titel</div><div class="ahead">Synlighet</div><div class="ahead">Åtgärd</div>'+campaignNpcs.map(function(x){return '<div><b>'+escAttr(x.name||'Namnlös')+'</b></div><div>'+escAttr(x.title||'—')+'</div><div>'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignNpc(\''+x.id+'\')">✎</button><button class="deletebtn" onclick="deleteCampaignNpc(\''+x.id+'\')">×</button></div>'}).join('');
+ if(nt)nt.innerHTML='<div class="ahead">SLP</div><div class="ahead">Roll / titel</div><div class="ahead">Synlighet</div><div class="ahead">Åtgärd</div>'+campaignNpcs.map(function(x){return '<div>'+npcPortraitListHtml(x)+'</div><div>'+escAttr(x.title||'—')+'</div><div>'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignNpc(\''+x.id+'\')" title="Redigera SLP">✎</button><button class="deletebtn" onclick="deleteCampaignNpc(\''+x.id+'\')" title="Ta bort SLP">×</button></div>'}).join('');
  if(mt)mt.innerHTML='<div class="ahead">Namn</div><div class="ahead">Typ / standardantal</div><div class="ahead">Synlighet</div><div class="ahead">Åtgärd</div>'+campaignMonsters.map(function(x){return '<div><b>'+escAttr(x.name||'Namnlös')+'</b></div><div>'+escAttr(x.monster_type||'—')+' · '+(Number(x.quantity)||0)+'</div><div>'+contentVisibilityBadge(x.player_visible)+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMonster(\''+x.id+'\')">✎</button><button class="deletebtn" onclick="deleteCampaignMonster(\''+x.id+'\')">×</button></div>'}).join('');
 }
 function locationOptions(selected,allowNone){selected=selected||'';if(allowNone===undefined)allowNone=true;let rows=campaignLocations.map(function(l){return '<option value="'+l.id+'" '+(selected===l.id?'selected':'')+'>'+escAttr(sitePath(l.site_id)+' › '+l.location_key+'. '+l.name)+'</option>'}).join('');return (allowNone?'<option value="">Ingen aktuell plats</option>':'')+rows}
@@ -647,28 +647,235 @@ async function deleteCampaignEvent(id){
   renderAdminMaps()
  }catch(e){alert('Kunde inte ta bort händelsen: '+e.message)}
 }
+let adminNpcDraft=null,npcPortraitUrlCache=new Map();
+const NPC_ATTRS=[
+ ['STY','Styrka'],['FYS','Fysik'],['STO','Storlek'],['SMI','Smidighet'],['INT','Intelligens'],['PSY','Psykisk kraft'],['KAR','Karisma']
+];
+function npcNum(v){if(v===''||v==null)return null;let n=Number(v);return Number.isFinite(n)?n:null}
+function normalizeNpcAttributes(v){
+ let src=v&&typeof v==='object'&&!Array.isArray(v)?v:{},out={};
+ NPC_ATTRS.forEach(([k])=>out[k]=npcNum(src[k]));
+ return out
+}
+function npcCalculatedKp(attrs){let f=npcNum(attrs?.FYS),st=npcNum(attrs?.STO);return f==null||st==null?null:Math.ceil((f+st)/2)}
+function npcPortraitCachedUrl(path){return npcPortraitUrlCache.get(String(path||''))?.url||''}
+async function getNpcPortraitUrl(path){
+ path=String(path||'');if(!path)return '';
+ let cached=npcPortraitUrlCache.get(path);if(cached?.url)return cached.url;
+ let r=await mapStorageFetch('object/campaign-actor-images/'+encodeStoragePath(path),{method:'GET'});
+ if(!r.ok){let data=await r.json().catch(()=>null);throw new Error(data?.message||data?.error||('Kunde inte läsa SLP-bilden ('+r.status+').'))}
+ let blob=await r.blob();if(!blob.size)throw new Error('SLP-bilden är tom.');
+ let url=URL.createObjectURL(blob);npcPortraitUrlCache.set(path,{url});return url
+}
+async function preloadNpcPortraits(list){
+ await Promise.all((list||[]).map(async n=>{if(!n?.image_path)return;try{await getNpcPortraitUrl(n.image_path)}catch(e){console.warn('Kunde inte läsa SLP-bild',e)}}))
+}
+function revokeNpcPortraitUrls(){
+ for(let x of npcPortraitUrlCache.values())if(x?.url?.startsWith('blob:'))URL.revokeObjectURL(x.url);
+ npcPortraitUrlCache.clear()
+}
+function prepareNpcPortraitBlob(file){
+ return new Promise((resolve,reject)=>{
+  if(!file||!String(file.type||'').startsWith('image/')){reject(new Error('Välj en bildfil.'));return}
+  let reader=new FileReader();
+  reader.onerror=()=>reject(new Error('Kunde inte läsa bildfilen.'));
+  reader.onload=e=>{
+   let img=new Image();
+   img.onerror=()=>reject(new Error('Bildfilen kunde inte öppnas.'));
+   img.onload=()=>{
+    let max=1000,scale=Math.min(1,max/Math.max(img.width,img.height)),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),cv=document.createElement('canvas');
+    cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+    cv.toBlob(blob=>blob?resolve(blob):reject(new Error('Kunde inte skapa SLP-bilden.')),'image/webp',.86)
+   };
+   img.src=e.target.result
+  };
+  reader.readAsDataURL(file)
+ })
+}
+async function deleteNpcPortraitAsset(path){
+ path=String(path||'');if(!path)return;
+ let r=await mapStorageFetch('object/campaign-actor-images/'+encodeStoragePath(path),{method:'DELETE'});
+ if(!r.ok&&r.status!==404){let data=await r.json().catch(()=>null);throw new Error(data?.message||data?.error||'Kunde inte ta bort SLP-bilden.')}
+ let cached=npcPortraitUrlCache.get(path);if(cached?.url?.startsWith('blob:'))URL.revokeObjectURL(cached.url);npcPortraitUrlCache.delete(path)
+}
+async function uploadNpcPortraitAsset(npcId,file,oldPath=''){
+ if(!centralCampaignId||!npcId)throw new Error('SLP:n måste vara sparad innan bilden kan laddas upp.');
+ let blob=await prepareNpcPortraitBlob(file),path=centralCampaignId+'/npc/'+npcId+'/portrait-'+crypto.randomUUID()+'.webp';
+ let r=await mapStorageFetch('object/campaign-actor-images/'+encodeStoragePath(path),{method:'POST',headers:{'Content-Type':'image/webp','x-upsert':'false'},body:blob});
+ if(!r.ok){let data=await r.json().catch(()=>null);throw new Error(data?.message||data?.error||'Uppladdningen av SLP-bilden misslyckades.')}
+ let url=URL.createObjectURL(blob);npcPortraitUrlCache.set(path,{url});
+ if(oldPath&&oldPath!==path)await deleteNpcPortraitAsset(oldPath).catch(e=>console.warn('Kunde inte rensa tidigare SLP-bild',e));
+ return{path,url}
+}
+function resetAdminNpcDraft(){
+ if(adminNpcDraft?.portraitPreviewUrl?.startsWith('blob:'))URL.revokeObjectURL(adminNpcDraft.portraitPreviewUrl);
+ adminNpcDraft=null
+}
+function beginAdminNpcDraft(x,id){
+ resetAdminNpcDraft();
+ adminNpcDraft={
+  id:id||'',attributes:normalizeNpcAttributes(x?.attributes),
+  skills:Array.isArray(x?.skills)?JSON.parse(JSON.stringify(x.skills)):[],
+  weapons:Array.isArray(x?.weapons)?JSON.parse(JSON.stringify(x.weapons)):[],
+  shield:x?.shield&&typeof x.shield==='object'&&!Array.isArray(x.shield)?JSON.parse(JSON.stringify(x.shield)):{},
+  armor:x?.armor&&typeof x.armor==='object'&&!Array.isArray(x.armor)?JSON.parse(JSON.stringify(x.armor)):{},
+  oldImagePath:x?.image_path||'',imagePath:x?.image_path||'',portraitFile:null,portraitPreviewUrl:'',portraitRemove:false,portraitChanged:false
+ };
+ if(x?.image_path)getNpcPortraitUrl(x.image_path).then(()=>{if(adminNpcDraft?.oldImagePath===x.image_path)refreshAdminNpcPortraitPreview()}).catch(e=>console.warn('Kunde inte läsa SLP-bild',e))
+}
+function adminNpcPortraitHtml(){
+ let url=adminNpcDraft?.portraitPreviewUrl||npcPortraitCachedUrl(adminNpcDraft?.imagePath),has=!!(adminNpcDraft?.imagePath||adminNpcDraft?.portraitFile);
+ return '<div class="slp-portrait-picker"><div id="npcPortraitPreview" class="slp-portrait-preview">'+(url?'<img src="'+url+'" alt="SLP-bild">':'<span>👤</span>')+'</div><div class="slp-portrait-actions"><b>Bild</b><small>Porträtt för SLP:n. Stridsikonen väljs separat.</small><button class="smallbtn" type="button" onclick="$(\'npcPortraitFile\').click()">Välj bild</button><button id="npcPortraitReset" class="smallbtn '+(has?'':'hidden')+'" type="button" onclick="removeAdminNpcPortraitDraft()">Ta bort bild</button><input id="npcPortraitFile" class="hidden" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleAdminNpcPortraitFile(this.files&&this.files[0]);this.value=\'\'"></div></div>'
+}
+function refreshAdminNpcPortraitPreview(){
+ let el=$('npcPortraitPreview');if(!el||!adminNpcDraft)return;
+ let url=adminNpcDraft.portraitPreviewUrl||npcPortraitCachedUrl(adminNpcDraft.imagePath);
+ el.innerHTML=url?'<img src="'+url+'" alt="SLP-bild">':'<span>👤</span>';
+ $('npcPortraitReset')?.classList.toggle('hidden',!(adminNpcDraft.imagePath||adminNpcDraft.portraitFile))
+}
+function handleAdminNpcPortraitFile(file){
+ if(!file||!adminNpcDraft)return;
+ if(adminNpcDraft.portraitPreviewUrl?.startsWith('blob:'))URL.revokeObjectURL(adminNpcDraft.portraitPreviewUrl);
+ adminNpcDraft.portraitFile=file;adminNpcDraft.portraitRemove=false;adminNpcDraft.portraitChanged=true;adminNpcDraft.portraitPreviewUrl=URL.createObjectURL(file);refreshAdminNpcPortraitPreview()
+}
+function removeAdminNpcPortraitDraft(){
+ if(!adminNpcDraft)return;
+ if(adminNpcDraft.portraitPreviewUrl?.startsWith('blob:'))URL.revokeObjectURL(adminNpcDraft.portraitPreviewUrl);
+ adminNpcDraft.portraitFile=null;adminNpcDraft.portraitRemove=true;adminNpcDraft.portraitChanged=true;adminNpcDraft.imagePath='';adminNpcDraft.portraitPreviewUrl='';refreshAdminNpcPortraitPreview()
+}
+async function persistAdminNpcPortrait(npcId){
+ let d=adminNpcDraft;if(!d||!d.portraitChanged)return d?.oldImagePath||'';
+ if(d.portraitFile){
+  let local=d.portraitPreviewUrl,res=await uploadNpcPortraitAsset(npcId,d.portraitFile,d.oldImagePath||'');
+  if(local?.startsWith('blob:')&&local!==res.url)URL.revokeObjectURL(local);
+  d.imagePath=res.path;d.portraitPreviewUrl='';d.portraitFile=null;d.portraitRemove=false;return res.path
+ }
+ if(d.portraitRemove&&d.oldImagePath)await deleteNpcPortraitAsset(d.oldImagePath);
+ return ''
+}
+function npcSkillOptions(selected){
+ selected=String(selected||'');
+ let legacy=selected&&!ruleSkills.some(r=>r.id===selected)?'<option value="'+escAttr(selected)+'" selected>Befintlig färdighet</option>':'';
+ return '<option value="">Välj färdighet…</option>'+legacy+ruleSkills.map(r=>'<option value="'+escAttr(r.id)+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+' · '+escAttr(r.type)+'</option>').join('')
+}
+function npcWeaponOptions(selected){
+ selected=String(selected||'');
+ let legacy=selected&&!ruleWeapons.some(r=>r.id===selected)?'<option value="'+escAttr(selected)+'" selected>Befintligt vapen</option>':'';
+ return '<option value="">Eget / ej i register</option>'+legacy+ruleWeapons.map(r=>'<option value="'+r.id+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+'</option>').join('')
+}
+function npcArmorOptions(selected){
+ selected=String(selected||'');
+ return '<option value="">Ingen / egen rustning</option>'+ruleArmorTypes.map(r=>'<option value="'+r.id+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+' · ABS '+r.absorption+'</option>').join('')
+}
+function adminNpcAttributesHtml(){
+ return '<div class="slp-attribute-grid">'+NPC_ATTRS.map(([k,label])=>'<label><span>'+label+'</span><input data-npc-attr="'+k+'" type="number" min="0" max="99" value="'+escAttr(adminNpcDraft?.attributes?.[k]??'')+'" oninput="updateNpcKpPreview()"></label>').join('')+'</div><div class="slp-derived-note">Beräknad KP: <b id="npcKpPreview">'+(npcCalculatedKp(adminNpcDraft?.attributes)??'—')+'</b></div>'
+}
+function collectAdminNpcAttributes(){
+ let out={};NPC_ATTRS.forEach(([k])=>out[k]=npcNum(document.querySelector('[data-npc-attr="'+k+'"]')?.value));return out
+}
+function updateNpcKpPreview(){let el=$('npcKpPreview');if(el)el.textContent=npcCalculatedKp(collectAdminNpcAttributes())??'—'}
+function renderAdminNpcSkills(){
+ let el=$('npcSkillsList');if(!el||!adminNpcDraft)return;
+ el.innerHTML=adminNpcDraft.skills.length?adminNpcDraft.skills.map((r,i)=>'<div class="slp-list-row slp-skill-row"><select onchange="setAdminNpcSkill('+i+',\'skill_id\',this.value)">'+npcSkillOptions(r.skill_id||'')+'</select><input type="number" min="0" max="99" placeholder="FV" value="'+escAttr(r.fv??'')+'" oninput="setAdminNpcSkill('+i+',\'fv\',this.value)"><button class="deletebtn" type="button" onclick="removeAdminNpcSkill('+i+')" title="Ta bort">×</button></div>').join(''):'<div class="slp-list-empty">Inga färdigheter tillagda.</div>'
+}
+function addAdminNpcSkill(){if(!adminNpcDraft)return;adminNpcDraft.skills.push({skill_id:'',name:'',fv:null});renderAdminNpcSkills()}
+function removeAdminNpcSkill(i){if(!adminNpcDraft)return;adminNpcDraft.skills.splice(i,1);renderAdminNpcSkills()}
+function setAdminNpcSkill(i,key,value){
+ let r=adminNpcDraft?.skills?.[i];if(!r)return;
+ if(key==='skill_id'){r.skill_id=value;let rule=ruleSkills.find(x=>x.id===value);r.name=rule?.name||r.name||''}
+ else if(key==='fv')r.fv=npcNum(value)
+}
+function renderAdminNpcWeapons(){
+ let el=$('npcWeaponsList');if(!el||!adminNpcDraft)return;
+ el.innerHTML=adminNpcDraft.weapons.length?adminNpcDraft.weapons.map((r,i)=>'<div class="slp-list-row slp-weapon-row"><select onchange="setAdminNpcWeapon('+i+',\'weapon_id\',this.value)">'+npcWeaponOptions(r.weapon_id||'')+'</select><input placeholder="Namn" value="'+escAttr(r.name||'')+'" oninput="setAdminNpcWeapon('+i+',\'name\',this.value)"><input type="number" min="0" max="99" placeholder="FV" value="'+escAttr(r.fv??'')+'" oninput="setAdminNpcWeapon('+i+',\'fv\',this.value)"><input placeholder="Skada" value="'+escAttr(r.damage||'')+'" oninput="setAdminNpcWeapon('+i+',\'damage\',this.value)"><button class="deletebtn" type="button" onclick="removeAdminNpcWeapon('+i+')" title="Ta bort">×</button></div>').join(''):'<div class="slp-list-empty">Inga vapen tillagda.</div>'
+}
+function addAdminNpcWeapon(){if(!adminNpcDraft)return;adminNpcDraft.weapons.push({weapon_id:'',name:'',fv:null,damage:''});renderAdminNpcWeapons()}
+function removeAdminNpcWeapon(i){if(!adminNpcDraft)return;adminNpcDraft.weapons.splice(i,1);renderAdminNpcWeapons()}
+function setAdminNpcWeapon(i,key,value){
+ let r=adminNpcDraft?.weapons?.[i];if(!r)return;
+ if(key==='weapon_id'){
+  r.weapon_id=value;let rule=ruleWeapons.find(x=>x.id===value);
+  if(rule){r.name=rule.name||'';r.damage=rule.damage||''}
+  renderAdminNpcWeapons()
+ }else if(key==='fv')r.fv=npcNum(value);else r[key]=value
+}
+function setAdminNpcArmorType(value){
+ if(!adminNpcDraft)return;
+ let rule=ruleArmorTypes.find(x=>x.id===value);
+ adminNpcDraft.armor={...(adminNpcDraft.armor||{}),armor_type_id:value||'',name:rule?.name||'',absorption:rule?Number(rule.absorption):npcNum($('npcArmorAbs')?.value)};
+ if($('npcArmorName'))$('npcArmorName').value=adminNpcDraft.armor.name||'';
+ if($('npcArmorAbs'))$('npcArmorAbs').value=adminNpcDraft.armor.absorption??''
+}
+function collectAdminNpcShield(){return{name:$('npcShieldName')?.value.trim()||'',fv:npcNum($('npcShieldFv')?.value),bv:npcNum($('npcShieldBv')?.value)}}
+function collectAdminNpcArmor(){return{armor_type_id:$('npcArmorType')?.value||'',name:$('npcArmorName')?.value.trim()||'',absorption:npcNum($('npcArmorAbs')?.value)}}
+function sanitizeNpcSkills(list){return(list||[]).filter(r=>r.skill_id||r.name).map(r=>({skill_id:r.skill_id||'',name:(ruleSkills.find(x=>x.id===r.skill_id)?.name||r.name||''),fv:npcNum(r.fv)}))}
+function sanitizeNpcWeapons(list){return(list||[]).filter(r=>r.weapon_id||String(r.name||'').trim()).map(r=>({weapon_id:r.weapon_id||'',name:String(r.name||'').trim(),fv:npcNum(r.fv),damage:String(r.damage||'').trim()}))}
+function npcAdminSummary(x){
+ let kp=npcCalculatedKp(x?.attributes),skills=Array.isArray(x?.skills)?x.skills.length:0,weapons=Array.isArray(x?.weapons)?x.weapons.length:0;
+ return [kp!=null?'KP '+kp:'',skills?skills+' färd.':'',weapons?weapons+' vapen':''].filter(Boolean).join(' · ')||'Ingen stridsdata'
+}
+function npcPortraitListHtml(x){
+ let url=npcPortraitCachedUrl(x?.image_path);
+ return '<div class="npc-admin-name">'+(url?'<img src="'+url+'" alt="">':'<span class="npc-admin-placeholder">👤</span>')+'<span><b>'+escAttr(x?.name||'Namnlös')+'</b><small>'+escAttr(npcAdminSummary(x))+'</small></span></div>'
+}
+function adminNpcEditorHtml(x,id){
+ let a=adminNpcDraft?.armor||{},sh=adminNpcDraft?.shield||{};
+ return '<div class="adminform slp-admin-form">'+
+  '<div class="slp-top-grid">'+adminNpcPortraitHtml()+'<div class="slp-basic-fields"><label>Namn<input id="cnName" value="'+escAttr(x?.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x?.title||'')+'"></label><label>Aktuell plats<select id="cnLocation">'+locationOptions(x?.current_location_id||'',true)+'</select></label></div></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">Minirollpersonens sju grundegenskaper.</p></div></div>'+adminNpcAttributesHtml()+'</div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Färdigheter</h3><p class="muted" style="margin:3px 0 0">Lägg bara in de färdigheter som är relevanta för SLP:n.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcSkill()">+ Färdighet</button></div><div id="npcSkillsList" class="slp-list"></div></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Vapen och sköld</h3><p class="muted" style="margin:3px 0 0">Vapen kan kopplas till vapenregistret eller anges manuellt.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcWeapon()">+ Vapen</button></div><div id="npcWeaponsList" class="slp-list"></div><div class="slp-equipment-grid slp-shield-grid"><label>Sköld<input id="npcShieldName" value="'+escAttr(sh.name||'')+'" placeholder="t.ex. Rundsköld"></label><label>FV<input id="npcShieldFv" type="number" min="0" value="'+escAttr(sh.fv??'')+'"></label><label>BV<input id="npcShieldBv" type="number" min="0" value="'+escAttr(sh.bv??'')+'"></label></div></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Rustning</h3></div></div><div class="slp-equipment-grid"><label>Rustningstyp<select id="npcArmorType" onchange="setAdminNpcArmorType(this.value)">'+npcArmorOptions(a.armor_type_id||'')+'</select></label><label>Namn<input id="npcArmorName" value="'+escAttr(a.name||'')+'" placeholder="Egen rustning"></label><label>ABS<input id="npcArmorAbs" type="number" min="0" value="'+escAttr(a.absorption??'')+'"></label></div></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Beskrivning</h3></div></div><label>Beskrivning<textarea id="cnDesc" rows="5">'+escAttr(x?.description||'')+'</textarea></label><label>SL-noteringar<textarea id="cnNotes" rows="3">'+escAttr(x?.gm_notes||'')+'</textarea></label></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Stridsikon</h3><p class="muted" style="margin:3px 0 0">Den lilla hexikonen som används på stridskartan.</p></div></div>'+adminCombatIconPickerHtml('npc')+'</div>'+
+  '<div class="slp-admin-flags"><label class="admincheck"><input id="cnVisible" type="checkbox" '+(x?.player_visible?'checked':'')+'> Synlig för spelare</label><label class="admincheck"><input id="cnActive" type="checkbox" '+(!x||x.active!==false?'checked':'')+'> Aktiv</label></div>'+
+  '<div class="adminformactions"><button class="btn" type="button" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" type="button" onclick="saveCampaignNpc(\''+(id||'')+'\')">Spara SLP</button></div>'+
+ '</div>'
+}
 function editCampaignNpc(id){
- id=id||'';if(!campaignContentReady){alert('Kör först migrationen för kampanjinnehåll.');return}let x=id?campaignNpcs.find(function(v){return v.id===id}):null;
- beginAdminCombatIconDraft('npc',id,x?.combat_icon_path||'');
- $('adminEditorTitle').textContent=x?'Redigera person':'Lägg till person';
- $('adminEditorBody').innerHTML='<div class="adminform"><label>Namn<input id="cnName" value="'+escAttr(x&&x.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x&&x.title||'')+'"></label>'+adminCombatIconPickerHtml('npc')+'<label>Aktuell plats<select id="cnLocation">'+locationOptions(x&&x.current_location_id||'',true)+'</select></label><label>Beskrivning<textarea id="cnDesc">'+escAttr(x&&x.description||'')+'</textarea></label><label>SL-noteringar<textarea id="cnNotes">'+escAttr(x&&x.gm_notes||'')+'</textarea></label><label class="admincheck"><input id="cnVisible" type="checkbox" '+(x&&x.player_visible?'checked':'')+'> Synlig för spelare</label><label class="admincheck"><input id="cnActive" type="checkbox" '+(!x||x.active!==false?'checked':'')+'> Aktiv</label><div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveCampaignNpc(\''+id+'\')">Spara</button></div></div>';
+ id=id||'';if(!campaignContentReady){alert('Kampanjinnehållet är inte tillgängligt.');return}
+ let x=id?campaignNpcs.find(v=>v.id===id):null;
+ beginAdminNpcDraft(x,id);beginAdminCombatIconDraft('npc',id,x?.combat_icon_path||'');
+ $('adminEditorTitle').textContent=x?'Redigera SLP':'Skapa SLP';
+ $('adminEditorBody').innerHTML=adminNpcEditorHtml(x,id);
+ let modal=document.querySelector('#adminEditor .admineditor');if(modal)modal.classList.add('slp-editor');
  $('adminEditor').classList.remove('hidden');
+ renderAdminNpcSkills();renderAdminNpcWeapons();updateNpcKpPreview()
 }
 async function saveCampaignNpc(id){
- id=id||adminCombatIconDraft?.id||'';let name=$('cnName').value.trim();if(!name){alert('Namn måste anges.');return}
- let body={campaign_id:centralCampaignId,name:name,title:$('cnTitle').value,current_location_id:$('cnLocation').value||null,description:$('cnDesc').value,gm_notes:$('cnNotes').value,player_visible:$('cnVisible').checked,active:$('cnActive').checked,updated_at:new Date().toISOString()};if(!id)body.created_by=supabaseSession.user.id;
+ id=id||adminNpcDraft?.id||adminCombatIconDraft?.id||'';
+ let name=$('cnName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ let body={
+  campaign_id:centralCampaignId,name,title:$('cnTitle')?.value.trim()||'',current_location_id:$('cnLocation')?.value||null,
+  description:$('cnDesc')?.value||'',gm_notes:$('cnNotes')?.value||'',player_visible:!!$('cnVisible')?.checked,active:!!$('cnActive')?.checked,
+  attributes:collectAdminNpcAttributes(),skills:sanitizeNpcSkills(adminNpcDraft?.skills),weapons:sanitizeNpcWeapons(adminNpcDraft?.weapons),
+  shield:collectAdminNpcShield(),armor:collectAdminNpcArmor(),updated_at:new Date().toISOString()
+ };
+ if(!id)body.created_by=supabaseSession.user.id;
  try{
   let savedId=id;
   if(id)await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(body)});
-  else{let rows=await dbJson('campaign_npcs',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||'';if(adminCombatIconDraft)adminCombatIconDraft.id=savedId}
+  else{
+   let rows=await dbJson('campaign_npcs',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||'';
+   if(adminNpcDraft)adminNpcDraft.id=savedId;if(adminCombatIconDraft)adminCombatIconDraft.id=savedId
+  }
   if(!savedId)throw new Error('Kunde inte fastställa SLP:ns id.');
-  if(adminCombatIconDraft?.changed){let path=await persistAdminCombatIcon(savedId);await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(savedId),{method:'PATCH',body:JSON.stringify({combat_icon_path:path||null,updated_at:new Date().toISOString()})})}
-  closeAdminEditor();await loadCampaignContentData();renderAdminCampaignContent()
- }catch(e){alert('Kunde inte spara personen: '+e.message)}
+  let patch={updated_at:new Date().toISOString()},needsPatch=false;
+  if(adminNpcDraft?.portraitChanged){patch.image_path=(await persistAdminNpcPortrait(savedId))||null;needsPatch=true}
+  if(adminCombatIconDraft?.changed){patch.combat_icon_path=(await persistAdminCombatIcon(savedId))||null;needsPatch=true}
+  if(needsPatch)await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(savedId),{method:'PATCH',body:JSON.stringify(patch)});
+  closeAdminEditor();await loadCampaignContentData();renderAdminCampaignContent();renderAdminOverviewCounts()
+ }catch(e){alert('Kunde inte spara SLP:n: '+e.message)}
 }
 async function deleteCampaignNpc(id){
- let x=campaignNpcs.find(function(v){return v.id===id});if(!x)return;if(!await askConfirm('Ta bort person','Vill du ta bort '+x.name+'? Kopplingar till platser och händelser tas också bort.','Ta bort',true))return;
- try{await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});if(x.combat_icon_path)await deleteCombatIconAsset(x.combat_icon_path).catch(e=>console.warn('Kunde inte rensa stridsikon',e));await loadCampaignContentData();renderAdminCampaignContent()}catch(e){alert('Kunde inte ta bort SLP: '+e.message)}
+ let x=campaignNpcs.find(v=>v.id===id);if(!x)return;
+ if(!await askConfirm('Ta bort SLP','Vill du ta bort '+x.name+'? SLP:n, dess bild och kopplingar tas bort.','Ta bort',true))return;
+ try{
+  await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  if(x.image_path)await deleteNpcPortraitAsset(x.image_path).catch(e=>console.warn('Kunde inte rensa SLP-bild',e));
+  if(x.combat_icon_path)await deleteCombatIconAsset(x.combat_icon_path).catch(e=>console.warn('Kunde inte rensa stridsikon',e));
+  await loadCampaignContentData();renderAdminCampaignContent();renderAdminOverviewCounts()
+ }catch(e){alert('Kunde inte ta bort SLP: '+e.message)}
 }
 function editCampaignMonster(id){
  id=id||'';if(!campaignContentReady){alert('Kör först migrationen för kampanjinnehåll.');return}let x=id?campaignMonsters.find(function(v){return v.id===id}):null;
