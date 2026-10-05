@@ -12,9 +12,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.31.26");
-    expect(html).toContain("./features/character/glowup.js?v=0.31.26");
-    expect(html).toContain("./features/map/glowup.css?v=0.31.26");
+    expect(html).toContain("./features/character/glowup.css?v=0.31.27");
+    expect(html).toContain("./features/character/glowup.js?v=0.31.27");
+    expect(html).toContain("./features/map/glowup.css?v=0.31.27");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -405,9 +405,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.26");
-    expect(html).toContain("app.css?v=0.31.26");
-    expect(html).toContain("legacy/app.js?v=0.31.26");
+    expect(html).toContain("Alea Crusaders v0.31.27");
+    expect(html).toContain("app.css?v=0.31.27");
+    expect(html).toContain("legacy/app.js?v=0.31.27");
   });
 
 
@@ -415,7 +415,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.31.26");
+    expect(html).toContain("./features/map/glowup.css?v=0.31.27");
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -429,18 +429,10 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("targans-gille-hero/chunk-00.b64?v=0.31.26");
-    expect(shop).toContain("new Blob([bytes],{type:'image/webp'})");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.31.27");
+    expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
-  });
-
-  test("Targans illustrated hero chunks reconstruct a WebP", () => {
-    const parts=Array.from({length:6},(_,i)=>read("assets/targans-gille-hero/chunk-"+String(i).padStart(2,"0")+".b64").trim());
-    const bytes=Buffer.from(parts.join(""),"base64");
-    expect(bytes.length).toBeGreaterThan(20_000);
-    expect(bytes.subarray(0,4).toString("ascii")).toBe("RIFF");
-    expect(bytes.subarray(8,12).toString("ascii")).toBe("WEBP");
   });
 
   test("Targans Gille is a player-facing shop with a persistent cart", () => {
@@ -450,8 +442,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.26");
-    expect(html).toContain("./features/shop/store.js?v=0.31.26");
+    expect(html).toContain("./features/shop/store.css?v=0.31.27");
+    expect(html).toContain("./features/shop/store.js?v=0.31.27");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");

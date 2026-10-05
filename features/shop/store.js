@@ -9,47 +9,19 @@ let shopSearch='';
 let shopCart=loadShopCart();
 let shopBuyerId='';
 let shopCheckoutBusy=false;
-let shopHeroObjectUrl='';
-let shopHeroLoading=null;
-const SHOP_HERO_CHUNKS=[
-  './assets/targans-gille-hero/chunk-00.b64?v=0.31.26',
-  './assets/targans-gille-hero/chunk-01.b64?v=0.31.26',
-  './assets/targans-gille-hero/chunk-02.b64?v=0.31.26',
-  './assets/targans-gille-hero/chunk-03.b64?v=0.31.26',
-  './assets/targans-gille-hero/chunk-04.b64?v=0.31.26',
-  './assets/targans-gille-hero/chunk-05.b64?v=0.31.26'
-];
+const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.27';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
   if(!img)return;
-  if(shopHeroObjectUrl){
-    img.src=shopHeroObjectUrl;
-    img.classList.add('loaded');
-    return;
-  }
-  if(!shopHeroLoading){
-    shopHeroLoading=(async()=>{
-      const parts=await Promise.all(SHOP_HERO_CHUNKS.map(async path=>{
-        const response=await fetch(path,{cache:'force-cache'});
-        if(!response.ok)throw new Error('Kunde inte ladda Targans bild');
-        return (await response.text()).trim();
-      }));
-      const binary=atob(parts.join(''));
-      const bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      shopHeroObjectUrl=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));
-      return shopHeroObjectUrl;
-    })().catch(error=>{
-      console.warn('Targans hero kunde inte laddas',error);
-      return '';
-    });
-  }
-  const url=await shopHeroLoading;
-  if(url&&document.getElementById('shopHeroImage')===img){
-    img.src=url;
-    img.onload=()=>img.classList.add('loaded');
-  }
+  if(img.dataset.shopHeroLoaded==='1')return;
+  img.dataset.shopHeroLoaded='1';
+  img.onload=()=>img.classList.add('loaded');
+  img.onerror=()=>{
+    img.classList.remove('loaded');
+    console.warn('Targans hero kunde inte laddas');
+  };
+  img.src=SHOP_HERO_SRC;
 }
 
 function shopEsc(value){
