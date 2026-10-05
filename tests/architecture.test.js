@@ -74,7 +74,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function sceneCombatantMapDrop");
     expect(combat).toContain("function placeSceneCombatantAtHex");
     expect(combat).toContain("ec-combatant-token");
-    expect(combat).toContain("Dra en kombatant till kartan");
+    expect(combat).toContain("Dra en ikon till en hex");
   });
 
   test("combat code is owned by combat packages", () => {
