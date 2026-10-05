@@ -16,9 +16,9 @@ describe("application architecture smoke checks", () => {
 
   test("classic application scripts are syntactically valid", () => {
     const files = [
-      "public/features/combat/admin-scenes.js",
-      "public/features/combat/runtime.js",
-      "public/legacy/app.js",
+      "features/combat/admin-scenes.js",
+      "features/combat/runtime.js",
+      "legacy/app.js",
     ];
     for (const file of files) {
       expect(() => new Function(read(file)), file).not.toThrow();
@@ -26,9 +26,9 @@ describe("application architecture smoke checks", () => {
   });
 
   test("combat code is owned by combat packages", () => {
-    const legacy = read("public/legacy/app.js");
-    const admin = read("public/features/combat/admin-scenes.js");
-    const runtime = read("public/features/combat/runtime.js");
+    const legacy = read("legacy/app.js");
+    const admin = read("features/combat/admin-scenes.js");
+    const runtime = read("features/combat/runtime.js");
     expect(legacy).not.toContain("function eventCombatHexGeometry");
     expect(legacy).not.toContain("function renderCombatMap");
     expect(admin).toContain("function eventCombatHexGeometry");
