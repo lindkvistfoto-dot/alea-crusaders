@@ -1564,3 +1564,160 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .adminformactions{flex-wrap:wrap}
  .adminformactions .btn{flex:1 1 140px;min-width:0}
 }
+
+
+/* v0.31.17 — rollperson mörkgrön, SLP blå + utrustningsval */
+#view .box{
+ background:linear-gradient(145deg,#17241d,#101713);
+ border-color:#365746;
+}
+#view .portrait{
+ background:linear-gradient(145deg,#20372a,#0e1712);
+ border-color:#3f6851;
+}
+#view .field,#view .quickstat{
+ background:#111c16;
+ border-color:#31503f;
+}
+#view .tab{
+ border-color:#3b5e49;
+ background:#101914;
+}
+#view .tab.active,
+#view .skillhead,
+#view .head,
+#view #weaponsPanel .weapon-head>div{
+ background:#1f5138;
+ color:#f0f7f2;
+}
+#view .derived .field{background:#183d2c}
+#view .derived .field .label{color:#d2eadb}
+#view .smallbtn,#view .btn,#view .stepper button{
+ border-color:#4d755d;
+ background:#1b3023;
+}
+#view .smallbtn:hover,#view .btn:hover,#view .stepper button:hover{background:#244633}
+#view .skill-link:hover{color:#8fc5a1}
+#view .current-equipment-launch .btn{
+ background:linear-gradient(#28523a,#193725);
+ border-color:#5f8b6c;
+ color:#eff8f1;
+}
+#view .section-title{color:#e4f1e8}
+#view .label{color:#a9c7b3}
+
+#admin [data-admin-section="people"].adminbox{
+ border-color:rgba(78,139,181,.55);
+ background:linear-gradient(145deg,rgba(29,50,67,.96),rgba(17,31,43,.97));
+}
+#admin [data-admin-section="people"] .adminsectionhead h2{color:#d8efff}
+#admin [data-admin-section="people"] .campaigncontenttable{border-color:#315c79}
+#admin [data-admin-section="people"] .campaigncontenttable .ahead{background:#1f5579}
+#admin [data-admin-section="enemies"] .campaigncontenttable .ahead{background:#6d1e1e}
+
+.admineditor.slp-editor{
+ --slp-bg:#09131c;
+ --slp-panel:#0f1e2b;
+ --slp-field:#0b1822;
+ --slp-line:#315d7a;
+ --slp-accent:#24678f;
+ --slp-accent-strong:#1f7caf;
+ --slp-text:#edf7fd;
+ --slp-muted:#9eb9cb;
+ background:linear-gradient(145deg,#102333,#08131c)!important;
+ border:1px solid #376985!important;
+ color:var(--slp-text)!important;
+ box-shadow:0 26px 80px rgba(0,0,0,.55),inset 0 0 0 1px rgba(118,188,230,.035);
+}
+.admineditor.slp-editor .modalhead{
+ padding-bottom:12px;
+ margin-bottom:14px;
+ border-bottom:1px solid rgba(81,139,178,.38);
+}
+.admineditor.slp-editor .modalhead h2{color:#dff3ff!important;font-family:Georgia,serif}
+.admineditor.slp-editor .modalclose{
+ border-color:#47718b;
+ background:#122738;
+ color:#eaf7ff;
+}
+.admineditor.slp-editor .modalclose:hover{background:#19364b}
+.admineditor.slp-editor .slp-portrait-picker,
+.admineditor.slp-editor .adminform-section{
+ border:1px solid rgba(65,113,145,.55);
+ border-radius:14px;
+ background:linear-gradient(145deg,rgba(15,31,44,.96),rgba(10,22,32,.98));
+ padding:12px;
+}
+.admineditor.slp-editor .adminform-section{
+ border-top:1px solid rgba(65,113,145,.55);
+ margin-top:0;
+}
+.admineditor.slp-editor .slp-portrait-preview{
+ border-color:#416d8a;
+ background:linear-gradient(145deg,#122b3d,#08131c);
+}
+.admineditor.slp-editor .slp-basic-fields label,
+.admineditor.slp-editor .slp-attribute-grid label{
+ background:var(--slp-field);
+ border:1px solid rgba(65,113,145,.48);
+ border-radius:10px;
+ padding:9px;
+ color:#b9d3e4;
+}
+.admineditor.slp-editor .slp-basic-fields label{
+ text-transform:uppercase;
+ letter-spacing:.05em;
+ font-size:11px;
+}
+.admineditor.slp-editor input,
+.admineditor.slp-editor select,
+.admineditor.slp-editor textarea{
+ background:#08131c!important;
+ color:#f1f8fc!important;
+ border-color:#3b6884!important;
+}
+.admineditor.slp-editor input[readonly]{opacity:.78;background:#0d1b25!important}
+.admineditor.slp-editor .admin-subsection-head h3{
+ color:#dceefa;
+ font-family:Georgia,serif;
+ font-size:18px;
+}
+.admineditor.slp-editor .muted,
+.admineditor.slp-editor .slp-derived-note,
+.admineditor.slp-editor .slp-portrait-actions small,
+.admineditor.slp-editor #npcRaceRuleNote{color:var(--slp-muted)!important}
+.admineditor.slp-editor .smallbtn{
+ border-color:#467694;
+ background:#153247;
+ color:#eef8fe;
+}
+.admineditor.slp-editor .smallbtn:hover{background:#1b4965;border-color:#65a7d0}
+.admineditor.slp-editor .btn.primary{
+ background:linear-gradient(#2879a5,#1d5d83);
+ border-color:#62a6ce;
+ color:#fff;
+}
+.admineditor.slp-editor .btn:not(.primary){
+ border-color:#416a84;
+ background:#122736;
+}
+.admineditor.slp-editor .slp-list-row{
+ border:1px solid rgba(65,113,145,.42);
+ border-radius:10px;
+ background:#0b1720;
+ padding:7px;
+}
+.admineditor.slp-editor .slp-list-empty{
+ border-color:rgba(78,137,176,.42);
+ color:#89a8bc;
+}
+.admineditor.slp-editor .admin-combat-icon-picker{
+ border-color:rgba(65,113,145,.48);
+ background:#0b1720;
+}
+.slp-shield-grid{grid-template-columns:minmax(160px,1.5fr) minmax(140px,1.2fr) 78px 78px}
+@media(max-width:760px){
+ .slp-shield-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .slp-shield-grid label:nth-last-child(-n+2){grid-column:auto}
+ #view .box{border-color:#315441}
+}
