@@ -12,6 +12,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
+    expect(html).toContain("./features/character/glowup.css?v=0.31.24");
+    expect(html).toContain("./features/character/glowup.js?v=0.31.24");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -19,6 +21,7 @@ describe("application architecture smoke checks", () => {
       "features/combat/admin-scenes.js",
       "features/combat/runtime.js",
       "features/shop/store.js",
+      "features/character/glowup.js",
       "legacy/app.js",
     ];
     for (const file of files) {
@@ -401,9 +404,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.23");
-    expect(html).toContain("app.css?v=0.31.23");
-    expect(html).toContain("legacy/app.js?v=0.31.23");
+    expect(html).toContain("Alea Crusaders v0.31.24");
+    expect(html).toContain("app.css?v=0.31.24");
+    expect(html).toContain("legacy/app.js?v=0.31.24");
   });
 
 
@@ -414,8 +417,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.23");
-    expect(html).toContain("./features/shop/store.js?v=0.31.23");
+    expect(html).toContain("./features/shop/store.css?v=0.31.24");
+    expect(html).toContain("./features/shop/store.js?v=0.31.24");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
