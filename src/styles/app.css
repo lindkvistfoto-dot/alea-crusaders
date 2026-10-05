@@ -1368,3 +1368,71 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .race-attribute-row{padding:6px}
  .adminracetable{grid-template-columns:minmax(120px,1fr) 90px 110px 82px;font-size:12px}
 }
+
+
+/* v0.31.15 — SLP-lista utan horisontell mobilscroll */
+.npcadmintable{
+ width:100%;
+ max-width:100%;
+ min-width:0;
+ box-sizing:border-box;
+ overflow:hidden;
+}
+.npcadmintable>div{min-width:0;box-sizing:border-box}
+.npc-admin-mobile-title{display:none}
+@media(max-width:760px){
+ .npcadmintable{
+  grid-template-columns:minmax(0,1fr) 64px 72px;
+  width:100%;
+  max-width:100%;
+  overflow:hidden;
+  font-size:12px;
+ }
+ .npcadmintable .npc-col-title{display:none}
+ .npcadmintable .npc-col-name{min-width:0}
+ .npcadmintable .npc-col-visibility{
+  min-width:0;
+  padding-left:4px;
+  padding-right:4px;
+  text-align:center;
+ }
+ .npcadmintable .npc-col-actions{
+  min-width:0;
+  padding-left:3px;
+  padding-right:3px;
+  gap:3px;
+  flex-wrap:nowrap;
+  justify-content:center;
+ }
+ .npcadmintable .npc-col-actions .smallbtn,
+ .npcadmintable .npc-col-actions .deletebtn{
+  min-width:28px;
+  width:28px;
+  padding-left:3px;
+  padding-right:3px;
+ }
+ .npcadmintable .content-badge{
+  max-width:100%;
+  box-sizing:border-box;
+  padding:3px 4px;
+  font-size:9px;
+  white-space:nowrap;
+ }
+ .npc-admin-mobile-title{
+  display:block;
+  color:#d7c19d!important;
+  font-size:11px!important;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+ }
+ .npc-admin-summary{
+  overflow-wrap:anywhere;
+  line-height:1.25;
+ }
+ .npc-admin-name img,.npc-admin-placeholder{
+  width:36px;
+  height:42px;
+ }
+ .npc-admin-name{gap:7px}
+}
