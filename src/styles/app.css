@@ -1146,3 +1146,14 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .adminracetable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
 .adminracetable .ahead{background:#6d1e1e;font-weight:800}
 @media(max-width:700px){.adminracetable{grid-template-columns:minmax(140px,1fr) 110px 70px 100px;font-size:13px}}
+
+
+/* v0.31.3 — individuell ERF-vila */
+.campaign-rest-status{margin-top:12px}
+.character-rest-grid{display:grid;gap:7px}
+.character-rest-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #d2bd9a;border-radius:10px;background:#f8efdf;padding:9px 10px;color:#594735}
+.character-rest-row>div:first-child{display:grid;gap:2px}.character-rest-row>div:first-child span{font-size:12px;color:#78634e}
+.character-rest-rule{display:grid;text-align:right;gap:1px}.character-rest-rule strong{font-size:16px}.character-rest-rule span{font-size:11px}
+.character-rest-row.rest-ok{border-color:#8eaa87;background:#eef5e9}.character-rest-row.rest-ok .character-rest-rule{color:#365b3b}
+.character-rest-row.rest-need .character-rest-rule{color:#8a4b38}
+@media(max-width:560px){.character-rest-row{align-items:flex-start}.character-rest-rule{min-width:112px}}
