@@ -186,8 +186,8 @@ function sceneCombatantRowHtml(c){
   '</div></div>'
  }
  let placed=c.start_q!=null&&c.start_r!=null;
- return '<div class="scene-combatant-row'+(placing?' placement-active':'')+'" data-combatant-id="'+c.id+'" draggable="true" ondragstart="sceneCombatantDragStart(event,\''+c.id+'\')" ondragend="sceneCombatantDragEnd(event)">'+
-  '<span class="scene-combatant-badge">'+sceneCombatantTypeLabel(c.combatant_type)+'</span>'+
+ return '<div class="scene-combatant-row'+(placing?' placement-active':'')+'" data-combatant-id="'+c.id+'">'+
+  '<span class="scene-combatant-badge scene-combatant-drag" draggable="true" ondragstart="sceneCombatantDragStart(event,\''+c.id+'\')" ondragend="sceneCombatantDragEnd(event)" title="Dra till starthex">'+sceneCombatantTypeLabel(c.combatant_type)+'</span>'+
   '<div class="scene-combatant-copy"><b>'+escAttr(c.name||'Kombatant')+'</b><small>'+escAttr(sceneCombatantSourceLabel(c))+'</small><small class="scene-combatant-position '+(placed?'placed':'unplaced')+'">'+(placed?('Starthex '+c.start_q+','+c.start_r):'Ej placerad')+'</small></div>'+
   '<div class="scene-combatant-actions">'+
    '<button class="smallbtn scene-place-btn'+(placing?' active':'')+'" type="button" onclick="selectSceneCombatantForPlacement(\''+c.id+'\')" title="'+(placed?'Flytta startposition':'Placera startposition')+'">⌖</button>'+
