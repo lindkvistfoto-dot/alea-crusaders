@@ -337,11 +337,45 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".adminweapontable{display:grid");
   });
 
-  test("weapon administration bumps cache version", () => {
+  test("weapon master list seeds Expert melee weapon data", () => {
+    const sql = read("supabase/migrations/20261005184111_seed_rule_weapons_melee_master.sql");
+    expect(sql).toContain("('melee','1H',1,'Dolk','1T4+1',0,0.5,9,'L',40");
+    expect(sql).toContain("('melee','1-2H',1,'Kortspjut','1T6+1',2,2,11,'L',75");
+    expect(sql).toContain("('melee','1-2H',4,'Morgonstjärna','2T8+2',1,3,11,'T',250");
+    expect(sql).toContain("('melee','2H',4,'Tvåhandssvärd','2T10',3,2,11,'T',560");
+    expect(sql).toContain("('melee','2H',4,'Pålyxa','3T6',4,3,11,'T',125");
+    expect(sql).toContain("on conflict (category,name) do update");
+  });
+
+  test("actors copy weapon master data into independently editable instances", () => {
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    expect(legacy).toContain("function copyRuleWeaponToInstance");
+    expect(legacy).toContain("target.handling=rule.handling");
+    expect(legacy).toContain("target.strengthGroup=rule.strength_group");
+    expect(legacy).toContain("target.bep=rule.bep");
+    expect(legacy).toContain("target.weaponType=rule.weapon_type");
+    expect(legacy).toContain("function setCharacterWeaponMaster");
+    expect(legacy).toContain("copyRuleWeaponToInstance(w,rule)");
+    expect(legacy).toContain("if(rule)copyRuleWeaponToInstance(r,rule)");
+    expect(legacy).toContain("function openWeaponInstanceEditor");
+    expect(legacy).toContain("function saveWeaponInstanceEditor");
+    expect(legacy).toContain("weapon_id:r.weapon_id||r.weaponTypeId||''");
+    expect(css).toContain("#skillModal.weapon-instance-modal{z-index:1400}");
+  });
+
+  test("weapon instance grip overrides master values", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("handling:item?.handling||r?.handling||''");
+    expect(legacy).toContain("let r=ruleWeaponForItem(item),ownGroup=Number(item?.strengthGroup)");
+    expect(legacy).toContain("Number.isFinite(ownGroup)?ownGroup");
+  });
+
+  test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.19");
-    expect(html).toContain("app.css?v=0.31.19");
-    expect(html).toContain("legacy/app.js?v=0.31.19");
+    expect(html).toContain("Alea Crusaders v0.31.20");
+    expect(html).toContain("app.css?v=0.31.20");
+    expect(html).toContain("legacy/app.js?v=0.31.20");
   });
 
 });
