@@ -80,7 +80,7 @@ describe("application architecture smoke checks", () => {
     const legacy = read("legacy/app.js");
     expect(html).toContain('id="mobileHomeVersion"');
     expect(html).toMatch(/Version v\d+\.\d+\.\d+/);
-    expect(legacy).toContain("dst.textContent='Version '+src.textContent");
+    expect(legacy).toContain("let label='Version '+src.textContent");
   });
 
   test("SLP admin supports full mini-character editing", () => {
