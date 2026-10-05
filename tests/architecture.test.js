@@ -67,6 +67,31 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("profession:$('cnProfession')?.value||''");
   });
 
+  test("race admin edits roll formulas and typical values", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("rule_race_attributes?select=*");
+    expect(legacy).toContain("function ruleRaceAttributeEditorHtml");
+    expect(legacy).toContain("function collectRuleRaceAttributes");
+    expect(legacy).toContain("rrRoll_");
+    expect(legacy).toContain("rrTypical_");
+  });
+
+  test("SLP can generate attributes from selected race", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("Slumpa enligt ras");
+    expect(legacy).toContain("applyNpcRaceAttributes");
+    expect(legacy).toContain("rollRaceAttributeFormula");
+    expect(legacy).toContain("npcRaceTypicalBtn");
+    expect(legacy).toContain("updateNpcRaceRuleAvailability");
+  });
+
+  test("SLP mobile editor avoids fixed-width overflowing rows", () => {
+    const css = read("src/styles/app.css");
+    expect(css).toContain("#adminEditor.modalback{padding:8px}");
+    expect(css).toContain(".slp-skill-row{grid-template-columns:minmax(0,1fr) 64px 36px}");
+    expect(css).toContain(".slp-weapon-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px}");
+  });
+
   test("administration overview shows the current app version", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
