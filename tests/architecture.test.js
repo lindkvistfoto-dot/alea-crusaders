@@ -410,26 +410,29 @@ describe("application architecture smoke checks", () => {
 
   test("Targans Gille shop reuses the weapon master and supports cart checkout", () => {
     const html = read("index.html");
-    const legacy = read("legacy/app.js");
-    const css = read("src/styles/app.css");
+    const shop = read("features/shop/store.js");
+    const css = read("features/shop/store.css");
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCharacterSelect"');
     expect(html).toContain('id="shopCart"');
     expect(html).toContain("checkoutShopCart()");
-    expect(legacy).toContain("function shopCatalogRows");
-    expect(legacy).toContain("let weapons=(ruleWeapons||[]).filter");
-    expect(legacy).toContain("function addShopCart");
-    expect(legacy).toContain("async function checkoutShopCart");
-    expect(legacy).toContain("copyRuleWeaponToInstance(w,row.rule)");
-    expect(legacy).toContain("GM:100,SM:10,KM:1");
-    expect(legacy).toContain("c.coins.carried=shopKmToCoins(balance-total)");
+    expect(html).toContain("features/shop/store.css?v=0.32.0");
+    expect(html).toContain("features/shop/store.js?v=0.32.0");
+    expect(shop).toContain("function shopCatalogRows");
+    expect(shop).toContain("let weapons=(ruleWeapons||[]).filter");
+    expect(shop).toContain("function addShopCart");
+    expect(shop).toContain("async function checkoutShopCart");
+    expect(shop).toContain("copyRuleWeaponToInstance(w,row.rule)");
+    expect(shop).toContain("GM:100,SM:10,KM:1");
+    expect(shop).toContain("c.coins.carried=shopKmToCoins(balance-total)");
     expect(css).toContain(".shoplayout{display:grid");
     expect(css).toContain('url("./../../assets/targans-gille-shop.webp")');
   });
 
   test("shop checkout preserves stacked equipment burden", () => {
     const legacy = read("legacy/app.js");
-    expect(legacy).toContain("existing.count=Math.max(1,Number(existing.count)||1)+qty");
+    const shop = read("features/shop/store.js");
+    expect(shop).toContain("existing.count=Math.max(1,Number(existing.count)||1)+qty");
     expect(legacy).toContain("bepNumber(x.bep)*Math.max(1,Number(x.count)||1)");
   });
 
@@ -438,6 +441,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("Alea Crusaders v0.32.0");
     expect(html).toContain("app.css?v=0.32.0");
     expect(html).toContain("legacy/app.js?v=0.32.0");
+    expect(html).toContain("features/shop/store.css?v=0.32.0");
+    expect(html).toContain("features/shop/store.js?v=0.32.0");
   });
 
 });
