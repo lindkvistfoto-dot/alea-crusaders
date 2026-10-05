@@ -435,6 +435,14 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".shop-hero-media img");
   });
 
+  test("Targans illustrated hero chunks reconstruct a WebP", () => {
+    const parts=Array.from({length:6},(_,i)=>read("assets/targans-gille-hero/chunk-"+String(i).padStart(2,"0")+".b64").trim());
+    const bytes=Buffer.from(parts.join(""),"base64");
+    expect(bytes.length).toBeGreaterThan(20_000);
+    expect(bytes.subarray(0,4).toString("ascii")).toBe("RIFF");
+    expect(bytes.subarray(8,12).toString("ascii")).toBe("WEBP");
+  });
+
   test("Targans Gille is a player-facing shop with a persistent cart", () => {
     const html = read("index.html");
     const shop = read("features/shop/store.js");
