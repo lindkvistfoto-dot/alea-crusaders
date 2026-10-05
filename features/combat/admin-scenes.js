@@ -644,6 +644,7 @@ function eventCombatPointerMove(e){
   d.lastX=e.clientX;d.lastY=e.clientY;
   if(!d.moved&&Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>6)d.moved=true;
   if(d.moved){
+   $('eventCombatCanvas')?.classList.add('token-dragging');
    let key=eventCombatHexKeyFromClient(e.clientX,e.clientY);
    if(key!==d.hoverKey){d.hoverKey=key;eventCombatTokenDropHighlight(key)}
   }
@@ -670,11 +671,11 @@ function eventCombatPointerMove(e){
 function eventCombatPointerUp(e){
  let st=eventCombatEditorState;if(!st)return;
  if(st.tokenDrag?.pointerId===e.pointerId){
-  let d=st.tokenDrag;st.tokenDrag=null;eventCombatTokenDropHighlight('');
-  if(d.moved){
+  let d=st.tokenDrag;st.tokenDrag=null;eventCombatTokenDropHighlight('');$('eventCombatCanvas')?.classList.remove('token-dragging');
+  if(e.type!=='pointercancel'&&d.moved){
    let key=eventCombatHexKeyFromClient(e.clientX,e.clientY);
    if(key)placeSceneCombatantAtHex(d.combatantId,key)
-  }else{
+  }else if(e.type!=='pointercancel'){
    selectSceneCombatantForPlacement(d.combatantId)
   }
   try{e.currentTarget.releasePointerCapture?.(e.pointerId)}catch(_){}
