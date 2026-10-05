@@ -1,0 +1,241 @@
+/* v0.31.25 — kartvy i mörk brons/sepia, utan ändring av kartlogik */
+#mapPage .mappage{
+  --map-bg:#090806;
+  --map-panel:#12100c;
+  --map-panel-2:#1a150f;
+  --map-bronze:#b78948;
+  --map-bronze-bright:#d3a45b;
+  --map-bronze-dark:#5c4125;
+  --map-cream:#efe4cf;
+  --map-muted:#b9a78d;
+  padding:14px;
+  border:1px solid rgba(125,91,49,.48);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(119,80,34,.16),transparent 34%),
+    linear-gradient(180deg,#0f0d09,#080705);
+  box-shadow:0 20px 46px rgba(0,0,0,.34),inset 0 0 0 1px rgba(255,238,196,.018);
+}
+
+#mapPage .maphead{
+  align-items:center;
+  margin-bottom:13px;
+  padding:2px 2px 8px;
+  border-bottom:1px solid rgba(142,101,55,.28);
+}
+
+#mapPage .maphead h2{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--map-cream);
+  font:700 28px/1.1 Georgia,"Times New Roman",serif;
+}
+
+#mapPage .map-title-icon{
+  width:34px;
+  height:34px;
+  display:inline-grid;
+  place-items:center;
+  color:#d0a052;
+  filter:drop-shadow(0 0 10px rgba(208,160,82,.14));
+}
+
+#mapPage .map-title-icon svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+#mapPage .map-title-icon path{
+  fill:rgba(182,130,55,.14);
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linejoin:round;
+  stroke-linecap:round;
+}
+
+#mapPage .maptoolbar{
+  margin-bottom:13px;
+  padding:10px;
+  border:1px solid rgba(112,82,47,.56);
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(24,20,14,.96),rgba(13,11,8,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.018);
+}
+
+#mapPage .maptoolbar .btn,
+#mapPage .maphead .btn{
+  border-color:#76562f;
+  background:linear-gradient(180deg,#211b12,#14100b);
+  color:#f0e6d4;
+}
+
+#mapPage .maptoolbar .btn:hover,
+#mapPage .maphead .btn:hover{
+  border-color:#a97a3e;
+}
+
+#mapPage .maptoolbar select{
+  border-color:#76562f;
+  background:#17120d;
+  color:#f0e5d2;
+}
+
+#mapPage .map-current-badge{
+  background:linear-gradient(180deg,#6e512b,#4c371d);
+  color:#f4ddb1;
+  border:1px solid rgba(202,151,78,.44);
+}
+
+#mapPage .mapzoom{
+  color:#dfc79f;
+}
+
+#mapPage .maplegend{
+  color:#b8a88f;
+}
+
+#mapPage .maplegend i{
+  border-color:#87653c;
+}
+
+#mapPage .maplegend .unknown i{
+  background:#0b0907;
+}
+
+#mapPage .maplegend .unexplored i{
+  background:#665744;
+}
+
+#mapPage .maplegend .explored i{
+  background:#c7aa79;
+}
+
+/* Själva ramen */
+#mapPage .mapviewport{
+  isolation:isolate;
+  border:2px solid #a57639;
+  border-radius:14px;
+  background:#0c0805;
+  box-shadow:
+    0 0 0 3px #21170d,
+    0 0 0 5px #644724,
+    0 14px 30px rgba(0,0,0,.42),
+    inset 0 0 46px rgba(36,18,5,.58);
+}
+
+#mapPage .mapviewport::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  z-index:5;
+  pointer-events:none;
+  border:1px solid rgba(211,164,91,.44);
+  border-radius:9px;
+  box-shadow:
+    inset 0 0 0 1px rgba(59,38,18,.78),
+    inset 0 0 28px rgba(48,25,7,.18);
+}
+
+#mapPage .mapviewport::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:4;
+  pointer-events:none;
+  border-radius:12px;
+  box-shadow:
+    inset 0 0 54px rgba(41,21,7,.38),
+    inset 0 0 110px rgba(0,0,0,.18);
+}
+
+/* Kartbilden hålls varm och brun. Overlay/fog påverkas inte. */
+#mapPage .mapimage{
+  filter:sepia(.68) saturate(.90) hue-rotate(349deg) brightness(.92) contrast(1.06);
+}
+
+#mapPage .map-zone.sl-outline{
+  stroke:#d3a45b;
+}
+
+#mapPage .map-zone.sl-outline:hover,
+#mapPage .map-zone.selected{
+  fill:rgba(201,151,77,.12);
+}
+
+#mapPage .mapstatusbar{
+  margin-top:12px;
+  padding:7px 9px;
+  border:1px solid rgba(97,70,40,.38);
+  border-radius:9px;
+  background:rgba(18,14,10,.72);
+  color:#a99578;
+}
+
+#mapPage .map-location-panel{
+  border-color:#6a4c2b;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(101,68,31,.11),transparent 38%),
+    linear-gradient(180deg,#17120d,#0f0c09);
+  box-shadow:0 12px 30px rgba(0,0,0,.26),inset 0 0 0 1px rgba(255,235,191,.015);
+}
+
+#mapPage .map-location-head h3{
+  color:#f1dfbf;
+}
+
+#mapPage .map-location-section{
+  border-top-color:#49351f;
+}
+
+#mapPage .map-location-section h4{
+  color:#d9b677;
+}
+
+#mapPage .map-location-text{
+  color:#dfd2bd;
+}
+
+#mapPage .map-location-gm{
+  background:#1b140d;
+  border-color:#6d4d29;
+}
+
+@media(max-width:700px){
+  #mapPage .mappage{
+    padding:10px;
+    border-radius:14px;
+  }
+
+  #mapPage .maphead h2{
+    font-size:23px;
+  }
+
+  #mapPage .map-title-icon{
+    width:29px;
+    height:29px;
+  }
+
+  #mapPage .maptoolbar{
+    padding:8px;
+  }
+
+  #mapPage .mapviewport{
+    border-radius:11px;
+    box-shadow:
+      0 0 0 2px #21170d,
+      0 0 0 4px #644724,
+      0 10px 24px rgba(0,0,0,.40),
+      inset 0 0 38px rgba(36,18,5,.52);
+  }
+
+  #mapPage .mapviewport::before{
+    inset:4px;
+    border-radius:7px;
+  }
+
+  #mapPage .mapviewport::after{
+    border-radius:9px;
+  }
+}
