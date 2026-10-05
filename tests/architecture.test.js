@@ -25,6 +25,17 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("race registry is wired into character editing", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    expect(html).toContain("data-admin-section=\"races\"");
+    expect(html).toContain("adminCountRaces");
+    expect(legacy).toContain("function loadRuleRaces");
+    expect(legacy).toContain("rule_races?select=*&order=sort_order.asc,name.asc");
+    expect(legacy).toContain("raceOptions(i.ras)");
+    expect(legacy).toContain("function renderAdminRaces");
+  });
+
   test("profession registry is wired into character editing", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
