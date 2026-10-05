@@ -8,6 +8,7 @@ let shopCatalogLoaded=false;
 let shopCategory='Alla';
 let shopSearch='';
 let shopCart=loadShopCart();
+let shopCharacterId='';
 
 function shopEsc(value){
   return String(value??'')
@@ -32,6 +33,70 @@ function loadShopCart(){
 
 function saveShopCart(){
   localStorage.setItem(SHOP_CART_STORAGE_KEY,JSON.stringify(shopCart));
+}
+
+function shopAvailableCharacters(){
+  const user=activeUser();
+  if(!user)return [];
+  return (user.admin||centralCampaignRole==='gm')?(chars||[]):((chars||[]).filter(c=>c.ownerId===user.id));
+}
+
+function shopSelectedCharacter(){
+  return shopAvailableCharacters().find(c=>c.id===shopCharacterId)||null;
+}
+
+function shopMoneyToKm(coins){
+  coins=coins||{};
+  return Math.max(0,Number(coins.GM)||0)*100+Math.max(0,Number(coins.SM)||0)*10+Math.max(0,Number(coins.KM)||0);
+}
+
+function shopKmToCoins(value){
+  const n=Math.max(0,Math.round(Number(value)||0));
+  return {GM:Math.floor(n/100),SM:Math.floor((n%100)/10),KM:n%10};
+}
+
+function shopMoneyLabel(value){
+  const coins=shopKmToCoins(value),parts=[];
+  if(coins.GM)parts.push(coins.GM+' GM');
+  if(coins.SM)parts.push(coins.SM+' SM');
+  if(coins.KM||!parts.length)parts.push(coins.KM+' KM');
+  return parts.join(' ');
+}
+
+function shopItemPriceKm(item){
+  const multiplier={GM:100,SM:10,KM:1}[item?.priceCurrency]||1;
+  return Math.round((Number(item?.priceAmount)||0)*multiplier);
+}
+
+function shopCartTotalKm(){
+  return shopCart.reduce((sum,row)=>{
+    const item=shopItemByKey(row.key);
+    return sum+(item?shopItemPriceKm(item)*Math.max(1,Number(row.qty)||1):0);
+  },0);
+}
+
+function renderShopBuyer(){
+  const select=document.getElementById('shopCharacterSelect');
+  const wallet=document.getElementById('shopWallet');
+  const checkout=document.getElementById('shopCheckout');
+  const allowed=shopAvailableCharacters();
+  if(!allowed.some(c=>c.id===shopCharacterId))shopCharacterId=allowed[0]?.id||'';
+  if(select)select.innerHTML=allowed.length
+    ?allowed.map(c=>'<option value="'+shopEsc(c.id)+'" '+(c.id===shopCharacterId?'selected':'')+'>'+shopEsc(c.identity?.namn||'Namnlös')+'</option>').join('')
+    :'<option value="">Ingen tillgänglig rollperson</option>';
+  const buyer=shopSelectedCharacter(),balance=shopMoneyToKm(buyer?.coins?.carried),total=shopCartTotalKm();
+  if(wallet)wallet.innerHTML=buyer
+    ?'<span>Buret av <b>'+shopEsc(buyer.identity?.namn||'rollpersonen')+'</b></span><strong>'+shopEsc(shopMoneyLabel(balance))+'</strong>'
+    :'<span>Ingen rollperson tillgänglig.</span>';
+  if(checkout){
+    checkout.disabled=!buyer||!shopCart.length||total>balance;
+    checkout.textContent=total>balance?'För lite pengar':'Köp hos Targan';
+  }
+}
+
+function shopSelectCharacter(id){
+  shopCharacterId=String(id||'');
+  renderShopBuyer();
 }
 
 function shopWeaponCategoryLabel(category){
@@ -239,16 +304,7 @@ function shopClearCart(){
 }
 
 function shopCartTotals(rows){
-  const totals=new Map();
-  rows.forEach(({item,qty})=>{
-    if(item.priceAmount===null||item.priceAmount===undefined)return;
-    const currency=item.priceCurrency||'SM';
-    totals.set(currency,(totals.get(currency)||0)+Number(item.priceAmount)*qty);
-  });
-  return [...totals.entries()].map(([currency,value])=>{
-    const amount=Number.isInteger(value)?String(value):String(value).replace('.',',');
-    return amount+' '+currency;
-  });
+  return shopMoneyLabel(rows.reduce((sum,{item,qty})=>sum+shopItemPriceKm(item)*qty,0));
 }
 
 function renderShopCart(){
@@ -277,8 +333,8 @@ function renderShopCart(){
       '<button type="button" class="shop-cart-remove" onclick="shopRemoveItem(\''+shopEsc(row.key)+'\')" aria-label="Ta bort '+shopEsc(item.name)+'">×</button>'+
     '</div>'
   ).join('');
-  const totals=shopCartTotals(rows.map(x=>({item:x.item,qty:x.row.qty})));
-  total.textContent=totals.length?totals.join(' · '):'Pris saknas';
+  total.textContent=shopCartTotals(rows.map(x=>({item:x.item,qty:x.row.qty})));
+  renderShopBuyer();
 }
 
 function shopSetCategory(name){
@@ -290,6 +346,95 @@ function shopSetCategory(name){
 function shopSetSearch(value){
   shopSearch=String(value||'');
   renderShopItems();
+}
+
+function shopAddPurchasedItem(character,item,qty){
+  ensureEquipmentState(character);
+  character.projectiles=character.projectiles||[];
+  qty=Math.max(1,Number(qty)||1);
+
+  if(item.source==='weapon'){
+    const rule=(ruleWeapons||[]).find(row=>row.id===item.sourceId);
+    if(!rule)return;
+    for(let i=0;i<qty;i++){
+      const weapon={equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',fv:0,erf:0};
+      copyRuleWeaponToInstance(weapon,rule);
+      character.weapons.push(weapon);
+    }
+    return;
+  }
+
+  const meta=item.metadata||{};
+  if(item.purchaseKind==='projectile'){
+    const name=meta.projectile_name||item.name;
+    const units=Math.max(1,Number(item.quantityPerPurchase)||1)*qty;
+    const existing=character.projectiles.find(x=>(x.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);
+    if(existing)existing.count=Math.max(0,Number(existing.count)||0)+units;
+    else character.projectiles.push({name,count:units});
+    return;
+  }
+
+  if(item.purchaseKind==='armor'){
+    for(let i=0;i<qty;i++)character.armor.push({
+      equipId:newEquipItemId('armor'),shopItemId:item.sourceId,name:item.name,
+      material:'Standard',materialKey:'standard',abs:Number(meta.abs)||0,
+      bep:item.bep==null?'':Number(item.bep),baseAbs:Number(meta.abs)||0,
+      baseBep:item.bep==null?0:Number(item.bep),magicBlocking:false
+    });
+    return;
+  }
+
+  if(item.purchaseKind==='shield'){
+    for(let i=0;i<qty;i++)character.shields.push({
+      equipId:newEquipItemId('shield'),shopItemId:item.sourceId,name:item.name,fv:0,erf:0,
+      bep:item.bep==null?'':Number(item.bep),abs:Number(meta.abs)||0,
+      strengthGroup:Number(meta.strength_group)||null
+    });
+    return;
+  }
+
+  const existing=character.equipment.find(x=>x.shopItemId===item.sourceId);
+  if(existing)existing.count=Math.max(1,Number(existing.count)||1)+qty;
+  else character.equipment.push({
+    equipId:newEquipItemId('equipment'),shopItemId:item.sourceId,shopCategory:item.category,
+    name:item.name,bep:item.bep==null?0:Number(item.bep),count:qty
+  });
+}
+
+async function checkoutShopCart(){
+  const buyer=shopSelectedCharacter();
+  if(!buyer||!shopCart.length)return;
+  const total=shopCartTotalKm();
+  const balance=shopMoneyToKm(buyer.coins?.carried);
+  if(total>balance){
+    alert('Rollpersonen har inte tillräckligt med burna pengar.');
+    return;
+  }
+  const units=shopCart.reduce((sum,row)=>sum+(Number(row.qty)||0),0);
+  if(!await askConfirm('Handla hos Targan',units+' varor för '+shopMoneyLabel(total)+'?','Köp'))return;
+
+  const index=chars.findIndex(c=>c.id===buyer.id);
+  const snapshot=JSON.parse(JSON.stringify(buyer));
+  try{
+    shopCart.forEach(row=>{
+      const item=shopItemByKey(row.key);
+      if(item)shopAddPurchasedItem(buyer,item,row.qty);
+    });
+    buyer.coins=buyer.coins||{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}};
+    buyer.coins.carried=shopKmToCoins(balance-total);
+    localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));
+    await syncCharacterToCentral(buyer);
+    shopCart=[];
+    saveShopCart();
+    if(current?.id===buyer.id)current=buyer;
+    renderShopCart();
+    showBackupToast('✓ Köpet genomfört hos Targan');
+  }catch(error){
+    if(index>=0)chars[index]=snapshot;
+    if(current?.id===snapshot.id)current=chars[index];
+    localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));
+    alert('Köpet kunde inte genomföras: '+(error?.message||error));
+  }
 }
 
 async function openShop(){
@@ -305,6 +450,7 @@ async function openShop(){
   document.body.classList.add('shop-open');
   try{
     await loadShopCatalog();
+    if(centralCampaignRole==null&&centralCampaignId)await loadCampaignMapRole();
     renderShopCategories();
     renderShopItems();
     renderShopCart();
