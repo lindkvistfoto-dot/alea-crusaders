@@ -1160,8 +1160,8 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 
 /* v0.31.4 — startpositioner för stridsscener */
-.scene-combatant-row[draggable="true"]{cursor:grab}
-.scene-combatant-row.dragging{opacity:.55}
+.scene-combatant-drag{cursor:grab;user-select:none}
+.scene-combatant-drag.dragging{opacity:.55}
 .scene-combatant-row.placement-active{border-color:#d2a64f;background:#251e14}
 .scene-combatant-position.placed{color:#a9c48d}.scene-combatant-position.unplaced{color:#bd8a78}
 .scene-placement-count{display:block;color:#9f8c72;margin-top:2px}
