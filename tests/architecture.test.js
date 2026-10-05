@@ -388,6 +388,16 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("if(rule)return 'rule:'+rule.id");
   });
 
+  test("legacy actor weapons are backfilled from master without replacing overrides", () => {
+    const sql = read("supabase/migrations/20261005185623_backfill_weapon_master_instances.sql");
+    expect(sql).toContain("'weaponTypeId', r.id");
+    expect(sql).toContain("coalesce(nullif(e.item->>'damage',''),r.damage)");
+    expect(sql).toContain("when lower(e.item->>'name')='stav' then 'trästav'");
+    expect(sql).toContain("update public.characters");
+    expect(sql).toContain("update public.campaign_npcs");
+    expect(sql).toContain("update public.campaign_monsters");
+  });
+
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
     expect(html).toContain("Alea Crusaders v0.31.21");
