@@ -1320,7 +1320,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 
 
-/* v0.31.12 — rasregler + mobil SLP */
+/* v0.31.13 — rasregler + mobil SLP */
 .adminracetable{grid-template-columns:minmax(150px,1fr) minmax(110px,.75fr) minmax(125px,.85fr) 100px}
 .race-rule-summary{font-size:12px;color:#cdbb99}
 .race-attribute-editor{display:grid;gap:6px;margin-top:6px}
