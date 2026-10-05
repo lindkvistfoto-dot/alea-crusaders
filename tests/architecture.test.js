@@ -231,4 +231,22 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain("overflow:hidden");
   });
 
+  test("combat scene map surface is the image picker", () => {
+    const combat = read("features/combat/admin-scenes.js");
+    expect(combat).toContain('class="event-combat-map-picker"');
+    expect(combat).toContain(">Välj kartbild</b>");
+    expect(combat).toContain(">Byt kartbild</button>");
+    expect(combat).toContain("ecSceneMapFile");
+    expect(combat).not.toContain("Eller välj befintlig karta");
+  });
+
+  test("combat scene mobile editor avoids horizontal scrolling", () => {
+    const css = read("src/styles/app.css");
+    expect(css).toContain(".admineditor.event-combat-editor{\n width:100%;");
+    expect(css).toContain("overflow-x:hidden");
+    expect(css).toContain(".event-combat-compact-toolbar,\n .event-combat-terrain-row{\n  flex-wrap:wrap;");
+    expect(css).toContain(".scene-combatant-strip{\n  flex-wrap:wrap;\n  overflow-x:hidden;");
+    expect(css).toContain(".scene-combatant-chip{\n  flex:1 1 120px;\n  min-width:0;");
+  });
+
 });
