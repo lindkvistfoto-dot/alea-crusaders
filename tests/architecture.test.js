@@ -55,6 +55,14 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("mobile home shows the current app version below Administration", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    expect(html).toContain('id="mobileHomeVersion"');
+    expect(html).toContain("Version v0.31.9");
+    expect(legacy).toContain("dst.textContent='Version '+src.textContent");
+  });
+
   test("SLP admin supports full mini-character editing", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
