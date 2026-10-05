@@ -1,6 +1,4 @@
-/* Targans Gille — player-facing shop browser and cart.
- * Step 1 deliberately stops before checkout mutates character inventories.
- */
+/* Targans Gille — player-facing shop browser, cart and character checkout. */
 const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1';
 const SHOP_CURRENCY_KM={GM:100,SM:10,KM:1};
 const SHOP_CATEGORY_ORDER=['Alla','Vapen','Rustning','Sköld','Vapentillbehör','Äventyr','Proviant','Behållare','Verktyg','Kläder','Transport'];
