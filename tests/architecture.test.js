@@ -398,11 +398,46 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("update public.campaign_monsters");
   });
 
-  test("weapon master and instance update bumps cache version", () => {
+  test("Targans Gille has a versioned buyable catalog", () => {
+    const sql = read("supabase/migrations/20261005192103_targans_gille_shop_catalog.sql");
+    expect(sql).toContain("create table if not exists public.rule_shop_items");
+    expect(sql).toContain("('rope_10m','Äventyr','Rep, 10 m'");
+    expect(sql).toContain("('travel_rations_day','Proviant','Reseproviant, 1 dag'");
+    expect(sql).toContain("('shield_large','Sköld','Stor sköld'");
+    expect(sql).toContain("price_currency in ('GM','SM','KM')");
+    expect(sql).toContain("for select to authenticated using (true)");
+  });
+
+  test("Targans Gille shop reuses the weapon master and supports cart checkout", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.21");
-    expect(html).toContain("app.css?v=0.31.21");
-    expect(html).toContain("legacy/app.js?v=0.31.21");
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    expect(html).toContain('id="shopPage"');
+    expect(html).toContain('id="shopCharacterSelect"');
+    expect(html).toContain('id="shopCart"');
+    expect(html).toContain("checkoutShopCart()");
+    expect(legacy).toContain("function shopCatalogRows");
+    expect(legacy).toContain("let weapons=(ruleWeapons||[]).filter");
+    expect(legacy).toContain("function addShopCart");
+    expect(legacy).toContain("async function checkoutShopCart");
+    expect(legacy).toContain("copyRuleWeaponToInstance(w,row.rule)");
+    expect(legacy).toContain("GM:100,SM:10,KM:1");
+    expect(legacy).toContain("c.coins.carried=shopKmToCoins(balance-total)");
+    expect(css).toContain(".shoplayout{display:grid");
+    expect(css).toContain('url("./../../assets/targans-gille-shop.webp")');
+  });
+
+  test("shop checkout preserves stacked equipment burden", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("existing.count=Math.max(1,Number(existing.count)||1)+qty");
+    expect(legacy).toContain("bepNumber(x.bep)*Math.max(1,Number(x.count)||1)");
+  });
+
+  test("Targans Gille release bumps cache version", () => {
+    const html = read("index.html");
+    expect(html).toContain("Alea Crusaders v0.32.0");
+    expect(html).toContain("app.css?v=0.32.0");
+    expect(html).toContain("legacy/app.js?v=0.32.0");
   });
 
 });
