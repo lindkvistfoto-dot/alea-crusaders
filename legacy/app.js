@@ -655,12 +655,12 @@ function editCampaignNpc(id){
  $('adminEditor').classList.remove('hidden');
 }
 async function saveCampaignNpc(id){
- id=id||'';let name=$('cnName').value.trim();if(!name){alert('Namn måste anges.');return}
+ id=id||adminCombatIconDraft?.id||'';let name=$('cnName').value.trim();if(!name){alert('Namn måste anges.');return}
  let body={campaign_id:centralCampaignId,name:name,title:$('cnTitle').value,current_location_id:$('cnLocation').value||null,description:$('cnDesc').value,gm_notes:$('cnNotes').value,player_visible:$('cnVisible').checked,active:$('cnActive').checked,updated_at:new Date().toISOString()};if(!id)body.created_by=supabaseSession.user.id;
  try{
   let savedId=id;
   if(id)await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(body)});
-  else{let rows=await dbJson('campaign_npcs',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||''}
+  else{let rows=await dbJson('campaign_npcs',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||'';if(adminCombatIconDraft)adminCombatIconDraft.id=savedId}
   if(!savedId)throw new Error('Kunde inte fastställa SLP:ns id.');
   if(adminCombatIconDraft?.changed){let path=await persistAdminCombatIcon(savedId);await dbJson('campaign_npcs?id=eq.'+encodeURIComponent(savedId),{method:'PATCH',body:JSON.stringify({combat_icon_path:path||null,updated_at:new Date().toISOString()})})}
   closeAdminEditor();await loadCampaignContentData();renderAdminCampaignContent()
@@ -678,12 +678,12 @@ function editCampaignMonster(id){
  $('adminEditor').classList.remove('hidden');
 }
 async function saveCampaignMonster(id){
- id=id||'';let name=$('cmName').value.trim();if(!name){alert('Namn måste anges.');return}
+ id=id||adminCombatIconDraft?.id||'';let name=$('cmName').value.trim();if(!name){alert('Namn måste anges.');return}
  let body={campaign_id:centralCampaignId,name:name,monster_type:$('cmType').value,quantity:Math.max(0,Number($('cmQty').value)||0),current_location_id:$('cmLocation').value||null,description:$('cmDesc').value,gm_notes:$('cmNotes').value,player_visible:$('cmVisible').checked,active:$('cmActive').checked,updated_at:new Date().toISOString()};if(!id)body.created_by=supabaseSession.user.id;
  try{
   let savedId=id;
   if(id)await dbJson('campaign_monsters?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(body)});
-  else{let rows=await dbJson('campaign_monsters',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||''}
+  else{let rows=await dbJson('campaign_monsters',{method:'POST',body:JSON.stringify(body)});savedId=rows?.[0]?.id||'';if(adminCombatIconDraft)adminCombatIconDraft.id=savedId}
   if(!savedId)throw new Error('Kunde inte fastställa fiendens id.');
   if(adminCombatIconDraft?.changed){let path=await persistAdminCombatIcon(savedId);await dbJson('campaign_monsters?id=eq.'+encodeURIComponent(savedId),{method:'PATCH',body:JSON.stringify({combat_icon_path:path||null,updated_at:new Date().toISOString()})})}
   closeAdminEditor();await loadCampaignContentData();renderAdminCampaignContent()
@@ -933,13 +933,13 @@ async function handleCharacterCombatIconFile(file){
   if(!current._dbId)await syncCharacterToCentral(current);
   if(!current._dbId)throw new Error('Rollpersonen kunde inte sparas centralt.');
   let res=await uploadCombatIconAsset('character',current._dbId,file,current.combatIconPath||'');
-  current.combatIconPath=res.path;save();render()
+  current.combatIconPath=res.path;save();await syncCharacterToCentral(current);render()
  }catch(e){alert('Kunde inte spara stridsikonen: '+e.message)}
  finally{if($('combatIconFile'))$('combatIconFile').value=''}
 }
 async function removeCharacterCombatIcon(){
  if(!current?.combatIconPath)return;
- try{await deleteCombatIconAsset(current.combatIconPath);current.combatIconPath='';save();render()}
+ try{await deleteCombatIconAsset(current.combatIconPath);current.combatIconPath='';save();await syncCharacterToCentral(current);render()}
  catch(e){alert('Kunde inte ta bort stridsikonen: '+e.message)}
 }
 function resetAdminCombatIconDraft(){
@@ -948,7 +948,7 @@ function resetAdminCombatIconDraft(){
 }
 function beginAdminCombatIconDraft(entityType,id,path){
  resetAdminCombatIconDraft();adminCombatIconDraft={entityType,id:id||'',oldPath:path||'',path:path||'',file:null,remove:false,previewUrl:'',changed:false};
- if(path)getCombatIconUrl(path).then(url=>{if(adminCombatIconDraft&&adminCombatIconDraft.oldPath===path){adminCombatIconDraft.previewUrl=url;refreshAdminCombatIconPreview()}}).catch(e=>console.warn('Kunde inte läsa stridsikon',e))
+ if(path)getCombatIconUrl(path).then(()=>{if(adminCombatIconDraft&&adminCombatIconDraft.oldPath===path)refreshAdminCombatIconPreview()}).catch(e=>console.warn('Kunde inte läsa stridsikon',e))
 }
 function adminCombatIconPickerHtml(type){
  return '<div class="admin-combat-icon-picker"><div><b>Stridsikon</b><small>Visas som hexpjäs på stridskartan.</small></div><div class="admin-combat-icon-row"><div id="adminCombatIconPreview">'+combatIconHexHtml(adminCombatIconDraft?.previewUrl||combatIconCachedUrl(adminCombatIconDraft?.path),type,type==='npc'?'SLP':'Fiende')+'</div><div class="admin-combat-icon-actions"><button class="smallbtn" type="button" onclick="$(\'adminCombatIconFile\').click()">Välj bild</button><button id="adminCombatIconReset" class="smallbtn '+(adminCombatIconDraft?.path?'':'hidden')+'" type="button" onclick="removeAdminCombatIconDraft()">Schablon</button><input id="adminCombatIconFile" class="hidden" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleAdminCombatIconFile(this.files&&this.files[0]);this.value=\'\'"></div></div></div>'
