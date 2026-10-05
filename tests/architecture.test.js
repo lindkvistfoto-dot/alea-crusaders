@@ -55,6 +55,19 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("combat icons are sourced from actors and rendered as hex tokens", () => {
+    const legacy = read("legacy/app.js");
+    const combat = read("features/combat/admin-scenes.js");
+    expect(legacy).toContain("combat-icons");
+    expect(legacy).toContain("function handleCharacterCombatIconFile");
+    expect(legacy).toContain("function adminCombatIconPickerHtml");
+    expect(legacy).toContain("combat_icon_path");
+    expect(combat).toContain("function sceneCombatantIconPath");
+    expect(combat).toContain("function loadEventCombatCombatantIcons");
+    expect(combat).toContain("ec-token-border");
+    expect(combat).toContain("eventCombatHexPolygon(0,0,tokenSize)");
+  });
+
   test("combat scene editor uses compact map controls and reserve strip", () => {
     const combat = read("features/combat/admin-scenes.js");
     expect(combat).toContain("event-combat-compact-toolbar");
