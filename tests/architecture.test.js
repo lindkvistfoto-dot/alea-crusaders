@@ -401,9 +401,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.22");
-    expect(html).toContain("app.css?v=0.31.22");
-    expect(html).toContain("legacy/app.js?v=0.31.22");
+    expect(html).toContain("Alea Crusaders v0.31.23");
+    expect(html).toContain("app.css?v=0.31.23");
+    expect(html).toContain("legacy/app.js?v=0.31.23");
   });
 
 
@@ -414,8 +414,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.22");
-    expect(html).toContain("./features/shop/store.js?v=0.31.22");
+    expect(html).toContain("./features/shop/store.css?v=0.31.23");
+    expect(html).toContain("./features/shop/store.js?v=0.31.23");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -435,6 +435,46 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("'Rustning'");
     expect(sql).toContain("on conflict (item_key) do update");
     expect(sql).toContain("grant select, insert, update, delete on table public.rule_shop_items to authenticated");
+  });
+
+
+  test("Targans Gille checkout uses carried coins and existing character inventories", () => {
+    const html = read("index.html");
+    const shop = read("features/shop/store.js");
+    const css = read("features/shop/store.css");
+    expect(html).toContain('id="shopBuyerSelect"');
+    expect(html).toContain('id="shopBuyerBalance"');
+    expect(html).toContain('id="shopCheckoutBtn"');
+    expect(html).toContain("1 GM = 10 SM = 100 KM");
+    expect(shop).toContain("const SHOP_CURRENCY_KM={GM:100,SM:10,KM:1}");
+    expect(shop).toContain("String(c.ownerId||'')===String(u.id)");
+    expect(shop).toContain("function shopSpendCarriedCoins");
+    expect(shop).toContain("function shopAddPurchasedItem");
+    expect(shop).toContain("copyRuleWeaponToInstance(w,rule)");
+    expect(shop).toContain("fv:10");
+    expect(shop).toContain("item.purchaseKind==='projectile'");
+    expect(shop).toContain("c.armor.push(shopArmorInstance(item))");
+    expect(shop).toContain("c.shields.push({");
+    expect(shop).toContain("c.equipment.push({");
+    expect(shop).toContain("await syncCharacterToCentral(draft)");
+    expect(shop).toContain("shopSpendCarriedCoins(draft,cost)");
+    expect(css).toContain(".shop-checkout{");
+    expect(css).toContain(".shop-insufficient{");
+  });
+
+  test("Targans Gille checkout keeps default FV 10 for bought weapons and shields", () => {
+    const shop = read("features/shop/store.js");
+    const weaponStart = shop.indexOf("if(item.source==='weapon'||item.purchaseKind==='weapon')");
+    const projectileStart = shop.indexOf("if(item.purchaseKind==='projectile')", weaponStart);
+    const weaponBlock = shop.slice(weaponStart, projectileStart);
+    expect(weaponStart).toBeGreaterThan(-1);
+    expect(projectileStart).toBeGreaterThan(weaponStart);
+    expect(weaponBlock).toContain("fv:10");
+    expect(weaponBlock).toContain("w.fv=10");
+    const shieldStart = shop.indexOf("if(item.purchaseKind==='shield')");
+    const equipmentStart = shop.indexOf("c.equipment=c.equipment||[]", shieldStart);
+    const shieldBlock = shop.slice(shieldStart, equipmentStart);
+    expect(shieldBlock).toContain("fv:10");
   });
 
 });
