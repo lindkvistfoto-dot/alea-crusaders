@@ -18,6 +18,7 @@ describe("application architecture smoke checks", () => {
     const files = [
       "features/combat/admin-scenes.js",
       "features/combat/runtime.js",
+      "features/shop/store.js",
       "legacy/app.js",
     ];
     for (const file of files) {
@@ -400,9 +401,40 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.21");
-    expect(html).toContain("app.css?v=0.31.21");
-    expect(html).toContain("legacy/app.js?v=0.31.21");
+    expect(html).toContain("Alea Crusaders v0.31.22");
+    expect(html).toContain("app.css?v=0.31.22");
+    expect(html).toContain("legacy/app.js?v=0.31.22");
+  });
+
+
+  test("Targans Gille is a player-facing shop with a persistent cart", () => {
+    const html = read("index.html");
+    const shop = read("features/shop/store.js");
+    const css = read("features/shop/store.css");
+    expect(html).toContain('id="shopNavBtn"');
+    expect(html).toContain('id="shopPage"');
+    expect(html).toContain('id="shopCartLines"');
+    expect(html).toContain("./features/shop/store.css?v=0.31.22");
+    expect(html).toContain("./features/shop/store.js?v=0.31.22");
+    expect(shop).toContain("rule_shop_items?active=eq.true");
+    expect(shop).toContain("loadRuleWeapons(force)");
+    expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
+    expect(shop).toContain("function shopAddItem");
+    expect(shop).toContain("function shopChangeQuantity");
+    expect(shop).toContain("function shopClearCart");
+    expect(css).toContain(".shop-layout{display:grid");
+  });
+
+  test("Targans Gille catalogue is versioned without duplicating weapon masters", () => {
+    const sql = read("supabase/migrations/20261005213000_targans_gille_shop_catalog.sql");
+    expect(sql).toContain("create table if not exists public.rule_shop_items");
+    expect(sql).toContain("Weapons are intentionally NOT duplicated here");
+    expect(sql).toContain("insert into public.rule_shop_items");
+    expect(sql).toContain("'Pilar, 20 st'");
+    expect(sql).toContain("'Liten ryggsäck'");
+    expect(sql).toContain("'Rustning'");
+    expect(sql).toContain("on conflict (item_key) do update");
+    expect(sql).toContain("grant select, insert, update, delete on table public.rule_shop_items to authenticated");
   });
 
 });
