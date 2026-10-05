@@ -1175,3 +1175,58 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .ec-combatant-token.player circle{fill:#376a92}.ec-combatant-token.npc circle{fill:#6d6b73}.ec-combatant-token.enemy circle{fill:#9a493e}.ec-combatant-token.monster circle{fill:#70478c}
 .ec-combatant-token.active circle{stroke:#ffd36f;stroke-width:4}
 @media(max-width:520px){.scene-combatant-row{grid-template-columns:auto minmax(0,1fr)}.scene-combatant-actions{grid-column:1/-1;justify-content:flex-start}.scene-placement-help{font-size:13px}}
+
+
+/* v0.31.5 — kompakt stridsscensverktyg */
+.event-combat-compact-toolbar,.event-combat-terrain-row{
+ display:flex;align-items:center;gap:5px;min-height:36px;padding:5px 6px;
+ border:1px solid rgba(184,145,82,.28);background:#171310
+}
+.event-combat-compact-toolbar{border-radius:9px 9px 0 0;margin-top:5px}
+.event-combat-terrain-row{border-top:0;border-radius:0 0 9px 9px;margin-bottom:7px;overflow-x:auto}
+.event-combat-compact-toolbar .smallbtn,.event-combat-terrain-row .smallbtn{padding:5px 8px;min-height:28px;margin:0;white-space:nowrap}
+.event-combat-brush-compact{display:flex;align-items:center;gap:4px;color:#a99476;font-size:11px;white-space:nowrap}
+.event-combat-brush-compact select{height:28px;min-width:48px;padding:2px 4px;background:#100d0b;color:#f0dfc1;border:1px solid #765b38;border-radius:6px}
+.event-combat-toolbar-spacer{flex:1 1 auto;min-width:8px}
+.event-combat-row-label{font-weight:850;color:#ead7b8;margin-right:3px;white-space:nowrap}
+.event-combat-mini-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8f7d65;margin-left:2px;white-space:nowrap}
+.event-combat-terrain-divider{width:1px;height:22px;background:rgba(184,145,82,.28);margin:0 3px;flex:0 0 auto}
+.event-combat-selected-compact{font-size:11px;color:#a99476;white-space:nowrap}
+.event-combat-terrain-row .terrain-choice.active{background:#5b431d;border-color:#d5aa58;color:#fff1cf}
+.event-combat-terrain-row .event-combat-apply-terrain{font-weight:800}
+.ec-hex.token-drop-target{fill:rgba(255,211,111,.28);stroke:#ffd36f;stroke-width:4}
+
+.scene-combatants-compact{padding:7px 8px;border-radius:9px;background:#171310}
+.scene-combatants-compact-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.scene-combatants-compact-head>div:first-child{display:flex;align-items:baseline;gap:8px;min-width:0}
+.scene-combatants-compact-head b{color:#ead7b8}
+.scene-combatants-compact-head small{color:#8f7d65;white-space:nowrap}
+.scene-combatants-compact-actions{display:flex;gap:5px}
+.scene-combatants-compact-actions .smallbtn{margin:0;padding:5px 8px}
+.scene-combatant-strip{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:2px 0 5px}
+.scene-combatant-chip{flex:0 0 auto;min-width:112px;max-width:150px;border:1px solid rgba(184,145,82,.24);border-radius:8px;background:#100d0b}
+.scene-combatant-chip.reserve{border-style:dashed}
+.scene-combatant-chip.placement-active{border-color:#d5aa58;box-shadow:inset 0 0 0 1px rgba(213,170,88,.35)}
+.scene-combatant-chip-main{display:flex;align-items:center;gap:7px;width:100%;min-height:42px;padding:5px 7px;border:0;background:transparent;color:#ead7b8;text-align:left;cursor:grab}
+.scene-combatant-chip-main.dragging{opacity:.55}
+.scene-combatant-chip-token{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:2px solid #f0dfc1;color:#fff;font-weight:900;font-size:11px;flex:0 0 auto}
+.scene-combatant-chip.player .scene-combatant-chip-token{background:#376a92}
+.scene-combatant-chip.npc .scene-combatant-chip-token{background:#6d6b73}
+.scene-combatant-chip.enemy .scene-combatant-chip-token{background:#9a493e}
+.scene-combatant-chip.monster .scene-combatant-chip-token{background:#70478c}
+.scene-combatant-chip-copy{min-width:0;display:grid;gap:1px}
+.scene-combatant-chip-copy b{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scene-combatant-chip-copy small{font-size:10px;color:#9f8c72}
+.scene-combatant-chip.reserve .scene-combatant-chip-copy small{color:#c18c76;font-weight:750}
+.scene-combatant-strip-note{font-size:11px;color:#8f7d65;line-height:1.35}
+.scene-combatant-picker,.scene-combatant-manage-list{margin-top:8px;padding-top:8px;border-top:1px solid rgba(184,145,82,.2)}
+.scene-combatant-manage-list{display:grid;gap:5px}
+.event-combat-canvas.token-dragging{cursor:grabbing}
+
+@media(max-width:720px){
+ .event-combat-compact-toolbar{overflow-x:auto}
+ .event-combat-toolbar-spacer{display:none}
+ .event-combat-zoom{margin-left:auto}
+ .scene-combatants-compact-head{align-items:flex-start}
+ .scene-combatants-compact-head>div:first-child{display:grid;gap:1px}
+}

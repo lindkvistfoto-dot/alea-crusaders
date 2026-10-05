@@ -55,6 +55,17 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("combat scene editor uses compact map controls and reserve strip", () => {
+    const combat = read("features/combat/admin-scenes.js");
+    expect(combat).toContain("event-combat-compact-toolbar");
+    expect(combat).toContain("event-combat-terrain-row");
+    expect(combat).toContain("scene-combatant-strip");
+    expect(combat).toContain("Reserv");
+    expect(combat).toContain("function eventCombatTokenDropHighlight");
+    expect(combat).toContain("tokenDrag");
+    expect(combat.indexOf('id="eventCombatCanvas"')).toBeLessThan(combat.indexOf('id="sceneCombatantsMount"'));
+  });
+
   test("combat scene start positions support drag and click placement", () => {
     const combat = read("features/combat/admin-scenes.js");
     expect(combat).toContain("start_q");
@@ -63,7 +74,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function sceneCombatantMapDrop");
     expect(combat).toContain("function placeSceneCombatantAtHex");
     expect(combat).toContain("ec-combatant-token");
-    expect(combat).toContain("Dra en kombatant till kartan");
+    expect(combat).toContain("Dra en ikon till en hex");
   });
 
   test("combat code is owned by combat packages", () => {

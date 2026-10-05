@@ -84,7 +84,7 @@ async function openCampaignCombatSceneEditor(sceneId,presetEventId){
    originalBackgroundPath:backgroundPath,pendingUploadPath:'',settings,hexes:hexMap,selected:new Set(),imageUrl:'',dirty:false,
    characters:Array.isArray(characterRows)?characterRows:[],
    combatants:(combatantRows||[]).map(x=>({...x,isNew:false})),
-   deletedCombatantIds:new Set(),combatantPickerOpen:false,editingCombatantId:null,placementCombatantId:null,dragCombatantId:null,
+   deletedCombatantIds:new Set(),combatantPickerOpen:false,combatantManageOpen:false,editingCombatantId:null,placementCombatantId:null,dragCombatantId:null,tokenDrag:null,
    tool:null,brushRadius:0,terrainMovement:'free',terrainSight:'clear',zoom:1,paintPointerId:null,paintLastKey:null,pan:null,gesturePointers:new Map(),pinch:null
   };
   renderEventCombatMapEditor();
@@ -220,21 +220,37 @@ function sceneCombatantPickerHtml(st){
   '<div class="scene-combatant-picker-actions"><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">Avbryt</button><button class="smallbtn" type="button" onclick="addSelectedSceneCombatants()">Lägg till markerade</button></div>'+
  '</div>'
 }
+function sceneCombatantStripItemHtml(c){
+ let st=eventCombatEditorState,placed=c.start_q!=null&&c.start_r!=null,active=st?.placementCombatantId===c.id;
+ let type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc';
+ let status=placed?('Hex '+c.start_q+','+c.start_r):'Reserv';
+ return '<div class="scene-combatant-chip '+type+(placed?' placed':' reserve')+(active?' placement-active':'')+'" title="'+escAttr((c.name||'Kombatant')+' · '+status)+'">'+
+  '<button class="scene-combatant-chip-main" type="button" draggable="true" onclick="selectSceneCombatantForPlacement(\''+c.id+'\')" ondragstart="sceneCombatantDragStart(event,\''+c.id+'\')" ondragend="sceneCombatantDragEnd(event)" aria-label="'+escAttr((placed?'Flytta ':'Placera ')+(c.name||'kombatant'))+'">'+
+   '<span class="scene-combatant-chip-token">'+escAttr(sceneCombatantTokenLabel(c))+'</span>'+
+   '<span class="scene-combatant-chip-copy"><b>'+escAttr(c.name||'Kombatant')+'</b><small>'+status+'</small></span>'+
+  '</button>'+
+ '</div>'
+}
 function eventCombatCombatantsHtml(st){
- let rows=(st.combatants||[]).map(sceneCombatantRowHtml).join('');
- let placed=(st.combatants||[]).filter(c=>c.start_q!=null&&c.start_r!=null).length,total=(st.combatants||[]).length;
- return '<section class="scene-combatants">'+
-  '<div class="scene-combatants-head"><div><h3>Kombatanter</h3><small class="scene-placement-count">'+placed+' / '+total+' placerade</small></div><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">+ Lägg till kombatanter</button></div>'+
-  '<div class="scene-placement-help">Dra en kombatant till kartan, eller tryck <b>⌖</b> och därefter på önskad hex. En hex kan ha en startande kombatant.</div>'+
-  '<div id="sceneCombatantList" class="scene-combatant-list">'+(rows||'<div class="scene-participant-empty">Inga kombatanter valda.</div>')+'</div>'+
-  (st.combatantPickerOpen?sceneCombatantPickerHtml(st):'')+
+ let placed=(st.combatants||[]).filter(c=>c.start_q!=null&&c.start_r!=null).length,total=(st.combatants||[]).length,reserve=total-placed;
+ let chips=(st.combatants||[]).map(sceneCombatantStripItemHtml).join('');
+ let manage=(st.combatantManageOpen?'<div class="scene-combatant-manage-list">'+((st.combatants||[]).map(sceneCombatantRowHtml).join('')||'<div class="scene-participant-empty">Inga kombatanter valda.</div>')+'</div>':'');
+ return '<section class="scene-combatants scene-combatants-compact">'+
+  '<div class="scene-combatants-compact-head"><div><b>Kombatanter</b><small>'+placed+' placerade · '+reserve+' reserv</small></div><div class="scene-combatants-compact-actions">'+
+   '<button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">+ Lägg till</button>'+
+   (total?'<button class="smallbtn" type="button" onclick="toggleSceneCombatantManager()">'+(st.combatantManageOpen?'Stäng':'Hantera')+'</button>':'')+
+  '</div></div>'+
+  '<div class="scene-combatant-strip">'+(chips||'<div class="scene-participant-empty">Inga kombatanter. Lägg till spelare, SLP eller fiender.</div>')+'</div>'+
+  '<div class="scene-combatant-strip-note">Dra en ikon till en hex. Oplacerade kombatanter ligger <b>i reserv</b> och placeras av SL när de sätts in i striden.</div>'+
+  (st.combatantPickerOpen?sceneCombatantPickerHtml(st):'')+manage+
  '</section>'
 }
 function renderSceneCombatantsSection(){
  let st=eventCombatEditorState,old=$('sceneCombatantsMount');if(!st||!old)return;
  old.innerHTML=eventCombatCombatantsHtml(st)
 }
-function toggleSceneCombatantPicker(){let st=eventCombatEditorState;if(!st)return;st.combatantPickerOpen=!st.combatantPickerOpen;st.editingCombatantId=null;renderSceneCombatantsSection()}
+function toggleSceneCombatantPicker(){let st=eventCombatEditorState;if(!st)return;st.combatantPickerOpen=!st.combatantPickerOpen;st.combatantManageOpen=false;st.editingCombatantId=null;renderSceneCombatantsSection()}
+function toggleSceneCombatantManager(){let st=eventCombatEditorState;if(!st)return;st.combatantManageOpen=!st.combatantManageOpen;st.combatantPickerOpen=false;st.editingCombatantId=null;renderSceneCombatantsSection()}
 function sceneCombatantTempId(){return 'tmp_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}
 function nextSceneCombatantInstance(sourceType,sourceId){
  let nums=(eventCombatEditorState?.combatants||[]).filter(c=>c.source_type===sourceType&&c.source_id===sourceId).map(c=>Number(c.instance_no)||1);
@@ -264,7 +280,7 @@ function addSelectedSceneCombatants(){
  });
  st.combatantPickerOpen=false;st.dirty=true;renderSceneCombatantsSection()
 }
-function editSceneCombatant(id){let st=eventCombatEditorState;if(!st)return;st.editingCombatantId=id;st.combatantPickerOpen=false;renderSceneCombatantsSection()}
+function editSceneCombatant(id){let st=eventCombatEditorState;if(!st)return;st.editingCombatantId=id;st.combatantPickerOpen=false;st.combatantManageOpen=true;renderSceneCombatantsSection()}
 function cancelSceneCombatantEdit(){if(!eventCombatEditorState)return;eventCombatEditorState.editingCombatantId=null;renderSceneCombatantsSection()}
 function saveSceneCombatantEdit(id){
  let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!c)return;
@@ -385,33 +401,33 @@ function renderEventCombatMapEditor(){
    '<div class="event-combat-derived"><b id="ecRows">'+set.rows+'</b> hexrader · <b>1,5 m</b> per hex</div>'+
    '<details><summary>Finjustera hexnät</summary><div class="event-combat-offsets"><label>Hexstorlek (%)<input id="ecHexScale" type="number" min="50" max="150" step="1" value="'+Math.round((set.hex_scale||1)*100)+'" oninput="eventCombatCalibrationChanged()"></label><label>X-förskjutning<input id="ecOffsetX" type="number" step="1" value="'+set.offset_x+'" oninput="eventCombatCalibrationChanged()"></label><label>Y-förskjutning<input id="ecOffsetY" type="number" step="1" value="'+set.offset_y+'" oninput="eventCombatCalibrationChanged()"></label></div></details>'+
   '</div>'+
-  '<div id="sceneCombatantsMount">'+eventCombatCombatantsHtml(st)+'</div>'+
   '<div id="eventCombatCanvas" class="event-combat-canvas" ondragover="sceneCombatantMapDragOver(event)" ondragleave="sceneCombatantMapDragLeave(event)" ondrop="sceneCombatantMapDrop(event)"><div class="event-combat-loading">Välj eller ladda upp karta…</div></div>'+
-  '<div class="event-combat-drawtools">'+
-    '<button id="ecToolSelect" class="smallbtn '+(st.tool==='select'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='select'?'true':'false')+'" onclick="setEventCombatTool(\'select\')" title="Markera">⬡ Markera</button>'+
-    '<button id="ecToolBrush" class="smallbtn '+(st.tool==='brush'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='brush'?'true':'false')+'" onclick="setEventCombatTool(\'brush\')" title="Pensel">🖌 Pensel</button>'+
-    '<button id="ecToolErase" class="smallbtn '+(st.tool==='erase'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='erase'?'true':'false')+'" onclick="setEventCombatTool(\'erase\')" title="Sudd">⌫ Sudd</button>'+
-    '<label>Penselstorlek <select id="ecBrushSize" onchange="setEventCombatBrushSize(this.value)"><option value="0" '+((st.brushRadius||0)===0?'selected':'')+'>1 hex</option><option value="1" '+((st.brushRadius||0)===1?'selected':'')+'>3 hex</option><option value="2" '+((st.brushRadius||0)===2?'selected':'')+'>5 hex</option></select></label>'+
-    '<button class="smallbtn" type="button" onclick="selectAllEventCombatHexes()">Välj alla</button>'+
-    '<button class="smallbtn" type="button" onclick="clearEventCombatSelection()">Rensa markering</button>'+
+  '<div class="event-combat-compact-toolbar">'+
+    '<button id="ecToolSelect" class="smallbtn '+(st.tool==='select'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='select'?'true':'false')+'" onclick="setEventCombatTool(\'select\')" title="Markera hex">⬡ Markera</button>'+
+    '<button id="ecToolBrush" class="smallbtn '+(st.tool==='brush'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='brush'?'true':'false')+'" onclick="setEventCombatTool(\'brush\')" title="Pensla markering">🖌 Pensel</button>'+
+    '<button id="ecToolErase" class="smallbtn '+(st.tool==='erase'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='erase'?'true':'false')+'" onclick="setEventCombatTool(\'erase\')" title="Sudda terräng">⌫ Sudd</button>'+
+    '<label class="event-combat-brush-compact">Storlek <select id="ecBrushSize" onchange="setEventCombatBrushSize(this.value)"><option value="0" '+((st.brushRadius||0)===0?'selected':'')+'>1</option><option value="1" '+((st.brushRadius||0)===1?'selected':'')+'>3</option><option value="2" '+((st.brushRadius||0)===2?'selected':'')+'>5</option></select></label>'+
+    '<button class="smallbtn" type="button" onclick="selectAllEventCombatHexes()" title="Markera alla hexar">Alla</button>'+
+    '<button class="smallbtn" type="button" onclick="clearEventCombatSelection()" title="Rensa markering">Rensa</button>'+
+    '<div class="event-combat-toolbar-spacer"></div>'+
     '<div class="event-combat-zoom"><button class="smallbtn" type="button" onclick="eventCombatZoomBy(1/1.25)">−</button><span id="ecZoomValue" class="event-combat-zoom-value">'+Math.round((st.zoom||1)*100)+'%</span><button class="smallbtn" type="button" onclick="eventCombatZoomBy(1.25)">+</button><button class="smallbtn" type="button" onclick="eventCombatResetZoom()">100%</button></div>'+
   '</div>'+
-  '<div class="event-combat-tools event-combat-terrain-panel">'+
-    '<div class="event-combat-selection-summary"><b>Markerade hexar:</b> <span id="ecSelectedCount">0</span></div>'+
-    '<div class="event-combat-terrain-choice"><div class="event-combat-terrain-label">Rörelse</div><div class="event-combat-terrain-buttons">'+
-      '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='free'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="free" aria-pressed="'+((st.terrainMovement||'free')==='free'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'free\')">Fri</button>'+
-      '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='difficult'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="difficult" aria-pressed="'+((st.terrainMovement||'free')==='difficult'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'difficult\')">Svår terräng</button>'+
-      '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='blocked'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="blocked" aria-pressed="'+((st.terrainMovement||'free')==='blocked'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'blocked\')">Ogenomtränglig</button>'+
-    '</div></div>'+
-    '<div class="event-combat-terrain-choice"><div class="event-combat-terrain-label">Sikt</div><div class="event-combat-terrain-buttons">'+
-      '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='clear'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="clear" aria-pressed="'+((st.terrainSight||'clear')==='clear'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'clear\')">Fri sikt</button>'+
-      '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='obscuring'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="obscuring" aria-pressed="'+((st.terrainSight||'clear')==='obscuring'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'obscuring\')">Skymmande</button>'+
-      '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='blocked'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="blocked" aria-pressed="'+((st.terrainSight||'clear')==='blocked'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'blocked\')">Blockerad sikt</button>'+
-    '</div></div>'+
+  '<div class="event-combat-terrain-row">'+
+    '<span class="event-combat-row-label">Terräng</span>'+
+    '<span class="event-combat-mini-label">Rörelse</span>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='free'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="free" aria-pressed="'+((st.terrainMovement||'free')==='free'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'free\')">Fri</button>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='difficult'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="difficult" aria-pressed="'+((st.terrainMovement||'free')==='difficult'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'difficult\')">Svår</button>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='blocked'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="blocked" aria-pressed="'+((st.terrainMovement||'free')==='blocked'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'blocked\')">Ogenomtr.</button>'+
+    '<span class="event-combat-terrain-divider"></span>'+
+    '<span class="event-combat-mini-label">Sikt</span>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='clear'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="clear" aria-pressed="'+((st.terrainSight||'clear')==='clear'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'clear\')">Fri</button>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='obscuring'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="obscuring" aria-pressed="'+((st.terrainSight||'clear')==='obscuring'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'obscuring\')">Skymmande</button>'+
+    '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='blocked'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="blocked" aria-pressed="'+((st.terrainSight||'clear')==='blocked'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'blocked\')">Blockerad</button>'+
+    '<div class="event-combat-toolbar-spacer"></div>'+
+    '<span class="event-combat-selected-compact"><span id="ecSelectedCount">0</span> valda</span>'+
     '<button class="smallbtn event-combat-apply-terrain" type="button" onclick="applyEventCombatTerrain()">Tillämpa</button>'+
   '</div>'+
-  '<div class="event-combat-legend"><span class="legend-difficult">▧ Svår terräng</span><span class="legend-move-blocked">✕ Ogenomtränglig</span><span class="legend-obscuring">··· Skymmande sikt</span><span class="legend-sight-blocked">◼ Blockerad sikt</span></div>'+
-  '<div class="event-combat-help"><b>Markera</b> växlar en enskild hex. <b>Pensel</b> målar fram en markering och <b>Sudd</b> återställer hexar till fri rörelse/fri sikt. Markera först, välj därefter rörelse och sikt och tryck <b>Tillämpa</b>. Markeringen ligger kvar efter Tillämpa tills du ändrar eller rensar den. Utan aktivt verktyg kan du panorera och zooma.</div>'+
+  '<div id="sceneCombatantsMount">'+eventCombatCombatantsHtml(st)+'</div>'+
   '<div class="adminformactions"><button class="btn" type="button" onclick="returnToCombatScenes()">← Stridsscener</button><button class="btn primary" type="button" onclick="saveEventCombatMapEditor()">Spara stridsscen</button></div>'+
  '</div>';
  renderEventCombatHexCanvas()
@@ -600,10 +616,19 @@ function eventCombatGestureStart(e){
   st.pan=null
  }
 }
+function eventCombatTokenDropHighlight(key){
+ document.querySelectorAll('#eventCombatCanvas .ec-hex.token-drop-target').forEach(el=>el.classList.remove('token-drop-target'));
+ if(!key)return;
+ let el=document.querySelector('#eventCombatCanvas .ec-hex[data-hex="'+key+'"]');if(el)el.classList.add('token-drop-target')
+}
 function eventCombatPointerDown(e){
  let st=eventCombatEditorState;if(!st||((e.button!=null)&&e.button!==0))return;
  let token=e.target?.closest?.('.ec-combatant-token');
- if(token){e.preventDefault();selectSceneCombatantForPlacement(token.dataset.combatantId);return}
+ if(token){
+  e.preventDefault();
+  st.tokenDrag={pointerId:e.pointerId,combatantId:token.dataset.combatantId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false,hoverKey:''};
+  e.currentTarget.setPointerCapture?.(e.pointerId);return
+ }
  let hex=e.target?.closest?.('.ec-hex');
  if(st.placementCombatantId&&hex){e.preventDefault();placeSceneCombatantAtHex(st.placementCombatantId,hex.dataset.hex);return}
  if(!st.tool){e.preventDefault();eventCombatGestureStart(e);return}
@@ -614,6 +639,17 @@ function eventCombatPointerDown(e){
 }
 function eventCombatPointerMove(e){
  let st=eventCombatEditorState;if(!st)return;
+ if(st.tokenDrag?.pointerId===e.pointerId){
+  e.preventDefault();let d=st.tokenDrag;
+  d.lastX=e.clientX;d.lastY=e.clientY;
+  if(!d.moved&&Math.hypot(e.clientX-d.startX,e.clientY-d.startY)>6)d.moved=true;
+  if(d.moved){
+   $('eventCombatCanvas')?.classList.add('token-dragging');
+   let key=eventCombatHexKeyFromClient(e.clientX,e.clientY);
+   if(key!==d.hoverKey){d.hoverKey=key;eventCombatTokenDropHighlight(key)}
+  }
+  return
+ }
  if(!st.tool){
   if(!(st.gesturePointers instanceof Map)||!st.gesturePointers.has(e.pointerId))return;
   e.preventDefault();st.gesturePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -634,6 +670,17 @@ function eventCombatPointerMove(e){
 }
 function eventCombatPointerUp(e){
  let st=eventCombatEditorState;if(!st)return;
+ if(st.tokenDrag?.pointerId===e.pointerId){
+  let d=st.tokenDrag;st.tokenDrag=null;eventCombatTokenDropHighlight('');$('eventCombatCanvas')?.classList.remove('token-dragging');
+  if(e.type!=='pointercancel'&&d.moved){
+   let key=eventCombatHexKeyFromClient(e.clientX,e.clientY);
+   if(key)placeSceneCombatantAtHex(d.combatantId,key)
+  }else if(e.type!=='pointercancel'){
+   selectSceneCombatantForPlacement(d.combatantId)
+  }
+  try{e.currentTarget.releasePointerCapture?.(e.pointerId)}catch(_){}
+  return
+ }
  if(!st.tool&&st.gesturePointers instanceof Map&&st.gesturePointers.has(e.pointerId)){
   st.gesturePointers.delete(e.pointerId);
   let canvas=$('eventCombatCanvas');
