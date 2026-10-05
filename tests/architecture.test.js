@@ -300,7 +300,7 @@ describe("application architecture smoke checks", () => {
   test("combat picker respects stored enemy or monster kind", () => {
     const combat = read("features/combat/admin-scenes.js");
     expect(combat).toContain("m.actor_kind||'enemy'");
-    expect(combat).toContain('data-kind="'+kind+'"');
+    expect(combat).toContain("data-kind=\"'+kind+'\"");
     expect(combat).toContain("let enemies=templateRows('enemy'),monsters=templateRows('monster')");
     expect(combat).toContain("let kind=cb.dataset.kind||m.actor_kind||'enemy'");
     expect(combat).not.toContain("data-combatant-kind");
