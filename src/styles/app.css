@@ -1271,7 +1271,6 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .slp-admin-form{gap:12px}
 .slp-top-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
 .slp-basic-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.slp-basic-fields label:last-child{grid-column:1/-1}
 .slp-portrait-picker{display:grid;gap:8px}
 .slp-portrait-preview{
  width:220px;aspect-ratio:4/5;border:1px solid #5a4631;border-radius:12px;overflow:hidden;
@@ -1306,7 +1305,6 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .slp-top-grid{grid-template-columns:1fr}
  .slp-portrait-preview{width:min(220px,100%)}
  .slp-basic-fields{grid-template-columns:1fr}
- .slp-basic-fields label:last-child{grid-column:auto}
  .slp-attribute-grid{grid-template-columns:repeat(4,1fr)}
  .slp-weapon-row{grid-template-columns:1fr 1fr 70px}
  .slp-weapon-row input:nth-of-type(2){grid-column:1/3}

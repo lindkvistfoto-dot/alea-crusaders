@@ -812,7 +812,7 @@ function sanitizeNpcSkills(list){return(list||[]).filter(r=>r.skill_id||r.name).
 function sanitizeNpcWeapons(list){return(list||[]).filter(r=>r.weapon_id||String(r.name||'').trim()).map(r=>({weapon_id:r.weapon_id||'',name:String(r.name||'').trim(),fv:npcNum(r.fv),damage:String(r.damage||'').trim()}))}
 function npcAdminSummary(x){
  let kp=npcCalculatedKp(x?.attributes),skills=Array.isArray(x?.skills)?x.skills.length:0,weapons=Array.isArray(x?.weapons)?x.weapons.length:0;
- return [kp!=null?'KP '+kp:'',skills?skills+' färd.':'',weapons?weapons+' vapen':''].filter(Boolean).join(' · ')||'Ingen stridsdata'
+ return [x?.race||'',x?.profession||'',kp!=null?'KP '+kp:'',skills?skills+' färd.':'',weapons?weapons+' vapen':''].filter(Boolean).join(' · ')||'Ingen stridsdata'
 }
 function npcPortraitListHtml(x){
  let url=npcPortraitCachedUrl(x?.image_path);
@@ -821,7 +821,7 @@ function npcPortraitListHtml(x){
 function adminNpcEditorHtml(x,id){
  let a=adminNpcDraft?.armor||{},sh=adminNpcDraft?.shield||{};
  return '<div class="adminform slp-admin-form">'+
-  '<div class="slp-top-grid">'+adminNpcPortraitHtml()+'<div class="slp-basic-fields"><label>Namn<input id="cnName" value="'+escAttr(x?.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x?.title||'')+'"></label><label>Aktuell plats<select id="cnLocation">'+locationOptions(x?.current_location_id||'',true)+'</select></label></div></div>'+
+  '<div class="slp-top-grid">'+adminNpcPortraitHtml()+'<div class="slp-basic-fields"><label>Namn<input id="cnName" value="'+escAttr(x?.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x?.title||'')+'"></label><label>Ras<select id="cnRace">'+raceOptions(x?.race||'')+'</select></label><label>Kön<input id="cnGender" value="'+escAttr(x?.gender||'')+'" placeholder="t.ex. kvinna, man"></label><label>Yrke<select id="cnProfession">'+professionOptions(x?.profession||'')+'</select></label><label>Aktuell plats<select id="cnLocation">'+locationOptions(x?.current_location_id||'',true)+'</select></label></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">Minirollpersonens sju grundegenskaper.</p></div></div>'+adminNpcAttributesHtml()+'</div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Färdigheter</h3><p class="muted" style="margin:3px 0 0">Lägg bara in de färdigheter som är relevanta för SLP:n.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcSkill()">+ Färdighet</button></div><div id="npcSkillsList" class="slp-list"></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Vapen och sköld</h3><p class="muted" style="margin:3px 0 0">Vapen kan kopplas till vapenregistret eller anges manuellt.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcWeapon()">+ Vapen</button></div><div id="npcWeaponsList" class="slp-list"></div><div class="slp-equipment-grid slp-shield-grid"><label>Sköld<input id="npcShieldName" value="'+escAttr(sh.name||'')+'" placeholder="t.ex. Rundsköld"></label><label>FV<input id="npcShieldFv" type="number" min="0" value="'+escAttr(sh.fv??'')+'"></label><label>BV<input id="npcShieldBv" type="number" min="0" value="'+escAttr(sh.bv??'')+'"></label></div></div>'+
@@ -846,7 +846,7 @@ async function saveCampaignNpc(id){
  id=id||adminNpcDraft?.id||adminCombatIconDraft?.id||'';
  let name=$('cnName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let body={
-  campaign_id:centralCampaignId,name,title:$('cnTitle')?.value.trim()||'',current_location_id:$('cnLocation')?.value||null,
+  campaign_id:centralCampaignId,name,title:$('cnTitle')?.value.trim()||'',race:$('cnRace')?.value||'',gender:$('cnGender')?.value.trim()||'',profession:$('cnProfession')?.value||'',current_location_id:$('cnLocation')?.value||null,
   description:$('cnDesc')?.value||'',gm_notes:$('cnNotes')?.value||'',player_visible:!!$('cnVisible')?.checked,active:!!$('cnActive')?.checked,
   attributes:collectAdminNpcAttributes(),skills:sanitizeNpcSkills(adminNpcDraft?.skills),weapons:sanitizeNpcWeapons(adminNpcDraft?.weapons),
   shield:collectAdminNpcShield(),armor:collectAdminNpcArmor(),updated_at:new Date().toISOString()
