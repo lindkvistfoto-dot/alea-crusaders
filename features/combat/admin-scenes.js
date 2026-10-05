@@ -84,7 +84,7 @@ async function openCampaignCombatSceneEditor(sceneId,presetEventId){
    originalBackgroundPath:backgroundPath,pendingUploadPath:'',settings,hexes:hexMap,selected:new Set(),imageUrl:'',dirty:false,
    characters:Array.isArray(characterRows)?characterRows:[],
    combatants:(combatantRows||[]).map(x=>({...x,isNew:false})),
-   deletedCombatantIds:new Set(),combatantPickerOpen:false,editingCombatantId:null,
+   deletedCombatantIds:new Set(),combatantPickerOpen:false,editingCombatantId:null,placementCombatantId:null,dragCombatantId:null,
    tool:null,brushRadius:0,terrainMovement:'free',terrainSight:'clear',zoom:1,paintPointerId:null,paintLastKey:null,pan:null,gesturePointers:new Map(),pinch:null
   };
   renderEventCombatMapEditor();
@@ -119,8 +119,8 @@ async function handleCombatSceneMapFile(file){
  let st=eventCombatEditorState;if(!file||!st||!centralCampaignId)return;
  let ext=(String(file.name||'').split('.').pop()||'webp').toLowerCase();
  if(!['png','jpg','jpeg','webp'].includes(ext)){alert('Kartbilden måste vara PNG, JPG eller WEBP.');return}
- if(st.hexes.size&&(st.mapId||st.backgroundPath)){
-  let ok=await askConfirm('Byt stridskarta','Terrängmarkeringarna är kopplade till hexkoordinater. Vill du byta bakgrundsbild och rensa de befintliga terrängmarkeringarna?','Byt karta');
+ if((st.hexes.size||sceneHasCombatantPlacements())&&(st.mapId||st.backgroundPath)){
+  let ok=await askConfirm('Byt stridskarta','Terrängmarkeringar och startpositioner är kopplade till hexkoordinater. Vill du byta bakgrundsbild och rensa dem?','Byt karta');
   if(!ok)return;
  }
  let path=centralCampaignId+'/'+st.sceneId+'/background-'+crypto.randomUUID()+'.'+ext,previousPending=st.pendingUploadPath;
@@ -134,7 +134,7 @@ async function handleCombatSceneMapFile(file){
    throw new Error(data?.message||data?.error||'Uppladdningen av kartbilden misslyckades.')
   }
   if(previousPending&&previousPending!==st.originalBackgroundPath)await deleteCombatSceneStoredImage(previousPending).catch(()=>{});
-  st.hexes.clear();st.selected.clear();st.mapId='';
+  st.hexes.clear();st.selected.clear();clearAllSceneCombatantPlacements(false);st.mapId='';
   st.backgroundPath=path;st.backgroundWidth=dim.width;st.backgroundHeight=dim.height;st.pendingUploadPath=path;
   st.imageUrl=URL.createObjectURL(file);st.dirty=true;
   renderEventCombatMapEditor();showBackupToast('✓ Stridsbild uppladdad endast till stridsscenen')
@@ -146,13 +146,13 @@ async function handleCombatSceneMapFile(file){
 }
 async function removeEventCombatDirectBackground(){
  let st=eventCombatEditorState;if(!st||!st.backgroundPath)return;
- if(st.hexes.size){
-  let ok=await askConfirm('Ta bort stridsbild','Vill du ta bort den direktuppladdade bakgrunden? Terrängmarkeringarna rensas eftersom de hör till kartans hexnät.','Ta bort',true);
+ if(st.hexes.size||sceneHasCombatantPlacements()){
+  let ok=await askConfirm('Ta bort stridsbild','Vill du ta bort den direktuppladdade bakgrunden? Terrängmarkeringar och startpositioner rensas eftersom de hör till kartans hexnät.','Ta bort',true);
   if(!ok)return
  }
  if(st.pendingUploadPath&&st.pendingUploadPath!==st.originalBackgroundPath)await deleteCombatSceneStoredImage(st.pendingUploadPath).catch(()=>{});
  st.backgroundPath='';st.backgroundWidth=0;st.backgroundHeight=0;st.pendingUploadPath='';
- st.hexes.clear();st.selected.clear();st.imageUrl='';st.dirty=true;
+ st.hexes.clear();st.selected.clear();clearAllSceneCombatantPlacements(false);st.imageUrl='';st.dirty=true;
  renderEventCombatMapEditor();if(st.mapId)await loadEventCombatEditorMapImage(st.mapId)
 }
 async function loadEventCombatEditorBackgroundImage(path){
@@ -174,7 +174,7 @@ function sceneCombatantSourceLabel(c){
  return 'Egen kombatant'
 }
 function sceneCombatantRowHtml(c){
- let st=eventCombatEditorState,editing=st?.editingCombatantId===c.id;
+ let st=eventCombatEditorState,editing=st?.editingCombatantId===c.id,placing=st?.placementCombatantId===c.id;
  if(editing){
   return '<div class="scene-combatant-row"><div class="scene-combatant-edit">'+
    '<input id="sceneCombatantName_'+c.id+'" value="'+escAttr(c.name||'')+'" aria-label="Namn">'+
@@ -185,10 +185,16 @@ function sceneCombatantRowHtml(c){
    '<button class="smallbtn" type="button" onclick="cancelSceneCombatantEdit()">Avbryt</button>'+
   '</div></div>'
  }
- return '<div class="scene-combatant-row">'+
+ let placed=c.start_q!=null&&c.start_r!=null;
+ return '<div class="scene-combatant-row'+(placing?' placement-active':'')+'" data-combatant-id="'+c.id+'" draggable="true" ondragstart="sceneCombatantDragStart(event,\''+c.id+'\')" ondragend="sceneCombatantDragEnd(event)">'+
   '<span class="scene-combatant-badge">'+sceneCombatantTypeLabel(c.combatant_type)+'</span>'+
-  '<div class="scene-combatant-copy"><b>'+escAttr(c.name||'Kombatant')+'</b><small>'+escAttr(sceneCombatantSourceLabel(c))+'</small></div>'+
-  '<div class="scene-combatant-actions"><button class="smallbtn" type="button" onclick="editSceneCombatant(\''+c.id+'\')" title="Redigera">✎</button><button class="deletebtn" type="button" onclick="deleteSceneCombatant(\''+c.id+'\')" title="Ta bort">×</button></div>'+
+  '<div class="scene-combatant-copy"><b>'+escAttr(c.name||'Kombatant')+'</b><small>'+escAttr(sceneCombatantSourceLabel(c))+'</small><small class="scene-combatant-position '+(placed?'placed':'unplaced')+'">'+(placed?('Starthex '+c.start_q+','+c.start_r):'Ej placerad')+'</small></div>'+
+  '<div class="scene-combatant-actions">'+
+   '<button class="smallbtn scene-place-btn'+(placing?' active':'')+'" type="button" onclick="selectSceneCombatantForPlacement(\''+c.id+'\')" title="'+(placed?'Flytta startposition':'Placera startposition')+'">⌖</button>'+
+   (placed?'<button class="smallbtn" type="button" onclick="clearSceneCombatantPlacement(\''+c.id+'\')" title="Rensa startposition">↺</button>':'')+
+   '<button class="smallbtn" type="button" onclick="editSceneCombatant(\''+c.id+'\')" title="Redigera">✎</button>'+
+   '<button class="deletebtn" type="button" onclick="deleteSceneCombatant(\''+c.id+'\')" title="Ta bort">×</button>'+
+  '</div>'+
  '</div>'
 }
 function sceneCombatantPickerHtml(st){
@@ -216,7 +222,13 @@ function sceneCombatantPickerHtml(st){
 }
 function eventCombatCombatantsHtml(st){
  let rows=(st.combatants||[]).map(sceneCombatantRowHtml).join('');
- return '<section class="scene-combatants"><div class="scene-combatants-head"><h3>Kombatanter</h3><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">+ Lägg till kombatanter</button></div><div id="sceneCombatantList" class="scene-combatant-list">'+(rows||'<div class="scene-participant-empty">Inga kombatanter valda.</div>')+'</div>'+(st.combatantPickerOpen?sceneCombatantPickerHtml(st):'')+'</section>'
+ let placed=(st.combatants||[]).filter(c=>c.start_q!=null&&c.start_r!=null).length,total=(st.combatants||[]).length;
+ return '<section class="scene-combatants">'+
+  '<div class="scene-combatants-head"><div><h3>Kombatanter</h3><small class="scene-placement-count">'+placed+' / '+total+' placerade</small></div><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">+ Lägg till kombatanter</button></div>'+
+  '<div class="scene-placement-help">Dra en kombatant till kartan, eller tryck <b>⌖</b> och därefter på önskad hex. En hex kan ha en startande kombatant.</div>'+
+  '<div id="sceneCombatantList" class="scene-combatant-list">'+(rows||'<div class="scene-participant-empty">Inga kombatanter valda.</div>')+'</div>'+
+  (st.combatantPickerOpen?sceneCombatantPickerHtml(st):'')+
+ '</section>'
 }
 function renderSceneCombatantsSection(){
  let st=eventCombatEditorState,old=$('sceneCombatantsMount');if(!st||!old)return;
@@ -230,7 +242,7 @@ function nextSceneCombatantInstance(sourceType,sourceId){
 }
 function addSceneCombatant(sourceType,sourceId,kind,name,instanceNo){
  let st=eventCombatEditorState;if(!st)return;
- st.combatants.push({id:sceneCombatantTempId(),isNew:true,scene_id:st.sceneId||null,campaign_id:centralCampaignId,source_type:sourceType,source_id:sourceId||null,combatant_type:kind,instance_no:instanceNo||1,name:name||'Kombatant',visible_to_players:true,sort_order:st.combatants.length,state:{}})
+ st.combatants.push({id:sceneCombatantTempId(),isNew:true,scene_id:st.sceneId||null,campaign_id:centralCampaignId,source_type:sourceType,source_id:sourceId||null,combatant_type:kind,instance_no:instanceNo||1,name:name||'Kombatant',visible_to_players:true,sort_order:st.combatants.length,start_q:null,start_r:null,state:{}})
 }
 function addSelectedSceneCombatants(){
  let st=eventCombatEditorState;if(!st)return;
@@ -264,6 +276,97 @@ function deleteSceneCombatant(id){
  if(!c.isNew)st.deletedCombatantIds.add(c.id);
  st.combatants=st.combatants.filter(x=>x.id!==id);if(st.editingCombatantId===id)st.editingCombatantId=null;st.dirty=true;renderSceneCombatantsSection()
 }
+function sceneCombatantPlacementKey(c){
+ return c&&c.start_q!=null&&c.start_r!=null?String(c.start_q)+','+String(c.start_r):''
+}
+function sceneHasCombatantPlacements(){
+ return !!eventCombatEditorState?.combatants?.some(c=>c.start_q!=null&&c.start_r!=null)
+}
+function clearAllSceneCombatantPlacements(markDirty=true){
+ let st=eventCombatEditorState;if(!st)return;
+ (st.combatants||[]).forEach(c=>{c.start_q=null;c.start_r=null});
+ st.placementCombatantId=null;st.dragCombatantId=null;
+ if(markDirty)st.dirty=true
+}
+function sceneCombatantAtHex(key,exceptId=''){
+ let st=eventCombatEditorState;
+ return st?.combatants?.find(c=>c.id!==exceptId&&sceneCombatantPlacementKey(c)===key)||null
+}
+function sceneCombatantTokenLabel(c){
+ let parts=String(c?.name||'?').trim().split(/\s+/).filter(Boolean);
+ if(!parts.length)return '?';
+ if(parts.length===1)return parts[0].slice(0,2).toUpperCase();
+ let last=parts[parts.length-1],lastNum=/^\d+$/.test(last)?last:'';
+ return (parts[0].charAt(0)+(lastNum||last.charAt(0))).slice(0,2).toUpperCase()
+}
+function syncEventCombatToolButtons(){
+ let st=eventCombatEditorState;
+ ['Select','Brush','Erase'].forEach(name=>{
+  let b=$('ecTool'+name),active=st?.tool===name.toLowerCase();
+  if(b){b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false')}
+ })
+}
+function selectSceneCombatantForPlacement(id){
+ let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!st||!c)return;
+ st.placementCombatantId=st.placementCombatantId===id?null:id;
+ if(st.placementCombatantId){
+  st.tool=null;st.paintLastKey=null;st.paintPointerId=null;st.pan=null;st.pinch=null;st.gesturePointers=new Map()
+ }
+ syncEventCombatToolButtons();renderSceneCombatantsSection();renderEventCombatHexCanvas()
+}
+function clearSceneCombatantPlacement(id){
+ let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!c)return;
+ c.start_q=null;c.start_r=null;if(st.placementCombatantId===id)st.placementCombatantId=null;
+ st.dirty=true;renderSceneCombatantsSection();renderEventCombatHexCanvas()
+}
+function placeSceneCombatantAtHex(id,key){
+ let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!st||!c||!key)return false;
+ let terrain=st.hexes.get(key);
+ if(terrain?.movement_mode==='blocked'){alert('Kombatanten kan inte starta på en ogenomtränglig hex.');return false}
+ let occupied=sceneCombatantAtHex(key,id);
+ if(occupied){alert('Hex '+key+' används redan av '+(occupied.name||'en annan kombatant')+'.');return false}
+ let parts=String(key).split(',').map(Number);
+ if(parts.length!==2||parts.some(v=>!Number.isInteger(v)))return false;
+ c.start_q=parts[0];c.start_r=parts[1];st.placementCombatantId=id;st.dirty=true;
+ renderSceneCombatantsSection();renderEventCombatHexCanvas();return true
+}
+function sceneCombatantDragStart(e,id){
+ let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!st||!c)return;
+ st.dragCombatantId=id;
+ try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id)}catch(_){}
+ e.currentTarget?.classList?.add('dragging')
+}
+function sceneCombatantDragEnd(e){
+ let st=eventCombatEditorState;if(st)st.dragCombatantId=null;
+ e.currentTarget?.classList?.remove('dragging');$('eventCombatCanvas')?.classList.remove('combatant-drop-ready')
+}
+function eventCombatHexKeyFromClient(clientX,clientY){
+ let svg=$('eventCombatCanvas')?.querySelector('svg'),g=eventCombatHexGeometry();if(!svg||!g)return '';
+ let rect=svg.getBoundingClientRect();if(!rect.width||!rect.height)return '';
+ if(clientX<rect.left||clientX>rect.right||clientY<rect.top||clientY>rect.bottom)return '';
+ let x=(clientX-rect.left)/rect.width*g.width,y=(clientY-rect.top)/rect.height*g.height,best=null,bestD=Infinity;
+ eventCombatHexCells().forEach(c=>{
+  if(c.x<0||c.x>g.width||c.y<0||c.y>g.height)return;
+  let d=(c.x-x)*(c.x-x)+(c.y-y)*(c.y-y);
+  if(d<bestD){bestD=d;best=c}
+ });
+ return best&&Math.sqrt(bestD)<=g.size?best.key:''
+}
+function sceneCombatantMapDragOver(e){
+ let st=eventCombatEditorState,id=st?.dragCombatantId||e.dataTransfer?.getData?.('text/plain');if(!st||!id)return;
+ e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';$('eventCombatCanvas')?.classList.add('combatant-drop-ready')
+}
+function sceneCombatantMapDragLeave(e){
+ let canvas=$('eventCombatCanvas');if(!canvas)return;
+ let next=e.relatedTarget;if(!next||!canvas.contains(next))canvas.classList.remove('combatant-drop-ready')
+}
+function sceneCombatantMapDrop(e){
+ let st=eventCombatEditorState;if(!st)return;e.preventDefault();
+ let id='';
+ try{id=e.dataTransfer?.getData('text/plain')||st.dragCombatantId||''}catch(_){id=st.dragCombatantId||''}
+ st.dragCombatantId=null;$('eventCombatCanvas')?.classList.remove('combatant-drop-ready');
+ let key=eventCombatHexKeyFromClient(e.clientX,e.clientY);if(id&&key)placeSceneCombatantAtHex(id,key)
+}
 function renderEventCombatMapEditor(){
  let st=eventCombatEditorState;if(!st)return;
  let set=st.settings,directStatus=st.backgroundPath?'<div class="event-combat-direct-status"><span>Direktuppladdad stridsbild aktiv · sparas endast med stridsscenen</span><button class="smallbtn" type="button" onclick="removeEventCombatDirectBackground()">Ta bort</button></div>':'';
@@ -283,7 +386,7 @@ function renderEventCombatMapEditor(){
    '<details><summary>Finjustera hexnät</summary><div class="event-combat-offsets"><label>Hexstorlek (%)<input id="ecHexScale" type="number" min="50" max="150" step="1" value="'+Math.round((set.hex_scale||1)*100)+'" oninput="eventCombatCalibrationChanged()"></label><label>X-förskjutning<input id="ecOffsetX" type="number" step="1" value="'+set.offset_x+'" oninput="eventCombatCalibrationChanged()"></label><label>Y-förskjutning<input id="ecOffsetY" type="number" step="1" value="'+set.offset_y+'" oninput="eventCombatCalibrationChanged()"></label></div></details>'+
   '</div>'+
   '<div id="sceneCombatantsMount">'+eventCombatCombatantsHtml(st)+'</div>'+
-  '<div id="eventCombatCanvas" class="event-combat-canvas"><div class="event-combat-loading">Välj eller ladda upp karta…</div></div>'+
+  '<div id="eventCombatCanvas" class="event-combat-canvas" ondragover="sceneCombatantMapDragOver(event)" ondragleave="sceneCombatantMapDragLeave(event)" ondrop="sceneCombatantMapDrop(event)"><div class="event-combat-loading">Välj eller ladda upp karta…</div></div>'+
   '<div class="event-combat-drawtools">'+
     '<button id="ecToolSelect" class="smallbtn '+(st.tool==='select'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='select'?'true':'false')+'" onclick="setEventCombatTool(\'select\')" title="Markera">⬡ Markera</button>'+
     '<button id="ecToolBrush" class="smallbtn '+(st.tool==='brush'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='brush'?'true':'false')+'" onclick="setEventCombatTool(\'brush\')" title="Pensel">🖌 Pensel</button>'+
@@ -328,10 +431,10 @@ async function changeEventCombatSceneLocation(id){
  if(st.backgroundPath){st.dirty=true;return}
  let maps=combatSceneAvailableMaps(st.locationId);
  if(st.mapId&&!maps.some(m=>m.id===st.mapId)){
-  if(st.hexes.size){
-   let ok=await askConfirm('Byt plats','Den valda kartan hör inte till den nya platsen. Vill du byta plats och rensa terrängmarkeringarna?','Byt plats');
+  if(st.hexes.size||sceneHasCombatantPlacements()){
+   let ok=await askConfirm('Byt plats','Den valda kartan hör inte till den nya platsen. Vill du byta plats och rensa terrängmarkeringar samt startpositioner?','Byt plats');
    if(!ok){renderEventCombatMapEditor();return}
-   st.hexes.clear();st.selected.clear()
+   st.hexes.clear();st.selected.clear();clearAllSceneCombatantPlacements(false)
   }
   st.mapId='';st.imageUrl=''
  }
@@ -340,10 +443,10 @@ async function changeEventCombatSceneLocation(id){
 async function changeEventCombatMap(id){
  let st=eventCombatEditorState;if(!st)return;
  if(!id){st.mapId='';st.imageUrl='';st.dirty=true;renderEventCombatHexCanvas();return}
- if(st.hexes.size&&(id!==st.mapId||st.backgroundPath)){
-  let ok=await askConfirm('Byt stridskarta','Terrängmarkeringarna är kopplade till hexkoordinater. Vill du byta karta och rensa de befintliga terrängmarkeringarna?','Byt karta');
+ if((st.hexes.size||sceneHasCombatantPlacements())&&(id!==st.mapId||st.backgroundPath)){
+  let ok=await askConfirm('Byt stridskarta','Terrängmarkeringar och startpositioner är kopplade till hexkoordinater. Vill du byta karta och rensa dem?','Byt karta');
   if(!ok){renderEventCombatMapEditor();return}
-  st.hexes.clear();st.selected.clear()
+  st.hexes.clear();st.selected.clear();clearAllSceneCombatantPlacements(false)
  }
  if(st.pendingUploadPath&&st.pendingUploadPath!==st.originalBackgroundPath)await deleteCombatSceneStoredImage(st.pendingUploadPath).catch(()=>{});
  st.backgroundPath='';st.backgroundWidth=0;st.backgroundHeight=0;st.pendingUploadPath='';
@@ -392,7 +495,7 @@ function renderEventCombatHexCanvas(){
  '<pattern id="ecMoveBlocked" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0L12 12M12 0L0 12" stroke="rgba(165,58,43,.7)" stroke-width="2"/></pattern>'+
  '<pattern id="ecObscuring" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="rgba(98,135,157,.8)"/><circle cx="8" cy="7" r="1.2" fill="rgba(98,135,157,.65)"/></pattern>'+
  '</defs>';
- let cells=eventCombatHexCells(),svg=cells.map(c=>{
+ let cells=eventCombatHexCells(),cellMap=new Map(cells.map(c=>[c.key,c])),svg=cells.map(c=>{
   let h=st.hexes.get(c.key)||null,pts=eventCombatHexPolygon(c.x,c.y,g.size*.97),sel=st.selected.has(c.key),overlays='';
   if(h?.movement_mode==='difficult')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecDifficult)"/>';
   if(h?.movement_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecMoveBlocked)"/>';
@@ -400,8 +503,17 @@ function renderEventCombatHexCanvas(){
   if(h?.sight_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay ec-sight-blocked" points="'+pts+'"/>';
   return overlays+'<polygon class="ec-hex'+(sel?' selected':'')+'" data-hex="'+c.key+'" points="'+pts+'"><title>Hex '+c.key+' · '+eventCombatTerrainTitle(h)+'</title></polygon>'
  }).join('');
+ let tokenRadius=Math.max(8,g.size*.43),tokens=(st.combatants||[]).map(c=>{
+  let key=sceneCombatantPlacementKey(c),cell=cellMap.get(key);if(!key||!cell)return '';
+  let active=st.placementCombatantId===c.id?' active':'',type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc';
+  return '<g class="ec-combatant-token '+type+active+'" data-combatant-id="'+c.id+'" transform="translate('+cell.x.toFixed(1)+' '+cell.y.toFixed(1)+')">'+
+   '<circle r="'+tokenRadius.toFixed(1)+'"></circle>'+
+   '<text y="'+(tokenRadius*.12).toFixed(1)+'">'+escAttr(sceneCombatantTokenLabel(c))+'</text>'+
+   '<title>'+escAttr(c.name||'Kombatant')+' · starthex '+key+'</title>'+
+  '</g>'
+ }).join('');
  let zoom=Math.max(.5,Math.min(4,Number(st.zoom)||1));
- el.innerHTML='<div class="event-combat-stage" style="width:'+(zoom*100)+'%;aspect-ratio:'+g.width+'/'+g.height+'"><img src="'+st.imageUrl+'" alt="'+escAttr(meta.name)+'"><svg viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="none" onpointerdown="eventCombatPointerDown(event)" onpointermove="eventCombatPointerMove(event)" onpointerup="eventCombatPointerUp(event)" onpointercancel="eventCombatPointerUp(event)" onwheel="eventCombatWheel(event)">'+defs+svg+'</svg></div>';
+ el.innerHTML='<div class="event-combat-stage" style="width:'+(zoom*100)+'%;aspect-ratio:'+g.width+'/'+g.height+'"><img src="'+st.imageUrl+'" alt="'+escAttr(meta.name)+'"><svg viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="none" onpointerdown="eventCombatPointerDown(event)" onpointermove="eventCombatPointerMove(event)" onpointerup="eventCombatPointerUp(event)" onpointercancel="eventCombatPointerUp(event)" onwheel="eventCombatWheel(event)">'+defs+svg+tokens+'</svg></div>';
  updateEventCombatSelectionCount();updateEventCombatZoomLabel()
 }
 function eventCombatHexNeighbors(q,r){return [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]]}
@@ -469,11 +581,9 @@ function setEventCombatTool(tool){
  let st=eventCombatEditorState;if(!st)return;
  let allowed=['select','brush','erase'];
  st.tool=(allowed.includes(tool)&&st.tool!==tool)?tool:null;
+ if(st.tool)st.placementCombatantId=null;
  st.paintLastKey=null;st.paintPointerId=null;st.pan=null;st.pinch=null;st.gesturePointers=new Map();
- ['Select','Brush','Erase'].forEach(name=>{
-  let b=$('ecTool'+name),active=st.tool===name.toLowerCase();
-  if(b){b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false')}
- })
+ syncEventCombatToolButtons();renderSceneCombatantsSection();renderEventCombatHexCanvas()
 }
 function setEventCombatBrushSize(v){if(eventCombatEditorState)eventCombatEditorState.brushRadius=Math.max(0,Math.min(2,Number(v)||0))}
 function eventCombatGestureStart(e){
@@ -492,7 +602,10 @@ function eventCombatGestureStart(e){
 }
 function eventCombatPointerDown(e){
  let st=eventCombatEditorState;if(!st||((e.button!=null)&&e.button!==0))return;
+ let token=e.target?.closest?.('.ec-combatant-token');
+ if(token){e.preventDefault();selectSceneCombatantForPlacement(token.dataset.combatantId);return}
  let hex=e.target?.closest?.('.ec-hex');
+ if(st.placementCombatantId&&hex){e.preventDefault();placeSceneCombatantAtHex(st.placementCombatantId,hex.dataset.hex);return}
  if(!st.tool){e.preventDefault();eventCombatGestureStart(e);return}
  if(!hex)return;
  e.preventDefault();
@@ -612,7 +725,7 @@ async function saveEventCombatMapEditor(){
   if(deleteWrites.length)await Promise.all(deleteWrites);
   let writes=[];
   (st.combatants||[]).forEach((c,i)=>{
-   let row={scene_id:sceneId,campaign_id:centralCampaignId,source_type:c.source_type||'custom',source_id:c.source_id||null,combatant_type:c.combatant_type||'npc',instance_no:Math.max(1,Number(c.instance_no)||1),name:c.name||'Kombatant',visible_to_players:c.visible_to_players!==false,sort_order:i,state:c.state&&typeof c.state==='object'?c.state:{}};
+   let row={scene_id:sceneId,campaign_id:centralCampaignId,source_type:c.source_type||'custom',source_id:c.source_id||null,combatant_type:c.combatant_type||'npc',instance_no:Math.max(1,Number(c.instance_no)||1),name:c.name||'Kombatant',visible_to_players:c.visible_to_players!==false,sort_order:i,start_q:c.start_q==null?null:Number(c.start_q),start_r:c.start_r==null?null:Number(c.start_r),state:c.state&&typeof c.state==='object'?c.state:{}};
    if(c.isNew)writes.push(dbJson('campaign_combat_scene_combatants',{method:'POST',body:JSON.stringify(row)}));
    else writes.push(dbJson('campaign_combat_scene_combatants?id=eq.'+encodeURIComponent(c.id),{method:'PATCH',body:JSON.stringify({...row,updated_at:new Date().toISOString()})}))
   });
