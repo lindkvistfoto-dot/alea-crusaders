@@ -1230,3 +1230,37 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .scene-combatants-compact-head{align-items:flex-start}
  .scene-combatants-compact-head>div:first-child{display:grid;gap:1px}
 }
+
+
+/* v0.31.6 — hexagonala stridsikoner */
+.combat-icon-hex{
+ --combat-side:#aeb7c2;
+ display:inline-grid;place-items:center;width:46px;height:52px;
+ clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+ background:var(--combat-side);padding:3px;box-sizing:border-box;flex:0 0 auto
+}
+.combat-icon-hex.player{--combat-side:#43a65b}
+.combat-icon-hex.npc{--combat-side:#4d8fc9}
+.combat-icon-hex.enemy{--combat-side:#c64d45}
+.combat-icon-hex-inner{
+ display:grid;place-items:center;width:100%;height:100%;
+ clip-path:inherit;background:#1a1714;color:#eee;font-size:22px;font-weight:800;overflow:hidden
+}
+.combat-icon-hex-inner img{width:100%;height:100%;object-fit:cover;display:block}
+.character-combat-icon-control,.admin-combat-icon-row{display:flex;align-items:center;gap:10px}
+.character-combat-icon-actions,.admin-combat-icon-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.character-combat-icon-actions small{flex-basis:100%;color:#8f7d65}
+.admin-combat-icon-picker{grid-column:1/-1;display:grid;gap:7px;padding:9px;border:1px solid rgba(184,145,82,.25);border-radius:9px;background:#171310}
+.admin-combat-icon-picker>div:first-child small{display:block;color:#9f8c72;margin-top:2px}
+.admin-combat-icon-picker .combat-icon-hex{width:58px;height:66px}
+
+.scene-combatant-chip .combat-icon-hex{width:34px;height:38px;padding:2px}
+.scene-combatant-chip .combat-icon-hex-inner{font-size:16px}
+.ec-combatant-token .ec-token-border{fill:none;stroke-width:4;vector-effect:non-scaling-stroke;pointer-events:all}
+.ec-combatant-token.player .ec-token-border{stroke:#43a65b}
+.ec-combatant-token.npc .ec-token-border{stroke:#4d8fc9}
+.ec-combatant-token.enemy .ec-token-border,.ec-combatant-token.monster .ec-token-border{stroke:#c64d45}
+.ec-combatant-token.active .ec-token-border{stroke:#ffd36f;stroke-width:6}
+.ec-combatant-token .ec-token-fallback{fill:rgba(22,20,18,.92);pointer-events:none}
+.ec-combatant-token .ec-token-glyph{fill:#f6ead2;font-size:18px;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.ec-combatant-token image{pointer-events:none}

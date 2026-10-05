@@ -65,7 +65,7 @@ async function openCampaignCombatSceneEditor(sceneId,presetEventId){
  $('adminEditor').classList.remove('hidden');
  try{
   let cfg=null,hexRows=[],combatantRows=[];
-  let characterRows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,name,is_npc&order=name.asc');
+  let characterRows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,name,is_npc,combat_icon_path&order=name.asc');
   if(existingSceneId){
    let rows=await Promise.all([
     dbJson('campaign_combat_scenes?id=eq.'+encodeURIComponent(existingSceneId)+'&campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&limit=1'),
@@ -82,12 +82,13 @@ async function openCampaignCombatSceneEditor(sceneId,presetEventId){
    sceneId:draftSceneId,isNew,cfg,sceneName:cfg?.name||'',sourceEventId:cfg?.source_event_id||presetEventId||'',locationId,mapId,
    backgroundPath,backgroundWidth:Number(cfg?.background_width)||0,backgroundHeight:Number(cfg?.background_height)||0,
    originalBackgroundPath:backgroundPath,pendingUploadPath:'',settings,hexes:hexMap,selected:new Set(),imageUrl:'',dirty:false,
-   characters:Array.isArray(characterRows)?characterRows:[],
+   characters:Array.isArray(characterRows)?characterRows:[],combatIconUrls:new Map(),
    combatants:(combatantRows||[]).map(x=>({...x,isNew:false})),
    deletedCombatantIds:new Set(),combatantPickerOpen:false,combatantManageOpen:false,editingCombatantId:null,placementCombatantId:null,dragCombatantId:null,tokenDrag:null,
    tool:null,brushRadius:0,terrainMovement:'free',terrainSight:'clear',zoom:1,paintPointerId:null,paintLastKey:null,pan:null,gesturePointers:new Map(),pinch:null
   };
   renderEventCombatMapEditor();
+  await loadEventCombatCombatantIcons();
   if(backgroundPath)await loadEventCombatEditorBackgroundImage(backgroundPath);
   else if(mapId)await loadEventCombatEditorMapImage(mapId)
  }catch(e){
@@ -220,13 +221,34 @@ function sceneCombatantPickerHtml(st){
   '<div class="scene-combatant-picker-actions"><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">Avbryt</button><button class="smallbtn" type="button" onclick="addSelectedSceneCombatants()">Lägg till markerade</button></div>'+
  '</div>'
 }
+function sceneCombatantIconPath(c){
+ let st=eventCombatEditorState;if(!st||!c)return '';
+ if(c.source_type==='character')return st.characters.find(x=>x.id===c.source_id)?.combat_icon_path||'';
+ if(c.source_type==='npc')return campaignNpcs.find(x=>x.id===c.source_id)?.combat_icon_path||'';
+ if(c.source_type==='monster')return campaignMonsters.find(x=>x.id===c.source_id)?.combat_icon_path||'';
+ return ''
+}
+function sceneCombatantIconUrl(c){
+ let st=eventCombatEditorState,path=sceneCombatantIconPath(c);
+ return path?(st?.combatIconUrls?.get(path)||combatIconCachedUrl(path)||''):''
+}
+async function loadEventCombatCombatantIcons(){
+ let st=eventCombatEditorState;if(!st)return;
+ let paths=[...new Set((st.combatants||[]).map(sceneCombatantIconPath).filter(Boolean))];
+ await Promise.all(paths.map(async path=>{
+  if(st.combatIconUrls?.has(path))return;
+  try{let url=await getCombatIconUrl(path);if(eventCombatEditorState===st)st.combatIconUrls.set(path,url)}
+  catch(e){console.warn('Kunde inte läsa stridsikon i stridsscenen',e)}
+ }));
+ if(eventCombatEditorState===st){renderSceneCombatantsSection();renderEventCombatHexCanvas()}
+}
 function sceneCombatantStripItemHtml(c){
  let st=eventCombatEditorState,placed=c.start_q!=null&&c.start_r!=null,active=st?.placementCombatantId===c.id;
  let type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc';
- let status=placed?('Hex '+c.start_q+','+c.start_r):'Reserv';
+ let status=placed?('Hex '+c.start_q+','+c.start_r):'Reserv',url=sceneCombatantIconUrl(c);
  return '<div class="scene-combatant-chip '+type+(placed?' placed':' reserve')+(active?' placement-active':'')+'" title="'+escAttr((c.name||'Kombatant')+' · '+status)+'">'+
   '<button class="scene-combatant-chip-main" type="button" draggable="true" onclick="selectSceneCombatantForPlacement(\''+c.id+'\')" ondragstart="sceneCombatantDragStart(event,\''+c.id+'\')" ondragend="sceneCombatantDragEnd(event)" aria-label="'+escAttr((placed?'Flytta ':'Placera ')+(c.name||'kombatant'))+'">'+
-   '<span class="scene-combatant-chip-token">'+escAttr(sceneCombatantTokenLabel(c))+'</span>'+
+   combatIconHexHtml(url,type,c.name||'Kombatant')+
    '<span class="scene-combatant-chip-copy"><b>'+escAttr(c.name||'Kombatant')+'</b><small>'+status+'</small></span>'+
   '</button>'+
  '</div>'
@@ -278,7 +300,7 @@ function addSelectedSceneCombatants(){
    addSceneCombatant('monster',m.id,kind,name,instanceNo)
   }
  });
- st.combatantPickerOpen=false;st.dirty=true;renderSceneCombatantsSection()
+ st.combatantPickerOpen=false;st.dirty=true;renderSceneCombatantsSection();loadEventCombatCombatantIcons()
 }
 function editSceneCombatant(id){let st=eventCombatEditorState;if(!st)return;st.editingCombatantId=id;st.combatantPickerOpen=false;st.combatantManageOpen=true;renderSceneCombatantsSection()}
 function cancelSceneCombatantEdit(){if(!eventCombatEditorState)return;eventCombatEditorState.editingCombatantId=null;renderSceneCombatantsSection()}
@@ -506,11 +528,6 @@ function renderEventCombatHexCanvas(){
  let meta=eventCombatImageMeta(),g=eventCombatHexGeometry();
  if(!meta||!g){el.innerHTML='<div class="event-combat-loading">Välj en befintlig karta eller ladda upp en stridsbild.</div>';return}
  if(!st.imageUrl){el.innerHTML='<div class="event-combat-loading">Laddar kartbild…</div>';return}
- let defs='<defs>'+
- '<pattern id="ecDifficult" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="10" height="10" fill="rgba(194,137,38,.12)"/><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(231,169,54,.72)" stroke-width="3"/></pattern>'+
- '<pattern id="ecMoveBlocked" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0L12 12M12 0L0 12" stroke="rgba(165,58,43,.7)" stroke-width="2"/></pattern>'+
- '<pattern id="ecObscuring" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="rgba(98,135,157,.8)"/><circle cx="8" cy="7" r="1.2" fill="rgba(98,135,157,.65)"/></pattern>'+
- '</defs>';
  let cells=eventCombatHexCells(),cellMap=new Map(cells.map(c=>[c.key,c])),svg=cells.map(c=>{
   let h=st.hexes.get(c.key)||null,pts=eventCombatHexPolygon(c.x,c.y,g.size*.97),sel=st.selected.has(c.key),overlays='';
   if(h?.movement_mode==='difficult')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecDifficult)"/>';
@@ -519,15 +536,25 @@ function renderEventCombatHexCanvas(){
   if(h?.sight_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay ec-sight-blocked" points="'+pts+'"/>';
   return overlays+'<polygon class="ec-hex'+(sel?' selected':'')+'" data-hex="'+c.key+'" points="'+pts+'"><title>Hex '+c.key+' · '+eventCombatTerrainTitle(h)+'</title></polygon>'
  }).join('');
- let tokenRadius=Math.max(8,g.size*.43),tokens=(st.combatants||[]).map(c=>{
+ let tokenSize=g.size*.92,tokenPts=eventCombatHexPolygon(0,0,tokenSize),tokenDefs='',tokens=(st.combatants||[]).map(c=>{
   let key=sceneCombatantPlacementKey(c),cell=cellMap.get(key);if(!key||!cell)return '';
-  let active=st.placementCombatantId===c.id?' active':'',type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc';
+  let active=st.placementCombatantId===c.id?' active':'',type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc',url=sceneCombatantIconUrl(c);
+  let clipId='ecTokenClip_'+String(c.id).replace(/[^a-zA-Z0-9_-]/g,'_');
+  tokenDefs+='<clipPath id="'+clipId+'"><polygon points="'+tokenPts+'"/></clipPath>';
+  let content=url
+   ?'<image href="'+escAttr(url)+'" x="'+(-tokenSize).toFixed(1)+'" y="'+(-tokenSize).toFixed(1)+'" width="'+(tokenSize*2).toFixed(1)+'" height="'+(tokenSize*2).toFixed(1)+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'
+   :'<polygon class="ec-token-fallback" points="'+tokenPts+'"/><text class="ec-token-glyph" y="'+(tokenSize*.08).toFixed(1)+'">'+escAttr(combatIconFallbackGlyph(type))+'</text>';
   return '<g class="ec-combatant-token '+type+active+'" data-combatant-id="'+c.id+'" transform="translate('+cell.x.toFixed(1)+' '+cell.y.toFixed(1)+')">'+
-   '<circle r="'+tokenRadius.toFixed(1)+'"></circle>'+
-   '<text y="'+(tokenRadius*.12).toFixed(1)+'">'+escAttr(sceneCombatantTokenLabel(c))+'</text>'+
+   content+
+   '<polygon class="ec-token-border" points="'+tokenPts+'"/>'+
    '<title>'+escAttr(c.name||'Kombatant')+' · starthex '+key+'</title>'+
   '</g>'
  }).join('');
+ let defs='<defs>'+
+ '<pattern id="ecDifficult" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="10" height="10" fill="rgba(194,137,38,.12)"/><line x1="0" y1="0" x2="0" y2="10" stroke="rgba(231,169,54,.72)" stroke-width="3"/></pattern>'+
+ '<pattern id="ecMoveBlocked" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0L12 12M12 0L0 12" stroke="rgba(165,58,43,.7)" stroke-width="2"/></pattern>'+
+ '<pattern id="ecObscuring" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="rgba(98,135,157,.8)"/><circle cx="8" cy="7" r="1.2" fill="rgba(98,135,157,.65)"/></pattern>'+
+ tokenDefs+'</defs>';
  let zoom=Math.max(.5,Math.min(4,Number(st.zoom)||1));
  el.innerHTML='<div class="event-combat-stage" style="width:'+(zoom*100)+'%;aspect-ratio:'+g.width+'/'+g.height+'"><img src="'+st.imageUrl+'" alt="'+escAttr(meta.name)+'"><svg viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="none" onpointerdown="eventCombatPointerDown(event)" onpointermove="eventCombatPointerMove(event)" onpointerup="eventCombatPointerUp(event)" onpointercancel="eventCombatPointerUp(event)" onwheel="eventCombatWheel(event)">'+defs+svg+tokens+'</svg></div>';
  updateEventCombatSelectionCount();updateEventCombatZoomLabel()
