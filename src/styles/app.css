@@ -1318,3 +1318,53 @@ body:not(.editing) #skilltable .skill-roll-btn{
  margin-top:18px;padding-top:12px;border-top:1px solid rgba(184,145,82,.18);
  text-align:center;font-size:11px;font-weight:700;letter-spacing:.04em;color:#8f806d
 }
+
+
+/* v0.31.12 — rasregler + mobil SLP */
+.adminracetable{grid-template-columns:minmax(150px,1fr) minmax(110px,.75fr) minmax(125px,.85fr) 100px}
+.race-rule-summary{font-size:12px;color:#cdbb99}
+.race-attribute-editor{display:grid;gap:6px;margin-top:6px}
+.race-attribute-head,.race-attribute-row{display:grid;grid-template-columns:90px minmax(120px,1fr) 100px;gap:8px;align-items:center}
+.race-attribute-head{font-size:11px;font-weight:800;color:#765f47;padding:0 2px}
+.race-attribute-row{padding:6px 8px;border:1px solid #d4c09e;border-radius:8px;background:#fbf3e5}
+.race-attribute-row input{margin:0!important}
+.race-attribute-editor>small{color:#78634e}
+
+.admineditor.slp-editor{
+ width:100%;max-width:1080px;min-width:0;box-sizing:border-box;overflow-x:hidden
+}
+.slp-admin-form,.slp-top-grid,.slp-basic-fields,.slp-list,.slp-list-row,.slp-equipment-grid,.adminform-section{min-width:0}
+.slp-admin-form input,.slp-admin-form select,.slp-admin-form textarea{min-width:0;width:100%;max-width:100%;box-sizing:border-box}
+.slp-attribute-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.slp-attribute-actions .smallbtn:disabled{opacity:.45;cursor:not-allowed}
+#npcRaceRuleNote{color:#8f7d65}
+
+@media(max-width:760px){
+ #adminEditor.modalback{padding:8px}
+ .admineditor.slp-editor{width:100%;max-width:100%;padding:14px;border-radius:14px}
+ .admineditor.slp-editor .modalhead h2{font-size:22px}
+ .slp-admin-form{overflow-x:hidden}
+ .slp-top-grid{grid-template-columns:minmax(0,1fr)}
+ .slp-basic-fields{grid-template-columns:minmax(0,1fr)}
+ .slp-attribute-head{align-items:flex-start;flex-direction:column}
+ .slp-attribute-actions{width:100%;justify-content:stretch}
+ .slp-attribute-actions .smallbtn{flex:1 1 140px}
+ .slp-attribute-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .slp-skill-row{grid-template-columns:minmax(0,1fr) 64px 36px}
+ .slp-skill-row>*{min-width:0}
+ .slp-weapon-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 36px}
+ .slp-weapon-row>*{min-width:0}
+ .slp-weapon-row>select{grid-column:1/-1}
+ .slp-weapon-row>input:nth-of-type(1){grid-column:1/-1}
+ .slp-weapon-row>input:nth-of-type(2){grid-column:1}
+ .slp-weapon-row>input:nth-of-type(3){grid-column:2}
+ .slp-weapon-row>.deletebtn{grid-column:3;grid-row:3}
+ .slp-equipment-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .slp-equipment-grid>*{min-width:0}
+ .slp-admin-flags{display:grid;grid-template-columns:1fr}
+ .adminformactions{flex-wrap:wrap}
+ .adminformactions .btn{flex:1 1 130px}
+ .race-attribute-head,.race-attribute-row{grid-template-columns:56px minmax(0,1fr) 78px}
+ .race-attribute-row{padding:6px}
+ .adminracetable{grid-template-columns:minmax(120px,1fr) 90px 110px 82px;font-size:12px}
+}
