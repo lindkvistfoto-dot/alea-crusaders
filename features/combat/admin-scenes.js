@@ -171,7 +171,7 @@ function sceneCombatantTypeLabel(t){return({player:'SPELARE',npc:'SLP',enemy:'FI
 function sceneCombatantSourceLabel(c){
  if(c.source_type==='character')return c.combatant_type==='player'?'Rollfigur':'Rollfigur · SLP';
  if(c.source_type==='npc')return 'Kampanjperson';
- if(c.source_type==='monster')return 'Fiende-/monstermall';
+ if(c.source_type==='monster')return c.combatant_type==='monster'?'Monstermall':'Fiendemall';
  return 'Egen kombatant'
 }
 function sceneCombatantRowHtml(c){
@@ -209,14 +209,16 @@ function sceneCombatantPickerHtml(st){
  let campaignNpcRows=campaignNpcs.map(n=>
   '<label class="scene-participant-row"><input type="checkbox" data-add-combatant="npc" data-id="'+n.id+'" data-kind="npc" '+(existing.has('npc:'+n.id)?'disabled':'')+'><span><b>'+escAttr(n.name||'SLP')+'</b><small>'+escAttr(n.title||'Kampanjperson')+'</small></span></label>'
  ).join('');
- let templates=campaignMonsters.map(m=>
-  '<label class="scene-template-row"><input type="checkbox" data-add-combatant="monster" data-id="'+m.id+'"><span><b>'+escAttr(m.name||'Fiende')+'</b><small>'+escAttr(m.monster_type||'Mall')+'</small></span><input type="number" min="1" max="100" value="'+Math.max(1,Number(m.quantity)||1)+'" data-combatant-qty="'+m.id+'" aria-label="Antal"><select data-combatant-kind="'+m.id+'"><option value="enemy">Fiende</option><option value="monster">Monster</option></select></label>'
+ let templateRows=kind=>campaignMonsters.filter(m=>(m.actor_kind||'enemy')===kind).map(m=>
+  '<label class="scene-template-row"><input type="checkbox" data-add-combatant="monster" data-id="'+m.id+'" data-kind="'+kind+'"><span><b>'+escAttr(m.name||(kind==='monster'?'Monster':'Fiende'))+'</b><small>'+escAttr(m.title||m.monster_type||'Mall')+'</small></span><input type="number" min="1" max="100" value="'+Math.max(1,Number(m.quantity)||1)+'" data-combatant-qty="'+m.id+'" aria-label="Antal"></label>'
  ).join('');
+ let enemies=templateRows('enemy'),monsters=templateRows('monster');
  return '<div class="scene-combatant-picker">'+
   '<div class="scene-participants">'+
    '<section class="scene-participant-group"><h4>Spelare</h4><div class="scene-participant-list">'+(players||'<div class="scene-participant-empty">Inga spelarkaraktärer finns.</div>')+'</div></section>'+
    '<section class="scene-participant-group"><h4>SLP</h4><div class="scene-participant-list">'+((characterNpcs+campaignNpcRows)||'<div class="scene-participant-empty">Inga SLP finns.</div>')+'</div></section>'+
-   '<section class="scene-participant-group"><h4>Fiender / monster</h4><div class="scene-participant-list">'+(templates||'<div class="scene-participant-empty">Inga fiende- eller monstermallar finns ännu.</div>')+'</div></section>'+
+   '<section class="scene-participant-group"><h4>Fiender</h4><div class="scene-participant-list">'+(enemies||'<div class="scene-participant-empty">Inga fiendemallar finns ännu.</div>')+'</div></section>'+
+   '<section class="scene-participant-group"><h4>Monster</h4><div class="scene-participant-list">'+(monsters||'<div class="scene-participant-empty">Inga monstermallar finns ännu.</div>')+'</div></section>'+
   '</div>'+
   '<div class="scene-combatant-picker-actions"><button class="smallbtn" type="button" onclick="toggleSceneCombatantPicker()">Avbryt</button><button class="smallbtn" type="button" onclick="addSelectedSceneCombatants()">Lägg till markerade</button></div>'+
  '</div>'
@@ -293,7 +295,7 @@ function addSelectedSceneCombatants(){
  document.querySelectorAll('#sceneCombatantsMount [data-add-combatant="monster"]:checked').forEach(cb=>{
   let m=campaignMonsters.find(x=>x.id===cb.dataset.id);if(!m)return;
   let qty=Math.max(1,Math.min(100,Number(document.querySelector('[data-combatant-qty="'+m.id+'"]')?.value)||1));
-  let kind=document.querySelector('[data-combatant-kind="'+m.id+'"]')?.value||'enemy';
+  let kind=cb.dataset.kind||m.actor_kind||'enemy';
   let first=nextSceneCombatantInstance('monster',m.id);
   for(let i=0;i<qty;i++){
    let instanceNo=first+i,name=(qty>1||first>1)?(m.name+' '+instanceNo):m.name;
