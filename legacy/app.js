@@ -9,7 +9,7 @@ let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,c
 const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
 let supabaseSession=null,supabaseProfile=null;
-let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;
+let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;
 let centralCampaignId=null,centralReady=false,centralSaveTimer=null,centralCampaignRole=null,campaignDayState=null,campaignErfAwards=[],campaignCharacterRestStates=[],campaignSites=[],campaignLocations=[],campaignLocationEventLinks=[],campaignEvents=[],campaignNpcs=[],campaignMonsters=[],campaignCombatScenes=[],campaignContentReady=false,currentLocationContentId=null,currentLocationAssets=[],locationAssetUrlCache=new Map();let activeCombat=null,combatants=[],combatHexes=[],combatActions=[],combatLogRows=[],combatSelectedTargetId=null,combatReturn='home';
 function asBool(v){return v===true||v===1||v==='1'||String(v).toLowerCase()==='true'}
 function syncAppVersionDisplay(){let src=document.getElementById('appVersion'),home=document.getElementById('mobileHomeVersion'),admin=document.getElementById('adminOverviewVersion');if(!src)return;let label='Version '+src.textContent;if(home)home.textContent=label;if(admin)admin.textContent=label}
@@ -41,15 +41,42 @@ function professionOptions(selected=''){
  return '<option value="">— Välj yrke —</option>'+legacy+ruleProfessions.map(p=>'<option value="'+escAttr(p.name)+'" '+((p.name||'').localeCompare(selected,'sv',{sensitivity:'base'})===0?'selected':'')+'>'+escAttr(p.name)+'</option>').join('')
 }
 async function loadRuleRaces(force=false){
- if(ruleRacesLoaded&&!force)return ruleRaces;
- try{ruleRaces=await dbJson('rule_races?select=*&order=sort_order.asc,name.asc');ruleRacesLoaded=true;return ruleRaces}
- catch(e){console.error('Kunde inte läsa rule_races',e);ruleRaces=[];ruleRacesLoaded=false;return []}
+ if(ruleRacesLoaded&&ruleRaceAttributesLoaded&&!force)return ruleRaces;
+ try{
+  let rows=await Promise.all([
+   dbJson('rule_races?select=*&order=sort_order.asc,name.asc'),
+   dbJson('rule_race_attributes?select=*&order=race_id.asc,sort_order.asc')
+  ]);
+  ruleRaces=rows[0]||[];ruleRaceAttributes=rows[1]||[];ruleRacesLoaded=true;ruleRaceAttributesLoaded=true;return ruleRaces
+ }catch(e){
+  console.error('Kunde inte läsa rasregistret',e);ruleRaces=[];ruleRaceAttributes=[];ruleRacesLoaded=false;ruleRaceAttributesLoaded=false;return []
+ }
 }
 function raceOptions(selected=''){
  selected=String(selected||'');
  let known=ruleRaces.some(r=>(r.name||'').localeCompare(selected,'sv',{sensitivity:'base'})===0);
  let legacy=selected&&!known?'<option value="'+escAttr(selected)+'" selected>Befintligt: '+escAttr(selected)+'</option>':'';
  return '<option value="">— Välj ras —</option>'+legacy+ruleRaces.map(r=>'<option value="'+escAttr(r.name)+'" '+((r.name||'').localeCompare(selected,'sv',{sensitivity:'base'})===0?'selected':'')+'>'+escAttr(r.name)+(r.category?' · '+escAttr(r.category):'')+'</option>').join('')
+}
+const RULE_RACE_ATTRS=[['STY','Styrka'],['FYS','Fysik'],['STO','Storlek'],['SMI','Smidighet'],['INT','Intelligens'],['PSY','Psykisk kraft'],['KAR','Karisma']];
+function raceRuleRows(raceId){return RULE_RACE_ATTRS.map(([key,label],i)=>ruleRaceAttributes.find(x=>x.race_id===raceId&&x.attribute_key===key)||{race_id:raceId,attribute_key:key,roll_formula:'',typical_value:null,sort_order:(i+1)*10,label})}
+function raceRuleByName(name){
+ let race=ruleRaces.find(r=>(r.name||'').localeCompare(String(name||''),'sv',{sensitivity:'base'})===0);
+ return race?{race,rows:raceRuleRows(race.id)}:null
+}
+function normalizeRaceRollFormula(value){
+ let v=String(value||'').toUpperCase().replace(/\s+/g,'');
+ if(!v)return '';
+ return /^(?:[1-9]\d*)T(?:[2-9]|[1-9]\d+)(?:[+-]\d+)?$/.test(v)?v:null
+}
+function rollRaceAttributeFormula(formula){
+ let v=normalizeRaceRollFormula(formula);if(!v)throw new Error('Ogiltig tärningsformel: '+formula);
+ let m=v.match(/^(\d+)T(\d+)([+-]\d+)?$/),count=Number(m[1]),sides=Number(m[2]),mod=Number(m[3]||0);
+ if(count<1||count>20||sides<2||sides>100)throw new Error('Tärningsformeln är utanför tillåtna gränser: '+formula);
+ let total=mod;for(let i=0;i<count;i++)total+=secureDie(sides);return total
+}
+function raceRulesCompleteForMode(rows,mode){
+ return Array.isArray(rows)&&rows.length===7&&rows.every(r=>mode==='typical'?(r.typical_value!==null&&r.typical_value!==''&&Number.isFinite(Number(r.typical_value))):!!normalizeRaceRollFormula(r.roll_formula))
 }
 async function loadRuleArmorRegistry(force=false){
  if(ruleArmorLoaded&&!force)return {types:ruleArmorTypes,materials:ruleArmorMaterials};
@@ -181,9 +208,52 @@ function editRuleSkill(id=''){if(!activeUser()?.admin)return;let r=id?ruleSkills
 async function saveRuleSkill(id=''){if(!activeUser()?.admin)return;let name=$('rsName').value.trim();if(!name){alert('Namn måste anges.');return}let payload={name,type:$('rsType').value.trim(),grundegenskap:$('rsGrund').value.trim(),cost:Number($('rsCost').value||0),bc:$('rsBc').value.trim()||'0',description:$('rsDesc').value.trim()};try{if(id)await dbJson('rule_skills?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});else await dbJson('rule_skills',{method:'POST',body:JSON.stringify(payload)});closeAdminEditor();await loadRuleSkills(true);renderAdminSkills();renderSkills();}catch(e){alert('Kunde inte spara färdigheten: '+e.message)}}
 async function deleteRuleSkill(id){if(!activeUser()?.admin)return;let r=ruleSkills.find(x=>x.id===id);if(!r)return;let used=(chars||[]).some(c=>(c.skills||[]).some(sk=>sk.skillId===id||(sk.name||'').localeCompare(r.name||'','sv',{sensitivity:'base'})===0));let msg=`Vill du verkligen ta bort ${r.name}?`+(used?'\n\nFärdigheten används av minst en rollfigur. Rollfigurens befintliga rad lämnas kvar, men regelkopplingen försvinner.':'');if(!await askConfirm('Ta bort färdighet',msg,'Ta bort',true))return;try{await dbJson('rule_skills?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadRuleSkills(true);renderAdminSkills();renderSkills()}catch(e){alert('Kunde inte ta bort färdigheten: '+e.message)}}
 function raceIdFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('race')}
-function renderAdminRaces(){let el=$('adminRaceTable'),st=$('adminRaceStatus');if(!el)return;if(!ruleRacesLoaded){el.innerHTML='';if(st)st.textContent='Rasregistret kunde inte läsas.';return}if(st)st.textContent=`${ruleRaces.length} raser i regelregistret.`;el.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Ordning</div><div class="ahead">Åtgärd</div>`+ruleRaces.map(r=>`<div><b>${escAttr(r.name||'—')}</b></div><div>${escAttr(r.category||'—')}</div><div>${Number(r.sort_order)||0}</div><div class="adminactions"><button class="smallbtn" onclick="editRuleRace('${r.id}')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleRace('${r.id}')" title="Ta bort">×</button></div>`).join('')}
-function editRuleRace(id=''){if(!activeUser()?.admin)return;let r=id?ruleRaces.find(x=>x.id===id):null;$('adminEditorTitle').textContent=r?'Redigera ras':'Lägg till ras';$('adminEditorBody').innerHTML=`<div class="rule-editor-grid"><label class="wide">Namn<input id="rrName" value="${escAttr(r?.name||'')}"></label><label>Kategori<input id="rrCategory" value="${escAttr(r?.category||'')}" placeholder="t.ex. Älvfolk"></label><label>Sorteringsordning<input id="rrSort" type="number" step="10" value="${r?.sort_order??((ruleRaces.length+1)*10)}"></label><label class="wide">Beskrivning<textarea id="rrDesc">${escAttr(r?.description||'')}</textarea></label></div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleRace('${id}')">Spara</button></div>`;$('adminEditor').classList.remove('hidden')}
-async function saveRuleRace(id=''){if(!activeUser()?.admin)return;let name=$('rrName').value.trim();if(!name){alert('Namn måste anges.');return}let payload={name,category:$('rrCategory').value.trim(),description:$('rrDesc').value.trim(),sort_order:Number($('rrSort').value||0)};try{if(id)await dbJson('rule_races?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});else{payload.id=raceIdFromName(name);await dbJson('rule_races',{method:'POST',body:JSON.stringify(payload)})}closeAdminEditor();await loadRuleRaces(true);renderAdminRaces();renderAdminOverviewCounts();if(current)render()}catch(e){alert('Kunde inte spara rasen: '+e.message)}}
+function raceRuleSummary(raceId){
+ let rows=raceRuleRows(raceId),rolls=rows.filter(r=>normalizeRaceRollFormula(r.roll_formula)).length,types=rows.filter(r=>r.typical_value!==null&&r.typical_value!==''&&Number.isFinite(Number(r.typical_value))).length;
+ return rolls+'/7 slag · '+types+'/7 typ'
+}
+function ruleRaceAttributeEditorHtml(raceId){
+ let rows=raceRuleRows(raceId||'');
+ return '<div class="race-attribute-editor"><div class="race-attribute-head"><span>Egenskap</span><span>Tärningsslag</span><span>Typvärde</span></div>'+
+ rows.map(r=>'<div class="race-attribute-row"><b>'+r.attribute_key+'</b><input id="rrRoll_'+r.attribute_key+'" value="'+escAttr(r.roll_formula||'')+'" placeholder="t.ex. 3T6"><input id="rrTypical_'+r.attribute_key+'" type="number" min="0" max="99" value="'+escAttr(r.typical_value??'')+'"></div>').join('')+
+ '<small>Tärningsformel: t.ex. 3T6, 2T6+6 eller 2T4+2.</small></div>'
+}
+function collectRuleRaceAttributes(){
+ return RULE_RACE_ATTRS.map(([key],i)=>{
+  let raw=$('rrRoll_'+key)?.value||'',formula=normalizeRaceRollFormula(raw);
+  if(raw.trim()&&!formula)throw new Error(key+': ogiltig tärningsformel.');
+  let typicalRaw=$('rrTypical_'+key)?.value??'',typical=typicalRaw===''?null:Number(typicalRaw);
+  if(typical!=null&&(!Number.isInteger(typical)||typical<0||typical>99))throw new Error(key+': typvärde måste vara 0–99.');
+  return{attribute_key:key,roll_formula:formula||null,typical_value:typical,sort_order:(i+1)*10}
+ })
+}
+function renderAdminRaces(){
+ let el=$('adminRaceTable'),st=$('adminRaceStatus');if(!el)return;
+ if(!ruleRacesLoaded||!ruleRaceAttributesLoaded){el.innerHTML='';if(st)st.textContent='Rasregistret kunde inte läsas.';return}
+ if(st)st.textContent=ruleRaces.length+' raser i regelregistret.';
+ el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Egenskaper</div><div class="ahead">Åtgärd</div>'+
+ ruleRaces.map(r=>'<div><b>'+escAttr(r.name||'—')+'</b></div><div>'+escAttr(r.category||'—')+'</div><div class="race-rule-summary">'+escAttr(raceRuleSummary(r.id))+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleRace(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleRace(\''+r.id+'\')" title="Ta bort">×</button></div>').join('')
+}
+function editRuleRace(id=''){
+ if(!activeUser()?.admin)return;
+ let r=id?ruleRaces.find(x=>x.id===id):null;
+ $('adminEditorTitle').textContent=r?'Redigera ras':'Lägg till ras';
+ $('adminEditorBody').innerHTML='<div class="rule-editor-grid"><label class="wide">Namn<input id="rrName" value="'+escAttr(r?.name||'')+'"></label><label>Kategori<input id="rrCategory" value="'+escAttr(r?.category||'')+'" placeholder="t.ex. Älvfolk"></label><label>Sorteringsordning<input id="rrSort" type="number" step="10" value="'+(r?.sort_order??((ruleRaces.length+1)*10))+'"></label><label class="wide">Beskrivning<textarea id="rrDesc">'+escAttr(r?.description||'')+'</textarea></label><div class="wide"><div class="admin-subsection-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">Tärningsslag och typvärde för rasen.</p></div></div>'+ruleRaceAttributeEditorHtml(r?.id||'')+'</div></div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleRace(\''+id+'\')">Spara</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+async function saveRuleRace(id=''){
+ if(!activeUser()?.admin)return;
+ let name=$('rrName').value.trim();if(!name){alert('Namn måste anges.');return}
+ let attrs;try{attrs=collectRuleRaceAttributes()}catch(e){alert(e.message);return}
+ let payload={name,category:$('rrCategory').value.trim(),description:$('rrDesc').value.trim(),sort_order:Number($('rrSort').value||0)};
+ try{
+  let raceId=id||raceIdFromName(name);
+  if(id)await dbJson('rule_races?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+  else{payload.id=raceId;await dbJson('rule_races',{method:'POST',body:JSON.stringify(payload)})}
+  await Promise.all(attrs.map(a=>dbJson('rule_race_attributes?race_id=eq.'+encodeURIComponent(raceId)+'&attribute_key=eq.'+encodeURIComponent(a.attribute_key),{method:'PATCH',body:JSON.stringify({roll_formula:a.roll_formula,typical_value:a.typical_value,sort_order:a.sort_order,updated_at:new Date().toISOString()})})));
+  closeAdminEditor();await loadRuleRaces(true);renderAdminRaces();renderAdminOverviewCounts();if(current)render()
+ }catch(e){alert('Kunde inte spara rasen: '+e.message)}
+}
 async function deleteRuleRace(id){if(!activeUser()?.admin)return;let r=ruleRaces.find(x=>x.id===id);if(!r)return;let used=(chars||[]).some(c=>(c.identity?.ras||'').localeCompare(r.name||'','sv',{sensitivity:'base'})===0);let msg=`Vill du verkligen ta bort ${r.name}?`+(used?'\n\nRasen används av minst en rollfigur. Rollfigurens befintliga rasttext lämnas kvar.':'');if(!await askConfirm('Ta bort ras',msg,'Ta bort',true))return;try{await dbJson('rule_races?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadRuleRaces(true);renderAdminRaces();renderAdminOverviewCounts();if(current)render()}catch(e){alert('Kunde inte ta bort rasen: '+e.message)}}
 function professionIdFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('profession')}
 function renderAdminProfessions(){let el=$('adminProfessionTable'),st=$('adminProfessionStatus');if(!el)return;if(!ruleProfessionsLoaded){el.innerHTML='';if(st)st.textContent='Yrkesregistret kunde inte läsas.';return}if(st)st.textContent=`${ruleProfessions.length} yrken i regelregistret.`;el.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Ordning</div><div class="ahead">Åtgärd</div>`+ruleProfessions.map(r=>`<div><b>${escAttr(r.name||'—')}</b></div><div>${Number(r.sort_order)||0}</div><div class="adminactions"><button class="smallbtn" onclick="editRuleProfession('${r.id}')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleProfession('${r.id}')" title="Ta bort">×</button></div>`).join('')}
@@ -768,12 +838,32 @@ function npcArmorOptions(selected){
  return '<option value="">Ingen / egen rustning</option>'+ruleArmorTypes.map(r=>'<option value="'+r.id+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+' · ABS '+r.absorption+'</option>').join('')
 }
 function adminNpcAttributesHtml(){
- return '<div class="slp-attribute-grid">'+NPC_ATTRS.map(([k,label])=>'<label><span>'+label+'</span><input data-npc-attr="'+k+'" type="number" min="0" max="99" value="'+escAttr(adminNpcDraft?.attributes?.[k]??'')+'" oninput="updateNpcKpPreview()"></label>').join('')+'</div><div class="slp-derived-note">Beräknad KP: <b id="npcKpPreview">'+(npcCalculatedKp(adminNpcDraft?.attributes)??'—')+'</b></div>'
+ return '<div class="slp-attribute-grid">'+NPC_ATTRS.map(([k,label])=>'<label><span>'+label+'</span><input data-npc-attr="'+k+'" type="number" min="0" max="99" value="'+escAttr(adminNpcDraft?.attributes?.[k]??'')+'" oninput="updateNpcKpPreview()"></label>').join('')+'</div><div class="slp-derived-note">Beräknad KP: <b id="npcKpPreview">'+(npcCalculatedKp(adminNpcDraft?.attributes)??'—')+'</b><span id="npcRaceRuleNote"></span></div>'
 }
 function collectAdminNpcAttributes(){
  let out={};NPC_ATTRS.forEach(([k])=>out[k]=npcNum(document.querySelector('[data-npc-attr="'+k+'"]')?.value));return out
 }
 function updateNpcKpPreview(){let el=$('npcKpPreview');if(el)el.textContent=npcCalculatedKp(collectAdminNpcAttributes())??'—'}
+function selectedNpcRaceRules(){return raceRuleByName($('cnRace')?.value||'')}
+function updateNpcRaceRuleAvailability(){
+ let info=selectedNpcRaceRules(),randomOk=!!info&&raceRulesCompleteForMode(info.rows,'random'),typicalOk=!!info&&raceRulesCompleteForMode(info.rows,'typical');
+ if($('npcRaceRandomBtn'))$('npcRaceRandomBtn').disabled=!randomOk;
+ if($('npcRaceTypicalBtn'))$('npcRaceTypicalBtn').disabled=!typicalOk;
+ let note=$('npcRaceRuleNote');
+ if(note)note.textContent=!info?' · välj ras':(randomOk&&typicalOk?' · rasregler klara':' · rasregler saknas/delvis')
+}
+function applyNpcRaceAttributes(mode){
+ let info=selectedNpcRaceRules();if(!info){alert('Välj först en ras.');return}
+ if(!raceRulesCompleteForMode(info.rows,mode)){alert(mode==='random'?'Rasen saknar kompletta tärningsslag.':'Rasen saknar kompletta typvärden.');return}
+ try{
+  info.rows.forEach(r=>{
+   let value=mode==='random'?rollRaceAttributeFormula(r.roll_formula):Number(r.typical_value),input=document.querySelector('[data-npc-attr="'+r.attribute_key+'"]');
+   if(input)input.value=value;if(adminNpcDraft?.attributes)adminNpcDraft.attributes[r.attribute_key]=value
+  });
+  updateNpcKpPreview();
+  let note=$('npcRaceRuleNote');if(note)note.textContent=' · '+info.race.name+' · '+(mode==='random'?'slumpad':'typvärden')
+ }catch(e){alert('Kunde inte fylla grundegenskaper: '+e.message)}
+}
 function renderAdminNpcSkills(){
  let el=$('npcSkillsList');if(!el||!adminNpcDraft)return;
  el.innerHTML=adminNpcDraft.skills.length?adminNpcDraft.skills.map((r,i)=>'<div class="slp-list-row slp-skill-row"><select onchange="setAdminNpcSkill('+i+',\'skill_id\',this.value)">'+npcSkillOptions(r.skill_id||'')+'</select><input type="number" min="0" max="99" placeholder="FV" value="'+escAttr(r.fv??'')+'" oninput="setAdminNpcSkill('+i+',\'fv\',this.value)"><button class="deletebtn" type="button" onclick="removeAdminNpcSkill('+i+')" title="Ta bort">×</button></div>').join(''):'<div class="slp-list-empty">Inga färdigheter tillagda.</div>'
@@ -821,8 +911,8 @@ function npcPortraitListHtml(x){
 function adminNpcEditorHtml(x,id){
  let a=adminNpcDraft?.armor||{},sh=adminNpcDraft?.shield||{};
  return '<div class="adminform slp-admin-form">'+
-  '<div class="slp-top-grid">'+adminNpcPortraitHtml()+'<div class="slp-basic-fields"><label>Namn<input id="cnName" value="'+escAttr(x?.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x?.title||'')+'"></label><label>Ras<select id="cnRace">'+raceOptions(x?.race||'')+'</select></label><label>Kön<input id="cnGender" value="'+escAttr(x?.gender||'')+'" placeholder="t.ex. kvinna, man"></label><label>Yrke<select id="cnProfession">'+professionOptions(x?.profession||'')+'</select></label><label>Aktuell plats<select id="cnLocation">'+locationOptions(x?.current_location_id||'',true)+'</select></label></div></div>'+
-  '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">Minirollpersonens sju grundegenskaper.</p></div></div>'+adminNpcAttributesHtml()+'</div>'+
+  '<div class="slp-top-grid">'+adminNpcPortraitHtml()+'<div class="slp-basic-fields"><label>Namn<input id="cnName" value="'+escAttr(x?.name||'')+'"></label><label>Roll / titel<input id="cnTitle" value="'+escAttr(x?.title||'')+'"></label><label>Ras<select id="cnRace" onchange="updateNpcRaceRuleAvailability()">'+raceOptions(x?.race||'')+'</select></label><label>Kön<input id="cnGender" value="'+escAttr(x?.gender||'')+'" placeholder="t.ex. kvinna, man"></label><label>Yrke<select id="cnProfession">'+professionOptions(x?.profession||'')+'</select></label><label>Aktuell plats<select id="cnLocation">'+locationOptions(x?.current_location_id||'',true)+'</select></label></div></div>'+
+  '<div class="adminform-section"><div class="admin-subsection-head slp-attribute-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">Minirollpersonens sju grundegenskaper.</p></div><div class="slp-attribute-actions"><button id="npcRaceRandomBtn" class="smallbtn" type="button" onclick="applyNpcRaceAttributes(\'random\')">🎲 Slumpa enligt ras</button><button id="npcRaceTypicalBtn" class="smallbtn" type="button" onclick="applyNpcRaceAttributes(\'typical\')">Typvärden</button></div></div>'+adminNpcAttributesHtml()+'</div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Färdigheter</h3><p class="muted" style="margin:3px 0 0">Lägg bara in de färdigheter som är relevanta för SLP:n.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcSkill()">+ Färdighet</button></div><div id="npcSkillsList" class="slp-list"></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Vapen och sköld</h3><p class="muted" style="margin:3px 0 0">Vapen kan kopplas till vapenregistret eller anges manuellt.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcWeapon()">+ Vapen</button></div><div id="npcWeaponsList" class="slp-list"></div><div class="slp-equipment-grid slp-shield-grid"><label>Sköld<input id="npcShieldName" value="'+escAttr(sh.name||'')+'" placeholder="t.ex. Rundsköld"></label><label>FV<input id="npcShieldFv" type="number" min="0" value="'+escAttr(sh.fv??'')+'"></label><label>BV<input id="npcShieldBv" type="number" min="0" value="'+escAttr(sh.bv??'')+'"></label></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Rustning</h3></div></div><div class="slp-equipment-grid"><label>Rustningstyp<select id="npcArmorType" onchange="setAdminNpcArmorType(this.value)">'+npcArmorOptions(a.armor_type_id||'')+'</select></label><label>Namn<input id="npcArmorName" value="'+escAttr(a.name||'')+'" placeholder="Egen rustning"></label><label>ABS<input id="npcArmorAbs" type="number" min="0" value="'+escAttr(a.absorption??'')+'"></label></div></div>'+
@@ -840,7 +930,7 @@ function editCampaignNpc(id){
  $('adminEditorBody').innerHTML=adminNpcEditorHtml(x,id);
  let modal=document.querySelector('#adminEditor .admineditor');if(modal)modal.classList.add('slp-editor');
  $('adminEditor').classList.remove('hidden');
- renderAdminNpcSkills();renderAdminNpcWeapons();updateNpcKpPreview()
+ renderAdminNpcSkills();renderAdminNpcWeapons();updateNpcKpPreview();updateNpcRaceRuleAvailability()
 }
 async function saveCampaignNpc(id){
  id=id||adminNpcDraft?.id||adminCombatIconDraft?.id||'';
