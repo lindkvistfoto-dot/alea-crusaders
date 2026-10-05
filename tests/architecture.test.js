@@ -209,4 +209,15 @@ describe("application architecture smoke checks", () => {
     expect(admin).toContain("function eventCombatHexGeometry");
     expect(runtime).toContain("function renderCombatMap");
   });
+  test("additional race source data is versioned", () => {
+    const sql = read("supabase/migrations/20261005_additional_race_attribute_rules.sql");
+    expect(sql).toContain("('svartalf','STY','2T6+2',9)");
+    expect(sql).toContain("('svartnisse','STO','1T2+1',3)");
+    expect(sql).toContain("('skogsalv','SMI','3T6+3',14)");
+    expect(sql).toContain("('graalv','KAR','3T6+2',13)");
+    expect(sql).toContain("('karkion','INT','3T6+6',17)");
+    expect(sql).toContain("('kentaur','STO','4T6+12',26)");
+    expect(sql).toContain("('rese','STY','3T6+24',35)");
+  });
+
 });
