@@ -55,6 +55,17 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function renderAdminProfessions");
   });
 
+  test("combat scene start positions support drag and click placement", () => {
+    const combat = read("features/combat/admin-scenes.js");
+    expect(combat).toContain("start_q");
+    expect(combat).toContain("start_r");
+    expect(combat).toContain("function sceneCombatantDragStart");
+    expect(combat).toContain("function sceneCombatantMapDrop");
+    expect(combat).toContain("function placeSceneCombatantAtHex");
+    expect(combat).toContain("ec-combatant-token");
+    expect(combat).toContain("Dra en kombatant till kartan");
+  });
+
   test("combat code is owned by combat packages", () => {
     const legacy = read("legacy/app.js");
     const admin = read("features/combat/admin-scenes.js");
