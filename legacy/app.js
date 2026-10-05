@@ -260,6 +260,82 @@ function renderAdminProfessions(){let el=$('adminProfessionTable'),st=$('adminPr
 function editRuleProfession(id=''){if(!activeUser()?.admin)return;let r=id?ruleProfessions.find(x=>x.id===id):null;$('adminEditorTitle').textContent=r?'Redigera yrke':'Lägg till yrke';$('adminEditorBody').innerHTML=`<div class="rule-editor-grid"><label class="wide">Namn<input id="rpName" value="${escAttr(r?.name||'')}"></label><label>Sorteringsordning<input id="rpSort" type="number" step="10" value="${r?.sort_order??((ruleProfessions.length+1)*10)}"></label><label class="wide">Beskrivning<textarea id="rpDesc">${escAttr(r?.description||'')}</textarea></label></div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleProfession('${id}')">Spara</button></div>`;$('adminEditor').classList.remove('hidden')}
 async function saveRuleProfession(id=''){if(!activeUser()?.admin)return;let name=$('rpName').value.trim();if(!name){alert('Namn måste anges.');return}let payload={name,description:$('rpDesc').value.trim(),sort_order:Number($('rpSort').value||0)};try{if(id)await dbJson('rule_professions?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});else{payload.id=professionIdFromName(name);await dbJson('rule_professions',{method:'POST',body:JSON.stringify(payload)})}closeAdminEditor();await loadRuleProfessions(true);renderAdminProfessions();renderAdminOverviewCounts();if(current)render()}catch(e){alert('Kunde inte spara yrket: '+e.message)}}
 async function deleteRuleProfession(id){if(!activeUser()?.admin)return;let r=ruleProfessions.find(x=>x.id===id);if(!r)return;let used=(chars||[]).some(c=>(c.identity?.yrke||'').localeCompare(r.name||'','sv',{sensitivity:'base'})===0);let msg=`Vill du verkligen ta bort ${r.name}?`+(used?'\n\nYrket används av minst en rollfigur. Rollfigurens befintliga yrkestext lämnas kvar.':'');if(!await askConfirm('Ta bort yrke',msg,'Ta bort',true))return;try{await dbJson('rule_professions?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadRuleProfessions(true);renderAdminProfessions();renderAdminOverviewCounts();if(current)render()}catch(e){alert('Kunde inte ta bort yrket: '+e.message)}}
+function ruleWeaponCategoryLabel(category){return({melee:'Närstrid',projectile:'Projektil',thrown:'Kastvapen'})[category]||category||'—'}
+function ruleWeaponNumberValue(id,{nullable=false,integer=false,min=0}={}){
+ let raw=$(id)?.value??'';if(raw==='')return nullable?null:0;let value=Number(raw);
+ if(!Number.isFinite(value)||(integer&&!Number.isInteger(value))||value<min)throw new Error('Kontrollera numeriska värden i vapenformuläret.');
+ return value
+}
+function renderAdminWeapons(){
+ let el=$('adminWeaponTable'),st=$('adminWeaponStatus');if(!el)return;
+ if(!ruleWeaponsLoaded){el.innerHTML='';if(st)st.textContent='Vapenregistret kunde inte läsas.';return}
+ if(st)st.textContent=ruleWeapons.length+' vapen i regelregistret.';
+ if(!ruleWeapons.length){el.innerHTML='<div class="admin-weapon-empty">Inga vapen finns ännu. Lägg till det första vapnet.</div>';return}
+ el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
+  ruleWeapons.map(r=>'<div><b>'+escAttr(r.name||'—')+'</b></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>').join('')
+}
+function editRuleWeapon(id=''){
+ if(!activeUser()?.admin)return;let r=id?ruleWeapons.find(x=>x.id===id):null;
+ let category=r?.category||'melee',handling=r?.handling||'1H',tags=Array.isArray(r?.tags)?r.tags.join(', '):'';
+ $('adminEditorTitle').textContent=r?'Redigera vapen':'Lägg till vapen';
+ $('adminEditorBody').innerHTML=
+  '<div class="rule-editor-grid weapon-rule-editor">'+
+   '<label class="wide">Namn<input id="rwName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Kategori<select id="rwCategory"><option value="melee" '+(category==='melee'?'selected':'')+'>Närstrid</option><option value="projectile" '+(category==='projectile'?'selected':'')+'>Projektil</option><option value="thrown" '+(category==='thrown'?'selected':'')+'>Kastvapen</option></select></label>'+
+   '<label>Grepp<select id="rwHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
+   '<label>STY-grupp<input id="rwStrengthGroup" type="number" min="0" step="1" value="'+escAttr(r?.strength_group??0)+'"></label>'+
+   '<label>Skada<input id="rwDamage" value="'+escAttr(r?.damage||'')+'" placeholder="t.ex. 1T8+1"></label>'+
+   '<label>Vapenlängd<input id="rwLength" type="number" min="0" step="1" value="'+escAttr(r?.weapon_length??'')+'"></label>'+
+   '<label>BEP<input id="rwBep" type="number" min="0" step="0.1" value="'+escAttr(r?.bep??0)+'"></label>'+
+   '<label>BV<input id="rwBv" type="number" min="0" step="1" value="'+escAttr(r?.bv??'')+'"></label>'+
+   '<label>Vapentyp<input id="rwType" value="'+escAttr(r?.weapon_type||'')+'" placeholder="t.ex. Svärd"></label>'+
+   '<label>Pris<input id="rwPrice" type="number" min="0" step="0.01" value="'+escAttr(r?.price??'')+'"></label>'+
+   '<label>Räckvidd<input id="rwRange" value="'+escAttr(r?.range_text||'')+'" placeholder="t.ex. 20 m"></label>'+
+   '<label>Omladdning, rundor<input id="rwReload" type="number" min="0" step="1" value="'+escAttr(r?.reload_rounds??'')+'"></label>'+
+   '<label>Sorteringsordning<input id="rwSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleWeapons.length+1)*10))+'"></label>'+
+   '<label class="wide">Taggar<input id="rwTags" value="'+escAttr(tags)+'" placeholder="kommaseparerade, t.ex. klinga, militär"></label>'+
+   '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+  '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+async function saveRuleWeapon(id=''){
+ if(!activeUser()?.admin)return;let name=$('rwName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ try{
+  let payload={
+   name,
+   category:$('rwCategory')?.value||'melee',
+   handling:$('rwHandling')?.value||'1H',
+   strength_group:ruleWeaponNumberValue('rwStrengthGroup',{integer:true}),
+   damage:$('rwDamage')?.value.trim()||'',
+   weapon_length:ruleWeaponNumberValue('rwLength',{nullable:true,integer:true}),
+   bep:ruleWeaponNumberValue('rwBep'),
+   bv:ruleWeaponNumberValue('rwBv',{nullable:true,integer:true}),
+   weapon_type:$('rwType')?.value.trim()||'',
+   price:ruleWeaponNumberValue('rwPrice',{nullable:true}),
+   range_text:$('rwRange')?.value.trim()||'',
+   reload_rounds:ruleWeaponNumberValue('rwReload',{nullable:true,integer:true}),
+   notes:$('rwNotes')?.value.trim()||'',
+   sort_order:Number($('rwSort')?.value||0),
+   tags:($('rwTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
+   updated_at:new Date().toISOString()
+  };
+  if(id)await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+  else await dbJson('rule_weapons',{method:'POST',body:JSON.stringify(payload)});
+  closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render()
+ }catch(e){alert('Kunde inte spara vapnet: '+e.message)}
+}
+async function deleteRuleWeapon(id){
+ if(!activeUser()?.admin)return;let r=ruleWeapons.find(x=>x.id===id);if(!r)return;
+ let usedByCharacter=(chars||[]).some(c=>(c.weapons||[]).some(w=>w.weaponTypeId===id));
+ let usedByNpc=(campaignNpcs||[]).some(n=>(n.weapons||[]).some(w=>w.weapon_id===id));
+ let usedByEnemy=(campaignMonsters||[]).some(n=>(n.weapons||[]).some(w=>w.weapon_id===id));
+ let used=usedByCharacter||usedByNpc||usedByEnemy;
+ let msg='Vill du verkligen ta bort '+r.name+'?'+(used?'\n\nVapnet används redan av en rollfigur, SLP, fiende eller monster. Befintliga kopior behåller sina sparade värden men registerkopplingen försvinner.':'');
+ if(!await askConfirm('Ta bort vapen',msg,'Ta bort',true))return;
+ try{await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render()}
+ catch(e){alert('Kunde inte ta bort vapnet: '+e.message)}
+}
+
 async function ensureCentralCampaign(){let rows=await dbJson('campaigns?select=id,name,created_by&order=created_at.asc');let c=rows.find(x=>x.name==='Skelettbyns Hemlighet')||rows[0];if(!c&&activeUser()?.admin){let created=await dbJson('campaigns',{method:'POST',body:JSON.stringify({name:'Skelettbyns Hemlighet',description:'Alea Crusaders-kampanj',created_by:supabaseSession.user.id})});c=created&&created[0];if(c)await dbJson('campaign_members',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({campaign_id:c.id,user_id:supabaseSession.user.id,role:'gm'})})}centralCampaignId=c?.id||null;return c}
 async function importLocalCharactersToCentral(){if(!centralCampaignId||!activeUser()?.admin||!chars.length)return;let payload=chars.map(c=>({campaign_id:centralCampaignId,owner_id:null,name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c),created_by:supabaseSession.user.id}));let rows=await dbJson('characters',{method:'POST',body:JSON.stringify(payload)});if(rows?.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||r.data?.ownerId||'SLP'}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));}}
 async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;return}let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||r.data?.ownerId||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];chars.forEach(c=>{ensureEquipmentState(c);c.projectiles=c.projectiles||[];c.spells=c.spells||[];c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralReady=true}
@@ -305,6 +381,7 @@ const ADMIN_SECTION_META={
  skills:['Färdigheter','Centralt regelregister'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
+ weapons:['Vapen','Centralt vapenregister'],
  campaigns:['Kampanjer','Kampanjinställningar och deltagare'],
  users:['Användare','Konton och behörigheter'],
  data:['Datahantering','Import och säkerhetskopiering']
@@ -319,6 +396,7 @@ function renderAdminOverviewCounts(){
  set('adminCountSkills',ruleSkills.length);
  set('adminCountProfessions',ruleProfessions.length);
  set('adminCountRaces',ruleRaces.length);
+ set('adminCountWeapons',ruleWeapons.length);
  set('adminCountCampaigns',adminData.campaigns.length);
  set('adminCountUsers',adminData.users.length)
 }
@@ -347,9 +425,9 @@ async function openAdminSection(key='overview'){
  }
  window.scrollTo({top:0,behavior:'smooth'})
 }
-async function openAdmin(){if(!activeUser()?.admin)return;editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
+async function openAdmin(){if(!activeUser()?.admin)return;editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleWeapons(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
 function closeAdmin(){activeAdminSection='overview';$('admin').classList.add('hidden');$('home').classList.remove('hidden');renderCards()}
-function renderAdmin(){let ut=$('userTable');ut.innerHTML=`<div class="ahead">Namn</div><div class="ahead emailcol">E-post</div><div class="ahead">Admin</div><div class="ahead">Åtgärd</div>`+adminData.users.map(u=>`<div>${escAttr(u.name||'—')}</div><div class="emailcol">${escAttr(u.email||'—')}</div><div>${u.admin?'Ja':'Nej'}</div><div class="adminactions"><button class="smallbtn" onclick="editUser('${u.id}')">✎</button><button class="deletebtn" onclick="deleteUser('${u.id}')">×</button></div>`).join('');let ct=$('campaignTable');ct.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Spelare</div><div class="ahead slcol">SL</div><div class="ahead">Åtgärd</div>`+adminData.campaigns.map(c=>`<div>${escAttr(c.name||'—')}</div><div>${(c.players||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="slcol">${(c.gms||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="adminactions"><button class="smallbtn" onclick="editCampaign('${c.id}')">✎</button><button class="deletebtn" onclick="deleteCampaign('${c.id}')">×</button></div>`).join('');let dd=$('currentCampaign');dd.innerHTML=`<option value="">Ingen vald</option>`+adminData.campaigns.map(c=>`<option value="${escAttr(c.id)}" ${adminData.currentCampaignId===c.id?'selected':''}>${escAttr(c.name||'Namnlös kampanj')}</option>`).join('');renderCurrentCampaignGM();renderAdminMaps();renderAdminCampaignContent();renderAdminCombatSceneList();renderAdminSkills();renderAdminProfessions();renderAdminRaces();renderAdminOverviewCounts()}function renderCurrentCampaignGM(){let el=$('currentCampaignGM');if(!el)return;let c=adminData.campaigns.find(x=>x.id===adminData.currentCampaignId);el.innerHTML=c?`SL: <b>${(c.gms||[]).map(userName).map(escAttr).join(', ')||'Ingen angiven'}</b>`:''}
+function renderAdmin(){let ut=$('userTable');ut.innerHTML=`<div class="ahead">Namn</div><div class="ahead emailcol">E-post</div><div class="ahead">Admin</div><div class="ahead">Åtgärd</div>`+adminData.users.map(u=>`<div>${escAttr(u.name||'—')}</div><div class="emailcol">${escAttr(u.email||'—')}</div><div>${u.admin?'Ja':'Nej'}</div><div class="adminactions"><button class="smallbtn" onclick="editUser('${u.id}')">✎</button><button class="deletebtn" onclick="deleteUser('${u.id}')">×</button></div>`).join('');let ct=$('campaignTable');ct.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Spelare</div><div class="ahead slcol">SL</div><div class="ahead">Åtgärd</div>`+adminData.campaigns.map(c=>`<div>${escAttr(c.name||'—')}</div><div>${(c.players||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="slcol">${(c.gms||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="adminactions"><button class="smallbtn" onclick="editCampaign('${c.id}')">✎</button><button class="deletebtn" onclick="deleteCampaign('${c.id}')">×</button></div>`).join('');let dd=$('currentCampaign');dd.innerHTML=`<option value="">Ingen vald</option>`+adminData.campaigns.map(c=>`<option value="${escAttr(c.id)}" ${adminData.currentCampaignId===c.id?'selected':''}>${escAttr(c.name||'Namnlös kampanj')}</option>`).join('');renderCurrentCampaignGM();renderAdminMaps();renderAdminCampaignContent();renderAdminCombatSceneList();renderAdminSkills();renderAdminProfessions();renderAdminRaces();renderAdminWeapons();renderAdminOverviewCounts()}function renderCurrentCampaignGM(){let el=$('currentCampaignGM');if(!el)return;let c=adminData.campaigns.find(x=>x.id===adminData.currentCampaignId);el.innerHTML=c?`SL: <b>${(c.gms||[]).map(userName).map(escAttr).join(', ')||'Ingen angiven'}</b>`:''}
 function setCurrentCampaign(id){adminData.currentCampaignId=id;saveAdmin();renderCurrentCampaignGM()}
 function closeAdminEditor(){
  let st=eventCombatEditorState;

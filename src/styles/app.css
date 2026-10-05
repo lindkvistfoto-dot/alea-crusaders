@@ -368,6 +368,16 @@ header #editBtn{font-size:20px;min-width:42px}
 .rule-description{white-space:pre-line;line-height:1.6}
 .rule-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rule-editor-grid label{font-size:12px;color:#6b5b4a;font-weight:800}.rule-editor-grid input,.rule-editor-grid select,.rule-editor-grid textarea{width:100%;margin-top:5px;padding:9px;border:1px solid #9b805d;border-radius:8px;background:#fffaf0;color:#2a2119}.rule-editor-grid .wide{grid-column:1/-1}.rule-editor-grid textarea{min-height:180px;resize:vertical}.rule-editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.skill-picker-list{display:grid;gap:10px}.skill-picker-list select,.skill-picker-list input{width:100%;padding:10px;border:1px solid #9b805d;border-radius:8px;background:#fffaf0;color:#2a2119}
 @media(max-width:700px){.adminskilltable{grid-template-columns:170px 60px 105px 72px 60px 78px;font-size:13px}.adminskilltable>div{padding:9px 6px}.rule-editor-grid{grid-template-columns:1fr}}
+.adminweapontable{display:grid;grid-template-columns:minmax(150px,1.5fr) 100px 74px 82px 92px minmax(110px,1fr) 90px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
+.adminweapontable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
+.adminweapontable .ahead{background:#6d1e1e;font-weight:800}
+.adminweapontable .admin-weapon-empty{grid-column:1/-1;color:#b9a68f;padding:14px}
+.weapon-rule-editor textarea{min-height:120px}
+@media(max-width:700px){
+ .adminweapontable{grid-template-columns:160px 90px 64px 76px 82px 105px 78px;font-size:13px}
+ .adminweapontable>div{padding:9px 6px}
+}
+
 .adminmaptable{display:grid;grid-template-columns:minmax(150px,1.4fr) minmax(130px,1fr) 90px 160px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
 .adminmaptable>div,.adminsitetable>div,.adminlocationtable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
 .adminsitetable{display:grid;grid-template-columns:90px minmax(150px,1fr) 110px 120px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
