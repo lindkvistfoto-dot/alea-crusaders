@@ -9,6 +9,48 @@ let shopSearch='';
 let shopCart=loadShopCart();
 let shopBuyerId='';
 let shopCheckoutBusy=false;
+let shopHeroObjectUrl='';
+let shopHeroLoading=null;
+const SHOP_HERO_CHUNKS=[
+  './assets/targans-gille-hero/chunk-00.b64?v=0.31.26',
+  './assets/targans-gille-hero/chunk-01.b64?v=0.31.26',
+  './assets/targans-gille-hero/chunk-02.b64?v=0.31.26',
+  './assets/targans-gille-hero/chunk-03.b64?v=0.31.26',
+  './assets/targans-gille-hero/chunk-04.b64?v=0.31.26',
+  './assets/targans-gille-hero/chunk-05.b64?v=0.31.26'
+];
+
+async function loadShopHeroImage(){
+  const img=document.getElementById('shopHeroImage');
+  if(!img)return;
+  if(shopHeroObjectUrl){
+    img.src=shopHeroObjectUrl;
+    img.classList.add('loaded');
+    return;
+  }
+  if(!shopHeroLoading){
+    shopHeroLoading=(async()=>{
+      const parts=await Promise.all(SHOP_HERO_CHUNKS.map(async path=>{
+        const response=await fetch(path,{cache:'force-cache'});
+        if(!response.ok)throw new Error('Kunde inte ladda Targans bild');
+        return (await response.text()).trim();
+      }));
+      const binary=atob(parts.join(''));
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      shopHeroObjectUrl=URL.createObjectURL(new Blob([bytes],{type:'image/webp'}));
+      return shopHeroObjectUrl;
+    })().catch(error=>{
+      console.warn('Targans hero kunde inte laddas',error);
+      return '';
+    });
+  }
+  const url=await shopHeroLoading;
+  if(url&&document.getElementById('shopHeroImage')===img){
+    img.src=url;
+    img.onload=()=>img.classList.add('loaded');
+  }
+}
 
 function shopEsc(value){
   return String(value??'')
@@ -501,7 +543,7 @@ function renderShopCart(){
   count.textContent=String(units);
   clear?.classList.toggle('hidden',!rows.length);
   if(!rows.length){
-    host.innerHTML='<div class="shop-cart-empty">Varukorgen är tom.</div>';
+    host.innerHTML='<div class="shop-cart-empty">Targan väntar på din beställning.</div>';
     total.textContent='0 KM';
     renderShopBuyer();
     return;
@@ -543,6 +585,7 @@ async function openShop(){
   document.getElementById('editBtn')?.classList.add('hidden');
   document.getElementById('cancelEditBtn')?.classList.add('hidden');
   document.body.classList.add('shop-open');
+  void loadShopHeroImage();
   try{
     await loadShopCatalog();
     renderShopCategories();
