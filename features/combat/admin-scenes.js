@@ -407,23 +407,20 @@ function sceneCombatantMapDrop(e){
 }
 function renderEventCombatMapEditor(){
  let st=eventCombatEditorState;if(!st)return;
- let set=st.settings,directStatus=st.backgroundPath?'<div class="event-combat-direct-status"><span>Direktuppladdad stridsbild aktiv · sparas endast med stridsscenen</span><button class="smallbtn" type="button" onclick="removeEventCombatDirectBackground()">Ta bort</button></div>':'';
+ let set=st.settings;
  $('adminEditorBody').innerHTML=
  '<div class="event-combat-editor-layout">'+
   '<div class="event-combat-settings">'+
    '<label>Namn på stridsscenen<input id="ecSceneName" value="'+escAttr(st.sceneName||'')+'" placeholder="t.ex. Bron" oninput="eventCombatEditorState.sceneName=this.value"></label>'+
    '<label>Händelse<select id="ecEvent" onchange="eventCombatEditorState.sourceEventId=this.value;eventCombatEditorState.dirty=true">'+combatSceneEventOptions(st.sourceEventId)+'</select></label>'+
    '<label>Plats<select id="ecLocation" onchange="changeEventCombatSceneLocation(this.value)">'+combatSceneLocationOptions(st.locationId)+'</select></label>'+
-   '<div class="event-combat-map-source">'+
-     '<div class="event-combat-map-upload"><div><b>Bakgrundskarta</b><small>Ladda upp en bild som hör endast till denna stridsscen. Den läggs inte till bland platsstrukturens permanenta kartor.</small></div><button class="smallbtn" type="button" onclick="$(\'ecSceneMapFile\').click()">↑ Ladda upp kartbild</button><input id="ecSceneMapFile" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="handleCombatSceneMapFile(this.files&&this.files[0]);this.value=\'\'"></div>'+
-     directStatus+
-     '<label class="event-combat-existing-map">Eller välj befintlig karta<select id="ecMap" onchange="changeEventCombatMap(this.value)" '+(st.backgroundPath?'disabled':'')+'>'+combatSceneMapOptions(st.mapId,st.locationId)+'</select></label>'+
-   '</div>'+
+
    '<label>Kartans höjd (meter)<input id="ecHeight" type="number" min="3" step="1.5" value="'+set.map_height_m+'" oninput="eventCombatCalibrationChanged()"></label>'+
    '<div class="event-combat-derived"><b id="ecRows">'+set.rows+'</b> hexrader · <b>1,5 m</b> per hex</div>'+
    '<details><summary>Finjustera hexnät</summary><div class="event-combat-offsets"><label>Hexstorlek (%)<input id="ecHexScale" type="number" min="50" max="150" step="1" value="'+Math.round((set.hex_scale||1)*100)+'" oninput="eventCombatCalibrationChanged()"></label><label>X-förskjutning<input id="ecOffsetX" type="number" step="1" value="'+set.offset_x+'" oninput="eventCombatCalibrationChanged()"></label><label>Y-förskjutning<input id="ecOffsetY" type="number" step="1" value="'+set.offset_y+'" oninput="eventCombatCalibrationChanged()"></label></div></details>'+
   '</div>'+
-  '<div id="eventCombatCanvas" class="event-combat-canvas" ondragover="sceneCombatantMapDragOver(event)" ondragleave="sceneCombatantMapDragLeave(event)" ondrop="sceneCombatantMapDrop(event)"><div class="event-combat-loading">Välj eller ladda upp karta…</div></div>'+
+  '<input id="ecSceneMapFile" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="handleCombatSceneMapFile(this.files&&this.files[0]);this.value=\'\'">'+
+  '<div id="eventCombatCanvas" class="event-combat-canvas" ondragover="sceneCombatantMapDragOver(event)" ondragleave="sceneCombatantMapDragLeave(event)" ondrop="sceneCombatantMapDrop(event)"><button class="event-combat-map-picker" type="button" onclick="$(\'ecSceneMapFile\').click()"><span>🗺</span><b>Välj kartbild</b><small>Klicka här för att ladda upp kartan till stridsscenen.</small></button></div>'+
   '<div class="event-combat-compact-toolbar">'+
     '<button id="ecToolSelect" class="smallbtn '+(st.tool==='select'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='select'?'true':'false')+'" onclick="setEventCombatTool(\'select\')" title="Markera hex">⬡ Markera</button>'+
     '<button id="ecToolBrush" class="smallbtn '+(st.tool==='brush'?'active':'')+'" type="button" aria-pressed="'+(st.tool==='brush'?'true':'false')+'" onclick="setEventCombatTool(\'brush\')" title="Pensla markering">🖌 Pensel</button>'+
@@ -526,7 +523,12 @@ function eventCombatTerrainTitle(h){
 function renderEventCombatHexCanvas(){
  let st=eventCombatEditorState,el=$('eventCombatCanvas');if(!st||!el)return;
  let meta=eventCombatImageMeta(),g=eventCombatHexGeometry();
- if(!meta||!g){el.innerHTML='<div class="event-combat-loading">Välj en befintlig karta eller ladda upp en stridsbild.</div>';return}
+ if(!meta||!g){
+  el.classList.add('empty-map');
+  el.innerHTML='<button class="event-combat-map-picker" type="button" onclick="$(\'ecSceneMapFile\').click()"><span>🗺</span><b>Välj kartbild</b><small>Klicka på kartytan för att ladda upp en bild till stridsscenen.</small></button>';
+  return
+ }
+ el.classList.remove('empty-map');
  if(!st.imageUrl){el.innerHTML='<div class="event-combat-loading">Laddar kartbild…</div>';return}
  let cells=eventCombatHexCells(),cellMap=new Map(cells.map(c=>[c.key,c])),svg=cells.map(c=>{
   let h=st.hexes.get(c.key)||null,pts=eventCombatHexPolygon(c.x,c.y,g.size*.97),sel=st.selected.has(c.key),overlays='';
@@ -556,7 +558,7 @@ function renderEventCombatHexCanvas(){
  '<pattern id="ecObscuring" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.4" fill="rgba(98,135,157,.8)"/><circle cx="8" cy="7" r="1.2" fill="rgba(98,135,157,.65)"/></pattern>'+
  tokenDefs+'</defs>';
  let zoom=Math.max(.5,Math.min(4,Number(st.zoom)||1));
- el.innerHTML='<div class="event-combat-stage" style="width:'+(zoom*100)+'%;aspect-ratio:'+g.width+'/'+g.height+'"><img src="'+st.imageUrl+'" alt="'+escAttr(meta.name)+'"><svg viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="none" onpointerdown="eventCombatPointerDown(event)" onpointermove="eventCombatPointerMove(event)" onpointerup="eventCombatPointerUp(event)" onpointercancel="eventCombatPointerUp(event)" onwheel="eventCombatWheel(event)">'+defs+svg+tokens+'</svg></div>';
+ el.innerHTML='<button class="smallbtn event-combat-change-map" type="button" onclick="$(\'ecSceneMapFile\').click()">Byt kartbild</button><div class="event-combat-stage" style="width:'+(zoom*100)+'%;aspect-ratio:'+g.width+'/'+g.height+'"><img src="'+st.imageUrl+'" alt="'+escAttr(meta.name)+'"><svg viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="none" onpointerdown="eventCombatPointerDown(event)" onpointermove="eventCombatPointerMove(event)" onpointerup="eventCombatPointerUp(event)" onpointercancel="eventCombatPointerUp(event)" onwheel="eventCombatWheel(event)">'+defs+svg+tokens+'</svg></div>';
  updateEventCombatSelectionCount();updateEventCombatZoomLabel()
 }
 function eventCombatHexNeighbors(q,r){return [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]]}
@@ -782,7 +784,7 @@ async function saveEventCombatMapEditor(){
  let st=eventCombatEditorState;if(!st)return;
  let name=String($('ecSceneName')?.value||st.sceneName||'').trim();
  if(!name){alert('Namn på stridsscenen måste anges.');return}
- if(!st.mapId&&!st.backgroundPath){alert('Välj en befintlig karta eller ladda upp en stridsbild.');return}
+ if(!st.mapId&&!st.backgroundPath){alert('Välj en kartbild för stridsscenen.');return}
  try{
   let settings={hex_m:1.5,map_height_m:st.settings.map_height_m,rows:st.settings.rows,hex_scale:st.settings.hex_scale||1,offset_x:st.settings.offset_x,offset_y:st.settings.offset_y,terrain_visibility:'clear'};
   let body={
