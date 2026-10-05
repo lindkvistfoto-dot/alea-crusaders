@@ -220,4 +220,15 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("('rese','STY','3T6+24',35)");
   });
 
+  test("SLP admin list fits mobile viewport without horizontal scrolling", () => {
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    expect(legacy).toContain('class="ahead npc-col-title"');
+    expect(legacy).toContain('class="npc-admin-mobile-title"');
+    expect(css).toContain(".npcadmintable .npc-col-title{display:none}");
+    expect(css).toContain("grid-template-columns:minmax(0,1fr) 64px 72px");
+    expect(css).toContain("max-width:100%");
+    expect(css).toContain("overflow:hidden");
+  });
+
 });
