@@ -750,15 +750,32 @@ async function openCampaignDay(){
  renderCampaignDayModal();$('campaignDayModal').classList.remove('hidden')
 }
 function closeCampaignDay(){$('campaignDayModal').classList.add('hidden')}
+function characterRaceRule(c=current){
+ let race=String(c?.identity?.ras||'').trim();if(!race)return null;
+ return ruleRaces.find(r=>(r.name||'').localeCompare(race,'sv',{sensitivity:'base'})===0)||null
+}
+function characterErfRestHours(c=current){
+ let rr=characterRaceRule(c);
+ return rr?.category==='Älvfolk'?2:6
+}
+function characterRestThresholdHtml(hours=Number(campaignDayState?.rest_hours)||0){
+ let list=(chars||[]).filter(c=>c?.identity?.namn);
+ if(!list.length)return '';
+ return '<div class="campaign-day-section campaign-rest-status"><h3>ERF-vila per rollperson</h3><div class="character-rest-grid">'+list.map(c=>{
+  let threshold=characterErfRestHours(c),rr=characterRaceRule(c),isElf=rr?.category==='Älvfolk',met=hours>=threshold;
+  return '<div class="character-rest-row '+(met?'rest-ok':'rest-need')+'"><div><b>'+escAttr(c.identity.namn||'Namnlös')+'</b><span>'+escAttr(c.identity.ras||'Okänd ras')+(isElf?' · Älvfolk':'')+'</span></div><div class="character-rest-rule"><strong>'+threshold+' h</strong><span>'+(met?'ERF återställd':'krävs för ny ERF-period')+'</span></div></div>'
+ }).join('')+'</div></div>'
+}
 function renderCampaignDayModal(){
  let el=$('campaignDayBody');if(!el)return;
  if(!campaignDayState){el.innerHTML='<div class="muted">Ingen dagstatus finns för kampanjen.</div>';return}
  let d=campaignDayState,w=String(d.weather||''),manager=campaignDayManager(),hours=Number(d.rest_hours)||0;
  let status=hours>0?(hours+' h vila'):'Ingen vila';
  let summary='<div class="campaign-day-summary"><div class="campaign-day-card"><div class="k">Dag</div><div class="v">'+d.day_number+'</div></div><div class="campaign-day-card"><div class="k">Väder</div><div class="v">'+escAttr(w||'Ej angivet')+'</div></div><div class="campaign-day-card"><div class="k">Vila</div><div class="v">'+status+'</div></div></div>';
- let note='<div class="campaign-day-note">Varje hel vilad timme återställer <b>1 PSY</b> upp till rollpersonens start-/maxvärde. En ny ERF-period öppnas efter minst <b>6 timmars vila</b>. För rollpersoner med ras <b>Alv</b> räcker <b>2 timmar</b>. En färdighet som redan fått ERF förblir annars låst.</div><div class="rest-rule-grid"><div class="rest-rule-card"><b>Vanliga raser</b><br>6 h vila → ERF-gränsen nollställs.</div><div class="rest-rule-card"><b>Alv</b><br>2 h vila → ERF-gränsen nollställs.</div></div>';
- if(!manager){el.innerHTML=summary+note;return}
- el.innerHTML=summary+note+'<div class="campaign-day-section"><h3>Ändra dagens väder</h3><label class="campaign-day-field">Väder<input id="currentDayWeather" value="'+escAttr(w)+'" placeholder="T.ex. regn, hård vind, klart"></label><div class="campaign-day-actions"><button class="btn primary" onclick="saveCampaignWeather()">Spara väder</button></div></div><div class="campaign-day-section"><h3>Starta ny dag</h3><label class="campaign-day-field">Väder för nästa dag<input id="nextDayWeather" value="'+escAttr(w)+'" placeholder="T.ex. dimma, ösregn, klart"></label><div class="rest-hours-row"><label class="campaign-day-field">Vilotid i timmar<input id="nextDayRestHours" type="number" min="1" max="24" step="1" value="6"></label><div class="campaign-day-note">1 PSY per hel timme.</div></div><div class="campaign-day-actions" style="margin-top:12px"><button class="btn" onclick="advanceCampaignDay(false)">Ny dag utan vila</button><button class="btn primary" onclick="advanceCampaignDay(true)">Ny dag med vila</button></div></div>'
+ let note='<div class="campaign-day-note">Varje hel vilad timme återställer <b>1 PSY</b> upp till rollpersonens start-/maxvärde. En ny ERF-period öppnas normalt efter minst <b>6 timmars vila</b>. Alla raser i kategorin <b>Älvfolk</b> behöver bara <b>2 timmar</b>. En färdighet som redan fått ERF förblir annars låst.</div><div class="rest-rule-grid"><div class="rest-rule-card"><b>Övriga raser</b><br>6 h vila → ERF-gränsen nollställs.</div><div class="rest-rule-card"><b>Älvfolk</b><br>2 h vila → ERF-gränsen nollställs.</div></div>';
+ let restStatus=characterRestThresholdHtml(hours);
+ if(!manager){el.innerHTML=summary+note+restStatus;return}
+ el.innerHTML=summary+note+restStatus+'<div class="campaign-day-section"><h3>Ändra dagens väder</h3><label class="campaign-day-field">Väder<input id="currentDayWeather" value="'+escAttr(w)+'" placeholder="T.ex. regn, hård vind, klart"></label><div class="campaign-day-actions"><button class="btn primary" onclick="saveCampaignWeather()">Spara väder</button></div></div><div class="campaign-day-section"><h3>Starta ny dag</h3><label class="campaign-day-field">Väder för nästa dag<input id="nextDayWeather" value="'+escAttr(w)+'" placeholder="T.ex. dimma, ösregn, klart"></label><div class="rest-hours-row"><label class="campaign-day-field">Vilotid i timmar<input id="nextDayRestHours" type="number" min="1" max="24" step="1" value="6"></label><div class="campaign-day-note">1 PSY per hel timme.</div></div><div class="campaign-day-actions" style="margin-top:12px"><button class="btn" onclick="advanceCampaignDay(false)">Ny dag utan vila</button><button class="btn primary" onclick="advanceCampaignDay(true)">Ny dag med vila</button></div></div>'
 }
 async function saveCampaignWeather(){
  if(!campaignDayManager()||!centralCampaignId)return;
@@ -775,7 +792,7 @@ async function advanceCampaignDay(withRest){
  if(withRest&&restHours<=0){alert('Ange vilotid i timmar.');return}
  let fullHours=Math.floor(restHours);
  let msg=withRest
-  ?restHours+' h vila. Varje rollperson återfår '+fullHours+' PSY upp till max. ERF-gränsen nollställs vid minst 6 h vila, eller 2 h för alver.'
+  ?restHours+' h vila. Varje rollperson återfår '+fullHours+' PSY upp till max. ERF-gränsen nollställs vid minst 6 h vila, eller 2 h för alla raser i kategorin Älvfolk.'
   :'Ingen vila. PSY återhämtas inte och ERF-gränsen nollställs inte.';
  if(weather)msg+='\nVäder: '+weather;
  let ok=await askConfirm('Starta dag '+next,msg,'Starta dag');

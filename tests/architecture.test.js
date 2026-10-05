@@ -25,6 +25,14 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("elf races use the two-hour ERF rest rule", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("function characterErfRestHours");
+    expect(legacy).toContain("rr?.category==='Älvfolk'?2:6");
+    expect(legacy).toContain("ERF-vila per rollperson");
+    expect(legacy).toContain("Alla raser i kategorin <b>Älvfolk</b> behöver bara <b>2 timmar</b>");
+  });
+
   test("race registry is wired into character editing", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
