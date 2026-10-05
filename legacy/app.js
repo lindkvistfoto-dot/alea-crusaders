@@ -914,11 +914,11 @@ async function deleteCombatIconAsset(path){
 async function preloadCharacterCombatIcons(list){
  await Promise.all((list||[]).map(async c=>{
   if(!c?.combatIconPath)return;
-  try{c._combatIconUrl=await getCombatIconUrl(c.combatIconPath)}catch(e){console.warn('Kunde inte läsa rollpersonens stridsikon',e)}
+  try{await getCombatIconUrl(c.combatIconPath)}catch(e){console.warn('Kunde inte läsa rollpersonens stridsikon',e)}
  }))
 }
 function characterCombatIconFieldHtml(c){
- let url=c?._combatIconUrl||combatIconCachedUrl(c?.combatIconPath),name=c?.identity?.namn||'Rollfigur';
+ let url=combatIconCachedUrl(c?.combatIconPath),name=c?.identity?.namn||'Rollfigur';
  return '<div class="field wide character-combat-icon-field"><div class="label">Stridsikon</div><div class="character-combat-icon-control">'+
   combatIconHexHtml(url,'player',name)+
   '<div class="character-combat-icon-actions">'+
@@ -933,13 +933,13 @@ async function handleCharacterCombatIconFile(file){
   if(!current._dbId)await syncCharacterToCentral(current);
   if(!current._dbId)throw new Error('Rollpersonen kunde inte sparas centralt.');
   let res=await uploadCombatIconAsset('character',current._dbId,file,current.combatIconPath||'');
-  current.combatIconPath=res.path;current._combatIconUrl=res.url;save();render()
+  current.combatIconPath=res.path;save();render()
  }catch(e){alert('Kunde inte spara stridsikonen: '+e.message)}
  finally{if($('combatIconFile'))$('combatIconFile').value=''}
 }
 async function removeCharacterCombatIcon(){
  if(!current?.combatIconPath)return;
- try{await deleteCombatIconAsset(current.combatIconPath);current.combatIconPath='';current._combatIconUrl='';save();render()}
+ try{await deleteCombatIconAsset(current.combatIconPath);current.combatIconPath='';save();render()}
  catch(e){alert('Kunde inte ta bort stridsikonen: '+e.message)}
 }
 function resetAdminCombatIconDraft(){
@@ -972,7 +972,9 @@ function removeAdminCombatIconDraft(){
 async function persistAdminCombatIcon(entityId){
  let d=adminCombatIconDraft;if(!d||!d.changed)return d?.oldPath||'';
  if(d.file){
-  let res=await uploadCombatIconAsset(d.entityType,entityId,d.file,d.oldPath||'');d.path=res.path;d.previewUrl=res.url;d.file=null;d.remove=false;return res.path
+  let localPreview=d.previewUrl,res=await uploadCombatIconAsset(d.entityType,entityId,d.file,d.oldPath||'');
+  if(localPreview?.startsWith('blob:')&&localPreview!==res.url)URL.revokeObjectURL(localPreview);
+  d.path=res.path;d.previewUrl='';d.file=null;d.remove=false;return res.path
  }
  if(d.remove&&d.oldPath)await deleteCombatIconAsset(d.oldPath);
  return ''
