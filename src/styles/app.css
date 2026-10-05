@@ -1436,3 +1436,131 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
  .npc-admin-name{gap:7px}
 }
+
+
+/* v0.31.16 — mobil stridsscen utan horisontell sidscroll + kartval i kartytan */
+.admineditor.event-combat-editor{
+ width:100%;
+ max-width:1180px;
+ min-width:0;
+ box-sizing:border-box;
+ overflow-y:auto;
+ overflow-x:hidden;
+}
+.event-combat-editor-layout,
+.event-combat-settings,
+.event-combat-settings>*,
+.event-combat-compact-toolbar,
+.event-combat-terrain-row,
+#sceneCombatantsMount,
+.scene-combatants-compact,
+.scene-combatant-picker,
+.scene-participants,
+.scene-participant-group{
+ min-width:0;
+ max-width:100%;
+ box-sizing:border-box;
+}
+.event-combat-settings input,
+.event-combat-settings select,
+.event-combat-offsets input,
+.scene-combatant-edit input,
+.scene-combatant-edit select,
+.scene-template-row input,
+.scene-template-row select{
+ min-width:0;
+ max-width:100%;
+ box-sizing:border-box;
+}
+.event-combat-map-picker{
+ width:100%;
+ height:100%;
+ min-height:300px;
+ border:0;
+ background:linear-gradient(145deg,#15110e,#0c0a08);
+ color:#d8c39c;
+ display:grid;
+ place-items:center;
+ align-content:center;
+ gap:8px;
+ padding:24px;
+ cursor:pointer;
+ font:inherit;
+ text-align:center;
+}
+.event-combat-map-picker:hover{background:linear-gradient(145deg,#1d1712,#100d0a)}
+.event-combat-map-picker span{font-size:38px}
+.event-combat-map-picker b{font:800 19px Georgia,serif;color:#f0dab7}
+.event-combat-map-picker small{max-width:360px;color:#9f8c72;line-height:1.4}
+.event-combat-change-map{
+ position:absolute;
+ z-index:8;
+ top:8px;
+ right:8px;
+ margin:0!important;
+ box-shadow:0 3px 12px rgba(0,0,0,.45);
+}
+.event-combat-canvas.empty-map{overflow:hidden}
+@media(max-width:760px){
+ #adminEditor.modalback{padding:8px}
+ .admineditor.event-combat-editor{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  padding:12px;
+  border-radius:14px;
+  box-sizing:border-box;
+ }
+ .event-combat-editor-layout{overflow-x:hidden}
+ .event-combat-settings{grid-template-columns:minmax(0,1fr)}
+ .event-combat-settings details{min-width:0}
+ .event-combat-offsets{grid-template-columns:minmax(0,1fr)}
+ .event-combat-compact-toolbar,
+ .event-combat-terrain-row{
+  flex-wrap:wrap;
+  overflow-x:hidden;
+  width:100%;
+ }
+ .event-combat-compact-toolbar .smallbtn,
+ .event-combat-terrain-row .smallbtn{
+  white-space:normal;
+  flex:0 1 auto;
+ }
+ .event-combat-brush-compact{white-space:normal;min-width:0}
+ .event-combat-toolbar-spacer{display:none}
+ .event-combat-terrain-divider{display:none}
+ .event-combat-row-label{flex:1 0 100%}
+ .event-combat-mini-label{margin-left:0}
+ .event-combat-selected-compact{margin-left:auto}
+ .event-combat-zoom{
+  width:auto;
+  max-width:100%;
+  margin-left:auto;
+  flex-wrap:wrap;
+ }
+ .scene-combatant-strip{
+  flex-wrap:wrap;
+  overflow-x:hidden;
+  width:100%;
+ }
+ .scene-combatant-chip{
+  flex:1 1 120px;
+  min-width:0;
+  max-width:none;
+ }
+ .scene-combatants-compact-head{
+  flex-wrap:wrap;
+ }
+ .scene-combatants-compact-actions{
+  flex-wrap:wrap;
+ }
+ .scene-participants{grid-template-columns:minmax(0,1fr)}
+ .scene-template-row>*{min-width:0}
+ .scene-combatant-row{min-width:0}
+ .scene-combatant-edit{grid-template-columns:minmax(0,1fr)}
+ .scene-combatant-edit .smallbtn{width:100%}
+ .event-combat-map-picker{min-height:260px}
+ .event-combat-change-map{top:6px;right:6px}
+ .adminformactions{flex-wrap:wrap}
+ .adminformactions .btn{flex:1 1 140px;min-width:0}
+}
