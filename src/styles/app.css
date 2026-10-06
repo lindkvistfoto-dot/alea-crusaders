@@ -3240,3 +3240,92 @@ body:not(.editing) #skilltable .skill-roll-btn{
  stroke:#71ff91;
  stroke-width:6.4;
 }
+
+
+/* v0.33.35 — fyra tydliga turkontroller: flytta, attack, andra actions, sluta drag */
+.combatant-card{
+ grid-template-columns:44px minmax(0,1fr) 140px 48px;
+}
+.combat-row-controls{
+ min-width:140px;
+ gap:4px;
+}
+.combat-row-tool{
+ width:32px;
+ flex:0 0 32px;
+}
+.combat-row-attack.chosen:not(.active),
+.combat-row-action.chosen:not(.active){
+ border-color:#8d6f39;
+ background:#f4ead0;
+}
+.combat-row-attack.chosen{
+ color:#6f211d;
+}
+.combat-row-action-menu.combat-row-attack-menu{
+ width:220px;
+}
+.combat-row-attack-menu .combat-weapon-choice{
+ margin-top:0;
+}
+@media(max-width:560px){
+ .combatant-card{
+  grid-template-columns:42px minmax(0,1fr) 46px;
+  grid-template-rows:auto auto;
+  gap:5px;
+ }
+ .combat-order-number{
+  grid-row:1/3;
+ }
+ .combatant-card-copy{
+  grid-column:2;
+  grid-row:1;
+ }
+ .combat-row-vitals{
+  grid-column:3;
+  grid-row:1;
+ }
+ .combat-row-controls{
+  grid-column:2/4;
+  grid-row:2;
+  min-width:0;
+  width:100%;
+  justify-content:flex-start;
+  gap:6px;
+  padding-top:2px;
+ }
+ .combat-row-tool{
+  width:34px;
+  flex-basis:34px;
+ }
+ .combat-row-tool-btn{
+  width:34px;
+  min-width:34px;
+  height:34px;
+ }
+ .move-tool>small{
+  width:44px;
+  margin-left:-5px;
+ }
+ .combat-row-action-menu{
+  width:min(230px,76vw);
+ }
+}
+@media(max-width:390px){
+ .combatant-card{
+  grid-template-columns:40px minmax(0,1fr) 43px;
+ }
+ .combat-row-controls{
+  min-width:0;
+  gap:4px;
+ }
+ .combat-row-tool{
+  width:32px;
+  flex-basis:32px;
+ }
+ .combat-row-tool-btn{
+  width:32px;
+  min-width:32px;
+  height:32px;
+ }
+}
