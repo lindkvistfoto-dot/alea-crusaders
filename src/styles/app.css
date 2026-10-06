@@ -1872,3 +1872,42 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .enemy-admin-group .admin-subsection-head{align-items:flex-start;gap:8px;flex-wrap:wrap}
  .enemy-admin-group .admin-subsection-head .smallbtn{flex:0 0 auto}
 }
+
+
+/* v0.33.0 — SL-start av stridsscen */
+.combat-gm-controls{
+ display:grid;
+ grid-template-columns:minmax(150px,auto) minmax(180px,360px) auto auto minmax(120px,1fr);
+ gap:8px;
+ align-items:center;
+ margin:0 0 12px;
+ padding:9px 10px;
+ border:1px solid #8e6b43;
+ border-radius:11px;
+ background:#211912;
+ color:#f2dfbf
+}
+.combat-gm-controls.hidden{display:none}
+.combat-gm-control-copy{display:flex;flex-direction:column;gap:1px}
+.combat-gm-control-copy span{font-size:10px;font-weight:900;letter-spacing:.1em;color:#f2ca83}
+.combat-gm-control-copy small{font-size:10px;color:#a99577}
+.combat-gm-controls select{
+ min-width:0;
+ min-height:38px;
+ padding:7px 9px;
+ border:1px solid #745a3d;
+ border-radius:8px;
+ background:#f7ead6;
+ color:#3c3025;
+ font-weight:700
+}
+.combat-gm-controls .btn{min-height:38px;padding:7px 12px}
+.combat-play-btn{background:#315d3f!important;border-color:#467957!important;color:#fff!important}
+.combat-reset-btn{background:#6f221f!important;border-color:#8b3731!important;color:#fff!important}
+.combat-gm-active{justify-self:end;font-size:11px;color:#ceb995;text-align:right}
+.combat-gm-active.idle{color:#8f806c}
+@media(max-width:760px){
+ .combat-gm-controls{grid-template-columns:1fr 1fr}
+ .combat-gm-control-copy,.combat-gm-controls select,.combat-gm-active{grid-column:1/-1}
+ .combat-gm-active{justify-self:start;text-align:left}
+}
