@@ -423,15 +423,15 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
     expect(combat).toContain("function combatRollD10");
-    expect(combat).toContain("function combatRollInitiative");
+    expect(combat).toContain("function combatBuildInitiative");
     expect(combat).toContain("formula:'SMI+1T10'");
     expect(combat).toContain("b.total-a.total||b.smi-a.smi");
     expect(combat).toContain("visible_to_players!==false");
-    expect(combat).toContain("initiative,active_actor_id:null");
-    expect(combat).toContain("JSON.stringify({active_actor_id:firstActorId})");
+    expect(combat).toContain("initiative:pendingInitiative,active_actor_id:null");
+    expect(combat).toContain("JSON.stringify({initiative,active_actor_id:firstActorId,phase:'movement'");
     expect(combat).toContain("initiative_roll:result.die");
     expect(combat).toContain("initiative_total:result.total");
-    expect(combat).toContain("initiative_rank:rankById.get");
+    expect(combat).toContain("initiative_rank:rank");
     expect(combat).toContain("event_type:'initiative'");
     expect(combat).toContain("SMI '+result.smi+' + T10 '+result.die+' = '+result.total");
     expect(combat).toContain("phase:'movement'");
@@ -502,7 +502,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("const selectedExists=scenes.some");
     expect(combat).not.toContain("else if(!reset&&activeCombat?.id)return");
     expect(combat).toContain("replacementCombatId=await combatCreateRuntimeFromScene");
-    expect(combat).toContain("combatSceneBusy||!scene?'disabled':''");
+    expect(combat).toContain("activeCombat&&!combatIsResetReadyForPlay(scene)");
     expect(combat).toContain("function combatantCard(c,index=0)");
     expect(combat).toContain("combat-order-number");
     expect(combat).toContain("combatMovementButton");
@@ -588,7 +588,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function combatRollAndApplyInitiative");
     expect(combat).toContain("themeColor:entry.color");
     expect(combat).toContain("phase:'initiative'");
-    expect(combat).toContain("await combatRollAndApplyInitiative(instanceId)");
+    expect(combat).toContain("await combatRollAndApplyInitiative(replacementCombatId)");
     expect(combat).toContain("groupId:index");
     expect(html).toContain('id="combatInitiativeLegend"');
     expect(combat).toContain("function combatPositionDiceLayer");
@@ -634,7 +634,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatActionWeapon");
     expect(combat).toContain("async function chooseCombatAttackWeapon");
     expect(combat).toContain("function combatAttackWeaponChooserHtml");
-    expect(combat).toContain("weapon_key:combatWeaponKey(autoWeapon)");
+    expect(combat).toContain("sourceData.weapon_key=combatWeaponKey(autoWeapon)");
     expect(combat).toContain("options.length>1&&!weapon");
     expect(combat).toContain("combatPossibleAttackTargets(combatant,mode,weapon)");
     expect(combat).toContain("function combatMeleeRangeHexes");
