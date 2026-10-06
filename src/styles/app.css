@@ -2091,3 +2091,37 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:560px){
  .combat-action-grid{grid-template-columns:1fr}
 }
+
+
+/* v0.33.7 — rörelse/action-koppling och attackmål */
+.combat-token.attack-target{
+ stroke:#ff645c;
+ stroke-width:5;
+ filter:drop-shadow(0 0 7px rgba(255,80,70,.88));
+}
+.combatant-card.attack-target{
+ box-shadow:inset 4px 0 0 #c93f38,0 0 0 1px rgba(201,63,56,.2);
+ background:#fff0eb;
+}
+.combat-action-box.full-move{
+ border-color:#9b7550;
+ background:#f3e4cb;
+}
+.combat-attack-summary{
+ margin-top:10px;
+ padding:8px 9px;
+ border:1px solid #c78980;
+ border-radius:8px;
+ background:#fff0eb;
+ display:flex;
+ flex-direction:column;
+ gap:2px;
+ color:#6f2925;
+}
+.combat-attack-summary b{font-size:12px}
+.combat-attack-summary span{font-size:10px;color:#7c5b52}
+.combat-attack-summary.empty{
+ border-color:#b9a98e;
+ background:#f4ede2;
+ color:#665c4f;
+}
