@@ -12,9 +12,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.33.11");
-    expect(html).toContain("./features/character/glowup.js?v=0.33.11");
-    expect(html).toContain("./features/map/glowup.css?v=0.33.11");
+    expect(html).toContain("./features/character/glowup.css?v=0.33.12");
+    expect(html).toContain("./features/character/glowup.js?v=0.33.12");
+    expect(html).toContain("./features/map/glowup.css?v=0.33.12");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -405,9 +405,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.11");
-    expect(html).toContain("app.css?v=0.33.11");
-    expect(html).toContain("legacy/app.js?v=0.33.11");
+    expect(html).toContain("Alea Crusaders v0.33.12");
+    expect(html).toContain("app.css?v=0.33.12");
+    expect(html).toContain("legacy/app.js?v=0.33.12");
   });
 
 
@@ -462,6 +462,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("parry_decision:'declined'");
     expect(combat).toContain("status:'pending'");
     expect(combat).toContain("combatReactionPromptHtml()");
+    expect(combat).toContain("async function combatRollDice");
+    expect(combat).toContain("function combatPositionDiceLayer");
+    expect(combat).toContain("function combatResolveDiceRows");
+    expect(combat).toContain("window.alea3dCombatRoll");
+    expect(combat).toContain("combatDiceLastRoll");
+    expect(html).toContain('id="combatDiceHost"');
+    expect(html).toContain('id="combatDiceReadout"');
     expect(combat).toContain("key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse'");
     expect(combat).toContain("key:'spell_cast',type:'spell',label:'Lägg besvärjelse'");
     expect(combat).toContain("mode:'cast'");
@@ -528,6 +535,9 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-move-legend{");
     expect(css).toContain(".combat-action-box{");
     expect(css).toContain(".combat-reaction-prompt{");
+    expect(css).toContain(".combat-dice-layer{");
+    expect(css).toContain(".combat-dice-host{");
+    expect(css).toContain(".combat-dice-readout{");
     expect(css).toContain(".combat-parry-btn{");
     expect(css).toContain(".combat-take-hit-btn{");
     expect(css).toContain(".combat-action-grid{");
@@ -548,7 +558,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.33.11");
+    expect(html).toContain("./features/map/glowup.css?v=0.33.12");
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -562,7 +572,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.33.11");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.33.12");
     expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
@@ -575,8 +585,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.33.11");
-    expect(html).toContain("./features/shop/store.js?v=0.33.11");
+    expect(html).toContain("./features/shop/store.css?v=0.33.12");
+    expect(html).toContain("./features/shop/store.js?v=0.33.12");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -680,8 +690,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innPage"');
     expect(html).toContain('id="innCartLines"');
     expect(html).toContain('id="innBuyerSelect"');
-    expect(html).toContain("./features/inn/inn.css?v=0.33.11");
-    expect(html).toContain("./features/inn/inn.js?v=0.33.11");
+    expect(html).toContain("./features/inn/inn.css?v=0.33.12");
+    expect(html).toContain("./features/inn/inn.js?v=0.33.12");
     expect(inn).toContain("rule_inn_items?active=eq.true");
     expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
     expect(html).not.toContain('id="innCategories"');
@@ -781,7 +791,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const inn = read("features/inn/inn.js");
     expect(html).toContain('id="innHeroImage"');
-    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.33.11");
+    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.33.12");
     expect(inn).toContain("shopCurrencyAmountHtml");
     expect(inn).toContain("shopMoneyHtml");
   });
