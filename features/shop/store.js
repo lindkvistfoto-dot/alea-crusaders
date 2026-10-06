@@ -9,7 +9,9 @@ let shopSearch='';
 let shopCart=loadShopCart();
 let shopBuyerId='';
 let shopCheckoutBusy=false;
-const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.27';
+let shopExpandedItemKey='';
+const shopRowQuantities=new Map();
+const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.28';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
@@ -191,6 +193,20 @@ function renderShopCategories(){
   ).join('');
 }
 
+function shopRowQuantity(key){
+  return Math.max(1,Math.min(99,Number(shopRowQuantities.get(key))||1));
+}
+
+function shopChangeRowQuantity(key,delta){
+  shopRowQuantities.set(key,Math.max(1,Math.min(99,shopRowQuantity(key)+(Number(delta)||0))));
+  renderShopItems();
+}
+
+function shopToggleItemDetails(key){
+  shopExpandedItemKey=shopExpandedItemKey===key?'':key;
+  renderShopItems();
+}
+
 function renderShopItems(){
   const host=document.getElementById('shopItems');
   if(!host)return;
@@ -201,13 +217,28 @@ function renderShopItems(){
     return;
   }
   host.innerHTML=rows.map(item=>{
+    const key=shopEsc(item.key);
+    const qty=shopRowQuantity(item.key);
+    const expanded=shopExpandedItemKey===item.key;
     const description=item.description?'<p>'+shopEsc(item.description)+'</p>':'';
-    return '<article class="shop-item-card">'+
-      '<div class="shop-item-top"><span class="shop-item-category">'+shopEsc(item.subcategory||item.category)+'</span><span class="shop-item-price">'+shopPriceLabel(item)+'</span></div>'+
-      '<h3>'+shopEsc(item.name)+'</h3>'+
-      description+
-      '<div class="shop-item-meta">'+shopItemDetailsHtml(item)+'</div>'+
-      '<button type="button" class="shop-add" onclick="shopAddItem(\''+shopEsc(item.key)+'\')">+ Lägg i varukorg</button>'+
+    const details=shopItemDetailsHtml(item);
+    return '<article class="shop-item-row '+(expanded?'expanded':'')+'">'+
+      '<div class="shop-item-main">'+
+        '<span class="shop-item-category" title="'+shopEsc(item.category)+'">'+shopEsc(item.category)+'</span>'+
+        '<button type="button" class="shop-item-name" aria-expanded="'+(expanded?'true':'false')+'" onclick="shopToggleItemDetails(\''+key+'\')">'+shopEsc(item.name)+'</button>'+
+        '<span class="shop-item-price">'+shopPriceLabel(item)+'</span>'+
+        '<div class="shop-row-stepper" aria-label="Antal">'+
+          '<button type="button" onclick="shopChangeRowQuantity(\''+key+'\',-1)" aria-label="Minska antal">−</button>'+
+          '<span>'+qty+'</span>'+
+          '<button type="button" onclick="shopChangeRowQuantity(\''+key+'\',1)" aria-label="Öka antal">+</button>'+
+        '</div>'+
+        '<button type="button" class="shop-row-buy" onclick="shopAddItem(\''+key+'\','+qty+')">Köp</button>'+
+      '</div>'+
+      '<div class="shop-item-details '+(expanded?'':'hidden')+'">'+
+        (details?'<div class="shop-item-meta">'+details+'</div>':'')+
+        description+
+        '<div class="shop-item-detail-price">Pris: <b>'+shopPriceLabel(item)+'</b></div>'+
+      '</div>'+
     '</article>';
   }).join('');
 }
@@ -216,17 +247,20 @@ function shopItemByKey(key){
   return shopCatalog.find(item=>item.key===key)||null;
 }
 
-function shopAddItem(key){
+function shopAddItem(key,quantity=1){
   const item=shopItemByKey(key);
   if(!item)return;
+  const qty=Math.max(1,Math.min(99,Math.floor(Number(quantity)||1)));
   const existing=shopCart.find(row=>row.key===key);
-  if(existing)existing.qty=Math.min(99,existing.qty+1);
-  else shopCart.push({key,qty:1});
+  if(existing)existing.qty=Math.min(99,existing.qty+qty);
+  else shopCart.push({key,qty});
+  shopRowQuantities.set(key,1);
   saveShopCart();
+  renderShopItems();
   renderShopCart();
   const status=document.getElementById('shopCartNotice');
   if(status){
-    status.textContent=item.name+' lades i varukorgen.';
+    status.textContent=(qty>1?qty+' × ':'')+item.name+' lades i varukorgen.';
     clearTimeout(shopAddItem._timer);
     shopAddItem._timer=setTimeout(()=>{if(status)status.textContent='';},1400);
   }
