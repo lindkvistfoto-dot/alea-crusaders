@@ -110,6 +110,7 @@ async function combatRollDice(specs,label='Slag'){
 }
 
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
+let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 
 function combatSceneFromId(id){
  return (campaignCombatScenes||[]).find(scene=>String(scene.id)===String(id))||null
@@ -1277,6 +1278,7 @@ async function loadActiveCombat(combatId=null){
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    combatSelectedTargetId=activeCombat.active_actor_id||null;
+   if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
    await loadCombatRuntimeBackground()
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
@@ -1308,6 +1310,106 @@ function combatSelectedCombatant(){
 }
 function combatActiveActor(){
  return combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''))||null
+}
+function combatMovementPlanningActor(){
+ const actor=combatActiveActor();
+ return actor&&String(combatMovementPlan?.combatantId||'')===String(actor.id)?actor:null
+}
+function combatIsMovementPlanning(combatant){
+ return !!combatant&&String(combatMovementPlan?.combatantId||'')===String(combatant.id)
+}
+function combatCanPlanMovement(combatant){
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&combatMovementBudget(combatant)>0
+}
+function combatMovementOccupied(combatant,q,r){
+ return combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(combatant?.id||'')&&Number(row.q)===Number(q)&&Number(row.r)===Number(r))
+}
+function combatSetMovementPreview(q,r,{render=true}={}){
+ const actor=combatMovementPlanningActor();if(!actor)return false;
+ q=Number(q);r=Number(r);
+ const key=q+','+r,reachable=combatReachableHexes(actor),cost=reachable.get(key);
+ if(cost==null||combatMovementOccupied(actor,q,r))return false;
+ combatMovementPlan={...combatMovementPlan,q,r,cost:Number(cost)||0};
+ if(render)renderCombat();
+ return true
+}
+function previewCombatMovementToHex(event,q,r){
+ event?.stopPropagation?.();
+ return combatSetMovementPreview(q,r)
+}
+function combatMovementButton(event,combatantId){
+ event?.stopPropagation?.();
+ const actor=combatActiveActor();
+ if(!actor||String(actor.id)!==String(combatantId)||!combatCanPlanMovement(actor))return;
+ if(!combatIsMovementPlanning(actor)){
+  combatMovementPlan={
+   combatantId:String(actor.id),
+   startQ:Number(actor.q)||0,startR:Number(actor.r)||0,
+   q:Number(actor.q)||0,r:Number(actor.r)||0,cost:0
+  };
+  combatSelectedTargetId=actor.id;
+  renderCombat();
+  return
+ }
+ if((Number(combatMovementPlan.cost)||0)<=0){
+  combatMovementPlan=null;
+  renderCombat();
+  return
+ }
+ return commitCombatMovementPlan()
+}
+function combatSvgPoint(event,svg){
+ if(!svg?.createSVGPoint)return null;
+ const point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;
+ const matrix=svg.getScreenCTM();if(!matrix)return null;
+ return point.matrixTransform(matrix.inverse())
+}
+function combatNearestRuntimeCell(point){
+ if(!point)return null;
+ let best=null,bestDistance=Infinity;
+ for(const cell of combatRuntimeHexCells()){
+  const dx=cell.x-point.x,dy=cell.y-point.y,d=dx*dx+dy*dy;
+  if(d<bestDistance){best=cell;bestDistance=d}
+ }
+ return best
+}
+function combatMovementDragStart(event,combatantId){
+ const actor=combatMovementPlanningActor();
+ if(!actor||String(actor.id)!==String(combatantId))return;
+ event.stopPropagation();event.preventDefault();
+ const token=event.currentTarget,svg=token?.ownerSVGElement,point=combatSvgPoint(event,svg);
+ if(!svg||!point)return;
+ combatMovementDrag={
+  pointerId:event.pointerId,combatantId:String(actor.id),token,svg,
+  startPoint:point,moved:false
+ };
+ try{token.setPointerCapture?.(event.pointerId)}catch(_error){}
+}
+function combatMovementDragMove(event){
+ const drag=combatMovementDrag;
+ if(!drag||drag.pointerId!==event.pointerId)return;
+ event.preventDefault();
+ const point=combatSvgPoint(event,drag.svg);if(!point)return;
+ const dx=point.x-drag.startPoint.x,dy=point.y-drag.startPoint.y;
+ if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;
+ drag.token?.setAttribute('transform','translate('+dx+' '+dy+')')
+}
+function combatMovementDragEnd(event){
+ const drag=combatMovementDrag;
+ if(!drag||drag.pointerId!==event.pointerId)return;
+ event.preventDefault();event.stopPropagation();
+ const point=combatSvgPoint(event,drag.svg);
+ try{drag.token?.releasePointerCapture?.(event.pointerId)}catch(_error){}
+ drag.token?.removeAttribute('transform');
+ combatMovementDrag=null;
+ if(!drag.moved)return;
+ combatMovementSuppressClickUntil=Date.now()+350;
+ const cell=combatNearestRuntimeCell(point);
+ if(cell)combatSetMovementPreview(cell.q,cell.r)
+}
+function combatTokenClick(event,combatantId){
+ if(Date.now()<combatMovementSuppressClickUntil){event?.stopPropagation?.();return}
+ selectCombatTarget(combatantId)
 }
 function combatMovementHasUsedMoreThanHalf(combatant){
  return combatMovementSpent(combatant)>combatHalfMoveLimit(combatant)
@@ -1540,26 +1642,52 @@ async function combatRecordFullMoveAction(combatant){
   })})
  }
 }
-async function moveActiveCombatantToHex(q,r){
- const actor=combatActiveActor();
- if(!actor||!combatCanManage()||activeCombat?.status!=='active'||activeCombat?.phase!=='movement')return;
- const key=Number(q)+','+Number(r),reachable=combatReachableHexes(actor),cost=reachable.get(key);
- if(cost==null||cost<=0)return;
- const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(actor.id)&&Number(row.q)===Number(q)&&Number(row.r)===Number(r));
- if(occupied)return;
- const remaining=Math.max(0,combatMovementBudget(actor)-Number(cost));
+async function commitCombatMovementPlan(){
+ const actor=combatMovementPlanningActor(),plan=combatMovementPlan;
+ if(!actor||!plan||!combatCanPlanMovement(actor))return;
+ const q=Number(plan.q),r=Number(plan.r),cost=Number(plan.cost)||0;
+ if(cost<=0||combatMovementOccupied(actor,q,r))return;
+ const remaining=Math.max(0,combatMovementBudget(actor)-cost);
+ const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
  try{
   await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
-   body:JSON.stringify({q:Number(q),r:Number(r),movement_remaining:remaining,updated_at:new Date().toISOString()})
+   body:JSON.stringify({q,r,movement_remaining:remaining,updated_at:new Date().toISOString()})
   });
-  actor.q=Number(q);actor.r=Number(r);actor.movement_remaining=remaining;
+  actor.q=q;actor.r=r;actor.movement_remaining=remaining;
   if(combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
+  combatMovementAnimation={combatantId:String(actor.id),fromQ,fromR,toQ:q,toR:r};
+  combatMovementPlan=null;
   await loadActiveCombat()
  }catch(error){
-  console.error('Kunde inte flytta kombatant',error);
-  alert('Kunde inte flytta kombatanten: '+(error?.message||error))
+  console.error('Kunde inte låsa förflyttning',error);
+  alert('Kunde inte låsa förflyttningen: '+(error?.message||error))
  }
+}
+async function moveActiveCombatantToHex(q,r){
+ const actor=combatActiveActor();if(!actor)return;
+ if(!combatIsMovementPlanning(actor)){
+  combatMovementPlan={combatantId:String(actor.id),startQ:Number(actor.q)||0,startR:Number(actor.r)||0,q:Number(actor.q)||0,r:Number(actor.r)||0,cost:0}
+ }
+ if(!combatSetMovementPreview(q,r,{render:false}))return;
+ return commitCombatMovementPlan()
+}
+function combatAnimateCommittedMovement(){
+ const move=combatMovementAnimation;if(!move)return;
+ const g=combatRuntimeGeometry();if(!g)return;
+ const token=document.querySelector('#combatPage .combat-token-group[data-token-id="'+CSS.escape(String(move.combatantId))+'"]');
+ if(!token)return;
+ combatMovementAnimation=null;
+ const fromX=g.xPitch*(Number(move.fromQ)+Number(move.fromR)/2)+g.offsetX;
+ const fromY=g.rowPitch*Number(move.fromR)+g.offsetY;
+ const toX=g.xPitch*(Number(move.toQ)+Number(move.toR)/2)+g.offsetX;
+ const toY=g.rowPitch*Number(move.toR)+g.offsetY;
+ const dx=fromX-toX,dy=fromY-toY;
+ if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+ token.animate([
+  {transform:'translate('+dx+'px,'+dy+'px)',filter:'brightness(1.22)'},
+  {transform:'translate(0,0)',filter:'brightness(1)'}
+ ],{duration:520,easing:'cubic-bezier(.22,.8,.25,1)',fill:'both'})
 }
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
@@ -1573,9 +1701,10 @@ function renderCombatMap(){
   return '<div class="combat-map-missing">'+note+'</div>'
  }
  const cells=combatRuntimeHexCells(),byCoord=new Map(cells.map(cell=>[cell.key,cell]));
- const actor=combatActiveActor();
- const reachable=combatReachableHexes(actor);
- const originKey=actor?((Number(actor.q)||0)+','+(Number(actor.r)||0)):'';
+ const actor=combatActiveActor(),planningActor=combatMovementPlanningActor();
+ const reachable=planningActor?combatReachableHexes(planningActor):new Map();
+ const originKey=planningActor?((Number(planningActor.q)||0)+','+(Number(planningActor.r)||0)):'';
+ const previewKey=planningActor&&combatMovementPlan?Number(combatMovementPlan.q)+','+Number(combatMovementPlan.r):'';
  const attackTargets=combatCurrentAttackTargets();
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
@@ -1592,41 +1721,51 @@ function renderCombatMap(){
   const reachText=moveCost!=null
    ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
-  const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(actor?.id||'')&&Number(row.q)===cell.q&&Number(row.r)===cell.r);
+  const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(planningActor?.id||'')&&Number(row.q)===cell.q&&Number(row.r)===cell.r);
   if(occupied)cls.push('move-occupied');
-  const clickable=moveCost!=null&&moveCost>0&&!occupied;
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+(clickable?'onclick="moveActiveCombatantToHex('+cell.q+','+cell.r+')"':'')+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
+  if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
+  const clickable=!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+(clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'')+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
  }).join('');
  const tokens=combatants.filter(c=>c.status!=='removed').map(c=>{
-  const key=(Number(c.q)||0)+','+(Number(c.r)||0);
+  const isPlanning=combatIsMovementPlanning(c);
+  const displayQ=isPlanning&&combatMovementPlan?Number(combatMovementPlan.q):Number(c.q)||0;
+  const displayR=isPlanning&&combatMovementPlan?Number(combatMovementPlan.r):Number(c.r)||0;
+  const key=displayQ+','+displayR;
   let cell=byCoord.get(key);
-  if(!cell){
-   const q=Number(c.q)||0,r=Number(c.r)||0;
-   cell={x:g.xPitch*(q+r/2)+g.offsetX,y:g.rowPitch*r+g.offsetY}
-  }
+  if(!cell)cell={x:g.xPitch*(displayQ+displayR/2)+g.offsetX,y:g.rowPitch*displayR+g.offsetY};
   const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
-  const attack=attackTargets.get(String(c.id)),targetClass=attack?' attack-target':'';
+  const attack=attackTargets.get(String(c.id)),targetClass=attack?' attack-target':'',planningClass=isPlanning?' movement-planning':'';
   const targetTitle=attack?' · möjligt mål · '+attack.distance+' hex':'';
-  return '<g onclick="selectCombatTarget(\''+c.id+'\')"><circle class="combat-token '+side+selected+turn+targetClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
+  return '<g class="combat-token-group'+planningClass+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'><circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
  }).join('');
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund">'+image+terrain+tokens+'</svg>'
+ return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onpointermove="combatMovementDragMove(event)" onpointerup="combatMovementDragEnd(event)" onpointercancel="combatMovementDragEnd(event)">'+image+terrain+tokens+'</svg>'
 }
 
 function combatantCard(c,index=0){
  const roleClass=c.source_type==='character'?'player-row':c.source_type==='npc'?'npc-row':'enemy-row';
  const selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
- let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp),move=c.movement_remaining==null?'—':c.movement_remaining;
- let rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
+ const kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp);
+ const psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':'/'+c.max_psy);
+ const remaining=combatMovementBudget(c),maximum=combatMovementMaximum(c);
+ const rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  const order=rank!=null?rank:index+1;
- let init=total!=null?'Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'Initiativ ej slaget';
- const fumbleState=(c.state?.prone?' · Liggande':'')+((c.state?.broken_weapon_keys||[]).length?' · Trasigt vapen':'')+((c.state?.dropped_weapon_keys||[]).length?' · Tappat vapen':'');
- const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':'Fiende/monster';
- return'<button type="button" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
-  '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+'</span><div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div>'+
-  '<div class="meta">'+roleLabel+(smi!=null&&die!=null?' · SMI '+smi+' + T10 '+die:'')+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></div></button>'
+ const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
+ const planning=combatIsMovementPlanning(c),previewCost=planning?(Number(combatMovementPlan?.cost)||0):0;
+ const canMove=combatCanPlanMovement(c);
+ const moveLabel=planning?(previewCost>0?'Lås förflyttning':'Avbryt'):'Förflyttning';
+ const moveHint=planning&&previewCost>0
+  ?(combatDestinationKeepsAction(c,previewCost)?'Halv · handling kvar':'Hel · handling förbrukas')
+  :'Halv '+combatHalfMoveLimit(c)+' · Hel '+maximum;
+ return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
+  '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+(smi!=null&&die!=null?'<em>(SMI'+smi+'+'+die+')</em>':'<em>—</em>')+'</span>'+
+  '<div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+'</div></div>'+
+  '<div class="combat-row-controls"><button type="button" class="combat-row-move'+(planning?' active':'')+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'><span>↔</span><b>'+moveLabel+'</b><small>'+moveHint+'</small></button></div>'+
+  '<div class="combat-row-vitals"><span>KP <b>'+kp+'</b></span><span>PSY <b>'+psy+'</b></span></div>'+
+ '</div>'
 }
 function combatAttackTargetSummaryHtml(combatant){
  if(!combatant||!combatIsActiveTurn(combatant))return '';
@@ -1657,7 +1796,7 @@ function renderCombat(){
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span><span class="combat-status">· Sparad strid</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
- requestAnimationFrame(()=>requestAnimationFrame(()=>combatPositionDiceLayer()))
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
