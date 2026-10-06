@@ -1570,7 +1570,8 @@ function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
  const safeId=String(combatant.id||combatant.source_id||'player').replace(/[^a-zA-Z0-9_-]/g,'_');
  const clipId='combatPortraitClip_'+safeId;
  const outer=combatPortraitHexPoints(34),inner=combatPortraitHexPoints(28.7);
- return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+ const visualCenterY=cell.y-(2.5*scale);
+ return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+visualCenterY.toFixed(2)+') scale('+scale.toFixed(3)+')">'+
   '<defs><clipPath id="'+clipId+'"><polygon points="'+inner+'"/></clipPath></defs>'+
   '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
   '<polygon class="combat-portrait-frame-back" points="'+outer+'"/>'+
@@ -2010,6 +2011,7 @@ function combatAnimateCommittedMovement(){
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
 }
+const COMBAT_MAP_MIN_ZOOM=1,COMBAT_MAP_MAX_ZOOM=8;
 function combatMapViewGeometry(){
  return combatRuntimeGeometry()
 }
@@ -2021,7 +2023,7 @@ function combatMapEnsureView(g){
   combatMapView={zoom:1,x:0,y:0};
   combatMapPan=null;combatMapPointers.clear();combatMapPinch=null
  }
- const zoom=Math.max(1,Math.min(4.5,Number(combatMapView.zoom)||1));
+ const zoom=Math.max(1,Math.min(COMBAT_MAP_MAX_ZOOM,Number(combatMapView.zoom)||1));
  const width=g.width/zoom,height=g.height/zoom;
  combatMapView.zoom=zoom;
  combatMapView.x=Math.max(0,Math.min(g.width-width,Number(combatMapView.x)||0));
@@ -2049,7 +2051,7 @@ function combatMapZoomAt(clientX,clientY,nextZoom){
  const px=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
  const py=Math.max(0,Math.min(1,(clientY-rect.top)/rect.height));
  const anchorX=old.x+px*old.width,anchorY=old.y+py*old.height;
- const zoom=Math.max(1,Math.min(4.5,Number(nextZoom)||1));
+ const zoom=Math.max(1,Math.min(COMBAT_MAP_MAX_ZOOM,Number(nextZoom)||1));
  const width=g.width/zoom,height=g.height/zoom;
  combatMapView.zoom=zoom;
  combatMapView.x=anchorX-px*width;
