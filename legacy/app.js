@@ -2325,6 +2325,17 @@ function scheduleSkillConfirmation(){
  },520)
 }
 function skillOutcomeEarnsErf(outcome){return outcome==='success'||outcome==='special'||outcome==='perfect'}
+async function awardCharacterErfItem(characterId,itemGroup,itemKey,outcome,{amount=null}={}){
+ if(!skillOutcomeEarnsErf(outcome))return {awarded:0,skipped:true};
+ if(!characterId||!itemGroup||!itemKey)throw new Error('ERF-underlaget är ofullständigt.');
+ let award=amount;
+ if(award==null)award=outcome==='perfect'?secureDie(3)+1:1;
+ let response=await dbJson('rpc/award_character_erf',{method:'POST',body:JSON.stringify({
+  p_character_id:characterId,p_item_group:itemGroup,p_item_key:itemKey,p_amount:award,p_reason:outcome
+ })});
+ response=Array.isArray(response)?response[0]:response;
+ return {...(response||{}),awarded:Number(response?.awarded??award)||award}
+}
 function skillErfInline(message,cls=''){let el=$('skillErfAward');if(el){el.className='skill-erf-award '+cls;el.innerHTML=message}}
 async function awardErfFromSkillRoll(ctx,outcome){
  if(!skillOutcomeEarnsErf(outcome))return;
@@ -2339,14 +2350,7 @@ async function awardErfFromSkillRoll(ctx,outcome){
  try{
   if(!current._dbId)await syncCharacterToCentral(current);
   if(!current._dbId)throw new Error('Rollpersonen saknar databas-ID.');
-  let x=await dbJson('rpc/award_character_erf',{method:'POST',body:JSON.stringify({
-   p_character_id:current._dbId,
-   p_item_group:group,
-   p_item_key:key,
-   p_amount:amount,
-   p_reason:reason
-  })});
-  x=Array.isArray(x)?x[0]:x;
+  let x=await awardCharacterErfItem(current._dbId,group,key,reason,{amount});
   item.erf=Number(x?.new_erf)||((+item.erf||0)+amount);
   rememberCurrentErfAward(group,item,amount,reason,current);
   localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));
