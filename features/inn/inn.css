@@ -280,3 +280,120 @@
   .inn-game-roll,.inn-game-roll:last-child{grid-template-columns:1fr auto auto;text-align:left}
   .inn-game-outcome{flex-direction:column;align-items:center;gap:2px}
 }
+
+
+/* v0.32.3 — kompakt tärningsbord på värdshuset + spelmodal */
+.inn-game-launch{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  gap:14px;
+  align-items:center;
+  padding:13px 15px;
+  border:1px solid rgba(205,143,88,.34);
+  border-radius:12px;
+  background:
+    radial-gradient(circle at 8% 50%,rgba(154,75,32,.17),transparent 28%),
+    linear-gradient(180deg,rgba(38,20,12,.88),rgba(22,13,9,.94));
+}
+.inn-game-launch-icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(225,169,106,.3);
+  border-radius:10px;
+  background:rgba(0,0,0,.2);
+  font-size:26px;
+}
+.inn-game-launch-copy span{
+  color:#d69b61;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.inn-game-launch-copy h3{
+  margin:1px 0 2px;
+  color:#f0c792;
+  font:700 20px/1.1 Georgia,serif;
+}
+.inn-game-launch-copy p{
+  margin:0;
+  color:#bba88e;
+  font-size:12px;
+}
+.inn-game-launch-rules{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.inn-game-launch-rules span{
+  padding:5px 7px;
+  border:1px solid rgba(205,143,88,.2);
+  border-radius:999px;
+  color:#bda98b;
+  font-size:10px;
+  white-space:nowrap;
+}
+.inn-game-launch-btn{
+  min-width:82px;
+  min-height:38px;
+  padding:8px 14px;
+  border:1px solid rgba(224,164,99,.58);
+  border-radius:9px;
+  background:linear-gradient(180deg,#7d4826,#542d19);
+  color:#fff0da;
+  font-weight:900;
+  cursor:pointer;
+}
+.inn-game-modalback{
+  z-index:1700;
+  padding:18px;
+}
+.inn-game-modal{
+  width:min(820px,100%);
+  max-height:min(90vh,760px);
+  overflow:auto;
+  padding:0;
+  border-color:rgba(205,143,88,.42);
+  background:#160e0a;
+}
+.inn-game-modalhead{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(205,143,88,.22);
+  background:rgba(22,14,10,.96);
+}
+.inn-game-modalhead h2{
+  margin:1px 0 0;
+  color:#f0c792;
+  font:700 25px/1.05 Georgia,serif;
+}
+.inn-game-modal .inn-game-panel{
+  margin:0;
+  padding:17px;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.inn-game-modal .inn-game-head{
+  align-items:center;
+}
+.inn-game-modal .inn-game-head>p{
+  margin:0;
+}
+body.inn-game-open{overflow:hidden}
+@media(max-width:700px){
+  .inn-game-launch{grid-template-columns:auto minmax(0,1fr) auto}
+  .inn-game-launch-rules{display:none}
+}
+@media(max-width:520px){
+  .inn-game-launch{grid-template-columns:auto minmax(0,1fr);gap:10px}
+  .inn-game-launch-btn{grid-column:1/-1;width:100%}
+  .inn-game-modalback{padding:8px}
+  .inn-game-modal{max-height:94vh}
+}
