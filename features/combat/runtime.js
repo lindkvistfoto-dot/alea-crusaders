@@ -1130,7 +1130,7 @@ async function combatAwardAttackErf(actor,weapon,outcome){
   return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'}
  }
 }
-async function combatResolveAttackAction(actor,target,action,weapon){
+async function combatResolveAttackAction(actor,target,action,weapon,attackMode='melee'){
  const fv=combatAttackFv(weapon);
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
@@ -1156,7 +1156,7 @@ async function combatResolveAttackAction(actor,target,action,weapon){
  const fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll,confirmation_roll:confirmationRoll,fv,
-  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',
+  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',attack_mode:attackMode,
   full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
   rule_engine:'expert_skill'
  };
@@ -1170,6 +1170,7 @@ async function combatResolveAttackAction(actor,target,action,weapon){
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'attack',actor_id:actor.id,target_id:target.id,event_type:'attack',
   message:actor.name_snapshot+' attackerar '+target.name_snapshot+' med '+(weapon?.name||'vapen')+
+   ' · '+(attackMode==='melee'?'närstrid':'avstånd')+
    ' · T20 '+roll+(confirmationRoll!=null?' / kontroll '+confirmationRoll:'')+
    ' mot FV '+fv+' · '+combatOutcomeLabel(outcome)+(fullDamage?' · FULL SKADA':''),
   details:result,player_visible:true
@@ -1179,7 +1180,7 @@ async function combatResolveAttackAction(actor,target,action,weapon){
  if(outcome==='fumble'){
   combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv);
   await new Promise(resolve=>setTimeout(resolve,700));
-  result.fumble=await combatResolveFumbleChain(actor,action,action?.source_data?.mode||'melee',weapon)
+  result.fumble=await combatResolveFumbleChain(actor,action,attackMode,weapon)
  }else{
   combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv)
  }
@@ -1197,12 +1198,13 @@ async function rollCombatAttack(actorId,targetId){
  const target=combatants.find(row=>String(row.id)===String(targetId));
  const action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||!target||!action||def?.type!=='attack'||!combatIsActiveTurn(actor)||action.status!=='planned')return;
- const weapon=combatActionWeapon(actor,action,def.mode);
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const weapon=combatActionWeapon(actor,action,mode);
  if(!weapon)return;
- const possible=combatPossibleAttackTargets(actor,def.mode,weapon);
- if(!possible.has(String(target.id)))return;
+ const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
+ if(!info)return;
  try{
-  await combatResolveAttackAction(actor,target,action,weapon);
+  await combatResolveAttackAction(actor,target,action,weapon,info.mode);
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte slå attack',error);
@@ -1211,17 +1213,18 @@ async function rollCombatAttack(actorId,targetId){
 }
 function combatAttackExecutionHtml(target){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(!actor||!target||!action||def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return '';
+ if(!actor||!target||!action||def?.type!=='attack')return '';
  if(action.result?.outcome&&String(action.target_combatant_id||'')===String(target.id))return combatAttackResultHtml(action);
  if(action.status!=='planned')return '';
- const weapon=combatActionWeapon(actor,action,def.mode);
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const weapon=combatActionWeapon(actor,action,mode);
  if(!weapon)return '';
- const possible=combatPossibleAttackTargets(actor,def.mode,weapon);
- if(!possible.has(String(target.id)))return '';
+ const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
+ if(!info)return '';
  const fv=combatAttackFv(weapon);
  if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slås ännu.</span></div>';
  return '<div class="combat-attack-execute">'+
-  '<div><span>Valt mål</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' · FV '+fv+'</small></div>'+
+  '<div><span>Valt mål · '+(info.mode==='melee'?'Närstrid':'Avstånd')+'</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' · FV '+fv+' · '+info.distance+' hex</small></div>'+
   '<button type="button" class="btn combat-attack-roll-btn" onclick="rollCombatAttack(\''+actor.id+'\',\''+target.id+'\')">🎲 Slå attack 1T20</button>'+
  '</div>'
 }
@@ -1229,7 +1232,8 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
  if(!combatant||!action||def?.type!=='attack'||!combatCanChoosePrimaryAction(combatant))return;
- const weapon=combatAttackWeaponOptions(combatant,def.mode).find(item=>combatWeaponKey(item)===String(weaponKey));
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const weapon=combatAttackWeaponOptions(combatant,mode).find(item=>combatWeaponKey(item)===String(weaponKey));
  if(!weapon)return;
  const sourceData={...(action.source_data||{}),weapon_key:combatWeaponKey(weapon),weapon_name:weapon.name||'Vapen',weapon_id:weapon.weapon_id||weapon.weaponTypeId||null};
  try{
@@ -1243,23 +1247,25 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
   alert('Kunde inte välja vapen: '+(error?.message||error))
  }
 }
+function combatWeaponAttackHint(weapon,combatant){
+ const category=combatWeaponCategory(weapon);
+ if(category==='thrown')return 'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex';
+ if(category==='projectile')return 'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex';
+ return 'Närstrid · '+combatMeleeReachHexesForWeapon(weapon)+' hex'
+}
 function combatAttackWeaponChooserHtml(combatant,action,def){
- if(def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return '';
- const options=combatAttackWeaponOptions(combatant,def.mode);
- if(!options.length){
-  return def.mode==='melee'
-   ?'<div class="combat-weapon-choice single"><span>Vapen</span><b>👊 Obeväpnad</b></div>'
-   :'<div class="combat-weapon-choice empty"><span>Vapen</span><b>Inget aktivt avståndsvapen</b></div>'
- }
- const selected=combatActionWeapon(combatant,action,def.mode);
+ if(def?.type!=='attack')return '';
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const options=combatAttackWeaponOptions(combatant,mode);
+ if(!options.length)return '<div class="combat-weapon-choice single"><span>Vapen</span><b>👊 Obeväpnad</b><small>Närstrid · 1 hex</small></div>';
+ const selected=combatActionWeapon(combatant,action,mode);
  if(options.length===1){
-  return '<div class="combat-weapon-choice single"><span>Vapen</span><b>⚔ '+escAttr(options[0].name||'Vapen')+'</b></div>'
+  return '<div class="combat-weapon-choice single"><span>Vapen</span><b>⚔ '+escAttr(options[0].name||'Vapen')+'</b><small>'+escAttr(combatWeaponAttackHint(options[0],combatant))+'</small></div>'
  }
- return '<div class="combat-weapon-choice"><span>Välj vapen för attacken</span><div class="combat-weapon-choice-grid">'+
+ return '<div class="combat-weapon-choice"><span>Välj aktivt vapen</span><div class="combat-weapon-choice-grid">'+
   options.map(weapon=>{
    const key=combatWeaponKey(weapon),active=selected&&combatWeaponKey(selected)===key;
-   const reach=def.mode==='melee'?combatMeleeReachHexesForWeapon(weapon):combatWeaponRangeHexes(weapon,combatant);
-   return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatAttackWeapon(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(weapon.name||'Vapen')+'</b><small>'+reach+' hex</small></button>'
+   return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatAttackWeapon(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(weapon.name||'Vapen')+'</b><small>'+escAttr(combatWeaponAttackHint(weapon,combatant))+'</small></button>'
   }).join('')+
  '</div></div>'
 }
@@ -1941,15 +1947,14 @@ function combatantCard(c,index=0){
 function combatAttackTargetSummaryHtml(combatant){
  if(!combatant||!combatIsActiveTurn(combatant))return '';
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
- if(def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return '';
- const options=combatAttackWeaponOptions(combatant,def.mode);
- const weapon=combatActionWeapon(combatant,action,def.mode);
- if(options.length>1&&!weapon)return '<div class="combat-attack-summary empty"><b>Välj vapen</b><span>Mål markeras först när du valt vilket vapen attacken görs med.</span></div>';
- if(def.mode==='ranged'&&!weapon)return '<div class="combat-attack-summary empty"><b>Inga möjliga mål</b><span>Inget aktivt avståndsvapen finns i handen.</span></div>';
- const targets=combatPossibleAttackTargets(combatant,def.mode,weapon);
- const range=combatAttackRangeHexes(combatant,def.mode,weapon);
- const weaponName=weapon?.name||'Obeväpnad';
- return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+escAttr(weaponName)+' · '+(def.mode==='melee'?'max '+range+' hex enligt vapenlängd':'max '+range+' hex')+' · fri LoS krävs</span></div>'
+ if(def?.type!=='attack')return '';
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const options=combatAttackWeaponOptions(combatant,mode);
+ const weapon=combatActionWeapon(combatant,action,mode);
+ if(options.length>1&&!weapon)return '<div class="combat-attack-summary empty"><b>Välj vapen</b><span>Mål markeras när aktivt vapen är valt.</span></div>';
+ if(!weapon)return '<div class="combat-attack-summary empty"><b>Inga möjliga mål</b><span>Inget användbart aktivt vapen.</span></div>';
+ const targets=combatPossibleAttackTargets(combatant,mode,weapon);
+ return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+escAttr(weapon.name||'Obeväpnad')+' · '+escAttr(combatWeaponAttackHint(weapon,combatant))+' · fri LoS krävs</span></div>'
 }
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
