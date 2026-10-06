@@ -1303,7 +1303,7 @@ function combatTurnOrderIds(){
   .map(row=>String(row.id))
 }
 function combatCanEndTurn(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&!combatIsMovementPlanning(combatant)
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&!combatIsMovementPlanning(combatant)&&!combatPendingParryOpportunity()
 }
 async function endCombatTurn(event,combatantId){
  event?.stopPropagation?.();
