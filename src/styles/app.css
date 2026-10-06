@@ -2546,3 +2546,18 @@ body:not(.editing) #skilltable .skill-roll-btn{
  text-overflow:clip;
  max-width:min(520px,62vw);
 }
+
+
+/* v0.33.19 — sociala stånd som centralt Expert-register */
+.adminstandtable{
+ display:grid;
+ grid-template-columns:minmax(160px,1fr) 120px 90px 110px;
+ border:1px solid #5a4631;
+ border-radius:12px;
+ overflow:auto;
+}
+.adminstandtable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
+.adminstandtable .ahead{background:#6d1e1e;font-weight:800}
+@media(max-width:700px){
+ .adminstandtable{grid-template-columns:minmax(140px,1fr) 100px 70px 100px;font-size:13px}
+}
