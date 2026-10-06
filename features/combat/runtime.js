@@ -2192,6 +2192,31 @@ function renderCombatMap(){
  return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
 }
 
+function combatRowPortraitUrl(combatant){
+ if(!combatant)return '';
+ if(combatant.source_type==='character'){
+  const portrait=combatPlayerPortraitSource(combatant);
+  return portrait?.url||''
+ }
+ let source=null;
+ if(combatant.source_type==='npc'&&typeof campaignNpcs!=='undefined')source=(campaignNpcs||[]).find(row=>String(row.id)===String(combatant.source_id));
+ else if(combatant.source_type==='monster'&&typeof campaignMonsters!=='undefined')source=(campaignMonsters||[]).find(row=>String(row.id)===String(combatant.source_id));
+ if(!source)return '';
+ const data=source.data&&typeof source.data==='object'?source.data:source;
+ const direct=data.portrait||data.portrait_url||data.image_url||source.portrait_url||source.image_url||'';
+ if(direct)return String(direct);
+ const iconPath=source.combat_icon_path||data.combatIconPath||data.combat_icon_path||'';
+ if(iconPath&&typeof combatIconCachedUrl==='function'){
+  try{return combatIconCachedUrl(iconPath)||''}catch(_error){}
+ }
+ return ''
+}
+function combatRowPortraitHtml(combatant,roleClass){
+ const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant?.name_snapshot||'?');
+ return '<span class="combat-row-portrait '+roleClass+'">'+
+  (url?'<img src="'+escAttr(url)+'" alt="'+escAttr(combatant?.name_snapshot||'Kombatant')+'">':'<b>'+escAttr(initials)+'</b>')+
+ '</span>'
+}
 function combatantCard(c,index=0){
  const roleClass=c.source_type==='character'?'player-row':c.source_type==='npc'?'npc-row':'enemy-row';
  const selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
@@ -2207,15 +2232,20 @@ function combatantCard(c,index=0){
  const attackChosen=chosenDef?.key==='attack',otherChosen=!!chosenDef&&!attackChosen;
  const moveTitle=planning?(previewCost>0?'Lås förflyttning':'Avbryt förflyttning'):'Planera förflyttning';
  return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
-  '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+(smi!=null&&die!=null?'<em>(SMI'+smi+'+'+die+')</em>':'<em>—</em>')+'</span>'+
-  '<div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+'</div></div>'+
-  '<div class="combat-row-controls">'+
-   '<div class="combat-row-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(planning?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'>'+(planning&&previewCost>0?'✓':'↔')+'</button><small><span>Hel '+maximum+'</span><span>Halv '+half+'</span></small></div>'+
-   '<div class="combat-row-tool attack-tool"><button type="button" class="combat-row-tool-btn combat-row-attack'+(attackOpen?' active':'')+(attackChosen?' chosen':'')+'" title="Attack" aria-label="Attack" aria-haspopup="menu" aria-expanded="'+(attackOpen?'true':'false')+'" onclick="combatAttackButton(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>⚔</button>'+combatRowAttackMenuHtml(c)+'</div>'+
-   '<div class="combat-row-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra actions" aria-label="Andra actions" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>⚡</button>'+combatRowActionMenuHtml(c)+'</div>'+
-   '<div class="combat-row-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Sluta drag" aria-label="Sluta drag" onclick="endCombatTurn(event,\''+c.id+'\')" '+(!canEnd?'disabled':'')+'>⏭</button></div>'+
+  '<span class="combat-order-number"><b>'+order+'</b></span>'+
+  combatRowPortraitHtml(c,roleClass)+
+  '<div class="combatant-card-copy">'+
+   '<div class="name">'+escAttr(c.name_snapshot)+'</div>'+
+   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+'</div>'+
+   '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
-  '<div class="combat-row-vitals"><span>KP <b>'+kp+'</b></span><span>PSY <b>'+psy+'</b></span></div>'+
+  '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
+  '<div class="combat-row-controls">'+
+   '<div class="combat-row-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(planning?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'><span>'+(planning&&previewCost>0?'✓':'↔')+'</span></button><small><span>Hel '+maximum+'</span><span>Halv '+half+'</span></small></div>'+
+   '<div class="combat-row-tool attack-tool"><button type="button" class="combat-row-tool-btn combat-row-attack'+(attackOpen?' active':'')+(attackChosen?' chosen':'')+'" title="Attack" aria-label="Attack" aria-haspopup="menu" aria-expanded="'+(attackOpen?'true':'false')+'" onclick="combatAttackButton(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>⚔</button>'+combatRowAttackMenuHtml(c)+'</div>'+
+   '<div class="combat-row-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra actions" aria-label="Andra actions" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>✦</button>'+combatRowActionMenuHtml(c)+'</div>'+
+   '<div class="combat-row-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Sluta drag" aria-label="Sluta drag" onclick="endCombatTurn(event,\''+c.id+'\')" '+(!canEnd?'disabled':'')+'>⌛</button></div>'+
+  '</div>'+
  '</div>'
 }
 function combatAttackTargetSummaryHtml(combatant){
