@@ -11,7 +11,7 @@ let shopBuyerId='';
 let shopCheckoutBusy=false;
 let shopExpandedItemKey='';
 const shopRowQuantities=new Map();
-const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.28';
+const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.29';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
@@ -224,7 +224,6 @@ function renderShopItems(){
     const details=shopItemDetailsHtml(item);
     return '<article class="shop-item-row '+(expanded?'expanded':'')+'">'+
       '<div class="shop-item-main">'+
-        '<span class="shop-item-category" title="'+shopEsc(item.category)+'">'+shopEsc(item.category)+'</span>'+
         '<button type="button" class="shop-item-name" aria-expanded="'+(expanded?'true':'false')+'" onclick="shopToggleItemDetails(\''+key+'\')">'+shopEsc(item.name)+'</button>'+
         '<span class="shop-item-price">'+shopPriceLabel(item)+'</span>'+
         '<div class="shop-row-stepper" aria-label="Antal">'+
