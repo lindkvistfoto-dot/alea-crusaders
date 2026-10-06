@@ -3,6 +3,109 @@ function combatPhaseLabel(p){return COMBAT_PHASE_LABELS[p]||String(p||'—')}
 function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiender':'Neutral'}
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
+let combatDiceBusy=false,combatDiceLastRoll=null;
+function combatPositionDiceLayer(){
+ const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
+ if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
+ const rect=board.getBoundingClientRect();
+ if(rect.width<80||rect.height<80)return false;
+ layer.style.left=rect.left+'px';layer.style.top=rect.top+'px';
+ layer.style.width=rect.width+'px';layer.style.height=rect.height+'px';
+ layer.classList.add('positioned');
+ window.alea3dCombatPrepare?.();
+ return true
+}
+function combatSecureDie(sides){
+ sides=Math.max(2,Math.floor(Number(sides)||6));
+ try{
+  if(globalThis.crypto?.getRandomValues){
+   const box=new Uint32Array(1),limit=Math.floor(4294967296/sides)*sides;
+   do{globalThis.crypto.getRandomValues(box)}while(box[0]>=limit);
+   return (box[0]%sides)+1
+  }
+ }catch(_error){}
+ return Math.floor(Math.random()*sides)+1
+}
+function combatDiceResultRows(result){
+ return (Array.isArray(result)?result:[]).map(row=>({
+  sides:Number(String(row?.sides??'').replace(/^d/i,'')),
+  value:Number(row?.value)
+ })).filter(row=>Number.isInteger(row.sides)&&Number.isInteger(row.value)&&row.value>=1&&row.value<=row.sides)
+}
+function combatResolveDiceRows(raw,specs){
+ const pools=new Map();
+ raw.forEach(row=>{
+  if(!pools.has(row.sides))pools.set(row.sides,[]);
+  pools.get(row.sides).push(row.value)
+ });
+ const rolls=[];
+ for(const spec of specs){
+  const logical=Math.floor(Number(spec.sides)||6),physical=logical===3?6:logical;
+  for(let i=0;i<Math.max(1,Math.floor(Number(spec.qty)||1));i++){
+   const pool=pools.get(physical)||[];
+   if(!pool.length)return null;
+   const rawValue=pool.shift(),value=logical===3?Math.ceil(rawValue/2):rawValue;
+   rolls.push({sides:logical,value,rawValue})
+  }
+ }
+ return rolls
+}
+function combatDiceExpression(rolls){
+ const counts={};
+ (rolls||[]).forEach(row=>counts[row.sides]=(counts[row.sides]||0)+1);
+ return Object.keys(counts).map(Number).sort((a,b)=>a-b).map(sides=>counts[sides]+'T'+sides).join(' + ')
+}
+function combatRenderDiceReadout(label,rolls){
+ const host=$('combatDiceReadout');if(!host)return;
+ const total=(rolls||[]).reduce((sum,row)=>sum+Number(row.value||0),0);
+ const detail=(rolls||[]).map(row=>'T'+row.sides+': '+row.value).join(' · ');
+ host.innerHTML='<b>'+escAttr(label||'Slag')+'</b><span>'+escAttr(combatDiceExpression(rolls))+' · '+escAttr(detail)+'</span><strong>'+total+'</strong>';
+ host.classList.add('show')
+}
+async function combatRollDice(specs,label='Slag'){
+ if(combatDiceBusy)return null;
+ const clean=(Array.isArray(specs)?specs:[]).map(spec=>({
+  qty:Math.max(1,Math.min(20,Math.floor(Number(spec?.qty)||1))),
+  sides:[3,4,6,8,10,20,100].includes(Number(spec?.sides))?Number(spec.sides):6
+ }));
+ if(!clean.length)return null;
+ combatDiceBusy=true;combatDiceLastRoll=null;
+ combatPositionDiceLayer();
+ const layer=$('combatDiceLayer'),readout=$('combatDiceReadout');
+ layer?.classList.add('rolling');
+ if(readout){readout.innerHTML='<b>'+escAttr(label)+'</b><span>Tärningarna rullar…</span>';readout.classList.add('show')}
+ try{
+  let rolls=null;
+  if(typeof window.alea3dCombatRoll==='function'){
+   try{
+    const physical=clean.map(spec=>({qty:spec.qty,sides:spec.sides===3?6:spec.sides}));
+    const result=await window.alea3dCombatRoll(physical);
+    rolls=combatResolveDiceRows(combatDiceResultRows(result),clean);
+    if(!rolls)throw new Error('DiceBox returnerade inte rätt antal giltiga tärningsresultat.')
+   }catch(error){
+    console.warn('Stridens DiceBox-kast misslyckades, använder reservslag.',error)
+   }
+  }
+  if(!rolls){
+   rolls=[];
+   clean.forEach(spec=>{
+    const physical=spec.sides===3?6:spec.sides;
+    for(let i=0;i<spec.qty;i++){
+     const rawValue=combatSecureDie(physical);
+     rolls.push({sides:spec.sides,value:spec.sides===3?Math.ceil(rawValue/2):rawValue,rawValue})
+    }
+   })
+  }
+  const total=rolls.reduce((sum,row)=>sum+row.value,0);
+  combatDiceLastRoll={label,rolls,total,expression:combatDiceExpression(rolls)};
+  combatRenderDiceReadout(label,rolls);
+  return combatDiceLastRoll
+ }finally{
+  combatDiceBusy=false;
+  layer?.classList.remove('rolling')
+ }
+}
+
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 
 function combatSceneFromId(id){
@@ -942,5 +1045,9 @@ function renderCombat(){
  let first=combatants.find(row=>String(row.id)===String(activeCombat.active_actor_id)),initiativeLead=first?(' · Initiativetta: '+first.name_snapshot):'';
  let participantHtml=combatants.length?combatants.map(combatantCard).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Deltagare</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'
+ body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Deltagare</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ requestAnimationFrame(()=>requestAnimationFrame(()=>combatPositionDiceLayer()))
 }
+
+window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
+window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
