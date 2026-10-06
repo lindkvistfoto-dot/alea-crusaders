@@ -691,6 +691,15 @@ function combatReactionPromptHtml(){
   '</div>'+
  '</section>'
 }
+function combatFumbleTableKey(mode,weapon=null){
+ if(weapon?._unarmed)return 'natural';
+ if(mode==='ranged')return 'ranged';
+ return 'melee'
+}
+function combatFumbleRule(mode,weapon,roll){
+ const tableKey=combatFumbleTableKey(mode,weapon);
+ return typeof ruleCombatFumble==='function'?ruleCombatFumble(tableKey,roll):null
+}
 function combatAttackFv(weapon){
  const fv=combatNumber(weapon?.fv,null);
  return fv!=null&&fv>0?Math.floor(fv):null
