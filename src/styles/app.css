@@ -3657,3 +3657,134 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-row-tool{width:31px;flex-basis:31px}
  .combat-row-tool-btn{width:31px;min-width:31px;height:30px;font-size:13px}
 }
+
+
+/* v0.33.39 — mörkare kombatantrader och säkra gridområden */
+.combatant-card.player-row,
+.combatant-card.npc-row,
+.combatant-card.enemy-row{
+ position:relative;
+ isolation:isolate;
+ overflow:visible;
+ background:
+  radial-gradient(circle at 28% 0,color-mix(in srgb,var(--side) 10%,transparent),transparent 40%),
+  linear-gradient(180deg,#211a14 0%,#17120e 58%,#120f0c 100%);
+ color:#efe3d0;
+}
+.combatant-card.player-row:hover,
+.combatant-card.npc-row:hover,
+.combatant-card.enemy-row:hover{
+ background:
+  radial-gradient(circle at 28% 0,color-mix(in srgb,var(--side) 15%,transparent),transparent 42%),
+  linear-gradient(180deg,#2a2118 0%,#1c1611 60%,#14100d 100%);
+}
+.combatant-card.player-row{--side:#3ca95a}
+.combatant-card.npc-row{--side:#3984c6}
+.combatant-card.enemy-row{--side:#bd493e}
+
+.combat-order-number{
+ grid-column:1;
+ position:relative;
+ z-index:1;
+ width:38px;
+ min-width:38px;
+}
+.combat-row-portrait{
+ grid-column:2;
+ position:relative;
+ z-index:2;
+}
+.combatant-card-copy{
+ grid-column:3;
+ position:relative;
+ z-index:2;
+ min-width:0;
+ overflow:hidden;
+}
+.combat-row-init{
+ grid-column:4;
+ position:relative;
+ z-index:2;
+}
+.combat-row-controls{
+ grid-column:5;
+ position:relative;
+ z-index:3;
+}
+.combatant-card-copy .name,
+.combatant-card-copy .meta{
+ max-width:100%;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.combat-row-inline-vitals{
+ position:relative;
+ z-index:2;
+ display:flex;
+ align-items:center;
+ gap:8px;
+ max-width:100%;
+ overflow:hidden;
+ color:#cbb99d;
+}
+.combat-row-inline-vitals span{
+ flex:0 0 auto;
+}
+.combat-row-inline-vitals b{
+ color:#f5e7d0;
+ text-shadow:0 1px 1px rgba(0,0,0,.7);
+}
+.combat-row-inline-vitals i{
+ flex:0 0 1px;
+ width:1px;
+ height:12px;
+ background:#806544;
+}
+.combat-order-number{
+ background:
+  linear-gradient(180deg,
+   color-mix(in srgb,var(--side) 72%,#4b3216),
+   color-mix(in srgb,var(--side) 50%,#19110b));
+ box-shadow:
+  inset 0 0 0 1px rgba(255,236,190,.10),
+  inset 0 -12px 22px rgba(0,0,0,.30),
+  0 2px 6px rgba(0,0,0,.35);
+}
+
+@media(max-width:700px){
+ .combatant-card{
+  grid-template-columns:38px 42px minmax(0,1fr) 40px;
+  grid-template-areas:
+   "rank portrait copy init"
+   "rank controls controls controls";
+  gap:5px 7px;
+  min-width:0;
+ }
+ .combat-order-number{
+  grid-area:rank;
+  width:38px;
+  min-width:38px;
+  min-height:72px;
+ }
+ .combat-row-portrait{grid-area:portrait}
+ .combatant-card-copy{grid-area:copy}
+ .combat-row-init{grid-area:init}
+ .combat-row-controls{
+  grid-area:controls;
+  width:100%;
+  min-width:0;
+  justify-content:flex-start;
+  padding-left:0;
+ }
+}
+@media(max-width:390px){
+ .combatant-card{
+  grid-template-columns:36px 39px minmax(0,1fr) 36px;
+  gap:4px 6px;
+ }
+ .combat-order-number{
+  width:36px;
+  min-width:36px;
+ }
+}
