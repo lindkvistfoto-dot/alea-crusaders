@@ -1,0 +1,37 @@
+/* Värdshus */
+.inn-open #dayNavBtn,
+.inn-open #combatNavBtn,
+.inn-open #mapNavBtn,
+.inn-open #diceNavBtn,
+.inn-open #shopNavBtn,
+.inn-open #innNavBtn{display:none!important}
+
+.shop-open #innNavBtn{display:none!important}
+.inn-nav{white-space:nowrap}
+#innPage{width:100%}
+
+.inn-hero.shop-hero-photo{
+  border-color:rgba(176,105,54,.62);
+  background:linear-gradient(145deg,#170d08,#32180e);
+}
+.inn-hero .shop-hero-copy{
+  background:
+    radial-gradient(circle at 0 35%,rgba(178,92,43,.18),transparent 48%),
+    linear-gradient(180deg,#27140c,#140b08);
+}
+.inn-hero .shop-hero-kicker{
+  border-color:rgba(221,151,93,.44);
+  background:rgba(103,47,24,.50);
+  color:#e6b27e;
+}
+.inn-hero .shop-hero-media img{
+  object-position:center 38%;
+}
+.inn-item-meta span:first-child{
+  border-color:rgba(205,143,88,.36);
+  color:#e0b486;
+}
+
+@media(max-width:560px){
+  .inn-nav{min-width:42px}
+}
