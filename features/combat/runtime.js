@@ -59,8 +59,15 @@ function combatSourceStats(sceneCombatant,sources){
  const live=data.live&&typeof data.live==='object'?data.live:{};
  const derived=data.derived&&typeof data.derived==='object'?data.derived:{};
  const base=data.base&&typeof data.base==='object'?data.base:{};
+ const strengthRaw=base.Styrka&&typeof base.Styrka==='object'?base.Styrka.v:(base.STY??base.Styrka);
  const smidighetRaw=base.Smidighet&&typeof base.Smidighet==='object'?base.Smidighet.v:(base.SMI??base.Smidighet);
  let smi=combatNumber(combatStateValue(state,'smi','SMI','smidighet'),combatNumber(smidighetRaw,combatNumber(attributes.SMI,10)));
+ let sty=combatNumber(combatStateValue(state,'sty','STY','styrka'),combatNumber(strengthRaw,combatNumber(attributes.STY,10)));
+ const attackProfile={
+  weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(source?.weapons)?source.weapons:[]),
+  currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
+  sty,smi
+ };
  let maxKp=combatNumber(combatStateValue(state,'max_kp','kp_max'),combatNumber(live.KPmax,null));
  if(maxKp==null&&attributes.FYS!=null&&attributes.STO!=null)maxKp=Math.ceil((Number(attributes.FYS)+Number(attributes.STO))/2);
  let currentKp=combatNumber(combatStateValue(state,'current_kp','kp'),combatNumber(live.KP,maxKp));
@@ -69,7 +76,7 @@ function combatSourceStats(sceneCombatant,sources){
  let move=combatNumber(combatStateValue(state,'movement_max','movement','move'),combatNumber(derived['Förflyttning'],combatNumber(attributes.SMI,10)));
  return{
   current_kp:currentKp,max_kp:maxKp,current_psy:currentPsy,max_psy:maxPsy,
-  movement_max:move,movement_remaining:move,smi,
+  movement_max:move,movement_remaining:move,smi,sty,attack_profile:attackProfile,
   flying:state.flying===true,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null
  }
@@ -80,8 +87,8 @@ async function combatLoadSceneRuntimeData(scene){
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
   dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,data'),
-  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,attributes'),
-  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,attributes')
+  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,attributes,weapons'),
+  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,attributes,weapons')
  ]);
  return{
   sceneCombatants:Array.isArray(sceneCombatants)?sceneCombatants:[],
@@ -168,7 +175,7 @@ async function combatCreateRuntimeFromScene(scene){
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:'active',action_plan:[],
-   state:{...(row.state||{}),smi:stats.smi,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),smi:stats.smi,sty:stats.sty,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -319,7 +326,7 @@ const COMBAT_PRIMARY_ACTIONS=[
  {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction'},
  {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
  {key:'spell_cast',type:'spell',label:'Lägg besvärjelse',icon:'🔮',mode:'cast'},
- {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full'},
+ {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full',automatic:true},
  {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
 ];
 function combatIsActiveTurn(combatant){
@@ -347,7 +354,8 @@ function combatCanChoosePrimaryAction(combatant){
 async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
- if(!combatant||!def||!combatCanChoosePrimaryAction(combatant))return;
+ if(!combatant||!def||def.automatic||!combatCanChoosePrimaryAction(combatant))return;
+ if(combatMovementHasUsedMoreThanHalf(combatant))return;
  const round=Number(activeCombat.round_number)||1;
  const existing=combatChosenAction(combatant);
  const body={
@@ -387,17 +395,20 @@ function combatActionChooserHtml(combatant){
  if(!combatCanManage()){
   return '<div class="combat-action-box waiting"><b>Din tur</b><span>Actionval hanteras av SL i den här utvecklingsversionen.</span></div>'
  }
+ if(combatMovementHasUsedMoreThanHalf(combatant)){
+  return '<div class="combat-action-box waiting full-move"><b>Full förflyttning</b><span>Mer än halva förflyttningsförmågan är använd. Actionen är förbrukad och resten av turen avvaktas.</span></div>'
+ }
  return '<div class="combat-action-box">'+
   '<div class="combat-action-head"><div><b>Välj action</b><span>En action denna SR</span></div>'+
    (chosenDef?'<strong>Vald: '+chosenDef.icon+' '+escAttr(chosenDef.label)+'</strong>':'<strong>Ingen vald</strong>')+
   '</div>'+
-  '<div class="combat-action-grid">'+COMBAT_PRIMARY_ACTIONS.map(def=>{
+  '<div class="combat-action-grid">'+COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic).map(def=>{
    const active=chosenDef?.key===def.key;
    return '<button type="button" class="combat-action-btn'+(active?' active':'')+'" onclick="chooseCombatPrimaryAction(\''+combatant.id+'\',\''+def.key+'\')">'+
     '<span>'+def.icon+'</span><b>'+escAttr(def.label)+'</b>'+
    '</button>'
   }).join('')+'</div>'+
-  '<div class="combat-action-note">Valet sparas för runda '+(Number(activeCombat?.round_number)||1)+'. Du kan ändra det tills vi kopplar på själva utförandet.</div>'+
+  '<div class="combat-action-note">Vald action begränsar återstående förflyttning till högst halva förflyttningsförmågan denna SR. Går du först mer än halva sträckan förbrukas actionen automatiskt.</div>'+
  '</div>'
 }
 async function loadActiveCombat(){
@@ -448,6 +459,123 @@ function combatHexNeighbors(q,r){
 function combatSelectedCombatant(){
  return combatants.find(row=>String(row.id)===String(combatSelectedTargetId))||null
 }
+function combatActiveActor(){
+ return combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''))||null
+}
+function combatMovementHasUsedMoreThanHalf(combatant){
+ return combatMovementSpent(combatant)>combatHalfMoveLimit(combatant)
+}
+function combatMovementAllowance(combatant){
+ const remaining=combatMovementBudget(combatant);
+ if(!combatant)return 0;
+ if(combatMovementHasUsedMoreThanHalf(combatant))return remaining;
+ const action=combatChosenAction(combatant);
+ if(!action)return remaining;
+ const def=combatActionDefinition(action);
+ if(def?.key==='move_full')return remaining;
+ const halfLeft=Math.max(0,combatHalfMoveLimit(combatant)-combatMovementSpent(combatant));
+ return Math.min(remaining,halfLeft)
+}
+function combatAxialDistance(a,b){
+ const aq=Number(a?.q)||0,ar=Number(a?.r)||0,bq=Number(b?.q)||0,br=Number(b?.r)||0;
+ const dq=aq-bq,dr=ar-br;
+ return (Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2
+}
+function combatCubeRound(x,y,z){
+ let rx=Math.round(x),ry=Math.round(y),rz=Math.round(z);
+ const dx=Math.abs(rx-x),dy=Math.abs(ry-y),dz=Math.abs(rz-z);
+ if(dx>dy&&dx>dz)rx=-ry-rz;
+ else if(dy>dz)ry=-rx-rz;
+ else rz=-rx-ry;
+ return{q:rx,r:rz}
+}
+function combatHexLine(a,b){
+ const aq=Number(a?.q)||0,ar=Number(a?.r)||0,bq=Number(b?.q)||0,br=Number(b?.r)||0;
+ const ax=aq,az=ar,ay=-ax-az,bx=bq,bz=br,by=-bx-bz;
+ const n=Math.max(0,combatAxialDistance(a,b)),out=[];
+ if(!n)return[{q:aq,r:ar}];
+ for(let i=0;i<=n;i++){
+  const t=i/n;
+  out.push(combatCubeRound(ax+(bx-ax)*t,ay+(by-ay)*t,az+(bz-az)*t))
+ }
+ return out
+}
+function combatHasLineOfSight(actor,target){
+ const terrain=new Map(combatRuntimeHexCells().map(cell=>[cell.key,cell]));
+ const line=combatHexLine(actor,target);
+ for(let i=1;i<line.length-1;i++){
+  const cell=terrain.get(line[i].q+','+line[i].r);
+  if(cell?.sight_mode==='blocked')return false
+ }
+ return true
+}
+function combatAttackProfile(combatant){
+ const stored=combatant?.state?.attack_profile;
+ if(stored&&typeof stored==='object')return stored;
+ let src=null;
+ if(combatant?.source_type==='character'&&typeof chars!=='undefined')src=(chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id));
+ else if(combatant?.source_type==='npc'&&typeof campaignNpcs!=='undefined')src=(campaignNpcs||[]).find(c=>String(c.id)===String(combatant.source_id));
+ else if(combatant?.source_type==='monster'&&typeof campaignMonsters!=='undefined')src=(campaignMonsters||[]).find(c=>String(c.id)===String(combatant.source_id));
+ if(!src)return{weapons:[],currentEquipment:null,sty:combatNumber(combatant?.state?.sty,10),smi:combatNumber(combatant?.state?.smi,10)};
+ const data=src.data&&typeof src.data==='object'?src.data:src;
+ const base=data.base&&typeof data.base==='object'?data.base:{};
+ const attrs=src.attributes&&typeof src.attributes==='object'?src.attributes:{};
+ const sty=combatNumber(base.Styrka?.v??base.STY,combatNumber(attrs.STY,combatNumber(combatant?.state?.sty,10)));
+ const smi=combatNumber(base.Smidighet?.v??base.SMI,combatNumber(attrs.SMI,combatNumber(combatant?.state?.smi,10)));
+ return{weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(src.weapons)?src.weapons:[]),currentEquipment:data.currentEquipment||null,sty,smi}
+}
+function combatAvailableWeapons(combatant,mode){
+ const profile=combatAttackProfile(combatant),weapons=Array.isArray(profile.weapons)?profile.weapons:[];
+ let available=weapons;
+ if(combatant?.source_type==='character'&&profile.currentEquipment){
+  const refs=[profile.currentEquipment.leftHand,profile.currentEquipment.rightHand].filter(ref=>ref?.kind==='weapon'&&ref.itemId);
+  const ids=new Set(refs.map(ref=>String(ref.itemId)));
+  available=weapons.filter(weapon=>ids.has(String(weapon.equipId)))
+ }
+ if(mode==='melee')return available.filter(weapon=>(weapon.weaponCategory||weapon.category||'melee')==='melee');
+ return available.filter(weapon=>['projectile','thrown'].includes(weapon.weaponCategory||weapon.category))
+}
+function combatWeaponRangeHexes(weapon,combatant){
+ const raw=String(weapon?.range??weapon?.range_text??'').trim();
+ if(!raw)return 0;
+ const profile=combatAttackProfile(combatant),hexM=Math.max(.1,combatNumber(activeCombat?.settings?.hex_m,1.5));
+ let match=raw.match(/([0-9]+(?:[.,][0-9]+)?)\s*m\b/i);
+ if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))/hexM));
+ match=raw.match(/([0-9]+(?:[.,][0-9]+)?)\s*rutor?/i);
+ if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))));
+ match=raw.match(/(STY|SMI)\s*[×x*]\s*([0-9]+(?:[.,][0-9]+)?)\s*rutor?/i);
+ if(match){
+  const base=match[1].toUpperCase()==='STY'?profile.sty:profile.smi;
+  return Math.max(0,Math.floor(combatNumber(base,0)*Number(match[2].replace(',','.'))))
+ }
+ return 0
+}
+function combatAttackRangeHexes(combatant,mode){
+ if(mode==='melee')return 1;
+ const weapons=combatAvailableWeapons(combatant,'ranged');
+ return weapons.reduce((max,weapon)=>Math.max(max,combatWeaponRangeHexes(weapon,combatant)),0)
+}
+function combatPossibleAttackTargets(actor,mode){
+ const out=new Map();
+ if(!actor||!['melee','ranged'].includes(mode))return out;
+ const maxRange=combatAttackRangeHexes(actor,mode);
+ if(maxRange<=0)return out;
+ for(const target of combatants){
+  if(String(target.id)===String(actor.id)||target.visible_to_players===false)continue;
+  if(target.side===actor.side)continue;
+  if(['dead','removed'].includes(target.status))continue;
+  const distance=combatAxialDistance(actor,target);
+  if(distance<1||distance>maxRange)continue;
+  if(!combatHasLineOfSight(actor,target))continue;
+  out.set(String(target.id),{distance,maxRange})
+ }
+ return out
+}
+function combatCurrentAttackTargets(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(!actor||def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return new Map();
+ return combatPossibleAttackTargets(actor,def.mode)
+}
 function combatMovementBudget(combatant){
  if(!combatant)return 0;
  const remaining=combatNumber(combatant.movement_remaining,null);
@@ -474,7 +602,7 @@ function combatReachableHexes(combatant){
  const out=new Map();
  if(!combatant||activeCombat?.phase!=='movement')return out;
  const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
- const budget=combatMovementBudget(combatant);
+ const budget=combatMovementAllowance(combatant);
  if(!cellByKey.has(startKey))return out;
  const frontier=[{key:startKey,cost:0}];
  out.set(startKey,0);
@@ -511,9 +639,10 @@ function renderCombatMap(){
   return '<div class="combat-map-missing">'+note+'</div>'
  }
  const cells=combatRuntimeHexCells(),byCoord=new Map(cells.map(cell=>[cell.key,cell]));
- const selected=combatSelectedCombatant();
- const reachable=combatReachableHexes(selected);
- const originKey=selected?((Number(selected.q)||0)+','+(Number(selected.r)||0)):'';
+ const actor=combatActiveActor();
+ const reachable=combatReachableHexes(actor);
+ const originKey=actor?((Number(actor.q)||0)+','+(Number(actor.r)||0)):'';
+ const attackTargets=combatCurrentAttackTargets();
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
   const moveCost=reachable.get(cell.key);
@@ -523,11 +652,11 @@ function renderCombatMap(){
   if(cell.sight_mode==='blocked')cls.push('sight-blocked');
   if(moveCost!=null&&cell.key!==originKey){
    cls.push('move-reachable');
-   cls.push(combatDestinationKeepsAction(selected,moveCost)?'move-action-kept':'move-action-spent')
+   cls.push(combatDestinationKeepsAction(actor,moveCost)?'move-action-kept':'move-action-spent')
   }
   if(cell.key===originKey)cls.push('move-origin');
   const reachText=moveCost!=null
-   ?' · kostnad '+moveCost+(combatDestinationKeepsAction(selected,moveCost)?' · handling kvar':' · full rörelse')
+   ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+'</title></polygon>'
  }).join('');
@@ -539,7 +668,9 @@ function renderCombatMap(){
    cell={x:g.xPitch*(q+r/2)+g.offsetX,y:g.rowPitch*r+g.offsetY}
   }
   const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
-  return '<g onclick="selectCombatTarget(\''+c.id+'\')"><circle class="combat-token '+side+selected+turn+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
+  const attack=attackTargets.get(String(c.id)),targetClass=attack?' attack-target':'';
+  const targetTitle=attack?' · möjligt mål · '+attack.distance+' hex':'';
+  return '<g onclick="selectCombatTarget(\''+c.id+'\')"><circle class="combat-token '+side+selected+turn+targetClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
  }).join('');
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
@@ -548,16 +679,25 @@ function renderCombatMap(){
 }
 
 function combatantCard(c){
- let cls=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
+ let cls=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp),move=c.movement_remaining==null?'—':c.movement_remaining;
  let rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  let init=rank!=null&&total!=null?' · #'+rank+' Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'';
- return'<button type="button" class="combatant-card '+cls+selected+turn+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+'</div></button>'
+ return'<button type="button" class="combatant-card '+cls+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+'</div></button>'
+}
+function combatAttackTargetSummaryHtml(combatant){
+ if(!combatant||!combatIsActiveTurn(combatant))return '';
+ const action=combatChosenAction(combatant),def=combatActionDefinition(action);
+ if(def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return '';
+ const targets=combatPossibleAttackTargets(combatant,def.mode);
+ const range=combatAttackRangeHexes(combatant,def.mode);
+ if(def.mode==='ranged'&&range<=0)return '<div class="combat-attack-summary empty"><b>Inga möjliga mål</b><span>Inget aktivt avståndsvapen med räckvidd är tillgängligt.</span></div>';
+ return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+(def.mode==='melee'?'Närstrid · angränsande hex':'Avstånd · max '+range+' hex')+' · fri LoS krävs</span></div>'
 }
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. Fri terräng kostar 1 poäng per hex, svår terräng 2 och blockerad terräng kan inte passeras.</div>'+combatActionChooserHtml(c)+'</div>'
+ return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. När en action valts kan högst halva förflyttningen användas totalt denna SR.</div>'+combatAttackTargetSummaryHtml(c)+combatActionChooserHtml(c)+'</div>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
