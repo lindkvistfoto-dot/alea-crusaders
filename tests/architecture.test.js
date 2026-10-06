@@ -460,9 +460,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatPendingParryOpportunity");
     expect(combat).toContain("async function chooseCombatParry");
     expect(combat).toContain("async function declineCombatParry");
-    expect(combat).toContain("parry_decision:'parry'");
+    expect(combat).toContain("parry_decision:rolled.success?'parried':'failed'");
     expect(combat).toContain("parry_decision:'declined'");
-    expect(combat).toContain("status:'pending'");
+    expect(combat).toContain("status:'resolving'");
     expect(combat).toContain("combatReactionPromptHtml()");
     expect(combat).toContain("async function combatRollDice");
     expect(combat).toContain("status=in.(setup,active,paused)");
@@ -597,7 +597,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("full_damage:fullDamage");
     expect(combat).toContain("damage_mode:fullDamage?'full':'roll'");
     expect(combat).toContain("rule_engine:'expert_skill'");
-    expect(combat).toContain("combatAttackExecutionHtml(c)");
+    expect(combat).toContain("function combatAttackPanelHtml");
+    expect(combat).toContain("combatAttackPanelHtml()");
+    expect(combat).toContain("async function combatResolveDamage");
+    expect(combat).toContain("function combatParryOptions");
+    expect(combat).toContain("async function combatExpertRoll");
+    expect(combat).toContain("status='dead'");
+    expect(combat).toContain("combat-token-skull");
     expect(combat).toContain("const COMBAT_INITIATIVE_COLORS=");
     expect(combat).toContain("function combatBuildInitiative");
     expect(combat).toContain("function combatInitiativeDiceMap");
@@ -741,6 +747,11 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-attack-summary{");
     expect(css).toContain(".combat-attack-execute{");
     expect(css).toContain(".combat-attack-result{");
+    expect(css).toContain(".combat-mini-attack{");
+    expect(css).toContain(".combat-mini-duel{");
+    expect(css).toContain(".combat-mini-parry{");
+    expect(css).toContain(".combat-damage-result{");
+    expect(css).toContain(".combat-token.defeated{");
     expect(css).toContain(".combat-fumble-results{");
     expect(css).toContain(".combatant-card.player-row{");
     expect(css).toContain(".combatant-card.npc-row{");
