@@ -2003,6 +2003,7 @@ function combatMapWheel(event){
 function combatMapPointerDown(event){
  if(event.button!=null&&event.button!==0&&event.pointerType!=='touch')return;
  if(combatMovementDrag)return;
+ if(event.target?.closest?.('.combat-token-group'))return;
  combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
  const svg=event.currentTarget;
  try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
