@@ -3788,3 +3788,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
   min-width:36px;
  }
 }
+
+
+/* v0.33.40 — fokusera striden */
+.combat-map-fit-btn{
+ font-size:16px!important;
+ line-height:1;
+}
+.combat-map-fit-btn:hover:not(:disabled){
+ color:#fff0c8;
+}
