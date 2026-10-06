@@ -427,7 +427,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("formula:'SMI+1T10'");
     expect(combat).toContain("b.total-a.total||b.smi-a.smi");
     expect(combat).toContain("visible_to_players!==false");
-    expect(combat).toContain("active_actor_id:firstActorId");
+    expect(combat).toContain("initiative,active_actor_id:null");
+    expect(combat).toContain("JSON.stringify({active_actor_id:firstActorId})");
     expect(combat).toContain("initiative_roll:result.die");
     expect(combat).toContain("initiative_total:result.total");
     expect(combat).toContain("initiative_rank:rankById.get");
