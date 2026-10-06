@@ -2561,3 +2561,38 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:700px){
  .adminstandtable{grid-template-columns:minmax(140px,1fr) 100px 70px 100px;font-size:13px}
 }
+
+
+/* v0.33.20 — tydlig turordning per kombatanttyp */
+.combatant-card{
+ display:grid;
+ grid-template-columns:36px minmax(0,1fr);
+ gap:9px;
+ align-items:center;
+ color:#2f2a24;
+}
+.combatant-card .name{color:#2f2a24!important}
+.combatant-card .meta{color:#514a42}
+.combatant-card.player-row{background:#d9eadc;border-color:#8eb497}
+.combatant-card.player-row:hover{background:#cfe5d3;border-color:#5e916b}
+.combatant-card.npc-row{background:#d9e7f3;border-color:#8baaca}
+.combatant-card.npc-row:hover{background:#ccdef0;border-color:#5d86ae}
+.combatant-card.enemy-row{background:#f0d8d5;border-color:#c68e88}
+.combatant-card.enemy-row:hover{background:#ebccc8;border-color:#a85e57}
+.combat-order-number{
+ width:30px;
+ height:30px;
+ border-radius:8px;
+ display:grid;
+ place-items:center;
+ font:900 17px/1 Georgia,serif;
+ background:rgba(31,28,25,.82);
+ color:#fff8e8;
+ box-shadow:0 1px 3px rgba(0,0,0,.18);
+}
+.combatant-card-copy{min-width:0}
+.combatant-card.selected{outline:3px solid #7f4f21;outline-offset:1px}
+.combatant-card.active-turn{
+ box-shadow:0 0 0 3px rgba(232,177,63,.55),0 3px 10px rgba(0,0,0,.12);
+}
+.combatant-card.active-turn .combat-order-number{background:#7a5416;color:#fff2c4}
