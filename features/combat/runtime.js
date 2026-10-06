@@ -313,6 +313,92 @@ function combatRuntimeHexCells(){
  }
  return cells
 }
+const COMBAT_PRIMARY_ACTIONS=[
+ {key:'attack_melee',type:'attack',label:'Anfall',icon:'⚔',mode:'melee'},
+ {key:'attack_ranged',type:'attack',label:'Avståndsanfall',icon:'🏹',mode:'ranged'},
+ {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction'},
+ {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
+ {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full'},
+ {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
+];
+function combatIsActiveTurn(combatant){
+ return !!combatant&&String(activeCombat?.active_actor_id||'')===String(combatant.id)
+}
+function combatChosenAction(combatant){
+ if(!combatant||!activeCombat)return null;
+ const round=Number(activeCombat.round_number)||1;
+ return (combatActions||[]).find(action=>
+  String(action.combatant_id)===String(combatant.id)&&
+  Number(action.round_number)===round&&
+  action.slot_key==='primary'&&
+  action.status!=='cancelled'
+ )||null
+}
+function combatActionDefinition(action){
+ if(!action)return null;
+ const key=action.source_data?.action_key||'';
+ return COMBAT_PRIMARY_ACTIONS.find(item=>item.key===key)||
+  COMBAT_PRIMARY_ACTIONS.find(item=>item.type===action.action_type)||null
+}
+function combatCanChoosePrimaryAction(combatant){
+ return combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'
+}
+async function chooseCombatPrimaryAction(combatantId,actionKey){
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId));
+ const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
+ if(!combatant||!def||!combatCanChoosePrimaryAction(combatant))return;
+ const round=Number(activeCombat.round_number)||1;
+ const existing=combatChosenAction(combatant);
+ const body={
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatant.id,
+  round_number:round,phase:activeCombat.phase||'movement',action_type:def.type,slot_key:'primary',
+  source_data:{action_key:def.key,label:def.label,mode:def.mode},
+  target_combatant_id:null,status:def.type==='parry'?'reserved':'planned',
+  sequence:Math.max(0,(combatNumber(combatant.state?.initiative_rank,1)||1)-1),
+  result:{},player_visible:true,created_by:activeUser()?.id||null
+ };
+ try{
+  if(existing){
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({
+     phase:body.phase,action_type:body.action_type,slot_key:body.slot_key,
+     source_data:body.source_data,target_combatant_id:null,status:body.status,
+     sequence:body.sequence,result:{},player_visible:true,updated_at:new Date().toISOString()
+    })
+   })
+  }else{
+   await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)})
+  }
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte välja action',error);
+  alert('Kunde inte välja action: '+(error?.message||error))
+ }
+}
+function combatActionChooserHtml(combatant){
+ if(!combatant)return '';
+ const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
+ if(!combatIsActiveTurn(combatant)){
+  const active=combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''));
+  return '<div class="combat-action-box waiting"><b>Inte den här kombatantens tur</b><span>Aktuell tur: '+escAttr(active?.name_snapshot||'—')+'</span></div>'
+ }
+ if(!combatCanManage()){
+  return '<div class="combat-action-box waiting"><b>Din tur</b><span>Actionval hanteras av SL i den här utvecklingsversionen.</span></div>'
+ }
+ return '<div class="combat-action-box">'+
+  '<div class="combat-action-head"><div><b>Välj action</b><span>En action denna SR</span></div>'+
+   (chosenDef?'<strong>Vald: '+chosenDef.icon+' '+escAttr(chosenDef.label)+'</strong>':'<strong>Ingen vald</strong>')+
+  '</div>'+
+  '<div class="combat-action-grid">'+COMBAT_PRIMARY_ACTIONS.map(def=>{
+   const active=chosenDef?.key===def.key;
+   return '<button type="button" class="combat-action-btn'+(active?' active':'')+'" onclick="chooseCombatPrimaryAction(\''+combatant.id+'\',\''+def.key+'\')">'+
+    '<span>'+def.icon+'</span><b>'+escAttr(def.label)+'</b>'+
+   '</button>'
+  }).join('')+'</div>'+
+  '<div class="combat-action-note">Valet sparas för runda '+(Number(activeCombat?.round_number)||1)+'. Du kan ändra det tills vi kopplar på själva utförandet.</div>'+
+ '</div>'
+}
 async function loadActiveCombat(){
  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
@@ -331,6 +417,7 @@ async function loadActiveCombat(){
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
+   combatSelectedTargetId=activeCombat.active_actor_id||null;
    await loadCombatRuntimeBackground()
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
@@ -450,8 +537,8 @@ function renderCombatMap(){
    const q=Number(c.q)||0,r=Number(c.r)||0;
    cell={x:g.xPitch*(q+r/2)+g.offsetX,y:g.rowPitch*r+g.offsetY}
   }
-  const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'';
-  return '<g onclick="selectCombatTarget(\''+c.id+'\')"><circle class="combat-token '+side+selected+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
+  const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
+  return '<g onclick="selectCombatTarget(\''+c.id+'\')"><circle class="combat-token '+side+selected+turn+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
  }).join('');
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
@@ -460,16 +547,16 @@ function renderCombatMap(){
 }
 
 function combatantCard(c){
- let cls=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'';
+ let cls=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp),move=c.movement_remaining==null?'—':c.movement_remaining;
  let rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  let init=rank!=null&&total!=null?' · #'+rank+' Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'';
- return'<button type="button" class="combatant-card '+cls+selected+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+'</div></button>'
+ return'<button type="button" class="combatant-card '+cls+selected+turn+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+'</div></button>'
 }
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. Fri terräng kostar 1 poäng per hex, svår terräng 2 och blockerad terräng kan inte passeras.</div></div>'
+ return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. Fri terräng kostar 1 poäng per hex, svår terräng 2 och blockerad terräng kan inte passeras.</div>'+combatActionChooserHtml(c)+'</div>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
