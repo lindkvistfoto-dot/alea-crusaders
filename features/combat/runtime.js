@@ -700,6 +700,153 @@ function combatFumbleRule(mode,weapon,roll){
  const tableKey=combatFumbleTableKey(mode,weapon);
  return typeof ruleCombatFumble==='function'?ruleCombatFumble(tableKey,roll):null
 }
+function combatFumbleTableLabel(tableKey){
+ return tableKey==='ranged'?'avståndsvapen':tableKey==='natural'?'naturlig/obeväpnad attack':'närstridsvapen'
+}
+function combatParseSimpleDiceFormula(value){
+ const match=String(value||'').trim().toUpperCase().match(/^(\d+)T(\d+)$/);
+ if(!match)return null;
+ const qty=Math.max(1,Math.min(20,Number(match[1])||1)),sides=Number(match[2]);
+ return [3,4,6,8,10,20,100].includes(sides)?{qty,sides}:null
+}
+async function combatResolveFumbleParams(rule,weapon){
+ const params={...(rule?.effect_params||{})};
+ for(const key of ['count_dice','distance_dice']){
+  const spec=combatParseSimpleDiceFormula(params[key]);
+  if(!spec)continue;
+  const rolled=await combatRollDice([spec],'Fummel · '+(key==='count_dice'?'antal':'avstånd'));
+  const value=Number(rolled?.total);
+  if(Number.isFinite(value))params[key==='count_dice'?'count':'distance_hex']=value
+ }
+ if(params.thrown_distance_dice){
+  const category=weapon?.weaponCategory||weapon?.category||'';
+  if(category==='thrown'){
+   const spec=combatParseSimpleDiceFormula(params.thrown_distance_dice);
+   if(spec){
+    const rolled=await combatRollDice([spec],'Fummel · kastvapnets avstånd');
+    const value=Number(rolled?.total);
+    if(Number.isFinite(value))params.distance_hex=value
+   }
+  }else if(params.distance_hex==null){
+   params.distance_hex=0
+  }
+ }
+ return params
+}
+function combatFumbleOverlay(entry,totalEntries=1,index=0){
+ const host=$('combatDiceReadout');if(!host||!entry)return;
+ host.classList.remove('success','fail','special','perfect','outcome-show');
+ host.classList.add('show','outcome-show','fumble','fumble-detail');
+ host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">⚠</span>'+
+  '<div class="combat-outcome-copy"><b>FUMMEL '+entry.roll+' · '+escAttr(entry.title)+'</b>'+
+  '<span>'+escAttr(entry.effect_text||'')+(totalEntries>1?' · resultat '+(index+1)+'/'+totalEntries:'')+'</span></div>'
+}
+function combatFumbleEffectRecord(action,entry,weapon){
+ return{
+  id:(action?.id||'fumble')+':'+entry.sequence,
+  source:'fumble',
+  action_id:action?.id||null,
+  round_number:Number(activeCombat?.round_number)||1,
+  table_key:entry.table_key,
+  roll:entry.roll,
+  title:entry.title,
+  effect_type:entry.effect_type,
+  params:entry.params||{},
+  weapon_key:weapon?._unarmed?'unarmed':combatWeaponKey(weapon),
+  weapon_name:weapon?.name||'Obeväpnad',
+  created_at:new Date().toISOString()
+ }
+}
+async function combatApplyFumbleEntries(actor,action,weapon,entries){
+ if(!actor||!entries?.length)return {applied:[],pending:[]};
+ const state={...(actor.state||{})};
+ const effects=Array.isArray(state.combat_effects)?[...state.combat_effects]:[];
+ const broken=new Set((state.broken_weapon_keys||[]).map(String));
+ const dropped=new Set((state.dropped_weapon_keys||[]).map(String));
+ let movementMax=combatMovementMaximum(actor),movementRemaining=combatMovementBudget(actor);
+ const applied=[],pending=[];
+ for(const entry of entries){
+  if(entry.effect_type==='roll_twice')continue;
+  const effect=combatFumbleEffectRecord(action,entry,weapon);
+  effects.push(effect);
+  const key=weapon?._unarmed?'':combatWeaponKey(weapon);
+  if(entry.effect_type==='weapon_break'&&key){
+   broken.add(key);effect.applied=true;applied.push(effect.effect_type);continue
+  }
+  if(entry.effect_type==='drop_weapon'&&key){
+   dropped.add(key);effect.applied=true;applied.push(effect.effect_type);continue
+  }
+  if(entry.effect_type==='prone'){
+   state.prone=true;effect.applied=true;applied.push(effect.effect_type);continue
+  }
+  if(entry.effect_type==='movement_penalty'){
+   const delta=Number(entry.params?.amount)||0;
+   if(delta){
+    movementMax=Math.max(0,movementMax+delta);
+    movementRemaining=Math.max(0,Math.min(movementMax,movementRemaining+delta));
+    state.fumble_movement_penalty=(Number(state.fumble_movement_penalty)||0)+delta;
+    effect.applied=true;applied.push(effect.effect_type);continue
+   }
+  }
+  effect.applied=false;
+  effect.pending=true;
+  pending.push(effect.effect_type)
+ }
+ state.combat_effects=effects;
+ state.broken_weapon_keys=[...broken];
+ state.dropped_weapon_keys=[...dropped];
+ const patch={state,updated_at:new Date().toISOString()};
+ if(movementMax!==combatMovementMaximum(actor))patch.movement_max=movementMax;
+ if(movementRemaining!==combatMovementBudget(actor))patch.movement_remaining=movementRemaining;
+ await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(patch)
+ });
+ actor.state=state;
+ if(patch.movement_max!=null)actor.movement_max=patch.movement_max;
+ if(patch.movement_remaining!=null)actor.movement_remaining=patch.movement_remaining;
+ return{applied:[...new Set(applied)],pending:[...new Set(pending)]}
+}
+async function combatResolveFumbleChain(actor,action,mode,weapon){
+ const tableKey=combatFumbleTableKey(mode,weapon),entries=[];
+ let pendingRolls=1,sequence=0,truncated=false;
+ while(pendingRolls>0){
+  if(sequence>=20){truncated=true;break}
+  pendingRolls--;sequence++;
+  const rolled=await combatRollDice([{qty:1,sides:20}],'Fummel · '+combatFumbleTableLabel(tableKey));
+  const value=Number(rolled?.rolls?.[0]?.value);
+  if(!Number.isInteger(value))throw new Error('Fummelslaget gav inget giltigt T20-resultat.');
+  const rule=combatFumbleRule(mode,weapon,value);
+  if(!rule)throw new Error('Ingen fummelregel hittades för '+tableKey+' och T20 '+value+'.');
+  const params=await combatResolveFumbleParams(rule,weapon);
+  const entry={
+   sequence,table_key:tableKey,roll:value,title:rule.title,effect_text:rule.effect_text,
+   effect_type:rule.effect_type,params
+  };
+  entries.push(entry);
+  combatFumbleOverlay(entry);
+  if(rule.effect_type==='roll_twice')pendingRolls+=Math.max(2,Number(params.count)||2);
+  if(pendingRolls>0)await new Promise(resolve=>setTimeout(resolve,650))
+ }
+ const effects=await combatApplyFumbleEntries(actor,action,weapon,entries);
+ const result={table_key:tableKey,entries,effects,truncated};
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(entries.map(entry=>({
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+  phase:'attack',actor_id:actor.id,target_id:null,event_type:'fumble',
+  message:actor.name_snapshot+' · Fummel '+entry.roll+' · '+entry.title+' · '+entry.effect_text,
+  details:{...entry,weapon_key:weapon?._unarmed?'unarmed':combatWeaponKey(weapon),weapon_name:weapon?.name||'Obeväpnad'},
+  player_visible:true
+ })))});
+ if(entries.length)combatFumbleOverlay(entries[entries.length-1],entries.length,entries.length-1);
+ return result
+}
+function combatFumbleResultHtml(result){
+ const fumble=result?.fumble;
+ if(!fumble?.entries?.length)return '';
+ return '<div class="combat-fumble-results"><div class="combat-fumble-head"><b>⚠ Fummeltabell · '+escAttr(combatFumbleTableLabel(fumble.table_key))+'</b><span>Automatiskt slag</span></div>'+
+  fumble.entries.map(entry=>'<div class="combat-fumble-row"><strong>T20 '+entry.roll+'</strong><div><b>'+escAttr(entry.title)+'</b><span>'+escAttr(entry.effect_text||'')+'</span></div></div>').join('')+
+  (fumble.truncated?'<div class="combat-fumble-warning">Fummelkedjan stoppades efter 20 tabellslag.</div>':'')+
+ '</div>'
+}
 function combatAttackFv(weapon){
  const fv=combatNumber(weapon?.fv,null);
  return fv!=null&&fv>0?Math.floor(fv):null
@@ -738,6 +885,7 @@ function combatAttackResultHtml(action){
       :escAttr(result.erf.message||'Ingen ny ERF'))+
     '</div>'
    :'')+
+  combatFumbleResultHtml(result)+
  '</div>'
 }
 function combatOutcomeEarnsErf(outcome){
@@ -831,14 +979,20 @@ async function combatResolveAttackAction(actor,target,action,weapon){
   details:result,player_visible:true
  })});
  const erf=await combatAwardAttackErf(actor,weapon,outcome);
- if(erf){
-  result.erf=erf;
+ if(erf)result.erf=erf;
+ if(outcome==='fumble'){
+  combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv);
+  await new Promise(resolve=>setTimeout(resolve,700));
+  result.fumble=await combatResolveFumbleChain(actor,action,action?.source_data?.mode||'melee',weapon)
+ }else{
+  combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv)
+ }
+ if(erf||result.fumble){
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({result,updated_at:new Date().toISOString()})
   })
  }
- combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv);
  return result
 }
 async function rollCombatAttack(actorId,targetId){
@@ -1061,6 +1215,11 @@ function combatAvailableWeapons(combatant,mode){
   const ids=new Set(refs.map(ref=>String(ref.itemId)));
   available=weapons.filter(weapon=>ids.has(String(weapon.equipId)))
  }
+ const disabled=new Set([
+  ...(Array.isArray(combatant?.state?.broken_weapon_keys)?combatant.state.broken_weapon_keys:[]),
+  ...(Array.isArray(combatant?.state?.dropped_weapon_keys)?combatant.state.dropped_weapon_keys:[])
+ ].map(String));
+ if(disabled.size)available=available.filter(weapon=>!disabled.has(combatWeaponKey(weapon)));
  if(mode==='melee')return available.filter(weapon=>(weapon.weaponCategory||weapon.category||'melee')==='melee');
  return available.filter(weapon=>['projectile','thrown'].includes(weapon.weaponCategory||weapon.category))
 }
@@ -1297,7 +1456,8 @@ function combatantCard(c){
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp),move=c.movement_remaining==null?'—':c.movement_remaining;
  let rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  let init=rank!=null&&total!=null?' · #'+rank+' Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'';
- return'<button type="button" class="combatant-card '+cls+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+'</div></button>'
+ const fumbleState=(c.state?.prone?' · Liggande':'')+((c.state?.broken_weapon_keys||[]).length?' · Trasigt vapen':'')+((c.state?.dropped_weapon_keys||[]).length?' · Tappat vapen':'');
+ return'<button type="button" class="combatant-card '+cls+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></button>'
 }
 function combatAttackTargetSummaryHtml(combatant){
  if(!combatant||!combatIsActiveTurn(combatant))return '';
