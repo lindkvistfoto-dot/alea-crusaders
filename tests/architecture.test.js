@@ -405,7 +405,7 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.32.5");
+    expect(html).toContain("Alea Crusaders v0.32.6");
     expect(html).toContain("app.css?v=0.32.5");
     expect(html).toContain("legacy/app.js?v=0.32.5");
   });
@@ -585,6 +585,7 @@ describe("application architecture smoke checks", () => {
     expect(inn).toContain("function innPlayFiveCrowns");
     expect(inn).toContain("function innFiveCrownsCategory");
     expect(inn).toContain("'Fem kronor':50");
+    expect(inn).toContain("'Fem sexor':100");
     expect(inn).toContain("const playerDice=await innAnimatedDice(5)");
     expect(inn).toContain("function innRoll2d6");
     expect(inn).toContain("const houseDice=await innAnimated2d6()");
@@ -621,9 +622,12 @@ describe("application architecture smoke checks", () => {
     expect(inn).toContain("'Stege':4");
     expect(inn).toContain("'Fyrtal':8");
     expect(inn).toContain("'Fem kronor':50");
+    expect(inn).toContain("'Fem sexor':100");
+    expect(inn).toContain("dice.every(value=>value===6)");
     expect(inn).toContain("unique.join(',')==='1,2,3,4,5'");
     expect(inn).toContain("unique.join(',')==='2,3,4,5,6'");
-    expect(inn).toContain("Teoretisk återbetalning: <b>97,2 %</b>");
+    expect(inn).toContain("Teoretisk återbetalning: <b>97,9 %</b>");
+    expect(inn).toContain("Husfördel: <b>2,1 %</b>");
   });
 
   test("Värdshus catalogue includes lodging meals and services", () => {
