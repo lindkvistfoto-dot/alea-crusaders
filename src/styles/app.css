@@ -2140,3 +2140,22 @@ body:not(.editing) #skilltable .skill-roll-btn{
  fill:rgba(120,80,70,.18)!important;
  stroke:rgba(120,80,70,.6)!important;
 }
+
+
+/* v0.33.10 — attack använder aktuellt handvapen; två vapen kräver val */
+.combat-weapon-choice{
+ margin-top:8px;padding:8px;border:1px solid #c7aa7c;border-radius:8px;background:#fffaf0;
+ display:flex;flex-direction:column;gap:6px;
+}
+.combat-weapon-choice>span{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#725c43}
+.combat-weapon-choice.single,.combat-weapon-choice.empty{flex-direction:row;align-items:center;justify-content:space-between}
+.combat-weapon-choice.single b{color:#315d3f}
+.combat-weapon-choice.empty b{color:#8a493f;font-size:11px}
+.combat-weapon-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.combat-weapon-choice-btn{
+ border:1px solid #c9aa7d;border-radius:7px;background:#fff;padding:7px 8px;
+ display:flex;flex-direction:column;gap:2px;text-align:left;cursor:pointer;color:#44352a;
+}
+.combat-weapon-choice-btn.active{border-color:#467957;outline:2px solid rgba(70,121,87,.28);background:#e8f1e7}
+.combat-weapon-choice-btn small{font-size:10px;color:#7c6a54}
+@media(max-width:560px){.combat-weapon-choice-grid{grid-template-columns:1fr}}
