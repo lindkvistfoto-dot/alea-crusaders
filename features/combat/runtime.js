@@ -323,7 +323,7 @@ function combatRuntimeHexCells(){
 const COMBAT_PRIMARY_ACTIONS=[
  {key:'attack_melee',type:'attack',label:'Anfall',icon:'⚔',mode:'melee'},
  {key:'attack_ranged',type:'attack',label:'Avståndsanfall',icon:'🏹',mode:'ranged'},
- {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction'},
+ {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction',reactive:true},
  {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
  {key:'spell_cast',type:'spell',label:'Lägg besvärjelse',icon:'🔮',mode:'cast'},
  {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full',automatic:true},
@@ -354,7 +354,7 @@ function combatCanChoosePrimaryAction(combatant){
 async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
- if(!combatant||!def||def.automatic||!combatCanChoosePrimaryAction(combatant))return;
+ if(!combatant||!def||def.automatic||def.reactive||!combatCanChoosePrimaryAction(combatant))return;
  if(combatMovementHasUsedMoreThanHalf(combatant))return;
  const round=Number(activeCombat.round_number)||1;
  const existing=combatChosenAction(combatant);
@@ -394,6 +394,101 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
   console.error('Kunde inte välja action',error);
   alert('Kunde inte välja action: '+(error?.message||error))
  }
+}
+function combatPrimaryActionIsSpent(action){
+ if(!action)return false;
+ if(action.action_type==='move'&&action.source_data?.action_key==='move_full')return true;
+ return ['reserved','pending','resolving','resolved'].includes(action.status)
+}
+function combatHasUnusedAction(combatant){
+ if(!combatant||combatMovementHasUsedMoreThanHalf(combatant))return false;
+ return !combatPrimaryActionIsSpent(combatChosenAction(combatant))
+}
+function combatSuccessfulMeleeAttack(action){
+ return !!action&&action.action_type==='attack'&&action.source_data?.mode==='melee'&&
+  action.result?.success===true&&action.status!=='cancelled'
+}
+function combatPendingParryOpportunity(){
+ const round=Number(activeCombat?.round_number)||1;
+ for(let i=(combatActions||[]).length-1;i>=0;i--){
+  const attack=combatActions[i];
+  if(Number(attack.round_number)!==round||!combatSuccessfulMeleeAttack(attack))continue;
+  if(!attack.target_combatant_id||attack.result?.parry_decision)return null;
+  const defender=combatants.find(row=>String(row.id)===String(attack.target_combatant_id));
+  const attacker=combatants.find(row=>String(row.id)===String(attack.combatant_id));
+  if(!defender||!attacker||['dead','removed'].includes(defender.status))return null;
+  if(!combatHasUnusedAction(defender))return null;
+  return{attack,defender,attacker}
+ }
+ return null
+}
+async function chooseCombatParry(defenderId,attackActionId){
+ const opportunity=combatPendingParryOpportunity();
+ if(!opportunity||String(opportunity.defender.id)!==String(defenderId)||String(opportunity.attack.id)!==String(attackActionId))return;
+ const defender=opportunity.defender,attack=opportunity.attack;
+ if(!combatHasUnusedAction(defender)||!combatCanManage())return;
+ const existing=combatChosenAction(defender);
+ const parryId=existing?.id||crypto.randomUUID();
+ const sourceData={
+  action_key:'parry',label:'Parera',mode:'reaction',
+  reaction_to_action_id:attack.id,attacker_id:attack.combatant_id
+ };
+ const payload={
+  phase:'reaction',action_type:'parry',slot_key:'primary',source_data:sourceData,
+  target_combatant_id:attack.combatant_id,status:'pending',
+  sequence:Math.max(0,(combatNumber(defender.state?.initiative_rank,1)||1)-1),
+  result:{reaction_to_action_id:attack.id},player_visible:true
+ };
+ try{
+  if(existing){
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({...payload,updated_at:new Date().toISOString()})
+   })
+  }else{
+   await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+    id:parryId,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:defender.id,
+    round_number:Number(activeCombat.round_number)||1,...payload,created_by:activeUser()?.id||null
+   })})
+  }
+  const attackResult={...(attack.result||{}),parry_decision:'parry',parry_action_id:parryId};
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(attack.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({result:attackResult,updated_at:new Date().toISOString()})
+  });
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte välja parering',error);
+  alert('Kunde inte välja parering: '+(error?.message||error))
+ }
+}
+async function declineCombatParry(defenderId,attackActionId){
+ const opportunity=combatPendingParryOpportunity();
+ if(!opportunity||String(opportunity.defender.id)!==String(defenderId)||String(opportunity.attack.id)!==String(attackActionId)||!combatCanManage())return;
+ try{
+  const attackResult={...(opportunity.attack.result||{}),parry_decision:'declined'};
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(opportunity.attack.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({result:attackResult,updated_at:new Date().toISOString()})
+  });
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte avstå parering',error);
+  alert('Kunde inte registrera valet: '+(error?.message||error))
+ }
+}
+function combatReactionPromptHtml(){
+ const opportunity=combatPendingParryOpportunity();
+ if(!opportunity)return '';
+ const {attack,defender,attacker}=opportunity;
+ return '<section class="combat-reaction-prompt">'+
+  '<div><span>REAKTION</span><b>Lyckat närstridsanfall mot '+escAttr(defender.name_snapshot)+'</b>'+
+  '<small>'+escAttr(attacker.name_snapshot)+' har träffat. '+escAttr(defender.name_snapshot)+' har en action kvar.</small></div>'+
+  '<div class="combat-reaction-actions">'+
+   '<button type="button" class="btn combat-parry-btn" onclick="chooseCombatParry(\''+defender.id+'\',\''+attack.id+'\')">🛡 Parera</button>'+
+   '<button type="button" class="btn combat-take-hit-btn" onclick="declineCombatParry(\''+defender.id+'\',\''+attack.id+'\')">Ta träffen</button>'+
+  '</div>'+
+ '</section>'
 }
 async function chooseCombatAttackWeapon(combatantId,weaponKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
@@ -450,7 +545,7 @@ function combatActionChooserHtml(combatant){
   '<div class="combat-action-head"><div><b>Välj action</b><span>En action denna SR</span></div>'+
    (chosenDef?'<strong>Vald: '+chosenDef.icon+' '+escAttr(chosenDef.label)+'</strong>':'<strong>Ingen vald</strong>')+
   '</div>'+
-  '<div class="combat-action-grid">'+COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic).map(def=>{
+  '<div class="combat-action-grid">'+COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive).map(def=>{
    const active=chosenDef?.key===def.key;
    return '<button type="button" class="combat-action-btn'+(active?' active':'')+'" onclick="chooseCombatPrimaryAction(\''+combatant.id+'\',\''+def.key+'\')">'+
     '<span>'+def.icon+'</span><b>'+escAttr(def.label)+'</b>'+
@@ -847,5 +942,5 @@ function renderCombat(){
  let first=combatants.find(row=>String(row.id)===String(activeCombat.active_actor_id)),initiativeLead=first?(' · Initiativetta: '+first.name_snapshot):'';
  let participantHtml=combatants.length?combatants.map(combatantCard).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div><aside class="combat-panel combat-participants"><h3>Deltagare</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'
+ body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Deltagare</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'
 }
