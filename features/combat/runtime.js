@@ -1452,6 +1452,23 @@ function combatPlayerMiniatureKind(combatant){
  if(name.includes('evalin'))return 'duck';
  return null
 }
+function combatPlayerGlbModel(combatant){
+ if(combatant?.source_type!=='character')return null;
+ const explicit=String(combatant?.state?.miniature_glb||'').trim();
+ if(explicit)return explicit;
+ const name=String(combatant?.name_snapshot||'').toLowerCase();
+ if(name.includes('astrid'))return './assets/models/kenney/mini-characters/character-female-a.glb';
+ return null
+}
+function combatGlbMiniatureFigure(combatant){
+ const model=combatPlayerGlbModel(combatant);
+ if(!model||!window.customElements?.get('model-viewer'))return '';
+ return '<foreignObject class="combat-glb-mini-fo" x="-34" y="-69" width="68" height="78">'+
+  '<div xmlns="http://www.w3.org/1999/xhtml" class="combat-glb-mini-wrap">'+
+   '<model-viewer class="combat-glb-mini" src="'+escAttr(model)+'" alt="'+escAttr((combatant?.name_snapshot||'Spelare')+' 3D-miniatyr')+'" loading="eager" reveal="auto" interaction-prompt="none" camera-orbit="18deg 72deg 2.7m" field-of-view="27deg" environment-image="neutral" tone-mapping="aces" exposure="1.08" shadow-intensity=".75" shadow-softness=".85"></model-viewer>'+
+  '</div>'+
+ '</foreignObject>'
+}
 function combatMiniatureDefs(){
  return '<defs>'+
   '<linearGradient id="miniMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f2f3"/><stop offset=".45" stop-color="#8e989e"/><stop offset="1" stop-color="#444d52"/></linearGradient>'+
@@ -1502,13 +1519,14 @@ function combatMiniatureDuck(){
 function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
  const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
  const scale=Math.max(.55,g.size/42);
- const figure=kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck();
- return '<g class="combat-miniature '+kind+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+ const glbFigure=combatGlbMiniatureFigure(combatant);
+ const figure=glbFigure||(kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck());
+ return '<g class="combat-miniature '+kind+(glbFigure?' glb-miniature':'')+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
   '<ellipse class="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
   '<ellipse class="combat-mini-base" cx="0" cy="7" rx="21" ry="7"/>'+
   '<ellipse class="combat-mini-base-ring" cx="0" cy="7" rx="21" ry="7"/>'+
   figure+
-  '<rect class="combat-mini-hit" x="-31" y="-58" width="62" height="72" rx="8"/>'+
+  '<rect class="combat-mini-hit" x="-31" y="-64" width="62" height="78" rx="8"/>'+
  '</g>'
 }
 function combatHexNeighbors(q,r){
