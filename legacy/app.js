@@ -9,7 +9,7 @@ let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,c
 const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
 let supabaseSession=null,supabaseProfile=null;
-let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;
+let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;
 let centralCampaignId=null,centralReady=false,centralSaveTimer=null,centralCampaignRole=null,campaignDayState=null,campaignErfAwards=[],campaignCharacterRestStates=[],campaignSites=[],campaignLocations=[],campaignLocationEventLinks=[],campaignEvents=[],campaignNpcs=[],campaignMonsters=[],campaignCombatScenes=[],campaignContentReady=false,currentLocationContentId=null,currentLocationAssets=[],locationAssetUrlCache=new Map();let activeCombat=null,combatants=[],combatHexes=[],combatActions=[],combatLogRows=[],combatSelectedTargetId=null,combatReturn='home';
 function asBool(v){return v===true||v===1||v==='1'||String(v).toLowerCase()==='true'}
 function syncAppVersionDisplay(){let src=document.getElementById('appVersion'),home=document.getElementById('mobileHomeVersion'),admin=document.getElementById('adminOverviewVersion');if(!src)return;let label='Version '+src.textContent;if(home)home.textContent=label;if(admin)admin.textContent=label}
@@ -18,7 +18,7 @@ function toggleLoginPassword(){let e=$('loginPassword');e.type=e.type==='passwor
 syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
-async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleWeapons(),loadRuleWeaponMaterials(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
+async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleWeapons(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
 async function authFetch(path,options={}){let headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json',...(options.headers||{})};return fetch(SUPABASE_URL+path,{...options,headers})}
 async function loadProfile(){if(!supabaseSession?.user?.id)return null;const auth={'Authorization':'Bearer '+supabaseSession.access_token};let path='/rest/v1/profiles?id=eq.'+encodeURIComponent(supabaseSession.user.id)+'&select=id,display_name,email,is_admin';let r=await authFetch(path,{headers:auth});if(!r.ok)throw new Error('Kunde inte läsa användarprofilen ('+r.status+').');let rows=await r.json();supabaseProfile=rows[0]||null;if(!supabaseProfile&&supabaseSession.user.email){path='/rest/v1/profiles?email=eq.'+encodeURIComponent(supabaseSession.user.email)+'&select=id,display_name,email,is_admin';r=await authFetch(path,{headers:auth});if(r.ok){rows=await r.json();supabaseProfile=rows[0]||null}}return supabaseProfile}
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
@@ -101,6 +101,24 @@ async function loadRuleWeapons(force=false){
   console.error('Kunde inte läsa vapenregistret',e);
   ruleWeapons=[];ruleWeaponsLoaded=false;return []
  }
+}
+async function loadRuleCombatFumbles(force=false){
+ if(ruleCombatFumblesLoaded&&!force)return ruleCombatFumbles;
+ try{
+  ruleCombatFumbles=await dbJson('rule_combat_fumbles?ruleset=eq.dod_expert&active=eq.true&select=*&order=table_key.asc,roll_min.asc,roll_max.asc');
+  ruleCombatFumblesLoaded=true;return ruleCombatFumbles
+ }catch(e){
+  console.error('Kunde inte läsa fummelregistret',e);
+  ruleCombatFumbles=[];ruleCombatFumblesLoaded=false;return []
+ }
+}
+function ruleCombatFumble(tableKey,roll){
+ const key=String(tableKey||''),value=Math.floor(Number(roll)||0);
+ if(value<1||value>20)return null;
+ return (ruleCombatFumbles||[]).find(row=>
+  row.ruleset==='dod_expert'&&row.active!==false&&row.table_key===key&&
+  value>=Number(row.roll_min)&&value<=Number(row.roll_max)
+ )||null
 }
 async function loadRuleWeaponMaterials(force=false){
  if(ruleWeaponMaterialsLoaded&&!force)return ruleWeaponMaterials;
