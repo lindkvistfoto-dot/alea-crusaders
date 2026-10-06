@@ -5,7 +5,7 @@ const INN_SECTIONS=[
   {category:'Mat & dryck',title:'Mat'},
   {category:'Tjänster',title:'Tjänster'}
 ];
-const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.3';
+const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.4';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
@@ -17,6 +17,9 @@ let innExpandedItemKey='';
 let innGameStakeKm=5;
 let innGameBusy=false;
 let innGameResult=null;
+let innGamePhase='idle';
+let innGameHouseDice=null;
+let innGamePlayerDice=null;
 const innRowQuantities=new Map();
 
 function loadInnCart(){
@@ -251,10 +254,16 @@ function openInnGame(){
   modal.classList.remove('hidden');
   document.body.classList.add('inn-game-open');
   renderInnGame();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.alea3dInnPrepare?.()));
   setTimeout(()=>document.getElementById('innGamePlayBtn')?.focus(),0);
 }
 
 function closeInnGame(){
+  if(innGameBusy){
+    const notice=document.getElementById('innGameNotice');
+    if(notice)notice.textContent='Vänta tills kastet är avgjort.';
+    return;
+  }
   document.getElementById('innGameModal')?.classList.add('hidden');
   document.body.classList.remove('inn-game-open');
 }
@@ -275,14 +284,82 @@ function innRoll2d6(){
   return [innRandomD6(),innRandomD6()];
 }
 
+function innWait(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function innDiceBoxValues(result){
+  return (Array.isArray(result)?result:[])
+    .map(row=>Number(row?.value))
+    .filter(value=>Number.isInteger(value)&&value>=1&&value<=6)
+    .slice(0,2);
+}
+
+function innFallbackDiceHtml(values,rolling=false){
+  const faces=['','⚀','⚁','⚂','⚃','⚄','⚅'];
+  return values.map(value=>'<span class="inn-game-fallback-die '+(rolling?'rolling':'')+'">'+faces[value]+'</span>').join('');
+}
+
+async function innFallbackAnimatedRoll(){
+  const host=document.getElementById('innGameDiceFallback');
+  if(!host)return innRoll2d6();
+  host.classList.remove('hidden');
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  if(reduced){
+    const values=innRoll2d6();
+    host.innerHTML=innFallbackDiceHtml(values,false);
+    return values;
+  }
+  const started=Date.now();
+  while(Date.now()-started<950){
+    host.innerHTML=innFallbackDiceHtml(innRoll2d6(),true);
+    await innWait(85);
+  }
+  const values=innRoll2d6();
+  host.innerHTML=innFallbackDiceHtml(values,false);
+  return values;
+}
+
+async function innAnimated2d6(){
+  const fallback=document.getElementById('innGameDiceFallback');
+  if(fallback){
+    fallback.classList.add('hidden');
+    fallback.innerHTML='';
+  }
+  if(typeof window.alea3dInnRoll==='function'){
+    try{
+      const result=await window.alea3dInnRoll([{qty:2,sides:6}]);
+      const values=innDiceBoxValues(result);
+      if(values.length===2)return values;
+      throw new Error('DiceBox returnerade inte två giltiga T6-resultat.');
+    }catch(error){
+      console.warn('Värdshusets DiceBox-kast misslyckades, använder reservanimation.',error);
+    }
+  }
+  return innFallbackAnimatedRoll();
+}
+
 function innDieHtml(value){
   const faces=['','⚀','⚁','⚂','⚃','⚄','⚅'];
   return '<span class="inn-game-die" aria-label="'+value+'">'+faces[value]+'</span>';
 }
 
 function innGameResultHtml(){
+  if(innGameBusy){
+    if(innGamePhase==='house'){
+      return '<div class="inn-game-phase-message"><b>Huset kastar…</b><span>Två T6 rullar över bordet.</span></div>';
+    }
+    if(innGamePhase==='house-wait'&&Array.isArray(innGameHouseDice)){
+      const total=innGameHouseDice.reduce((sum,value)=>sum+value,0);
+      return '<div class="inn-game-phase-message house-settled"><b>Huset fick '+total+'</b><span>Din tur…</span></div>';
+    }
+    if(innGamePhase==='player'){
+      const houseTotal=Array.isArray(innGameHouseDice)?innGameHouseDice.reduce((sum,value)=>sum+value,0):0;
+      return '<div class="inn-game-phase-message"><b>Du kastar…</b><span>Huset står på '+houseTotal+'.</span></div>';
+    }
+  }
   if(!innGameResult){
-    return '<div class="inn-game-awaiting">Välj insats och kasta tärningarna.</div>';
+    return '<div class="inn-game-awaiting">Välj insats och starta spelet. Huset kastar först.</div>';
   }
   const r=innGameResult;
   const outcomeClass=r.outcome==='win'?'win':r.outcome==='tie'?'tie':'loss';
@@ -297,9 +374,9 @@ function innGameResultHtml(){
       ?'Insatsen återbetalas.'
       :'Förlust: <b>−'+shopMoneyHtml(r.stakeKm)+'</b>';
   return '<div class="inn-game-rolls">'+
-    '<div class="inn-game-roll"><span>Du</span><div>'+r.playerDice.map(innDieHtml).join('')+'</div><b>'+r.playerTotal+'</b></div>'+
-    '<div class="inn-game-versus">mot</div>'+
     '<div class="inn-game-roll"><span>Huset</span><div>'+r.houseDice.map(innDieHtml).join('')+'</div><b>'+r.houseTotal+'</b></div>'+
+    '<div class="inn-game-versus">mot</div>'+
+    '<div class="inn-game-roll"><span>Du</span><div>'+r.playerDice.map(innDieHtml).join('')+'</div><b>'+r.playerTotal+'</b></div>'+
   '</div>'+
   '<div class="inn-game-outcome '+outcomeClass+'"><strong>'+headline+'</strong><span>'+money+'</span></div>';
 }
@@ -330,8 +407,17 @@ function renderInnGame(){
     ?'<span>Börs: <b>'+shopMoneyHtml(funds)+'</b></span><span>Insats: <b>'+shopMoneyHtml(innGameStakeKm)+'</b></span>'
     :'Ingen rollfigur är kopplad till ditt konto.';
   play.disabled=innGameBusy||!buyer||funds<innGameStakeKm;
-  play.textContent=innGameBusy?'Tärningarna rullar…':'Kasta tärningarna';
+  play.textContent=innGameBusy
+    ?innGamePhase==='house'?'Huset kastar…':innGamePhase==='house-wait'?'Din tur snart…':innGamePhase==='player'?'Du kastar…':'Avgör…'
+    :'Spela';
   result.innerHTML=innGameResultHtml();
+
+  const phase=document.getElementById('innGamePhaseLabel');
+  if(phase){
+    phase.textContent=innGameBusy
+      ?innGamePhase==='house'?'HUSET KASTAR':innGamePhase==='house-wait'?'HUSET: '+(innGameHouseDice||[]).reduce((s,v)=>s+v,0)+' · DIN TUR':innGamePhase==='player'?'DITT KAST':'AVGJORT'
+      :'2T6 · HUSET BÖRJAR';
+  }
 
   const notice=document.getElementById('innGameNotice');
   if(notice){
@@ -353,6 +439,9 @@ async function innPlayHighRoll(){
 
   innGameBusy=true;
   innGameResult=null;
+  innGameHouseDice=null;
+  innGamePlayerDice=null;
+  innGamePhase='house';
   renderInnGame();
 
   const draft=JSON.parse(JSON.stringify(buyer));
@@ -360,8 +449,20 @@ async function innPlayHighRoll(){
     shopEnsureCoins(draft);
     if(!shopSpendCarriedCoins(draft,stake))throw new Error('Börsen räcker inte till insatsen.');
 
-    const playerDice=innRoll2d6();
-    const houseDice=innRoll2d6();
+    await window.alea3dInnClear?.();
+    const houseDice=await innAnimated2d6();
+    innGameHouseDice=houseDice;
+    innGamePhase='house-wait';
+    renderInnGame();
+
+    await innWait(1050);
+
+    innGamePhase='player';
+    renderInnGame();
+    await window.alea3dInnClear?.();
+    const playerDice=await innAnimated2d6();
+    innGamePlayerDice=playerDice;
+
     const playerTotal=playerDice[0]+playerDice[1];
     const houseTotal=houseDice[0]+houseDice[1];
     let outcome='loss';
@@ -387,9 +488,11 @@ async function innPlayHighRoll(){
     localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));
 
     innGameResult={playerDice,houseDice,playerTotal,houseTotal,outcome,stakeKm:stake};
+    innGamePhase='result';
     if(typeof renderCards==='function')renderCards();
     renderInnBuyer();
   }catch(error){
+    innGamePhase='idle';
     const notice=document.getElementById('innGameNotice');
     if(notice)notice.textContent='Spelet kunde inte genomföras: '+(error?.message||error);
   }finally{
