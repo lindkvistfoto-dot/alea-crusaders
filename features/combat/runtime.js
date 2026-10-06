@@ -135,6 +135,7 @@ async function combatRollDice(specs,label='Slag'){
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 let combatActionMenuId=null;
+let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
 
 function combatSceneFromId(id){
  return (campaignCombatScenes||[]).find(scene=>String(scene.id)===String(id))||null
@@ -1543,6 +1544,7 @@ function combatSetMovementPreview(q,r,{render=true}={}){
 }
 function previewCombatMovementToHex(event,q,r){
  event?.stopPropagation?.();
+ if(Date.now()<combatMapSuppressClickUntil)return false;
  return combatSetMovementPreview(q,r)
 }
 function combatMovementButton(event,combatantId){
@@ -1617,7 +1619,7 @@ function combatMovementDragEnd(event){
  if(cell)combatSetMovementPreview(cell.q,cell.r)
 }
 function combatTokenClick(event,combatantId){
- if(Date.now()<combatMovementSuppressClickUntil){event?.stopPropagation?.();return}
+ if(Date.now()<combatMovementSuppressClickUntil||Date.now()<combatMapSuppressClickUntil){event?.stopPropagation?.();return}
  selectCombatTarget(combatantId)
 }
 function combatMovementHasUsedMoreThanHalf(combatant){
@@ -1936,6 +1938,127 @@ function combatAnimateCommittedMovement(){
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
 }
+function combatMapViewGeometry(){
+ return combatRuntimeGeometry()
+}
+function combatMapEnsureView(g){
+ if(!g)return;
+ const key=String(activeCombat?.id||'')+'|'+String(combatActiveSceneId()||'')+'|'+g.width+'x'+g.height;
+ if(combatMapViewKey!==key){
+  combatMapViewKey=key;
+  combatMapView={zoom:1,x:0,y:0};
+  combatMapPan=null;combatMapPointers.clear();combatMapPinch=null
+ }
+ const zoom=Math.max(1,Math.min(4.5,Number(combatMapView.zoom)||1));
+ const width=g.width/zoom,height=g.height/zoom;
+ combatMapView.zoom=zoom;
+ combatMapView.x=Math.max(0,Math.min(g.width-width,Number(combatMapView.x)||0));
+ combatMapView.y=Math.max(0,Math.min(g.height-height,Number(combatMapView.y)||0))
+}
+function combatMapViewBox(g=combatMapViewGeometry()){
+ if(!g)return{x:0,y:0,width:1,height:1};
+ combatMapEnsureView(g);
+ return{x:combatMapView.x,y:combatMapView.y,width:g.width/combatMapView.zoom,height:g.height/combatMapView.zoom}
+}
+function combatMapApplyView(){
+ const svg=document.querySelector('#combatPage .combat-map-svg'),g=combatMapViewGeometry();
+ if(!svg||!g)return;
+ const view=combatMapViewBox(g);
+ svg.setAttribute('viewBox',view.x+' '+view.y+' '+view.width+' '+view.height);
+ const label=$('combatMapZoomLabel');if(label)label.textContent=Math.round(combatMapView.zoom*100)+'%';
+ svg.classList.toggle('zoomed',combatMapView.zoom>1.001)
+}
+function combatMapZoomAt(clientX,clientY,nextZoom){
+ const svg=document.querySelector('#combatPage .combat-map-svg'),g=combatMapViewGeometry();
+ if(!svg||!g)return;
+ combatMapEnsureView(g);
+ const old=combatMapViewBox(g),rect=svg.getBoundingClientRect();
+ if(rect.width<=0||rect.height<=0)return;
+ const px=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+ const py=Math.max(0,Math.min(1,(clientY-rect.top)/rect.height));
+ const anchorX=old.x+px*old.width,anchorY=old.y+py*old.height;
+ const zoom=Math.max(1,Math.min(4.5,Number(nextZoom)||1));
+ const width=g.width/zoom,height=g.height/zoom;
+ combatMapView.zoom=zoom;
+ combatMapView.x=anchorX-px*width;
+ combatMapView.y=anchorY-py*height;
+ combatMapEnsureView(g);
+ combatMapApplyView()
+}
+function combatMapZoomStep(direction){
+ const svg=document.querySelector('#combatPage .combat-map-svg');if(!svg)return;
+ const rect=svg.getBoundingClientRect();
+ const factor=direction>0?1.25:0.8;
+ combatMapZoomAt(rect.left+rect.width/2,rect.top+rect.height/2,combatMapView.zoom*factor)
+}
+function combatMapResetView(){
+ combatMapView={zoom:1,x:0,y:0};combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
+ combatMapApplyView()
+}
+function combatMapWheel(event){
+ event.preventDefault();
+ const factor=Math.exp(-event.deltaY*.0014);
+ combatMapZoomAt(event.clientX,event.clientY,combatMapView.zoom*factor)
+}
+function combatMapPointerDown(event){
+ if(event.button!=null&&event.button!==0&&event.pointerType!=='touch')return;
+ if(combatMovementDrag)return;
+ combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ const svg=event.currentTarget;
+ try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
+ if(combatMapPointers.size===2){
+  const pts=[...combatMapPointers.values()];
+  const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+  combatMapPinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:combatMapView.zoom,centerX:(pts[0].x+pts[1].x)/2,centerY:(pts[0].y+pts[1].y)/2};
+  combatMapPan=null;event.preventDefault();return
+ }
+ combatMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false}
+}
+function combatMapPointerMove(event){
+ if(combatMovementDrag){combatMovementDragMove(event);return}
+ if(!combatMapPointers.has(event.pointerId))return;
+ combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ const svg=event.currentTarget,g=combatMapViewGeometry();if(!g)return;
+ if(combatMapPointers.size>=2){
+  event.preventDefault();
+  const pts=[...combatMapPointers.values()].slice(0,2);
+  const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y,distance=Math.max(1,Math.hypot(dx,dy));
+  if(!combatMapPinch)combatMapPinch={distance,zoom:combatMapView.zoom,centerX:(pts[0].x+pts[1].x)/2,centerY:(pts[0].y+pts[1].y)/2};
+  const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
+  combatMapZoomAt(centerX,centerY,combatMapPinch.zoom*(distance/combatMapPinch.distance));
+  combatMapSuppressClickUntil=Date.now()+450;
+  return
+ }
+ const pan=combatMapPan;
+ if(!pan||pan.pointerId!==event.pointerId)return;
+ const dx=event.clientX-pan.lastX,dy=event.clientY-pan.lastY;
+ if(Math.abs(event.clientX-pan.startX)+Math.abs(event.clientY-pan.startY)>5)pan.moved=true;
+ pan.lastX=event.clientX;pan.lastY=event.clientY;
+ if(!pan.moved)return;
+ event.preventDefault();
+ const rect=svg.getBoundingClientRect(),view=combatMapViewBox(g);
+ if(rect.width<=0||rect.height<=0)return;
+ combatMapView.x-=dx*(view.width/rect.width);
+ combatMapView.y-=dy*(view.height/rect.height);
+ combatMapEnsureView(g);
+ combatMapApplyView();
+ combatMapSuppressClickUntil=Date.now()+350
+}
+function combatMapPointerEnd(event){
+ if(combatMovementDrag){combatMovementDragEnd(event);return}
+ const svg=event.currentTarget;
+ combatMapPointers.delete(event.pointerId);
+ try{svg.releasePointerCapture?.(event.pointerId)}catch(_error){}
+ if(combatMapPan?.pointerId===event.pointerId){
+  if(combatMapPan.moved)combatMapSuppressClickUntil=Date.now()+350;
+  combatMapPan=null
+ }
+ if(combatMapPointers.size<2)combatMapPinch=null;
+ if(combatMapPointers.size===1){
+  const [id,pt]=[...combatMapPointers.entries()][0];
+  combatMapPan={pointerId:id,startX:pt.x,startY:pt.y,lastX:pt.x,lastY:pt.y,moved:false}
+ }
+}
 function renderCombatMap(){
  const g=combatRuntimeGeometry();
  if(!g){
@@ -1944,6 +2067,8 @@ function renderCombatMap(){
    :'Stridsscenen saknar en tillgänglig kartbild.';
   return '<div class="combat-map-missing">'+note+'</div>'
  }
+ combatMapEnsureView(g);
+ const mapView=combatMapViewBox(g);
  const cells=combatRuntimeHexCells(),byCoord=new Map(cells.map(cell=>[cell.key,cell]));
  const actor=combatActiveActor(),planningActor=combatMovementPlanningActor();
  const reachable=planningActor?combatReachableHexes(planningActor):new Map();
@@ -1991,7 +2116,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onpointermove="combatMovementDragMove(event)" onpointerup="combatMovementDragEnd(event)" onpointercancel="combatMovementDragEnd(event)">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
 }
 
 function combatantCard(c,index=0){
@@ -2045,8 +2170,8 @@ function renderCombat(){
  let first=combatants.find(row=>String(row.id)===String(activeCombat.active_actor_id)),initiativeLead=first?(' · Initiativetta: '+first.name_snapshot):'';
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span><span class="combat-status">· Sparad strid</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
- requestAnimationFrame(()=>requestAnimationFrame(()=>{combatPositionDiceLayer();combatAnimateCommittedMovement()}))
+ body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span><span class="combat-status">· Sparad strid</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><div class="combat-board-title"><span>Hexkarta</span><div class="combat-map-zoom-controls"><button type="button" title="Zooma ut" aria-label="Zooma ut" onclick="combatMapZoomStep(-1)">−</button><button id="combatMapZoomLabel" type="button" title="Återställ kartvy" onclick="combatMapResetView()">'+Math.round((combatMapView.zoom||1)*100)+'%</button><button type="button" title="Zooma in" aria-label="Zooma in" onclick="combatMapZoomStep(1)">+</button><button type="button" title="Återställ kartvy" aria-label="Återställ kartvy" onclick="combatMapResetView()">⌂</button></div></div><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
