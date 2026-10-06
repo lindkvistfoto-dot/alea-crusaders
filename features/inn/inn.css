@@ -397,3 +397,98 @@ body.inn-game-open{overflow:hidden}
   .inn-game-modalback{padding:8px}
   .inn-game-modal{max-height:94vh}
 }
+
+
+/* v0.32.4 — sekventiellt DiceBox-kast: huset först, sedan spelaren */
+.inn-game-dice-stage{
+  position:relative;
+  width:100%;
+  height:245px;
+  margin-top:14px;
+  overflow:hidden;
+  border:1px solid rgba(205,143,88,.2);
+  border-radius:12px;
+  background:
+    radial-gradient(ellipse at 50% 45%,rgba(107,65,35,.28),transparent 60%),
+    linear-gradient(180deg,#19100c,#0f0907);
+}
+.inn-game-dicebox-host{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+.inn-game-dicebox-host canvas{
+  width:100%!important;
+  height:100%!important;
+}
+.inn-game-dicebox-host.unavailable{display:none}
+.inn-game-dice-fallback{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+.inn-game-dice-fallback.hidden{display:none}
+.inn-game-fallback-die{
+  display:grid;
+  place-items:center;
+  width:72px;
+  height:72px;
+  border:1px solid rgba(233,198,149,.5);
+  border-radius:14px;
+  background:#eee1c9;
+  color:#372116;
+  font-size:62px;
+  line-height:1;
+  box-shadow:0 10px 20px rgba(0,0,0,.35);
+}
+.inn-game-fallback-die.rolling{
+  animation:innDiceFallbackRoll .34s linear infinite;
+}
+@keyframes innDiceFallbackRoll{
+  0%{transform:translate(-5px,-4px) rotate(-8deg)}
+  35%{transform:translate(7px,-15px) rotate(12deg)}
+  70%{transform:translate(-3px,4px) rotate(-5deg)}
+  100%{transform:translate(-5px,-4px) rotate(-8deg)}
+}
+.inn-game-phase-label{
+  position:absolute;
+  left:10px;
+  bottom:9px;
+  z-index:4;
+  padding:5px 8px;
+  border:1px solid rgba(205,143,88,.24);
+  border-radius:999px;
+  background:rgba(15,9,7,.76);
+  color:#d9b17e;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.09em;
+  pointer-events:none;
+}
+.inn-game-phase-message{
+  min-height:70px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  text-align:center;
+}
+.inn-game-phase-message b{
+  color:#f0c792;
+  font:700 20px/1.15 Georgia,serif;
+}
+.inn-game-phase-message span{color:#aa9983;font-size:12px}
+.inn-game-phase-message.house-settled b{color:#e4b16f}
+.inn-game-modal .inn-game-result{min-height:76px}
+@media(max-width:560px){
+  .inn-game-dice-stage{height:205px}
+  .inn-game-fallback-die{width:62px;height:62px;font-size:54px}
+}
+@media(prefers-reduced-motion:reduce){
+  .inn-game-fallback-die.rolling{animation:none}
+}
