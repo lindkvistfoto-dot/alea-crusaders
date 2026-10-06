@@ -5,7 +5,7 @@ const INN_SECTIONS=[
   {category:'Mat & dryck',title:'Mat'},
   {category:'Tjänster',title:'Tjänster'}
 ];
-const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.33.40';
+const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.33.41';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
