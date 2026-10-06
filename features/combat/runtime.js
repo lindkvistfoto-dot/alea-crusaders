@@ -711,7 +711,60 @@ function combatAttackResultHtml(action){
    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
   '</div>'+
   (full?'<strong>FULL SKADA</strong>':'')+
+  (result.erf
+   ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
+     (result.erf.awarded>0
+      ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
+      :escAttr(result.erf.message||'Ingen ny ERF'))+
+    '</div>'
+   :'')+
  '</div>'
+}
+function combatOutcomeEarnsErf(outcome){
+ return ['success','special','perfect'].includes(outcome)
+}
+function combatSyncWeaponErfLocal(actor,weapon,newErf){
+ if(actor?.source_type!=='character'||newErf==null||typeof chars==='undefined')return;
+ const character=(chars||[]).find(c=>String(c._dbId||c.id)===String(actor.source_id));
+ if(!character)return;
+ const data=character.data&&typeof character.data==='object'?character.data:character;
+ const key=String(weapon?.equipId||weapon?.name||'');
+ const match=(data.weapons||[]).find(item=>String(item.equipId||item.name)===key);
+ if(match)match.erf=Number(newErf)||0;
+ try{localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(_error){}
+}
+async function combatAwardAttackErf(actor,weapon,outcome){
+ if(actor?.source_type!=='character'||!combatOutcomeEarnsErf(outcome))return null;
+ const itemKey=String(weapon?.equipId||weapon?.name||'');
+ if(!itemKey||!actor.source_id)return null;
+ try{
+  let amount=null,erfRoll=null;
+  if(outcome==='perfect'){
+   const roll=await combatRollDice([{qty:1,sides:3}],(weapon?.name||'Vapen')+' · ERF 1T3+1');
+   erfRoll=Number(roll?.rolls?.[0]?.value);
+   if(!Number.isInteger(erfRoll))throw new Error('ERF-slaget gav inget giltigt T3-resultat.');
+   amount=erfRoll+1
+  }
+  if(typeof awardCharacterErfItem!=='function')throw new Error('ERF-regelmotorn är inte tillgänglig.');
+  const awarded=await awardCharacterErfItem(actor.source_id,'weapons',itemKey,outcome,{amount});
+  combatSyncWeaponErfLocal(actor,weapon,awarded?.new_erf);
+  return {
+   awarded:Number(awarded?.awarded)||amount||1,
+   new_erf:Number(awarded?.new_erf),
+   erf_roll:erfRoll,
+   item_group:'weapons',item_key:itemKey,reason:outcome
+  }
+ }catch(error){
+  const message=String(error?.message||error||'');
+  if(/redan tjänat ERF|redan.*ERF/i.test(message)){
+   return {awarded:0,locked:true,reason:outcome,message:'ERF redan erhållet under aktuell viloperiod.'}
+  }
+  if(/ny dag med vila|kan inte tjänas denna dag/i.test(message)){
+   return {awarded:0,locked:true,reason:outcome,message:'Tillräcklig vila krävs för ny ERF-period.'}
+  }
+  console.warn('ERF från vapenattack kunde inte registreras',error);
+  return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'}
+ }
 }
 async function combatResolveAttackAction(actor,target,action,weapon){
  const fv=combatAttackFv(weapon);
@@ -757,6 +810,14 @@ async function combatResolveAttackAction(actor,target,action,weapon){
    ' mot FV '+fv+' · '+combatOutcomeLabel(outcome)+(fullDamage?' · FULL SKADA':''),
   details:result,player_visible:true
  })});
+ const erf=await combatAwardAttackErf(actor,weapon,outcome);
+ if(erf){
+  result.erf=erf;
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({result,updated_at:new Date().toISOString()})
+  })
+ }
  return result
 }
 async function rollCombatAttack(actorId,targetId){
