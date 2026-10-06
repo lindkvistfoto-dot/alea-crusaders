@@ -2159,3 +2159,57 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-weapon-choice-btn.active{border-color:#467957;outline:2px solid rgba(70,121,87,.28);background:#e8f1e7}
 .combat-weapon-choice-btn small{font-size:10px;color:#7c6a54}
 @media(max-width:560px){.combat-weapon-choice-grid{grid-template-columns:1fr}}
+
+
+/* v0.33.11 — parering erbjuds först efter lyckat närstridsanfall */
+.combat-reaction-prompt{
+ grid-column:1/-1;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:14px;
+ padding:11px 13px;
+ border:1px solid #c58b55;
+ border-radius:10px;
+ background:#fff0dc;
+ box-shadow:0 3px 12px rgba(68,39,24,.12);
+}
+.combat-reaction-prompt>div:first-child{
+ display:flex;
+ flex-direction:column;
+ gap:2px;
+}
+.combat-reaction-prompt span{
+ font-size:10px;
+ font-weight:900;
+ letter-spacing:.08em;
+ color:#8e4e28;
+}
+.combat-reaction-prompt b{
+ color:#6f221f;
+ font-size:13px;
+}
+.combat-reaction-prompt small{
+ color:#725b49;
+ font-size:11px;
+}
+.combat-reaction-actions{
+ display:flex;
+ gap:7px;
+ flex:0 0 auto;
+}
+.combat-parry-btn{
+ background:#315d3f!important;
+ color:#fff!important;
+ border-color:#315d3f!important;
+}
+.combat-take-hit-btn{
+ background:#fffaf1!important;
+ color:#6f352e!important;
+ border-color:#bd9580!important;
+}
+@media(max-width:700px){
+ .combat-reaction-prompt{align-items:stretch;flex-direction:column}
+ .combat-reaction-actions{width:100%}
+ .combat-reaction-actions .btn{flex:1}
+}
