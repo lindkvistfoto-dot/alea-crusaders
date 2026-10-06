@@ -2232,7 +2232,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
  transform-origin:center center;
  overflow:hidden;
  pointer-events:none;
+ opacity:1;
+ transition:opacity .82s ease;
 }
+.combat-dice-host.initiative-fading{opacity:0}
 .combat-dice-host canvas{
  display:block;
  width:100%!important;
@@ -3035,4 +3038,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-row-vitals{padding-left:3px}
  .combatant-card-copy .name{font-size:12px}
  .combatant-card-copy .meta{font-size:9px}
+}
+
+
+/* v0.33.28 — initiativtärningar tonar bort när turordningen byggs */
+@media(prefers-reduced-motion:reduce){
+ .combat-dice-host{transition:none!important}
 }
