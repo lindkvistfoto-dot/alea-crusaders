@@ -101,7 +101,7 @@ async function ensureInnDice3D(){
    origin:window.location.origin,
    theme:"default",
    themeColor:"#d8bd82",
-   scale:6.4,
+   scale:5.6,
    enableShadows:true,
    shadowTransparency:.72,
    lightIntensity:1.15,
