@@ -1937,3 +1937,23 @@ body:not(.editing) #skilltable .skill-roll-btn{
  font-size:13px;
  line-height:1.45;
 }
+
+
+/* v0.33.2 — nåbara hexar för markerad kombatant i Rörelse */
+.combat-hex.move-reachable{
+ fill:rgba(74,156,92,.28);
+ stroke:#72cf86;
+ stroke-width:2.2;
+}
+.combat-hex.move-reachable.difficult{
+ fill:rgba(194,145,52,.32);
+ stroke:#e4bc67;
+}
+.combat-hex.move-origin{
+ fill:rgba(255,211,123,.22);
+ stroke:#ffd37b;
+ stroke-width:3;
+}
+.combat-hex.move-blocked{
+ cursor:not-allowed;
+}
