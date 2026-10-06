@@ -485,7 +485,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("offset:.94");
     expect(combat).toContain("setTimeout(()=>transferOne(0),reduced?700:3000)");
     expect(combat).toContain("data-combatant-id");
-    expect(combat).toContain("<small>Init ");
+    expect(combat).toContain("<small>SMI ");
+    expect(combat).toContain("<small>Initiativ</small>");
     expect(combat).toContain("initiative-arrival");
     expect(combat).toContain("function combatCaptureInitiativeForReset");
     expect(combat).toContain("const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null");
@@ -915,9 +916,8 @@ describe("application architecture smoke checks", () => {
     expect(shop).toContain("function shopCurrencyAmountHtml");
     expect(shop).toContain("function shopPriceHtml");
     expect(shop).toContain("function shopMoneyHtml");
-    expect(shop).toContain("shop-coin-gm");
-    expect(shop).toContain("shop-coin-sm");
-    expect(shop).toContain("shop-coin-km");
+    expect(shop).toContain("const code=['GM','SM','KM'].includes(currency)?currency:'SM'");
+    expect(shop).toContain("shop-coin-'+code.toLowerCase()");
     expect(shop).toContain("button.innerHTML=shopCheckoutBusy");
     expect(shop).toContain("total.innerHTML=shopMoneyHtml");
     expect(css).toContain(".shop-coin-gm{");
