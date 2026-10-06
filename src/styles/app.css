@@ -3192,3 +3192,86 @@ body:not(.editing) #skilltable .skill-roll-btn{
  stroke-width:5;
  filter:drop-shadow(0 0 2px rgba(32,201,84,.58)) drop-shadow(0 1px 1px rgba(0,0,0,.8));
 }
+
+
+/* v0.33.34 — riktiga spelarporträtt som upphöjda hexbrickor */
+.combat-miniature.combat-portrait-hex{
+ filter:drop-shadow(0 4px 3px rgba(0,0,0,.58));
+}
+.combat-portrait-depth{
+ fill:#080a07;
+ stroke:#050605;
+ stroke-width:2.4;
+ opacity:.92;
+ filter:url(#portraitHexShadow);
+}
+.combat-portrait-frame-back{
+ fill:url(#portraitHexFrame);
+ stroke:#0d0c09;
+ stroke-width:2.6;
+}
+.combat-portrait-green-ring{
+ fill:none;
+ stroke:url(#portraitHexGreen);
+ stroke-width:4.8;
+ stroke-linejoin:round;
+ vector-effect:non-scaling-stroke;
+}
+.combat-portrait-inner-frame{
+ fill:#18140f;
+ stroke:#bc9253;
+ stroke-width:2.2;
+ stroke-linejoin:round;
+}
+.combat-portrait-image{
+ pointer-events:none;
+}
+.combat-portrait-image-edge{
+ fill:none;
+ stroke:rgba(230,201,139,.92);
+ stroke-width:1.35;
+ stroke-linejoin:round;
+}
+.combat-portrait-bevel-light,
+.combat-portrait-bevel-dark{
+ fill:none;
+ stroke-linecap:round;
+ stroke-linejoin:round;
+ pointer-events:none;
+}
+.combat-portrait-bevel-light{
+ stroke:rgba(255,246,205,.78);
+ stroke-width:2.2;
+}
+.combat-portrait-bevel-dark{
+ stroke:rgba(0,0,0,.72);
+ stroke-width:3.1;
+}
+.combat-miniature.combat-portrait-hex.selected{
+ filter:drop-shadow(0 0 5px rgba(255,224,153,.95)) drop-shadow(0 4px 3px rgba(0,0,0,.62));
+}
+.combat-miniature.combat-portrait-hex.selected .combat-portrait-green-ring{
+ stroke:#ffd06f;
+ stroke-width:5.6;
+}
+.combat-miniature.combat-portrait-hex.active-turn{
+ filter:drop-shadow(0 0 7px rgba(255,191,58,.98)) drop-shadow(0 4px 3px rgba(0,0,0,.65));
+}
+.combat-miniature.combat-portrait-hex.active-turn .combat-portrait-green-ring{
+ stroke:#7dff8d;
+ stroke-width:6.2;
+}
+.combat-miniature.combat-portrait-hex.attack-target{
+ filter:drop-shadow(0 0 7px rgba(228,70,61,.98)) drop-shadow(0 4px 3px rgba(0,0,0,.65));
+}
+.combat-miniature.combat-portrait-hex.attack-target .combat-portrait-green-ring{
+ stroke:#e1493f;
+ stroke-width:6.2;
+}
+.combat-miniature.combat-portrait-hex.movement-planning{
+ filter:drop-shadow(0 0 8px rgba(92,224,130,.98)) drop-shadow(0 4px 3px rgba(0,0,0,.65));
+}
+.combat-miniature.combat-portrait-hex.movement-planning .combat-portrait-green-ring{
+ stroke:#71ff91;
+ stroke-width:6.4;
+}
