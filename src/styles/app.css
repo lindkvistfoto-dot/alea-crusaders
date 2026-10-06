@@ -2823,3 +2823,216 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
  .combatant-card-copy{grid-column:2;grid-row:1}
 }
+
+
+/* v0.33.27 — tre kompakta turkontroller: förflyttning, action, avsluta drag */
+@media(min-width:981px){
+ .combat-shell{grid-template-columns:360px minmax(0,1fr) 270px}
+}
+.combat-participants,
+.combat-participant-list{overflow:visible}
+.combatant-card{
+ position:relative;
+ grid-template-columns:44px minmax(0,1fr) 104px 48px;
+ gap:6px;
+ padding:6px;
+ overflow:visible;
+}
+.combat-order-number{
+ width:42px;
+ min-height:52px;
+}
+.combat-row-controls{
+ position:relative;
+ display:flex;
+ align-items:flex-start;
+ justify-content:center;
+ gap:4px;
+ min-width:104px;
+ overflow:visible;
+}
+.combat-row-tool{
+ position:relative;
+ width:32px;
+ flex:0 0 32px;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:2px;
+}
+.combat-row-tool-btn{
+ width:32px;
+ height:32px;
+ min-width:32px;
+ padding:0;
+ border:1px solid #947d60;
+ border-radius:7px;
+ background:rgba(255,250,240,.94);
+ color:#493b2f;
+ display:grid;
+ place-items:center;
+ font-size:15px;
+ line-height:1;
+ cursor:pointer;
+ box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.combat-row-tool-btn:hover:not(:disabled){
+ border-color:#5f8868;
+ background:#edf5ea;
+ transform:translateY(-1px);
+}
+.combat-row-tool-btn:disabled{
+ opacity:.34;
+ cursor:not-allowed;
+}
+.combat-row-tool-btn.active{
+ border-color:#467957;
+ background:#dfeee0;
+ box-shadow:0 0 0 2px rgba(70,121,87,.18);
+}
+.combat-row-action.chosen:not(.active){
+ border-color:#8d6f39;
+ background:#f4ead0;
+}
+.move-tool>small{
+ width:44px;
+ margin-left:-6px;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:0;
+ font:700 7px/1.15 system-ui,sans-serif;
+ color:#6e5d4b;
+ white-space:nowrap;
+}
+.move-tool>small span{display:block}
+.combat-row-vitals{
+ padding-left:5px;
+ font-size:8px;
+ gap:3px;
+}
+.combat-row-vitals b{font-size:9px}
+.combat-row-action-menu{
+ position:absolute;
+ z-index:80;
+ top:36px;
+ left:50%;
+ width:220px;
+ transform:translateX(-50%);
+ padding:8px;
+ border:1px solid #94754f;
+ border-radius:10px;
+ background:#211912;
+ color:#f3dfbb;
+ box-shadow:0 12px 28px rgba(0,0,0,.35);
+ cursor:default;
+}
+.combat-row-action-menu:before{
+ content:'';
+ position:absolute;
+ top:-6px;
+ left:50%;
+ width:10px;
+ height:10px;
+ transform:translateX(-50%) rotate(45deg);
+ background:#211912;
+ border-left:1px solid #94754f;
+ border-top:1px solid #94754f;
+}
+.combat-row-action-menu-title{
+ margin:0 0 6px;
+ font:800 10px/1 system-ui,sans-serif;
+ letter-spacing:.08em;
+ text-transform:uppercase;
+ color:#e5c88f;
+}
+.combat-row-action-menu-grid{
+ display:grid;
+ grid-template-columns:1fr;
+ gap:4px;
+}
+.combat-row-action-option{
+ min-height:34px;
+ padding:5px 7px;
+ border:1px solid #66523d;
+ border-radius:7px;
+ background:#30251c;
+ color:#f2dfbd;
+ display:grid;
+ grid-template-columns:24px minmax(0,1fr);
+ gap:5px;
+ align-items:center;
+ text-align:left;
+ cursor:pointer;
+}
+.combat-row-action-option:hover{
+ background:#443326;
+ border-color:#a48154;
+}
+.combat-row-action-option.active{
+ background:#334d37;
+ border-color:#6f9d76;
+}
+.combat-row-action-option span{
+ font-size:16px;
+ text-align:center;
+}
+.combat-row-action-option b{
+ font-size:10px;
+ line-height:1.15;
+}
+.combat-row-action-menu .combat-weapon-choice{
+ margin-top:7px;
+ padding:6px;
+ background:#2d241c;
+ border-color:#6d573e;
+}
+.combat-row-action-menu .combat-weapon-choice>span,
+.combat-row-action-menu .combat-weapon-choice-btn small{color:#cfb895}
+.combat-row-action-menu .combat-weapon-choice-btn{
+ background:#f8f0e3;
+}
+.combat-play-btn:disabled{
+ opacity:.38;
+ filter:grayscale(.45);
+ cursor:not-allowed;
+}
+@media(max-width:560px){
+ .combatant-card{
+  grid-template-columns:42px minmax(0,1fr) 104px 46px;
+  grid-template-rows:auto;
+  gap:5px;
+ }
+ .combat-order-number{
+  grid-row:auto;
+  width:40px;
+  min-height:54px;
+ }
+ .combatant-card-copy{
+  grid-column:auto;
+  grid-row:auto;
+ }
+ .combat-row-controls{
+  grid-column:auto;
+  grid-row:auto;
+ }
+ .combat-row-vitals{
+  grid-column:auto;
+  grid-row:auto;
+ }
+ .combat-row-action-menu{
+  width:min(220px,74vw);
+ }
+}
+@media(max-width:390px){
+ .combatant-card{
+  grid-template-columns:40px minmax(0,1fr) 98px 43px;
+  gap:4px;
+  padding:5px;
+ }
+ .combat-row-controls{min-width:98px;gap:1px}
+ .combat-row-tool{width:32px;flex-basis:32px}
+ .combat-row-vitals{padding-left:3px}
+ .combatant-card-copy .name{font-size:12px}
+ .combatant-card-copy .meta{font-size:9px}
+}
