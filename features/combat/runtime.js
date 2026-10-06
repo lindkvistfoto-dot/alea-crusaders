@@ -535,6 +535,18 @@ function combatAvailableWeapons(combatant,mode){
  if(mode==='melee')return available.filter(weapon=>(weapon.weaponCategory||weapon.category||'melee')==='melee');
  return available.filter(weapon=>['projectile','thrown'].includes(weapon.weaponCategory||weapon.category))
 }
+function combatMeleeReachHexesForWeapon(weapon){
+ const length=combatNumber(weapon?.weapon_length??weapon?.length,null);
+ if(length==null)return 1;
+ if(length<=1)return 1;
+ if(length<=3)return 2;
+ return 3
+}
+function combatMeleeRangeHexes(combatant){
+ const weapons=combatAvailableWeapons(combatant,'melee');
+ if(!weapons.length)return 1;
+ return weapons.reduce((max,weapon)=>Math.max(max,combatMeleeReachHexesForWeapon(weapon)),1)
+}
 function combatWeaponRangeHexes(weapon,combatant){
  const raw=String(weapon?.range??weapon?.range_text??'').trim();
  if(!raw)return 0;
@@ -551,7 +563,7 @@ function combatWeaponRangeHexes(weapon,combatant){
  return 0
 }
 function combatAttackRangeHexes(combatant,mode){
- if(mode==='melee')return 1;
+ if(mode==='melee')return combatMeleeRangeHexes(combatant);
  const weapons=combatAvailableWeapons(combatant,'ranged');
  return weapons.reduce((max,weapon)=>Math.max(max,combatWeaponRangeHexes(weapon,combatant)),0)
 }
@@ -741,7 +753,7 @@ function combatAttackTargetSummaryHtml(combatant){
  const targets=combatPossibleAttackTargets(combatant,def.mode);
  const range=combatAttackRangeHexes(combatant,def.mode);
  if(def.mode==='ranged'&&range<=0)return '<div class="combat-attack-summary empty"><b>Inga möjliga mål</b><span>Inget aktivt avståndsvapen med räckvidd är tillgängligt.</span></div>';
- return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+(def.mode==='melee'?'Närstrid · angränsande hex':'Avstånd · max '+range+' hex')+' · fri LoS krävs</span></div>'
+ return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+(def.mode==='melee'?'Närstrid · max '+range+' hex enligt vapenlängd':'Avstånd · max '+range+' hex')+' · fri LoS krävs</span></div>'
 }
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
