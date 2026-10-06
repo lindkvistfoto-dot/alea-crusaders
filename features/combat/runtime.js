@@ -3,7 +3,7 @@ function combatPhaseLabel(p){return COMBAT_PHASE_LABELS[p]||String(p||'—')}
 function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiender':'Neutral'}
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
-let combatDiceBusy=false,combatDiceLastRoll=null;
+let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
 function combatPositionDiceLayer(){
  const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
  if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
@@ -14,6 +14,20 @@ function combatPositionDiceLayer(){
  layer.classList.add('positioned');
  window.alea3dCombatPrepare?.();
  return true
+}
+function combatShowDiceHost(){
+ const host=$('combatDiceHost');
+ if(combatDiceFadeTimer){clearTimeout(combatDiceFadeTimer);combatDiceFadeTimer=null}
+ host?.classList.remove('initiative-fading')
+}
+function combatFadeInitiativeDice(){
+ const host=$('combatDiceHost');if(!host)return;
+ if(combatDiceFadeTimer){clearTimeout(combatDiceFadeTimer);combatDiceFadeTimer=null}
+ host.classList.add('initiative-fading');
+ combatDiceFadeTimer=setTimeout(async()=>{
+  combatDiceFadeTimer=null;
+  try{await window.alea3dCombatClear?.()}catch(_error){}
+ },900)
 }
 function combatSecureDie(sides){
  sides=Math.max(2,Math.floor(Number(sides)||6));
@@ -71,6 +85,7 @@ async function combatRollDice(specs,label='Slag'){
  }));
  if(!clean.length)return null;
  combatDiceBusy=true;combatDiceLastRoll=null;
+ combatShowDiceHost();
  combatPositionDiceLayer();
  const outcomeHost=$('combatDiceReadout');
  outcomeHost?.classList.remove('success','fail','special','perfect','fumble','outcome-show');
@@ -309,6 +324,7 @@ function combatInitiativeTransferToOrder(initiative){
  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
  const transferOne=index=>{
   if(token!==combatInitiativeTransferToken)return;
+  if(index===0)combatFadeInitiativeDice();
   if(index>=results.length){
    combatInitiativeTransferTimer=setTimeout(()=>{
     if(token!==combatInitiativeTransferToken)return;
@@ -393,6 +409,7 @@ async function combatRollAndApplyInitiative(instanceId){
  }
  combatInitiativeVisuals=new Map(entries.map(entry=>[entry.combatant_id,entry]));
  combatShowInitiativeLegend(entries);
+ combatShowDiceHost();
  combatPositionDiceLayer();
  const readout=$('combatDiceReadout');if(readout)readout.classList.remove('show');
  try{await window.alea3dCombatClear?.()}catch(_){}
@@ -1776,9 +1793,12 @@ function combatAnimateCommittedMovement(){
  const dx=fromX-toX,dy=fromY-toY;
  if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
  token.animate([
-  {transform:'translate('+dx+'px,'+dy+'px)',filter:'brightness(1.22)'},
-  {transform:'translate(0,0)',filter:'brightness(1)'}
- ],{duration:520,easing:'cubic-bezier(.22,.8,.25,1)',fill:'both'})
+  {transform:'translate('+dx+'px,'+dy+'px)',filter:'brightness(1.22)',offset:0},
+  {transform:'translate('+(dx*.28)+'px,'+(dy*.28)+'px)',filter:'brightness(1.12)',offset:.58},
+  {transform:'translate('+(dx*.09)+'px,'+(dy*.09)+'px)',filter:'brightness(1.05)',offset:.82},
+  {transform:'translate('+(dx*.025)+'px,'+(dy*.025)+'px)',filter:'brightness(1.02)',offset:.94},
+  {transform:'translate(0,0)',filter:'brightness(1)',offset:1}
+ ],{duration:780,easing:'linear',fill:'both'})
 }
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
