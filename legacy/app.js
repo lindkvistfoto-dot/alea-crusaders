@@ -2274,11 +2274,37 @@ function skillRollTarget(sk,r=findRuleSkill(sk)){
  return{target:group,source:'BC',label:`BC ${bc}`,bc,baseKey};
 }
 function formatSkillModifier(n){n=Number(n)||0;return n>0?'+'+n:n<0?'−'+Math.abs(n):'±0'}
-function skillSpecialMax(fv){
+function expertSkillSpecialMax(fv){
  fv=Math.floor(Number(fv)||0);
  if(fv<20)return 5;
  return Math.min(19,5+Math.floor((fv-20)/4))
 }
+function expertSkillInitialResolution(ctx,roll){
+ let cl=Number(ctx.target),fv=Number(ctx.baseTarget??cl),success=roll!==20&&roll<=cl;
+ if(cl>=20){
+  if(roll===1)return {outcome:'perfect'};
+  if(roll===2)return {confirm:'high_perfect',fallback:'special',note:'Kontrollslag för perfekt slag.'};
+  if(roll===20)return {confirm:'high_fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
+  if(roll>=2&&roll<=expertSkillSpecialMax(fv))return {outcome:'special'};
+  return {outcome:success?'success':'fail'}
+ }
+ if(roll===1)return {confirm:'perfect',fallback:'success',note:'Kontrollslag för perfekt slag.'};
+ if(roll===20)return {confirm:'fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
+ if(success&&roll>=2&&roll<=5)return {confirm:'special',fallback:'success',note:'Kontrollslag för särskilt slag.'};
+ return {outcome:success?'success':'fail'}
+}
+function expertSkillConfirmationResolution(ctx,second){
+ let kind=ctx.skillConfirmKind??ctx.confirmKind,fv=Number(ctx.baseTarget??ctx.target);
+ if(kind==='perfect')return second<=fv?'perfect':'success';
+ if(kind==='special')return second<=fv?'special':'success';
+ if(kind==='fumble')return second>fv||second===20?'fumble':'fail';
+ if(kind==='high_perfect')return second<=Math.max(0,fv-20)?'perfect':'special';
+ if(kind==='high_fumble')return second===20?'fumble':'fail';
+ return 'fail'
+}
+function skillSpecialMax(fv){return expertSkillSpecialMax(fv)}
+function skillInitialResolution(ctx,roll){return expertSkillInitialResolution(ctx,roll)}
+function skillConfirmationResolution(ctx,second){return expertSkillConfirmationResolution(ctx,second)}
 function skillRollContextLine(ctx){
  let target=Number(ctx.target),base=Number(ctx.baseTarget??target),mod=Number(ctx.modifier)||0,diff=ctx.difficulty||'Normal';
  return `<div class="dice-context">Färdighet: <b>${escAttr(ctx.skillName)}</b> · ${escAttr(ctx.targetLabel||'FV')} <b>${base}</b>${mod?` → <b>${target}</b> · ${escAttr(diff)} ${formatSkillModifier(mod)}`:` · ${escAttr(diff)} ±0`}</div>`
@@ -2291,29 +2317,6 @@ function skillOutcomeMeta(outcome){
   perfect:{label:'PERFEKT SLAG',cls:'perfect'},
   fumble:{label:'FUMMELSLAG',cls:'fumble'}
  }[outcome]||{label:String(outcome||'').toUpperCase(),cls:'fail'}
-}
-function skillInitialResolution(ctx,roll){
- let cl=Number(ctx.target),fv=Number(ctx.baseTarget??cl),success=roll!==20&&roll<=cl;
- if(cl>=20){
-  if(roll===1)return {outcome:'perfect'};
-  if(roll===2)return {confirm:'high_perfect',fallback:'special',note:'Kontrollslag för perfekt slag.'};
-  if(roll===20)return {confirm:'high_fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
-  if(roll>=2&&roll<=skillSpecialMax(fv))return {outcome:'special'};
-  return {outcome:success?'success':'fail'}
- }
- if(roll===1)return {confirm:'perfect',fallback:'success',note:'Kontrollslag för perfekt slag.'};
- if(roll===20)return {confirm:'fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
- if(success&&roll>=2&&roll<=5)return {confirm:'special',fallback:'success',note:'Kontrollslag för särskilt slag.'};
- return {outcome:success?'success':'fail'}
-}
-function skillConfirmationResolution(ctx,second){
- let kind=ctx.skillConfirmKind,fv=Number(ctx.baseTarget??ctx.target);
- if(kind==='perfect')return second<=fv?'perfect':'success';
- if(kind==='special')return second<=fv?'special':'success';
- if(kind==='fumble')return second>fv||second===20?'fumble':'fail';
- if(kind==='high_perfect')return second<=Math.max(0,fv-20)?'perfect':'special';
- if(kind==='high_fumble')return second===20?'fumble':'fail';
- return 'fail'
 }
 function scheduleSkillConfirmation(){
  setTimeout(()=>{
