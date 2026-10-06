@@ -134,7 +134,7 @@ async function combatRollDice(specs,label='Slag'){
 
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
-let combatActionMenuId=null;
+let combatActionMenuId=null,combatActionMenuKind=null;
 let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
 
 function combatSceneFromId(id){
@@ -1242,6 +1242,7 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({source_data:sourceData,target_combatant_id:null,updated_at:new Date().toISOString()})
   });
+  if(combatActionMenuKind==='attack')combatCloseRowActionMenu();
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte välja attackvapen',error);
@@ -1300,33 +1301,71 @@ function combatActionChooserHtml(combatant){
 function combatCanUseActionMenu(combatant){
  return !!combatant&&combatCanChoosePrimaryAction(combatant)&&!combatMovementHasUsedMoreThanHalf(combatant)&&combatHasUnusedAction(combatant)
 }
-function toggleCombatActionMenu(event,combatantId){
+function combatCloseRowActionMenu(){
+ combatActionMenuId=null;combatActionMenuKind=null
+}
+async function combatAttackButton(event,combatantId){
  event?.stopPropagation?.();
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  if(!combatCanUseActionMenu(combatant))return;
  combatMovementPlan=null;
- combatActionMenuId=String(combatActionMenuId||'')===String(combatantId)?null:String(combatantId);
+ combatSelectedTargetId=combatant.id;
+ const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
+ const options=combatAttackWeaponOptions(combatant,'auto');
+ const needsChoice=options.length>1;
+ if(chosenDef?.key==='attack'){
+  if(needsChoice){
+   const open=String(combatActionMenuId||'')===String(combatant.id)&&combatActionMenuKind==='attack';
+   combatActionMenuId=open?null:String(combatant.id);
+   combatActionMenuKind=open?null:'attack'
+  }else combatCloseRowActionMenu();
+  renderCombat();
+  return
+ }
+ combatActionMenuId=needsChoice?String(combatant.id):null;
+ combatActionMenuKind=needsChoice?'attack':null;
+ await chooseCombatPrimaryAction(combatantId,'attack')
+}
+function toggleCombatOtherActionsMenu(event,combatantId){
+ event?.stopPropagation?.();
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId));
+ if(!combatCanUseActionMenu(combatant))return;
+ combatMovementPlan=null;
+ const open=String(combatActionMenuId||'')===String(combatantId)&&combatActionMenuKind==='other';
+ combatActionMenuId=open?null:String(combatant.id);
+ combatActionMenuKind=open?null:'other';
  combatSelectedTargetId=combatant.id;
  renderCombat()
 }
+function toggleCombatActionMenu(event,combatantId){
+ return toggleCombatOtherActionsMenu(event,combatantId)
+}
 async function chooseCombatRowAction(event,combatantId,actionKey){
  event?.stopPropagation?.();
- combatActionMenuId=String(combatantId);
+ combatCloseRowActionMenu();
  await chooseCombatPrimaryAction(combatantId,actionKey)
 }
-function combatRowActionMenuHtml(combatant){
- if(!combatant||String(combatActionMenuId||'')!==String(combatant.id))return '';
+function combatRowAttackMenuHtml(combatant){
+ if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='attack')return '';
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
- const options=COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive);
- return '<div class="combat-row-action-menu" role="menu" onclick="event.stopPropagation()">'+
-  '<div class="combat-row-action-menu-title">Action</div>'+
+ if(chosenDef?.key!=='attack')return '';
+ return '<div class="combat-row-action-menu combat-row-attack-menu" role="menu" onclick="event.stopPropagation()">'+
+  '<div class="combat-row-action-menu-title">Attack · välj vapen</div>'+
+  combatAttackWeaponChooserHtml(combatant,chosen,chosenDef)+
+ '</div>'
+}
+function combatRowActionMenuHtml(combatant){
+ if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='other')return '';
+ const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
+ const options=COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive&&def.key!=='attack');
+ return '<div class="combat-row-action-menu combat-row-other-menu" role="menu" onclick="event.stopPropagation()">'+
+  '<div class="combat-row-action-menu-title">Andra actions</div>'+
   '<div class="combat-row-action-menu-grid">'+options.map(def=>{
    const active=chosenDef?.key===def.key;
    return '<button type="button" role="menuitem" class="combat-row-action-option'+(active?' active':'')+'" onclick="chooseCombatRowAction(event,\''+combatant.id+'\',\''+def.key+'\')">'+
     '<span>'+def.icon+'</span><b>'+escAttr(def.label)+'</b>'+
    '</button>'
   }).join('')+'</div>'+
-  combatAttackWeaponChooserHtml(combatant,chosen,chosenDef)+
  '</div>'
 }
 function combatTurnOrderIds(){
@@ -1345,7 +1384,7 @@ async function endCombatTurn(event,combatantId){
  event?.stopPropagation?.();
  const actor=combatActiveActor();
  if(!actor||String(actor.id)!==String(combatantId)||!combatCanEndTurn(actor))return;
- combatActionMenuId=null;combatMovementPlan=null;
+ combatCloseRowActionMenu();combatMovementPlan=null;
  const order=combatTurnOrderIds();
  if(!order.length)return;
  const currentIndex=Math.max(0,order.indexOf(String(actor.id)));
@@ -1415,7 +1454,7 @@ async function loadActiveCombat(combatId=null){
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    combatSelectedTargetId=activeCombat.active_actor_id||null;
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
-   if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatActionMenuId=null;
+   if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatCloseRowActionMenu();
    await loadCombatRuntimeBackground()
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
@@ -2164,15 +2203,17 @@ function combatantCard(c,index=0){
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
  const planning=combatIsMovementPlanning(c),previewCost=planning?(Number(combatMovementPlan?.cost)||0):0;
  const canMove=combatCanPlanMovement(c),canAction=combatCanUseActionMenu(c),canEnd=combatCanEndTurn(c);
- const actionOpen=String(combatActionMenuId||'')===String(c.id),chosenDef=combatActionDefinition(combatChosenAction(c));
+ const actionOpen=String(combatActionMenuId||'')===String(c.id),attackOpen=actionOpen&&combatActionMenuKind==='attack',otherOpen=actionOpen&&combatActionMenuKind==='other',chosenDef=combatActionDefinition(combatChosenAction(c));
+ const attackChosen=chosenDef?.key==='attack',otherChosen=!!chosenDef&&!attackChosen;
  const moveTitle=planning?(previewCost>0?'Lås förflyttning':'Avbryt förflyttning'):'Planera förflyttning';
  return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
   '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+(smi!=null&&die!=null?'<em>(SMI'+smi+'+'+die+')</em>':'<em>—</em>')+'</span>'+
   '<div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+'</div></div>'+
   '<div class="combat-row-controls">'+
    '<div class="combat-row-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(planning?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'>'+(planning&&previewCost>0?'✓':'↔')+'</button><small><span>Hel '+maximum+'</span><span>Halv '+half+'</span></small></div>'+
-   '<div class="combat-row-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(actionOpen?' active':'')+(chosenDef?' chosen':'')+'" title="Action" aria-label="Action" aria-haspopup="menu" aria-expanded="'+(actionOpen?'true':'false')+'" onclick="toggleCombatActionMenu(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>'+(chosenDef?.icon||'⚡')+'</button>'+combatRowActionMenuHtml(c)+'</div>'+
-   '<div class="combat-row-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+c.id+'\')" '+(!canEnd?'disabled':'')+'>⏭</button></div>'+
+   '<div class="combat-row-tool attack-tool"><button type="button" class="combat-row-tool-btn combat-row-attack'+(attackOpen?' active':'')+(attackChosen?' chosen':'')+'" title="Attack" aria-label="Attack" aria-haspopup="menu" aria-expanded="'+(attackOpen?'true':'false')+'" onclick="combatAttackButton(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>⚔</button>'+combatRowAttackMenuHtml(c)+'</div>'+
+   '<div class="combat-row-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra actions" aria-label="Andra actions" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>⚡</button>'+combatRowActionMenuHtml(c)+'</div>'+
+   '<div class="combat-row-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Sluta drag" aria-label="Sluta drag" onclick="endCombatTurn(event,\''+c.id+'\')" '+(!canEnd?'disabled':'')+'>⏭</button></div>'+
   '</div>'+
   '<div class="combat-row-vitals"><span>KP <b>'+kp+'</b></span><span>PSY <b>'+psy+'</b></span></div>'+
  '</div>'
