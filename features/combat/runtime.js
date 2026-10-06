@@ -541,13 +541,13 @@ function combatWeaponRangeHexes(weapon,combatant){
  const profile=combatAttackProfile(combatant),hexM=Math.max(.1,combatNumber(activeCombat?.settings?.hex_m,1.5));
  let match=raw.match(/([0-9]+(?:[.,][0-9]+)?)\s*m\b/i);
  if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))/hexM));
- match=raw.match(/([0-9]+(?:[.,][0-9]+)?)\s*rutor?/i);
- if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))));
  match=raw.match(/(STY|SMI)\s*[×x*]\s*([0-9]+(?:[.,][0-9]+)?)\s*rutor?/i);
  if(match){
   const base=match[1].toUpperCase()==='STY'?profile.sty:profile.smi;
   return Math.max(0,Math.floor(combatNumber(base,0)*Number(match[2].replace(',','.'))))
  }
+ match=raw.match(/([0-9]+(?:[.,][0-9]+)?)\s*rutor?/i);
+ if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))));
  return 0
 }
 function combatAttackRangeHexes(combatant,mode){
@@ -627,6 +627,52 @@ function combatReachableHexes(combatant){
  }
  return out
 }
+async function combatRecordFullMoveAction(combatant){
+ if(!combatant||!activeCombat)return;
+ const existing=combatChosenAction(combatant),def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key==='move_full');
+ if(!def)return;
+ const round=Number(activeCombat.round_number)||1;
+ const payload={
+  phase:activeCombat.phase||'movement',action_type:'move',slot_key:'primary',
+  source_data:{action_key:'move_full',label:'Full förflyttning',mode:'full',auto_wait:true},
+  target_combatant_id:null,status:'resolved',
+  sequence:Math.max(0,(combatNumber(combatant.state?.initiative_rank,1)||1)-1),
+  result:{movement_spent:combatMovementSpent(combatant),wait_rest_of_turn:true},
+  player_visible:true
+ };
+ if(existing){
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({...payload,updated_at:new Date().toISOString()})
+  })
+ }else{
+  await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatant.id,
+   round_number:round,...payload,created_by:activeUser()?.id||null
+  })})
+ }
+}
+async function moveActiveCombatantToHex(q,r){
+ const actor=combatActiveActor();
+ if(!actor||!combatCanManage()||activeCombat?.status!=='active'||activeCombat?.phase!=='movement')return;
+ const key=Number(q)+','+Number(r),reachable=combatReachableHexes(actor),cost=reachable.get(key);
+ if(cost==null||cost<=0)return;
+ const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(actor.id)&&Number(row.q)===Number(q)&&Number(row.r)===Number(r));
+ if(occupied)return;
+ const remaining=Math.max(0,combatMovementBudget(actor)-Number(cost));
+ try{
+  await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({q:Number(q),r:Number(r),movement_remaining:remaining,updated_at:new Date().toISOString()})
+  });
+  actor.q=Number(q);actor.r=Number(r);actor.movement_remaining=remaining;
+  if(combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte flytta kombatant',error);
+  alert('Kunde inte flytta kombatanten: '+(error?.message||error))
+ }
+}
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
 }
@@ -658,7 +704,10 @@ function renderCombatMap(){
   const reachText=moveCost!=null
    ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+'</title></polygon>'
+  const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(actor?.id||'')&&Number(row.q)===cell.q&&Number(row.r)===cell.r);
+  if(occupied)cls.push('move-occupied');
+  const clickable=moveCost!=null&&moveCost>0&&!occupied;
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+(clickable?'onclick="moveActiveCombatantToHex('+cell.q+','+cell.r+')"':'')+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
  }).join('');
  const tokens=combatants.filter(c=>c.status!=='removed').map(c=>{
   const key=(Number(c.q)||0)+','+(Number(c.r)||0);
