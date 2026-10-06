@@ -405,7 +405,7 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.32.0");
+    expect(html).toContain("Alea Crusaders v0.32.1");
     expect(html).toContain("app.css?v=0.32.0");
     expect(html).toContain("legacy/app.js?v=0.32.0");
   });
@@ -551,6 +551,12 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/inn/inn.js?v=0.32.0");
     expect(inn).toContain("rule_inn_items?active=eq.true");
     expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
+    expect(html).not.toContain('id="innCategories"');
+    expect(inn).toContain("const INN_SECTIONS=[");
+    expect(inn).toContain("{category:'Boende',title:'Boende'}");
+    expect(inn).toContain("{category:'Mat & dryck',title:'Mat'}");
+    expect(inn).toContain("{category:'Tjänster',title:'Tjänster'}");
+    expect(inn).toContain('class="inn-menu-heading"');
     expect(inn).toContain("function innCheckout");
     expect(inn).toContain("shopSpendCarriedCoins(draft,cost)");
     expect(inn).toContain("await syncCharacterToCentral(draft)");
