@@ -2071,6 +2071,42 @@ function combatMapResetView(){
  combatMapView={zoom:1,x:0,y:0};combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
  combatMapApplyView()
 }
+function combatMapCombatantCenters(g=combatMapViewGeometry()){
+ if(!g)return[];
+ return (combatants||[]).filter(c=>c&&c.status!=='removed').map(c=>{
+  const isPlanning=combatIsMovementPlanning(c);
+  const q=isPlanning&&combatMovementPlan?Number(combatMovementPlan.q):Number(c.q);
+  const r=isPlanning&&combatMovementPlan?Number(combatMovementPlan.r):Number(c.r);
+  if(!Number.isFinite(q)||!Number.isFinite(r))return null;
+  return{
+   x:g.xPitch*(q+r/2)+g.offsetX,
+   y:g.rowPitch*r+g.offsetY
+  }
+ }).filter(Boolean)
+}
+function combatMapFitCombatants(){
+ const svg=document.querySelector('#combatPage .combat-map-svg'),g=combatMapViewGeometry();
+ if(!svg||!g)return;
+ const points=combatMapCombatantCenters(g);
+ if(!points.length){combatMapResetView();return}
+ const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+ const marginX=g.xPitch,marginY=g.rowPitch;
+ const minX=Math.min(...xs)-marginX,maxX=Math.max(...xs)+marginX;
+ const minY=Math.min(...ys)-marginY,maxY=Math.max(...ys)+marginY;
+ const boundsWidth=Math.max(g.xPitch*2,maxX-minX);
+ const boundsHeight=Math.max(g.rowPitch*2,maxY-minY);
+ const zoomX=g.width/boundsWidth,zoomY=g.height/boundsHeight;
+ const zoom=Math.max(COMBAT_MAP_MIN_ZOOM,Math.min(COMBAT_MAP_MAX_ZOOM,zoomX,zoomY));
+ const viewWidth=g.width/zoom,viewHeight=g.height/zoom;
+ const centerX=(minX+maxX)/2,centerY=(minY+maxY)/2;
+ combatMapView.zoom=zoom;
+ combatMapView.x=centerX-viewWidth/2;
+ combatMapView.y=centerY-viewHeight/2;
+ combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
+ combatMapEnsureView(g);
+ combatMapApplyView()
+}
+
 function combatMapWheel(event){
  event.preventDefault();
  const factor=Math.exp(-event.deltaY*.0014);
@@ -2279,7 +2315,7 @@ function renderCombat(){
  let first=combatants.find(row=>String(row.id)===String(activeCombat.active_actor_id)),initiativeLead=first?(' · Initiativetta: '+first.name_snapshot):'';
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span><span class="combat-status">· Sparad strid</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><div class="combat-board-title"><span>Hexkarta</span><div class="combat-map-zoom-controls"><button type="button" title="Zooma ut" aria-label="Zooma ut" onclick="combatMapZoomStep(-1)">−</button><button id="combatMapZoomLabel" type="button" title="Återställ kartvy" onclick="combatMapResetView()">'+Math.round((combatMapView.zoom||1)*100)+'%</button><button type="button" title="Zooma in" aria-label="Zooma in" onclick="combatMapZoomStep(1)">+</button><button type="button" title="Återställ kartvy" aria-label="Återställ kartvy" onclick="combatMapResetView()">⌂</button></div></div><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span><span class="combat-status">· Sparad strid</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><div class="combat-board-title"><span>Hexkarta</span><div class="combat-map-zoom-controls"><button type="button" title="Zooma ut" aria-label="Zooma ut" onclick="combatMapZoomStep(-1)">−</button><button id="combatMapZoomLabel" type="button" title="Återställ kartvy" onclick="combatMapResetView()">'+Math.round((combatMapView.zoom||1)*100)+'%</button><button type="button" title="Zooma in" aria-label="Zooma in" onclick="combatMapZoomStep(1)">+</button><button type="button" class="combat-map-fit-btn" title="Fokusera alla kombatanter" aria-label="Fokusera alla kombatanter" onclick="combatMapFitCombatants()">◎</button><button type="button" title="Återställ kartvy" aria-label="Återställ kartvy" onclick="combatMapResetView()">⌂</button></div></div><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
