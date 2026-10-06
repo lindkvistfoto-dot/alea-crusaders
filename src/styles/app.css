@@ -2500,3 +2500,49 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(prefers-reduced-motion:reduce){
  .combat-dice-readout.outcome-show.perfect,.combat-dice-readout.outcome-show.fumble{animation:none}
 }
+
+
+/* v0.33.18 — automatiskt fummelslag och fummelresultat */
+.combat-fumble-results{
+ margin-top:7px;
+ border-top:1px solid rgba(137,58,49,.28);
+ padding-top:7px;
+ display:flex;
+ flex-direction:column;
+ gap:5px;
+}
+.combat-fumble-head{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:8px;
+ color:#922f29;
+}
+.combat-fumble-head b{font-size:11px}
+.combat-fumble-head span{
+ font-size:9px;
+ text-transform:uppercase;
+ letter-spacing:.05em;
+ color:#8b7067;
+}
+.combat-fumble-row{
+ display:grid;
+ grid-template-columns:52px minmax(0,1fr);
+ gap:7px;
+ align-items:start;
+ padding:6px 7px;
+ border:1px solid #d4a199;
+ border-radius:7px;
+ background:#fff3f0;
+}
+.combat-fumble-row>strong{font-size:11px;color:#9b3029}
+.combat-fumble-row>div{display:flex;flex-direction:column;gap:1px}
+.combat-fumble-row b{font-size:11px;color:#72251f}
+.combat-fumble-row span{font-size:10px;color:#715a54}
+.combat-fumble-warning{font-size:10px;color:#8d3a32;font-weight:700}
+.combat-dice-readout.fumble-detail .combat-outcome-copy span{
+ white-space:normal;
+ overflow:visible;
+ text-overflow:clip;
+ max-width:min(520px,62vw);
+}
