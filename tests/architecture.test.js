@@ -405,7 +405,7 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.32.4");
+    expect(html).toContain("Alea Crusaders v0.32.5");
     expect(html).toContain("app.css?v=0.32.4");
     expect(html).toContain("legacy/app.js?v=0.32.4");
   });
@@ -573,6 +573,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innGameModal"');
     expect(html).toContain('id="innGameTitle">Högt kast');
     expect(html).toContain('id="innGameBuyerSelect"');
+    expect(html).toContain('data-inn-game-type="high"');
+    expect(html).toContain('data-inn-game-type="five"');
     expect(html).toContain('id="innGameDiceHost"');
     expect(html).toContain('id="innGamePhaseLabel"');
     expect(html).toContain('data-inn-game-stake="1"');
@@ -580,6 +582,10 @@ describe("application architecture smoke checks", () => {
     expect(inn).toContain("function openInnGame");
     expect(inn).toContain("function closeInnGame");
     expect(inn).toContain("function innPlayHighRoll");
+    expect(inn).toContain("function innPlayFiveCrowns");
+    expect(inn).toContain("function innFiveCrownsCategory");
+    expect(inn).toContain("'Fem kronor':50");
+    expect(inn).toContain("const playerDice=await innAnimatedDice(5)");
     expect(inn).toContain("function innRoll2d6");
     expect(inn).toContain("const houseDice=await innAnimated2d6()");
     expect(inn).toContain("await innWait(1050)");
@@ -603,6 +609,21 @@ describe("application architecture smoke checks", () => {
     expect(dice3d).toContain("window.alea3dInnPrepare");
     expect(dice3d).toContain("window.alea3dInnRoll");
     expect(dice3d).toContain("window.alea3dInnClear");
+    expect(dice3d).toContain("scale:5.6");
+  });
+
+  test("Fem kronor uses five-die poker categories and a probability-based payout plan", () => {
+    const inn = read("features/inn/inn.js");
+    expect(inn).toContain("'Ett par':0");
+    expect(inn).toContain("'Två par':1");
+    expect(inn).toContain("'Triss':2");
+    expect(inn).toContain("'Kåk':3");
+    expect(inn).toContain("'Stege':4");
+    expect(inn).toContain("'Fyrtal':8");
+    expect(inn).toContain("'Fem kronor':50");
+    expect(inn).toContain("unique.join(',')==='1,2,3,4,5'");
+    expect(inn).toContain("unique.join(',')==='2,3,4,5,6'");
+    expect(inn).toContain("Teoretisk återbetalning: <b>97,2 %</b>");
   });
 
   test("Värdshus catalogue includes lodging meals and services", () => {
