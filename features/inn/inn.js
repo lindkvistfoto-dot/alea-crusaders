@@ -5,7 +5,7 @@ const INN_SECTIONS=[
   {category:'Mat & dryck',title:'Mat'},
   {category:'Tjänster',title:'Tjänster'}
 ];
-const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.0';
+const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.2';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
@@ -14,6 +14,9 @@ let innCart=loadInnCart();
 let innBuyerId='';
 let innCheckoutBusy=false;
 let innExpandedItemKey='';
+let innGameStakeKm=5;
+let innGameBusy=false;
+let innGameResult=null;
 const innRowQuantities=new Map();
 
 function loadInnCart(){
@@ -230,6 +233,155 @@ function innSetBuyer(id){
   const next=innBuyerById(id);
   innBuyerId=next?String(next.id):'';
   renderInnBuyer();
+  renderInnGame();
+}
+
+function innGameSetBuyer(id){
+  innSetBuyer(id);
+}
+
+function innGameSetStakeKm(value){
+  innGameStakeKm=Math.max(1,Math.floor(Number(value)||1));
+  renderInnGame();
+}
+
+function innRandomD6(){
+  try{
+    if(globalThis.crypto?.getRandomValues){
+      const box=new Uint32Array(1);
+      const max=4294967295-(4294967295%6);
+      do{globalThis.crypto.getRandomValues(box);}while(box[0]>max);
+      return (box[0]%6)+1;
+    }
+  }catch(_error){}
+  return Math.floor(Math.random()*6)+1;
+}
+
+function innRoll2d6(){
+  return [innRandomD6(),innRandomD6()];
+}
+
+function innDieHtml(value){
+  const faces=['','⚀','⚁','⚂','⚃','⚄','⚅'];
+  return '<span class="inn-game-die" aria-label="'+value+'">'+faces[value]+'</span>';
+}
+
+function innGameResultHtml(){
+  if(!innGameResult){
+    return '<div class="inn-game-awaiting">Välj insats och kasta tärningarna.</div>';
+  }
+  const r=innGameResult;
+  const outcomeClass=r.outcome==='win'?'win':r.outcome==='tie'?'tie':'loss';
+  const headline=r.outcome==='win'
+    ?'Du vann!'
+    :r.outcome==='tie'
+      ?'Oavgjort'
+      :'Huset vann';
+  const money=r.outcome==='win'
+    ?'Vinst: <b>+'+shopMoneyHtml(r.stakeKm)+'</b>'
+    :r.outcome==='tie'
+      ?'Insatsen återbetalas.'
+      :'Förlust: <b>−'+shopMoneyHtml(r.stakeKm)+'</b>';
+  return '<div class="inn-game-rolls">'+
+    '<div class="inn-game-roll"><span>Du</span><div>'+r.playerDice.map(innDieHtml).join('')+'</div><b>'+r.playerTotal+'</b></div>'+
+    '<div class="inn-game-versus">mot</div>'+
+    '<div class="inn-game-roll"><span>Huset</span><div>'+r.houseDice.map(innDieHtml).join('')+'</div><b>'+r.houseTotal+'</b></div>'+
+  '</div>'+
+  '<div class="inn-game-outcome '+outcomeClass+'"><strong>'+headline+'</strong><span>'+money+'</span></div>';
+}
+
+function renderInnGame(){
+  const select=document.getElementById('innGameBuyerSelect');
+  const balance=document.getElementById('innGameBalance');
+  const play=document.getElementById('innGamePlayBtn');
+  const result=document.getElementById('innGameResult');
+  if(!select||!balance||!play||!result)return;
+
+  const buyers=innEligibleBuyers();
+  if(!buyers.some(c=>String(c.id)===String(innBuyerId)))innBuyerId=buyers[0]?String(buyers[0].id):'';
+  select.innerHTML=buyers.length
+    ?buyers.map(c=>'<option value="'+shopEsc(c.id)+'" '+(String(c.id)===String(innBuyerId)?'selected':'')+'>'+shopEsc(c.identity?.namn||c.name||'Namnlös')+'</option>').join('')
+    :'<option value="">Ingen tillgänglig rollfigur</option>';
+  select.disabled=!buyers.length||innGameBusy;
+
+  document.querySelectorAll('[data-inn-game-stake]').forEach(button=>{
+    const value=Number(button.dataset.innGameStake)||0;
+    button.classList.toggle('active',value===innGameStakeKm);
+    button.disabled=innGameBusy;
+  });
+
+  const buyer=innBuyerById();
+  const funds=buyer?shopCarriedValueKm(buyer):0;
+  balance.innerHTML=buyer
+    ?'<span>Börs: <b>'+shopMoneyHtml(funds)+'</b></span><span>Insats: <b>'+shopMoneyHtml(innGameStakeKm)+'</b></span>'
+    :'Ingen rollfigur är kopplad till ditt konto.';
+  play.disabled=innGameBusy||!buyer||funds<innGameStakeKm;
+  play.textContent=innGameBusy?'Tärningarna rullar…':'Kasta tärningarna';
+  result.innerHTML=innGameResultHtml();
+
+  const notice=document.getElementById('innGameNotice');
+  if(notice){
+    notice.innerHTML=buyer&&funds<innGameStakeKm
+      ?'Du behöver '+shopMoneyHtml(innGameStakeKm-funds)+' till för den insatsen.'
+      :'';
+  }
+}
+
+async function innPlayHighRoll(){
+  if(innGameBusy)return;
+  const buyer=innBuyerById();
+  if(!buyer)return;
+  const stake=Math.max(1,Math.floor(Number(innGameStakeKm)||1));
+  if(shopCarriedValueKm(buyer)<stake){
+    renderInnGame();
+    return;
+  }
+
+  innGameBusy=true;
+  innGameResult=null;
+  renderInnGame();
+
+  const draft=JSON.parse(JSON.stringify(buyer));
+  try{
+    shopEnsureCoins(draft);
+    if(!shopSpendCarriedCoins(draft,stake))throw new Error('Börsen räcker inte till insatsen.');
+
+    const playerDice=innRoll2d6();
+    const houseDice=innRoll2d6();
+    const playerTotal=playerDice[0]+playerDice[1];
+    const houseTotal=houseDice[0]+houseDice[1];
+    let outcome='loss';
+    let payout=0;
+    if(playerTotal>houseTotal){
+      outcome='win';
+      payout=stake*2;
+    }else if(playerTotal===houseTotal){
+      outcome='tie';
+      payout=stake;
+    }
+
+    if(payout>0){
+      const afterStake=shopCarriedValueKm(draft);
+      draft.coins.carried=shopMoneyBreakdown(afterStake+payout);
+    }
+
+    if(typeof syncCharacterToCentral==='function')await syncCharacterToCentral(draft);
+    const index=(chars||[]).findIndex(c=>String(c.id)===String(buyer.id));
+    if(index<0)throw new Error('Spelaren kunde inte hittas.');
+    chars[index]=draft;
+    if(current&&String(current.id)===String(draft.id))current=draft;
+    localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));
+
+    innGameResult={playerDice,houseDice,playerTotal,houseTotal,outcome,stakeKm:stake};
+    if(typeof renderCards==='function')renderCards();
+    renderInnBuyer();
+  }catch(error){
+    const notice=document.getElementById('innGameNotice');
+    if(notice)notice.textContent='Spelet kunde inte genomföras: '+(error?.message||error);
+  }finally{
+    innGameBusy=false;
+    renderInnGame();
+  }
 }
 
 function renderInnBuyer(){
@@ -373,9 +525,11 @@ async function openInn(){
     renderInnItems();
     renderInnCart();
     renderInnBuyer();
+    renderInnGame();
     window.scrollTo({top:0,behavior:'smooth'});
   }catch(_error){
     renderInnCart();
+    renderInnGame();
   }
 }
 
