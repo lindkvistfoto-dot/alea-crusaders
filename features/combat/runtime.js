@@ -1452,23 +1452,6 @@ function combatPlayerMiniatureKind(combatant){
  if(name.includes('evalin'))return 'duck';
  return null
 }
-function combatPlayerGlbModel(combatant){
- if(combatant?.source_type!=='character')return null;
- const explicit=String(combatant?.state?.miniature_glb||'').trim();
- if(explicit)return explicit;
- const name=String(combatant?.name_snapshot||'').toLowerCase();
- if(name.includes('astrid'))return './assets/models/kenney/mini-characters/character-female-a.glb';
- return null
-}
-function combatGlbMiniatureFigure(combatant){
- const model=combatPlayerGlbModel(combatant);
- if(!model||!window.customElements?.get('model-viewer'))return '';
- return '<foreignObject class="combat-glb-mini-fo" x="-34" y="-69" width="68" height="78">'+
-  '<div xmlns="http://www.w3.org/1999/xhtml" class="combat-glb-mini-wrap">'+
-   '<model-viewer class="combat-glb-mini" src="'+escAttr(model)+'" alt="'+escAttr((combatant?.name_snapshot||'Spelare')+' 3D-miniatyr')+'" loading="eager" reveal="auto" interaction-prompt="none" camera-orbit="18deg 72deg 2.7m" field-of-view="27deg" environment-image="neutral" tone-mapping="aces" exposure="1.08" shadow-intensity=".75" shadow-softness=".85"></model-viewer>'+
-  '</div>'+
- '</foreignObject>'
-}
 function combatMiniatureDefs(){
  return '<defs>'+
   '<linearGradient id="miniMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f2f3"/><stop offset=".45" stop-color="#8e989e"/><stop offset="1" stop-color="#444d52"/></linearGradient>'+
