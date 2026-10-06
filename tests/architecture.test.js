@@ -702,7 +702,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("cell?.sight_mode==='blocked'");
     expect(combat).toContain("target.side===actor.side");
     expect(combat).toContain("attack-target");
-    expect(combat).toContain("combatAttackTargetSummaryHtml(c)");
+    expect(combat).toContain("function combatCurrentAttackTargets");
+    expect(combat).toContain("function combatAttackPanelHtml");
     expect(combat).toContain("function combatDestinationKeepsAction");
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
