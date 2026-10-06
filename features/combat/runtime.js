@@ -445,39 +445,59 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null}={}){
   startActorId=order[0]||null
  }
 
- await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
-  id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
-  name:scene.name||'Strid',status:'active',round_number:1,phase:startPhase,winning_side:null,
-  initiative,active_actor_id:startActorId,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
- })});
+ let instanceCreated=false;
+ try{
+  const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+  await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
+   name:scene.name||'Strid',status:'active',round_number:1,phase:'initiative',winning_side:null,
+   initiative:pendingInitiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
+  })});
+  instanceCreated=true;
 
- if(combatantRows.length)await dbJson('combatants',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(combatantRows)});
+  if(combatantRows.length)await dbJson('combatants',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(combatantRows)});
 
- const hexRows=runtime.sceneHexes.map(row=>({
-  combat_id:instanceId,campaign_id:centralCampaignId,q:Number(row.q),r:Number(row.r),
-  movement_mode:row.movement_mode||'free',sight_mode:row.sight_mode||'clear',
-  movement_cost:Number(row.movement_cost)||1,notes:row.notes||''
- }));
- if(hexRows.length)await dbJson('combat_hexes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(hexRows)});
+  const hexRows=runtime.sceneHexes.map(row=>({
+   combat_id:instanceId,campaign_id:centralCampaignId,q:Number(row.q),r:Number(row.r),
+   movement_mode:row.movement_mode||'free',sight_mode:row.sight_mode||'clear',
+   movement_cost:Number(row.movement_cost)||1,notes:row.notes||''
+  }));
+  if(hexRows.length)await dbJson('combat_hexes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(hexRows)});
 
- return instanceId
+  if(startActorId){
+   await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({initiative,active_actor_id:startActorId,phase:startPhase,updated_at:new Date().toISOString()})
+   })
+  }
+  return instanceId
+ }catch(error){
+  if(instanceCreated){
+   try{await combatDeleteRuntime(instanceId)}catch(cleanupError){console.error('Kunde inte städa misslyckad stridsruntime',cleanupError)}
+  }
+  throw error
+ }
 }
 
 async function combatStartScene(sceneId,{reset=false}={}){
  if(!combatCanManage()||combatSceneBusy)return;
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
+ const previousCombatId=activeCombat?.id||null;
  try{
   const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null;
-  if(activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
-  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];
   const instanceId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot});
   combatSelectedSceneId=String(scene.id);
-  await loadActiveCombat();
+  await loadActiveCombat(instanceId);
+  if(String(activeCombat?.id||'')!==String(instanceId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
   if(!reset)await combatRollAndApplyInitiative(instanceId);
-  await loadActiveCombat();
+  if(previousCombatId&&String(previousCombatId)!==String(instanceId))await combatDeleteRuntime(previousCombatId);
+  await loadActiveCombat(instanceId);
  }catch(e){
   console.error('Kunde inte starta stridsscen',e);
+  if(previousCombatId){
+   try{await loadActiveCombat(previousCombatId)}catch(_error){}
+  }
   alert((reset?'Reset':'Play')+' kunde inte genomföras: '+(e?.message||e))
  }finally{
   combatSceneBusy=false;
@@ -1155,11 +1175,14 @@ function combatActionChooserHtml(combatant){
   '<div class="combat-action-note">Vald action begränsar återstående förflyttning till högst halva förflyttningsförmågan denna SR. Går du först mer än halva sträckan förbrukas actionen automatiskt.</div>'+
  '</div>'
 }
-async function loadActiveCombat(){
+async function loadActiveCombat(combatId=null){
  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
-  let rows=await dbJson('combat_instances?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=in.(setup,active,paused)&select=*&order=updated_at.desc&limit=1');
+  const instanceQuery=combatId
+   ?'combat_instances?id=eq.'+encodeURIComponent(combatId)+'&campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&limit=1'
+   :'combat_instances?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=in.(setup,active,paused)&select=*&order=updated_at.desc&limit=1';
+  let rows=await dbJson(instanceQuery);
   activeCombat=rows?.[0]||null;
   if(activeCombat){
    const activeSceneId=combatActiveSceneId();
