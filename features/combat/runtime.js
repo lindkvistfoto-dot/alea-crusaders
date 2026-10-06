@@ -149,7 +149,7 @@ function renderCombatGmControls(){
   '</select>'+
   '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat?'disabled':'')+'>↻ Reset</button>'+
-  (activeCombat?'<span class="combat-gm-active">Sparad: '+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
+  (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
 function combatNumber(value,fallback=null){
  if(value==null||value==='')return fallback;
@@ -454,7 +454,7 @@ function combatCaptureInitiativeForReset(){
   entries
  }
 }
-async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null}={}){
+async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,resetReady=false}={}){
  const runtime=await combatLoadSceneRuntimeData(scene);
  const instanceId=crypto.randomUUID();
  const settings={
@@ -462,6 +462,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null}={}){
   scene_id:scene.id,
   source:'campaign_combat_scene',
   development_mode:'movement',
+  reset_ready_for_play:resetReady===true,
   background_image_path:scene.background_image_path||null,
   background_width:scene.background_width||null,
   background_height:scene.background_height||null
@@ -559,7 +560,7 @@ async function combatStartScene(sceneId,{reset=false}={}){
  let replacementCombatId=null,replacementCommitted=false;
  try{
   const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null;
-  replacementCombatId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot});
+  replacementCombatId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot,resetReady:reset});
   combatSelectedSceneId=String(scene.id);
   await loadActiveCombat(replacementCombatId);
   if(String(activeCombat?.id||'')!==String(replacementCombatId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
@@ -583,8 +584,13 @@ async function combatStartScene(sceneId,{reset=false}={}){
   renderCombatGmControls()
  }
 }
+function combatIsResetReadyForPlay(scene){
+ return !!activeCombat?.id&&
+  activeCombat?.settings?.reset_ready_for_play===true&&
+  String(combatActiveSceneId())===String(scene?.id||'')
+}
 function combatConfirmReplaceActiveRuntime(scene){
- if(!activeCombat?.id)return true;
+ if(!activeCombat?.id||combatIsResetReadyForPlay(scene))return true;
  const activeName=activeCombat.name||combatSceneFromId(combatActiveSceneId())?.name||'Strid';
  const selectedName=scene?.name||'vald stridsscen';
  return confirm('En pågående strid ("'+activeName+'") är sparad och kan återupptas där den slutade.\n\nPlay startar "'+selectedName+'" från början och ersätter den sparade striden. Vill du fortsätta?')
