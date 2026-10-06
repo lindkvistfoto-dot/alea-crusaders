@@ -405,7 +405,7 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.32.1");
+    expect(html).toContain("Alea Crusaders v0.32.2");
     expect(html).toContain("app.css?v=0.32.1");
     expect(html).toContain("legacy/app.js?v=0.32.1");
   });
@@ -562,6 +562,24 @@ describe("application architecture smoke checks", () => {
     expect(inn).toContain("await syncCharacterToCentral(draft)");
     expect(inn).not.toContain("shopAddPurchasedItem");
     expect(css).toContain(".inn-open #dayNavBtn");
+  });
+
+  test("Värdshus has a money dice table draft", () => {
+    const html = read("index.html");
+    const inn = read("features/inn/inn.js");
+    const css = read("features/inn/inn.css");
+    expect(html).toContain('id="innGameTitle">Högt kast');
+    expect(html).toContain('id="innGameBuyerSelect"');
+    expect(html).toContain('data-inn-game-stake="1"');
+    expect(html).toContain('data-inn-game-stake="50"');
+    expect(inn).toContain("function innPlayHighRoll");
+    expect(inn).toContain("function innRoll2d6");
+    expect(inn).toContain("payout=stake*2");
+    expect(inn).toContain("payout=stake;");
+    expect(inn).toContain("shopSpendCarriedCoins(draft,stake)");
+    expect(inn).toContain("await syncCharacterToCentral(draft)");
+    expect(css).toContain(".inn-game-panel{");
+    expect(css).toContain(".inn-game-die{");
   });
 
   test("Värdshus catalogue includes lodging meals and services", () => {
