@@ -35,3 +35,37 @@
 @media(max-width:560px){
   .inn-nav{min-width:42px}
 }
+
+
+/* v0.32.1 — fasta menysektioner i stället för kategorifilter */
+#innItems.shop-items{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.inn-menu-section{
+  min-width:0;
+}
+.inn-menu-heading{
+  margin:0 0 8px;
+  padding:8px 11px 7px;
+  border-bottom:1px solid rgba(205,143,88,.42);
+  color:#edc08d;
+  font:700 21px/1.15 Georgia,serif;
+  letter-spacing:.02em;
+  background:linear-gradient(90deg,rgba(120,61,29,.24),transparent 72%);
+}
+.inn-menu-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.inn-menu-empty{
+  padding:8px 11px;
+  color:var(--muted,#b6a894);
+  font-size:13px;
+  font-style:italic;
+}
+@media(max-width:560px){
+  .inn-menu-heading{font-size:18px;padding:7px 8px 6px}
+}
