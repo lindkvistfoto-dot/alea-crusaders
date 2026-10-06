@@ -293,21 +293,92 @@ function combatInitiativeDiceMap(raw,entries){
  });
  return values
 }
+let combatInitiativeTransferTimer=null,combatInitiativeTransferToken=0;
+function combatCancelInitiativeTransfer(){
+ combatInitiativeTransferToken++;
+ if(combatInitiativeTransferTimer){clearTimeout(combatInitiativeTransferTimer);combatInitiativeTransferTimer=null}
+ document.querySelectorAll('.combat-initiative-flyer').forEach(node=>node.remove())
+}
+function combatInitiativeTransferToOrder(initiative){
+ const host=$('combatInitiativeLegend');if(!host||!initiative?.results?.length)return;
+ combatCancelInitiativeTransfer();
+ const token=combatInitiativeTransferToken;
+ const results=[...initiative.results].sort((a,b)=>(Number(a.rank)||999)-(Number(b.rank)||999));
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+ const transferOne=index=>{
+  if(token!==combatInitiativeTransferToken)return;
+  if(index>=results.length){
+   combatInitiativeTransferTimer=setTimeout(()=>{
+    if(token!==combatInitiativeTransferToken)return;
+    host.classList.remove('show','resolved','transferring');
+    host.querySelectorAll('.combat-initiative-chip').forEach(chip=>chip.classList.remove('departing'))
+   },reduced?80:320);
+   return
+  }
+  const result=results[index];
+  const chip=host.querySelector('.combat-initiative-chip[data-combatant-id="'+CSS.escape(String(result.combatant_id))+'"]');
+  const target=document.querySelector('.combatant-card[data-combatant-id="'+CSS.escape(String(result.combatant_id))+'"] .combat-order-number');
+  if(!chip||!target){
+   combatInitiativeTransferTimer=setTimeout(()=>transferOne(index+1),reduced?60:220);
+   return
+  }
+  chip.classList.add('departing');
+  target.classList.add('initiative-arrival');
+  setTimeout(()=>target.classList.remove('initiative-arrival'),reduced?120:720);
+  if(reduced){
+   chip.style.visibility='hidden';
+   combatInitiativeTransferTimer=setTimeout(()=>transferOne(index+1),90);
+   return
+  }
+  const from=chip.getBoundingClientRect(),to=target.getBoundingClientRect();
+  const flyer=chip.cloneNode(true);
+  flyer.classList.add('combat-initiative-flyer');
+  flyer.classList.remove('departing');
+  Object.assign(flyer.style,{
+   position:'fixed',
+   left:from.left+'px',
+   top:from.top+'px',
+   width:from.width+'px',
+   height:from.height+'px',
+   margin:'0',
+   zIndex:'1800',
+   pointerEvents:'none'
+  });
+  document.body.appendChild(flyer);
+  const dx=(to.left+to.width/2)-(from.left+from.width/2);
+  const dy=(to.top+to.height/2)-(from.top+from.height/2);
+  const animation=flyer.animate([
+   {transform:'translate(0,0) scale(1)',opacity:1,filter:'brightness(1)'},
+   {transform:'translate('+(dx*.78)+'px,'+(dy*.78)+'px) scale(.72)',opacity:.86,filter:'brightness(1.15)',offset:.72},
+   {transform:'translate('+dx+'px,'+dy+'px) scale(.42)',opacity:.08,filter:'brightness(1.35)'}
+  ],{duration:680,easing:'cubic-bezier(.2,.75,.25,1)',fill:'forwards'});
+  animation.finished.catch(()=>{}).finally(()=>flyer.remove());
+  combatInitiativeTransferTimer=setTimeout(()=>transferOne(index+1),520)
+ };
+ host.classList.add('transferring');
+ combatInitiativeTransferTimer=setTimeout(()=>transferOne(0),reduced?700:3000)
+}
 function combatShowInitiativeLegend(entries,initiative=null){
  const host=$('combatInitiativeLegend');if(!host)return;
+ combatCancelInitiativeTransfer();
  const results=new Map((initiative?.results||[]).map(result=>[String(result.combatant_id),result]));
- host.innerHTML='<div class="combat-initiative-title">Initiativ · SMI + T10</div><div class="combat-initiative-chips">'+entries.map(entry=>{
+ const displayEntries=initiative?.results?.length
+  ?[...entries].sort((a,b)=>(Number(results.get(a.combatant_id)?.rank)||999)-(Number(results.get(b.combatant_id)?.rank)||999))
+  :entries;
+ host.innerHTML='<div class="combat-initiative-title">Initiativ · SMI + T10</div><div class="combat-initiative-chips">'+displayEntries.map(entry=>{
   const result=results.get(entry.combatant_id);
-  return '<div class="combat-initiative-chip" style="--initiative-color:'+entry.color+'">'+
+  return '<div class="combat-initiative-chip" data-combatant-id="'+escAttr(entry.combatant_id)+'" style="--initiative-color:'+entry.color+'">'+
    '<i></i><b>'+escAttr(entry.name)+'</b>'+
    (result?'<span>T10 '+result.die+' + SMI '+result.smi+' = <strong>'+result.total+'</strong> · #'+result.rank+'</span>':'<span>T10 rullar… · SMI '+entry.smi+'</span>')+
   '</div>'
  }).join('')+'</div>';
  host.classList.add('show');
- host.classList.toggle('resolved',!!initiative)
+ host.classList.toggle('resolved',!!initiative);
+ if(initiative?.results?.length)combatInitiativeTransferToOrder(initiative)
 }
 function combatHideInitiativeLegend(){
- const host=$('combatInitiativeLegend');if(host)host.classList.remove('show','resolved')
+ combatCancelInitiativeTransfer();
+ const host=$('combatInitiativeLegend');if(host){host.classList.remove('show','resolved','transferring');host.querySelectorAll('.combat-initiative-chip').forEach(chip=>chip.style.visibility='')}
 }
 async function combatRollAndApplyInitiative(instanceId){
  const entries=combatInitiativeEntries(combatants);
@@ -1553,9 +1624,9 @@ function combatantCard(c,index=0){
  let init=total!=null?'Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'Initiativ ej slaget';
  const fumbleState=(c.state?.prone?' · Liggande':'')+((c.state?.broken_weapon_keys||[]).length?' · Trasigt vapen':'')+((c.state?.dropped_weapon_keys||[]).length?' · Tappat vapen':'');
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':'Fiende/monster';
- return'<button type="button" class="combatant-card '+roleClass+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
-  '<span class="combat-order-number">'+order+'</span><div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div>'+
-  '<div class="meta">'+roleLabel+' · '+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></div></button>'
+ return'<button type="button" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
+  '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+'</span><div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div>'+
+  '<div class="meta">'+roleLabel+(smi!=null&&die!=null?' · SMI '+smi+' + T10 '+die:'')+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></div></button>'
 }
 function combatAttackTargetSummaryHtml(combatant){
  if(!combatant||!combatIsActiveTurn(combatant))return '';
