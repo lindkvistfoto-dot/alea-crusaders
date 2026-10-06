@@ -2273,11 +2273,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
 /* v0.33.13 — samtidiga färgkodade initiativslag */
 .combat-initiative-legend{
  position:absolute;
- top:10px;
  left:10px;
  right:10px;
+ bottom:12px;
+ top:auto;
  display:none;
  pointer-events:none;
+ z-index:6;
 }
 .combat-initiative-legend.show{display:block}
 .combat-initiative-title{
@@ -2297,7 +2299,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
  display:flex;
  flex-wrap:wrap;
  gap:5px;
- align-items:flex-start;
+ align-items:flex-end;
 }
 .combat-initiative-chip{
  display:grid;
@@ -2309,9 +2311,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
  padding:5px 8px;
  border:1px solid color-mix(in srgb,var(--initiative-color) 72%,#fff 28%);
  border-radius:8px;
- background:rgba(26,20,16,.88);
+ background:rgba(26,20,16,.90);
  color:#f8ead2;
  box-shadow:0 3px 12px rgba(0,0,0,.22);
+ transition:opacity .32s ease,transform .32s ease,filter .32s ease;
 }
 .combat-initiative-chip i{
  grid-row:1/3;
@@ -2325,6 +2328,31 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-initiative-chip span{font-size:10px;color:#d6c6ae;line-height:1.15}
 .combat-initiative-chip strong{color:#fff4c8}
 .combat-initiative-legend.resolved .combat-initiative-chip{background:rgba(26,20,16,.93)}
+.combat-initiative-legend.resolved .combat-initiative-chips{justify-content:center}
+.combat-initiative-chip.departing{opacity:.14;transform:translateY(7px) scale(.96);filter:grayscale(.25)}
+.combat-initiative-flyer{
+ display:grid;
+ grid-template-columns:10px auto;
+ column-gap:6px;
+ row-gap:1px;
+ align-items:center;
+ padding:5px 8px;
+ border:1px solid color-mix(in srgb,var(--initiative-color) 72%,#fff 28%);
+ border-radius:8px;
+ background:rgba(26,20,16,.95);
+ color:#f8ead2;
+ box-shadow:0 6px 20px rgba(0,0,0,.34);
+}
+.combat-initiative-flyer i{
+ grid-row:1/3;
+ width:9px;
+ height:24px;
+ border-radius:5px;
+ background:var(--initiative-color);
+}
+.combat-initiative-flyer b{font-size:11px;line-height:1.1}
+.combat-initiative-flyer span{font-size:10px;color:#d6c6ae;line-height:1.15}
+.combat-initiative-flyer strong{color:#fff4c8}
 @media(max-width:620px){
  .combat-initiative-chip{min-width:0;flex:1 1 44%;padding:4px 6px}
  .combat-initiative-chip span{font-size:9px}
@@ -2566,7 +2594,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 /* v0.33.20 — tydlig turordning per kombatanttyp */
 .combatant-card{
  display:grid;
- grid-template-columns:36px minmax(0,1fr);
+ grid-template-columns:44px minmax(0,1fr);
  gap:9px;
  align-items:center;
  color:#2f2a24;
@@ -2580,15 +2608,31 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combatant-card.enemy-row{background:#f0d8d5;border-color:#c68e88}
 .combatant-card.enemy-row:hover{background:#ebccc8;border-color:#a85e57}
 .combat-order-number{
- width:30px;
- height:30px;
- border-radius:8px;
- display:grid;
- place-items:center;
- font:900 17px/1 Georgia,serif;
+ width:40px;
+ min-height:42px;
+ border-radius:9px;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:1px;
  background:rgba(31,28,25,.82);
  color:#fff8e8;
  box-shadow:0 1px 3px rgba(0,0,0,.18);
+ transition:transform .22s ease,box-shadow .22s ease,filter .22s ease;
+}
+.combat-order-number>b{font:900 18px/1 Georgia,serif}
+.combat-order-number>small{
+ display:block;
+ font:800 8px/1.05 system-ui,sans-serif;
+ letter-spacing:.02em;
+ color:#e8d7b9;
+ white-space:nowrap;
+}
+.combat-order-number.initiative-arrival{
+ transform:scale(1.12);
+ filter:brightness(1.35);
+ box-shadow:0 0 0 3px rgba(238,190,76,.48),0 5px 14px rgba(0,0,0,.22);
 }
 .combatant-card-copy{min-width:0}
 .combatant-card.selected{outline:3px solid #7f4f21;outline-offset:1px}
@@ -2596,3 +2640,15 @@ body:not(.editing) #skilltable .skill-roll-btn{
  box-shadow:0 0 0 3px rgba(232,177,63,.55),0 3px 10px rgba(0,0,0,.12);
 }
 .combatant-card.active-turn .combat-order-number{background:#7a5416;color:#fff2c4}
+
+
+/* v0.33.24 — initiativresultat sorteras visuellt från kartan till turordningen */
+@media(max-width:620px){
+ .combat-initiative-legend{left:7px;right:7px;bottom:8px}
+ .combat-initiative-title{margin-bottom:4px}
+ .combat-initiative-chips{gap:4px}
+ .combat-initiative-chip{flex:1 1 46%;min-width:0}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-initiative-chip,.combat-order-number{transition:none!important}
+}
