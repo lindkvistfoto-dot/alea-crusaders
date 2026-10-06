@@ -3045,3 +3045,53 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(prefers-reduced-motion:reduce){
  .combat-dice-host{transition:none!important}
 }
+
+
+/* v0.33.31 — inline SVG-miniatyrer för spelarkaraktärer */
+.combat-miniature{
+ cursor:pointer;
+ pointer-events:none;
+ transform-box:fill-box;
+ transform-origin:center bottom;
+}
+.combat-mini-hit{
+ fill:transparent;
+ stroke:none;
+ pointer-events:all;
+ cursor:pointer;
+}
+.combat-mini-shadow{
+ fill:rgba(0,0,0,.38);
+ filter:blur(1.1px);
+}
+.combat-mini-base{
+ fill:#282925;
+ stroke:#11130f;
+ stroke-width:3.5;
+}
+.combat-mini-base-ring{
+ fill:none;
+ stroke:#27bd4d;
+ stroke-width:4.5;
+ vector-effect:non-scaling-stroke;
+ filter:drop-shadow(0 1px 1px rgba(0,0,0,.7));
+}
+.combat-miniature .mini-figure{pointer-events:none}
+.combat-miniature.selected{
+ filter:drop-shadow(0 0 4px rgba(255,211,123,.95));
+}
+.combat-miniature.active-turn{
+ filter:drop-shadow(0 0 6px rgba(242,188,67,.95));
+}
+.combat-miniature.attack-target{
+ filter:drop-shadow(0 0 6px rgba(226,70,61,.92));
+}
+.combat-miniature.movement-planning{
+ filter:drop-shadow(0 0 7px rgba(117,226,137,.95));
+}
+.combat-miniature.movement-planning .combat-mini-base-ring{
+ stroke-width:6;
+}
+@media(max-width:560px){
+ .combat-miniature .combat-mini-base-ring{stroke-width:5}
+}
