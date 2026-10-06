@@ -492,3 +492,72 @@ body.inn-game-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .inn-game-fallback-die.rolling{animation:none}
 }
+
+
+/* v0.32.5 — spelval + Fem kronor */
+.inn-game-selector{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-bottom:12px;
+}
+.inn-game-selector button{
+  min-height:42px;
+  border:1px solid rgba(205,143,88,.25);
+  border-radius:9px;
+  background:rgba(255,255,255,.035);
+  color:#cbb797;
+  font-weight:900;
+  cursor:pointer;
+}
+.inn-game-selector button.active{
+  border-color:#d39a5e;
+  background:linear-gradient(180deg,#714021,#4b2917);
+  color:#fff0da;
+}
+.inn-game-selector button:disabled{opacity:.55;cursor:not-allowed}
+.inn-five-paytable{
+  min-width:310px;
+  display:grid;
+  gap:3px;
+}
+.inn-five-paytable>div{
+  display:grid;
+  grid-template-columns:minmax(105px,1fr) 72px 44px;
+  gap:8px;
+  align-items:center;
+  padding:4px 7px;
+  border-radius:6px;
+  background:rgba(255,255,255,.025);
+  color:#c8b59a;
+  font-size:11px;
+}
+.inn-five-paytable small{text-align:right;color:#9e8e79}
+.inn-five-paytable b{text-align:right;color:#edc08d}
+.inn-five-rtp{
+  margin-top:5px;
+  color:#9f8f79;
+  font-size:10px;
+  text-align:right;
+}
+.inn-five-result{
+  width:100%;
+  padding:11px 12px;
+}
+.inn-five-result-dice{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.inn-five-result .inn-game-die{
+  width:32px;
+  height:32px;
+  font-size:27px;
+}
+@media(max-width:650px){
+  .inn-game-head{display:block}
+  .inn-five-paytable{min-width:0;margin-top:10px}
+  .inn-five-rtp{text-align:left}
+}
