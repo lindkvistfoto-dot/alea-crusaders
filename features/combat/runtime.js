@@ -111,6 +111,7 @@ async function combatRollDice(specs,label='Slag'){
 
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
+let combatActionMenuId=null;
 
 function combatSceneFromId(id){
  return (campaignCombatScenes||[]).find(scene=>String(scene.id)===String(id))||null
@@ -147,7 +148,7 @@ function renderCombatGmControls(){
   '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
-  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>▶ Play</button>'+
+  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
@@ -1260,6 +1261,85 @@ function combatActionChooserHtml(combatant){
   '<div class="combat-action-note">Vald action begränsar återstående förflyttning till högst halva förflyttningsförmågan denna SR. Går du först mer än halva sträckan förbrukas actionen automatiskt.</div>'+
  '</div>'
 }
+function combatCanUseActionMenu(combatant){
+ return !!combatant&&combatCanChoosePrimaryAction(combatant)&&!combatMovementHasUsedMoreThanHalf(combatant)&&combatHasUnusedAction(combatant)
+}
+function toggleCombatActionMenu(event,combatantId){
+ event?.stopPropagation?.();
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId));
+ if(!combatCanUseActionMenu(combatant))return;
+ combatMovementPlan=null;
+ combatActionMenuId=String(combatActionMenuId||'')===String(combatantId)?null:String(combatantId);
+ combatSelectedTargetId=combatant.id;
+ renderCombat()
+}
+async function chooseCombatRowAction(event,combatantId,actionKey){
+ event?.stopPropagation?.();
+ combatActionMenuId=String(combatantId);
+ await chooseCombatPrimaryAction(combatantId,actionKey)
+}
+function combatRowActionMenuHtml(combatant){
+ if(!combatant||String(combatActionMenuId||'')!==String(combatant.id))return '';
+ const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
+ const options=COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive);
+ return '<div class="combat-row-action-menu" role="menu" onclick="event.stopPropagation()">'+
+  '<div class="combat-row-action-menu-title">Action</div>'+
+  '<div class="combat-row-action-menu-grid">'+options.map(def=>{
+   const active=chosenDef?.key===def.key;
+   return '<button type="button" role="menuitem" class="combat-row-action-option'+(active?' active':'')+'" onclick="chooseCombatRowAction(event,\''+combatant.id+'\',\''+def.key+'\')">'+
+    '<span>'+def.icon+'</span><b>'+escAttr(def.label)+'</b>'+
+   '</button>'
+  }).join('')+'</div>'+
+  combatAttackWeaponChooserHtml(combatant,chosen,chosenDef)+
+ '</div>'
+}
+function combatTurnOrderIds(){
+ const fromInitiative=Array.isArray(activeCombat?.initiative?.order)?activeCombat.initiative.order.map(String):[];
+ const valid=new Set((combatants||[]).filter(row=>!['dead','removed'].includes(row.status)).map(row=>String(row.id)));
+ const ordered=fromInitiative.filter(id=>valid.has(id));
+ if(ordered.length)return ordered;
+ return (combatants||[]).filter(row=>!['dead','removed'].includes(row.status))
+  .slice().sort((a,b)=>(combatNumber(a.state?.initiative_rank,999)-combatNumber(b.state?.initiative_rank,999))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0))
+  .map(row=>String(row.id))
+}
+function combatCanEndTurn(combatant){
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&!combatIsMovementPlanning(combatant)
+}
+async function endCombatTurn(event,combatantId){
+ event?.stopPropagation?.();
+ const actor=combatActiveActor();
+ if(!actor||String(actor.id)!==String(combatantId)||!combatCanEndTurn(actor))return;
+ combatActionMenuId=null;combatMovementPlan=null;
+ const order=combatTurnOrderIds();
+ if(!order.length)return;
+ const currentIndex=Math.max(0,order.indexOf(String(actor.id)));
+ const nextIndex=currentIndex+1;
+ const newRound=nextIndex>=order.length;
+ const nextActorId=newRound?order[0]:order[nextIndex];
+ const round=(Number(activeCombat.round_number)||1)+(newRound?1:0);
+ try{
+  if(newRound){
+   await Promise.all((combatants||[]).filter(row=>!['dead','removed'].includes(row.status)).map(row=>dbJson('combatants?id=eq.'+encodeURIComponent(row.id),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({movement_remaining:combatMovementMaximum(row),updated_at:new Date().toISOString()})
+   })))
+  }
+  await dbJson('combat_instances?id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({active_actor_id:nextActorId,active_responder_id:null,round_number:round,phase:'movement',updated_at:new Date().toISOString()})
+  });
+  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+   phase:'movement',actor_id:actor.id,target_id:null,event_type:'turn_end',
+   message:actor.name_snapshot+' avslutar draget'+(newRound?' · Runda '+round:''),
+   details:{next_actor_id:nextActorId,new_round:newRound,round_number:round},player_visible:true
+  })});
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte avsluta draget',error);
+  alert('Kunde inte avsluta draget: '+(error?.message||error))
+ }
+}
 async function loadActiveCombat(combatId=null){
  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
@@ -1285,6 +1365,7 @@ async function loadActiveCombat(combatId=null){
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    combatSelectedTargetId=activeCombat.active_actor_id||null;
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
+   if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatActionMenuId=null;
    await loadCombatRuntimeBackground()
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
@@ -1306,7 +1387,10 @@ function closeCombat(){
  else if(combatReturn==='admin'&&activeUser()?.admin){$('admin').classList.remove('hidden')}
  else{$('home').classList.remove('hidden');renderCards()}
 }
-function selectCombatTarget(id){combatSelectedTargetId=id||null;renderCombat()}
+function selectCombatTarget(id){
+ if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
+ combatSelectedTargetId=id||null;renderCombat()
+}
 function combatTokenInitials(name){let a=String(name||'?').trim().split(/\s+/).filter(Boolean);return(a.length>1?(a[0][0]+a[a.length-1][0]):a[0]?.slice(0,2)||'?').toUpperCase()}
 function combatHexNeighbors(q,r){
  return [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]]
@@ -1345,6 +1429,7 @@ function previewCombatMovementToHex(event,q,r){
 }
 function combatMovementButton(event,combatantId){
  event?.stopPropagation?.();
+ combatActionMenuId=null;
  const actor=combatActiveActor();
  if(!actor||String(actor.id)!==String(combatantId)||!combatCanPlanMovement(actor))return;
  if(!combatIsMovementPlanning(actor)){
@@ -1756,20 +1841,22 @@ function combatantCard(c,index=0){
  const selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
  const kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp);
  const psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':'/'+c.max_psy);
- const remaining=combatMovementBudget(c),maximum=combatMovementMaximum(c);
+ const remaining=combatMovementBudget(c),maximum=combatMovementMaximum(c),half=combatHalfMoveLimit(c);
  const rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  const order=rank!=null?rank:index+1;
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
  const planning=combatIsMovementPlanning(c),previewCost=planning?(Number(combatMovementPlan?.cost)||0):0;
- const canMove=combatCanPlanMovement(c);
- const moveLabel=planning?(previewCost>0?'Lås förflyttning':'Avbryt'):'Förflyttning';
- const moveHint=planning&&previewCost>0
-  ?(combatDestinationKeepsAction(c,previewCost)?'Halv · handling kvar':'Hel · handling förbrukas')
-  :'Halv '+combatHalfMoveLimit(c)+' · Hel '+maximum;
+ const canMove=combatCanPlanMovement(c),canAction=combatCanUseActionMenu(c),canEnd=combatCanEndTurn(c);
+ const actionOpen=String(combatActionMenuId||'')===String(c.id),chosenDef=combatActionDefinition(combatChosenAction(c));
+ const moveTitle=planning?(previewCost>0?'Lås förflyttning':'Avbryt förflyttning'):'Planera förflyttning';
  return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
   '<span class="combat-order-number"><b>'+order+'</b>'+(total!=null?'<small>Init '+total+'</small>':'<small>Init —</small>')+(smi!=null&&die!=null?'<em>(SMI'+smi+'+'+die+')</em>':'<em>—</em>')+'</span>'+
   '<div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+'</div></div>'+
-  '<div class="combat-row-controls"><button type="button" class="combat-row-move'+(planning?' active':'')+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'><span>↔</span><b>'+moveLabel+'</b><small>'+moveHint+'</small></button></div>'+
+  '<div class="combat-row-controls">'+
+   '<div class="combat-row-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(planning?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+c.id+'\')" '+(!canMove?'disabled':'')+'>'+(planning&&previewCost>0?'✓':'↔')+'</button><small><span>Hel '+maximum+'</span><span>Halv '+half+'</span></small></div>'+
+   '<div class="combat-row-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(actionOpen?' active':'')+(chosenDef?' chosen':'')+'" title="Action" aria-label="Action" aria-haspopup="menu" aria-expanded="'+(actionOpen?'true':'false')+'" onclick="toggleCombatActionMenu(event,\''+c.id+'\')" '+(!canAction?'disabled':'')+'>'+(chosenDef?.icon||'⚡')+'</button>'+combatRowActionMenuHtml(c)+'</div>'+
+   '<div class="combat-row-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+c.id+'\')" '+(!canEnd?'disabled':'')+'>⏭</button></div>'+
+  '</div>'+
   '<div class="combat-row-vitals"><span>KP <b>'+kp+'</b></span><span>PSY <b>'+psy+'</b></span></div>'+
  '</div>'
 }
@@ -1789,7 +1876,7 @@ function combatAttackTargetSummaryHtml(combatant){
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. När en action valts kan högst halva förflyttningen användas totalt denna SR.</div>'+combatAttackExecutionHtml(c)+combatAttackTargetSummaryHtml(c)+combatActionChooserHtml(c)+'</div>'
+ return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. När en action valts kan högst halva förflyttningen användas totalt denna SR.</div>'+combatAttackExecutionHtml(c)+combatAttackTargetSummaryHtml(c)+'</div>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
