@@ -689,6 +689,110 @@ function combatReactionPromptHtml(){
   '</div>'+
  '</section>'
 }
+function combatAttackFv(weapon){
+ const fv=combatNumber(weapon?.fv,null);
+ return fv!=null&&fv>0?Math.floor(fv):null
+}
+function combatOutcomeLabel(outcome){
+ return {
+  success:'LYCKAT SLAG',
+  fail:'MISSLYCKAT SLAG',
+  special:'SÄRSKILT SLAG',
+  perfect:'PERFEKT SLAG',
+  fumble:'FUMMELSLAG'
+ }[outcome]||String(outcome||'').toUpperCase()
+}
+function combatAttackResultHtml(action){
+ if(!action||action.action_type!=='attack'||!action.result?.outcome)return '';
+ const result=action.result,outcome=result.outcome,full=result.full_damage===true;
+ return '<div class="combat-attack-result '+escAttr(outcome)+'">'+
+  '<div><span>Attackslag</span><b>'+escAttr(combatOutcomeLabel(outcome))+'</b></div>'+
+  '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
+   (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
+  '</div>'+
+  (full?'<strong>FULL SKADA</strong>':'')+
+ '</div>'
+}
+async function combatResolveAttackAction(actor,target,action,weapon){
+ const fv=combatAttackFv(weapon);
+ if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
+ const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
+ const first=await combatRollDice([{qty:1,sides:20}],label);
+ const roll=Number(first?.rolls?.[0]?.value);
+ if(!Number.isInteger(roll))throw new Error('Attackslaget gav inget giltigt T20-resultat.');
+ const ctx={target:fv,baseTarget:fv,skillConfirmKind:null};
+ let resolution=typeof expertSkillInitialResolution==='function'
+  ?expertSkillInitialResolution(ctx,roll)
+  :{outcome:(roll!==20&&roll<=fv)?'success':'fail'};
+ let confirmationRoll=null,outcome=resolution.outcome;
+ if(!outcome&&resolution.confirm){
+  ctx.skillConfirmKind=resolution.confirm;
+  await new Promise(resolve=>setTimeout(resolve,520));
+  const confirm=await combatRollDice([{qty:1,sides:20}],label+' · kontrollslag');
+  confirmationRoll=Number(confirm?.rolls?.[0]?.value);
+  if(!Number.isInteger(confirmationRoll))throw new Error('Kontrollslaget gav inget giltigt T20-resultat.');
+  outcome=typeof expertSkillConfirmationResolution==='function'
+   ?expertSkillConfirmationResolution(ctx,confirmationRoll)
+   :resolution.fallback
+ }
+ const success=['success','special','perfect'].includes(outcome);
+ const fullDamage=outcome==='special'||outcome==='perfect';
+ const result={
+  success,outcome,roll,confirmation_roll:confirmationRoll,fv,
+  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',
+  full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
+  rule_engine:'expert_skill'
+ };
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({
+   target_combatant_id:target.id,status:'resolved',result,updated_at:new Date().toISOString()
+  })
+ });
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+  phase:'attack',actor_id:actor.id,target_id:target.id,event_type:'attack',
+  message:actor.name_snapshot+' attackerar '+target.name_snapshot+' med '+(weapon?.name||'vapen')+
+   ' · T20 '+roll+(confirmationRoll!=null?' / kontroll '+confirmationRoll:'')+
+   ' mot FV '+fv+' · '+combatOutcomeLabel(outcome)+(fullDamage?' · FULL SKADA':''),
+  details:result,player_visible:true
+ })});
+ return result
+}
+async function rollCombatAttack(actorId,targetId){
+ if(combatDiceBusy||!combatCanManage())return;
+ const actor=combatants.find(row=>String(row.id)===String(actorId));
+ const target=combatants.find(row=>String(row.id)===String(targetId));
+ const action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(!actor||!target||!action||def?.type!=='attack'||!combatIsActiveTurn(actor)||action.status!=='planned')return;
+ const weapon=combatActionWeapon(actor,action,def.mode);
+ if(!weapon)return;
+ const possible=combatPossibleAttackTargets(actor,def.mode,weapon);
+ if(!possible.has(String(target.id)))return;
+ try{
+  await combatResolveAttackAction(actor,target,action,weapon);
+  await loadActiveCombat()
+ }catch(error){
+  console.error('Kunde inte slå attack',error);
+  alert('Attackslaget kunde inte genomföras: '+(error?.message||error))
+ }
+}
+function combatAttackExecutionHtml(target){
+ const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(!actor||!target||!action||def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return '';
+ if(action.result?.outcome&&String(action.target_combatant_id||'')===String(target.id))return combatAttackResultHtml(action);
+ if(action.status!=='planned')return '';
+ const weapon=combatActionWeapon(actor,action,def.mode);
+ if(!weapon)return '';
+ const possible=combatPossibleAttackTargets(actor,def.mode,weapon);
+ if(!possible.has(String(target.id)))return '';
+ const fv=combatAttackFv(weapon);
+ if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slås ännu.</span></div>';
+ return '<div class="combat-attack-execute">'+
+  '<div><span>Valt mål</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' · FV '+fv+'</small></div>'+
+  '<button type="button" class="btn combat-attack-roll-btn" onclick="rollCombatAttack(\''+actor.id+'\',\''+target.id+'\')">🎲 Slå attack 1T20</button>'+
+ '</div>'
+}
 async function chooseCombatAttackWeapon(combatantId,weaponKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
@@ -1129,7 +1233,7 @@ function combatAttackTargetSummaryHtml(combatant){
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. När en action valts kan högst halva förflyttningen användas totalt denna SR.</div>'+combatAttackTargetSummaryHtml(c)+combatActionChooserHtml(c)+'</div>'
+ return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div><div class="combat-target-stat"><span>Halv förflyttning</span><b>'+combatHalfMoveLimit(c)+' poäng</b></div><div class="combat-target-note"><b>Tydlig markering:</b> målet nås inom högst halva förflyttningsförmågan och handlingen finns kvar. <b>Diffus markering:</b> målet kräver mer än halva förflyttningen och förbrukar handlingen. När en action valts kan högst halva förflyttningen användas totalt denna SR.</div>'+combatAttackExecutionHtml(c)+combatAttackTargetSummaryHtml(c)+combatActionChooserHtml(c)+'</div>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
