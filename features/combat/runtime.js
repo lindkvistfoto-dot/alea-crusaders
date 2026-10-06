@@ -1441,6 +1441,75 @@ function selectCombatTarget(id){
  combatSelectedTargetId=id||null;renderCombat()
 }
 function combatTokenInitials(name){let a=String(name||'?').trim().split(/\s+/).filter(Boolean);return(a.length>1?(a[0][0]+a[a.length-1][0]):a[0]?.slice(0,2)||'?').toUpperCase()}
+function combatPlayerMiniatureKind(combatant){
+ if(combatant?.source_type!=='character')return null;
+ const explicit=String(combatant?.state?.miniature_kind||'').toLowerCase();
+ if(['warrior','wizard','duck'].includes(explicit))return explicit;
+ const name=String(combatant?.name_snapshot||'').toLowerCase();
+ if(name.includes('astrid'))return 'warrior';
+ if(name.includes('lyra'))return 'wizard';
+ if(name.includes('evalin'))return 'duck';
+ return null
+}
+function combatMiniatureDefs(){
+ return '<defs>'+
+  '<linearGradient id="miniMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f2f3"/><stop offset=".45" stop-color="#8e989e"/><stop offset="1" stop-color="#444d52"/></linearGradient>'+
+  '<linearGradient id="miniBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#315c8e"/><stop offset="1" stop-color="#142e50"/></linearGradient>'+
+  '<linearGradient id="miniGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#557c43"/><stop offset="1" stop-color="#223a25"/></linearGradient>'+
+  '<linearGradient id="miniLeather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9d6d3e"/><stop offset="1" stop-color="#4f301f"/></linearGradient>'+
+  '<radialGradient id="miniMagic"><stop offset="0" stop-color="#d8fbff"/><stop offset=".35" stop-color="#59d9ff"/><stop offset="1" stop-color="#2775d8" stop-opacity=".15"/></radialGradient>'+
+  '<filter id="miniDrop" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".55"/></filter>'+
+ '</defs>'
+}
+function combatMiniatureWarrior(){
+ return '<g class="mini-figure mini-warrior" filter="url(#miniDrop)">'+
+  '<path d="M-10 5 L-8 -13 L-2 -17 L0 6 Z" fill="#5b3928"/><path d="M10 5 L8 -13 L2 -17 L0 6 Z" fill="#5b3928"/>'+
+  '<path d="M-12 -12 L-9 -31 Q0 -38 9 -31 L12 -12 L7 -2 L-7 -2 Z" fill="url(#miniMetal)" stroke="#d9b25b" stroke-width="1.5"/>'+
+  '<path d="M-9 -29 Q0 -35 9 -29 L7 -19 L-7 -19 Z" fill="#6e3030" opacity=".75"/>'+
+  '<circle cx="0" cy="-39" r="7" fill="#e7b18c" stroke="#5b3427" stroke-width="1.5"/>'+
+  '<path d="M-7 -42 Q0 -51 8 -42 Q3 -45 -1 -43 Q-4 -38 -8 -36 Z" fill="#8a3f27"/>'+
+  '<path d="M-11 -28 L-23 -20" stroke="url(#miniMetal)" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M-23 -20 L-34 -34" stroke="#d8dfe2" stroke-width="3.2" stroke-linecap="round"/><path d="M-29 -29 L-35 -26" stroke="#d1a247" stroke-width="2"/>'+
+  '<path d="M11 -28 L23 -23" stroke="url(#miniMetal)" stroke-width="6" stroke-linecap="round"/>'+
+  '<path d="M20 -32 Q31 -29 30 -13 Q22 -8 16 -17 Z" fill="#68727a" stroke="#d0a84f" stroke-width="2"/><path d="M21 -25 L28 -20 M25 -29 L22 -14" stroke="#d0a84f" stroke-width="1.5"/>'+
+ '</g>'
+}
+function combatMiniatureWizard(){
+ return '<g class="mini-figure mini-wizard" filter="url(#miniDrop)">'+
+  '<path d="M0 -3 L-17 -6 L-11 -31 Q0 -38 11 -31 L17 -6 Z" fill="url(#miniBlue)" stroke="#c7a45b" stroke-width="1.4"/>'+
+  '<path d="M-7 -33 Q0 -45 7 -33 L4 -27 L-4 -27 Z" fill="#152b4c" stroke="#c7a45b" stroke-width="1.3"/>'+
+  '<circle cx="0" cy="-36" r="5.5" fill="#e5b38e"/>'+
+  '<path d="M-4 -38 Q0 -44 6 -37" stroke="#d7d1c8" stroke-width="3" fill="none"/>'+
+  '<path d="M-9 -27 L-23 -17" stroke="#e7d7bf" stroke-width="5" stroke-linecap="round"/>'+
+  '<path d="M-23 -44 L-23 -7" stroke="#6a4525" stroke-width="3.2" stroke-linecap="round"/><circle cx="-23" cy="-47" r="5" fill="url(#miniMagic)" stroke="#81e4ff" stroke-width="1.5"/>'+
+  '<path d="M10 -26 Q20 -23 24 -31" stroke="#e7d7bf" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+  '<circle cx="27" cy="-34" r="7" fill="url(#miniMagic)"/><path d="M20 -34 Q27 -43 34 -34 Q27 -25 20 -34 Z" fill="none" stroke="#8de7ff" stroke-width="1.4" opacity=".9"/>'+
+ '</g>'
+}
+function combatMiniatureDuck(){
+ return '<g class="mini-figure mini-duck" filter="url(#miniDrop)">'+
+  '<path d="M-12 -2 Q-12 -24 -6 -30 Q0 -35 8 -28 Q13 -17 11 -2 Z" fill="url(#miniGreen)" stroke="#263c25" stroke-width="1.4"/>'+
+  '<circle cx="0" cy="-36" r="8" fill="#f3efe1" stroke="#b9aa91" stroke-width="1.1"/>'+
+  '<path d="M6 -37 L18 -33 L6 -29 Z" fill="#e99b25" stroke="#9c5f16" stroke-width="1"/>'+
+  '<circle cx="-2" cy="-38" r="1.7" fill="#2b211b"/>'+
+  '<path d="M-7 -42 Q0 -50 9 -42 L11 -37 Q0 -40 -8 -36 Z" fill="#315b35" stroke="#213a25" stroke-width="1.2"/><path d="M4 -48 L12 -54" stroke="#b04d28" stroke-width="2.5" stroke-linecap="round"/>'+
+  '<path d="M-7 -25 L-20 -18" stroke="#f3efe1" stroke-width="5" stroke-linecap="round"/><path d="M-20 -18 L-30 -29" stroke="#d9d9d6" stroke-width="2.8" stroke-linecap="round"/>'+
+  '<path d="M7 -24 L18 -15" stroke="#f3efe1" stroke-width="5" stroke-linecap="round"/>'+
+  '<path d="M-5 0 L-9 8 M5 0 L9 8" stroke="#d98522" stroke-width="5" stroke-linecap="round"/><path d="M-13 9 L-5 9 M5 9 L13 9" stroke="#e99b25" stroke-width="4" stroke-linecap="round"/>'+
+ '</g>'
+}
+function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
+ const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
+ const scale=Math.max(.55,g.size/42);
+ const figure=kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck();
+ return '<g class="combat-miniature '+kind+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+  '<ellipse class="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
+  '<ellipse class="combat-mini-base" cx="0" cy="7" rx="21" ry="7"/>'+
+  '<ellipse class="combat-mini-base-ring" cx="0" cy="7" rx="21" ry="7"/>'+
+  figure+
+  '<rect class="combat-mini-hit" x="-31" y="-58" width="62" height="72" rx="8"/>'+
+ '</g>'
+}
 function combatHexNeighbors(q,r){
  return [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]]
 }
@@ -1902,22 +1971,27 @@ function renderCombatMap(){
   const clickable=!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+(clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'')+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
  }).join('');
- const tokens=combatants.filter(c=>c.status!=='removed').map(c=>{
+ const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
   const displayQ=isPlanning&&combatMovementPlan?Number(combatMovementPlan.q):Number(c.q)||0;
   const displayR=isPlanning&&combatMovementPlan?Number(combatMovementPlan.r):Number(c.r)||0;
   const key=displayQ+','+displayR;
   let cell=byCoord.get(key);
   if(!cell)cell={x:g.xPitch*(displayQ+displayR/2)+g.offsetX,y:g.rowPitch*displayR+g.offsetY};
+  return{c,isPlanning,cell}
+ }).sort((a,b)=>a.cell.y-b.cell.y);
+ const tokens=tokenRows.map(({c,isPlanning,cell})=>{
   const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
   const attack=attackTargets.get(String(c.id)),targetClass=attack?' attack-target':'',planningClass=isPlanning?' movement-planning':'';
   const targetTitle=attack?' · möjligt mål · '+attack.distance+' hex':'';
-  return '<g class="combat-token-group'+planningClass+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'><circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text></g>'
+  const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass);
+  const visual=miniature||('<circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text>');
+  return '<g class="combat-token-group'+planningClass+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+visual+'<title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
  }).join('');
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onpointermove="combatMovementDragMove(event)" onpointerup="combatMovementDragEnd(event)" onpointercancel="combatMovementDragEnd(event)">'+image+terrain+tokens+'</svg>'
+ return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onpointermove="combatMovementDragMove(event)" onpointerup="combatMovementDragEnd(event)" onpointercancel="combatMovementDragEnd(event)">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
 }
 
 function combatantCard(c,index=0){
