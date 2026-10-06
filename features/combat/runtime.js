@@ -484,19 +484,26 @@ async function combatStartScene(sceneId,{reset=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  const previousCombatId=activeCombat?.id||null;
+ let replacementCombatId=null,replacementCommitted=false;
  try{
   const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null;
-  const instanceId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot});
+  replacementCombatId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot});
   combatSelectedSceneId=String(scene.id);
-  await loadActiveCombat(instanceId);
-  if(String(activeCombat?.id||'')!==String(instanceId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
-  if(!reset)await combatRollAndApplyInitiative(instanceId);
-  if(previousCombatId&&String(previousCombatId)!==String(instanceId))await combatDeleteRuntime(previousCombatId);
-  await loadActiveCombat(instanceId);
+  await loadActiveCombat(replacementCombatId);
+  if(String(activeCombat?.id||'')!==String(replacementCombatId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
+  if(!reset)await combatRollAndApplyInitiative(replacementCombatId);
+  if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId))await combatDeleteRuntime(previousCombatId);
+  replacementCommitted=true;
+  await loadActiveCombat(replacementCombatId);
  }catch(e){
   console.error('Kunde inte starta stridsscen',e);
-  if(previousCombatId){
+  if(replacementCombatId&&!replacementCommitted){
+   try{await combatDeleteRuntime(replacementCombatId)}catch(cleanupError){console.error('Kunde inte återställa efter misslyckat byte av stridsruntime',cleanupError)}
+  }
+  if(previousCombatId&&!replacementCommitted){
    try{await loadActiveCombat(previousCombatId)}catch(_error){}
+  }else if(replacementCombatId&&replacementCommitted){
+   try{await loadActiveCombat(replacementCombatId)}catch(_error){}
   }
   alert((reset?'Reset':'Play')+' kunde inte genomföras: '+(e?.message||e))
  }finally{
