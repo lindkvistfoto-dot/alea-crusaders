@@ -318,6 +318,7 @@ const COMBAT_PRIMARY_ACTIONS=[
  {key:'attack_ranged',type:'attack',label:'Avståndsanfall',icon:'🏹',mode:'ranged'},
  {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction'},
  {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
+ {key:'spell_cast',type:'spell',label:'Lägg besvärjelse',icon:'🔮',mode:'cast'},
  {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full'},
  {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
 ];
