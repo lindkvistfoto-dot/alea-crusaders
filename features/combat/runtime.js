@@ -72,6 +72,8 @@ async function combatRollDice(specs,label='Slag'){
  if(!clean.length)return null;
  combatDiceBusy=true;combatDiceLastRoll=null;
  combatPositionDiceLayer();
+ const outcomeHost=$('combatDiceReadout');
+ outcomeHost?.classList.remove('success','fail','special','perfect','fumble','outcome-show');
  const layer=$('combatDiceLayer'),readout=$('combatDiceReadout');
  layer?.classList.add('rolling');
  if(readout){readout.innerHTML='<b>'+escAttr(label)+'</b><span>Tärningarna rullar…</span>';readout.classList.add('show')}
@@ -693,20 +695,29 @@ function combatAttackFv(weapon){
  const fv=combatNumber(weapon?.fv,null);
  return fv!=null&&fv>0?Math.floor(fv):null
 }
-function combatOutcomeLabel(outcome){
+function combatOutcomeMeta(outcome){
+ if(typeof expertOutcomePresentation==='function')return expertOutcomePresentation(outcome);
  return {
-  success:'LYCKAT SLAG',
-  fail:'MISSLYCKAT SLAG',
-  special:'SÄRSKILT SLAG',
-  perfect:'PERFEKT SLAG',
-  fumble:'FUMMELSLAG'
- }[outcome]||String(outcome||'').toUpperCase()
+  fail:{label:'MISSLYCKAT SLAG',cls:'fail',icon:'✕',tier:'normal'},
+  success:{label:'LYCKAT SLAG',cls:'success',icon:'✓',tier:'normal'},
+  special:{label:'SÄRSKILT SLAG',cls:'special',icon:'✦',tier:'major'},
+  perfect:{label:'PERFEKT SLAG',cls:'perfect',icon:'★',tier:'critical'},
+  fumble:{label:'FUMMELSLAG',cls:'fumble',icon:'⚠',tier:'critical'}
+ }[outcome]||{label:String(outcome||'').toUpperCase(),cls:'fail',icon:'?',tier:'normal'}
+}
+function combatOutcomeLabel(outcome){return combatOutcomeMeta(outcome).label}
+function combatShowOutcomeOverlay(outcome,context=''){
+ const host=$('combatDiceReadout');if(!host)return;
+ const meta=combatOutcomeMeta(outcome);
+ host.classList.remove('success','fail','special','perfect','fumble','outcome-show');
+ host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span><div class="combat-outcome-copy"><b>'+escAttr(meta.label)+'</b>'+(context?'<span>'+escAttr(context)+'</span>':'')+'</div>';
+ host.classList.add('show','outcome-show',meta.cls)
 }
 function combatAttackResultHtml(action){
  if(!action||action.action_type!=='attack'||!action.result?.outcome)return '';
- const result=action.result,outcome=result.outcome,full=result.full_damage===true;
+ const result=action.result,outcome=result.outcome,full=result.full_damage===true,meta=combatOutcomeMeta(outcome);
  return '<div class="combat-attack-result '+escAttr(outcome)+'">'+
-  '<div><span>Attackslag</span><b>'+escAttr(combatOutcomeLabel(outcome))+'</b></div>'+
+  '<div><span>Attackslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
   '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
   '</div>'+
@@ -818,6 +829,7 @@ async function combatResolveAttackAction(actor,target,action,weapon){
    body:JSON.stringify({result,updated_at:new Date().toISOString()})
   })
  }
+ combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+roll+' mot FV '+fv);
  return result
 }
 async function rollCombatAttack(actorId,targetId){
