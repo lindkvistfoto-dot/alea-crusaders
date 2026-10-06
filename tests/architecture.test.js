@@ -415,6 +415,7 @@ describe("application architecture smoke checks", () => {
   test("GM can select, play and reset a combat scene", () => {
     const html = read("index.html");
     const combat = read("features/combat/runtime.js");
+    const legacy = read("legacy/app.js");
     const css = read("src/styles/app.css");
     expect(html).toContain('id="combatGmControls"');
     expect(combat).toContain("async function loadCombatSceneChoices");
