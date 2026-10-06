@@ -1957,3 +1957,62 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-hex.move-blocked{
  cursor:not-allowed;
 }
+
+
+/* v0.33.3 — halv förflyttning behåller handling */
+.combat-hex.move-reachable.move-action-kept{
+ fill:rgba(64,178,89,.38);
+ stroke:#82e296;
+ stroke-width:2.8;
+}
+.combat-hex.move-reachable.move-action-spent{
+ fill:rgba(74,156,92,.11);
+ stroke:rgba(114,207,134,.48);
+ stroke-width:1.5;
+}
+.combat-hex.move-reachable.difficult.move-action-kept{
+ fill:rgba(214,162,55,.40);
+ stroke:#f0c96e;
+ stroke-width:2.8;
+}
+.combat-hex.move-reachable.difficult.move-action-spent{
+ fill:rgba(194,145,52,.12);
+ stroke:rgba(228,188,103,.50);
+ stroke-width:1.5;
+}
+.combat-board-legends{
+ display:flex;
+ align-items:center;
+ justify-content:flex-end;
+ gap:12px;
+ flex-wrap:wrap;
+}
+.combat-move-legend{
+ display:flex;
+ gap:8px;
+ align-items:center;
+ font-size:11px;
+ color:#cdbb9d;
+}
+.combat-move-legend span{
+ display:inline-flex;
+ align-items:center;
+ gap:5px;
+ white-space:nowrap;
+}
+.combat-move-legend span:before{
+ content:'⬡';
+ font-size:14px;
+}
+.combat-move-legend .keep-action:before{
+ color:#82e296;
+ text-shadow:0 0 5px rgba(130,226,150,.45);
+}
+.combat-move-legend .spend-action:before{
+ color:rgba(114,207,134,.46);
+}
+@media(max-width:700px){
+ .combat-board-head{align-items:flex-start}
+ .combat-board-legends{gap:5px;justify-content:flex-end}
+ .combat-move-legend{width:100%;justify-content:flex-end}
+}
