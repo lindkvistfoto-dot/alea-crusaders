@@ -12,9 +12,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.33.18");
-    expect(html).toContain("./features/character/glowup.js?v=0.33.18");
-    expect(html).toContain("./features/map/glowup.css?v=0.33.18");
+    expect(html).toContain("./features/character/glowup.css?v=0.33.19");
+    expect(html).toContain("./features/character/glowup.js?v=0.33.19");
+    expect(html).toContain("./features/map/glowup.css?v=0.33.19");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -405,9 +405,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.18");
-    expect(html).toContain("app.css?v=0.33.18");
-    expect(html).toContain("legacy/app.js?v=0.33.18");
+    expect(html).toContain("Alea Crusaders v0.33.19");
+    expect(html).toContain("app.css?v=0.33.19");
+    expect(html).toContain("legacy/app.js?v=0.33.19");
   });
 
 
@@ -495,6 +495,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function rollCombatAttack");
     expect(legacy).toContain("async function awardCharacterErfItem");
     expect(legacy).toContain("async function loadRuleCombatFumbles");
+    expect(legacy).toContain("async function loadRuleSocialStands");
+    expect(legacy).toContain("function socialStandOptions");
+    expect(legacy).toContain("rule_social_stands?ruleset=eq.dod_expert");
+    expect(legacy).toContain("socialStandOptions(i.stand)");
+    expect(legacy).toContain("function renderAdminSocialStands");
+    expect(legacy).toContain("function editRuleSocialStand");
+    expect(legacy).toContain("function saveRuleSocialStand");
     expect(legacy).toContain("function ruleCombatFumble");
     expect(legacy).toContain("rule_combat_fumbles?ruleset=eq.dod_expert");
     expect(legacy).toContain("loadRuleCombatFumbles()");
@@ -522,6 +529,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatResolveDiceRows");
     expect(combat).toContain("window.alea3dCombatRoll");
     expect(combat).toContain("combatDiceLastRoll");
+    expect(html).toContain('data-admin-section="stands"');
+    expect(html).toContain('id="adminSocialStandTable"');
+    expect(html).toContain('id="adminCountStands"');
     expect(html).toContain('id="combatDiceHost"');
     expect(html).toContain('id="combatDiceReadout"');
     expect(combat).toContain("key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse'");
@@ -607,6 +617,7 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-attack-execute{");
     expect(css).toContain(".combat-attack-result{");
     expect(css).toContain(".combat-fumble-results{");
+    expect(css).toContain(".adminstandtable{");
     expect(css).toContain(".combat-fumble-row{");
     expect(css).toContain(".combat-dice-readout.fumble-detail");
     expect(css).toContain(".roll-outcome.special{");
@@ -630,7 +641,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.33.18");
+    expect(html).toContain("./features/map/glowup.css?v=0.33.19");
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -644,7 +655,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.33.18");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.33.19");
     expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
@@ -657,8 +668,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.33.18");
-    expect(html).toContain("./features/shop/store.js?v=0.33.18");
+    expect(html).toContain("./features/shop/store.css?v=0.33.19");
+    expect(html).toContain("./features/shop/store.js?v=0.33.19");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -762,8 +773,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innPage"');
     expect(html).toContain('id="innCartLines"');
     expect(html).toContain('id="innBuyerSelect"');
-    expect(html).toContain("./features/inn/inn.css?v=0.33.18");
-    expect(html).toContain("./features/inn/inn.js?v=0.33.18");
+    expect(html).toContain("./features/inn/inn.css?v=0.33.19");
+    expect(html).toContain("./features/inn/inn.js?v=0.33.19");
     expect(inn).toContain("rule_inn_items?active=eq.true");
     expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
     expect(html).not.toContain('id="innCategories"');
@@ -863,7 +874,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const inn = read("features/inn/inn.js");
     expect(html).toContain('id="innHeroImage"');
-    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.33.18");
+    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.33.19");
     expect(inn).toContain("shopCurrencyAmountHtml");
     expect(inn).toContain("shopMoneyHtml");
   });
