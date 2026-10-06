@@ -11,7 +11,7 @@ let shopBuyerId='';
 let shopCheckoutBusy=false;
 let shopExpandedItemKey='';
 const shopRowQuantities=new Map();
-const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.33.19';
+const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.33.20';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
