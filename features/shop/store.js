@@ -11,7 +11,7 @@ let shopBuyerId='';
 let shopCheckoutBusy=false;
 let shopExpandedItemKey='';
 const shopRowQuantities=new Map();
-const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.29';
+const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.31.30';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
@@ -147,11 +147,42 @@ function shopCategories(){
   return [...ordered,...extra];
 }
 
+const SHOP_CURRENCY_NAMES={GM:'guldmynt',SM:'silvermynt',KM:'kopparmynt'};
+
+function shopCoinHtml(currency){
+  const code=['GM','SM','KM'].includes(currency)?currency:'SM';
+  const name=SHOP_CURRENCY_NAMES[code];
+  const motif=code==='GM'
+    ?'<path class="shop-coin-mark" d="M5.4 11.9 6.5 7.8l2.2 2 1.3-3.2 1.3 3.2 2.2-2 1.1 4.1z"/><path class="shop-coin-mark" d="M6.2 13.4h7.6"/>'
+    :code==='SM'
+      ?'<path class="shop-coin-mark" d="m10 5.2 1.35 2.73 3.01.44-2.18 2.12.52 3-2.7-1.42-2.7 1.42.52-3-2.18-2.12 3.01-.44z"/>'
+      :'<circle class="shop-coin-mark shop-coin-dot" cx="10" cy="10" r="2.8"/><circle class="shop-coin-mark" cx="10" cy="10" r="4.7"/>';
+  return '<span class="shop-coin shop-coin-'+code.toLowerCase()+'" title="'+shopEsc(name)+'" aria-hidden="true">'+
+    '<svg viewBox="0 0 20 20" focusable="false">'+
+      '<circle class="shop-coin-rim" cx="10" cy="10" r="9"/>'+
+      '<circle class="shop-coin-face" cx="10" cy="10" r="7"/>'+
+      motif+
+    '</svg>'+
+  '</span>';
+}
+
+function shopCurrencyAmountHtml(amount,currency){
+  const code=['GM','SM','KM'].includes(currency)?currency:'SM';
+  const value=Number(amount);
+  const text=Number.isInteger(value)?String(value):String(value).replace('.',',');
+  return '<span class="shop-money-unit"><span class="shop-money-amount">'+shopEsc(text)+'</span>'+shopCoinHtml(code)+'<span class="shop-money-sr">'+shopEsc(SHOP_CURRENCY_NAMES[code])+'</span></span>';
+}
+
 function shopPriceLabel(item){
   if(item.priceAmount===null||item.priceAmount===undefined||Number.isNaN(Number(item.priceAmount)))return 'Pris saknas';
   const amount=Number(item.priceAmount);
   const text=Number.isInteger(amount)?String(amount):String(amount).replace('.',',');
   return text+' '+shopEsc(item.priceCurrency||'SM');
+}
+
+function shopPriceHtml(item){
+  if(item.priceAmount===null||item.priceAmount===undefined||Number.isNaN(Number(item.priceAmount)))return 'Pris saknas';
+  return shopCurrencyAmountHtml(item.priceAmount,item.priceCurrency||'SM');
 }
 
 function shopBepLabel(item){
@@ -225,7 +256,7 @@ function renderShopItems(){
     return '<article class="shop-item-row '+(expanded?'expanded':'')+'">'+
       '<div class="shop-item-main">'+
         '<button type="button" class="shop-item-name" aria-expanded="'+(expanded?'true':'false')+'" onclick="shopToggleItemDetails(\''+key+'\')">'+shopEsc(item.name)+'</button>'+
-        '<span class="shop-item-price">'+shopPriceLabel(item)+'</span>'+
+        '<span class="shop-item-price">'+shopPriceHtml(item)+'</span>'+
         '<div class="shop-row-stepper" aria-label="Antal">'+
           '<button type="button" onclick="shopChangeRowQuantity(\''+key+'\',-1)" aria-label="Minska antal">−</button>'+
           '<span>'+qty+'</span>'+
@@ -236,7 +267,7 @@ function renderShopItems(){
       '<div class="shop-item-details '+(expanded?'':'hidden')+'">'+
         (details?'<div class="shop-item-meta">'+details+'</div>':'')+
         description+
-        '<div class="shop-item-detail-price">Pris: <b>'+shopPriceLabel(item)+'</b></div>'+
+        '<div class="shop-item-detail-price">Pris: <b>'+shopPriceHtml(item)+'</b></div>'+
       '</div>'+
     '</article>';
   }).join('');
@@ -331,6 +362,15 @@ function shopMoneyLabel(totalKm){
   return parts.join(' · ');
 }
 
+function shopMoneyHtml(totalKm){
+  const c=shopMoneyBreakdown(totalKm);
+  const parts=[];
+  if(c.GM)parts.push(shopCurrencyAmountHtml(c.GM,'GM'));
+  if(c.SM)parts.push(shopCurrencyAmountHtml(c.SM,'SM'));
+  if(c.KM||!parts.length)parts.push(shopCurrencyAmountHtml(c.KM,'KM'));
+  return '<span class="shop-money">'+parts.join('<span class="shop-money-sep" aria-hidden="true">·</span>')+'</span>';
+}
+
 function shopEnsureCoins(c){
   if(!c)return null;
   c.coins=c.coins||{};
@@ -394,9 +434,9 @@ function renderShopBuyer(){
     return;
   }
   const funds=shopCarriedValueKm(buyer);
-  balance.innerHTML='<span>Börs (buret): <b>'+shopMoneyLabel(funds)+'</b></span>'+(cost>funds?'<span class="shop-insufficient">Saknar '+shopMoneyLabel(cost-funds)+'</span>':'');
+  balance.innerHTML='<span>Börs (buret): <b>'+shopMoneyHtml(funds)+'</b></span>'+(cost>funds?'<span class="shop-insufficient">Saknar '+shopMoneyHtml(cost-funds)+'</span>':'');
   button.disabled=shopCheckoutBusy||!rows.length||cost>funds;
-  button.textContent=shopCheckoutBusy?'Genomför köp…':'Köp för '+shopMoneyLabel(cost);
+  button.innerHTML=shopCheckoutBusy?'Genomför köp…':'Köp för '+shopMoneyHtml(cost);
 }
 
 function shopArmorInstance(item){
@@ -549,13 +589,13 @@ function renderShopCart(){
   clear?.classList.toggle('hidden',!rows.length);
   if(!rows.length){
     host.innerHTML='<div class="shop-cart-empty">Targan väntar på din beställning.</div>';
-    total.textContent='0 KM';
+    total.innerHTML=shopMoneyHtml(0);
     renderShopBuyer();
     return;
   }
   host.innerHTML=rows.map(({row,item})=>
     '<div class="shop-cart-line">'+
-      '<div class="shop-cart-copy"><b>'+shopEsc(item.name)+'</b><small>'+shopPriceLabel(item)+' / köp</small></div>'+
+      '<div class="shop-cart-copy"><b>'+shopEsc(item.name)+'</b><small>'+shopPriceHtml(item)+' / köp</small></div>'+
       '<div class="shop-cart-stepper">'+
         '<button type="button" onclick="shopChangeQuantity(\''+shopEsc(row.key)+'\',-1)">−</button>'+
         '<span>'+row.qty+'</span>'+
@@ -564,7 +604,7 @@ function renderShopCart(){
       '<button type="button" class="shop-cart-remove" onclick="shopRemoveItem(\''+shopEsc(row.key)+'\')" aria-label="Ta bort '+shopEsc(item.name)+'">×</button>'+
     '</div>'
   ).join('');
-  total.textContent=shopMoneyLabel(shopCartCostKm(rows));
+  total.innerHTML=shopMoneyHtml(shopCartCostKm(rows));
   renderShopBuyer();
 }
 

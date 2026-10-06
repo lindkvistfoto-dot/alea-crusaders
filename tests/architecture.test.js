@@ -12,9 +12,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.31.29");
-    expect(html).toContain("./features/character/glowup.js?v=0.31.29");
-    expect(html).toContain("./features/map/glowup.css?v=0.31.29");
+    expect(html).toContain("./features/character/glowup.css?v=0.31.30");
+    expect(html).toContain("./features/character/glowup.js?v=0.31.30");
+    expect(html).toContain("./features/map/glowup.css?v=0.31.30");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -405,9 +405,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.29");
-    expect(html).toContain("app.css?v=0.31.29");
-    expect(html).toContain("legacy/app.js?v=0.31.29");
+    expect(html).toContain("Alea Crusaders v0.31.30");
+    expect(html).toContain("app.css?v=0.31.30");
+    expect(html).toContain("legacy/app.js?v=0.31.30");
   });
 
 
@@ -415,7 +415,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.31.29");
+    expect(html).toContain("./features/map/glowup.css?v=0.31.30");
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -429,7 +429,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.31.29");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.31.30");
     expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
@@ -442,8 +442,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.29");
-    expect(html).toContain("./features/shop/store.js?v=0.31.29");
+    expect(html).toContain("./features/shop/store.css?v=0.31.30");
+    expect(html).toContain("./features/shop/store.js?v=0.31.30");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -520,5 +520,23 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain("grid-template-columns:minmax(0,1fr) 78px 86px 54px");
     expect(css).toContain(".shop-item-details.hidden{display:none}");
   });
+  test("Targans Gille renders GM SM KM as distinct coin icons", () => {
+    const shop = read("features/shop/store.js");
+    const css = read("features/shop/store.css");
+    expect(shop).toContain("function shopCoinHtml");
+    expect(shop).toContain("function shopCurrencyAmountHtml");
+    expect(shop).toContain("function shopPriceHtml");
+    expect(shop).toContain("function shopMoneyHtml");
+    expect(shop).toContain("shop-coin-gm");
+    expect(shop).toContain("shop-coin-sm");
+    expect(shop).toContain("shop-coin-km");
+    expect(shop).toContain("button.innerHTML=shopCheckoutBusy");
+    expect(shop).toContain("total.innerHTML=shopMoneyHtml");
+    expect(css).toContain(".shop-coin-gm{");
+    expect(css).toContain(".shop-coin-sm{");
+    expect(css).toContain(".shop-coin-km{");
+    expect(css).toContain(".shop-money-sr{");
+  });
+
 
 });
