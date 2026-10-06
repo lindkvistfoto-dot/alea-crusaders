@@ -1,11 +1,14 @@
 /* Värdshus — player-facing lodging, meals and services. */
 const INN_CART_STORAGE_KEY='alea_inn_cart_v1';
-const INN_CATEGORY_ORDER=['Alla','Boende','Mat & dryck','Tjänster'];
+const INN_SECTIONS=[
+  {category:'Boende',title:'Boende'},
+  {category:'Mat & dryck',title:'Mat'},
+  {category:'Tjänster',title:'Tjänster'}
+];
 const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.0';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
-let innCategory='Alla';
 let innSearch='';
 let innCart=loadInnCart();
 let innBuyerId='';
@@ -75,17 +78,9 @@ async function loadInnCatalog(force=false){
   }
 }
 
-function innCategories(){
-  const found=new Set(innCatalog.map(item=>item.category).filter(Boolean));
-  const ordered=INN_CATEGORY_ORDER.filter(name=>name==='Alla'||found.has(name));
-  const extra=[...found].filter(name=>!INN_CATEGORY_ORDER.includes(name)).sort((a,b)=>a.localeCompare(b,'sv'));
-  return [...ordered,...extra];
-}
-
 function innFilteredItems(){
   const query=innSearch.trim().toLocaleLowerCase('sv-SE');
   return innCatalog.filter(item=>{
-    if(innCategory!=='Alla'&&item.category!==innCategory)return false;
     if(!query)return true;
     return [item.name,item.description,item.category,item.unitLabel,item.itemKey]
       .join(' ')
@@ -128,12 +123,29 @@ function innDetailsHtml(item){
   return pills.join('');
 }
 
-function renderInnCategories(){
-  const host=document.getElementById('innCategories');
-  if(!host)return;
-  host.innerHTML=innCategories().map(name=>
-    '<button type="button" class="shop-category '+(name===innCategory?'active':'')+'" onclick="innSetCategory(\''+shopEsc(name).replaceAll("'","\\'")+'\')">'+shopEsc(name)+'</button>'
-  ).join('');
+function innItemRowHtml(item){
+  const key=shopEsc(item.key);
+  const qty=innRowQuantity(item.key);
+  const expanded=innExpandedItemKey===item.key;
+  const description=item.description?'<p>'+shopEsc(item.description)+'</p>':'';
+  const details=innDetailsHtml(item);
+  return '<article class="shop-item-row '+(expanded?'expanded':'')+'">'+
+    '<div class="shop-item-main">'+
+      '<button type="button" class="shop-item-name" aria-expanded="'+(expanded?'true':'false')+'" onclick="innToggleItemDetails(\''+key+'\')">'+shopEsc(item.name)+'</button>'+
+      '<span class="shop-item-price">'+innPriceHtml(item)+'</span>'+
+      '<div class="shop-row-stepper" aria-label="Antal">'+
+        '<button type="button" onclick="innChangeRowQuantity(\''+key+'\',-1)" aria-label="Minska antal">−</button>'+
+        '<span>'+qty+'</span>'+
+        '<button type="button" onclick="innChangeRowQuantity(\''+key+'\',1)" aria-label="Öka antal">+</button>'+
+      '</div>'+
+      '<button type="button" class="shop-row-buy" onclick="innAddItem(\''+key+'\','+qty+')">Beställ</button>'+
+    '</div>'+
+    '<div class="shop-item-details '+(expanded?'':'hidden')+'">'+
+      (details?'<div class="shop-item-meta inn-item-meta">'+details+'</div>':'')+
+      description+
+      '<div class="shop-item-detail-price">Pris: <b>'+innPriceHtml(item)+'</b></div>'+
+    '</div>'+
+  '</article>';
 }
 
 function renderInnItems(){
@@ -142,33 +154,17 @@ function renderInnItems(){
   const rows=innFilteredItems();
   const count=document.getElementById('innResultCount');
   if(count)count.textContent=rows.length+' alternativ';
-  if(!rows.length){
-    host.innerHTML='<div class="shop-empty"><b>Inget matchar.</b><span>Prova en annan kategori eller sökning.</span></div>';
-    return;
-  }
-  host.innerHTML=rows.map(item=>{
-    const key=shopEsc(item.key);
-    const qty=innRowQuantity(item.key);
-    const expanded=innExpandedItemKey===item.key;
-    const description=item.description?'<p>'+shopEsc(item.description)+'</p>':'';
-    const details=innDetailsHtml(item);
-    return '<article class="shop-item-row '+(expanded?'expanded':'')+'">'+
-      '<div class="shop-item-main">'+
-        '<button type="button" class="shop-item-name" aria-expanded="'+(expanded?'true':'false')+'" onclick="innToggleItemDetails(\''+key+'\')">'+shopEsc(item.name)+'</button>'+
-        '<span class="shop-item-price">'+innPriceHtml(item)+'</span>'+
-        '<div class="shop-row-stepper" aria-label="Antal">'+
-          '<button type="button" onclick="innChangeRowQuantity(\''+key+'\',-1)" aria-label="Minska antal">−</button>'+
-          '<span>'+qty+'</span>'+
-          '<button type="button" onclick="innChangeRowQuantity(\''+key+'\',1)" aria-label="Öka antal">+</button>'+
-        '</div>'+
-        '<button type="button" class="shop-row-buy" onclick="innAddItem(\''+key+'\','+qty+')">Beställ</button>'+
+
+  host.innerHTML=INN_SECTIONS.map(section=>{
+    const sectionRows=rows.filter(item=>item.category===section.category);
+    return '<section class="inn-menu-section" data-inn-category="'+shopEsc(section.category)+'">'+
+      '<h3 class="inn-menu-heading">'+shopEsc(section.title)+'</h3>'+
+      '<div class="inn-menu-list">'+
+        (sectionRows.length
+          ?sectionRows.map(innItemRowHtml).join('')
+          :'<div class="inn-menu-empty">Inga träffar.</div>')+
       '</div>'+
-      '<div class="shop-item-details '+(expanded?'':'hidden')+'">'+
-        (details?'<div class="shop-item-meta inn-item-meta">'+details+'</div>':'')+
-        description+
-        '<div class="shop-item-detail-price">Pris: <b>'+innPriceHtml(item)+'</b></div>'+
-      '</div>'+
-    '</article>';
+    '</section>';
   }).join('');
 }
 
@@ -350,12 +346,6 @@ async function innCheckout(){
   }
 }
 
-function innSetCategory(name){
-  innCategory=name||'Alla';
-  renderInnCategories();
-  renderInnItems();
-}
-
 function innSetSearch(value){
   innSearch=String(value||'');
   renderInnItems();
@@ -380,7 +370,6 @@ async function openInn(){
   void loadInnHeroImage();
   try{
     await loadInnCatalog();
-    renderInnCategories();
     renderInnItems();
     renderInnCart();
     renderInnBuyer();
