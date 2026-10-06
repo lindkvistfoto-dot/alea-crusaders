@@ -142,3 +142,60 @@ window.alea3dInnRoll=async(notation)=>{
 window.alea3dInnClear=async()=>{
  if(innBox)await innBox.clear();
 };
+
+
+let combatBox=null,combatReady=null;
+async function ensureCombatDice3D(){
+ if(combatBox)return combatBox;
+ if(combatReady)return combatReady;
+ combatReady=(async()=>{
+  await waitForDiceHostSelector("#combatDiceHost");
+  const appPath=new URL(".",document.baseURI).pathname;
+  const instance=new DiceBox({
+   container:"#combatDiceHost",
+   id:"alea-combat-dice-canvas",
+   assetPath:appPath+"alea-dicebox-assets-v1.1.4/assets/dice-box/",
+   origin:window.location.origin,
+   theme:"default",
+   themeColor:"#d8bd82",
+   scale:6.2,
+   enableShadows:true,
+   shadowTransparency:.72,
+   lightIntensity:1.15,
+   spinForce:7,
+   throwForce:5,
+   gravity:1,
+   offscreen:false
+  });
+  await instance.init();
+  combatBox=instance;
+  combatBox.show();
+  combatBox.resizeWorld?.();
+  await nextFrame();
+  return combatBox;
+ })().catch(error=>{
+  combatReady=null;combatBox=null;
+  console.warn("Combat DiceBox unavailable; fallback remains active",error);
+  document.getElementById("combatDiceHost")?.classList.add("unavailable");
+  throw error;
+ });
+ return combatReady
+}
+window.alea3dCombatPrepare=async()=>{
+ try{
+  document.getElementById("combatDiceHost")?.classList.remove("unavailable");
+  await ensureCombatDice3D()
+ }catch(_){}
+};
+window.alea3dCombatRoll=async(notation)=>{
+ const host=await waitForDiceHostSelector("#combatDiceHost");
+ host.classList.remove("unavailable");
+ const b=await ensureCombatDice3D();
+ b.show();
+ b.resizeWorld?.();
+ await nextFrame();
+ return b.roll(notation,{newStartPoint:true})
+};
+window.alea3dCombatClear=async()=>{
+ if(combatBox)await combatBox.clear()
+};
