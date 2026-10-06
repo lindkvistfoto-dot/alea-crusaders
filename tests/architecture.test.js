@@ -539,7 +539,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatAnimateCommittedMovement");
     expect(combat).toContain("Lås förflyttning");
     expect(combat).toContain("(SMI");
-    expect(combat).toContain("combat-row-vitals");
+    expect(combat).toContain("combat-row-inline-vitals");
     expect(combat).toContain("player-row");
     expect(combat).toContain("npc-row");
     expect(combat).toContain("enemy-row");
