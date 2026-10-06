@@ -3095,3 +3095,65 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:560px){
  .combat-miniature .combat-mini-base-ring{stroke-width:5}
 }
+
+
+/* v0.33.32 — egen zoom/pan för stridskartan */
+.combat-board{
+ overflow:hidden;
+ overscroll-behavior:contain;
+}
+.combat-board-title{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ min-width:0;
+}
+.combat-map-zoom-controls{
+ display:flex;
+ align-items:center;
+ gap:3px;
+}
+.combat-map-zoom-controls button{
+ min-width:30px;
+ height:28px;
+ padding:0 7px;
+ border:1px solid #6f5a43;
+ border-radius:6px;
+ background:#1d1712;
+ color:#ead5b3;
+ font:800 13px/1 system-ui,sans-serif;
+ cursor:pointer;
+}
+.combat-map-zoom-controls button:hover{
+ background:#33271d;
+ border-color:#9c7a52;
+}
+#combatMapZoomLabel{
+ min-width:48px;
+ font-size:10px;
+ color:#d9c19a;
+}
+.combat-map-svg{
+ touch-action:none;
+ user-select:none;
+ -webkit-user-select:none;
+ cursor:grab;
+}
+.combat-map-svg.zoomed:active{cursor:grabbing}
+.combat-token-group{cursor:pointer}
+.combat-token-group.movement-planning{cursor:grab}
+@media(max-width:700px){
+ .combat-board-head{
+  gap:6px;
+ }
+ .combat-board-title{
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+ }
+ .combat-map-zoom-controls button{
+  min-width:28px;
+  height:27px;
+ }
+ #combatMapZoomLabel{min-width:44px}
+}
