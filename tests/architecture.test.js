@@ -12,9 +12,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.31.30");
-    expect(html).toContain("./features/character/glowup.js?v=0.31.30");
-    expect(html).toContain("./features/map/glowup.css?v=0.31.30");
+    expect(html).toContain("./features/character/glowup.css?v=0.32.0");
+    expect(html).toContain("./features/character/glowup.js?v=0.32.0");
+    expect(html).toContain("./features/map/glowup.css?v=0.32.0");
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -405,9 +405,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.31.30");
-    expect(html).toContain("app.css?v=0.31.30");
-    expect(html).toContain("legacy/app.js?v=0.31.30");
+    expect(html).toContain("Alea Crusaders v0.32.0");
+    expect(html).toContain("app.css?v=0.32.0");
+    expect(html).toContain("legacy/app.js?v=0.32.0");
   });
 
 
@@ -415,7 +415,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.31.30");
+    expect(html).toContain("./features/map/glowup.css?v=0.32.0");
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -429,7 +429,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.31.30");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.32.0");
     expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
@@ -442,8 +442,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.31.30");
-    expect(html).toContain("./features/shop/store.js?v=0.31.30");
+    expect(html).toContain("./features/shop/store.css?v=0.32.0");
+    expect(html).toContain("./features/shop/store.js?v=0.32.0");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -536,6 +536,49 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".shop-coin-sm{");
     expect(css).toContain(".shop-coin-km{");
     expect(css).toContain(".shop-money-sr{");
+  });
+
+
+  test("Värdshus is a player-facing service checkout", () => {
+    const html = read("index.html");
+    const inn = read("features/inn/inn.js");
+    const css = read("features/inn/inn.css");
+    expect(html).toContain('id="innNavBtn"');
+    expect(html).toContain('id="innPage"');
+    expect(html).toContain('id="innCartLines"');
+    expect(html).toContain('id="innBuyerSelect"');
+    expect(html).toContain("./features/inn/inn.css?v=0.32.0");
+    expect(html).toContain("./features/inn/inn.js?v=0.32.0");
+    expect(inn).toContain("rule_inn_items?active=eq.true");
+    expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
+    expect(inn).toContain("function innCheckout");
+    expect(inn).toContain("shopSpendCarriedCoins(draft,cost)");
+    expect(inn).toContain("await syncCharacterToCentral(draft)");
+    expect(inn).not.toContain("shopAddPurchasedItem");
+    expect(css).toContain(".inn-open #dayNavBtn");
+  });
+
+  test("Värdshus catalogue includes lodging meals and services", () => {
+    const sql = read("supabase/migrations/20261006014500_inn_catalog.sql");
+    expect(sql).toContain("create table if not exists public.rule_inn_items");
+    expect(sql).toContain("'Svit'");
+    expect(sql).toContain("'Enkelrum'");
+    expect(sql).toContain("'Flerbäddsrum'");
+    expect(sql).toContain("'Sovsal'");
+    expect(sql).toContain("'Stall'");
+    expect(sql).toContain("'Stigfinnare'");
+    expect(sql).toContain("'Sömmerska'");
+    expect(sql).toContain("'Varm måltid'");
+    expect(sql).toContain("alter table public.rule_inn_items enable row level security");
+  });
+
+  test("Värdshus uses the generated innkeeper hero and Targans coin language", () => {
+    const html = read("index.html");
+    const inn = read("features/inn/inn.js");
+    expect(html).toContain('id="innHeroImage"');
+    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.32.0");
+    expect(inn).toContain("shopCurrencyAmountHtml");
+    expect(inn).toContain("shopMoneyHtml");
   });
 
 
