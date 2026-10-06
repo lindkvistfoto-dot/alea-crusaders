@@ -703,6 +703,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("target.side===actor.side");
     expect(combat).toContain("attack-target");
     expect(combat).toContain("function combatCurrentAttackTargets");
+    expect(combat).toContain("preserveSelectedTarget:def.type===\'attack\'");
+    expect(combat).toContain("loadActiveCombat(null,{preserveSelectedTarget:true})");
+    expect(combat).toContain("panelTargetId=action.status===\'resolved\'");
     expect(combat).toContain("function combatAttackPanelHtml");
     expect(combat).toContain("function combatDestinationKeepsAction");
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
