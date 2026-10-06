@@ -142,7 +142,7 @@ function renderCombatGmControls(){
  if(scenes.length===1&&!combatSelectedSceneId)combatSelectedSceneId=String(scenes[0].id);
  const activeSceneId=combatActiveSceneId();
  const scene=combatSceneFromId(combatSelectedSceneId);
- host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>Pågående strid återupptas automatiskt · Play startar vald scen från början · Reset återställer aktiv scen</small></div>'+
+ host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>Pågående strid återupptas automatiskt · Play startar vald scen med nytt initiativ · Reset återställer aktiv scen utan nytt initiativ</small></div>'+
   '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
@@ -361,7 +361,28 @@ async function combatRollAndApplyInitiative(instanceId){
  if(logRows.length)await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(logRows)});
  combatShowInitiativeLegend(entries,initiative)
 }
-async function combatCreateRuntimeFromScene(scene){
+function combatCaptureInitiativeForReset(){
+ const previous=activeCombat?.initiative&&typeof activeCombat.initiative==='object'?activeCombat.initiative:{};
+ const resultById=new Map((Array.isArray(previous.results)?previous.results:[]).map(result=>[String(result.combatant_id),result]));
+ const entries=(combatants||[]).map(row=>{
+  const key=String(row.source_instance_key||'');
+  const rank=combatNumber(row.state?.initiative_rank,null);
+  const roll=combatNumber(row.state?.initiative_roll,null);
+  const total=combatNumber(row.state?.initiative_total,null);
+  if(!key||rank==null)return null;
+  return{
+   key,rank,roll,total,
+   smi:combatNumber(row.state?.smi,null),
+   result:resultById.get(String(row.id))||null
+  }
+ }).filter(Boolean).sort((a,b)=>a.rank-b.rank);
+ return{
+  formula:previous.formula||'SMI+1T10',
+  rolled_at:previous.rolled_at||null,
+  entries
+ }
+}
+async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null}={}){
  const runtime=await combatLoadSceneRuntimeData(scene);
  const instanceId=crypto.randomUUID();
  const settings={
@@ -394,12 +415,40 @@ async function combatCreateRuntimeFromScene(scene){
   }
  }).filter(Boolean);
 
- const initiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+ let initiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+ let startPhase='initiative',startActorId=null;
+ const preservedEntries=Array.isArray(initiativeSnapshot?.entries)?initiativeSnapshot.entries:[];
+ if(preservedEntries.length){
+  const rowByKey=new Map(combatantRows.map(row=>[String(row.source_instance_key||''),row]));
+  const order=[],results=[];
+  preservedEntries.forEach((entry,index)=>{
+   const row=rowByKey.get(String(entry.key||''));if(!row)return;
+   const rank=Math.max(1,combatNumber(entry.rank,index+1));
+   const roll=combatNumber(entry.roll,null),total=combatNumber(entry.total,null),smi=combatNumber(entry.smi,combatNumber(row.state?.smi,10));
+   row.sort_order=rank-1;
+   row.state={...(row.state||{}),initiative_rank:rank,initiative_roll:roll,initiative_total:total};
+   order.push(row.id);
+   results.push({
+    ...(entry.result&&typeof entry.result==='object'?entry.result:{}),
+    combatant_id:row.id,name:row.name_snapshot,smi,die:roll,total,rank
+   })
+  });
+  const orderedIds=new Set(order.map(String));
+  combatantRows.forEach((row,index)=>{if(!orderedIds.has(String(row.id)))row.sort_order=1000+index});
+  initiative={
+   formula:initiativeSnapshot.formula||'SMI+1T10',
+   status:'resolved',
+   rolled_at:initiativeSnapshot.rolled_at||new Date().toISOString(),
+   order,results
+  };
+  startPhase='movement';
+  startActorId=order[0]||null
+ }
 
  await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
-  name:scene.name||'Strid',status:'active',round_number:1,phase:'initiative',winning_side:null,
-  initiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
+  name:scene.name||'Strid',status:'active',round_number:1,phase:startPhase,winning_side:null,
+  initiative,active_actor_id:startActorId,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
  })});
 
  if(combatantRows.length)await dbJson('combatants',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(combatantRows)});
@@ -419,12 +468,13 @@ async function combatStartScene(sceneId,{reset=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  try{
+  const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null;
   if(activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
   activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];
-  const instanceId=await combatCreateRuntimeFromScene(scene);
+  const instanceId=await combatCreateRuntimeFromScene(scene,{initiativeSnapshot});
   combatSelectedSceneId=String(scene.id);
   await loadActiveCombat();
-  await combatRollAndApplyInitiative(instanceId);
+  if(!reset)await combatRollAndApplyInitiative(instanceId);
   await loadActiveCombat();
  }catch(e){
   console.error('Kunde inte starta stridsscen',e);
