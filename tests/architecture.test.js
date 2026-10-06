@@ -429,7 +429,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('class="shop-hero shop-hero-photo"');
     expect(html).toContain('class="shop-hero-kicker">Handelshus');
     expect(shop).toContain("function loadShopHeroImage");
-    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.32.1");
+    expect(shop).toContain("assets/targans-gille-clean.jpg?v=0.32.2");
     expect(shop).toContain("const SHOP_HERO_SRC");
     expect(css).toContain(".shop-hero.shop-hero-photo");
     expect(css).toContain(".shop-hero-media img");
@@ -600,7 +600,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const inn = read("features/inn/inn.js");
     expect(html).toContain('id="innHeroImage"');
-    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.32.1");
+    expect(inn).toContain("assets/innkeeper-hero.jpg?v=0.32.2");
     expect(inn).toContain("shopCurrencyAmountHtml");
     expect(inn).toContain("shopMoneyHtml");
   });
