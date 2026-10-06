@@ -249,8 +249,8 @@ function innRandomD6(){
   try{
     if(globalThis.crypto?.getRandomValues){
       const box=new Uint32Array(1);
-      const max=4294967295-(4294967295%6);
-      do{globalThis.crypto.getRandomValues(box);}while(box[0]>max);
+      const limit=Math.floor(4294967296/6)*6;
+      do{globalThis.crypto.getRandomValues(box);}while(box[0]>=limit);
       return (box[0]%6)+1;
     }
   }catch(_error){}
