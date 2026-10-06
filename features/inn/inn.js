@@ -5,7 +5,7 @@ const INN_SECTIONS=[
   {category:'Mat & dryck',title:'Mat'},
   {category:'Tjänster',title:'Tjänster'}
 ];
-const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.5';
+const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.6';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
@@ -27,6 +27,7 @@ const INN_FIVE_CROWNS_PAYOUTS={
   'Stege':4,
   'Fyrtal':8,
   'Fem kronor':50,
+  'Fem sexor':100,
   'Ingen vinst':0
 };
 let innGameHouseDice=null;
@@ -372,6 +373,7 @@ function innAnimated2d6(){
 function innFiveCrownsCategory(dice){
   const counts=[...new Map(dice.map(value=>[value,dice.filter(x=>x===value).length])).values()].sort((a,b)=>b-a);
   const unique=[...new Set(dice)].sort((a,b)=>a-b);
+  if(dice.every(value=>value===6))return 'Fem sexor';
   if(counts[0]===5)return 'Fem kronor';
   if(counts[0]===4)return 'Fyrtal';
   if(counts[0]===3&&counts[1]===2)return 'Kåk';
@@ -393,7 +395,8 @@ function innFiveCrownsProbabilityTable(){
     {name:'Kåk',chance:'3,86 %',payout:'3×'},
     {name:'Stege',chance:'3,09 %',payout:'4×'},
     {name:'Fyrtal',chance:'1,93 %',payout:'8×'},
-    {name:'Fem kronor',chance:'0,077 %',payout:'50×'}
+    {name:'Fem kronor',chance:'0,064 %',payout:'50×'},
+    {name:'Fem sexor',chance:'0,013 %',payout:'100×'}
   ];
 }
 
@@ -460,13 +463,13 @@ function innGameResultHtml(){
 
 function innGameInfoHtml(){
   if(innGameType==='five'){
-    return '<p>Du kastar fem T6 en gång. Kombinationen avgör utbetalningen. Fem kronor betyder fem lika.</p>'+
+    return '<p>Du kastar fem T6 en gång. Kombinationen avgör utbetalningen. Fem kronor betyder fem lika; fem sexor är toppvinsten.</p>'+
       '<div class="inn-five-paytable">'+
         innFiveCrownsProbabilityTable().map(row=>
           '<div><span>'+row.name+'</span><small>'+row.chance+'</small><b>'+row.payout+'</b></div>'
         ).join('')+
       '</div>'+
-      '<div class="inn-five-rtp">Teoretisk återbetalning: <b>97,2 %</b> · Husfördel: <b>2,8 %</b></div>';
+      '<div class="inn-five-rtp">Teoretisk återbetalning: <b>97,9 %</b> · Husfördel: <b>2,1 %</b></div>';
   }
   return '<p>Huset slår 2T6 först. Efter en kort paus kastar du dina 2T6. Högst summa vinner.</p>'+
     '<div class="inn-game-rules"><span>Vinst <b>2×</b></span><span>Oavgjort <b>1×</b></span><span>Förlust <b>0×</b></span></div>';
