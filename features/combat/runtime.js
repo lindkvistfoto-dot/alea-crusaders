@@ -29,6 +29,14 @@ function combatFadeInitiativeDice(){
   try{await window.alea3dCombatClear?.()}catch(_error){}
  },900)
 }
+async function combatWaitForInitiativeDiceToSettle(startedAt,used3d){
+ if(!used3d)return;
+ const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+ const minimum=reduced?350:2300;
+ const elapsed=Math.max(0,performance.now()-startedAt);
+ if(elapsed<minimum)await new Promise(resolve=>setTimeout(resolve,minimum-elapsed));
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))
+}
 function combatSecureDie(sides){
  sides=Math.max(2,Math.floor(Number(sides)||6));
  try{
@@ -398,7 +406,8 @@ function combatHideInitiativeLegend(){
  combatCancelInitiativeTransfer();
  const host=$('combatInitiativeLegend');if(host){host.classList.remove('show','resolved','transferring');host.querySelectorAll('.combat-initiative-chip').forEach(chip=>chip.style.visibility='')}
 }
-async function combatRollAndApplyInitiative(instanceId){
+async function combatRollAndApplyInitiative(instanceId,{roundNumber=null}={}){
+ const initiativeRound=Math.max(1,Number(roundNumber??activeCombat?.round_number)||1);
  const entries=combatInitiativeEntries(combatants);
  if(!entries.length){
   await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
@@ -413,13 +422,15 @@ async function combatRollAndApplyInitiative(instanceId){
  combatPositionDiceLayer();
  const readout=$('combatDiceReadout');if(readout)readout.classList.remove('show');
  try{await window.alea3dCombatClear?.()}catch(_){}
- let dieMap=new Map();
+ let dieMap=new Map(),used3d=false;
+ const initiativeRollStartedAt=performance.now();
  if(typeof window.alea3dCombatRoll==='function'){
   try{
    const notation=entries.map(entry=>({qty:1,sides:10,theme:'default',themeColor:entry.color}));
    const raw=await window.alea3dCombatRoll(notation);
    dieMap=combatInitiativeDiceMap(raw,entries);
-   if(dieMap.size!==entries.length)throw new Error('Kunde inte koppla samtliga initiativtärningar till rätt kombatant.')
+   if(dieMap.size!==entries.length)throw new Error('Kunde inte koppla samtliga initiativtärningar till rätt kombatant.');
+   used3d=true
   }catch(error){
    console.warn('Samtidigt initiativkast i DiceBox misslyckades, använder reservslag.',error);
    dieMap=new Map()
@@ -428,6 +439,7 @@ async function combatRollAndApplyInitiative(instanceId){
  if(dieMap.size!==entries.length){
   entries.forEach(entry=>dieMap.set(entry.combatant_id,combatRollD10()))
  }
+ await combatWaitForInitiativeDiceToSettle(initiativeRollStartedAt,used3d);
  const colors=new Map(entries.map(entry=>[entry.combatant_id,entry.color]));
  const initiative=combatBuildInitiative(combatants,dieMap,colors);
  const firstActorId=initiative.order[0]||null;
@@ -442,7 +454,7 @@ async function combatRollAndApplyInitiative(instanceId){
  });
 
  const logRows=initiative.results.map(result=>({
-  combat_id:instanceId,campaign_id:centralCampaignId,round_number:1,phase:'initiative',
+  combat_id:instanceId,campaign_id:centralCampaignId,round_number:initiativeRound,phase:'initiative',
   actor_id:result.combatant_id,target_id:null,event_type:'initiative',
   message:'#'+result.rank+' '+result.name+' · SMI '+result.smi+' + T10 '+result.die+' = '+result.total,
   details:{rank:result.rank,smi:result.smi,die:result.die,total:result.total,color:result.color,formula:'SMI+1T10'},
@@ -1332,26 +1344,40 @@ async function endCombatTurn(event,combatantId){
  const currentIndex=Math.max(0,order.indexOf(String(actor.id)));
  const nextIndex=currentIndex+1;
  const newRound=nextIndex>=order.length;
- const nextActorId=newRound?order[0]:order[nextIndex];
- const round=(Number(activeCombat.round_number)||1)+(newRound?1:0);
+ const currentRound=Number(activeCombat.round_number)||1;
+ const nextActorId=newRound?null:order[nextIndex];
+ const round=currentRound+(newRound?1:0);
+ const combatId=activeCombat.id;
  try{
+  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:combatId,campaign_id:centralCampaignId,round_number:currentRound,
+   phase:'movement',actor_id:actor.id,target_id:null,event_type:'turn_end',
+   message:actor.name_snapshot+' avslutar draget'+(newRound?' · SR '+currentRound+' avslutad':''),
+   details:{next_actor_id:nextActorId,new_round:newRound,round_number:round},player_visible:true
+  })});
   if(newRound){
    await Promise.all((combatants||[]).filter(row=>!['dead','removed'].includes(row.status)).map(row=>dbJson('combatants?id=eq.'+encodeURIComponent(row.id),{
     method:'PATCH',headers:{'Prefer':'return=minimal'},
     body:JSON.stringify({movement_remaining:combatMovementMaximum(row),updated_at:new Date().toISOString()})
-   })))
+   })));
+   const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+   await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({
+     active_actor_id:null,active_responder_id:null,round_number:round,phase:'initiative',
+     initiative:pendingInitiative,updated_at:new Date().toISOString()
+    })
+   });
+   await loadActiveCombat(combatId);
+   await combatRollAndApplyInitiative(combatId,{roundNumber:round});
+   await loadActiveCombat(combatId);
+   return
   }
-  await dbJson('combat_instances?id=eq.'+encodeURIComponent(activeCombat.id),{
+  await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({active_actor_id:nextActorId,active_responder_id:null,round_number:round,phase:'movement',updated_at:new Date().toISOString()})
   });
-  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
-   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
-   phase:'movement',actor_id:actor.id,target_id:null,event_type:'turn_end',
-   message:actor.name_snapshot+' avslutar draget'+(newRound?' · Runda '+round:''),
-   details:{next_actor_id:nextActorId,new_round:newRound,round_number:round},player_visible:true
-  })});
-  await loadActiveCombat()
+  await loadActiveCombat(combatId)
  }catch(error){
   console.error('Kunde inte avsluta draget',error);
   alert('Kunde inte avsluta draget: '+(error?.message||error))
