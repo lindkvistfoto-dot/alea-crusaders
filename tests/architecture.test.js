@@ -405,7 +405,7 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.32.3");
+    expect(html).toContain("Alea Crusaders v0.32.4");
     expect(html).toContain("app.css?v=0.32.3");
     expect(html).toContain("legacy/app.js?v=0.32.3");
   });
@@ -573,12 +573,19 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innGameModal"');
     expect(html).toContain('id="innGameTitle">Högt kast');
     expect(html).toContain('id="innGameBuyerSelect"');
+    expect(html).toContain('id="innGameDiceHost"');
+    expect(html).toContain('id="innGamePhaseLabel"');
     expect(html).toContain('data-inn-game-stake="1"');
     expect(html).toContain('data-inn-game-stake="50"');
     expect(inn).toContain("function openInnGame");
     expect(inn).toContain("function closeInnGame");
     expect(inn).toContain("function innPlayHighRoll");
     expect(inn).toContain("function innRoll2d6");
+    expect(inn).toContain("const houseDice=await innAnimated2d6()");
+    expect(inn).toContain("await innWait(1050)");
+    expect(inn).toContain("const playerDice=await innAnimated2d6()");
+    expect(inn).toContain("window.alea3dInnRoll");
+    expect(inn.indexOf("const houseDice=await innAnimated2d6()")).toBeLessThan(inn.indexOf("const playerDice=await innAnimated2d6()"));
     expect(inn).toContain("payout=stake*2");
     expect(inn).toContain("payout=stake;");
     expect(inn).toContain("shopSpendCarriedCoins(draft,stake)");
@@ -586,6 +593,16 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".inn-game-launch{");
     expect(css).toContain(".inn-game-modal{");
     expect(css).toContain(".inn-game-die{");
+    expect(css).toContain(".inn-game-dice-stage{");
+  });
+
+  test("Värdshus reuses DiceBox in its own animated dice host", () => {
+    const dice3d = read("src/features/dice/dice3d.js");
+    expect(dice3d).toContain('container:"#innGameDiceHost"');
+    expect(dice3d).toContain('id:"alea-inn-dice-canvas"');
+    expect(dice3d).toContain("window.alea3dInnPrepare");
+    expect(dice3d).toContain("window.alea3dInnRoll");
+    expect(dice3d).toContain("window.alea3dInnClear");
   });
 
   test("Värdshus catalogue includes lodging meals and services", () => {
