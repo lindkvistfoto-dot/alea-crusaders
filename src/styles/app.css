@@ -3798,3 +3798,19 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-map-fit-btn:hover:not(:disabled){
  color:#fff0c8;
 }
+
+
+/* v0.33.41 — bildikoner för kombatantradens fyra befintliga handlingar */
+.combat-row-tool-btn{
+ overflow:hidden;
+}
+.combat-row-tool-icon{
+ display:block;
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ border-radius:inherit;
+ pointer-events:none;
+ user-select:none;
+ -webkit-user-drag:none;
+}
