@@ -288,6 +288,49 @@ function closeCombat(){
 }
 function selectCombatTarget(id){combatSelectedTargetId=id||null;renderCombat()}
 function combatTokenInitials(name){let a=String(name||'?').trim().split(/\s+/).filter(Boolean);return(a.length>1?(a[0][0]+a[a.length-1][0]):a[0]?.slice(0,2)||'?').toUpperCase()}
+function combatHexNeighbors(q,r){
+ return [[q+1,r],[q-1,r],[q,r+1],[q,r-1],[q+1,r-1],[q-1,r+1]]
+}
+function combatSelectedCombatant(){
+ return combatants.find(row=>String(row.id)===String(combatSelectedTargetId))||null
+}
+function combatMovementBudget(combatant){
+ if(!combatant)return 0;
+ const remaining=combatNumber(combatant.movement_remaining,null);
+ const maximum=combatNumber(combatant.movement_max,0);
+ return Math.max(0,remaining==null?maximum:remaining)
+}
+function combatReachableHexes(combatant){
+ const cells=combatRuntimeHexCells();
+ const cellByKey=new Map(cells.map(cell=>[cell.key,cell]));
+ const out=new Map();
+ if(!combatant||activeCombat?.phase!=='movement')return out;
+ const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
+ const budget=combatMovementBudget(combatant);
+ if(!cellByKey.has(startKey))return out;
+ const frontier=[{key:startKey,cost:0}];
+ out.set(startKey,0);
+
+ while(frontier.length){
+  frontier.sort((a,b)=>a.cost-b.cost);
+  const current=frontier.shift();
+  if(current.cost!==out.get(current.key))continue;
+  const [q,r]=current.key.split(',').map(Number);
+  for(const [nq,nr] of combatHexNeighbors(q,r)){
+   const key=nq+','+nr,cell=cellByKey.get(key);
+   if(!cell||cell.movement_mode==='blocked')continue;
+   const stepCost=cell.movement_mode==='difficult'?2:1;
+   const nextCost=current.cost+stepCost;
+   if(nextCost>budget)continue;
+   const known=out.get(key);
+   if(known==null||nextCost<known){
+    out.set(key,nextCost);
+    frontier.push({key,cost:nextCost})
+   }
+  }
+ }
+ return out
+}
 function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
 }
@@ -300,13 +343,20 @@ function renderCombatMap(){
   return '<div class="combat-map-missing">'+note+'</div>'
  }
  const cells=combatRuntimeHexCells(),byCoord=new Map(cells.map(cell=>[cell.key,cell]));
+ const selected=combatSelectedCombatant();
+ const reachable=combatReachableHexes(selected);
+ const originKey=selected?((Number(selected.q)||0)+','+(Number(selected.r)||0)):'';
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
+  const moveCost=reachable.get(cell.key);
   if(cell.movement_mode==='difficult')cls.push('difficult');
   if(cell.movement_mode==='blocked')cls.push('move-blocked');
   if(cell.sight_mode==='obscuring')cls.push('sight-obscuring');
   if(cell.sight_mode==='blocked')cls.push('sight-blocked');
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+'</title></polygon>'
+  if(moveCost!=null&&cell.key!==originKey)cls.push('move-reachable');
+  if(cell.key===originKey)cls.push('move-origin');
+  const reachText=moveCost!=null?' · kostnad '+moveCost:'';
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+'</title></polygon>'
  }).join('');
  const tokens=combatants.filter(c=>c.status!=='removed').map(c=>{
   const key=(Number(c.q)||0)+','+(Number(c.r)||0);
@@ -332,7 +382,7 @@ function combatantCard(c){
 function combatTargetHtml(){
  let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att markera mål. Tillgängliga attacker kommer senare att räknas fram från avstånd, sikt, utrustning och kvarvarande handlingar.</div></div>';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-note">Nästa steg är att koppla målvalet till line of sight, räckvidd och handlingsknappar för aktuell utrustning.</div></div>'
+ return'<div class="combat-target-body"><div class="combat-target-name">'+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Rörelse</span><b>'+(c.flying?'Flygande':'Mark')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+'</b></div><div class="combat-target-note">Markerade hexar kan nås med kvarvarande förflyttning. Fri terräng kostar 1 poäng per hex, svår terräng 2 och blockerad terräng kan inte passeras.</div></div>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
