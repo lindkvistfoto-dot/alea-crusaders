@@ -2213,3 +2213,58 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-reaction-actions{width:100%}
  .combat-reaction-actions .btn{flex:1}
 }
+
+
+/* v0.33.12 — samma DiceBox-motor rullar stridstärningar ovanpå hexkartan */
+.combat-dice-layer{
+ position:fixed;
+ z-index:1200;
+ overflow:hidden;
+ pointer-events:none;
+ opacity:0;
+ transition:opacity .12s ease;
+}
+.combat-dice-layer.positioned{opacity:1}
+.combat-dice-host{
+ position:absolute;
+ inset:-20%;
+ transform:scale(.72);
+ transform-origin:center center;
+ overflow:hidden;
+ pointer-events:none;
+}
+.combat-dice-host canvas{
+ display:block;
+ width:100%!important;
+ height:100%!important;
+ background:transparent!important;
+}
+.combat-dice-host.unavailable{display:none}
+.combat-dice-readout{
+ position:absolute;
+ left:50%;
+ bottom:14px;
+ transform:translateX(-50%) translateY(8px);
+ display:flex;
+ align-items:center;
+ gap:9px;
+ max-width:calc(100% - 28px);
+ padding:7px 11px;
+ border:1px solid rgba(224,191,132,.72);
+ border-radius:999px;
+ background:rgba(31,23,17,.90);
+ color:#f4e1bf;
+ opacity:0;
+ white-space:nowrap;
+ box-shadow:0 4px 18px rgba(0,0,0,.28);
+ transition:opacity .15s ease,transform .15s ease;
+}
+.combat-dice-readout.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.combat-dice-readout b{font-size:11px;color:#e7c77e}
+.combat-dice-readout span{font-size:11px;overflow:hidden;text-overflow:ellipsis}
+.combat-dice-readout strong{font-size:18px;color:#fff3cf}
+.combat-dice-layer.rolling .combat-dice-readout{border-color:#f0ca79}
+@media(max-width:620px){
+ .combat-dice-readout{bottom:8px;gap:6px;padding:6px 8px}
+ .combat-dice-readout span{max-width:46vw}
+}
