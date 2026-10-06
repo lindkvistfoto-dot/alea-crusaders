@@ -2125,3 +2125,18 @@ body:not(.editing) #skilltable .skill-roll-btn{
  background:#f4ede2;
  color:#665c4f;
 }
+
+
+/* v0.33.8 — klickbar förflyttning och automatisk avvaktan efter full rörelse */
+.combat-hex.move-reachable{
+ cursor:pointer;
+}
+.combat-hex.move-reachable:hover{
+ stroke-width:3.4;
+ filter:drop-shadow(0 0 4px rgba(114,207,134,.5));
+}
+.combat-hex.move-occupied{
+ cursor:not-allowed;
+ fill:rgba(120,80,70,.18)!important;
+ stroke:rgba(120,80,70,.6)!important;
+}
