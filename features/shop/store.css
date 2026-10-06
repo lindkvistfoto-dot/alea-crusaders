@@ -284,7 +284,7 @@ font-family:Georgia,serif;text-align:center;text-transform:uppercase;letter-spac
 }
 .shop-row-buy:hover{filter:brightness(1.12)}
 .shop-item-details{
-  padding:9px 12px 11px 110px;
+  padding:9px 12px 11px;
   border-top:1px solid rgba(184,145,82,.14);
   background:rgba(0,0,0,.10);
 }
