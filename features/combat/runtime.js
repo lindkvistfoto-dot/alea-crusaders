@@ -794,7 +794,7 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
   }else{
    await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)})
   }
-  await loadActiveCombat()
+  await loadActiveCombat(null,{preserveSelectedTarget:def.type==='attack'})
  }catch(error){
   console.error('Kunde inte välja action',error);
   alert('Kunde inte välja action: '+(error?.message||error))
@@ -1234,7 +1234,7 @@ async function rollCombatAttack(actorId,targetId){
  if(!info)return;
  try{
   await combatResolveAttackAction(actor,target,action,weapon,info.mode);
-  await loadActiveCombat()
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(error){
   console.error('Kunde inte slå attack',error);
   alert('Attackslaget kunde inte genomföras: '+(error?.message||error))
@@ -1271,7 +1271,7 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
    body:JSON.stringify({source_data:sourceData,target_combatant_id:null,updated_at:new Date().toISOString()})
   });
   if(combatActionMenuKind==='attack')combatCloseRowActionMenu();
-  await loadActiveCombat()
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(error){
   console.error('Kunde inte välja attackvapen',error);
   alert('Kunde inte välja vapen: '+(error?.message||error))
@@ -1466,7 +1466,8 @@ async function endCombatTurn(event,combatantId){
   alert('Kunde inte avsluta draget: '+(error?.message||error))
  }
 }
-async function loadActiveCombat(combatId=null){
+async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
+ const selectedTargetBeforeLoad=combatSelectedTargetId;
  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
@@ -1489,7 +1490,8 @@ async function loadActiveCombat(combatId=null){
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
-   combatSelectedTargetId=activeCombat.active_actor_id||null;
+   const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
+   combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null);
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
    if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatCloseRowActionMenu();
    await loadCombatRuntimeBackground()
@@ -2612,7 +2614,8 @@ function combatAttackPanelHtml(){
  }
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||def?.type!=='attack')return '';
- const target=combatants.find(row=>String(row.id)===String(combatSelectedTargetId||''))||null;
+ const panelTargetId=action.status==='resolved'&&action.target_combatant_id?action.target_combatant_id:combatSelectedTargetId;
+ const target=combatants.find(row=>String(row.id)===String(panelTargetId||''))||null;
  const mode=def.mode||action?.source_data?.mode||'auto',selectedWeapon=combatActionWeapon(actor,action,mode);
  const targets=combatCurrentAttackTargets();
  let instruction='';
