@@ -1570,17 +1570,19 @@ function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
  const safeId=String(combatant.id||combatant.source_id||'player').replace(/[^a-zA-Z0-9_-]/g,'_');
  const clipId='combatPortraitClip_'+safeId;
  const outer=combatPortraitHexPoints(34),inner=combatPortraitHexPoints(28.7);
- const visualCenterY=cell.y-(2.5*scale);
- return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+visualCenterY.toFixed(2)+') scale('+scale.toFixed(3)+')">'+
+ const depthOffset=2.5;
+ return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
   '<defs><clipPath id="'+clipId+'"><polygon points="'+inner+'"/></clipPath></defs>'+
-  '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
-  '<polygon class="combat-portrait-frame-back" points="'+outer+'"/>'+
-  '<polygon class="combat-portrait-green-ring" points="'+outer+'"/>'+
-  '<polygon class="combat-portrait-inner-frame" points="'+combatPortraitHexPoints(30.7)+'"/>'+
-  '<image class="combat-portrait-image" href="'+escAttr(portrait.url)+'" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'+
-  '<polygon class="combat-portrait-image-edge" points="'+inner+'"/>'+
-  '<polyline class="combat-portrait-bevel-light" points="-29.4,-17 0,-34 29.4,-17"/>'+
-  '<polyline class="combat-portrait-bevel-dark" points="29.4,17 0,34 -29.4,17"/>'+
+  '<g class="combat-portrait-visual" transform="translate(0 -'+depthOffset+')">'+
+   '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
+   '<polygon class="combat-portrait-frame-back" points="'+outer+'"/>'+
+   '<polygon class="combat-portrait-green-ring" points="'+outer+'"/>'+
+   '<polygon class="combat-portrait-inner-frame" points="'+combatPortraitHexPoints(30.7)+'"/>'+
+   '<image class="combat-portrait-image" href="'+escAttr(portrait.url)+'" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'+
+   '<polygon class="combat-portrait-image-edge" points="'+inner+'"/>'+
+   '<polyline class="combat-portrait-bevel-light" points="-29.4,-17 0,-34 29.4,-17"/>'+
+   '<polyline class="combat-portrait-bevel-dark" points="29.4,17 0,34 -29.4,17"/>'+
+  '</g>'+
   '<rect class="combat-mini-hit" x="-35" y="-39" width="70" height="80" rx="8"/>'+
  '</g>'
 }
