@@ -2309,15 +2309,20 @@ function skillRollContextLine(ctx){
  let target=Number(ctx.target),base=Number(ctx.baseTarget??target),mod=Number(ctx.modifier)||0,diff=ctx.difficulty||'Normal';
  return `<div class="dice-context">Färdighet: <b>${escAttr(ctx.skillName)}</b> · ${escAttr(ctx.targetLabel||'FV')} <b>${base}</b>${mod?` → <b>${target}</b> · ${escAttr(diff)} ${formatSkillModifier(mod)}`:` · ${escAttr(diff)} ±0`}</div>`
 }
-function skillOutcomeMeta(outcome){
+function expertOutcomePresentation(outcome){
  return {
-  success:{label:'LYCKAT SLAG',cls:'success'},
-  fail:{label:'MISSLYCKAT SLAG',cls:'fail'},
-  special:{label:'SÄRSKILT SLAG',cls:'special'},
-  perfect:{label:'PERFEKT SLAG',cls:'perfect'},
-  fumble:{label:'FUMMELSLAG',cls:'fumble'}
- }[outcome]||{label:String(outcome||'').toUpperCase(),cls:'fail'}
+  fail:{label:'MISSLYCKAT SLAG',cls:'fail',icon:'✕',tier:'normal'},
+  success:{label:'LYCKAT SLAG',cls:'success',icon:'✓',tier:'normal'},
+  special:{label:'SÄRSKILT SLAG',cls:'special',icon:'✦',tier:'major'},
+  perfect:{label:'PERFEKT SLAG',cls:'perfect',icon:'★',tier:'critical'},
+  fumble:{label:'FUMMELSLAG',cls:'fumble',icon:'⚠',tier:'critical'}
+ }[outcome]||{label:String(outcome||'').toUpperCase(),cls:'fail',icon:'?',tier:'normal'}
 }
+function expertOutcomeHtml(outcome){
+ const meta=expertOutcomePresentation(outcome);
+ return '<span class="outcome-icon" aria-hidden="true">'+meta.icon+'</span><span class="outcome-label">'+escAttr(meta.label)+'</span>'
+}
+function skillOutcomeMeta(outcome){return expertOutcomePresentation(outcome)}
 function scheduleSkillConfirmation(){
  setTimeout(()=>{
   if(diceRollContext?.type!=='skill'||diceRollContext.skillPhase!=='confirm'||diceRolling)return;
@@ -2376,7 +2381,7 @@ function renderResolvedSkillRoll(ctx,outcome,second=null){
  let meta=skillOutcomeMeta(outcome),seq=second==null
   ?`<div class="skill-roll-sequence"><span>Slag: <b>${ctx.skillFirstRoll}</b></span></div>`
   :`<div class="skill-roll-sequence"><span>Första: <b>${ctx.skillFirstRoll}</b></span><span>Kontroll: <b>${second}</b></span></div>`;
- $('diceResult').innerHTML=skillRollContextLine(ctx)+seq+`<div class="roll-outcome ${meta.cls}">${meta.label}</div>`+(skillOutcomeEarnsErf(outcome)?'<div id="skillErfAward" class="skill-erf-award">Kontrollerar ERF…</div>':'');
+ $('diceResult').innerHTML=skillRollContextLine(ctx)+seq+'<div class="roll-outcome '+meta.cls+'">'+expertOutcomeHtml(outcome)+'</div>'+(skillOutcomeEarnsErf(outcome)?'<div id="skillErfAward" class="skill-erf-award">Kontrollerar ERF…</div>':'');
  ctx.skillPhase='done';ctx.skillOutcome=outcome;ctx.skillSecondRoll=second;
  if(skillOutcomeEarnsErf(outcome))awardErfFromSkillRoll(ctx,outcome)
 }
@@ -2534,7 +2539,7 @@ function renderDiceRollResult(rolls,total){
  let detail=rolls.map(r=>r.value).join(' + ');
  if(diceRollContext?.type==='spell'&&rolls.length===1&&rolls[0].sides===20){
   let ctx=diceRollContext,target=Number(ctx.target),roll=Number(rolls[0].value),valid=validDieValue(roll,20),ok=valid&&Number.isFinite(target)&&roll<=target,eg=Math.max(1,Number(ctx.effectGrade)||1);
-  let psyText=Number.isFinite(Number(ctx.psyAfter))?` · PSY <b>${ctx.psyBefore} → ${ctx.psyAfter}</b>`:'';$('diceResult').innerHTML=`<div class="dice-context">Besvärjelse: <b>${escAttr(ctx.spellName)}</b> · FV <b>${target}</b> · Effektgrad <b>${eg}</b>${psyText}</div><div class="expr">1T20</div><div>${roll}</div><div class="roll-outcome ${ok?'success':'fail'}">${ok?'LYCKAT':'MISSLYCKAT'}</div>`;
+  let psyText=Number.isFinite(Number(ctx.psyAfter))?` · PSY <b>${ctx.psyBefore} → ${ctx.psyAfter}</b>`:'',outcome=ok?'success':'fail';$('diceResult').innerHTML=`<div class="dice-context">Besvärjelse: <b>${escAttr(ctx.spellName)}</b> · FV <b>${target}</b> · Effektgrad <b>${eg}</b>${psyText}</div><div class="expr">1T20</div><div>${roll}</div>`+'<div class="roll-outcome '+outcome+'">'+expertOutcomeHtml(outcome)+'</div>';
   return;
  }
  if(diceRollContext?.type==='skill'&&rolls.length===1&&rolls[0].sides===20){
