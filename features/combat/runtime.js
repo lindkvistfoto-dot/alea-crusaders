@@ -37,7 +37,7 @@ function renderCombatGmControls(){
   '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
-  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>▶ Play</button>'+
+  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||!!activeCombat?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat?'<span class="combat-gm-active">Aktiv: '+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
@@ -143,7 +143,8 @@ async function combatStartScene(sceneId,{reset=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  try{
-  if(activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
+  if(reset&&activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
+  else if(!reset&&activeCombat?.id)return;
   await combatCreateRuntimeFromScene(scene);
   combatSelectedSceneId=String(scene.id);
   await loadActiveCombat();
