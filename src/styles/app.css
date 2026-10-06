@@ -2016,3 +2016,78 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-board-legends{gap:5px;justify-content:flex-end}
  .combat-move-legend{width:100%;justify-content:flex-end}
 }
+
+
+/* v0.33.5 — actionval för kombatanten vars tur det är */
+.combatant-card.active-turn{
+ box-shadow:inset 4px 0 0 #d7a84d;
+ background:#fff3d8;
+}
+.combat-token.active-turn{
+ stroke:#ffe08b;
+ stroke-width:5;
+ filter:drop-shadow(0 0 5px rgba(255,211,123,.8));
+}
+.combat-action-box{
+ margin-top:12px;
+ padding:10px;
+ border:1px solid #b8935f;
+ border-radius:10px;
+ background:#fff5e2;
+}
+.combat-action-box.waiting{
+ display:flex;
+ flex-direction:column;
+ gap:4px;
+ color:#6d5a43;
+}
+.combat-action-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:flex-start;
+ gap:10px;
+ margin-bottom:8px;
+}
+.combat-action-head>div{display:flex;flex-direction:column;gap:2px}
+.combat-action-head b{color:#6f221f}
+.combat-action-head span{font-size:11px;color:#7b654e}
+.combat-action-head strong{
+ font-size:11px;
+ color:#315d3f;
+ text-align:right;
+}
+.combat-action-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;
+}
+.combat-action-btn{
+ min-height:44px;
+ border:1px solid #c9aa7d;
+ border-radius:8px;
+ background:#fffaf0;
+ color:#44352a;
+ display:flex;
+ align-items:center;
+ gap:7px;
+ padding:7px 8px;
+ text-align:left;
+ cursor:pointer;
+}
+.combat-action-btn:hover{border-color:#8f6536;background:#fff1d9}
+.combat-action-btn.active{
+ border-color:#467957;
+ outline:2px solid rgba(70,121,87,.32);
+ background:#e8f1e7;
+}
+.combat-action-btn span{font-size:17px}
+.combat-action-btn b{font-size:12px}
+.combat-action-note{
+ margin-top:8px;
+ font-size:10px;
+ line-height:1.35;
+ color:#7b654e;
+}
+@media(max-width:560px){
+ .combat-action-grid{grid-template-columns:1fr}
+}
