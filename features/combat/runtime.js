@@ -1477,6 +1477,9 @@ function combatMiniatureDefs(){
   '<linearGradient id="miniLeather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9d6d3e"/><stop offset="1" stop-color="#4f301f"/></linearGradient>'+
   '<radialGradient id="miniMagic"><stop offset="0" stop-color="#d8fbff"/><stop offset=".35" stop-color="#59d9ff"/><stop offset="1" stop-color="#2775d8" stop-opacity=".15"/></radialGradient>'+
   '<filter id="miniDrop" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".55"/></filter>'+
+  '<linearGradient id="portraitHexFrame" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d7b56f"/><stop offset=".22" stop-color="#7b633d"/><stop offset=".58" stop-color="#30271d"/><stop offset="1" stop-color="#0f0d0a"/></linearGradient>'+
+  '<linearGradient id="portraitHexGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7dff8d"/><stop offset=".42" stop-color="#1fd04a"/><stop offset="1" stop-color="#087926"/></linearGradient>'+
+  '<filter id="portraitHexShadow" x="-60%" y="-60%" width="220%" height="240%"><feDropShadow dx="0" dy="4" stdDeviation="2.4" flood-color="#000" flood-opacity=".72"/></filter>'+
  '</defs>'
 }
 function combatMiniatureWarrior(){
@@ -1516,17 +1519,46 @@ function combatMiniatureDuck(){
   '<path d="M-5 0 L-9 8 M5 0 L9 8" stroke="#d98522" stroke-width="5" stroke-linecap="round"/><path d="M-13 9 L-5 9 M5 9 L13 9" stroke="#e99b25" stroke-width="4" stroke-linecap="round"/>'+
  '</g>'
 }
+function combatPlayerPortraitSource(combatant){
+ if(combatant?.source_type!=='character'||typeof chars==='undefined')return null;
+ const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===String(combatant.source_id||''));
+ if(!source)return null;
+ let portrait='';
+ try{portrait=typeof getPortraitSrc==='function'?getPortraitSrc(source):(source.portrait||'')}catch(_error){portrait=source.portrait||''}
+ return portrait?{source,url:String(portrait)}:null
+}
+function combatPortraitHexPoints(size){
+ return combatHexPoints(0,0,size)
+}
 function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
- const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
+ if(combatant?.source_type!=='character')return '';
+ const portrait=combatPlayerPortraitSource(combatant);
  const scale=Math.max(.55,g.size/42);
- const glbFigure=combatGlbMiniatureFigure(combatant);
- const figure=glbFigure||(kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck());
- return '<g class="combat-miniature '+kind+(glbFigure?' glb-miniature':'')+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
-  '<ellipse class="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
-  '<ellipse class="combat-mini-base" cx="0" cy="7" rx="21" ry="7"/>'+
-  '<ellipse class="combat-mini-base-ring" cx="0" cy="7" rx="21" ry="7"/>'+
-  figure+
-  '<rect class="combat-mini-hit" x="-31" y="-64" width="62" height="78" rx="8"/>'+
+ if(!portrait){
+  const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
+  const figure=kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck();
+  return '<g class="combat-miniature '+kind+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+   '<ellipse class="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
+   '<ellipse class="combat-mini-base" cx="0" cy="7" rx="21" ry="7"/>'+
+   '<ellipse class="combat-mini-base-ring" cx="0" cy="7" rx="21" ry="7"/>'+
+   figure+
+   '<rect class="combat-mini-hit" x="-31" y="-64" width="62" height="78" rx="8"/>'+
+  '</g>'
+ }
+ const safeId=String(combatant.id||combatant.source_id||'player').replace(/[^a-zA-Z0-9_-]/g,'_');
+ const clipId='combatPortraitClip_'+safeId;
+ const outer=combatPortraitHexPoints(34),inner=combatPortraitHexPoints(28.7);
+ return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+  '<defs><clipPath id="'+clipId+'"><polygon points="'+inner+'"/></clipPath></defs>'+
+  '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
+  '<polygon class="combat-portrait-frame-back" points="'+outer+'"/>'+
+  '<polygon class="combat-portrait-green-ring" points="'+outer+'"/>'+
+  '<polygon class="combat-portrait-inner-frame" points="'+combatPortraitHexPoints(30.7)+'"/>'+
+  '<image class="combat-portrait-image" href="'+escAttr(portrait.url)+'" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'+
+  '<polygon class="combat-portrait-image-edge" points="'+inner+'"/>'+
+  '<polyline class="combat-portrait-bevel-light" points="-29.4,-17 0,-34 29.4,-17"/>'+
+  '<polyline class="combat-portrait-bevel-dark" points="29.4,17 0,34 -29.4,17"/>'+
+  '<rect class="combat-mini-hit" x="-35" y="-39" width="70" height="80" rx="8"/>'+
  '</g>'
 }
 function combatHexNeighbors(q,r){
