@@ -5,7 +5,7 @@ const INN_SECTIONS=[
   {category:'Mat & dryck',title:'Mat'},
   {category:'Tjänster',title:'Tjänster'}
 ];
-const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.2';
+const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.32.3';
 
 let innCatalog=[];
 let innCatalogLoaded=false;
@@ -243,6 +243,20 @@ function innGameSetBuyer(id){
 function innGameSetStakeKm(value){
   innGameStakeKm=Math.max(1,Math.floor(Number(value)||1));
   renderInnGame();
+}
+
+function openInnGame(){
+  const modal=document.getElementById('innGameModal');
+  if(!modal)return;
+  modal.classList.remove('hidden');
+  document.body.classList.add('inn-game-open');
+  renderInnGame();
+  setTimeout(()=>document.getElementById('innGamePlayBtn')?.focus(),0);
+}
+
+function closeInnGame(){
+  document.getElementById('innGameModal')?.classList.add('hidden');
+  document.body.classList.remove('inn-game-open');
 }
 
 function innRandomD6(){
@@ -534,6 +548,7 @@ async function openInn(){
 }
 
 function closeInn(){
+  closeInnGame();
   document.getElementById('innPage')?.classList.add('hidden');
   document.body.classList.remove('inn-open');
   goHome();
