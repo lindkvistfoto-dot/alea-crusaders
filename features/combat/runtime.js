@@ -179,10 +179,13 @@ async function combatCreateRuntimeFromScene(scene){
  await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
   name:scene.name||'Strid',status:'active',round_number:1,phase:'movement',winning_side:null,
-  initiative,active_actor_id:firstActorId,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
+  initiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
  })});
 
  if(combatantRows.length)await dbJson('combatants',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(combatantRows)});
+ if(firstActorId)await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({active_actor_id:firstActorId})
+ });
 
  const hexRows=runtime.sceneHexes.map(row=>({
   combat_id:instanceId,campaign_id:centralCampaignId,q:Number(row.q),r:Number(row.r),
