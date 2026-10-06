@@ -718,8 +718,7 @@ function combatRuntimeHexCells(){
  return cells
 }
 const COMBAT_PRIMARY_ACTIONS=[
- {key:'attack_melee',type:'attack',label:'Anfall',icon:'⚔',mode:'melee'},
- {key:'attack_ranged',type:'attack',label:'Avståndsanfall',icon:'🏹',mode:'ranged'},
+ {key:'attack',type:'attack',label:'Attack',icon:'⚔',mode:'auto'},
  {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction',reactive:true},
  {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
  {key:'spell_cast',type:'spell',label:'Lägg besvärjelse',icon:'🔮',mode:'cast'},
@@ -762,7 +761,7 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
   sourceData.weapon_key=combatWeaponKey(autoWeapon);
   sourceData.weapon_name=autoWeapon.name||'Vapen';
   sourceData.weapon_id=autoWeapon.weapon_id||autoWeapon.weaponTypeId||null
- }else if(def.type==='attack'&&def.mode==='melee'&&!weaponOptions.length){
+ }else if(def.type==='attack'&&def.mode!=='ranged'&&!weaponOptions.length){
   sourceData.weapon_key='unarmed';sourceData.weapon_name='Obeväpnad'
  }
  const body={
@@ -802,7 +801,8 @@ function combatHasUnusedAction(combatant){
  return !combatPrimaryActionIsSpent(combatChosenAction(combatant))
 }
 function combatSuccessfulMeleeAttack(action){
- return !!action&&action.action_type==='attack'&&action.source_data?.mode==='melee'&&
+ const mode=action?.result?.attack_mode||action?.source_data?.mode;
+ return !!action&&action.action_type==='attack'&&mode==='melee'&&
   action.result?.success===true&&action.status!=='cancelled'
 }
 function combatPendingParryOpportunity(){
@@ -1607,7 +1607,11 @@ function combatAttackProfile(combatant){
  const smi=combatNumber(base.Smidighet?.v??base.SMI,combatNumber(attrs.SMI,combatNumber(combatant?.state?.smi,10)));
  return{weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(src.weapons)?src.weapons:[]),currentEquipment:data.currentEquipment||null,sty,smi}
 }
-function combatAvailableWeapons(combatant,mode){
+function combatWeaponCategory(weapon){
+ if(weapon?._unarmed)return 'melee';
+ return String(weapon?.weaponCategory||weapon?.category||'melee').toLowerCase()
+}
+function combatAvailableWeapons(combatant,mode='auto'){
  const profile=combatAttackProfile(combatant),weapons=Array.isArray(profile.weapons)?profile.weapons:[];
  let available=weapons;
  if(combatant?.source_type==='character'&&profile.currentEquipment){
@@ -1620,13 +1624,14 @@ function combatAvailableWeapons(combatant,mode){
   ...(Array.isArray(combatant?.state?.dropped_weapon_keys)?combatant.state.dropped_weapon_keys:[])
  ].map(String));
  if(disabled.size)available=available.filter(weapon=>!disabled.has(combatWeaponKey(weapon)));
- if(mode==='melee')return available.filter(weapon=>(weapon.weaponCategory||weapon.category||'melee')==='melee');
- return available.filter(weapon=>['projectile','thrown'].includes(weapon.weaponCategory||weapon.category))
+ if(mode==='auto')return available;
+ if(mode==='melee')return available.filter(weapon=>combatWeaponCategory(weapon)==='melee');
+ return available.filter(weapon=>['projectile','thrown'].includes(combatWeaponCategory(weapon)))
 }
 function combatWeaponKey(weapon){
  return String(weapon?.equipId||weapon?.weapon_id||weapon?.weaponTypeId||weapon?.id||weapon?.name||'')
 }
-function combatAttackWeaponOptions(combatant,mode){
+function combatAttackWeaponOptions(combatant,mode='auto'){
  const weapons=combatAvailableWeapons(combatant,mode),seen=new Set();
  return weapons.filter(weapon=>{
   const key=combatWeaponKey(weapon);
@@ -1634,9 +1639,9 @@ function combatAttackWeaponOptions(combatant,mode){
   seen.add(key);return true
  })
 }
-function combatActionWeapon(combatant,action,mode){
+function combatActionWeapon(combatant,action,mode='auto'){
  const options=combatAttackWeaponOptions(combatant,mode);
- if(!options.length)return mode==='melee'?{name:'Obeväpnad',_unarmed:true}:null;
+ if(!options.length)return mode==='ranged'?null:{name:'Obeväpnad',_unarmed:true};
  const selectedKey=String(action?.source_data?.weapon_key||'');
  if(selectedKey==='unarmed')return {name:'Obeväpnad',_unarmed:true};
  if(selectedKey)return options.find(weapon=>combatWeaponKey(weapon)===selectedKey)||null;
@@ -1671,34 +1676,61 @@ function combatWeaponRangeHexes(weapon,combatant){
  if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))));
  return 0
 }
+function combatAttackModeForTarget(actor,target,weapon,preferredMode='auto'){
+ if(!actor||!target||!weapon)return null;
+ if(preferredMode==='melee'||preferredMode==='ranged')return preferredMode;
+ const category=combatWeaponCategory(weapon),distance=combatAxialDistance(actor,target);
+ if(category==='thrown')return distance===1?'melee':'ranged';
+ if(category==='projectile')return 'ranged';
+ return 'melee'
+}
 function combatAttackRangeHexes(combatant,mode,weapon=null){
  if(mode==='melee')return combatMeleeRangeHexes(combatant,weapon);
- if(weapon)return combatWeaponRangeHexes(weapon,combatant);
- const weapons=combatAttackWeaponOptions(combatant,'ranged');
- return weapons.length===1?combatWeaponRangeHexes(weapons[0],combatant):0
+ if(mode==='ranged'){
+  if(weapon)return combatWeaponRangeHexes(weapon,combatant);
+  const weapons=combatAttackWeaponOptions(combatant,'ranged');
+  return weapons.length===1?combatWeaponRangeHexes(weapons[0],combatant):0
+ }
+ if(weapon){
+  const category=combatWeaponCategory(weapon);
+  if(category==='melee'||weapon?._unarmed)return combatMeleeRangeHexes(combatant,weapon);
+  return combatWeaponRangeHexes(weapon,combatant)
+ }
+ return 0
 }
-function combatPossibleAttackTargets(actor,mode,weapon=null){
+function combatAttackTargetInfo(actor,target,weapon,preferredMode='auto'){
+ if(!actor||!target||!weapon)return null;
+ if(String(target.id)===String(actor.id)||target.visible_to_players===false)return null;
+ if(target.side===actor.side||['dead','removed'].includes(target.status))return null;
+ const distance=combatAxialDistance(actor,target);
+ if(distance<1||!combatHasLineOfSight(actor,target))return null;
+ const mode=combatAttackModeForTarget(actor,target,weapon,preferredMode);
+ if(!mode)return null;
+ let maxRange;
+ if(mode==='melee'){
+  maxRange=preferredMode==='auto'&&combatWeaponCategory(weapon)==='thrown'?1:combatMeleeRangeHexes(actor,weapon)
+ }else{
+  maxRange=combatWeaponRangeHexes(weapon,actor)
+ }
+ if(maxRange<=0||distance>maxRange)return null;
+ return{distance,maxRange,mode}
+}
+function combatPossibleAttackTargets(actor,mode='auto',weapon=null){
  const out=new Map();
- if(!actor||!['melee','ranged'].includes(mode))return out;
- const maxRange=combatAttackRangeHexes(actor,mode,weapon);
- if(maxRange<=0)return out;
+ if(!actor||!weapon)return out;
  for(const target of combatants){
-  if(String(target.id)===String(actor.id)||target.visible_to_players===false)continue;
-  if(target.side===actor.side)continue;
-  if(['dead','removed'].includes(target.status))continue;
-  const distance=combatAxialDistance(actor,target);
-  if(distance<1||distance>maxRange)continue;
-  if(!combatHasLineOfSight(actor,target))continue;
-  out.set(String(target.id),{distance,maxRange})
+  const info=combatAttackTargetInfo(actor,target,weapon,mode);
+  if(info)out.set(String(target.id),info)
  }
  return out
 }
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(!actor||def?.type!=='attack'||!['melee','ranged'].includes(def.mode))return new Map();
- const weapon=combatActionWeapon(actor,action,def.mode);
+ if(!actor||def?.type!=='attack')return new Map();
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const weapon=combatActionWeapon(actor,action,mode);
  if(!weapon)return new Map();
- return combatPossibleAttackTargets(actor,def.mode,weapon)
+ return combatPossibleAttackTargets(actor,mode,weapon)
 }
 function combatMovementBudget(combatant){
  if(!combatant)return 0;
