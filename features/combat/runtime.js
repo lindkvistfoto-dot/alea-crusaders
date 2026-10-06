@@ -42,6 +42,7 @@ function renderCombatGmControls(){
   (activeCombat?'<span class="combat-gm-active">Aktiv: '+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
 function combatNumber(value,fallback=null){
+ if(value==null||value==='')return fallback;
  const n=Number(value);return Number.isFinite(n)?n:fallback
 }
 function combatStateValue(state,...keys){
