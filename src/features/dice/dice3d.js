@@ -76,3 +76,69 @@ window.alea3dRoll=async(notation)=>{
 };
 window.alea3dClear=async()=>{if(box)box.clear()};
 window.alea3dStatus("3D-motor: redo");
+
+let innBox=null,innReady=null;
+async function waitForDiceHostSelector(selector){
+ const host=document.querySelector(selector);
+ if(!host)throw new Error("3D-behållaren saknas: "+selector);
+ for(let i=0;i<24;i++){
+  const r=host.getBoundingClientRect();
+  if(r.width>80&&r.height>80&&host.offsetParent!==null)return host;
+  await nextFrame();
+ }
+ throw new Error("3D-behållaren har ingen användbar storlek: "+selector);
+}
+async function ensureInnDice3D(){
+ if(innBox)return innBox;
+ if(innReady)return innReady;
+ innReady=(async()=>{
+  await waitForDiceHostSelector("#innGameDiceHost");
+  const appPath=new URL(".",document.baseURI).pathname;
+  const instance=new DiceBox({
+   container:"#innGameDiceHost",
+   id:"alea-inn-dice-canvas",
+   assetPath:appPath+"alea-dicebox-assets-v1.1.4/assets/dice-box/",
+   origin:window.location.origin,
+   theme:"default",
+   themeColor:"#d8bd82",
+   scale:6.4,
+   enableShadows:true,
+   shadowTransparency:.72,
+   lightIntensity:1.15,
+   spinForce:7,
+   throwForce:5,
+   gravity:1,
+   offscreen:false
+  });
+  await instance.init();
+  innBox=instance;
+  innBox.show();
+  innBox.resizeWorld?.();
+  await nextFrame();
+  return innBox;
+ })().catch(error=>{
+  innReady=null;innBox=null;
+  console.warn("Inn DiceBox unavailable; fallback remains active",error);
+  document.getElementById("innGameDiceHost")?.classList.add("unavailable");
+  throw error;
+ });
+ return innReady;
+}
+window.alea3dInnPrepare=async()=>{
+ try{
+  document.getElementById("innGameDiceHost")?.classList.remove("unavailable");
+  await ensureInnDice3D();
+ }catch(_){}
+};
+window.alea3dInnRoll=async(notation)=>{
+ const host=await waitForDiceHostSelector("#innGameDiceHost");
+ host.classList.remove("unavailable");
+ const b=await ensureInnDice3D();
+ b.show();
+ b.resizeWorld?.();
+ await nextFrame();
+ return b.roll(notation,{newStartPoint:true});
+};
+window.alea3dInnClear=async()=>{
+ if(innBox)await innBox.clear();
+};
