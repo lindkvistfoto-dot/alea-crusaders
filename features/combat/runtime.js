@@ -122,8 +122,11 @@ async function loadCombatSceneChoices(force=false){
  if(typeof loadCampaignCombatScenes==='function'&&(force||!(campaignCombatScenes||[]).length))await loadCampaignCombatScenes();
  const scenes=Array.isArray(campaignCombatScenes)?campaignCombatScenes:[];
  const activeSceneId=combatActiveSceneId();
- if(activeSceneId&&scenes.some(scene=>String(scene.id)===activeSceneId))combatSelectedSceneId=activeSceneId;
- else if(!scenes.some(scene=>String(scene.id)===String(combatSelectedSceneId)))combatSelectedSceneId=scenes.length===1?String(scenes[0].id):'';
+ const selectedExists=scenes.some(scene=>String(scene.id)===String(combatSelectedSceneId));
+ if(!selectedExists){
+  if(activeSceneId&&scenes.some(scene=>String(scene.id)===activeSceneId))combatSelectedSceneId=activeSceneId;
+  else combatSelectedSceneId=scenes.length===1?String(scenes[0].id):''
+ }
  renderCombatGmControls();
  return scenes
 }
@@ -139,11 +142,11 @@ function renderCombatGmControls(){
  if(scenes.length===1&&!combatSelectedSceneId)combatSelectedSceneId=String(scenes[0].id);
  const activeSceneId=combatActiveSceneId();
  const scene=combatSceneFromId(combatSelectedSceneId);
- host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>Under utveckling · startar direkt i Rörelse</small></div>'+
+ host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>Play startar vald scen · Reset återställer aktiv scen</small></div>'+
   '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
-  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||!!activeCombat?'disabled':'')+'>▶ Play</button>'+
+  '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat?'<span class="combat-gm-active">Aktiv: '+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
@@ -416,8 +419,8 @@ async function combatStartScene(sceneId,{reset=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  try{
-  if(reset&&activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
-  else if(!reset&&activeCombat?.id)return;
+  if(activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
+  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];
   const instanceId=await combatCreateRuntimeFromScene(scene);
   combatSelectedSceneId=String(scene.id);
   await loadActiveCombat();
@@ -1451,13 +1454,18 @@ function renderCombatMap(){
  return '<svg class="combat-map-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund">'+image+terrain+tokens+'</svg>'
 }
 
-function combatantCard(c){
- let cls=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
+function combatantCard(c,index=0){
+ const roleClass=c.source_type==='character'?'player-row':c.source_type==='npc'?'npc-row':'enemy-row';
+ const selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'',attack=combatCurrentAttackTargets().has(String(c.id))?' attack-target':'';
  let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':'/'+c.max_kp),move=c.movement_remaining==null?'—':c.movement_remaining;
  let rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
- let init=rank!=null&&total!=null?' · #'+rank+' Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'';
+ const order=rank!=null?rank:index+1;
+ let init=total!=null?'Init '+total+(smi!=null&&die!=null?' (SMI '+smi+' + '+die+')':''):'Initiativ ej slaget';
  const fumbleState=(c.state?.prone?' · Liggande':'')+((c.state?.broken_weapon_keys||[]).length?' · Trasigt vapen':'')+((c.state?.dropped_weapon_keys||[]).length?' · Tappat vapen':'');
- return'<button type="button" class="combatant-card '+cls+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')"><div class="name">'+escAttr(c.name_snapshot)+'</div><div class="meta">'+combatSideLabel(c.side)+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></button>'
+ const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':'Fiende/monster';
+ return'<button type="button" class="combatant-card '+roleClass+selected+turn+attack+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
+  '<span class="combat-order-number">'+order+'</span><div class="combatant-card-copy"><div class="name">'+escAttr(c.name_snapshot)+'</div>'+
+  '<div class="meta">'+roleLabel+' · '+init+' · KP '+kp+' · Förfl. '+move+(c.flying?' · Flyger':'')+fumbleState+'</div></div></button>'
 }
 function combatAttackTargetSummaryHtml(combatant){
  if(!combatant||!combatIsActiveTurn(combatant))return '';
@@ -1481,13 +1489,13 @@ function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
  if(!activeCombat){
   if(sub)sub.textContent='Ingen aktiv strid';
-  body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen i SL-raden ovan och tryck <b>Play</b>. Under utvecklingen startar striden direkt i <b>Rörelse</b> så att förflyttning kan testas först.</div><div class="combat-quick-note"><b>Reset</b> återställer runtime-striden till stridsscenens sparade startpositioner, terräng och grundvärden utan att ändra själva scenen.</div></div>';return
+  body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen i SL-raden ovan och tryck <b>Play</b>. Alea skapar då striden och slår initiativ för samtliga kombatanter.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div>';return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let first=combatants.find(row=>String(row.id)===String(activeCombat.active_actor_id)),initiativeLead=first?(' · Initiativetta: '+first.name_snapshot):'';
- let participantHtml=combatants.length?combatants.map(combatantCard).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
+ let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Deltagare</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ body.innerHTML='<div class="combat-shell"><div class="combat-topbar"><span class="combat-round">Runda '+activeCombat.round_number+'</span><span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span><span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+escAttr(initiativeLead)+'</span>'+(combatCanManage()?'<span class="combat-status">· SL-läge</span>':'')+'</div>'+combatReactionPromptHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap"><div class="combat-board-head"><span>Hexkarta</span><div class="combat-board-legends"><div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div><div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div></div></div><div class="combat-board">'+renderCombatMap()+'</div></div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
  requestAnimationFrame(()=>requestAnimationFrame(()=>combatPositionDiceLayer()))
 }
 
