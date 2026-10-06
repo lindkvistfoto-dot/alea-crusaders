@@ -64,6 +64,7 @@ function combatRenderDiceReadout(label,rolls){
 }
 async function combatRollDice(specs,label='Slag'){
  if(combatDiceBusy)return null;
+ combatHideInitiativeLegend();
  const clean=(Array.isArray(specs)?specs:[]).map(spec=>({
   qty:Math.max(1,Math.min(20,Math.floor(Number(spec?.qty)||1))),
   sides:[3,4,6,8,10,20,100].includes(Number(spec?.sides))?Number(spec.sides):6
@@ -217,17 +218,18 @@ function combatRollD10(){
  }catch(_error){}
  return Math.floor(Math.random()*10)+1
 }
-function combatRollInitiative(rows){
+const COMBAT_INITIATIVE_COLORS=['#d7544d','#4f86c6','#d4a72c','#68a05d','#9a69b4','#d87b39','#49a5a0','#cc6f92','#7e6ac8','#8a7a55'];
+let combatInitiativeVisuals=new Map();
+function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=new Map()){
  const visible=(rows||[]).filter(row=>row.visible_to_players!==false);
  const results=visible.map((row,index)=>{
   const smi=Math.max(0,combatNumber(row.state?.smi,10));
-  const die=combatRollD10();
+  const die=combatNumber(dieByCombatant.get(String(row.id)),combatRollD10());
   return{
    combatant_id:row.id,
    name:row.name_snapshot,
-   smi,
-   die,
-   total:smi+die,
+   smi,die,total:smi+die,
+   color:colorByCombatant.get(String(row.id))||COMBAT_INITIATIVE_COLORS[index%COMBAT_INITIATIVE_COLORS.length],
    original_sort:Number(row.sort_order)||index
   }
  }).sort((a,b)=>b.total-a.total||b.smi-a.smi||a.original_sort-b.original_sort||String(a.name).localeCompare(String(b.name),'sv'));
@@ -237,18 +239,122 @@ function combatRollInitiative(rows){
  rows.forEach((row,index)=>{
   const result=resultById.get(String(row.id));
   if(result){
-   row.sort_order=rankById.get(String(row.id))-1;
-   row.state={...(row.state||{}),initiative_roll:result.die,initiative_total:result.total,initiative_rank:rankById.get(String(row.id))}
+   const rank=rankById.get(String(row.id));
+   row.sort_order=rank-1;
+   row.state={...(row.state||{}),initiative_roll:result.die,initiative_total:result.total,initiative_rank:rank}
   }else{
    row.sort_order=1000+(Number(row.sort_order)||index)
   }
  });
  return{
   formula:'SMI+1T10',
+  status:'resolved',
   rolled_at:new Date().toISOString(),
   order:results.map(result=>result.combatant_id),
   results:results.map((result,index)=>({...result,rank:index+1}))
  }
+}
+function combatInitiativeEntries(rows){
+ return (rows||[]).filter(row=>row.visible_to_players!==false).map((row,index)=>({
+  combatant_id:String(row.id),
+  name:row.name_snapshot||'Kombatant',
+  smi:Math.max(0,combatNumber(row.state?.smi,10)),
+  color:COMBAT_INITIATIVE_COLORS[index%COMBAT_INITIATIVE_COLORS.length],
+  groupId:index
+ }))
+}
+function combatInitiativeDiceMap(raw,entries){
+ const byGroup=new Map(),sequential=[];
+ for(const item of (Array.isArray(raw)?raw:[])){
+  if(Array.isArray(item?.rolls)&&item.rolls.length){
+   const roll=item.rolls[0],value=Number(roll?.value??roll?.result);
+   const group=Number(item.id??item.groupId??roll?.groupId);
+   if(Number.isInteger(value)&&value>=1&&value<=10){
+    if(Number.isFinite(group))byGroup.set(group,value);
+    sequential.push(value)
+   }
+  }else{
+   const value=Number(item?.value??item?.result),group=Number(item?.groupId);
+   if(Number.isInteger(value)&&value>=1&&value<=10){
+    if(Number.isFinite(group))byGroup.set(group,value);
+    sequential.push(value)
+   }
+  }
+ }
+ const values=new Map();
+ entries.forEach((entry,index)=>{
+  const value=byGroup.get(entry.groupId)??sequential[index];
+  if(Number.isInteger(value)&&value>=1&&value<=10)values.set(entry.combatant_id,value)
+ });
+ return values
+}
+function combatShowInitiativeLegend(entries,initiative=null){
+ const host=$('combatInitiativeLegend');if(!host)return;
+ const results=new Map((initiative?.results||[]).map(result=>[String(result.combatant_id),result]));
+ host.innerHTML='<div class="combat-initiative-title">Initiativ · SMI + T10</div><div class="combat-initiative-chips">'+entries.map(entry=>{
+  const result=results.get(entry.combatant_id);
+  return '<div class="combat-initiative-chip" style="--initiative-color:'+entry.color+'">'+
+   '<i></i><b>'+escAttr(entry.name)+'</b>'+
+   (result?'<span>T10 '+result.die+' + SMI '+result.smi+' = <strong>'+result.total+'</strong> · #'+result.rank+'</span>':'<span>T10 rullar… · SMI '+entry.smi+'</span>')+
+  '</div>'
+ }).join('')+'</div>';
+ host.classList.add('show');
+ host.classList.toggle('resolved',!!initiative)
+}
+function combatHideInitiativeLegend(){
+ const host=$('combatInitiativeLegend');if(host)host.classList.remove('show','resolved')
+}
+async function combatRollAndApplyInitiative(instanceId){
+ const entries=combatInitiativeEntries(combatants);
+ if(!entries.length){
+  await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({initiative:{formula:'SMI+1T10',status:'resolved',rolled_at:new Date().toISOString(),order:[],results:[]},phase:'movement'})
+  });
+  return
+ }
+ combatInitiativeVisuals=new Map(entries.map(entry=>[entry.combatant_id,entry]));
+ combatShowInitiativeLegend(entries);
+ combatPositionDiceLayer();
+ const readout=$('combatDiceReadout');if(readout)readout.classList.remove('show');
+ try{await window.alea3dCombatClear?.()}catch(_){}
+ let dieMap=new Map();
+ if(typeof window.alea3dCombatRoll==='function'){
+  try{
+   const notation=entries.map(entry=>({qty:1,sides:10,theme:'default',themeColor:entry.color}));
+   const raw=await window.alea3dCombatRoll(notation);
+   dieMap=combatInitiativeDiceMap(raw,entries);
+   if(dieMap.size!==entries.length)throw new Error('Kunde inte koppla samtliga initiativtärningar till rätt kombatant.')
+  }catch(error){
+   console.warn('Samtidigt initiativkast i DiceBox misslyckades, använder reservslag.',error);
+   dieMap=new Map()
+  }
+ }
+ if(dieMap.size!==entries.length){
+  entries.forEach(entry=>dieMap.set(entry.combatant_id,combatRollD10()))
+ }
+ const colors=new Map(entries.map(entry=>[entry.combatant_id,entry.color]));
+ const initiative=combatBuildInitiative(combatants,dieMap,colors);
+ const firstActorId=initiative.order[0]||null;
+
+ await Promise.all(combatants.map(row=>dbJson('combatants?id=eq.'+encodeURIComponent(row.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({sort_order:row.sort_order,state:row.state,updated_at:new Date().toISOString()})
+ })));
+ await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({initiative,active_actor_id:firstActorId,phase:'movement',updated_at:new Date().toISOString()})
+ });
+
+ const logRows=initiative.results.map(result=>({
+  combat_id:instanceId,campaign_id:centralCampaignId,round_number:1,phase:'initiative',
+  actor_id:result.combatant_id,target_id:null,event_type:'initiative',
+  message:'#'+result.rank+' '+result.name+' · SMI '+result.smi+' + T10 '+result.die+' = '+result.total,
+  details:{rank:result.rank,smi:result.smi,die:result.die,total:result.total,color:result.color,formula:'SMI+1T10'},
+  player_visible:true
+ }));
+ if(logRows.length)await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(logRows)});
+ combatShowInitiativeLegend(entries,initiative)
 }
 async function combatCreateRuntimeFromScene(scene){
  const runtime=await combatLoadSceneRuntimeData(scene);
@@ -283,19 +389,15 @@ async function combatCreateRuntimeFromScene(scene){
   }
  }).filter(Boolean);
 
- const initiative=combatRollInitiative(combatantRows);
- const firstActorId=initiative.order[0]||null;
+ const initiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
 
  await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
-  name:scene.name||'Strid',status:'active',round_number:1,phase:'movement',winning_side:null,
+  name:scene.name||'Strid',status:'active',round_number:1,phase:'initiative',winning_side:null,
   initiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
  })});
 
  if(combatantRows.length)await dbJson('combatants',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(combatantRows)});
- if(firstActorId)await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
-  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({active_actor_id:firstActorId})
- });
 
  const hexRows=runtime.sceneHexes.map(row=>({
   combat_id:instanceId,campaign_id:centralCampaignId,q:Number(row.q),r:Number(row.r),
@@ -304,14 +406,6 @@ async function combatCreateRuntimeFromScene(scene){
  }));
  if(hexRows.length)await dbJson('combat_hexes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(hexRows)});
 
- const logRows=initiative.results.map(result=>({
-  combat_id:instanceId,campaign_id:centralCampaignId,round_number:1,phase:'initiative',
-  actor_id:result.combatant_id,target_id:null,event_type:'initiative',
-  message:'#'+result.rank+' '+result.name+' · SMI '+result.smi+' + T10 '+result.die+' = '+result.total,
-  details:{rank:result.rank,smi:result.smi,die:result.die,total:result.total,formula:'SMI+1T10'},
-  player_visible:true
- }));
- if(logRows.length)await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(logRows)});
  return instanceId
 }
 
@@ -322,8 +416,10 @@ async function combatStartScene(sceneId,{reset=false}={}){
  try{
   if(reset&&activeCombat?.id)await combatDeleteRuntime(activeCombat.id);
   else if(!reset&&activeCombat?.id)return;
-  await combatCreateRuntimeFromScene(scene);
+  const instanceId=await combatCreateRuntimeFromScene(scene);
   combatSelectedSceneId=String(scene.id);
+  await loadActiveCombat();
+  await combatRollAndApplyInitiative(instanceId);
   await loadActiveCombat();
  }catch(e){
   console.error('Kunde inte starta stridsscen',e);
