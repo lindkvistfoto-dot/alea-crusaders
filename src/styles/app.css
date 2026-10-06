@@ -2329,3 +2329,31 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-initiative-chip{min-width:0;flex:1 1 44%;padding:4px 6px}
  .combat-initiative-chip span{font-size:9px}
 }
+
+
+/* v0.33.14 — vapenattacker använder samma Expert-färdighetsslagsmotor */
+.combat-attack-execute{
+ margin-top:10px;padding:9px;border:1px solid #b87863;border-radius:9px;background:#fff0e8;
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.combat-attack-execute>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.combat-attack-execute span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#8a5846}
+.combat-attack-execute b{font-size:13px;color:#6f221f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combat-attack-execute small{font-size:10px;color:#715d51}
+.combat-attack-execute.disabled{display:block;color:#7c6659}
+.combat-attack-roll-btn{flex:0 0 auto;background:#7b302b!important;color:#fff!important;border-color:#7b302b!important}
+.combat-attack-result{
+ margin-top:10px;padding:9px;border:1px solid #ad8d68;border-radius:9px;background:#f5ecdd;
+ display:flex;flex-direction:column;gap:5px;
+}
+.combat-attack-result>div:first-child{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.combat-attack-result>div:first-child span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#806c58}
+.combat-attack-result>div:first-child b{font-size:13px}
+.combat-attack-result-rolls{display:flex;gap:9px;flex-wrap:wrap;font-size:10px;color:#715f4d}
+.combat-attack-result.success,.combat-attack-result.special,.combat-attack-result.perfect{border-color:#65916d;background:#edf5e9}
+.combat-attack-result.fail,.combat-attack-result.fumble{border-color:#b56e65;background:#fae9e5}
+.combat-attack-result.special>div:first-child b,.combat-attack-result.perfect>div:first-child b{color:#2f6a3b}
+.combat-attack-result>strong{
+ align-self:flex-start;padding:4px 7px;border-radius:999px;background:#7b302b;color:#fff4d9;font-size:10px;letter-spacing:.05em
+}
+@media(max-width:620px){.combat-attack-execute{align-items:stretch;flex-direction:column}.combat-attack-roll-btn{width:100%}}
