@@ -9,7 +9,7 @@ let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,c
 const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
 let supabaseSession=null,supabaseProfile=null;
-let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;let ruleSocialStands=[],ruleSocialStandsLoaded=false;
+let ruleSkills=[],ruleSkillsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleShields=[],ruleShieldsLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;let ruleSocialStands=[],ruleSocialStandsLoaded=false;
 let centralCampaignId=null,centralReady=false,centralSaveTimer=null,centralCampaignRole=null,campaignDayState=null,campaignErfAwards=[],campaignCharacterRestStates=[],campaignSites=[],campaignLocations=[],campaignLocationEventLinks=[],campaignEvents=[],campaignNpcs=[],campaignMonsters=[],campaignCombatScenes=[],campaignContentReady=false,currentLocationContentId=null,currentLocationAssets=[],locationAssetUrlCache=new Map();let activeCombat=null,combatants=[],combatHexes=[],combatActions=[],combatLogRows=[],combatSelectedTargetId=null,combatReturn='home';
 function asBool(v){return v===true||v===1||v==='1'||String(v).toLowerCase()==='true'}
 function syncAppVersionDisplay(){let src=document.getElementById('appVersion'),home=document.getElementById('mobileHomeVersion'),admin=document.getElementById('adminOverviewVersion');if(!src)return;let label='Version '+src.textContent;if(home)home.textContent=label;if(admin)admin.textContent=label}
@@ -18,7 +18,7 @@ function toggleLoginPassword(){let e=$('loginPassword');e.type=e.type==='passwor
 syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
-async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleWeapons(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
+async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
 async function authFetch(path,options={}){let headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json',...(options.headers||{})};return fetch(SUPABASE_URL+path,{...options,headers})}
 async function loadProfile(){if(!supabaseSession?.user?.id)return null;const auth={'Authorization':'Bearer '+supabaseSession.access_token};let path='/rest/v1/profiles?id=eq.'+encodeURIComponent(supabaseSession.user.id)+'&select=id,display_name,email,is_admin';let r=await authFetch(path,{headers:auth});if(!r.ok)throw new Error('Kunde inte läsa användarprofilen ('+r.status+').');let rows=await r.json();supabaseProfile=rows[0]||null;if(!supabaseProfile&&supabaseSession.user.email){path='/rest/v1/profiles?email=eq.'+encodeURIComponent(supabaseSession.user.email)+'&select=id,display_name,email,is_admin';r=await authFetch(path,{headers:auth});if(r.ok){rows=await r.json();supabaseProfile=rows[0]||null}}return supabaseProfile}
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
@@ -107,6 +107,16 @@ async function loadRuleArmorRegistry(force=false){
  }catch(e){
   console.error('Kunde inte läsa rustningsregistret',e);
   ruleArmorTypes=[];ruleArmorMaterials=[];ruleArmorLoaded=false;return {types:[],materials:[]}
+ }
+}
+async function loadRuleShields(force=false){
+ if(ruleShieldsLoaded&&!force)return ruleShields;
+ try{
+  ruleShields=await dbJson('rule_shields?select=*&order=sort_order.asc,name.asc');
+  ruleShieldsLoaded=true;return ruleShields
+ }catch(e){
+  console.error('Kunde inte läsa sköldregistret',e);
+  ruleShields=[];ruleShieldsLoaded=false;return []
  }
 }
 async function loadRuleWeapons(force=false){
@@ -538,6 +548,197 @@ async function deleteRuleWeapon(id){
  catch(e){alert('Kunde inte ta bort vapnet: '+e.message)}
 }
 
+
+function ruleArmorCategoryLabel(category){
+ return({cloth:'Tyg',leather:'Läder',metal:'Metall'})[category]||category||'—'
+}
+function ruleShieldSizeLabel(size){
+ return({small:'Liten',medium:'Medelstor',large:'Stor'})[size]||size||'—'
+}
+function ruleMasterNumberValue(id,{nullable=false,integer=false,min=0}={}){
+ let raw=$(id)?.value??'';
+ if(raw==='')return nullable?null:0;
+ let value=Number(raw);
+ if(!Number.isFinite(value)||(integer&&!Number.isInteger(value))||value<min)throw new Error('Kontrollera de numeriska värdena.');
+ return value
+}
+function ruleMasterKeyFromName(name,prefix='item'){
+ let key=String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+ return key||prefix
+}
+function renderAdminArmors(){
+ let el=$('adminArmorTable'),st=$('adminArmorStatus');if(!el)return;
+ if(!ruleArmorLoaded){el.innerHTML='';if(st)st.textContent='Rustningsregistret kunde inte läsas.';return}
+ let expert=ruleArmorTypes.filter(r=>asBool(r.canonical_expert)).length;
+ if(st)st.textContent=ruleArmorTypes.length+' rustningstyper · '+expert+' kanoniska Expertposter · '+ruleArmorMaterials.length+' materialregler.';
+ if(!ruleArmorTypes.length){el.innerHTML='<div class="admin-master-empty">Inga rustningar finns ännu.</div>';return}
+ el.innerHTML=
+  '<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP*</div><div class="ahead">Pris/BEP</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  ruleArmorTypes.map(r=>
+   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
+   '<div>'+escAttr(ruleArmorCategoryLabel(r.category))+'</div>'+
+   '<div>'+(r.absorption??'—')+'</div>'+
+   '<div><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
+   '<div>'+(r.bep??'—')+'</div>'+
+   '<div>'+(r.price_per_bep??'—')+'</div>'+
+   '<div><span class="admin-source-badge '+(asBool(r.canonical_expert)?'expert':'extra')+'">'+escAttr(r.source_label||'—')+'</span></div>'+
+   '<div class="adminactions"><button class="smallbtn" onclick="editRuleArmor(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleArmor(\''+r.id+'\')" title="Ta bort">×</button></div>'
+  ).join('')+
+  '<div class="admin-master-footnote">* BEP är kompatibilitetsvärdet för STO 9–12. Expert använder i första hand viktkod A–K och räknar faktisk vikt från bärarens STO.</div>'
+}
+function editRuleArmor(id=''){
+ if(!activeUser()?.admin)return;
+ let r=id?ruleArmorTypes.find(x=>x.id===id):null,category=r?.category||'leather';
+ $('adminEditorTitle').textContent=r?'Redigera rustning':'Lägg till rustning';
+ $('adminEditorBody').innerHTML=
+  '<div class="rule-editor-grid armor-rule-editor">'+
+   '<label class="wide">Namn<input id="raName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Kategori<select id="raCategory"><option value="cloth" '+(category==='cloth'?'selected':'')+'>Tyg</option><option value="leather" '+(category==='leather'?'selected':'')+'>Läder</option><option value="metal" '+(category==='metal'?'selected':'')+'>Metall</option></select></label>'+
+   '<label>ABS<input id="raAbs" type="number" min="0" step="1" value="'+escAttr(r?.absorption??0)+'"></label>'+
+   '<label>Viktkod<select id="raWeightCode"><option value="">— Ingen —</option>'+['A','B','C','D','E','F','G','H','J','K'].map(k=>'<option value="'+k+'" '+(r?.weight_code===k?'selected':'')+'>'+k+'</option>').join('')+'</select></label>'+
+   '<label>BEP, STO 9–12<input id="raBep" type="number" min="0" step="1" value="'+escAttr(r?.bep??0)+'"></label>'+
+   '<label>Pris / BEP (sm)<input id="raPricePerBep" type="number" min="0" step="0.01" value="'+escAttr(r?.price_per_bep??'')+'"></label>'+
+   '<label>Källa<input id="raSource" value="'+escAttr(r?.source_label||'Alea-tillägg')+'" placeholder="t.ex. Expert E51-52"></label>'+
+   '<label>Sorteringsordning<input id="raSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleArmorTypes.length+1)*10))+'"></label>'+
+   '<label class="wide admincheck"><input id="raCanonical" type="checkbox" '+(asBool(r?.canonical_expert)?'checked':'')+'> Kanonisk Expert-rustning</label>'+
+   '<label class="wide">Beskrivning<textarea id="raDescription">'+escAttr(r?.description||'')+'</textarea></label>'+
+  '</div><div class="rule-editor-note">Expert anger viktkod A–K; BEP-värdet används tills den STO-beroende vikttabellen kopplas direkt till rollfiguren.</div>'+
+  '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleArmor(\''+id+'\')">Spara</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+async function saveRuleArmor(id=''){
+ if(!activeUser()?.admin)return;
+ let name=$('raName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ let existing=id?ruleArmorTypes.find(x=>x.id===id):null;
+ try{
+  let payload={
+   type_key:existing?.type_key||ruleMasterKeyFromName(name,'armor'),
+   name,
+   category:$('raCategory')?.value||'leather',
+   absorption:ruleMasterNumberValue('raAbs',{integer:true}),
+   weight_code:$('raWeightCode')?.value||null,
+   bep:ruleMasterNumberValue('raBep',{integer:true}),
+   price_per_bep:ruleMasterNumberValue('raPricePerBep',{nullable:true}),
+   source_label:$('raSource')?.value.trim()||'Alea-tillägg',
+   canonical_expert:!!$('raCanonical')?.checked,
+   description:$('raDescription')?.value.trim()||'',
+   sort_order:Number($('raSort')?.value||0),
+   updated_at:new Date().toISOString()
+  };
+  if(id)await dbJson('rule_armor_types?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+  else await dbJson('rule_armor_types',{method:'POST',body:JSON.stringify(payload)});
+  closeAdminEditor();await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
+ }catch(e){alert('Kunde inte spara rustningen: '+e.message)}
+}
+async function deleteRuleArmor(id){
+ if(!activeUser()?.admin)return;
+ let r=ruleArmorTypes.find(x=>x.id===id);if(!r)return;
+ let usedByCharacter=(chars||[]).some(c=>(c.armor||[]).some(a=>String(a.armorTypeId||'')===String(id)));
+ let usedByNpc=(campaignNpcs||[]).some(n=>String(n?.armor?.armor_type_id||'')===String(id));
+ let usedByEnemy=(campaignMonsters||[]).some(n=>String(n?.armor?.armor_type_id||'')===String(id));
+ let used=usedByCharacter||usedByNpc||usedByEnemy;
+ let msg='Vill du verkligen ta bort '+r.name+'?'+(asBool(r.canonical_expert)?'\n\nDetta är markerat som en kanonisk Expert-post.':'')+(used?'\n\nRustningen används redan av en rollfigur, SLP, fiende eller monster. Befintliga kopior behåller sparade värden.':'');
+ if(!await askConfirm('Ta bort rustning',msg,'Ta bort',true))return;
+ try{
+  await dbJson('rule_armor_types?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
+ }catch(e){alert('Kunde inte ta bort rustningen: '+e.message)}
+}
+function renderAdminShields(){
+ let el=$('adminShieldTable'),st=$('adminShieldStatus');if(!el)return;
+ if(!ruleShieldsLoaded){el.innerHTML='';if(st)st.textContent='Sköldregistret kunde inte läsas.';return}
+ if(st)st.textContent=ruleShields.length+' sköldtyper · Expertdata för passivt skydd, projektiler och tålighet.';
+ if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
+ el.innerHTML=
+  '<div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">ABS</div><div class="ahead">BEP</div><div class="ahead">BV</div><div class="ahead">Projektil</div><div class="ahead">Passivt skydd</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  ruleShields.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return
+   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.shield_key||'—')+'</small></div>'+
+   '<div>'+escAttr(ruleShieldSizeLabel(r.size_class))+'</div>'+
+   '<div>'+escAttr(skill?.name||r.skill_id||'—')+'</div>'+
+   '<div>'+(r.absorption??'—')+'</div>'+
+   '<div>'+(r.bep??'—')+'</div>'+
+   '<div>'+(r.bv??'—')+'</div>'+
+   '<div>1T20: '+r.projectile_block_min+'–'+r.projectile_block_max+'</div>'+
+   '<div>'+escAttr(r.passive_coverage||'—')+'</div>'+
+   '<div><span class="admin-source-badge expert">'+escAttr(r.source_label||'—')+'</span></div>'+
+   '<div class="adminactions"><button class="smallbtn" onclick="editRuleShield(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleShield(\''+r.id+'\')" title="Ta bort">×</button></div>'
+  }).join('')
+}
+function editRuleShield(id=''){
+ if(!activeUser()?.admin)return;
+ let r=id?ruleShields.find(x=>x.id===id):null,size=r?.size_class||'medium';
+ let risk=Math.round(Number(r?.destruction_chance_per_excess??0.05)*10000)/100;
+ $('adminEditorTitle').textContent=r?'Redigera sköld':'Lägg till sköld';
+ $('adminEditorBody').innerHTML=
+  '<div class="rule-editor-grid shield-rule-editor">'+
+   '<label class="wide">Namn<input id="rsName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Storlek<select id="rsSize"><option value="small" '+(size==='small'?'selected':'')+'>Liten</option><option value="medium" '+(size==='medium'?'selected':'')+'>Medelstor</option><option value="large" '+(size==='large'?'selected':'')+'>Stor</option></select></label>'+
+   '<label>Färdighet<select id="rsSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'skoldar')+'</select></label>'+
+   '<label>ABS<input id="rsAbs" type="number" min="0" step="1" value="'+escAttr(r?.absorption??'')+'" placeholder="Grundregel"></label>'+
+   '<label>BEP<input id="rsBep" type="number" min="0" step="0.5" value="'+escAttr(r?.bep??'')+'" placeholder="Grundregel"></label>'+
+   '<label>BV<input id="rsBv" type="number" min="0" step="1" value="'+escAttr(r?.bv??'')+'" placeholder="Grundregel"></label>'+
+   '<label>Pris (sm)<input id="rsPrice" type="number" min="0" step="0.01" value="'+escAttr(r?.price??'')+'" placeholder="Grundregel"></label>'+
+   '<label>Projektil från<input id="rsProjectileMin" type="number" min="1" max="20" step="1" value="'+escAttr(r?.projectile_block_min??1)+'"></label>'+
+   '<label>Projektil till<input id="rsProjectileMax" type="number" min="1" max="20" step="1" value="'+escAttr(r?.projectile_block_max??4)+'"></label>'+
+   '<label>Risk / överskada (%)<input id="rsBreakRisk" type="number" min="0" max="100" step="0.01" value="'+escAttr(risk)+'"></label>'+
+   '<label>Källa<input id="rsSource" value="'+escAttr(r?.source_label||'Expert E55')+'"></label>'+
+   '<label>Sorteringsordning<input id="rsSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleShields.length+1)*10))+'"></label>'+
+   '<label class="wide">Passivt skydd<input id="rsCoverage" value="'+escAttr(r?.passive_coverage||'')+'" placeholder="t.ex. Sköldarm + bröstkorg"></label>'+
+   '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+
+   '<label class="wide">Noteringar<textarea id="rsNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+  '</div><div class="rule-editor-note">Expert E55 anger storlek, passivt skydd och projektilregler. ABS/BEP/BV/pris är medvetet separata masterfält från grundreglerna och lämnas tomma tills de verifierats.</div>'+
+  '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleShield(\''+id+'\')">Spara</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+async function saveRuleShield(id=''){
+ if(!activeUser()?.admin)return;
+ let name=$('rsName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ let skillId=$('rsSkillId')?.value||'skoldar',existing=id?ruleShields.find(x=>x.id===id):null;
+ try{
+  let min=ruleMasterNumberValue('rsProjectileMin',{integer:true,min:1});
+  let max=ruleMasterNumberValue('rsProjectileMax',{integer:true,min:1});
+  if(max>20||min>max)throw new Error('Kontrollera projektilintervallet.');
+  let risk=ruleMasterNumberValue('rsBreakRisk',{min:0});if(risk>100)throw new Error('Risk måste vara 0–100 %.');
+  let payload={
+   shield_key:existing?.shield_key||ruleMasterKeyFromName(name,'shield'),
+   name,
+   size_class:$('rsSize')?.value||'medium',
+   skill_id:skillId,
+   absorption:ruleMasterNumberValue('rsAbs',{nullable:true,integer:true}),
+   bep:ruleMasterNumberValue('rsBep',{nullable:true}),
+   bv:ruleMasterNumberValue('rsBv',{nullable:true,integer:true}),
+   price:ruleMasterNumberValue('rsPrice',{nullable:true}),
+   projectile_block_min:min,
+   projectile_block_max:max,
+   passive_coverage:$('rsCoverage')?.value.trim()||'',
+   can_parry_thrown:!!$('rsParryThrown')?.checked,
+   destruction_chance_per_excess:risk/100,
+   source_label:$('rsSource')?.value.trim()||'Expert E55',
+   notes:$('rsNotes')?.value.trim()||'',
+   sort_order:Number($('rsSort')?.value||0),
+   updated_at:new Date().toISOString()
+  };
+  if(id)await dbJson('rule_shields?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+  else await dbJson('rule_shields',{method:'POST',body:JSON.stringify(payload)});
+  closeAdminEditor();await loadRuleShields(true);renderAdminShields();renderAdminOverviewCounts()
+ }catch(e){alert('Kunde inte spara skölden: '+e.message)}
+}
+async function deleteRuleShield(id){
+ if(!activeUser()?.admin)return;
+ let r=ruleShields.find(x=>x.id===id);if(!r)return;
+ let usedByCharacter=(chars||[]).some(c=>(c.shields||[]).some(s=>String(s.shieldTypeId||s.shield_id||'')===String(id)));
+ let usedByNpc=(campaignNpcs||[]).some(n=>String(n?.shield?.shield_id||'')===String(id));
+ let usedByEnemy=(campaignMonsters||[]).some(n=>String(n?.shield?.shield_id||'')===String(id));
+ let used=usedByCharacter||usedByNpc||usedByEnemy;
+ let msg='Vill du verkligen ta bort '+r.name+'?'+(used?'\n\nSkölden används redan. Befintliga kopior behåller sparade värden.':'');
+ if(!await askConfirm('Ta bort sköld',msg,'Ta bort',true))return;
+ try{
+  await dbJson('rule_shields?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await loadRuleShields(true);renderAdminShields();renderAdminOverviewCounts()
+ }catch(e){alert('Kunde inte ta bort skölden: '+e.message)}
+}
+
 async function ensureCentralCampaign(){let rows=await dbJson('campaigns?select=id,name,created_by&order=created_at.asc');let c=rows.find(x=>x.name==='Skelettbyns Hemlighet')||rows[0];if(!c&&activeUser()?.admin){let created=await dbJson('campaigns',{method:'POST',body:JSON.stringify({name:'Skelettbyns Hemlighet',description:'Alea Crusaders-kampanj',created_by:supabaseSession.user.id})});c=created&&created[0];if(c)await dbJson('campaign_members',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({campaign_id:c.id,user_id:supabaseSession.user.id,role:'gm'})})}centralCampaignId=c?.id||null;return c}
 async function importLocalCharactersToCentral(){if(!centralCampaignId||!activeUser()?.admin||!chars.length)return;let payload=chars.map(c=>({campaign_id:centralCampaignId,owner_id:null,name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c),created_by:supabaseSession.user.id}));let rows=await dbJson('characters',{method:'POST',body:JSON.stringify(payload)});if(rows?.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||r.data?.ownerId||'SLP'}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));}}
 async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;return}let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||r.data?.ownerId||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];chars.forEach(c=>{ensureEquipmentState(c);c.projectiles=c.projectiles||[];c.spells=c.spells||[];c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralReady=true}
@@ -585,6 +786,8 @@ const ADMIN_SECTION_META={
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
  weapons:['Vapen','Centralt vapenregister'],
+ armors:['Rustningar','Centralt rustningsregister enligt Expert'],
+ shields:['Sköldar','Centralt sköldregister enligt Expert'],
  campaigns:['Kampanjer','Kampanjinställningar och deltagare'],
  users:['Användare','Konton och behörigheter'],
  data:['Datahantering','Import och säkerhetskopiering']
@@ -601,6 +804,8 @@ function renderAdminOverviewCounts(){
  set('adminCountRaces',ruleRaces.length);
  set('adminCountStands',ruleSocialStands.length);
  set('adminCountWeapons',ruleWeapons.length);
+ set('adminCountArmors',ruleArmorTypes.length);
+ set('adminCountShields',ruleShields.length);
  set('adminCountCampaigns',adminData.campaigns.length);
  set('adminCountUsers',adminData.users.length)
 }
@@ -629,9 +834,9 @@ async function openAdminSection(key='overview'){
  }
  window.scrollTo({top:0,behavior:'smooth'})
 }
-async function openAdmin(){if(!activeUser()?.admin)return;editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleWeapons(),loadRuleSocialStands(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
+async function openAdmin(){if(!activeUser()?.admin)return;editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleSocialStands(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
 function closeAdmin(){activeAdminSection='overview';$('admin').classList.add('hidden');$('home').classList.remove('hidden');renderCards()}
-function renderAdmin(){let ut=$('userTable');ut.innerHTML=`<div class="ahead">Namn</div><div class="ahead emailcol">E-post</div><div class="ahead">Admin</div><div class="ahead">Åtgärd</div>`+adminData.users.map(u=>`<div>${escAttr(u.name||'—')}</div><div class="emailcol">${escAttr(u.email||'—')}</div><div>${u.admin?'Ja':'Nej'}</div><div class="adminactions"><button class="smallbtn" onclick="editUser('${u.id}')">✎</button><button class="deletebtn" onclick="deleteUser('${u.id}')">×</button></div>`).join('');let ct=$('campaignTable');ct.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Spelare</div><div class="ahead slcol">SL</div><div class="ahead">Åtgärd</div>`+adminData.campaigns.map(c=>`<div>${escAttr(c.name||'—')}</div><div>${(c.players||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="slcol">${(c.gms||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="adminactions"><button class="smallbtn" onclick="editCampaign('${c.id}')">✎</button><button class="deletebtn" onclick="deleteCampaign('${c.id}')">×</button></div>`).join('');let dd=$('currentCampaign');dd.innerHTML=`<option value="">Ingen vald</option>`+adminData.campaigns.map(c=>`<option value="${escAttr(c.id)}" ${adminData.currentCampaignId===c.id?'selected':''}>${escAttr(c.name||'Namnlös kampanj')}</option>`).join('');renderCurrentCampaignGM();renderAdminMaps();renderAdminCampaignContent();renderAdminCombatSceneList();renderAdminSkills();renderAdminProfessions();renderAdminRaces();renderAdminSocialStands();renderAdminWeapons();renderAdminOverviewCounts()}function renderCurrentCampaignGM(){let el=$('currentCampaignGM');if(!el)return;let c=adminData.campaigns.find(x=>x.id===adminData.currentCampaignId);el.innerHTML=c?`SL: <b>${(c.gms||[]).map(userName).map(escAttr).join(', ')||'Ingen angiven'}</b>`:''}
+function renderAdmin(){let ut=$('userTable');ut.innerHTML=`<div class="ahead">Namn</div><div class="ahead emailcol">E-post</div><div class="ahead">Admin</div><div class="ahead">Åtgärd</div>`+adminData.users.map(u=>`<div>${escAttr(u.name||'—')}</div><div class="emailcol">${escAttr(u.email||'—')}</div><div>${u.admin?'Ja':'Nej'}</div><div class="adminactions"><button class="smallbtn" onclick="editUser('${u.id}')">✎</button><button class="deletebtn" onclick="deleteUser('${u.id}')">×</button></div>`).join('');let ct=$('campaignTable');ct.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Spelare</div><div class="ahead slcol">SL</div><div class="ahead">Åtgärd</div>`+adminData.campaigns.map(c=>`<div>${escAttr(c.name||'—')}</div><div>${(c.players||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="slcol">${(c.gms||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="adminactions"><button class="smallbtn" onclick="editCampaign('${c.id}')">✎</button><button class="deletebtn" onclick="deleteCampaign('${c.id}')">×</button></div>`).join('');let dd=$('currentCampaign');dd.innerHTML=`<option value="">Ingen vald</option>`+adminData.campaigns.map(c=>`<option value="${escAttr(c.id)}" ${adminData.currentCampaignId===c.id?'selected':''}>${escAttr(c.name||'Namnlös kampanj')}</option>`).join('');renderCurrentCampaignGM();renderAdminMaps();renderAdminCampaignContent();renderAdminCombatSceneList();renderAdminSkills();renderAdminProfessions();renderAdminRaces();renderAdminSocialStands();renderAdminWeapons();renderAdminArmors();renderAdminShields();renderAdminOverviewCounts()}function renderCurrentCampaignGM(){let el=$('currentCampaignGM');if(!el)return;let c=adminData.campaigns.find(x=>x.id===adminData.currentCampaignId);el.innerHTML=c?`SL: <b>${(c.gms||[]).map(userName).map(escAttr).join(', ')||'Ingen angiven'}</b>`:''}
 function setCurrentCampaign(id){adminData.currentCampaignId=id;saveAdmin();renderCurrentCampaignGM()}
 function closeAdminEditor(){
  let st=eventCombatEditorState;
