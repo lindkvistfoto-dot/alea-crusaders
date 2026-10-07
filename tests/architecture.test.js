@@ -659,7 +659,9 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
     expect(css).toContain(".combat-hit-model-image-svg{");
-    expect(css).toContain("v0.33.66 — image-only hit location label");
+    expect(css).toContain("v0.33.65 — image-only hit location label");
+    expect(css).toContain("v0.33.66 — compact attack result layout");
+    expect(css).toContain(".combat-hit-full-damage{");
     expect(css).toContain(".combat-hit-location-label{");
     expect(css).toContain("v0.33.64 — frilagd kropp direkt på attackradens bakgrund");
     expect(css).toContain(".combat-attack-hit-camera{");
