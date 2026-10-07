@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Attack">
+ <g fill="none" stroke="#e5c58e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M17 47L44 20"/>
+  <path d="M40 15l9 0-1 9-4-4-5 5"/>
+  <path d="M14 50l8-2-6-6z"/>
+  <path d="M21 43l6 6"/>
+  <path d="M15 17l32 32"/>
+  <path d="M11 13l8 1-5 5z"/>
+  <path d="M43 43l6-6"/>
+ </g>
+</svg>
