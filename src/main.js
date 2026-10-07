@@ -105,3 +105,262 @@ window.combatAttackResultHtml=function(action){
   '</div>';
 };
 
+/* v0.33.68 — one-turn GM undo */
+const COMBAT_UNDO_CURRENT_KEY="turn_undo_current";
+const COMBAT_UNDO_LAST_KEY="turn_undo_last";
+let combatUndoCapturePromise=null;
+let combatUndoTransitioning=false;
+let combatUndoRestoring=false;
+
+function combatUndoClone(value){
+  if(value==null)return value;
+  try{return structuredClone(value)}catch(_error){}
+  return JSON.parse(JSON.stringify(value));
+}
+
+function combatUndoSettings(){
+  const settings=(typeof activeCombat!=="undefined"&&activeCombat?.settings&&typeof activeCombat.settings==="object")
+    ?combatUndoClone(activeCombat.settings):{};
+  return settings||{};
+}
+
+function combatUndoCombatantSnapshot(row){
+  return {
+    id:row.id,q:row.q,r:row.r,flying:row.flying,
+    visible_to_players:row.visible_to_players,
+    current_kp:row.current_kp,current_psy:row.current_psy,
+    movement_remaining:row.movement_remaining,status:row.status,
+    action_plan:combatUndoClone(row.action_plan||[]),
+    state:combatUndoClone(row.state||{})
+  };
+}
+
+function combatUndoActionSnapshot(row){
+  return {
+    id:row.id,combat_id:row.combat_id,campaign_id:row.campaign_id,
+    combatant_id:row.combatant_id,round_number:row.round_number,
+    phase:row.phase,action_type:row.action_type,slot_key:row.slot_key||"",
+    source_data:combatUndoClone(row.source_data||{}),
+    target_combatant_id:row.target_combatant_id||null,status:row.status,
+    sequence:Number(row.sequence)||0,result:combatUndoClone(row.result||{}),
+    player_visible:row.player_visible!==false,created_by:row.created_by||null
+  };
+}
+
+function combatUndoBuildSnapshot(){
+  if(typeof activeCombat==="undefined"||!activeCombat?.id||!activeCombat.active_actor_id)return null;
+  const actor=(typeof combatants!=="undefined"?combatants:[]).find(row=>String(row.id)===String(activeCombat.active_actor_id));
+  const logs=Array.isArray(typeof combatLogRows!=="undefined"?combatLogRows:null)?combatLogRows:[];
+  const maxLogId=logs.reduce((max,row)=>Math.max(max,Number(row?.id)||0),0);
+  return {
+    version:1,captured_at:new Date().toISOString(),combat_id:activeCombat.id,
+    actor_id:activeCombat.active_actor_id,actor_name:actor?.name_snapshot||"Okänd",
+    round_number:Number(activeCombat.round_number)||1,phase:activeCombat.phase||"movement",
+    active_actor_id:activeCombat.active_actor_id,active_responder_id:activeCombat.active_responder_id||null,
+    initiative:combatUndoClone(activeCombat.initiative||{}),
+    combatants:(Array.isArray(typeof combatants!=="undefined"?combatants:null)?combatants:[]).map(combatUndoCombatantSnapshot),
+    actions:(Array.isArray(typeof combatActions!=="undefined"?combatActions:null)?combatActions:[]).map(combatUndoActionSnapshot),
+    log_max_id:maxLogId
+  };
+}
+
+async function combatUndoPersistSettings(patch){
+  if(typeof activeCombat==="undefined"||!activeCombat?.id)return null;
+  const settings={...combatUndoSettings(),...combatUndoClone(patch)};
+  activeCombat.settings=settings;
+  await dbJson("combat_instances?id=eq."+encodeURIComponent(activeCombat.id),{
+    method:"PATCH",headers:{"Prefer":"return=minimal"},
+    body:JSON.stringify({settings,updated_at:new Date().toISOString()})
+  });
+  return settings;
+}
+
+async function combatUndoEnsureCurrentSnapshot(){
+  if(combatUndoTransitioning||combatUndoRestoring)return null;
+  if(typeof combatCanManage!=="function"||!combatCanManage())return null;
+  if(typeof activeCombat==="undefined"||!activeCombat?.id||activeCombat.status!=="active"||!activeCombat.active_actor_id)return null;
+  const settings=combatUndoSettings();
+  const existing=settings[COMBAT_UNDO_CURRENT_KEY];
+  if(existing&&String(existing.combat_id)===String(activeCombat.id)&&String(existing.actor_id)===String(activeCombat.active_actor_id)&&Number(existing.round_number)===Number(activeCombat.round_number)){
+    return existing;
+  }
+  if(combatUndoCapturePromise)return combatUndoCapturePromise;
+  const snapshot=combatUndoBuildSnapshot();
+  if(!snapshot)return null;
+  combatUndoCapturePromise=combatUndoPersistSettings({[COMBAT_UNDO_CURRENT_KEY]:snapshot})
+    .then(()=>snapshot)
+    .catch(error=>{console.warn("Kunde inte spara ångra-snapshot",error);return null})
+    .finally(()=>{combatUndoCapturePromise=null;combatUndoInstallButton()});
+  return combatUndoCapturePromise;
+}
+
+async function combatUndoPromoteCompleted(snapshot){
+  if(!snapshot||typeof activeCombat==="undefined"||!activeCombat?.id)return;
+  await combatUndoPersistSettings({
+    [COMBAT_UNDO_LAST_KEY]:snapshot,
+    [COMBAT_UNDO_CURRENT_KEY]:null
+  });
+}
+
+function combatUndoInstallButton(){
+  const topbar=document.querySelector("#combatPage .combat-topbar");
+  if(!topbar)return;
+  const existing=topbar.querySelector(".combat-undo-row");
+  const canManage=typeof combatCanManage==="function"&&combatCanManage();
+  if(!canManage){
+    existing?.remove();
+    return;
+  }
+  const last=(typeof activeCombat!=="undefined"&&activeCombat?.settings&&typeof activeCombat.settings==="object")
+    ?activeCombat.settings[COMBAT_UNDO_LAST_KEY]:null;
+  let row=existing;
+  if(!row){
+    row=document.createElement("div");
+    row.className="combat-undo-row";
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="combat-undo-btn";
+    button.addEventListener("click",event=>window.undoLastCombatTurn?.(event));
+    row.appendChild(button);
+    topbar.appendChild(row);
+  }
+  const button=row.querySelector(".combat-undo-btn");
+  if(!button)return;
+  button.disabled=!last||combatUndoRestoring;
+  button.textContent=last?.actor_name?"↶ Ångra senaste drag · "+last.actor_name:"↶ Ångra senaste drag";
+}
+
+const combatUndoOriginalEndTurn=window.endCombatTurn;
+if(typeof combatUndoOriginalEndTurn==="function"&&!window.__aleaCombatUndoEndWrapped){
+  window.__aleaCombatUndoEndWrapped=true;
+  window.endCombatTurn=async function(event,combatantId){
+    const beforeCombatId=typeof activeCombat!=="undefined"?activeCombat?.id:null;
+    const beforeActorId=typeof activeCombat!=="undefined"?activeCombat?.active_actor_id:null;
+    const beforeRound=Number(typeof activeCombat!=="undefined"?activeCombat?.round_number:0)||0;
+    const snapshot=await combatUndoEnsureCurrentSnapshot();
+    combatUndoTransitioning=true;
+    let result;
+    try{
+      result=await combatUndoOriginalEndTurn(event,combatantId);
+    }finally{
+      combatUndoTransitioning=false;
+    }
+    const changed=beforeCombatId&&typeof activeCombat!=="undefined"&&String(activeCombat?.id||"")===String(beforeCombatId)&&(
+      String(activeCombat?.active_actor_id||"")!==String(beforeActorId||"")||
+      Number(activeCombat?.round_number||0)!==beforeRound
+    );
+    if(changed&&snapshot){
+      try{await combatUndoPromoteCompleted(snapshot)}catch(error){console.warn("Kunde inte markera senaste drag för ångra",error)}
+      await combatUndoEnsureCurrentSnapshot();
+    }
+    combatUndoInstallButton();
+    return result;
+  };
+}
+
+window.undoLastCombatTurn=async function(event){
+  event?.stopPropagation?.();
+  if(combatUndoRestoring||typeof combatCanManage!=="function"||!combatCanManage())return;
+  if(typeof activeCombat==="undefined"||!activeCombat?.id)return;
+  const snapshot=combatUndoSettings()[COMBAT_UNDO_LAST_KEY];
+  if(!snapshot||String(snapshot.combat_id)!==String(activeCombat.id))return;
+  const actorName=snapshot.actor_name||"senaste kombatanten";
+  if(!window.confirm("Ångra hela senaste draget för "+actorName+"?"))return;
+  combatUndoRestoring=true;combatUndoInstallButton();
+  const combatId=activeCombat.id,cid=encodeURIComponent(combatId);
+  try{
+    const currentActions=await dbJson("combat_actions?combat_id=eq."+cid+"&select=id,round_number");
+    const baselineActions=new Map((snapshot.actions||[]).map(row=>[String(row.id),row]));
+    const currentIds=new Set((currentActions||[]).map(row=>String(row.id)));
+    const removals=(currentActions||[]).filter(row=>{
+      const round=Number(row.round_number)||0;
+      return round>Number(snapshot.round_number)||(
+        round===Number(snapshot.round_number)&&!baselineActions.has(String(row.id))
+      );
+    });
+    await Promise.all(removals.map(row=>dbJson("combat_actions?id=eq."+encodeURIComponent(row.id),{
+      method:"DELETE",headers:{"Prefer":"return=minimal"}
+    })));
+    for(const action of snapshot.actions||[]){
+      const body={
+        phase:action.phase,action_type:action.action_type,slot_key:action.slot_key||"",
+        source_data:action.source_data||{},target_combatant_id:action.target_combatant_id||null,
+        status:action.status,sequence:Number(action.sequence)||0,result:action.result||{},
+        player_visible:action.player_visible!==false,updated_at:new Date().toISOString()
+      };
+      if(currentIds.has(String(action.id))){
+        await dbJson("combat_actions?id=eq."+encodeURIComponent(action.id),{
+          method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify(body)
+        });
+      }else{
+        await dbJson("combat_actions",{
+          method:"POST",headers:{"Prefer":"return=minimal"},
+          body:JSON.stringify({
+            id:action.id,combat_id:action.combat_id,campaign_id:action.campaign_id,
+            combatant_id:action.combatant_id,round_number:action.round_number,
+            ...body,created_by:action.created_by||null
+          })
+        });
+      }
+    }
+    await Promise.all((snapshot.combatants||[]).map(row=>dbJson("combatants?id=eq."+encodeURIComponent(row.id),{
+      method:"PATCH",headers:{"Prefer":"return=minimal"},
+      body:JSON.stringify({
+        q:row.q,r:row.r,flying:row.flying,visible_to_players:row.visible_to_players,
+        current_kp:row.current_kp,current_psy:row.current_psy,
+        movement_remaining:row.movement_remaining,status:row.status,
+        action_plan:row.action_plan||[],state:row.state||{},updated_at:new Date().toISOString()
+      })
+    })));
+    const logMax=Math.max(0,Number(snapshot.log_max_id)||0);
+    await dbJson("combat_log?combat_id=eq."+cid+"&id=gt."+logMax,{
+      method:"DELETE",headers:{"Prefer":"return=minimal"}
+    });
+    const restoredSettings={...combatUndoSettings(),
+      [COMBAT_UNDO_LAST_KEY]:null,
+      [COMBAT_UNDO_CURRENT_KEY]:snapshot
+    };
+    await dbJson("combat_instances?id=eq."+cid,{
+      method:"PATCH",headers:{"Prefer":"return=minimal"},
+      body:JSON.stringify({
+        active_actor_id:snapshot.active_actor_id||snapshot.actor_id,
+        active_responder_id:snapshot.active_responder_id||null,
+        round_number:Number(snapshot.round_number)||1,
+        phase:snapshot.phase||"movement",
+        initiative:snapshot.initiative||{},
+        settings:restoredSettings,
+        updated_at:new Date().toISOString()
+      })
+    });
+    await dbJson("combat_log",{
+      method:"POST",headers:{"Prefer":"return=minimal"},
+      body:JSON.stringify({
+        combat_id:combatId,campaign_id:centralCampaignId,
+        round_number:Number(snapshot.round_number)||1,phase:snapshot.phase||"movement",
+        actor_id:snapshot.actor_id||null,target_id:null,event_type:"turn_undo",
+        message:"SL ångrade "+actorName+"s senaste drag",
+        details:{undone_actor_id:snapshot.actor_id,captured_at:snapshot.captured_at},
+        player_visible:true
+      })
+    });
+    await loadActiveCombat(combatId);
+  }catch(error){
+    console.error("Kunde inte ångra senaste draget",error);
+    alert("Kunde inte ångra senaste draget: "+(error?.message||error));
+  }finally{
+    combatUndoRestoring=false;
+    combatUndoInstallButton();
+  }
+};
+
+const combatUndoBody=document.getElementById("combatBody");
+if(combatUndoBody){
+  const combatUndoObserver=new MutationObserver(()=>{
+    combatUndoInstallButton();
+    queueMicrotask(()=>combatUndoEnsureCurrentSnapshot());
+  });
+  combatUndoObserver.observe(combatUndoBody,{childList:true,subtree:true});
+  combatUndoInstallButton();
+  queueMicrotask(()=>combatUndoEnsureCurrentSnapshot());
+}
+
