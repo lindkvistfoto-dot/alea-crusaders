@@ -598,6 +598,10 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("full_damage:fullDamage");
     expect(combat).toContain("damage_mode:fullDamage?'full':'roll'");
     expect(combat).toContain("rule_engine:'expert_skill'");
+    expect(combat).toContain("if(event.pointerType===\'touch\')");
+    expect(combat).toContain("combatMapPan=null");
+    expect(combat).toContain("if((tracked.pointerType||event.pointerType)===\'touch\')return;");
+    expect(combat).toContain("lastCenterX:centerX,lastCenterY:centerY");
     expect(combat).toContain("function combatAttackPanelHtml");
     expect(combat).toContain("combatAttackPanelHtml()");
     expect(combat).toContain("async function combatResolveDamage");
