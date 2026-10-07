@@ -429,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.47");
-    expect(html).toContain("app.css?v=0.33.47");
-    expect(html).toContain("legacy/app.js?v=0.33.47");
+    expect(html).toContain("Alea Crusaders v0.33.48");
+    expect(html).toContain("app.css?v=0.33.48");
+    expect(html).toContain("legacy/app.js?v=0.33.48");
   });
 
 
@@ -444,7 +444,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.47");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.48");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -630,6 +630,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatAttackPanelHtml");
     expect(combat).toContain("combatAttackPanelHtml()");
     expect(combat).toContain("async function combatResolveDamage");
+    expect(combat).toContain("const COMBAT_HIT_LOCATION_TABLES=");
+    expect(combat).toContain("async function combatResolveHitLocation");
+    expect(combat).toContain("return attackMode==='melee'&&defenseMode==='parry_failed'?'B':'A'");
+    expect(combat).toContain("result.hit_location=await combatResolveHitLocation");
+    expect(combat).toContain("attackResult.hit_location=await combatResolveHitLocation");
+    expect(combat).toContain("combatHitLocationResultHtml(result.hit_location)");
+    expect(css).toContain(".combat-hit-location-result{");
     expect(combat).toContain("function combatParryOptions");
     expect(combat).toContain("async function combatExpertRoll");
     expect(combat).toContain("status='dead'");
