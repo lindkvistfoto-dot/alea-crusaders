@@ -226,8 +226,10 @@ function combatUndoInstallButton(){
   }
   const button=row.querySelector(".combat-undo-btn");
   if(!button)return;
-  button.disabled=!last||combatUndoRestoring;
-  button.textContent=last?.actor_name?"↶ Ångra senaste drag · "+last.actor_name:"↶ Ångra senaste drag";
+  const disabled=!last||combatUndoRestoring;
+  const label=last?.actor_name?"↶ Ångra senaste drag · "+last.actor_name:"↶ Ångra senaste drag";
+  if(button.disabled!==disabled)button.disabled=disabled;
+  if(button.textContent!==label)button.textContent=label;
 }
 
 const combatUndoOriginalEndTurn=window.endCombatTurn;
@@ -359,8 +361,13 @@ if(combatUndoBody){
     combatUndoInstallButton();
     queueMicrotask(()=>combatUndoEnsureCurrentSnapshot());
   });
-  combatUndoObserver.observe(combatUndoBody,{childList:true,subtree:true});
+  // Observe only replacement of the combat body's direct children.
+  // Observing the subtree caused the undo button's own text updates to
+  // retrigger this observer indefinitely and freeze the combat screen.
+  combatUndoObserver.observe(combatUndoBody,{childList:true});
   combatUndoInstallButton();
   queueMicrotask(()=>combatUndoEnsureCurrentSnapshot());
 }
 
+
+/* v0.33.70 — prevent combat undo observer feedback loop */
