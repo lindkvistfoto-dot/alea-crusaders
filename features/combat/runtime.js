@@ -207,7 +207,7 @@ function combatSourceStats(sceneCombatant,sources){
  const attackProfile={
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(source?.weapons)?source.weapons:[]),
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
-  shields:sourceShields,armor:sourceArmor,
+  shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
   sty,sto,smi
  };
@@ -1984,7 +1984,7 @@ function combatAttackProfile(combatant){
   weapons:Array.isArray(stored.weapons)?stored.weapons:[],
   currentEquipment:stored.currentEquipment||null,
   shields:Array.isArray(stored.shields)?stored.shields:[],
-  armor:Array.isArray(stored.armor)?stored.armor:[],
+  armor:Array.isArray(stored.armor)?stored.armor:[],projectiles:Array.isArray(stored.projectiles)?stored.projectiles:[],
   damage_bonus:stored.damage_bonus??null,
   sty:combatNumber(stored.sty,combatNumber(combatant?.state?.sty,10)),
   sto:combatNumber(stored.sto,combatNumber(combatant?.state?.sto,10)),
@@ -2005,7 +2005,7 @@ function combatAttackProfile(combatant){
   ...stored,
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(src.weapons)?src.weapons:(Array.isArray(stored.weapons)?stored.weapons:[])),
   currentEquipment:data.currentEquipment||stored.currentEquipment||null,
-  shields,armor,
+  shields,armor,projectiles:Array.isArray(data.projectiles)?data.projectiles:(Array.isArray(stored.projectiles)?stored.projectiles:[]),
   damage_bonus:derived.Skadebonus??derived.skadebonus??stored.damage_bonus??null,
   sty,sto,smi
  }
@@ -2900,6 +2900,33 @@ function combatTurnActionState(combatant){
  if(def)return{key:'other',label:'Övriga handlingar'};
  return{key:'none',label:'Redo'}
 }
+function combatTurnEquipmentHtml(combatant){
+ const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{},weapons=Array.isArray(profile.weapons)?profile.weapons:[],shields=Array.isArray(profile.shields)?profile.shields:[],armor=Array.isArray(profile.armor)?profile.armor:[],projectiles=Array.isArray(profile.projectiles)?profile.projectiles:[];
+ const itemForRef=ref=>{
+  if(!ref?.itemId)return null;
+  const list=ref.kind==='weapon'?weapons:ref.kind==='shield'?shields:[];
+  return list.find(item=>String(item.equipId||item.id||'')===String(ref.itemId))||null
+ };
+ const hand=(slot,label)=>{
+  const ref=eq[slot],item=itemForRef(ref);
+  let name=item?.name||'Tom hand',src='';
+  if(ref?.kind==='weapon'&&item){
+   const rule=(typeof ruleWeapons!=='undefined'?ruleWeapons:[]).find(r=>String(r.id)===String(item.weaponTypeId||item.weapon_id||''));
+   const key=item.iconKey||item.icon_key||rule?.icon_key||'generic';src='./assets/weapon-icons/'+key+'.svg'
+  }else if(ref?.kind==='shield'&&item){
+   const rule=(typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''));
+   const key=item.iconKey||item.icon_key||rule?.icon_key||'shield-medium';src='./assets/armor-icons/'+key+'.svg'
+  }
+  return '<div class="combat-turn-equip"><span>'+label+'</span>'+(src?'<img src="'+escAttr(src)+'" alt="">':'<b>—</b>')+'<small>'+escAttr(name)+'</small></div>'
+ };
+ const worn=armor.find(item=>['torso','body'].includes(String(item.slot||'').toLowerCase()))||armor[0]||null;
+ const armorRule=worn&&(typeof ruleArmorTypes!=='undefined'?ruleArmorTypes:[]).find(r=>String(r.id)===String(worn.armorTypeId||worn.armor_type_id||''));
+ const armorKey=worn?.iconKey||worn?.icon_key||armorRule?.icon_key||'generic';
+ const armorHtml='<div class="combat-turn-equip"><span>Rustning</span>'+(worn?'<img src="./assets/armor-icons/'+escAttr(armorKey)+'.svg" alt="">':'<b>—</b>')+'<small>'+escAttr(worn?.name||'Ingen')+'</small></div>';
+ const projectileTotal=projectiles.reduce((sum,p)=>sum+Math.max(0,Number(p?.count)||0),0);
+ const projectileHtml='<div class="combat-turn-equip projectile"><span>Projektiler</span><b>'+projectileTotal+'</b><small>'+escAttr(projectiles.filter(p=>Number(p?.count)>0).map(p=>p.name).filter(Boolean).join(', ')||'Inga')+'</small></div>';
+ return hand('leftHand','Vänster hand')+hand('rightHand','Höger hand')+armorHtml+projectileHtml
+}
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
  const lastUndo=activeCombat?.settings?.turn_undo_last;
@@ -2942,7 +2969,7 @@ function combatTurnPanelHtml(){
   '<div class="combat-turn-stats">'+
    '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><small>förbrukat / max</small></div>'+
    '<div><span>KP</span><b>'+kpCurrent+'/'+kpMax+'</b></div>'+
-   '<div><span>PSY</span><b>'+psyCurrent+'/'+psyMax+'</b></div>'+
+   '<div><span>PSY</span><b>'+psyCurrent+'/'+psyMax+'</b></div>'+combatTurnEquipmentHtml(actor)+
   '</div>'+
  '</div>'
 }
