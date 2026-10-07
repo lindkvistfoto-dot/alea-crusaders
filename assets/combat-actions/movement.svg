@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Förflyttning">
+ <g fill="none" stroke="#e5c58e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M21 12c4 1 7 5 8 10l1 7c1 5-1 9-5 10-4 1-8-2-9-7l-2-8c-1-5 1-10 7-12z"/>
+  <path d="M43 27c5 1 8 5 8 10v8c0 5-3 9-7 9-5 0-8-4-8-9v-8c0-5 2-9 7-10z"/>
+  <path d="M15 17l-3-2M18 12l-1-4M47 28l3-3M51 33l4-1"/>
+ </g>
+</svg>
