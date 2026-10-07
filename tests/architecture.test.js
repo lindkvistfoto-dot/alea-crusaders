@@ -132,6 +132,7 @@ describe("application architecture smoke checks", () => {
   test("SLP mobile editor prevents horizontal overflow", () => {
     const css = read("src/styles/app.css");
     const zones = read("features/combat/hit-body-zones.js");
+    const main = read("src/main.js");
     expect(css).toContain("#adminEditor.modalback{padding:8px}");
     expect(css).toContain("width:100%;max-width:1080px;min-width:0;box-sizing:border-box;overflow-x:hidden");
     expect(css).toContain(".slp-admin-form input,.slp-admin-form select,.slp-admin-form textarea{min-width:0;width:100%;max-width:100%;box-sizing:border-box}");
@@ -430,9 +431,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.62");
-    expect(html).toContain("app.css?v=0.33.62");
-    expect(html).toContain("legacy/app.js?v=0.33.62");
+    expect(html).toContain("Alea Crusaders v0.33.63");
+    expect(html).toContain("app.css?v=0.33.63");
+    expect(html).toContain("legacy/app.js?v=0.33.63");
   });
 
 
@@ -446,9 +447,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.62");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.62");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.62");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.63");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.63");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.63");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -656,6 +657,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).not.toContain("mask=\"url(#");
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
+    expect(css).toContain(".combat-hit-model-image-svg{");
     expect(css).toContain(".combat-hit-zone-fill{");
     expect(css).toContain(".combat-hit-camera{");
     expect(css).toContain("@keyframes combatHitCameraReveal");
@@ -677,6 +679,11 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("class=\"combat-attack-result-main\"");
     expect(combat).toContain("has-hit-camera");
     expect(combat).toContain("combatHitLocationCameraHtml(result.hit_location)");
+    expect(html).toContain("./src/main.js?v=0.33.63");
+    expect(main).toContain("window.combatHitLocationFigureHtml=function");
+    expect(main).toContain("combat-hit-model-image-svg");
+    expect(main).toContain("clipPathUnits=\"userSpaceOnUse\"");
+    expect(main).toContain("clip-path=\"url(#");
     expect(css).toContain(".combat-hit-location-result{");
     expect(combat).toContain("function combatParryOptions");
     expect(combat).toContain("async function combatExpertRoll");
