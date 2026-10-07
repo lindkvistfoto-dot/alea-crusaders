@@ -343,6 +343,28 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("await loadRuleWeapons(true)");
     expect(legacy).toContain("set('adminCountWeapons',ruleWeapons.length)");
     expect(css).toContain(".adminweapontable{display:grid");
+    expect(legacy).toContain("const RULE_WEAPON_ICON_DEFS=");
+    expect(legacy).toContain("function ruleWeaponIconHtml");
+    expect(legacy).toContain("function ruleWeaponIconOptions");
+    expect(legacy).toContain("Ikontäckning ");
+    expect(legacy).toContain('id="rwIconKey"');
+    expect(legacy).toContain("icon_key:$('rwIconKey')?.value||'generic'");
+    expect(css).toContain("v0.33.85 — master weapon icon registry");
+  });
+
+  test("master weapon icons are stored on rule_weapons and have local artwork", () => {
+    const sql = read("supabase/migrations/20261007224500_add_weapon_icon_key.sql");
+    const legacy = read("legacy/app.js");
+    const notices = read("THIRD_PARTY_NOTICES.md");
+    expect(sql).toContain("add column if not exists icon_key text");
+    expect(sql).toContain("alter column icon_key set not null");
+    expect(sql).toContain("rule_weapons_icon_key_nonblank");
+    expect(legacy).toContain("./assets/weapon-icons/");
+    expect(read("assets/weapon-icons/sword.svg")).toContain("Game-icons.net");
+    expect(read("assets/weapon-icons/bow.svg")).toContain("Game-icons.net");
+    expect(read("assets/weapon-icons/staff.svg")).toContain("Game-icons.net");
+    expect(read("assets/weapon-icons/dagger.svg")).toContain("Game-icons.net");
+    expect(notices).toContain("Game-icons.net — master weapon icons");
   });
 
   test("weapon master list seeds Expert melee weapon data", () => {
@@ -363,6 +385,7 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("target.strengthGroup=rule.strength_group");
     expect(legacy).toContain("target.bep=rule.bep");
     expect(legacy).toContain("target.weaponType=rule.weapon_type");
+    expect(legacy).toContain("target.iconKey=rule.icon_key||'generic'");
     expect(legacy).toContain("function setCharacterWeaponMaster");
     expect(legacy).toContain("copyRuleWeaponToInstance(w,rule)");
     expect(legacy).toContain("if(rule)copyRuleWeaponToInstance(r,rule)");
@@ -431,9 +454,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.84");
-    expect(html).toContain("app.css?v=0.33.84");
-    expect(html).toContain("legacy/app.js?v=0.33.84");
+    expect(html).toContain("Alea Crusaders v0.33.85");
+    expect(html).toContain("app.css?v=0.33.85");
+    expect(html).toContain("legacy/app.js?v=0.33.85");
   });
 
 
@@ -448,9 +471,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.84");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.84");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.84");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.85");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.85");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.85");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -755,7 +778,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("class=\"combat-attack-result-main\"");
     expect(combat).toContain("has-hit-camera");
     expect(combat).toContain("combatHitLocationCameraHtml(result.hit_location)");
-    expect(html).toContain("./src/main.js?v=0.33.84");
+    expect(html).toContain("./src/main.js?v=0.33.85");
     expect(main).toContain("window.combatHitLocationFigureHtml=function");
     expect(main).toContain("window.combatHitLocationResultHtml=function");
     expect(main).toContain("window.combatHitLocationCameraHtml=function");
