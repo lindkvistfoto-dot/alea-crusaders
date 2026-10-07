@@ -836,14 +836,14 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:980px){
  .combat-shell{grid-template-columns:1fr}
  .combat-topbar,.combat-log{grid-column:1}
- .combat-board{height:66vh;min-height:480px}
+
  .combat-participants{order:2}.combat-board-wrap{order:1}.combat-target{order:3}.combat-log{order:4}
  .combat-schema-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:560px){
  .combatpage{padding:10px}
  .combathead h2{font-size:24px}
- .combat-board{height:62vh;min-height:420px}
+
  .combat-schema-cards{grid-template-columns:1fr}
 }
 
