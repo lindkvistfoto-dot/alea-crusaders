@@ -180,12 +180,10 @@ function combatUndoSnapshotMatchesActiveTurn(snapshot){
   if(String(snapshot.combat_id)!==String(activeCombat.id))return false;
   if(String(snapshot.actor_id)!==String(activeCombat.active_actor_id))return false;
   if(Number(snapshot.round_number)!==Number(activeCombat.round_number))return false;
-  const hasActorAction=(snapshot.actions||[]).some(action=>
-    String(action.combatant_id)===String(snapshot.actor_id)&&
-    Number(action.round_number)===Number(snapshot.round_number)&&
-    action.status!=="cancelled"
-  );
-  return !hasActorAction;
+  // A turn snapshot is immutable once captured. It represents the state at
+  // the beginning of this actor's turn, even if that baseline already
+  // contains actions from earlier actors in the same round.
+  return true;
 }
 
 function combatUndoActiveTurnAlreadyStarted(){
@@ -393,3 +391,5 @@ if(combatUndoBody){
 /* v0.33.74 — integrated round-panel undo control */
 
 /* v0.33.76 — reliable turn-start undo checkpoints */
+
+/* v0.33.76 — immutable turn-start undo snapshots */
