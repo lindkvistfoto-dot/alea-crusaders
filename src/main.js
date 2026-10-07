@@ -175,15 +175,44 @@ async function combatUndoPersistSettings(patch){
   return settings;
 }
 
+function combatUndoSnapshotMatchesActiveTurn(snapshot){
+  if(!snapshot||typeof activeCombat==="undefined"||!activeCombat?.id||!activeCombat.active_actor_id)return false;
+  if(String(snapshot.combat_id)!==String(activeCombat.id))return false;
+  if(String(snapshot.actor_id)!==String(activeCombat.active_actor_id))return false;
+  if(Number(snapshot.round_number)!==Number(activeCombat.round_number))return false;
+  const hasActorAction=(snapshot.actions||[]).some(action=>
+    String(action.combatant_id)===String(snapshot.actor_id)&&
+    Number(action.round_number)===Number(snapshot.round_number)&&
+    action.status!=="cancelled"
+  );
+  return !hasActorAction;
+}
+
+function combatUndoActiveTurnAlreadyStarted(){
+  if(typeof activeCombat==="undefined"||!activeCombat?.active_actor_id)return false;
+  const actorId=String(activeCombat.active_actor_id),round=Number(activeCombat.round_number)||1;
+  const hasAction=(Array.isArray(typeof combatActions!=="undefined"?combatActions:null)?combatActions:[]).some(action=>
+    String(action.combatant_id)===actorId&&Number(action.round_number)===round&&action.status!=="cancelled"
+  );
+  if(hasAction)return true;
+  const actor=(Array.isArray(typeof combatants!=="undefined"?combatants:null)?combatants:[])
+    .find(row=>String(row.id)===actorId);
+  if(actor&&typeof combatMovementMaximum==="function"&&typeof combatMovementBudget==="function"){
+    const max=Number(combatMovementMaximum(actor))||0;
+    const left=Number(combatMovementBudget(actor))||0;
+    if(max>0&&left<max)return true;
+  }
+  return false;
+}
+
 async function combatUndoEnsureCurrentSnapshot(){
   if(combatUndoTransitioning||combatUndoRestoring)return null;
   if(typeof combatCanManage!=="function"||!combatCanManage())return null;
   if(typeof activeCombat==="undefined"||!activeCombat?.id||activeCombat.status!=="active"||!activeCombat.active_actor_id)return null;
   const settings=combatUndoSettings();
   const existing=settings[COMBAT_UNDO_CURRENT_KEY];
-  if(existing&&String(existing.combat_id)===String(activeCombat.id)&&String(existing.actor_id)===String(activeCombat.active_actor_id)&&Number(existing.round_number)===Number(activeCombat.round_number)){
-    return existing;
-  }
+  if(existing&&combatUndoSnapshotMatchesActiveTurn(existing))return existing;
+  if(combatUndoActiveTurnAlreadyStarted())return null;
   if(combatUndoCapturePromise)return combatUndoCapturePromise;
   const snapshot=combatUndoBuildSnapshot();
   if(!snapshot)return null;
@@ -223,33 +252,31 @@ function combatUndoInstallButton(){
   if(button.getAttribute("aria-label")!==label)button.setAttribute("aria-label",label);
 }
 
-const combatUndoOriginalEndTurn=window.endCombatTurn;
-if(typeof combatUndoOriginalEndTurn==="function"&&!window.__aleaCombatUndoEndWrapped){
-  window.__aleaCombatUndoEndWrapped=true;
-  window.endCombatTurn=async function(event,combatantId){
-    const beforeCombatId=typeof activeCombat!=="undefined"?activeCombat?.id:null;
-    const beforeActorId=typeof activeCombat!=="undefined"?activeCombat?.active_actor_id:null;
-    const beforeRound=Number(typeof activeCombat!=="undefined"?activeCombat?.round_number:0)||0;
-    const snapshot=await combatUndoEnsureCurrentSnapshot();
-    combatUndoTransitioning=true;
-    let result;
-    try{
-      result=await combatUndoOriginalEndTurn(event,combatantId);
-    }finally{
-      combatUndoTransitioning=false;
+window.combatUndoBeforeActorAction=async function(){
+  return combatUndoEnsureCurrentSnapshot();
+};
+
+window.combatUndoAfterTurnAdvanced=async function(snapshot){
+  combatUndoTransitioning=true;
+  try{
+    if(snapshot&&combatUndoSnapshotMatchesActiveTurn(snapshot)===false){
+      // Snapshot belongs to the actor who just completed the turn; active turn has already advanced.
     }
-    const changed=beforeCombatId&&typeof activeCombat!=="undefined"&&String(activeCombat?.id||"")===String(beforeCombatId)&&(
-      String(activeCombat?.active_actor_id||"")!==String(beforeActorId||"")||
-      Number(activeCombat?.round_number||0)!==beforeRound
-    );
-    if(changed&&snapshot){
-      try{await combatUndoPromoteCompleted(snapshot)}catch(error){console.warn("Kunde inte markera senaste drag för ångra",error)}
-      await combatUndoEnsureCurrentSnapshot();
+    if(snapshot){
+      try{await combatUndoPromoteCompleted(snapshot)}
+      catch(error){console.warn("Kunde inte markera senaste drag för ångra",error)}
+    }else{
+      const settings=combatUndoSettings();
+      if(settings[COMBAT_UNDO_CURRENT_KEY]){
+        await combatUndoPersistSettings({[COMBAT_UNDO_CURRENT_KEY]:null});
+      }
     }
-    combatUndoInstallButton();
-    return result;
-  };
-}
+  }finally{
+    combatUndoTransitioning=false;
+  }
+  await combatUndoEnsureCurrentSnapshot();
+  combatUndoInstallButton();
+};
 
 window.undoLastCombatTurn=async function(event){
   event?.stopPropagation?.();
@@ -364,3 +391,5 @@ if(combatUndoBody){
 /* v0.33.70 — prevent combat undo observer feedback loop */
 
 /* v0.33.74 — integrated round-panel undo control */
+
+/* v0.33.76 — reliable turn-start undo checkpoints */
