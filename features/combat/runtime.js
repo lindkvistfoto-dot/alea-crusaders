@@ -1184,6 +1184,7 @@ function combatAttackResultHtml(action){
    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
   '</div>'+
   (full?'<strong>FULL SKADA</strong>':'')+
+  combatHitLocationResultHtml(result.hit_location)+
   (result.erf
    ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
      (result.erf.awarded>0
@@ -1193,7 +1194,6 @@ function combatAttackResultHtml(action){
    :'')+
   combatFumbleResultHtml(result)+
   combatParryResultHtml(result)+
-  combatHitLocationResultHtml(result.hit_location)+
   combatDamageResultHtml(result.damage)+
  '</div>'
 }
