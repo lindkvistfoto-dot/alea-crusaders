@@ -556,8 +556,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatActionMenuKind");
     expect(combat).toContain("def.key!=='attack'");
     expect(combat).toContain('title="Attack"');
-    expect(combat).toContain('title="Andra actions"');
-    expect(combat).toContain('title="Sluta drag"');
+    expect(combat).toContain('title="Andra handlingar"');
+    expect(combat).toContain('title="Avsluta drag"');
     expect(combat).toContain("endCombatTurn");
     expect(combat).toContain("combatTurnOrderIds");
     expect(combat).toContain("Hel ");
