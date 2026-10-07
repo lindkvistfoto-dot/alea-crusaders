@@ -1168,20 +1168,33 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
  return{profile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
 }
 let combatHitMaskSeq=0;
+const COMBAT_HIT_CAMERA={
+ head:{scale:2.5,tx:-75,ty:19},
+ chest:{scale:2.05,tx:-52.5,ty:-11.5},
+ abdomen:{scale:2.0,tx:-50,ty:-40},
+ right_arm:{scale:1.9,tx:-5,ty:-20},
+ left_arm:{scale:1.9,tx:-85,ty:-20},
+ right_leg:{scale:1.55,tx:-12,ty:-59},
+ left_leg:{scale:1.55,tx:-43,ty:-59}
+};
 function combatHitLocationFigureHtml(hitLocation){
  const active=String(hitLocation?.key||''),model=window.ALEA_HIT_BODY_MODEL?.src||'',data=window.ALEA_HIT_BODY_ZONES||null;
  const zone=data?.zones?.[active],outline=String(data?.outline||''),viewBox=String(data?.viewBox||'0 0 1024 1536');
+ const camera=COMBAT_HIT_CAMERA[active]||{scale:1,tx:0,ty:0};
  if(!model||!zone||!outline){
   return '<div class="combat-hit-model-stage"><div class="combat-hit-model-missing">Kroppsmodell eller träffzon saknas</div></div>'
  }
  const uid='combatHit_'+(++combatHitMaskSeq),clipId=uid+'_clip';
  const zonePaths=(zone.paths||[]).map(d=>'<path d="'+d+'"/>').join('');
+ const cameraStyle='--hit-scale:'+camera.scale+';--hit-tx:'+camera.tx+'%;--hit-ty:'+camera.ty+'%';
  return '<div class="combat-hit-model-stage">'+
-  '<img class="combat-hit-model-image" src="'+model+'" alt="" aria-hidden="true">'+
-  '<svg class="combat-hit-model-overlay" viewBox="'+escAttr(viewBox)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Träffområde '+escAttr(hitLocation?.label||'')+'">'+
-   '<defs><clipPath id="'+clipId+'"><path d="'+outline+'"/></clipPath></defs>'+
-   '<g class="combat-hit-zone-fill" clip-path="url(#'+clipId+')">'+zonePaths+'</g>'+
-  '</svg>'+
+  '<div class="combat-hit-camera" style="'+cameraStyle+'">'+
+   '<img class="combat-hit-model-image" src="'+model+'" alt="" aria-hidden="true">'+
+   '<svg class="combat-hit-model-overlay" viewBox="'+escAttr(viewBox)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Träffområde '+escAttr(hitLocation?.label||'')+'">'+
+    '<defs><clipPath id="'+clipId+'"><path d="'+outline+'"/></clipPath></defs>'+
+    '<g class="combat-hit-zone-fill" clip-path="url(#'+clipId+')">'+zonePaths+'</g>'+
+   '</svg>'+
+  '</div>'+
  '</div>'
 }
 function combatHitLocationResultHtml(hitLocation){
@@ -1189,10 +1202,10 @@ function combatHitLocationResultHtml(hitLocation){
  return '<div class="combat-hit-location-result">'+
   '<div class="combat-hit-location-head"><span>🎯 Träffområde</span><b>'+escAttr(hitLocation.label)+'</b></div>'+
   '<div class="combat-hit-location-body">'+
-   '<div class="combat-hit-figure-wrap">'+combatHitLocationFigureHtml(hitLocation)+'</div>'+
    '<div class="combat-hit-location-copy"><strong>'+escAttr(hitLocation.label)+'</strong>'+
     '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
    '</div>'+
+   '<div class="combat-hit-figure-wrap">'+combatHitLocationFigureHtml(hitLocation)+'</div>'+
   '</div>'+
  '</div>'
 }
