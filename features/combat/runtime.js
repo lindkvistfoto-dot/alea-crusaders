@@ -1247,7 +1247,7 @@ function combatAttackResultHtml(action){
    '</div>'+
    (full?'<strong>FULL SKADA</strong>':'')+
    combatHitLocationResultHtml(result.hit_location)+
-   (result.erf
+   (result.erf&&(result.erf.awarded>0||!result.erf.locked)
     ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
       (result.erf.awarded>0
        ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
