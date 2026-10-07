@@ -679,8 +679,7 @@ function renderAdminShields(){
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  el.innerHTML=
   '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">ABS</div><div class="ahead">BEP</div><div class="ahead">BV</div><div class="ahead">Projektil</div><div class="ahead">Passivt skydd</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
-  ruleShields.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return
-   '<div class="admin-weapon-icon-cell">'+ruleShieldIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.shield_key||'—')+'</small></div>'+
+  ruleShields.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div class="admin-weapon-icon-cell">'+ruleShieldIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.shield_key||'—')+'</small></div>'+
    '<div>'+escAttr(ruleShieldSizeLabel(r.size_class))+'</div>'+
    '<div>'+escAttr(skill?.name||r.skill_id||'—')+'</div>'+
    '<div>'+(r.absorption??'—')+'</div>'+
