@@ -4684,3 +4684,101 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
 }
 
+/* v0.33.71 — four-row damage equation */
+.combat-mini-attack .combat-damage-result{
+ display:flex;
+ flex-direction:column;
+ gap:3px;
+ padding:6px 8px;
+}
+.combat-mini-attack .combat-damage-head,
+.combat-mini-attack .combat-damage-formulas{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:8px;
+ align-items:end;
+}
+.combat-mini-attack .combat-damage-head span{
+ color:#b89f7f;
+ font-size:8px;
+ font-weight:900;
+ line-height:1;
+ letter-spacing:.055em;
+ text-align:center;
+ text-transform:uppercase;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-damage-equation{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);
+ gap:5px;
+ align-items:center;
+}
+.combat-mini-attack .combat-damage-equation b,
+.combat-mini-attack .combat-damage-equation strong{
+ color:#f1dfc1;
+ font-size:18px;
+ font-weight:900;
+ line-height:1;
+ text-align:center;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-damage-equation strong{
+ color:#79b8ce;
+ font-size:20px;
+}
+.combat-mini-attack .combat-damage-equation i{
+ color:#9d876a;
+ font-size:13px;
+ font-style:normal;
+ font-weight:900;
+ line-height:1;
+ text-align:center;
+}
+.combat-mini-attack .combat-damage-formulas span{
+ min-width:0;
+ color:#9f8a70;
+ font-size:7px;
+ font-weight:700;
+ line-height:1.05;
+ text-align:center;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.combat-mini-attack .combat-damage-kp{
+ display:grid;
+ grid-template-columns:auto minmax(0,1fr);
+ gap:8px;
+ align-items:baseline;
+ margin-top:2px;
+ padding-top:4px;
+ border-top:1px solid rgba(164,128,83,.28);
+}
+.combat-mini-attack .combat-damage-kp span{
+ color:#b89f7f;
+ font-size:8px;
+ font-weight:900;
+ letter-spacing:.05em;
+ text-transform:uppercase;
+}
+.combat-mini-attack .combat-damage-kp b,
+.combat-mini-attack .combat-attack-result.special .combat-damage-kp b,
+.combat-mini-attack .combat-attack-result.perfect .combat-damage-kp b,
+.combat-mini-attack .combat-attack-result.fumble .combat-damage-kp b{
+ justify-self:end;
+ color:#f1dfc1;
+ font-size:10px;
+ line-height:1.05;
+ white-space:nowrap;
+}
+@media(max-width:390px){
+ .combat-mini-attack .combat-damage-head,
+ .combat-mini-attack .combat-damage-formulas{gap:5px}
+ .combat-mini-attack .combat-damage-equation{gap:3px}
+ .combat-mini-attack .combat-damage-equation b{font-size:16px}
+ .combat-mini-attack .combat-damage-equation strong{font-size:18px}
+ .combat-mini-attack .combat-damage-head span{font-size:7px}
+ .combat-mini-attack .combat-damage-formulas span{font-size:6.5px}
+}
+
