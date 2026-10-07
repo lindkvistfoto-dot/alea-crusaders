@@ -766,7 +766,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("action_type:def.type");
     expect(combat).toContain("status:def.type==='parry'?'reserved':'planned'");
     expect(combat).toContain("combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null)");
-    expect(combat).toContain("combatRowActionMenuHtml(c)");
+    expect(combat).toContain("combatRowActionMenuHtml(actor)");
     expect(combat).toContain("combatPlayerMiniatureKind");
     expect(combat).toContain("combatMiniatureWarrior");
     expect(combat).toContain("combatMiniatureWizard");
