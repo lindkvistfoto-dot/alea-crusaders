@@ -783,6 +783,7 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
  const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
  if(!combatant||!def||def.automatic||def.reactive||!combatCanChoosePrimaryAction(combatant))return;
  if(combatMovementHasUsedMoreThanHalf(combatant))return;
+ await window.combatUndoBeforeActorAction?.();
  const round=Number(activeCombat.round_number)||1;
  const existing=combatChosenAction(combatant);
  const weaponOptions=def.type==='attack'?combatAttackWeaponOptions(combatant,def.mode):[];
@@ -1576,6 +1577,7 @@ async function endCombatTurn(event,combatantId){
  const nextActorId=newRound?null:order[nextIndex];
  const round=currentRound+(newRound?1:0);
  const combatId=activeCombat.id;
+ const undoSnapshot=await window.combatUndoBeforeActorAction?.();
  try{
   await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
    combat_id:combatId,campaign_id:centralCampaignId,round_number:currentRound,
@@ -1599,13 +1601,15 @@ async function endCombatTurn(event,combatantId){
    await loadActiveCombat(combatId);
    await combatRollAndApplyInitiative(combatId,{roundNumber:round});
    await loadActiveCombat(combatId);
+   try{await window.combatUndoAfterTurnAdvanced?.(undoSnapshot)}catch(undoError){console.warn('Kunde inte uppdatera ångra-checkpoint efter turbyte',undoError)}
    return
   }
   await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({active_actor_id:nextActorId,active_responder_id:null,round_number:round,phase:'movement',updated_at:new Date().toISOString()})
   });
-  await loadActiveCombat(combatId)
+  await loadActiveCombat(combatId);
+  try{await window.combatUndoAfterTurnAdvanced?.(undoSnapshot)}catch(undoError){console.warn('Kunde inte uppdatera ångra-checkpoint efter turbyte',undoError)}
  }catch(error){
   console.error('Kunde inte avsluta draget',error);
   alert('Kunde inte avsluta draget: '+(error?.message||error))
@@ -2408,6 +2412,7 @@ async function commitCombatMovementPlan(){
  if(cost<=0||combatMovementOccupied(actor,q,r))return;
  const remaining=Math.max(0,combatMovementBudget(actor)-cost);
  const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
+ await window.combatUndoBeforeActorAction?.();
  try{
   await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
