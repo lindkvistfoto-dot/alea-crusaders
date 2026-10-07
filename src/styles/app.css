@@ -5208,3 +5208,22 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-participants .combat-row-portrait{width:38px;height:38px}
 }
 
+/* v0.33.75 — crisp normalized combat SVG icons */
+.combat-row-tool-icon{
+ width:88%;
+ height:88%;
+ object-fit:contain;
+ object-position:center;
+ border-radius:0;
+ image-rendering:auto;
+}
+.combat-turn-actions .combat-row-tool-btn{
+ display:grid;
+ place-items:center;
+ overflow:hidden;
+}
+.combat-turn-actions .combat-row-tool-btn.active .combat-row-tool-icon,
+.combat-turn-actions .combat-row-tool-btn.chosen .combat-row-tool-icon{
+ filter:drop-shadow(0 0 2px rgba(230,197,142,.45));
+}
+
