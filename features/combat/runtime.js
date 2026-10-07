@@ -1170,35 +1170,38 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
 function combatHitLocationFigureHtml(hitLocation){
  const valid=new Set(['head','chest','abdomen','right_arm','left_arm','right_leg','left_leg']);
  const active=valid.has(String(hitLocation?.key||''))?String(hitLocation.key):'';
- const cls=(key)=>'combat-hit-bodypart '+key+(active===key?' active':'');
- return '<svg class="combat-hit-figure" viewBox="0 0 180 320" role="img" aria-label="Humanoidfigur, träffområde '+escAttr(hitLocation?.label||'')+'">'+
-  '<defs>'+
-   '<filter id="combatHitGlow" x="-45%" y="-45%" width="190%" height="190%">'+
-    '<feGaussianBlur stdDeviation="4.2" result="blur"/>'+
-    '<feColorMatrix in="blur" type="matrix" values="1 0 0 0 .18  0 .46 0 0 .04  0 0 .18 0 0  0 0 0 1 0" result="warm"/>'+
-    '<feMerge><feMergeNode in="warm"/><feMergeNode in="SourceGraphic"/></feMerge>'+
-   '</filter>'+
-   '<linearGradient id="combatHitBodyFill" x1="0" y1="0" x2=".85" y2="1">'+
-    '<stop offset="0" stop-color="#f1e8d7"/><stop offset=".58" stop-color="#d9c9ad"/><stop offset="1" stop-color="#c2ad8c"/>'+
-   '</linearGradient>'+
-   '<linearGradient id="combatHitActiveFill" x1=".15" y1="0" x2=".85" y2="1">'+
-    '<stop offset="0" stop-color="#ffd36f"/><stop offset=".5" stop-color="#ed7e24"/><stop offset="1" stop-color="#b53f18"/>'+
-   '</linearGradient>'+
-  '</defs>'+
-  '<ellipse class="combat-hit-shadow" cx="91" cy="309" rx="60" ry="7"/>'+
-  '<g class="combat-hit-figure-root">'+
-   '<path class="'+cls('right_leg')+'" d="M77 190 C70 201 63 213 58 228 C53 243 50 258 48 274 C46 287 44 296 38 302 C33 307 24 309 18 313 C13 316 15 320 23 320 L48 320 C58 320 64 315 67 306 C72 291 76 278 80 263 C85 245 90 229 96 215 L91 195 Z"/>'+
-   '<path class="'+cls('left_leg')+'" d="M104 191 C111 201 119 214 125 229 C131 244 135 258 137 274 C139 287 141 296 147 301 C152 306 161 308 167 312 C172 315 170 319 162 319 L137 319 C127 319 121 314 118 305 C113 290 108 277 103 262 C98 246 92 230 86 216 L91 195 Z"/>'+
-   '<path class="'+cls('abdomen')+'" d="M67 146 C74 151 82 154 90 154 C99 154 107 151 115 146 C117 158 118 171 115 184 C112 196 106 207 99 217 C95 223 92 229 90 235 C87 228 83 222 79 216 C72 206 66 195 64 183 C61 171 63 158 67 146 Z"/>'+
-   '<path class="'+cls('right_arm')+'" d="M58 86 C49 92 43 101 40 111 C37 121 36 133 34 143 C31 154 27 164 22 173 C18 181 14 190 15 198 C16 205 21 211 27 212 C33 213 38 208 39 200 C40 192 42 184 46 177 C51 168 57 160 61 151 C65 142 68 132 69 121 C70 110 68 99 64 92 C62 89 60 87 58 86 Z"/>'+
-   '<path class="'+cls('left_arm')+'" d="M120 85 C130 90 137 98 142 108 C147 118 150 128 153 139 C156 150 161 160 166 170 C171 180 174 190 172 198 C170 206 164 211 158 211 C152 211 148 206 148 198 C148 190 146 182 142 174 C137 165 131 157 127 148 C123 139 120 129 119 118 C118 108 118 97 120 85 Z"/>'+
-   '<path class="'+cls('chest')+'" d="M73 74 C78 79 83 82 90 82 C98 82 103 79 108 74 C116 77 124 81 130 88 C137 96 140 108 138 121 C136 133 131 142 115 147 C107 151 99 154 90 154 C82 154 74 151 67 147 C54 142 49 133 48 121 C47 108 50 97 57 89 C62 82 67 78 73 74 Z"/>'+
-   '<path class="'+cls('head')+'" d="M90 20 C79 20 71 28 69 40 C67 50 69 60 74 68 C79 76 84 80 90 80 C96 80 102 76 106 68 C111 60 113 50 111 40 C109 28 101 20 90 20 Z"/>'+
-   '<path class="combat-hit-neck" d="M77 70 C81 78 85 82 90 82 C95 82 100 78 104 70"/>'+
-   '<path class="combat-hit-detail" d="M63 146 C73 150 81 153 90 153 C99 153 108 150 116 146"/>'+
-   '<path class="combat-hit-detail" d="M90 235 C87 244 84 252 80 263 M90 235 C94 244 98 253 103 262"/>'+
-  '</g>'+
- '</svg>'
+ const cls=(key)=>'combat-hit-zone '+key+(active===key?' active':'');
+ const centers={
+  head:[512,188],chest:[512,405],abdomen:[512,625],
+  right_arm:[300,520],left_arm:[724,520],
+  right_leg:[408,1040],left_leg:[616,1040]
+ };
+ const center=centers[active]||[512,600],model=window.ALEA_HIT_BODY_MODEL?.src||'';
+ return '<div class="combat-hit-model-stage">'+
+  (model?'<img class="combat-hit-model-image" src="'+model+'" alt="" aria-hidden="true">':'<div class="combat-hit-model-missing">Kroppsmodell saknas</div>')+
+  '<svg class="combat-hit-model-overlay" viewBox="0 0 1024 1536" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Träffområde '+escAttr(hitLocation?.label||'')+'">'+
+   '<defs>'+
+    '<filter id="combatHitZoneGlow" x="-50%" y="-50%" width="200%" height="200%">'+
+     '<feGaussianBlur stdDeviation="18" result="blur"/>'+
+     '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'+
+    '</filter>'+
+    '<radialGradient id="combatHitZoneFill" cx=".5" cy=".5" r=".7">'+
+     '<stop offset="0" stop-color="#ffd66f" stop-opacity=".76"/>'+
+     '<stop offset=".56" stop-color="#f27a24" stop-opacity=".55"/>'+
+     '<stop offset="1" stop-color="#b83d17" stop-opacity=".26"/>'+
+    '</radialGradient>'+
+   '</defs>'+
+   '<ellipse class="'+cls('head')+'" cx="512" cy="188" rx="103" ry="128"/>'+
+   '<path class="'+cls('chest')+'" d="M332 292 C383 250 446 238 512 246 C578 238 641 250 692 292 C720 329 727 386 713 449 C701 504 672 544 640 565 C597 584 555 590 512 588 C469 590 427 584 384 565 C352 544 323 504 311 449 C297 386 304 329 332 292 Z"/>'+
+   '<path class="'+cls('abdomen')+'" d="M386 548 C426 572 468 584 512 584 C556 584 598 572 638 548 C654 603 654 660 636 716 C622 760 596 796 565 817 C546 830 529 838 512 850 C495 838 478 830 459 817 C428 796 402 760 388 716 C370 660 370 603 386 548 Z"/>'+
+   '<path class="'+cls('right_arm')+'" d="M330 300 C286 317 256 360 244 415 C233 466 222 522 209 580 C198 632 186 681 192 724 C197 760 218 786 246 793 C273 800 296 779 301 744 C308 702 310 655 319 611 C328 565 344 523 356 480 C369 433 371 386 361 347 C354 324 343 307 330 300 Z"/>'+
+   '<path class="'+cls('left_arm')+'" d="M694 300 C738 317 768 360 780 415 C791 466 802 522 815 580 C826 632 838 681 832 724 C827 760 806 786 778 793 C751 800 728 779 723 744 C716 702 714 655 705 611 C696 565 680 523 668 480 C655 433 653 386 663 347 C670 324 681 307 694 300 Z"/>'+
+   '<path class="'+cls('right_leg')+'" d="M427 734 C384 773 358 828 346 900 C335 972 331 1047 326 1125 C322 1199 313 1275 300 1349 C294 1388 306 1421 337 1438 C366 1454 402 1441 416 1410 C433 1373 443 1325 449 1273 C457 1209 466 1150 478 1095 C490 1036 505 976 512 906 L493 817 Z"/>'+
+   '<path class="'+cls('left_leg')+'" d="M597 734 C640 773 666 828 678 900 C689 972 693 1047 698 1125 C702 1199 711 1275 724 1349 C730 1388 718 1421 687 1438 C658 1454 622 1441 608 1410 C591 1373 581 1325 575 1273 C567 1209 558 1150 546 1095 C534 1036 519 976 512 906 L531 817 Z"/>'+
+   '<circle class="combat-hit-target-ring" cx="'+center[0]+'" cy="'+center[1]+'" r="54"/>'+
+   '<circle class="combat-hit-target-dot" cx="'+center[0]+'" cy="'+center[1]+'" r="12"/>'+
+  '</svg>'+
+ '</div>'
 }
 function combatHitLocationResultHtml(hitLocation){
  if(!hitLocation?.label)return '';
