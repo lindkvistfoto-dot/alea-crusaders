@@ -153,7 +153,7 @@ function combatUndoBuildSnapshot(){
   const logs=Array.isArray(typeof combatLogRows!=="undefined"?combatLogRows:null)?combatLogRows:[];
   const maxLogId=logs.reduce((max,row)=>Math.max(max,Number(row?.id)||0),0);
   return {
-    version:1,captured_at:new Date().toISOString(),combat_id:activeCombat.id,
+    version:2,turn_start:true,captured_at:new Date().toISOString(),combat_id:activeCombat.id,
     actor_id:activeCombat.active_actor_id,actor_name:actor?.name_snapshot||"Okänd",
     round_number:Number(activeCombat.round_number)||1,phase:activeCombat.phase||"movement",
     active_actor_id:activeCombat.active_actor_id,active_responder_id:activeCombat.active_responder_id||null,
@@ -176,13 +176,11 @@ async function combatUndoPersistSettings(patch){
 }
 
 function combatUndoSnapshotMatchesActiveTurn(snapshot){
-  if(!snapshot||typeof activeCombat==="undefined"||!activeCombat?.id||!activeCombat.active_actor_id)return false;
+  if(!snapshot||snapshot.turn_start!==true)return false;
+  if(typeof activeCombat==="undefined"||!activeCombat?.id||!activeCombat.active_actor_id)return false;
   if(String(snapshot.combat_id)!==String(activeCombat.id))return false;
   if(String(snapshot.actor_id)!==String(activeCombat.active_actor_id))return false;
   if(Number(snapshot.round_number)!==Number(activeCombat.round_number))return false;
-  // A turn snapshot is immutable once captured. It represents the state at
-  // the beginning of this actor's turn, even if that baseline already
-  // contains actions from earlier actors in the same round.
   return true;
 }
 
