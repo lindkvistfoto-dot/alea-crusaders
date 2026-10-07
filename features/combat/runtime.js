@@ -1167,11 +1167,32 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
  if(!resolved)return null;
  return{profile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
 }
+function combatHitLocationFigureHtml(hitLocation){
+ const valid=new Set(['head','chest','abdomen','right_arm','left_arm','right_leg','left_leg']);
+ const active=valid.has(String(hitLocation?.key||''))?String(hitLocation.key):'';
+ const cls=(key)=>'combat-hit-bodypart '+key+(active===key?' active':'');
+ return '<svg class="combat-hit-figure" viewBox="0 0 120 210" role="img" aria-label="Humanoidfigur, träffområde '+escAttr(hitLocation?.label||'')+'">'+
+  '<g class="combat-hit-body">'+
+   '<circle class="'+cls('head')+'" cx="60" cy="27" r="18"/>'+
+   '<path class="'+cls('chest')+'" d="M40 54 Q60 43 80 54 L84 108 Q60 118 36 108 Z"/>'+
+   '<path class="'+cls('abdomen')+'" d="M36 108 Q60 118 84 108 L79 137 Q60 145 41 137 Z"/>'+
+   '<path class="'+cls('right_arm')+'" d="M38 60 Q26 79 21 106 T18 145"/>'+
+   '<path class="'+cls('left_arm')+'" d="M82 60 Q94 79 99 106 T102 145"/>'+
+   '<path class="'+cls('right_leg')+'" d="M50 137 Q45 160 43 184 L39 203"/>'+
+   '<path class="'+cls('left_leg')+'" d="M70 137 Q75 160 77 184 L81 203"/>'+
+  '</g>'+
+ '</svg>'
+}
 function combatHitLocationResultHtml(hitLocation){
  if(!hitLocation?.label)return '';
  return '<div class="combat-hit-location-result">'+
-  '<span>🎯 Träffområde</span><b>'+escAttr(hitLocation.label)+'</b>'+
-  '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
+  '<div class="combat-hit-location-head"><span>🎯 Träffområde</span><b>'+escAttr(hitLocation.label)+'</b></div>'+
+  '<div class="combat-hit-location-body">'+
+   '<div class="combat-hit-figure-wrap">'+combatHitLocationFigureHtml(hitLocation)+'</div>'+
+   '<div class="combat-hit-location-copy"><strong>'+escAttr(hitLocation.label)+'</strong>'+
+    '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
+   '</div>'+
+  '</div>'+
  '</div>'
 }
 
