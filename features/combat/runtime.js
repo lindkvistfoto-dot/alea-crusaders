@@ -2869,7 +2869,6 @@ function combatTurnPanelHtml(){
   :'';
  const head='<div class="combat-turn-head">'+
   '<span class="combat-round">Runda '+activeCombat.round_number+'</span>'+
-  '<span class="combat-phase">Fas: '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>'+
   '<span class="combat-turn-action-status '+state.key+'">Handling: '+escAttr(state.label)+'</span>'+
   '<span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+' · Sparad strid'+(canManage?' · SL-läge':'')+'</span>'+
   undoButton+
