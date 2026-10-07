@@ -4928,3 +4928,283 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-mini-attack .combat-attack-hit-camera{margin-right:0}
 }
 
+/* v0.33.74 — active combatant round panel */
+.combat-turn-panel{
+ grid-column:1/-1;
+ display:flex;
+ flex-direction:column;
+ gap:0;
+ align-items:stretch;
+ padding:0;
+ overflow:visible;
+ background:
+  radial-gradient(circle at 18% 0,rgba(160,111,53,.12),transparent 38%),
+  linear-gradient(180deg,#261d16 0%,#17120e 100%);
+}
+.combat-turn-head{
+ display:grid;
+ grid-template-columns:auto auto auto minmax(0,1fr) auto;
+ gap:8px;
+ align-items:center;
+ min-width:0;
+ padding:8px 10px 7px;
+ border-bottom:1px solid rgba(139,103,61,.48);
+}
+.combat-turn-head .combat-status{
+ min-width:0;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+}
+.combat-turn-action-status{
+ padding:4px 7px;
+ border:1px solid rgba(198,154,88,.34);
+ border-radius:999px;
+ background:#2f261d;
+ color:#d9c29c;
+ font-size:9px;
+ font-weight:900;
+ line-height:1;
+ letter-spacing:.04em;
+ text-transform:uppercase;
+ white-space:nowrap;
+}
+.combat-turn-action-status.move{border-color:rgba(74,151,89,.55);color:#a9d9af;background:#1d2b20}
+.combat-turn-action-status.attack{border-color:rgba(182,75,63,.62);color:#efb0a7;background:#351c19}
+.combat-turn-action-status.other{border-color:rgba(177,133,66,.58);color:#e8c88d;background:#34291a}
+.combat-turn-action-status.reaction{border-color:rgba(80,132,194,.62);color:#b5d4f0;background:#17283a}
+.combat-turn-undo-btn{
+ width:29px;
+ height:29px;
+ min-width:29px;
+ padding:0;
+ border:1px solid #6d563b;
+ border-radius:7px;
+ background:linear-gradient(180deg,#30251c,#17130f);
+ color:#e2c58f;
+ display:grid;
+ place-items:center;
+ font:900 18px/1 system-ui,sans-serif;
+ cursor:pointer;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 5px rgba(0,0,0,.28);
+}
+.combat-turn-undo-btn:hover:not(:disabled){
+ border-color:#ae8550;
+ color:#ffe0a8;
+ background:linear-gradient(180deg,#453325,#211912);
+}
+.combat-turn-undo-btn:disabled{opacity:.32;cursor:default}
+.combat-undo-row{display:none!important}
+
+.combat-turn-actor{
+ min-height:66px;
+ display:flex;
+ align-items:center;
+ gap:10px;
+ padding:7px 10px 6px;
+ position:relative;
+ overflow:visible;
+}
+.combat-turn-actor.empty{
+ min-height:48px;
+ color:#a9977f;
+ font-size:11px;
+}
+.combat-turn-portrait{
+ --turn-side:#aa7b3f;
+ width:50px;
+ height:56px;
+ flex:0 0 50px;
+ padding:2px;
+ clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);
+ background:var(--turn-side);
+ display:grid;
+ place-items:center;
+ color:#f7ead3;
+ filter:drop-shadow(0 2px 4px rgba(0,0,0,.44));
+}
+.combat-turn-portrait.player-row{--turn-side:#3ca95a}
+.combat-turn-portrait.npc-row{--turn-side:#3984c6}
+.combat-turn-portrait.enemy-row{--turn-side:#bd493e}
+.combat-turn-portrait img,
+.combat-turn-portrait b{
+ width:100%;
+ height:100%;
+ clip-path:inherit;
+}
+.combat-turn-portrait img{
+ display:block;
+ object-fit:cover;
+ object-position:center 23%;
+ background:#17130f;
+}
+.combat-turn-portrait b{
+ display:grid;
+ place-items:center;
+ background:#241e18;
+ font:800 14px/1 Georgia,serif;
+}
+.combat-turn-identity{
+ min-width:0;
+ flex:1 1 auto;
+ display:flex;
+ flex-direction:column;
+ gap:3px;
+}
+.combat-turn-identity span{
+ color:#9e896d;
+ font-size:8px;
+ font-weight:900;
+ line-height:1;
+ letter-spacing:.07em;
+ text-transform:uppercase;
+}
+.combat-turn-identity b{
+ min-width:0;
+ color:#f3e5cf;
+ font:800 18px/1.05 Georgia,serif;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+.combat-turn-actions{
+ flex:0 0 auto;
+ display:flex;
+ align-items:center;
+ justify-content:flex-end;
+ gap:7px;
+ overflow:visible;
+}
+.combat-turn-actions .combat-turn-action-tool{
+ width:40px;
+ flex:0 0 40px;
+ position:relative;
+}
+.combat-turn-actions .combat-row-tool-btn{
+ width:40px;
+ min-width:40px;
+ height:40px;
+ border-radius:7px;
+}
+.combat-turn-actions .combat-row-action-menu{
+ top:45px;
+}
+.combat-turn-actions .combat-row-tool-btn.active{
+ border-color:#d0a85f;
+ box-shadow:0 0 0 2px rgba(202,159,82,.22),0 0 12px rgba(202,159,82,.18);
+}
+.combat-turn-stats{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ border-top:1px solid rgba(139,103,61,.38);
+ background:rgba(8,7,6,.18);
+}
+.combat-turn-stats>div{
+ min-width:0;
+ padding:6px 10px 7px;
+ text-align:center;
+ border-right:1px solid rgba(139,103,61,.28);
+}
+.combat-turn-stats>div:last-child{border-right:0}
+.combat-turn-stats span{
+ display:block;
+ color:#9f8b70;
+ font-size:8px;
+ font-weight:900;
+ line-height:1;
+ letter-spacing:.055em;
+ text-transform:uppercase;
+}
+.combat-turn-stats b{
+ display:block;
+ margin-top:2px;
+ color:#f0dcc0;
+ font:900 16px/1 Georgia,serif;
+}
+.combat-turn-stats small{
+ display:block;
+ min-height:8px;
+ margin-top:2px;
+ color:#746652;
+ font-size:6px;
+ font-weight:700;
+ line-height:1;
+}
+
+/* Turordningen visar nu ordning och status, inte handlingsknappar. */
+.combat-participants .combatant-card{
+ grid-template-columns:38px 46px minmax(0,1fr) 44px;
+ grid-template-rows:auto;
+ grid-template-areas:none;
+ min-height:66px;
+}
+.combat-participants .combat-order-number{grid-column:1;grid-row:1;min-height:54px}
+.combat-participants .combat-row-portrait{grid-column:2;grid-row:1}
+.combat-participants .combatant-card-copy{grid-column:3;grid-row:1}
+.combat-participants .combat-row-init{grid-column:4;grid-row:1}
+.combat-participants .combat-row-controls{display:none!important}
+
+@media(max-width:700px){
+ .combat-turn-head{
+  grid-template-columns:auto auto minmax(0,1fr) auto;
+ }
+ .combat-turn-action-status{grid-column:3}
+ .combat-turn-head .combat-status{display:none}
+ .combat-turn-actor{gap:8px;padding-left:8px;padding-right:8px}
+ .combat-turn-portrait{width:45px;height:50px;flex-basis:45px}
+ .combat-turn-identity b{font-size:16px}
+ .combat-turn-actions{gap:5px}
+ .combat-turn-actions .combat-turn-action-tool{width:36px;flex-basis:36px}
+ .combat-turn-actions .combat-row-tool-btn{width:36px;min-width:36px;height:36px}
+ .combat-turn-actions .combat-row-action-menu{top:41px;width:min(230px,76vw)}
+ .combat-participants .combatant-card{
+  grid-template-columns:36px 42px minmax(0,1fr) 40px;
+  grid-template-areas:none;
+  min-height:64px;
+ }
+ .combat-participants .combat-order-number{grid-column:1;grid-row:1;min-height:52px}
+ .combat-participants .combat-row-portrait{grid-column:2;grid-row:1}
+ .combat-participants .combatant-card-copy{grid-column:3;grid-row:1}
+ .combat-participants .combat-row-init{grid-column:4;grid-row:1}
+}
+@media(max-width:430px){
+ .combat-turn-head{gap:5px;padding:7px 8px}
+ .combat-turn-head .combat-round{font-size:16px}
+ .combat-turn-head .combat-phase{font-size:10px;padding:4px 6px}
+ .combat-turn-action-status{font-size:8px;padding:4px 5px}
+ .combat-turn-undo-btn{width:27px;height:27px;min-width:27px}
+ .combat-turn-actor{
+  display:grid;
+  grid-template-columns:43px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  gap:5px 8px;
+ }
+ .combat-turn-portrait{
+  grid-column:1;
+  grid-row:1/3;
+  width:43px;
+  height:48px;
+  align-self:start;
+ }
+ .combat-turn-identity{grid-column:2;grid-row:1}
+ .combat-turn-identity span{font-size:7px}
+ .combat-turn-identity b{font-size:15px}
+ .combat-turn-actions{
+  grid-column:2;
+  grid-row:2;
+  justify-content:flex-start;
+  gap:6px;
+ }
+ .combat-turn-actions .combat-turn-action-tool{width:34px;flex-basis:34px}
+ .combat-turn-actions .combat-row-tool-btn{width:34px;min-width:34px;height:34px}
+ .combat-turn-actions .combat-row-action-menu{top:39px}
+ .combat-turn-stats>div{padding:5px 4px 6px}
+ .combat-turn-stats b{font-size:14px}
+ .combat-participants .combatant-card{
+  grid-template-columns:34px 39px minmax(0,1fr) 36px;
+  gap:4px 6px;
+ }
+ .combat-participants .combat-order-number{width:34px;min-width:34px}
+ .combat-participants .combat-row-portrait{width:38px;height:38px}
+}
+
