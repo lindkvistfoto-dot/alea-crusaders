@@ -5833,3 +5833,41 @@ body:not(.editing) #skilltable .skill-roll-btn{
   padding:10px!important;
  }
 }
+
+
+/* v0.33.92 — armor master uses the same horizontally scrollable table pattern as weapons */
+@media(max-width:700px){
+ .adminarmortable{
+  display:grid;
+  grid-template-columns:64px 155px 82px 54px 64px 92px 94px 68px 105px 220px 78px;
+  width:max-content;
+  min-width:100%;
+  overflow:visible;
+  border:1px solid #5a4631;
+  border-radius:12px;
+  font-size:13px;
+ }
+ .adminarmortable>.ahead{display:block}
+ .adminarmortable>div{
+  display:block!important;
+  width:auto!important;
+  min-width:0;
+  padding:9px 6px!important;
+  border-bottom:1px solid #443527;
+  box-sizing:border-box;
+  grid-column:auto!important;
+  grid-row:auto!important;
+  background:transparent;
+  text-align:left;
+  font-size:inherit;
+ }
+ .adminarmortable>.ahead{background:#6d1e1e}
+ .adminarmortable .admin-master-footnote{
+  grid-column:1/-1!important;
+  border-bottom:0;
+ }
+ .adminarmortable .admin-weapon-icon-cell{display:grid!important;place-items:center}
+ .adminarmortable .admin-weapon-icon img{width:32px;height:32px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.62))}
+ .adminarmortable .admin-weapon-icon small{display:block}
+ .adminarmortable>div::before{content:none!important}
+}
