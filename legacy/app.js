@@ -161,6 +161,40 @@ function ruleWeaponForItem(item){
  let alias=({'stav':'Trästav'})[name.toLocaleLowerCase('sv-SE')];
  return alias?ruleWeapons.find(r=>(r.name||'').localeCompare(alias,'sv',{sensitivity:'base'})===0)||null:null
 }
+function weaponSkillId(item){
+ let direct=String(item?.skillId||item?.skill_id||'').trim();
+ if(direct)return direct;
+ return String(ruleWeaponForItem(item)?.skill_id||'').trim()
+}
+function weaponSkillRule(item){
+ let id=weaponSkillId(item);return id?(ruleSkills||[]).find(r=>r.id===id)||null:null
+}
+function characterWeaponSkill(item,c=current){
+ let id=weaponSkillId(item);return id?(c?.skills||[]).find(sk=>sk.skillId===id)||null:null
+}
+function characterWeaponSkillTarget(item,c=current){
+ let skillId=weaponSkillId(item),rule=skillId?(ruleSkills||[]).find(r=>r.id===skillId)||null:null,skill=characterWeaponSkill(item,c);
+ let skillName=rule?.name||skill?.name||item?.skillName||skillId||'';
+ if(skillId){
+  let explicit=Number(skill?.fv);
+  if(Number.isFinite(explicit)&&explicit>0)return{fv:explicit,skillId,skillName,source:'FV',linked:true,skill};
+  let bc=String(rule?.bc??'').trim().toUpperCase();
+  if(bc&&bc!=='0'&&bc!=='—'&&bc!=='NONE'){
+   let names={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
+   let baseKey=names[bc]||Object.keys(c?.base||{}).find(k=>k.toLocaleUpperCase('sv-SE')===bc)||null;
+   let baseChance=Number(baseKey?c?.base?.[baseKey]?.g:null);
+   if(Number.isFinite(baseChance)&&baseChance>0)return{fv:baseChance,skillId,skillName,source:'BC '+bc,linked:true,skill}
+  }
+  return{fv:null,skillId,skillName,source:'FV',linked:true,skill}
+ }
+ let legacy=Number(item?.fv);
+ return{fv:Number.isFinite(legacy)?legacy:null,skillId:'',skillName:'',source:'Vapen-FV',linked:false,skill:null}
+}
+function characterWeaponFv(item,c=current){return characterWeaponSkillTarget(item,c).fv}
+function characterWeaponErfItem(item,c=current){return characterWeaponSkill(item,c)||item}
+function characterWeaponErf(item,c=current){
+ let x=characterWeaponErfItem(item,c),n=Number(x?.erf);return Number.isFinite(n)?n:0
+}
 function weaponInstanceMasterId(item){
  let r=ruleWeaponForItem(item);return r?.id||''
 }
@@ -180,6 +214,8 @@ function copyRuleWeaponToInstance(target,rule){
  target.price=rule.price==null?'':Number(rule.price);target.range=rule.range_text||'';
  target.reloadRounds=rule.reload_rounds==null?'':Number(rule.reload_rounds);
  target.tags=Array.isArray(rule.tags)?[...rule.tags]:[];target.masterNotes=rule.notes||'';
+ target.skillId=rule.skill_id||'';
+ target.skillName=(ruleSkills||[]).find(skill=>skill.id===rule.skill_id)?.name||'';
  return target
 }
 function setCharacterWeaponMaster(i,value){
@@ -187,9 +223,9 @@ function setCharacterWeaponMaster(i,value){
  if(value&&value!=='__custom__'){
   let rule=ruleWeapons.find(r=>r.id===value);if(rule)copyRuleWeaponToInstance(w,rule)
  }else if(value==='__custom__'){
-  w.weaponTypeId='';w.weapon_id='';w.weaponCategory=w.weaponCategory||'melee'
+  w.weaponTypeId='';w.weapon_id='';w.weaponCategory=w.weaponCategory||'melee';w.skillId='';w.skillName=''
  }else{
-  w.weaponTypeId='';w.weapon_id=''
+  w.weaponTypeId='';w.weapon_id='';w.skillId='';w.skillName=''
  }
  save();renderWeapons();refreshTotalBep()
 }
@@ -388,13 +424,19 @@ function ruleWeaponNumberValue(id,{nullable=false,integer=false,min=0}={}){
  if(!Number.isFinite(value)||(integer&&!Number.isInteger(value))||value<min)throw new Error('Kontrollera numeriska värden i vapenformuläret.');
  return value
 }
+function ruleWeaponSkillOptions(selected=''){
+ selected=String(selected||'');
+ return '<option value="">— Ingen färdighet —</option>'+
+  (ruleSkills||[]).filter(r=>r.type==='STR').sort((a,b)=>(a.name||'').localeCompare(b.name||'','sv'))
+   .map(r=>'<option value="'+escAttr(r.id)+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+'</option>').join('')
+}
 function renderAdminWeapons(){
  let el=$('adminWeaponTable'),st=$('adminWeaponStatus');if(!el)return;
  if(!ruleWeaponsLoaded){el.innerHTML='';if(st)st.textContent='Vapenregistret kunde inte läsas.';return}
  if(st)st.textContent=ruleWeapons.length+' vapen i regelregistret.';
  if(!ruleWeapons.length){el.innerHTML='<div class="admin-weapon-empty">Inga vapen finns ännu. Lägg till det första vapnet.</div>';return}
- el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
-  ruleWeapons.map(r=>'<div><b>'+escAttr(r.name||'—')+'</b></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>').join('')
+ el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
+  ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div><b>'+escAttr(r.name||'—')+'</b></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
 }
 function editRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let r=id?ruleWeapons.find(x=>x.id===id):null;
@@ -404,6 +446,7 @@ function editRuleWeapon(id=''){
   '<div class="rule-editor-grid weapon-rule-editor">'+
    '<label class="wide">Namn<input id="rwName" value="'+escAttr(r?.name||'')+'"></label>'+
    '<label>Kategori<select id="rwCategory"><option value="melee" '+(category==='melee'?'selected':'')+'>Närstrid</option><option value="projectile" '+(category==='projectile'?'selected':'')+'>Projektil</option><option value="thrown" '+(category==='thrown'?'selected':'')+'>Kastvapen</option></select></label>'+
+   '<label>Färdighet<select id="rwSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'')+'</select></label>'+
    '<label>Grepp<select id="rwHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
    '<label>STY-grupp<input id="rwStrengthGroup" type="number" min="0" step="1" value="'+escAttr(r?.strength_group??0)+'"></label>'+
    '<label>Skada<input id="rwDamage" value="'+escAttr(r?.damage||'')+'" placeholder="t.ex. 1T8+1"></label>'+
@@ -426,6 +469,7 @@ async function saveRuleWeapon(id=''){
   let payload={
    name,
    category:$('rwCategory')?.value||'melee',
+   skill_id:$('rwSkillId')?.value||null,
    handling:$('rwHandling')?.value||'1H',
    strength_group:ruleWeaponNumberValue('rwStrengthGroup',{integer:true}),
    damage:$('rwDamage')?.value.trim()||'',
