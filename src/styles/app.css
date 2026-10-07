@@ -3997,6 +3997,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
  margin-top:8px;
 }
 .combat-parry-result,
+.combat-hit-location-result,
 .combat-damage-result{
  margin-top:4px;
  padding:6px 7px;
@@ -4010,6 +4011,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#554636;
 }
 .combat-parry-result span,
+.combat-hit-location-result span,
 .combat-damage-result span{
  font-size:9px;
  font-weight:900;
@@ -4018,11 +4020,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#77644d;
 }
 .combat-parry-result b,
+.combat-hit-location-result b,
 .combat-damage-result b{
  justify-self:end;
  font-size:11px;
 }
 .combat-parry-result small,
+.combat-hit-location-result small,
 .combat-damage-result small{
  grid-column:1/-1;
  font-size:9px;
@@ -4035,6 +4039,15 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-parry-result.fail{
  border-color:#b47b70;
  background:#f9eae6;
+}
+.combat-hit-location-result{
+ border-color:#b98b49;
+ background:#fff1cf;
+ color:#5b3d13;
+}
+.combat-hit-location-result b{
+ color:#8a4f12;
+ font-weight:900;
 }
 .combat-damage-result.defeated{
  border-color:#8e3b34;
