@@ -4436,3 +4436,16 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#d3bea0;
 }
 
+/* v0.33.63 — transparent clipped hit-body artwork */
+.combat-hit-model-image-svg{
+ pointer-events:none;
+ opacity:.8;
+ filter:grayscale(1) sepia(.22) saturate(.58) contrast(1.05) brightness(.86);
+ mix-blend-mode:multiply;
+}
+.combat-mini-attack .combat-hit-model-image-svg{
+ opacity:.9;
+ filter:grayscale(1) sepia(.25) saturate(.54) contrast(1.08) brightness(.82);
+ mix-blend-mode:multiply;
+}
+
