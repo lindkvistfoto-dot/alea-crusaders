@@ -441,6 +441,7 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     const legacy = read("legacy/app.js");
     const css = read("src/styles/app.css");
+    const zones = read("features/combat/hit-body-zones.js");
     expect(html).toContain('id="combatGmControls"');
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
