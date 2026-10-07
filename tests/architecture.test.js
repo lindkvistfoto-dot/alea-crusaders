@@ -429,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.50");
-    expect(html).toContain("app.css?v=0.33.50");
-    expect(html).toContain("legacy/app.js?v=0.33.50");
+    expect(html).toContain("Alea Crusaders v0.33.51");
+    expect(html).toContain("app.css?v=0.33.51");
+    expect(html).toContain("legacy/app.js?v=0.33.51");
   });
 
 
@@ -444,7 +444,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.50");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.51");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -637,6 +637,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("result.hit_location=await combatResolveHitLocation");
     expect(combat).toContain("attackResult.hit_location=await combatResolveHitLocation");
     expect(combat).toContain("combatHitLocationResultHtml(result.hit_location)");
+    expect(combat).toContain("function combatHitLocationFigureHtml");
+    expect(combat).toContain("combat-hit-bodypart '+key+(active===key?' active':'')");
+    expect(combat).toContain("class=\"combat-hit-figure\"");
+    expect(combat).toContain("class=\"'+cls('head')+'\"");
+    expect(combat).toContain("class=\"'+cls('right_arm')+'\"");
+    expect(css).toContain(".combat-hit-bodypart.active{");
+    expect(css).toContain(".combat-hit-figure-wrap{");
     expect(combat).toContain("(full?'<strong>FULL SKADA</strong>':'')+\n  combatHitLocationResultHtml(result.hit_location)+\n  (result.erf");
     expect(css).toContain(".combat-hit-location-result{");
     expect(combat).toContain("function combatParryOptions");
