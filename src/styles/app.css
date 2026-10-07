@@ -3134,7 +3134,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#d9c19a;
 }
 .combat-map-svg{
- touch-action:none;
+ touch-action:pan-y;
  user-select:none;
  -webkit-user-select:none;
  cursor:grab;
