@@ -593,11 +593,11 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combat-result-icon");
     expect(combat).toContain("async function combatResolveAttackAction");
     expect(combat).toContain("async function combatAwardAttackErf");
-    expect(combat).toContain("actor.source_id,'weapons',itemKey,outcome");
+    expect(combat).toContain("awardCharacterErfItem(actor.source_id,itemGroup,itemKey,outcome,{amount})");
     expect(combat).toContain("combatRollDice([{qty:1,sides:3}]");
     expect(combat).toContain("ERF redan erhållet under aktuell viloperiod.");
     expect(combat).toContain("result.erf=erf");
-    expect(combat).toContain("combatSyncWeaponErfLocal");
+    expect(combat).toContain("combatSyncAttackErfLocal");
     expect(combat).toContain("async function rollCombatAttack");
     expect(legacy).toContain("async function awardCharacterErfItem");
     expect(legacy).toContain("async function loadRuleCombatFumbles");
