@@ -429,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.54");
-    expect(html).toContain("app.css?v=0.33.54");
-    expect(html).toContain("legacy/app.js?v=0.33.54");
+    expect(html).toContain("Alea Crusaders v0.33.55");
+    expect(html).toContain("app.css?v=0.33.55");
+    expect(html).toContain("legacy/app.js?v=0.33.55");
   });
 
 
@@ -444,8 +444,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.54");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.54");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.55");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.55");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -648,12 +648,17 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("class=\"'+cls('right_arm')+'\"");
     expect(combat).toContain("combatHitZoneFill");
     expect(combat).toContain("combatHitZoneGlow");
+    expect(combat).toContain("combat-hit-target-ring-outer");
     expect(combat).toContain("combat-hit-target-ring");
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
     expect(css).toContain(".combat-hit-zone.active{");
     expect(css).toContain("fill:url(#combatHitZoneFill)");
     expect(css).toContain("filter:url(#combatHitZoneGlow)");
+    expect(css).toContain(".combat-hit-target-ring-outer{");
+    expect(css).toContain("stroke-width:2.5;");
+    expect(combat).toContain("r=\"25\"");
+    expect(combat).toContain("r=\"7\"");
     expect(combat).toContain("(full?'<strong>FULL SKADA</strong>':'')+\n  combatHitLocationResultHtml(result.hit_location)+\n  (result.erf");
     expect(css).toContain(".combat-hit-location-result{");
     expect(combat).toContain("function combatParryOptions");
