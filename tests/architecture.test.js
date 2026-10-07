@@ -665,7 +665,7 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain("v0.33.65 — image-only hit location label");
     expect(css).toContain("v0.33.66 — compact attack result layout");
     expect(css).toContain("v0.33.67 — full damage under attack outcome");
-    expect(css).toContain("v0.33.70 — GM undo under round status");
+    expect(css).toContain("v0.33.68 — GM undo under round status");
     expect(css).toContain(".combat-undo-btn{");
     expect(css).toContain(".combat-full-damage-inline{");
     expect(css).toContain(".combat-hit-full-damage{");
@@ -705,6 +705,7 @@ describe("application architecture smoke checks", () => {
     expect(main).toContain("window.undoLastCombatTurn=async function");
     expect(main).toContain("combatUndoObserver.observe(combatUndoBody,{childList:true});");
     expect(main).not.toContain("combatUndoObserver.observe(combatUndoBody,{childList:true,subtree:true});");
+    expect(main).toContain("v0.33.70 — prevent combat undo observer feedback loop");
     expect(main).toContain("window.endCombatTurn=async function");
     expect(main).toContain("turn_undo_last");
     expect(main).toContain("SL ångrade");
