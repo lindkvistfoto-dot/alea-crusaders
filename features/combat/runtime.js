@@ -2192,10 +2192,17 @@ function combatDamageResultHtml(damage){
   }
  }
  const armor=Math.max(0,Number(damage.armor_absorption)||0),net=Math.max(0,Number(damage.net_damage)||0);
+ const armorText=Array.isArray(damage.armor_names)&&damage.armor_names.length?damage.armor_names.join(', '):'ABS';
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
-  '<div class="combat-damage-head"><span>Skada</span><span>Skadebonus</span><span>Rustning</span></div>'+
-  '<div class="combat-damage-equation"><b>'+weaponValue+'</b><i>+</i><b>'+bonusValue+'</b><i>−</i><b>'+armor+'</b><i>=</i><strong>'+net+'</strong></div>'+
-  '<div class="combat-damage-formulas"><span>'+escAttr(weaponFormula)+'</span><span>'+escAttr(bonusFormula)+'</span><span></span></div>'+
+  '<div class="combat-damage-grid">'+
+   '<div class="combat-damage-col"><span>Skada</span><b>'+weaponValue+'</b><small>'+escAttr(weaponFormula)+'</small></div>'+
+   '<i class="combat-damage-op">+</i>'+
+   '<div class="combat-damage-col"><span>Skadebonus</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>'+
+   '<i class="combat-damage-op">−</i>'+
+   '<div class="combat-damage-col"><span>Rustning</span><b>'+armor+'</b><small>'+escAttr(armorText)+'</small></div>'+
+   '<i class="combat-damage-op">=</i>'+
+   '<div class="combat-damage-col total"><span>Totalt</span><b>'+net+'</b><small>KP skada</small></div>'+
+  '</div>'+
   '<div class="combat-damage-kp"><span>KP</span><b>'+damage.kp_before+' − '+net+' = '+damage.kp_after+(damage.defeated?' · NEDKÄMPAD':'')+'</b></div>'+
  '</div>'
 }
