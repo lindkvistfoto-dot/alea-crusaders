@@ -5227,3 +5227,41 @@ body:not(.editing) #skilltable .skill-roll-btn{
  filter:drop-shadow(0 0 2px rgba(230,197,142,.45));
 }
 
+/* v0.33.75 — normalized combat action artwork */
+.combat-turn-actions .combat-row-tool-btn{
+ border:0;
+ background:transparent;
+ box-shadow:none;
+ padding:0;
+ overflow:visible;
+}
+.combat-turn-actions .combat-row-tool-btn:hover:not(:disabled){
+ border:0;
+ background:transparent;
+ box-shadow:none;
+ transform:translateY(-1px);
+}
+.combat-turn-actions .combat-row-tool-icon{
+ display:block;
+ width:100%;
+ height:100%;
+ object-fit:cover;
+ object-position:center;
+ border-radius:7px;
+ image-rendering:auto;
+ pointer-events:none;
+ user-select:none;
+ -webkit-user-drag:none;
+}
+.combat-turn-actions .combat-row-tool-btn.active{
+ border:0;
+ background:transparent;
+ outline:2px solid #d0a85f;
+ outline-offset:2px;
+ box-shadow:0 0 12px rgba(202,159,82,.32);
+}
+.combat-turn-actions .combat-row-tool-btn:disabled{
+ opacity:.35;
+ filter:saturate(.55) brightness(.75);
+}
+
