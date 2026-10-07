@@ -90,7 +90,7 @@ window.combatAttackResultHtml=function(action){
         (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
       '</div>'+
       window.combatHitLocationResultHtml(result.hit_location)+
-      (result.erf
+      (result.erf&&(result.erf.awarded>0||!result.erf.locked)
         ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
           (result.erf.awarded>0
             ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
