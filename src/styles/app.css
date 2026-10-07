@@ -5718,3 +5718,14 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
  .adminarmortable .admin-master-footnote{grid-column:1/-1}
 }
+
+/* v0.33.95 — active combatant equipment status */
+.combat-turn-stats{grid-template-columns:repeat(7,minmax(0,1fr))}
+.combat-turn-equip{display:grid;grid-template-rows:auto 30px auto;place-items:center;align-content:center}
+.combat-turn-equip img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
+.combat-turn-equip small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combat-turn-equip.projectile b{font-size:18px}
+@media(max-width:700px){
+ .combat-turn-stats{grid-template-columns:repeat(7,minmax(78px,1fr));overflow-x:auto}
+ .combat-turn-stats>div{min-width:78px}
+}
