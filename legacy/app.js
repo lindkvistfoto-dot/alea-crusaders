@@ -555,6 +555,28 @@ function ruleArmorCategoryLabel(category){
 function ruleShieldSizeLabel(size){
  return({small:'Liten',medium:'Medelstor',large:'Stor'})[size]||size||'—'
 }
+const RULE_ARMOR_ICON_DEFS=[
+ {key:'cloth',label:'Tjockt tyg'},{key:'leather',label:'Läder'},{key:'studded-leather',label:'Nitläder'},
+ {key:'light-scale',label:'Lätt fjällpansar'},{key:'scale',label:'Fjällpansar'},{key:'chainmail',label:'Ringbrynja'},
+ {key:'reinforced-chainmail',label:'Förstärkt ringbrynja'},{key:'plate',label:'Helrustning'},{key:'generic',label:'Generisk rustning'}
+];
+const RULE_SHIELD_ICON_DEFS=[
+ {key:'shield-small',label:'Liten sköld'},{key:'shield-medium',label:'Medelstor sköld'},{key:'shield-large',label:'Stor sköld'}
+];
+function ruleArmorIconDef(key){return RULE_ARMOR_ICON_DEFS.find(icon=>icon.key===String(key||''))||null}
+function ruleShieldIconDef(key){return RULE_SHIELD_ICON_DEFS.find(icon=>icon.key===String(key||''))||null}
+function ruleArmorIconSrc(key){let d=ruleArmorIconDef(key);return './assets/armor-icons/'+(d?.key||'generic')+'.svg'}
+function ruleShieldIconSrc(key){let d=ruleShieldIconDef(key);return './assets/armor-icons/'+(d?.key||'shield-medium')+'.svg'}
+function ruleArmorIconHtml(rule){
+ let d=ruleArmorIconDef(rule?.icon_key);
+ return '<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleArmorIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+}
+function ruleShieldIconHtml(rule){
+ let d=ruleShieldIconDef(rule?.icon_key);
+ return '<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleShieldIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+}
+function ruleArmorIconOptions(selected=''){return '<option value="">— Välj ikon —</option>'+RULE_ARMOR_ICON_DEFS.map(x=>'<option value="'+x.key+'" '+(x.key===selected?'selected':'')+'>'+x.label+'</option>').join('')}
+function ruleShieldIconOptions(selected=''){return '<option value="">— Välj ikon —</option>'+RULE_SHIELD_ICON_DEFS.map(x=>'<option value="'+x.key+'" '+(x.key===selected?'selected':'')+'>'+x.label+'</option>').join('')}
 function ruleMasterNumberValue(id,{nullable=false,integer=false,min=0}={}){
  let raw=$(id)?.value??'';
  if(raw==='')return nullable?null:0;
@@ -574,9 +596,9 @@ function renderAdminArmors(){
  if(st)st.textContent=ruleArmorTypes.length+' rustningstyper · '+expert+' kanoniska Expertposter · '+ruleArmorMaterials.length+' materialregler.';
  if(!ruleArmorTypes.length){el.innerHTML='<div class="admin-master-empty">Inga rustningar finns ännu.</div>';return}
  el.innerHTML=
-  '<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP*</div><div class="ahead">Pris/BEP</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP*</div><div class="ahead">Pris/BEP</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
   ruleArmorTypes.map(r=>
-   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
+   '<div class="admin-weapon-icon-cell">'+ruleArmorIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
    '<div>'+escAttr(ruleArmorCategoryLabel(r.category))+'</div>'+
    '<div>'+(r.absorption??'—')+'</div>'+
    '<div><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
@@ -594,6 +616,7 @@ function editRuleArmor(id=''){
  $('adminEditorBody').innerHTML=
   '<div class="rule-editor-grid armor-rule-editor">'+
    '<label class="wide">Namn<input id="raName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Ikon<select id="raIconKey">'+ruleArmorIconOptions(r?.icon_key||'')+'</select></label>'+
    '<label>Kategori<select id="raCategory"><option value="cloth" '+(category==='cloth'?'selected':'')+'>Tyg</option><option value="leather" '+(category==='leather'?'selected':'')+'>Läder</option><option value="metal" '+(category==='metal'?'selected':'')+'>Metall</option></select></label>'+
    '<label>ABS<input id="raAbs" type="number" min="0" step="1" value="'+escAttr(r?.absorption??0)+'"></label>'+
    '<label>Viktkod<select id="raWeightCode"><option value="">— Ingen —</option>'+['A','B','C','D','E','F','G','H','J','K'].map(k=>'<option value="'+k+'" '+(r?.weight_code===k?'selected':'')+'>'+k+'</option>').join('')+'</select></label>'+
@@ -615,6 +638,7 @@ async function saveRuleArmor(id=''){
   let payload={
    type_key:existing?.type_key||ruleMasterKeyFromName(name,'armor'),
    name,
+   icon_key:$('raIconKey')?.value||'generic',
    category:$('raCategory')?.value||'leather',
    absorption:ruleMasterNumberValue('raAbs',{integer:true}),
    weight_code:$('raWeightCode')?.value||null,
@@ -651,9 +675,9 @@ function renderAdminShields(){
  if(st)st.textContent=ruleShields.length+' sköldtyper · Expertdata för passivt skydd, projektiler och tålighet.';
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  el.innerHTML=
-  '<div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">ABS</div><div class="ahead">BEP</div><div class="ahead">BV</div><div class="ahead">Projektil</div><div class="ahead">Passivt skydd</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">ABS</div><div class="ahead">BEP</div><div class="ahead">BV</div><div class="ahead">Projektil</div><div class="ahead">Passivt skydd</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
   ruleShields.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return
-   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.shield_key||'—')+'</small></div>'+
+   '<div class="admin-weapon-icon-cell">'+ruleShieldIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.shield_key||'—')+'</small></div>'+
    '<div>'+escAttr(ruleShieldSizeLabel(r.size_class))+'</div>'+
    '<div>'+escAttr(skill?.name||r.skill_id||'—')+'</div>'+
    '<div>'+(r.absorption??'—')+'</div>'+
@@ -673,6 +697,7 @@ function editRuleShield(id=''){
  $('adminEditorBody').innerHTML=
   '<div class="rule-editor-grid shield-rule-editor">'+
    '<label class="wide">Namn<input id="rsName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Ikon<select id="rsIconKey">'+ruleShieldIconOptions(r?.icon_key||'')+'</select></label>'+
    '<label>Storlek<select id="rsSize"><option value="small" '+(size==='small'?'selected':'')+'>Liten</option><option value="medium" '+(size==='medium'?'selected':'')+'>Medelstor</option><option value="large" '+(size==='large'?'selected':'')+'>Stor</option></select></label>'+
    '<label>Färdighet<select id="rsSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'skoldar')+'</select></label>'+
    '<label>ABS<input id="rsAbs" type="number" min="0" step="1" value="'+escAttr(r?.absorption??'')+'" placeholder="Grundregel"></label>'+
@@ -703,6 +728,7 @@ async function saveRuleShield(id=''){
   let payload={
    shield_key:existing?.shield_key||ruleMasterKeyFromName(name,'shield'),
    name,
+   icon_key:$('rsIconKey')?.value||('shield-'+($('rsSize')?.value||'medium')),
    size_class:$('rsSize')?.value||'medium',
    skill_id:skillId,
    absorption:ruleMasterNumberValue('rsAbs',{nullable:true,integer:true}),
