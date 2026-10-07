@@ -596,18 +596,21 @@ function renderAdminArmors(){
  if(st)st.textContent=ruleArmorTypes.length+' rustningstyper · '+expert+' kanoniska Expertposter · '+ruleArmorMaterials.length+' materialregler.';
  if(!ruleArmorTypes.length){el.innerHTML='<div class="admin-master-empty">Inga rustningar finns ännu.</div>';return}
  el.innerHTML=
-  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP*</div><div class="ahead">Pris/BEP</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Rustning</div><div class="ahead">Typ</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP (STO 9–12)</div><div class="ahead">Pris/BEP (sm)</div><div class="ahead">Expert</div><div class="ahead">Källa</div><div class="ahead">Beskrivning</div><div class="ahead">Åtgärd</div>'+
   ruleArmorTypes.map(r=>
-   '<div class="admin-weapon-icon-cell">'+ruleArmorIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
+   '<div class="admin-weapon-icon-cell">'+ruleArmorIconHtml(r)+'</div>'+
+   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
    '<div>'+escAttr(ruleArmorCategoryLabel(r.category))+'</div>'+
-   '<div>'+(r.absorption??'—')+'</div>'+
+   '<div><b>'+(r.absorption??'—')+'</b></div>'+
    '<div><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
    '<div>'+(r.bep??'—')+'</div>'+
    '<div>'+(r.price_per_bep??'—')+'</div>'+
+   '<div>'+(asBool(r.canonical_expert)?'Ja':'Nej')+'</div>'+
    '<div><span class="admin-source-badge '+(asBool(r.canonical_expert)?'expert':'extra')+'">'+escAttr(r.source_label||'—')+'</span></div>'+
+   '<div class="admin-master-description">'+escAttr(r.description||'—')+'</div>'+
    '<div class="adminactions"><button class="smallbtn" onclick="editRuleArmor(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleArmor(\''+r.id+'\')" title="Ta bort">×</button></div>'
   ).join('')+
-  '<div class="admin-master-footnote">* BEP är kompatibilitetsvärdet för STO 9–12. Expert använder i första hand viktkod A–K och räknar faktisk vikt från bärarens STO.</div>'
+  '<div class="admin-master-footnote">ABS = absorbering. Viktkod A–K är Experts viktklass. BEP-värdet avser STO 9–12 och Pris/BEP anges i silvermynt.</div>'
 }
 function editRuleArmor(id=''){
  if(!activeUser()?.admin)return;
