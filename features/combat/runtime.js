@@ -1500,7 +1500,11 @@ async function combatAttackButton(event,combatantId){
  combatCloseRowActionMenu();
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
  if(chosenDef?.key==='attack'&&chosen?.status==='planned'){
-  const target=combatants.find(row=>String(row.id)===String(combatSelectedTargetId||''));
+  const selectedTargetId=String(combatSelectedTargetId||'');
+  const validTargets=combatCurrentAttackTargets();
+  const target=selectedTargetId&&validTargets.has(selectedTargetId)
+   ?combatants.find(row=>String(row.id)===selectedTargetId)
+   :null;
   if(!target){
    await combatCancelPlannedAttack(combatant,chosen);
    return
@@ -1684,13 +1688,24 @@ function closeCombat(){
 function selectCombatTarget(id){
  if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(actor&&def?.type==='attack'&&action?.status==='planned'&&id){
-  const targets=combatCurrentAttackTargets();
-  if(!targets.has(String(id)))return;
-  if(String(combatSelectedTargetId||'')===String(id)){
+ if(actor&&def?.type==='attack'&&action?.status==='planned'){
+  if(id&&String(id)===String(actor.id)){
    combatSelectedTargetId=null;
    renderCombat();
    return
+  }
+  if(id){
+   const targets=combatCurrentAttackTargets();
+   if(!targets.has(String(id))){
+    combatSelectedTargetId=null;
+    renderCombat();
+    return
+   }
+   if(String(combatSelectedTargetId||'')===String(id)){
+    combatSelectedTargetId=null;
+    renderCombat();
+    return
+   }
   }
  }
  combatSelectedTargetId=id||null;renderCombat()
@@ -2840,10 +2855,12 @@ function combatAttackPanelHtml(){
  }
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||def?.type!=='attack')return '';
- const panelTargetId=action.status==='resolved'&&action.target_combatant_id?action.target_combatant_id:combatSelectedTargetId;
+ const targets=combatCurrentAttackTargets();
+ const resolvedTargetId=action.status==='resolved'&&action.target_combatant_id?String(action.target_combatant_id):'';
+ const plannedTargetId=String(combatSelectedTargetId||'');
+ const panelTargetId=resolvedTargetId||(plannedTargetId&&targets.has(plannedTargetId)?plannedTargetId:'');
  const target=combatants.find(row=>String(row.id)===String(panelTargetId||''))||null;
  const mode=def.mode||action?.source_data?.mode||'auto',selectedWeapon=combatActionWeapon(actor,action,mode);
- const targets=combatCurrentAttackTargets();
  let instruction='';
  if(action.status==='planned'){
   if(!target)instruction=targets.size+' giltiga mål är markerade. Klicka på mål på kartan eller i turordningen. Tryck Attack igen för att avbryta.';
@@ -2944,3 +2961,5 @@ function renderCombat(){
 
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
 window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
+
+/* v0.33.82 — never allow the active combatant to be an attack target */
