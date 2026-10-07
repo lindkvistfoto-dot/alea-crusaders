@@ -429,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.46");
-    expect(html).toContain("app.css?v=0.33.46");
-    expect(html).toContain("legacy/app.js?v=0.33.46");
+    expect(html).toContain("Alea Crusaders v0.33.47");
+    expect(html).toContain("app.css?v=0.33.47");
+    expect(html).toContain("legacy/app.js?v=0.33.47");
   });
 
 
@@ -444,7 +444,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.46");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.47");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -621,8 +621,10 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("full_damage:fullDamage");
     expect(combat).toContain("damage_mode:fullDamage?'full':'roll'");
     expect(combat).toContain("rule_engine:'expert_skill'");
+    expect(combat).toContain("function combatMapTouchGate");
     expect(combat).toContain("if(event.pointerType===\'touch\')");
-    expect(combat).toContain("combatMapPan=null");
+    expect(combat).toContain("if(combatMapPointers.size<2)return;");
+    expect(combat).toContain("svg.setPointerCapture?.(pointerId)");
     expect(combat).toContain("if((tracked.pointerType||event.pointerType)===\'touch\')return;");
     expect(combat).toContain("lastCenterX:centerX,lastCenterY:centerY");
     expect(combat).toContain("function combatAttackPanelHtml");
@@ -819,7 +821,7 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-map-zoom-controls{");
     expect(css).toContain(".combat-map-fit-btn{");
     expect(css).toContain(".combat-map-svg{");
-    expect(css).toContain("touch-action:none");
+    expect(css).toContain("touch-action:pan-y");
     expect(css).toContain("overscroll-behavior:contain");
     expect(css).toContain("stroke:#27bd4d");
     expect(css).toContain(".combat-token-group.movement-planning{");
