@@ -2119,11 +2119,14 @@ function combatParryResultHtml(result){
 }
 
 function combatActionWeapon(combatant,action,mode='auto'){
+ const selectedKey=String(action?.source_data?.weapon_key||action?.result?.weapon_key||'');
+ if(selectedKey==='unarmed')return {name:'Obeväpnad',_unarmed:true};
+ if(selectedKey){
+  const selected=combatAttackWeaponOptions(combatant,'auto').find(weapon=>combatWeaponKey(weapon)===selectedKey);
+  if(selected)return selected
+ }
  const options=combatAttackWeaponOptions(combatant,mode);
  if(!options.length)return mode==='ranged'?null:{name:'Obeväpnad',_unarmed:true};
- const selectedKey=String(action?.source_data?.weapon_key||'');
- if(selectedKey==='unarmed')return {name:'Obeväpnad',_unarmed:true};
- if(selectedKey)return options.find(weapon=>combatWeaponKey(weapon)===selectedKey)||null;
  return options.length===1?options[0]:null
 }
 function combatMeleeReachHexesForWeapon(weapon){
