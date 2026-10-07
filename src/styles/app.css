@@ -4639,3 +4639,48 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-undo-btn{width:100%;text-align:left;padding:7px 9px}
 }
 
+/* v0.33.69 — three-line damage calculation */
+.combat-mini-attack .combat-damage-result{
+ display:flex;
+ flex-direction:column;
+ gap:2px;
+ padding:5px 7px;
+}
+.combat-mini-attack .combat-damage-line{
+ display:grid;
+ grid-template-columns:auto minmax(0,1fr);
+ gap:8px;
+ align-items:baseline;
+ min-width:0;
+}
+.combat-mini-attack .combat-damage-line span{
+ font-size:8px;
+ font-weight:900;
+ line-height:1;
+ text-transform:uppercase;
+ letter-spacing:.045em;
+ color:#ae9878;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-damage-line b,
+.combat-mini-attack .combat-attack-result.special .combat-damage-line b,
+.combat-mini-attack .combat-attack-result.perfect .combat-damage-line b,
+.combat-mini-attack .combat-attack-result.fumble .combat-damage-line b{
+ justify-self:end;
+ min-width:0;
+ font-size:10px;
+ line-height:1.1;
+ color:#f1dfc1;
+ text-align:right;
+ white-space:normal;
+}
+@media(max-width:390px){
+ .combat-mini-attack .combat-damage-line{gap:6px}
+ .combat-mini-attack .combat-damage-line b,
+ .combat-mini-attack .combat-attack-result.special .combat-damage-line b,
+ .combat-mini-attack .combat-attack-result.perfect .combat-damage-line b,
+ .combat-mini-attack .combat-attack-result.fumble .combat-damage-line b{
+  font-size:9px;
+ }
+}
+
