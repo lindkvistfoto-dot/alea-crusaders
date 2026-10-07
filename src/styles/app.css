@@ -5593,3 +5593,106 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .admin-weapon-icon img{width:32px;height:32px}
  .admin-weapon-icon small{font-size:7px}
 }
+
+/* v0.33.86 — armor and shield master admin */
+.adminarmortable{
+ display:grid;
+ grid-template-columns:minmax(150px,1.5fr) 90px 58px 72px 72px 86px minmax(110px,1fr) 86px;
+ border:1px solid #5a4631;
+ border-radius:12px;
+ overflow:auto;
+}
+.adminshieldtable{
+ display:grid;
+ grid-template-columns:minmax(150px,1.4fr) 86px 105px 58px 58px 58px 92px minmax(150px,1.35fr) 100px 86px;
+ border:1px solid #5a4631;
+ border-radius:12px;
+ overflow:auto;
+}
+.adminarmortable>div,
+.adminshieldtable>div{
+ padding:10px 8px;
+ border-bottom:1px solid #443527;
+ min-width:0;
+}
+.adminarmortable .ahead,
+.adminshieldtable .ahead{
+ background:#6d1e1e;
+ font-weight:800;
+ white-space:nowrap;
+}
+.admin-master-empty,
+.admin-master-footnote{
+ grid-column:1/-1;
+}
+.admin-master-empty{
+ color:#b9a68f;
+ padding:14px!important;
+}
+.admin-master-footnote{
+ color:#a99578;
+ font-size:11px;
+ line-height:1.4;
+ background:#17120e;
+ border-bottom:0!important;
+}
+.admin-master-key{
+ display:block;
+ margin-top:3px;
+ color:#8f7b63;
+ font-size:9px;
+ font-weight:600;
+ letter-spacing:.02em;
+}
+.admin-source-badge{
+ display:inline-block;
+ max-width:100%;
+ padding:3px 6px;
+ border:1px solid rgba(180,145,91,.28);
+ border-radius:999px;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#cdbb9e;
+ background:#272018;
+ font-size:9px;
+ font-weight:800;
+}
+.admin-source-badge.expert{
+ color:#d9c694;
+ border-color:rgba(202,168,91,.45);
+ background:#302817;
+}
+.admin-source-badge.extra{
+ color:#b7a99b;
+ background:#24211e;
+}
+.armor-rule-editor textarea,
+.shield-rule-editor textarea{
+ min-height:110px;
+}
+.rule-editor-note{
+ margin-top:10px;
+ padding:9px 10px;
+ border:1px solid rgba(180,145,91,.25);
+ border-radius:8px;
+ color:#bba98f;
+ background:#18130f;
+ font-size:11px;
+ line-height:1.45;
+}
+@media(max-width:700px){
+ .adminarmortable{
+  grid-template-columns:155px 82px 54px 64px 64px 80px 105px 78px;
+  font-size:13px;
+ }
+ .adminshieldtable{
+  grid-template-columns:155px 78px 100px 54px 54px 54px 86px 145px 95px 78px;
+  font-size:13px;
+ }
+ .adminarmortable>div,
+ .adminshieldtable>div{
+  padding:9px 6px;
+ }
+}
+
