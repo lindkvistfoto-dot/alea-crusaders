@@ -1081,7 +1081,21 @@ function combatFumbleResultHtml(result){
   (fumble.truncated?'<div class="combat-fumble-warning">Fummelkedjan stoppades efter 20 tabellslag.</div>':'')+
  '</div>'
 }
-function combatAttackFv(weapon){
+function combatCharacterSource(combatant){
+ if(combatant?.source_type!=='character'||typeof chars==='undefined')return null;
+ return (chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id))||null
+}
+function combatWeaponSkillTarget(combatant,weapon){
+ const character=combatCharacterSource(combatant);
+ if(!character||typeof characterWeaponSkillTarget!=='function')return null;
+ return characterWeaponSkillTarget(weapon,character)
+}
+function combatAttackFv(weapon,combatant=null){
+ const skillTarget=combatWeaponSkillTarget(combatant,weapon);
+ if(skillTarget?.linked){
+  const linkedFv=combatNumber(skillTarget.fv,null);
+  return linkedFv!=null&&linkedFv>0?Math.floor(linkedFv):null
+ }
  const fv=combatNumber(weapon?.fv,null);
  return fv!=null&&fv>0?Math.floor(fv):null
 }
@@ -1127,19 +1141,25 @@ function combatAttackResultHtml(action){
 function combatOutcomeEarnsErf(outcome){
  return ['success','special','perfect'].includes(outcome)
 }
-function combatSyncWeaponErfLocal(actor,weapon,newErf){
- if(actor?.source_type!=='character'||newErf==null||typeof chars==='undefined')return;
- const character=(chars||[]).find(c=>String(c._dbId||c.id)===String(actor.source_id));
- if(!character)return;
- const data=character.data&&typeof character.data==='object'?character.data:character;
+function combatAttackErfTarget(actor,weapon){
+ const character=combatCharacterSource(actor),skillTarget=combatWeaponSkillTarget(actor,weapon);
+ if(character&&skillTarget?.linked&&skillTarget.skillId&&skillTarget.skill){
+  return{item_group:'skills',item_key:String(skillTarget.skillId),item:skillTarget.skill}
+ }
+ const data=character?(character.data&&typeof character.data==='object'?character.data:character):null;
  const key=String(weapon?.equipId||weapon?.name||'');
- const match=(data.weapons||[]).find(item=>String(item.equipId||item.name)===key);
- if(match)match.erf=Number(newErf)||0;
+ const item=(data?.weapons||[]).find(entry=>String(entry.equipId||entry.name)===key)||null;
+ return{item_group:'weapons',item_key:key,item}
+}
+function combatSyncAttackErfLocal(actor,weapon,newErf){
+ if(actor?.source_type!=='character'||newErf==null||typeof chars==='undefined')return;
+ const target=combatAttackErfTarget(actor,weapon);
+ if(target.item)target.item.erf=Number(newErf)||0;
  try{localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(_error){}
 }
 async function combatAwardAttackErf(actor,weapon,outcome){
  if(actor?.source_type!=='character'||!combatOutcomeEarnsErf(outcome))return null;
- const itemKey=String(weapon?.equipId||weapon?.name||'');
+ const erfTarget=combatAttackErfTarget(actor,weapon),itemKey=erfTarget.item_key,itemGroup=erfTarget.item_group;
  if(!itemKey||!actor.source_id)return null;
  try{
   let amount=null,erfRoll=null;
@@ -1150,13 +1170,13 @@ async function combatAwardAttackErf(actor,weapon,outcome){
    amount=erfRoll+1
   }
   if(typeof awardCharacterErfItem!=='function')throw new Error('ERF-regelmotorn är inte tillgänglig.');
-  const awarded=await awardCharacterErfItem(actor.source_id,'weapons',itemKey,outcome,{amount});
-  combatSyncWeaponErfLocal(actor,weapon,awarded?.new_erf);
+  const awarded=await awardCharacterErfItem(actor.source_id,itemGroup,itemKey,outcome,{amount});
+  combatSyncAttackErfLocal(actor,weapon,awarded?.new_erf);
   return {
    awarded:Number(awarded?.awarded)||amount||1,
    new_erf:Number(awarded?.new_erf),
    erf_roll:erfRoll,
-   item_group:'weapons',item_key:itemKey,reason:outcome
+   item_group:itemGroup,item_key:itemKey,reason:outcome
   }
  }catch(error){
   const message=String(error?.message||error||'');
@@ -1171,7 +1191,7 @@ async function combatAwardAttackErf(actor,weapon,outcome){
  }
 }
 async function combatResolveAttackAction(actor,target,action,weapon,attackMode='melee'){
- const fv=combatAttackFv(weapon);
+ const fv=combatAttackFv(weapon,actor);
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
  const rolled=await combatExpertRoll(label,fv);
@@ -1250,7 +1270,7 @@ function combatAttackExecutionHtml(target){
  if(!weapon)return '';
  const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
  if(!info)return '';
- const fv=combatAttackFv(weapon);
+ const fv=combatAttackFv(weapon,actor);
  if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slås ännu.</span></div>';
  return '<div class="combat-attack-execute">'+
   '<div><span>Valt mål · '+(info.mode==='melee'?'Närstrid':'Avstånd')+'</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' · FV '+fv+' · '+info.distance+' hex</small></div>'+
@@ -1278,10 +1298,10 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
  }
 }
 function combatWeaponAttackHint(weapon,combatant){
- const category=combatWeaponCategory(weapon);
- if(category==='thrown')return 'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex';
- if(category==='projectile')return 'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex';
- return 'Närstrid · '+combatMeleeReachHexesForWeapon(weapon)+' hex'
+ const category=combatWeaponCategory(weapon),fv=combatAttackFv(weapon,combatant),fvText=fv==null?'FV — · ':'FV '+fv+' · ';
+ if(category==='thrown')return fvText+'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex';
+ if(category==='projectile')return fvText+'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex';
+ return fvText+'Närstrid · '+combatMeleeReachHexesForWeapon(weapon)+' hex'
 }
 function combatAttackWeaponChooserHtml(combatant,action,def){
  if(def?.type!=='attack')return '';
@@ -1884,7 +1904,7 @@ function combatParryOptions(combatant){
   kind:'weapon',
   key:'weapon:'+combatWeaponKey(weapon),
   name:weapon.name||'Vapen',
-  fv:combatAttackFv(weapon),
+  fv:combatAttackFv(weapon,combatant),
   abs:0,
   item:weapon
  }));
