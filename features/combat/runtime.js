@@ -2122,19 +2122,28 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=combatDamageBonusSpec(actor);
- let gross=weaponSpec.modifier+bonusSpec.modifier,rolled=null;
+ let weaponValue=Number(weaponSpec.modifier)||0,bonusValue=Number(bonusSpec.modifier)||0;
  if(fullDamage){
-  gross+=weaponSpec.qty*weaponSpec.sides+bonusSpec.qty*bonusSpec.sides
+  weaponValue+=weaponSpec.qty*weaponSpec.sides;
+  bonusValue+=bonusSpec.qty*bonusSpec.sides
  }else{
   const specs=[];
-  if(weaponSpec.qty>0&&weaponSpec.sides>0)specs.push({qty:weaponSpec.qty,sides:weaponSpec.sides});
-  if(bonusSpec.qty>0&&bonusSpec.sides>0)specs.push({qty:bonusSpec.qty,sides:bonusSpec.sides});
+  if(weaponSpec.qty>0&&weaponSpec.sides>0)specs.push({kind:'weapon',qty:weaponSpec.qty,sides:weaponSpec.sides});
+  if(bonusSpec.qty>0&&bonusSpec.sides>0)specs.push({kind:'bonus',qty:bonusSpec.qty,sides:bonusSpec.sides});
   if(specs.length){
-   rolled=await combatRollDice(specs,'Skada · '+actor.name_snapshot+' → '+target.name_snapshot);
-   gross+=Number(rolled?.total)||0
+   const rolled=await combatRollDice(specs.map(({qty,sides})=>({qty,sides})),'Skada · '+actor.name_snapshot+' → '+target.name_snapshot);
+   let rollIndex=0;
+   for(const spec of specs){
+    let subtotal=0;
+    for(let i=0;i<spec.qty;i++)subtotal+=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
+    if(spec.kind==='weapon')weaponValue+=subtotal;
+    else bonusValue+=subtotal
+   }
   }
  }
- gross=Math.max(0,Math.floor(gross));
+ weaponValue=Math.max(0,Math.floor(weaponValue));
+ bonusValue=Math.floor(bonusValue);
+ const gross=Math.max(0,weaponValue+bonusValue);
  const armor=combatArmorAbsorption(target),net=Math.max(0,gross-armor.absorption);
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
@@ -2145,7 +2154,9 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  target.current_kp=after;if(defeated)target.status='dead';
  const result={
   weapon_formula:weaponSpec.formula,
+  weapon_damage_value:weaponValue,
   damage_bonus:bonusSpec.formula||'Ingen',
+  damage_bonus_value:bonusValue,
   gross_damage:gross,
   armor_absorption:armor.absorption,
   armor_names:armor.names,
@@ -2159,19 +2170,33 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'damage',actor_id:actor.id,target_id:target.id,event_type:defeated?'defeated':'damage',
   message:actor.name_snapshot+' träffar '+(hitLocation?.label||'målet')+' och gör '+net+' KP skada på '+target.name_snapshot+
-   ' ('+gross+' − ABS '+armor.absorption+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
+   ' ('+weaponValue+' + '+bonusValue+' − ABS '+armor.absorption+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
  return result
 }
 function combatDamageResultHtml(damage){
  if(!damage)return '';
- const bonus=String(damage.damage_bonus||'').trim();
- const bonusText=!bonus||bonus.toLowerCase()==='ingen'?'0':bonus;
+ const weaponFormula=String(damage.weapon_formula||'—');
+ const bonusRaw=String(damage.damage_bonus||'').trim();
+ const bonusFormula=!bonusRaw||bonusRaw.toLowerCase()==='ingen'?'—':bonusRaw;
+ let weaponValue=Number(damage.weapon_damage_value),bonusValue=Number(damage.damage_bonus_value);
+ if(!Number.isFinite(weaponValue)||!Number.isFinite(bonusValue)){
+  if(damage.full_damage===true){
+   const weaponSpec=combatParseDamageFormula(weaponFormula),bonusSpec=combatParseDamageFormula(bonusRaw);
+   weaponValue=weaponSpec?Math.max(0,weaponSpec.qty*weaponSpec.sides+weaponSpec.modifier):Number(damage.gross_damage)||0;
+   bonusValue=bonusSpec?bonusSpec.qty*bonusSpec.sides+bonusSpec.modifier:0
+  }else{
+   weaponValue=Number(damage.gross_damage)||0;
+   bonusValue=0
+  }
+ }
+ const armor=Math.max(0,Number(damage.armor_absorption)||0),net=Math.max(0,Number(damage.net_damage)||0);
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
-  '<div class="combat-damage-line"><span>Skada</span><b>'+escAttr(damage.weapon_formula||'—')+' + skadebonus '+escAttr(bonusText)+' = '+damage.gross_damage+'</b></div>'+
-  '<div class="combat-damage-line"><span>Total skada</span><b>'+damage.gross_damage+' − ABS '+damage.armor_absorption+' = '+damage.net_damage+'</b></div>'+
-  '<div class="combat-damage-line"><span>KP</span><b>'+damage.kp_before+' − '+damage.net_damage+' = '+damage.kp_after+(damage.defeated?' · NEDKÄMPAD':'')+'</b></div>'+
+  '<div class="combat-damage-head"><span>Skada</span><span>Skadebonus</span><span>Rustning</span></div>'+
+  '<div class="combat-damage-equation"><b>'+weaponValue+'</b><i>+</i><b>'+bonusValue+'</b><i>−</i><b>'+armor+'</b><i>=</i><strong>'+net+'</strong></div>'+
+  '<div class="combat-damage-formulas"><span>'+escAttr(weaponFormula)+'</span><span>'+escAttr(bonusFormula)+'</span><span></span></div>'+
+  '<div class="combat-damage-kp"><span>KP</span><b>'+damage.kp_before+' − '+net+' = '+damage.kp_after+(damage.defeated?' · NEDKÄMPAD':'')+'</b></div>'+
  '</div>'
 }
 function combatParryResultHtml(result){
