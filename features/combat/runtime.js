@@ -1117,6 +1117,60 @@ function combatShowOutcomeOverlay(outcome,context=''){
  host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span><div class="combat-outcome-copy"><b>'+escAttr(meta.label)+'</b>'+(context?'<span>'+escAttr(context)+'</span>':'')+'</div>';
  host.classList.add('show','outcome-show',meta.cls)
 }
+const COMBAT_HIT_LOCATION_TABLES={
+ humanoid:{
+  A:{die:8,label:'Projektil / oförsvarad närstrid',rows:[
+   {min:1,max:1,key:'right_leg',label:'Höger ben'},
+   {min:2,max:2,key:'left_leg',label:'Vänster ben'},
+   {min:3,max:3,key:'abdomen',label:'Mage'},
+   {min:4,max:5,key:'chest',label:'Bröstkorg'},
+   {min:6,max:6,key:'right_arm',label:'Höger arm'},
+   {min:7,max:7,key:'left_arm',label:'Vänster arm'},
+   {min:8,max:8,key:'head',label:'Huvud'}
+  ]},
+  B:{die:10,label:'Försvarad närstrid',rows:[
+   {min:1,max:1,key:'right_leg',label:'Höger ben'},
+   {min:2,max:2,key:'left_leg',label:'Vänster ben'},
+   {min:3,max:3,key:'abdomen',label:'Mage'},
+   {min:4,max:4,key:'chest',label:'Bröstkorg'},
+   {min:5,max:6,key:'right_arm',label:'Höger arm'},
+   {min:7,max:8,key:'left_arm',label:'Vänster arm'},
+   {min:9,max:10,key:'head',label:'Huvud'}
+  ]}
+ }
+};
+function combatHitLocationProfile(combatant){
+ const profile=String(combatant?.state?.hit_location_profile||combatant?.state?.anatomy_profile||'humanoid').trim();
+ return COMBAT_HIT_LOCATION_TABLES[profile]?profile:'humanoid'
+}
+function combatHitLocationTableKey(attackMode='melee',defenseMode='none'){
+ return attackMode==='melee'&&defenseMode==='parry_failed'?'B':'A'
+}
+function combatHitLocationRule(profile,tableKey,roll){
+ const table=COMBAT_HIT_LOCATION_TABLES[profile]?.[tableKey]||COMBAT_HIT_LOCATION_TABLES.humanoid?.[tableKey];
+ if(!table)return null;
+ const row=table.rows.find(entry=>roll>=entry.min&&roll<=entry.max);
+ return row?{table,row}:null
+}
+async function combatResolveHitLocation(actor,target,attackMode='melee',defenseMode='none'){
+ const profile=combatHitLocationProfile(target),tableKey=combatHitLocationTableKey(attackMode,defenseMode);
+ const table=COMBAT_HIT_LOCATION_TABLES[profile]?.[tableKey];
+ if(!table)return null;
+ const rolled=await combatRollDice([{qty:1,sides:table.die}],'Träffområde · '+actor.name_snapshot+' → '+target.name_snapshot);
+ const roll=Number(rolled?.rolls?.[0]?.value);
+ if(!Number.isInteger(roll))throw new Error('Träffområdesslaget gav inget giltigt resultat.');
+ const resolved=combatHitLocationRule(profile,tableKey,roll);
+ if(!resolved)return null;
+ return{profile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
+}
+function combatHitLocationResultHtml(hitLocation){
+ if(!hitLocation?.label)return '';
+ return '<div class="combat-hit-location-result">'+
+  '<span>🎯 Träffområde</span><b>'+escAttr(hitLocation.label)+'</b>'+
+  '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
+ '</div>'
+}
+
 function combatAttackResultHtml(action){
  if(!action||action.action_type!=='attack'||!action.result?.outcome)return '';
  const result=action.result,outcome=result.outcome,full=result.full_damage===true,meta=combatOutcomeMeta(outcome);
@@ -1135,6 +1189,7 @@ function combatAttackResultHtml(action){
    :'')+
   combatFumbleResultHtml(result)+
   combatParryResultHtml(result)+
+  combatHitLocationResultHtml(result.hit_location)+
   combatDamageResultHtml(result.damage)+
  '</div>'
 }
