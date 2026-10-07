@@ -5731,3 +5731,105 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .adminarmortable>.ahead{display:block}
  .adminarmortable>div{padding:9px 6px}
 }
+
+
+/* v0.33.91 — readable armor master on mobile (11-column markup) */
+@media(max-width:700px){
+ .adminarmortable{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) 70px 72px;
+  width:100%;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid #5a4631;
+  border-radius:12px;
+  font-size:13px;
+ }
+ .adminarmortable>.ahead{display:none}
+ .adminarmortable>div{
+  display:block!important;
+  width:auto!important;
+  min-width:0;
+  padding:7px 8px!important;
+  border-bottom:0;
+  box-sizing:border-box;
+ }
+ /* Every armor row has 11 cells after the 11 hidden headings. */
+ .adminarmortable>div:nth-child(11n+12){
+  grid-column:1;
+  grid-row:auto / span 2;
+  border-top:1px solid #443527;
+  display:grid!important;
+  place-items:center;
+ }
+ .adminarmortable>div:nth-child(11n+13){
+  grid-column:2 / 4;
+  border-top:1px solid #443527;
+  padding-bottom:2px!important;
+ }
+ .adminarmortable>div:nth-child(11n+14){
+  grid-column:2 / 4;
+  color:#bca98f;
+  font-size:11px;
+  padding-top:0!important;
+ }
+ .adminarmortable>div:nth-child(11n+15){
+  grid-column:4;
+  grid-row:auto / span 2;
+  border-top:1px solid #443527;
+  font-size:20px;
+  font-weight:900;
+  text-align:center;
+ }
+ .adminarmortable>div:nth-child(11n+16),
+ .adminarmortable>div:nth-child(11n+17),
+ .adminarmortable>div:nth-child(11n+18),
+ .adminarmortable>div:nth-child(11n+19){
+  grid-column:auto;
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+  background:rgba(255,255,255,.018);
+  color:#d0bea5;
+  font-size:11px;
+  text-align:center;
+ }
+ .adminarmortable>div:nth-child(11n+16)::before{content:"Vikt ";color:#8f7b63}
+ .adminarmortable>div:nth-child(11n+17)::before{content:"BEP ";color:#8f7b63}
+ .adminarmortable>div:nth-child(11n+18)::before{content:"Pris ";color:#8f7b63}
+ .adminarmortable>div:nth-child(11n+19)::before{content:"Expert ";color:#8f7b63}
+ .adminarmortable>div:nth-child(11n+20){
+  grid-column:1 / 3;
+  padding-top:8px!important;
+ }
+ .adminarmortable>div:nth-child(11n+21){
+  grid-column:1 / 4;
+  color:#b9a68f;
+  font-size:11px;
+  line-height:1.35;
+  padding-top:3px!important;
+  padding-bottom:9px!important;
+ }
+ .adminarmortable>div:nth-child(11n+22){
+  grid-column:4;
+  grid-row:auto;
+  display:flex!important;
+  align-items:center;
+  justify-content:flex-end;
+  gap:5px;
+ }
+ .adminarmortable .admin-weapon-icon img{
+  width:38px;
+  height:38px;
+  filter:brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,.7));
+ }
+ .adminarmortable .admin-weapon-icon small{display:none}
+ .adminarmortable .admin-master-key{font-size:8px}
+ .adminarmortable .admin-master-footnote{
+  grid-column:1/-1!important;
+  display:block!important;
+  width:auto!important;
+  margin:0;
+  border-top:1px solid #443527;
+  padding:10px!important;
+ }
+}
