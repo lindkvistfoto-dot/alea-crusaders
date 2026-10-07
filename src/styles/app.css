@@ -4449,3 +4449,39 @@ body:not(.editing) #skilltable .skill-roll-btn{
  mix-blend-mode:multiply;
 }
 
+/* v0.33.64 — frilagd kropp direkt på attackradens bakgrund */
+.combat-attack-hit-camera{
+ background:transparent;
+ border:0;
+ box-shadow:none;
+ padding:0;
+}
+.combat-mini-attack .combat-hit-figure-wrap{
+ border:0;
+ background:transparent;
+ box-shadow:none;
+ overflow:visible;
+}
+.combat-mini-attack .combat-hit-model-stage{
+ background:transparent;
+ border:0;
+ box-shadow:none;
+ border-radius:0;
+}
+.combat-mini-attack .combat-hit-camera{
+ background:transparent;
+ border:0;
+ box-shadow:none;
+}
+.combat-mini-attack .combat-hit-model-image-svg{
+ opacity:.92;
+ filter:
+  grayscale(1)
+  sepia(.25)
+  saturate(.54)
+  contrast(1.08)
+  brightness(.84)
+  drop-shadow(0 1px 2px rgba(0,0,0,.18));
+ mix-blend-mode:multiply;
+}
+
