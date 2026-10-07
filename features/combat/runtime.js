@@ -1171,15 +1171,30 @@ function combatHitLocationFigureHtml(hitLocation){
  const valid=new Set(['head','chest','abdomen','right_arm','left_arm','right_leg','left_leg']);
  const active=valid.has(String(hitLocation?.key||''))?String(hitLocation.key):'';
  const cls=(key)=>'combat-hit-bodypart '+key+(active===key?' active':'');
- return '<svg class="combat-hit-figure" viewBox="0 0 120 210" role="img" aria-label="Humanoidfigur, träffområde '+escAttr(hitLocation?.label||'')+'">'+
-  '<g class="combat-hit-body">'+
-   '<circle class="'+cls('head')+'" cx="60" cy="27" r="18"/>'+
-   '<path class="'+cls('chest')+'" d="M40 54 Q60 43 80 54 L84 108 Q60 118 36 108 Z"/>'+
-   '<path class="'+cls('abdomen')+'" d="M36 108 Q60 118 84 108 L79 137 Q60 145 41 137 Z"/>'+
-   '<path class="'+cls('right_arm')+'" d="M38 60 Q26 79 21 106 T18 145"/>'+
-   '<path class="'+cls('left_arm')+'" d="M82 60 Q94 79 99 106 T102 145"/>'+
-   '<path class="'+cls('right_leg')+'" d="M50 137 Q45 160 43 184 L39 203"/>'+
-   '<path class="'+cls('left_leg')+'" d="M70 137 Q75 160 77 184 L81 203"/>'+
+ return '<svg class="combat-hit-figure" viewBox="0 0 180 320" role="img" aria-label="Humanoidfigur, träffområde '+escAttr(hitLocation?.label||'')+'">'+
+  '<defs>'+
+   '<filter id="combatHitGlow" x="-45%" y="-45%" width="190%" height="190%">'+
+    '<feGaussianBlur stdDeviation="4.2" result="blur"/>'+
+    '<feColorMatrix in="blur" type="matrix" values="1 0 0 0 .18  0 .46 0 0 .04  0 0 .18 0 0  0 0 0 1 0" result="warm"/>'+
+    '<feMerge><feMergeNode in="warm"/><feMergeNode in="SourceGraphic"/></feMerge>'+
+   '</filter>'+
+   '<linearGradient id="combatHitBodyFill" x1="0" y1="0" x2="0.9" y2="1">'+
+    '<stop offset="0" stop-color="#eee4d1"/><stop offset=".58" stop-color="#d9c9ad"/><stop offset="1" stop-color="#c7b28f"/>'+
+   '</linearGradient>'+
+   '<linearGradient id="combatHitActiveFill" x1=".15" y1="0" x2=".85" y2="1">'+
+    '<stop offset="0" stop-color="#ffd16a"/><stop offset=".5" stop-color="#ec7a22"/><stop offset="1" stop-color="#b84118"/>'+
+   '</linearGradient>'+
+  '</defs>'+
+  '<ellipse class="combat-hit-shadow" cx="91" cy="309" rx="62" ry="7"/>'+
+  '<g class="combat-hit-figure-root">'+
+   '<path class="'+cls('right_leg')+'" d="M82 202 C76 210 70 222 67 236 C64 251 60 268 55 286 C52 298 49 304 43 307 C38 310 31 309 27 313 C24 316 27 319 34 319 L55 319 C63 318 68 313 70 305 C75 287 80 272 83 255 C86 238 88 220 90 209 Z"/>'+
+   '<path class="'+cls('left_leg')+'" d="M98 202 C104 210 110 222 113 236 C116 251 120 268 125 286 C128 298 131 304 137 307 C142 310 149 309 153 313 C156 316 153 319 146 319 L125 319 C117 318 112 313 110 305 C105 287 100 272 97 255 C94 238 92 220 90 209 Z"/>'+
+   '<path class="'+cls('abdomen')+'" d="M66 157 C73 161 81 163 90 163 C99 163 107 161 114 157 C116 170 118 183 115 196 C112 208 105 218 98 226 C95 230 92 233 90 237 C88 233 85 230 82 226 C75 218 68 208 65 196 C62 183 64 170 66 157 Z"/>'+
+   '<path class="'+cls('right_arm')+'" d="M61 91 C51 96 45 105 42 116 C39 128 39 142 36 154 C33 168 27 181 27 194 C27 203 31 211 37 213 C43 215 48 210 49 202 C51 190 52 179 56 168 C60 157 64 147 66 136 C68 124 68 112 66 102 C65 98 63 94 61 91 Z"/>'+
+   '<path class="'+cls('left_arm')+'" d="M119 91 C129 96 135 105 138 116 C141 128 141 142 144 154 C147 168 153 181 153 194 C153 203 149 211 143 213 C137 215 132 210 131 202 C129 190 128 179 124 168 C120 157 116 147 114 136 C112 124 112 112 114 102 C115 98 117 94 119 91 Z"/>'+
+   '<path class="'+cls('chest')+'" d="M77 79 C80 83 84 85 90 85 C96 85 100 83 103 79 C109 82 115 86 120 92 C126 101 128 114 127 127 C126 140 122 151 114 157 C107 161 99 163 90 163 C81 163 73 161 66 157 C58 151 54 140 53 127 C52 114 54 101 60 92 C65 86 71 82 77 79 Z"/>'+
+   '<path class="'+cls('head')+'" d="M90 19 C77 19 69 28 68 42 C67 54 70 65 77 72 C81 76 85 78 90 78 C95 78 99 76 103 72 C110 65 113 54 112 42 C111 28 103 19 90 19 Z"/>'+
+   '<path class="combat-hit-neck" d="M81 73 C83 79 84 83 90 85 C96 83 97 79 99 73"/>'+
   '</g>'+
  '</svg>'
 }
