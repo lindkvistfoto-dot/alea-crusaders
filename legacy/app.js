@@ -119,6 +119,37 @@ async function loadRuleWeapons(force=false){
   ruleWeapons=[];ruleWeaponsLoaded=false;return []
  }
 }
+const RULE_WEAPON_ICON_DEFS=[
+ {key:'sword',label:'Svärd'},{key:'dagger',label:'Dolk'},{key:'hammer',label:'Hammare'},
+ {key:'knuckles',label:'Knogjärn'},{key:'whip',label:'Piska'},{key:'club',label:'Klubba'},
+ {key:'axe',label:'Yxa'},{key:'spear',label:'Spjut'},{key:'flail',label:'Gissel'},
+ {key:'pick',label:'Hacka'},{key:'mace',label:'Morgonstjärna'},{key:'staff',label:'Stav'},
+ {key:'spade',label:'Spade'},{key:'halberd',label:'Stångvapen'},{key:'bow',label:'Pilbåge'},
+ {key:'sling',label:'Slunga'},{key:'blowgun',label:'Blåsrör'},{key:'crossbow',label:'Armborst'},
+ {key:'shuriken',label:'Kaststjärna'},{key:'bola',label:'Bola'},{key:'lasso',label:'Lasso'},
+ {key:'trident',label:'Treudd'},{key:'pitchfork',label:'Höggaffel'},{key:'crowbar',label:'Kofot'},
+ {key:'generic',label:'Generiskt vapen'}
+];
+function ruleWeaponIconDef(key){
+ return RULE_WEAPON_ICON_DEFS.find(icon=>icon.key===String(key||''))||null
+}
+function ruleWeaponIconSrc(key){
+ let def=ruleWeaponIconDef(key);return def?'./assets/weapon-icons/'+def.key+'.svg':'./assets/weapon-icons/generic.svg'
+}
+function ruleWeaponIconHtml(rule){
+ let key=String(rule?.icon_key||''),def=ruleWeaponIconDef(key),missing=!def;
+ return '<span class="admin-weapon-icon'+(missing?' missing':'')+'" title="'+escAttr(def?.label||'Ikon saknas')+'">'+
+  '<img src="'+escAttr(ruleWeaponIconSrc(key))+'" alt="" aria-hidden="true">'+
+  '<small>'+escAttr(def?.label||'SAKNAS')+'</small>'+
+ '</span>'
+}
+function ruleWeaponIconOptions(selected=''){
+ selected=String(selected||'');
+ return '<option value="">— Välj ikon —</option>'+RULE_WEAPON_ICON_DEFS.map(icon=>
+  '<option value="'+escAttr(icon.key)+'" '+(icon.key===selected?'selected':'')+'>'+escAttr(icon.label)+'</option>'
+ ).join('')
+}
+
 async function loadRuleCombatFumbles(force=false){
  if(ruleCombatFumblesLoaded&&!force)return ruleCombatFumbles;
  try{
@@ -216,6 +247,7 @@ function copyRuleWeaponToInstance(target,rule){
  target.tags=Array.isArray(rule.tags)?[...rule.tags]:[];target.masterNotes=rule.notes||'';
  target.skillId=rule.skill_id||'';
  target.skillName=(ruleSkills||[]).find(skill=>skill.id===rule.skill_id)?.name||'';
+ target.iconKey=rule.icon_key||'generic';target.icon_key=rule.icon_key||'generic';
  return target
 }
 function setCharacterWeaponMaster(i,value){
@@ -433,10 +465,11 @@ function ruleWeaponSkillOptions(selected=''){
 function renderAdminWeapons(){
  let el=$('adminWeaponTable'),st=$('adminWeaponStatus');if(!el)return;
  if(!ruleWeaponsLoaded){el.innerHTML='';if(st)st.textContent='Vapenregistret kunde inte läsas.';return}
- if(st)st.textContent=ruleWeapons.length+' vapen i regelregistret.';
+ let covered=ruleWeapons.filter(r=>!!ruleWeaponIconDef(r.icon_key)).length;
+ if(st)st.textContent=ruleWeapons.length+' vapen i regelregistret · Ikontäckning '+covered+'/'+ruleWeapons.length+'.';
  if(!ruleWeapons.length){el.innerHTML='<div class="admin-weapon-empty">Inga vapen finns ännu. Lägg till det första vapnet.</div>';return}
- el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
-  ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div><b>'+escAttr(r.name||'—')+'</b></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
+ el.innerHTML='<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
+  ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div class="admin-weapon-icon-cell">'+ruleWeaponIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-weapon-icon-key">'+escAttr(r.icon_key||'—')+'</small></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
 }
 function editRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let r=id?ruleWeapons.find(x=>x.id===id):null;
@@ -445,6 +478,7 @@ function editRuleWeapon(id=''){
  $('adminEditorBody').innerHTML=
   '<div class="rule-editor-grid weapon-rule-editor">'+
    '<label class="wide">Namn<input id="rwName" value="'+escAttr(r?.name||'')+'"></label>'+
+   '<label>Ikon<select id="rwIconKey">'+ruleWeaponIconOptions(r?.icon_key||'')+'</select></label>'+
    '<label>Kategori<select id="rwCategory"><option value="melee" '+(category==='melee'?'selected':'')+'>Närstrid</option><option value="projectile" '+(category==='projectile'?'selected':'')+'>Projektil</option><option value="thrown" '+(category==='thrown'?'selected':'')+'>Kastvapen</option></select></label>'+
    '<label>Färdighet<select id="rwSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'')+'</select></label>'+
    '<label>Grepp<select id="rwHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
@@ -469,6 +503,7 @@ async function saveRuleWeapon(id=''){
  try{
   let payload={
    name,
+   icon_key:$('rwIconKey')?.value||'generic',
    category:$('rwCategory')?.value||'melee',
    skill_id:skillId,
    handling:$('rwHandling')?.value||'1H',
