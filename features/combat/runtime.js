@@ -2373,32 +2373,47 @@ function combatMapPointerDown(event){
  if(event.button!=null&&event.button!==0&&event.pointerType!=='touch')return;
  if(combatMovementDrag)return;
  if(event.target?.closest?.('.combat-token-group'))return;
- combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pointerType:event.pointerType||'mouse'});
  const svg=event.currentTarget;
  try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
  if(combatMapPointers.size===2){
   const pts=[...combatMapPointers.values()];
   const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
-  combatMapPinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:combatMapView.zoom,centerX:(pts[0].x+pts[1].x)/2,centerY:(pts[0].y+pts[1].y)/2};
+  const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
+  combatMapPinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:combatMapView.zoom,centerX,centerY,lastCenterX:centerX,lastCenterY:centerY};
   combatMapPan=null;event.preventDefault();return
+ }
+ if(event.pointerType==='touch'){
+  combatMapPan=null;
+  return
  }
  combatMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false}
 }
 function combatMapPointerMove(event){
  if(combatMovementDrag){combatMovementDragMove(event);return}
- if(!combatMapPointers.has(event.pointerId))return;
- combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+ const tracked=combatMapPointers.get(event.pointerId);
+ if(!tracked)return;
+ combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pointerType:tracked.pointerType||event.pointerType||'mouse'});
  const svg=event.currentTarget,g=combatMapViewGeometry();if(!g)return;
  if(combatMapPointers.size>=2){
   event.preventDefault();
   const pts=[...combatMapPointers.values()].slice(0,2);
   const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y,distance=Math.max(1,Math.hypot(dx,dy));
-  if(!combatMapPinch)combatMapPinch={distance,zoom:combatMapView.zoom,centerX:(pts[0].x+pts[1].x)/2,centerY:(pts[0].y+pts[1].y)/2};
   const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
+  if(!combatMapPinch)combatMapPinch={distance,zoom:combatMapView.zoom,centerX,centerY,lastCenterX:centerX,lastCenterY:centerY};
+  const rect=svg.getBoundingClientRect(),view=combatMapViewBox(g);
+  if(rect.width>0&&rect.height>0){
+   const panDx=centerX-(combatMapPinch.lastCenterX??centerX),panDy=centerY-(combatMapPinch.lastCenterY??centerY);
+   combatMapView.x-=panDx*(view.width/rect.width);
+   combatMapView.y-=panDy*(view.height/rect.height);
+   combatMapEnsureView(g)
+  }
+  combatMapPinch.lastCenterX=centerX;combatMapPinch.lastCenterY=centerY;
   combatMapZoomAt(centerX,centerY,combatMapPinch.zoom*(distance/combatMapPinch.distance));
   combatMapSuppressClickUntil=Date.now()+450;
   return
  }
+ if((tracked.pointerType||event.pointerType)==='touch')return;
  const pan=combatMapPan;
  if(!pan||pan.pointerId!==event.pointerId)return;
  const dx=event.clientX-pan.lastX,dy=event.clientY-pan.lastY;
@@ -2426,7 +2441,9 @@ function combatMapPointerEnd(event){
  if(combatMapPointers.size<2)combatMapPinch=null;
  if(combatMapPointers.size===1){
   const [id,pt]=[...combatMapPointers.entries()][0];
-  combatMapPan={pointerId:id,startX:pt.x,startY:pt.y,lastX:pt.x,lastY:pt.y,moved:false}
+  combatMapPan=pt.pointerType==='touch'
+   ?null
+   :{pointerId:id,startX:pt.x,startY:pt.y,lastX:pt.x,lastY:pt.y,moved:false}
  }
 }
 function renderCombatMap(){
