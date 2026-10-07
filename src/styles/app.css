@@ -4118,6 +4118,15 @@ body:not(.editing) #skilltable .skill-roll-btn{
  opacity:.72;
  vector-effect:non-scaling-stroke;
 }
+.combat-hit-detail{
+ fill:none;
+ stroke:#8f785b;
+ stroke-width:1.15;
+ stroke-linecap:round;
+ opacity:.48;
+ vector-effect:non-scaling-stroke;
+ pointer-events:none;
+}
 .combat-hit-bodypart.active{
  fill:url(#combatHitActiveFill);
  stroke:#923b17;
