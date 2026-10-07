@@ -1181,14 +1181,14 @@ function combatHitLocationFigureHtml(hitLocation){
   (model?'<img class="combat-hit-model-image" src="'+model+'" alt="" aria-hidden="true">':'<div class="combat-hit-model-missing">Kroppsmodell saknas</div>')+
   '<svg class="combat-hit-model-overlay" viewBox="0 0 1024 1536" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Träffområde '+escAttr(hitLocation?.label||'')+'">'+
    '<defs>'+
-    '<filter id="combatHitZoneGlow" x="-50%" y="-50%" width="200%" height="200%">'+
-     '<feGaussianBlur stdDeviation="18" result="blur"/>'+
+    '<filter id="combatHitZoneGlow" x="-35%" y="-35%" width="170%" height="170%">'+
+     '<feGaussianBlur stdDeviation="8" result="blur"/>'+
      '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'+
     '</filter>'+
     '<radialGradient id="combatHitZoneFill" cx=".5" cy=".5" r=".7">'+
-     '<stop offset="0" stop-color="#ffd66f" stop-opacity=".76"/>'+
-     '<stop offset=".56" stop-color="#f27a24" stop-opacity=".55"/>'+
-     '<stop offset="1" stop-color="#b83d17" stop-opacity=".26"/>'+
+     '<stop offset="0" stop-color="#ffd98a" stop-opacity=".30"/>'+
+     '<stop offset=".58" stop-color="#f28a34" stop-opacity=".22"/>'+
+     '<stop offset="1" stop-color="#c95824" stop-opacity=".08"/>'+
     '</radialGradient>'+
    '</defs>'+
    '<ellipse class="'+cls('head')+'" cx="512" cy="188" rx="103" ry="128"/>'+
@@ -1198,8 +1198,9 @@ function combatHitLocationFigureHtml(hitLocation){
    '<path class="'+cls('left_arm')+'" d="M694 300 C738 317 768 360 780 415 C791 466 802 522 815 580 C826 632 838 681 832 724 C827 760 806 786 778 793 C751 800 728 779 723 744 C716 702 714 655 705 611 C696 565 680 523 668 480 C655 433 653 386 663 347 C670 324 681 307 694 300 Z"/>'+
    '<path class="'+cls('right_leg')+'" d="M427 734 C384 773 358 828 346 900 C335 972 331 1047 326 1125 C322 1199 313 1275 300 1349 C294 1388 306 1421 337 1438 C366 1454 402 1441 416 1410 C433 1373 443 1325 449 1273 C457 1209 466 1150 478 1095 C490 1036 505 976 512 906 L493 817 Z"/>'+
    '<path class="'+cls('left_leg')+'" d="M597 734 C640 773 666 828 678 900 C689 972 693 1047 698 1125 C702 1199 711 1275 724 1349 C730 1388 718 1421 687 1438 C658 1454 622 1441 608 1410 C591 1373 581 1325 575 1273 C567 1209 558 1150 546 1095 C534 1036 519 976 512 906 L531 817 Z"/>'+
-   '<circle class="combat-hit-target-ring" cx="'+center[0]+'" cy="'+center[1]+'" r="54"/>'+
-   '<circle class="combat-hit-target-dot" cx="'+center[0]+'" cy="'+center[1]+'" r="12"/>'+
+   '<circle class="combat-hit-target-ring-outer" cx="'+center[0]+'" cy="'+center[1]+'" r="42"/>'+
+   '<circle class="combat-hit-target-ring" cx="'+center[0]+'" cy="'+center[1]+'" r="25"/>'+
+   '<circle class="combat-hit-target-dot" cx="'+center[0]+'" cy="'+center[1]+'" r="7"/>'+
   '</svg>'+
  '</div>'
 }
