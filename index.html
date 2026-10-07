@@ -152,6 +152,8 @@
     <button class="admin-nav-card compact" onclick="openAdminSection('races')"><span class="admin-nav-icon">♞</span><span class="admin-nav-copy"><b>Raser</b><small>Centralt rasregister</small></span><span id="adminCountRaces" class="admin-nav-count">0</span></button>
     <button class="admin-nav-card compact" onclick="openAdminSection('stands')"><span class="admin-nav-icon">♛</span><span class="admin-nav-copy"><b>Stånd</b><small>Socialt stånd enligt Expert</small></span><span id="adminCountStands" class="admin-nav-count">0</span></button>
     <button class="admin-nav-card compact" onclick="openAdminSection('weapons')"><span class="admin-nav-icon">⚔</span><span class="admin-nav-copy"><b>Vapen</b><small>Centralt vapenregister</small></span><span id="adminCountWeapons" class="admin-nav-count">0</span></button>
+    <button class="admin-nav-card compact" onclick="openAdminSection('armors')"><span class="admin-nav-icon">▰</span><span class="admin-nav-copy"><b>Rustningar</b><small>Expert: ABS och viktkoder</small></span><span id="adminCountArmors" class="admin-nav-count">0</span></button>
+    <button class="admin-nav-card compact" onclick="openAdminSection('shields')"><span class="admin-nav-icon">◇</span><span class="admin-nav-copy"><b>Sköldar</b><small>Expert: skydd och projektilregler</small></span><span id="adminCountShields" class="admin-nav-count">0</span></button>
   </div>
   <div class="admin-overview-intro admin-overview-secondary"><h3>System</h3></div>
   <div class="admin-card-grid">
@@ -224,6 +226,16 @@
 <section class="adminbox admin-detail hidden" data-admin-section="weapons">
   <div class="adminsectionhead"><div><h2>Vapen</h2><p class="muted" style="margin:4px 0 0">Centralt vapenregister för Drakar och Demoner Expert. Vapnen används i rollpersoner, SLP, fiender och monster.</p></div><button class="smallbtn" onclick="editRuleWeapon()">+ Lägg till vapen</button></div>
   <div id="adminWeaponStatus" class="note"></div><div id="adminWeaponTable" class="adminweapontable"></div>
+</section>
+
+<section class="adminbox admin-detail hidden" data-admin-section="armors">
+  <div class="adminsectionhead"><div><h2>Rustningar</h2><p class="muted" style="margin:4px 0 0">Masterregister för rustningar. Expertposterna använder ABS och viktkod A–K; BEP-värdet visas som kompatibilitetsvärde för STO 9–12.</p></div><button class="smallbtn" onclick="editRuleArmor()">+ Lägg till rustning</button></div>
+  <div id="adminArmorStatus" class="note"></div><div id="adminArmorTable" class="adminarmortable"></div>
+</section>
+
+<section class="adminbox admin-detail hidden" data-admin-section="shields">
+  <div class="adminsectionhead"><div><h2>Sköldar</h2><p class="muted" style="margin:4px 0 0">Masterregister för sköldar. Expert E55 styr storlek, passivt skydd, projektilträffar och tålighet.</p></div><button class="smallbtn" onclick="editRuleShield()">+ Lägg till sköld</button></div>
+  <div id="adminShieldStatus" class="note"></div><div id="adminShieldTable" class="adminshieldtable"></div>
 </section>
 
 <section class="adminbox admin-detail hidden" data-admin-section="campaigns">
