@@ -443,6 +443,7 @@ describe("application architecture smoke checks", () => {
     const legacy = read("legacy/app.js");
     const css = read("src/styles/app.css");
     const zones = read("features/combat/hit-body-zones.js");
+    const main = read("src/main.js");
     expect(html).toContain('id="combatGmControls"');
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
@@ -660,7 +661,7 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-hit-model-image-svg{");
     expect(css).toContain("v0.33.65 — image-only hit location label");
     expect(css).toContain(".combat-hit-location-label{");
-    expect(css).toContain("v0.33.65 — frilagd kropp direkt på attackradens bakgrund");
+    expect(css).toContain("v0.33.64 — frilagd kropp direkt på attackradens bakgrund");
     expect(css).toContain(".combat-attack-hit-camera{");
     expect(css).toContain("background:transparent;");
     expect(css).toContain(".combat-hit-zone-fill{");
