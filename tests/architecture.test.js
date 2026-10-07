@@ -430,9 +430,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.58");
-    expect(html).toContain("app.css?v=0.33.58");
-    expect(html).toContain("legacy/app.js?v=0.33.58");
+    expect(html).toContain("Alea Crusaders v0.33.59");
+    expect(html).toContain("app.css?v=0.33.59");
+    expect(html).toContain("legacy/app.js?v=0.33.59");
   });
 
 
@@ -446,9 +446,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.58");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.58");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.58");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.59");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.59");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.59");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -661,6 +661,9 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain("@keyframes combatHitCameraReveal");
     expect(css).toContain("@keyframes combatHitZoneReveal");
     expect(css).toContain("grid-template-columns:minmax(0,1fr) 126px");
+    expect(css).toContain(".combat-attack-result.has-hit-camera{");
+    expect(css).toContain(".combat-attack-hit-camera{");
+    expect(css).toContain("justify-self:end;");
     expect(css).toContain("fill-opacity:.38");
     expect(zones).toContain("window.ALEA_HIT_BODY_ZONES=");
     expect(zones).toContain("MuscleMap");
@@ -669,7 +672,11 @@ describe("application architecture smoke checks", () => {
     expect(zones).toContain("\"left_leg\"");
     expect(zones).toContain("\"right_leg\"");
     expect(zones).toContain("\"outline\"");
-    expect(combat).toContain("(full?'<strong>FULL SKADA</strong>':'')+\n  combatHitLocationResultHtml(result.hit_location)+\n  (result.erf");
+    expect(combat).toContain("function combatHitLocationCameraHtml");
+    expect(combat).toContain("class=\"combat-attack-hit-camera\"");
+    expect(combat).toContain("class=\"combat-attack-result-main\"");
+    expect(combat).toContain("has-hit-camera");
+    expect(combat).toContain("combatHitLocationCameraHtml(result.hit_location)");
     expect(css).toContain(".combat-hit-location-result{");
     expect(combat).toContain("function combatParryOptions");
     expect(combat).toContain("async function combatExpertRoll");
