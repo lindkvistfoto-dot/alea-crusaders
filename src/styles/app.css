@@ -4411,15 +4411,17 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 .combat-mini-attack .combat-hit-model-stage{
  background:
-  radial-gradient(circle at 50% 31%,#b7a58e 0%,#927d67 54%,#6d5a49 100%);
- border:1px solid rgba(207,177,132,.24);
+  radial-gradient(circle at 50% 30%,rgba(120,96,72,.16) 0%,rgba(61,47,36,.11) 42%,rgba(20,16,13,.02) 100%),
+  linear-gradient(180deg,#211a15 0%,#15110e 100%);
+ border:1px solid rgba(207,177,132,.16);
  box-shadow:
-  inset 0 1px 0 rgba(255,246,224,.18),
-  inset 0 -14px 28px rgba(43,30,20,.13);
+  inset 0 1px 0 rgba(255,246,224,.045),
+  inset 0 0 28px rgba(0,0,0,.34),
+  0 2px 6px rgba(0,0,0,.2);
 }
 .combat-mini-attack .combat-hit-model-image{
- opacity:.9;
- filter:grayscale(1) sepia(.22) saturate(.62) contrast(1.04) brightness(.96);
+ opacity:.88;
+ filter:grayscale(1) sepia(.25) saturate(.54) contrast(1.06) brightness(.82);
  mix-blend-mode:multiply;
 }
 .combat-mini-attack .combat-hit-zone-fill{
