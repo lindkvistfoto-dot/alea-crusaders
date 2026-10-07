@@ -4943,7 +4943,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 .combat-turn-head{
  display:grid;
- grid-template-columns:auto auto auto minmax(0,1fr) auto;
+ grid-template-columns:auto auto minmax(0,1fr) auto;
  gap:8px;
  align-items:center;
  min-width:0;
@@ -5146,9 +5146,9 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 @media(max-width:700px){
  .combat-turn-head{
-  grid-template-columns:auto auto minmax(0,1fr) auto;
+  grid-template-columns:auto minmax(0,1fr) auto;
  }
- .combat-turn-action-status{grid-column:3}
+ .combat-turn-action-status{grid-column:2}
  .combat-turn-head .combat-status{display:none}
  .combat-turn-actor{gap:8px;padding-left:8px;padding-right:8px}
  .combat-turn-portrait{width:45px;height:50px;flex-basis:45px}
@@ -5170,7 +5170,6 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:430px){
  .combat-turn-head{gap:5px;padding:7px 8px}
  .combat-turn-head .combat-round{font-size:16px}
- .combat-turn-head .combat-phase{font-size:10px;padding:4px 6px}
  .combat-turn-action-status{font-size:8px;padding:4px 5px}
  .combat-turn-undo-btn{width:27px;height:27px;min-width:27px}
  .combat-turn-actor{
@@ -5540,3 +5539,5 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
 }
 
+
+/* v0.33.80 — simplified round header */
