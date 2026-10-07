@@ -5717,3 +5717,45 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .adminarmortable .admin-master-key{font-size:8px}
  .adminarmortable .admin-master-footnote{display:block;margin-top:8px;border-top:1px solid #443527}
 }
+
+
+/* v0.33.88 — robust mobile armor master cards */
+.adminarmortable>.admin-armor-row{display:contents}
+@media(max-width:700px){
+ .adminarmortable{display:block;overflow:visible;border:0;background:transparent}
+ .adminarmortable>.ahead{display:none}
+ .adminarmortable>.admin-armor-row{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr) repeat(3,46px);
+  grid-template-areas:
+   "icon name name name name"
+   "icon category abs weight bep"
+   "price price source source actions";
+  gap:4px 8px;
+  align-items:center;
+  margin:0 0 10px;
+  padding:10px;
+  border:1px solid #443527;
+  border-radius:10px;
+  background:#1b1510;
+ }
+ .adminarmortable>.admin-armor-row>div{padding:3px 0;border:0;min-width:0}
+ .adminarmortable>.admin-armor-row>.admin-weapon-icon-cell{grid-area:icon;align-self:start}
+ .adminarmortable>.admin-armor-row>.admin-armor-name{grid-area:name;font-size:16px}
+ .adminarmortable>.admin-armor-row>.admin-armor-category{grid-area:category}
+ .adminarmortable>.admin-armor-row>.admin-armor-abs{grid-area:abs}
+ .adminarmortable>.admin-armor-row>.admin-armor-weight{grid-area:weight}
+ .adminarmortable>.admin-armor-row>.admin-armor-bep{grid-area:bep}
+ .adminarmortable>.admin-armor-row>.admin-armor-price{grid-area:price}
+ .adminarmortable>.admin-armor-row>.admin-armor-source{grid-area:source}
+ .adminarmortable>.admin-armor-row>.adminactions{grid-area:actions;justify-content:flex-end}
+ .adminarmortable>.admin-armor-row>.admin-armor-category:before{content:"Kategori";display:block;font-size:9px;color:#8f7b63}
+ .adminarmortable>.admin-armor-row>.admin-armor-abs:before{content:"ABS";display:block;font-size:9px;color:#8f7b63}
+ .adminarmortable>.admin-armor-row>.admin-armor-weight:before{content:"Vikt";display:block;font-size:9px;color:#8f7b63}
+ .adminarmortable>.admin-armor-row>.admin-armor-bep:before{content:"BEP";display:block;font-size:9px;color:#8f7b63}
+ .adminarmortable>.admin-armor-row>.admin-armor-price:before{content:"Pris/BEP";display:block;font-size:9px;color:#8f7b63}
+ .adminarmortable>.admin-armor-row>.admin-armor-source:before{content:"Källa";display:block;font-size:9px;color:#8f7b63;margin-bottom:2px}
+ .adminarmortable>.admin-armor-row .admin-weapon-icon small{display:none}
+ .adminarmortable>.admin-armor-row .admin-master-key{font-size:8px}
+ .adminarmortable>.admin-master-footnote{display:block;margin-top:8px;border-top:1px solid #443527}
+}
