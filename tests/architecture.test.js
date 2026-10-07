@@ -352,6 +352,46 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain("v0.33.85 — master weapon icon registry");
   });
 
+  test("armor and shield master registries are editable from admin", () => {
+    const html = read("index.html");
+    const legacy = read("legacy/app.js");
+    const css = read("src/styles/app.css");
+    const sql = read("supabase/migrations/20261007232600_expert_armor_shield_master.sql");
+
+    expect(html).toContain("openAdminSection('armors')");
+    expect(html).toContain("openAdminSection('shields')");
+    expect(html).toContain('id="adminCountArmors"');
+    expect(html).toContain('id="adminCountShields"');
+    expect(html).toContain('data-admin-section="armors"');
+    expect(html).toContain('data-admin-section="shields"');
+    expect(html).toContain('id="adminArmorTable"');
+    expect(html).toContain('id="adminShieldTable"');
+
+    expect(legacy).toContain("async function loadRuleShields");
+    expect(legacy).toContain("function renderAdminArmors");
+    expect(legacy).toContain("function editRuleArmor");
+    expect(legacy).toContain("async function saveRuleArmor");
+    expect(legacy).toContain("async function deleteRuleArmor");
+    expect(legacy).toContain("function renderAdminShields");
+    expect(legacy).toContain("function editRuleShield");
+    expect(legacy).toContain("async function saveRuleShield");
+    expect(legacy).toContain("async function deleteRuleShield");
+    expect(legacy).toContain("set('adminCountArmors',ruleArmorTypes.length)");
+    expect(legacy).toContain("set('adminCountShields',ruleShields.length)");
+
+    expect(sql).toContain("add column if not exists weight_code text");
+    expect(sql).toContain("('light_scale','Lätt fjällpansar','metal',4,6");
+    expect(sql).toContain("name='Ringbrynja', absorption=6, bep=8, weight_code='H'");
+    expect(sql).toContain("name='Förstärkt ringbrynja', absorption=7, bep=9, weight_code='J'");
+    expect(sql).toContain("create table if not exists public.rule_shields");
+    expect(sql).toContain("('small','Liten sköld','small','skoldar',1,2");
+    expect(sql).toContain("('medium','Medelstor sköld','medium','skoldar',1,4");
+    expect(sql).toContain("('large','Stor sköld','large','skoldar',1,6");
+    expect(sql).toContain("alter table public.rule_shields enable row level security");
+    expect(sql).toContain("create index if not exists rule_shields_skill_id_idx");
+    expect(css).toContain("v0.33.86 — armor and shield master admin");
+  });
+
   test("master weapon icons are stored on rule_weapons and have local artwork", () => {
     const sql = read("supabase/migrations/20261007224500_add_weapon_icon_key.sql");
     const legacy = read("legacy/app.js");
@@ -454,9 +494,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.85");
-    expect(html).toContain("app.css?v=0.33.85");
-    expect(html).toContain("legacy/app.js?v=0.33.85");
+    expect(html).toContain("Alea Crusaders v0.33.86");
+    expect(html).toContain("app.css?v=0.33.86");
+    expect(html).toContain("legacy/app.js?v=0.33.86");
   });
 
 
@@ -471,9 +511,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.85");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.85");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.85");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.86");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.86");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.86");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -778,7 +818,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("class=\"combat-attack-result-main\"");
     expect(combat).toContain("has-hit-camera");
     expect(combat).toContain("combatHitLocationCameraHtml(result.hit_location)");
-    expect(html).toContain("./src/main.js?v=0.33.85");
+    expect(html).toContain("./src/main.js?v=0.33.86");
     expect(main).toContain("window.combatHitLocationFigureHtml=function");
     expect(main).toContain("window.combatHitLocationResultHtml=function");
     expect(main).toContain("window.combatHitLocationCameraHtml=function");
