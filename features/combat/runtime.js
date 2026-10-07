@@ -2238,7 +2238,7 @@ function combatDamageResultHtml(damage){
   '<div class="combat-damage-grid">'+
    '<div class="combat-damage-col"><span>Skada</span><b>'+weaponValue+'</b><small>'+escAttr(weaponFormula)+'</small></div>'+
    '<i class="combat-damage-op">+</i>'+
-   '<div class="combat-damage-col"><span>Skadebonus</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>'+
+   '<div class="combat-damage-col"><span>SB</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>'+
    '<i class="combat-damage-op">−</i>'+
    '<div class="combat-damage-col"><span>Rustning</span><b>'+armor+'</b><small>'+escAttr(armorText)+'</small></div>'+
    '<i class="combat-damage-op">=</i>'+
