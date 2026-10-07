@@ -1201,35 +1201,41 @@ function combatHitLocationResultHtml(hitLocation){
  if(!hitLocation?.label)return '';
  return '<div class="combat-hit-location-result">'+
   '<div class="combat-hit-location-head"><span>🎯 Träffområde</span><b>'+escAttr(hitLocation.label)+'</b></div>'+
-  '<div class="combat-hit-location-body">'+
-   '<div class="combat-hit-location-copy"><strong>'+escAttr(hitLocation.label)+'</strong>'+
-    '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
-   '</div>'+
-   '<div class="combat-hit-figure-wrap">'+combatHitLocationFigureHtml(hitLocation)+'</div>'+
+  '<div class="combat-hit-location-copy">'+
+   '<small>'+escAttr(hitLocation.die||'')+' → '+escAttr(hitLocation.roll)+' · Expert tabell '+escAttr(hitLocation.table||'')+'</small>'+
   '</div>'+
  '</div>'
+}
+function combatHitLocationCameraHtml(hitLocation){
+ if(!hitLocation?.label)return '';
+ return '<aside class="combat-attack-hit-camera" aria-label="Träffkamera">'+
+  '<div class="combat-hit-figure-wrap">'+combatHitLocationFigureHtml(hitLocation)+'</div>'+
+ '</aside>'
 }
 
 function combatAttackResultHtml(action){
  if(!action||action.action_type!=='attack'||!action.result?.outcome)return '';
- const result=action.result,outcome=result.outcome,full=result.full_damage===true,meta=combatOutcomeMeta(outcome);
- return '<div class="combat-attack-result '+escAttr(outcome)+'">'+
-  '<div><span>Attackslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
-  '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
-   (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
+ const result=action.result,outcome=result.outcome,full=result.full_damage===true,meta=combatOutcomeMeta(outcome),hasHit=!!result.hit_location?.label;
+ return '<div class="combat-attack-result '+escAttr(outcome)+(hasHit?' has-hit-camera':'')+'">'+
+  '<div class="combat-attack-result-main">'+
+   '<div class="combat-attack-result-heading"><span>Attackslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
+   '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
+    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
+   '</div>'+
+   (full?'<strong>FULL SKADA</strong>':'')+
+   combatHitLocationResultHtml(result.hit_location)+
+   (result.erf
+    ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
+      (result.erf.awarded>0
+       ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
+       :escAttr(result.erf.message||'Ingen ny ERF'))+
+     '</div>'
+    :'')+
+   combatFumbleResultHtml(result)+
+   combatParryResultHtml(result)+
+   combatDamageResultHtml(result.damage)+
   '</div>'+
-  (full?'<strong>FULL SKADA</strong>':'')+
-  combatHitLocationResultHtml(result.hit_location)+
-  (result.erf
-   ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
-     (result.erf.awarded>0
-      ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
-      :escAttr(result.erf.message||'Ingen ny ERF'))+
-    '</div>'
-   :'')+
-  combatFumbleResultHtml(result)+
-  combatParryResultHtml(result)+
-  combatDamageResultHtml(result.damage)+
+  combatHitLocationCameraHtml(result.hit_location)+
  '</div>'
 }
 function combatOutcomeEarnsErf(outcome){
