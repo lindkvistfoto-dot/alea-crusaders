@@ -375,13 +375,17 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     const linkSql = read("supabase/migrations/20261007045327_link_weapon_master_to_skills.sql");
     const migrateSql = read("supabase/migrations/20261007045409_migrate_character_weapon_fv_to_skills.sql");
+    const enforceSql = read("supabase/migrations/20261007050300_enforce_weapon_skill_link.sql");
     expect(linkSql).toContain("add column if not exists skill_id text");
     expect(linkSql).toContain("when 'dagger'=any(tags) then 'dolkar'");
     expect(linkSql).toContain("when 'bow'=any(tags) then 'pilbagar'");
     expect(migrateSql).toContain("jsonb_build_object('skillId',rw.skill_id,'skillName',rs.name)");
+    expect(enforceSql).toContain("alter column skill_id set not null");
+    expect(enforceSql).toContain("on delete restrict");
     expect(legacy).toContain("function characterWeaponSkillTarget");
     expect(legacy).toContain("target.skillId=rule.skill_id");
-    expect(legacy).toContain("skill_id:$('rwSkillId')?.value||null");
+    expect(legacy).toContain("skill_id:skillId");
+    expect(legacy).toContain("Färdighet måste anges för varje vapen.");
     expect(legacy).toContain("function weaponLinkedFvHtml");
     expect(combat).toContain("function combatWeaponSkillTarget");
     expect(combat).toContain("const fv=combatAttackFv(weapon,actor)");
@@ -425,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.45");
-    expect(html).toContain("app.css?v=0.33.45");
-    expect(html).toContain("legacy/app.js?v=0.33.45");
+    expect(html).toContain("Alea Crusaders v0.33.46");
+    expect(html).toContain("app.css?v=0.33.46");
+    expect(html).toContain("legacy/app.js?v=0.33.46");
   });
 
 
@@ -440,7 +444,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.45");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.46");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
