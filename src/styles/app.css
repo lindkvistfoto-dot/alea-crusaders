@@ -4073,7 +4073,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 .combat-hit-location-body{
  display:grid;
- grid-template-columns:126px minmax(0,1fr);
+ grid-template-columns:minmax(0,1fr) 126px;
  gap:13px;
  align-items:center;
 }
@@ -4095,6 +4095,14 @@ body:not(.editing) #skilltable .skill-roll-btn{
  overflow:hidden;
  border-radius:8px;
  isolation:isolate;
+}
+.combat-hit-camera{
+ position:absolute;
+ inset:0;
+ transform-origin:0 0;
+ transform:translate(var(--hit-tx),var(--hit-ty)) scale(var(--hit-scale));
+ animation:combatHitCameraReveal 1.28s cubic-bezier(.22,.78,.22,1) both;
+ will-change:transform;
 }
 .combat-hit-model-image,
 .combat-hit-model-overlay{
@@ -4123,6 +4131,19 @@ body:not(.editing) #skilltable .skill-roll-btn{
  stroke-linejoin:round;
  stroke-linecap:round;
  filter:drop-shadow(0 0 2px rgba(196,79,28,.22));
+ opacity:1;
+ animation:combatHitZoneReveal .72s ease-out .22s both;
+}
+@keyframes combatHitCameraReveal{
+ 0%,18%{transform:translate(0,0) scale(1)}
+ 100%{transform:translate(var(--hit-tx),var(--hit-ty)) scale(var(--hit-scale))}
+}
+@keyframes combatHitZoneReveal{
+ 0%{opacity:0}
+ 100%{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-hit-camera,.combat-hit-zone-fill{animation:none}
 }
 .combat-hit-model-missing{
  position:absolute;
@@ -4152,9 +4173,9 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#796957;
 }
 @media(max-width:520px){
- .combat-hit-location-body{grid-template-columns:114px minmax(0,1fr);gap:10px}
+ .combat-hit-location-body{grid-template-columns:minmax(0,1fr) 108px;gap:10px}
  .combat-hit-figure-wrap{min-height:180px}
- .combat-hit-model-stage{width:106px}
+ .combat-hit-model-stage{width:100px}
  .combat-hit-location-copy strong{font-size:16px}
 }
 
