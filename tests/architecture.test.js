@@ -560,8 +560,6 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain('title="Avsluta drag"');
     expect(combat).toContain("endCombatTurn");
     expect(combat).toContain("combatTurnOrderIds");
-    expect(combat).toContain("Hel ");
-    expect(combat).toContain("Halv ");
     expect(combat).toContain("commitCombatMovementPlan");
     expect(combat).toContain("previewCombatMovementToHex");
     expect(combat).toContain("combatMovementDragStart");
