@@ -368,7 +368,7 @@ header #editBtn{font-size:20px;min-width:42px}
 .rule-description{white-space:pre-line;line-height:1.6}
 .rule-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rule-editor-grid label{font-size:12px;color:#6b5b4a;font-weight:800}.rule-editor-grid input,.rule-editor-grid select,.rule-editor-grid textarea{width:100%;margin-top:5px;padding:9px;border:1px solid #9b805d;border-radius:8px;background:#fffaf0;color:#2a2119}.rule-editor-grid .wide{grid-column:1/-1}.rule-editor-grid textarea{min-height:180px;resize:vertical}.rule-editor-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.skill-picker-list{display:grid;gap:10px}.skill-picker-list select,.skill-picker-list input{width:100%;padding:10px;border:1px solid #9b805d;border-radius:8px;background:#fffaf0;color:#2a2119}
 @media(max-width:700px){.adminskilltable{grid-template-columns:170px 60px 105px 72px 60px 78px;font-size:13px}.adminskilltable>div{padding:9px 6px}.rule-editor-grid{grid-template-columns:1fr}}
-.adminweapontable{display:grid;grid-template-columns:minmax(150px,1.5fr) 100px minmax(120px,1.1fr) 74px 82px 92px minmax(110px,1fr) 90px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
+.adminweapontable{display:grid;grid-template-columns:74px minmax(150px,1.5fr) 100px minmax(120px,1.1fr) 74px 82px 92px minmax(110px,1fr) 90px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
 .adminweapontable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
 .adminweapontable .ahead{background:#6d1e1e;font-weight:800}
 .adminweapontable .admin-weapon-empty{grid-column:1/-1;color:#b9a68f;padding:14px}
@@ -385,7 +385,7 @@ header #editBtn{font-size:20px;min-width:42px}
 .weapon-instance-editor .rule-editor-grid input,.weapon-instance-editor .rule-editor-grid select{box-sizing:border-box}
 
 @media(max-width:700px){
- .adminweapontable{grid-template-columns:160px 90px 64px 76px 82px 105px 78px;font-size:13px}
+ .adminweapontable{grid-template-columns:70px 160px 90px 120px 64px 76px 82px 105px 78px;font-size:13px}
  .adminweapontable>div{padding:9px 6px}
 }
 
@@ -5541,3 +5541,55 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 
 /* v0.33.80 — simplified round header */
+
+/* v0.33.85 — master weapon icon registry */
+.admin-weapon-icon-cell{
+ display:grid;
+ place-items:center;
+ padding-left:6px!important;
+ padding-right:6px!important;
+}
+.admin-weapon-icon{
+ display:grid;
+ justify-items:center;
+ gap:3px;
+ min-width:48px;
+}
+.admin-weapon-icon img{
+ width:36px;
+ height:36px;
+ object-fit:contain;
+ filter:drop-shadow(0 1px 2px rgba(0,0,0,.62));
+}
+.admin-weapon-icon small{
+ max-width:62px;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#c8af88;
+ font-size:8px;
+ line-height:1;
+ text-align:center;
+}
+.admin-weapon-icon.missing img{
+ opacity:.35;
+}
+.admin-weapon-icon.missing small{
+ color:#e18a7f;
+ font-weight:800;
+}
+.admin-weapon-icon-key{
+ display:block;
+ margin-top:3px;
+ color:#8f7b63;
+ font-size:9px;
+ font-weight:600;
+ letter-spacing:.02em;
+}
+.weapon-rule-editor #rwIconKey{
+ min-width:150px;
+}
+@media(max-width:700px){
+ .admin-weapon-icon img{width:32px;height:32px}
+ .admin-weapon-icon small{font-size:7px}
+}
