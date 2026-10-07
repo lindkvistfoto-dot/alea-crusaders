@@ -51,3 +51,17 @@ window.combatHitLocationFigureHtml=function(hitLocation){
     '</div>'+
   '</div>';
 };
+
+
+/* v0.33.65 — image-only hit location camera */
+window.combatHitLocationResultHtml=function(){
+  return "";
+};
+
+window.combatHitLocationCameraHtml=function(hitLocation){
+  if(!hitLocation?.label)return "";
+  return '<aside class="combat-attack-hit-camera" aria-label="Träffkamera">'+
+    '<div class="combat-hit-figure-wrap">'+window.combatHitLocationFigureHtml(hitLocation)+'</div>'+
+    '<div class="combat-hit-location-label">'+transparentHitEscAttr(hitLocation.label)+'</div>'+
+  '</aside>';
+};
