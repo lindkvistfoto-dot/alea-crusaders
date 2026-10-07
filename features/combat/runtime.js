@@ -2389,24 +2389,31 @@ function combatMapWheel(event){
  const factor=Math.exp(-event.deltaY*.0014);
  combatMapZoomAt(event.clientX,event.clientY,combatMapView.zoom*factor)
 }
+function combatMapTouchGate(event){
+ if((event.touches?.length||0)>=2&&event.cancelable)event.preventDefault()
+}
 function combatMapPointerDown(event){
  if(event.button!=null&&event.button!==0&&event.pointerType!=='touch')return;
  if(combatMovementDrag)return;
  if(event.target?.closest?.('.combat-token-group'))return;
  combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pointerType:event.pointerType||'mouse'});
  const svg=event.currentTarget;
- try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
- if(combatMapPointers.size===2){
-  const pts=[...combatMapPointers.values()];
-  const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
-  const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
-  combatMapPinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:combatMapView.zoom,centerX,centerY,lastCenterX:centerX,lastCenterY:centerY};
-  combatMapPan=null;event.preventDefault();return
- }
  if(event.pointerType==='touch'){
   combatMapPan=null;
+  if(combatMapPointers.size<2)return;
+  if(combatMapPointers.size===2){
+   for(const pointerId of combatMapPointers.keys()){
+    try{svg.setPointerCapture?.(pointerId)}catch(_error){}
+   }
+   const pts=[...combatMapPointers.values()];
+   const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+   const centerX=(pts[0].x+pts[1].x)/2,centerY=(pts[0].y+pts[1].y)/2;
+   combatMapPinch={distance:Math.max(1,Math.hypot(dx,dy)),zoom:combatMapView.zoom,centerX,centerY,lastCenterX:centerX,lastCenterY:centerY};
+   if(event.cancelable)event.preventDefault()
+  }
   return
  }
+ try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
  combatMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false}
 }
 function combatMapPointerMove(event){
@@ -2529,7 +2536,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
 }
 
 function combatRowPortraitUrl(combatant){
