@@ -430,9 +430,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.59");
-    expect(html).toContain("app.css?v=0.33.59");
-    expect(html).toContain("legacy/app.js?v=0.33.59");
+    expect(html).toContain("Alea Crusaders v0.33.60");
+    expect(html).toContain("app.css?v=0.33.60");
+    expect(html).toContain("legacy/app.js?v=0.33.60");
   });
 
 
@@ -446,9 +446,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.59");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.59");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.59");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.60");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.60");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.60");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -866,6 +866,16 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-portrait-green-ring{");
     expect(css).toContain("stroke:url(#portraitHexGreen)");
     expect(css).toContain(".combat-mini-base-ring{");
+    expect(combat).toContain("function combatMapFrameStyle");
+    expect(combat).toContain("function combatMapFooterHtml");
+    expect(combat).toContain("style=\"'+combatMapFrameStyle()+'");
+    expect(combat).toContain("combatMapFooterHtml()");
+    expect(css).toContain(".combat-board-footer{");
+    expect(css).toContain(".combat-board-description{");
+    expect(css).toContain("height:auto;min-height:0");
+    expect(css).not.toContain("height:620px");
+    expect(css).not.toContain("height:66vh;min-height:480px");
+    expect(css).not.toContain("height:62vh;min-height:420px");
     expect(css).toContain(".combat-map-zoom-controls{");
     expect(css).toContain(".combat-map-fit-btn{");
     expect(css).toContain(".combat-map-svg{");
