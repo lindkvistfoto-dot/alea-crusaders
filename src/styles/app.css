@@ -4271,3 +4271,166 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-mini-parry{align-items:stretch;flex-direction:column}
  .combat-mini-parry>div{justify-content:flex-start}
 }
+
+/* v0.33.61 — mörk Alea-stil för attackresultat och träffkamera */
+.combat-mini-attack .combat-attack-result{
+ border-color:#72583b;
+ background:
+  radial-gradient(circle at 100% 0,rgba(147,105,58,.12),transparent 38%),
+  linear-gradient(180deg,#261d16 0%,#18130f 100%);
+ color:#eadbc3;
+ box-shadow:
+  inset 0 1px 0 rgba(255,235,198,.05),
+  0 5px 15px rgba(0,0,0,.18);
+}
+.combat-mini-attack .combat-attack-result.success{
+ border-color:#53765b;
+ background:
+  radial-gradient(circle at 100% 0,rgba(78,126,86,.12),transparent 40%),
+  linear-gradient(180deg,#241d16 0%,#17130f 100%);
+}
+.combat-mini-attack .combat-attack-result.fail{
+ border-color:#8a514a;
+ background:
+  radial-gradient(circle at 100% 0,rgba(145,68,59,.12),transparent 40%),
+  linear-gradient(180deg,#281a16 0%,#18110f 100%);
+}
+.combat-mini-attack .combat-attack-result.special{
+ border-color:#4b7f91;
+ background:
+  radial-gradient(circle at 100% 0,rgba(74,135,157,.13),transparent 40%),
+  linear-gradient(180deg,#201d19 0%,#141311 100%);
+ box-shadow:0 0 14px rgba(79,145,171,.12),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.combat-mini-attack .combat-attack-result.perfect{
+ border-color:#a98435;
+ background:
+  radial-gradient(circle at 100% 0,rgba(191,151,52,.16),transparent 42%),
+  linear-gradient(180deg,#2b2415 0%,#18140d 100%);
+ box-shadow:0 0 18px rgba(196,157,54,.13),inset 0 1px 0 rgba(255,244,193,.05);
+}
+.combat-mini-attack .combat-attack-result.fumble{
+ border-color:#9e4a42;
+ background:
+  radial-gradient(circle at 100% 0,rgba(166,58,49,.16),transparent 42%),
+  linear-gradient(180deg,#2b1815 0%,#190f0e 100%);
+ box-shadow:0 0 17px rgba(181,73,62,.13),inset 0 1px 0 rgba(255,255,255,.035);
+}
+.combat-mini-attack .combat-attack-result-heading span{
+ color:#bda585;
+}
+.combat-mini-attack .combat-attack-result-heading b{
+ color:#e9d7b9;
+ text-shadow:0 1px 1px rgba(0,0,0,.55);
+}
+.combat-mini-attack .combat-attack-result.success .combat-attack-result-heading b{color:#9fc493}
+.combat-mini-attack .combat-attack-result.special .combat-attack-result-heading b{color:#8fc7da}
+.combat-mini-attack .combat-attack-result.perfect .combat-attack-result-heading b{color:#e2c76b}
+.combat-mini-attack .combat-attack-result.fail .combat-attack-result-heading b,
+.combat-mini-attack .combat-attack-result.fumble .combat-attack-result-heading b{color:#dc8b80}
+.combat-mini-attack .combat-attack-result-rolls{
+ color:#c3af91;
+}
+.combat-mini-attack .combat-attack-result-rolls b{
+ color:#f0e1c8;
+}
+.combat-mini-attack .combat-hit-location-result{
+ border-color:#8a6a3d;
+ background:
+  linear-gradient(180deg,rgba(94,69,43,.82),rgba(60,43,29,.94));
+ color:#ead7b8;
+ box-shadow:
+  inset 0 1px 0 rgba(255,232,185,.055),
+  0 2px 6px rgba(0,0,0,.12);
+}
+.combat-mini-attack .combat-hit-location-head span{
+ color:#d2b27f;
+}
+.combat-mini-attack .combat-hit-location-head b{
+ color:#f0c47d;
+}
+.combat-mini-attack .combat-hit-location-copy small{
+ color:#c3ad8c;
+}
+.combat-mini-attack .combat-erf-result{
+ border-color:#6b7f5d;
+ background:rgba(43,57,39,.72);
+ color:#bdc9ad;
+}
+.combat-mini-attack .combat-erf-result.gained b{color:#9bcb92}
+.combat-mini-attack .combat-erf-result.locked{
+ border-color:#665a4b;
+ background:rgba(66,57,47,.72);
+ color:#b6a58e;
+}
+.combat-mini-attack .combat-parry-result,
+.combat-mini-attack .combat-damage-result{
+ border-color:#725f47;
+ background:linear-gradient(180deg,#30261d,#231b15);
+ color:#dfceb3;
+}
+.combat-mini-attack .combat-parry-result span,
+.combat-mini-attack .combat-damage-result span{
+ color:#ae9878;
+}
+.combat-mini-attack .combat-parry-result b,
+.combat-mini-attack .combat-damage-result b{
+ color:#f1dfc1;
+}
+.combat-mini-attack .combat-parry-result small,
+.combat-mini-attack .combat-damage-result small{
+ color:#baa68a;
+}
+.combat-mini-attack .combat-parry-result.success{
+ border-color:#52755a;
+ background:linear-gradient(180deg,#243329,#1a241d);
+}
+.combat-mini-attack .combat-parry-result.fail{
+ border-color:#87524c;
+ background:linear-gradient(180deg,#36211e,#261713);
+}
+.combat-mini-attack .combat-damage-result.defeated{
+ border-color:#8f443c;
+ background:linear-gradient(180deg,#351e1b,#241412);
+ color:#e1aaa2;
+}
+.combat-mini-attack .combat-attack-result-main>strong{
+ background:#6d2b27;
+ color:#f5deb6;
+ border:1px solid rgba(219,165,91,.38);
+}
+.combat-mini-attack .combat-hit-figure-wrap{
+ border-color:#796041;
+ background:
+  radial-gradient(circle at 50% 20%,rgba(150,111,67,.16),transparent 46%),
+  linear-gradient(180deg,#2a2119 0%,#17120e 100%);
+ box-shadow:
+  inset 0 1px 0 rgba(255,235,201,.06),
+  inset 0 0 22px rgba(0,0,0,.24),
+  0 3px 8px rgba(0,0,0,.18);
+}
+.combat-mini-attack .combat-hit-model-stage{
+ background:
+  radial-gradient(circle at 50% 31%,#b7a58e 0%,#927d67 54%,#6d5a49 100%);
+ border:1px solid rgba(207,177,132,.24);
+ box-shadow:
+  inset 0 1px 0 rgba(255,246,224,.18),
+  inset 0 -14px 28px rgba(43,30,20,.13);
+}
+.combat-mini-attack .combat-hit-model-image{
+ opacity:.9;
+ filter:grayscale(1) sepia(.22) saturate(.62) contrast(1.04) brightness(.96);
+ mix-blend-mode:multiply;
+}
+.combat-mini-attack .combat-hit-zone-fill{
+ fill:#e78335;
+ fill-opacity:.48;
+ stroke:#ffb16b;
+ stroke-opacity:.76;
+ stroke-width:2.4;
+ filter:drop-shadow(0 0 3px rgba(235,123,46,.38));
+}
+.combat-mini-attack .combat-hit-model-missing{
+ color:#d3bea0;
+}
+
