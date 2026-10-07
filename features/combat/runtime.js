@@ -2853,13 +2853,13 @@ function combatTurnPortraitHtml(combatant){
  '</span>'
 }
 function combatTurnActionState(combatant){
- if(!combatant)return{key:'none',label:combatPhaseLabel(activeCombat?.phase)};
+ if(!combatant)return{key:'none',label:'Ingen handling'};
  if(combatPendingParryOpportunity())return{key:'reaction',label:'Reaktion'};
  if(combatIsMovementPlanning(combatant))return{key:'move',label:'Förflyttning'};
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
  if(def?.type==='attack'||def?.key==='attack')return{key:'attack',label:'Attack'};
  if(def)return{key:'other',label:'Övriga handlingar'};
- return{key:'move',label:'Rörelse'}
+ return{key:'none',label:'Redo'}
 }
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
@@ -2869,8 +2869,8 @@ function combatTurnPanelHtml(){
   :'';
  const head='<div class="combat-turn-head">'+
   '<span class="combat-round">Runda '+activeCombat.round_number+'</span>'+
-  '<span class="combat-phase">'+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>'+
-  '<span class="combat-turn-action-status '+state.key+'">'+escAttr(state.label)+'</span>'+
+  '<span class="combat-phase">Fas: '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>'+
+  '<span class="combat-turn-action-status '+state.key+'">Handling: '+escAttr(state.label)+'</span>'+
   '<span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+' · Sparad strid'+(canManage?' · SL-läge':'')+'</span>'+
   undoButton+
  '</div>';
