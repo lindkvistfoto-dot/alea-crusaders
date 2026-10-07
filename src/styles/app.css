@@ -4049,6 +4049,101 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#8a4f12;
  font-weight:900;
 }
+.combat-hit-location-result{
+ grid-template-columns:1fr;
+ gap:7px;
+ padding:8px 9px;
+}
+.combat-hit-location-head{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+}
+.combat-hit-location-head span{
+ font-size:9px;
+ font-weight:900;
+ text-transform:uppercase;
+ letter-spacing:.05em;
+ color:#77644d;
+}
+.combat-hit-location-head b{
+ justify-self:auto;
+ font-size:12px;
+}
+.combat-hit-location-body{
+ display:grid;
+ grid-template-columns:94px minmax(0,1fr);
+ gap:12px;
+ align-items:center;
+}
+.combat-hit-figure-wrap{
+ min-height:142px;
+ display:grid;
+ place-items:center;
+ border:1px solid rgba(138,79,18,.22);
+ border-radius:9px;
+ background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.7),rgba(238,219,180,.5));
+ overflow:hidden;
+}
+.combat-hit-figure{
+ display:block;
+ width:78px;
+ height:136px;
+ overflow:visible;
+}
+.combat-hit-bodypart{
+ fill:#d8c7a6;
+ stroke:#8d7557;
+ stroke-width:3;
+ stroke-linejoin:round;
+ stroke-linecap:round;
+ vector-effect:non-scaling-stroke;
+ transition:fill .18s ease,stroke .18s ease,filter .18s ease,opacity .18s ease;
+}
+.combat-hit-bodypart.right_arm,
+.combat-hit-bodypart.left_arm,
+.combat-hit-bodypart.right_leg,
+.combat-hit-bodypart.left_leg{
+ fill:none;
+ stroke-width:12;
+}
+.combat-hit-bodypart.active{
+ fill:#d77920;
+ stroke:#a13d17;
+ filter:drop-shadow(0 0 5px rgba(230,111,26,.95)) drop-shadow(0 0 11px rgba(230,111,26,.55));
+}
+.combat-hit-bodypart.right_arm.active,
+.combat-hit-bodypart.left_arm.active,
+.combat-hit-bodypart.right_leg.active,
+.combat-hit-bodypart.left_leg.active{
+ fill:none;
+ stroke:#d85b1b;
+ stroke-width:15;
+}
+.combat-hit-location-copy{
+ min-width:0;
+ display:grid;
+ gap:5px;
+ align-content:center;
+}
+.combat-hit-location-copy strong{
+ font:800 18px Georgia,serif;
+ color:#7f4214;
+ line-height:1.05;
+}
+.combat-hit-location-copy small{
+ display:block;
+ grid-column:auto;
+ font-size:9px;
+ color:#796957;
+}
+@media(max-width:520px){
+ .combat-hit-location-body{grid-template-columns:82px minmax(0,1fr);gap:9px}
+ .combat-hit-figure-wrap{min-height:128px}
+ .combat-hit-figure{width:70px;height:124px}
+ .combat-hit-location-copy strong{font-size:16px}
+}
 .combat-damage-result.defeated{
  border-color:#8e3b34;
  background:#f5dfdb;
