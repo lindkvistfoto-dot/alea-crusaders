@@ -205,31 +205,22 @@ async function combatUndoPromoteCompleted(snapshot){
 function combatUndoInstallButton(){
   const topbar=document.querySelector("#combatPage .combat-topbar");
   if(!topbar)return;
-  const existing=topbar.querySelector(".combat-undo-row");
+  topbar.querySelector(".combat-undo-row")?.remove();
+  const button=topbar.querySelector(".combat-turn-undo-btn");
+  if(!button)return;
   const canManage=typeof combatCanManage==="function"&&combatCanManage();
   if(!canManage){
-    existing?.remove();
+    button.hidden=true;
     return;
   }
+  button.hidden=false;
   const last=(typeof activeCombat!=="undefined"&&activeCombat?.settings&&typeof activeCombat.settings==="object")
     ?activeCombat.settings[COMBAT_UNDO_LAST_KEY]:null;
-  let row=existing;
-  if(!row){
-    row=document.createElement("div");
-    row.className="combat-undo-row";
-    const button=document.createElement("button");
-    button.type="button";
-    button.className="combat-undo-btn";
-    button.addEventListener("click",event=>window.undoLastCombatTurn?.(event));
-    row.appendChild(button);
-    topbar.appendChild(row);
-  }
-  const button=row.querySelector(".combat-undo-btn");
-  if(!button)return;
   const disabled=!last||combatUndoRestoring;
-  const label=last?.actor_name?"↶ Ångra senaste drag · "+last.actor_name:"↶ Ångra senaste drag";
+  const label=last?.actor_name?"Ångra senaste drag · "+last.actor_name:"Ångra senaste drag";
   if(button.disabled!==disabled)button.disabled=disabled;
-  if(button.textContent!==label)button.textContent=label;
+  if(button.title!==label)button.title=label;
+  if(button.getAttribute("aria-label")!==label)button.setAttribute("aria-label",label);
 }
 
 const combatUndoOriginalEndTurn=window.endCombatTurn;
@@ -371,3 +362,5 @@ if(combatUndoBody){
 
 
 /* v0.33.70 — prevent combat undo observer feedback loop */
+
+/* v0.33.74 — integrated round-panel undo control */
