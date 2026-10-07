@@ -4587,3 +4587,22 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
 }
 
+/* v0.33.67 — full damage under attack outcome */
+.combat-mini-attack .combat-full-damage-inline{
+ align-self:flex-start;
+ margin-top:-1px;
+ padding:4px 8px;
+ border:1px solid rgba(219,165,91,.42);
+ border-radius:999px;
+ background:#6d2b27;
+ color:#f5deb6;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:.045em;
+ line-height:1;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-hit-full-damage{
+ display:none;
+}
+
