@@ -4911,3 +4911,20 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-mini-attack .combat-damage-op{font-size:16px}
 }
 
+/* v0.33.73 — centered hit camera */
+.combat-mini-attack .combat-attack-hit-camera{
+ margin-right:0;
+ align-items:center;
+}
+.combat-mini-attack .combat-hit-figure-wrap{
+ width:100%;
+ justify-items:center;
+}
+.combat-mini-attack .combat-hit-location-label{
+ width:100%;
+ text-align:center;
+}
+@media(max-width:520px){
+ .combat-mini-attack .combat-attack-hit-camera{margin-right:0}
+}
+
