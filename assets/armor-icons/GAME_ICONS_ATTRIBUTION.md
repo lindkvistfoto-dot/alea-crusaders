@@ -2,7 +2,7 @@
 
 Armor SVG artwork in `assets/armor-icons/` uses icons by **Lorc** from Game-icons.net, licensed under CC BY 3.0.
 
-Current armor set:
+Current armor and shield set:
 - Armor vest — Lorc
 - Leather vest — Lorc
 - Spiked armor — Lorc
@@ -11,6 +11,9 @@ Current armor set:
 - Mail shirt — Lorc
 - Layered armor — Lorc
 - Plastron — Lorc
+- Bordered shield — Lorc
+- Crenulated shield — Lorc
+- Arrows shield — Lorc
 
 Source: https://game-icons.net/
 License: https://creativecommons.org/licenses/by/3.0/
