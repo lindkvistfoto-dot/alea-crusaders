@@ -1478,6 +1478,20 @@ function combatCanUseActionMenu(combatant){
 function combatCloseRowActionMenu(){
  combatActionMenuId=null;combatActionMenuKind=null
 }
+async function combatCancelPlannedAttack(combatant,action){
+ if(!combatant||!action||action.status!=='planned')return;
+ combatSelectedTargetId=null;
+ combatCloseRowActionMenu();
+ try{
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+   method:'DELETE',headers:{'Prefer':'return=minimal'}
+  });
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){
+  console.error('Kunde inte avbryta attackläge',error);
+  alert('Kunde inte avbryta attackläget: '+(error?.message||error))
+ }
+}
 async function combatAttackButton(event,combatantId){
  event?.stopPropagation?.();
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
@@ -1487,7 +1501,10 @@ async function combatAttackButton(event,combatantId){
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
  if(chosenDef?.key==='attack'&&chosen?.status==='planned'){
   const target=combatants.find(row=>String(row.id)===String(combatSelectedTargetId||''));
-  if(!target){renderCombat();return}
+  if(!target){
+   await combatCancelPlannedAttack(combatant,chosen);
+   return
+  }
   const mode=chosenDef.mode||chosen?.source_data?.mode||'auto';
   let weapon=combatActionWeapon(combatant,chosen,mode);
   let info=weapon?combatAttackTargetInfo(combatant,target,weapon,mode):null;
@@ -1669,7 +1686,12 @@ function selectCombatTarget(id){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(actor&&def?.type==='attack'&&action?.status==='planned'&&id){
   const targets=combatCurrentAttackTargets();
-  if(!targets.has(String(id)))return
+  if(!targets.has(String(id)))return;
+  if(String(combatSelectedTargetId||'')===String(id)){
+   combatSelectedTargetId=null;
+   renderCombat();
+   return
+  }
  }
  combatSelectedTargetId=id||null;renderCombat()
 }
@@ -2824,11 +2846,11 @@ function combatAttackPanelHtml(){
  const targets=combatCurrentAttackTargets();
  let instruction='';
  if(action.status==='planned'){
-  if(!target)instruction=targets.size+' giltiga mål är markerade. Klicka på mål på kartan eller i turordningen.';
+  if(!target)instruction=targets.size+' giltiga mål är markerade. Klicka på mål på kartan eller i turordningen. Tryck Attack igen för att avbryta.';
   else if(!selectedWeapon){
    const valid=combatAttackWeaponOptions(actor,mode).filter(weapon=>combatAttackTargetInfo(actor,target,weapon,mode));
    instruction=valid.length>1?'Välj vilket vapen som används mot målet.':'Tryck på attackknappen igen för att slå attacken.'
-  }else instruction='Målet är valt. Tryck på attackknappen igen för att slå attacken.'
+  }else instruction='Målet är valt. Klicka på målet igen för att avmarkera, eller tryck Attack igen för att slå.'
  }
  const targetInfo=target&&selectedWeapon?combatAttackTargetInfo(actor,target,selectedWeapon,mode):null;
  return '<section class="combat-mini-attack '+(action.status==='resolved'?'resolved':'planning')+'">'+
