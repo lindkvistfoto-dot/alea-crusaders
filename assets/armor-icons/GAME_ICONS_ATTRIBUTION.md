@@ -1,16 +1,18 @@
 # Game-icons attribution
 
-Armor SVG artwork in `assets/armor-icons/` uses or is adapted from icons from Game-icons.net, licensed under CC BY 3.0.
+Armor SVG artwork in `assets/armor-icons/` uses icons by **Lorc** from Game-icons.net, licensed under CC BY 3.0.
 
+Current armor set:
 - Armor vest — Lorc
-- Leather armor — Delapouite
 - Leather vest — Lorc
+- Spiked armor — Lorc
 - Lamellar — Lorc
+- Scale mail — Lorc
+- Mail shirt — Lorc
 - Layered armor — Lorc
-- Chain mail — Willdabeast
 - Plastron — Lorc
 
 Source: https://game-icons.net/
 License: https://creativecommons.org/licenses/by/3.0/
 
-Some SVGs have been adapted for Alea Crusaders by removing the background and/or simplifying paths for transparent UI use.
+The SVGs are adapted for Alea Crusaders by removing the black background and using the same gold fill as the weapon icon set.
