@@ -5265,3 +5265,69 @@ body:not(.editing) #skilltable .skill-roll-btn{
  filter:saturate(.55) brightness(.75);
 }
 
+/* v0.33.77 — centered crisp combat SVG controls */
+.combat-turn-actions .combat-row-tool-btn{
+ display:grid;
+ place-items:center;
+ width:40px;
+ min-width:40px;
+ height:40px;
+ padding:0;
+ overflow:hidden;
+ border:1px solid #6d563b;
+ border-radius:7px;
+ background:linear-gradient(180deg,#2b241c,#171410);
+ color:#e4c58e;
+ box-shadow:
+  inset 0 1px 0 rgba(255,255,255,.045),
+  0 2px 4px rgba(0,0,0,.35);
+}
+.combat-turn-actions .combat-row-tool-btn:hover:not(:disabled){
+ border-color:#ad8551;
+ background:linear-gradient(180deg,#403124,#211912);
+ box-shadow:
+  inset 0 1px 0 rgba(255,255,255,.055),
+  0 2px 5px rgba(0,0,0,.38);
+ transform:translateY(-1px);
+}
+.combat-turn-actions .combat-row-tool-icon{
+ display:block;
+ width:84%;
+ height:84%;
+ margin:0;
+ object-fit:contain;
+ object-position:center;
+ border-radius:0;
+ image-rendering:auto;
+ filter:none;
+ transform:none;
+}
+.combat-turn-actions .combat-row-tool-btn.active{
+ border:1px solid #d0a85f;
+ background:linear-gradient(180deg,#443523,#211912);
+ outline:2px solid rgba(208,168,95,.42);
+ outline-offset:1px;
+ box-shadow:
+  inset 0 1px 0 rgba(255,255,255,.055),
+  0 0 10px rgba(202,159,82,.28);
+}
+.combat-turn-actions .combat-row-tool-btn.active .combat-row-tool-icon,
+.combat-turn-actions .combat-row-tool-btn.chosen .combat-row-tool-icon{
+ filter:drop-shadow(0 0 2px rgba(230,197,142,.42));
+}
+.combat-turn-actions .combat-row-tool-btn:disabled{
+ opacity:.35;
+ filter:none;
+}
+@media(max-width:430px){
+ .combat-turn-actions .combat-row-tool-btn{
+  width:34px;
+  min-width:34px;
+  height:34px;
+ }
+ .combat-turn-actions .combat-row-tool-icon{
+  width:82%;
+  height:82%;
+ }
+}
+
