@@ -879,7 +879,8 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
   if(!rolled.success){
    const attackMode=attack.result?.attack_mode||attack.source_data?.mode||'melee';
    const weapon=combatActionWeapon(attacker,attack,attackMode);
-   if(weapon)attackResult.damage=await combatResolveDamage(attacker,defender,weapon,attack.result?.full_damage===true)
+   attackResult.hit_location=await combatResolveHitLocation(attacker,defender,attackMode,'parry_failed');
+   if(weapon)attackResult.damage=await combatResolveDamage(attacker,defender,weapon,attack.result?.full_damage===true,attackResult.hit_location)
   }
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(attack.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -889,7 +890,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
    combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
    phase:'reaction',actor_id:defender.id,target_id:attacker.id,event_type:'parry',
    message:defender.name_snapshot+' parerar med '+option.name+' · '+combatOutcomeLabel(rolled.outcome)+
-    (rolled.success?' · attacken stoppas':' · pareringen misslyckas'),
+    (rolled.success?' · attacken stoppas':' · pareringen misslyckas'+(attackResult.hit_location?' · träff '+attackResult.hit_location.label:'')),
    details:parryResult,player_visible:true
   })});
   combatShowOutcomeOverlay(rolled.outcome,'Parering · '+option.name+' · T20 '+rolled.roll+' mot FV '+option.fv);
@@ -909,8 +910,11 @@ async function declineCombatParry(defenderId,attackActionId){
    ...(opportunity.attack.result||{}),
    parry_decision:'declined',awaiting_parry:false,hit_resolved:true
   };
+  attackResult.hit_location=await combatResolveHitLocation(
+   opportunity.attacker,opportunity.defender,attackMode,'declined'
+  );
   if(weapon)attackResult.damage=await combatResolveDamage(
-   opportunity.attacker,opportunity.defender,weapon,opportunity.attack.result?.full_damage===true
+   opportunity.attacker,opportunity.defender,weapon,opportunity.attack.result?.full_damage===true,attackResult.hit_location
   );
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(opportunity.attack.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -1274,7 +1278,9 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    result.hit_resolved=false
   }else{
    result.parry_decision=attackMode==='melee'?'unavailable':'not_applicable';
-   result.damage=await combatResolveDamage(actor,target,weapon,fullDamage);
+   const defenseMode=attackMode==='melee'?'undefended':'ranged';
+   result.hit_location=await combatResolveHitLocation(actor,target,attackMode,defenseMode);
+   result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location);
    result.hit_resolved=true
   }
  }
@@ -1291,6 +1297,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    ' · '+(attackMode==='melee'?'närstrid':'avstånd')+
    ' · T20 '+rolled.roll+(rolled.confirmation_roll!=null?' / kontroll '+rolled.confirmation_roll:'')+
    ' mot FV '+fv+' · '+combatOutcomeLabel(outcome)+(fullDamage?' · FULL SKADA':'')+
+   (result.hit_location?' · träff '+result.hit_location.label:'')+
    (result.awaiting_parry?' · inväntar parering':''),
   details:result,player_visible:true
  })});
@@ -2048,7 +2055,7 @@ function combatArmorAbsorption(combatant){
  });
  return{absorption,names:[...new Set(names)]}
 }
-async function combatResolveDamage(actor,target,weapon,fullDamage=false){
+async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null){
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=combatDamageBonusSpec(actor);
@@ -2082,12 +2089,13 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false){
   net_damage:net,
   kp_before:before,kp_after:after,
   full_damage:fullDamage===true,
+  hit_location:hitLocation||null,
   defeated
  };
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'damage',actor_id:actor.id,target_id:target.id,event_type:defeated?'defeated':'damage',
-  message:actor.name_snapshot+' gör '+net+' KP skada på '+target.name_snapshot+
+  message:actor.name_snapshot+' träffar '+(hitLocation?.label||'målet')+' och gör '+net+' KP skada på '+target.name_snapshot+
    ' ('+gross+' − ABS '+armor.absorption+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
