@@ -2375,17 +2375,33 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-attack-roll-btn{flex:0 0 auto;background:#7b302b!important;color:#fff!important;border-color:#7b302b!important}
 .combat-attack-result{
  margin-top:10px;padding:9px;border:1px solid #ad8d68;border-radius:9px;background:#f5ecdd;
- display:flex;flex-direction:column;gap:5px;
+ display:grid;grid-template-columns:minmax(0,1fr);gap:10px;
+ align-items:start;
 }
-.combat-attack-result>div:first-child{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.combat-attack-result>div:first-child span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#806c58}
-.combat-attack-result>div:first-child b{font-size:13px}
+.combat-attack-result.has-hit-camera{
+ grid-template-columns:minmax(0,1fr) 126px;
+}
+.combat-attack-result-main{
+ min-width:0;
+ display:flex;
+ flex-direction:column;
+ gap:5px;
+}
+.combat-attack-result-heading{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.combat-attack-result-heading span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#806c58}
+.combat-attack-result-heading b{font-size:13px}
 .combat-attack-result-rolls{display:flex;gap:9px;flex-wrap:wrap;font-size:10px;color:#715f4d}
 .combat-attack-result.success,.combat-attack-result.special,.combat-attack-result.perfect{border-color:#65916d;background:#edf5e9}
 .combat-attack-result.fail,.combat-attack-result.fumble{border-color:#b56e65;background:#fae9e5}
-.combat-attack-result.special>div:first-child b,.combat-attack-result.perfect>div:first-child b{color:#2f6a3b}
-.combat-attack-result>strong{
+.combat-attack-result.special .combat-attack-result-heading b,.combat-attack-result.perfect .combat-attack-result-heading b{color:#2f6a3b}
+.combat-attack-result-main>strong{
  align-self:flex-start;padding:4px 7px;border-radius:999px;background:#7b302b;color:#fff4d9;font-size:10px;letter-spacing:.05em
+}
+.combat-attack-hit-camera{
+ width:126px;
+ min-width:0;
+ justify-self:end;
+ align-self:start;
 }
 @media(max-width:620px){.combat-attack-execute{align-items:stretch;flex-direction:column}.combat-attack-roll-btn{width:100%}}
 
@@ -4071,12 +4087,6 @@ body:not(.editing) #skilltable .skill-roll-btn{
  justify-self:auto;
  font-size:12px;
 }
-.combat-hit-location-body{
- display:grid;
- grid-template-columns:minmax(0,1fr) 126px;
- gap:13px;
- align-items:center;
-}
 .combat-hit-figure-wrap{
  min-height:194px;
  display:grid;
@@ -4173,9 +4183,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
  color:#796957;
 }
 @media(max-width:520px){
- .combat-hit-location-body{grid-template-columns:minmax(0,1fr) 108px;gap:10px}
- .combat-hit-figure-wrap{min-height:180px}
- .combat-hit-model-stage{width:100px}
+ .combat-attack-result.has-hit-camera{grid-template-columns:minmax(0,1fr) 100px;gap:8px}
+ .combat-attack-hit-camera{width:100px}
+ .combat-hit-figure-wrap{min-height:172px}
+ .combat-hit-model-stage{width:92px}
  .combat-hit-location-copy strong{font-size:16px}
 }
 
