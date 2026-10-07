@@ -430,9 +430,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.57");
-    expect(html).toContain("app.css?v=0.33.57");
-    expect(html).toContain("legacy/app.js?v=0.33.57");
+    expect(html).toContain("Alea Crusaders v0.33.58");
+    expect(html).toContain("app.css?v=0.33.58");
+    expect(html).toContain("legacy/app.js?v=0.33.58");
   });
 
 
@@ -446,9 +446,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.57");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.57");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.57");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.58");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.58");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.58");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -642,6 +642,11 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("attackResult.hit_location=await combatResolveHitLocation");
     expect(combat).toContain("combatHitLocationResultHtml(result.hit_location)");
     expect(combat).toContain("function combatHitLocationFigureHtml");
+    expect(combat).toContain("const COMBAT_HIT_CAMERA=");
+    expect(combat).toContain("class=\"combat-hit-camera\"");
+    expect(combat).toContain("--hit-scale:");
+    expect(combat).toContain("--hit-tx:");
+    expect(combat).toContain("--hit-ty:");
     expect(combat).toContain("window.ALEA_HIT_BODY_MODEL?.src");
     expect(combat).toContain("window.ALEA_HIT_BODY_ZONES||null");
     expect(combat).toContain("combat-hit-model-image");
@@ -652,6 +657,10 @@ describe("application architecture smoke checks", () => {
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
     expect(css).toContain(".combat-hit-zone-fill{");
+    expect(css).toContain(".combat-hit-camera{");
+    expect(css).toContain("@keyframes combatHitCameraReveal");
+    expect(css).toContain("@keyframes combatHitZoneReveal");
+    expect(css).toContain("grid-template-columns:minmax(0,1fr) 126px");
     expect(css).toContain("fill-opacity:.38");
     expect(zones).toContain("window.ALEA_HIT_BODY_ZONES=");
     expect(zones).toContain("MuscleMap");
