@@ -4502,3 +4502,88 @@ body:not(.editing) #skilltable .skill-roll-btn{
  text-shadow:0 1px 1px rgba(0,0,0,.65);
 }
 
+/* v0.33.66 — compact attack result layout */
+.combat-mini-attack .combat-attack-result-heading.outcome-only{
+ justify-content:flex-start;
+ min-height:24px;
+}
+.combat-mini-attack .combat-attack-result-heading.outcome-only>span{
+ display:none;
+}
+.combat-mini-attack .combat-attack-result-heading.outcome-only b{
+ white-space:nowrap;
+ line-height:1;
+ font-size:15px;
+}
+.combat-mini-attack .combat-attack-result.special .combat-attack-result-heading.outcome-only b{
+ font-size:15px;
+}
+.combat-mini-attack .combat-attack-result.special .combat-result-icon{
+ font-size:18px;
+}
+.combat-mini-attack .combat-attack-result.perfect .combat-attack-result-heading.outcome-only b,
+.combat-mini-attack .combat-attack-result.fumble .combat-attack-result-heading.outcome-only b{
+ font-size:16px;
+}
+.combat-mini-attack .combat-attack-result-rolls{
+ gap:5px 9px;
+ line-height:1.15;
+}
+.combat-mini-attack .combat-hit-full-damage{
+ align-self:center;
+ margin:0 0 3px;
+ padding:4px 8px;
+ border:1px solid rgba(219,165,91,.42);
+ border-radius:999px;
+ background:#6d2b27;
+ color:#f5deb6;
+ font-size:9px;
+ font-weight:900;
+ letter-spacing:.045em;
+ line-height:1;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-attack-hit-camera{
+ gap:3px;
+}
+.combat-mini-attack .combat-damage-result{
+ margin-top:2px;
+ padding:4px 6px;
+ grid-template-columns:auto minmax(0,1fr);
+ gap:1px 6px;
+ align-items:baseline;
+ min-height:0;
+ line-height:1.05;
+}
+.combat-mini-attack .combat-damage-result span{
+ font-size:8px;
+ line-height:1;
+}
+.combat-mini-attack .combat-damage-result b,
+.combat-mini-attack .combat-attack-result.special .combat-damage-result b,
+.combat-mini-attack .combat-attack-result.perfect .combat-damage-result b,
+.combat-mini-attack .combat-attack-result.fumble .combat-damage-result b{
+ justify-self:end;
+ font-size:11px;
+ line-height:1.05;
+ white-space:nowrap;
+}
+.combat-mini-attack .combat-damage-result small{
+ grid-column:1/-1;
+ margin-top:1px;
+ font-size:8px;
+ line-height:1.1;
+}
+@media(max-width:390px){
+ .combat-mini-attack .combat-attack-result-heading.outcome-only b,
+ .combat-mini-attack .combat-attack-result.special .combat-attack-result-heading.outcome-only b{
+  font-size:14px;
+ }
+ .combat-mini-attack .combat-damage-result b,
+ .combat-mini-attack .combat-attack-result.special .combat-damage-result b,
+ .combat-mini-attack .combat-attack-result.perfect .combat-damage-result b,
+ .combat-mini-attack .combat-attack-result.fumble .combat-damage-result b{
+  font-size:10px;
+ }
+}
+
