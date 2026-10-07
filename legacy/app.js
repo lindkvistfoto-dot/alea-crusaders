@@ -465,11 +465,12 @@ function editRuleWeapon(id=''){
 }
 async function saveRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let name=$('rwName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ let skillId=$('rwSkillId')?.value||'';if(!skillId){alert('Färdighet måste anges för varje vapen.');return}
  try{
   let payload={
    name,
    category:$('rwCategory')?.value||'melee',
-   skill_id:$('rwSkillId')?.value||null,
+   skill_id:skillId,
    handling:$('rwHandling')?.value||'1H',
    strength_group:ruleWeaponNumberValue('rwStrengthGroup',{integer:true}),
    damage:$('rwDamage')?.value.trim()||'',
