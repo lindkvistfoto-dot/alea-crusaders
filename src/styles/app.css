@@ -4606,3 +4606,36 @@ body:not(.editing) #skilltable .skill-roll-btn{
  display:none;
 }
 
+/* v0.33.68 — GM undo under round status */
+.combat-undo-row{
+ flex:0 0 100%;
+ display:flex;
+ align-items:center;
+ padding-top:2px;
+}
+.combat-undo-btn{
+ appearance:none;
+ border:1px solid #755a3c;
+ border-radius:8px;
+ background:#2c2119;
+ color:#e8cfaa;
+ padding:6px 9px;
+ font:800 10px/1.1 system-ui,sans-serif;
+ letter-spacing:.02em;
+ cursor:pointer;
+ box-shadow:inset 0 1px 0 rgba(255,236,199,.05);
+}
+.combat-undo-btn:hover:not(:disabled){
+ border-color:#a47a49;
+ background:#3a291d;
+ color:#f5dfbb;
+}
+.combat-undo-btn:disabled{
+ opacity:.42;
+ cursor:default;
+}
+@media(max-width:620px){
+ .combat-undo-row{padding-top:4px}
+ .combat-undo-btn{width:100%;text-align:left;padding:7px 9px}
+}
+
