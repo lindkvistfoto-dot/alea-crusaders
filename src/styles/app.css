@@ -4124,24 +4124,31 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 .combat-hit-zone.active{
  fill:url(#combatHitZoneFill);
- stroke:rgba(184,61,23,.92);
- stroke-width:6;
+ stroke:rgba(185,82,32,.68);
+ stroke-width:2.5;
  filter:url(#combatHitZoneGlow);
 }
+.combat-hit-target-ring-outer,
 .combat-hit-target-ring{
  fill:none;
- stroke:rgba(146,51,19,.9);
- stroke-width:7;
- stroke-dasharray:18 12;
  vector-effect:non-scaling-stroke;
- filter:drop-shadow(0 0 10px rgba(238,119,35,.72));
+}
+.combat-hit-target-ring-outer{
+ stroke:rgba(242,150,57,.46);
+ stroke-width:2;
+ filter:drop-shadow(0 0 4px rgba(238,119,35,.34));
+}
+.combat-hit-target-ring{
+ stroke:rgba(164,70,28,.82);
+ stroke-width:2.5;
+ filter:drop-shadow(0 0 3px rgba(238,119,35,.42));
 }
 .combat-hit-target-dot{
- fill:#f08a27;
- stroke:#fff0c5;
- stroke-width:5;
+ fill:#fff4cf;
+ stroke:#dc782c;
+ stroke-width:2.5;
  vector-effect:non-scaling-stroke;
- filter:drop-shadow(0 0 12px rgba(238,119,35,.9));
+ filter:drop-shadow(0 0 5px rgba(238,119,35,.58));
 }
 .combat-hit-model-missing{
  position:absolute;
