@@ -431,9 +431,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.81");
-    expect(html).toContain("app.css?v=0.33.81");
-    expect(html).toContain("legacy/app.js?v=0.33.81");
+    expect(html).toContain("Alea Crusaders v0.33.82");
+    expect(html).toContain("app.css?v=0.33.82");
+    expect(html).toContain("legacy/app.js?v=0.33.82");
   });
 
 
@@ -448,9 +448,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.81");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.81");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.81");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.82");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.82");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.82");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -550,6 +550,10 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("activeCombat&&!combatIsResetReadyForPlay(scene)");
     expect(combat).toContain("combatAttackButton");
     expect(combat).toContain("combatCancelPlannedAttack");
+    expect(combat).toContain("v0.33.82 — never allow the active combatant to be an attack target");
+    expect(combat).toContain("String(target.id)===String(actor.id)");
+    expect(combat).toContain("targets.has(plannedTargetId)");
+    expect(combat).toContain("String(id)===String(actor.id)");
     expect(combat).toContain("await combatCancelPlannedAttack(combatant,chosen)");
     expect(combat).toContain("String(combatSelectedTargetId||\'\')===String(id)");
     expect(combat).toContain("combatSelectedTargetId=null;");
@@ -749,7 +753,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("class=\"combat-attack-result-main\"");
     expect(combat).toContain("has-hit-camera");
     expect(combat).toContain("combatHitLocationCameraHtml(result.hit_location)");
-    expect(html).toContain("./src/main.js?v=0.33.81");
+    expect(html).toContain("./src/main.js?v=0.33.82");
     expect(main).toContain("window.combatHitLocationFigureHtml=function");
     expect(main).toContain("window.combatHitLocationResultHtml=function");
     expect(main).toContain("window.combatHitLocationCameraHtml=function");
