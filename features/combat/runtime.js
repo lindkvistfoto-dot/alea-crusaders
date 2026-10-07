@@ -2166,9 +2166,12 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
 }
 function combatDamageResultHtml(damage){
  if(!damage)return '';
+ const bonus=String(damage.damage_bonus||'').trim();
+ const bonusText=!bonus||bonus.toLowerCase()==='ingen'?'0':bonus;
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
-  '<span>Skada</span><b>'+damage.gross_damage+' − ABS '+damage.armor_absorption+' = '+damage.net_damage+' KP</b>'+
-  '<small>KP '+damage.kp_before+' → '+damage.kp_after+(damage.full_damage?' · full skada':'')+(damage.defeated?' · NEDKÄMPAD':'')+'</small>'+
+  '<div class="combat-damage-line"><span>Skada</span><b>'+escAttr(damage.weapon_formula||'—')+' + skadebonus '+escAttr(bonusText)+' = '+damage.gross_damage+'</b></div>'+
+  '<div class="combat-damage-line"><span>Total skada</span><b>'+damage.gross_damage+' − ABS '+damage.armor_absorption+' = '+damage.net_damage+'</b></div>'+
+  '<div class="combat-damage-line"><span>KP</span><b>'+damage.kp_before+' − '+damage.net_damage+' = '+damage.kp_after+(damage.defeated?' · NEDKÄMPAD':'')+'</b></div>'+
  '</div>'
 }
 function combatParryResultHtml(result){
