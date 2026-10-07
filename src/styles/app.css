@@ -5696,3 +5696,24 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
 }
 
+
+/* v0.33.87 — compact mobile armor/shield master cards */
+@media(max-width:700px){
+ .adminarmortable,.adminshieldtable{display:block;overflow:visible;border:0;background:transparent}
+ .adminarmortable>.ahead,.adminshieldtable>.ahead{display:none}
+ .adminarmortable>div,.adminshieldtable>div{box-sizing:border-box}
+ .adminarmortable>div:not(.admin-master-footnote):not(.admin-master-empty){
+  display:inline-block;vertical-align:middle;border-bottom:0;padding:7px 5px
+ }
+ .adminarmortable>div:nth-of-type(9n+10){width:62px;clear:left;border-top:1px solid #443527}
+ .adminarmortable>div:nth-of-type(9n+11){width:calc(100% - 62px);border-top:1px solid #443527}
+ .adminarmortable>div:nth-of-type(9n+12),
+ .adminarmortable>div:nth-of-type(9n+13),
+ .adminarmortable>div:nth-of-type(9n+14),
+ .adminarmortable>div:nth-of-type(9n+15){width:25%;font-size:12px;color:#c9b79d}
+ .adminarmortable>div:nth-of-type(9n+16){width:65%;font-size:11px}
+ .adminarmortable>div:nth-of-type(9n+17){width:35%;text-align:right}
+ .adminarmortable .admin-weapon-icon small{display:none}
+ .adminarmortable .admin-master-key{font-size:8px}
+ .adminarmortable .admin-master-footnote{display:block;margin-top:8px;border-top:1px solid #443527}
+}
