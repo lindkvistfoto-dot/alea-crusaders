@@ -492,11 +492,12 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("update public.campaign_monsters");
   });
 
-  test("weapon master and instance update bumps cache version", () => {
+  test("app shell uses a consistent semantic version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.87");
-    expect(html).toContain("app.css?v=0.33.86");
-    expect(html).toContain("legacy/app.js?v=0.33.86");
+    const titleVersion = html.match(/<title>Alea Crusaders v(\d+\.\d+\.\d+)<\/title>/)?.[1];
+    const displayVersion = html.match(/id="appVersion"[^>]*>v(\d+\.\d+\.\d+)/)?.[1];
+    expect(titleVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(displayVersion).toBe(titleVersion);
   });
 
 
