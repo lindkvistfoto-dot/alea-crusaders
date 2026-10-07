@@ -4485,3 +4485,20 @@ body:not(.editing) #skilltable .skill-roll-btn{
  mix-blend-mode:multiply;
 }
 
+/* v0.33.65 — image-only hit location label */
+.combat-mini-attack .combat-attack-hit-camera{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:5px;
+}
+.combat-mini-attack .combat-hit-location-label{
+ width:100%;
+ text-align:center;
+ color:#d8c09a;
+ font:800 10px/1.15 Georgia,serif;
+ letter-spacing:.02em;
+ text-transform:none;
+ text-shadow:0 1px 1px rgba(0,0,0,.65);
+}
+
