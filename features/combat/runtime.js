@@ -1174,18 +1174,13 @@ function combatHitLocationFigureHtml(hitLocation){
  if(!model||!zone||!outline){
   return '<div class="combat-hit-model-stage"><div class="combat-hit-model-missing">Kroppsmodell eller träffzon saknas</div></div>'
  }
- const uid='combatHit_'+(++combatHitMaskSeq),clipId=uid+'_clip',maskId=uid+'_mask';
+ const uid='combatHit_'+(++combatHitMaskSeq),clipId=uid+'_clip';
  const zonePaths=(zone.paths||[]).map(d=>'<path d="'+d+'"/>').join('');
  return '<div class="combat-hit-model-stage">'+
   '<img class="combat-hit-model-image" src="'+model+'" alt="" aria-hidden="true">'+
   '<svg class="combat-hit-model-overlay" viewBox="'+escAttr(viewBox)+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Träffområde '+escAttr(hitLocation?.label||'')+'">'+
-   '<defs>'+
-    '<clipPath id="'+clipId+'"><path d="'+outline+'"/></clipPath>'+
-    '<mask id="'+maskId+'" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1536">'+
-     '<g clip-path="url(#'+clipId+')" fill="#fff" stroke="#fff" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">'+zonePaths+'</g>'+
-    '</mask>'+
-   '</defs>'+
-   '<rect class="combat-hit-zone-fill" x="0" y="0" width="1024" height="1536" mask="url(#'+maskId+')" clip-path="url(#'+clipId+')"/>'+
+   '<defs><clipPath id="'+clipId+'"><path d="'+outline+'"/></clipPath></defs>'+
+   '<g class="combat-hit-zone-fill" clip-path="url(#'+clipId+')">'+zonePaths+'</g>'+
   '</svg>'+
  '</div>'
 }
