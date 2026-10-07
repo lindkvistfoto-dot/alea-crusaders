@@ -429,9 +429,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.48");
-    expect(html).toContain("app.css?v=0.33.48");
-    expect(html).toContain("legacy/app.js?v=0.33.48");
+    expect(html).toContain("Alea Crusaders v0.33.49");
+    expect(html).toContain("app.css?v=0.33.49");
+    expect(html).toContain("legacy/app.js?v=0.33.49");
   });
 
 
@@ -444,7 +444,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.48");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.49");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -628,6 +628,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("if((tracked.pointerType||event.pointerType)===\'touch\')return;");
     expect(combat).toContain("lastCenterX:centerX,lastCenterY:centerY");
     expect(combat).toContain("function combatAttackPanelHtml");
+    expect(combat).toContain("combatAttackWeaponOptions(combatant,'auto').find");
     expect(combat).toContain("combatAttackPanelHtml()");
     expect(combat).toContain("async function combatResolveDamage");
     expect(combat).toContain("const COMBAT_HIT_LOCATION_TABLES=");
