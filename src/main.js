@@ -65,3 +65,43 @@ window.combatHitLocationCameraHtml=function(hitLocation){
     '<div class="combat-hit-location-label">'+transparentHitEscAttr(hitLocation.label)+'</div>'+
   '</aside>';
 };
+
+/* v0.33.66 — compact attack result layout */
+window.combatHitLocationCameraHtml=function(hitLocation,fullDamage=false){
+  if(!hitLocation?.label)return "";
+  return '<aside class="combat-attack-hit-camera" aria-label="Träffkamera">'+
+    (fullDamage?'<div class="combat-hit-full-damage">FULL SKADA</div>':'')+
+    '<div class="combat-hit-figure-wrap">'+window.combatHitLocationFigureHtml(hitLocation)+'</div>'+
+    '<div class="combat-hit-location-label">'+transparentHitEscAttr(hitLocation.label)+'</div>'+
+  '</aside>';
+};
+
+window.combatAttackResultHtml=function(action){
+  if(!action||action.action_type!=="attack"||!action.result?.outcome)return "";
+  const result=action.result;
+  const outcome=result.outcome;
+  const full=result.full_damage===true;
+  const meta=window.combatOutcomeMeta(outcome);
+  const hasHit=!!result.hit_location?.label;
+  return '<div class="combat-attack-result '+transparentHitEscAttr(outcome)+(hasHit?' has-hit-camera':'')+'">'+
+    '<div class="combat-attack-result-main">'+
+      '<div class="combat-attack-result-heading outcome-only"><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+transparentHitEscAttr(meta.label)+'</b></div>'+
+      '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
+        (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
+      '</div>'+
+      window.combatHitLocationResultHtml(result.hit_location)+
+      (result.erf
+        ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
+          (result.erf.awarded>0
+            ?'<b>+'+result.erf.awarded+' ERF</b>'+(result.erf.erf_roll!=null?' · 1T3 '+result.erf.erf_roll+' + 1':'')
+            :transparentHitEscAttr(result.erf.message||'Ingen ny ERF'))+
+         '</div>'
+        :'')+
+      window.combatFumbleResultHtml(result)+
+      window.combatParryResultHtml(result)+
+      window.combatDamageResultHtml(result.damage)+
+    '</div>'+
+    window.combatHitLocationCameraHtml(result.hit_location,full)+
+  '</div>';
+};
+
