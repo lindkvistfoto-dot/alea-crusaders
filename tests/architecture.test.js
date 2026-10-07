@@ -647,12 +647,12 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combat-hit-model-image");
     expect(combat).toContain("combat-hit-model-overlay");
     expect(combat).toContain("combat-hit-zone-fill");
-    expect(combat).toContain("maskUnits=\"userSpaceOnUse\"");
     expect(combat).toContain("clipPath id=");
+    expect(combat).not.toContain("mask=\"url(#");
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
     expect(css).toContain(".combat-hit-zone-fill{");
-    expect(css).toContain("fill-opacity:.30");
+    expect(css).toContain("fill-opacity:.38");
     expect(zones).toContain("window.ALEA_HIT_BODY_ZONES=");
     expect(zones).toContain("MuscleMap");
     expect(zones).toContain("\"left_arm\"");
