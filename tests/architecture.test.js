@@ -430,9 +430,9 @@ describe("application architecture smoke checks", () => {
 
   test("weapon master and instance update bumps cache version", () => {
     const html = read("index.html");
-    expect(html).toContain("Alea Crusaders v0.33.60");
-    expect(html).toContain("app.css?v=0.33.60");
-    expect(html).toContain("legacy/app.js?v=0.33.60");
+    expect(html).toContain("Alea Crusaders v0.33.61");
+    expect(html).toContain("app.css?v=0.33.61");
+    expect(html).toContain("legacy/app.js?v=0.33.61");
   });
 
 
@@ -446,9 +446,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.60");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.60");
-    expect(html).toContain("./features/combat/runtime.js?v=0.33.60");
+    expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.61");
+    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.61");
+    expect(html).toContain("./features/combat/runtime.js?v=0.33.61");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
