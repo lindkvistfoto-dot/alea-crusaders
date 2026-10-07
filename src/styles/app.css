@@ -4114,41 +4114,11 @@ body:not(.editing) #skilltable .skill-roll-btn{
  pointer-events:none;
  overflow:visible;
 }
-.combat-hit-zone{
- fill:transparent;
- stroke:transparent;
- stroke-width:5;
- stroke-linejoin:round;
- vector-effect:non-scaling-stroke;
- transition:fill .18s ease,stroke .18s ease,filter .18s ease;
-}
-.combat-hit-zone.active{
- fill:url(#combatHitZoneFill);
- stroke:rgba(185,82,32,.68);
- stroke-width:2.5;
- filter:url(#combatHitZoneGlow);
-}
-.combat-hit-target-ring-outer,
-.combat-hit-target-ring{
- fill:none;
- vector-effect:non-scaling-stroke;
-}
-.combat-hit-target-ring-outer{
- stroke:rgba(242,150,57,.46);
- stroke-width:2;
- filter:drop-shadow(0 0 4px rgba(238,119,35,.34));
-}
-.combat-hit-target-ring{
- stroke:rgba(164,70,28,.82);
- stroke-width:2.5;
- filter:drop-shadow(0 0 3px rgba(238,119,35,.42));
-}
-.combat-hit-target-dot{
- fill:#fff4cf;
- stroke:#dc782c;
- stroke-width:2.5;
- vector-effect:non-scaling-stroke;
- filter:drop-shadow(0 0 5px rgba(238,119,35,.58));
+.combat-hit-zone-fill{
+ fill:#ee8534;
+ fill-opacity:.30;
+ mix-blend-mode:multiply;
+ filter:drop-shadow(0 0 2px rgba(196,79,28,.28));
 }
 .combat-hit-model-missing{
  position:absolute;
