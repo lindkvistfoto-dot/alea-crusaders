@@ -1002,6 +1002,157 @@ function combatPendingParryOpportunity(){
  }
  return null
 }
+
+/* Alea reaction variant: Expert antimagic shield (EG vs EG) is offered
+   immediately on a successful incoming cast and costs the defender's SR action.
+   The pending spell/result is stored, never held only in browser memory. */
+function combatAntimagicOptions(caster,ids){
+ const targets=[...new Set((ids||[]).map(String))].map(id=>combatants.find(c=>String(c.id)===id)).filter(Boolean),options=[];
+ for(const target of targets){
+  if(!target||target.side===caster.side||['dead','removed'].includes(target.status))continue;
+  for(const mage of combatants){
+   if(mage.side!==target.side||['dead','removed'].includes(mage.status)||combatCannotReact(mage)||!combatHasUnusedAction(mage))continue;
+   if(combatChosenAction(mage)?.source_data?.casting_spell===true)continue;
+   const spell=combatSpellOptions(mage).find(s=>String(s.name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim()==='ANTIMAGI');
+   if(!spell||Number(mage.current_psy)<1)continue;
+   const reach=combatSpellRangeHexes(mage,{source_data:{range_text:spell.range_text,effect_grade:1}});
+   if(combatAxialDistance(mage,target)>reach||!combatHasLineOfSight(mage,target))continue;
+   options.push({mage,target,spell,maxGrade:Math.max(1,Math.min(Number(spell.school_fv)||1,Number(mage.current_psy)||1))})
+  }
+ }
+ return options
+}
+function combatPendingAntimagic(){
+ for(let i=(combatActions||[]).length-1;i>=0;i--){
+  const action=combatActions[i];if(action.status!=='pending'||action.result?.awaiting_antimagic!==true)continue;
+  const caster=combatants.find(c=>String(c.id)===String(action.combatant_id));
+  if(!caster)return null;
+  return {action,caster,options:combatAntimagicOptions(caster,action.result.antimagic_target_ids||[])}
+ }
+ return null
+}
+async function combatDeferForAntimagic(caster,action,result,ids,kind){
+ if(!result.success||!combatAntimagicOptions(caster,ids).length)return false;
+ const next={...result,awaiting_antimagic:true,antimagic_kind:kind,antimagic_target_ids:ids.map(String)};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'pending',result:next,updated_at:new Date().toISOString()})});
+ action.status='pending';action.result=next;
+ return true
+}
+function combatAntimagicEgResistance(incoming,defending,roll){
+ const chance=Math.max(1,Math.min(19,10+Number(incoming)-Number(defending)));
+ return {target:chance,roll:Number(roll),penetrates:Number(roll)<=chance}
+}
+function combatAntimagicPromptHtml(){
+ const wait=combatPendingAntimagic();if(!wait)return '';
+ const {action,caster,options}=wait,result=action.result;
+ return '<section class="combat-mini-attack reaction combat-antimagic-reaction">'+
+  '<div class="combat-mini-title"><span>ANTIMAGI · REAKTION</span><b>'+escAttr(caster.name_snapshot)+' kastar '+escAttr(action.source_data.spell_name)+'</b></div>'+
+  '<div class="combat-mini-instruction">Lyckat kast · EG '+escAttr(result.effect_grade)+'. Reagera innan effekten verkställs. Antimagi förbrukar en handling i denna SR.</div>'+
+  '<div class="combat-mini-parry"><div class="combat-antimagic-options">'+options.map(o=>'<div class="combat-antimagic-choice">'+
+   '<b>'+escAttr(o.mage.name_snapshot)+'</b> skyddar '+escAttr(o.target.name_snapshot)+
+   ' · EG <select id="antimagic-grade-'+o.mage.id+'-'+o.target.id+'">'+
+   Array.from({length:o.maxGrade},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('')+
+   '</select> <button type="button" class="btn combat-parry-btn" onclick="combatChooseAntimagic(\''+o.mage.id+'\',\''+action.id+'\',\''+o.target.id+'\')">Kasta Antimagi</button></div>').join('')+
+   '<button type="button" class="btn combat-take-hit-btn" onclick="combatDeclineAntimagic(\''+action.id+'\')">Avstå Antimagi</button></div></section>'
+}
+async function combatFinalizeAntimagicSpell(caster,action){
+ const data=action.source_data,result={...action.result},eg=Math.max(1,Number(result.effect_grade)||1),round=Number(activeCombat.round_number)||1;
+ const bounce=result.antimagic?.reflected===true,protectedId=String(result.antimagic?.target_id||'');
+ if(result.antimagic_kind==='damage'){
+  const allocations=combatMagicTargetAllocations(action),targets=allocations.length?allocations:[{target_id:action.target_combatant_id,eg}];
+  result.target_results=[];
+  for(const allocation of targets){
+   const original=combatants.find(c=>String(c.id)===String(allocation.target_id));if(!original)throw new Error('Magimålet saknas.');
+   const victim=bounce&&String(original.id)===protectedId?caster:original;
+   const formula=combatMagicDamageFormula(data,allocation.eg);if(!formula)throw new Error('Skadeformeln saknar regelstöd.');
+   const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null);
+   result.target_results.push({target_id:victim.id,original_target_id:original.id,reflected:victim.id!==original.id,effect_grade:allocation.eg,damage})
+  }
+  result.damage=result.target_results[0]?.damage;result.hit_resolved=true
+ }else if(result.antimagic_kind==='status'){
+  const original=combatants.find(c=>String(c.id)===String(result.target_id));if(!original)throw new Error('Magimålet saknas.');
+  if(!result.resisted){
+   const victim=bounce?caster:original,def=combatEffectRegistry.find(e=>e.code===data.magic_binding?.code&&e.active);
+   if(!def)throw new Error('Statuseffekten saknas.');
+   const duration=combatSpellDurationRounds(action),defaultRound=def.default_duration_rounds;
+   const expiry=Number.isInteger(duration)&&duration>0?{expires_round:round+duration-1,expires_at:null}:defaultRound==null?combatEffectExpiry(def,round,eg):{expires_round:round+Math.max(1,Number(defaultRound))-1,expires_at:null};
+   const body={strength:eg,applied_round:round,...expiry,expiration_condition:def.expiration_condition||'duration',parameters:{},source_combatant_id:caster.id,source_action_id:action.id,updated_at:new Date().toISOString()};
+   const existing=combatActiveEffects.find(e=>e.combatant_id===victim.id&&e.effect_id===def.id&&e.status==='active');
+   if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
+   else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...body,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:victim.id,effect_id:def.id})});
+   result.effect_applied=true;result.effect_target_id=victim.id
+  }
+ }else if(result.antimagic_kind==='area'){
+  if(bounce){result.gm_resolution_required=true;result.rebound_requires_gm=true}
+  else{
+   const def=combatEffectRegistry.find(e=>e.code===data.magic_binding?.code&&e.active);if(!def)throw new Error('Områdeseffekten saknas.');
+   const duration=combatSpellDurationRounds(action),center=result.area_center;
+   await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+    combat_id:activeCombat.id,campaign_id:centralCampaignId,effect_id:def.id,source_combatant_id:caster.id,
+    center_q:Number(center.q),center_r:Number(center.r),radius:Number(result.area_radius)||0,applied_round:round,
+    expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
+    parameters:{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}
+   })});result.area_applied=true
+  }
+ }
+ result.awaiting_antimagic=false;
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result,updated_at:new Date().toISOString()})});
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',actor_id:caster.id,
+  target_id:result.antimagic?.target_id||null,event_type:'spell_after_antimagic',
+  message:caster.name_snapshot+' · '+data.spell_name+(bounce?' · Antimagi reflekterar besvärjelsen':' · effekten fullföljs')+(result.rebound_requires_gm?' · SL avgör tillbakastudsen':''),
+  details:result,player_visible:true
+ })});
+ await combatLoadEffects();await loadActiveCombat(null,{preserveSelectedTarget:true})
+}
+async function combatResolveAntimagic(actionId,mageId=null,targetId=null,eg=1){
+ if(!combatCanManage())return;
+ const opportunity=combatPendingAntimagic();if(!opportunity||String(opportunity.action.id)!==String(actionId))return;
+ const {action,caster}=opportunity,choice=mageId?opportunity.options.find(o=>String(o.mage.id)===String(mageId)&&String(o.target.id)===String(targetId)):null;
+ if(mageId&&!choice)return;
+ if(choice&&(!Number.isInteger(Number(eg))||eg<1||eg>choice.maxGrade))return;
+ const snapshot={...action.result};
+ const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.pending&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
+ if(!Array.isArray(claimed)||claimed.length!==1){await loadActiveCombat();return}
+ action.status='resolving';
+ try{
+  let antimagic={declined:true,reflected:false};
+  if(choice){
+   const {mage,spell}=choice,preflight=combatMagicCastPreflight(mage,spell,eg);
+   if(!preflight.valid)throw new Error(preflight.errors.join(' · '));
+   const old=combatChosenAction(mage),reactionId=old?.id||crypto.randomUUID();
+   const payload={phase:'reaction',action_type:'spell',slot_key:'primary',source_data:{action_key:'antimagic_reaction',label:'Antimagi',mode:'reaction',spell_name:spell.name,effect_grade:eg,reaction_to_action_id:action.id,protect_target_id:String(targetId)},target_combatant_id:String(targetId),status:'resolving',result:{},player_visible:true};
+   if(old)await dbJson('combat_actions?id=eq.'+encodeURIComponent(old.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...payload,updated_at:new Date().toISOString()})});
+   else await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({id:reactionId,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:mage.id,round_number:Number(activeCombat.round_number)||1,sequence:Math.max(0,(Number(mage.state?.initiative_rank)||1)-1),...payload,created_by:activeUser()?.id||null})});
+   const fv=Math.max(1,Number(spell.fv)-2*(eg-1)),rolled=await combatExpertRoll('Antimagi · '+mage.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
+   await combatSpendMagicPsy(mage,cost);
+   let resistance=null;
+   if(rolled.success){
+    const throwResult=await combatRollDice([{qty:1,sides:20}],'Motstånd · inkommande EG mot Antimagi EG');
+    const die=Number(throwResult?.rolls?.[0]?.value);if(!Number.isInteger(die)||die<1||die>20)throw new Error('Ogiltigt motståndsslag.');
+    resistance=combatAntimagicEgResistance(snapshot.effect_grade,eg,die)
+   }
+   antimagic={mage_id:mage.id,target_id:String(targetId),effect_grade:eg,success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,psy_cost:cost,resistance,reflected:rolled.success&&!!resistance&&!resistance.penetrates};
+   const erf=await combatAwardSpellErf(mage,{source_data:{spell_name:spell.name,spell_id:spell.rule_id}},rolled.outcome);if(erf)antimagic.erf=erf;
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(reactionId),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result:antimagic,updated_at:new Date().toISOString()})});
+   await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'reaction',actor_id:mage.id,target_id:caster.id,event_type:'antimagic',message:mage.name_snapshot+' kastar Antimagi · '+combatOutcomeLabel(rolled.outcome)+(resistance?(resistance.penetrates?' · magin går igenom':' · magin studsar tillbaka'):''),details:antimagic,player_visible:true})});
+   combatShowOutcomeOverlay(rolled.outcome,'Antimagi · T20 '+rolled.roll+' mot FV '+fv)
+  }
+  action.result={...snapshot,antimagic,awaiting_antimagic:false};
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({result:action.result,updated_at:new Date().toISOString()})});
+  await combatFinalizeAntimagicSpell(caster,action)
+ }catch(error){
+  console.error('Antimagi-reaktion',error);alert('Antimagi kunde inte slutföras: '+(error?.message||error));
+  if(!action.result?.antimagic)await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'pending',result:snapshot,updated_at:new Date().toISOString()})}).catch(console.error);
+  await loadActiveCombat()
+ }
+}
+function combatChooseAntimagic(mageId,actionId,targetId){
+ const grade=Number(document.getElementById('antimagic-grade-'+mageId+'-'+targetId)?.value)||1;
+ return combatResolveAntimagic(actionId,mageId,targetId,grade)
+}
+function combatDeclineAntimagic(actionId){return combatResolveAntimagic(actionId)}
+
 async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
  const opportunity=combatPendingParryOpportunity();
  if(!opportunity||String(opportunity.defender.id)!==String(defenderId)||String(opportunity.attack.id)!==String(attackActionId))return;
@@ -1890,6 +2041,7 @@ function combatActionChooserHtml(combatant){
  '</div>'
 }
 function combatCanUseActionMenu(combatant){
+ if(combatPendingAntimagic())return false;
  const pending=combatChosenAction(combatant);
  if(pending?.source_data?.casting_spell===true&&pending.status==='planned')return combatCanChoosePrimaryAction(combatant);
  return !!combatant&&combatCanChoosePrimaryAction(combatant)&&!combatMovementHasUsedMoreThanHalf(combatant)&&combatHasUnusedAction(combatant)
@@ -2001,7 +2153,7 @@ function combatTurnOrderIds(){
   .map(row=>String(row.id))
 }
 function combatCanEndTurn(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&(!combatIsMovementPlanning(combatant)||combatCannotMove(combatant))&&!combatPendingParryOpportunity()
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&(!combatIsMovementPlanning(combatant)||combatCannotMove(combatant))&&!combatPendingParryOpportunity()&&!combatPendingAntimagic()
 }
 async function endCombatTurn(event,combatantId){
  event?.stopPropagation?.();
@@ -3033,6 +3185,9 @@ async function combatCastStatusSpell(actor,target,action){
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
  if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ if(rolled.success&&!resisted&&await combatDeferForAntimagic(actor,action,result,[target.id],'status')){
+  await loadActiveCombat(null,{preserveSelectedTarget:true});return
+ }
  if(rolled.success&&!resisted){
   const duration=effect.default_duration_rounds;
   const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
@@ -3070,6 +3225,10 @@ async function combatCastAreaSpell(actor,action){
  if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
+  const affected=combatants.filter(row=>!['dead','removed'].includes(row.status)&&combatAxialDistance(row,center)<=radius).map(row=>row.id);
+  if(await combatDeferForAntimagic(actor,action,result,affected,'area')){
+   await loadActiveCombat(null,{preserveSelectedTarget:true});return
+  }
   const duration=combatSpellDurationRounds(action);
   await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
@@ -3100,6 +3259,7 @@ async function combatResolveTestFireball(actor,target,action){
  if(success){
   const allocations=combatMagicTargetAllocations(action);
   const targets=allocations.length?allocations:[{target_id:target.id,eg}];
+  if(await combatDeferForAntimagic(actor,action,result,targets.map(t=>t.target_id),'damage'))return;
   result.target_results=[];
   for(const allocation of targets){
    const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
@@ -3766,6 +3926,7 @@ function combatSpellCastPanelHtml(){
   (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
 }
 function combatAttackPanelHtml(){
+ const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
  const pending=combatPendingParryOpportunity();
  if(pending){
@@ -3826,7 +3987,7 @@ function combatTurnPortraitHtml(combatant){
 }
 function combatTurnActionState(combatant){
  if(!combatant)return{key:'none',label:'Ingen handling'};
- if(combatPendingParryOpportunity())return{key:'reaction',label:'Reaktion'};
+ if(combatPendingParryOpportunity()||combatPendingAntimagic())return{key:'reaction',label:'Reaktion'};
  if(combatIsMovementPlanning(combatant))return{key:'move',label:'Förflyttning'};
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
  if(def?.type==='attack'||def?.key==='attack')return{key:'attack',label:'Attack'};
