@@ -2413,23 +2413,6 @@ function combatFireballTargets(){
  }
  return out
 }
-async function combatTestFireballButton(event,combatantId){
- event?.stopPropagation?.();
- const actor=combatants.find(row=>String(row.id)===String(combatantId));if(!actor||!combatCanUseActionMenu(actor))return;
- const action=combatChosenAction(actor);
- if(action?.source_data?.test_fireball===true&&action.status==='planned'){
-  const targetId=String(combatSelectedTargetId||''),targets=combatFireballTargets();
-  if(targetId&&targets.has(targetId)){await rollCombatTestFireball(actor.id,targetId);return}
-  await combatCancelPlannedAttack(actor,action);return
- }
- await chooseCombatPrimaryAction(actor.id,'spell_cast');
- const fresh=combatChosenAction(actor)||combatActions.find(row=>String(row.combatant_id)===String(actor.id)&&row.slot_key==='primary');
- if(!fresh)return;
- const spell=(actor.attack_profile?.spells||[]).find(row=>String(row.name||'').toUpperCase().includes('ELD'));
- const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:spellName,school_value:2,spell_fv:10,effect_grade:2,damage_text:'2T6',range_text:spell?.range_text||'30 m',attack_magic:true};
- await dbJson('combat_actions?id=eq.'+encodeURIComponent(fresh.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,target_combatant_id:null,status:'planned',updated_at:new Date().toISOString()})});
- fresh.source_data=sourceData;combatSelectedTargetId=null;renderCombat()
-}
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',fv=Math.max(1,Number(action.source_data?.spell_fv)||10),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
