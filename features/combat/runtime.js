@@ -1943,7 +1943,7 @@ async function combatMagicButton(event,combatantId){
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
    if(data.magic_binding?.kind==='manual'||data.magic_binding?.kind==='heal'){
     const healing=data.magic_binding?.kind==='heal';
-    const target=healing?combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId):null;
+    const target=healing?combatHealingTarget(combatant,action,targetId):null;
     if(healing&&!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.planned&select=id',{
@@ -3164,17 +3164,25 @@ async function combatSetMagicDuration(actorId,delta){
  });
  action.source_data=sourceData;renderCombat()
 }
+function combatHealingTarget(actor,action,targetId){
+ const available=combatSpellEffectTargets(actor,action);
+ const others=available.filter(row=>String(row.id)!==String(actor.id));
+ // Nobody else within touching distance -> the spell defaults to its caster.
+ if(!others.length)return available.find(row=>String(row.id)===String(actor.id))||null;
+ return available.find(row=>String(row.id)===String(targetId||''))||null
+}
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
-  return '<div class="combat-spell-choice"><b>HELA · välj mål</b>'+
-   '<small>Beröring · välj dig själv eller en kombatant inom räckvidd på kartan, raden eller här. Tryck sedan ✦ igen.</small>'+
+  const alone=!targets.some(row=>String(row.id)!==String(actor.id));
+  return '<div class="combat-spell-choice"><b>HELA · '+(alone?'helar dig själv':'välj mål')+'</b>'+
+   '<small>'+(alone?'Ingen annan inom beröringsavstånd – '+escAttr(actor.name_snapshot)+' blir automatiskt mål. Tryck ✦ för att kasta.':'Beröring · välj dig själv eller en kombatant inom räckvidd på kartan, raden eller här. Tryck sedan ✦ igen.')+'</small>'+
    targets.map(target=>'<button type="button" class="combat-weapon-choice-btn'+
     (String(combatSelectedTargetId)===String(target.id)?' active':'')+
     '" onclick="selectCombatTarget(\''+target.id+'\')">'+escAttr(target.name_snapshot)+
     ' · KP '+escAttr(target.current_kp??'—')+'/'+escAttr(target.max_kp??'—')+'</button>').join('')+
-   '<small>SL avgör antal återställda KP enligt regelboken. KP ändras inte automatiskt.</small></div>'
+   '<small>Vid lyckat slag anger SL läkningen i resultatkortet. KP före och efter visas där.</small></div>'
  }
  if(action.source_data.magic_binding?.kind==='manual'){
   const ritual=action.source_data.magic_binding.ritual===true;
@@ -3267,11 +3275,12 @@ async function combatCastManualSpell(actor,action,target=null){
   spell_name:spellName,manual_effect:true,effect_applied:false,
   target_id:target?.id||null,target_name:target?.name_snapshot||null,
   healing_target_id:healing?target.id:null,healing_applied:false,
+  healing_pending:healing&&rolled.success,healing_amount:null,healing_restored:null,
   gm_resolution_required:rolled.success,ritual:data.magic_binding.ritual===true};
  if(erf)result.erf=erf;
  if(healing&&rolled.success){
   result.barrier=await combatResolveBeskyddarePassage(actor,target,eg);
-  if(result.barrier.blocked){result.blocked_by_beskyddare=true;result.gm_resolution_required=false}
+  if(result.barrier.blocked){result.blocked_by_beskyddare=true;result.gm_resolution_required=false;result.healing_pending=false}
  }
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  const round=Number(activeCombat.round_number)||1;
@@ -3281,7 +3290,7 @@ async function combatCastManualSpell(actor,action,target=null){
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
   actor_id:actor.id,target_id:target?.id||null,event_type:healing?'spell_heal':'spell_manual',
   message:actor.name_snapshot+' kastar '+spellName+(target?' på '+target.name_snapshot:'')+' · '+combatOutcomeLabel(rolled.outcome)+
-   (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':' · SL avgör effekten'):' · ingen automatisk effekt'),
+   (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':healing?' · inväntar läkning i resultatkortet':' · SL avgör effekten'):' · ingen automatisk effekt'),
   details:result,player_visible:true
  })});
  await loadActiveCombat(null,{preserveSelectedTarget:true})
