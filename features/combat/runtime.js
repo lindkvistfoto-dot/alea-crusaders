@@ -3374,23 +3374,72 @@ function combatantEffectsHtml(combatant){
  const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1)));
  return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>'<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+(combatCanManage()?'<button type="button" title="Ta bort effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\')">×</button>':'')+'</span>').join('')+'</div>':''
 }
+const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','custom'];
+const COMBAT_EFFECT_TARGETS=['combatant','hex','area','item','self'];
+const COMBAT_EFFECT_DURATIONS=['round','minute','hour','instant','permanent'];
+const COMBAT_EFFECT_ENDINGS=['duration','manual','woken','cured','dispelled','concentration','special'];
+function combatEffectSelect(id,values,selected){
+ return '<select id="'+id+'">'+values.map(v=>'<option value="'+v+'" '+(v===selected?'selected':'')+'>'+v+'</option>').join('')+'</select>'
+}
 function combatEffectsAdminHtml(){
  if(!combatCanManage())return '';
- return '<details class="combat-effects-admin"><summary>Effekter · register och tilldelning</summary>'+
- '<div><b>Skapa effekt</b> <input id="combatEffectName" placeholder="Namn" maxlength="100"><select id="combatEffectPolarity"><option value="positive">Positiv</option><option value="negative">Negativ</option><option value="neutral">Neutral</option></select><input id="combatEffectDuration" type="number" min="0" placeholder="SR (tomt = tills vidare)"><button type="button" onclick="combatCreateEffect()">Lägg till</button></div>'+
- '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><select id="combatEffectAttribute" title="Egenskap">'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'">'+a+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Effektgrad"><input id="combatEffectPointsPerEg" type="number" min="1" value="1" title="Egenskapspoäng per EG"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
- '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+') '+(e.active?'':'[inaktiv]')+' <button type="button" onclick="combatToggleEffect(\''+e.id+'\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
+ const edit=combatEffectRegistry.find(e=>e.id===combatEffectEditingId);
+ return '<details class="combat-effects-admin" open><summary>Effekter · register och tilldelning</summary>'+
+ '<div><b>Skapa effekt</b> <input id="combatEffectName" placeholder="Namn" maxlength="100">'+
+ combatEffectSelect('combatEffectPolarity',['positive','negative','neutral'],'neutral')+
+ combatEffectSelect('combatEffectCategory',['magic','condition','poison','environment','combat','other'],'magic')+
+ combatEffectSelect('combatEffectType',COMBAT_EFFECT_TYPES,'custom')+
+ combatEffectSelect('combatEffectTarget',COMBAT_EFFECT_TARGETS,'combatant')+
+ combatEffectSelect('combatEffectUnit',COMBAT_EFFECT_DURATIONS,'round')+
+ '<input id="combatEffectDuration" type="number" min="0" placeholder="Varaktighet">'+
+ combatEffectSelect('combatEffectEnding',COMBAT_EFFECT_ENDINGS,'duration')+
+ '<input id="combatEffectDescription" placeholder="Beskrivning">'+
+ '<button type="button" onclick="combatCreateEffect()">Lägg till</button></div>'+
+ (edit?'<div><b>Redigera '+escAttr(edit.name)+'</b> <input id="combatEditName" value="'+escAttr(edit.name)+'">'+
+ '<input id="combatEditDescription" value="'+escAttr(edit.description||'')+'" placeholder="Beskrivning">'+
+ combatEffectSelect('combatEditPolarity',['positive','negative','neutral'],edit.polarity)+
+ combatEffectSelect('combatEditCategory',['magic','condition','poison','environment','combat','other'],edit.category)+
+ combatEffectSelect('combatEditType',COMBAT_EFFECT_TYPES,edit.modifiers?.type||'custom')+
+ combatEffectSelect('combatEditTarget',COMBAT_EFFECT_TARGETS,edit.target_type||'combatant')+
+ combatEffectSelect('combatEditUnit',COMBAT_EFFECT_DURATIONS,edit.duration_unit||'round')+
+ '<input id="combatEditDuration" type="number" min="0" placeholder="Varaktighet" value="'+(edit.default_duration_rounds??'')+'">'+
+ combatEffectSelect('combatEditEnding',COMBAT_EFFECT_ENDINGS,edit.expiration_condition||'duration')+
+ '<label>Parametrar (JSON)<textarea id="combatEditParameters" rows="2">'+escAttr(JSON.stringify(edit.parameter_schema||{}))+'</textarea></label>'+
+ '<button type="button" onclick="combatSaveEffect()">Spara ändringar</button><button type="button" onclick="combatEffectEditingId=null;renderCombat()">Stäng</button></div>':'')+
+ '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active&&(!e.target_type||['combatant','self'].includes(e.target_type))).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><select id="combatEffectAttribute" title="Egenskap">'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'">'+a+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Effektgrad"><input id="combatEffectPointsPerEg" type="number" min="1" value="1" title="Egenskapspoäng per EG"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
+ '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+', '+escAttr(e.target_type||'combatant')+') <button type="button" onclick="combatEffectEditingId=\\''+e.id+'\\';renderCombat()">Redigera</button> <button type="button" onclick="combatToggleEffect(\\''+e.id+'\\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
+}
+let combatEffectEditingId=null;
+function combatEffectFormData(prefix){
+ const val=id=>$(prefix+id)?.value;
+ const raw=val('Duration'),duration=raw===''?null:Number(raw);
+ if(duration!==null&&(!Number.isInteger(duration)||duration<0))throw new Error('Ogiltig varaktighet');
+ const type=val('Type');
+ const params=prefix==='combatEdit'?JSON.parse(val('Parameters')||'{}'):{};
+ if(!params||Array.isArray(params)||typeof params!=='object')throw new Error('Parametrar måste vara ett JSON-objekt');
+ return {name:String(val('Name')||'').trim(),description:String(val('Description')||'').trim(),
+ polarity:val('Polarity'),category:val('Category'),target_type:val('Target'),
+ duration_unit:val('Unit'),default_duration_rounds:duration,expiration_condition:val('Ending'),
+ modifiers:{...(prefix==='combatEdit'?(combatEffectRegistry.find(e=>e.id===combatEffectEditingId)?.modifiers||{}):{}),type},
+ parameter_schema:params}
 }
 async function combatCreateEffect(){
  if(!combatCanManage())return;
- const name=String($('combatEffectName')?.value||'').trim(),polarity=$('combatEffectPolarity')?.value||'neutral',raw=$('combatEffectDuration')?.value;
- if(!name)return alert('Ange effektnamn.');
- const duration=raw===''?null:Number(raw);
- if(duration!==null&&(!Number.isInteger(duration)||duration<0))return alert('Ogiltig varaktighet.');
  try{
-  await dbJson('rule_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({code:'custom_'+crypto.randomUUID().replaceAll('-',''),name,polarity,default_duration_rounds:duration})});
+  const data=combatEffectFormData('combatEffect');
+  if(!data.name)throw new Error('Ange effektnamn');
+  await dbJson('rule_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...data,code:'custom_'+crypto.randomUUID().replaceAll('-','')})});
   await combatLoadEffects();renderCombat()
  }catch(e){alert('Kunde inte skapa effekt: '+e.message)}
+}
+async function combatSaveEffect(){
+ if(!combatCanManage()||!combatEffectEditingId)return;
+ try{
+  const data=combatEffectFormData('combatEdit');
+  if(!data.name)throw new Error('Ange effektnamn');
+  await dbJson('rule_effects?id=eq.'+encodeURIComponent(combatEffectEditingId),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...data,updated_at:new Date().toISOString()})});
+  await combatLoadEffects();renderCombat()
+ }catch(e){alert('Kunde inte spara effekt: '+e.message)}
 }
 async function combatToggleEffect(id,active){
  if(!combatCanManage())return;
