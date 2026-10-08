@@ -6099,3 +6099,14 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-npc-edit-fields label:last-child{grid-column:span 2}
  .combat-npc-edit-footer .combat-npc-edit-save{width:100%}
 }
+
+/* v0.34.76 HELA: visible healing outcome, readable also on narrow mobile screens */
+.combat-spell-heal-result{margin-top:10px;padding:12px;border:1px solid rgba(104,177,141,.7);border-radius:9px;background:rgba(18,48,37,.55);display:flex;flex-direction:column;gap:8px;color:#f5eedc}
+.combat-spell-heal-result>b{font-size:15px;color:#ddf8df}
+.combat-spell-heal-result>span{font-size:14px;line-height:1.5;color:#f6e8c9}
+.combat-spell-heal-result .combat-heal-total{font-size:clamp(21px,5vw,27px);font-weight:800;line-height:1.2;color:#8df3b0}
+.combat-spell-heal-result label{display:flex;flex-direction:column;gap:7px;font-weight:700;font-size:14px}
+.combat-spell-heal-result input{min-height:42px;max-width:175px;width:100%;padding:8px 10px;border:1px solid #93cda8;border-radius:7px;background:#171c17;color:#fff5df;font-size:17px}
+.combat-spell-heal-result button{align-self:flex-start;min-height:43px;border:1px solid #9ed9b1;border-radius:8px;padding:9px 17px;background:#23694a;color:#f6fff3;font-weight:800;font-size:14px;cursor:pointer}
+.combat-spell-heal-result button:disabled{opacity:.5;cursor:wait}
+@media(max-width:540px){.combat-spell-heal-result{padding:10px}.combat-spell-heal-result button{width:100%}}
