@@ -1344,4 +1344,14 @@ describe("application architecture smoke checks", () => {
   });
 
 
+  test("combat exposes a dedicated attack-magic action slice", () => {
+    const runtime = read("features/combat/runtime.js");
+    expect(runtime).toContain("function combatAttackSpellOptions");
+    expect(runtime).toContain("function combatMagicButton");
+    expect(runtime).toContain("function chooseCombatAttackSpell");
+    expect(runtime).toContain("combatRowMagicMenuHtml");
+    expect(runtime).toContain("attack_magic:true");
+    for (const spell of ["BLIXT (F, K)","ENERGISTRÅLE (F)","ELD (F)","FROST (F)"]) expect(runtime).toContain(spell);
+  });
+
 });
