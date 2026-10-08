@@ -2139,7 +2139,7 @@ function combatFlightCapabilities(combatant){
 function combatIsFlying(combatant){return combatFlightCapabilities(combatant).flying}
 function combatTerrainIsWall(cell){
  // Explicit wall markers are stronger than either terrain or sight mode.
- return /(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(cell?.notes||''))
+ return /(?:^|[\s,;|])(?:wall|vägg|mur)(?:$|[\s,;|])/i.test(String(cell?.notes||''))
 }
 function combatIgnoresSightObstacle(actor,cell){
  if(!actor||!cell)return false;

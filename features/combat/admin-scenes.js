@@ -522,7 +522,7 @@ function eventCombatHexPolygon(x,y,size){
 function eventCombatTerrainTitle(h){
  let move=h?.movement_mode==='difficult'?'Svår terräng':h?.movement_mode==='blocked'?'Blockerad rörelse':'Fri rörelse';
  let sight=h?.sight_mode==='obscuring'?'Skymmande sikt':h?.sight_mode==='blocked'?'Siktblockerande':'Fri sikt';
- return (/(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(h?.notes||''))?'Vägg / mur · ':'')+move+' · '+sight
+ return (/(?:^|[\s,;|])(?:wall|vägg|mur)(?:$|[\s,;|])/i.test(String(h?.notes||''))?'Vägg / mur · ':'')+move+' · '+sight
 }
 function renderEventCombatHexCanvas(){
  let st=eventCombatEditorState,el=$('eventCombatCanvas');if(!st||!el)return;
@@ -540,7 +540,7 @@ function renderEventCombatHexCanvas(){
   if(h?.movement_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecMoveBlocked)"/>';
   if(h?.sight_mode==='obscuring')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecObscuring)"/>';
   if(h?.sight_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay ec-sight-blocked" points="'+pts+'"/>';
-  if(/(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(h?.notes||'')))overlays+='<text x="'+c.x+'" y="'+(c.y+g.size*.15)+'" text-anchor="middle" font-size="'+(g.size*.8)+'" fill="#f7e3b3" stroke="#242026" stroke-width="1" paint-order="stroke">▥</text>';
+  if(/(?:^|[\s,;|])(?:wall|vägg|mur)(?:$|[\s,;|])/i.test(String(h?.notes||'')))overlays+='<text x="'+c.x+'" y="'+(c.y+g.size*.15)+'" text-anchor="middle" font-size="'+(g.size*.8)+'" fill="#f7e3b3" stroke="#242026" stroke-width="1" paint-order="stroke">▥</text>';
   return overlays+'<polygon class="ec-hex'+(sel?' selected':'')+'" data-hex="'+c.key+'" points="'+pts+'"><title>Hex '+c.key+' · '+eventCombatTerrainTitle(h)+'</title></polygon>'
  }).join('');
  let tokenSize=g.size*.92,tokenPts=eventCombatHexPolygon(0,0,tokenSize),tokenDefs='',tokens=(st.combatants||[]).map(c=>{
