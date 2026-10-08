@@ -3295,6 +3295,60 @@ async function combatCastManualSpell(actor,action,target=null){
  })});
  await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
+// SL applies a verified amount for HELA in the current combat. The Expert
+// spell registry has no numeric healing formula, so no dice are invented here.
+async function combatApplySpellHealing(actionId){
+ if(!combatCanManage()||!activeCombat)return;
+ const action=combatActions.find(row=>String(row.id)===String(actionId)),result=action?.result;
+ if(!action||action.status!=='resolved'||!result?.healing_target_id||result.success!==true||
+    result.blocked_by_beskyddare||result.healing_applied===true||result.healing_pending!==true)return;
+ const target=combatants.find(row=>String(row.id)===String(result.healing_target_id));
+ if(!target){alert('HELA-målet finns inte längre i striden.');return}
+ const input=document.getElementById('combatHealAmount-'+action.id),raw=String(input?.value??'').trim(),amount=Number(raw);
+ if(!/^\d+$/.test(raw)||!Number.isSafeInteger(amount)||amount<0||amount>9999){
+  alert('Ange ett heltal mellan 0 och 9999 för läkningens KP.');return
+ }
+ const before=Number(target.current_kp),max=Number(target.max_kp);
+ if(!Number.isSafeInteger(before)||!Number.isSafeInteger(max)||max<1){
+  alert('Målet saknar giltiga KP-värden. Kontrollera KP i kombatantens detaljruta.');return
+ }
+ const restored=Math.max(0,Math.min(amount,max-before)),after=before+restored;
+ const button=document.getElementById('combatHealApply-'+action.id);
+ if(button?.disabled)return;
+ if(button)button.disabled=true;
+ try{
+  if(restored>0){
+   const rows=await dbJson('combatants?id=eq.'+encodeURIComponent(target.id)+
+    '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+    '&current_kp=eq.'+encodeURIComponent(before)+'&select=id,current_kp,status',{
+    method:'PATCH',headers:{'Prefer':'return=representation'},
+    body:JSON.stringify({current_kp:after,status:target.status==='dead'?'active':target.status,updated_at:new Date().toISOString()})
+   });
+   if(!Array.isArray(rows)||rows.length!==1)throw Error('Målets KP har ändrats under tiden. Ladda om striden.');
+   target.current_kp=Number(rows[0].current_kp);target.status=rows[0].status
+  }
+  const next={...result,healing_pending:false,healing_applied:true,effect_applied:true,
+   manual_effect:false,gm_resolution_required:false,
+   healing_amount:amount,healing_restored:restored,kp_before:before,kp_after:after,kp_max:max};
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+
+   '&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({result:next,updated_at:new Date().toISOString()})
+  });
+  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+   phase:'magic',actor_id:action.combatant_id,target_id:target.id,event_type:'spell_healing_applied',
+   message:'HELA · '+target.name_snapshot+' återfår '+restored+' KP ('+before+' → '+after+' / '+max+')',
+   details:{action_id:action.id,healing_amount:amount,healing_restored:restored,kp_before:before,kp_after:after,kp_max:max},
+   player_visible:true
+  })});
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){
+  alert('Kunde inte tillämpa läkningen: '+(error?.message||error));
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }finally{if(button)button.disabled=false}
+}
+
 async function combatCastStatusSpell(actor,target,action){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
  const spellName=combatSupportedStatusSpell(action),eg=Math.max(1,Number(action.source_data?.effect_grade)||1);
@@ -4195,6 +4249,8 @@ function combatSpellResultHtml(action){
  else if(result.blocked_target_ids?.length)note='Beskyddare stoppade magin mot vissa mål. Övriga mål påverkas normalt.';
  else if(!success)note='Besvärjelsen misslyckades. Ingen magisk effekt tilldelas.';
  else if(result.resisted)note='Besvärjelsen lyckades, men målet stod emot effekten.';
+ else if(result.healing_applied&&result.healing_target_id)note='HELA lyckades. Resultatet av läkningen visas nedan.';
+ else if(result.healing_pending&&result.healing_target_id)note='HELA lyckades. SL anger antalet läkande KP nedan.';
  else if(result.gm_resolution_required||kind==='manual')note='Besvärjelsen lyckades. SL avgör effekten enligt regeltexten; ingen effekt tilldelas automatiskt i striden.';
  else if(result.effect_applied)note='Besvärjelsen lyckades och effekten har tilldelats målet.';
  else if(result.area_applied)note='Besvärjelsen lyckades och områdeseffekten har skapats.';
@@ -4209,7 +4265,14 @@ function combatSpellResultHtml(action){
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
-   (result.healing_target_id?'<div class="combat-spell-rule-note"><b>HELA · mål:</b> '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+' · KP bestäms av SL</div>':'')+
+   (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA · '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+'</b>'+
+    (result.healing_applied?'<div class="combat-heal-total">+'+escAttr(result.healing_restored??0)+' KP återställda</div>'+
+      '<span>Läkningsvärde '+escAttr(result.healing_amount??'—')+' KP · '+escAttr(result.kp_before??'—')+' → '+escAttr(result.kp_after??'—')+' / '+escAttr(result.kp_max??'—')+' KP</span>':
+     result.healing_pending&&combatCanManage()?'<label>Återställ KP (SL) <input id="combatHealAmount-'+escAttr(action.id)+'" type="number" inputmode="numeric" min="0" max="9999" step="1" value="0"></label>'+
+       '<button id="combatHealApply-'+escAttr(action.id)+'" type="button" onclick="combatApplySpellHealing(\''+escAttr(action.id)+'\')">Tillämpa läkning</button>':
+     result.healing_pending?'<span>Väntar på att SL anger antal läkande KP.</span>':
+     !success?'<span>Ingen läkning – kastet misslyckades.</span>':
+     '<span>Ingen läkning – besvärjelsen stoppades.</span>')+'</div>':'')+
    (result.barrier?.checks?.length?'<div class="combat-spell-rule-note">Beskyddare: '+result.barrier.checks.map(c=>'EG '+c.incoming_eg+' mot '+c.barrier_eg+' · T20 '+c.roll+' / '+c.resistance.target+(c.blocked?' · stoppad':' · passerar')).join(' · ')+'</div>':'')+
    (result.barrier_checks?.length?'<div class="combat-spell-rule-note">Beskyddare per mål: '+result.barrier_checks.map(c=>escAttr(combatants.find(t=>String(t.id)===String(c.target_id))?.name_snapshot||c.target_id)+' · '+c.checks.map(v=>'T20 '+v.roll+' / '+v.resistance.target+(v.blocked?' stoppad':' passerar')).join(', ')).join(' · ')+'</div>':'')+
    (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
