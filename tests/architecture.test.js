@@ -729,7 +729,7 @@ describe("application architecture smoke checks", () => {
     expect(notices).toContain("Creative Commons Attribution 3.0 Unported");
     expect(notices).toContain("Creator: Lorc");
     expect(combat).toContain("Förflyttning");
-    expect(combat).toContain("förbrukat / max");
+    expect(combat).toContain("combat-turn-vitals");
     expect(combat).toContain("combatAttackWeaponOptions(combatant,'auto').find");
     expect(combat).toContain("combatAttackPanelHtml()");
     expect(combat).toContain("async function combatResolveDamage");
@@ -1343,19 +1343,13 @@ describe("application architecture smoke checks", () => {
   });
 
 
-  test("combat exposes a dedicated attack-magic action slice", () => {
+  test("combat magic uses preparation and casting from one button", () => {
     const runtime = read("features/combat/runtime.js");
-    expect(runtime).toContain("function combatAttackSpellOptions");
-    expect(runtime).toContain("function combatMagicButton");
-    expect(runtime).toContain("function chooseCombatAttackSpell");
-    expect(runtime).toContain("combatRowMagicMenuHtml");
-    expect(runtime).toContain("attack_magic:true");
-    for (const spell of ["BLIXT (F, K)","ENERGISTRÅLE (F)","ELD (F)","FROST (F)"]) expect(runtime).toContain(spell);
-  });
-
-  test("temporary fireball button exercises the normal combat outcome flow", () => {
-    const runtime = read("features/combat/runtime.js");
-    for (const marker of ["combatTestFireballButton","combatFireballTargets","rollCombatTestFireball","combatResolveTestFireball","combatExpertRoll","combatResolveDamage","TEST · ELDKLOT"]) expect(runtime).toContain(marker);
+    for (const marker of ["function combatSpellOptions","function combatMagicButton","function chooseCombatPreparedSpell","function stepCombatSpellEffect","combatRowMagicMenuHtml","spell_prepared:true","casting_spell:true","combatSpellCastPanelHtml"]) expect(runtime).toContain(marker);
+    expect(runtime).not.toContain("combatTestFireballButton(event");
+    expect(runtime).toContain("combatFireballTargets");
+    expect(runtime).toContain("combatExpertRoll");
+    expect(runtime).toContain("combatResolveDamage");
   });
 
 });
