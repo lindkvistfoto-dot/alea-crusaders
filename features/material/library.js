@@ -116,3 +116,143 @@ async function bilboLoadThumbnails(){
  }
  await Promise.all([worker(),worker(),worker()])
 }
+
+function bilboDetailHtml(row){
+ const categories=bilboStorage()?.categories||{};
+ return '<div class="bilbo-detail-heading"><div><h3>'+bilboEscape(row.title)+'</h3><small>'+(row.archived_at?'Arkiverad':'Privat material')+
+  ' · '+bilboEscape(row.mime_type)+'</small></div><button type="button" class="smallbtn" onclick="bilboCloseDetail()">Stäng</button></div>'+
+  '<div id="bilboFullPreview" class="bilbo-full-preview" aria-live="polite"><span>Laddar förhandsvisning…</span></div>'+
+  '<form class="bilbo-metadata" id="bilboMetadata" onsubmit="bilboSaveMetadata(event)">'+
+  '<label>Titel<input name="title" maxlength="160" required value="'+bilboEscape(row.title)+'"></label>'+
+  '<label>Kategori<select name="category">'+Object.entries(categories).map(([id,label])=>
+   '<option value="'+id+'"'+(row.category===id?' selected':'')+'>'+bilboEscape(label)+'</option>').join('')+'</select></label>'+
+  '<label>Beskrivning som kan visas för spelare<textarea name="description" maxlength="2000" rows="4">'+
+   bilboEscape(row.description||'')+'</textarea></label>'+
+  '<button type="submit" class="btn primary" id="bilboSaveButton">Spara uppgifter</button></form>'+
+  '<div class="bilbo-note"><label>Privata SL-anteckningar<textarea id="bilboGmNote" maxlength="8000" rows="3" placeholder="Endast spelledaren kan läsa detta…"></textarea></label>'+
+  '<button type="button" class="smallbtn" id="bilboNoteSave" onclick="bilboSaveNote()">Spara SL-anteckning</button></div>'+
+  '<div class="bilbo-detail-actions"><button type="button" class="smallbtn" id="bilboArchiveButton" onclick="bilboToggleArchive()">'+
+   (row.archived_at?'Återställ ur arkiv':'Arkivera material')+'</button></div>'+
+  '<p class="bilbo-detail-info">'+(row.file_size_bytes?Math.ceil(row.file_size_bytes/1024)+' kB · ':'')+
+   'Uppladdad: '+bilboEscape((row.created_at||'').slice(0,10))+'<br>Fil: '+bilboEscape(row.original_filename||'—')+'</p>'+
+  '<p class="bilbo-detail-info">Arkivering döljer materialet ur det aktiva biblioteket utan att radera filen.</p>'
+}
+function bilboCloseDetail(){
+ bilboState.selected=null;bilboState.note='';
+ if(bilboState.detailUrl){URL.revokeObjectURL(bilboState.detailUrl);bilboState.detailUrl=''}
+ const el=document.getElementById('bilboDetails');
+ if(el)el.innerHTML='<div class="bilbo-empty">Välj material för att förhandsvisa och redigera.</div>';
+ document.querySelectorAll('.bilbo-card').forEach(el=>el.classList.remove('is-selected'))
+}
+async function bilboSelect(id){
+ if(!bilboAllowed())return;
+ const row=bilboState.rows.find(m=>m.id===id);if(!row)return;
+ bilboCloseDetail();
+ bilboState.selected=row.id;
+ document.querySelectorAll('.bilbo-card').forEach(el=>{
+  const selected=el.querySelector('[data-bilbo-thumb="'+id+'"]');
+  el.classList.toggle('is-selected',Boolean(selected))
+ });
+ const box=document.getElementById('bilboDetails');
+ if(box)box.innerHTML=bilboDetailHtml(row);
+ const generation=++bilboState.mediaSeq;
+ // Do not invalidate the thumbnail URLs when opening details.
+ await Promise.allSettled([bilboShowFullPreview(row,generation),bilboLoadNote(row,generation)])
+}
+async function bilboShowFullPreview(row,generation){
+ const box=document.getElementById('bilboFullPreview');if(!box)return;
+ try{
+  const blob=await bilboFetchBlob(row,false);
+  if(generation!==bilboState.mediaSeq||bilboState.selected!==row.id)return;
+  const url=URL.createObjectURL(blob);
+  if(bilboState.detailUrl)URL.revokeObjectURL(bilboState.detailUrl);
+  bilboState.detailUrl=url;box.replaceChildren();
+  if(row.asset_kind==='image'){
+   const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+   link.title='Öppna bilden i större format';
+   const image=document.createElement('img');image.alt=row.title;image.src=url;link.append(image);box.append(link)
+  }else{
+   const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+   link.textContent='Öppna '+(row.asset_kind==='document'?'PDF-dokumentet':'textfilen');
+   box.append(link)
+  }
+ }catch(error){
+  if(generation===bilboState.mediaSeq&&bilboState.selected===row.id)box.textContent='Förhandsvisningen kunde inte laddas: '+error.message
+ }
+}
+async function bilboLoadNote(row,generation){
+ try{
+  const results=await dbJson('campaign_material_gm_notes?campaign_id=eq.'+encodeURIComponent(row.campaign_id)+
+    '&material_id=eq.'+encodeURIComponent(row.id)+'&select=notes&limit=1');
+  if(generation!==bilboState.mediaSeq||bilboState.selected!==row.id)return;
+  bilboState.note=results?.[0]?.notes||'';
+  const input=document.getElementById('bilboGmNote');if(input)input.value=bilboState.note
+ }catch(error){if(bilboState.selected===row.id)bilboNotice('Kunde inte läsa SL-anteckningar: '+error.message,true)}
+}
+async function bilboSaveMetadata(event){
+ event?.preventDefault?.();
+ if(!bilboAllowed()||bilboState.busy)return;
+ const row=bilboSelected(),form=document.getElementById('bilboMetadata');
+ if(!row||!form||row.campaign_id!==bilboCampaign())return;
+ const title=String(form.elements.namedItem('title')?.value||'').trim();
+ const category=String(form.elements.namedItem('category')?.value||'');
+ const description=String(form.elements.namedItem('description')?.value||'');
+ if(title.length<1||title.length>160||description.length>2000||!Object.hasOwn(bilboStorage()?.categories||{},category)){
+  bilboNotice('Kontrollera titel, beskrivning och kategori.',true);return
+ }
+ const button=document.getElementById('bilboSaveButton');if(button)button.disabled=true;
+ bilboState.busy=true;
+ try{
+  const url='campaign_materials?id=eq.'+encodeURIComponent(row.id)+
+   '&campaign_id=eq.'+encodeURIComponent(row.campaign_id)+
+   '&updated_at=eq.'+encodeURIComponent(row.updated_at)+'&select=*';
+  const update=await dbJson(url,{method:'PATCH',headers:{Prefer:'return=representation'},
+   body:JSON.stringify({title,category,description,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(update)||update.length!==1)throw Error('Materialet har ändrats av någon annan. Läs om sidan.');
+  const index=bilboState.rows.findIndex(x=>x.id===row.id);
+  if(index>=0)bilboState.rows[index]={...bilboState.rows[index],...update[0]};
+  const cards=document.getElementById('bilboGrid');
+  if(cards)cards.innerHTML=bilboState.rows.map(bilboCardHtml).join('');
+  bilboLoadThumbnails();
+  const details=document.getElementById('bilboDetails');
+  if(details){const heading=details.querySelector('.bilbo-detail-heading h3');if(heading)heading.textContent=title}
+  bilboNotice('Uppgifter sparade för '+title+'.');
+ }catch(error){bilboNotice('Kunde inte spara: '+error.message,true)}
+ finally{bilboState.busy=false;if(button)button.disabled=false}
+}
+async function bilboSaveNote(){
+ if(!bilboAllowed()||bilboState.busy)return;
+ const row=bilboSelected(),input=document.getElementById('bilboGmNote'),button=document.getElementById('bilboNoteSave');
+ if(!row||!input)return;
+ const notes=String(input.value||'');
+ if(notes.length>8000){bilboNotice('SL-anteckningen får ha högst 8000 tecken.',true);return}
+ if(button)button.disabled=true;bilboState.busy=true;
+ try{
+  await dbJson('campaign_material_gm_notes?on_conflict=material_id',{
+   method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+   body:JSON.stringify({material_id:row.id,campaign_id:row.campaign_id,notes,updated_at:new Date().toISOString()})
+  });
+  bilboState.note=notes;bilboNotice('Privat SL-anteckning sparad.')
+ }catch(error){bilboNotice('Kunde inte spara SL-anteckningen: '+error.message,true)}
+ finally{bilboState.busy=false;if(button)button.disabled=false}
+}
+async function bilboToggleArchive(){
+ if(!bilboAllowed()||bilboState.busy)return;
+ const row=bilboSelected();
+ if(!row||row.campaign_id!==bilboCampaign())return;
+ const restore=Boolean(row.archived_at);
+ if(!window.confirm(restore?'Återställa '+row.title+' till det aktiva biblioteket?':'Arkivera '+row.title+'? Filen raderas inte.'))return;
+ bilboState.busy=true;
+ const button=document.getElementById('bilboArchiveButton');if(button)button.disabled=true;
+ try{
+  const url='campaign_materials?id=eq.'+encodeURIComponent(row.id)+
+   '&campaign_id=eq.'+encodeURIComponent(row.campaign_id)+
+   '&updated_at=eq.'+encodeURIComponent(row.updated_at)+'&select=id';
+  const result=await dbJson(url,{method:'PATCH',headers:{Prefer:'return=representation'},
+   body:JSON.stringify({archived_at:restore?null:new Date().toISOString(),updated_at:new Date().toISOString()})});
+  if(!Array.isArray(result)||result.length!==1)throw Error('Materialet har ändrats. Läs om biblioteket.');
+  bilboNotice(restore?'Materialet är återställt.':'Materialet är arkiverat, filen finns kvar.');
+  await bilboLoadPage()
+ }catch(error){bilboNotice('Det gick inte att ändra arkivstatus: '+error.message,true)}
+ finally{bilboState.busy=false;if(button)button.disabled=false}
+}
