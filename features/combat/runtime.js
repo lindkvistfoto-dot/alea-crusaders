@@ -2598,7 +2598,7 @@ function combatMagicTargetChooserHtml(actor,action){
 }
 function combatSupportedStatusSpell(action){
  const name=String(action?.source_data?.spell_name||'').trim().toUpperCase();
- return name==='ÖKA'||name==='MINSKA'||name==='FLYGA'?name:null
+ return name==='FLYGA'?name:null
 }
 function combatSpellEffectTargets(actor,action){
  const range=String(action?.source_data?.range_text||'').toLowerCase();
