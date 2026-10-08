@@ -61,6 +61,6 @@ describe('Antimagi som reaktion',()=>{
   expect(source).toContain('!combatPendingParryOpportunity()&&!combatPendingAntimagic()');
   expect(source).toContain("await combatDeferForAntimagic(actor,action,result,[target.id],'status')");
   expect(source).toContain("await combatDeferForAntimagic(actor,action,result,affected,'area')");
-  expect(source).toContain("await combatDeferForAntimagic(actor,action,result,targets.map(t=>t.target_id),'damage')");
+  expect(source).toContain("await combatDeferForAntimagic(actor,action,result,accepted.map(t=>t.target_id),'damage')");
  });
 });
