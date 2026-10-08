@@ -114,7 +114,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatEffectAttributeDelta(combatant,attribute)");
     expect(combat).toContain("def.modifiers?.type!=='attribute_delta'");
     expect(combat).toContain("type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}");
-    expect(combat).toContain("combatEffectAttributeHtml(c)+");
+    expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttributeHtml(c)");
   });
 
   test("combat effect registry persists and renders status effects", () => {
