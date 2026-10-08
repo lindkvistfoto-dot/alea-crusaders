@@ -2477,6 +2477,28 @@ function combatFireballTargets(){
  }
  return out
 }
+function combatMagicAreaCells(center,radius){
+ const r=Math.max(0,Math.floor(Number(radius)||0));
+ return combatRuntimeHexCells().filter(cell=>combatAxialDistance(center,cell)<=r)
+}
+function combatMagicAreaCombatants(center,radius){
+ const affected=new Set(combatMagicAreaCells(center,radius).map(cell=>cell.key));
+ return combatants.filter(row=>!['dead','removed'].includes(row.status)&&affected.has(Number(row.q)+','+Number(row.r)))
+}
+async function combatSetMagicAreaCenter(actorId,q,r,radius=0){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||!action||action.status!=='planned'||!action.source_data?.casting_spell)return;
+ const center={q:Number(q),r:Number(r)},range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
+ if(!Number.isInteger(center.q)||!Number.isInteger(center.r)||!Number.isInteger(Number(radius))||Number(radius)<0||
+  !combatRuntimeHexCells().some(cell=>cell.q===center.q&&cell.r===center.r)||
+  combatAxialDistance(actor,center)>range||!combatHasLineOfSight(actor,center))
+  throw new Error('Centrumhexagonen ligger utanför kartan, räckvidden eller fri sikt.');
+ const sourceData={...action.source_data,area_center:center,area_radius:Number(radius),target_mode:'hex_area'};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;renderCombat()
+}
 function combatMagicTargetAllocations(action){
  return Array.isArray(action?.source_data?.target_allocations)?action.source_data.target_allocations:[]
 }
