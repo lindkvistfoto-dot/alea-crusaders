@@ -2611,10 +2611,17 @@ function combatPossibleAttackTargets(actor,mode='auto',weapon=null){
  }
  return out
 }
+function combatSpellRangeHexes(actor,action){
+ const text=String(action?.source_data?.range_text||'').trim(),eg=Math.max(1,Number(action?.source_data?.effect_grade)||1);
+ if(/berör|kontakt|touch/i.test(text))return 1;
+ const scaled=/^S\s*[x×*]\s*(\d+)\s*rutor?$/i.exec(text);
+ if(scaled)return eg*Number(scaled[1]);
+ return Math.max(1,combatWeaponRangeHexes({range:text||'30 m'},actor)||20)
+}
 function combatFireballTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor);
  if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||action?.source_data?.magic_binding?.kind!=='damage')return new Map();
- const out=new Map(),range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
+ const out=new Map(),range=combatSpellRangeHexes(actor,action);
  for(const target of combatants){
   if(!combatCanTargetHostile(actor,target))continue;
   const distance=combatAxialDistance(actor,target);
@@ -2633,7 +2640,7 @@ function combatMagicAreaCombatants(center,radius){
 async function combatSetMagicAreaCenter(actorId,q,r,radius=0){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
  if(!actor||!action||action.status!=='planned'||!action.source_data?.casting_spell)return;
- const center={q:Number(q),r:Number(r)},range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
+ const center={q:Number(q),r:Number(r)},range=combatSpellRangeHexes(actor,action);
  if(!Number.isInteger(center.q)||!Number.isInteger(center.r)||!Number.isInteger(Number(radius))||Number(radius)<0||
   !combatRuntimeHexCells().some(cell=>cell.q===center.q&&cell.r===center.r)||
   combatAxialDistance(actor,center)>range||!combatHasLineOfSight(actor,center))
@@ -2742,7 +2749,7 @@ function combatSupportedStatusSpell(action){
 function combatSpellEffectTargets(actor,action){
  const range=String(action?.source_data?.range_text||'').toLowerCase();
  const touch=/berör|kontakt|touch/.test(range);
- const maxRange=touch?1:Math.max(1,combatWeaponRangeHexes({range:action?.source_data?.range_text||'30 m'},actor)||20);
+ const maxRange=touch?1:combatSpellRangeHexes(actor,action);
  return combatants.filter(target=>!['dead','removed'].includes(target.status)&&
   (target.visible_to_players!==false||combatCanManage())&&
   combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
