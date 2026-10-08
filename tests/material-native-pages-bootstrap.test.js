@@ -36,7 +36,7 @@ describe('v0.34.91 – GitHub Pages native material bootstrap',()=>{
   expect(library).toContain('window.gimliMountAdmin?.();');
   expect(library).toContain('bilboMountLibrary();');
   expect(legacy).toContain('window.gimliMountAdmin?.();window.bilboMountLibrary?.();');
-  expect(library).toContain("data-admin-section='library'");
+  expect(library).toContain("section.dataset.adminSection='library'");
   expect(read('features/material/storage.js')).toContain("section.dataset.adminSection='materials'");
  });
  it('actually mounts the library and the top panel under a normal parsed HTML document',()=>{
