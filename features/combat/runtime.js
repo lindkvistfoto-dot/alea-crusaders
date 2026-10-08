@@ -2716,6 +2716,10 @@ function combatMagicTargetChooserHtml(actor,action){
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
  const candidates=[...combatFireballTargets().keys()];
  const statusSpell=combatSupportedStatusSpell(action);
+ const duration=Number(action.source_data?.effect_duration_rounds)||0;
+ const durationHtml='<div class="combat-spell-effect"><span>Varaktighet: '+(duration?duration+' SR':'SL avgör')+'</span>'+
+  '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',-1)">−</button>'+
+  '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',1)">+</button></div>';
  if(action.source_data?.magic_binding?.kind==='area'){
   const radius=Number(action.source_data.area_radius)||0,center=action.source_data.area_center;
   return '<div class="combat-spell-choice"><b>'+escAttr(action.source_data.spell_name)+' · område</b>'+
@@ -2727,7 +2731,7 @@ function combatMagicTargetChooserHtml(actor,action){
  }
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action);
-  return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
+  return '<div class="combat-spell-choice">'+durationHtml+'<b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
    candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+
    (action.source_data.magic_binding?.requires_resistance&&candidates.some(c=>String(c.id)===String(combatSelectedTargetId))?
     '<div class="combat-spell-effect"><span>SL avgör målets motstånd (regeldetaljer saknas)</span>'+
