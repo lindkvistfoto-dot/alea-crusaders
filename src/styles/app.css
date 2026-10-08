@@ -6064,3 +6064,38 @@ body:not(.editing) #skilltable .skill-roll-btn{
  font-size:11px;
  line-height:1.35;
 }
+
+/* v0.34.75 — SL quick-edit sheet inside combatant details popup */
+.combat-npc-editor{margin:0 0 14px;padding:13px;border:1px solid #9c805a;background:#2d2620;border-radius:11px}
+.combat-npc-editor h3{margin:0 0 7px;color:#f3d29a}
+.combat-npc-editor h4{margin:15px 0 8px;color:#e5bf83;font:700 14px Georgia,serif}
+.combat-npc-editor .combat-detail-empty{margin-bottom:10px;color:#ddc5a0}
+.combat-npc-edit-name,.combat-npc-edit-field,.combat-npc-edit-fields label{display:flex;flex-direction:column;gap:4px;min-width:0;color:#e6d6b9;font:650 12px system-ui,sans-serif}
+.combat-npc-editor input,.combat-npc-editor select{box-sizing:border-box;width:100%;min-height:40px;padding:8px 9px;border:1px solid #8b7457;border-radius:7px;background:#171613;color:#fff2dc;font:600 16px system-ui,sans-serif}
+.combat-npc-editor input:focus-visible,.combat-npc-editor select:focus-visible{outline:2px solid #74bad3;outline-offset:1px}
+.combat-npc-edit-name{margin-bottom:9px}
+.combat-npc-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.combat-npc-edit-attributes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.combat-npc-edit-adjust{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.combat-npc-edit-adjust>span{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.combat-npc-edit-adjust b{min-width:29px;color:#d7b78a;font-size:12px}
+.combat-npc-editor button{cursor:pointer;min-height:34px;padding:5px 9px;border:1px solid #a38961;border-radius:7px;background:#493828;color:#f9e7c7;font:700 12px system-ui,sans-serif}
+.combat-npc-editor button:hover{background:#644831}
+.combat-npc-edit-weapon{border:1px solid #685640;border-radius:8px;padding:9px;margin-bottom:8px;background:#231e19}
+.combat-npc-edit-weapon-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.combat-npc-edit-weapon-head b{color:#f0cd93;font-size:13px}
+.combat-npc-edit-fields{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.65fr) minmax(0,1.2fr);gap:8px}
+.combat-npc-edit-fields label:last-child{grid-column:span 2}
+.combat-npc-edit-add{margin:3px 0 12px}
+.combat-npc-edit-footer{position:sticky;bottom:-1px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px;padding:11px 0 0;background:#2d2620;border-top:1px solid #89704f;z-index:1}
+.combat-npc-edit-footer span{flex:1;min-width:155px;font-size:12px;color:#e9d2aa;line-height:1.4}
+.combat-npc-editor .combat-npc-edit-save{background:#27705f;color:#fff;border-color:#62b69c;min-height:43px;padding:9px 18px;font-size:14px}
+.combat-npc-editor .combat-npc-edit-save:disabled{opacity:.55;cursor:wait}
+@media(max-width:540px){
+ .combat-npc-editor{padding:10px}
+ .combat-npc-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .combat-npc-edit-attributes{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .combat-npc-edit-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .combat-npc-edit-fields label:last-child{grid-column:span 2}
+ .combat-npc-edit-footer .combat-npc-edit-save{width:100%}
+}
