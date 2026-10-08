@@ -5852,3 +5852,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-turn-stats{grid-template-columns:repeat(4,minmax(0,1fr)) !important}
  .combat-turn-equip small{font-size:8px}
 }
+
+/* Combat effects registry and active condition chips */
+.combat-effects-admin{grid-column:1/-1;padding:12px 16px;border:1px solid #655642;border-radius:10px;background:#211d1a;color:#e8ddc8}
+.combat-effects-admin summary{cursor:pointer;font-weight:700}
+.combat-effects-admin>div{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.combat-effects-admin input,.combat-effects-admin select{max-width:230px;min-width:80px;padding:6px;background:#302b25;color:#fff;border:1px solid #746651;border-radius:5px}
+.combat-effects-admin button,.combat-effect-tags button{cursor:pointer}
+.combat-effect-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.combat-effect-tags span{font-size:11px;border:1px solid #817052;border-radius:5px;padding:2px 5px;background:#332b23;color:#f3e4ca}
+.combat-effect-tags button{margin-left:4px;border:0;background:transparent;color:inherit}
