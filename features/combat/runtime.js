@@ -2489,7 +2489,23 @@ async function rollCombatTestFireball(actorId,targetId){
  if(combatDiceBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
  if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||!combatFireballTargets().has(String(target.id)))return;
- try{await combatResolveTestFireball(actor,target,action);await loadActiveCombat(null,{preserveSelectedTarget:true})}catch(error){console.error('Eldklot misslyckades',error);alert('Eldklot kunde inte genomföras: '+(error?.message||error))}
+ try{
+  const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+
+   '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+   '&status=eq.planned&select=id,status',{
+   method:'PATCH',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})
+  });
+  if(!Array.isArray(claimed)||claimed.length!==1)
+   throw new Error('Besvärjelsen hanteras redan av en annan spelare. Ladda om striden.');
+  action.status='resolving';
+  await combatResolveTestFireball(actor,target,action);
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){
+  console.error('Eldklot misslyckades',error);
+  alert('Eldklot kunde inte genomföras: '+(error?.message||error));
+  await loadActiveCombat(null,{preserveSelectedTarget:true}).catch(console.error)
+ }
 }
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
