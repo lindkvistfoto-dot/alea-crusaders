@@ -692,14 +692,15 @@ describe("application architecture smoke checks", () => {
     const css = read("src/styles/app.css");
     const zones = read("features/combat/hit-body-zones.js");
     const main = read("src/main.js");
-    expect(html).toContain('id="combatGmControls"');
+    expect(combat).toContain('id="combatGmControls"');
+     expect(html).not.toContain('id="combatGmControls"');
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
     expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.86");
     expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.86");
-    expect(html).toContain("./features/combat/runtime.js?v=0.34.59");
-    expect(html).toContain("./legacy/app.js?v=0.34.59");
+    expect(html).toContain("./features/combat/runtime.js?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./legacy/app.js?v="+JSON.parse(read("package.json")).version);
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
