@@ -3034,6 +3034,8 @@ function combatBeskyddareCrossings(source,target,round=Number(activeCombat?.roun
  })
 }
 async function combatResolveBeskyddarePassage(caster,target,eg){
+ // No barrier: leave ordinary Expert casts and existing standalone tests untouched.
+ if(typeof combatAreaEffects==='undefined'||!Array.isArray(combatAreaEffects)||!combatAreaEffects.length)return {blocked:false,checks:[]};
  const checks=[];
  for(const area of combatBeskyddareCrossings(caster,target)){
   const dieResult=await combatRollDice([{qty:1,sides:20}],'Beskyddare · passera magispärr');
@@ -4285,7 +4287,7 @@ function combatAreaActive(row,round=Number(activeCombat?.round_number)||1){
 function combatAreasForHex(q,r,round=Number(activeCombat?.round_number)||1){
  const cell={q:Number(q),r:Number(r)};
  return combatAreaEffects.filter(area=>combatAreaActive(area,round)&&
-  (combatIsBeskyddareArea(area)?combatBeskyddareContains(area,cell):
+  (typeof combatIsBeskyddareArea==='function'&&combatIsBeskyddareArea(area)?combatBeskyddareContains(area,cell):
    combatAxialDistance(cell,{q:area.center_q,r:area.center_r})<=Number(area.radius)))
 }
 function combatAreaTerrainForHex(q,r){
