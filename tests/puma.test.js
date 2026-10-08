@@ -11,7 +11,7 @@ function setup(rows=[],definitions=[]){
 }
 const target={id:'hero',state:{attributes:{STY:15,FYS:12,STO:11,SMI:13,INT:16,PSY:17,KAR:9}}};
 describe('PUMA effective characteristics',()=>{
- test('explicit ÖKA and MINSKA magnitudes compose, base stays unchanged',()=>{
+ test('independent, explicit attribute effect magnitudes compose without modifying base values',()=>{
   const defs=[{id:'up',active:true,modifiers:{type:'attribute_delta',direction:1}},{id:'down',active:true,modifiers:{type:'attribute_delta',direction:-1}}];
   const rows=[{combatant_id:'hero',effect_id:'up',status:'active',strength:2,parameters:{attribute:'SMI',points_per_eg:2}},{combatant_id:'hero',effect_id:'down',status:'active',strength:1,parameters:{attribute:'SMI',points_per_eg:1}}];
   const x=setup(rows,defs);

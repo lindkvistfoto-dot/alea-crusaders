@@ -109,7 +109,7 @@ describe("application architecture smoke checks", () => {
     expect(app).toContain("playtested:!!tested");
   });
 
-  test("ÖKA and MINSKA expose temporary attribute deltas", () => {
+  test("generic temporary attribute deltas remain supported", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatEffectAttributeDelta(combatant,attribute)");
     expect(combat).toContain("def.modifiers?.type!=='attribute_delta'");
