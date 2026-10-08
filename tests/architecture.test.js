@@ -42,6 +42,14 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("FLYGA bypasses terrain but not walls or melee restrictions", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatIsFlying(combatant)");
+    expect(combat).toContain("function combatTerrainIsWall(cell)");
+    expect(combat).toContain("combatIsFlying(actor)||combatIsFlying(target)");
+    expect(combat).toContain("const stepCost=combatIsFlying(combatant)?1");
+  });
+
   test("spell registry has editable persistent playtested flags", () => {
     const app = read("legacy/app.js");
     expect(app).toContain('<div class="ahead">Testad</div>');
