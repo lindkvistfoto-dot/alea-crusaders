@@ -1480,14 +1480,23 @@ function combatMagicRuleProfile(spell){
  const known=combatSpellEffectProfile(spell),summon=combatIsSummoningSpell(spell);
  return {category:summon?'summon':known.category,effect:summon?'summon':known.effect,target:summon?'hex':known.target,range_text:spell?.range_text||'',duration_text:spell?.duration_text||'',psy_cost_text:spell?.psy_cost_text||'',damage_text:spell?.damage_text||'',resistance_text:spell?.resistance_text||'',effect_per_eg:spell?.effect_per_eg||''}
 }
+// Expert Magiboken pp. 3–5: one PSY per EG, -2 CL per EG beyond the first.
+// Normal spells resolve next SR; K spells are immediate. No invented per-EG casting rounds.
+function combatMagicCastingRules(spell,effectGrade){
+ const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
+ const quick=/(?:^|[\\s(])K(?:[\\s)]|$)/i.test(String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||''));
+ return {effect_grade:eg,psy_cost:eg,cl_modifier:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
+}
 function combatMagicCastPreflight(combatant,spell,effectGrade){
  const eg=Number(effectGrade),fv=Number(spell?.fv),errors=[];
+ const rules=combatMagicCastingRules(spell,eg);
  if(!spell?.name)errors.push('Ingen besvärjelse vald');
  if(!Number.isInteger(eg)||eg<1)errors.push('Ogiltig effektgrad');
  if(!Number.isFinite(fv)||fv<1)errors.push('Besvärjelsen saknar giltigt FV');
- const cost=Number(spell?.psy_cost_per_eg);
- if(Number.isFinite(cost)&&cost>0&&Number.isFinite(Number(combatant?.current_psy))&&cost*eg>Number(combatant.current_psy))errors.push('Otillräcklig PSY');
- return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:Number.isFinite(cost)&&cost>0?cost*eg:null,rule:combatMagicRuleProfile(spell)}
+ const schoolFv=Number(spell?.school_fv??spell?.school_skill_value);
+ if(Number.isFinite(schoolFv)&&schoolFv>0&&eg>schoolFv)errors.push('EG överstiger FV i magiskolan');
+ if(Number.isFinite(Number(combatant?.current_psy))&&combatant?.current_psy!=null&&rules.psy_cost>Number(combatant.current_psy))errors.push('Otillräcklig PSY');
+ return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:rules.psy_cost,casting:rules,rule:combatMagicRuleProfile(spell)}
 }
 function combatSpellOptions(combatant){
  return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
@@ -1526,7 +1535,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  if(!combatant||!action||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
  const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
