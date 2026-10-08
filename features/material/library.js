@@ -3,6 +3,7 @@ import './storage.js?v=0.34.79';
 import {createAragorn} from './links.js?v=0.34.83';
 import {createLegolas} from './viewer.js?v=0.34.84';
 import {mountFrodo} from './frodo-ui.js?v=0.34.85';
+import {mountSam} from './player-folder-ui.js?v=0.34.86';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
@@ -28,6 +29,15 @@ const frodoUi=mountFrodo({
  request:(path,options)=>dbJson(path,options)
 });
 frodoUi.mount();
+const samUi=mountSam({
+ legolas,
+ getCampaign:()=>String(centralCampaignId||''),
+ isLoggedIn:()=>Boolean(activeUser()),
+ isGM:()=>Boolean(activeUser()?.admin||centralCampaignRole==='gm'),
+ request:(path,options)=>dbJson(path,options),
+ escape:value=>bilboEscape(value)
+});
+samUi.mount();
 const aragorn=createAragorn({
  getSelected:()=>bilboSelected(),
  getCampaign:()=>bilboCampaign(),
@@ -172,6 +182,7 @@ function bilboDetailHtml(row){
   aragorn.html()+
   '<div class="bilbo-detail-actions"><button type="button" class="smallbtn" data-id="'+bilboEscape(row.id)+'" onclick="legolasPreviewMaterial(this.dataset.id)">⛶ Förhandsvisa i Legolas</button>'+
    (!row.archived_at?'<button type="button" class="smallbtn" data-id="'+bilboEscape(row.id)+'" onclick="frodoShowMaterial(this.dataset.id)">📡 Visa nu för spelarna</button>':'')+
+   (!row.archived_at?'<button type="button" class="smallbtn" data-id="'+bilboEscape(row.id)+'" onclick="samShareMaterial(this.dataset.id)">📁 Dela till spelarmapp</button>':'')+
   '<button type="button" class="smallbtn" id="bilboArchiveButton" onclick="bilboToggleArchive()">'+
    (row.archived_at?'Återställ ur arkiv':'Arkivera material')+'</button></div>'+
   '<p class="bilbo-detail-info">'+(row.file_size_bytes?Math.ceil(row.file_size_bytes/1024)+' kB · ':'')+
@@ -348,5 +359,11 @@ Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDeta
  legolasOpenPanel:legolas.openPanel,legolasClosePanel:legolas.closePanel,legolasReset:legolas.reset,
  legolasGetStagedIds:legolas.getStagedIds,
  legolasPreviewMaterial:(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign());if(row)legolas.previewMaterial(row)},
+ samShareMaterial:async(id)=>{
+  const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign()&&!r.archived_at);
+  if(!row||!bilboAllowed())return;
+  const result=await samUi.share(row);
+  bilboNotice(result?('Tillgängligt i spelarmappen: '+row.title+'.'):'Materialet kunde inte delas. Kontrollera materialpanelen.',!result);
+ },
  frodoShowMaterial:async(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign()&&!r.archived_at);if(!row||!bilboAllowed())return;const result=await frodoUi.showRow(row);if(result)bilboNotice('Visas nu för spelarna: '+row.title+'.');else bilboNotice('Visningen kunde inte startas. Kontrollera status i Materialpanelen.',true);}
 });
