@@ -1729,7 +1729,7 @@ function closeCombat(){
 function selectCombatTarget(id){
  if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(actor&&def?.type==='attack'&&action?.status==='planned'){
+ if(actor&&(def?.type==='attack'||action?.source_data?.test_fireball===true)&&action?.status==='planned'){
   if(id&&String(id)===String(actor.id)){
    combatSelectedTargetId=null;
    renderCombat();
@@ -2386,8 +2386,57 @@ function combatPossibleAttackTargets(actor,mode='auto',weapon=null){
  }
  return out
 }
+function combatFireballTargets(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);
+ if(!actor||action?.source_data?.test_fireball!==true||action.status!=='planned')return new Map();
+ const out=new Map(),range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
+ for(const target of combatants){
+  if(String(target.id)===String(actor.id)||target.visible_to_players===false||target.side===actor.side||['dead','removed'].includes(target.status))continue;
+  const distance=combatAxialDistance(actor,target);
+  if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
+ }
+ return out
+}
+async function combatTestFireballButton(event,combatantId){
+ event?.stopPropagation?.();
+ const actor=combatants.find(row=>String(row.id)===String(combatantId));if(!actor||!combatCanUseActionMenu(actor))return;
+ const action=combatChosenAction(actor);
+ if(action?.source_data?.test_fireball===true&&action.status==='planned'){
+  const targetId=String(combatSelectedTargetId||''),targets=combatFireballTargets();
+  if(targetId&&targets.has(targetId)){await rollCombatTestFireball(actor.id,targetId);return}
+  await combatCancelPlannedAttack(actor,action);return
+ }
+ await chooseCombatPrimaryAction(actor.id,'spell_cast');
+ const fresh=combatChosenAction(actor)||combatActions.find(row=>String(row.combatant_id)===String(actor.id)&&row.slot_key==='primary');
+ if(!fresh)return;
+ const spell=(actor.attack_profile?.spells||[]).find(row=>String(row.name||'').toUpperCase().includes('ELD'));
+ const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:'Eldklot',spell_fv:Number(spell?.fv)||10,damage_text:spell?.damage_text||'1T6',range_text:spell?.range_text||'30 m',attack_magic:true};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(fresh.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,target_combatant_id:null,status:'planned',updated_at:new Date().toISOString()})});
+ fresh.source_data=sourceData;combatSelectedTargetId=null;renderCombat()
+}
+async function combatResolveTestFireball(actor,target,action){
+ const fv=Math.max(1,Number(action.source_data?.spell_fv)||10),rolled=await combatExpertRoll('Eldklot · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
+ const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
+ const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,spell_name:'Eldklot',attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
+ combatShowOutcomeOverlay(outcome,'Eldklot · T20 '+rolled.roll+' mot FV '+fv);
+ if(success){
+  const pseudoWeapon={name:'Eldklot',damage:action.source_data?.damage_text||'1T6'};
+  result.hit_location=await combatResolveHitLocation(actor,target,'ranged','ranged');
+  result.damage=await combatResolveDamage(actor,target,pseudoWeapon,fullDamage,result.hit_location);
+  result.hit_resolved=true
+ }
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({target_combatant_id:target.id,status:'resolved',result,updated_at:new Date().toISOString()})});
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_attack',message:actor.name_snapshot+' kastar Eldklot mot '+target.name_snapshot+' · T20 '+rolled.roll+' mot FV '+fv+' · '+combatOutcomeLabel(outcome),details:result,player_visible:true})})
+}
+async function rollCombatTestFireball(actorId,targetId){
+ if(combatDiceBusy||!combatCanManage())return;
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
+ if(!actor||!target||action?.source_data?.test_fireball!==true||action.status!=='planned'||!combatFireballTargets().has(String(target.id)))return;
+ try{await combatResolveTestFireball(actor,target,action);await loadActiveCombat(null,{preserveSelectedTarget:true})}catch(error){console.error('Eldklot misslyckades',error);alert('Eldklot kunde inte genomföras: '+(error?.message||error))}
+}
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(action?.source_data?.test_fireball===true)return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
  const selected=combatActionWeapon(actor,action,mode);
@@ -2874,7 +2923,17 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
  return '<div class="combat-mini-side"><span>'+label+'</span><b>'+(combatant?.status==='dead'?'☠ ':'')+escAttr(combatant?.name_snapshot||'—')+'</b>'+
   '<small>KP '+kp+(itemText?' · '+escAttr(itemText):'')+'</small></div>'
 }
+function combatTestFireballPanelHtml(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);if(!actor||action?.source_data?.test_fireball!==true)return '';
+ const targets=combatFireballTargets(),resolved=action.status==='resolved',targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
+ const target=combatants.find(row=>String(row.id)===targetId)||null,result=action.result||{};
+ return '<section class="combat-mini-attack '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>TEST · ELDKLOT</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):' · välj fiende')+'</b></div>'+
+  '<div class="combat-mini-duel">'+combatMiniParticipantHtml('KASTAR',actor,'Eldklot · FV '+(action.source_data?.spell_fv||10))+'<div class="combat-mini-arrow">→</div>'+combatMiniParticipantHtml('MÅL',target,target?'Avstånd · '+combatAxialDistance(actor,target)+' hex':'—')+'</div>'+
+  (!resolved?'<div class="combat-mini-instruction">'+(target?'Målet är valt. Klicka 🔥 igen för att kasta Eldklot.':'Giltiga fiender är markerade ('+targets.size+'). Klicka på en fiende på kartan eller i turordningen.')+'</div>':'')+
+  (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
+}
 function combatAttackPanelHtml(){
+ const fireball=combatTestFireballPanelHtml();if(fireball)return fireball;
  const pending=combatPendingParryOpportunity();
  if(pending){
   const attack=pending.attack,result=attack.result||{};
@@ -3006,6 +3065,7 @@ function combatTurnPanelHtml(){
     '<div class="combat-row-tool combat-turn-action-tool magic-tool"><button type="button" class="combat-row-tool-btn combat-row-magic'+(state.key==='spell'?' active':'')+(magicChosen?' chosen':'')+'" title="Besvärjelse" aria-label="Besvärjelse" onclick="combatMagicButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-magic-glyph" aria-hidden="true">✦</span></button>'+combatRowMagicMenuHtml(actor)+'</div>'+
     '<div class="combat-row-tool combat-turn-action-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(state.key==='other'||otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra handlingar" aria-label="Andra handlingar" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/other-actions.svg?v=0.33.79" alt="" aria-hidden="true"></button>'+combatRowActionMenuHtml(actor)+'</div>'+
     '<div class="combat-row-tool combat-turn-action-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+actor.id+'\')" '+(!canEnd?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/end-round.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
+    '<div class="combat-row-tool combat-turn-action-tool fireball-test-tool"><button type="button" class="combat-row-tool-btn combat-row-fireball'+(combatChosenAction(actor)?.source_data?.test_fireball===true?' active chosen':'')+'" title="TEST · Eldklot" aria-label="Testa Eldklot" onclick="combatTestFireballButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-fireball-glyph" aria-hidden="true">🔥</span></button></div>'+
    '</div>'+
   '</div>'+
   '<div class="combat-turn-stats">'+
