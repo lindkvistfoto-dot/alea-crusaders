@@ -784,7 +784,7 @@ function combatActionDefinition(action){
   COMBAT_PRIMARY_ACTIONS.find(item=>item.type===action.action_type)||null
 }
 function combatCanChoosePrimaryAction(combatant){
- return combatCanManage()&&combatIsActiveTurn(combatant)&&!combatMustSkipTurn(combatant)&&activeCombat?.status==='active'
+ return combatCanManage()&&combatIsActiveTurn(combatant)&&!combatCannotAct(combatant)&&activeCombat?.status==='active'
 }
 async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
@@ -1381,7 +1381,7 @@ async function rollCombatAttack(actorId,targetId){
  const actor=combatants.find(row=>String(row.id)===String(actorId));
  const target=combatants.find(row=>String(row.id)===String(targetId));
  const action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(!actor||!target||!action||def?.type!=='attack'||!combatIsActiveTurn(actor)||action.status!=='planned')return;
+ if(!actor||!target||!action||combatCannotAct(actor)||def?.type!=='attack'||!combatIsActiveTurn(actor)||action.status!=='planned')return;
  const mode=def.mode||action?.source_data?.mode||'auto';
  const weapon=combatActionWeapon(actor,action,mode);
  if(!weapon)return;
@@ -1397,7 +1397,7 @@ async function rollCombatAttack(actorId,targetId){
 }
 function combatAttackExecutionHtml(target){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(!actor||!target||!action||def?.type!=='attack')return '';
+ if(!actor||!target||!action||combatCannotAct(actor)||def?.type!=='attack')return '';
  if(action.result?.outcome&&String(action.target_combatant_id||'')===String(target.id))return combatAttackResultHtml(action);
  if(action.status!=='planned')return '';
  const mode=def.mode||action?.source_data?.mode||'auto';
@@ -1556,7 +1556,7 @@ async function combatMagicButton(event,combatantId){
 }
 async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
- if(!combatant||!action||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
+ if(!combatant||!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
  const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
@@ -1564,7 +1564,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  action.source_data=sourceData;renderCombat()
 }
 async function stepCombatSpellEffect(combatantId,delta){
- const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||action.status!=='planned'||action.source_data?.spell_locked)return;
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked)return;
  const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(action.source_data?.spell_key));
  if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
@@ -1580,7 +1580,7 @@ function combatRowMagicMenuHtml(combatant){
 function combatActionChooserHtml(combatant){
  if(!combatant)return '';
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
- if(combatMustSkipTurn(combatant))return '<div class="combat-action-box waiting"><b>Står över denna SR</b><span>En aktiv effekt hindrar förflyttning och handlingar. Avsluta turen för att fortsätta.</span></div>';
+ if(combatCannotAct(combatant))return '<div class="combat-action-box waiting"><b>'+escAttr(combatIncapacitation(combatant)?.definition?.name||'Står över denna SR')+'</b><span>Handlingar spärrade'+(combatCannotMove(combatant)?' och förflyttning spärrad':' · förflyttning möjlig')+'. Avsluta turen för att fortsätta.</span></div>';
  if(!combatIsActiveTurn(combatant)){
   const active=combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''));
   return '<div class="combat-action-box waiting"><b>Inte den här kombatantens tur</b><span>Aktuell tur: '+escAttr(active?.name_snapshot||'—')+'</span></div>'
@@ -1717,7 +1717,7 @@ function combatTurnOrderIds(){
   .map(row=>String(row.id))
 }
 function combatCanEndTurn(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&!combatIsMovementPlanning(combatant)&&!combatPendingParryOpportunity()
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&(!combatIsMovementPlanning(combatant)||combatCannotMove(combatant))&&!combatPendingParryOpportunity()
 }
 async function endCombatTurn(event,combatantId){
  event?.stopPropagation?.();
@@ -1970,7 +1970,7 @@ function combatIsMovementPlanning(combatant){
  return !!combatant&&String(combatMovementPlan?.combatantId||'')===String(combatant.id)
 }
 function combatCanPlanMovement(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&!combatMustSkipTurn(combatant)&&combatMovementBudget(combatant)>0
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&!combatCannotMove(combatant)&&combatMovementBudget(combatant)>0
 }
 function combatMovementOccupied(combatant,q,r){
  return combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(combatant?.id||'')&&Number(row.q)===Number(q)&&Number(row.r)===Number(r))
@@ -2599,6 +2599,7 @@ function combatSpellEffectTargets(actor,action){
   combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
 }
 async function combatCastStatusSpell(actor,target,action){
+ if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
  const spellName=combatSupportedStatusSpell(action),eg=Math.max(1,Number(action.source_data?.effect_grade)||1);
  if(!spellName||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id)))throw new Error('Ogiltigt mål för besvärjelsen.');
  const code=spellName==='ÖKA'?'spell_oka':spellName==='MINSKA'?'spell_minska':'spell_flyga';
@@ -2634,7 +2635,7 @@ async function combatCastStatusSpell(actor,target,action){
 }
 async function combatChooseSpellAttribute(actorId,attribute){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
- if(!action||action.status!=='planned'||!action.source_data?.casting_spell||!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return;
+ if(!action||combatCannotAct(actor)||action.status!=='planned'||!action.source_data?.casting_spell||!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return;
  const data={...action.source_data,effect_attribute:attribute};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:data,updated_at:new Date().toISOString()})});
  action.source_data=data;renderCombat()
@@ -2664,7 +2665,7 @@ async function combatResolveTestFireball(actor,target,action){
 async function rollCombatTestFireball(actorId,targetId){
  if(combatDiceBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
- if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)||!combatFireballTargets().has(String(target.id)))return;
+ if(!actor||!target||combatCannotAct(actor)||action?.source_data?.casting_spell!==true||action.status!=='planned'||(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)||!combatFireballTargets().has(String(target.id)))return;
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1);
  if(allocations.length&&(allocations.reduce((n,t)=>n+t.eg,0)!==total||allocations.some(t=>!combatFireballTargets().has(String(t.target_id))))){
   alert('Fördela samtliga effektgrader mellan giltiga mål före kastet.');return
@@ -2689,6 +2690,7 @@ async function rollCombatTestFireball(actorId,targetId){
 }
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(!actor||combatCannotAct(actor))return new Map();
  if(action?.source_data?.casting_spell===true&&combatSupportedStatusSpell(action))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
  if(action?.source_data?.casting_spell===true&&String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
@@ -2734,7 +2736,7 @@ function combatReachableHexes(combatant){
  const cells=combatRuntimeHexCells();
  const cellByKey=new Map(cells.map(cell=>[cell.key,cell]));
  const out=new Map();
- if(!combatant||combatMustSkipTurn(combatant)||activeCombat?.phase!=='movement')return out;
+ if(!combatant||combatCannotMove(combatant)||activeCombat?.phase!=='movement')return out;
  const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
  const budget=combatMovementAllowance(combatant);
  if(!cellByKey.has(startKey))return out;
@@ -3314,8 +3316,7 @@ function combatTurnPanelHtml(){
  const attackChosen=chosenDef?.key==='attack',magicChosen=chosenDef?.key==='spell_cast',otherChosen=!!chosenDef&&!attackChosen&&!magicChosen;
  const actionOpen=String(combatActionMenuId||'')===String(actor.id);
  const otherOpen=actionOpen&&combatActionMenuKind==='other',magicOpen=actionOpen&&combatActionMenuKind==='magic';
- const skipping=combatMustSkipTurn(actor);
- const canMove=!defeated&&!skipping&&combatCanPlanMovement(actor),canAction=!defeated&&!skipping&&combatCanUseActionMenu(actor),canEnd=!defeated&&combatCanEndTurn(actor);
+ const canMove=!defeated&&!combatCannotMove(actor)&&combatCanPlanMovement(actor),canAction=!defeated&&!combatCannotAct(actor)&&combatCanUseActionMenu(actor),canEnd=!defeated&&combatCanEndTurn(actor);
  const moveTitle=planning?((Number(combatMovementPlan?.cost)||0)>0?'Lås förflyttning':'Avbryt förflyttning'):'Planera förflyttning';
  const maximum=combatMovementMaximum(actor),remaining=combatMovementBudget(actor),spent=Math.max(0,maximum-remaining);
  const kpCurrent=actor.current_kp==null?'—':actor.current_kp,kpMax=actor.max_kp==null?'—':actor.max_kp;
@@ -3389,6 +3390,22 @@ async function combatEndEffectByCondition(id,condition){
  }catch(e){alert('Kunde inte avsluta effekten: '+e.message)}
 }
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
+// BJÖRN: interpret per-effect restrictions separately, never infer attack immunity.
+function combatRestrictionFlags(combatant,round=Number(activeCombat?.round_number)||1){
+ const flags={actions:false,movement:false,reactions:false};
+ if(!combatant)return flags;
+ for(const effect of combatActiveEffects){
+  if(String(effect.combatant_id)!==String(combatant.id)||!combatEffectIsActive(effect,round))continue;
+  const def=combatEffectDefinition(effect);
+  if(!def?.active)continue;
+  const modifiers=def.modifiers||{};
+  const incapacitated=modifiers.type==='incapacitated',skip=modifiers.type==='skip_turns';
+  flags.actions ||= incapacitated||skip||modifiers.disable_actions===true;
+  flags.movement ||= incapacitated||skip||modifiers.disable_movement===true;
+  flags.reactions ||= incapacitated||modifiers.disable_reactions===true;
+ }
+ return flags
+}
 function combatIncapacitation(combatant,round=Number(activeCombat?.round_number)||1){
  if(!combatant)return null;
  for(const effect of combatActiveEffects){
@@ -3398,13 +3415,12 @@ function combatIncapacitation(combatant,round=Number(activeCombat?.round_number)
  }
  return null
 }
-function combatCannotReact(combatant){
- return !!combatIncapacitation(combatant)
-}
+function combatCannotAct(combatant){return combatRestrictionFlags(combatant).actions}
+function combatCannotMove(combatant){return combatRestrictionFlags(combatant).movement}
+function combatCannotReact(combatant){return combatRestrictionFlags(combatant).reactions}
 function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||1){
- if(!combatant)return false;
- return combatActiveEffects.some(row=>String(row.combatant_id)===String(combatant.id)&&combatEffectIsActive(row,round)&&
-  combatEffectRegistry.some(def=>def.id===row.effect_id&&def.active&&['skip_turns','incapacitated'].includes(def.modifiers?.type)))
+ const flags=combatRestrictionFlags(combatant,round);
+ return flags.actions&&flags.movement
 }
 function combatEffectAttributeDelta(combatant,attribute){
  return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&combatEffectIsActive(e)).reduce((sum,e)=>{
@@ -3428,8 +3444,8 @@ function combatantEffectsHtml(combatant){
   const ending=combatEffectDefinition(e)?.expiration_condition||'duration';
   const conditionLabel={woken:'Väck',cured:'Bota',dispelled:'Skingra',concentration:'Bryt koncentration'}[ending]||ending;
   return '<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+remaining+
-   (combatCanManage()?'<button type="button" title="Avsluta effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\\')">×</button>':'')+
-   (combatCanManage()&&['woken','cured','dispelled','concentration'].includes(ending)?'<button type="button" title="'+escAttr(ending)+'" onclick="event.stopPropagation();combatEndEffectByCondition(\''+e.id+'\\',\''+ending+'\\')">'+escAttr(conditionLabel)+'</button>':'')+'</span>'
+   (combatCanManage()?'<button type="button" title="Avsluta effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\')">×</button>':'')+
+   (combatCanManage()&&['woken','cured','dispelled','concentration'].includes(ending)?'<button type="button" title="'+escAttr(ending)+'" onclick="event.stopPropagation();combatEndEffectByCondition(\''+e.id+'\',\''+ending+'\')">'+escAttr(conditionLabel)+'</button>':'')+'</span>'
  }).join('')+'</div>':''
 }
 const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','incapacitated','custom'];
@@ -3465,7 +3481,7 @@ function combatEffectsAdminHtml(){
  '<label>Parametrar (JSON)<textarea id="combatEditParameters" rows="2">'+escAttr(JSON.stringify(edit.parameter_schema||{}))+'</textarea></label>'+
  '<button type="button" onclick="combatSaveEffect()">Spara ändringar</button><button type="button" onclick="combatEffectEditingId=null;renderCombat()">Stäng</button></div>':'')+
  '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active&&(!e.target_type||['combatant','self'].includes(e.target_type))).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><select id="combatEffectAttribute" title="Egenskap">'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'">'+a+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Effektgrad"><input id="combatEffectPointsPerEg" type="number" min="1" value="1" title="Egenskapspoäng per EG"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
- '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+', '+escAttr(e.target_type||'combatant')+') <button type="button" onclick="combatEffectEditingId=\''+e.id+'\\';renderCombat()">Redigera</button> <button type="button" onclick="combatToggleEffect(\''+e.id+'\\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
+ '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+', '+escAttr(e.target_type||'combatant')+') <button type="button" onclick="combatEffectEditingId=\''+e.id+'\';renderCombat()">Redigera</button> <button type="button" onclick="combatToggleEffect(\''+e.id+'\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
 }
 let combatEffectEditingId=null;
 function combatEffectFormData(prefix){
@@ -3511,7 +3527,11 @@ async function combatApplyEffect(){
  if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
  const round=Number(activeCombat.round_number)||1,expiry=combatEffectExpiry(def,round,strength);
  try{
-  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,...expiry,expiration_condition:def.expiration_condition||'duration',parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{}})});
+  const payload={strength,applied_round:round,...expiry,expiration_condition:def.expiration_condition||'duration',parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{},updated_at:new Date().toISOString()};
+  const existing=def.stacking==='refresh'?combatActiveEffects.find(e=>e.status==='active'&&e.combatant_id===combatantId&&e.effect_id===effectId&&
+   (def.modifiers?.type!=='attribute_delta'||e.parameters?.attribute===attribute)):null;
+  if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
+  else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,...payload})});
   await combatLoadEffects();renderCombat()
  }catch(e){alert('Kunde inte tilldela effekt: '+e.message)}
 }

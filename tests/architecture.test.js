@@ -46,7 +46,7 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatIncapacitation(combatant");
     expect(combat).toContain("function combatCannotReact(combatant)");
-    expect(combat).toContain("['skip_turns','incapacitated'].includes(def.modifiers?.type)");
+    expect(combat).toContain("function combatRestrictionFlags(combatant");
     expect(combat).toContain("!combatCannotReact(defender)");
     expect(combat).toContain("woken:'Väck'");
   });
@@ -73,8 +73,8 @@ describe("application architecture smoke checks", () => {
   test("STÅ ÖVER blocks actions and movement for configured rounds", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatMustSkipTurn(combatant");
-    expect(combat).toContain("!combatMustSkipTurn(combatant)");
-    expect(combat).toContain("round+strength-1");
+    expect(combat).toContain("!combatCannotAct(combatant)");
+    expect(combat).toContain("round+Math.max(1,Number(count))-1");
     expect(combat).toContain("Står över denna SR");
   });
 
@@ -1130,8 +1130,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatDestinationKeepsAction");
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
-    expect(combat).toContain("const stepCost=cell.movement_mode==='difficult'?2:1");
-    expect(combat).toContain("if(!cell||cell.movement_mode==='blocked')continue");
+    expect(combat).toContain("combatIsFlying(combatant)?1:cell.movement_mode==='difficult'?2:1");
+    expect(combat).toContain("if(!cell||(cell.movement_mode==='blocked'&&(!combatIsFlying(combatant)||combatTerrainIsWall(cell))))continue");
     expect(combat).toContain("if(nextCost>budget)continue");
     expect(combat).toContain("cls.push('move-reachable')");
     expect(combat).toContain("'move-action-kept':'move-action-spent'");
