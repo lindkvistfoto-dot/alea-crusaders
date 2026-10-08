@@ -56,7 +56,7 @@ export function mountSam({
  async function share(row){
   if(!isGM()||!isLoggedIn()||sam.state.busy)return null;
   const result=await sam.share(row);render();
-  if(result){notice(sam.state.notice);await load();}
+  if(result){const message=sam.state.notice;await load();notice(message);}
   else notice(sam.state.notice||'Delningen kunde inte sparas.',true);
   return result;
  }
