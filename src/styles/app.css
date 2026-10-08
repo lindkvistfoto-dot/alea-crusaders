@@ -6196,3 +6196,9 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
  .race-attribute-row input[id^="rrSourceRule_"]{grid-column:2/-1;min-height:37px}
 }
+
+/* v0.34.82 – summoned elementals and other NPCs can override derived KP/movement. */
+.slp-special-values{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0;color:#ead4b3}
+.slp-special-values label{display:flex;flex-direction:column;gap:5px;min-width:0;font-weight:650;font-size:12px}
+.slp-special-values input{box-sizing:border-box;width:100%;min-height:39px;padding:7px 10px;border:1px solid #997d55;border-radius:7px;background:#fdf7ea;color:#332619;font-size:16px}
+@media(max-width:520px){.slp-special-values{grid-template-columns:1fr}}
