@@ -24,24 +24,38 @@ async function loadProfile(){if(!supabaseSession?.user?.id)return null;const aut
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
 function cleanCharacterForDb(c){let d=JSON.parse(JSON.stringify(c));delete d._dbId;delete d._combatIconUrl;delete d.combatIconPath;return d}
 async function dbJson(path,options={}){let r=await authFetch('/rest/v1/'+path,{...options,headers:dbHeaders(options.headers||{})});let text=await r.text(),data=text?JSON.parse(text):null;if(!r.ok)throw new Error((data&&data.message)||('Databasfel '+r.status));return data}
+const RULE_REGISTRY_STATUS={
+ skills:{label:'Färdigheter',state:'idle',error:null},
+ spells:{label:'Besvärjelser',state:'idle',error:null},
+ professions:{label:'Yrken',state:'idle',error:null},
+ races:{label:'Raser',state:'idle',error:null},
+ stands:{label:'Stånd',state:'idle',error:null},
+ weapons:{label:'Vapen',state:'idle',error:null},
+ armors:{label:'Rustningar',state:'idle',error:null},
+ shields:{label:'Sköldar',state:'idle',error:null}
+};
+function setRuleRegistryStatus(key,state,error=null){let s=RULE_REGISTRY_STATUS[key];if(!s)return;s.state=state;s.error=error?String(error?.message||error):null}
+function ruleRegistryCount(key,count){let s=RULE_REGISTRY_STATUS[key];return s?.state==='error'?'⚠':s?.state==='loading'?'…':count}
+async function withRuleRegistryLoad(key,loader){
+ setRuleRegistryStatus(key,'loading');
+ try{let result=await loader();setRuleRegistryStatus(key,'loaded');return result}
+ catch(e){setRuleRegistryStatus(key,'error',e);console.error('Kunde inte läsa '+(RULE_REGISTRY_STATUS[key]?.label||key),e);throw e}
+}
 async function loadRuleSkills(force=false){
  if(ruleSkillsLoaded&&!force)return ruleSkills;
- try{ruleSkills=await dbJson('rule_skills?select=*&order=type.asc,name.asc');ruleSkillsLoaded=true;linkCharacterSkillsToRegistry();return ruleSkills}
- catch(e){console.error('Kunde inte läsa rule_skills',e);ruleSkills=[];ruleSkillsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('skills',async()=>{ruleSkills=await dbJson('rule_skills?select=*&order=type.asc,name.asc');ruleSkillsLoaded=true;linkCharacterSkillsToRegistry();return ruleSkills})}
+ catch(e){ruleSkills=[];ruleSkillsLoaded=false;return []}
 }
 async function loadRuleMagicRegistry(force=false){
  if(ruleMagicSchoolsLoaded&&ruleSpellsLoaded&&!force)return ruleSpells;
- try{
-  let rows=await Promise.all([dbJson('rule_magic_schools?select=*&order=sort_order.asc,name.asc'),dbJson('rule_spells?select=*&order=sort_order.asc,name.asc')]);
-  ruleMagicSchools=rows[0]||[];ruleSpells=rows[1]||[];ruleMagicSchoolsLoaded=true;ruleSpellsLoaded=true;return ruleSpells
- }catch(e){console.error('Kunde inte läsa magiregistret',e);ruleMagicSchools=[];ruleSpells=[];ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('spells',async()=>{let rows=await Promise.all([dbJson('rule_magic_schools?select=*&order=sort_order.asc,name.asc'),dbJson('rule_spells?select=*&order=sort_order.asc,name.asc')]);ruleMagicSchools=rows[0]||[];ruleSpells=rows[1]||[];ruleMagicSchoolsLoaded=true;ruleSpellsLoaded=true;return ruleSpells})}catch(e){ruleMagicSchools=[];ruleSpells=[];ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false;return []}
 }
 function magicSchoolOptions(selected=''){return '<option value="">— Välj magiskola —</option>'+ruleMagicSchools.map(s=>'<option value="'+escAttr(s.id)+'" '+(String(s.id)===String(selected)?'selected':'')+'>'+escAttr(s.name)+'</option>').join('')}
 function spellKeyFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('spell')}
 async function loadRuleProfessions(force=false){
  if(ruleProfessionsLoaded&&!force)return ruleProfessions;
- try{ruleProfessions=await dbJson('rule_professions?select=*&order=sort_order.asc,name.asc');ruleProfessionsLoaded=true;return ruleProfessions}
- catch(e){console.error('Kunde inte läsa rule_professions',e);ruleProfessions=[];ruleProfessionsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('professions',async()=>{ruleProfessions=await dbJson('rule_professions?select=*&order=sort_order.asc,name.asc');ruleProfessionsLoaded=true;return ruleProfessions})}
+ catch(e){ruleProfessions=[];ruleProfessionsLoaded=false;return []}
 }
 function professionOptions(selected=''){
  selected=String(selected||'');
@@ -69,13 +83,7 @@ function raceOptions(selected=''){
 }
 async function loadRuleSocialStands(force=false){
  if(ruleSocialStandsLoaded&&!force)return ruleSocialStands;
- try{
-  ruleSocialStands=await dbJson('rule_social_stands?ruleset=eq.dod_expert&active=eq.true&select=*&order=sort_order.asc,name.asc');
-  ruleSocialStandsLoaded=true;return ruleSocialStands
- }catch(e){
-  console.error('Kunde inte läsa ståndsregistret',e);
-  ruleSocialStands=[];ruleSocialStandsLoaded=false;return []
- }
+ try{return await withRuleRegistryLoad('stands',async()=>{ruleSocialStands=await dbJson('rule_social_stands?ruleset=eq.dod_expert&active=eq.true&select=*&order=sort_order.asc,name.asc');ruleSocialStandsLoaded=true;return ruleSocialStands})}catch(e){ruleSocialStands=[];ruleSocialStandsLoaded=false;return []}
 }
 function socialStandOptions(selected=''){
  selected=String(selected||'');
@@ -120,23 +128,11 @@ async function loadRuleArmorRegistry(force=false){
 }
 async function loadRuleShields(force=false){
  if(ruleShieldsLoaded&&!force)return ruleShields;
- try{
-  ruleShields=await dbJson('rule_shields?select=*&order=sort_order.asc,name.asc');
-  ruleShieldsLoaded=true;return ruleShields
- }catch(e){
-  console.error('Kunde inte läsa sköldregistret',e);
-  ruleShields=[];ruleShieldsLoaded=false;return []
- }
+ try{return await withRuleRegistryLoad('shields',async()=>{ruleShields=await dbJson('rule_shields?select=*&order=sort_order.asc,name.asc');ruleShieldsLoaded=true;return ruleShields})}catch(e){ruleShields=[];ruleShieldsLoaded=false;return []}
 }
 async function loadRuleWeapons(force=false){
  if(ruleWeaponsLoaded&&!force)return ruleWeapons;
- try{
-  ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');
-  ruleWeaponsLoaded=true;return ruleWeapons
- }catch(e){
-  console.error('Kunde inte läsa vapenregistret',e);
-  ruleWeapons=[];ruleWeaponsLoaded=false;return []
- }
+ try{return await withRuleRegistryLoad('weapons',async()=>{ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');ruleWeaponsLoaded=true;return ruleWeapons})}catch(e){ruleWeapons=[];ruleWeaponsLoaded=false;return []}
 }
 const RULE_WEAPON_ICON_DEFS=[
  {key:'sword',label:'Svärd'},{key:'dagger',label:'Dolk'},{key:'hammer',label:'Hammare'},
@@ -854,14 +850,14 @@ function renderAdminOverviewCounts(){
  set('adminCountEnemies',campaignMonsters.length);
  set('adminCountScenes',campaignCombatScenes.length);
  set('adminCountPlaces',campaignSites.length);
- set('adminCountSkills',ruleSkills.length);
- set('adminCountSpells',ruleSpells.length);
- set('adminCountProfessions',ruleProfessions.length);
+ set('adminCountSkills',ruleRegistryCount('skills',ruleSkills.length));
+ set('adminCountSpells',ruleRegistryCount('spells',ruleSpells.length));
+ set('adminCountProfessions',ruleRegistryCount('professions',ruleProfessions.length));
  set('adminCountRaces',ruleRaces.length);
- set('adminCountStands',ruleSocialStands.length);
- set('adminCountWeapons',ruleWeapons.length);
- set('adminCountArmors',ruleArmorTypes.length);
- set('adminCountShields',ruleShields.length);
+ set('adminCountStands',ruleRegistryCount('stands',ruleSocialStands.length));
+ set('adminCountWeapons',ruleRegistryCount('weapons',ruleWeapons.length));
+ set('adminCountArmors',ruleRegistryCount('armors',ruleArmorTypes.length));
+ set('adminCountShields',ruleRegistryCount('shields',ruleShields.length));
  set('adminCountCampaigns',adminData.campaigns.length);
  set('adminCountUsers',adminData.users.length)
 }
