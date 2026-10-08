@@ -5748,3 +5748,16 @@ body:not(.editing) #skilltable .skill-roll-btn{
  }
  .adminshieldtable>.ahead{display:block}
 }
+
+
+/* v0.33.99 — shield columns: BV, BEP, price, passive projectile protection */
+.adminshieldtable{
+ grid-template-columns:64px 155px 82px 105px 58px 58px 78px 230px 105px 86px;
+ min-width:1040px;
+}
+@media(max-width:700px){
+ .adminshieldtable{
+  grid-template-columns:64px 155px 82px 100px 54px 54px 74px 220px 100px 78px;
+  min-width:1000px;
+ }
+}
