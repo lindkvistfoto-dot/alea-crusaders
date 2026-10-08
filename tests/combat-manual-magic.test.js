@@ -10,7 +10,8 @@ function section(start,end){
 describe('Besvärjelser utan automatisk effekt i strid',()=>{
  const bindingCode=section('function combatMagicCastingRules(', 'function combatMagicDamageFormula(');
  const context={combatIsSummoningSpell:()=>false,
-  combatSpellEffectProfile:()=>({category:'none',effect:null,target:null})};
+  combatSpellEffectProfile:()=>({category:'none',effect:null,target:null}),
+  combatMagicRuleProfile:()=>({category:'none'})};
  runInNewContext(bindingCode+'this.magicBinding=combatMagicBinding;this.preflight=combatMagicCastPreflight;this.casting=combatMagicCastingRules;',context);
  test('okänd besvärjelse tillåts med SL-styrd effekt men behåller regler för FV, EG och PSY',()=>{
   const spell={name:'FINNA VATTEN',fv:15,school_fv:15};

@@ -57,14 +57,15 @@ const areaAction=(overrides={})=>({id:'area-action',source_data:{
 const magicWrites=(calls,table)=>calls.filter(x=>x.url===table||x.url.startsWith(table+'?'));
 
 describe('LEJON – behavior-tested Expert magic across real cast flows',()=>{
- test('Expert preflight checks FV, EG, school cap, PSY and unsupported spells',()=>{
+ test('Expert preflight checks FV, EG, school cap, PSY and allows SL-ruled effects',()=>{
   const {actor,api}=harness({psy:3});
   const spell={name:'BLIXT (F, K)',damage_text:'1T6 per EG',fv:10,school_fv:3};
   expect(api.combatMagicCastPreflight(actor,spell,2).valid).toBe(true);
   expect(api.combatMagicCastPreflight(actor,spell,4).valid).toBe(false);
   expect(api.combatMagicCastPreflight(actor,{...spell,school_fv:10},4).errors).toContain('Otillräcklig PSY');
-  expect(api.combatMagicCastPreflight(actor,{name:'FINNA VATTEN',fv:10},1).valid).toBe(false);
-  expect(api.combatMagicCastPreflight(actor,{name:'VÄDERKONTROLL (R)',fv:10,ritual:true},1).valid).toBe(false);
+  expect(api.combatMagicCastPreflight(actor,{name:'FINNA VATTEN',fv:10},1).valid).toBe(true);
+  expect(api.combatMagicCastPreflight(actor,{name:'VÄDERKONTROLL (R)',fv:10,ritual:true},1).valid).toBe(true);
+  expect(api.combatMagicBinding({name:'VÄDERKONTROLL (R)',ritual:true})).toMatchObject({kind:'manual',ritual:true});
  });
  test('K spells resolve in the same SR; normal spells are prepared for the next SR',()=>{
   const {api}=harness();

@@ -21,18 +21,18 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
   expect(formula({damage_text:'2T8 per EG'},4)).toBe('8T8')
  });
  test('unknown or special poison damage is not silently replaced by one die',()=>{
-  expect(binding({name:'GASMOLN (F)',damage_text:'Gift (special)',attack_magic:true}).supported).toBe(false);
+  expect(binding({name:'GASMOLN (F)',damage_text:'Gift (special)',attack_magic:true})).toMatchObject({kind:'manual',supported:true});
   expect(formula({damage_text:'Gift (special)'},2)).toBeNull();
   expect(src).not.toContain("damage:action.source_data?.damage_text||'1T6'")
  });
  test('ritual marker takes priority even for otherwise known effects',()=>{
-  expect(binding({name:'FROST (R)',ritual:true,damage_text:'1T6 per EG'})).toMatchObject({kind:'ritual',supported:false});
-  expect(binding({name:'VÄDERKONTROLL (R)'}).kind).toBe('ritual')
+  expect(binding({name:'FROST (R)',ritual:true,damage_text:'1T6 per EG'})).toMatchObject({kind:'manual',supported:true,ritual:true});
+  expect(binding({name:'VÄDERKONTROLL (R)'})).toMatchObject({kind:'manual',ritual:true})
  });
- test('unimplemented spells stay available as known entries but cannot cast',()=>{
+ test('unimplemented spell effects can cast but are explicitly delegated to SL',()=>{
   const x=binding({name:'FINNA VATTEN'});
-  expect(x.supported).toBe(false);
-  expect(x.kind).toBe('unimplemented')
+  expect(x.supported).toBe(true);
+  expect(x.kind).toBe('manual')
  });
  test('FLYGA is a support effect with no involuntary resistance',()=>{
   expect(binding({name:'FLYGA'})).toMatchObject({kind:'status',code:'spell_flyga',requires_resistance:false})
@@ -101,7 +101,7 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
   expect(src).toContain("awardCharacterErfItem(actor.source_id,'spells',itemKey,outcome,{amount})");
   expect(src).toContain('combatSpellErfTarget(actor,action)');
   expect(src).toContain("combatRollDice([{qty:1,sides:3}]");
-  expect((src.match(/await combatAwardSpellErf\(actor,action,rolled.outcome\)/g)||[]).length).toBe(3);
+  expect((src.match(/await combatAwardSpellErf\(actor,action,rolled.outcome\)/g)||[]).length).toBe(4);
  });
  test('area casting repeats range and blocked-sight validation immediately before the roll',()=>{
   const start=src.indexOf('async function combatCastAreaSpell('),end=src.indexOf('async function combatResolveTestFireball(',start);
