@@ -729,7 +729,7 @@ async function deleteRuleArmor(id){
 function renderAdminShields(){
  let el=$('adminShieldTable'),st=$('adminShieldStatus');if(!el)return;
  if(!ruleShieldsLoaded){el.innerHTML='';if(st)st.textContent='Sköldregistret kunde inte läsas.';return}
- if(st)st.textContent=ruleShields.length+' sköldtyper · Expertdata för passivt skydd, projektiler och tålighet.';
+ if(st){let incomplete=ruleShields.filter(r=>r.bv==null||r.bep==null).length;st.textContent=ruleShields.length+' sköldtyper · BV och BEP: '+(incomplete?incomplete+' saknar värden':'kompletta')+' · Expertdata för passivt skydd och projektiler.';}
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  const cell=v=>escAttr(v===null||v===undefined||v===''?'—':String(v));
  el.innerHTML=
@@ -745,7 +745,8 @@ function renderAdminShields(){
     '<div>'+cell(r.price!=null?r.price+' sm':null)+'</div>'+
     '<div>'+cell(passive)+'</div>'+
     '<div class="adminactions"><button class="smallbtn" onclick="editRuleShield(\''+escAttr(r.id)+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleShield(\''+escAttr(r.id)+'\')" title="Ta bort">×</button></div>'
-  }).join('')
+  }).join('')+
+  '<div class="admin-master-footnote">BV är inledningsvis baserat på registrens sköldtålighet (ABS 8/12/16); BEP och pris kommer från grundreglernas butiksregister (1988). Expert E55 styr passivt skydd och projektiler. Alla värden kan redigeras.</div>'
 }
 function editRuleShield(id=''){
  if(!activeUser()?.admin)return;
@@ -770,7 +771,7 @@ function editRuleShield(id=''){
    '<label class="wide">Passivt skydd<input id="rsCoverage" value="'+escAttr(r?.passive_coverage||'')+'" placeholder="t.ex. Sköldarm + bröstkorg"></label>'+
    '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+
    '<label class="wide">Noteringar<textarea id="rsNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
-  '</div><div class="rule-editor-note">Expert E55 anger storlek, passivt skydd och projektilregler. ABS/BEP/BV/pris är medvetet separata masterfält från grundreglerna och lämnas tomma tills de verifierats.</div>'+
+  '</div><div class="rule-editor-note">Expert E55 reglerar passivt skydd och projektiler. Sköldarnas grundvärden för BEP, pris och tålighet kommer från Aleas befintliga grundregelsregister (1988). BV är initialt samma som registrerat tålighetsvärde och kan justeras separat från ABS.</div>'+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleShield(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden')
 }
