@@ -61,13 +61,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("expires_at:ms?new Date(Date.now()");
   });
 
-  test("VARG exposes editable effect definitions and parameter schema", () => {
-    const combat = read("features/combat/runtime.js");
-    expect(combat).toContain("function combatEffectFormData(prefix)");
-    expect(combat).toContain("async function combatSaveEffect()");
-    expect(combat).toContain("parameter_schema:params");
-    expect(combat).toContain("expiration_condition:val('Ending')");
-    expect(combat).toContain("target_type:val('Target')");
+  test("VARG effect definitions are editable in Admin with full parameters", () => {
+    const effects = read("features/combat/admin-effects.js");
+    expect(effects).toContain("function ruleEffectFormData()");
+    expect(effects).toContain("async function saveRuleEffect(");
+    expect(effects).toContain("parameter_schema:ruleEffectJson('refParameters')");
+    expect(effects).toContain("expiration_condition:$('refEnding').value");
+    expect(effects).toContain("target_type:$('refTarget').value");
   });
 
   test("STÅ ÖVER blocks actions and movement for configured rounds", () => {
@@ -1523,7 +1523,7 @@ describe("application architecture smoke checks", () => {
     const end = legacy.indexOf("const RULE_REGISTRY_STATUS=", start);
     const contract = legacy.slice(start, end);
     for (const field of ["table:","countId:","section:","load:","render:","count:"]) {
-      expect((contract.match(new RegExp(field,"g"))||[]).length, field).toBe(8);
+      expect((contract.match(new RegExp(field,"g"))||[]).length, field).toBe(9);
     }
   });
 
