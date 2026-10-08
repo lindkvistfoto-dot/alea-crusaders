@@ -2525,7 +2525,7 @@ function combatAttackRangeHexes(combatant,mode,weapon=null){
 function combatAttackTargetInfo(actor,target,weapon,preferredMode='auto'){
  if(!actor||!target||!weapon)return null;
  if(String(target.id)===String(actor.id)||target.visible_to_players===false)return null;
- if(target.side===actor.side||['dead','removed'].includes(target.status))return null;
+ if(!combatCanTargetHostile(actor,target))return null;
  const distance=combatAxialDistance(actor,target);
  if(distance<1||!combatHasLineOfSight(actor,target))return null;
  const mode=combatAttackModeForTarget(actor,target,weapon,preferredMode);
@@ -2554,7 +2554,7 @@ function combatFireballTargets(){
  if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||!String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return new Map();
  const out=new Map(),range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
  for(const target of combatants){
-  if(String(target.id)===String(actor.id)||target.visible_to_players===false||target.side===actor.side||['dead','removed'].includes(target.status))continue;
+  if(!combatCanTargetHostile(actor,target))continue;
   const distance=combatAxialDistance(actor,target);
   if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
  }
@@ -2791,6 +2791,7 @@ function combatReachableHexes(combatant){
   for(const [nq,nr] of combatHexNeighbors(q,r)){
    const key=nq+','+nr,cell=cellByKey.get(key);
    if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue;
+   if(!combatMentalMovementAllowed(combatant,{q,r},{q:nq,r:nr}))continue;
    const stepCost=flight.ignore_terrain?1:cell.movement_mode==='difficult'?2:1;
    const nextCost=current.cost+stepCost;
    if(nextCost>budget)continue;
@@ -3172,13 +3173,14 @@ function combatantCard(c,index=0){
  const rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  const order=rank!=null?rank:index+1;
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
+ const mental=combatMentalStatusLabel(c);
  const planning=combatIsMovementPlanning(c);
  return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+(defeated?' defeated':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
   '<span class="combat-order-number"><b>'+order+'</b></span>'+
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
-   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(defeated?' · Nedkämpad':'')+'</div>'+
+   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(defeated?' · Nedkämpad':'')+'</div>'+
    combatantEffectsHtml(c)+combatEffectAttributeHtml(c)+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
@@ -3365,7 +3367,7 @@ function combatTurnPanelHtml(){
  return '<div class="combat-topbar combat-turn-panel">'+head+
   '<div class="combat-turn-actor">'+
    combatTurnPortraitHtml(actor)+
-   '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b></div>'+
+   '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b></div>'+
     '<div><span>KP</span><b>'+kpCurrent+'/'+kpMax+'</b></div>'+
@@ -3430,6 +3432,57 @@ async function combatEndEffectByCondition(id,condition){
   await combatLoadEffects();renderCombat()
  }catch(e){alert('Kunde inte avsluta effekten: '+e.message)}
 }
+// TIGER: runtime-only interpretations of GM-assigned conditions; Expert resistance is not guessed.
+function combatMentalEffects(combatant,types=null,round=Number(activeCombat?.round_number)||1){
+ if(!combatant)return [];
+ return combatActiveEffects.filter(effect=>{
+  if(String(effect.combatant_id)!==String(combatant.id)||!combatEffectIsActive(effect,round))return false;
+  const def=combatEffectDefinition(effect);
+  return def?.active&&['fear','panic','confusion','control'].includes(def.modifiers?.type)&&(!types||types.includes(def.modifiers.type))
+ }).map(effect=>({effect,definition:combatEffectDefinition(effect)}))
+}
+function combatMentalSource(effect){
+ const id=String(effect?.source_combatant_id||'');
+ return id&&Array.isArray(combatants)?combatants.find(c=>String(c.id)===id&&!['dead','removed'].includes(c.status))||null:null
+}
+function combatControlSource(combatant){
+ for(const {effect} of combatMentalEffects(combatant,['control']).reverse()){
+  const source=combatMentalSource(effect);
+  if(source&&String(source.id)!==String(combatant.id))return source
+ }
+ return null
+}
+function combatEffectiveSide(combatant,visited=new Set()){
+ if(!combatant)return null;
+ const key=String(combatant.id);
+ if(visited.has(key))return combatant.side;
+ visited.add(key);
+ const source=combatControlSource(combatant);
+ return source?combatEffectiveSide(source,visited):combatant.side
+}
+function combatCanTargetHostile(actor,target){
+ if(!actor||!target||String(actor.id)===String(target.id)||target.visible_to_players===false||['dead','removed'].includes(target.status))return false;
+ if(combatEffectiveSide(actor)===combatEffectiveSide(target))return false;
+ return !combatMentalEffects(actor,['fear','panic']).some(({effect})=>String(effect.source_combatant_id)===String(target.id))
+}
+function combatMentalMovementAllowed(combatant,from,to){
+ if(!combatant||!from||!to)return false;
+ for(const {effect,definition} of combatMentalEffects(combatant,['fear','panic'])){
+  const source=combatMentalSource(effect);
+  if(!source)continue;
+  const previous=combatAxialDistance(from,source),next=combatAxialDistance(to,source);
+  if(definition.modifiers.type==='fear'&&next<previous)return false;
+  if(definition.modifiers.type==='panic'&&next<=previous)return false
+ }
+ return true
+}
+function combatMentalStatusLabel(combatant){
+ return combatMentalEffects(combatant).map(({effect,definition})=>{
+  const source=combatMentalSource(effect),type=definition.modifiers.type;
+  const name={fear:'Rädd',panic:'Panik',confusion:'Förvirrad',control:'Kontrollerad'}[type]||definition.name;
+  return name+(source?' · '+(type==='control'?'styrd av ':'källa ')+source.name_snapshot:'')
+ }).join(' · ')
+}
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
 // BJÖRN: interpret per-effect restrictions separately, never infer attack immunity.
 function combatRestrictionFlags(combatant,round=Number(activeCombat?.round_number)||1){
@@ -3493,7 +3546,9 @@ function combatEffectAttributeHtml(combatant){
 }
 function combatEffectLabel(row){
  const def=combatEffectRegistry.find(e=>e.id===row.effect_id);
- return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')
+ const source=row.source_combatant_id&&combatants.find(c=>String(c.id)===String(row.source_combatant_id));
+ return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')+
+  (source&&['fear','panic','control'].includes(def?.modifiers?.type)?' · '+(def.modifiers.type==='control'?'styrs av ':'källa: ')+source.name_snapshot:'')
 }
 function combatantEffectsHtml(combatant){
  const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&combatEffectIsActive(e));
