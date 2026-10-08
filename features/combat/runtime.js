@@ -3094,6 +3094,7 @@ function renderCombatMap(){
  const originKey=planningActor?((Number(planningActor.q)||0)+','+(Number(planningActor.r)||0)):'';
  const previewKey=planningActor&&combatMovementPlan?Number(combatMovementPlan.q)+','+Number(combatMovementPlan.r):'';
  const attackTargets=combatCurrentAttackTargets();
+ const areaMode=combatAreaPlacementActive&&combatCanManage();
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
   const moveCost=reachable.get(cell.key);
@@ -3113,8 +3114,21 @@ function renderCombatMap(){
   const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(planningActor?.id||'')&&Number(row.q)===cell.q&&Number(row.r)===cell.r);
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
-  const clickable=!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+(clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'')+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
+  const clickable=areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  const click=areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
+   clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
+ }).join('');
+ const areasOverlay=cells.map(cell=>{
+  const areas=combatAreasForHex(cell.q,cell.r);
+  const preview=combatAreaDraftCenter&&cell.q===combatAreaDraftCenter.q&&cell.r===combatAreaDraftCenter.r;
+  if(!areas.length&&!preview)return '';
+  const codes=areas.map(area=>combatEffectDefinition({effect_id:area.effect_id})?.code||'');
+  const color=codes.some(x=>x==='area_fire')?'#fa7045':
+   codes.some(x=>x==='area_poison')?'#70c97b':
+   codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
+  const names=areas.map(area=>combatEffectDefinition({effect_id:area.effect_id})?.name||'Område').join(', ');
+  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview?'.44':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview?3:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(names||'Valt centrum')+'</title></polygon>'
  }).join('');
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
@@ -3142,7 +3156,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+tokens+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+'</svg>'
 }
 
 function combatRowPortraitUrl(combatant){
@@ -3753,7 +3767,7 @@ function renderCombat(){
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
