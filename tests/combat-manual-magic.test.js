@@ -56,7 +56,7 @@ describe('Manuellt kast: färdighetsslag, PSY, logg – inga påhittade effekter
   const action={id:'action1',source_data:{spell_name:'FINNA VATTEN',
    spell_fv:15,effect_grade:2,magic_binding:{kind:'manual',supported:true}}};
   const env={activeCombat:{id:'combat1',round_number:3},centralCampaignId:'campaign1',
-   combatCannotAct:()=>false,
+   combatCannotAct:()=>false,combatElementalSummonDefinition:()=>null,
    combatExpertRoll:async(label,fv)=>{expect(fv).toBe(13);return {outcome,success,roll:7,confirmation_roll:null}},
    combatMagicPsyCost:(result,eg)=>result==='perfect'?Math.max(1,Math.ceil(eg/2)):success?eg:1,
    combatSpendMagicPsy:async(_actor,cost)=>spent.push(cost),
