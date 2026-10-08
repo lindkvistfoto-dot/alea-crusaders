@@ -386,3 +386,16 @@ Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDeta
  },
  frodoShowMaterial:async(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign()&&!r.archived_at);if(!row||!bilboAllowed())return;const result=await frodoUi.showRow(row);if(result)bilboNotice('Visas nu för spelarna: '+row.title+'.');else bilboNotice('Visningen kunde inte startas. Kontrollera status i Materialpanelen.',true);}
 });
+
+
+// GitHub Pages serves plain browser modules, not Vite's built bundle.
+// Mount the two administration sections as soon as the static DOM is ready.
+function mountCampaignMaterialAdmin(){
+ window.gimliMountAdmin?.();
+ bilboMountLibrary();
+}
+if(document.readyState==='loading'){
+ document.addEventListener('DOMContentLoaded',mountCampaignMaterialAdmin,{once:true});
+}else{
+ mountCampaignMaterialAdmin();
+}
