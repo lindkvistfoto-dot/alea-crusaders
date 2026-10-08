@@ -1,4 +1,5 @@
 import "./features/dice/dice3d.js";
+import "../features/material/storage.js?v=0.34.78";
 
 const TRANSPARENT_HIT_CAMERA={
   head:{scale:2.5,tx:-75,ty:19},
@@ -425,3 +426,6 @@ if(combatUndoBody){
 /* v0.33.76 — reliable turn-start undo checkpoints */
 
 /* v0.33.76 — immutable turn-start undo snapshots */
+
+// Gimli material uploader mounts on the existing Administration page.
+window.gimliMountAdmin?.();
