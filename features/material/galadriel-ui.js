@@ -3,11 +3,11 @@ import {createGaladriel} from './realtime.js?v=0.34.87';
 import './realtime.css';
 
 export function mountGaladriel({
- legolas,frodoUi,samUi,getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
+ legolas,frodoUi,samUi,getCampaign,getToken,isAuthenticated,isGM,supabaseUrl,publishableKey,
  doc=()=>document,win=()=>window,makeSocket
 }){
  const el=id=>doc().getElementById(id);
- let mounted=false,playerPreviewId=null,refreshSequence=0;
+ let mounted=false,refreshSequence=0;
  async function refreshPresentation(){
   if(!isAuthenticated()||!getCampaign())return;
   try{
@@ -28,12 +28,9 @@ export function mountGaladriel({
     displayed.id!==frodoUi.frodo.state.materialId&&
     !samUi.sam.state.rows.some(entry=>entry.material_id===displayed.id)&&
     !legolas.state.selection.has(displayed.id)&&
-    !isGMAllowed())legolas.closeViewer();
+    !isGM())legolas.closeViewer();
   void legolas.loadPage();
  }
- const isGMAllowed=()=>Boolean(frodoUi.frodo&&
-  // A player never has staging buttons; do not infer authorisation from the DOM.
-  (typeof legolas.getStagedIds==='function'&&legolas.state.selection.size>0&&legolas.getStagedIds().length>0));
  const galadriel=createGaladriel({
   getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
   makeSocket,
