@@ -1,4 +1,5 @@
 /* Bilbo – search, gallery and metadata management for private campaign materials. */
+import './zip-import.js?v=0.34.92';
 import './storage.js?v=0.34.79';
 import {createAragorn} from './links.js?v=0.34.83';
 import {createLegolas} from './viewer.js?v=0.34.91';
