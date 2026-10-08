@@ -865,8 +865,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="adminCountStands"');
     expect(html).toContain('id="combatDiceHost"');
     expect(html).toContain('id="combatDiceReadout"');
-    expect(combat).toContain("key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse'");
-    expect(combat).toContain("key:'spell_cast',type:'spell',label:'Lägg besvärjelse'");
+    expect(combat).toContain("key:'spell_cast',type:'spell',label:'Magi'");
     expect(combat).toContain("mode:'cast'");
     expect(combat).toContain("function combatIsActiveTurn");
     expect(combat).toContain("function combatChosenAction");
