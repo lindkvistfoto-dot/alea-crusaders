@@ -18,16 +18,17 @@ function sourceBetween(start,end){
 }
 function mapControlsContext({gm=true,viewing=next,current=old}={}){
  const nodes=new Map();
- for(const id of ['mapPicker','mapCurrentBtn','mapSetCurrentBtn','mapCurrentBadge','mapRevealAllBtn']){
+ for(const id of ['mapPicker','mapCurrentBtn','mapSetCurrentBtn','mapCurrentBadge','mapRevealAllBtn','mapVisibilityToggle']){
   const classes={hidden:null};
   nodes.set(id,{
-   classes,disabled:false,title:'',innerHTML:'',
+   classes,disabled:false,title:'',innerHTML:'',textContent:'',attributes:{},
+   setAttribute(name,value){this.attributes[name]=value},
    classList:{toggle:(name,value)=>{classes[name]=value}}
   });
  }
  const context={
   campaignMaps:maps,activeCampaignMap:maps.find(m=>m.id===viewing),
-  campaignActiveMapId:current,activatingCampaignMap:false,
+  campaignActiveMapId:current,activatingCampaignMap:false,changingMapVisibilityId:null,
   canManageCampaignMaps:()=>gm,
   $:id=>nodes.get(id)||null,
   escAttr:v=>v
@@ -129,5 +130,97 @@ describe('Kampanjkarta – välj en annan aktuell karta (v0.34.89)',()=>{
   expect(h.ctx.campaignActiveMapId).toBe(next);
   expect(h.toasts).toHaveLength(1);
   expect(h.viewed).toHaveLength(0);
+ });
+});
+
+
+function visibilityContext({gm=true,viewing=next,initialVisible=false,saveConfirmed=true}={}){
+ const entity={...maps.find(m=>m.id===viewing),player_visible:initialVisible};
+ const calls=[],toasts=[],alerts=[];
+ const ctx={
+  campaignMaps:[entity],activeCampaignMap:entity,centralCampaignId:campaign,
+  changingMapVisibilityId:null,canManageCampaignMaps:()=>gm,
+  renderMapLibraryControls:()=>calls.push('render'),
+  renderAdminMaps:()=>calls.push('admin'),
+  loadCampaignMaps:async()=>calls.push('reload'),
+  showBackupToast:x=>toasts.push(x),alert:x=>alerts.push(x),console,encodeURIComponent,
+  dbJson:async (path,opts)=>{
+   calls.push({path,opts});
+   return saveConfirmed?[{id:viewing,campaign_id:campaign,player_visible:JSON.parse(opts.body).player_visible}]:[];
+  }
+ };
+ vm.runInNewContext(sourceBetween('async function toggleViewedMapPlayerVisibility(){','async function deleteCampaignMap(id){'),ctx);
+ return {ctx,calls,toasts,alerts,entity};
+}
+describe('Kartpanelen – visa/dölj för spelare (v0.34.90)',()=>{
+ it('has an accessible switch directly in the map toolbar',()=>{
+  expect(html).toContain('id="mapVisibilityToggle"');
+  expect(html).toContain('role="switch"');
+  expect(html).toContain('aria-checked="false"');
+  expect(html).toContain('onclick="toggleViewedMapPlayerVisibility()"');
+ });
+ it('shows the hidden status when viewing a hidden map as GM',()=>{
+  const {context,nodes}=mapControlsContext({gm:true});
+  context.renderMapLibraryControls();
+  const toggle=nodes.get('mapVisibilityToggle');
+  expect(toggle.classes.hidden).toBe(false);
+  expect(toggle.classes['is-hidden']).toBe(true);
+  expect(toggle.attributes['aria-checked']).toBe('false');
+  expect(toggle.textContent).toContain('Dold för spelare');
+  expect(toggle.disabled).toBe(false);
+ });
+ it('shows the visible status and checks the switch when viewing a public map',()=>{
+  const {context,nodes}=mapControlsContext({gm:true,viewing:old});
+  context.renderMapLibraryControls();
+  const toggle=nodes.get('mapVisibilityToggle');
+  expect(toggle.classes['is-visible']).toBe(true);
+  expect(toggle.attributes['aria-checked']).toBe('true');
+  expect(toggle.textContent).toContain('Synlig för spelare');
+ });
+ it('hides the switch for players and for no selected map',()=>{
+  const player=mapControlsContext({gm:false});
+  player.context.renderMapLibraryControls();
+  expect(player.nodes.get('mapVisibilityToggle').classes.hidden).toBe(true);
+  const noMap=mapControlsContext();
+  noMap.context.activeCampaignMap=null;
+  noMap.context.renderMapLibraryControls();
+  expect(noMap.nodes.get('mapVisibilityToggle').classes.hidden).toBe(true);
+ });
+ it('disables toggle while a visibility update is in flight',()=>{
+  const h=mapControlsContext();
+  h.context.changingMapVisibilityId=next;
+  h.context.renderMapLibraryControls();
+  expect(h.nodes.get('mapVisibilityToggle').disabled).toBe(true);
+ });
+ it('writes the exact campaign and id, verifies response, then reveals the map',async()=>{
+  const h=visibilityContext();
+  expect(await h.ctx.toggleViewedMapPlayerVisibility()).toBe(true);
+  const save=h.calls.find(x=>typeof x==='object');
+  expect(save.path).toContain('campaign_maps?id=eq.'+next);
+  expect(save.path).toContain('campaign_id=eq.'+campaign);
+  expect(save.path).toContain('select=id,campaign_id,player_visible');
+  expect(save.opts.method).toBe('PATCH');
+  expect(save.opts.headers.Prefer).toBe('return=representation');
+  expect(JSON.parse(save.opts.body).player_visible).toBe(true);
+  expect(h.entity.player_visible).toBe(true);
+  expect(h.toasts[0]).toContain('tillgänglig för spelare');
+ });
+ it('uses the same action to hide a previously visible map',async()=>{
+  const h=visibilityContext({viewing:old,initialVisible:true});
+  expect(await h.ctx.toggleViewedMapPlayerVisibility()).toBe(true);
+  expect(h.entity.player_visible).toBe(false);
+  expect(h.toasts[0]).toContain('dold för spelare');
+ });
+ it('does not claim success or change local state if RLS rejects the update',async()=>{
+  const h=visibilityContext({saveConfirmed:false});
+  expect(await h.ctx.toggleViewedMapPlayerVisibility()).toBe(false);
+  expect(h.entity.player_visible).toBe(false);
+  expect(h.toasts).toHaveLength(0);
+  expect(h.alerts[0]).toContain('Databasen bekräftade inte');
+ });
+ it('prevents players from writing through the handler',async()=>{
+  const h=visibilityContext({gm:false});
+  expect(await h.ctx.toggleViewedMapPlayerVisibility()).toBe(false);
+  expect(h.calls).toHaveLength(0);
  });
 });
