@@ -256,3 +256,47 @@ async function bilboToggleArchive(){
  }catch(error){bilboNotice('Det gick inte att ändra arkivstatus: '+error.message,true)}
  finally{bilboState.busy=false;if(button)button.disabled=false}
 }
+
+function bilboSetLayout(layout){
+ if(!['grid','list'].includes(layout))return;
+ bilboState.layout=layout;
+ bilboCloseDetail();bilboReleaseMedia();
+ bilboRenderPage();bilboLoadThumbnails()
+}
+function bilboMountLibrary(){
+ if(document.querySelector('[data-admin-section="library"]'))return;
+ const place=document.querySelector('.admin-nav-card[onclick*="places"]');
+ if(!place)return;
+ const nav=document.createElement('button');
+ nav.type='button';nav.className='admin-nav-card';
+ nav.onclick=()=>openAdminSection('library');
+ nav.innerHTML='<span class="admin-nav-icon">▧</span><span class="admin-nav-copy"><b>Bildbibliotek</b><small>Bilbo · bilder, dokument och SL-anteckningar</small></span>';
+ place.insertAdjacentElement('beforebegin',nav);
+ const section=document.createElement('section');section.className='adminbox admin-detail hidden';section.dataset.adminSection='library';
+ section.innerHTML='<div class="adminsectionhead bilbo-page-header"><div><h2>Bilbo · Bildbibliotek</h2>'+
+  '<p class="muted">Sök, granska och organisera kampanjens privata bilder och dokument.</p></div>'+
+  '<button type="button" class="smallbtn" onclick="openAdminSection(\'materials\')">+ Ladda upp</button></div>'+
+  '<div class="bilbo-controls"><label><span>Sök titel eller beskrivning</span><input id="bilboSearch" type="search" maxlength="80" placeholder="Sök material…" oninput="bilboSearchChanged(this.value)"></label>'+
+  '<label><span>Kategori</span><select id="bilboCategory" onchange="bilboSetFilter(\'category\',this.value)">'+
+   '<option value="all">Alla kategorier</option>'+
+   Object.entries(bilboStorage()?.categories||{}).map(([key,value])=>'<option value="'+key+'">'+bilboEscape(value)+'</option>').join('')+'</select></label>'+
+  '<label><span>Status</span><select id="bilboStatus" onchange="bilboSetFilter(\'status\',this.value)">'+
+   '<option value="active">Aktiva</option><option value="archived">Arkiverade</option><option value="all">Alla</option></select></label>'+
+  '<label><span>Sortering</span><select id="bilboSort" onchange="bilboSetFilter(\'sort\',this.value)">'+
+   '<option value="newest">Nyast först</option><option value="oldest">Äldst först</option><option value="title">Titel A–Ö</option></select></label></div>'+
+  '<div class="bilbo-toolbar"><span id="bilboNotice" role="status" aria-live="polite">Laddar bibliotek…</span>'+
+   '<div class="bilbo-view-choice"><button type="button" title="Rutnät" onclick="bilboSetLayout(\'grid\')">▦ Rutnät</button>'+
+   '<button type="button" title="Lista" onclick="bilboSetLayout(\'list\')">☷ Lista</button></div></div>'+
+  '<div class="bilbo-columns"><div class="bilbo-gallery"><div id="bilboGrid" class="bilbo-grid"></div>'+
+   '<nav class="bilbo-pagination" aria-label="Bläddra mellan materialsidor"><button type="button" id="bilboPrevious" onclick="bilboPage(-1)">← Föregående</button>'+
+   '<span id="bilboPageCount">Sida 1</span><button type="button" id="bilboNext" onclick="bilboPage(1)">Nästa →</button></nav></div>'+
+   '<aside id="bilboDetails" class="bilbo-details"><div class="bilbo-empty">Välj en bild för förhandsvisning.</div></aside></div>';
+ document.querySelector('#admin .admin-detail')?.insertAdjacentElement('beforebegin',section);
+ const gimli=document.querySelector('[data-admin-section="materials"] .adminsectionhead');
+ if(gimli&&!gimli.querySelector('.bilbo-back-link')){
+  const back=document.createElement('button');back.className='smallbtn bilbo-back-link';back.type='button';
+  back.textContent='← Bildbibliotek';back.onclick=()=>openAdminSection('library');gimli.append(back)
+ }
+}
+Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDetail,bilboSaveMetadata,
+ bilboSaveNote,bilboToggleArchive,bilboSetFilter,bilboSetLayout,bilboPage,bilboSearchChanged});
