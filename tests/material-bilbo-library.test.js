@@ -21,6 +21,7 @@ function harness(overrides={}){
  const ctx={
   window:{gimliMaterialApi:storage,confirm:()=>true},
   createAragorn:()=>({html:()=>'',clear:()=>{},loadDetails:async()=>{},sync:async()=>{},setType:()=>{},searchTargets:()=>{},link:async()=>{},unlink:async()=>{}}),
+  createLegolas:()=>({mount:()=>{},previewMaterial:()=>{},openPanel:()=>{},closePanel:()=>{},reset:()=>{},getStagedIds:()=>[]}),
   centralCampaignId:campaign,clearTimeout,setTimeout,
   URL:{createObjectURL:()=> 'blob:preview',revokeObjectURL:()=>{}},
   document:{getElementById:id=>elems[id]||null,querySelector:()=>null,querySelectorAll:()=>[]},
