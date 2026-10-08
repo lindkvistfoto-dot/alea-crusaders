@@ -1514,7 +1514,11 @@ function combatMagicCastPreflight(combatant,spell,effectGrade){
  return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:rules.psy_cost,casting:rules,rule:combatMagicRuleProfile(spell)}
 }
 function combatSpellOptions(combatant){
- return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
+ // Only spell definitions still in the central registry may be prepared or cast.
+ const registry=Array.isArray(ruleSpells)?ruleSpells:[];
+ return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name&&registry.some(rule=>
+  (spell.rule_id&&String(rule.id)===String(spell.rule_id))||
+  String(rule.name||'').localeCompare(String(spell.name),'sv',{sensitivity:'base'})===0))
 }
 function combatSpellKey(spell){return String(spell?.rule_id||spell?.name||'spell')}
 function combatSpellChooserHtml(combatant,action){
@@ -1531,13 +1535,22 @@ async function combatMagicButton(event,combatantId){
  combatMovementPlan=null;
  const action=combatChosenAction(combatant),data=action?.source_data||{};
  if(combatActionDefinition(action)?.key==='spell_cast'&&action?.status==='planned'&&data.spell_prepared){
+  const known=combatSpellOptions(combatant).some(spell=>combatSpellKey(spell)===String(data.spell_key)||
+   String(spell.name).localeCompare(String(data.spell_name||''),'sv',{sensitivity:'base'})===0);
+  if(!known){
+   const cleared={...data,spell_prepared:false,casting_spell:false,spell_locked:false,spell_name:null,spell_key:null};
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+    method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:cleared,updated_at:new Date().toISOString()})
+   });
+   alert('Den förberedda besvärjelsen finns inte längre i registret. Välj en annan.');
+   await loadActiveCombat(null,{preserveSelectedTarget:true});return
+  }
   if(data.casting_spell){
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
    if(statusSpell){
     const target=combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId);
     if(!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
-    if(statusSpell!=='FLYGA'&&!COMBAT_EFFECT_ATTRIBUTES.includes(data.effect_attribute)){alert('Välj först vilken egenskap som ska påverkas.');combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
      if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Besvärjelsen är redan under behandling.');
@@ -2586,9 +2599,8 @@ function combatMagicTargetChooserHtml(actor,action){
  const candidates=[...combatFireballTargets().keys()];
  const statusSpell=combatSupportedStatusSpell(action);
  if(statusSpell){
-  const candidates=combatSpellEffectTargets(actor,action),attribute=action.source_data?.effect_attribute;
+  const candidates=combatSpellEffectTargets(actor,action);
   return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
-   (statusSpell==='FLYGA'?'':'<div class="combat-spell-effect"><span>Egenskap</span><select onchange="combatChooseSpellAttribute(&quot;'+actor.id+'&quot;,this.value)"><option value="">Välj egenskap</option>'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'" '+(attribute===a?'selected':'')+'>'+a+'</option>').join('')+'</select></div>')+
    candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+'</div>'
  }
  return '<div class="combat-spell-choice"><b>Mål i kast-SR · EG '+spent+'/'+total+'</b><small>Välj fiender och fördela effektgrad innan kastet.</small>'+
@@ -2612,11 +2624,9 @@ async function combatCastStatusSpell(actor,target,action){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
  const spellName=combatSupportedStatusSpell(action),eg=Math.max(1,Number(action.source_data?.effect_grade)||1);
  if(!spellName||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id)))throw new Error('Ogiltigt mål för besvärjelsen.');
- const code=spellName==='ÖKA'?'spell_oka':spellName==='MINSKA'?'spell_minska':'spell_flyga';
+ const code='spell_flyga';
  const effect=combatEffectRegistry.find(row=>row.code===code&&row.active);
  if(!effect)throw new Error('Besvärjelsens effekt saknas i effektregistret.');
- const attribute=action.source_data?.effect_attribute;
- if(spellName!=='FLYGA'&&!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))throw new Error('Välj egenskap före kastet.');
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;
@@ -2628,13 +2638,13 @@ async function combatCastStatusSpell(actor,target,action){
   if(!Array.isArray(spent)||spent.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
   actor.current_psy=before-cost
  }
- const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,attribute:attribute||null};
+ const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id};
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
   const duration=effect.default_duration_rounds;
-  const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active'&&(spellName==='FLYGA'||e.parameters?.attribute===attribute));
+  const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
   const spellExpiry=duration==null?combatEffectExpiry(effect,round,eg):{expires_round:round+Math.max(1,Number(duration))-1,expires_at:null};
-  const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',parameters:spellName==='FLYGA'?{}:{attribute,points_per_eg:1},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
+  const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',parameters:{},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
   if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
   else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...body,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:target.id,effect_id:effect.id})});
   result.effect_applied=true
@@ -2642,13 +2652,6 @@ async function combatCastStatusSpell(actor,target,action){
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:target.id,result,updated_at:new Date().toISOString()})});
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_effect',message:actor.name_snapshot+' kastar '+spellName+' på '+target.name_snapshot+' · '+combatOutcomeLabel(rolled.outcome),details:result,player_visible:true})});
  await combatLoadEffects();await loadActiveCombat(null,{preserveSelectedTarget:true})
-}
-async function combatChooseSpellAttribute(actorId,attribute){
- const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
- if(!action||combatCannotAct(actor)||action.status!=='planned'||!action.source_data?.casting_spell||!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return;
- const data={...action.source_data,effect_attribute:attribute};
- await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:data,updated_at:new Date().toISOString()})});
- action.source_data=data;renderCombat()
 }
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
