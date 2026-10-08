@@ -6,19 +6,20 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const html=read('index.html');
 const library=read('features/material/library.js');
 const legolas=read('features/material/viewer.js');
+const version=JSON.parse(read('package.json')).version;
 
-describe('v0.34.95 – GitHub Pages native material bootstrap',()=>{
+describe('GitHub Pages native material bootstrap',()=>{
  it('loads material independently of the dice-box module entry',()=>{
-  expect(html).toMatch(/<script type="module" src="\.\/features\/material\/library\.js\?v=0\.34\.95"><\/script>/);
-  expect(html).toMatch(/<script type="module" src="\.\/src\/main\.js\?v=0\.34\.95"><\/script>/);
+  expect(html).toContain('<script type="module" src="./features/material/library.js?v='+version+'"></script>');
+  expect(html).toContain('<script type="module" src="./src/main.js?v='+version+'"></script>');
   expect(read('src/main.js')).not.toMatch(/^import [^;\n]*material\/library\.js/gm);
-  expect(html.indexOf('features/material/library.js?v=0.34.95'))
-   .toBeLessThan(html.indexOf('src/main.js?v=0.34.95'));
+  expect(html.indexOf('features/material/library.js?v='+version+''))
+   .toBeLessThan(html.indexOf('src/main.js?v='+version+''));
  });
  it('uses native HTML stylesheets, never bare CSS imports in JS modules',()=>{
   for(const name of ['viewer','frodo-ui','player-folder','realtime']){
    const css=name+'.css';
-   expect(html).toContain('href="./features/material/'+css+'?v=0.34.95"');
+   expect(html).toContain('href="./features/material/'+css+'?v='+version+'"');
   }
   for(const name of ['viewer.js','frodo-ui.js','player-folder-ui.js','galadriel-ui.js']){
    expect(read('features/material/'+name)).not.toMatch(/^\s*import\s+['"][^'"]+\.css['"]\s*;?/gm);
