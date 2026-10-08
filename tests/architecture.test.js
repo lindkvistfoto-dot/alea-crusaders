@@ -124,7 +124,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function combatApplyEffect()");
     expect(combat).toContain("async function combatRemoveEffect(");
     expect(combat).toContain("combatantEffectsHtml(c)+");
-    expect(combat).toContain("combatEffectsAdminHtml()+combatTurnPanelHtml()");
+    expect(combat).toContain("combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()");
   });
 
   test("area spell centers use hex radius and range checks", () => {
@@ -168,10 +168,10 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("async function commitCombatMovement");
     const move = combat.slice(combat.indexOf("const fromQ=Number(actor.q)||0", Math.max(0,start)),combat.indexOf("async function moveActiveCombatantToHex("));
-    expect(move).toContain("'&q=eq.'+encodeURIComponent(fromQ)");
-    expect(move).toContain("'&r=eq.'+encodeURIComponent(fromR)");
-    expect(move).toContain("'&movement_remaining=eq.'+encodeURIComponent(combatMovementBudget(actor))");
-    expect(move).toContain("!Array.isArray(moved)||moved.length!==1");
+    expect(move).toContain("'rpc/haj_move_combatant'");
+    expect(move).toContain("p_from_q:fromQ,p_from_r:fromR");
+    expect(move).toContain("p_expected_remaining:combatMovementBudget(actor)");
+    expect(move).toContain("!moved||String(moved.id)!==String(actor.id)");
   });
 
   test("combat damage rejects stale KP instead of silently overwriting concurrent damage", () => {
@@ -1137,7 +1137,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("cls.push('move-reachable')");
     expect(combat).toContain("'move-action-kept':'move-action-spent'");
     expect(combat).toContain("cls.push('move-origin')");
-    expect(combat).toContain("movement_mode:terrain?.movement_mode||'free'");
+    expect(combat).toContain("const areaTerrain=combatAreaTerrainForHex(q,r)");
     expect(combat).toContain('class="combat-map-background"');
     expect(combat).toContain("const image=combatRuntimeMapUrl");
     expect(combat).toContain("movement_remaining:stats.movement_remaining");
