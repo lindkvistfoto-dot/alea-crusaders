@@ -4,6 +4,7 @@ import {createAragorn} from './links.js?v=0.34.83';
 import {createLegolas} from './viewer.js?v=0.34.84';
 import {mountFrodo} from './frodo-ui.js?v=0.34.85';
 import {mountSam} from './player-folder-ui.js?v=0.34.86';
+import {mountGaladriel} from './galadriel-ui.js?v=0.34.87';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
@@ -38,6 +39,18 @@ const samUi=mountSam({
  escape:value=>bilboEscape(value)
 });
 samUi.mount();
+const galadrielUi=mountGaladriel({
+ legolas,frodoUi,samUi,
+ getCampaign:()=>String(centralCampaignId||''),
+ getToken:()=>String(supabaseSession?.access_token||''),
+ isAuthenticated:()=>Boolean(activeUser()&&supabaseSession?.access_token),
+ isGM:()=>Boolean(activeUser()?.admin||centralCampaignRole==='gm'),
+ supabaseUrl:SUPABASE_URL,
+ publishableKey:SUPABASE_KEY
+});
+galadrielUi.mount();
+window.galadrielMaterialApi=Object.freeze({connected:galadrielUi.connected});
+
 const aragorn=createAragorn({
  getSelected:()=>bilboSelected(),
  getCampaign:()=>bilboCampaign(),
