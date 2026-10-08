@@ -1448,6 +1448,8 @@ function combatAttackWeaponChooserHtml(combatant,action,def){
   }).join('')+
  '</div></div>'
 }
+const COMBAT_SPELL_EFFECTS={"FÖRROLLAD SÖMN":{"category":"indirect","effect":"sleep","target":"creature"},"MÖRKER (F)":{"category":"indirect","effect":"darkness","target":"area"},"DIMMA":{"category":"indirect","effect":"obscured","target":"area"},"PARALYSERING":{"category":"indirect","effect":"paralyzed","target":"creature"},"FÖRVIRRA":{"category":"indirect","effect":"confused","target":"creature"},"PANIK":{"category":"indirect","effect":"panic","target":"creature"},"RÄDSLA (K)":{"category":"indirect","effect":"fear","target":"creature"},"TERROR":{"category":"indirect","effect":"terror","target":"creature"},"SMÄRTA":{"category":"indirect","effect":"pain","target":"creature"},"LÅNGSAMHET":{"category":"indirect","effect":"slow","target":"creature"},"SNUBBLA (K)":{"category":"indirect","effect":"prone","target":"creature"},"DISTRAKTION (K)":{"category":"indirect","effect":"distracted","target":"creature"},"BLIDHET":{"category":"indirect","effect":"pacified","target":"creature"},"KONTROLLERA VARELSE":{"category":"indirect","effect":"controlled","target":"creature"},"STENVÄGG (F)":{"category":"indirect","effect":"wall","target":"area"},"OSYNLIGHET":{"category":"indirect","effect":"invisible","target":"creature"},"ILLUSION (F)":{"category":"indirect","effect":"illusion","target":"area"},"FATA MORGANA (STOR ILLUSION) (F, R)":{"category":"indirect","effect":"illusion","target":"area"},"SNABBHET":{"category":"support","effect":"haste","target":"creature"},"MOTSTÅNDSKRAFT":{"category":"support","effect":"resistance","target":"creature"},"ANTIMAGI":{"category":"support","effect":"antimagic","target":"creature"},"SKINGRA":{"category":"support","effect":"dispel","target":"creature"},"HELA":{"category":"support","effect":"heal","target":"creature"},"ORÄDD":{"category":"support","effect":"fear_resistance","target":"creature"},"MÖRKERSYN":{"category":"support","effect":"darkvision","target":"creature"}};
+function combatSpellEffectProfile(spell){const name=String(spell?.name||'').toUpperCase().trim();return COMBAT_SPELL_EFFECTS[name]||{category:spell?.attack_magic?'direct':'none',effect:spell?.attack_magic?'damage':null,target:spell?.attack_magic?'creature':null}}
 function combatSpellOptions(combatant){
  return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
 }
@@ -1456,7 +1458,7 @@ function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
  return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
-  const key=combatSpellKey(spell),active=selectedKey===key;
+  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatSpellEffectProfile(spell);
   return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+'</small></button>'
  }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
@@ -1484,7 +1486,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
  if(!combatant||!action||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
- const sourceData={...(action.source_data||{}),spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
+ const sourceData={...(action.source_data||{}),spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:combatSpellEffectProfile(spell),effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
