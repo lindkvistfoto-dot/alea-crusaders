@@ -1525,6 +1525,7 @@ function combatMagicBinding(spell){
  if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
   return {kind:'ritual',supported:false,reason:'Ritual kräver regelstyrd tid och SL-bedömning'};
  if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
+ if(name==='DIMMA')return {kind:'area',code:'area_fog',supported:true,requires_resistance:false};
  if(['ELD','BLIXT','ENERGISTRÅLE','FROST'].includes(name)&&
   /^\s*\d+T\d+\s+per\s+EG\s*$/i.test(String(spell?.damage_text||'')))
   return {kind:'damage',supported:true,requires_resistance:false};
