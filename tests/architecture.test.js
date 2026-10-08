@@ -125,6 +125,13 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function combatRemoveEffect(");
     expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttributeHtml(c)");
     expect(combat).toContain("combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()");
+    expect(combat).not.toContain("Effekter · register och tilldelning");
+    const app=read("legacy/app.js");
+    const effects=read("features/combat/admin-effects.js");
+    expect(app).toContain("effects:{label:'Effekter'");
+    expect(effects).toContain("function renderAdminEffects()");
+    expect(effects).toContain("async function loadRuleEffects(");
+    expect(effects).toContain("async function saveRuleEffect(");
   });
 
   test("area spell centers use hex radius and range checks", () => {
@@ -691,8 +698,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain('id="combatScenePicker"');
     expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.86");
     expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.86");
-    expect(html).toContain("./features/combat/runtime.js?v=0.34.55");
-    expect(html).toContain("./legacy/app.js?v=0.34.55");
+    expect(html).toContain("./features/combat/runtime.js?v=0.34.56");
+    expect(html).toContain("./legacy/app.js?v=0.34.56");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");

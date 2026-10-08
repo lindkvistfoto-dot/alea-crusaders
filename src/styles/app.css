@@ -5904,3 +5904,16 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-detail-attributes{grid-template-columns:repeat(4,minmax(0,1fr))}
  .combat-detail-equipment{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* v0.34.56 – Effektregistret i Admin, samma horisontella tabellmönster som vapen. */
+.admin-table-scroll .admineffecttable{width:max-content;min-width:100%;overflow:visible}
+.admineffecttable{display:grid;grid-template-columns:180px 192px 106px 147px 120px 135px 125px 70px 105px;min-width:1180px;border:1px solid #5a4631;border-radius:12px;overflow:visible}
+.admineffecttable>div{padding:9px 8px;border-bottom:1px solid #443527;min-width:0;overflow-wrap:anywhere}
+.admineffecttable .ahead{background:#6d1e1e;font-weight:800;white-space:nowrap;color:#f8e6cd}
+.admineffecttable .rule-name{font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px;cursor:pointer}
+.admineffecttable .admin-effect-code{font-size:11px;color:#bca890;word-break:break-word}
+.admineffecttable .adminactions{display:flex;gap:4px;justify-content:flex-start}
+.admineffecttable input[type=checkbox]{accent-color:#c1a065;width:17px;height:17px}
+.effect-rule-editor textarea{min-height:90px}
+.effect-rule-editor #refModifiers,.effect-rule-editor #refParameters{min-height:100px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:700px){.admineffecttable{font-size:13px;min-width:1180px}.admineffecttable>div{padding:8px 7px}}
