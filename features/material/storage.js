@@ -85,3 +85,20 @@ async function gimliUploadMaterial({campaignId,file,title,category='other',descr
   throw error
  }
 }
+async function gimliRollbackFiles(paths){
+ const failed=[];
+ for(const path of paths.slice().reverse()){
+  try{await gimliStorage(path,{method:'DELETE'})}
+  catch(error){failed.push(path);console.error('Gimli: orphan file requires cleanup',path,error)}
+ }
+ if(failed.length)throw Error('Misslyckad uppladdning: osparade filer behöver rensas av SL.')
+}
+async function gimliReadFile(record,thumbnail=false){
+ if(record?.storage_bucket!==GIMLI_BUCKET)throw Error('Den här läsaren hanterar endast privata materialfiler.');
+ const path=thumbnail&&record.thumbnail_path?record.thumbnail_path:record.storage_path;
+ return (await gimliStorage(path,{method:'GET'})).blob()
+}
+function gimliStatus(message,isError=false){
+ const status=$('gimliStatus');
+ if(status){status.textContent=message;status.classList.toggle('error',isError)}
+}
