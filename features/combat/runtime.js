@@ -3043,7 +3043,7 @@ function combatantCard(c,index=0){
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
    '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+(defeated?' · Nedkämpad':'')+'</div>'+
-   combatantEffectsHtml(c)+
+   combatantEffectsHtml(c)+combatEffectAttributeHtml(c)+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
   '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
@@ -3255,6 +3255,18 @@ async function combatLoadEffects(){
   combatActiveEffects=Array.isArray(assigned)?assigned:[]
  }else combatActiveEffects=[]
 }
+const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
+function combatEffectAttributeDelta(combatant,attribute){
+ return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1))).reduce((sum,e)=>{
+  const def=combatEffectRegistry.find(d=>d.id===e.effect_id),p=e.parameters||{};
+  if(def?.modifiers?.type!=='attribute_delta'||p.attribute!==attribute)return sum;
+  return sum+(Number(def.modifiers.direction)||0)*Math.max(1,Number(e.strength)||1)*Math.max(1,Number(p.points_per_eg)||1)
+ },0)
+}
+function combatEffectAttributeHtml(combatant){
+ const active=COMBAT_EFFECT_ATTRIBUTES.map(attr=>({attr,delta:combatEffectAttributeDelta(combatant,attr)})).filter(x=>x.delta!==0);
+ return active.length?'<div class="combat-effect-tags">'+active.map(x=>'<span>'+x.attr+' '+(x.delta>0?'+':'')+x.delta+'</span>').join('')+'</div>':''
+}
 function combatEffectLabel(row){
  const def=combatEffectRegistry.find(e=>e.id===row.effect_id);
  return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')
@@ -3267,7 +3279,7 @@ function combatEffectsAdminHtml(){
  if(!combatCanManage())return '';
  return '<details class="combat-effects-admin"><summary>Effekter · register och tilldelning</summary>'+
  '<div><b>Skapa effekt</b> <input id="combatEffectName" placeholder="Namn" maxlength="100"><select id="combatEffectPolarity"><option value="positive">Positiv</option><option value="negative">Negativ</option><option value="neutral">Neutral</option></select><input id="combatEffectDuration" type="number" min="0" placeholder="SR (tomt = tills vidare)"><button type="button" onclick="combatCreateEffect()">Lägg till</button></div>'+
- '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Styrka"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
+ '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><select id="combatEffectAttribute" title="Egenskap">'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'">'+a+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Effektgrad"><input id="combatEffectPointsPerEg" type="number" min="1" value="1" title="Egenskapspoäng per EG"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
  '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+') '+(e.active?'':'[inaktiv]')+' <button type="button" onclick="combatToggleEffect(\''+e.id+'\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
 }
 async function combatCreateEffect(){
@@ -3288,11 +3300,12 @@ async function combatToggleEffect(id,active){
 async function combatApplyEffect(){
  if(!combatCanManage()||!activeCombat)return;
  const combatantId=$('combatEffectCombatant')?.value,effectId=$('combatEffectDefinition')?.value,strength=Number($('combatEffectStrength')?.value||1);
- const def=combatEffectRegistry.find(e=>e.id===effectId);
+ const def=combatEffectRegistry.find(e=>e.id===effectId),attribute=$('combatEffectAttribute')?.value,pointsPerEg=Number($('combatEffectPointsPerEg')?.value||1);
+ if(def?.modifiers?.type==='attribute_delta'&&(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute)||!Number.isInteger(pointsPerEg)||pointsPerEg<1))return alert('Välj egenskap och giltig förändring per EG.');
  if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
  const round=Number(activeCombat.round_number)||1,expires=def.default_duration_rounds==null?null:round+def.default_duration_rounds;
  try{
-  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,expires_round:expires})});
+  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,expires_round:expires,parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{}})});
   await combatLoadEffects();renderCombat()
  }catch(e){alert('Kunde inte tilldela effekt: '+e.message)}
 }
