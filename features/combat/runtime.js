@@ -1592,6 +1592,18 @@ async function combatMagicButton(event,combatantId){
   if(data.casting_spell){
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
+   if(data.magic_binding?.kind==='area'){
+    if(!data.area_center){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    try{
+     const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{
+      method:'PATCH',headers:{'Prefer':'return=representation'},
+      body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})
+     });
+     if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Kastet hanteras redan.');
+     action.status='resolving';await combatCastAreaSpell(combatant,action)
+    }catch(error){alert('Områdesbesvärjelsen kunde inte slutföras: '+error.message);await loadActiveCombat(null,{preserveSelectedTarget:true})}
+    return
+   }
    if(statusSpell){
     const target=combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId);
     if(!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
