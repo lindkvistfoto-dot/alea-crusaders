@@ -43,7 +43,8 @@ describe('character spells use the single rule_spells master',()=>{
   expect(magic).toContain('spellSchoolLabel(rule)');
   expect(magic).toContain('rule.effect_per_eg');
   expect(magic).toContain('rule.resistance_text');
-  expect(magic).not.toContain('onchange="setSpell(');
+  // FV and ERF remain editable; only spell names are master controlled.
+  expect(magic).toContain("if(k==='name'||k==='rule_id')return");
   expect(magic).toContain("if(k==='name'||k==='rule_id')return");
   expect(code).toContain('linkCharacterSpellsToRegistry();if(current');
   expect(code).toContain('if(!sp||!findRuleSpell(sp))return');

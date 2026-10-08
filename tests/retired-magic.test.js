@@ -36,8 +36,8 @@ describe('retired spells are not available',()=>{
   expect(env.retired('FLYGA')).toBe(false);
   expect(env.retired(' MINSKA ')).toBe(true);
   expect(app.split('c.spells=(Array.isArray(c.spells)?c.spells:[]).filter').length-1).toBe(3);
-  expect(app).toContain('function renderMagic(){current.spells=(current.spells||[]).filter');
-  expect(app).toContain("if(k==='name'&&isRetiredSpellName(v))");
+  expect(app).toMatch(/function renderMagic\(\)\s*\{\s*current\.spells=\(current\.spells\|\|\[\]\)\.filter/);
+  expect(app).toContain("if(k==='name'||k==='rule_id')return");
   expect(app).toContain("if(isRetiredSpellName(name)){alert(");
  });
  test('database migration files record removed registries and snapshots',()=>{
