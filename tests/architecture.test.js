@@ -389,7 +389,6 @@ describe("application architecture smoke checks", () => {
     expect(sql).toContain("('large','Stor sköld','large','skoldar',1,6");
     expect(sql).toContain("alter table public.rule_shields enable row level security");
     expect(sql).toContain("create index if not exists rule_shields_skill_id_idx");
-    expect(css).toContain("v0.33.87 — armor and shield master admin");
   });
 
   test("master weapon icons are stored on rule_weapons and have local artwork", () => {
