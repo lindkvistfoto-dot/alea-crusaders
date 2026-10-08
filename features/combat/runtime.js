@@ -2712,6 +2712,10 @@ async function combatCastStatusSpell(actor,target,action){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
  const spellName=combatSupportedStatusSpell(action),eg=Math.max(1,Number(action.source_data?.effect_grade)||1);
  if(!spellName||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id)))throw new Error('Ogiltigt mål för besvärjelsen.');
+ if(action.source_data.magic_binding.requires_resistance&&
+  (action.source_data.resistance_target_id!==String(target.id)||
+   !['resisted','affected'].includes(action.source_data.resistance_decision)))
+  throw new Error('SL måste först avgöra motstånd för detta mål.');
  const code=action.source_data.magic_binding.code;
  const effect=combatEffectRegistry.find(row=>row.code===code&&row.active);
  if(!effect)throw new Error('Besvärjelsens effekt saknas i effektregistret.');
@@ -2726,9 +2730,10 @@ async function combatCastStatusSpell(actor,target,action){
   if(!Array.isArray(spent)||spent.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
   actor.current_psy=before-cost
  }
- const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id};
+ const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
+ const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
- if(rolled.success){
+ if(rolled.success&&!resisted){
   const duration=effect.default_duration_rounds;
   const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
   const spellExpiry=duration==null?combatEffectExpiry(effect,round,eg):{expires_round:round+Math.max(1,Number(duration))-1,expires_at:null};
