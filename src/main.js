@@ -160,6 +160,11 @@ function combatUndoBuildSnapshot(){
     initiative:combatUndoClone(activeCombat.initiative||{}),
     combatants:(Array.isArray(typeof combatants!=="undefined"?combatants:null)?combatants:[]).map(combatUndoCombatantSnapshot),
     actions:(Array.isArray(typeof combatActions!=="undefined"?combatActions:null)?combatActions:[]).map(combatUndoActionSnapshot),
+    area_effects:(Array.isArray(typeof combatAreaEffects!=="undefined"?combatAreaEffects:null)?combatAreaEffects:[]).map(row=>({
+      id:row.id,center_q:row.center_q,center_r:row.center_r,radius:row.radius,
+      applied_round:row.applied_round,expires_round:row.expires_round,status:row.status,
+      parameters:combatUndoClone(row.parameters||{}),source_combatant_id:row.source_combatant_id||null
+    })),
     log_max_id:maxLogId
   };
 }
@@ -212,8 +217,12 @@ async function combatUndoEnsureCurrentSnapshot(){
   if(combatUndoCapturePromise)return combatUndoCapturePromise;
   const snapshot=combatUndoBuildSnapshot();
   if(!snapshot)return null;
-  combatUndoCapturePromise=combatUndoPersistSettings({[COMBAT_UNDO_CURRENT_KEY]:snapshot})
-    .then(()=>snapshot)
+  combatUndoCapturePromise=(async()=>{
+    const last=await dbJson("combat_area_events?combat_id=eq."+encodeURIComponent(snapshot.combat_id)+"&select=id&order=id.desc&limit=1");
+    snapshot.area_event_max_id=Number(last?.[0]?.id)||0;
+    await combatUndoPersistSettings({[COMBAT_UNDO_CURRENT_KEY]:snapshot});
+    return snapshot;
+  })()
     .catch(error=>{console.warn("Kunde inte spara ångra-snapshot",error);return null})
     .finally(()=>{combatUndoCapturePromise=null;combatUndoInstallButton()});
   return combatUndoCapturePromise;
@@ -280,6 +289,10 @@ window.undoLastCombatTurn=async function(event){
   if(typeof activeCombat==="undefined"||!activeCombat?.id)return;
   const snapshot=combatUndoSettings()[COMBAT_UNDO_LAST_KEY];
   if(!snapshot||String(snapshot.combat_id)!==String(activeCombat.id))return;
+  if(combatUndoActiveTurnAlreadyStarted()){
+    alert("Du kan inte ångra föregående drag efter att nästa kombatant börjat agera.");
+    return;
+  }
   const actorName=snapshot.actor_name||"senaste kombatanten";
   if(!window.confirm("Ångra hela senaste draget för "+actorName+"?"))return;
   combatUndoRestoring=true;combatUndoInstallButton();
@@ -319,15 +332,36 @@ window.undoLastCombatTurn=async function(event){
         });
       }
     }
-    await Promise.all((snapshot.combatants||[]).map(row=>dbJson("combatants?id=eq."+encodeURIComponent(row.id),{
-      method:"PATCH",headers:{"Prefer":"return=minimal"},
-      body:JSON.stringify({
-        q:row.q,r:row.r,flying:row.flying,visible_to_players:row.visible_to_players,
-        current_kp:row.current_kp,current_psy:row.current_psy,
-        movement_remaining:row.movement_remaining,status:row.status,
-        action_plan:row.action_plan||[],state:row.state||{},updated_at:new Date().toISOString()
-      })
+    // Restore coordinates in transaction-local trigger-suppressed RPC calls.
+    await Promise.all((snapshot.combatants||[]).map(row=>dbJson("rpc/haj_restore_combatant",{
+      method:"POST",headers:{"Prefer":"return=representation"},
+      body:JSON.stringify({p_combatant_id:row.id,p_snapshot:row})
     })));
+    if(Array.isArray(snapshot.area_effects)){
+      const currentAreas=await dbJson("combat_area_effects?combat_id=eq."+cid+"&select=id");
+      const originalById=new Map(snapshot.area_effects.map(row=>[String(row.id),row]));
+      await Promise.all((currentAreas||[]).filter(row=>!originalById.has(String(row.id))).map(row=>
+        dbJson("combat_area_effects?id=eq."+encodeURIComponent(row.id)+"&combat_id=eq."+cid,{
+          method:"DELETE",headers:{"Prefer":"return=minimal"}
+        })
+      ));
+      await Promise.all(snapshot.area_effects.map(row=>
+        dbJson("combat_area_effects?id=eq."+encodeURIComponent(row.id)+"&combat_id=eq."+cid,{
+          method:"PATCH",headers:{"Prefer":"return=minimal"},
+          body:JSON.stringify({
+            center_q:row.center_q,center_r:row.center_r,radius:row.radius,
+            applied_round:row.applied_round,expires_round:row.expires_round,
+            source_combatant_id:row.source_combatant_id,status:row.status,
+            parameters:row.parameters||{},updated_at:new Date().toISOString()
+          })
+        })
+      ));
+    }
+    if(Number.isSafeInteger(snapshot.area_event_max_id)&&snapshot.area_event_max_id>=0){
+      await dbJson("combat_area_events?combat_id=eq."+cid+"&id=gt."+snapshot.area_event_max_id,{
+        method:"DELETE",headers:{"Prefer":"return=minimal"}
+      });
+    }
     const logMax=Math.max(0,Number(snapshot.log_max_id)||0);
     await dbJson("combat_log?combat_id=eq."+cid+"&id=gt."+logMax,{
       method:"DELETE",headers:{"Prefer":"return=minimal"}
