@@ -1474,6 +1474,21 @@ function combatSummonSnapshot(template,effectGrade){
 function combatIsSummoningSpell(spell){
  return /^(FRAMMANA\\/SKICKA BORT ELEMENTAR|TILLKALLA VARELSE)/i.test(String(spell?.name||''))
 }
+// Shared magic metadata and casting preflight. Unknown Expert values stay unresolved.
+const COMBAT_MAGIC_CATEGORIES=['direct','indirect','support','summon','none'];
+function combatMagicRuleProfile(spell){
+ const known=combatSpellEffectProfile(spell),summon=combatIsSummoningSpell(spell);
+ return {category:summon?'summon':known.category,effect:summon?'summon':known.effect,target:summon?'hex':known.target,range_text:spell?.range_text||'',duration_text:spell?.duration_text||'',psy_cost_text:spell?.psy_cost_text||'',damage_text:spell?.damage_text||'',resistance_text:spell?.resistance_text||'',effect_per_eg:spell?.effect_per_eg||''}
+}
+function combatMagicCastPreflight(combatant,spell,effectGrade){
+ const eg=Number(effectGrade),fv=Number(spell?.fv),errors=[];
+ if(!spell?.name)errors.push('Ingen besvärjelse vald');
+ if(!Number.isInteger(eg)||eg<1)errors.push('Ogiltig effektgrad');
+ if(!Number.isFinite(fv)||fv<1)errors.push('Besvärjelsen saknar giltigt FV');
+ const cost=Number(spell?.psy_cost_per_eg);
+ if(Number.isFinite(cost)&&cost>0&&Number.isFinite(Number(combatant?.current_psy))&&cost*eg>Number(combatant.current_psy))errors.push('Otillräcklig PSY');
+ return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:Number.isFinite(cost)&&cost>0?cost*eg:null,rule:combatMagicRuleProfile(spell)}
+}
 function combatSpellOptions(combatant){
  return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
 }
@@ -1482,7 +1497,7 @@ function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
  return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
-  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatSpellEffectProfile(spell),summon=combatIsSummoningSpell(spell);
+  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatMagicRuleProfile(spell),summon=profile.category==='summon';
   return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+'</small></button>'
  }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
@@ -1510,7 +1525,8 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
  if(!combatant||!action||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
- const sourceData={...(action.source_data||{}),spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:combatSpellEffectProfile(spell),effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
+ const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
