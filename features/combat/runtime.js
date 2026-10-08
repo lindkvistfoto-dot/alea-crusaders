@@ -1542,7 +1542,9 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
 async function stepCombatSpellEffect(combatantId,delta){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action)return;
  const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
- const sourceData={...(action.source_data||{}),effect_grade:effect};
+ const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(action.source_data?.spell_key));
+ if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
+ const sourceData={...(action.source_data||{}),effect_grade:effect,magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,psy_cost:effect};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
@@ -2463,9 +2465,9 @@ function combatFireballTargets(){
  return out
 }
 async function combatResolveTestFireball(actor,target,action){
- const spellName=action.source_data?.spell_name||'Eld',fv=Math.max(1,Number(action.source_data?.spell_fv)||10),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
+ const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
- const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,spell_name:'Eldklot',attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
+ const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:outcome==='perfect'?Math.max(1,Math.floor(eg/2)):eg,spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(success){
   const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6'};
@@ -2977,7 +2979,7 @@ function combatSpellCastPanelHtml(){
  const effect=Math.max(1,Number(data.effect_grade)||1),spell=escAttr(data.spell_name||'Besvärjelse');
  let instruction=!casting?'Besvärjelsen är förberedd. Tryck ✦ för att slunga den.':(target?'Målet är valt. Tryck ✦ igen för att slunga '+spell+'.':'Välj mål för '+spell+'. Giltiga mål är markerade ('+targets.size+').');
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>MAGI · '+spell+'</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):'')+'</b></div>'+
-  '<div class="combat-magic-prepared"><span>FÖRBEREDD</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+(data.range_text?' · '+escAttr(data.range_text):'')+'</small></div>'+
+  '<div class="combat-magic-prepared"><span>FÖRBEREDD</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+' · CL '+Math.max(1,(Number(data.spell_fv)||1)-2*(effect-1))+' · PSY '+effect+' · '+(data.magic_casting?.quick?'Kvick':'Effekt nästa SR')+(data.range_text?' · '+escAttr(data.range_text):'')+'</small></div>'+
   (!resolved?'<div class="combat-mini-instruction">'+instruction+'</div>':'')+
   (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
 }
