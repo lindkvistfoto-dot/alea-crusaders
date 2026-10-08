@@ -75,4 +75,25 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
   expect(src).toContain("damage_text:rule.damage_text||''");
   expect(src).toContain('if(!binding.supported)errors.push')
  });
+ test('DIMMA uses HAJ persistent obscuring hex areas',()=>{
+  expect(binding({name:'DIMMA'})).toMatchObject({kind:'area',code:'area_fog',supported:true});
+  expect(src).toContain('async function combatCastAreaSpell(actor,action)');
+  expect(src).toContain("await dbJson('combat_area_effects'");
+  expect(src).toContain('combatSetMagicAreaCenter(');
+  expect(src).toContain('combatSetMagicAreaRadius(');
+ });
+ test('spell reach scales SxN hexes by effect grade',()=>{
+  expect(src).toContain('function combatSpellRangeHexes(actor,action)');
+  expect(src).toContain('if(scaled)return eg*Number(scaled[1])');
+  expect(src).toContain('combatAxialDistance(actor,center)>range');
+ });
+ test('spell damage never adds physical-strength SB',()=>{
+  expect(src).toContain("weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}");
+  expect(src).toContain('_spell_damage:true');
+ });
+ test('area and status casts keep manually specified SR duration',()=>{
+  expect(src).toContain('async function combatSetMagicDuration(actorId,delta)');
+  expect(src).toContain('effect_duration_rounds:duration||null');
+  expect(src).toContain('expires_round:round+duration-1:null');
+ });
 });
