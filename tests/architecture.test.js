@@ -42,6 +42,13 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("spell registry has editable persistent playtested flags", () => {
+    const app = read("legacy/app.js");
+    expect(app).toContain('<div class="ahead">Testad</div>');
+    expect(app).toContain("async function setRuleSpellPlaytested(id,tested,checkbox)");
+    expect(app).toContain("playtested:!!tested");
+  });
+
   test("ÖKA and MINSKA expose temporary attribute deltas", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatEffectAttributeDelta(combatant,attribute)");
