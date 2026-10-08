@@ -3656,6 +3656,93 @@ const COMBAT_EFFECT_ENDINGS=['duration','manual','woken','cured','dispelled','co
 function combatEffectSelect(id,values,selected){
  return '<select id="'+id+'">'+values.map(v=>'<option value="'+v+'" '+(v===selected?'selected':'')+'>'+v+'</option>').join('')+'</select>'
 }
+// HAJ: GM-created areas are independent of a combatant's personal effects.
+function combatAreasAdminHtml(){
+ if(!combatCanManage()||!activeCombat)return '';
+ const center=combatAreaDraftCenter,defs=combatEffectRegistry.filter(d=>d.active&&['area','hex'].includes(d.target_type));
+ const rows=combatAreaEffects.filter(row=>combatAreaActive(row));
+ return '<details class="combat-effects-admin" open><summary>HAJ · Områdeseffekter ('+rows.length+')</summary>'+
+  '<div><b>Skapa område</b> <select id="combatAreaRule">'+defs.map(d=>
+   '<option value="'+escAttr(d.id)+'">'+escAttr(d.name)+'</option>').join('')+'</select>'+
+  '<button type="button" onclick="combatToggleAreaPlacement()" aria-pressed="'+(combatAreaPlacementActive?'true':'false')+'">'+
+   (combatAreaPlacementActive?'Klicka på centrumhex…':'Välj centrum på kartan')+'</button>'+
+  '<span>Centrum: '+(center?center.q+','+center.r:'välj på kartan')+'</span>'+
+  '<label>Radie (hex) <input id="combatAreaRadius" type="number" min="0" max="15" step="1" value="0"></label>'+
+  '<label>Varaktighet (SR, valfri) <input id="combatAreaDuration" type="number" min="1" step="1" placeholder="Tills SL avslutar"></label>'+
+  '<label>Inträde (KP) <input id="combatAreaEnter" type="number" min="0" max="9999" step="1" value="0"></label>'+
+  '<label>Vistelse (KP/SR) <input id="combatAreaStay" type="number" min="0" max="9999" step="1" value="0"></label>'+
+  '<label>Utträde (KP) <input id="combatAreaExit" type="number" min="0" max="9999" step="1" value="0"></label>'+
+  '<select id="combatAreaSource" title="Valfri orsakande kombatant"><option value="">Ingen känd källa</option>'+
+   combatants.filter(c=>!['dead','removed'].includes(c.status)).map(c=>
+    '<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select>'+
+  '<button type="button" '+(!center||!defs.length?'disabled':'')+' onclick="combatCreateAreaEffect()">Placera område</button></div>'+
+  '<div class="combat-action-note">Skadevärdena anges av SL. Dimma och svår terräng har ingen automatisk skada. Effekter räknas vid in- och utträde samt vid slutet av kombatantens drag.</div>'+
+  '<div>'+rows.map(a=>{
+   const d=combatEffectDefinition({effect_id:a.effect_id}),end=a.expires_round!=null?' · till SR '+a.expires_round:' · tills vidare';
+   const params=a.parameters||{};
+   return '<span><b>'+escAttr(d?.name||'Område')+'</b> ('+a.center_q+','+a.center_r+', radie '+a.radius+
+    end+') · in '+(params.damage_on_enter||0)+' / kvar '+(params.damage_on_stay||0)+
+    ' / ut '+(params.damage_on_exit||0)+
+    ' <button type="button" onclick="combatRemoveAreaEffect(\''+a.id+'\')">Ta bort</button></span>'
+  }).join(' · ')+'</div></details>'
+}
+function combatToggleAreaPlacement(){
+ if(!combatCanManage()||!activeCombat)return;
+ combatAreaPlacementActive=!combatAreaPlacementActive;
+ if(combatAreaPlacementActive)combatMovementPlan=null;
+ renderCombat()
+}
+function combatChooseAreaCenter(event,q,r){
+ event?.stopPropagation?.();
+ if(!combatCanManage()||!combatAreaPlacementActive)return;
+ if(!Number.isInteger(q)||!Number.isInteger(r)||!combatRuntimeHexCells().some(c=>c.q===q&&c.r===r))return;
+ combatAreaDraftCenter={q,r};
+ combatAreaPlacementActive=false;
+ renderCombat()
+}
+async function combatCreateAreaEffect(){
+ if(!combatCanManage()||!activeCombat||!combatAreaDraftCenter)return;
+ const id=$('combatAreaRule')?.value,def=combatEffectRegistry.find(d=>d.id===id);
+ if(!def?.active||!['area','hex'].includes(def.target_type))return alert('Välj en områdeseffekt.');
+ const integer=(field,min,max)=>{
+  const raw=String($(field)?.value??'').trim();
+  if(!/^[0-9]+$/.test(raw))throw new Error('Ogiltigt heltal: '+field);
+  const value=Number(raw);
+  if(!Number.isSafeInteger(value)||value<min||value>max)throw new Error('Värdet måste ligga mellan '+min+' och '+max+': '+field);
+  return value
+ };
+ try{
+  const radius=integer('combatAreaRadius',0,15);
+  const entered=integer('combatAreaEnter',0,9999),stayed=integer('combatAreaStay',0,9999),exited=integer('combatAreaExit',0,9999);
+  const rawDuration=String($('combatAreaDuration')?.value||'').trim(),duration=rawDuration?integer('combatAreaDuration',1,9999):null;
+  const sourceId=$('combatAreaSource')?.value||null;
+  if(sourceId&&!combatants.some(c=>c.id===sourceId))throw new Error('Områdets källa finns inte i striden.');
+  const kind=def.modifiers?.type;
+  if(kind!=='area_damage'&&(entered||stayed||exited))throw new Error('Den valda terrängeffekten kan inte orsaka KP-skada.');
+  if(kind!=='area_damage'&&kind!=='area_terrain')throw new Error('Områdets regeltyp saknar stöd i strid.');
+  const round=Number(activeCombat.round_number)||1,center=combatAreaDraftCenter;
+  if(!combatRuntimeHexCells().some(c=>c.q===center.q&&c.r===center.r))throw new Error('Centrum ligger utanför stridskartan.');
+  await dbJson('combat_area_effects',{
+   method:'POST',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,effect_id:id,
+    source_combatant_id:sourceId,center_q:center.q,center_r:center.r,radius,applied_round:round,
+    expires_round:duration==null?null:round+duration-1,
+    parameters:{damage_on_enter:entered,damage_on_stay:stayed,damage_on_exit:exited}})
+  });
+  combatAreaDraftCenter=null;combatAreaPlacementActive=false;
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){alert('Kunde inte placera området: '+error.message)}
+}
+async function combatRemoveAreaEffect(areaId){
+ if(!combatCanManage()||!activeCombat)return;
+ try{
+  await dbJson('combat_area_effects?id=eq.'+encodeURIComponent(areaId)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({status:'removed',updated_at:new Date().toISOString()})
+  });
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){alert('Kunde inte ta bort området: '+error.message)}
+}
 function combatEffectsAdminHtml(){
  if(!combatCanManage())return '';
  const edit=combatEffectRegistry.find(e=>e.id===combatEffectEditingId);
