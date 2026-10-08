@@ -124,7 +124,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function combatApplyEffect()");
     expect(combat).toContain("async function combatRemoveEffect(");
     expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttributeHtml(c)");
-    expect(combat).toContain("combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()");
+    expect(combat).toContain("combatGmToolboxHtml()");
     expect(combat).not.toContain("Effekter · register och tilldelning");
     const app=read("legacy/app.js");
     const effects=read("features/combat/admin-effects.js");

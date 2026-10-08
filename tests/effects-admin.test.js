@@ -6,7 +6,7 @@ const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.u
 const app=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 function harness({rows=[],fields={},admin=true}={}){
- const nodes=Object.fromEntries(['adminEffectTable','adminEffectStatus','adminEditorBody','adminEditorTitle','adminEditor'].map(id=>[id,{
+ const nodes=Object.fromEntries(['adminEffectTable','adminAreaEffectTable','adminAreaEffectStatus','adminEffectStatus','adminEditorBody','adminEditorTitle','adminEditor'].map(id=>[id,{
   innerHTML:'',textContent:'',classList:{remove(){}}
  }]));
  for(const [id,value] of Object.entries(fields))nodes[id]=value&&typeof value==='object'?value:{value};
@@ -29,7 +29,7 @@ function harness({rows=[],fields={},admin=true}={}){
   askConfirm:async()=>true,
   crypto:{randomUUID:()=> '123e4567-e89b-42d3-a456-426614174000'}
  };
- runInNewContext(source+'\nthis.api={loadRuleEffects,renderAdminEffects,editRuleEffect,ruleEffectFormData,saveRuleEffect,toggleRuleEffect,deleteRuleEffect};',ctx);
+ runInNewContext(source+'\nthis.api={loadRuleEffects,renderAdminEffects,editRuleEffect,editRuleAreaEffect,ruleEffectFormData,saveRuleEffect,toggleRuleEffect,deleteRuleEffect};',ctx);
  return {ctx,api:ctx.api,nodes,calls,get refresh(){return refresh},get close(){return close}}
 }
 const effect={id:'e1',code:'spell_flyga',name:'FLYGA',active:true,description:'Kan flyga',category:'magic',polarity:'positive',target_type:'combatant',duration_unit:'round',expiration_condition:'duration',stacking:'refresh',default_duration_rounds:4,modifiers:{type:'flight',ignore_terrain:true},parameter_schema:{}};
@@ -40,6 +40,23 @@ const form={
  refParameters:'{"radius":"integer"}',refActive:{checked:true}
 };
 describe('Admin · effektregister – live data and CRUD',()=>{
+ test('area effects have their own editable master table',()=>{
+  const area={...effect,id:'e2',name:'DIMMA',code:'area_fog',target_type:'area',modifiers:{type:'area_terrain',sight_mode:'obscuring'}};
+  const x=harness({rows:[effect,area]});x.api.renderAdminEffects();
+  expect(x.nodes.adminEffectTable.innerHTML).toContain('FLYGA');
+  expect(x.nodes.adminEffectTable.innerHTML).not.toContain('DIMMA');
+  expect(x.nodes.adminAreaEffectTable.innerHTML).toContain('DIMMA');
+  expect(x.nodes.adminAreaEffectStatus.textContent).toContain('1 områdeseffekter');
+  x.api.editRuleAreaEffect();expect(x.nodes.adminEditorBody.innerHTML).toContain('area_terrain');
+  expect(html).toContain('id="adminAreaEffectTable"');
+ });
+ test('GM toolbox is after combat log and manual assignment is its last tool',()=>{
+  const render=runtime.slice(runtime.indexOf('function renderCombat(){'));
+  expect(render.indexOf("'+combatGmToolboxHtml()+'")).toBeGreaterThan(render.indexOf('combatTurnPanelHtml()'));
+  const toolbox=runtime.slice(runtime.indexOf('function combatGmToolboxHtml(){'),runtime.indexOf('function renderCombat(){'));
+  expect(toolbox.indexOf('combatAreasAdminHtml()')).toBeLessThan(toolbox.indexOf('combatEffectsAdminHtml()'));
+ });
+
  test('register can be fetched directly from shared rule_effects table',async()=>{
   const x=harness({rows:[effect]});x.ctx.ruleEffectsLoaded=false;x.ctx.ruleEffects=[];
   expect((await x.api.loadRuleEffects()).length).toBe(1);
@@ -104,6 +121,6 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   expect(section).not.toContain('open><summary');
   expect(app).toContain("effects:{label:'Effekter'");
   expect(html).toContain('data-admin-section="effects"');
-  expect(html).toContain('features/combat/admin-effects.js?v=0.34.56');
+  expect(html).toContain('features/combat/admin-effects.js?v=0.34.57');
  });
 });

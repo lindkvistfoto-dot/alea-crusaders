@@ -3982,7 +3982,7 @@ function combatAreasAdminHtml(){
  if(!combatCanManage()||!activeCombat)return '';
  const center=combatAreaDraftCenter,defs=combatEffectRegistry.filter(d=>d.active&&['area','hex'].includes(d.target_type));
  const rows=combatAreaEffects.filter(row=>combatAreaActive(row));
- return '<details class="combat-effects-admin" open><summary>HAJ · Områdeseffekter ('+rows.length+')</summary>'+
+ return '<details class="combat-effects-admin"><summary>Områden i striden ('+rows.length+')</summary>'+
   '<div><b>Skapa område</b> <select id="combatAreaRule">'+defs.map(d=>
    '<option value="'+escAttr(d.id)+'">'+escAttr(d.name)+'</option>').join('')+'</select>'+
   '<button type="button" onclick="combatToggleAreaPlacement()" aria-pressed="'+(combatAreaPlacementActive?'true':'false')+'">'+
@@ -4110,6 +4110,10 @@ async function combatRemoveEffect(id){
  if(!combatCanManage())return;
  try{await dbJson('combatant_effects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',updated_at:new Date().toISOString()})});await combatLoadEffects();renderCombat()}catch(e){alert(e.message)}
 }
+function combatGmToolboxHtml(){
+ if(!combatCanManage()||!activeCombat)return '';
+ return '<section class="combat-gm-toolbox"><h3>SL · Stridskontroll</h3><p class="combat-action-note">Skapa områden och tilldela effekter i striden. Regeldefinitioner finns i Administration → Effekter.</p>'+combatAreasAdminHtml()+combatEffectsAdminHtml()+'</section>'
+}
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
  if(!activeCombat){
@@ -4121,7 +4125,7 @@ function renderCombat(){
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+combatGmToolboxHtml()+'</div>'+combatantDetailsPopupHtml();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 

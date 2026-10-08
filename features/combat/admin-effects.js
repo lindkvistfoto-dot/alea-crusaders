@@ -20,13 +20,11 @@ function ruleEffectDuration(row){
  if(row.duration_unit==='instant')return 'Omedelbar';
  return row.default_duration_rounds==null?'SL avgör':row.default_duration_rounds+' '+ruleEffectLabel(RULE_EFFECT_UNIT,row.duration_unit)
 }
-function renderAdminEffects(){
- const table=$('adminEffectTable'),status=$('adminEffectStatus');if(!table)return;
- if(!ruleEffectsLoaded){table.innerHTML='';if(status)status.textContent='Effektregistret kunde inte läsas.';return}
- if(status)status.textContent=ruleEffects.length+' effekter i registret · '+ruleEffects.filter(row=>row.active).length+' aktiva.';
+function ruleEffectsAreArea(row){return ['area','hex'].includes(row?.target_type)}
+function ruleEffectRegistryMarkup(rows){
  const headings=['Namn','Kod','Kategori','Typ','Mål','Varaktighet','Avslut','Aktiv','Åtgärd'];
- table.innerHTML=headings.map(h=>'<div class="ahead">'+h+'</div>').join('')+
-  ruleEffects.map(row=>{
+ return headings.map(h=>'<div class="ahead">'+h+'</div>').join('')+
+  rows.map(row=>{
    const id=encodeURIComponent(row.id),code=String(row.code||''),type=row.modifiers?.type||'custom';
    return '<div><span class="rule-name" title="'+escAttr(row.description||'')+'" onclick="editRuleEffect(\''+id+'\')">'+escAttr(row.name||'—')+'</span>'+
     (row.description?'<small class="admin-master-key">'+escAttr(row.description)+'</small>':'')+'</div>'+
@@ -42,30 +40,40 @@ function renderAdminEffects(){
      (code.startsWith('custom_')?'<button class="deletebtn" title="Ta bort egen effekt" type="button" onclick="deleteRuleEffect(\''+id+'\')">×</button>':'')+'</div>'
   }).join('')
 }
+function renderAdminEffects(){
+ const table=$('adminEffectTable'),areaTable=$('adminAreaEffectTable'),status=$('adminEffectStatus'),areaStatus=$('adminAreaEffectStatus');if(!table)return;
+ if(!ruleEffectsLoaded){table.innerHTML='';if(areaTable)areaTable.innerHTML='';if(status)status.textContent='Effektregistret kunde inte läsas.';return}
+ const personal=ruleEffects.filter(row=>!ruleEffectsAreArea(row)),area=ruleEffects.filter(ruleEffectsAreArea);
+ if(status)status.textContent=ruleEffects.length+' effekter i registret · '+ruleEffects.filter(row=>row.active).length+' aktiva.';
+ table.innerHTML=ruleEffectRegistryMarkup(personal);
+ if(areaTable)areaTable.innerHTML=ruleEffectRegistryMarkup(area);
+ if(areaStatus)areaStatus.textContent=area.length+' områdeseffekter · '+area.filter(row=>row.active).length+' aktiva. SL placerar dem via stridskontrollen.';
+}
 function ruleEffectOptions(map,chosen){
  const entries=Object.entries(map);
  if(chosen!=null&&!entries.some(([value])=>value===String(chosen)))entries.push([String(chosen),String(chosen)]);
  return entries.map(([v,label])=>'<option value="'+escAttr(v)+'" '+(v===String(chosen)?'selected':'')+'>'+escAttr(label)+'</option>').join('')
 }
-function editRuleEffect(id=''){
+function editRuleAreaEffect(id=''){return editRuleEffect(id,'area')}
+function editRuleEffect(id='',mode='combatant'){
  if(!activeUser()?.admin)return;
- const row=ruleEffects.find(r=>String(r.id)===String(id))||null,kind=String(row?.modifiers?.type||'custom');
+ const row=ruleEffects.find(r=>String(r.id)===String(id))||null,kind=String(row?.modifiers?.type||(mode==='area'?'area_terrain':'custom'));
  const types=['custom','attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','area_damage','area_terrain','terrain','incapacitated','fear','panic','confusion'];
  const typeOptions=Object.fromEntries([...new Set([...types,kind])].map(t=>[t,t]));
  $('adminEditorTitle').textContent=row?'Redigera effekt: '+row.name:'Lägg till effekt';
  $('adminEditorBody').innerHTML='<div class="rule-editor-grid effect-rule-editor">'+
   '<label class="wide">Namn<input id="refName" maxlength="100" value="'+escAttr(row?.name||'')+'"></label>'+
   (row?'<label class="wide">Regelkod<input readonly value="'+escAttr(row.code||'')+'"></label>':'<p class="rule-editor-note wide">En unik regelkod skapas automatiskt.</p>')+
-  '<label>Kategori<select id="refCategory">'+ruleEffectOptions(RULE_EFFECT_CATEGORY,row?.category||'condition')+'</select></label>'+
+  '<label>Kategori<select id="refCategory">'+ruleEffectOptions(RULE_EFFECT_CATEGORY,row?.category||(mode==='area'?'environment':'condition'))+'</select></label>'+
   '<label>Typ<select id="refType">'+ruleEffectOptions(typeOptions,kind)+'</select></label>'+
-  '<label>Mål<select id="refTarget">'+ruleEffectOptions(RULE_EFFECT_TARGET,row?.target_type||'combatant')+'</select></label>'+
+  '<label>Mål<select id="refTarget">'+ruleEffectOptions(RULE_EFFECT_TARGET,row?.target_type||(mode==='area'?'area':'combatant'))+'</select></label>'+
   '<label>Polaritet<select id="refPolarity">'+ruleEffectOptions(RULE_EFFECT_POLARITY,row?.polarity||'neutral')+'</select></label>'+
   '<label>Tidsenhet<select id="refUnit">'+ruleEffectOptions(RULE_EFFECT_UNIT,row?.duration_unit||'round')+'</select></label>'+
   '<label>Standardvaraktighet<input id="refDuration" type="number" min="0" max="9999" step="1" placeholder="SL avgör" value="'+escAttr(row?.default_duration_rounds??'')+'"></label>'+
   '<label>Avslut<select id="refEnding">'+ruleEffectOptions(RULE_EFFECT_END,row?.expiration_condition||'duration')+'</select></label>'+
   '<label>Stapling<select id="refStacking">'+ruleEffectOptions({refresh:'Förnya',stack:'Stapla',ignore:'Ignorera'},row?.stacking||'refresh')+'</select></label>'+
   '<label class="wide">Beskrivning<textarea id="refDescription">'+escAttr(row?.description||'')+'</textarea></label>'+
-  '<label class="wide">Modifierare (JSON)<textarea id="refModifiers" spellcheck="false">'+escAttr(JSON.stringify(row?.modifiers||{type:'custom'},null,2))+'</textarea></label>'+
+  '<label class="wide">Modifierare (JSON)<textarea id="refModifiers" spellcheck="false">'+escAttr(JSON.stringify(row?.modifiers||(mode==='area'?{type:'area_terrain',movement_mode:'free',sight_mode:'obscuring'}:{type:'custom'}),null,2))+'</textarea></label>'+
   '<label class="wide">Parameterschema (JSON)<textarea id="refParameters" spellcheck="false">'+escAttr(JSON.stringify(row?.parameter_schema||{},null,2))+'</textarea></label>'+
   '<label class="wide admincheck"><input id="refActive" type="checkbox" '+(row?.active!==false?'checked':'')+'> Aktiv</label>'+
  '</div><p class="rule-editor-note">Modifierare styr effektens beteende i strid. Behåll befintlig kod och parametrar för effekter som redan används av besvärjelser.</p>'+
