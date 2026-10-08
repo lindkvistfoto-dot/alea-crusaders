@@ -260,3 +260,40 @@
   opacity:.5;
   cursor:wait;
 }
+
+
+/* v0.34.90 – kartans direktstyrda synlighet för SL. */
+#mapPage .map-visibility-toggle{
+  min-height:38px;
+  padding-inline:12px;
+  white-space:nowrap;
+  font-weight:750;
+  border:1px solid #b58c5f;
+  border-radius:8px;
+  background:linear-gradient(180deg,#55432e,#3e2b20);
+  color:#f9e9c7;
+}
+#mapPage .map-visibility-toggle.is-visible{
+  background:linear-gradient(180deg,#315b44,#234536);
+  border-color:#88b99a;
+  color:#f1ffe9;
+}
+#mapPage .map-visibility-toggle.is-hidden{
+  background:linear-gradient(180deg,#55432e,#3e2b20);
+  border-color:#b58c5f;
+  color:#f9e9c7;
+}
+#mapPage .map-visibility-toggle:focus-visible{
+  outline:2px solid #bde8ec;
+  outline-offset:2px;
+}
+#mapPage .map-visibility-toggle:disabled{
+  opacity:.55;
+  cursor:wait;
+}
+@media(max-width:700px){
+  #mapPage .map-visibility-toggle{
+    white-space:normal;
+    text-align:center;
+  }
+}
