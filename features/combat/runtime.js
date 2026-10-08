@@ -1796,6 +1796,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    await combatLoadEffects();
+   await combatExpireElapsedEffects();
    const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
    combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null);
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
@@ -2104,8 +2105,7 @@ function combatHexLine(a,b){
 function combatIsFlying(combatant){
  if(!combatant)return false;
  return combatant.flying===true||combatActiveEffects.some(effect=>
-  String(effect.combatant_id)===String(combatant.id)&&effect.status==='active'&&
-  (effect.expires_round==null||effect.expires_round>=(Number(activeCombat?.round_number)||1))&&
+  String(effect.combatant_id)===String(combatant.id)&&combatEffectIsActive(effect)&&
   combatEffectRegistry.some(def=>def.id===effect.effect_id&&def.modifiers?.type==='flight'))
 }
 function combatTerrainIsWall(cell){
@@ -3348,15 +3348,53 @@ async function combatLoadEffects(){
   combatActiveEffects=Array.isArray(assigned)?assigned:[]
  }else combatActiveEffects=[]
 }
+function combatEffectDefinition(row){return combatEffectRegistry.find(def=>def.id===row.effect_id)}
+function combatEffectIsActive(row,round=Number(activeCombat?.round_number)||1,now=Date.now()){
+ if(!row||row.status!=='active')return false;
+ if(Number(row.applied_round||1)>round)return false;
+ if(row.expires_round!=null&&round>Number(row.expires_round))return false;
+ if(row.expires_at&&new Date(row.expires_at).getTime()<=now)return false;
+ return true
+}
+function combatEffectExpiry(def,round,strength=1){
+ const unit=def?.duration_unit||'round',ending=def?.expiration_condition||'duration';
+ const count=def?.modifiers?.type==='skip_turns'?strength:def?.default_duration_rounds;
+ if(ending!=='duration'||count==null||unit==='permanent')return {expires_round:null,expires_at:null};
+ if(unit==='instant')return {expires_round:round,expires_at:null};
+ if(unit==='round')return {expires_round:round+Math.max(1,Number(count))-1,expires_at:null};
+ const ms=unit==='minute'?60000:unit==='hour'?3600000:0;
+ return {expires_round:null,expires_at:ms?new Date(Date.now()+Math.max(0,Number(count))*ms).toISOString():null}
+}
+async function combatExpireElapsedEffects(){
+ if(!activeCombat||!combatCanManage())return;
+ const round=Number(activeCombat.round_number)||1,now=Date.now();
+ const expired=combatActiveEffects.filter(row=>row.status==='active'&&!combatEffectIsActive(row,round,now));
+ if(!expired.length)return;
+ await Promise.all(expired.map(row=>dbJson('combatant_effects?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.active',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'expired',updated_at:new Date().toISOString()})
+ })));
+ expired.forEach(row=>row.status='expired')
+}
+async function combatEndEffectByCondition(id,condition){
+ if(!combatCanManage()||!activeCombat||!COMBAT_EFFECT_ENDINGS.includes(condition))return;
+ const row=combatActiveEffects.find(e=>e.id===id),def=row&&combatEffectDefinition(row);
+ if(!row||!def||!combatEffectIsActive(row))return;
+ if(condition!=='manual'&&def.expiration_condition!==condition)return alert('Denna effekt kan inte avslutas med det villkoret.');
+ try{
+  await dbJson('combatant_effects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',notes:[row.notes,condition].filter(Boolean).join(' · '),updated_at:new Date().toISOString()})
+  });
+  await combatLoadEffects();renderCombat()
+ }catch(e){alert('Kunde inte avsluta effekten: '+e.message)}
+}
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
 function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||1){
  if(!combatant)return false;
- return combatActiveEffects.some(row=>String(row.combatant_id)===String(combatant.id)&&row.status==='active'&&
-  Number(row.applied_round||0)<=round&&(row.expires_round==null||Number(row.expires_round)>=round)&&
+ return combatActiveEffects.some(row=>String(row.combatant_id)===String(combatant.id)&&combatEffectIsActive(row,round)&&
   combatEffectRegistry.some(def=>def.id===row.effect_id&&def.active&&def.modifiers?.type==='skip_turns'))
 }
 function combatEffectAttributeDelta(combatant,attribute){
- return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1))).reduce((sum,e)=>{
+ return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&combatEffectIsActive(e)).reduce((sum,e)=>{
   const def=combatEffectRegistry.find(d=>d.id===e.effect_id),p=e.parameters||{};
   if(def?.modifiers?.type!=='attribute_delta'||p.attribute!==attribute)return sum;
   return sum+(Number(def.modifiers.direction)||0)*Math.max(1,Number(e.strength)||1)*Math.max(1,Number(p.points_per_eg)||1)
@@ -3371,7 +3409,7 @@ function combatEffectLabel(row){
  return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')
 }
 function combatantEffectsHtml(combatant){
- const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1)));
+ const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&combatEffectIsActive(e));
  return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>'<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+(combatCanManage()?'<button type="button" title="Ta bort effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\')">×</button>':'')+'</span>').join('')+'</div>':''
 }
 const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','custom'];
@@ -3451,9 +3489,9 @@ async function combatApplyEffect(){
  const def=combatEffectRegistry.find(e=>e.id===effectId),attribute=$('combatEffectAttribute')?.value,pointsPerEg=Number($('combatEffectPointsPerEg')?.value||1);
  if(def?.modifiers?.type==='attribute_delta'&&(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute)||!Number.isInteger(pointsPerEg)||pointsPerEg<1))return alert('Välj egenskap och giltig förändring per EG.');
  if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
- const round=Number(activeCombat.round_number)||1,expires=def.modifiers?.type==='skip_turns'?round+strength-1:def.default_duration_rounds==null?null:round+def.default_duration_rounds;
+ const round=Number(activeCombat.round_number)||1,expiry=combatEffectExpiry(def,round,strength);
  try{
-  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,expires_round:expires,parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{}})});
+  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,...expiry,expiration_condition:def.expiration_condition||'duration',parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{}})});
   await combatLoadEffects();renderCombat()
  }catch(e){alert('Kunde inte tilldela effekt: '+e.message)}
 }
