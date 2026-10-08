@@ -1,10 +1,21 @@
 /* Bilbo – search, gallery and metadata management for private campaign materials. */
 import './storage.js?v=0.34.79';
+import {createAragorn} from './links.js?v=0.34.83';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
 const bilboState={campaign:'',rows:[],page:0,hasNext:false,category:'all',status:'active',sort:'newest',search:'',selected:null,busy:false,querySeq:0,mediaSeq:0,detailSeq:0,layout:'grid',thumbUrls:new Map(),detailUrl:'',note:'',searchTimer:null};
 const bilboStorage=()=>window.gimliMaterialApi;
+const aragorn=createAragorn({
+ getSelected:()=>bilboSelected(),
+ getCampaign:()=>bilboCampaign(),
+ getGeneration:()=>bilboState.detailSeq,
+ canManage:()=>bilboAllowed(),
+ request:(path,options)=>dbJson(path,options),
+ escape:value=>bilboEscape(value),
+ notify:(message,error)=>bilboNotice(message,error),
+ reload:async()=>{bilboState.page=0;await bilboLoadPage()}
+});
 const bilboAllowed=()=>bilboStorage()?.canManage()===true;
 const bilboCampaign=()=>String(centralCampaignId||'');
 function bilboEscape(s){return escAttr(String(s??''))}
@@ -15,6 +26,7 @@ function bilboReleaseThumbs(){
  bilboState.thumbUrls.clear();
 }
 function bilboReleaseMedia(){
+ aragorn.clear();
  bilboReleaseThumbs();
  bilboState.detailSeq++;
  if(bilboState.detailUrl){URL.revokeObjectURL(bilboState.detailUrl);bilboState.detailUrl=''}
@@ -135,6 +147,7 @@ function bilboDetailHtml(row){
   '<button type="submit" class="btn primary" id="bilboSaveButton">Spara uppgifter</button></form>'+
   '<div class="bilbo-note"><label>Privata SL-anteckningar<textarea id="bilboGmNote" maxlength="8000" rows="3" placeholder="Endast spelledaren kan läsa detta…"></textarea></label>'+
   '<button type="button" class="smallbtn" id="bilboNoteSave" onclick="bilboSaveNote()">Spara SL-anteckning</button></div>'+
+  aragorn.html()+
   '<div class="bilbo-detail-actions"><button type="button" class="smallbtn" id="bilboArchiveButton" onclick="bilboToggleArchive()">'+
    (row.archived_at?'Återställ ur arkiv':'Arkivera material')+'</button></div>'+
   '<p class="bilbo-detail-info">'+(row.file_size_bytes?Math.ceil(row.file_size_bytes/1024)+' kB · ':'')+
@@ -142,6 +155,7 @@ function bilboDetailHtml(row){
   '<p class="bilbo-detail-info">Arkivering döljer materialet ur det aktiva biblioteket utan att radera filen.</p>'
 }
 function bilboCloseDetail(){
+ aragorn.clear();
  bilboState.detailSeq++;
  bilboState.selected=null;bilboState.note='';
  if(bilboState.detailUrl){URL.revokeObjectURL(bilboState.detailUrl);bilboState.detailUrl=''}
@@ -162,7 +176,7 @@ async function bilboSelect(id){
  if(box)box.innerHTML=bilboDetailHtml(row);
  const generation=++bilboState.detailSeq;
  // Do not invalidate the thumbnail URLs when opening details.
- await Promise.allSettled([bilboShowFullPreview(row,generation),bilboLoadNote(row,generation)])
+ await Promise.allSettled([bilboShowFullPreview(row,generation),bilboLoadNote(row,generation),aragorn.loadDetails(row,generation)])
 }
 async function bilboShowFullPreview(row,generation){
  const box=document.getElementById('bilboFullPreview');if(!box)return;
@@ -279,7 +293,8 @@ function bilboMountLibrary(){
  const section=document.createElement('section');section.className='adminbox admin-detail hidden';section.dataset.adminSection='library';
  section.innerHTML='<div class="adminsectionhead bilbo-page-header"><div><h2>Bilbo · Bildbibliotek</h2>'+
   '<p class="muted">Sök, granska och organisera kampanjens privata bilder och dokument.</p></div>'+
-  '<button type="button" class="smallbtn" onclick="openAdminSection(\'materials\')">+ Ladda upp</button></div>'+
+  '<div class="aragorn-header-actions"><button type="button" class="smallbtn" id="aragornSyncButton" onclick="aragornSyncLegacy()">↻ Hämta äldre bilder</button>'+ 
+  '<button type="button" class="smallbtn" onclick="openAdminSection(\'materials\')">+ Ladda upp</button></div></div>'+
   '<div class="bilbo-controls"><label><span>Sök titel eller beskrivning</span><input id="bilboSearch" type="search" maxlength="80" placeholder="Sök material…" oninput="bilboSearchChanged(this.value)"></label>'+
   '<label><span>Kategori</span><select id="bilboCategory" onchange="bilboSetFilter(\'category\',this.value)">'+
    '<option value="all">Alla kategorier</option>'+
@@ -303,4 +318,6 @@ function bilboMountLibrary(){
  }
 }
 Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDetail,bilboSaveMetadata,
- bilboSaveNote,bilboToggleArchive,bilboSetFilter,bilboSetLayout,bilboPage,bilboSearchChanged});
+ bilboSaveNote,bilboToggleArchive,bilboSetFilter,bilboSetLayout,bilboPage,bilboSearchChanged,
+ aragornSyncLegacy:aragorn.sync,aragornSetTargetType:aragorn.setType,aragornSearchTargets:aragorn.searchTargets,
+ aragornLink:aragorn.link,aragornUnlink:aragorn.unlink});
