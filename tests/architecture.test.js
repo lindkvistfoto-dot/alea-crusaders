@@ -31,6 +31,28 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("Expert magic casting applies EG penalties, PSY costs and quick timing", () => {
+    const combat = read("features/combat/runtime.js");
+    const start = combat.indexOf("function combatMagicCastingRules(");
+    const end = combat.indexOf("function combatSpellOptions(", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const rules = new Function(combat.slice(start, end) + ";return {combatMagicCastingRules,combatMagicCastPreflight};")();
+    const normal = rules.combatMagicCastingRules({name:"ELDKLOT"}, 2);
+    expect(normal).toMatchObject({effect_grade:2,psy_cost:2,cl_modifier:-2,quick:false,resolve_round_offset:1});
+    expect(rules.combatMagicCastingRules({name:"BLIXT",kvick:true}, 3))
+      .toMatchObject({psy_cost:3,cl_modifier:-4,quick:true,resolve_round_offset:0});
+    expect(rules.combatMagicCastingRules({name:"BLIXT (F, K)"}, 1).quick).toBe(true);
+    const preflight = new Function(
+      "combatMagicCastingRules", "combatMagicRuleProfile",
+      combat.slice(combat.indexOf("function combatMagicCastPreflight("), end) +
+      ";return combatMagicCastPreflight;"
+    )(rules.combatMagicCastingRules, () => ({}));
+    expect(preflight({current_psy:3},{name:"BLIXT",fv:10,school_fv:5},2).valid).toBe(true);
+    expect(preflight({current_psy:1},{name:"BLIXT",fv:10,school_fv:5},2).errors).toContain("Otillräcklig PSY");
+    expect(preflight({current_psy:20},{name:"BLIXT",fv:10,school_fv:2},3).errors).toContain("EG överstiger FV i magiskolan");
+  });
+
   test("elf races use the two-hour ERF rest rule", () => {
     const legacy = read("legacy/app.js");
     expect(legacy).toContain("function characterErfRestHours");
