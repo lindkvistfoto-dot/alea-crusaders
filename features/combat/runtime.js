@@ -2599,7 +2599,7 @@ function combatPossibleAttackTargets(actor,mode='auto',weapon=null){
 }
 function combatFireballTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor);
- if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||!String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return new Map();
+ if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||action?.source_data?.magic_binding?.kind!=='damage')return new Map();
  const out=new Map(),range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
  for(const target of combatants){
   if(!combatCanTargetHostile(actor,target))continue;
