@@ -19,7 +19,7 @@ function build(overrides={}){
   dbJson:async (path,opts)=>{writes.push({path,opts});return[{id,title:'Bild'}]},
   $:()=>null,escAttr:String,...overrides
  };
- runInNewContext(source+\'\nthis.api={gimliMime,gimliSignature,gimliValidate,gimliPath,gimliFilename,gimliCanUpload,gimliUploadMaterial,gimliRollbackFiles,gimliReadFile,gimliMountAdmin};\',context);
+ runInNewContext(source+'\nthis.api={gimliMime,gimliSignature,gimliValidate,gimliPath,gimliFilename,gimliCanUpload,gimliUploadMaterial,gimliRollbackFiles,gimliReadFile,gimliMountAdmin};',context);
  return {api:context.api,urls,writes,context}
 }
 function file(name,type,bytes){
