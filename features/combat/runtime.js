@@ -2683,6 +2683,19 @@ function combatMagicTargetChooserHtml(actor,action){
  return '<div class="combat-spell-effect"><span>'+escAttr(target?.name_snapshot||id)+'</span><b>EG '+(assigned?.eg||0)+'</b><button type="button" onclick="combatAddMagicTarget(\''+actor.id+'\',\''+id+'\')">+</button><button type="button" onclick="combatRemoveMagicTarget(\''+actor.id+'\',\''+id+'\')">×</button></div>'
  }).join('')+'</div>'
 }
+async function combatSetMagicResistance(actorId,targetId,decision){
+ if(!['resisted','affected'].includes(decision))return;
+ const actor=combatants.find(c=>String(c.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||action?.status!=='planned'||action.source_data?.magic_binding?.kind!=='status'||
+  !action.source_data.magic_binding.requires_resistance||
+  !combatSpellEffectTargets(actor,action).some(c=>String(c.id)===String(targetId)))return;
+ const sourceData={...action.source_data,resistance_decision:decision,resistance_target_id:String(targetId)};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;combatSelectedTargetId=String(targetId);renderCombat()
+}
 function combatSupportedStatusSpell(action){
  const name=String(action?.source_data?.spell_name||'').trim().toUpperCase();
  return action?.source_data?.magic_binding?.kind==='status'?name:null
