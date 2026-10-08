@@ -1,5 +1,6 @@
 import "./features/dice/dice3d.js";
-import "../features/material/library.js?v=0.34.90";
+// Material panel is a separate HTML module entry: it must still start
+// if external dice rendering or other main-app dependencies fail.
 
 const TRANSPARENT_HIT_CAMERA={
   head:{scale:2.5,tx:-75,ty:19},
