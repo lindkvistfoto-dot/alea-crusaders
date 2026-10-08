@@ -1484,7 +1484,8 @@ function combatMagicRuleProfile(spell){
 // Normal spells resolve next SR; K spells are immediate. No invented per-EG casting rounds.
 function combatMagicCastingRules(spell,effectGrade){
  const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
- const quick=/(?:^|[\\s(])K(?:[\\s)]|$)/i.test(String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||''));
+ const marker=String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||'');
+ const quick=spell?.kvick===true||/(?:^|[\\s(,])K(?:[\\s,)]|$)/i.test(marker)||/\\((?:F\\s*,\\s*)?K(?:\\s*,\\s*F)?\\)/i.test(String(spell?.name||''));
  return {effect_grade:eg,psy_cost:eg,cl_modifier:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
 }
 function combatMagicCastPreflight(combatant,spell,effectGrade){
