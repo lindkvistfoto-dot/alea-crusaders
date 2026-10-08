@@ -25,6 +25,7 @@ function harness(overrides={}){
   mountFrodo:()=>({mount:()=>{},showRow:async()=>({revision:1})}),
   mountSam:()=>({mount:()=>{},share:async()=>({changed:1})}),
   mountGaladriel:()=>({mount:()=>{},connected:()=>false}),
+  SUPABASE_URL:'https://example.supabase.co',SUPABASE_KEY:'test-publishable',
   centralCampaignId:campaign,clearTimeout,setTimeout,
   URL:{createObjectURL:()=> 'blob:preview',revokeObjectURL:()=>{}},
   document:{getElementById:id=>elems[id]||null,querySelector:()=>null,querySelectorAll:()=>[]},
