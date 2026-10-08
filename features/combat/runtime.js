@@ -4268,7 +4268,7 @@ function combatSpellResultHtml(action){
    (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA · '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+'</b>'+
     (result.healing_applied?'<div class="combat-heal-total">+'+escAttr(result.healing_restored??0)+' KP återställda</div>'+
       '<span>Läkningsvärde '+escAttr(result.healing_amount??'—')+' KP · '+escAttr(result.kp_before??'—')+' → '+escAttr(result.kp_after??'—')+' / '+escAttr(result.kp_max??'—')+' KP</span>':
-     result.healing_pending&&combatCanManage()?'<label>Återställ KP (SL) <input id="combatHealAmount-'+escAttr(action.id)+'" type="number" inputmode="numeric" min="0" max="9999" step="1" value="0"></label>'+
+     result.healing_pending&&combatCanManage()?'<label>Återställ KP (SL) <input id="combatHealAmount-'+escAttr(action.id)+'" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="Antal KP"></label>'+
        '<button id="combatHealApply-'+escAttr(action.id)+'" type="button" onclick="combatApplySpellHealing(\''+escAttr(action.id)+'\')">Tillämpa läkning</button>':
      result.healing_pending?'<span>Väntar på att SL anger antal läkande KP.</span>':
      !success?'<span>Ingen läkning – kastet misslyckades.</span>':
