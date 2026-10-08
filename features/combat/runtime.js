@@ -1505,6 +1505,8 @@ function combatMagicCastingRules(spell,effectGrade){
 }
 function combatMagicCastPreflight(combatant,spell,effectGrade){
  const eg=Number(effectGrade),fv=Number(spell?.fv),errors=[];
+ const binding=combatMagicBinding(spell);
+ if(!binding.supported)errors.push(binding.reason||'Ej implementerad');
  const rules=combatMagicCastingRules(spell,eg);
  if(!spell?.name)errors.push('Ingen besvärjelse vald');
  if(!Number.isInteger(eg)||eg<1)errors.push('Ogiltig effektgrad');
@@ -1514,20 +1516,60 @@ function combatMagicCastPreflight(combatant,spell,effectGrade){
  if(Number.isFinite(Number(combatant?.current_psy))&&combatant?.current_psy!=null&&rules.psy_cost>Number(combatant.current_psy))errors.push('Otillräcklig PSY');
  return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:rules.psy_cost,casting:rules,rule:combatMagicRuleProfile(spell)}
 }
+// FALK: only verified bindings may cast; special damage and rituals require separate rules.
+function combatMagicBinding(spell){
+ const name=String(spell?.name||'').toUpperCase().replace(/\s*\([^)]*\)/g,'').trim();
+ const effects={'FLYGA':'spell_flyga','FÖRROLLAD SÖMN':'condition_sleep',
+ 'PARALYSERING':'condition_paralysis','FÖRVIRRA':'condition_confusion',
+ 'PANIK':'condition_panic','RÄDSLA':'condition_fear','KONTROLLERA VARELSE':'condition_control'};
+ if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
+  return {kind:'ritual',supported:false,reason:'Ritual kräver regelstyrd tid och SL-bedömning'};
+ if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
+ if(['ELD','BLIXT','ENERGISTRÅLE','FROST'].includes(name)&&
+  /^\s*\d+T\d+\s+per\s+EG\s*$/i.test(String(spell?.damage_text||'')))
+  return {kind:'damage',supported:true,requires_resistance:false};
+ return {kind:'unimplemented',supported:false,reason:'Saknar verifierad effektkoppling i strid'};
+}
+function combatMagicDamageFormula(spell,eg=1){
+ const match=/^\s*(\d+)T(\d+)\s+per\s+EG\s*$/i.exec(String(spell?.damage_text||''));
+ if(!match)return null;
+ const dice=Number(match[1])*Number(eg),sides=Number(match[2]);
+ return Number.isSafeInteger(dice)&&dice>=1&&dice<=40&&[3,4,6,8,10,20,100].includes(sides)?dice+'T'+sides:null
+}
+function combatMagicPsyCost(outcome,eg){
+ return !['success','special','perfect'].includes(outcome)?1:
+  outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg
+}
+async function combatSpendMagicPsy(actor,cost){
+ if(actor.current_psy==null)return;
+ const before=Number(actor.current_psy);
+ if(!Number.isInteger(before)||before<cost)throw new Error('Otillräcklig PSY för kastet.');
+ const saved=await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+
+  '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+  '&current_psy=eq.'+before+'&select=id,current_psy',{
+  method:'PATCH',headers:{'Prefer':'return=representation'},
+  body:JSON.stringify({current_psy:before-cost,updated_at:new Date().toISOString()})
+ });
+ if(!Array.isArray(saved)||saved.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
+ actor.current_psy=Number(saved[0].current_psy)
+}
 function combatSpellOptions(combatant){
- // Only spell definitions still in the central registry may be prepared or cast.
  const registry=Array.isArray(ruleSpells)?ruleSpells:[];
- return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name&&registry.some(rule=>
-  (spell.rule_id&&String(rule.id)===String(spell.rule_id))||
-  String(rule.name||'').localeCompare(String(spell.name),'sv',{sensitivity:'base'})===0))
+ return (combatant?.attack_profile?.spells||[]).map(spell=>{
+  const rule=registry.find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||
+   String(row.name||'').localeCompare(String(spell?.name||''),'sv',{sensitivity:'base'})===0);
+  return rule?{...rule,...spell,rule_id:rule.id,attack_magic:rule.attack_magic===true,
+   damage_text:rule.damage_text||'',ritual:rule.ritual===true,kvick:rule.kvick===true,
+   range_text:rule.range_text||'',duration_text:rule.duration_text||''}:null
+ }).filter(spell=>spell?.name)
 }
 function combatSpellKey(spell){return String(spell?.rule_id||spell?.name||'spell')}
 function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
  return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
-  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatMagicRuleProfile(spell),summon=profile.category==='summon';
-  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+'</small></button>'
+  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatMagicRuleProfile(spell),binding=combatMagicBinding(spell),summon=profile.category==='summon';
+  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+(!binding.supported?' · '+escAttr(binding.reason):'')+'</small></button>'
  }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
 async function combatMagicButton(event,combatantId){
@@ -1567,7 +1609,7 @@ async function combatMagicButton(event,combatantId){
   const currentRound=Number(activeCombat?.round_number)||1;
   const sourceData={...data,casting_spell:true,spell_locked:true,
    preparation_round:currentRound,ready_round:currentRound+(castRules.quick?0:1),
-   test_fireball:String(data.spell_name||'').toUpperCase().startsWith('ELD')};
+   test_fireball:data.magic_binding?.kind==='damage'};
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
   action.source_data=sourceData;combatCloseRowActionMenu();combatSelectedTargetId=null;renderCombat();return
  }
@@ -1581,7 +1623,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  if(!combatant||!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
  const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
