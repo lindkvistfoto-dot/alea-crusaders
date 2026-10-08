@@ -3230,6 +3230,8 @@ function renderCombatMap(){
  const previewKey=planningActor&&combatMovementPlan?Number(combatMovementPlan.q)+','+Number(combatMovementPlan.r):'';
  const attackTargets=combatCurrentAttackTargets();
  const areaMode=combatAreaPlacementActive&&combatCanManage();
+ const currentMagic=actor&&combatChosenAction(actor);
+ const spellAreaMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&currentMagic.source_data.magic_binding?.kind==='area';
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
   const moveCost=reachable.get(cell.key);
@@ -3250,7 +3252,8 @@ function renderCombatMap(){
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
   const clickable=areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  const click=areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
+  const click=spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
+   areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
  }).join('');
