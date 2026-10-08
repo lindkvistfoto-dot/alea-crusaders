@@ -85,7 +85,7 @@ async function openCampaignCombatSceneEditor(sceneId,presetEventId){
    characters:Array.isArray(characterRows)?characterRows:[],combatIconUrls:new Map(),
    combatants:(combatantRows||[]).map(x=>({...x,isNew:false})),
    deletedCombatantIds:new Set(),combatantPickerOpen:false,combatantManageOpen:false,editingCombatantId:null,placementCombatantId:null,dragCombatantId:null,tokenDrag:null,
-   tool:null,brushRadius:0,terrainMovement:'free',terrainSight:'clear',zoom:1,paintPointerId:null,paintLastKey:null,pan:null,gesturePointers:new Map(),pinch:null
+   tool:null,brushRadius:0,terrainMovement:'free',terrainSight:'clear',terrainWall:false,zoom:1,paintPointerId:null,paintLastKey:null,pan:null,gesturePointers:new Map(),pinch:null
   };
   renderEventCombatMapEditor();
   await loadEventCombatCombatantIcons();
@@ -440,6 +440,8 @@ function renderEventCombatMapEditor(){
     '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='difficult'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="difficult" aria-pressed="'+((st.terrainMovement||'free')==='difficult'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'difficult\')">Svår</button>'+
     '<button class="smallbtn terrain-choice '+((st.terrainMovement||'free')==='blocked'?'active':'')+'" type="button" data-terrain-kind="movement" data-terrain-value="blocked" aria-pressed="'+((st.terrainMovement||'free')==='blocked'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'movement\',\'blocked\')">Ogenomtr.</button>'+
     '<span class="event-combat-terrain-divider"></span>'+
+     '<button class="smallbtn terrain-choice '+(st.terrainWall?'active':'')+'" type="button" data-terrain-kind="wall" data-terrain-value="wall" aria-pressed="'+(st.terrainWall?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'wall\',\'wall\')" title="Vägg eller mur blockerar alltid rörelse och sikt, även vid flygning">▥ Vägg / mur</button>'+
+     '<span class="event-combat-terrain-divider"></span>'+
     '<span class="event-combat-mini-label">Sikt</span>'+
     '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='clear'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="clear" aria-pressed="'+((st.terrainSight||'clear')==='clear'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'clear\')">Fri</button>'+
     '<button class="smallbtn terrain-choice '+((st.terrainSight||'clear')==='obscuring'?'active':'')+'" type="button" data-terrain-kind="sight" data-terrain-value="obscuring" aria-pressed="'+((st.terrainSight||'clear')==='obscuring'?'true':'false')+'" onclick="setEventCombatTerrainChoice(\'sight\',\'obscuring\')">Skymmande</button>'+
@@ -520,7 +522,7 @@ function eventCombatHexPolygon(x,y,size){
 function eventCombatTerrainTitle(h){
  let move=h?.movement_mode==='difficult'?'Svår terräng':h?.movement_mode==='blocked'?'Blockerad rörelse':'Fri rörelse';
  let sight=h?.sight_mode==='obscuring'?'Skymmande sikt':h?.sight_mode==='blocked'?'Siktblockerande':'Fri sikt';
- return move+' · '+sight
+ return (/(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(h?.notes||''))?'Vägg / mur · ':'')+move+' · '+sight
 }
 function renderEventCombatHexCanvas(){
  let st=eventCombatEditorState,el=$('eventCombatCanvas');if(!st||!el)return;
@@ -538,6 +540,7 @@ function renderEventCombatHexCanvas(){
   if(h?.movement_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecMoveBlocked)"/>';
   if(h?.sight_mode==='obscuring')overlays+='<polygon class="ec-terrain-overlay" points="'+pts+'" fill="url(#ecObscuring)"/>';
   if(h?.sight_mode==='blocked')overlays+='<polygon class="ec-terrain-overlay ec-sight-blocked" points="'+pts+'"/>';
+  if(/(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(h?.notes||'')))overlays+='<text x="'+c.x+'" y="'+(c.y+g.size*.15)+'" text-anchor="middle" font-size="'+(g.size*.8)+'" fill="#f7e3b3" stroke="#242026" stroke-width="1" paint-order="stroke">▥</text>';
   return overlays+'<polygon class="ec-hex'+(sel?' selected':'')+'" data-hex="'+c.key+'" points="'+pts+'"><title>Hex '+c.key+' · '+eventCombatTerrainTitle(h)+'</title></polygon>'
  }).join('');
  let tokenSize=g.size*.92,tokenPts=eventCombatHexPolygon(0,0,tokenSize),tokenDefs='',tokens=(st.combatants||[]).map(c=>{
@@ -583,19 +586,25 @@ function eventCombatSyncSelectionDom(keys){
 }
 function eventCombatCurrentTerrain(){
  let st=eventCombatEditorState,movement=st?.terrainMovement||'free',sight=st?.terrainSight||'clear';
- return{movement,sight,movementCost:movement==='difficult'?2:1}
+ return{movement,sight,movementCost:movement==='difficult'?2:1,notes:st?.terrainWall===true?'wall':''}
 }
 function setEventCombatTerrainChoice(kind,value){
  let st=eventCombatEditorState;if(!st)return;
- if(kind==='movement'){
+ if(kind==='wall'){
+  if(value!=='wall')return;
+  st.terrainWall=!st.terrainWall;
+  if(st.terrainWall){st.terrainMovement='blocked';st.terrainSight='blocked'}
+ }else if(kind==='movement'){
   if(!['free','difficult','blocked'].includes(value))return;
-  st.terrainMovement=value
+  st.terrainMovement=value;st.terrainWall=false
  }else if(kind==='sight'){
   if(!['clear','obscuring','blocked'].includes(value))return;
-  st.terrainSight=value
+  st.terrainSight=value;st.terrainWall=false
  }else return;
- document.querySelectorAll('#adminEditorBody [data-terrain-kind="'+kind+'"]').forEach(btn=>{
-  let active=btn.dataset.terrainValue===value;
+ document.querySelectorAll('#adminEditorBody [data-terrain-kind]').forEach(btn=>{
+  let type=btn.dataset.terrainKind,active=type==='wall'?st.terrainWall:
+   type==='movement'?btn.dataset.terrainValue===st.terrainMovement:
+   btn.dataset.terrainValue===st.terrainSight;
   btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',active?'true':'false')
  })
 }
@@ -605,13 +614,13 @@ function eventCombatSetTerrainForKeys(keys,movement,sight){
  (keys||[]).forEach(key=>{
   let [q,r]=String(key).split(',').map(Number);
   if(movement==='free'&&sight==='clear')st.hexes.delete(key);
-  else st.hexes.set(key,{q,r,movement_mode:movement,sight_mode:sight,movement_cost:cost,notes:''})
+  else st.hexes.set(key,{q,r,movement_mode:movement,sight_mode:sight,movement_cost:cost,notes:st.terrainWall?'wall':''})
  });
  st.dirty=true
 }
 function eventCombatTerrainSignature(key){
  let h=eventCombatEditorState?.hexes?.get(key);
- return (h?.movement_mode||'free')+'|'+(h?.sight_mode||'clear')
+ return (h?.movement_mode||'free')+'|'+(h?.sight_mode||'clear')+'|'+(h?.notes||'')
 }
 function eventCombatPaintHex(key){
  let st=eventCombatEditorState;if(!st||!key||st.paintLastKey===key)return;
@@ -778,7 +787,7 @@ function applyEventCombatTerrain(){
  for(let key of st.selected){
   let [q,r]=key.split(',').map(Number);
   if(movement==='free'&&sight==='clear')st.hexes.delete(key);
-  else st.hexes.set(key,{q,r,movement_mode:movement,sight_mode:sight,movement_cost:movement==='difficult'?2:1,notes:''})
+  else st.hexes.set(key,{q,r,movement_mode:movement,sight_mode:sight,movement_cost:movement==='difficult'?2:1,notes:t.notes})
  }
  st.dirty=true;renderEventCombatHexCanvas()
 }
@@ -797,7 +806,7 @@ async function saveEventCombatMapEditor(){
   if(st.isNew)await dbJson('campaign_combat_scenes',{method:'POST',body:JSON.stringify({...body,id:sceneId})});
   else await dbJson('campaign_combat_scenes?id=eq.'+encodeURIComponent(sceneId),{method:'PATCH',body:JSON.stringify(body)});
   await dbJson('campaign_combat_scene_hexes?scene_id=eq.'+encodeURIComponent(sceneId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});
-  let hexRows=[...st.hexes.values()].filter(h=>h.movement_mode!=='free'||h.sight_mode!=='clear').map(h=>({scene_id:sceneId,q:h.q,r:h.r,movement_mode:h.movement_mode||'free',sight_mode:h.sight_mode||'clear',movement_cost:Number(h.movement_cost)||1,notes:h.notes||''}));
+  let hexRows=[...st.hexes.values()].filter(h=>h.movement_mode!=='free'||h.sight_mode!=='clear'||h.notes).map(h=>({scene_id:sceneId,q:h.q,r:h.r,movement_mode:h.movement_mode||'free',sight_mode:h.sight_mode||'clear',movement_cost:Number(h.movement_cost)||1,notes:h.notes||''}));
   if(hexRows.length)await dbJson('campaign_combat_scene_hexes',{method:'POST',body:JSON.stringify(hexRows)});
   let deleteWrites=[...(st.deletedCombatantIds||[])].map(id=>dbJson('campaign_combat_scene_combatants?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}}));
   if(deleteWrites.length)await Promise.all(deleteWrites);

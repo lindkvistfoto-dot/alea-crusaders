@@ -99,7 +99,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatIsFlying(combatant)");
     expect(combat).toContain("function combatTerrainIsWall(cell)");
     expect(combat).toContain("combatIsFlying(actor)||combatIsFlying(target)");
-    expect(combat).toContain("const stepCost=combatIsFlying(combatant)?1");
+    expect(combat).toContain("const stepCost=flight.ignore_terrain?1");
   });
 
   test("spell registry has editable persistent playtested flags", () => {
@@ -1132,7 +1132,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
     expect(combat).toContain("combatIsFlying(combatant)?1:cell.movement_mode==='difficult'?2:1");
-    expect(combat).toContain("if(!cell||(cell.movement_mode==='blocked'&&(!combatIsFlying(combatant)||combatTerrainIsWall(cell))))continue");
+    expect(combat).toContain("if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue");
     expect(combat).toContain("if(nextCost>budget)continue");
     expect(combat).toContain("cls.push('move-reachable')");
     expect(combat).toContain("'move-action-kept':'move-action-spent'");

@@ -2123,21 +2123,48 @@ function combatHexLine(a,b){
  }
  return out
 }
-function combatIsFlying(combatant){
- if(!combatant)return false;
- return combatant.flying===true||combatActiveEffects.some(effect=>
-  String(effect.combatant_id)===String(combatant.id)&&combatEffectIsActive(effect)&&
-  combatEffectRegistry.some(def=>def.id===effect.effect_id&&def.modifiers?.type==='flight'))
+function combatFlightCapabilities(combatant){
+ const state={flying:combatant?.flying===true,ignore_terrain:combatant?.flying===true,ignore_obscuring_intermediate:combatant?.flying===true};
+ if(!combatant)return state;
+ for(const effect of combatActiveEffects){
+  if(String(effect.combatant_id)!==String(combatant.id)||!combatEffectIsActive(effect))continue;
+  const def=combatEffectDefinition(effect);
+  if(!def?.active||def.modifiers?.type!=='flight')continue;
+  state.flying=true;
+  state.ignore_terrain ||= def.modifiers.ignore_terrain===true;
+  state.ignore_obscuring_intermediate ||= def.modifiers.ignore_obscuring_intermediate===true
+ }
+ return state
 }
+function combatIsFlying(combatant){return combatFlightCapabilities(combatant).flying}
 function combatTerrainIsWall(cell){
- return /(?:^|[\\s,;])(?:wall|vägg|mur)(?:$|[\\s,;])/i.test(String(cell?.notes||''))
+ // Explicit wall markers are stronger than either terrain or sight mode.
+ return /(?:^|[\\s,;|])(?:wall|vägg|mur)(?:$|[\\s,;|])/i.test(String(cell?.notes||''))
+}
+function combatIgnoresSightObstacle(actor,cell){
+ if(!actor||!cell)return false;
+ // Height permits seeing beyond obscuring terrain, never through a tagged wall.
+ if(combatFlightCapabilities(actor).ignore_obscuring_intermediate)return true;
+ return combatActiveEffects.some(effect=>{
+  if(String(effect.combatant_id)!==String(actor.id)||!combatEffectIsActive(effect))return false;
+  const def=combatEffectDefinition(effect),m=def?.modifiers||{};
+  if(!def?.active||m.type!=='vision')return false;
+  if(m.ignore_obscuring_intermediate===true)return true;
+  const tags=String(cell.notes||'').toLowerCase();
+  return (m.see_through_darkness===true&&/(?:mörker|darkness)/.test(tags))||
+   (m.see_through_fog===true&&/(?:dimma|fog|mist)/.test(tags))
+ })
 }
 function combatHasLineOfSight(actor,target){
+ if(!actor||!target)return false;
  const terrain=new Map(combatRuntimeHexCells().map(cell=>[cell.key,cell]));
  const line=combatHexLine(actor,target);
+ const flight=combatFlightCapabilities(actor);
  for(let i=1;i<line.length-1;i++){
   const cell=terrain.get(line[i].q+','+line[i].r);
-  if(cell?.sight_mode==='blocked'&&(!combatIsFlying(actor)||combatTerrainIsWall(cell)))return false
+  if(combatTerrainIsWall(cell))return false;
+  if(cell?.sight_mode==='blocked'&&!flight.ignore_terrain)return false;
+  if(cell?.sight_mode==='obscuring'&&!combatIgnoresSightObstacle(actor,cell))return false
  }
  return true
 }
@@ -2751,7 +2778,7 @@ function combatReachableHexes(combatant){
  const out=new Map();
  if(!combatant||combatCannotMove(combatant)||activeCombat?.phase!=='movement')return out;
  const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
- const budget=combatMovementAllowance(combatant);
+ const budget=combatMovementAllowance(combatant),flight=combatFlightCapabilities(combatant);
  if(!cellByKey.has(startKey))return out;
  const frontier=[{key:startKey,cost:0}];
  out.set(startKey,0);
@@ -2763,8 +2790,8 @@ function combatReachableHexes(combatant){
   const [q,r]=current.key.split(',').map(Number);
   for(const [nq,nr] of combatHexNeighbors(q,r)){
    const key=nq+','+nr,cell=cellByKey.get(key);
-   if(!cell||(cell.movement_mode==='blocked'&&(!combatIsFlying(combatant)||combatTerrainIsWall(cell))))continue;
-   const stepCost=combatIsFlying(combatant)?1:cell.movement_mode==='difficult'?2:1;
+   if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue;
+   const stepCost=flight.ignore_terrain?1:cell.movement_mode==='difficult'?2:1;
    const nextCost=current.cost+stepCost;
    if(nextCost>budget)continue;
    const known=out.get(key);
@@ -3065,6 +3092,7 @@ function renderCombatMap(){
   const moveCost=reachable.get(cell.key);
   if(cell.movement_mode==='difficult')cls.push('difficult');
   if(cell.movement_mode==='blocked')cls.push('move-blocked');
+  if(combatTerrainIsWall(cell))cls.push('wall');
   if(cell.sight_mode==='obscuring')cls.push('sight-obscuring');
   if(cell.sight_mode==='blocked')cls.push('sight-blocked');
   if(moveCost!=null&&cell.key!==originKey){
