@@ -2716,6 +2716,15 @@ function combatMagicTargetChooserHtml(actor,action){
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
  const candidates=[...combatFireballTargets().keys()];
  const statusSpell=combatSupportedStatusSpell(action);
+ if(action.source_data?.magic_binding?.kind==='area'){
+  const radius=Number(action.source_data.area_radius)||0,center=action.source_data.area_center;
+  return '<div class="combat-spell-choice"><b>'+escAttr(action.source_data.spell_name)+' · område</b>'+
+   '<small>Klicka på centrumhexagonen på kartan. Tryck sedan ✦ för att kasta.</small>'+
+   '<div class="combat-spell-effect"><span>Radie '+radius+' hex</span>'+
+   '<button type="button" onclick="combatSetMagicAreaRadius(\''+actor.id+'\',-1)">−</button>'+
+   '<button type="button" onclick="combatSetMagicAreaRadius(\''+actor.id+'\',1)">+</button>'+
+   '<small>Centrum '+(center?center.q+','+center.r:'inte valt')+'</small></div></div>'
+ }
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action);
   return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
