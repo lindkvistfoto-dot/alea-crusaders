@@ -27,7 +27,8 @@ const frodoUi=mountFrodo({
  getCampaign:()=>String(centralCampaignId||''),
  isLoggedIn:()=>Boolean(activeUser()),
  isGM:()=>Boolean(activeUser()?.admin||centralCampaignRole==='gm'),
- request:(path,options)=>dbJson(path,options)
+ request:(path,options)=>dbJson(path,options),
+ isRealtimeConnected:()=>Boolean(window.galadrielMaterialApi?.connected())
 });
 frodoUi.mount();
 const samUi=mountSam({
