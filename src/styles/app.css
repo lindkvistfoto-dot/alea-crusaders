@@ -5761,3 +5761,22 @@ body:not(.editing) #skilltable .skill-roll-btn{
   min-width:1000px;
  }
 }
+
+
+/* v0.34.00 — shield master aligned 8-column horizontal table */
+.adminshieldtable{
+ grid-template-columns:64px 155px 82px 58px 58px 78px 230px 86px;
+ width:auto;
+ min-width:811px;
+ overflow:auto;
+}
+@media(max-width:700px){
+ .adminshieldtable{
+  grid-template-columns:64px 155px 82px 54px 54px 74px 220px 78px;
+  min-width:781px;
+  overflow:auto;
+  font-size:13px;
+ }
+ .adminshieldtable>.ahead{display:block}
+ .adminshieldtable>div{display:block;width:auto;min-width:0;box-sizing:border-box}
+}
