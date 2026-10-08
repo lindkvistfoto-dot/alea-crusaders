@@ -33,7 +33,7 @@ function ward(eg,old=false){
 
 describe('BESKYDDARE: varje sida har EG + 2 rutor',()=>{
  test.each([[1,3,27,9],[2,4,64,16],[3,5,125,25],[5,7,343,49],[15,17,4913,289]])(
-  'EG %i skapar %i×%i×%i rutor med korrekt kartyta',(eg,side,volume,footprint)=>{
+  'EG %i har sida %i, volym %i och kartfotavtryck %i',(eg,side,volume,footprint)=>{
    const api=setup(),area=ward(eg);
    expect(api.dimensions({effect_grade:eg})).toEqual({x:side,y:side,z:side});
    expect(api.side(area.parameters)).toBe(side);
