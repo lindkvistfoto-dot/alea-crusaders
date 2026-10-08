@@ -83,13 +83,14 @@ describe('v0.34.95 – live player maps',()=>{
   h.now(16000);h.api.tick();
   expect(h.sockets.length).toBe(2);
   h.open();
-  expect(h.refreshed).toEqual([campaign,campaign]);
+  expect(h.refreshed).toEqual([campaign]);
  });
  it('uses a 15-second fallback, and a 60-second safety sync while connected',()=>{
   const h=harness();h.api.start();h.open();h.refreshed.length=0;
   h.now(60001);h.api.tick();
   expect(h.refreshed).toEqual([campaign]);
   h.sockets[0].onclose();h.refreshed.length=0;
+  h.now(16000);h.api.tick();
   h.now(16000);h.api.tick();
   expect(h.refreshed).toEqual([campaign]);
  });
@@ -145,7 +146,7 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
   mapView:{scale:1.8,x:124,y:-30},
   canManageCampaignMaps:()=>gm,
   loadCampaignMaps:async()=>{context.campaignActiveMapId=current;context.campaignMaps=maps;actions.push('library')},
-  loadCampaignMapAreas:async()=>[{id:'polygon',status,location_id:'place'}],
+  loadCampaignMapAreas:async()=>[{id:'polygon',status:state,location_id:'place'}],
   renderMapPanel:()=>actions.push('render'),
   renderMapLibraryControls:()=>actions.push('controls'),
   closeMapLocationInfo:()=>actions.push('close-location'),
