@@ -46,6 +46,11 @@ const galadrielUi=mountGaladriel({
  getToken:()=>String(supabaseSession?.access_token||''),
  isAuthenticated:()=>Boolean(activeUser()&&supabaseSession?.access_token),
  isGM:()=>Boolean(activeUser()?.admin||centralCampaignRole==='gm'),
+ verifyVisible:async(id,campaign)=>{
+  const results=await dbJson('campaign_materials?campaign_id=eq.'+encodeURIComponent(campaign)+
+   '&id=eq.'+encodeURIComponent(id)+'&archived_at=is.null&select=id&limit=1');
+  return Array.isArray(results)&&results.some(row=>row.id===id);
+ },
  supabaseUrl:SUPABASE_URL,
  publishableKey:SUPABASE_KEY
 });
