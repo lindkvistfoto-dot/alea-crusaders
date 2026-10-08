@@ -5780,3 +5780,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .adminshieldtable>.ahead{display:block}
  .adminshieldtable>div{display:block;width:auto;min-width:0;box-sizing:border-box}
 }
+
+
+/* v0.34.01 — Expert spell administration */
+.adminspelltable{display:grid;grid-template-columns:170px 130px 82px 130px 130px 110px 86px;min-width:838px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
+.adminspelltable>div,.adminmagicschooltable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
+.adminspelltable .ahead,.adminmagicschooltable .ahead{background:#6d1e1e;font-weight:800;white-space:nowrap}
+.adminspelltable .rule-name{font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px;cursor:pointer}
+.adminmagicschooltable{display:grid;grid-template-columns:minmax(180px,1fr) 100px 86px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
+.spell-rule-editor textarea{min-height:95px}
+@media(max-width:700px){.adminspelltable{grid-template-columns:160px 120px 76px 120px 120px 105px 78px;min-width:779px;font-size:13px}.adminspelltable>div,.adminmagicschooltable>div{padding:9px 6px}}
