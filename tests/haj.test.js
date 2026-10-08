@@ -9,7 +9,7 @@ const schema=sql('20261008112000_haj_area_schema.sql');
 const events=sql('20261008112100_haj_area_runtime.sql');
 const undo=sql('20261008112200_haj_undo_safety.sql');
 const path=sql('20261008112300_haj_path_movement.sql');
-const from=src.indexOf('function combatAreaActive('),to=src.indexOf('let combatEffectRegistry=',from);
+const from=src.indexOf('function combatAreaActive('),to=src.indexOf('async function combatLoadEffects(',from);
 const moveFrom=src.indexOf('function combatReachableHexes('),moveTo=src.indexOf('async function combatRecordFullMoveAction(',moveFrom);
 if(from<0||to<=from||moveFrom<0||moveTo<=moveFrom)throw Error('HAJ runtime not found');
 const defs=[
