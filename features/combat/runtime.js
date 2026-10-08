@@ -2685,7 +2685,7 @@ function combatMagicTargetChooserHtml(actor,action){
 }
 function combatSupportedStatusSpell(action){
  const name=String(action?.source_data?.spell_name||'').trim().toUpperCase();
- return name==='FLYGA'?name:null
+ return action?.source_data?.magic_binding?.kind==='status'?name:null
 }
 function combatSpellEffectTargets(actor,action){
  const range=String(action?.source_data?.range_text||'').toLowerCase();
@@ -2699,12 +2699,12 @@ async function combatCastStatusSpell(actor,target,action){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
  const spellName=combatSupportedStatusSpell(action),eg=Math.max(1,Number(action.source_data?.effect_grade)||1);
  if(!spellName||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id)))throw new Error('Ogiltigt mål för besvärjelsen.');
- const code='spell_flyga';
+ const code=action.source_data.magic_binding.code;
  const effect=combatEffectRegistry.find(row=>row.code===code&&row.active);
  if(!effect)throw new Error('Besvärjelsens effekt saknas i effektregistret.');
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
- const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;
+ const cost=combatMagicPsyCost(rolled.outcome,eg);
  const round=Number(activeCombat.round_number)||1;
  if(actor.current_psy!=null){
   const before=Number(actor.current_psy);
