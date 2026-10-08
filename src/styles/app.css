@@ -5800,3 +5800,6 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 /* v0.34.11 — first combat magic slice */
 .combat-row-magic{font-size:0}.combat-magic-glyph{display:grid;place-items:center;width:100%;height:100%;font-size:28px;line-height:1}.combat-row-magic-menu{min-width:310px}.combat-spell-choice{display:grid;gap:8px}.combat-spell-choice>span{font-weight:800}.combat-spell-choice>small{opacity:.75}
+
+/* v0.34.12 — temporary fireball outcome tester */
+.combat-row-fireball{font-size:0}.combat-fireball-glyph{display:grid;place-items:center;width:100%;height:100%;font-size:25px;line-height:1}.fireball-test-tool{margin-left:4px}.combat-row-fireball.active{box-shadow:0 0 0 2px currentColor inset}
