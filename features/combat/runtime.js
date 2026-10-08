@@ -1756,6 +1756,7 @@ async function endCombatTurn(event,combatantId){
  const combatId=activeCombat.id;
  const undoSnapshot=await window.combatUndoBeforeActorAction?.();
  try{
+  await combatTickOngoingEffects(actor,currentRound);
   await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
    combat_id:combatId,campaign_id:centralCampaignId,round_number:currentRound,
    phase:'movement',actor_id:actor.id,target_id:null,event_type:'turn_end',
@@ -3383,6 +3384,35 @@ function combatTurnPanelHtml(){
   '</div>'+
   '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+
  '</div>'
+}
+// KROKODIL: strongest matching ward protects from matching damage kind.
+function combatProtectionValue(combatant,damageKind='physical'){
+ const matches=combatActiveEffects.filter(effect=>{
+  if(String(effect.combatant_id)!==String(combatant?.id)||!combatEffectIsActive(effect))return false;
+  const def=combatEffectDefinition(effect),kind=def?.modifiers?.damage_kind;
+  return !!def?.active&&def.modifiers?.type==='protection'&&(kind==='all'||kind===damageKind)
+ }).map(effect=>({definition:combatEffectDefinition(effect),points:Number(effect.parameters?.protection_points)}))
+  .filter(x=>Number.isInteger(x.points)&&x.points>=0&&x.points<=9999);
+ const points=matches.reduce((max,row)=>Math.max(max,row.points),0);
+ return {points,names:matches.filter(x=>x.points===points&&points>0).map(x=>x.definition.name)}
+}
+async function combatTickOngoingEffects(combatant,round){
+ if(!combatant||!combatCanManage()||!activeCombat)return [];
+ const due=combatActiveEffects.filter(effect=>{
+  const def=combatEffectDefinition(effect);
+  return String(effect.combatant_id)===String(combatant.id)&&def?.active&&
+   def.modifiers?.type==='damage_over_time'&&combatEffectIsActive(effect,round)
+ });
+ const results=[];
+ for(const effect of due){
+  // The server locks the effect and target, then atomically records each SR.
+  const result=await dbJson('rpc/resolve_combat_dot',{
+   method:'POST',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({p_effect_id:effect.id,p_round:round})
+  });
+  results.push({effect_id:effect.id,...result})
+ }
+ return results
 }
 let combatEffectRegistry=[],combatActiveEffects=[];
 async function combatLoadEffects(){
