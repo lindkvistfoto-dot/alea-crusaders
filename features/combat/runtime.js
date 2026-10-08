@@ -2753,6 +2753,43 @@ async function combatCastStatusSpell(actor,target,action){
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_effect',message:actor.name_snapshot+' kastar '+spellName+' på '+target.name_snapshot+' · '+combatOutcomeLabel(rolled.outcome),details:result,player_visible:true})});
  await combatLoadEffects();await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
+async function combatCastAreaSpell(actor,action){
+ if(combatCannotAct(actor))throw new Error('Kan inte kasta under detta tillstånd.');
+ const data=action.source_data||{},binding=data.magic_binding;
+ const center=data.area_center,radius=Number(data.area_radius??0),eg=Math.max(1,Number(data.effect_grade)||1);
+ if(binding?.kind!=='area'||!binding.supported||!center||
+  !Number.isInteger(radius)||radius<0||radius>15||
+  !combatRuntimeHexCells().some(c=>c.q===Number(center.q)&&c.r===Number(center.r)))
+  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.');
+ const effect=combatEffectRegistry.find(row=>row.code===binding.code&&row.active);
+ if(!effect)throw new Error('Områdeseffekten finns inte i registret.');
+ const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
+ const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
+ await combatSpendMagicPsy(actor,cost);
+ const round=Number(activeCombat.round_number)||1,result={success:rolled.success,
+  outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
+  effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,area_center:center,area_radius:radius};
+ combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
+ if(rolled.success){
+  const duration=Number(data.effect_duration_rounds);
+  await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
+    effect_id:effect.id,source_combatant_id:actor.id,center_q:Number(center.q),center_r:Number(center.r),
+    radius,applied_round:round,expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
+    parameters:{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}})
+  });
+  result.area_applied=true
+ }
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
+  headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result,updated_at:new Date().toISOString()})});
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
+  actor_id:actor.id,target_id:null,event_type:'spell_area',
+  message:actor.name_snapshot+' kastar '+data.spell_name+' på hex '+center.q+','+center.r+
+   ' · '+combatOutcomeLabel(rolled.outcome),details:result,player_visible:true
+ })});
+ await loadActiveCombat(null,{preserveSelectedTarget:true})
+}
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
