@@ -1382,11 +1382,16 @@ const NPC_ATTRS=[
 ];
 function npcNum(v){if(v===''||v==null)return null;let n=Number(v);return Number.isFinite(n)?n:null}
 function normalizeNpcAttributes(v){
- let src=v&&typeof v==='object'&&!Array.isArray(v)?v:{},out={};
+ let src=v&&typeof v==='object'&&!Array.isArray(v)?v:{},out={...src};
  NPC_ATTRS.forEach(([k])=>out[k]=npcNum(src[k]));
  return out
 }
-function npcCalculatedKp(attrs){let f=npcNum(attrs?.FYS),st=npcNum(attrs?.STO);return f==null||st==null?null:Math.ceil((f+st)/2)}
+function npcCalculatedKp(attrs){
+ let special=npcNum(attrs?.KP);
+ if(special!=null&&special>0)return special;
+ let f=npcNum(attrs?.FYS),st=npcNum(attrs?.STO);
+ return f==null||st==null?null:Math.ceil((f+st)/2)
+}
 function npcPortraitCachedUrl(path){return npcPortraitUrlCache.get(String(path||''))?.url||''}
 async function getNpcPortraitUrl(path){
  path=String(path||'');if(!path)return '';
@@ -1540,10 +1545,18 @@ function npcArmorOptions(selected){
  return '<option value="">Ingen / egen rustning</option>'+ruleArmorTypes.map(r=>'<option value="'+r.id+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+' · ABS '+r.absorption+'</option>').join('')
 }
 function adminNpcAttributesHtml(){
- return '<div class="slp-attribute-grid">'+NPC_ATTRS.map(([k,label])=>'<label><span>'+label+'</span><input data-npc-attr="'+k+'" type="number" min="0" max="99" value="'+escAttr(adminNpcDraft?.attributes?.[k]??'')+'" oninput="updateNpcKpPreview()"></label>').join('')+'</div><div class="slp-derived-note">Beräknad KP: <b id="npcKpPreview">'+(npcCalculatedKp(adminNpcDraft?.attributes)??'—')+'</b><span id="npcRaceRuleNote"></span></div>'
+ return '<div class="slp-attribute-grid">'+NPC_ATTRS.map(([k,label])=>'<label><span>'+label+'</span><input data-npc-attr="'+k+'" type="number" min="0" max="99" value="'+escAttr(adminNpcDraft?.attributes?.[k]??'')+'" oninput="updateNpcKpPreview()"></label>').join('')+'</div><div class="slp-special-values">'+
+ '<label>Särskilda KP (valfritt)<input id="npcKpOverride" type="number" min="1" max="9999" placeholder="Beräkna från FYS och STO" value="'+escAttr(adminNpcDraft?.attributes?.KP??'')+'" oninput="updateNpcKpPreview()"></label>'+
+ '<label>Särskild förflyttning (valfritt)<input id="npcMovementOverride" type="number" min="0" max="999" placeholder="Utgå från SMI" value="'+escAttr(adminNpcDraft?.attributes?.FORFLYTTNING??'')+'"></label></div>'+
+ '<div class="slp-derived-note">KP: <b id="npcKpPreview">'+(npcCalculatedKp(adminNpcDraft?.attributes)??'—')+'</b><span id="npcRaceRuleNote"></span></div>'
 }
 function collectAdminNpcAttributes(){
- let out={};NPC_ATTRS.forEach(([k])=>out[k]=npcNum(document.querySelector('[data-npc-attr="'+k+'"]')?.value));return out
+ let out={};NPC_ATTRS.forEach(([k])=>out[k]=npcNum(document.querySelector('[data-npc-attr="'+k+'"]')?.value));
+ let special=document.getElementById('npcKpOverride')?.value?.trim();
+ let movement=document.getElementById('npcMovementOverride')?.value?.trim();
+ if(special){let kp=Number(special);if(!Number.isSafeInteger(kp)||kp<1||kp>9999)throw Error('Särskilda KP ska vara 1–9999.');out.KP=kp}
+ if(movement){let move=Number(movement);if(!Number.isSafeInteger(move)||move<0||move>999)throw Error('Särskild förflyttning ska vara 0–999.');out.FORFLYTTNING=move}
+ return out
 }
 function updateNpcKpPreview(){let el=$('npcKpPreview');if(el)el.textContent=npcCalculatedKp(collectAdminNpcAttributes())??'—'}
 function selectedNpcRaceRules(){return raceRuleByName($('cnRace')?.value||'')}
