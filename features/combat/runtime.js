@@ -2228,7 +2228,7 @@ function combatParryOption(combatant,key){
  return options.find(option=>option.key===String(key))||null
 }
 function combatCanParryAttack(defender){
- return !!defender&&combatHasUnusedAction(defender)&&combatParryOptions(defender).length>0
+ return !!defender&&!combatCannotReact(defender)&&combatHasUnusedAction(defender)&&combatParryOptions(defender).length>0
 }
 async function combatExpertRoll(label,fv){
  const first=await combatRollDice([{qty:1,sides:20}],label);
@@ -3359,8 +3359,8 @@ function combatEffectIsActive(row,round=Number(activeCombat?.round_number)||1,no
 }
 function combatEffectExpiry(def,round,strength=1){
  const unit=def?.duration_unit||'round',ending=def?.expiration_condition||'duration';
- const count=def?.modifiers?.type==='skip_turns'?strength:def?.default_duration_rounds;
- if(ending!=='duration'||count==null||unit==='permanent')return {expires_round:null,expires_at:null};
+ const count=['skip_turns','incapacitated'].includes(def?.modifiers?.type)?strength:def?.default_duration_rounds;
+ if(count==null||unit==='permanent')return {expires_round:null,expires_at:null};
  if(unit==='instant')return {expires_round:round,expires_at:null};
  if(unit==='round')return {expires_round:round+Math.max(1,Number(count))-1,expires_at:null};
  const ms=unit==='minute'?60000:unit==='hour'?3600000:0;
@@ -3389,10 +3389,22 @@ async function combatEndEffectByCondition(id,condition){
  }catch(e){alert('Kunde inte avsluta effekten: '+e.message)}
 }
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
+function combatIncapacitation(combatant,round=Number(activeCombat?.round_number)||1){
+ if(!combatant)return null;
+ for(const effect of combatActiveEffects){
+  if(String(effect.combatant_id)!==String(combatant.id)||!combatEffectIsActive(effect,round))continue;
+  const def=combatEffectDefinition(effect);
+  if(def?.active&&def.modifiers?.type==='incapacitated')return {effect,definition:def,state:def.modifiers.state||'unconscious'}
+ }
+ return null
+}
+function combatCannotReact(combatant){
+ return !!combatIncapacitation(combatant)
+}
 function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||1){
  if(!combatant)return false;
  return combatActiveEffects.some(row=>String(row.combatant_id)===String(combatant.id)&&combatEffectIsActive(row,round)&&
-  combatEffectRegistry.some(def=>def.id===row.effect_id&&def.active&&def.modifiers?.type==='skip_turns'))
+  combatEffectRegistry.some(def=>def.id===row.effect_id&&def.active&&['skip_turns','incapacitated'].includes(def.modifiers?.type)))
 }
 function combatEffectAttributeDelta(combatant,attribute){
  return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&combatEffectIsActive(e)).reduce((sum,e)=>{
@@ -3414,12 +3426,13 @@ function combatantEffectsHtml(combatant){
  return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>{
   const remaining=e.expires_round!=null?' · '+Math.max(0,Number(e.expires_round)-(Number(activeCombat?.round_number)||1)+1)+' SR':e.expires_at?' · till '+escAttr(new Date(e.expires_at).toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})):'';
   const ending=combatEffectDefinition(e)?.expiration_condition||'duration';
+  const conditionLabel={woken:'Väck',cured:'Bota',dispelled:'Skingra',concentration:'Bryt koncentration'}[ending]||ending;
   return '<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+remaining+
    (combatCanManage()?'<button type="button" title="Avsluta effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\\')">×</button>':'')+
-   (combatCanManage()&&['woken','cured','dispelled','concentration'].includes(ending)?'<button type="button" title="'+escAttr(ending)+'" onclick="event.stopPropagation();combatEndEffectByCondition(\''+e.id+'\\',\''+ending+'\\')">'+escAttr(ending)+'</button>':'')+'</span>'
+   (combatCanManage()&&['woken','cured','dispelled','concentration'].includes(ending)?'<button type="button" title="'+escAttr(ending)+'" onclick="event.stopPropagation();combatEndEffectByCondition(\''+e.id+'\\',\''+ending+'\\')">'+escAttr(conditionLabel)+'</button>':'')+'</span>'
  }).join('')+'</div>':''
 }
-const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','custom'];
+const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','incapacitated','custom'];
 const COMBAT_EFFECT_TARGETS=['combatant','hex','area','item','self'];
 const COMBAT_EFFECT_DURATIONS=['round','minute','hour','instant','permanent'];
 const COMBAT_EFFECT_ENDINGS=['duration','manual','woken','cured','dispelled','concentration','special'];
