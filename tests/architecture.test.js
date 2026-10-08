@@ -80,8 +80,8 @@ describe("application architecture smoke checks", () => {
 
   test("failed spells cost one PSY and perfect spells cost half rounded up", () => {
     const combat = read("features/combat/runtime.js");
-    expect(combat).toContain("const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;");
-    expect(combat).toContain("psy_cost:!success?1:outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg");
+    expect(combat).toContain("const cost=combatMagicPsyCost(rolled.outcome,eg);");
+    expect(combat).toContain("psy_cost:combatMagicPsyCost(outcome,eg)");
   });
 
   test("prepared spells persist to next SR and status casts apply effects", () => {
@@ -204,9 +204,9 @@ describe("application architecture smoke checks", () => {
       combat.slice(combat.indexOf("function combatMagicCastPreflight("), end) +
       ";return combatMagicCastPreflight;"
     )(rules.combatMagicCastingRules, () => ({}));
-    expect(preflight({current_psy:3},{name:"BLIXT",fv:10,school_fv:5},2).valid).toBe(true);
-    expect(preflight({current_psy:1},{name:"BLIXT",fv:10,school_fv:5},2).errors).toContain("Otillräcklig PSY");
-    expect(preflight({current_psy:20},{name:"BLIXT",fv:10,school_fv:2},3).errors).toContain("EG överstiger FV i magiskolan");
+    expect(preflight({current_psy:3},{name:"BLIXT",fv:10,school_fv:5,damage_text:'1T6 per EG'},2).valid).toBe(true);
+    expect(preflight({current_psy:1},{name:"BLIXT",fv:10,school_fv:5,damage_text:'1T6 per EG'},2).errors).toContain("Otillräcklig PSY");
+    expect(preflight({current_psy:20},{name:"BLIXT",fv:10,school_fv:2,damage_text:'1T6 per EG'},3).errors).toContain("EG överstiger FV i magiskolan");
   });
 
   test("elf races use the two-hour ERF rest rule", () => {
