@@ -2731,8 +2731,9 @@ async function combatCastStatusSpell(actor,target,action){
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
- const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:!success?1:outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg,spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
+ const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatMagicPsyCost(outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ await combatSpendMagicPsy(actor,result.psy_cost);
  if(success){
   const allocations=combatMagicTargetAllocations(action);
   const targets=allocations.length?allocations:[{target_id:target.id,eg}];
