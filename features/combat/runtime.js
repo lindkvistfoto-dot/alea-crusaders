@@ -2727,7 +2727,7 @@ function combatMagicTargetChooserHtml(actor,action){
    '<div class="combat-spell-effect"><span>Radie '+radius+' hex</span>'+
    '<button type="button" onclick="combatSetMagicAreaRadius(\''+actor.id+'\',-1)">−</button>'+
    '<button type="button" onclick="combatSetMagicAreaRadius(\''+actor.id+'\',1)">+</button>'+
-   '<small>Centrum '+(center?center.q+','+center.r:'inte valt')+'</small></div></div>'
+   '<small>Centrum '+(center?center.q+','+center.r:'inte valt')+'</small></div>'+durationHtml+'</div>'
  }
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action);
