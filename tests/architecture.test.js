@@ -1121,7 +1121,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("if(mode==='melee')return combatMeleeRangeHexes(combatant,weapon)");
     expect(combat).toContain("Närkontakt = närstrid · annars avstånd");
     expect(combat).toContain("cell?.sight_mode==='blocked'");
-    expect(combat).toContain("target.side===actor.side");
+    expect(combat).toContain("combatEffectiveSide(actor)===combatEffectiveSide(target)");
     expect(combat).toContain("attack-target");
     expect(combat).toContain("function combatCurrentAttackTargets");
     expect(combat).toContain("preserveSelectedTarget:def.type===\'attack\'");
