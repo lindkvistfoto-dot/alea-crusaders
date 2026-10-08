@@ -322,12 +322,14 @@ function combatSourceStats(sceneCombatant,sources){
   }),
   sty,sto,smi
  };
- let maxKp=combatNumber(combatStateValue(state,'max_kp','kp_max'),combatNumber(live.KPmax,null));
+ // Elemental/other unusual NPCs may have published KP independent of (FYS+STO)/2.
+ let maxKp=combatNumber(combatStateValue(state,'max_kp','kp_max'),combatNumber(live.KPmax,combatNumber(attributes.KP,null)));
  if(maxKp==null&&attributes.FYS!=null&&attributes.STO!=null)maxKp=Math.ceil((Number(attributes.FYS)+Number(attributes.STO))/2);
  let currentKp=combatNumber(combatStateValue(state,'current_kp','kp'),combatNumber(live.KP,maxKp));
  let maxPsy=combatNumber(combatStateValue(state,'max_psy','psy_max'),combatNumber(live.PSYmax,combatNumber(attributes.PSY,null)));
  let currentPsy=combatNumber(combatStateValue(state,'current_psy','psy'),combatNumber(live.PSY,maxPsy));
- let move=combatNumber(combatStateValue(state,'movement_max','movement','move'),combatNumber(derived['Förflyttning'],combatNumber(attributes.SMI,10)));
+ let move=combatNumber(combatStateValue(state,'movement_max','movement','move'),
+  combatNumber(derived['Förflyttning'],combatNumber(attributes.FORFLYTTNING,combatNumber(attributes.SMI,10))));
  const propertyNames={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
  const snapshot={};
  for(const [abbr,name] of Object.entries(propertyNames)){
