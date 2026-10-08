@@ -39,7 +39,7 @@ function virtualServer(){
     }));
    }
    if(path.startsWith('campaign_materials?')){
-    const id=path.match(/id=eq\.([^&]+)/)?.[1];
+    const id=path.match(/(?:\?|&)id=eq\.([^&]+)/)?.[1];
     const inIds=path.match(/id=in\.\(([^)]+)\)/)?.[1]?.split(',')||null;
     const list=id?[currentMaterials.get(decodeURIComponent(id))]:
      inIds?inIds.map(x=>currentMaterials.get(decodeURIComponent(x))):[...currentMaterials.values()];
