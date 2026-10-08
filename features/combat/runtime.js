@@ -1518,11 +1518,16 @@ async function combatMagicButton(event,combatantId){
  const action=combatChosenAction(combatant),data=action?.source_data||{};
  if(combatActionDefinition(action)?.key==='spell_cast'&&action?.status==='planned'&&data.spell_prepared){
   if(data.casting_spell){
+   if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),targets=combatFireballTargets();
    if(targetId&&targets.has(targetId)){await rollCombatTestFireball(combatant.id,targetId);return}
    combatSelectedTargetId=null;renderCombat();return
   }
-  const sourceData={...data,casting_spell:true,test_fireball:String(data.spell_name||'').toUpperCase().startsWith('ELD')};
+  const castRules=data.magic_casting||combatMagicCastingRules({name:data.spell_name},data.effect_grade);
+  const currentRound=Number(activeCombat?.round_number)||1;
+  const sourceData={...data,casting_spell:true,spell_locked:true,
+   preparation_round:currentRound,ready_round:currentRound+(castRules.quick?0:1),
+   test_fireball:String(data.spell_name||'').toUpperCase().startsWith('ELD')};
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
   action.source_data=sourceData;combatCloseRowActionMenu();combatSelectedTargetId=null;renderCombat();return
  }
@@ -1533,7 +1538,7 @@ async function combatMagicButton(event,combatantId){
 }
 async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
- if(!combatant||!action||combatActionDefinition(action)?.key!=='spell_cast')return;
+ if(!combatant||!action||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
  const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
@@ -1541,7 +1546,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  action.source_data=sourceData;renderCombat()
 }
 async function stepCombatSpellEffect(combatantId,delta){
- const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action)return;
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||action.status!=='planned'||action.source_data?.spell_locked)return;
  const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(action.source_data?.spell_key));
  if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
@@ -2488,7 +2493,7 @@ async function combatResolveTestFireball(actor,target,action){
 async function rollCombatTestFireball(actorId,targetId){
  if(combatDiceBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
- if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||!combatFireballTargets().has(String(target.id)))return;
+ if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)||!combatFireballTargets().has(String(target.id)))return;
  try{
   const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+
    '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
