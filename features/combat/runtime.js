@@ -1450,6 +1450,30 @@ function combatAttackWeaponChooserHtml(combatant,action,def){
 }
 const COMBAT_SPELL_EFFECTS={"FÖRROLLAD SÖMN":{"category":"indirect","effect":"sleep","target":"creature"},"MÖRKER (F)":{"category":"indirect","effect":"darkness","target":"area"},"DIMMA":{"category":"indirect","effect":"obscured","target":"area"},"PARALYSERING":{"category":"indirect","effect":"paralyzed","target":"creature"},"FÖRVIRRA":{"category":"indirect","effect":"confused","target":"creature"},"PANIK":{"category":"indirect","effect":"panic","target":"creature"},"RÄDSLA (K)":{"category":"indirect","effect":"fear","target":"creature"},"TERROR":{"category":"indirect","effect":"terror","target":"creature"},"SMÄRTA":{"category":"indirect","effect":"pain","target":"creature"},"LÅNGSAMHET":{"category":"indirect","effect":"slow","target":"creature"},"SNUBBLA (K)":{"category":"indirect","effect":"prone","target":"creature"},"DISTRAKTION (K)":{"category":"indirect","effect":"distracted","target":"creature"},"BLIDHET":{"category":"indirect","effect":"pacified","target":"creature"},"KONTROLLERA VARELSE":{"category":"indirect","effect":"controlled","target":"creature"},"STENVÄGG (F)":{"category":"indirect","effect":"wall","target":"area"},"OSYNLIGHET":{"category":"indirect","effect":"invisible","target":"creature"},"ILLUSION (F)":{"category":"indirect","effect":"illusion","target":"area"},"FATA MORGANA (STOR ILLUSION) (F, R)":{"category":"indirect","effect":"illusion","target":"area"},"SNABBHET":{"category":"support","effect":"haste","target":"creature"},"MOTSTÅNDSKRAFT":{"category":"support","effect":"resistance","target":"creature"},"ANTIMAGI":{"category":"support","effect":"antimagic","target":"creature"},"SKINGRA":{"category":"support","effect":"dispel","target":"creature"},"HELA":{"category":"support","effect":"heal","target":"creature"},"ORÄDD":{"category":"support","effect":"fear_resistance","target":"creature"},"MÖRKERSYN":{"category":"support","effect":"darkvision","target":"creature"}};
 function combatSpellEffectProfile(spell){const name=String(spell?.name||'').toUpperCase().trim();return COMBAT_SPELL_EFFECTS[name]||{category:spell?.attack_magic?'direct':'none',effect:spell?.attack_magic?'damage':null,target:spell?.attack_magic?'creature':null}}
+// Reusable summon profiles are campaign-independent; a cast creates a combat instance.
+// Expert scaling formulas are deliberately data-driven, never guessed.
+const COMBAT_SUMMON_TEMPLATES={
+ earth:{key:'earth',name:'Jordelementar',kind:'elemental',scaling:{}},
+ fire:{key:'fire',name:'Eldelementar',kind:'elemental',scaling:{}},
+ air:{key:'air',name:'Luftelementar',kind:'elemental',scaling:{}},
+ water:{key:'water',name:'Vattenelementar',kind:'elemental',scaling:{}}
+};
+function combatSummonScaledValue(base,rule,eg){
+ if(!rule)return base;
+ const n=Number(base)||0,e=Math.max(1,Math.floor(Number(eg)||1));
+ if(rule.mode==='per_eg')return n*e;
+ if(rule.mode==='base_plus_per_eg')return n+(e-1)*(Number(rule.step)||0);
+ return base
+}
+function combatSummonSnapshot(template,effectGrade){
+ const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
+ const stats={...template.stats};
+ for(const [field,rule] of Object.entries(template.scaling||{}))stats[field]=combatSummonScaledValue(stats[field],rule,eg);
+ return {template_key:template.key,template_name:template.name,kind:template.kind,effect_grade:eg,stats}
+}
+function combatIsSummoningSpell(spell){
+ return /^(FRAMMANA\\/SKICKA BORT ELEMENTAR|TILLKALLA VARELSE)/i.test(String(spell?.name||''))
+}
 function combatSpellOptions(combatant){
  return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
 }
@@ -1458,7 +1482,7 @@ function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
  return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
-  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatSpellEffectProfile(spell);
+  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatSpellEffectProfile(spell),summon=combatIsSummoningSpell(spell);
   return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+'</small></button>'
  }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
