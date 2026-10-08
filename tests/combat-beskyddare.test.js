@@ -7,7 +7,7 @@ function code(from,to){
  if(start<0||end<start)throw Error('Missing code '+from);
  return rt.slice(start,end)
 }
-const logic=code('function combatBeskyddareAxes(', 'function combatMagicAreaCells(');
+const logic=code('function combatBeskyddareSideCells(', 'function combatMagicAreaCells(');
 function harness(){
  const env={activeCombat:{round_number:8},
   combatAreaEffects:[],combatEffectDefinition:({effect_id})=>effect_id==='ward'?{code:'area_beskyddare',active:true,target_type:'area'}:null,
@@ -21,20 +21,20 @@ function harness(){
   combatAntimagicEgResistance:(a,d,roll)=>({target:10+a-d,roll,penetrates:roll<=10+a-d}),
   combatRollDice:async()=>({rolls:[{value:15}]})
  };
- runInNewContext(logic+'this.api={combatBeskyddareAxes,combatBeskyddareDimensions,combatBeskyddareAreaParameters,combatIsBeskyddareArea,combatBeskyddareContains,combatBeskyddareCrossings,combatResolveBeskyddarePassage}',env);
+ runInNewContext(logic+'this.api={combatBeskyddareSideCells,combatBeskyddareDimensions,combatBeskyddareAreaParameters,combatIsBeskyddareArea,combatBeskyddareContains,combatBeskyddareCrossings,combatResolveBeskyddarePassage}',env);
  const area={id:'one',effect_id:'ward',center_q:0,center_r:0,radius:0,status:'active',
   parameters:env.api.combatBeskyddareAreaParameters({effect_grade:1},'spell1')};
  env.combatAreaEffects.push(area);
  return {env,area,api:env.api}
 }
 describe('BESKYDDARE · permanent kubisk spärr i båda riktningar',()=>{
- test('EG 1 är 27 m³; varje extra EG förstorar exakt en ledd med 3m',()=>{
+ test('Kubens sidlängd är EG + 2 rutor, i alla tre dimensioner',()=>{
   const {api}=harness();
   expect(api.combatBeskyddareDimensions({effect_grade:1})).toEqual({x:3,y:3,z:3});
-  expect(api.combatBeskyddareDimensions({effect_grade:4,cube_axes:['y','z','z']})).toEqual({x:3,y:6,z:9});
-  expect(api.combatBeskyddareDimensions({effect_grade:3,cube_axes:['x','x']})).toEqual({x:9,y:3,z:3});
-  const params=api.combatBeskyddareAreaParameters({effect_grade:2,cube_axes:['z']},'a');
-  expect(params.cube_dimensions_m).toEqual({x:3,y:3,z:6});
+  expect(api.combatBeskyddareDimensions({effect_grade:4})).toEqual({x:6,y:6,z:6});
+  expect(api.combatBeskyddareDimensions({effect_grade:3})).toEqual({x:5,y:5,z:5});
+  const params=api.combatBeskyddareAreaParameters({effect_grade:2},'a');
+  expect(params.cube_dimensions_cells).toEqual({x:4,y:4,z:4});
   expect(params.barrier_eg).toBe(1);
   expect(params.blocks_magic_both_directions).toBe(true);
  });
