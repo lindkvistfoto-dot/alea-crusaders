@@ -1312,4 +1312,36 @@ describe("application architecture smoke checks", () => {
   });
 
 
+  test("Hephaistos: admin rule registries have one central contract", () => {
+    const legacy = read("legacy/app.js");
+    const html = read("index.html");
+    const keys = ["skills","spells","professions","races","stands","weapons","armors","shields"];
+    expect(legacy).toContain("const RULE_REGISTRY_DEFS=");
+    expect(legacy).toContain("async function refreshAdminRuleRegistry");
+    expect(legacy).toContain("Object.entries(RULE_REGISTRY_DEFS)");
+    for (const key of keys) {
+      expect(legacy, key).toContain(key + ":{label:");
+      expect(html, key).toContain('data-admin-section="' + key + '"');
+    }
+  });
+
+  test("Hephaistos: registry load failures are distinct from empty data", () => {
+    const legacy = read("legacy/app.js");
+    expect(legacy).toContain("function ruleRegistryCount(key,count)");
+    expect(legacy).toContain("s?.state==='error'?'⚠'");
+    expect(legacy).toContain("s?.state==='loading'?'…'");
+    expect(legacy).toContain("setRuleRegistryStatus(key,'error',e)");
+  });
+
+  test("Hephaistos: every central registry exposes routing, loading, rendering and count", () => {
+    const legacy = read("legacy/app.js");
+    const start = legacy.indexOf("const RULE_REGISTRY_DEFS=");
+    const end = legacy.indexOf("const RULE_REGISTRY_STATUS=", start);
+    const contract = legacy.slice(start, end);
+    for (const field of ["table:","countId:","section:","load:","render:","count:"]) {
+      expect((contract.match(new RegExp(field,"g"))||[]).length, field).toBe(8);
+    }
+  });
+
+
 });
