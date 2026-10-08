@@ -2622,7 +2622,8 @@ async function combatCastStatusSpell(actor,target,action){
  if(rolled.success){
   const duration=effect.default_duration_rounds;
   const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active'&&(spellName==='FLYGA'||e.parameters?.attribute===attribute));
-  const body={strength:eg,applied_round:round,expires_round:duration==null?null:round+duration,parameters:spellName==='FLYGA'?{}:{attribute,points_per_eg:1},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
+  const spellExpiry=duration==null?combatEffectExpiry(effect,round,eg):{expires_round:round+Math.max(1,Number(duration))-1,expires_at:null};
+  const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',parameters:spellName==='FLYGA'?{}:{attribute,points_per_eg:1},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
   if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
   else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...body,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:target.id,effect_id:effect.id})});
   result.effect_applied=true
