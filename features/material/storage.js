@@ -102,3 +102,39 @@ function gimliStatus(message,isError=false){
  const status=$('gimliStatus');
  if(status){status.textContent=message;status.classList.toggle('error',isError)}
 }
+async function gimliFileSelected(file){
+ if(gimliPreviewUrl){URL.revokeObjectURL(gimliPreviewUrl);gimliPreviewUrl=''}
+ const preview=$('gimliPreview'),submit=$('gimliSubmit');
+ if(preview)preview.replaceChildren();
+ if(submit)submit.disabled=!file;
+ if(!file){gimliStatus('Välj en bild eller ett dokument.');return}
+ try{
+  const info=await gimliValidate(file);
+  const title=$('gimliTitle');
+  if(title&&!title.value)title.value=file.name.replace(/\.[^.]+$/,'').slice(0,160);
+  if(preview&&info.kind==='image'){
+   gimliPreviewUrl=URL.createObjectURL(file);
+   const img=document.createElement('img');img.src=gimliPreviewUrl;img.alt='Förhandsgranskning';
+   preview.append(img)
+  }else if(preview)preview.textContent=file.name+' · '+Math.ceil(file.size/1024)+' kB';
+  gimliStatus('Filen är validerad och redo att laddas upp.')
+ }catch(e){if(submit)submit.disabled=true;gimliStatus(e.message,true)}
+}
+async function gimliSubmitFile(event){
+ event?.preventDefault?.();if(gimliUploading)return;
+ const input=$('gimliFile'),button=$('gimliSubmit');
+ gimliUploading=true;if(button)button.disabled=true;
+ try{
+  const file=input?.files?.[0];
+  const result=await gimliUploadMaterial({campaignId:centralCampaignId,file,
+   title:$('gimliTitle')?.value||'',description:$('gimliDescription')?.value||'',
+   category:$('gimliCategory')?.value||'other',progress:gimliStatus});
+  if(input)input.value='';
+  if($('gimliTitle'))$('gimliTitle').value='';
+  if($('gimliDescription'))$('gimliDescription').value='';
+  await gimliFileSelected(null);
+  gimliStatus('✓ '+result.title+' lagrad privat. Den är inte delad med spelarna.');
+  await gimliLoadRecent()
+ }catch(e){gimliStatus('Uppladdningen misslyckades: '+e.message,true)}
+ finally{gimliUploading=false;if(button)button.disabled=!input?.files?.length}
+}
