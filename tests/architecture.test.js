@@ -42,6 +42,15 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("spell targets allocate EG without exceeding prepared total", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("async function combatAddMagicTarget(");
+    expect(combat).toContain("async function combatRemoveMagicTarget(");
+    expect(combat).toContain("target_allocations:next");
+    expect(combat).toContain("result.target_results.push(");
+    expect(combat).toContain("allocations.reduce((n,t)=>n+t.eg,0)!==total");
+  });
+
   test("magic preparation locks spell and effect grade until its ready round", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("spell_locked:true");
