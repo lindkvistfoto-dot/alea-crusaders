@@ -348,5 +348,5 @@ Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDeta
  legolasOpenPanel:legolas.openPanel,legolasClosePanel:legolas.closePanel,legolasReset:legolas.reset,
  legolasGetStagedIds:legolas.getStagedIds,
  legolasPreviewMaterial:(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign());if(row)legolas.previewMaterial(row)},
- frodoShowMaterial:(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign()&&!r.archived_at);if(row&&bilboAllowed())return frodoUi.showRow(row);}
+ frodoShowMaterial:async(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign()&&!r.archived_at);if(!row||!bilboAllowed())return;const result=await frodoUi.showRow(row);if(result)bilboNotice('Visas nu för spelarna: '+row.title+'.');else bilboNotice('Visningen kunde inte startas. Kontrollera status i Materialpanelen.',true);}
 });
