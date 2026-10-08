@@ -239,3 +239,24 @@
     border-radius:9px;
   }
 }
+
+
+/* v0.34.89 – tydlig skillnad mellan kartbyte och att visa aktuell karta. */
+#mapPage .map-set-current{
+  color:#f4ffeb;
+  border:1px solid #8eac73;
+  background:linear-gradient(180deg,#4a6c3e,#2c492d);
+  font-weight:700;
+  box-shadow:0 1px 0 rgba(255,255,255,.13) inset;
+}
+#mapPage .map-set-current:hover:not(:disabled){
+  background:linear-gradient(180deg,#557d46,#365b37);
+}
+#mapPage .map-set-current:focus-visible{
+  outline:2px solid #c7eea2;
+  outline-offset:2px;
+}
+#mapPage .map-set-current:disabled{
+  opacity:.5;
+  cursor:wait;
+}
