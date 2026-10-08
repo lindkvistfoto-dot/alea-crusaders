@@ -1537,6 +1537,48 @@ function combatMagicDamageFormula(spell,eg=1){
  const dice=Number(match[1])*Number(eg),sides=Number(match[2]);
  return Number.isSafeInteger(dice)&&dice>=1&&dice<=40&&[3,4,6,8,10,20,100].includes(sides)?dice+'T'+sides:null
 }
+
+/* FALK: Expert ERF for spells uses the shared once-per-rest award RPC. */
+function combatSpellErfTarget(actor,action){
+ const character=combatCharacterSource(actor);
+ const data=character?.data&&typeof character.data==='object'?character.data:character;
+ const spells=Array.isArray(data?.spells)?data.spells:[];
+ const wantedId=String(action?.source_data?.spell_id||'');
+ const wantedName=String(action?.source_data?.spell_name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim();
+ const item=spells.find(spell=>
+  (wantedId&&[spell?.id,spell?.rule_id].some(id=>id!=null&&String(id)===wantedId))||
+  String(spell?.name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim()===wantedName
+ )||null;
+ return {item_key:String(item?.id||item?.name||''),item};
+}
+async function combatAwardSpellErf(actor,action,outcome){
+ if(actor?.source_type!=='character'||!combatOutcomeEarnsErf(outcome)||!actor.source_id)return null;
+ const {item_key:itemKey,item}=combatSpellErfTarget(actor,action);
+ if(!itemKey)return null;
+ try{
+  let amount=null,erfRoll=null;
+  if(outcome==='perfect'){
+   const roll=await combatRollDice([{qty:1,sides:3}],(action.source_data?.spell_name||'Magi')+' · ERF 1T3+1');
+   erfRoll=Number(roll?.rolls?.[0]?.value);
+   if(!Number.isInteger(erfRoll))throw new Error('ERF-slaget gav inget giltigt T3-resultat.');
+   amount=erfRoll+1
+  }
+  if(typeof awardCharacterErfItem!=='function')throw new Error('ERF-regelmotorn är inte tillgänglig.');
+  const awarded=await awardCharacterErfItem(actor.source_id,'spells',itemKey,outcome,{amount});
+  if(item&&Number.isFinite(Number(awarded?.new_erf)))item.erf=Number(awarded.new_erf);
+  try{if(typeof chars!=='undefined')localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(_error){}
+  return {awarded:Number(awarded?.awarded)||amount||1,
+   new_erf:Number(awarded?.new_erf),erf_roll:erfRoll,item_group:'spells',item_key:itemKey,reason:outcome};
+ }catch(error){
+  const message=String(error?.message||error||'');
+  if(/redan tjänat ERF|redan.*ERF/i.test(message))
+   return {awarded:0,locked:true,reason:outcome,message:'ERF redan erhållet under aktuell viloperiod.'};
+  if(/ny dag med vila|kan inte tjänas denna dag/i.test(message))
+   return {awarded:0,locked:true,reason:outcome,message:'Tillräcklig vila krävs för ny ERF-period.'};
+  console.warn('ERF från besvärjelse kunde inte registreras',error);
+  return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'};
+ }
+}
 function combatMagicPsyCost(outcome,eg){
  return !['success','special','perfect'].includes(outcome)?1:
   outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg
@@ -2789,8 +2831,10 @@ async function combatCastStatusSpell(actor,target,action){
   if(!Array.isArray(spent)||spent.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
   actor.current_psy=before-cost
  }
+ const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
+ if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success&&!resisted){
   const duration=effect.default_duration_rounds;
@@ -2814,15 +2858,19 @@ async function combatCastAreaSpell(actor,action){
  if(binding?.kind!=='area'||!binding.supported||!center||
   !Number.isInteger(radius)||radius<0||radius>15||
   !combatRuntimeHexCells().some(c=>c.q===Number(center.q)&&c.r===Number(center.r)))
-  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.');
+  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.'); if(combatAxialDistance(actor,center)>combatSpellRangeHexes(actor,action)||!combatHasLineOfSight(actor,center))
+  throw new Error('Områdets centrum är inte längre inom räckvidd och fri sikt.');
+
  const effect=combatEffectRegistry.find(row=>row.code===binding.code&&row.active);
  if(!effect)throw new Error('Områdeseffekten finns inte i registret.');
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
  const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
  await combatSpendMagicPsy(actor,cost);
+ const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const round=Number(activeCombat.round_number)||1,result={success:rolled.success,
   outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
   effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,area_center:center,area_radius:radius};
+ if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
   const duration=Number(data.effect_duration_rounds);
@@ -2850,6 +2898,8 @@ async function combatResolveTestFireball(actor,target,action){
  const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatMagicPsyCost(outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  await combatSpendMagicPsy(actor,result.psy_cost);
+ const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
+ if(erf)result.erf=erf;
  if(success){
   const allocations=combatMagicTargetAllocations(action);
   const targets=allocations.length?allocations:[{target_id:target.id,eg}];

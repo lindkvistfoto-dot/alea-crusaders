@@ -96,4 +96,19 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
   expect(src).toContain('effect_duration_rounds:duration||null');
   expect(src).toContain('expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null');
  });
+ test('spell casts award Expert ERF through the existing once-per-rest rule engine',()=>{
+  expect(src).toContain('async function combatAwardSpellErf(actor,action,outcome)');
+  expect(src).toContain("awardCharacterErfItem(actor.source_id,'spells',itemKey,outcome,{amount})");
+  expect(src).toContain('combatSpellErfTarget(actor,action)');
+  expect(src).toContain("combatRollDice([{qty:1,sides:3}]");
+  expect((src.match(/await combatAwardSpellErf\(actor,action,rolled.outcome\)/g)||[]).length).toBe(3);
+ });
+ test('area casting repeats range and blocked-sight validation immediately before the roll',()=>{
+  const start=src.indexOf('async function combatCastAreaSpell('),end=src.indexOf('async function combatResolveTestFireball(',start);
+  const area=src.slice(start,end);
+  expect(area).toContain('combatAxialDistance(actor,center)>combatSpellRangeHexes(actor,action)');
+  expect(area).toContain('!combatHasLineOfSight(actor,center)');
+  expect(area.indexOf('combatAxialDistance(actor,center)>combatSpellRangeHexes')).toBeLessThan(area.indexOf('await combatExpertRoll('));
+ });
+
 });
