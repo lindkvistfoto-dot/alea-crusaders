@@ -22,7 +22,7 @@ export function createGaladriel({
 }){
  const state={started:false,connected:false,connecting:false,scope:'',socket:null,
   sessionToken:'',lastPresentation:-1,lastFolder:-1,joinRef:null,serial:0,ref:0,
-  nextAttempt:0,retryMs:1000,heartbeat:null,lifecycle:null,
+  nextAttempt:0,retryMs:1000,heartbeat:null,lifecycle:null,joinStarted:0,
   lastReconcile:0,lastFallback:0,status:'Vilande'};
  const scope=()=>String(getCampaign()||'');
  const credentials=()=>Boolean(isAuthenticated()&&scope()&&getToken());
@@ -44,7 +44,7 @@ export function createGaladriel({
    socket.onopen=null;socket.onmessage=null;socket.onerror=null;socket.onclose=null;
    try{socket.close(1000,'Galadriel reset');}catch(_){}
   }
-  state.joinRef=null;state.sessionToken='';
+  state.joinRef=null;state.sessionToken='';state.joinStarted=0;
  }
  function reset(){
   closeSocket();state.scope='';state.lastPresentation=-1;state.lastFolder=-1;
@@ -111,7 +111,7 @@ export function createGaladriel({
   }catch(_){emitStatus('Realtime saknas · reservläge');return false;}
   let socket;try{socket=makeSocket(url)}catch(_){reconnect();return false;}
   state.socket=socket;state.scope=campaign;state.sessionToken=token;
-  state.connecting=true;state.connected=false;
+  state.connecting=true;state.connected=false;state.joinStarted=clock();state.lastFallback=clock();
   const serial=++state.serial;
   emitStatus('Ansluter till Galadriel…');
   socket.onopen=()=>{
@@ -144,6 +144,7 @@ export function createGaladriel({
    return;
   }
   if(state.scope&&state.scope!==scope())reset();
+  if(state.connecting&&state.joinStarted&&clock()-state.joinStarted>=15000)reconnect();
   if(!state.socket&&clock()>=state.nextAttempt)connect();
   const now=clock();
   if(!state.connected){
