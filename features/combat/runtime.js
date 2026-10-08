@@ -3690,6 +3690,11 @@ async function combatApplyEffect(){
    parameters:params,source_combatant_id:(needsSource||type==='damage_over_time')&&sourceId?sourceId:null,updated_at:new Date().toISOString()};
   const existing=def.stacking==='refresh'?combatActiveEffects.find(e=>e.status==='active'&&e.combatant_id===combatantId&&e.effect_id===effectId&&
    (def.modifiers?.type!=='attribute_delta'||e.parameters?.attribute===attribute)&&(!needsSource||String(e.source_combatant_id)===sourceId)):null;
+  // A refresh must not erase the server's already-processed SR marker.
+  if(existing&&type==='damage_over_time'){
+   const last=Number(existing.parameters?.last_tick_round);
+   if(existing.parameters?.last_tick_round!=null&&Number.isSafeInteger(last)&&last>=0)params.last_tick_round=last
+  }
   if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
   else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,...payload})});
   await combatLoadEffects();renderCombat()
