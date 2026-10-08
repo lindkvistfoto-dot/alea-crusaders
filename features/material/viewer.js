@@ -221,6 +221,7 @@ export function createLegolas({
     '<span class="legolas-card-title">'+safe(row.title)+'</span><small>'+safe(categories[row.category]||'Övrigt')+'</small></button>'+
    (isGM()&&row.asset_kind==='image'?
      '<button type="button" class="legolas-pick" data-legolas-pick="'+safe(row.id)+'" aria-pressed="'+picked+'">'+(picked?'✓ Vald':'+ Välj')+'</button>':'')+
+   (isGM()?'<button type="button" class="legolas-sam-share" data-sam-share="'+safe(row.id)+'">📁 Till spelarmapp</button>':'')+
    '</article>';
  }
  function renderPage(){
