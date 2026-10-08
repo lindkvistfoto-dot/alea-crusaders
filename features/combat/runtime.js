@@ -1806,6 +1806,7 @@ function combatMagicBinding(spell){
  const effects={'FLYGA':'spell_flyga','FÖRROLLAD SÖMN':'condition_sleep',
  'PARALYSERING':'condition_paralysis','FÖRVIRRA':'condition_confusion',
  'PANIK':'condition_panic','RÄDSLA':'condition_fear','KONTROLLERA VARELSE':'condition_control'};
+ if(name==='BESKYDDARE')return {kind:'area',code:'area_beskyddare',supported:true,ritual:true,cube:true,requires_resistance:false};
  if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
   return {kind:'manual',supported:true,ritual:true,reason:'Ritual · SL avgör tid och effekt'};
  if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
@@ -1950,6 +1951,7 @@ async function combatMagicButton(event,combatantId){
     return
    }
    if(data.magic_binding?.kind==='area'){
+    if(data.magic_binding?.cube&&!data.beskyddare_ritual_confirmed){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     if(!data.area_center){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{
@@ -2989,6 +2991,59 @@ function combatFireballTargets(){
  }
  return out
 }
+// BESKYDDARE: 3 x 3 x 3 m; each extra EG extends one selected axis by 3 m.
+function combatBeskyddareAxes(data){
+ const extra=Math.max(0,Math.min(14,(Number(data?.effect_grade)||1)-1));
+ const stored=Array.isArray(data?.cube_axes)?data.cube_axes:[];
+ return Array.from({length:extra},(_,i)=>['x','y','z'].includes(stored[i])?stored[i]:'x')
+}
+function combatBeskyddareDimensions(data){
+ const a=combatBeskyddareAxes(data);
+ return {x:3+3*a.filter(v=>v==='x').length,y:3+3*a.filter(v=>v==='y').length,z:3+3*a.filter(v=>v==='z').length}
+}
+function combatBeskyddareAreaParameters(data,sourceActionId){
+ return {shape:'cube',cube_dimensions_m:combatBeskyddareDimensions(data),
+  cube_axes:combatBeskyddareAxes(data),barrier_eg:1,blocks_magic_both_directions:true,
+  object_passage:'ENERGISTRÅLE EG 1 – SL avgör skadan',damage_on_enter:0,
+  damage_on_stay:0,damage_on_exit:0,source_action_id:sourceActionId}
+}
+function combatIsBeskyddareArea(area){
+ return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&area.parameters?.shape==='cube'
+}
+function combatBeskyddareContains(area,point){
+ if(!combatIsBeskyddareArea(area)||!point)return false;
+ const d=area.parameters.cube_dimensions_m||{},x=Number(d.x),y=Number(d.y);
+ if(!Number.isFinite(x)||!Number.isFinite(y)||x<3||y<3)return false;
+ const dq=Number(point.q)-Number(area.center_q),dr=Number(point.r)-Number(area.center_r);
+ // Top-down axial projection; one map hex is treated as one metre.
+ return Math.abs(dq+dr/2)<=x/2&&Math.abs(dr*Math.sqrt(3)/2)<=y/2
+}
+function combatBeskyddareCrossings(source,target,round=Number(activeCombat?.round_number)||1){
+ if(!source||!target)return [];
+ const line=combatHexLine(source,target);
+ return (combatAreaEffects||[]).filter(area=>{
+  if(!combatAreaActive(area,round)||!combatIsBeskyddareArea(area))return false;
+  let prev=combatBeskyddareContains(area,line[0]);
+  for(let i=1;i<line.length;i++){
+   const inside=combatBeskyddareContains(area,line[i]);
+   if(prev!==inside)return true;
+   prev=inside
+  }
+  return false
+ })
+}
+async function combatResolveBeskyddarePassage(caster,target,eg){
+ const checks=[];
+ for(const area of combatBeskyddareCrossings(caster,target)){
+  const dieResult=await combatRollDice([{qty:1,sides:20}],'Beskyddare · passera magispärr');
+  const die=Number(dieResult?.rolls?.[0]?.value??dieResult?.total??dieResult?.result);
+  if(!Number.isFinite(die))throw Error('Kunde inte läsa motståndsslaget mot Beskyddare.');
+  const resistance=combatAntimagicEgResistance(eg,Number(area.parameters?.barrier_eg)||1,die);
+  checks.push({area_id:area.id,barrier_eg:1,incoming_eg:eg,roll:die,
+   resistance,blocked:!resistance.penetrates})
+ }
+ return {blocked:checks.some(x=>x.blocked),checks}
+}
 function combatMagicAreaCells(center,radius){
  const r=Math.max(0,Math.floor(Number(radius)||0));
  return combatRuntimeHexCells().filter(cell=>combatAxialDistance(center,cell)<=r)
@@ -3049,6 +3104,26 @@ async function combatRemoveMagicTarget(actorId,targetId){
   method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
  });action.source_data=sourceData;renderCombat()
 }
+async function combatSetBeskyddareAxis(actorId,index,axis){
+ const actor=combatants.find(c=>String(c.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!action||action.status!=='planned'||!action.source_data?.magic_binding?.cube||!['x','y','z'].includes(axis))return;
+ const axes=combatBeskyddareAxes(action.source_data);
+ if(!Number.isInteger(index)||index<0||index>=axes.length)return;
+ axes[index]=axis;
+ const source_data={...action.source_data,cube_axes:axes};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
+  headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data,updated_at:new Date().toISOString()})});
+ action.source_data=source_data;renderCombat()
+}
+async function combatConfirmBeskyddareRitual(actorId){
+ if(!combatCanManage())return;
+ const actor=combatants.find(c=>String(c.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!action||action.status!=='planned'||!action.source_data?.magic_binding?.cube)return;
+ const source_data={...action.source_data,beskyddare_ritual_confirmed:true};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
+  headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data,updated_at:new Date().toISOString()})});
+ action.source_data=source_data;renderCombat()
+}
 async function combatSetMagicAreaRadius(actorId,delta){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
  if(!actor||action?.status!=='planned'||action.source_data?.magic_binding?.kind!=='area')return;
@@ -3090,6 +3165,19 @@ function combatMagicTargetChooserHtml(actor,action){
   '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',-1)">−</button>'+
   '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',1)">+</button></div>';
  if(action.source_data?.magic_binding?.kind==='area'){
+  if(action.source_data.magic_binding.cube){
+   const d=combatBeskyddareDimensions(action.source_data),axes=combatBeskyddareAxes(action.source_data);
+   const confirmed=action.source_data.beskyddare_ritual_confirmed===true;
+   return '<div class="combat-spell-choice"><b>Beskyddare · magisk kub</b>'+
+    '<small>3 × 3 × 3 m vid EG 1. Fördela +3 m per ytterligare EG till längd, bredd eller höjd.</small>'+
+    '<small>Storlek: '+d.x+' × '+d.y+' × '+d.z+' m · permanent · skyddar mot magi i båda riktningarna.</small>'+
+    axes.map((axis,i)=>'<label class="combat-spell-effect">EG '+(i+2)+' · utöka <select onchange="combatSetBeskyddareAxis(\''+actor.id+'\','+i+',this.value)">'+
+     ['x','y','z'].map(v=>'<option value="'+v+'"'+(axis===v?' selected':'')+'>'+({x:'Längd',y:'Bredd',z:'Höjd'}[v])+'</option>').join('')+'</select></label>').join('')+
+    '<small>Välj centrum på magikerns hex eller en intilliggande hex (beröring).</small>'+
+    '<small>Ritual med nio stenar. SL bekräftar förberedelsen innan kastet.</small>'+
+    '<button type="button" class="btn" onclick="combatConfirmBeskyddareRitual(\''+actor.id+'\')">'+(confirmed?'✓ Ritual bekräftad':'SL: Bekräfta ritual')+'</button>'+
+    '<small>Centrum: '+(action.source_data.area_center?String(action.source_data.area_center.q)+','+String(action.source_data.area_center.r):'inte valt')+'</small></div>'
+  }
   const radius=Number(action.source_data.area_radius)||0,center=action.source_data.area_center;
   return '<div class="combat-spell-choice"><b>'+escAttr(action.source_data.spell_name)+' · område</b>'+
    '<small>Klicka på centrumhexagonen på kartan. Tryck sedan ✦ för att kasta.</small>'+
@@ -3713,10 +3801,11 @@ function renderCombatMap(){
   const preview=combatAreaDraftCenter&&cell.q===combatAreaDraftCenter.q&&cell.r===combatAreaDraftCenter.r;
   if(!areas.length&&!preview)return '';
   const codes=areas.map(area=>combatEffectDefinition({effect_id:area.effect_id})?.code||'');
-  const color=codes.some(x=>x==='area_fire')?'#fa7045':
+  const color=codes.some(x=>x==='area_beskyddare')?'#b68bff':
+   codes.some(x=>x==='area_fire')?'#fa7045':
    codes.some(x=>x==='area_poison')?'#70c97b':
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
-  const names=areas.map(area=>combatEffectDefinition({effect_id:area.effect_id})?.name||'Område').join(', ');
+  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';const d=area.parameters?.cube_dimensions_m;return combatIsBeskyddareArea(area)&&d?name+' '+d.x+'×'+d.y+'×'+d.z+' m':name}).join(', ');
   return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview?'.44':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview?3:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(names||'Valt centrum')+'</title></polygon>'
  }).join('');
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
@@ -4164,7 +4253,8 @@ function combatAreaActive(row,round=Number(activeCombat?.round_number)||1){
 function combatAreasForHex(q,r,round=Number(activeCombat?.round_number)||1){
  const cell={q:Number(q),r:Number(r)};
  return combatAreaEffects.filter(area=>combatAreaActive(area,round)&&
-  combatAxialDistance(cell,{q:area.center_q,r:area.center_r})<=Number(area.radius))
+  (combatIsBeskyddareArea(area)?combatBeskyddareContains(area,cell):
+   combatAxialDistance(cell,{q:area.center_q,r:area.center_r})<=Number(area.radius)))
 }
 function combatAreaTerrainForHex(q,r){
  const areas=combatAreasForHex(q,r);
@@ -4400,7 +4490,8 @@ function combatAreasAdminHtml(){
   '<div>'+rows.map(a=>{
    const d=combatEffectDefinition({effect_id:a.effect_id}),end=a.expires_round!=null?' · till SR '+a.expires_round:' · tills vidare';
    const params=a.parameters||{};
-   return '<span><b>'+escAttr(d?.name||'Område')+'</b> ('+a.center_q+','+a.center_r+', radie '+a.radius+
+   const shape=combatIsBeskyddareArea(a)?('kub '+[params.cube_dimensions_m?.x,params.cube_dimensions_m?.y,params.cube_dimensions_m?.z].join('×')+' m'):'radie '+a.radius;
+   return '<span><b>'+escAttr(d?.name||'Område')+'</b> ('+a.center_q+','+a.center_r+', '+shape+
     end+') · in '+(params.damage_on_enter||0)+' / kvar '+(params.damage_on_stay||0)+
     ' / ut '+(params.damage_on_exit||0)+
     ' <button type="button" onclick="combatRemoveAreaEffect(\''+a.id+'\')">Ta bort</button></span>'
