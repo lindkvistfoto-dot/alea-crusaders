@@ -2577,7 +2577,7 @@ function combatMagicTargetChooserHtml(actor,action){
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action),attribute=action.source_data?.effect_attribute;
   return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
-   (statusSpell==='FLYGA'?'':'<div class="combat-spell-effect"><span>Egenskap</span><select onchange="combatChooseSpellAttribute(\\''+actor.id+'\\',this.value)"><option value="">Välj egenskap</option>'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'" '+(attribute===a?'selected':'')+'>'+a+'</option>').join('')+'</select></div>')+
+   (statusSpell==='FLYGA'?'':'<div class="combat-spell-effect"><span>Egenskap</span><select onchange="combatChooseSpellAttribute(&quot;'+actor.id+'&quot;,this.value)"><option value="">Välj egenskap</option>'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'" '+(attribute===a?'selected':'')+'>'+a+'</option>').join('')+'</select></div>')+
    candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+'</div>'
  }
  return '<div class="combat-spell-choice"><b>Mål i kast-SR · EG '+spent+'/'+total+'</b><small>Välj fiender och fördela effektgrad innan kastet.</small>'+
