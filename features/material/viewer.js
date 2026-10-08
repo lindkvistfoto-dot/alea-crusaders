@@ -149,6 +149,12 @@ export function createLegolas({
   el('legolasStage').addEventListener('pointerup',pointerUp);
   el('legolasStage').addEventListener('pointercancel',pointerUp);
   doc().addEventListener('keydown',keyDown);
+  // Legacy logout shows loginScreen. Reset every private preview and blob URL immediately.
+  const login=el('loginScreen');
+  if(login&&typeof MutationObserver!=='undefined'){
+   new MutationObserver(()=>{if(!login.classList.contains('hidden'))reset();})
+    .observe(login,{attributes:true,attributeFilter:['class']});
+  }
   panel.addEventListener('click',event=>{if(event.target===panel)closePanel();});
   viewer.addEventListener('click',event=>{if(event.target===viewer)closeViewer();});
  }
