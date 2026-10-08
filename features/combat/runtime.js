@@ -2609,6 +2609,13 @@ async function combatCastStatusSpell(actor,target,action){
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const cost=rolled.outcome==='perfect'?Math.max(1,Math.floor(eg/2)):eg;
  const round=Number(activeCombat.round_number)||1;
+ if(actor.current_psy!=null){
+  const before=Number(actor.current_psy);
+  if(before<cost)throw new Error('Otillräcklig PSY för kastet.');
+  const spent=await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&current_psy=eq.'+before+'&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({current_psy:before-cost,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(spent)||spent.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
+  actor.current_psy=before-cost
+ }
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,attribute:attribute||null};
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
