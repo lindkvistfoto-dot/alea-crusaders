@@ -1579,6 +1579,23 @@ async function combatAwardSpellErf(actor,action,outcome){
   return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'};
  }
 }
+/* LEJON: convert verified Expert SR durations only. Hours and minutes remain
+   SL-controlled so effects do not expire while a session is paused. */
+function combatSpellRuleDurationRounds(action){
+ const text=String(action?.source_data?.duration_text||'').trim();
+ const match=/^S\s*[x×*]\s*(\d+)\s*SR$/i.exec(text);
+ if(!match)return null;
+ const eg=Number(action?.source_data?.effect_grade),factor=Number(match[1]),rounds=eg*factor;
+ return Number.isSafeInteger(eg)&&eg>=1&&Number.isSafeInteger(rounds)&&rounds>=1&&rounds<=9999?rounds:null
+}
+function combatSpellDurationRounds(action){
+ const custom=action?.source_data?.effect_duration_rounds;
+ if(custom!=null){
+  const value=Number(custom);
+  if(Number.isSafeInteger(value)&&value>=1&&value<=9999)return value
+ }
+ return combatSpellRuleDurationRounds(action)
+}
 function combatMagicPsyCost(outcome,eg){
  return !['success','special','perfect'].includes(outcome)?1:
   outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg
@@ -2745,7 +2762,7 @@ async function combatSetMagicAreaRadius(actorId,delta){
 async function combatSetMagicDuration(actorId,delta){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
  if(!actor||action?.status!=='planned'||!['status','area'].includes(action.source_data?.magic_binding?.kind))return;
- const duration=Math.max(0,Math.min(9999,Number(action.source_data.effect_duration_rounds||0)+Number(delta||0)));
+ const duration=Math.max(0,Math.min(9999,Number(combatSpellDurationRounds(action)||0)+Number(delta||0)));
  const sourceData={...action.source_data,effect_duration_rounds:duration||null};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
   method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -2758,8 +2775,11 @@ function combatMagicTargetChooserHtml(actor,action){
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
  const candidates=[...combatFireballTargets().keys()];
  const statusSpell=combatSupportedStatusSpell(action);
- const duration=Number(action.source_data?.effect_duration_rounds)||0;
- const durationHtml='<div class="combat-spell-effect"><span>Varaktighet: '+(duration?duration+' SR':'SL avgör')+'</span>'+
+ const manualDuration=Number(action.source_data?.effect_duration_rounds)||0;
+ const ruleDuration=combatSpellRuleDurationRounds(action);
+ const duration=manualDuration||ruleDuration||0;
+ const durationLabel=manualDuration?'SL: '+duration+' SR':ruleDuration?'Expert: '+duration+' SR':'SL avgör – avslutas manuellt';
+ const durationHtml='<div class="combat-spell-effect"><span>Varaktighet: '+durationLabel+'</span>'+
   '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',-1)">−</button>'+
   '<button type="button" onclick="combatSetMagicDuration(\''+actor.id+'\',1)">+</button></div>';
  if(action.source_data?.magic_binding?.kind==='area'){
@@ -2824,13 +2844,7 @@ async function combatCastStatusSpell(actor,target,action){
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const cost=combatMagicPsyCost(rolled.outcome,eg);
  const round=Number(activeCombat.round_number)||1;
- if(actor.current_psy!=null){
-  const before=Number(actor.current_psy);
-  if(before<cost)throw new Error('Otillräcklig PSY för kastet.');
-  const spent=await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&current_psy=eq.'+before+'&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({current_psy:before-cost,updated_at:new Date().toISOString()})});
-  if(!Array.isArray(spent)||spent.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
-  actor.current_psy=before-cost
- }
+ await combatSpendMagicPsy(actor,cost);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
@@ -2839,7 +2853,7 @@ async function combatCastStatusSpell(actor,target,action){
  if(rolled.success&&!resisted){
   const duration=effect.default_duration_rounds;
   const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
-  const custom=Number(action.source_data?.effect_duration_rounds);
+  const custom=combatSpellDurationRounds(action);
   const spellExpiry=Number.isSafeInteger(custom)&&custom>0?{expires_round:round+custom-1,expires_at:null}:
    duration==null?combatEffectExpiry(effect,round,eg):{expires_round:round+Math.max(1,Number(duration))-1,expires_at:null};
   const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',parameters:{},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
@@ -2873,7 +2887,7 @@ async function combatCastAreaSpell(actor,action){
  if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
-  const duration=Number(data.effect_duration_rounds);
+  const duration=combatSpellDurationRounds(action);
   await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
     effect_id:effect.id,source_combatant_id:actor.id,center_q:Number(center.q),center_r:Number(center.r),

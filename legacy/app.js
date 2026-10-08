@@ -369,10 +369,18 @@ function showRuleSkillById(id,fallbackName='Färdighet'){let r=ruleSkills.find(x
 function renderAdminSpells(){
  let el=$('adminSpellTable'),st=$('adminSpellStatus');if(!el)return;
  if(!ruleSpellsLoaded){el.innerHTML='';if(st)st.textContent='Besvärjelseregistret kunde inte läsas.';return}
- if(st)st.textContent=ruleSpells.length+' besvärjelser i Expert-registret.';
+ let manuallyTested=0;
+ for(const row of ruleSpells)if(row.playtested)manuallyTested++;
+ const supportedCount=ruleSpells.filter(r=>typeof combatMagicBinding==='function'&&combatMagicBinding(r).supported).length;
+ const combatStatus=r=>{
+  const binding=typeof combatMagicBinding==='function'?combatMagicBinding(r):null;
+  if(binding?.supported)return '<span title="Kodstöd i stridsmotorn, inte verifierat speltest">Stridsstöd</span>';
+  return '<span class="muted" title="'+escAttr(binding?.reason||'Saknar stridseffekt')+'">Ej stridsklar</span>'
+ };
+ if(st)st.textContent=ruleSpells.length+' besvärjelser · '+supportedCount+' med stridsstöd · '+manuallyTested+' manuellt speltestade.';
  let school=id=>ruleMagicSchools.find(s=>String(s.id)===String(id))?.name||'—';
- el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Magiskola</div><div class="ahead">Skolvärde</div><div class="ahead">Typ</div><div class="ahead">K</div><div class="ahead">F</div><div class="ahead">R</div><div class="ahead">Skada</div><div class="ahead">Räckvidd</div><div class="ahead">Varaktighet</div><div class="ahead">PSY / EG</div><div class="ahead">Testad</div><div class="ahead">Åtgärd</div>'+
- ruleSpells.map(r=>'<div><span class="rule-name" onclick="showRuleSpell(\''+r.id+'\')">'+escAttr(r.name||'—')+'</span></div><div>'+escAttr(school(r.school_id))+'</div><div>'+escAttr(r.school_value??'—')+'</div><div>'+(r.attack_magic?'<span class="spell-attack-badge">Attackmagi</span>':'—')+'</div><div>'+(r.kvick?'✓':'—')+'</div><div>'+(r.fysisk?'✓':'—')+'</div><div>'+(r.ritual?'✓':'—')+'</div><div>'+escAttr(r.damage_text||'—')+'</div><div>'+escAttr(r.range_text||'—')+'</div><div>'+escAttr(r.duration_text||'—')+'</div><div>'+escAttr(r.psy_cost_text||'—')+'</div><div><input type="checkbox" title="Speltestad och godkänd" '+(r.playtested?'checked':'')+' onchange="setRuleSpellPlaytested(\''+r.id+'\',this.checked,this)"></div><div class="adminactions"><button class="smallbtn" onclick="editRuleSpell(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleSpell(\''+r.id+'\')" title="Ta bort">×</button></div>').join('')
+ el.innerHTML='<div class="ahead">Namn</div><div class="ahead">Magiskola</div><div class="ahead">Skolvärde</div><div class="ahead">Typ</div><div class="ahead">K</div><div class="ahead">F</div><div class="ahead">R</div><div class="ahead">Skada</div><div class="ahead">Räckvidd</div><div class="ahead">Varaktighet</div><div class="ahead">PSY / EG</div><div class="ahead">Stridsstöd</div><div class="ahead">Testad</div><div class="ahead">Åtgärd</div>'+
+ ruleSpells.map(r=>'<div><span class="rule-name" onclick="showRuleSpell(\''+r.id+'\')">'+escAttr(r.name||'—')+'</span></div><div>'+escAttr(school(r.school_id))+'</div><div>'+escAttr(r.school_value??'—')+'</div><div>'+(r.attack_magic?'<span class="spell-attack-badge">Attackmagi</span>':'—')+'</div><div>'+(r.kvick?'✓':'—')+'</div><div>'+(r.fysisk?'✓':'—')+'</div><div>'+(r.ritual?'✓':'—')+'</div><div>'+escAttr(r.damage_text||'—')+'</div><div>'+escAttr(r.range_text||'—')+'</div><div>'+escAttr(r.duration_text||'—')+'</div><div>'+escAttr(r.psy_cost_text||'—')+'</div><div>'+combatStatus(r)+'</div><div><input type="checkbox" title="Speltestad och godkänd" '+(r.playtested?'checked':'')+' onchange="setRuleSpellPlaytested(\''+r.id+'\',this.checked,this)"></div><div class="adminactions"><button class="smallbtn" onclick="editRuleSpell(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleSpell(\''+r.id+'\')" title="Ta bort">×</button></div>').join('')
 }
 async function setRuleSpellPlaytested(id,tested,checkbox){
  if(!activeUser()?.admin){if(checkbox)checkbox.checked=!tested;return}
