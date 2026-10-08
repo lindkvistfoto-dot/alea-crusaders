@@ -4,6 +4,17 @@ import { readFileSync } from "node:fs";
 const read = (path) => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 
 describe("application architecture smoke checks", () => {
+  test("package, lockfile and visible application version stay synchronized", () => {
+    const pkg = JSON.parse(read("package.json"));
+    const lock = JSON.parse(read("package-lock.json"));
+    const html = read("index.html");
+    const version = html.match(/id="adminOverviewVersion"[^>]*>Version v(\d+\.\d+\.\d+)/)?.[1];
+    expect(version).toBeTruthy();
+    expect(pkg.version).toBe(version);
+    expect(lock.version).toBe(version);
+    expect(lock.packages[""].version).toBe(version);
+  });
+
   test("index is a slim shell", () => {
     const html = read("index.html");
     expect(html.length).toBeLessThan(150_000);
