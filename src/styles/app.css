@@ -6029,3 +6029,38 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-row-action-menu.combat-row-magic-menu .combat-weapon-choice-btn.active{
  background:#e8f1e7;
 }
+
+/* v0.34.71 — Spell results retain the dark attack-card theme and remain legible. */
+.combat-mini-magic .combat-spell-result{
+ width:100%;
+ margin-top:10px;
+}
+.combat-mini-magic .combat-spell-outcome-note{
+ margin-top:8px;
+ padding:8px 10px;
+ border-left:3px solid #b39263;
+ background:rgba(255,236,195,.07);
+ border-radius:3px 6px 6px 3px;
+ font-size:12px;
+ font-weight:600;
+ line-height:1.45;
+ color:#f1e1c7;
+}
+.combat-mini-magic .combat-spell-rule-note{
+ margin-top:7px;
+ padding:7px 10px;
+ border:1px solid rgba(207,174,126,.28);
+ border-radius:6px;
+ color:#dbc8a8;
+ font-size:11px;
+ line-height:1.45;
+ overflow-wrap:anywhere;
+}
+.combat-mini-magic .combat-spell-rule-note b{
+ color:#f1debc;
+ margin-right:6px;
+}
+.combat-mini-magic .combat-spell-result .combat-attack-result-rolls{
+ font-size:11px;
+ line-height:1.35;
+}
