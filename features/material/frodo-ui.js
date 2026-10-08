@@ -4,6 +4,7 @@ import './frodo-ui.css';
 
 export function mountFrodo({
  legolas,getCampaign,isLoggedIn,isGM,request,
+ isRealtimeConnected=()=>false,
  doc=()=>document,win=()=>window
 }){
  const el=id=>doc().getElementById(id);
@@ -119,7 +120,7 @@ export function mountFrodo({
    if(canWatch())void frodo.refresh({autoOpen:true,silent:true});
   });
   win().setInterval?.(()=>{
-   if(canWatch())void frodo.refresh({autoOpen:true,silent:true});
+   if(canWatch()&&!isRealtimeConnected())void frodo.refresh({autoOpen:true,silent:true});
   },5000);
   const login=el('loginScreen');
   if(login&&typeof MutationObserver!=='undefined'){
