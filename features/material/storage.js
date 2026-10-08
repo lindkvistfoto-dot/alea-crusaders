@@ -138,3 +138,35 @@ async function gimliSubmitFile(event){
  }catch(e){gimliStatus('Uppladdningen misslyckades: '+e.message,true)}
  finally{gimliUploading=false;if(button)button.disabled=!input?.files?.length}
 }
+async function gimliLoadRecent(){
+ const box=$('gimliRecent');if(!box)return;
+ if(!gimliCanUpload()||!centralCampaignId){box.textContent='Välj först en kampanj som du administrerar.';return}
+ try{
+  const rows=await dbJson('campaign_materials?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+
+   '&storage_bucket=eq.'+GIMLI_BUCKET+
+   '&select=id,title,category,asset_kind,mime_type,storage_bucket,storage_path,thumbnail_path,archived_at,created_at'+
+   '&order=created_at.desc&limit=12');
+  gimliRows=Array.isArray(rows)?rows:[];
+  box.innerHTML=gimliRows.length?gimliRows.map(row=>'<div class="gimli-row"><span><b>'+
+   escAttr(row.title)+'</b><small>'+escAttr(GIMLI_CATEGORIES[row.category]||'Övrigt')+
+   ' · '+escAttr(row.mime_type)+(row.archived_at?' · Arkiverad':' · Endast SL')+
+   '</small></span><button type="button" class="smallbtn" onclick="gimliShowStored(\''+
+   row.id+'\')">Förhandsvisa</button></div>').join(''):'<p class="muted">Inget material uppladdat ännu.</p>'
+ }catch(e){gimliStatus('Kunde inte visa material: '+e.message,true)}
+}
+async function gimliShowStored(id){
+ if(!gimliCanUpload())return;
+ const record=gimliRows.find(r=>r.id===id),preview=$('gimliStoredPreview');if(!record||!preview)return;
+ try{
+  const blob=await gimliReadFile(record,true);
+  if(gimliPreviewUrl){URL.revokeObjectURL(gimliPreviewUrl);gimliPreviewUrl=''}
+  gimliPreviewUrl=URL.createObjectURL(blob);
+  preview.replaceChildren();
+  if(record.asset_kind==='image'){
+   const img=document.createElement('img');img.src=gimliPreviewUrl;img.alt=record.title;preview.append(img)
+  }else{
+   const a=document.createElement('a');a.href=gimliPreviewUrl;a.target='_blank';a.rel='noopener noreferrer';
+   a.textContent='Öppna '+record.title;preview.append(a)
+  }
+ }catch(e){gimliStatus('Kunde inte läsa filen: '+e.message,true)}
+}
