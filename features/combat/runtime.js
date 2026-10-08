@@ -1594,6 +1594,7 @@ async function combatMagicButton(event,combatantId){
    if(statusSpell){
     const target=combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId);
     if(!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    if(data.magic_binding?.requires_resistance&&(data.resistance_target_id!==targetId||!['resisted','affected'].includes(data.resistance_decision))){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
      if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Besvärjelsen är redan under behandling.');
