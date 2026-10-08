@@ -75,7 +75,11 @@ export function createLegolas({
  }
  function cleanCampaign(){
   if(state.campaign===campaign())return;
-  state.campaign=campaign();state.page=0;state.rows=[];releaseThumbs();releaseViewer();
+  // A different campaign must never inherit an open preview or prior blob URL.
+  if(state.viewerOpen)closeViewer();
+  else releaseViewer();
+  state.campaign=campaign();state.page=0;state.rows=[];releaseThumbs();
+  state.previewRows=[];state.index=0;
   clearSelection();
  }
  function mount(){
