@@ -1,10 +1,10 @@
 /* Bilbo – search, gallery and metadata management for private campaign materials. */
 import './storage.js?v=0.34.79';
 import {createAragorn} from './links.js?v=0.34.83';
-import {createLegolas} from './viewer.js?v=0.34.84';
-import {mountFrodo} from './frodo-ui.js?v=0.34.85';
-import {mountSam} from './player-folder-ui.js?v=0.34.86';
-import {mountGaladriel} from './galadriel-ui.js?v=0.34.87';
+import {createLegolas} from './viewer.js?v=0.34.91';
+import {mountFrodo} from './frodo-ui.js?v=0.34.91';
+import {mountSam} from './player-folder-ui.js?v=0.34.91';
+import {mountGaladriel} from './galadriel-ui.js?v=0.34.91';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
