@@ -131,5 +131,6 @@ describe('KROKODIL: periodic poison, ongoing damage and typed wards',()=>{
   expect(src).toContain('damage_per_round:Number(dotRaw)');
   expect(src).toContain('protection_points:Number(wardRaw)');
   expect(src).toContain('await combatTickOngoingEffects(actor,currentRound);')
+  expect(src).toContain('params.last_tick_round=last');
  });
 });
