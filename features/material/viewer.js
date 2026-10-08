@@ -1,3 +1,4 @@
+import './viewer.css';
 /* Legolas Greenleaf v0.34.84 — materialpanel, SL-urval och privat bildvisare. */
 export const LEGOLAS_PAGE_SIZE=24;
 export const LEGOLAS_BUCKETS=new Set([
