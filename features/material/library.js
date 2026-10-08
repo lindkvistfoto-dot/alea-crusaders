@@ -1,11 +1,24 @@
 /* Bilbo – search, gallery and metadata management for private campaign materials. */
 import './storage.js?v=0.34.79';
 import {createAragorn} from './links.js?v=0.34.83';
+import {createLegolas} from './viewer.js?v=0.34.84';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
 const bilboState={campaign:'',rows:[],page:0,hasNext:false,category:'all',status:'active',sort:'newest',search:'',selected:null,busy:false,querySeq:0,mediaSeq:0,detailSeq:0,layout:'grid',thumbUrls:new Map(),detailUrl:'',note:'',searchTimer:null};
 const bilboStorage=()=>window.gimliMaterialApi;
+const legolas=createLegolas({
+ getCampaign:()=>String(centralCampaignId||''),
+ isLoggedIn:()=>Boolean(activeUser()),
+ isGM:()=>Boolean(activeUser()?.admin||centralCampaignRole==='gm'),
+ query:(path)=>dbJson(path),
+ read:async (bucket,path)=>{
+  const res=await mapStorageFetch('object/'+bucket+'/'+encodeStoragePath(path),{method:'GET'});
+  if(!res.ok)throw Error('Filåtkomst nekad ('+res.status+').');
+  return res.blob();
+ }
+});
+legolas.mount();
 const aragorn=createAragorn({
  getSelected:()=>bilboSelected(),
  getCampaign:()=>bilboCampaign(),
@@ -148,7 +161,8 @@ function bilboDetailHtml(row){
   '<div class="bilbo-note"><label>Privata SL-anteckningar<textarea id="bilboGmNote" maxlength="8000" rows="3" placeholder="Endast spelledaren kan läsa detta…"></textarea></label>'+
   '<button type="button" class="smallbtn" id="bilboNoteSave" onclick="bilboSaveNote()">Spara SL-anteckning</button></div>'+
   aragorn.html()+
-  '<div class="bilbo-detail-actions"><button type="button" class="smallbtn" id="bilboArchiveButton" onclick="bilboToggleArchive()">'+
+  '<div class="bilbo-detail-actions"><button type="button" class="smallbtn" data-id="'+bilboEscape(row.id)+'" onclick="legolasPreviewMaterial(this.dataset.id)">⛶ Förhandsvisa i Legolas</button>'+
+  '<button type="button" class="smallbtn" id="bilboArchiveButton" onclick="bilboToggleArchive()">'+
    (row.archived_at?'Återställ ur arkiv':'Arkivera material')+'</button></div>'+
   '<p class="bilbo-detail-info">'+(row.file_size_bytes?Math.ceil(row.file_size_bytes/1024)+' kB · ':'')+
    'Uppladdad: '+bilboEscape((row.created_at||'').slice(0,10))+'<br>Fil: '+bilboEscape(row.original_filename||'—')+'</p>'+
@@ -320,4 +334,8 @@ function bilboMountLibrary(){
 Object.assign(window,{bilboMountLibrary,bilboLoadPage,bilboSelect,bilboCloseDetail,bilboSaveMetadata,
  bilboSaveNote,bilboToggleArchive,bilboSetFilter,bilboSetLayout,bilboPage,bilboSearchChanged,
  aragornSyncLegacy:aragorn.sync,aragornSetTargetType:aragorn.setType,aragornSearchTargets:aragorn.searchTargets,
- aragornLink:aragorn.link,aragornUnlink:aragorn.unlink});
+ aragornLink:aragorn.link,aragornUnlink:aragorn.unlink,
+ legolasOpenPanel:legolas.openPanel,legolasClosePanel:legolas.closePanel,legolasReset:legolas.reset,
+ legolasGetStagedIds:legolas.getStagedIds,
+ legolasPreviewMaterial:(id)=>{const row=bilboState.rows.find(r=>r.id===id&&r.campaign_id===bilboCampaign());if(row)legolas.previewMaterial(row)}
+});
