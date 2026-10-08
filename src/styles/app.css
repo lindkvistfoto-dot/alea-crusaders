@@ -6202,3 +6202,27 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .slp-special-values label{display:flex;flex-direction:column;gap:5px;min-width:0;font-weight:650;font-size:12px}
 .slp-special-values input{box-sizing:border-box;width:100%;min-height:39px;padding:7px 10px;border:1px solid #997d55;border-radius:7px;background:#fdf7ea;color:#332619;font-size:16px}
 @media(max-width:520px){.slp-special-values{grid-template-columns:1fr}}
+
+
+/* Aragorn v0.34.83 – reusable campaign material links */
+.aragorn-header-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.aragorn-header-actions .smallbtn{margin-top:0;min-height:40px}
+.aragorn-links{margin:15px 0;padding:12px;border:1px solid #8c714a;border-radius:11px;background:#211e19}
+.aragorn-links h4{margin:0 0 6px;color:#ffe2b2;font-size:16px}
+.aragorn-help{margin:4px 0 12px;font-size:12px;line-height:1.55;color:#dccdb3}
+.aragorn-linked-list{display:grid;gap:6px;margin:10px 0 14px}
+.aragorn-linked-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:#31291f;border:1px solid #705938;border-radius:8px}
+.aragorn-linked-item span{min-width:0;overflow-wrap:anywhere}
+.aragorn-linked-item b{display:block;color:#fff0d2;font-size:13px}
+.aragorn-linked-item small{display:block;color:#d6bc94;font-size:11px;margin-top:3px}
+.aragorn-linked-item button{flex:0 0 auto;margin:0;min-height:37px}
+.aragorn-link-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:end}
+.aragorn-link-controls label{display:flex;flex-direction:column;gap:6px;min-width:0;color:#f2dfbf;font-size:12px;font-weight:650}
+.aragorn-link-controls .aragorn-target-label{grid-column:1/-1}
+.aragorn-link-controls input,.aragorn-link-controls select{width:100%;min-width:0;min-height:42px;border:1px solid #967d58;border-radius:8px;padding:9px 11px;background:#171715;color:#fff3dd;font-size:16px}
+.aragorn-link-controls :is(input,select):focus-visible{outline:2px solid #90c7d1;outline-offset:1px}
+.aragorn-link-controls button{grid-column:1/-1;min-height:43px}
+.aragorn-link-controls button:disabled,.aragorn-header-actions button:disabled{opacity:.52;cursor:wait}
+#aragornLinkStatus{margin:10px 0 0;min-height:18px;color:#d0e5b5;font-size:12px;line-height:1.5}
+#aragornLinkStatus.is-error{color:#ffc5ae}
+@media(max-width:400px){.aragorn-link-controls{grid-template-columns:1fr}.aragorn-link-controls .aragorn-target-label,.aragorn-link-controls button{grid-column:1}.aragorn-header-actions{width:100%}.aragorn-header-actions button{flex:1}}
