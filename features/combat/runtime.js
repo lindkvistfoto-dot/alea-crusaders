@@ -2677,7 +2677,10 @@ function combatMagicTargetChooserHtml(actor,action){
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action);
   return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
-   candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+'</div>'
+   candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+
+   (action.source_data.magic_binding?.requires_resistance&&candidates.some(c=>String(c.id)===String(combatSelectedTargetId))?
+    '<div class="combat-spell-effect"><span>SL avgör målets motstånd (regeldetaljer saknas)</span>'+
+    ['affected','resisted'].map(decision=>'<button type="button" class="combat-weapon-choice-btn'+(action.source_data.resistance_decision===decision&&action.source_data.resistance_target_id===String(combatSelectedTargetId)?' active':'')+'" onclick="combatSetMagicResistance(\''+actor.id+'\',\''+combatSelectedTargetId+'\',\''+decision+'\')">'+(decision==='resisted'?'Motstånd lyckades':'Motstånd misslyckades')+'</button>').join('')+'</div>':'')+'</div>'
  }
  return '<div class="combat-spell-choice"><b>Mål i kast-SR · EG '+spent+'/'+total+'</b><small>Välj fiender och fördela effektgrad innan kastet.</small>'+
  candidates.map(id=>{const target=combatants.find(c=>String(c.id)===id),assigned=allocations.find(t=>String(t.target_id)===id);
