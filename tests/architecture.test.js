@@ -341,7 +341,7 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("async function deleteRuleWeapon");
     expect(legacy).toContain("rule_weapons?id=eq.");
     expect(legacy).toContain("await loadRuleWeapons(true)");
-    expect(legacy).toContain("set('adminCountWeapons',ruleWeapons.length)");
+    expect(legacy).toContain("weapons:{label:'Vapen',table:'rule_weapons',countId:'adminCountWeapons'");
     expect(css).toContain(".adminweapontable{display:grid");
     expect(legacy).toContain("const RULE_WEAPON_ICON_DEFS=");
     expect(legacy).toContain("function ruleWeaponIconHtml");
@@ -376,8 +376,8 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function editRuleShield");
     expect(legacy).toContain("async function saveRuleShield");
     expect(legacy).toContain("async function deleteRuleShield");
-    expect(legacy).toContain("set('adminCountArmors',ruleArmorTypes.length)");
-    expect(legacy).toContain("set('adminCountShields',ruleShields.length)");
+    expect(legacy).toContain("armors:{label:'Rustningar',table:'rule_armor_types',countId:'adminCountArmors'");
+    expect(legacy).toContain("shields:{label:'Sköldar',table:'rule_shields',countId:'adminCountShields'");
 
     expect(sql).toContain("add column if not exists weight_code text");
     expect(sql).toContain("('light_scale','Lätt fjällpansar','metal',4,6");
