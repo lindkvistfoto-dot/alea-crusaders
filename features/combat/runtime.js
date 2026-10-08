@@ -2597,6 +2597,14 @@ function combatHasLineOfSight(actor,target){
 }
 function combatAttackProfile(combatant){
  const stored=combatant?.state?.attack_profile&&typeof combatant.state.attack_profile==='object'?combatant.state.attack_profile:{};
+ // For NPCs and monsters this combat instance's snapshot, not the source register, is authoritative.
+ if(['npc','monster'].includes(combatant?.source_type)&&combatant?.state?.attack_profile){
+  return {...stored,weapons:Array.isArray(stored.weapons)?stored.weapons:[],shields:stored.shields||[],
+   armor:stored.armor||[],projectiles:stored.projectiles||[],
+   sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),combatNumber(stored.sty,10)),
+   sto:combatNumber(combatEffectiveAttribute(combatant,'STO'),combatNumber(stored.sto,10)),
+   smi:combatNumber(combatEffectiveAttribute(combatant,'SMI'),combatNumber(stored.smi,10))}
+ }
  let src=null;
  if(combatant?.source_type==='character'&&typeof chars!=='undefined')src=(chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id));
  else if(combatant?.source_type==='npc'&&typeof campaignNpcs!=='undefined')src=(campaignNpcs||[]).find(c=>String(c.id)===String(combatant.source_id));
@@ -3970,6 +3978,106 @@ function combatCloseCombatantDetails(event){
   row?.focus()
  })
 }
+// SL edits SLP/monsters in the current combat only; source registries are never modified.
+function combatNpcEditAllowed(c){return combatCanManage()&&!!activeCombat&&['npc','monster'].includes(c?.source_type)}
+function combatNpcEditWeaponRow(w={},index=-1){
+ const input=(key,label,value,type='text')=>'<label><span>'+label+'</span><input data-w="'+key+'" type="'+type+'" value="'+escAttr(value??'')+'" '+(type==='number'?'min="0" max="100" step="1"':'maxlength="100"')+'></label>';
+ const category=String(w.weaponCategory||w.category||'melee').toLowerCase();
+ return '<div class="combat-npc-edit-weapon" data-original="'+index+'"><div class="combat-npc-edit-weapon-head"><b>Vapen</b><button type="button" onclick="this.closest(\'.combat-npc-edit-weapon\').remove()">Ta bort</button></div><div class="combat-npc-edit-fields">'+
+  input('name','Vapen',w.name||'')+input('fv','FV',w.fv??'', 'number')+
+  input('damage','Skada (1T6)',w.damage||'')+
+  '<label><span>Typ</span><select data-w="category">'+
+  [['melee','Närstrid'],['projectile','Projektil'],['thrown','Kastvapen']].map(([key,label])=>'<option value="'+key+'"'+(category===key?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+  input('range','Räckvidd',w.range||'')+'</div></div>'
+}
+function combatNpcQuickEditorHtml(c){
+ if(!combatNpcEditAllowed(c))return '';
+ const attrs=c.state?.attributes||{},profile=combatAttackProfile(c),weapons=Array.isArray(profile.weapons)?profile.weapons:[];
+ const field=(key,label,value,min=0,max=9999)=>'<label class="combat-npc-edit-field"><span>'+label+'</span><input type="number" name="'+key+'" required min="'+min+'" max="'+max+'" step="1" value="'+escAttr(value??0)+'"></label>';
+ return '<section class="combat-detail-section combat-npc-editor"><h3>SL · Snabbredigering</h3>'+
+  '<p class="combat-detail-empty">Gäller bara den här striden – original-SLP påverkas inte.</p>'+
+  '<form id="combatNpcQuickForm" onsubmit="combatSaveNpcQuickEdit(event,\''+c.id+'\')">'+
+  '<label class="combat-npc-edit-name"><span>Namn</span><input name="name" maxlength="100" required value="'+escAttr(c.name_snapshot)+'"></label>'+
+  '<div class="combat-npc-edit-grid">'+
+   field('current_kp','KP nu',c.current_kp)+field('max_kp','KP max',c.max_kp,1)+
+   field('current_psy','PSY nu',c.current_psy)+field('max_psy','PSY max',c.max_psy)+
+   field('movement_max','Förflyttning',c.movement_max)+field('movement_remaining','Kvar',c.movement_remaining)+
+  '</div><div class="combat-npc-edit-adjust">'+
+  ['current_kp','current_psy'].map(k=>'<span><b>'+(k==='current_kp'?'KP':'PSY')+'</b> '+
+    [-5,-1,1,5].map(d=>'<button type="button" onclick="combatNpcEditAdjust(\''+k+'\','+d+')">'+(d>0?'+':'')+d+'</button>').join('')+'</span>').join('')+
+  '</div><h4>Grundegenskaper</h4><div class="combat-npc-edit-attributes">'+
+   ['STY','FYS','STO','SMI','INT','PSY','KAR'].map(k=>field('attr_'+k,k,combatBaseAttribute(c,k)??attrs[k]??10,1,100)).join('')+
+  '</div><h4>Vapen och FV</h4><div id="combatNpcEditWeapons">'+weapons.map((w,i)=>combatNpcEditWeaponRow(w,i)).join('')+'</div>'+
+  '<button type="button" class="combat-npc-edit-add" onclick="combatNpcEditAddWeapon()">+ Lägg till vapen</button>'+
+  '<div class="combat-npc-edit-footer"><span id="combatNpcEditStatus" role="status" aria-live="polite">Initiativ räknas inte om.</span><button type="submit" class="combat-npc-edit-save">Spara i striden</button></div>'+
+  '</form></section>'
+}
+function combatNpcEditAdjust(key,delta){
+ const form=$('combatNpcQuickForm'),input=form?.elements?.namedItem(key),max=form?.elements?.namedItem(key==='current_kp'?'max_kp':'max_psy');
+ if(!input)return;
+ input.value=String(Math.max(0,Math.min(Number(max?.value)||0,(Number(input.value)||0)+delta)))
+}
+function combatNpcEditAddWeapon(){
+ const list=$('combatNpcEditWeapons');if(!list)return;
+ list.insertAdjacentHTML('beforeend',combatNpcEditWeaponRow());
+ list.lastElementChild?.querySelector('[data-w="name"]')?.focus()
+}
+function combatNpcEditParse(form,c){
+ const int=(key,min,max)=>{
+  const text=String(form.elements.namedItem(key)?.value??'').trim(),value=Number(text);
+  if(!/^\d+$/.test(text)||!Number.isSafeInteger(value)||value<min||value>max)throw Error('Ogiltigt värde: '+key);
+  return value
+ };
+ const name=String(form.elements.namedItem('name')?.value||'').trim();
+ if(!name||name.length>100)throw Error('Namn måste vara 1–100 tecken.');
+ const max_kp=int('max_kp',1,9999),current_kp=int('current_kp',0,max_kp);
+ const max_psy=int('max_psy',0,9999),current_psy=int('current_psy',0,max_psy);
+ const movement_max=int('movement_max',0,9999),movement_remaining=int('movement_remaining',0,movement_max);
+ const attributes={...(c.state?.attributes||{})};
+ for(const key of ['STY','FYS','STO','SMI','INT','PSY','KAR'])attributes[key]=int('attr_'+key,1,100);
+ const profile=combatAttackProfile(c),existing=Array.isArray(profile.weapons)?profile.weapons:[];
+ const rows=[...form.querySelectorAll('.combat-npc-edit-weapon')];
+ if(rows.length>30)throw Error('Högst 30 vapen.');
+ const weapons=rows.map((row,index)=>{
+  const val=k=>String(row.querySelector('[data-w="'+k+'"]')?.value??'').trim();
+  const originalIndex=Number(row.dataset.original),base=originalIndex>=0?existing[originalIndex]:null;
+  if(originalIndex>=0&&!base)throw Error('Vapenlistan ändrades; öppna popupen igen.');
+  const weaponName=val('name'),fv=val('fv'),damage=val('damage'),category=val('category');
+  if(!weaponName||weaponName.length>100)throw Error('Vapen '+(index+1)+' saknar namn.');
+  if(!/^\d+$/.test(fv)||Number(fv)>100)throw Error('Ogiltigt FV för '+weaponName+'.');
+  if(damage&&!combatParseDamageFormula(damage))throw Error('Ogiltig skadeformel för '+weaponName+'.');
+  if(!['melee','projectile','thrown'].includes(category))throw Error('Ogiltig vapentyp.');
+  return {...(base||{}),equipId:base?.equipId||crypto.randomUUID(),name:weaponName,fv:Number(fv),
+   damage,category,weaponCategory:category,range:val('range')}
+ });
+ const state={...(c.state||{}),attributes,sty:attributes.STY,sto:attributes.STO,smi:attributes.SMI,
+  attack_profile:{...profile,weapons,sty:attributes.STY,sto:attributes.STO,smi:attributes.SMI,
+   damage_bonus:attributes.STY!==combatBaseAttribute(c,'STY')||attributes.STO!==combatBaseAttribute(c,'STO')?null:profile.damage_bonus}};
+ const status=c.status==='removed'?'removed':current_kp===0?'dead':c.status==='dead'?'active':c.status;
+ return {name_snapshot:name,max_kp,current_kp,max_psy,current_psy,movement_max,movement_remaining,state,status}
+}
+async function combatSaveNpcQuickEdit(event,id){
+ event?.preventDefault?.();event?.stopPropagation?.();
+ const c=combatants.find(x=>String(x.id)===String(id)),form=$('combatNpcQuickForm');
+ if(!combatNpcEditAllowed(c)||!form)return;
+ const save=form.querySelector('button[type="submit"]'),feedback=$('combatNpcEditStatus');
+ if(save?.disabled)return;
+ try{
+  const patch=combatNpcEditParse(form,c);
+  if(save)save.disabled=true;
+  if(feedback)feedback.textContent='Sparar…';
+  const query='combatants?id=eq.'+encodeURIComponent(c.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+   (c.updated_at?'&updated_at=eq.'+encodeURIComponent(c.updated_at):'')+'&select=id';
+  const updated=await dbJson(query,{method:'PATCH',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({...patch,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(updated)||updated.length!==1)throw Error('Kombatanten har ändrats under tiden; ladda om och försök igen.');
+  await loadActiveCombat(null,{preserveSelectedTarget:true});
+ }catch(e){
+  if(save)save.disabled=false;
+  if(feedback)feedback.textContent='Kunde inte spara: '+(e?.message||e)
+ }
+}
+
 function combatantDetailsPopupHtml(){
  const c=combatants.find(row=>String(row.id)===String(combatantDetailCombatantId));
  if(!c||(!combatCanManage()&&c.visible_to_players===false))return '';
@@ -3996,7 +4104,7 @@ function combatantDetailsPopupHtml(){
      '<span>'+(c.status==='dead'?'Nedkämpad':c.status==='removed'?'Borttagen':'Aktiv')+(combatIsFlying(c)?' · Flyger':'')+'</span></div>'+
     '<button id="combatantDetailsClose" type="button" class="combat-detail-close" aria-label="Stäng kombatantdetaljer" onclick="combatCloseCombatantDetails(event)">×</button>'+
    '</header>'+
-   '<div class="combat-detail-content">'+
+   '<div class="combat-detail-content">'+combatNpcQuickEditorHtml(c)+
     '<div class="combat-detail-stat-grid">'+
       stat('Kroppspoäng',amount(c.current_kp,c.max_kp))+
       stat('Psykisk kraft',amount(c.current_psy,c.max_psy))+
