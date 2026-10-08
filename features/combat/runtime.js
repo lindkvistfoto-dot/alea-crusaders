@@ -2741,7 +2741,9 @@ async function combatResolveTestFireball(actor,target,action){
   for(const allocation of targets){
    const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
    if(!victim)throw new Error('Målet saknas vid kastet.');
-   const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6',damage_kind:/^ELD/i.test(spellName)?'fire':'magic'};
+   const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
+   if(!formula)throw new Error('Skadeformeln är inte verifierad för vald effektgrad.');
+   const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic'};
    const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
   }
