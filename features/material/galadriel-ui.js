@@ -3,7 +3,7 @@ import {createGaladriel} from './realtime.js?v=0.34.87';
 import './realtime.css';
 
 export function mountGaladriel({
- legolas,frodoUi,samUi,getCampaign,getToken,isAuthenticated,isGM,supabaseUrl,publishableKey,
+ legolas,frodoUi,samUi,getCampaign,getToken,isAuthenticated,isGM,verifyVisible,supabaseUrl,publishableKey,
  doc=()=>document,win=()=>window,makeSocket
 }){
  const el=id=>doc().getElementById(id);
@@ -16,20 +16,28 @@ export function mountGaladriel({
   }catch(_){}
  }
  async function refreshFolder(){
-  if(!isAuthenticated()||!legolas.state.panelOpen)return;
-  const campaign=getCampaign(),seq=++refreshSequence;
+  if(!isAuthenticated()||!getCampaign())return;
+  // A player may keep the viewer open even after closing the material panel.
+  const panelOpen=legolas.state.panelOpen;
   const displayed=legolas.state.viewerOpen?
-    legolas.state.previewRows[legolas.state.index]:null;
-  await samUi.load();
+   legolas.state.previewRows[legolas.state.index]:null;
+  if(!panelOpen&&!displayed)return;
+  const campaign=getCampaign(),seq=++refreshSequence;
+  if(panelOpen)await samUi.load();
   if(seq!==refreshSequence||campaign!==getCampaign()||!isAuthenticated())return;
-  // Stop showing revoked persistent library images if not also presented by Frodo.
-  if(displayed&&legolas.state.viewerOpen&&
-    legolas.state.previewRows[legolas.state.index]?.id===displayed.id&&
-    displayed.id!==frodoUi.frodo.state.materialId&&
-    !samUi.sam.state.rows.some(entry=>entry.material_id===displayed.id)&&
-    !legolas.state.selection.has(displayed.id)&&
-    !isGM())legolas.closeViewer();
-  void legolas.loadPage();
+  if(!isGM()&&displayed&&displayed.campaign_id===campaign&&
+     legolas.state.viewerOpen&&
+     legolas.state.previewRows[legolas.state.index]?.id===displayed.id){
+   // A paginated folder page is NOT proof of revocation. Check the
+   // exact row again under the player's own material RLS.
+   let visible=null;
+   try{visible=await verifyVisible(displayed.id,campaign)}catch(_){visible=null}
+   if(seq!==refreshSequence||campaign!==getCampaign()||!isAuthenticated())return;
+   if(visible===false&&legolas.state.viewerOpen&&
+      legolas.state.previewRows[legolas.state.index]?.id===displayed.id)
+    legolas.closeViewer();
+  }
+  if(panelOpen&&seq===refreshSequence)void legolas.loadPage();
  }
  const galadriel=createGaladriel({
   getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
