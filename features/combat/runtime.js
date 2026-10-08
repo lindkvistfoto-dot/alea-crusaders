@@ -3410,7 +3410,13 @@ function combatEffectLabel(row){
 }
 function combatantEffectsHtml(combatant){
  const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&combatEffectIsActive(e));
- return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>'<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+(combatCanManage()?'<button type="button" title="Ta bort effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\')">×</button>':'')+'</span>').join('')+'</div>':''
+ return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>{
+  const remaining=e.expires_round!=null?' · '+Math.max(0,Number(e.expires_round)-(Number(activeCombat?.round_number)||1)+1)+' SR':e.expires_at?' · till '+escAttr(new Date(e.expires_at).toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'})):'';
+  const ending=combatEffectDefinition(e)?.expiration_condition||'duration';
+  return '<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+remaining+
+   (combatCanManage()?'<button type="button" title="Avsluta effekt" onclick="event.stopPropagation();combatRemoveEffect(\\''+e.id+'\\')">×</button>':'')+
+   (combatCanManage()&&['woken','cured','dispelled','concentration'].includes(ending)?'<button type="button" title="'+escAttr(ending)+'" onclick="event.stopPropagation();combatEndEffectByCondition(\\''+e.id+'\\',\\''+ending+'\\')">'+escAttr(ending)+'</button>':'')+'</span>'
+ }).join('')+'</div>':''
 }
 const COMBAT_EFFECT_TYPES=['attribute_delta','skip_turns','flight','vision','control','damage_over_time','protection','terrain','custom'];
 const COMBAT_EFFECT_TARGETS=['combatant','hex','area','item','self'];
