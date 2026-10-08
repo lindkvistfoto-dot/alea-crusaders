@@ -2080,12 +2080,22 @@ function combatHexLine(a,b){
  }
  return out
 }
+function combatIsFlying(combatant){
+ if(!combatant)return false;
+ return combatant.flying===true||combatActiveEffects.some(effect=>
+  String(effect.combatant_id)===String(combatant.id)&&effect.status==='active'&&
+  (effect.expires_round==null||effect.expires_round>=(Number(activeCombat?.round_number)||1))&&
+  combatEffectRegistry.some(def=>def.id===effect.effect_id&&def.modifiers?.type==='flight'))
+}
+function combatTerrainIsWall(cell){
+ return /(?:^|[\\s,;])(?:wall|vägg|mur)(?:$|[\\s,;])/i.test(String(cell?.notes||''))
+}
 function combatHasLineOfSight(actor,target){
  const terrain=new Map(combatRuntimeHexCells().map(cell=>[cell.key,cell]));
  const line=combatHexLine(actor,target);
  for(let i=1;i<line.length-1;i++){
   const cell=terrain.get(line[i].q+','+line[i].r);
-  if(cell?.sight_mode==='blocked')return false
+  if(cell?.sight_mode==='blocked'&&(!combatIsFlying(actor)||combatTerrainIsWall(cell)))return false
  }
  return true
 }
@@ -2449,6 +2459,7 @@ function combatAttackTargetInfo(actor,target,weapon,preferredMode='auto'){
  if(distance<1||!combatHasLineOfSight(actor,target))return null;
  const mode=combatAttackModeForTarget(actor,target,weapon,preferredMode);
  if(!mode)return null;
+ if(mode==='melee'&&(combatIsFlying(actor)||combatIsFlying(target)))return null;
  let maxRange;
  if(mode==='melee'){
   maxRange=preferredMode==='auto'&&combatWeaponCategory(weapon)==='thrown'?1:combatMeleeRangeHexes(actor,weapon)
@@ -2655,8 +2666,8 @@ function combatReachableHexes(combatant){
   const [q,r]=current.key.split(',').map(Number);
   for(const [nq,nr] of combatHexNeighbors(q,r)){
    const key=nq+','+nr,cell=cellByKey.get(key);
-   if(!cell||cell.movement_mode==='blocked')continue;
-   const stepCost=cell.movement_mode==='difficult'?2:1;
+   if(!cell||(cell.movement_mode==='blocked'&&(!combatIsFlying(combatant)||combatTerrainIsWall(cell))))continue;
+   const stepCost=combatIsFlying(combatant)?1:cell.movement_mode==='difficult'?2:1;
    const nextCost=current.cost+stepCost;
    if(nextCost>budget)continue;
    const known=out.get(key);
@@ -3042,7 +3053,7 @@ function combatantCard(c,index=0){
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
-   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+(defeated?' · Nedkämpad':'')+'</div>'+
+   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(defeated?' · Nedkämpad':'')+'</div>'+
    combatantEffectsHtml(c)+combatEffectAttributeHtml(c)+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
