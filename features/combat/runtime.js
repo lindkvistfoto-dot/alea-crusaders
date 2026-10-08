@@ -1752,7 +1752,7 @@ async function endCombatTurn(event,combatantId){
 }
 async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
  const selectedTargetBeforeLoad=combatSelectedTargetId;
- activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
+ activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
   const instanceQuery=combatId
@@ -1774,6 +1774,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
+   await combatLoadEffects();
    const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
    combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null);
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
@@ -3042,6 +3043,7 @@ function combatantCard(c,index=0){
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
    '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(c.flying?' · Flyger':'')+(defeated?' · Nedkämpad':'')+'</div>'+
+   combatantEffectsHtml(c)+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
   '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
@@ -3244,6 +3246,60 @@ function combatTurnPanelHtml(){
   '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+
  '</div>'
 }
+let combatEffectRegistry=[],combatActiveEffects=[];
+async function combatLoadEffects(){
+ const registry=await dbJson('rule_effects?select=*&order=name.asc');
+ combatEffectRegistry=Array.isArray(registry)?registry:[];
+ if(activeCombat){
+  const assigned=await dbJson('combatant_effects?combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=*&order=created_at.asc');
+  combatActiveEffects=Array.isArray(assigned)?assigned:[]
+ }else combatActiveEffects=[]
+}
+function combatEffectLabel(row){
+ const def=combatEffectRegistry.find(e=>e.id===row.effect_id);
+ return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')
+}
+function combatantEffectsHtml(combatant){
+ const rows=combatActiveEffects.filter(e=>e.combatant_id===combatant.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1)));
+ return rows.length?'<div class="combat-effect-tags">'+rows.map(e=>'<span title="'+escAttr(e.notes||'')+'">'+escAttr(combatEffectLabel(e))+(combatCanManage()?'<button type="button" title="Ta bort effekt" onclick="event.stopPropagation();combatRemoveEffect(\''+e.id+'\')">×</button>':'')+'</span>').join('')+'</div>':''
+}
+function combatEffectsAdminHtml(){
+ if(!combatCanManage())return '';
+ return '<details class="combat-effects-admin"><summary>Effekter · register och tilldelning</summary>'+
+ '<div><b>Skapa effekt</b> <input id="combatEffectName" placeholder="Namn" maxlength="100"><select id="combatEffectPolarity"><option value="positive">Positiv</option><option value="negative">Negativ</option><option value="neutral">Neutral</option></select><input id="combatEffectDuration" type="number" min="0" placeholder="SR (tomt = tills vidare)"><button type="button" onclick="combatCreateEffect()">Lägg till</button></div>'+
+ '<div><b>Tilldela effekt</b> <select id="combatEffectCombatant">'+combatants.map(c=>'<option value="'+escAttr(c.id)+'">'+escAttr(c.name_snapshot)+'</option>').join('')+'</select><select id="combatEffectDefinition">'+combatEffectRegistry.filter(e=>e.active).map(e=>'<option value="'+escAttr(e.id)+'">'+escAttr(e.name)+'</option>').join('')+'</select><input id="combatEffectStrength" type="number" min="1" value="1" title="Styrka"><button type="button" onclick="combatApplyEffect()">Applicera</button></div>'+
+ '<div>'+combatEffectRegistry.map(e=>'<span>'+escAttr(e.name)+' ('+escAttr(e.polarity)+') '+(e.active?'':'[inaktiv]')+' <button type="button" onclick="combatToggleEffect(\''+e.id+'\','+(!e.active)+')">'+(e.active?'Inaktivera':'Aktivera')+'</button></span>').join(' · ')+'</div></details>'
+}
+async function combatCreateEffect(){
+ if(!combatCanManage())return;
+ const name=String($('combatEffectName')?.value||'').trim(),polarity=$('combatEffectPolarity')?.value||'neutral',raw=$('combatEffectDuration')?.value;
+ if(!name)return alert('Ange effektnamn.');
+ const duration=raw===''?null:Number(raw);
+ if(duration!==null&&(!Number.isInteger(duration)||duration<0))return alert('Ogiltig varaktighet.');
+ try{
+  await dbJson('rule_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({code:'custom_'+crypto.randomUUID().replaceAll('-',''),name,polarity,default_duration_rounds:duration})});
+  await combatLoadEffects();renderCombat()
+ }catch(e){alert('Kunde inte skapa effekt: '+e.message)}
+}
+async function combatToggleEffect(id,active){
+ if(!combatCanManage())return;
+ try{await dbJson('rule_effects?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({active,updated_at:new Date().toISOString()})});await combatLoadEffects();renderCombat()}catch(e){alert(e.message)}
+}
+async function combatApplyEffect(){
+ if(!combatCanManage()||!activeCombat)return;
+ const combatantId=$('combatEffectCombatant')?.value,effectId=$('combatEffectDefinition')?.value,strength=Number($('combatEffectStrength')?.value||1);
+ const def=combatEffectRegistry.find(e=>e.id===effectId);
+ if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
+ const round=Number(activeCombat.round_number)||1,expires=def.default_duration_rounds==null?null:round+def.default_duration_rounds;
+ try{
+  await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,expires_round:expires})});
+  await combatLoadEffects();renderCombat()
+ }catch(e){alert('Kunde inte tilldela effekt: '+e.message)}
+}
+async function combatRemoveEffect(id){
+ if(!combatCanManage())return;
+ try{await dbJson('combatant_effects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',updated_at:new Date().toISOString()})});await combatLoadEffects();renderCombat()}catch(e){alert(e.message)}
+}
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
  if(!activeCombat){
@@ -3253,7 +3309,7 @@ function renderCombat(){
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
