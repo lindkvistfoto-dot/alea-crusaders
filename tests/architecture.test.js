@@ -123,7 +123,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatant_effects?combat_id=eq.");
     expect(combat).toContain("async function combatApplyEffect()");
     expect(combat).toContain("async function combatRemoveEffect(");
-    expect(combat).toContain("combatantEffectsHtml(c)");
+    expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttributeHtml(c)");
     expect(combat).toContain("combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()");
   });
 
