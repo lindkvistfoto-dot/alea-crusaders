@@ -42,6 +42,15 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("area spell centers use hex radius and range checks", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatMagicAreaCells(center,radius)");
+    expect(combat).toContain("combatAxialDistance(center,cell)<=r");
+    expect(combat).toContain("function combatMagicAreaCombatants(center,radius)");
+    expect(combat).toContain("async function combatSetMagicAreaCenter(actorId,q,r,radius=0)");
+    expect(combat).toContain("target_mode:'hex_area'");
+  });
+
   test("spell targets allocate EG without exceeding prepared total", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("async function combatAddMagicTarget(");
