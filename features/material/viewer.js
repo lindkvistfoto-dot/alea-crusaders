@@ -281,6 +281,11 @@ export function createLegolas({
   state.previewRows=[...state.selection.values()].filter(row=>row.campaign_id===campaign()&&row.asset_kind==='image');
   state.index=0;showViewer();
  }
+ function previewMaterial(row){
+  if(!authorized()||!row||row.campaign_id!==campaign()||!buckets.has(row.storage_bucket))return;
+  cleanCampaign();
+  state.previewRows=[row];state.index=0;showViewer();
+ }
  function openViewer(id){
   const row=state.rows.find(row=>row.id===id);
   if(!row||row.campaign_id!==campaign())return;
@@ -409,5 +414,5 @@ export function createLegolas({
  }
  function getStagedIds(){return isGM()&&authorized()?[...state.selection.keys()]:[];}
  return {state,mount,openPanel,closePanel,reset,loadPage,openViewer,closeViewer,
-  openQueue,toggleSelection,getStagedIds,zoom,stepViewer,readMedia};
+  openQueue,previewMaterial,toggleSelection,getStagedIds,zoom,stepViewer,readMedia};
 }
