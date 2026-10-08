@@ -784,7 +784,7 @@ function combatActionDefinition(action){
   COMBAT_PRIMARY_ACTIONS.find(item=>item.type===action.action_type)||null
 }
 function combatCanChoosePrimaryAction(combatant){
- return combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'
+ return combatCanManage()&&combatIsActiveTurn(combatant)&&!combatMustSkipTurn(combatant)&&activeCombat?.status==='active'
 }
 async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
@@ -1580,6 +1580,7 @@ function combatRowMagicMenuHtml(combatant){
 function combatActionChooserHtml(combatant){
  if(!combatant)return '';
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
+ if(combatMustSkipTurn(combatant))return '<div class="combat-action-box waiting"><b>Står över denna SR</b><span>En aktiv effekt hindrar förflyttning och handlingar. Avsluta turen för att fortsätta.</span></div>';
  if(!combatIsActiveTurn(combatant)){
   const active=combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''));
   return '<div class="combat-action-box waiting"><b>Inte den här kombatantens tur</b><span>Aktuell tur: '+escAttr(active?.name_snapshot||'—')+'</span></div>'
@@ -1968,7 +1969,7 @@ function combatIsMovementPlanning(combatant){
  return !!combatant&&String(combatMovementPlan?.combatantId||'')===String(combatant.id)
 }
 function combatCanPlanMovement(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&combatMovementBudget(combatant)>0
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&!combatMustSkipTurn(combatant)&&combatMovementBudget(combatant)>0
 }
 function combatMovementOccupied(combatant,q,r){
  return combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(combatant?.id||'')&&Number(row.q)===Number(q)&&Number(row.r)===Number(r))
@@ -2732,7 +2733,7 @@ function combatReachableHexes(combatant){
  const cells=combatRuntimeHexCells();
  const cellByKey=new Map(cells.map(cell=>[cell.key,cell]));
  const out=new Map();
- if(!combatant||activeCombat?.phase!=='movement')return out;
+ if(!combatant||combatMustSkipTurn(combatant)||activeCombat?.phase!=='movement')return out;
  const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
  const budget=combatMovementAllowance(combatant);
  if(!cellByKey.has(startKey))return out;
@@ -3312,7 +3313,8 @@ function combatTurnPanelHtml(){
  const attackChosen=chosenDef?.key==='attack',magicChosen=chosenDef?.key==='spell_cast',otherChosen=!!chosenDef&&!attackChosen&&!magicChosen;
  const actionOpen=String(combatActionMenuId||'')===String(actor.id);
  const otherOpen=actionOpen&&combatActionMenuKind==='other',magicOpen=actionOpen&&combatActionMenuKind==='magic';
- const canMove=!defeated&&combatCanPlanMovement(actor),canAction=!defeated&&combatCanUseActionMenu(actor),canEnd=!defeated&&combatCanEndTurn(actor);
+ const skipping=combatMustSkipTurn(actor);
+ const canMove=!defeated&&!skipping&&combatCanPlanMovement(actor),canAction=!defeated&&!skipping&&combatCanUseActionMenu(actor),canEnd=!defeated&&combatCanEndTurn(actor);
  const moveTitle=planning?((Number(combatMovementPlan?.cost)||0)>0?'Lås förflyttning':'Avbryt förflyttning'):'Planera förflyttning';
  const maximum=combatMovementMaximum(actor),remaining=combatMovementBudget(actor),spent=Math.max(0,maximum-remaining);
  const kpCurrent=actor.current_kp==null?'—':actor.current_kp,kpMax=actor.max_kp==null?'—':actor.max_kp;
@@ -3347,6 +3349,12 @@ async function combatLoadEffects(){
  }else combatActiveEffects=[]
 }
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
+function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||1){
+ if(!combatant)return false;
+ return combatActiveEffects.some(row=>String(row.combatant_id)===String(combatant.id)&&row.status==='active'&&
+  Number(row.applied_round||0)<=round&&(row.expires_round==null||Number(row.expires_round)>=round)&&
+  combatEffectRegistry.some(def=>def.id===row.effect_id&&def.active&&def.modifiers?.type==='skip_turns'))
+}
 function combatEffectAttributeDelta(combatant,attribute){
  return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&e.status==='active'&&(e.expires_round==null||e.expires_round>=(Number(activeCombat?.round_number)||1))).reduce((sum,e)=>{
   const def=combatEffectRegistry.find(d=>d.id===e.effect_id),p=e.parameters||{};
@@ -3394,7 +3402,7 @@ async function combatApplyEffect(){
  const def=combatEffectRegistry.find(e=>e.id===effectId),attribute=$('combatEffectAttribute')?.value,pointsPerEg=Number($('combatEffectPointsPerEg')?.value||1);
  if(def?.modifiers?.type==='attribute_delta'&&(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute)||!Number.isInteger(pointsPerEg)||pointsPerEg<1))return alert('Välj egenskap och giltig förändring per EG.');
  if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
- const round=Number(activeCombat.round_number)||1,expires=def.default_duration_rounds==null?null:round+def.default_duration_rounds;
+ const round=Number(activeCombat.round_number)||1,expires=def.modifiers?.type==='skip_turns'?round+strength-1:def.default_duration_rounds==null?null:round+def.default_duration_rounds;
  try{
   await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:combatantId,effect_id:effectId,strength,applied_round:round,expires_round:expires,parameters:def.modifiers?.type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}:{}})});
   await combatLoadEffects();renderCombat()
