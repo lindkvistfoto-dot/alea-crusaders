@@ -9,8 +9,8 @@ const legolas=read('features/material/viewer.js');
 
 describe('v0.34.92 – GitHub Pages native material bootstrap',()=>{
  it('loads material independently of the dice-box module entry',()=>{
-  expect(html).toMatch(/<script type="module" src="\.\/features\/material\/library\.js\?v=0\.34\.91"><\/script>/);
-  expect(html).toMatch(/<script type="module" src="\.\/src\/main\.js\?v=0\.34\.91"><\/script>/);
+  expect(html).toMatch(/<script type="module" src="\.\/features\/material\/library\.js\?v=0\.34\.92"><\/script>/);
+  expect(html).toMatch(/<script type="module" src="\.\/src\/main\.js\?v=0\.34\.92"><\/script>/);
   expect(read('src/main.js')).not.toMatch(/^import [^;\n]*material\/library\.js/gm);
   expect(html.indexOf('features/material/library.js?v=0.34.92'))
    .toBeLessThan(html.indexOf('src/main.js?v=0.34.92'));
