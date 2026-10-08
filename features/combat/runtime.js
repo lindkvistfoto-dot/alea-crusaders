@@ -2254,15 +2254,43 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
  renderCombat();renderCombatGmControls();return activeCombat
 }
+// Spelarnas stridsvy följer SL:s Play/Reset utan att visa dolda, förberedda scener.
+let combatPlayerSyncTimer=null,combatPlayerSyncBusy=false;
+async function combatPollPlayerView(){
+ if(combatCanManage()||!supabaseSession?.user?.id||!centralCampaignId||
+    document.hidden||$('combatPage')?.classList.contains('hidden')||combatPlayerSyncBusy)return;
+ combatPlayerSyncBusy=true;
+ try{
+  const cid=encodeURIComponent(centralCampaignId);
+  const rows=await dbJson('combat_instances?campaign_id=eq.'+cid+
+   '&status=in.(setup,active,paused)&select=id,updated_at,status&order=updated_at.desc&limit=1');
+  const newest=rows?.[0]||null;
+  if(String(newest?.id||'')!==String(activeCombat?.id||'')||
+     String(newest?.updated_at||'')!==String(activeCombat?.updated_at||'')||
+     String(newest?.status||'')!==String(activeCombat?.status||'')){
+   await loadActiveCombat(newest?.id||null,{preserveSelectedTarget:true})
+  }
+ }catch(error){console.warn('Kunde inte uppdatera spelarens stridsvy',error)}
+ finally{combatPlayerSyncBusy=false}
+}
+function combatStartPlayerSync(){
+ combatStopPlayerSync();
+ if(!combatCanManage())combatPlayerSyncTimer=setInterval(combatPollPlayerView,5000)
+}
+function combatStopPlayerSync(){
+ if(combatPlayerSyncTimer){clearInterval(combatPlayerSyncTimer);combatPlayerSyncTimer=null}
+}
 async function openCombat(){
  combatReturn=!$('mapPage').classList.contains('hidden')?'map':(!$('dicePage').classList.contains('hidden')?'dice':(!$('view').classList.contains('hidden')?'view':(!$('admin').classList.contains('hidden')?'admin':'home')));
  ['home','view','admin','mapPage','dicePage'].forEach(id=>$(id).classList.add('hidden'));
  $('combatPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  $('combatBody').innerHTML='<div class="combat-empty">Laddar strid…</div>';
  await loadCombatSceneChoices();
- await loadActiveCombat()
+ await loadActiveCombat();
+ combatStartPlayerSync()
 }
 function closeCombat(){
+ combatStopPlayerSync();
  combatantDetailCombatantId=null;
  $('combatPage').classList.add('hidden');
  if(combatReturn==='map'){$('mapPage').classList.remove('hidden')}
