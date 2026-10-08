@@ -5787,7 +5787,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .admin-table-scroll .adminspelltable{width:max-content;min-width:100%;overflow:visible}
 
 /* v0.34.01 — Expert spell administration */
-.adminspelltable{display:grid;grid-template-columns:170px 130px 82px 105px 42px 42px 42px 105px 130px 130px 110px 86px;min-width:1174px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
+.adminspelltable{display:grid;grid-template-columns:170px 130px 82px 105px 42px 42px 42px 105px 130px 130px 110px 65px 86px;min-width:1239px;border:1px solid #5a4631;border-radius:12px;overflow:auto}
 .adminspelltable>div,.adminmagicschooltable>div{padding:10px 8px;border-bottom:1px solid #443527;min-width:0}
 .adminspelltable .ahead,.adminmagicschooltable .ahead{background:#6d1e1e;font-weight:800;white-space:nowrap}
 .adminspelltable .rule-name{font-weight:800;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px;cursor:pointer}
