@@ -1472,7 +1472,7 @@ function combatSummonSnapshot(template,effectGrade){
  return {template_key:template.key,template_name:template.name,kind:template.kind,effect_grade:eg,stats}
 }
 function combatIsSummoningSpell(spell){
- return /^(FRAMMANA\\/SKICKA BORT ELEMENTAR|TILLKALLA VARELSE)/i.test(String(spell?.name||''))
+ return /^(FRAMMANA\/SKICKA BORT ELEMENTAR|TILLKALLA VARELSE)/i.test(String(spell?.name||''))
 }
 // Shared magic metadata and casting preflight. Unknown Expert values stay unresolved.
 const COMBAT_MAGIC_CATEGORIES=['direct','indirect','support','summon','none'];
@@ -1485,7 +1485,7 @@ function combatMagicRuleProfile(spell){
 function combatMagicCastingRules(spell,effectGrade){
  const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
  const marker=String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||'');
- const quick=spell?.kvick===true||/(?:^|[\\s(,])K(?:[\\s,)]|$)/i.test(marker)||/\\((?:F\\s*,\\s*)?K(?:\\s*,\\s*F)?\\)/i.test(String(spell?.name||''));
+ const quick=spell?.kvick===true||/(?:^|[\s(,])K(?:[\s,)]|$)/i.test(marker)||/\((?:F\s*,\s*)?K(?:\s*,\s*F)?\)/i.test(String(spell?.name||''));
  return {effect_grade:eg,psy_cost:eg,cl_modifier:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
 }
 function combatMagicCastPreflight(combatant,spell,effectGrade){
