@@ -42,6 +42,14 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("magic preparation locks spell and effect grade until its ready round", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("spell_locked:true");
+    expect(combat).toContain("preparation_round:currentRound,ready_round:currentRound+(castRules.quick?0:1)");
+    expect(combat).toContain("action.source_data?.spell_locked");
+    expect(combat).toContain("Besvärjelsen förbereds. Klar i SR ");
+  });
+
   test("test spell action is claimed before rolling to prevent duplicate resolution", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("async function rollCombatTestFireball(");
