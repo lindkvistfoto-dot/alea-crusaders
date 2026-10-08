@@ -2682,6 +2682,28 @@ async function combatRemoveMagicTarget(actorId,targetId){
   method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
  });action.source_data=sourceData;renderCombat()
 }
+async function combatSetMagicAreaRadius(actorId,delta){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||action?.status!=='planned'||action.source_data?.magic_binding?.kind!=='area')return;
+ const radius=Math.max(0,Math.min(15,Number(action.source_data.area_radius||0)+Number(delta||0)));
+ const sourceData={...action.source_data,area_radius:radius,area_center:null};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;renderCombat()
+}
+async function combatSetMagicDuration(actorId,delta){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||action?.status!=='planned'||!['status','area'].includes(action.source_data?.magic_binding?.kind))return;
+ const duration=Math.max(0,Math.min(9999,Number(action.source_data.effect_duration_rounds||0)+Number(delta||0)));
+ const sourceData={...action.source_data,effect_duration_rounds:duration||null};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;renderCombat()
+}
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
