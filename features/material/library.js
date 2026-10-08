@@ -3,17 +3,21 @@ import './storage.js?v=0.34.79';
 
 const BILBO_PAGE_SIZE=24;
 const BILBO_BUCKETS=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
-const bilboState={campaign:'',rows:[],page:0,hasNext:false,category:'all',status:'active',sort:'newest',search:'',selected:null,busy:false,querySeq:0,mediaSeq:0,thumbUrls:new Map(),detailUrl:'',note:'',searchTimer:null};
+const bilboState={campaign:'',rows:[],page:0,hasNext:false,category:'all',status:'active',sort:'newest',search:'',selected:null,busy:false,querySeq:0,mediaSeq:0,detailSeq:0,layout:'grid',thumbUrls:new Map(),detailUrl:'',note:'',searchTimer:null};
 const bilboStorage=()=>window.gimliMaterialApi;
 const bilboAllowed=()=>bilboStorage()?.canManage()===true;
 const bilboCampaign=()=>String(centralCampaignId||'');
 function bilboEscape(s){return escAttr(String(s??''))}
 function bilboSelected(){return bilboState.rows.find(r=>r.id===bilboState.selected)||null}
-function bilboReleaseMedia(){
+function bilboReleaseThumbs(){
+ bilboState.mediaSeq++;
  for(const url of bilboState.thumbUrls.values())URL.revokeObjectURL(url);
  bilboState.thumbUrls.clear();
+}
+function bilboReleaseMedia(){
+ bilboReleaseThumbs();
+ bilboState.detailSeq++;
  if(bilboState.detailUrl){URL.revokeObjectURL(bilboState.detailUrl);bilboState.detailUrl=''}
- bilboState.mediaSeq++
 }
 function bilboRequestParams(){
  const parts=['campaign_id=eq.'+encodeURIComponent(bilboCampaign())];
@@ -69,13 +73,13 @@ async function bilboLoadPage(){
 function bilboCardHtml(item){
  const type=item.asset_kind==='image'?'▧':item.asset_kind==='document'?'▤':'≡';
  const label=bilboStorage()?.categories?.[item.category]||'Övrigt';
- return '<button class="bilbo-card'+(item.archived_at?' is-archived':'')+'" type="button" onclick="bilboSelect(\''+bilboEscape(item.id)+'\')">'+
+ return '<button class="bilbo-card'+(item.archived_at?' is-archived':'')+(bilboState.selected===item.id?' is-selected':'')+'" type="button" onclick="bilboSelect(\''+bilboEscape(item.id)+'\')">'+
   '<span class="bilbo-card-media" data-bilbo-thumb="'+bilboEscape(item.id)+'">'+type+'</span>'+
   '<span class="bilbo-card-label"><strong>'+bilboEscape(item.title)+'</strong><small>'+bilboEscape(label)+' · '+(item.archived_at?'Arkiverad':'Privat')+'</small></span></button>'
 }
 function bilboRenderPage(){
  const grid=document.getElementById('bilboGrid'),page=document.getElementById('bilboPageCount');
- if(grid)grid.innerHTML=bilboState.rows.length?bilboState.rows.map(bilboCardHtml).join(''):'<div class="bilbo-empty">Inga material matchar filtreringen. Ladda upp en fil eller ändra sökningen.</div>';
+ if(grid){grid.classList.toggle('is-list',bilboState.layout==='list');grid.innerHTML=bilboState.rows.length?bilboState.rows.map(bilboCardHtml).join(''):'<div class="bilbo-empty">Inga material matchar filtreringen. Ladda upp en fil eller ändra sökningen.</div>'}
  if(page)page.textContent='Sida '+(bilboState.page+1);
  const back=document.getElementById('bilboPrevious'),next=document.getElementById('bilboNext');
  if(back)back.disabled=bilboState.page===0;
@@ -138,6 +142,7 @@ function bilboDetailHtml(row){
   '<p class="bilbo-detail-info">Arkivering döljer materialet ur det aktiva biblioteket utan att radera filen.</p>'
 }
 function bilboCloseDetail(){
+ bilboState.detailSeq++;
  bilboState.selected=null;bilboState.note='';
  if(bilboState.detailUrl){URL.revokeObjectURL(bilboState.detailUrl);bilboState.detailUrl=''}
  const el=document.getElementById('bilboDetails');
@@ -155,7 +160,7 @@ async function bilboSelect(id){
  });
  const box=document.getElementById('bilboDetails');
  if(box)box.innerHTML=bilboDetailHtml(row);
- const generation=++bilboState.mediaSeq;
+ const generation=++bilboState.detailSeq;
  // Do not invalidate the thumbnail URLs when opening details.
  await Promise.allSettled([bilboShowFullPreview(row,generation),bilboLoadNote(row,generation)])
 }
@@ -163,7 +168,7 @@ async function bilboShowFullPreview(row,generation){
  const box=document.getElementById('bilboFullPreview');if(!box)return;
  try{
   const blob=await bilboFetchBlob(row,false);
-  if(generation!==bilboState.mediaSeq||bilboState.selected!==row.id)return;
+  if(generation!==bilboState.detailSeq||bilboState.selected!==row.id)return;
   const url=URL.createObjectURL(blob);
   if(bilboState.detailUrl)URL.revokeObjectURL(bilboState.detailUrl);
   bilboState.detailUrl=url;box.replaceChildren();
@@ -177,14 +182,14 @@ async function bilboShowFullPreview(row,generation){
    box.append(link)
   }
  }catch(error){
-  if(generation===bilboState.mediaSeq&&bilboState.selected===row.id)box.textContent='Förhandsvisningen kunde inte laddas: '+error.message
+  if(generation===bilboState.detailSeq&&bilboState.selected===row.id)box.textContent='Förhandsvisningen kunde inte laddas: '+error.message
  }
 }
 async function bilboLoadNote(row,generation){
  try{
   const results=await dbJson('campaign_material_gm_notes?campaign_id=eq.'+encodeURIComponent(row.campaign_id)+
     '&material_id=eq.'+encodeURIComponent(row.id)+'&select=notes&limit=1');
-  if(generation!==bilboState.mediaSeq||bilboState.selected!==row.id)return;
+  if(generation!==bilboState.detailSeq||bilboState.selected!==row.id)return;
   bilboState.note=results?.[0]?.notes||'';
   const input=document.getElementById('bilboGmNote');if(input)input.value=bilboState.note
  }catch(error){if(bilboState.selected===row.id)bilboNotice('Kunde inte läsa SL-anteckningar: '+error.message,true)}
@@ -212,8 +217,7 @@ async function bilboSaveMetadata(event){
   const index=bilboState.rows.findIndex(x=>x.id===row.id);
   if(index>=0)bilboState.rows[index]={...bilboState.rows[index],...update[0]};
   const cards=document.getElementById('bilboGrid');
-  if(cards)cards.innerHTML=bilboState.rows.map(bilboCardHtml).join('');
-  bilboLoadThumbnails();
+  if(cards){bilboReleaseThumbs();cards.innerHTML=bilboState.rows.map(bilboCardHtml).join('');bilboLoadThumbnails()}
   const details=document.getElementById('bilboDetails');
   if(details){const heading=details.querySelector('.bilbo-detail-heading h3');if(heading)heading.textContent=title}
   bilboNotice('Uppgifter sparade för '+title+'.');
@@ -260,7 +264,7 @@ async function bilboToggleArchive(){
 function bilboSetLayout(layout){
  if(!['grid','list'].includes(layout))return;
  bilboState.layout=layout;
- bilboCloseDetail();bilboReleaseMedia();
+ bilboCloseDetail();bilboReleaseThumbs();
  bilboRenderPage();bilboLoadThumbnails()
 }
 function bilboMountLibrary(){
