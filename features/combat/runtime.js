@@ -4901,9 +4901,110 @@ async function combatReturnToReserve(id){
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(e){alert('Kunde inte sätta kombatanten i reserv: '+e.message)}
 }
+// SL confirms which elemental was summoned after a successful Expert spell roll.
+// The general Expert EG/scaling stats are not verified: use the editable SLP template.
+let combatSummonBusy=false;
+function combatSummonActionCandidates(){
+ return (Array.isArray(combatActions)?combatActions:[]).filter(action=>
+  action.status==='resolved'&&action.result?.success===true&&!action.result?.blocked_by_beskyddare&&
+  /^FRAMMANA\/SKICKA BORT ELEMENTAR(?:\s|\(|$)/i.test(String(action.source_data?.spell_name||action.result?.spell_name||'')) &&
+  combatants.some(c=>String(c.id)===String(action.combatant_id))
+ )
+}
+function combatSummonPanelHtml(){
+ if(!combatCanManage()||!activeCombat)return '';
+ const candidates=combatSummonActionCandidates();
+ const spawned=combatants.filter(c=>String(c.source_instance_key||'').startsWith('summon:')&&c.state?.summon_template_key==='eldsalamander_frammanad');
+ return '<details class="combat-effects-admin combat-summon-admin"><summary>Framkallade elementarer ('+
+  spawned.filter(c=>!c.state?.summon_dismissed).length+')</summary>'+
+  '<p class="combat-action-note">Efter ett lyckat FRAMMANA/SKICKA BORT ELEMENTAR väljer SL om varelsen är en eldsalamander. Den skapas som reserv på magikerns sida och placeras sedan på kartan. Kontrollera EG, varaktighet och kontroll enligt Expert.</p>'+
+  (candidates.length?candidates.map(action=>{
+    const actor=combatants.find(c=>String(c.id)===String(action.combatant_id));
+    const existing=combatants.find(c=>String(c.source_instance_key)==='summon:'+action.id);
+    return '<div class="combat-gm-placement-row"><span><b>'+escAttr(actor?.name_snapshot||'Magiker')+
+      '</b><small>Lyckad frammaning · EG '+escAttr(action.result.effect_grade||1)+
+      ' · SR '+escAttr(action.round_number||'?')+'</small></span>'+
+      '<button type="button" class="smallbtn" '+(existing||combatSummonBusy?'disabled':'')+
+      ' onclick="combatCreateEldsalamanderFromSpell(\''+escAttr(action.id)+'\')">'+
+      (existing?'Redan skapad':'Skapa eldsalamander')+'</button></div>'
+  }).join(''):'<p class="combat-action-note">Inga lyckade elementarframbesvärjelser under de senast inlästa rundorna.</p>')+
+  (spawned.length?'<h4>Skapade eldsalamandrar</h4>'+spawned.map(c=>
+    '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>'+
+    (c.state?.summon_dismissed?'Bortskickad':combatGmIsReserve(c)?'Reserv – sätt ut via Uppställning':'Finns i striden')+
+    '</small></span>'+(c.state?.summon_dismissed?'':'<button type="button" class="smallbtn" onclick="combatDismissEldsalamander(\''+
+    escAttr(c.id)+'\')">Skicka bort</button>')+'</div>').join(''):'')+
+  '</details>'
+}
+async function combatCreateEldsalamanderFromSpell(actionId){
+ if(!combatCanManage()||!activeCombat||combatSummonBusy)return;
+ const action=combatSummonActionCandidates().find(row=>String(row.id)===String(actionId));
+ if(!action){alert('Hittade inget lyckat elementarkast att koppla varelsen till.');return}
+ const sourceKey='summon:'+action.id;
+ if(combatants.some(c=>String(c.source_instance_key)===sourceKey)){
+  alert('Den här frammaningen har redan skapat en varelse.');return
+ }
+ const caster=combatants.find(c=>String(c.id)===String(action.combatant_id));
+ if(!caster)return;
+ combatSummonBusy=true;
+ try{
+  const templates=await dbJson('campaign_npcs?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+
+   '&npc_key=eq.eldsalamander_frammanad&select=*&limit=1');
+  const template=templates?.[0];
+  if(!template||template.active===false)throw Error('SLP-mallen Eldsalamander saknas eller är inaktiv.');
+  const stats=combatSourceStats({source_type:'npc',source_id:template.id,state:{}},{
+   npcs:new Map([[template.id,template]]),characters:new Map(),monsters:new Map()
+  });
+  if(!Number.isFinite(stats.max_kp)||stats.max_kp<1)
+   throw Error('Eldsalamandern saknar giltiga KP i sin SLP-mall.');
+  const nextId=crypto.randomUUID();
+  const row={id:nextId,combat_id:activeCombat.id,campaign_id:centralCampaignId,
+   source_type:'npc',source_id:template.id,source_instance_key:sourceKey,
+   name_snapshot:template.name||'Eldsalamander',side:caster.side||'neutral',
+   controller_user_id:null,q:Number(caster.q)||0,r:Number(caster.r)||0,
+   flying:false,visible_to_players:true,
+   current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
+   movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,
+   status:'removed',action_plan:[],
+   state:{in_reserve:true,smi:stats.smi,sty:stats.sty,sto:stats.sto,
+    attributes:stats.attributes,attack_profile:stats.attack_profile,
+    summon_template_key:'eldsalamander_frammanad',summoning_action_id:action.id,
+    summoner_id:caster.id,effect_grade:Number(action.result.effect_grade)||1,
+    summon_duration_note:'SL avgör antal SR enligt Expert-reglerna.'},
+   sort_order:Math.max(0,...combatants.map(c=>Number(c.sort_order)||0))+1};
+  const saved=await dbJson('combatants?select=id',{
+   method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)
+  });
+  if(!Array.isArray(saved)||saved.length!==1)throw Error('Kunde inte skapa eldsalamandern i striden.');
+  await dbJson('combat_log',{method:'POST',headers:{Prefer:'return=minimal'},
+   body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
+    round_number:Number(activeCombat.round_number)||1,phase:'magic',
+    actor_id:caster.id,target_id:nextId,event_type:'summon_elemental',
+    message:caster.name_snapshot+' frammanar en eldsalamander · SL placerar varelsen',
+    details:{action_id:action.id,effect_grade:row.state.effect_grade,source_id:template.id,source_key:sourceKey},
+    player_visible:true})}).catch(error=>console.warn('Eldsalamander skapad men loggningen misslyckades',error));
+  await loadActiveCombat(null,{preserveSelectedTarget:true});
+  combatGmPlacementId=nextId;renderCombat();
+ }catch(error){alert('Kunde inte skapa eldsalamander: '+(error?.message||error))}
+ finally{combatSummonBusy=false}
+}
+async function combatDismissEldsalamander(id){
+ if(!combatCanManage()||!activeCombat)return;
+ const row=combatants.find(c=>String(c.id)===String(id)&&c.state?.summon_template_key==='eldsalamander_frammanad'&&!c.state?.summon_dismissed);
+ if(!row)return;
+ if(!confirm('Skicka bort '+row.name_snapshot+' från striden?'))return;
+ try{
+  await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{Prefer:'return=minimal'},
+   body:JSON.stringify({status:'removed',state:{...row.state,in_reserve:false,summon_dismissed:true},updated_at:new Date().toISOString()})
+  });
+  if(String(combatGmPlacementId||'')===String(row.id))combatGmPlacementId=null;
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){alert('Kunde inte skicka bort eldsalamandern: '+(error?.message||error))}
+}
+
 function combatGmToolboxHtml(){
  if(!combatCanManage()||!activeCombat)return '';
- return '<section id="combatGmToolbox" class="combat-gm-toolbox"><h3>SL · Stridskontroll</h3><p class="combat-action-note">Skapa områden och tilldela effekter i striden. Regeldefinitioner finns i Administration → Effekter.</p>'+combatGmPlacementHtml()+combatAreasAdminHtml()+combatEffectsAdminHtml()+'</section>'
+ return '<section id="combatGmToolbox" class="combat-gm-toolbox"><h3>SL · Stridskontroll</h3><p class="combat-action-note">Skapa områden och tilldela effekter i striden. Regeldefinitioner finns i Administration → Effekter.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+combatAreasAdminHtml()+combatEffectsAdminHtml()+'</section>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
