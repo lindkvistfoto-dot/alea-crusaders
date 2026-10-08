@@ -7,18 +7,18 @@ const html=read('index.html');
 const library=read('features/material/library.js');
 const legolas=read('features/material/viewer.js');
 
-describe('v0.34.92 – GitHub Pages native material bootstrap',()=>{
+describe('v0.34.95 – GitHub Pages native material bootstrap',()=>{
  it('loads material independently of the dice-box module entry',()=>{
-  expect(html).toMatch(/<script type="module" src="\.\/features\/material\/library\.js\?v=0\.34\.92"><\/script>/);
-  expect(html).toMatch(/<script type="module" src="\.\/src\/main\.js\?v=0\.34\.92"><\/script>/);
+  expect(html).toMatch(/<script type="module" src="\.\/features\/material\/library\.js\?v=0\.34\.95"><\/script>/);
+  expect(html).toMatch(/<script type="module" src="\.\/src\/main\.js\?v=0\.34\.95"><\/script>/);
   expect(read('src/main.js')).not.toMatch(/^import [^;\n]*material\/library\.js/gm);
-  expect(html.indexOf('features/material/library.js?v=0.34.92'))
-   .toBeLessThan(html.indexOf('src/main.js?v=0.34.92'));
+  expect(html.indexOf('features/material/library.js?v=0.34.95'))
+   .toBeLessThan(html.indexOf('src/main.js?v=0.34.95'));
  });
  it('uses native HTML stylesheets, never bare CSS imports in JS modules',()=>{
   for(const name of ['viewer','frodo-ui','player-folder','realtime']){
    const css=name+'.css';
-   expect(html).toContain('href="./features/material/'+css+'?v=0.34.92"');
+   expect(html).toContain('href="./features/material/'+css+'?v=0.34.95"');
   }
   for(const name of ['viewer.js','frodo-ui.js','player-folder-ui.js','galadriel-ui.js']){
    expect(read('features/material/'+name)).not.toMatch(/^\s*import\s+['"][^'"]+\.css['"]\s*;?/gm);
