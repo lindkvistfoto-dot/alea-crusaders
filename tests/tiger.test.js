@@ -95,7 +95,7 @@ describe('TIGER mental conditions',()=>{
   expect(src).toContain('if(!combatCanTargetHostile(actor,target))return null;');
   expect(src).toContain('if(!combatCanTargetHostile(actor,target))continue;');
   expect(src).toContain('if(!combatMentalMovementAllowed(combatant,{q,r},{q:nq,r:nr}))continue;');
-  expect(src).toContain('source_combatant_id:needsSource?sourceId:null')
+  expect(src).toContain("source_combatant_id:(needsSource||type==='damage_over_time')&&sourceId?sourceId:null")
  });
  test('GM can configure a source and SR duration, seeded statuses have no invented spell resistance',()=>{
   expect(src).toContain("combatEffectRounds");
