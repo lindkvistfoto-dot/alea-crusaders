@@ -2780,7 +2780,7 @@ function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||combatCannotAct(actor))return new Map();
  if(action?.source_data?.casting_spell===true&&combatSupportedStatusSpell(action))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
- if(action?.source_data?.casting_spell===true&&String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return combatFireballTargets();
+ if(action?.source_data?.casting_spell===true&&action?.source_data?.magic_binding?.kind==='damage')return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
  const selected=combatActionWeapon(actor,action,mode);
