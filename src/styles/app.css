@@ -5862,3 +5862,45 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-effect-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
 .combat-effect-tags span{font-size:11px;border:1px solid #817052;border-radius:5px;padding:2px 5px;background:#332b23;color:#f3e4ca}
 .combat-effect-tags button{margin-left:4px;border:0;background:transparent;color:inherit}
+
+/* v0.34.55 – Details popup without taking space in the initiative list. */
+.combatant-card:focus-visible{outline:3px solid #c8994d;outline-offset:2px}
+.combat-detail-backdrop{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(9,8,9,.79);backdrop-filter:blur(3px)}
+.combat-detail-dialog{display:flex;flex-direction:column;width:min(680px,100%);max-height:min(90vh,900px);border:1px solid #a68859;border-radius:15px;background:#241e1a;color:#f4e6cd;box-shadow:0 22px 70px rgba(0,0,0,.8);overflow:hidden}
+.combat-detail-header{display:flex;gap:15px;align-items:center;padding:17px 21px;background:linear-gradient(125deg,#4c2924,#291d1a);border-bottom:1px solid rgba(229,181,106,.28)}
+.combat-detail-header .combat-row-portrait{flex-shrink:0;width:67px;height:67px}
+.combat-detail-identity{flex:1;min-width:0}
+.combat-detail-identity small{display:block;color:#d8b87c;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.combat-detail-identity h2{margin:4px 0;color:#fff3dc;font:700 clamp(19px,4vw,26px) Georgia,serif;overflow-wrap:anywhere}
+.combat-detail-identity>span{color:#cbb99b;font-size:12px}
+.combat-detail-close{display:grid;place-items:center;align-self:flex-start;flex-shrink:0;width:37px;height:37px;cursor:pointer;border:1px solid #ab8e66;border-radius:8px;background:rgba(255,255,255,.05);color:#f5d7a8;font-size:26px;line-height:1}
+.combat-detail-close:hover,.combat-detail-close:focus-visible{background:#67412e;border-color:#f1c17d}
+.combat-detail-content{padding:17px 21px 22px;overflow-y:auto;overscroll-behavior:contain}
+.combat-detail-stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.combat-detail-stat{min-width:0;padding:10px 11px;border:1px solid rgba(196,154,96,.32);border-radius:9px;background:#302822}
+.combat-detail-stat span{display:block;color:#bca789;font-size:10px;font-weight:750;letter-spacing:.05em;text-transform:uppercase}
+.combat-detail-stat b{display:block;margin-top:5px;color:#fce6bd;font-size:18px;overflow-wrap:anywhere}
+.combat-detail-section{margin-top:16px;padding-top:14px;border-top:1px solid rgba(196,154,96,.27)}
+.combat-detail-section h3{display:flex;align-items:center;gap:9px;margin:0 0 11px;color:#e7bc77;font:700 17px Georgia,serif}
+.combat-detail-section h3 span{display:inline-grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:1px solid #806b4b;border-radius:12px;font:800 11px system-ui}
+.combat-detail-attributes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.combat-detail-attributes .combat-detail-stat{padding:8px}
+.combat-detail-attributes .combat-detail-stat b{font-size:15px}
+.combat-detail-effects .combat-effect-tags{gap:7px}
+.combat-detail-effects .combat-effect-tags>span{font-size:12px;padding:7px 10px;border-radius:7px}
+.combat-detail-effects .combat-effect-tags button{padding:3px 5px;font-size:13px}
+.combat-detail-empty{margin:0;color:#b7a185;font-size:13px}
+.combat-detail-equipment{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:11px}
+.combat-detail-equipment .combat-turn-equip{min-width:0;padding:9px 6px;border:1px solid rgba(196,154,96,.28);border-radius:8px;background:#302822}
+.combat-detail-section p{margin:7px 0;color:#dcc9a9;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.combat-detail-section p strong{color:#edc787}
+@media(max-width:560px){
+ .combat-detail-backdrop{padding:7px}
+ .combat-detail-dialog{max-height:96vh;border-radius:11px}
+ .combat-detail-header{padding:12px;gap:9px}
+ .combat-detail-header .combat-row-portrait{width:51px;height:51px}
+ .combat-detail-content{padding:11px 12px 15px}
+ .combat-detail-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .combat-detail-attributes{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .combat-detail-equipment{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

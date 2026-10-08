@@ -123,7 +123,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatant_effects?combat_id=eq.");
     expect(combat).toContain("async function combatApplyEffect()");
     expect(combat).toContain("async function combatRemoveEffect(");
-    expect(combat).toContain("combatantEffectsHtml(c)+");
+    expect(combat).toContain("combatantEffectsHtml(c)");
     expect(combat).toContain("combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()");
   });
 
@@ -691,8 +691,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain('id="combatScenePicker"');
     expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.86");
     expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.86");
-    expect(html).toContain("./features/combat/runtime.js?v=0.34.54");
-    expect(html).toContain("./legacy/app.js?v=0.34.54");
+    expect(html).toContain("./features/combat/runtime.js?v=0.34.55");
+    expect(html).toContain("./legacy/app.js?v=0.34.55");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");

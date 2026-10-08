@@ -1954,6 +1954,7 @@ async function openCombat(){
  await loadActiveCombat()
 }
 function closeCombat(){
+ combatantDetailCombatantId=null;
  $('combatPage').classList.add('hidden');
  if(combatReturn==='map'){$('mapPage').classList.remove('hidden')}
  else if(combatReturn==='dice'){$('dicePage').classList.remove('hidden')}
@@ -3439,17 +3440,93 @@ function combatantCard(c,index=0){
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
  const mental=combatMentalStatusLabel(c);
  const planning=combatIsMovementPlanning(c);
- return'<div role="button" tabindex="0" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+(defeated?' defeated':'')+'" onclick="selectCombatTarget(\''+c.id+'\')">'+
+ const effectCount=combatActiveEffects.filter(e=>String(e.combatant_id)===String(c.id)&&combatEffectIsActive(e)).length;
+ return'<div role="button" tabindex="0" title="Visa detaljer (eller välj mål vid attack/magi)" data-combatant-id="'+escAttr(c.id)+'" class="combatant-card '+roleClass+selected+turn+attack+(planning?' movement-planning':'')+(defeated?' defeated':'')+'" onclick="combatantRowClick(event,\''+escAttr(c.id)+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();combatantRowClick(event,\''+escAttr(c.id)+'\')}">'+
   '<span class="combat-order-number"><b>'+order+'</b></span>'+
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
-   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(defeated?' · Nedkämpad':'')+'</div>'+
-   combatantEffectsHtml(c)+combatEffectAttributeHtml(c)+
+   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
   '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
  '</div>'
+}
+
+/* Kombatantdetaljer: klick öppnar popup när ingen attack/besvärjelse väntar på mål. */
+let combatantDetailCombatantId=null;
+function combatRowIsSelectingTarget(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);
+ if(!actor||action?.status!=='planned')return false;
+ if(combatActionDefinition(action)?.type==='attack'||action.source_data?.test_fireball===true)return true;
+ return action.source_data?.casting_spell===true&&['damage','status'].includes(action.source_data?.magic_binding?.kind)
+}
+function combatantRowClick(event,id){
+ event?.stopPropagation?.();
+ if(combatRowIsSelectingTarget()){selectCombatTarget(id);return}
+ const combatant=combatants.find(row=>String(row.id)===String(id));
+ if(!combatant||(!combatCanManage()&&combatant.visible_to_players===false))return;
+ combatSelectedTargetId=combatant.id;
+ combatantDetailCombatantId=String(combatant.id);
+ renderCombat();
+ requestAnimationFrame(()=>$('combatantDetailsClose')?.focus())
+}
+function combatCloseCombatantDetails(event){
+ event?.stopPropagation?.();
+ const id=combatantDetailCombatantId;
+ combatantDetailCombatantId=null;renderCombat();
+ if(id)requestAnimationFrame(()=>{
+  const row=Array.from(document.querySelectorAll('.combatant-card[data-combatant-id]'))
+   .find(el=>el.dataset.combatantId===String(id));
+  row?.focus()
+ })
+}
+function combatantDetailsPopupHtml(){
+ const c=combatants.find(row=>String(row.id)===String(combatantDetailCombatantId));
+ if(!c||(!combatCanManage()&&c.visible_to_players===false))return '';
+ const profile=combatAttackProfile(c),attrs=c.state?.attributes||{};
+ const role=c.source_type==='character'?'Rollperson':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
+ const roleClass=c.source_type==='character'?'player-row':c.source_type==='npc'?'npc-row':'enemy-row';
+ const effects=combatActiveEffects.filter(row=>String(row.combatant_id)===String(c.id)&&combatEffectIsActive(row));
+ const stat=(name,value)=>'<div class="combat-detail-stat"><span>'+escAttr(name)+'</span><b>'+escAttr(value??'—')+'</b></div>';
+ const amount=(current,max)=>(current==null?'—':current)+(max==null?'':' / '+max);
+ const init=combatNumber(c.state?.initiative_total,null);
+ const canViewAttributes=combatCanManage()||c.source_type==='character';
+ const properties=canViewAttributes?['STY','FYS','STO','SMI','INT','PSY','KAR']
+  .filter(k=>attrs[k]!=null||profile[k.toLowerCase()]!=null)
+  .map(k=>stat(k,attrs[k]??profile[k.toLowerCase()])).join(''):'';
+ const itemList=items=>{
+  const names=(Array.isArray(items)?items:[]).map(item=>item?.name).filter(Boolean);
+  return names.length?escAttr(names.join(' · ')):'Inga registrerade'
+ };
+ return '<div class="combat-detail-backdrop" onclick="combatCloseCombatantDetails(event)">'+
+  '<section class="combat-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="combatantDetailsTitle" onclick="event.stopPropagation()" tabindex="-1">'+
+   '<header class="combat-detail-header">'+combatRowPortraitHtml(c,roleClass)+
+    '<div class="combat-detail-identity"><small>'+escAttr(role)+' · '+escAttr(combatSideLabel(c.side))+'</small>'+
+     '<h2 id="combatantDetailsTitle">'+escAttr(c.name_snapshot)+'</h2>'+
+     '<span>'+(c.status==='dead'?'Nedkämpad':c.status==='removed'?'Borttagen':'Aktiv')+(combatIsFlying(c)?' · Flyger':'')+'</span></div>'+
+    '<button id="combatantDetailsClose" type="button" class="combat-detail-close" aria-label="Stäng kombatantdetaljer" onclick="combatCloseCombatantDetails(event)">×</button>'+
+   '</header>'+
+   '<div class="combat-detail-content">'+
+    '<div class="combat-detail-stat-grid">'+
+      stat('Kroppspoäng',amount(c.current_kp,c.max_kp))+
+      stat('Psykisk kraft',amount(c.current_psy,c.max_psy))+
+      stat('Förflyttning',combatMovementBudget(c)+' / '+combatMovementMaximum(c))+
+      stat('Initiativ',init==null?'—':'#'+(c.state?.initiative_rank??'—')+' · '+init)+
+      stat('Position','Hex '+c.q+', '+c.r)+
+      stat('Stridsrunda',activeCombat?.round_number||1)+
+    '</div>'+
+    (properties?'<section class="combat-detail-section"><h3>Grundegenskaper</h3><div class="combat-detail-attributes">'+properties+'</div></section>':'')+
+    '<section class="combat-detail-section"><h3>Aktiva effekter <span>'+effects.length+'</span></h3>'+
+      '<div class="combat-detail-effects">'+(effects.length?combatantEffectsHtml(c)+combatEffectAttributeHtml(c):'<p class="combat-detail-empty">Inga aktiva effekter.</p>')+'</div>'+
+    '</section>'+
+    '<section class="combat-detail-section"><h3>Utrustning</h3>'+
+      '<div class="combat-detail-equipment">'+combatTurnEquipmentHtml(c)+'</div>'+
+      '<p><strong>Vapen:</strong> '+itemList(profile.weapons)+'</p>'+
+      (profile.spells?.length?'<p><strong>Besvärjelser:</strong> '+itemList(profile.spells)+'</p>':'')+
+    '</section>'+
+   '</div>'+
+  '</section></div>'
 }
 
 function combatAttackTargetSummaryHtml(combatant){
@@ -4095,15 +4172,18 @@ function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
  if(!activeCombat){
   if(sub)sub.textContent='Ingen aktiv strid';
+  combatantDetailCombatantId=null;
   body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen i SL-raden ovan och tryck <b>Play</b>. Alea skapar då striden och slår initiativ för samtliga kombatanter.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div>';return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let participantHtml=combatants.length?combatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
- body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>';
+ if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
+ body.innerHTML='<div class="combat-shell">'+combatEffectsAdminHtml()+combatAreasAdminHtml()+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
 window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
 
