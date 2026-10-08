@@ -212,8 +212,8 @@ function combatSourceStats(sceneCombatant,sources){
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
   shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
-  spells:(Array.isArray(data.spells)?data.spells:[]).map(spell=>{
-   const rule=(Array.isArray(ruleSpells)?ruleSpells:[]).find(row=>(row.name||'').localeCompare(spell?.name||'','sv',{sensitivity:'base'})===0);
+  spells:(Array.isArray(data.spells)?data.spells:(Array.isArray(source?.spells)?source.spells:[])).map(spell=>{
+   const rule=(Array.isArray(ruleSpells)?ruleSpells:[]).find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||(row.name||'').localeCompare(spell?.name||'','sv',{sensitivity:'base'})===0);
    return {...spell,rule_id:rule?.id||null,attack_magic:rule?.attack_magic===true,damage_text:rule?.damage_text||'',range_text:rule?.range_text||'',school_id:rule?.school_id||null}
   }),
   sty,sto,smi
@@ -245,7 +245,7 @@ async function combatLoadSceneRuntimeData(scene){
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
   dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,data'),
-  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,attributes,weapons,shield,armor'),
+  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,attributes,weapons,shield,armor,spells'),
   dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,attributes,weapons,shield,armor')
  ]);
  return{
