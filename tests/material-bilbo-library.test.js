@@ -23,6 +23,7 @@ function harness(overrides={}){
   createAragorn:()=>({html:()=>'',clear:()=>{},loadDetails:async()=>{},sync:async()=>{},setType:()=>{},searchTargets:()=>{},link:async()=>{},unlink:async()=>{}}),
   createLegolas:()=>({mount:()=>{},previewMaterial:()=>{},openPanel:()=>{},closePanel:()=>{},reset:()=>{},getStagedIds:()=>[]}),
   mountFrodo:()=>({mount:()=>{},showRow:async()=>({revision:1})}),
+  mountSam:()=>({mount:()=>{},share:async()=>({changed:1})}),
   centralCampaignId:campaign,clearTimeout,setTimeout,
   URL:{createObjectURL:()=> 'blob:preview',revokeObjectURL:()=>{}},
   document:{getElementById:id=>elems[id]||null,querySelector:()=>null,querySelectorAll:()=>[]},
