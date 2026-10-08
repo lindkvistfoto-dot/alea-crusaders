@@ -42,6 +42,12 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("failed spells cost one PSY and perfect spells cost half rounded up", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;");
+    expect(combat).toContain("psy_cost:!success?1:outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg");
+  });
+
   test("prepared spells persist to next SR and status casts apply effects", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("'&round_number=gte.'+Math.max(1,round-1)");
