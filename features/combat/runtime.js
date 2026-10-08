@@ -1060,15 +1060,16 @@ async function combatFinalizeAntimagicSpell(caster,action){
  const bounce=result.antimagic?.reflected===true,protectedId=String(result.antimagic?.target_id||'');
  if(result.antimagic_kind==='damage'){
   const allocations=combatMagicTargetAllocations(action),targets=allocations.length?allocations:[{target_id:action.target_combatant_id,eg}];
-  result.target_results=[];
+  result.target_results=Array.isArray(result.target_results)?result.target_results:[];
   for(const allocation of targets){
+   if((result.blocked_target_ids||[]).some(id=>String(id)===String(allocation.target_id)))continue;
    const original=combatants.find(c=>String(c.id)===String(allocation.target_id));if(!original)throw new Error('Magimålet saknas.');
    const victim=bounce&&String(original.id)===protectedId?caster:original;
    const formula=combatMagicDamageFormula(data,allocation.eg);if(!formula)throw new Error('Skadeformeln saknar regelstöd.');
    const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null);
    result.target_results.push({target_id:victim.id,original_target_id:original.id,reflected:victim.id!==original.id,effect_grade:allocation.eg,damage})
   }
-  result.damage=result.target_results[0]?.damage;result.hit_resolved=true
+  result.damage=result.target_results.find(x=>x.damage)?.damage;result.hit_resolved=true
  }else if(result.antimagic_kind==='status'){
   const original=combatants.find(c=>String(c.id)===String(result.target_id));if(!original)throw new Error('Magimålet saknas.');
   if(!result.resisted){
@@ -1090,8 +1091,8 @@ async function combatFinalizeAntimagicSpell(caster,action){
    await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
     combat_id:activeCombat.id,campaign_id:centralCampaignId,effect_id:def.id,source_combatant_id:caster.id,
     center_q:Number(center.q),center_r:Number(center.r),radius:Number(result.area_radius)||0,applied_round:round,
-    expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
-    parameters:{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}
+    expires_round:data.magic_binding?.cube?null:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
+    parameters:data.magic_binding?.cube?combatBeskyddareAreaParameters(data,action.id):{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}
    })});result.area_applied=true
   }
  }
@@ -3272,11 +3273,15 @@ async function combatCastStatusSpell(actor,target,action){
  const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
  if(erf)result.erf=erf;
+ if(rolled.success&&!resisted){
+  result.barrier=await combatResolveBeskyddarePassage(actor,target,eg);
+  if(result.barrier.blocked)result.blocked_by_beskyddare=true
+ }
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
- if(rolled.success&&!resisted&&await combatDeferForAntimagic(actor,action,result,[target.id],'status')){
+ if(rolled.success&&!resisted&&!result.blocked_by_beskyddare&&await combatDeferForAntimagic(actor,action,result,[target.id],'status')){
   await loadActiveCombat(null,{preserveSelectedTarget:true});return
  }
- if(rolled.success&&!resisted){
+ if(rolled.success&&!resisted&&!result.blocked_by_beskyddare){
   const duration=effect.default_duration_rounds;
   const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
   const custom=combatSpellDurationRounds(action);
@@ -3313,7 +3318,11 @@ async function combatCastAreaSpell(actor,action){
  if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
  if(rolled.success){
-  const affected=combatants.filter(row=>!['dead','removed'].includes(row.status)&&combatAxialDistance(row,center)<=radius).map(row=>row.id);
+  result.barrier=await combatResolveBeskyddarePassage(actor,center,eg);
+  if(result.barrier.blocked)result.blocked_by_beskyddare=true
+ }
+ if(rolled.success&&!result.blocked_by_beskyddare){
+  const affected=combatants.filter(row=>!['dead','removed'].includes(row.status)&&combatAxialDistance(row,center)<=(data.magic_binding?.cube?2:radius)).map(row=>row.id);
   if(await combatDeferForAntimagic(actor,action,result,affected,'area')){
    await loadActiveCombat(null,{preserveSelectedTarget:true});return
   }
@@ -3321,8 +3330,8 @@ async function combatCastAreaSpell(actor,action){
   await dbJson('combat_area_effects',{method:'POST',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
     effect_id:effect.id,source_combatant_id:actor.id,center_q:Number(center.q),center_r:Number(center.r),
-    radius,applied_round:round,expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
-    parameters:{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}})
+    radius,applied_round:round,expires_round:data.magic_binding?.cube?null:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null,
+    parameters:data.magic_binding?.cube?combatBeskyddareAreaParameters(data,action.id):{damage_on_enter:0,damage_on_stay:0,damage_on_exit:0,source_action_id:action.id}})
   });
   result.area_applied=true
  }
@@ -3347,9 +3356,23 @@ async function combatResolveTestFireball(actor,target,action){
  if(success){
   const allocations=combatMagicTargetAllocations(action);
   const targets=allocations.length?allocations:[{target_id:target.id,eg}];
-  if(await combatDeferForAntimagic(actor,action,result,targets.map(t=>t.target_id),'damage'))return;
-  result.target_results=[];
+  result.target_results=[];result.blocked_target_ids=[];
   for(const allocation of targets){
+   const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
+   if(!victim)throw new Error('Målet saknas vid magikastet.');
+   const gate=await combatResolveBeskyddarePassage(actor,victim,allocation.eg);
+   if(gate.checks.length){
+    (result.barrier_checks||(result.barrier_checks=[])).push({target_id:victim.id,...gate});
+    if(gate.blocked){
+     result.blocked_target_ids.push(String(victim.id));
+     result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,blocked_by_beskyddare:true});
+    }
+   }
+  }
+  if(result.blocked_target_ids.length===targets.length)result.blocked_by_beskyddare=true;
+  const accepted=targets.filter(t=>!result.blocked_target_ids.includes(String(t.target_id)));
+  if(accepted.length&&await combatDeferForAntimagic(actor,action,result,accepted.map(t=>t.target_id),'damage'))return;
+  for(const allocation of accepted){
    const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
    if(!victim)throw new Error('Målet saknas vid kastet.');
    const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
@@ -3358,7 +3381,7 @@ async function combatResolveTestFireball(actor,target,action){
    const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
   }
-  result.damage=result.target_results[0]?.damage;
+  result.damage=result.target_results.find(x=>x.damage)?.damage;
   result.hit_resolved=true
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({target_combatant_id:target.id,status:'resolved',result,updated_at:new Date().toISOString()})});
@@ -4018,6 +4041,8 @@ function combatSpellResultHtml(action){
  let note;
  if(result.awaiting_antimagic)note='Kastet lyckades. Målet kan fortfarande reagera med Antimagi.';
  else if(result.antimagic?.reflected)note='Antimagi har reflekterat besvärjelsen. SL avgör eventuell återverkan.';
+ else if(result.blocked_by_beskyddare)note='Beskyddares kub stoppade magin vid gränsen. Besvärjelsen trängde inte igenom.';
+ else if(result.blocked_target_ids?.length)note='Beskyddare stoppade magin mot vissa mål. Övriga mål påverkas normalt.';
  else if(!success)note='Besvärjelsen misslyckades. Ingen magisk effekt tilldelas.';
  else if(result.resisted)note='Besvärjelsen lyckades, men målet stod emot effekten.';
  else if(result.gm_resolution_required||kind==='manual')note='Besvärjelsen lyckades. SL avgör effekten enligt regeltexten; ingen effekt tilldelas automatiskt i striden.';
@@ -4034,6 +4059,7 @@ function combatSpellResultHtml(action){
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
+   (result.barrier?.checks?.length?'<div class="combat-spell-rule-note">Beskyddare: '+result.barrier.checks.map(c=>'EG '+c.incoming_eg+' mot '+c.barrier_eg+' · T20 '+c.roll+' / '+c.resistance.target+(c.blocked?' · stoppad':' · passerar')).join(' · ')+'</div>':'')+
    (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
    (result.erf&&result.erf.awarded>0?'<div class="combat-erf-result gained"><b>+'+escAttr(result.erf.awarded)+' ERF</b></div>':'')+
    (result.target_results?.length
