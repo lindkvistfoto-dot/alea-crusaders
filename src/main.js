@@ -1,5 +1,5 @@
 import "./features/dice/dice3d.js";
-import "../features/material/library.js?v=0.34.79";
+import "../features/material/library.js?v=0.34.83";
 
 const TRANSPARENT_HIT_CAMERA={
   head:{scale:2.5,tx:-75,ty:19},
