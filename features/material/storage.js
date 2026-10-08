@@ -197,3 +197,5 @@ function gimliMountAdmin(){
 
 // Expose only the admin UI callbacks needed by existing inline buttons.
 Object.assign(window,{gimliFileSelected,gimliSubmitFile,gimliLoadRecent,gimliShowStored,gimliMountAdmin});
+// Used by Bilbo without duplicating or weakening Gimli's authenticated upload implementation.
+window.gimliMaterialApi=Object.freeze({canManage:gimliCanUpload,read:gimliReadFile,upload:gimliUploadMaterial,categories:GIMLI_CATEGORIES});
