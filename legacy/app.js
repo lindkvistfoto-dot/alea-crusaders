@@ -860,6 +860,7 @@ const ADMIN_SECTION_META={
  people:['Personer','SLP och kampanjpersoner'],
  enemies:['Fiender','Kampanjens monster och fiendemallar'],
  places:['Platser','Platsstrukturer med kartor och rum'],
+ materials:['Materiallagring','Gimli: säker uppladdning av kampanjmaterial'],
  skills:['Färdigheter','Centralt regelregister'],
  spells:['Besvärjelser','Magiskolor och besvärjelser enligt Expert'],
  effects:['Effekter','Tillstånd, skydd och områdeseffekter'],
@@ -901,6 +902,8 @@ async function openAdminSection(key='overview'){
  if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
+ }else if(activeAdminSection==='materials'){
+  await gimliLoadRecent();
  }else if(activeAdminSection==='scenes'){
   renderAdminCombatSceneList();
   await refreshAdminCombatScenes()
