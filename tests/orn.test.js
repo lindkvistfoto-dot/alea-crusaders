@@ -19,7 +19,7 @@ function harness({cells=paths(),effects=[],defs=[flight],character=actor}={}){
   combatEffectDefinition:effect=>defs.find(d=>d.id===effect.effect_id),
   combatEffectIsActive:effect=>effect.status==='active',
   combatNumber:(v,fallback=null)=>v==null||v===''?fallback:Number(v),
-  combatCannotMove:()=>false,combatMovementAllowance:character=>character.movement_remaining,
+  combatCannotMove:()=>false,combatMentalMovementAllowed:()=>true,combatMovementAllowance:character=>character.movement_remaining,
   combatHexNeighbors:(q,r)=>[[q+1,r],[q-1,r]],activeCombat:{phase:'movement'}
  };
  const start=combat.indexOf('function combatAxialDistance('),stop=combat.indexOf('function combatAttackProfile(',start);
