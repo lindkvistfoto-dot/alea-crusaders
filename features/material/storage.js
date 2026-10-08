@@ -170,6 +170,54 @@ async function gimliShowStored(id){
   }
  }catch(e){gimliStatus('Kunde inte läsa filen: '+e.message,true)}
 }
+let gimliZipBusy=false;
+function gimliZipStatus(message,error=false){
+ const node=$('gimliZipStatus');
+ if(node){node.textContent=message;node.classList.toggle('error',error)}
+}
+async function gimliImportZip(event){
+ event?.preventDefault?.();
+ if(gimliZipBusy||gimliUploading)return;
+ const zip=$('gimliZipFile')?.files?.[0],button=$('gimliZipSubmit');
+ if(!gimliCanUpload()||!centralCampaignId){gimliZipStatus('Endast SL för en aktiv kampanj får importera.',true);return}
+ gimliZipBusy=true;if(button)button.disabled=true;
+ const campaign=centralCampaignId;
+ let imported=0,skipped=0,failed=0,firstError='';
+ try{
+  if(!zip)throw Error('Välj ZIP-paketet från Skelettbyn först.');
+  if(typeof window.aleaReadImageZip!=='function')
+   throw Error('ZIP-läsaren kunde inte starta. Ladda om Alea Crusaders.');
+  gimliZipStatus('Kontrollerar bildpaketet…');
+  const result=await window.aleaReadImageZip(zip);
+  if(result.campaignId!==campaign)
+   throw Error('ZIP-paketet hör till en annan kampanj.');
+  for(let i=0;i<result.entries.length;i++){
+   if(centralCampaignId!==campaign||!gimliCanUpload())
+    throw Error('Kampanjen eller din SL-behörighet ändrades – importen avbröts.');
+   const entry=result.entries[i];
+   gimliZipStatus('Bild '+(i+1)+' av '+result.entries.length+
+    ': '+entry.name+' · '+imported+' importerade, '+skipped+' befintliga');
+   try{
+    // Original filename is stored by Gimli; importing the same pack twice is safe.
+    const existing=await dbJson('campaign_materials?campaign_id=eq.'+encodeURIComponent(campaign)+
+     '&category=eq.location&original_filename=eq.'+encodeURIComponent(entry.name)+
+     '&archived_at=is.null&select=id&limit=1');
+    if(Array.isArray(existing)&&existing.length){skipped++;continue}
+    await gimliUploadMaterial({campaignId:campaign,file:entry.file,title:entry.title,
+     category:'location',description:entry.description});
+    imported++;
+   }catch(error){
+    failed++;if(!firstError)firstError=String(error.message||error);
+    console.error('Gimli: ZIP-bilden kunde inte importeras',entry.name,error);
+   }
+  }
+  gimliZipStatus('✓ '+imported+' platsbilder importerade, '+skipped+' dubbletter överhoppade, '+
+   failed+' misslyckades. Bilderna är privata.'+
+   (firstError?' Första felet: '+firstError:''),failed>0);
+  await gimliLoadRecent();
+ }catch(error){gimliZipStatus('Importen avbröts: '+error.message,true)}
+ finally{gimliZipBusy=false;if(button)button.disabled=false}
+}
 function gimliMountAdmin(){
  if(document.querySelector('[data-admin-section="materials"]'))return;
  const place=document.querySelector('.admin-nav-card[onclick*="places"]');
@@ -190,12 +238,18 @@ function gimliMountAdmin(){
   '<label>Kategori<select id="gimliCategory">'+Object.entries(GIMLI_CATEGORIES).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('')+'</select></label>'+
   '<label>Beskrivning<textarea id="gimliDescription" maxlength="2000" rows="2"></textarea></label>'+
   '<div class="gimli-actions"><button class="btn primary" id="gimliSubmit" type="submit" disabled>Ladda upp privat</button><span id="gimliStatus" role="status" aria-live="polite">Välj en fil.</span></div></form>'+
+  '<div class="admin-subsection gimli-zip-import"><div class="admin-subsection-head"><h3>Platsbilder från Drive</h3></div>'+
+  '<p class="muted">Importera ZIP-paketet med Skelettbyns 39 bilder. Alla blir privata platsbilder, utan automatisk delning till spelarna. Redan importerade originalnamn hoppas över.</p>'+
+  '<form id="gimliZipForm" onsubmit="gimliImportZip(event)">'+
+   '<label>Platsbilder (ZIP) <input id="gimliZipFile" type="file" accept=".zip,application/zip" required></label>'+
+   '<div class="gimli-actions"><button id="gimliZipSubmit" type="submit" class="btn primary">Importera platsbilder</button>'+
+    '<span id="gimliZipStatus" role="status" aria-live="polite">Välj ZIP-paketet.</span></div></form></div>'+
   '<div class="admin-subsection"><div class="admin-subsection-head"><h3>Senaste uppladdningarna</h3><button type="button" class="smallbtn" onclick="gimliLoadRecent()">Uppdatera</button></div>'+
   '<div id="gimliRecent"></div><div id="gimliStoredPreview" class="gimli-preview"></div></div>';
  document.querySelector('#admin .admin-detail')?.insertAdjacentElement('beforebegin',section)
 }
 
 // Expose only the admin UI callbacks needed by existing inline buttons.
-Object.assign(window,{gimliFileSelected,gimliSubmitFile,gimliLoadRecent,gimliShowStored,gimliMountAdmin});
+Object.assign(window,{gimliFileSelected,gimliSubmitFile,gimliImportZip,gimliLoadRecent,gimliShowStored,gimliMountAdmin});
 // Used by Bilbo without duplicating or weakening Gimli's authenticated upload implementation.
 window.gimliMaterialApi=Object.freeze({canManage:gimliCanUpload,read:gimliReadFile,upload:gimliUploadMaterial,categories:GIMLI_CATEGORIES});
