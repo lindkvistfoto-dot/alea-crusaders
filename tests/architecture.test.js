@@ -1131,7 +1131,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatDestinationKeepsAction");
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
-    expect(combat).toContain("combatIsFlying(combatant)?1:cell.movement_mode==='difficult'?2:1");
+    expect(combat).toContain("flight.ignore_terrain?1:cell.movement_mode==='difficult'?2:1");
     expect(combat).toContain("if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue");
     expect(combat).toContain("if(nextCost>budget)continue");
     expect(combat).toContain("cls.push('move-reachable')");
