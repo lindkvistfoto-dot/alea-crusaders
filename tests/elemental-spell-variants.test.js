@@ -25,7 +25,7 @@ describe('four independent elemental summoning spells',()=>{
   expect(original).toContain('rule_id:rule.id,name:rule.name');
  });
  it('summons Eldsalamander only for fire, with backwards-compatible old casts',()=>{
-  const start=runtime.indexOf('function combatIsFireElementalSummonName(');
+  const start=runtime.indexOf('const ELEMENTAL_SUMMON_TEMPLATES=');
   const end=runtime.indexOf('let combatSummonBusy=false;',start);
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);

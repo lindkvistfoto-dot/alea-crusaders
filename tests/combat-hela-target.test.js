@@ -59,7 +59,7 @@ describe('HELA får måltavla i striden',()=>{
  it('vägrar HELA utan mål och sparar mål i både handling och logg',async()=>{
   const writes=[];let rolls=0;
   const ctx=script('async function combatCastManualSpell(actor,action,target=null){','async function combatCastStatusSpell',{
-   combatCannotAct:()=>false,combatSpellEffectTargets:targets(),
+   combatCannotAct:()=>false,combatSpellEffectTargets:targets(),combatElementalSummonDefinition:()=>null,
    combatExpertRoll:async()=>{rolls++;return {outcome:'success',success:true,roll:8,fv:15}},
    combatMagicPsyCost:()=>1,combatSpendMagicPsy:async()=>{},combatAwardSpellErf:async()=>null,
    combatResolveBeskyddarePassage:async()=>({blocked:false,checks:[]}),combatShowOutcomeOverlay:()=>{},

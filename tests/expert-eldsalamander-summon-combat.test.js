@@ -52,7 +52,7 @@ describe('Eldsalamander – SL creates creature after Expert summon',()=>{
   expect(x.api.candidates()).toHaveLength(0);
   for(const element of ['LUFT','JORD','VATTEN']){
    x.combatActions[0].source_data.spell_name='FRAMMANA/SKICKA BORT ELEMENTAR – '+element+' (F)';
-   expect(x.api.candidates()).toHaveLength(0);
+   expect(x.api.candidates()).toHaveLength(1);
  }
  x.combatActions[0].source_data.spell_name='FRAMMANA/SKICKA BORT ELEMENTAR (F)';
  expect(x.api.candidates()).toHaveLength(1); // Old resolved casts still work.
