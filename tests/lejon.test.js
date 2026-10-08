@@ -32,7 +32,7 @@ function harness({outcome='success',sight=true,distance=1,psy=9}={}){
   combatExpertRoll:async()=>({outcome,success:['success','special','perfect'].includes(outcome),roll:9,confirmation_roll:null}),
   combatRollDice:async()=>({rolls:[{value:2}]}),
   combatResolveDamage:async(_a,victim,weapon,full)=>{damage.push({target:victim.id,formula:weapon.damage,full,spell:weapon._spell_damage});return {total:full?6:3}},
-  combatShowOutcomeOverlay:()=>{},combatLoadEffects:async()=>{},loadActiveCombat:async()=>{},
+  combatShowOutcomeOverlay:()=>{},combatOutcomeLabel:outcome=>String(outcome),combatLoadEffects:async()=>{},loadActiveCombat:async()=>{},
   combatEffectExpiry:()=>({expires_round:null,expires_at:null}),
   dbJson:async(url,options={})=>{
    const body=options.body?JSON.parse(options.body):null;
