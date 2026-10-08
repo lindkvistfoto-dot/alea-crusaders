@@ -679,7 +679,7 @@ function renderAdminShields(){
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  const cell=v=>escAttr(v===null||v===undefined||v===''?'—':String(v));
  el.innerHTML=
-  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">ABS</div><div class="ahead">BEP</div><div class="ahead">BV</div><div class="ahead">Projektil</div><div class="ahead">Passivt skydd</div><div class="ahead">Pris</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">BV</div><div class="ahead">BEP</div><div class="ahead">Pris</div><div class="ahead">Skydd projektil (passivt)</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
   ruleShields.map(r=>{
    let skill=(ruleSkills||[]).find(s=>String(s.id)===String(r.skill_id));
    let projectile=(r.projectile_block_min!=null&&r.projectile_block_max!=null)?'1T20: '+r.projectile_block_min+'–'+r.projectile_block_max:'—';
