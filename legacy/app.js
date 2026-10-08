@@ -679,21 +679,17 @@ function renderAdminShields(){
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  const cell=v=>escAttr(v===null||v===undefined||v===''?'—':String(v));
  el.innerHTML=
-  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">Färdighet</div><div class="ahead">BV</div><div class="ahead">BEP</div><div class="ahead">Pris</div><div class="ahead">Skydd projektil (passivt)</div><div class="ahead">Källa</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">BV</div><div class="ahead">BEP</div><div class="ahead">Pris</div><div class="ahead">Skydd projektil (passivt)</div><div class="ahead">Åtgärd</div>'+
   ruleShields.map(r=>{
-   let skill=(ruleSkills||[]).find(s=>String(s.id)===String(r.skill_id));
    let projectile=(r.projectile_block_min!=null&&r.projectile_block_max!=null)?'1T20: '+r.projectile_block_min+'–'+r.projectile_block_max:'—';
+   let passive=[projectile,r.passive_coverage].filter(Boolean).join(' · ');
    return '<div class="admin-weapon-icon-cell">'+ruleShieldIconHtml(r)+'</div>'+
     '<div><b>'+cell(r.name)+'</b><small class="admin-master-key">'+cell(r.shield_key)+'</small></div>'+
     '<div>'+cell(ruleShieldSizeLabel(r.size_class))+'</div>'+
-    '<div>'+cell(skill?.name||r.skill_id)+'</div>'+
-    '<div>'+cell(r.absorption)+'</div>'+
-    '<div>'+cell(r.bep)+'</div>'+
     '<div>'+cell(r.bv)+'</div>'+
-    '<div>'+cell(projectile)+'</div>'+
-    '<div>'+cell(r.passive_coverage)+'</div>'+
+    '<div>'+cell(r.bep)+'</div>'+
     '<div>'+cell(r.price!=null?r.price+' sm':null)+'</div>'+
-    '<div><span class="admin-source-badge expert">'+cell(r.source_label)+'</span></div>'+
+    '<div>'+cell(passive)+'</div>'+
     '<div class="adminactions"><button class="smallbtn" onclick="editRuleShield(\''+escAttr(r.id)+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleShield(\''+escAttr(r.id)+'\')" title="Ta bort">×</button></div>'
   }).join('')
 }
