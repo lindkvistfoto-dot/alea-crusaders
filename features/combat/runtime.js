@@ -1994,7 +1994,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  if(!combatant||!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
  const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
@@ -3914,16 +3914,70 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
  return '<div class="combat-mini-side"><span>'+label+'</span><b>'+(combatant?.status==='dead'?'☠ ':'')+escAttr(combatant?.name_snapshot||'—')+'</b>'+
   '<small>KP '+kp+(itemText?' · '+escAttr(itemText):'')+'</small></div>'
 }
+// Spell feedback is presentation-only: Expert casting, PSY and effects are resolved elsewhere.
+function combatLatestResolvedSpellAction(){
+ const round=Number(activeCombat?.round_number)||1;
+ return (combatActions||[]).filter(action=>
+  action.status==='resolved'&&action.source_data?.action_key==='spell_cast'&&
+  action.result?.outcome&&Number(action.round_number)>=round-1&&Number(action.round_number)<=round
+ ).sort((a,b)=>String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||'')))[0]||null
+}
+function combatSpellResultHtml(action){
+ if(!action?.result?.outcome)return '';
+ const result=action.result,data=action.source_data||{},meta=combatOutcomeMeta(result.outcome);
+ const success=result.success===true,kind=data.magic_binding?.kind||'manual';
+ let note;
+ if(result.awaiting_antimagic)note='Kastet lyckades. Målet kan fortfarande reagera med Antimagi.';
+ else if(result.antimagic?.reflected)note='Antimagi har reflekterat besvärjelsen. SL avgör eventuell återverkan.';
+ else if(!success)note='Besvärjelsen misslyckades. Ingen magisk effekt tilldelas.';
+ else if(result.resisted)note='Besvärjelsen lyckades, men målet stod emot effekten.';
+ else if(result.gm_resolution_required||kind==='manual')note='Besvärjelsen lyckades. SL avgör effekten enligt regeltexten; ingen effekt tilldelas automatiskt i striden.';
+ else if(result.effect_applied)note='Besvärjelsen lyckades och effekten har tilldelats målet.';
+ else if(result.area_applied)note='Besvärjelsen lyckades och områdeseffekten har skapats.';
+ else if(result.damage||result.target_results?.length)note='Besvärjelsen lyckades. Skadan visas nedan.';
+ else note='Besvärjelsen lyckades. Eventuell ytterligare effekt avgörs enligt reglerna.';
+ const info=String(data.magic_rule?.effect_per_eg||data.spell_description||'').trim();
+ return '<div class="combat-attack-result combat-spell-result '+escAttr(result.outcome)+'">'+
+  '<div class="combat-attack-result-main">'+
+   '<div class="combat-attack-result-heading"><span>Besvärjelseslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
+   '<div class="combat-attack-result-rolls"><span>T20 <b>'+escAttr(result.roll??'—')+'</b> mot FV <b>'+escAttr(result.fv??'—')+'</b></span>'+
+    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+escAttr(result.confirmation_roll)+'</b></span>':'')+
+    '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
+    '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
+   '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
+   (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
+   (result.erf&&result.erf.awarded>0?'<div class="combat-erf-result gained"><b>+'+escAttr(result.erf.awarded)+' ERF</b></div>':'')+
+   (result.target_results?.length
+    ?result.target_results.map(entry=>combatDamageResultHtml(entry.damage)).join('')
+    :combatDamageResultHtml(result.damage))+
+  '</div></div>'
+}
 function combatSpellCastPanelHtml(){
- const actor=combatActiveActor(),action=combatChosenAction(actor);if(!actor||combatActionDefinition(action)?.key!=='spell_cast'||!action?.source_data?.spell_prepared)return '';
- const data=action.source_data||{},casting=data.casting_spell===true,targets=casting?combatFireballTargets():new Map(),resolved=action.status==='resolved';
- const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||''),target=combatants.find(row=>String(row.id)===targetId)||null,result=action.result||{};
+ const activeActor=combatActiveActor(),chosen=combatChosenAction(activeActor);
+ // Keep the last finished cast in the battle panel after the turn moves on,
+ // but do not cover an attack or another newly chosen action.
+ const action=chosen||combatLatestResolvedSpellAction();
+ if(combatActionDefinition(action)?.key!=='spell_cast'||!action?.source_data?.spell_prepared)return '';
+ const actor=combatants.find(row=>String(row.id)===String(action.combatant_id))||activeActor;
+ if(!actor)return '';
+ const data=action.source_data||{},casting=data.casting_spell===true,resolved=action.status==='resolved';
+ const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
+ const target=combatants.find(row=>String(row.id)===targetId)||null;
  const effect=Math.max(1,Number(data.effect_grade)||1),spell=escAttr(data.spell_name||'Besvärjelse');
- let instruction=!casting?'Besvärjelsen är förberedd. Tryck ✦ för att slunga den.':(target?'Målet är valt. Tryck ✦ igen för att slunga '+spell+'.':'Välj mål för '+spell+'. Giltiga mål är markerade ('+targets.size+').');
+ let instruction='';
+ if(!resolved){
+  if(!casting)instruction='Besvärjelsen är förberedd. Tryck ✦ för att påbörja kastet.';
+  else if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1))instruction='Besvärjelsen förbereds till SR '+data.ready_round+'.';
+  else if(data.magic_binding?.kind==='manual')instruction='Tryck ✦ för att kasta. SL avgör besvärjelsens effekt efter färdighetsslaget.';
+  else if(data.magic_binding?.kind==='area')instruction=data.area_center?'Tryck ✦ för att kasta besvärjelsen på valt område.':'Välj ett centrum på kartan för besvärjelsen.';
+  else instruction=target?'Målet är valt. Tryck ✦ igen för att kasta '+spell+'.':'Välj mål för '+spell+'. Giltiga mål markeras på kartan.';
+ }
+ const range=data.range_text?' · Räckvidd '+escAttr(data.range_text):'';
+ const duration=data.duration_text?' · Varaktighet '+escAttr(data.duration_text):'';
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>MAGI · '+spell+'</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):'')+'</b></div>'+
-  '<div class="combat-magic-prepared"><span>FÖRBEREDD</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+' · CL '+Math.max(1,(Number(data.spell_fv)||1)-2*(effect-1))+' · PSY '+effect+' · '+(data.magic_casting?.quick?'Kvick':'Effekt nästa SR')+(data.range_text?' · '+escAttr(data.range_text):'')+'</small></div>'+
-  (!resolved?'<div class="combat-mini-instruction">'+instruction+'</div>':'')+
-  (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
+  '<div class="combat-magic-prepared"><span>'+(resolved?'GENOMFÖRD':'FÖRBEREDD')+'</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+' · CL '+Math.max(1,(Number(data.spell_fv)||1)-2*(effect-1))+' · PSY '+effect+' · '+(data.magic_casting?.quick?'Kvick':'Effekt nästa SR')+range+duration+'</small></div>'+
+  (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
+  (resolved?combatSpellResultHtml(action):'')+'</section>'
 }
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
