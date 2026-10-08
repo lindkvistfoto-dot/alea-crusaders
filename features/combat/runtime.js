@@ -221,9 +221,17 @@ function combatSourceStats(sceneCombatant,sources){
  let maxPsy=combatNumber(combatStateValue(state,'max_psy','psy_max'),combatNumber(live.PSYmax,combatNumber(attributes.PSY,null)));
  let currentPsy=combatNumber(combatStateValue(state,'current_psy','psy'),combatNumber(live.PSY,maxPsy));
  let move=combatNumber(combatStateValue(state,'movement_max','movement','move'),combatNumber(derived['Förflyttning'],combatNumber(attributes.SMI,10)));
+ const propertyNames={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
+ const snapshot={};
+ for(const [abbr,name] of Object.entries(propertyNames)){
+  const sourceValue=base[name]?.v??base[abbr]?.v??base[name]??base[abbr]??attributes[abbr]??state?.attributes?.[abbr];
+  const value=combatNumber(sourceValue,null);
+  if(value!=null)snapshot[abbr]=value
+ }
+ snapshot.STY=sty;snapshot.STO=sto;snapshot.SMI=smi;
  return{
   current_kp:currentKp,max_kp:maxKp,current_psy:currentPsy,max_psy:maxPsy,
-  movement_max:move,movement_remaining:move,smi,sty,sto,attack_profile:attackProfile,
+  movement_max:move,movement_remaining:move,smi,sty,sto,attributes:snapshot,attack_profile:attackProfile,
   flying:state.flying===true,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null
  }
@@ -266,7 +274,7 @@ let combatInitiativeVisuals=new Map();
 function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=new Map()){
  const visible=(rows||[]).filter(row=>row.visible_to_players!==false);
  const results=visible.map((row,index)=>{
-  const smi=Math.max(0,combatNumber(row.state?.smi,10));
+  const smi=Math.max(0,combatNumber(combatEffectiveAttribute(row,'SMI'),combatNumber(row.state?.smi,10)));
   const die=combatNumber(dieByCombatant.get(String(row.id)),combatRollD10());
   return{
    combatant_id:row.id,
@@ -526,7 +534,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:'active',action_plan:[],
-   state:{...(row.state||{}),smi:stats.smi,sty:stats.sty,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -2153,7 +2161,9 @@ function combatAttackProfile(combatant){
   currentEquipment:data.currentEquipment||stored.currentEquipment||null,
   shields,armor,projectiles:Array.isArray(data.projectiles)?data.projectiles:(Array.isArray(stored.projectiles)?stored.projectiles:[]),
   damage_bonus:derived.Skadebonus??derived.skadebonus??stored.damage_bonus??null,
-  sty,sto,smi
+  sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),sty),
+  sto:combatNumber(combatEffectiveAttribute(combatant,'STO'),sto),
+  smi:combatNumber(combatEffectiveAttribute(combatant,'SMI'),smi)
  }
 }
 function combatWeaponCategory(weapon){
@@ -3423,15 +3433,32 @@ function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||
  return flags.actions&&flags.movement
 }
 function combatEffectAttributeDelta(combatant,attribute){
- return combatActiveEffects.filter(e=>e.combatant_id===combatant?.id&&combatEffectIsActive(e)).reduce((sum,e)=>{
-  const def=combatEffectRegistry.find(d=>d.id===e.effect_id),p=e.parameters||{};
-  if(def?.modifiers?.type!=='attribute_delta'||p.attribute!==attribute)return sum;
-  return sum+(Number(def.modifiers.direction)||0)*Math.max(1,Number(e.strength)||1)*Math.max(1,Number(p.points_per_eg)||1)
+ if(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return 0;
+ return combatActiveEffects.filter(e=>String(e.combatant_id)===String(combatant?.id)&&combatEffectIsActive(e)).reduce((sum,e)=>{
+  const def=combatEffectDefinition(e),p=e.parameters||{};
+  if(!def?.active||def.modifiers?.type!=='attribute_delta'||p.attribute!==attribute)return sum;
+  const strength=Number(e.strength),perGrade=Number(p.points_per_eg),direction=Number(def.modifiers.direction);
+  // Never infer an Expert scaling rule when a magnitude is not configured.
+  if(!Number.isFinite(strength)||strength<1||!Number.isFinite(perGrade)||perGrade<1||![-1,1].includes(direction))return sum;
+  return sum+direction*strength*perGrade
  },0)
 }
+function combatBaseAttribute(combatant,attribute){
+ if(!combatant||!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return null;
+ const names={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
+ const source=combatCharacterSource(combatant),base=source?.base??source?.data?.base??{};
+ const stored=combatant.state?.attributes||{};
+ const fallback={STY:combatant.state?.sty,STO:combatant.state?.sto,SMI:combatant.state?.smi};
+ const value=base[names[attribute]]?.v??base[attribute]?.v??base[names[attribute]]??base[attribute]??stored[attribute]??fallback[attribute];
+ return combatNumber(value,null)
+}
+function combatEffectiveAttribute(combatant,attribute){
+ const base=combatBaseAttribute(combatant,attribute);
+ return base==null?null:base+combatEffectAttributeDelta(combatant,attribute)
+}
 function combatEffectAttributeHtml(combatant){
- const active=COMBAT_EFFECT_ATTRIBUTES.map(attr=>({attr,delta:combatEffectAttributeDelta(combatant,attr)})).filter(x=>x.delta!==0);
- return active.length?'<div class="combat-effect-tags">'+active.map(x=>'<span>'+x.attr+' '+(x.delta>0?'+':'')+x.delta+'</span>').join('')+'</div>':''
+ const active=COMBAT_EFFECT_ATTRIBUTES.map(attr=>({attr,delta:combatEffectAttributeDelta(combatant,attr),base:combatBaseAttribute(combatant,attr)})).filter(x=>x.delta!==0);
+ return active.length?'<div class="combat-effect-tags">'+active.map(x=>'<span title="Aktuellt egenskapsvärde">'+x.attr+' '+(x.delta>0?'+':'')+x.delta+(x.base!=null?' ('+x.base+' → '+(x.base+x.delta)+')':'')+'</span>').join('')+'</div>':''
 }
 function combatEffectLabel(row){
  const def=combatEffectRegistry.find(e=>e.id===row.effect_id);
@@ -3522,7 +3549,7 @@ async function combatToggleEffect(id,active){
 async function combatApplyEffect(){
  if(!combatCanManage()||!activeCombat)return;
  const combatantId=$('combatEffectCombatant')?.value,effectId=$('combatEffectDefinition')?.value,strength=Number($('combatEffectStrength')?.value||1);
- const def=combatEffectRegistry.find(e=>e.id===effectId),attribute=$('combatEffectAttribute')?.value,pointsPerEg=Number($('combatEffectPointsPerEg')?.value||1);
+ const def=combatEffectRegistry.find(e=>e.id===effectId),attribute=$('combatEffectAttribute')?.value,pointsPerEg=Number($('combatEffectPointsPerEg')?.value);
  if(def?.modifiers?.type==='attribute_delta'&&(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute)||!Number.isInteger(pointsPerEg)||pointsPerEg<1))return alert('Välj egenskap och giltig förändring per EG.');
  if(!combatants.some(c=>c.id===combatantId)||!def||!def.active||!Number.isInteger(strength)||strength<1)return alert('Välj giltig kombatant, effekt och styrka.');
  const round=Number(activeCombat.round_number)||1,expiry=combatEffectExpiry(def,round,strength);
