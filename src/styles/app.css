@@ -6012,3 +6012,20 @@ body:not(.editing) #skilltable .skill-roll-btn{
   overscroll-behavior:contain;
   padding:2px;
 }
+
+/* v0.34.70 — Contrast fix: readable spell metadata on pale magic-choice cards.
+   The generic dark-menu style used pale gold even on cream-colored buttons. */
+.combat-row-action-menu.combat-row-magic-menu .combat-weapon-choice-btn small{
+ color:#49392a;
+ font-size:12px;
+ font-weight:600;
+ line-height:1.4;
+ opacity:1;
+}
+.combat-row-action-menu.combat-row-magic-menu .combat-weapon-choice-btn{
+ background:#f8f0e3;
+ color:#2c211a;
+}
+.combat-row-action-menu.combat-row-magic-menu .combat-weapon-choice-btn.active{
+ background:#e8f1e7;
+}
