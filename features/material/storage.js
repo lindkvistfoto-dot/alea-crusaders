@@ -170,3 +170,27 @@ async function gimliShowStored(id){
   }
  }catch(e){gimliStatus('Kunde inte läsa filen: '+e.message,true)}
 }
+function gimliMountAdmin(){
+ if(document.querySelector('[data-admin-section="materials"]'))return;
+ const place=document.querySelector('.admin-nav-card[onclick*="places"]');
+ if(!place)return;
+ const button=document.createElement('button');
+ button.type='button';button.className='admin-nav-card';
+ button.onclick=()=>openAdminSection('materials');
+ button.innerHTML='<span class="admin-nav-icon">▧</span><span class="admin-nav-copy"><b>Materiallagring</b><small>Gimli · säker uppladdning</small></span>';
+ place.insertAdjacentElement('afterend',button);
+ const section=document.createElement('section');section.className='adminbox admin-detail hidden';
+ section.dataset.adminSection='materials';
+ section.innerHTML='<div class="adminsectionhead"><h2>Gimli · Materiallagring</h2></div>'+
+  '<p class="muted">Endast SL kan se uppladdat material tills materialdelning införs.</p>'+
+  '<form id="gimliForm" class="gimli-form" onsubmit="gimliSubmitFile(event)">'+
+  '<label>Fil (JPG, PNG, WebP, PDF, TXT · max 20 MB)<input id="gimliFile" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.txt" onchange="gimliFileSelected(this.files&&this.files[0])" required></label>'+
+  '<div id="gimliPreview" class="gimli-preview"></div>'+
+  '<label>Titel<input id="gimliTitle" maxlength="160" required></label>'+
+  '<label>Kategori<select id="gimliCategory">'+Object.entries(GIMLI_CATEGORIES).map(([k,v])=>'<option value="'+k+'">'+v+'</option>').join('')+'</select></label>'+
+  '<label>Beskrivning<textarea id="gimliDescription" maxlength="2000" rows="2"></textarea></label>'+
+  '<div class="gimli-actions"><button class="btn primary" id="gimliSubmit" type="submit" disabled>Ladda upp privat</button><span id="gimliStatus" role="status" aria-live="polite">Välj en fil.</span></div></form>'+
+  '<div class="admin-subsection"><div class="admin-subsection-head"><h3>Senaste uppladdningarna</h3><button type="button" class="smallbtn" onclick="gimliLoadRecent()">Uppdatera</button></div>'+
+  '<div id="gimliRecent"></div><div id="gimliStoredPreview" class="gimli-preview"></div></div>';
+ document.querySelector('#admin .admin-detail')?.insertAdjacentElement('beforebegin',section)
+}
