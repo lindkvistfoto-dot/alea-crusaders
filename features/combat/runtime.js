@@ -755,8 +755,7 @@ function combatRuntimeHexCells(){
 const COMBAT_PRIMARY_ACTIONS=[
  {key:'attack',type:'attack',label:'Attack',icon:'⚔',mode:'auto'},
  {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction',reactive:true},
- {key:'spell_prepare',type:'spell',label:'Förbereda besvärjelse',icon:'✨',mode:'prepare'},
- {key:'spell_cast',type:'spell',label:'Lägg besvärjelse',icon:'🔮',mode:'cast'},
+ {key:'spell_cast',type:'spell',label:'Magi',icon:'✦',mode:'cast'},
  {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full',automatic:true},
  {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
 ];
@@ -1449,42 +1448,57 @@ function combatAttackWeaponChooserHtml(combatant,action,def){
   }).join('')+
  '</div></div>'
 }
-function combatAttackSpellOptions(combatant){
- return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.attack_magic===true&&['BLIXT (F, K)','ENERGISTRÅLE (F)','ELD (F)','FROST (F)'].includes(String(spell.name||'').toUpperCase()))
+function combatSpellOptions(combatant){
+ return (combatant?.attack_profile?.spells||[]).filter(spell=>spell?.name)
 }
 function combatSpellKey(spell){return String(spell?.rule_id||spell?.name||'spell')}
 function combatSpellChooserHtml(combatant,action){
- const options=combatAttackSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
- if(!options.length)return '<div class="combat-spell-choice"><span>Attackmagi</span><small>Rollfiguren har ingen av de fyra första attackbesvärjelserna.</small></div>';
- return '<div class="combat-spell-choice"><span>Attackmagi · välj besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
+ const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
+ if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
+ return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
   const key=combatSpellKey(spell),active=selectedKey===key;
-  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatAttackSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+' · '+escAttr(spell.damage_text||'—')+' · '+escAttr(spell.range_text||'—')+'</small></button>'
- }).join('')+'</div></div>'
+  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+'</small></button>'
+ }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
 async function combatMagicButton(event,combatantId){
  event?.stopPropagation?.();
- const combatant=combatants.find(row=>String(row.id)===String(combatantId));
- if(!combatCanUseActionMenu(combatant))return;
- combatMovementPlan=null;combatSelectedTargetId=null;
- const chosen=combatChosenAction(combatant),def=combatActionDefinition(chosen);
- if(def?.key==='spell_cast'&&chosen?.status==='planned'){
-  combatActionMenuId=String(combatant.id);combatActionMenuKind='magic';renderCombat();return
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId));if(!combatCanUseActionMenu(combatant))return;
+ combatMovementPlan=null;
+ const action=combatChosenAction(combatant),data=action?.source_data||{};
+ if(combatActionDefinition(action)?.key==='spell_cast'&&action?.status==='planned'&&data.spell_prepared){
+  if(data.casting_spell){
+   const targetId=String(combatSelectedTargetId||''),targets=combatFireballTargets();
+   if(targetId&&targets.has(targetId)){await rollCombatTestFireball(combatant.id,targetId);return}
+   combatSelectedTargetId=null;renderCombat();return
+  }
+  const sourceData={...data,casting_spell:true,test_fireball:String(data.spell_name||'').toUpperCase().startsWith('ELD')};
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
+  action.source_data=sourceData;combatCloseRowActionMenu();combatSelectedTargetId=null;renderCombat();return
  }
- await chooseCombatPrimaryAction(combatantId,'spell_cast');
- combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat()
+ if(!action||combatActionDefinition(action)?.key!=='spell_cast'||action.status!=='planned'){
+  await chooseCombatPrimaryAction(combatantId,'spell_cast')
+ }
+ combatActionMenuId=String(combatantId);combatActionMenuKind='magic';combatSelectedTargetId=null;renderCombat()
 }
-async function chooseCombatAttackSpell(combatantId,spellKey){
+async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
  if(!combatant||!action||combatActionDefinition(action)?.key!=='spell_cast')return;
- const spell=combatAttackSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
- const sourceData={...(action.source_data||{}),spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:true};
+ const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
+ const sourceData={...(action.source_data||{}),spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,damage_text:spell.damage_text||'',range_text:spell.range_text||'',attack_magic:spell.attack_magic===true,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
- action.source_data=sourceData;combatCloseRowActionMenu();renderCombat()
+ action.source_data=sourceData;renderCombat()
+}
+async function stepCombatSpellEffect(combatantId,delta){
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action)return;
+ const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
+ const sourceData={...(action.source_data||{}),effect_grade:effect};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
+ action.source_data=sourceData;renderCombat()
 }
 function combatRowMagicMenuHtml(combatant){
  if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='magic')return '';
  const action=combatChosenAction(combatant);
- return '<div class="combat-row-action-menu combat-row-magic-menu" role="menu" onclick="event.stopPropagation()"><div class="combat-row-action-menu-title">Besvärjelse · attackmagi</div>'+combatSpellChooserHtml(combatant,action)+'</div>'
+ return '<div class="combat-row-action-menu combat-row-magic-menu" role="menu" onclick="event.stopPropagation()"><div class="combat-row-action-menu-title">Förbered besvärjelse</div>'+combatSpellChooserHtml(combatant,action)+'</div>'
 }
 function combatActionChooserHtml(combatant){
  if(!combatant)return '';
@@ -1602,7 +1616,7 @@ function combatRowAttackMenuHtml(combatant){
 function combatRowActionMenuHtml(combatant){
  if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='other')return '';
  const chosen=combatChosenAction(combatant),chosenDef=combatActionDefinition(chosen);
- const options=COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive&&def.key!=='attack');
+ const options=COMBAT_PRIMARY_ACTIONS.filter(def=>!def.automatic&&!def.reactive&&def.key!=='attack'&&def.type!=='spell');
  return '<div class="combat-row-action-menu combat-row-other-menu" role="menu" onclick="event.stopPropagation()">'+
   '<div class="combat-row-action-menu-title">Andra actions</div>'+
   '<div class="combat-row-action-menu-grid">'+options.map(def=>{
@@ -2388,7 +2402,7 @@ function combatPossibleAttackTargets(actor,mode='auto',weapon=null){
 }
 function combatFireballTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor);
- if(!actor||action?.source_data?.test_fireball!==true||action.status!=='planned')return new Map();
+ if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||!String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return new Map();
  const out=new Map(),range=Math.max(1,combatWeaponRangeHexes({range:action.source_data.range_text||'30 m'},actor)||20);
  for(const target of combatants){
   if(String(target.id)===String(actor.id)||target.visible_to_players===false||target.side===actor.side||['dead','removed'].includes(target.status))continue;
@@ -2410,33 +2424,32 @@ async function combatTestFireballButton(event,combatantId){
  const fresh=combatChosenAction(actor)||combatActions.find(row=>String(row.combatant_id)===String(actor.id)&&row.slot_key==='primary');
  if(!fresh)return;
  const spell=(actor.attack_profile?.spells||[]).find(row=>String(row.name||'').toUpperCase().includes('ELD'));
- const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:'Eldklot',school_value:2,spell_fv:10,effect_grade:2,damage_text:'2T6',range_text:spell?.range_text||'30 m',attack_magic:true};
+ const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:spellName,school_value:2,spell_fv:10,effect_grade:2,damage_text:'2T6',range_text:spell?.range_text||'30 m',attack_magic:true};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(fresh.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,target_combatant_id:null,status:'planned',updated_at:new Date().toISOString()})});
  fresh.source_data=sourceData;combatSelectedTargetId=null;renderCombat()
 }
 async function combatResolveTestFireball(actor,target,action){
- const fv=Math.max(1,Number(action.source_data?.spell_fv)||10),rolled=await combatExpertRoll('Eldklot · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
+ const spellName=action.source_data?.spell_name||'Eld',fv=Math.max(1,Number(action.source_data?.spell_fv)||10),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,spell_name:'Eldklot',attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
- combatShowOutcomeOverlay(outcome,'Eldklot · T20 '+rolled.roll+' mot FV '+fv);
+ combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(success){
-  const pseudoWeapon={name:'Eldklot',damage:action.source_data?.damage_text||'1T6'};
-  result.hit_location=await combatResolveHitLocation(actor,target,'ranged','ranged');
-  result.damage=await combatResolveDamage(actor,target,pseudoWeapon,fullDamage,result.hit_location);
+  const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6'};
+  result.damage=await combatResolveDamage(actor,target,pseudoWeapon,fullDamage,null);
   result.hit_resolved=true
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({target_combatant_id:target.id,status:'resolved',result,updated_at:new Date().toISOString()})});
- await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_attack',message:actor.name_snapshot+' kastar Eldklot mot '+target.name_snapshot+' · T20 '+rolled.roll+' mot FV '+fv+' · '+combatOutcomeLabel(outcome),details:result,player_visible:true})})
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_attack',message:actor.name_snapshot+' slungar '+spellName+' mot '+target.name_snapshot+' · T20 '+rolled.roll+' mot FV '+fv+' · '+combatOutcomeLabel(outcome),details:result,player_visible:true})})
 }
 async function rollCombatTestFireball(actorId,targetId){
  if(combatDiceBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
- if(!actor||!target||action?.source_data?.test_fireball!==true||action.status!=='planned'||!combatFireballTargets().has(String(target.id)))return;
+ if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||!combatFireballTargets().has(String(target.id)))return;
  try{await combatResolveTestFireball(actor,target,action);await loadActiveCombat(null,{preserveSelectedTarget:true})}catch(error){console.error('Eldklot misslyckades',error);alert('Eldklot kunde inte genomföras: '+(error?.message||error))}
 }
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(action?.source_data?.test_fireball===true)return combatFireballTargets();
+ if(action?.source_data?.casting_spell===true&&String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
  const selected=combatActionWeapon(actor,action,mode);
@@ -2923,17 +2936,19 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
  return '<div class="combat-mini-side"><span>'+label+'</span><b>'+(combatant?.status==='dead'?'☠ ':'')+escAttr(combatant?.name_snapshot||'—')+'</b>'+
   '<small>KP '+kp+(itemText?' · '+escAttr(itemText):'')+'</small></div>'
 }
-function combatTestFireballPanelHtml(){
- const actor=combatActiveActor(),action=combatChosenAction(actor);if(!actor||action?.source_data?.test_fireball!==true)return '';
- const targets=combatFireballTargets(),resolved=action.status==='resolved',targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
- const target=combatants.find(row=>String(row.id)===targetId)||null,result=action.result||{};
- return '<section class="combat-mini-attack '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>TEST · ELDKLOT</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):' · välj fiende')+'</b></div>'+
-  '<div class="combat-mini-duel">'+combatMiniParticipantHtml('KASTAR',actor,'Eldklot · Skola '+(action.source_data?.school_value||2)+' · FV '+(action.source_data?.spell_fv||10)+' · EG '+(action.source_data?.effect_grade||2))+'<div class="combat-mini-arrow">→</div>'+combatMiniParticipantHtml('MÅL',target,target?'Avstånd · '+combatAxialDistance(actor,target)+' hex':'—')+'</div>'+
-  (!resolved?'<div class="combat-mini-instruction">'+(target?'Målet är valt. Klicka 🔥 igen för att kasta Eldklot.':'Giltiga fiender är markerade ('+targets.size+'). Klicka på en fiende på kartan eller i turordningen.')+'</div>':'')+
+function combatSpellCastPanelHtml(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);if(!actor||combatActionDefinition(action)?.key!=='spell_cast'||!action?.source_data?.spell_prepared)return '';
+ const data=action.source_data||{},casting=data.casting_spell===true,targets=casting?combatFireballTargets():new Map(),resolved=action.status==='resolved';
+ const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||''),target=combatants.find(row=>String(row.id)===targetId)||null,result=action.result||{};
+ const effect=Math.max(1,Number(data.effect_grade)||1),spell=escAttr(data.spell_name||'Besvärjelse');
+ let instruction=!casting?'Besvärjelsen är förberedd. Tryck ✦ för att slunga den.':(target?'Målet är valt. Tryck ✦ igen för att slunga '+spell+'.':'Välj mål för '+spell+'. Giltiga mål är markerade ('+targets.size+').');
+ return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>MAGI · '+spell+'</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):'')+'</b></div>'+
+  '<div class="combat-magic-prepared"><span>FÖRBEREDD</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+(data.range_text?' · '+escAttr(data.range_text):'')+'</small></div>'+
+  (!resolved?'<div class="combat-mini-instruction">'+instruction+'</div>':'')+
   (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
 }
 function combatAttackPanelHtml(){
- const fireball=combatTestFireballPanelHtml();if(fireball)return fireball;
+ const magic=combatSpellCastPanelHtml();if(magic)return magic;
  const pending=combatPendingParryOpportunity();
  if(pending){
   const attack=pending.attack,result=attack.result||{};
@@ -2997,6 +3012,7 @@ function combatTurnActionState(combatant){
  if(combatIsMovementPlanning(combatant))return{key:'move',label:'Förflyttning'};
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
  if(def?.type==='attack'||def?.key==='attack')return{key:'attack',label:'Attack'};
+ if(def?.key==='spell_cast')return{key:'spell',label:action?.source_data?.spell_prepared?'Magi · '+(action.source_data.spell_name||'förberedd'):'Förbered magi'};
  if(def)return{key:'other',label:'Övriga handlingar'};
  return{key:'none',label:'Redo'}
 }
@@ -3062,10 +3078,9 @@ function combatTurnPanelHtml(){
    '<div class="combat-turn-actions">'+
     '<div class="combat-row-tool combat-turn-action-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(state.key==='move'?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+actor.id+'\')" '+(!canMove?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/movement.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
     '<div class="combat-row-tool combat-turn-action-tool attack-tool"><button type="button" class="combat-row-tool-btn combat-row-attack'+(state.key==='attack'?' active':'')+(attackChosen?' chosen':'')+'" title="Attack" aria-label="Attack" onclick="combatAttackButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/attack.svg?v=0.33.79" alt="" aria-hidden="true"></button>'+combatRowAttackMenuHtml(actor)+'</div>'+
-    '<div class="combat-row-tool combat-turn-action-tool magic-tool"><button type="button" class="combat-row-tool-btn combat-row-magic'+(state.key==='spell'?' active':'')+(magicChosen?' chosen':'')+'" title="Besvärjelse" aria-label="Besvärjelse" onclick="combatMagicButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-magic-glyph" aria-hidden="true">✦</span></button>'+combatRowMagicMenuHtml(actor)+'</div>'+
+    '<div class="combat-row-tool combat-turn-action-tool magic-tool"><button type="button" class="combat-row-tool-btn combat-row-magic'+(state.key==='spell'?' active':'')+(magicChosen?' chosen':'')+'" title="'+(combatChosenAction(actor)?.source_data?.spell_prepared?'Slunga besvärjelse':'Förbered besvärjelse')+'" aria-label="Magi" onclick="combatMagicButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-magic-glyph" aria-hidden="true">✦</span></button>'+combatRowMagicMenuHtml(actor)+'</div>'+
     '<div class="combat-row-tool combat-turn-action-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(state.key==='other'||otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra handlingar" aria-label="Andra handlingar" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/other-actions.svg?v=0.33.79" alt="" aria-hidden="true"></button>'+combatRowActionMenuHtml(actor)+'</div>'+
     '<div class="combat-row-tool combat-turn-action-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+actor.id+'\')" '+(!canEnd?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/end-round.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
-    '<div class="combat-row-tool combat-turn-action-tool fireball-test-tool"><button type="button" class="combat-row-tool-btn combat-row-fireball'+(combatChosenAction(actor)?.source_data?.test_fireball===true?' active chosen':'')+'" title="TEST · Eldklot" aria-label="Testa Eldklot" onclick="combatTestFireballButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-fireball-glyph" aria-hidden="true">🔥</span></button></div>'+
    '</div>'+
   '</div>'+
   '<div class="combat-turn-stats">'+
