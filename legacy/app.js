@@ -24,16 +24,26 @@ async function loadProfile(){if(!supabaseSession?.user?.id)return null;const aut
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
 function cleanCharacterForDb(c){let d=JSON.parse(JSON.stringify(c));delete d._dbId;delete d._combatIconUrl;delete d.combatIconPath;return d}
 async function dbJson(path,options={}){let r=await authFetch('/rest/v1/'+path,{...options,headers:dbHeaders(options.headers||{})});let text=await r.text(),data=text?JSON.parse(text):null;if(!r.ok)throw new Error((data&&data.message)||('Databasfel '+r.status));return data}
-const RULE_REGISTRY_STATUS={
- skills:{label:'Färdigheter',state:'idle',error:null},
- spells:{label:'Besvärjelser',state:'idle',error:null},
- professions:{label:'Yrken',state:'idle',error:null},
- races:{label:'Raser',state:'idle',error:null},
- stands:{label:'Stånd',state:'idle',error:null},
- weapons:{label:'Vapen',state:'idle',error:null},
- armors:{label:'Rustningar',state:'idle',error:null},
- shields:{label:'Sköldar',state:'idle',error:null}
+const RULE_REGISTRY_DEFS={
+ skills:{label:'Färdigheter',table:'rule_skills',countId:'adminCountSkills',section:'skills',load:()=>loadRuleSkills(),render:()=>renderAdminSkills(),count:()=>ruleSkills.length},
+ spells:{label:'Besvärjelser',table:'rule_spells',countId:'adminCountSpells',section:'spells',load:()=>loadRuleMagicRegistry(),render:()=>{renderAdminSpells();renderAdminMagicSchools()},count:()=>ruleSpells.length},
+ professions:{label:'Yrken',table:'rule_professions',countId:'adminCountProfessions',section:'professions',load:()=>loadRuleProfessions(),render:()=>renderAdminProfessions(),count:()=>ruleProfessions.length},
+ races:{label:'Raser',table:'rule_races',countId:'adminCountRaces',section:'races',load:()=>loadRuleRaces(),render:()=>renderAdminRaces(),count:()=>ruleRaces.length},
+ stands:{label:'Stånd',table:'rule_social_stands',countId:'adminCountStands',section:'stands',load:()=>loadRuleSocialStands(),render:()=>renderAdminSocialStands(),count:()=>ruleSocialStands.length},
+ weapons:{label:'Vapen',table:'rule_weapons',countId:'adminCountWeapons',section:'weapons',load:()=>loadRuleWeapons(),render:()=>renderAdminWeapons(),count:()=>ruleWeapons.length},
+ armors:{label:'Rustningar',table:'rule_armor_types',countId:'adminCountArmors',section:'armors',load:()=>loadRuleArmorRegistry(),render:()=>renderAdminArmors(),count:()=>ruleArmorTypes.length},
+ shields:{label:'Sköldar',table:'rule_shields',countId:'adminCountShields',section:'shields',load:()=>loadRuleShields(),render:()=>renderAdminShields(),count:()=>ruleShields.length}
 };
+const RULE_REGISTRY_STATUS=Object.fromEntries(Object.entries(RULE_REGISTRY_DEFS).map(([key,def])=>[key,{label:def.label,state:'idle',error:null}]));
+function adminRuleRegistryDef(key){return RULE_REGISTRY_DEFS[key]||null}
+async function refreshAdminRuleRegistry(key,force=false){
+ let def=adminRuleRegistryDef(key);if(!def)return false;
+ if(force){
+  if(key==='skills')ruleSkillsLoaded=false;else if(key==='spells'){ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false}else if(key==='professions')ruleProfessionsLoaded=false;else if(key==='races'){ruleRacesLoaded=false;ruleRaceAttributesLoaded=false}else if(key==='stands')ruleSocialStandsLoaded=false;else if(key==='weapons')ruleWeaponsLoaded=false;else if(key==='armors')ruleArmorLoaded=false;else if(key==='shields')ruleShieldsLoaded=false
+ }
+ await def.load();def.render();renderAdminOverviewCounts();return RULE_REGISTRY_STATUS[key]?.state==='loaded'
+}
+
 function setRuleRegistryStatus(key,state,error=null){let s=RULE_REGISTRY_STATUS[key];if(!s)return;s.state=state;s.error=error?String(error?.message||error):null}
 function ruleRegistryCount(key,count){let s=RULE_REGISTRY_STATUS[key];return s?.state==='error'?'⚠':s?.state==='loading'?'…':count}
 async function withRuleRegistryLoad(key,loader){
@@ -845,14 +855,7 @@ function renderAdminOverviewCounts(){
  set('adminCountEnemies',campaignMonsters.length);
  set('adminCountScenes',campaignCombatScenes.length);
  set('adminCountPlaces',campaignSites.length);
- set('adminCountSkills',ruleRegistryCount('skills',ruleSkills.length));
- set('adminCountSpells',ruleRegistryCount('spells',ruleSpells.length));
- set('adminCountProfessions',ruleRegistryCount('professions',ruleProfessions.length));
- set('adminCountRaces',ruleRegistryCount('races',ruleRaces.length));
- set('adminCountStands',ruleRegistryCount('stands',ruleSocialStands.length));
- set('adminCountWeapons',ruleRegistryCount('weapons',ruleWeapons.length));
- set('adminCountArmors',ruleRegistryCount('armors',ruleArmorTypes.length));
- set('adminCountShields',ruleRegistryCount('shields',ruleShields.length));
+ Object.entries(RULE_REGISTRY_DEFS).forEach(([key,def])=>set(def.countId,ruleRegistryCount(key,def.count())));
  set('adminCountCampaigns',adminData.campaigns.length);
  set('adminCountUsers',adminData.users.length)
 }
@@ -868,6 +871,8 @@ async function openAdminSection(key='overview'){
  if($('adminPageSubtitle'))$('adminPageSubtitle').textContent=meta[1];
  if($('adminOverviewBtn'))$('adminOverviewBtn').classList.toggle('hidden',isOverview);
  if(isOverview)renderAdminOverviewCounts();
+ let ruleDef=adminRuleRegistryDef(activeAdminSection);
+ if(ruleDef){await refreshAdminRuleRegistry(activeAdminSection);}
  if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
