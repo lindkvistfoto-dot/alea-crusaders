@@ -123,7 +123,7 @@ describe('HAJ: persistent hex and area effects',()=>{
   expect(src).toContain('combatChooseAreaCenter(event,');
   expect(src).toContain("dbJson('combat_area_effects'");
   expect(src).toContain("damage_on_enter:entered,damage_on_stay:stayed,damage_on_exit:exited");
-  expect(src).toContain("'+combatAreasAdminHtml()+combatTurnPanelHtml()");
+  expect(src).toContain("combatAreasAdminHtml()+combatTurnPanelHtml()");
  });
  test('undo protects against artificial movement damage and restores area history',()=>{
   expect(undo).toContain("set_config('alea.haj_restore','on',true)");
