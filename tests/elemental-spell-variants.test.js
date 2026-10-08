@@ -19,7 +19,7 @@ describe('four independent elemental summoning spells',()=>{
  });
  it('retains fire master UUID, FV, ERF and updates character/NPC snapshots',()=>{
   expect(migration).toContain("where elem->>'rule_id'=fire.id::text");
-  expect(migration).toContain("'name',to_jsonb(fire.name),true");
+  expect(migration).toContain("'{name}',to_jsonb(fire.name),true");
   expect(migration).toContain("'fv',15,'erf',0,'school_fv',15");
   expect(migration).toContain("where n.npc_key in ('magic-test-eldra','magic-test-nox')");
   expect(original).toContain('rule_id:rule.id,name:rule.name');

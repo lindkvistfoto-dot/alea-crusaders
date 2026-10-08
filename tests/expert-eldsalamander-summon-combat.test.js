@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const migration=readFileSync(new URL('../supabase/migrations/20261008_eldsalamander_summon_unique.sql',import.meta.url),'utf8');
-const start=runtime.indexOf('let combatSummonBusy=false;'),end=runtime.indexOf('function combatGmToolboxHtml(',start);
+const start=runtime.indexOf('function combatIsFireElementalSummonName('),end=runtime.indexOf('function combatGmToolboxHtml(',start);
 if(start<0||end<start)throw Error('Missing elemental GM summon controls');
 const section=runtime.slice(start,end);
 const caster={id:'actor-1',name_snapshot:'Magikern',side:'heroes',q:2,r:3,sort_order:2,status:'active'};
