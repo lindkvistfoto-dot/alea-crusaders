@@ -42,6 +42,17 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("test spell action is claimed before rolling to prevent duplicate resolution", () => {
+    const combat = read("features/combat/runtime.js");
+    const start = combat.indexOf("async function rollCombatTestFireball(");
+    const end = combat.indexOf("function combatCurrentAttackTargets(", start);
+    const section = combat.slice(start, end);
+    expect(section).toContain("'&status=eq.planned&select=id,status'");
+    expect(section).toContain("status:'resolving'");
+    expect(section).toContain("!Array.isArray(claimed)||claimed.length!==1");
+    expect(section.indexOf("status:'resolving'")).toBeLessThan(section.indexOf("await combatResolveTestFireball("));
+  });
+
   test("combat movement rejects stale coordinates and movement budgets", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("async function commitCombatMovement");
