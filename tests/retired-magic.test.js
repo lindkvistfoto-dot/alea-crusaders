@@ -15,7 +15,7 @@ describe('retired spells are not available',()=>{
   expect(end).toBeGreaterThan(start);
   const env={};
   runInNewContext(combat.slice(start,end)+'this.select=combatSupportedStatusSpell;',env);
-  expect(env.select({source_data:{spell_name:'FLYGA'}})).toBe('FLYGA');
+  expect(env.select({source_data:{spell_name:'FLYGA',magic_binding:{kind:'status',code:'spell_flyga'}}})).toBe('FLYGA');
   for(const name of retired)expect(env.select({source_data:{spell_name:name}})).toBeNull();
  });
  test('retired effect registry entries and cast branches are absent',()=>{
