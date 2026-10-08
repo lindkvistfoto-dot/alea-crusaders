@@ -34,6 +34,8 @@ function harness({outcome='success',sight=true,distance=1,psy=9}={}){
   combatResolveDamage:async(_a,victim,weapon,full)=>{damage.push({target:victim.id,formula:weapon.damage,full,spell:weapon._spell_damage});return {total:full?6:3}},
   combatShowOutcomeOverlay:()=>{},combatOutcomeLabel:outcome=>String(outcome),combatLoadEffects:async()=>{},loadActiveCombat:async()=>{},
   combatEffectExpiry:()=>({expires_round:null,expires_at:null}),
+  // Existing spell tests have no defender with Antimagi; no reaction is offered.
+  combatDeferForAntimagic:async()=>false,
   dbJson:async(url,options={})=>{
    const body=options.body?JSON.parse(options.body):null;
    calls.push({url,method:options.method,body});
