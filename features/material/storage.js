@@ -54,3 +54,34 @@ async function gimliThumbnail(file,mime){
  }catch(e){console.warn('Miniatyr saknas',e);return null}
  finally{img?.close?.()}
 }
+async function gimliUploadMaterial({campaignId,file,title,category='other',description='',progress=()=>{}}){
+ if(!gimliCanUpload())throw Error('Endast SL får ladda upp.');
+ if(String(campaignId||'')!==String(centralCampaignId||'')||!campaignId)throw Error('Välj aktiv kampanj.');
+ if(!GIMLI_CATEGORIES[category])throw Error('Ogiltig kategori.');
+ title=String(title||'').trim();description=String(description||'');
+ if(!title||title.length>160||description.length>2000)throw Error('Kontrollera titel och beskrivning.');
+ const info=await gimliValidate(file),id=crypto.randomUUID();
+ const original=gimliPath(campaignId,id,gimliFilename(file.name,info.ext));
+ const thumb=gimliPath(campaignId,id,'thumb.webp'),uploaded=[];
+ try{
+  progress('Laddar upp fil…');
+  await gimliStorage(original,{method:'POST',headers:{'Content-Type':info.mime,'x-upsert':'false'},body:file});
+  uploaded.push(original);
+  if(info.kind==='image'){
+   progress('Skapar miniatyr…');
+   const small=await gimliThumbnail(file,info.mime);
+   if(small){await gimliStorage(thumb,{method:'POST',headers:{'Content-Type':'image/webp','x-upsert':'false'},body:small});uploaded.push(thumb)}
+  }
+  progress('Registrerar materialet…');
+  const result=await dbJson('campaign_materials?select=*',{method:'POST',headers:{Prefer:'return=representation'},
+   body:JSON.stringify({id,campaign_id:campaignId,title,description,category,asset_kind:info.kind,
+    storage_bucket:GIMLI_BUCKET,storage_path:original,thumbnail_path:uploaded.includes(thumb)?thumb:null,
+    mime_type:info.mime,original_filename:String(file.name).slice(0,160),file_size_bytes:file.size})});
+  if(!Array.isArray(result)||result.length!==1)throw Error('Kunde inte registrera materialet.');
+  progress('Klart. Materialet är privat.');
+  return result[0]
+ }catch(error){
+  await gimliRollbackFiles(uploaded);
+  throw error
+ }
+}
