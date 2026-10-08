@@ -113,7 +113,7 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatEffectAttributeDelta(combatant,attribute)");
     expect(combat).toContain("def.modifiers?.type!=='attribute_delta'");
-    expect(combat).toContain("parameters:def.modifiers?.type==='attribute_delta'");
+    expect(combat).toContain("type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}");
     expect(combat).toContain("combatEffectAttributeHtml(c)+");
   });
 
