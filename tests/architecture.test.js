@@ -1354,4 +1354,9 @@ describe("application architecture smoke checks", () => {
     for (const spell of ["BLIXT (F, K)","ENERGISTRÅLE (F)","ELD (F)","FROST (F)"]) expect(runtime).toContain(spell);
   });
 
+  test("temporary fireball button exercises the normal combat outcome flow", () => {
+    const runtime = read("features/combat/runtime.js");
+    for (const marker of ["combatTestFireballButton","combatFireballTargets","rollCombatTestFireball","combatResolveTestFireball","combatExpertRoll","combatResolveDamage","TEST · ELDKLOT"]) expect(runtime).toContain(marker);
+  });
+
 });
