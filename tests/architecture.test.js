@@ -42,6 +42,14 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("STÅ ÖVER blocks actions and movement for configured rounds", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatMustSkipTurn(combatant");
+    expect(combat).toContain("!combatMustSkipTurn(combatant)");
+    expect(combat).toContain("round+strength-1");
+    expect(combat).toContain("Står över denna SR");
+  });
+
   test("failed spells cost one PSY and perfect spells cost half rounded up", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;");
