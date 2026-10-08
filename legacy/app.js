@@ -65,15 +65,13 @@ function professionOptions(selected=''){
 }
 async function loadRuleRaces(force=false){
  if(ruleRacesLoaded&&ruleRaceAttributesLoaded&&!force)return ruleRaces;
- try{
+ try{return await withRuleRegistryLoad('races',async()=>{
   let rows=await Promise.all([
    dbJson('rule_races?select=*&order=sort_order.asc,name.asc'),
    dbJson('rule_race_attributes?select=*&order=race_id.asc,sort_order.asc')
   ]);
   ruleRaces=rows[0]||[];ruleRaceAttributes=rows[1]||[];ruleRacesLoaded=true;ruleRaceAttributesLoaded=true;return ruleRaces
- }catch(e){
-  console.error('Kunde inte läsa rasregistret',e);ruleRaces=[];ruleRaceAttributes=[];ruleRacesLoaded=false;ruleRaceAttributesLoaded=false;return []
- }
+ })}catch(e){ruleRaces=[];ruleRaceAttributes=[];ruleRacesLoaded=false;ruleRaceAttributesLoaded=false;return []}
 }
 function raceOptions(selected=''){
  selected=String(selected||'');
@@ -114,17 +112,14 @@ function raceRulesCompleteForMode(rows,mode){
 }
 async function loadRuleArmorRegistry(force=false){
  if(ruleArmorLoaded&&!force)return {types:ruleArmorTypes,materials:ruleArmorMaterials};
- try{
+ try{return await withRuleRegistryLoad('armors',async()=>{
   let rows=await Promise.all([
    dbJson('rule_armor_types?select=*&order=sort_order.asc,name.asc'),
    dbJson('rule_armor_materials?select=*&order=sort_order.asc,name.asc')
   ]);
   ruleArmorTypes=rows[0]||[];ruleArmorMaterials=rows[1]||[];ruleArmorLoaded=true;
   return {types:ruleArmorTypes,materials:ruleArmorMaterials}
- }catch(e){
-  console.error('Kunde inte läsa rustningsregistret',e);
-  ruleArmorTypes=[];ruleArmorMaterials=[];ruleArmorLoaded=false;return {types:[],materials:[]}
- }
+ })}catch(e){ruleArmorTypes=[];ruleArmorMaterials=[];ruleArmorLoaded=false;return {types:[],materials:[]}}
 }
 async function loadRuleShields(force=false){
  if(ruleShieldsLoaded&&!force)return ruleShields;
@@ -853,7 +848,7 @@ function renderAdminOverviewCounts(){
  set('adminCountSkills',ruleRegistryCount('skills',ruleSkills.length));
  set('adminCountSpells',ruleRegistryCount('spells',ruleSpells.length));
  set('adminCountProfessions',ruleRegistryCount('professions',ruleProfessions.length));
- set('adminCountRaces',ruleRaces.length);
+ set('adminCountRaces',ruleRegistryCount('races',ruleRaces.length));
  set('adminCountStands',ruleRegistryCount('stands',ruleSocialStands.length));
  set('adminCountWeapons',ruleRegistryCount('weapons',ruleWeapons.length));
  set('adminCountArmors',ruleRegistryCount('armors',ruleArmorTypes.length));
