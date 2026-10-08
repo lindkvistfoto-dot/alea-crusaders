@@ -1,6 +1,6 @@
 /* Galadriel v0.34.87 — interface integration of safe campaign Realtime signals. */
 import {createGaladriel} from './realtime.js?v=0.34.87';
-import './realtime.css';
+// Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountGaladriel({
  legolas,frodoUi,samUi,getCampaign,getToken,isAuthenticated,isGM,verifyVisible,supabaseUrl,publishableKey,
