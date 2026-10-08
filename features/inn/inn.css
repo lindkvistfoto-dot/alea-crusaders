@@ -24,8 +24,33 @@
   background:rgba(103,47,24,.50);
   color:#e6b27e;
 }
+/* The source innkeeper portrait is a tiny JPEG; never magnify it into
+   the shop's wide banner. Keep it at its intended ~320 x 240 display size
+   until a real high-resolution original can replace the asset. */
+.inn-hero.shop-hero-photo{
+  grid-template-columns:minmax(0,320px) minmax(0,1fr);
+  min-height:240px;
+}
+.inn-hero .shop-hero-media{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:240px;
+}
 .inn-hero .shop-hero-media img{
+  width:min(100%,320px);
+  height:auto;
+  min-height:0;
+  max-height:240px;
+  aspect-ratio:4/3;
+  object-fit:cover;
   object-position:center 38%;
+  flex:0 1 auto;
+}
+@media(max-width:820px){
+  .inn-hero.shop-hero-photo{grid-template-columns:1fr;min-height:0}
+  .inn-hero .shop-hero-media{min-height:0}
+  .inn-hero .shop-hero-media img{width:min(100%,320px);height:auto;max-height:240px}
 }
 .inn-item-meta span:first-child{
   border-color:rgba(205,143,88,.36);
