@@ -2410,7 +2410,7 @@ async function combatTestFireballButton(event,combatantId){
  const fresh=combatChosenAction(actor)||combatActions.find(row=>String(row.combatant_id)===String(actor.id)&&row.slot_key==='primary');
  if(!fresh)return;
  const spell=(actor.attack_profile?.spells||[]).find(row=>String(row.name||'').toUpperCase().includes('ELD'));
- const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:'Eldklot',spell_fv:Number(spell?.fv)||10,damage_text:spell?.damage_text||'1T6',range_text:spell?.range_text||'30 m',attack_magic:true};
+ const sourceData={...(fresh.source_data||{}),test_fireball:true,spell_name:'Eldklot',school_value:2,spell_fv:10,effect_grade:2,damage_text:'2T6',range_text:spell?.range_text||'30 m',attack_magic:true};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(fresh.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,target_combatant_id:null,status:'planned',updated_at:new Date().toISOString()})});
  fresh.source_data=sourceData;combatSelectedTargetId=null;renderCombat()
 }
@@ -2928,7 +2928,7 @@ function combatTestFireballPanelHtml(){
  const targets=combatFireballTargets(),resolved=action.status==='resolved',targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
  const target=combatants.find(row=>String(row.id)===targetId)||null,result=action.result||{};
  return '<section class="combat-mini-attack '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>TEST · ELDKLOT</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):' · välj fiende')+'</b></div>'+
-  '<div class="combat-mini-duel">'+combatMiniParticipantHtml('KASTAR',actor,'Eldklot · FV '+(action.source_data?.spell_fv||10))+'<div class="combat-mini-arrow">→</div>'+combatMiniParticipantHtml('MÅL',target,target?'Avstånd · '+combatAxialDistance(actor,target)+' hex':'—')+'</div>'+
+  '<div class="combat-mini-duel">'+combatMiniParticipantHtml('KASTAR',actor,'Eldklot · Skola '+(action.source_data?.school_value||2)+' · FV '+(action.source_data?.spell_fv||10)+' · EG '+(action.source_data?.effect_grade||2))+'<div class="combat-mini-arrow">→</div>'+combatMiniParticipantHtml('MÅL',target,target?'Avstånd · '+combatAxialDistance(actor,target)+' hex':'—')+'</div>'+
   (!resolved?'<div class="combat-mini-instruction">'+(target?'Målet är valt. Klicka 🔥 igen för att kasta Eldklot.':'Giltiga fiender är markerade ('+targets.size+'). Klicka på en fiende på kartan eller i turordningen.')+'</div>':'')+
   (resolved?'<div class="combat-attack-result"><b>'+escAttr(combatOutcomeLabel(result.outcome))+'</b><small>T20 '+(result.roll??'—')+' mot FV '+(result.fv??'—')+'</small></div>'+combatDamageResultHtml(result.damage):'')+'</section>'
 }
