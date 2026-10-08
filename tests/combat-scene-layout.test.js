@@ -16,6 +16,13 @@ describe('SL stridscen under turordningslistan',()=>{
   expect(render).toContain('combat-shell combat-shell-idle');
   expect(render).toContain('renderCombatGmControls();return');
  });
+ test('SL stridskontroll visas direkt under SL stridsscen i samma sidokolumn',()=>{
+  expect((render.match(/combatGmToolboxHtml\(\)/g)||[])).toHaveLength(1);
+  expect(render).toContain(`id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside>`);
+  expect(render).not.toContain(`+'</div></section>'+combatGmToolboxHtml()+'</div>'`);
+  expect(css).toContain('.combat-participants .combat-gm-toolbox{');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr);');
+ });
  test('SL-kontrollerna återskapas vid varje omrendering',()=>{
   expect(render).toContain(' renderCombatGmControls();\n requestAnimationFrame(');
   expect(css).toContain('.combat-participants .combat-gm-controls{');

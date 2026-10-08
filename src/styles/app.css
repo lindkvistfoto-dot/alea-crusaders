@@ -5970,3 +5970,37 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-scene-preview-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;background:#2a2018;color:#ecd5b3;font-size:12px}
 .combat-scene-preview-footer .btn{flex-shrink:0}
 @media(max-width:980px){.combat-shell-scene-preview>.combat-board-wrap{grid-column:1;order:1}}
+
+/* v0.34.64 — SL stridskontroll immediately below SL stridsscen in the initiative column. */
+.combat-participants .combat-gm-toolbox{
+  display:block;
+  grid-column:auto;
+  min-width:0;
+  max-width:calc(100% - 16px);
+  margin:0 8px 12px;
+  padding:10px 8px;
+  overflow-wrap:anywhere;
+}
+.combat-participants .combat-gm-toolbox>h3{font-size:15px}
+.combat-participants .combat-gm-toolbox .combat-effects-admin{
+  min-width:0;
+  max-width:100%;
+  padding:9px 7px;
+}
+.combat-participants .combat-gm-toolbox .combat-gm-placements{
+  grid-template-columns:minmax(0,1fr);
+}
+.combat-participants .combat-gm-toolbox .combat-gm-placement-row{
+  flex-wrap:wrap;
+}
+.combat-participants .combat-gm-toolbox .combat-effects-admin input,
+.combat-participants .combat-gm-toolbox .combat-effects-admin select,
+.combat-participants .combat-gm-toolbox .combat-effects-admin label{
+  min-width:0;
+  max-width:100%;
+  width:100%;
+}
+.combat-participants .combat-gm-toolbox .combat-effects-admin button{
+  max-width:100%;
+  white-space:normal;
+}
