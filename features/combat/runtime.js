@@ -2382,7 +2382,8 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  weaponValue=Math.max(0,Math.floor(weaponValue));
  bonusValue=Math.floor(bonusValue);
  const gross=Math.max(0,weaponValue+bonusValue);
- const armor=combatArmorAbsorption(target),net=Math.max(0,gross-armor.absorption);
+ const armor=combatArmorAbsorption(target),ward=combatProtectionValue(target,weapon?.damage_kind||'physical');
+ const net=Math.max(0,gross-armor.absorption-ward.points);
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
@@ -2405,6 +2406,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   gross_damage:gross,
   armor_absorption:armor.absorption,
   armor_names:armor.names,
+  effect_protection:ward.points,protection_names:ward.names,
   net_damage:net,
   kp_before:before,kp_after:after,
   full_damage:fullDamage===true,
@@ -2415,7 +2417,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'damage',actor_id:actor.id,target_id:target.id,event_type:defeated?'defeated':'damage',
   message:actor.name_snapshot+' träffar '+(hitLocation?.label||'målet')+' och gör '+net+' KP skada på '+target.name_snapshot+
-   ' ('+weaponValue+' + '+bonusValue+' − ABS '+armor.absorption+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
+   ' ('+weaponValue+' + '+bonusValue+' − ABS '+armor.absorption+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
  return result
@@ -2436,7 +2438,7 @@ function combatDamageResultHtml(damage){
    bonusValue=0
   }
  }
- const armor=Math.max(0,Number(damage.armor_absorption)||0),net=Math.max(0,Number(damage.net_damage)||0);
+ const armor=Math.max(0,Number(damage.armor_absorption)||0),ward=Math.max(0,Number(damage.effect_protection)||0),net=Math.max(0,Number(damage.net_damage)||0);
  const armorText=Array.isArray(damage.armor_names)&&damage.armor_names.length?damage.armor_names.join(', '):'ABS';
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
   '<div class="combat-damage-grid">'+
@@ -2445,6 +2447,7 @@ function combatDamageResultHtml(damage){
    '<div class="combat-damage-col"><span>SB</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>'+
    '<i class="combat-damage-op">−</i>'+
    '<div class="combat-damage-col"><span>Rustning</span><b>'+armor+'</b><small>'+escAttr(armorText)+'</small></div>'+
+   (ward?'<i class="combat-damage-op">−</i><div class="combat-damage-col"><span>Skydd</span><b>'+ward+'</b><small>'+escAttr((damage.protection_names||[]).join(', ')||'Effekt')+'</small></div>':'')+
    '<i class="combat-damage-op">=</i>'+
    '<div class="combat-damage-col total"><span>Totalt</span><b>'+net+'</b><small>KP skada</small></div>'+
   '</div>'+
@@ -2693,7 +2696,7 @@ async function combatResolveTestFireball(actor,target,action){
   for(const allocation of targets){
    const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
    if(!victim)throw new Error('Målet saknas vid kastet.');
-   const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6'};
+   const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6',damage_kind:/^ELD/i.test(spellName)?'fire':'magic'};
    const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
   }
@@ -3577,7 +3580,8 @@ function combatEffectAttributeHtml(combatant){
 function combatEffectLabel(row){
  const def=combatEffectRegistry.find(e=>e.id===row.effect_id);
  const source=row.source_combatant_id&&combatants.find(c=>String(c.id)===String(row.source_combatant_id));
- return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')+
+ const type=def?.modifiers?.type,detail=type==='damage_over_time'?' · '+(row.parameters?.damage_per_round??'?')+' KP/SR':type==='protection'?' · Skydd '+(row.parameters?.protection_points??'?'):'';
+ return (def?.polarity==='positive'?'✦ ':def?.polarity==='negative'?'⚠ ':'◈ ')+(def?.name||'Effekt')+(row.strength>1?' '+row.strength:'')+detail+
   (source&&['fear','panic','control'].includes(def?.modifiers?.type)?' · '+(def.modifiers.type==='control'?'styrs av ':'källa: ')+source.name_snapshot:'')
 }
 function combatantEffectsHtml(combatant){
