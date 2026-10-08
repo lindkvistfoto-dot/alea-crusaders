@@ -134,6 +134,7 @@ async function combatRollDice(specs,label='Slag'){
 
 let combatGmPlacementId=null;
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
+let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 let combatActionMenuId=null,combatActionMenuKind=null;
 let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
@@ -157,9 +158,111 @@ async function loadCombatSceneChoices(force=false){
  renderCombatGmControls();
  return scenes
 }
-function selectCombatScene(id){
- combatSelectedSceneId=String(id||'');
+
+function combatSceneSelectionIsPreview(){
+ return !!combatSceneFromId(combatSelectedSceneId)&&String(combatSelectedSceneId)!==combatActiveSceneId()
+}
+function combatScenePreviewGeometry(scene,preview){
+ const settings=scene?.settings||{},width=Math.max(1,Number(preview?.width)||1600),height=Math.max(1,Number(preview?.height)||1000);
+ const rows=Math.max(2,Number(settings.rows)||Math.round((Number(settings.map_height_m)||45)/(Number(settings.hex_m)||1.5))||30);
+ const scale=Math.max(.5,Math.min(1.5,Number(settings.hex_scale)||1));
+ const rowPitch=(height/rows)*scale,size=rowPitch/1.5,xPitch=Math.sqrt(3)*size;
+ return {width,height,rows,size,xPitch,rowPitch,offsetX:Number(settings.offset_x)||0,offsetY:Number(settings.offset_y)||0}
+}
+async function loadCombatScenePreview(scene){
+ if(!scene||!combatSceneSelectionIsPreview())return;
+ const token=++combatScenePreviewRequest,sceneId=String(scene.id);
+ combatScenePreviewSceneId=sceneId;combatScenePreviewLoading=true;combatScenePreviewError='';combatScenePreview=null;
+ try{
+  const sceneQuery='scene_id=eq.'+encodeURIComponent(sceneId);
+  const [combatants,hexes]=await Promise.all([
+   dbJson('campaign_combat_scene_combatants?'+sceneQuery+'&select=name,combatant_type,start_q,start_r,visible_to_players'),
+   dbJson('campaign_combat_scene_hexes?'+sceneQuery+'&select=q,r,movement_mode,sight_mode')
+  ]);
+  let mapUrl='',width=Number(scene.background_width)||0,height=Number(scene.background_height)||0;
+  if(scene.background_image_path){
+   if(typeof getCombatSceneBackgroundUrl!=='function')throw Error('Stridsscenens bildläsare saknas.');
+   mapUrl=await getCombatSceneBackgroundUrl(scene.background_image_path)
+  }else if(scene.map_id){
+   const local=Array.isArray(campaignMaps)?campaignMaps.find(map=>String(map.id)===String(scene.map_id)):null;
+   const remote=local||((await dbJson('campaign_maps?id=eq.'+encodeURIComponent(scene.map_id)+'&select=id,name,image_path,width,height&limit=1'))||[])[0];
+   if(remote?.image_path){
+    if(typeof getMapImageUrl!=='function')throw Error('Kartläsaren är inte tillgänglig.');
+    mapUrl=await getMapImageUrl(remote);
+    width=Number(remote.width)||0;height=Number(remote.height)||0
+   }
+  }
+  if(token!==combatScenePreviewRequest||combatSelectedSceneId!==sceneId)return;
+  combatScenePreview={sceneId,url:mapUrl,width:width||1600,height:height||1000,
+   combatants:Array.isArray(combatants)?combatants:[],hexes:Array.isArray(hexes)?hexes:[]};
+ }catch(error){
+  if(token!==combatScenePreviewRequest||combatSelectedSceneId!==sceneId)return;
+  combatScenePreviewError=error?.message||String(error);
+  console.error('Kunde inte förhandsvisa vald stridsscen',error)
+ }finally{
+  if(token===combatScenePreviewRequest&&combatSelectedSceneId===sceneId){
+   combatScenePreviewLoading=false;
+   renderCombat()
+  }
+ }
+}
+function combatScenePreviewMapHtml(scene,preview){
+ if(!preview)return '<div class="combat-map-missing">Laddar kartbild och startpositioner…</div>';
+ const g=combatScenePreviewGeometry(scene,preview);
+ const byCoord=new Map(preview.hexes.map(h=>[Number(h.q)+','+Number(h.r),h]));
+ const polygons=[];
+ const rMin=Math.floor(-g.offsetY/g.rowPitch)-3,rMax=Math.ceil((g.height-g.offsetY)/g.rowPitch)+3;
+ for(let r=rMin;r<=rMax;r++){
+  const qMin=Math.floor(-g.offsetX/g.xPitch-r/2)-2,qMax=Math.ceil((g.width-g.offsetX)/g.xPitch-r/2)+2;
+  for(let q=qMin;q<=qMax;q++){
+   const x=g.xPitch*(q+r/2)+g.offsetX,y=g.rowPitch*r+g.offsetY;
+   if(x<-g.size||x>g.width+g.size||y<-g.size||y>g.height+g.size)continue;
+   const terrain=byCoord.get(q+','+r)||{},cls=['combat-hex'];
+   if(terrain.movement_mode==='difficult')cls.push('difficult');
+   if(terrain.movement_mode==='blocked')cls.push('move-blocked');
+   if(terrain.sight_mode==='obscuring')cls.push('sight-obscuring');
+   if(terrain.sight_mode==='blocked')cls.push('sight-blocked');
+   polygons.push('<polygon class="'+cls.join(' ')+'" points="'+combatHexPoints(x,y,g.size*.97)+'"><title>Hex '+q+','+r+'</title></polygon>')
+  }
+ }
+ const tokens=preview.combatants.filter(c=>c.start_q!=null&&c.start_r!=null&&c.visible_to_players!==false).map(c=>{
+  const x=g.xPitch*(Number(c.start_q)+Number(c.start_r)/2)+g.offsetX,y=g.rowPitch*Number(c.start_r)+g.offsetY;
+  const side=['enemy','monster'].includes(c.combatant_type)?'enemy':'hero';
+  return '<g class="combat-preview-token"><circle class="combat-token '+side+'" cx="'+x+'" cy="'+y+'" r="'+g.size*.48+'"></circle>'+
+   '<text class="combat-token-label" x="'+x+'" y="'+y+'">'+escAttr(combatTokenInitials(c.name||'SLP'))+'</text><title>'+escAttr(c.name||'Kombatant')+'</title></g>'
+ }).join('');
+ const image=preview.url?'<image class="combat-map-background" href="'+escAttr(preview.url)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>':'';
+ return '<svg class="combat-map-svg combat-scene-preview-svg" viewBox="0 0 '+g.width+' '+g.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Förhandsvisning av vald stridsscen">'+image+polygons.join('')+tokens+'</svg>'
+}
+function renderCombatScenePreview(scene){
+ const sub=$('combatSubtitle'),body=$('combatBody');if(!body)return;
+ if(sub)sub.textContent='Förhandsvisning: '+(scene.name||'Stridsscen');
+ const preview=combatScenePreview?.sceneId===String(scene.id)?combatScenePreview:null;
+ const current=activeCombat?.name||'';
+ const notice='Du förhandsvisar <b>'+escAttr(scene.name||'vald scen')+'</b>. '+(current
+  ?'Din aktiva strid <b>'+escAttr(current)+'</b> är oförändrad.'
+  :'Ingen strid har startats.');
+ const back=activeCombat?.id?'<button class="btn" type="button" onclick="selectCombatScene(\''+escAttr(combatActiveSceneId())+'\')">Visa aktiv strid</button>':'';
+ const placed=preview?.combatants?.filter(c=>c.start_q!=null&&c.start_r!=null).length||0;
+ const reserves=(preview?.combatants?.length||0)-placed;
+ const error=combatScenePreviewError&&combatScenePreviewSceneId===String(scene.id)
+  ?'<div class="combat-map-missing">Kunde inte visa kartan: '+escAttr(combatScenePreviewError)+'</div>':'';
+ body.innerHTML='<div class="combat-shell combat-shell-idle combat-shell-scene-preview">'+
+  '<aside class="combat-panel combat-participants"><h3>Stridsscen (förhandsvisning)</h3><div class="combat-participant-list">'+
+  '<div class="combat-target-note">'+notice+'</div>'+
+  '<div class="combat-target-note">'+(preview?placed+' placerade · '+reserves+' reserver':'Läser stridsscen…')+'</div>'+
+  '</div><div id="combatGmControls" class="combat-gm-controls hidden"></div></aside>'+
+  '<div class="combat-board-wrap combat-scene-preview-wrap"><div class="combat-board-head"><b>'+escAttr(scene.name||'Stridsscen')+'</b><span>Inte aktiv</span></div>'+
+  '<div class="combat-board" style="aspect-ratio:'+Math.max(1,Number(preview?.width)||Number(scene.background_width)||1600)+' / '+Math.max(1,Number(preview?.height)||Number(scene.background_height)||1000)+'">'+
+  (error||combatScenePreviewMapHtml(scene,preview))+'</div>'+
+  '<div class="combat-scene-preview-footer"><span>Välj <b>Förbered</b> för att aktivera scenen med dess karta och kombatanter.</span>'+back+'</div></div></div>';
  renderCombatGmControls()
+}
+function selectCombatScene(id){
+ ++combatScenePreviewRequest;
+ combatSelectedSceneId=String(id||'');
+ combatScenePreview=null;combatScenePreviewSceneId='';combatScenePreviewLoading=false;combatScenePreviewError='';
+ renderCombat()
 }
 function renderCombatGmControls(){
  const host=$('combatGmControls');if(!host)return;
@@ -169,14 +272,15 @@ function renderCombatGmControls(){
  if(scenes.length===1&&!combatSelectedSceneId)combatSelectedSceneId=String(scenes[0].id);
  const activeSceneId=combatActiveSceneId();
  const scene=combatSceneFromId(combatSelectedSceneId);
- host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>Pågående strid återupptas automatiskt · Play startar vald scen med nytt initiativ · Reset återställer aktiv scen utan nytt initiativ</small></div>'+
+ const previewing=combatSceneSelectionIsPreview();
+ host.innerHTML='<div class="combat-gm-control-copy"><span>SL · STRIDSSCEN</span><small>'+(previewing?'Förhandsvisning: '+escAttr(scene?.name||'vald scen')+' · Förbered aktiverar scenen efter bekräftelse.':'Pågående strid återupptas automatiskt · Play startar vald scen med nytt initiativ · Reset återställer aktiv scen utan nytt initiativ')+'</small></div>'+
   '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
   '<button type="button" class="btn" onclick="prepareCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>⚙ Förbered</button>'+
-   '<button type="button" class="btn" onclick="combatShowGmToolbox()" '+(!activeCombat?'disabled':'')+'>SL-kontroll</button>'+
+   '<button type="button" class="btn" onclick="combatShowGmToolbox()" '+(!activeCombat||previewing?'disabled':'')+'>SL-kontroll</button>'+
    '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
-  '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat?'disabled':'')+'>↻ Reset</button>'+
+  '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat||previewing?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
 function combatNumber(value,fallback=null){
@@ -4206,6 +4310,11 @@ function combatGmToolboxHtml(){
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
+ if(combatSceneSelectionIsPreview()){
+  const scene=combatSceneFromId(combatSelectedSceneId);
+  if(!combatScenePreviewLoading&&combatScenePreviewSceneId!==String(scene.id))void loadCombatScenePreview(scene);
+  renderCombatScenePreview(scene);return
+ }
  if(!activeCombat){
   if(sub)sub.textContent='Ingen aktiv strid';
   combatantDetailCombatantId=null;

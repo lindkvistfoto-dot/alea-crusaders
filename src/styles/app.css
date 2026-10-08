@@ -5962,3 +5962,11 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:980px){
   .combat-shell-idle>.combat-empty{grid-column:1;order:3}
 }
+
+/* v0.34.63 — visibly preview selected combat scene without replacing stored combat */
+.combat-shell-scene-preview>.combat-board-wrap{grid-column:2/-1}
+.combat-scene-preview-wrap .combat-board-head span{font-size:11px;color:#edc17c;font-weight:800}
+.combat-scene-preview-svg .combat-token{pointer-events:none}
+.combat-scene-preview-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;background:#2a2018;color:#ecd5b3;font-size:12px}
+.combat-scene-preview-footer .btn{flex-shrink:0}
+@media(max-width:980px){.combat-shell-scene-preview>.combat-board-wrap{grid-column:1;order:1}}
