@@ -5931,3 +5931,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-gm-placement-row button.active{box-shadow:0 0 0 2px #deb068 inset}
 .combat-hex.gm-placement-hex{stroke:#eac57e;stroke-width:2.4;cursor:crosshair}
 @media(max-width:580px){.combat-gm-placements{grid-template-columns:1fr}.combat-gm-placement-row{flex-wrap:wrap}}
+
+/* v0.34.59 – visible selected GM placement */
+.combat-gm-placement-hint{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;margin-bottom:8px;border-radius:9px;border:1px solid #d6a556;background:rgba(60,42,20,.95);color:#f8dfad;font-size:13px}
+.combat-gm-placement-hint b{color:#fff2d7}

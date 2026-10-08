@@ -660,6 +660,7 @@ async function prepareCombatScene(){
 async function combatPlayPreparedScene(){
  if(!combatCanManage()||!activeCombat?.id||combatSceneBusy)return;
  if(!combatants.some(c=>c.status==='active'))return alert('Placera minst en kombatant innan Play.');
+ combatGmPlacementId=null;
  const id=activeCombat.id,settings={...(activeCombat.settings||{}),reset_ready_for_play:false};
  combatSceneBusy=true;renderCombatGmControls();
  try{
@@ -4041,7 +4042,7 @@ function combatAreasAdminHtml(){
 function combatToggleAreaPlacement(){
  if(!combatCanManage()||!activeCombat)return;
  combatAreaPlacementActive=!combatAreaPlacementActive;
- if(combatAreaPlacementActive)combatMovementPlan=null;
+ if(combatAreaPlacementActive){combatMovementPlan=null;combatGmPlacementId=null}
  renderCombat()
 }
 function combatChooseAreaCenter(event,q,r){
@@ -4146,7 +4147,7 @@ function combatGmPlacementHtml(){
  if(!combatCanManage()||!activeCombat)return '';
  const reserve=combatants.filter(combatGmIsReserve),canReturn=activeCombat.status==='setup';
  const entries=combatants.filter(c=>c.status!=='dead'&&(c.status!=='removed'||combatGmIsReserve(c)));
- return '<details class="combat-effects-admin"><summary>Uppställning och reserver ('+reserve.length+' i reserv)</summary>'+
+ return '<details class="combat-effects-admin"'+(combatGmPlacementId?' open':'')+'><summary>Uppställning och reserver ('+reserve.length+' i reserv)</summary>'+
   '<p class="combat-action-note">Välj en kombatant och klicka sedan på en ledig hex. Oplacerade reserver syns bara här. Förstärkningar får initiativ nästa stridsrunda.</p>'+
   '<div class="combat-gm-placements">'+entries.map(c=>{
    const isReserve=combatGmIsReserve(c),selected=String(combatGmPlacementId||'')===String(c.id);
@@ -4154,6 +4155,13 @@ function combatGmPlacementHtml(){
     '<button type="button" class="smallbtn'+(selected?' active':'')+'" onclick="combatSelectGmPlacement(\''+escAttr(c.id)+'\')">'+(selected?'Avbryt':isReserve?'Sätt ut':'Flytta')+'</button>'+
     (canReturn&&!isReserve?'<button type="button" class="smallbtn" onclick="combatReturnToReserve(\''+escAttr(c.id)+'\')">Till reserv</button>':'')+'</div>'
   }).join('')+'</div></details>'
+}
+function combatGmPlacementHintHtml(){
+ if(!combatCanManage()||!combatGmPlacementId)return '';
+ const row=combatants.find(c=>String(c.id)===String(combatGmPlacementId));
+ if(!row)return '';
+ return '<div class="combat-gm-placement-hint"><span>SL placerar <b>'+escAttr(row.name_snapshot)+'</b> · välj en ledig hex på kartan</span>'+
+  '<button type="button" class="smallbtn" onclick="combatSelectGmPlacement(\''+escAttr(row.id)+'\')">Avbryt</button></div>'
 }
 function combatShowGmToolbox(){
  if(!combatCanManage()||!activeCombat)return;
@@ -4166,7 +4174,8 @@ function combatSelectGmPlacement(id){
  if(!row||row.status==='dead'||(row.status==='removed'&&!combatGmIsReserve(row)))return;
  combatGmPlacementId=String(combatGmPlacementId||'')===String(id)?null:String(id);
  if(combatGmPlacementId){combatAreaPlacementActive=false;combatAreaDraftCenter=null;combatMovementPlan=null}
- renderCombat()
+ renderCombat();
+ if(combatGmPlacementId)requestAnimationFrame(()=>$('combatBody')?.querySelector('.combat-board-wrap')?.scrollIntoView({behavior:'smooth',block:'center'}))
 }
 async function combatChooseGmHex(event,q,r){
  event?.stopPropagation?.();
@@ -4200,14 +4209,14 @@ function renderCombat(){
  if(!activeCombat){
   if(sub)sub.textContent='Ingen aktiv strid';
   combatantDetailCombatantId=null;
-  body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen i SL-raden ovan och tryck <b>Play</b>. Alea skapar då striden och slår initiativ för samtliga kombatanter.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div>';return
+  body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen. Tryck <b>Förbered</b> för att justera positioner och reserver före <b>Play</b>, som sedan slår initiativ.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div>';return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let displayedCombatants=combatants.filter(c=>c.state?.in_reserve!==true);
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+combatGmToolboxHtml()+'</div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+combatGmToolboxHtml()+'</div>'+combatantDetailsPopupHtml();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 

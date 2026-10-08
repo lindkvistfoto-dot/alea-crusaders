@@ -128,6 +128,6 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   expect(section).not.toContain('open><summary');
   expect(app).toContain("effects:{label:'Effekter'");
   expect(html).toContain('data-admin-section="effects"');
-  expect(html).toContain('features/combat/admin-effects.js?v=0.34.58');
+  expect(html).toContain('features/combat/admin-effects.js?v=0.34.59');
  });
 });
