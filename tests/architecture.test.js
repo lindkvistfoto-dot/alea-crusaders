@@ -42,6 +42,15 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("BJÖRN blocks actions movement and parry for incapacitated combatants", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatIncapacitation(combatant");
+    expect(combat).toContain("function combatCannotReact(combatant)");
+    expect(combat).toContain("['skip_turns','incapacitated'].includes(def.modifiers?.type)");
+    expect(combat).toContain("!combatCannotReact(defender)");
+    expect(combat).toContain("woken:'Väck'");
+  });
+
   test("LO expires effects across rounds and wall-clock duration", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatEffectIsActive(row");
