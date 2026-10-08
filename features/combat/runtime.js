@@ -2298,10 +2298,17 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
- await dbJson('combatants?id=eq.'+encodeURIComponent(target.id),{
-  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(patch)
+ // Optimistic concurrency: never overwrite damage committed by another player.
+ // A stale combatant snapshot must be reloaded and the action retried.
+ const saved=await dbJson('combatants?id=eq.'+encodeURIComponent(target.id)+
+  '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+  '&current_kp=eq.'+encodeURIComponent(before)+'&select=id,current_kp,status',{
+  method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(patch)
  });
- target.current_kp=after;if(defeated)target.status='dead';
+ if(!Array.isArray(saved)||saved.length!==1){
+  throw new Error('Målets KP har ändrats av en annan handling. Uppdatera striden och försök igen.');
+ }
+ target.current_kp=Number(saved[0].current_kp);target.status=saved[0].status;
  const result={
   weapon_formula:weaponSpec.formula,
   weapon_damage_value:weaponValue,
