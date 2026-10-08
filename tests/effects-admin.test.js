@@ -50,6 +50,13 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   x.api.editRuleAreaEffect();expect(x.nodes.adminEditorBody.innerHTML).toContain('area_terrain');
   expect(html).toContain('id="adminAreaEffectTable"');
  });
+ test('reserves do not enter initiative or the tactical map before placement',()=>{
+  expect(runtime).toContain("status:row.start_q==null||row.start_r==null?'removed':'active'");
+  expect(runtime).toContain('in_reserve:row.start_q==null||row.start_r==null');
+  expect(runtime).toContain("row.visible_to_players!==false&&row.status!=='removed'");
+  expect(runtime).toContain('async function combatChooseGmHex(event,q,r)');
+  expect(runtime).toContain('async function combatPlayPreparedScene()');
+ });
  test('GM toolbox is after combat log and manual assignment is its last tool',()=>{
   const render=runtime.slice(runtime.indexOf('function renderCombat(){'));
   expect(render.indexOf("'+combatGmToolboxHtml()+'")).toBeGreaterThan(render.indexOf('combatTurnPanelHtml()'));
@@ -121,6 +128,6 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   expect(section).not.toContain('open><summary');
   expect(app).toContain("effects:{label:'Effekter'");
   expect(html).toContain('data-admin-section="effects"');
-  expect(html).toContain('features/combat/admin-effects.js?v=0.34.57');
+  expect(html).toContain('features/combat/admin-effects.js?v=0.34.58');
  });
 });

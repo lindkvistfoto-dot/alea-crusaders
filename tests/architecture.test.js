@@ -698,8 +698,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain('id="combatScenePicker"');
     expect(html).toContain("./features/combat/hit-body-model.js?v=0.33.86");
     expect(html).toContain("./features/combat/hit-body-zones.js?v=0.33.86");
-    expect(html).toContain("./features/combat/runtime.js?v=0.34.56");
-    expect(html).toContain("./legacy/app.js?v=0.34.56");
+    expect(html).toContain("./features/combat/runtime.js?v=0.34.58");
+    expect(html).toContain("./legacy/app.js?v=0.34.58");
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -748,7 +748,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatConfirmReplaceActiveRuntime");
     expect(combat).toContain("combatIsResetReadyForPlay");
     expect(combat).toContain("reset_ready_for_play:resetReady===true");
-    expect(combat).toContain("resetReady:reset");
+    expect(combat).toContain("resetReady:reset||prepare");
     expect(combat).toContain("Återställd · redo för Play");
     expect(combat).toContain("combatInitiativeTransferToOrder");
     expect(combat).toContain("combatFadeInitiativeDice");
@@ -770,7 +770,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("initiative-arrival");
     expect(combat).toContain("function combatCaptureInitiativeForReset");
     expect(combat).toContain("const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null");
-    expect(combat).toContain("if(!reset)await combatRollAndApplyInitiative(replacementCombatId)");
+    expect(combat).toContain("if(!reset&&!prepare)await combatRollAndApplyInitiative(replacementCombatId)");
     expect(combat).toContain("active_actor_id:null");
     expect(combat).toContain("if(startActorId)");
     expect(combat).toContain("await loadActiveCombat(replacementCombatId)");
@@ -779,7 +779,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("await combatDeleteRuntime(replacementCombatId)");
     expect(combat).toContain("Reset återställer aktiv scen utan nytt initiativ");
     expect(combat).toContain("Pågående strid återupptas automatiskt");
-    expect(combat).toContain("Sparad strid");
+    expect(combat).toContain("combatPlayPreparedScene");
     expect(combat).toContain("if(activeSceneId&&!combatSceneFromId(combatSelectedSceneId)&&combatSceneFromId(activeSceneId))combatSelectedSceneId=activeSceneId");
     expect(combat).toContain("const selectedExists=scenes.some");
     expect(combat).not.toContain("else if(!reset&&activeCombat?.id)return");
