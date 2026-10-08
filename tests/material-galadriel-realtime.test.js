@@ -114,8 +114,10 @@ describe('Galadriel Lady of Lothlórien – authenticated RLS-aware Realtime',()
   expect(h.api.state.connected).toBe(false);
   h.stepTime(15000);h.api.tick();
   expect(h.sockets.length).toBe(2);
+  // Reconciliation is run once the fresh socket confirms its subscription.
+  h.open();
   expect(h.changes).toContain('presentation');
-  h.open();expect(h.api.state.connected).toBe(true);
+  expect(h.api.state.connected).toBe(true);
  });
  it('bad channel subscription stays in fallback rather than claiming success',()=>{
   const h=harness();h.api.start();
