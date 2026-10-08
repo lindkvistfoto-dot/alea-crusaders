@@ -1525,7 +1525,19 @@ async function combatMagicButton(event,combatantId){
  if(combatActionDefinition(action)?.key==='spell_cast'&&action?.status==='planned'&&data.spell_prepared){
   if(data.casting_spell){
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
-   const targetId=String(combatSelectedTargetId||''),targets=combatFireballTargets();
+   const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
+   if(statusSpell){
+    const target=combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId);
+    if(!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    if(statusSpell!=='FLYGA'&&!COMBAT_EFFECT_ATTRIBUTES.includes(data.effect_attribute)){alert('Välj först vilken egenskap som ska påverkas.');combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    try{
+     const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
+     if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Besvärjelsen är redan under behandling.');
+     action.status='resolving';await combatCastStatusSpell(combatant,target,action)
+    }catch(error){alert('Besvärjelsen kunde inte slutföras: '+error.message);await loadActiveCombat(null,{preserveSelectedTarget:true})}
+    return
+   }
+   const targets=combatFireballTargets();
    if(targetId&&targets.has(targetId)){await rollCombatTestFireball(combatant.id,targetId);return}
    combatSelectedTargetId=null;renderCombat();return
   }
@@ -2561,6 +2573,13 @@ function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
  const candidates=[...combatFireballTargets().keys()];
+ const statusSpell=combatSupportedStatusSpell(action);
+ if(statusSpell){
+  const candidates=combatSpellEffectTargets(actor,action),attribute=action.source_data?.effect_attribute;
+  return '<div class="combat-spell-choice"><b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
+   (statusSpell==='FLYGA'?'':'<div class="combat-spell-effect"><span>Egenskap</span><select onchange="combatChooseSpellAttribute(\\''+actor.id+'\\',this.value)"><option value="">Välj egenskap</option>'+COMBAT_EFFECT_ATTRIBUTES.map(a=>'<option value="'+a+'" '+(attribute===a?'selected':'')+'>'+a+'</option>').join('')+'</select></div>')+
+   candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=\\''+target.id+'\\';renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+'</div>'
+ }
  return '<div class="combat-spell-choice"><b>Mål i kast-SR · EG '+spent+'/'+total+'</b><small>Välj fiender och fördela effektgrad innan kastet.</small>'+
  candidates.map(id=>{const target=combatants.find(c=>String(c.id)===id),assigned=allocations.find(t=>String(t.target_id)===id);
  return '<div class="combat-spell-effect"><span>'+escAttr(target?.name_snapshot||id)+'</span><b>EG '+(assigned?.eg||0)+'</b><button type="button" onclick="combatAddMagicTarget(\''+actor.id+'\',\''+id+'\')">+</button><button type="button" onclick="combatRemoveMagicTarget(\''+actor.id+'\',\''+id+'\')">×</button></div>'
@@ -2661,6 +2680,7 @@ async function rollCombatTestFireball(actorId,targetId){
 }
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(action?.source_data?.casting_spell===true&&combatSupportedStatusSpell(action))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
  if(action?.source_data?.casting_spell===true&&String(action?.source_data?.spell_name||'').toUpperCase().startsWith('ELD'))return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
