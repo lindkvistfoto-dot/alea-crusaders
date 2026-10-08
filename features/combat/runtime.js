@@ -3793,6 +3793,10 @@ function renderCombatMap(){
   const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
  const currentMagic=actor&&combatChosenAction(actor);
  const spellAreaMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&currentMagic.source_data.magic_binding?.kind==='area';
+ const cubePreview=spellAreaMode&&currentMagic.source_data?.magic_binding?.cube&&currentMagic.source_data?.area_center?
+   {center_q:currentMagic.source_data.area_center.q,center_r:currentMagic.source_data.area_center.r,
+    effect_id:combatEffectRegistry.find(d=>d.code==='area_beskyddare'&&d.active)?.id,
+    parameters:combatBeskyddareAreaParameters(currentMagic.source_data,currentMagic.id)}:null;
  const terrain=cells.map(cell=>{
   const cls=['combat-hex'];
   const moveCost=reachable.get(cell.key);
@@ -3822,14 +3826,15 @@ function renderCombatMap(){
  const areasOverlay=cells.map(cell=>{
   const areas=combatAreasForHex(cell.q,cell.r);
   const preview=combatAreaDraftCenter&&cell.q===combatAreaDraftCenter.q&&cell.r===combatAreaDraftCenter.r;
-  if(!areas.length&&!preview)return '';
+  const cubeSelected=cubePreview&&combatBeskyddareContains(cubePreview,cell);
+  if(!areas.length&&!preview&&!cubeSelected)return '';
   const codes=areas.map(area=>combatEffectDefinition({effect_id:area.effect_id})?.code||'');
-  const color=codes.some(x=>x==='area_beskyddare')?'#b68bff':
+  const color=cubeSelected||codes.some(x=>x==='area_beskyddare')?'#b68bff':
    codes.some(x=>x==='area_fire')?'#fa7045':
    codes.some(x=>x==='area_poison')?'#70c97b':
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
   const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';const d=area.parameters?.cube_dimensions_m;return combatIsBeskyddareArea(area)&&d?name+' '+d.x+'×'+d.y+'×'+d.z+' m':name}).join(', ');
-  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview?'.44':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview?3:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(names||'Valt centrum')+'</title></polygon>'
+  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares kub':names||'Valt centrum')+'</title></polygon>'
  }).join('');
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
@@ -4060,6 +4065,7 @@ function combatSpellResultHtml(action){
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
    (result.barrier?.checks?.length?'<div class="combat-spell-rule-note">Beskyddare: '+result.barrier.checks.map(c=>'EG '+c.incoming_eg+' mot '+c.barrier_eg+' · T20 '+c.roll+' / '+c.resistance.target+(c.blocked?' · stoppad':' · passerar')).join(' · ')+'</div>':'')+
+   (result.barrier_checks?.length?'<div class="combat-spell-rule-note">Beskyddare per mål: '+result.barrier_checks.map(c=>escAttr(combatants.find(t=>String(t.id)===String(c.target_id))?.name_snapshot||c.target_id)+' · '+c.checks.map(v=>'T20 '+v.roll+' / '+v.resistance.target+(v.blocked?' stoppad':' passerar')).join(', ')).join(' · ')+'</div>':'')+
    (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
    (result.erf&&result.erf.awarded>0?'<div class="combat-erf-result gained"><b>+'+escAttr(result.erf.awarded)+' ERF</b></div>':'')+
    (result.target_results?.length
