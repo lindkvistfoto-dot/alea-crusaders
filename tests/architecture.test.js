@@ -42,6 +42,16 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("LO expires effects across rounds and wall-clock duration", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatEffectIsActive(row");
+    expect(combat).toContain("function combatEffectExpiry(def,round,strength=1)");
+    expect(combat).toContain("async function combatExpireElapsedEffects()");
+    expect(combat).toContain("async function combatEndEffectByCondition(id,condition)");
+    expect(combat).toContain("await combatExpireElapsedEffects()");
+    expect(combat).toContain("expires_at:ms?new Date(Date.now()");
+  });
+
   test("VARG exposes editable effect definitions and parameter schema", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatEffectFormData(prefix)");
