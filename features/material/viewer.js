@@ -88,7 +88,7 @@ export function createLegolas({
   const nav=doc().createElement('button');
   nav.id='materialNavBtn';nav.type='button';nav.className='btn legolas-nav';
   nav.title='Materialpanel';nav.setAttribute('aria-label','Öppna materialpanelen');
-  nav.textContent='▧ Material';nav.addEventListener('click',()=>openPanel());
+  nav.innerHTML='<span aria-hidden="true">▧</span><span class="material-nav-label"> Material</span>';nav.addEventListener('click',()=>openPanel());
   const target=el('mapNavBtn')||doc().querySelector('header .barspacer');
   if(target)target.insertAdjacentElement('beforebegin',nav);
   const panel=doc().createElement('section');panel.id='legolasPanel';panel.className='legolas-panel hidden';
