@@ -308,9 +308,10 @@ function weaponGripRule(handling,weaponGroup,charGroup){
   if(cg===req-1)return {canUse:true,hands:2,glMultiplier:.5,status:'understrength'};
   return {canUse:false,hands:2,glMultiplier:0,status:'too_weak'}
  }
- if(cg>=req+1)return {canUse:true,hands:1,glMultiplier:1,status:'normal'};
- if(cg===req)return {canUse:true,hands:2,glMultiplier:1,status:'normal'};
- if(cg===req-1)return {canUse:true,hands:2,glMultiplier:.5,status:'understrength'};
+ // For 1–2H weapons, matching the required STY group is enough for one-handed use.
+ if(cg>=req)return {canUse:true,hands:1,glMultiplier:1,status:'normal'};
+ if(cg===req-1)return {canUse:true,hands:2,glMultiplier:1,status:'normal'};
+ if(cg===req-2)return {canUse:true,hands:2,glMultiplier:.5,status:'understrength'};
  return {canUse:false,hands:2,glMultiplier:0,status:'too_weak'}
 }
 function weaponGripForCharacter(item,c=current){
