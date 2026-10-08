@@ -1807,6 +1807,7 @@ function combatMagicBinding(spell){
  const effects={'FLYGA':'spell_flyga','FÖRROLLAD SÖMN':'condition_sleep',
  'PARALYSERING':'condition_paralysis','FÖRVIRRA':'condition_confusion',
  'PANIK':'condition_panic','RÄDSLA':'condition_fear','KONTROLLERA VARELSE':'condition_control'};
+ if(name==='HELA')return {kind:'heal',supported:true,requires_resistance:false,manual_amount:true};
  if(name==='BESKYDDARE')return {kind:'area',code:'area_beskyddare',supported:true,ritual:true,cube:true,requires_resistance:false};
  if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
   return {kind:'manual',supported:true,ritual:true,reason:'Ritual · SL avgör tid och effekt'};
@@ -1940,14 +1941,17 @@ async function combatMagicButton(event,combatantId){
   if(data.casting_spell){
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
-   if(data.magic_binding?.kind==='manual'){
+   if(data.magic_binding?.kind==='manual'||data.magic_binding?.kind==='heal'){
+    const healing=data.magic_binding?.kind==='heal';
+    const target=healing?combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId):null;
+    if(healing&&!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.planned&select=id',{
       method:'PATCH',headers:{'Prefer':'return=representation'},
       body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})
      });
      if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Besvärjelsen hanteras redan. Ladda om striden.');
-     action.status='resolving';await combatCastManualSpell(combatant,action)
+     action.status='resolving';await combatCastManualSpell(combatant,action,target)
     }catch(error){console.error('Manuell besvärjelse kunde inte slutföras',error);alert('Besvärjelsen kunde inte slutföras: '+error.message);await loadActiveCombat(null,{preserveSelectedTarget:true})}
     return
    }
@@ -2268,8 +2272,9 @@ function closeCombat(){
 function selectCombatTarget(id){
  if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
- if(actor&&(def?.type==='attack'||action?.source_data?.test_fireball===true)&&action?.status==='planned'){
-  if(id&&String(id)===String(actor.id)){
+ if(actor&&(def?.type==='attack'||action?.source_data?.test_fireball===true||
+  (action?.source_data?.casting_spell===true&&['status','heal'].includes(action.source_data?.magic_binding?.kind)))&&action?.status==='planned'){
+  if(id&&String(id)===String(actor.id)&&(def?.type==='attack'||action?.source_data?.test_fireball===true)){
    combatSelectedTargetId=null;
    renderCombat();
    return
@@ -3153,6 +3158,16 @@ async function combatSetMagicDuration(actorId,delta){
 }
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
+ if(action.source_data.magic_binding?.kind==='heal'){
+  const targets=combatSpellEffectTargets(actor,action);
+  return '<div class="combat-spell-choice"><b>HELA · välj mål</b>'+
+   '<small>Beröring · välj dig själv eller en kombatant inom räckvidd på kartan, raden eller här. Tryck sedan ✦ igen.</small>'+
+   targets.map(target=>'<button type="button" class="combat-weapon-choice-btn'+
+    (String(combatSelectedTargetId)===String(target.id)?' active':'')+
+    '" onclick="selectCombatTarget(\''+target.id+'\')">'+escAttr(target.name_snapshot)+
+    ' · KP '+escAttr(target.current_kp??'—')+'/'+escAttr(target.max_kp??'—')+'</button>').join('')+
+   '<small>SL avgör antal återställda KP enligt regelboken. KP ändras inte automatiskt.</small></div>'
+ }
  if(action.source_data.magic_binding?.kind==='manual'){
   const ritual=action.source_data.magic_binding.ritual===true;
   return '<div class="combat-spell-choice"><b>'+escAttr(action.source_data.spell_name||'Besvärjelse')+'</b>'+
@@ -3227,10 +3242,12 @@ function combatSpellEffectTargets(actor,action){
   (target.visible_to_players!==false||combatCanManage())&&
   combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
 }
-async function combatCastManualSpell(actor,action){
+async function combatCastManualSpell(actor,action,target=null){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
- const data=action?.source_data||{};
- if(data.magic_binding?.kind!=='manual')throw new Error('Endast besvärjelser med SL-styrd effekt kan hanteras manuellt.');
+ const data=action?.source_data||{},healing=data.magic_binding?.kind==='heal';
+ if(!healing&&data.magic_binding?.kind!=='manual')throw new Error('Endast besvärjelser med SL-styrd effekt kan hanteras manuellt.');
+ if(healing&&(!target||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id))))
+  throw new Error('HELA kräver ett giltigt mål inom beröringsavstånd.');
  const spellName=data.spell_name||'Besvärjelse',eg=Math.max(1,Number(data.effect_grade)||1);
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot,fv);
@@ -3240,17 +3257,23 @@ async function combatCastManualSpell(actor,action){
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,
   confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,
   spell_name:spellName,manual_effect:true,effect_applied:false,
+  target_id:target?.id||null,target_name:target?.name_snapshot||null,
+  healing_target_id:healing?target.id:null,healing_applied:false,
   gm_resolution_required:rolled.success,ritual:data.magic_binding.ritual===true};
  if(erf)result.erf=erf;
+ if(healing&&rolled.success){
+  result.barrier=await combatResolveBeskyddarePassage(actor,target,eg);
+  if(result.barrier.blocked){result.blocked_by_beskyddare=true;result.gm_resolution_required=false}
+ }
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  const round=Number(activeCombat.round_number)||1;
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
-  headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:null,result,updated_at:new Date().toISOString()})});
+  headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:target?.id||null,result,updated_at:new Date().toISOString()})});
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
-  actor_id:actor.id,target_id:null,event_type:'spell_manual',
-  message:actor.name_snapshot+' kastar '+spellName+' · '+combatOutcomeLabel(rolled.outcome)+
-   (rolled.success?' · SL avgör effekten':' · ingen automatisk effekt'),
+  actor_id:actor.id,target_id:target?.id||null,event_type:healing?'spell_heal':'spell_manual',
+  message:actor.name_snapshot+' kastar '+spellName+(target?' på '+target.name_snapshot:'')+' · '+combatOutcomeLabel(rolled.outcome)+
+   (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':' · SL avgör effekten'):' · ingen automatisk effekt'),
   details:result,player_visible:true
  })});
  await loadActiveCombat(null,{preserveSelectedTarget:true})
@@ -3421,7 +3444,7 @@ async function rollCombatTestFireball(actorId,targetId){
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||combatCannotAct(actor))return new Map();
- if(action?.source_data?.casting_spell===true&&combatSupportedStatusSpell(action))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
+ if(action?.source_data?.casting_spell===true&&(combatSupportedStatusSpell(action)||action.source_data.magic_binding?.kind==='heal'))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
  if(action?.source_data?.casting_spell===true&&action?.source_data?.magic_binding?.kind==='damage')return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
@@ -3925,7 +3948,7 @@ function combatRowIsSelectingTarget(){
  const actor=combatActiveActor(),action=combatChosenAction(actor);
  if(!actor||action?.status!=='planned')return false;
  if(combatActionDefinition(action)?.type==='attack'||action.source_data?.test_fireball===true)return true;
- return action.source_data?.casting_spell===true&&['damage','status'].includes(action.source_data?.magic_binding?.kind)
+ return action.source_data?.casting_spell===true&&['damage','status','heal'].includes(action.source_data?.magic_binding?.kind)
 }
 function combatantRowClick(event,id){
  event?.stopPropagation?.();
@@ -4069,6 +4092,7 @@ function combatSpellResultHtml(action){
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
+   (result.healing_target_id?'<div class="combat-spell-rule-note"><b>HELA · mål:</b> '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+' · KP bestäms av SL</div>':'')+
    (result.barrier?.checks?.length?'<div class="combat-spell-rule-note">Beskyddare: '+result.barrier.checks.map(c=>'EG '+c.incoming_eg+' mot '+c.barrier_eg+' · T20 '+c.roll+' / '+c.resistance.target+(c.blocked?' · stoppad':' · passerar')).join(' · ')+'</div>':'')+
    (result.barrier_checks?.length?'<div class="combat-spell-rule-note">Beskyddare per mål: '+result.barrier_checks.map(c=>escAttr(combatants.find(t=>String(t.id)===String(c.target_id))?.name_snapshot||c.target_id)+' · '+c.checks.map(v=>'T20 '+v.roll+' / '+v.resistance.target+(v.blocked?' stoppad':' passerar')).join(', ')).join(' · ')+'</div>':'')+
    (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
