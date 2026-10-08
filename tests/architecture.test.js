@@ -42,6 +42,19 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("combat damage rejects stale KP instead of silently overwriting concurrent damage", () => {
+    const combat = read("features/combat/runtime.js");
+    const start = combat.indexOf("async function combatResolveDamage(");
+    const end = combat.indexOf("function combatDamageResultHtml(", start);
+    const damage = combat.slice(start, end);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    expect(damage).toContain("'&current_kp=eq.'+encodeURIComponent(before)");
+    expect(damage).toContain("'Prefer':'return=representation'");
+    expect(damage).toContain("!Array.isArray(saved)||saved.length!==1");
+    expect(damage).toContain("Målets KP har ändrats av en annan handling");
+  });
+
   test("Expert magic casting applies EG penalties, PSY costs and quick timing", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("function combatMagicCastingRules(");
