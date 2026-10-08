@@ -42,6 +42,15 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("VARG exposes editable effect definitions and parameter schema", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("function combatEffectFormData(prefix)");
+    expect(combat).toContain("async function combatSaveEffect()");
+    expect(combat).toContain("parameter_schema:params");
+    expect(combat).toContain("expiration_condition:val('Ending')");
+    expect(combat).toContain("target_type:val('Target')");
+  });
+
   test("STÅ ÖVER blocks actions and movement for configured rounds", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatMustSkipTurn(combatant");
