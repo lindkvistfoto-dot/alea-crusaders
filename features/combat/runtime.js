@@ -3722,6 +3722,7 @@ async function combatCreateAreaEffect(){
   if(kind!=='area_damage'&&kind!=='area_terrain')throw new Error('Områdets regeltyp saknar stöd i strid.');
   const round=Number(activeCombat.round_number)||1,center=combatAreaDraftCenter;
   if(!combatRuntimeHexCells().some(c=>c.q===center.q&&c.r===center.r))throw new Error('Centrum ligger utanför stridskartan.');
+  await window.combatUndoBeforeActorAction?.();
   await dbJson('combat_area_effects',{
    method:'POST',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,effect_id:id,
@@ -3736,6 +3737,7 @@ async function combatCreateAreaEffect(){
 async function combatRemoveAreaEffect(areaId){
  if(!combatCanManage()||!activeCombat)return;
  try{
+  await window.combatUndoBeforeActorAction?.();
   await dbJson('combat_area_effects?id=eq.'+encodeURIComponent(areaId)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({status:'removed',updated_at:new Date().toISOString()})
