@@ -2598,11 +2598,17 @@ async function commitCombatMovementPlan(){
  const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
  await window.combatUndoBeforeActorAction?.();
  try{
-  await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id),{
-   method:'PATCH',headers:{'Prefer':'return=minimal'},
+  const moved=await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+
+   '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
+   '&q=eq.'+encodeURIComponent(fromQ)+'&r=eq.'+encodeURIComponent(fromR)+
+   '&movement_remaining=eq.'+encodeURIComponent(combatMovementBudget(actor))+
+   '&select=id,q,r,movement_remaining',{
+   method:'PATCH',headers:{'Prefer':'return=representation'},
    body:JSON.stringify({q,r,movement_remaining:remaining,updated_at:new Date().toISOString()})
   });
-  actor.q=q;actor.r=r;actor.movement_remaining=remaining;
+  if(!Array.isArray(moved)||moved.length!==1)
+   throw new Error('Kombatanten har redan flyttats eller fått ändrad förflyttning. Ladda om striden.');
+  actor.q=Number(moved[0].q);actor.r=Number(moved[0].r);actor.movement_remaining=Number(moved[0].movement_remaining);
   if(combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
   combatMovementAnimation={combatantId:String(actor.id),fromQ,fromR,toQ:q,toR:r};
   combatMovementPlan=null;
