@@ -22,7 +22,7 @@ function harness({gm=true,logged=true,other=false,rows=[]}={}){
   legolasPreviewQueue:{disabled:false},legolasClearQueue:{disabled:false}
  };
  const api=createLegolas({
-  doc:()=>({getElementById:id=>nodes[id]||null}),
+  doc:()=>({getElementById:id=>nodes[id]||null,body:{classList:{toggle(){}}}}),
   win:()=>({URL:{revokeObjectURL(){},createObjectURL(){return 'blob:fake'}}}),
   getCampaign:()=>other?otherCampaign:campaign,
   isLoggedIn:()=>logged,isGM:()=>gm,
