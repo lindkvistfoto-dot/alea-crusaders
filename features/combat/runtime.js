@@ -4209,14 +4209,16 @@ function renderCombat(){
  if(!activeCombat){
   if(sub)sub.textContent='Ingen aktiv strid';
   combatantDetailCombatantId=null;
-  body.innerHTML='<div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen. Tryck <b>Förbered</b> för att justera positioner och reserver före <b>Play</b>, som sedan slår initiativ.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div>';return
+  body.innerHTML='<div class="combat-shell combat-shell-idle"><aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list"><div class="combat-target-note">Ingen aktiv strid.</div></div><div id="combatGmControls" class="combat-gm-controls hidden"></div></aside><div class="combat-empty"><h3>Ingen aktiv strid</h3><div class="combat-foundation-note">Välj en stridsscen. Tryck <b>Förbered</b> för att justera positioner och reserver före <b>Play</b>, som sedan slår initiativ.</div><div class="combat-quick-note"><b>Reset</b> återställer den aktiva striden till stridsscenens sparade startpositioner, terräng och grundvärden.</div></div></div>';
+  renderCombatGmControls();return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  let displayedCombatants=combatants.filter(c=>c.state?.in_reserve!==true);
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+combatGmToolboxHtml()+'</div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div></aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+combatGmToolboxHtml()+'</div>'+combatantDetailsPopupHtml();
+ renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
