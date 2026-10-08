@@ -42,6 +42,16 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("combat movement rejects stale coordinates and movement budgets", () => {
+    const combat = read("features/combat/runtime.js");
+    const start = combat.indexOf("async function commitCombatMovement");
+    const move = combat.slice(combat.indexOf("const fromQ=Number(actor.q)||0", Math.max(0,start)),combat.indexOf("async function moveActiveCombatantToHex("));
+    expect(move).toContain("'&q=eq.'+encodeURIComponent(fromQ)");
+    expect(move).toContain("'&r=eq.'+encodeURIComponent(fromR)");
+    expect(move).toContain("'&movement_remaining=eq.'+encodeURIComponent(combatMovementBudget(actor))");
+    expect(move).toContain("!Array.isArray(moved)||moved.length!==1");
+  });
+
   test("combat damage rejects stale KP instead of silently overwriting concurrent damage", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("async function combatResolveDamage(");
