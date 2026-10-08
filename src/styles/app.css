@@ -6004,3 +6004,11 @@ body:not(.editing) #skilltable .skill-roll-btn{
   max-width:100%;
   white-space:normal;
 }
+
+/* v0.34.65 — 88-spell test casters: keep the magic chooser usable on small screens. */
+.combat-row-magic-menu .combat-weapon-choice-grid{
+  max-height:min(50vh,450px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:2px;
+}

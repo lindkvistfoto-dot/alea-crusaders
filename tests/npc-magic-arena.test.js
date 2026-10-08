@@ -21,3 +21,42 @@ describe('SLP magiarena',()=>{
   for(const marker of ['function renderAdminNpcSpells()', 'function addAllAdminNpcSpells()', 'function sanitizeNpcSpells(list)', 'spells:sanitizeNpcSpells(adminNpcDraft?.spells)'])expect(adm).toContain(marker)
  })
 });
+
+describe('SLP magier i den pågående stridsvyn',()=>{
+ const spellStart=rt.indexOf('function combatSpellOptions(');
+ const spellEnd=rt.indexOf('async function combatMagicButton(',spellStart);
+ test('magimenyn hämtar 88 FV 15-besvärjelser från sparad state.attack_profile',()=>{
+  expect(spellStart).toBeGreaterThan(-1);
+  expect(spellEnd).toBeGreaterThan(spellStart);
+  const rules=Array.from({length:88},(_,i)=>({
+   id:'rule-'+i,name:i===0?'ELD (F)':'TESTBESVÄRJELSE '+i,
+   attack_magic:i===0,damage_text:i===0?'1T6 per EG':'',school_id:'elementarmagi'
+  }));
+  const npc={attributes:{STY:10,FYS:18,STO:20,SMI:15,PSY:99},weapons:[],spells:rules.map(rule=>({
+   rule_id:rule.id,name:rule.name,fv:15,school_fv:15
+  }))};
+  ctx.ruleSpells=rules;
+  const stats=ctx.getStats({source_type:'npc',source_id:'npc-test',state:{}},{
+   characters:new Map(),npcs:new Map([['npc-test',npc]]),monsters:new Map()
+  });
+  const battleCombatant={id:'combatant-test',source_type:'npc',state:{attack_profile:stats.attack_profile}};
+  const ui={ruleSpells:rules,escAttr:value=>String(value),
+   combatMagicRuleProfile:()=>({category:'direct'}),
+   combatMagicBinding:()=>({supported:true})};
+  runInNewContext(rt.slice(spellStart,spellEnd)+'this.spellOptions=combatSpellOptions;this.spellChooser=combatSpellChooserHtml;',ui);
+  const options=ui.spellOptions(battleCombatant);
+  expect(options).toHaveLength(88);
+  expect(options.every(spell=>spell.fv===15&&spell.school_fv===15)).toBe(true);
+  const html=ui.spellChooser(battleCombatant,null);
+  expect((html.match(/combat-weapon-choice-btn/g)||[])).toHaveLength(88);
+  expect(html).toContain('ELD (F)');
+  expect(html).not.toContain('Rollfiguren har inga besvärjelser.');
+ });
+ test('utan besvärjelser visas ett begripligt tomläge',()=>{
+  const ui={ruleSpells:[],escAttr:value=>String(value),
+   combatMagicRuleProfile:()=>({category:'none'}),combatMagicBinding:()=>({supported:false,reason:'Ej implementerad'})};
+  runInNewContext(rt.slice(spellStart,spellEnd)+'this.spellOptions=combatSpellOptions;this.spellChooser=combatSpellChooserHtml;',ui);
+  expect(ui.spellOptions({state:{attack_profile:{spells:[]}}})).toHaveLength(0);
+  expect(ui.spellChooser({state:{attack_profile:{spells:[]}}},null)).toContain('Rollfiguren har inga besvärjelser.');
+ });
+});

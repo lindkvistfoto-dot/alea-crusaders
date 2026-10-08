@@ -1748,7 +1748,10 @@ async function combatSpendMagicPsy(actor,cost){
 }
 function combatSpellOptions(combatant){
  const registry=Array.isArray(ruleSpells)?ruleSpells:[];
- return (combatant?.attack_profile?.spells||[]).map(spell=>{
+ // Combatants store their spell snapshot in state.attack_profile (not at top level).
+ // Read that snapshot so prepared scenes and resumed battles keep their spell list.
+ const spells=Array.isArray(combatant?.state?.attack_profile?.spells)?combatant.state.attack_profile.spells:[];
+ return spells.map(spell=>{
   const rule=registry.find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||
    String(row.name||'').localeCompare(String(spell?.name||''),'sv',{sensitivity:'base'})===0);
   return rule?{...rule,...spell,rule_id:rule.id,attack_magic:rule.attack_magic===true,
