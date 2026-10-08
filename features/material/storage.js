@@ -194,3 +194,6 @@ function gimliMountAdmin(){
   '<div id="gimliRecent"></div><div id="gimliStoredPreview" class="gimli-preview"></div></div>';
  document.querySelector('#admin .admin-detail')?.insertAdjacentElement('beforebegin',section)
 }
+
+// Expose only the admin UI callbacks needed by existing inline buttons.
+Object.assign(window,{gimliFileSelected,gimliSubmitFile,gimliLoadRecent,gimliShowStored,gimliMountAdmin});
