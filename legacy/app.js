@@ -1789,7 +1789,7 @@ async function deleteCampaignMonster(id){
 }
 
 
-let activatingCampaignMap=false,mapReturn='home',activeCampaignMap=null,campaignMapAreas=[],campaignMaps=[],campaignActiveMapId=null,mapView={scale:1,x:0,y:0},mapPointers=new Map(),mapDragStart=null,mapPinchStart=null,mapDidDrag=false,mapPointerAreaId=null,mapSelectedAreaId=null,mapLocationInfoToken=0,mapImageCache=new Map();
+let activatingCampaignMap=false,changingMapVisibilityId=null,mapReturn='home',activeCampaignMap=null,campaignMapAreas=[],campaignMaps=[],campaignActiveMapId=null,mapView={scale:1,x:0,y:0},mapPointers=new Map(),mapDragStart=null,mapPinchStart=null,mapDidDrag=false,mapPointerAreaId=null,mapSelectedAreaId=null,mapLocationInfoToken=0,mapImageCache=new Map();
 function canManageCampaignMaps(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 async function loadCampaignMapRole(){
  centralCampaignRole=null;
@@ -1936,7 +1936,7 @@ async function loadCampaignMaps(loadViewed=true){
  }else renderMapLibraryControls();
 }
 function renderMapLibraryControls(){
- let picker=$('mapPicker'),currentBtn=$('mapCurrentBtn'),setCurrentBtn=$('mapSetCurrentBtn'),badge=$('mapCurrentBadge');
+ let picker=$('mapPicker'),currentBtn=$('mapCurrentBtn'),setCurrentBtn=$('mapSetCurrentBtn'),badge=$('mapCurrentBadge'),visibilityToggle=$('mapVisibilityToggle');
  if(picker){
   let viewable=canManageCampaignMaps()?campaignMaps:campaignMaps.filter(m=>m.player_visible);
   picker.innerHTML='<option value="">Ingen karta</option>'+viewable.map(m=>`<option value="${m.id}" ${activeCampaignMap?.id===m.id?'selected':''}>${escAttr(m.name)}${m.id===campaignActiveMapId?' · aktuell':''}</option>`).join('');
@@ -1953,6 +1953,18 @@ function renderMapLibraryControls(){
    'Gör den visade kartan aktuell (kartan är fortfarande dold för spelarna)';
  }
  badge?.classList.toggle('hidden',!viewingActive);
+ if(visibilityToggle){
+  let gm=canManageCampaignMaps(),map=activeCampaignMap;
+  visibilityToggle.classList.toggle('hidden',!gm||!map);
+  let visible=!!map?.player_visible;
+  visibilityToggle.setAttribute('aria-checked',String(visible));
+  visibilityToggle.setAttribute('aria-label','Visa kartan för spelare');
+  visibilityToggle.classList.toggle('is-visible',visible);
+  visibilityToggle.classList.toggle('is-hidden',!visible);
+  visibilityToggle.disabled=!!changingMapVisibilityId||!map;
+  visibilityToggle.textContent=visible?'👁 Synlig för spelare':'🙈 Dold för spelare';
+  visibilityToggle.title=visible?'Dölj den här kartan för spelarna':'Gör den här kartan synlig för spelarna';
+ }
  let revealBtn=$('mapRevealAllBtn');
  revealBtn?.classList.toggle('hidden',!canManageCampaignMaps()||!activeCampaignMap);
 }
@@ -2286,14 +2298,36 @@ async function activateCampaignMapById(id){
  }catch(e){alert('Kunde inte göra kartan aktuell: '+e.message);return false}
  finally{activatingCampaignMap=false;renderMapLibraryControls()}
 }
+async function toggleViewedMapPlayerVisibility(){
+ if(!canManageCampaignMaps()||!activeCampaignMap)return false;
+ return toggleMapPlayerVisibility(activeCampaignMap.id);
+}
 async function toggleMapPlayerVisibility(id){
- let m=campaignMaps.find(x=>x.id===id);if(!m||!canManageCampaignMaps())return;
- let next=!m.player_visible;
+ let m=campaignMaps.find(x=>x.id===id);
+ if(!m||!canManageCampaignMaps()||!centralCampaignId||changingMapVisibilityId)return false;
+ let campaignAtStart=centralCampaignId,next=!m.player_visible;
+ changingMapVisibilityId=id;renderMapLibraryControls();
  try{
-  await dbJson('campaign_maps?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({player_visible:next})});
-  m.player_visible=next;await loadCampaignMaps(false);renderAdminMaps();renderMapLibraryControls();
+  let saved=await dbJson('campaign_maps?id=eq.'+encodeURIComponent(id)+
+   '&campaign_id=eq.'+encodeURIComponent(campaignAtStart)+
+   '&select=id,campaign_id,player_visible',{
+   method:'PATCH',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({player_visible:next})
+  });
+  if(!Array.isArray(saved)||!saved.some(row=>row.id===id&&
+     row.campaign_id===campaignAtStart&&row.player_visible===next))
+   throw new Error('Databasen bekräftade inte ändringen av spelaråtkomsten.');
+  if(centralCampaignId!==campaignAtStart)return false;
+  m.player_visible=next;
+  if(activeCampaignMap?.id===id)activeCampaignMap.player_visible=next;
+  try{await loadCampaignMaps(false)}
+  catch(refreshError){console.warn('Spelaråtkomsten ändrades men kartlistan kunde inte laddas om',refreshError)}
+  if(centralCampaignId!==campaignAtStart)return false;
+  renderAdminMaps();renderMapLibraryControls();
   showBackupToast(next?'✓ Kartan är tillgänglig för spelare':'✓ Kartan är dold för spelare');
- }catch(e){alert('Kunde inte ändra spelaråtkomst: '+e.message)}
+  return true;
+ }catch(e){alert('Kunde inte ändra spelaråtkomst: '+e.message);return false}
+ finally{changingMapVisibilityId=null;renderMapLibraryControls()}
 }
 async function deleteCampaignMap(id){
  let m=campaignMaps.find(x=>x.id===id);if(!m)return;if(id===campaignActiveMapId){alert('Byt aktuell karta innan du tar bort denna karta.');return}
