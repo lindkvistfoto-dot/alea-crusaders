@@ -1,0 +1,16 @@
+/* Frodo Bagger v0.34.85 — single active campaign presentation */
+.frodo-panel{border:1px solid #a08559;border-radius:12px;padding:15px;margin:0 0 18px;background:#29251d;color:#f9ebd2}
+.frodo-panel.frodo-is-active{border-color:#8db49f;background:#233128}
+.frodo-panel-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.frodo-panel-heading strong{font-size:16px;color:#ffe0af}
+.frodo-panel-heading span{color:#f4ebd7;font-size:13px;line-height:1.5}
+.frodo-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.frodo-actions.hidden{display:none!important}
+.frodo-actions button{cursor:pointer;border:1px solid #a28a64;background:#433a2a;color:#fff1d9;border-radius:8px;padding:9px 13px;min-height:43px;font:650 13px system-ui,Arial,sans-serif}
+.frodo-actions button.frodo-primary{border-color:#9ac9b0;background:#315b46;color:#fafff5}
+.frodo-actions button.frodo-stop{border-color:#c69179;background:#633a31;color:#fff0e5}
+.frodo-actions button:disabled{opacity:.45;cursor:default}
+.frodo-actions button:focus-visible{outline:2px solid #94d2df;outline-offset:2px}
+#frodoNotice{min-height:16px;margin:10px 0 0;color:#bbdfc7;font:12px/1.5 system-ui,Arial,sans-serif}
+#frodoNotice.is-error{color:#ffd0ba}
+@media(max-width:520px){.frodo-panel{padding:11px}.frodo-actions button{flex:1 1 auto}.frodo-panel-heading span{flex:1 1 100%}}
