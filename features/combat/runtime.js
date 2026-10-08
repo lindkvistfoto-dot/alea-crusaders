@@ -1557,7 +1557,7 @@ async function stepCombatSpellEffect(combatantId,delta){
 function combatRowMagicMenuHtml(combatant){
  if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='magic')return '';
  const action=combatChosenAction(combatant);
- return '<div class="combat-row-action-menu combat-row-magic-menu" role="menu" onclick="event.stopPropagation()"><div class="combat-row-action-menu-title">Förbered besvärjelse</div>'+combatSpellChooserHtml(combatant,action)+'</div>'
+ return '<div class="combat-row-action-menu combat-row-magic-menu" role="menu" onclick="event.stopPropagation()"><div class="combat-row-action-menu-title">Förbered besvärjelse</div>'+(action?.source_data?.casting_spell?combatMagicTargetChooserHtml(combatant,action):combatSpellChooserHtml(combatant,action))+'</div>'
 }
 function combatActionChooserHtml(combatant){
  if(!combatant)return '';
@@ -2476,6 +2476,53 @@ function combatFireballTargets(){
   if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
  }
  return out
+}
+function combatMagicTargetAllocations(action){
+ return Array.isArray(action?.source_data?.target_allocations)?action.source_data.target_allocations:[]
+}
+async function combatSetMagicTargets(actorId,targets){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||!action||action.status!=='planned'||!action.source_data?.casting_spell)return;
+ const total=Math.max(1,Number(action.source_data.effect_grade)||1);
+ const valid=combatFireballTargets();
+ if(!Array.isArray(targets)||!targets.length||targets.some(t=>!Number.isInteger(t.eg)||t.eg<1||!valid.has(String(t.target_id)))||
+  new Set(targets.map(t=>String(t.target_id))).size!==targets.length||targets.reduce((sum,t)=>sum+t.eg,0)!==total){
+  throw new Error('Fördela hela effektgraden mellan unika mål inom räckvidd.');
+ }
+ const sourceData={...action.source_data,target_allocations:targets};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;renderCombat()
+}
+async function combatAddMagicTarget(actorId,targetId){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!action||!combatFireballTargets().has(String(targetId)))return;
+ const total=Math.max(1,Number(action.source_data.effect_grade)||1);
+ const old=combatMagicTargetAllocations(action),existing=old.find(t=>String(t.target_id)===String(targetId));
+ const next=existing?old.map(t=>String(t.target_id)===String(targetId)?{...t,eg:t.eg+1}:t):[...old,{target_id:String(targetId),eg:1}];
+ if(next.reduce((sum,t)=>sum+t.eg,0)>total){alert('Alla effektgrader är redan fördelade. Ta bort ett mål först.');return}
+ const sourceData={...action.source_data,target_allocations:next};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;renderCombat()
+}
+async function combatRemoveMagicTarget(actorId,targetId){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);if(!action||action.status!=='planned')return;
+ const sourceData={...action.source_data,target_allocations:combatMagicTargetAllocations(action).filter(t=>String(t.target_id)!==String(targetId))};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });action.source_data=sourceData;renderCombat()
+}
+function combatMagicTargetChooserHtml(actor,action){
+ if(!action?.source_data?.casting_spell)return '';
+ const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
+ const candidates=[...combatFireballTargets().keys()];
+ return '<div class="combat-spell-choice"><b>Mål i kast-SR · EG '+spent+'/'+total+'</b><small>Välj fiender och fördela effektgrad innan kastet.</small>'+
+ candidates.map(id=>{const target=combatants.find(c=>String(c.id)===id),assigned=allocations.find(t=>String(t.target_id)===id);
+ return '<div class="combat-spell-effect"><span>'+escAttr(target?.name_snapshot||id)+'</span><b>EG '+(assigned?.eg||0)+'</b><button type="button" onclick="combatAddMagicTarget(\''+actor.id+'\',\''+id+'\')">+</button><button type="button" onclick="combatRemoveMagicTarget(\''+actor.id+'\',\''+id+'\')">×</button></div>'
+ }).join('')+'</div>'
 }
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
