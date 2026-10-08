@@ -2781,7 +2781,8 @@ function combatDestinationKeepsAction(combatant,pathCost){
 function combatReachableHexes(combatant){
  const cells=combatRuntimeHexCells();
  const cellByKey=new Map(cells.map(cell=>[cell.key,cell]));
- const out=new Map();
+ const out=new Map(),predecessors=new Map();
+ out.predecessors=predecessors;
  if(!combatant||combatCannotMove(combatant)||activeCombat?.phase!=='movement')return out;
  const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
  const budget=combatMovementAllowance(combatant),flight=combatFlightCapabilities(combatant);
@@ -2804,11 +2805,26 @@ function combatReachableHexes(combatant){
    const known=out.get(key);
    if(known==null||nextCost<known){
     out.set(key,nextCost);
+    predecessors.set(key,current.key);
     frontier.push({key,cost:nextCost})
    }
   }
  }
  return out
+}
+function combatMovementHexPath(combatant,q,r){
+ const reachable=combatReachableHexes(combatant),start=(Number(combatant.q)||0)+','+(Number(combatant.r)||0);
+ const goal=Number(q)+','+Number(r);
+ if(!reachable.has(goal)||goal===start)return null;
+ const keys=[],seen=new Set();
+ let key=goal;
+ while(key!==start){
+  if(seen.has(key)||keys.length>160)return null;
+  seen.add(key);keys.push(key);key=reachable.predecessors.get(key);
+  if(!key)return null
+ }
+ keys.reverse();
+ return {path:keys.map(k=>{const [q,r]=k.split(',').map(Number);return {q,r}}),cost:reachable.get(goal)}
 }
 async function combatRecordFullMoveAction(combatant){
  if(!combatant||!activeCombat)return;
@@ -2840,25 +2856,25 @@ async function commitCombatMovementPlan(){
  if(!actor||!plan||!combatCanPlanMovement(actor))return;
  const q=Number(plan.q),r=Number(plan.r),cost=Number(plan.cost)||0;
  if(cost<=0||combatMovementOccupied(actor,q,r))return;
- const remaining=Math.max(0,combatMovementBudget(actor)-cost);
+ const route=combatMovementHexPath(actor,q,r);
+ if(!route||route.cost!==cost)throw new Error('Förflyttningens väg stämmer inte längre. Försök igen.');
  const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
  await window.combatUndoBeforeActorAction?.();
  try{
-  const moved=await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+
-   '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
-   '&q=eq.'+encodeURIComponent(fromQ)+'&r=eq.'+encodeURIComponent(fromR)+
-   '&movement_remaining=eq.'+encodeURIComponent(combatMovementBudget(actor))+
-   '&select=id,q,r,movement_remaining',{
-   method:'PATCH',headers:{'Prefer':'return=representation'},
-   body:JSON.stringify({q,r,movement_remaining:remaining,updated_at:new Date().toISOString()})
+  const moved=await dbJson('rpc/haj_move_combatant',{
+   method:'POST',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({p_combatant_id:actor.id,p_from_q:fromQ,p_from_r:fromR,
+    p_expected_remaining:combatMovementBudget(actor),p_path:route.path})
   });
-  if(!Array.isArray(moved)||moved.length!==1)
+  if(!moved||String(moved.id)!==String(actor.id))
    throw new Error('Kombatanten har redan flyttats eller fått ändrad förflyttning. Ladda om striden.');
-  actor.q=Number(moved[0].q);actor.r=Number(moved[0].r);actor.movement_remaining=Number(moved[0].movement_remaining);
-  if(combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
-  combatMovementAnimation={combatantId:String(actor.id),fromQ,fromR,toQ:q,toR:r};
+  actor.q=Number(moved.q);actor.r=Number(moved.r);actor.movement_remaining=Number(moved.movement_remaining);
+  actor.current_kp=moved.current_kp;actor.status=moved.status;
+  if(actor.status!=='dead'&&combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
+  combatMovementAnimation={combatantId:String(actor.id),fromQ,fromR,toQ:actor.q,toR:actor.r};
   combatMovementPlan=null;
-  await loadActiveCombat()
+  await loadActiveCombat();
+  if(moved.interrupted)alert('Förflyttningen avbröts eftersom kombatanten nedkämpades i ett effektområde.')
  }catch(error){
   console.error('Kunde inte låsa förflyttning',error);
   alert('Kunde inte låsa förflyttningen: '+(error?.message||error))
