@@ -408,13 +408,14 @@ async function deleteRuleSkill(id){if(!activeUser()?.admin)return;let r=ruleSkil
 function raceIdFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('race')}
 function raceRuleSummary(raceId){
  let rows=raceRuleRows(raceId),rolls=rows.filter(r=>normalizeRaceRollFormula(r.roll_formula)).length,types=rows.filter(r=>r.typical_value!==null&&r.typical_value!==''&&Number.isFinite(Number(r.typical_value))).length;
- return rolls+'/7 slag · '+types+'/7 typ'
+ let derived=rows.filter(r=>String(r.source_rule||'').trim()).length;
+ return derived?derived+'/7 härledda regler · '+rolls+'/7 slag':rolls+'/7 slag · '+types+'/7 typ'
 }
 function ruleRaceAttributeEditorHtml(raceId){
  let rows=raceRuleRows(raceId||'');
- return '<div class="race-attribute-editor"><div class="race-attribute-head"><span>Egenskap</span><span>Tärningsslag</span><span>Typvärde</span></div>'+
- rows.map(r=>'<div class="race-attribute-row"><b>'+r.attribute_key+'</b><input id="rrRoll_'+r.attribute_key+'" value="'+escAttr(r.roll_formula||'')+'" placeholder="t.ex. 3T6"><input id="rrTypical_'+r.attribute_key+'" type="number" min="0" max="99" value="'+escAttr(r.typical_value??'')+'"></div>').join('')+
- '<small>Tärningsformel: t.ex. 3T6, 2T6+6 eller 2T4+2.</small></div>'
+ return '<div class="race-attribute-editor"><div class="race-attribute-head"><span>Egenskap</span><span>Tärningsslag</span><span>Typvärde</span><span>Härledd regel</span></div>'+
+ rows.map(r=>'<div class="race-attribute-row"><b>'+r.attribute_key+'</b><input id="rrRoll_'+r.attribute_key+'" value="'+escAttr(r.roll_formula||'')+'" placeholder="t.ex. 3T6"><input id="rrTypical_'+r.attribute_key+'" type="number" min="0" max="99" value="'+escAttr(r.typical_value??'')+'"><input id="rrSourceRule_'+r.attribute_key+'" maxlength="180" value="'+escAttr(r.source_rule||'')+'" placeholder="t.ex. upp till ×2 av ursprungsvärdet"></div>').join('')+
+ '<small>Tärningsformel: t.ex. 3T6 eller 2T6+6. Härledda egenskaper (t.ex. skelett) skrivs som särskilda regler, inte som tärningsslag.</small></div>'
 }
 function collectRuleRaceAttributes(){
  return RULE_RACE_ATTRS.map(([key],i)=>{
@@ -422,7 +423,8 @@ function collectRuleRaceAttributes(){
   if(raw.trim()&&!formula)throw new Error(key+': ogiltig tärningsformel.');
   let typicalRaw=$('rrTypical_'+key)?.value??'',typical=typicalRaw===''?null:Number(typicalRaw);
   if(typical!=null&&(!Number.isInteger(typical)||typical<0||typical>99))throw new Error(key+': typvärde måste vara 0–99.');
-  return{attribute_key:key,roll_formula:formula||null,typical_value:typical,sort_order:(i+1)*10}
+  let sourceRule=String($('rrSourceRule_'+key)?.value||'').trim().slice(0,180);
+  return{attribute_key:key,roll_formula:formula||null,typical_value:typical,source_rule:sourceRule,sort_order:(i+1)*10}
  })
 }
 function renderAdminRaces(){
@@ -448,7 +450,7 @@ async function saveRuleRace(id=''){
   let raceId=id||raceIdFromName(name);
   if(id)await dbJson('rule_races?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else{payload.id=raceId;await dbJson('rule_races',{method:'POST',body:JSON.stringify(payload)})}
-  await Promise.all(attrs.map(a=>dbJson('rule_race_attributes?race_id=eq.'+encodeURIComponent(raceId)+'&attribute_key=eq.'+encodeURIComponent(a.attribute_key),{method:'PATCH',body:JSON.stringify({roll_formula:a.roll_formula,typical_value:a.typical_value,sort_order:a.sort_order,updated_at:new Date().toISOString()})})));
+  await Promise.all(attrs.map(a=>dbJson('rule_race_attributes?race_id=eq.'+encodeURIComponent(raceId)+'&attribute_key=eq.'+encodeURIComponent(a.attribute_key),{method:'PATCH',body:JSON.stringify({roll_formula:a.roll_formula,typical_value:a.typical_value,source_rule:a.source_rule,sort_order:a.sort_order,updated_at:new Date().toISOString()})})));
   closeAdminEditor();await loadRuleRaces(true);renderAdminRaces();renderAdminOverviewCounts();if(current)render()
  }catch(e){alert('Kunde inte spara rasen: '+e.message)}
 }
@@ -1550,7 +1552,7 @@ function updateNpcRaceRuleAvailability(){
  if($('npcRaceRandomBtn'))$('npcRaceRandomBtn').disabled=!randomOk;
  if($('npcRaceTypicalBtn'))$('npcRaceTypicalBtn').disabled=!typicalOk;
  let note=$('npcRaceRuleNote');
- if(note)note.textContent=!info?' · välj ras':(randomOk&&typicalOk?' · rasregler klara':' · ofullständiga rasregler – inga värden ändras')
+ if(note)note.textContent=!info?' · välj ras':(info.rows.some(r=>r.source_rule)?' · härledda egenskaper – ange ursprungsvärden manuellt':randomOk&&typicalOk?' · rasregler klara':' · ofullständiga rasregler – inga värden ändras')
 }
 function applyNpcRaceAttributes(mode){
  let info=selectedNpcRaceRules();if(!info){alert('Välj först en ras.');return}
