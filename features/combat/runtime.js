@@ -2417,7 +2417,7 @@ function combatArmorAbsorption(combatant){
 async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null){
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
- const bonusSpec=combatDamageBonusSpec(actor);
+ const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
  let weaponValue=Number(weaponSpec.modifier)||0,bonusValue=Number(bonusSpec.modifier)||0;
  if(fullDamage){
   weaponValue+=weaponSpec.qty*weaponSpec.sides;
@@ -2859,7 +2859,7 @@ async function combatResolveTestFireball(actor,target,action){
    if(!victim)throw new Error('Målet saknas vid kastet.');
    const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
    if(!formula)throw new Error('Skadeformeln är inte verifierad för vald effektgrad.');
-   const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic'};
+   const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic',_spell_damage:true};
    const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
   }
