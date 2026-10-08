@@ -94,7 +94,7 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
  test('area and status casts keep manually specified SR duration',()=>{
   expect(src).toContain('async function combatSetMagicDuration(actorId,delta)');
   expect(src).toContain('effect_duration_rounds:duration||null');
-  expect(src).toContain('expires_round:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null');
+  expect(src).toContain('expires_round:data.magic_binding?.cube?null:Number.isSafeInteger(duration)&&duration>0?round+duration-1:null');
  });
  test('spell casts award Expert ERF through the existing once-per-rest rule engine',()=>{
   expect(src).toContain('async function combatAwardSpellErf(actor,action,outcome)');
