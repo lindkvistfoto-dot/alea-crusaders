@@ -6181,3 +6181,18 @@ body:not(.editing) #skilltable .skill-roll-btn{
 @media(max-width:1080px){.bilbo-columns{grid-template-columns:minmax(0,1fr) minmax(260px,310px)}.bilbo-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.bilbo-columns{grid-template-columns:1fr}.bilbo-details{position:static;max-height:none}.bilbo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bilbo-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:400px){.bilbo-controls{grid-template-columns:1fr}.bilbo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.bilbo-card-label{padding:7px}.bilbo-pagination{gap:8px}}
+
+/* Expert skelett: extra column for rules derived from an original creature */
+.race-attribute-editor .race-attribute-head,
+.race-attribute-editor .race-attribute-row{
+ grid-template-columns:65px minmax(100px,.85fr) 82px minmax(205px,1.55fr);
+}
+.race-attribute-row input[id^="rrSourceRule_"]{min-width:0;width:100%;box-sizing:border-box}
+@media(max-width:690px){
+ .race-attribute-editor .race-attribute-head{display:none}
+ .race-attribute-editor .race-attribute-row{
+  grid-template-columns:52px minmax(0,1fr) 76px;
+  gap:6px;padding:8px;
+ }
+ .race-attribute-row input[id^="rrSourceRule_"]{grid-column:2/-1;min-height:37px}
+}
