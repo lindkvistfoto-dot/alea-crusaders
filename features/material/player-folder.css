@@ -1,0 +1,30 @@
+/* Sam Gamgi v0.34.86 — readable, mobile-friendly persistent player library. */
+.sam-folder{padding:15px;margin:0 0 18px;background:#232a20;border:1px solid #81916e;border-radius:12px;color:#f6efdc}
+.sam-header{display:flex;align-items:start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.sam-header h3{font-size:17px;color:#e9eec0;margin:0 0 5px}
+.sam-header p{font-size:12px;color:#d7dbc0;margin:0 0 10px;line-height:1.5}
+.sam-header button,.sam-pagination button,.sam-revoke,.sam-share-primary{border:1px solid #9ba785;border-radius:8px;min-height:40px;background:#354331;color:#f9f4df;padding:8px 11px;font:650 13px system-ui,sans-serif;cursor:pointer}
+.sam-header button:hover,.sam-pagination button:hover:not(:disabled),.sam-revoke:hover:not(:disabled){background:#496141}
+.sam-header button:focus-visible,.sam-pagination button:focus-visible,.sam-revoke:focus-visible,.sam-share-primary:focus-visible,.sam-item-open:focus-visible{outline:2px solid #98d9e8;outline-offset:2px}
+.sam-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 0;border-top:1px solid #506144;border-bottom:1px solid #506144;margin:7px 0 12px}
+.sam-actions.hidden{display:none!important}
+.sam-actions span{font-size:12px;color:#cfdbc0;max-width:470px}
+.sam-share-primary{background:#3b6249;border-color:#83b591}
+.sam-share-primary:hover:not(:disabled){background:#4a7958}
+.sam-share-primary:disabled,.sam-pagination button:disabled,.sam-revoke:disabled{opacity:.48;cursor:default}
+.sam-notice{min-height:17px;font-size:12px;line-height:1.4;color:#d8e6bd;margin:8px 0}
+.sam-notice.is-error{color:#ffd2b9}
+.sam-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:9px}
+.sam-item{display:flex;align-items:center;gap:6px;min-width:0;border:1px solid #677c61;background:#273429;border-radius:9px;padding:7px}
+.sam-item-open{display:flex;align-items:center;gap:10px;flex:1;min-width:0;min-height:55px;color:#f8f4e7;background:transparent;border:0;text-align:left;cursor:pointer;padding:3px}
+.sam-item-open strong{display:block;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.sam-item-open small{display:block;margin-top:4px;font-size:11px;color:#cfd7c1}
+.sam-item-symbol{font-size:28px;color:#bfd3a0;min-width:32px;text-align:center}
+.sam-revoke{flex-shrink:0;background:#59382e;color:#ffebdc;border-color:#b69083;font-size:12px;min-height:37px}
+.sam-empty{grid-column:1/-1;color:#d6ddc7;border:1px dashed #718068;border-radius:9px;padding:16px;text-align:center;font-size:13px;margin:0}
+.sam-pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 0}
+.sam-pagination span{font-size:12px;font-weight:700;min-width:60px;text-align:center}
+.legolas-sam-share{margin:0 10px 10px;min-height:37px;border:1px solid #90b08b;border-radius:8px;background:#354e39;color:#efffdf;font:650 12px system-ui,sans-serif;cursor:pointer}
+.legolas-sam-share:hover{background:#45674a}
+.legolas-sam-share:focus-visible{outline:2px solid #94d2df;outline-offset:2px}
+@media(max-width:720px){.sam-items{grid-template-columns:1fr}.sam-folder{padding:11px}.sam-item{gap:4px}.sam-revoke{font-size:11px}}
