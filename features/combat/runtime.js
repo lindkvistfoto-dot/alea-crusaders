@@ -3838,7 +3838,7 @@ function renderCombatMap(){
    codes.some(x=>x==='area_fire')?'#fa7045':
    codes.some(x=>x==='area_poison')?'#70c97b':
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
-  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' '+combatBeskyddareStoredSideCells(area.parameters)+'³ rutor':name}).join(', ');
+  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' '+Array(3).fill(combatBeskyddareStoredSideCells(area.parameters)).join('×')+' rutor':name}).join(', ');
   return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares kub':names||'Valt centrum')+'</title></polygon>'
  }).join('');
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
@@ -4527,7 +4527,7 @@ function combatAreasAdminHtml(){
   '<div>'+rows.map(a=>{
    const d=combatEffectDefinition({effect_id:a.effect_id}),end=a.expires_round!=null?' · till SR '+a.expires_round:' · tills vidare';
    const params=a.parameters||{};
-   const shape=combatIsBeskyddareArea(a)?('kub '+combatBeskyddareStoredSideCells(params)+'³ rutor'):'radie '+a.radius;
+   const shape=combatIsBeskyddareArea(a)?('kub '+Array(3).fill(combatBeskyddareStoredSideCells(params)).join('×')+' rutor'):'radie '+a.radius;
    return '<span><b>'+escAttr(d?.name||'Område')+'</b> ('+a.center_q+','+a.center_r+', '+shape+
     end+') · in '+(params.damage_on_enter||0)+' / kvar '+(params.damage_on_stay||0)+
     ' / ut '+(params.damage_on_exit||0)+
