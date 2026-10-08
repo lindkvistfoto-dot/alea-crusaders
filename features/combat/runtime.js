@@ -2607,7 +2607,7 @@ async function combatCastStatusSpell(actor,target,action){
  if(spellName!=='FLYGA'&&!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))throw new Error('Välj egenskap före kastet.');
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
- const cost=rolled.outcome==='perfect'?Math.max(1,Math.floor(eg/2)):eg;
+ const cost=!rolled.success?1:rolled.outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg;
  const round=Number(activeCombat.round_number)||1;
  if(actor.current_psy!=null){
   const before=Number(actor.current_psy);
@@ -2640,7 +2640,7 @@ async function combatChooseSpellAttribute(actorId,attribute){
 async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
- const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:outcome==='perfect'?Math.max(1,Math.floor(eg/2)):eg,spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
+ const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:!success?1:outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg,spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(success){
   const allocations=combatMagicTargetAllocations(action);
