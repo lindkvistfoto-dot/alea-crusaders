@@ -2,7 +2,7 @@ import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
-const code=readFileSync(new URL('../features/material/library.js',import.meta.url),'utf8').replace(/^import .*?;\s*/m,'');
+const code=readFileSync(new URL('../features/material/library.js',import.meta.url),'utf8').replace(/^import .*?;\s*$/gm,'');
 const schema=readFileSync(new URL('../supabase/migrations/20261008_bilbo_archive_guard.sql',import.meta.url),'utf8');
 const campaign='123e4567-e89b-42d3-a456-426614174000';
 const material='123e4567-e89b-42d3-a456-426614174001';
@@ -20,6 +20,7 @@ function harness(overrides={}){
   location:'Platser',npc:'SLP',monster:'Monster',item:'Föremål',map:'Kartor',document:'Dokument',other:'Övrigt'}};
  const ctx={
   window:{gimliMaterialApi:storage,confirm:()=>true},
+  createAragorn:()=>({html:()=>'',clear:()=>{},loadDetails:async()=>{},sync:async()=>{},setType:()=>{},searchTargets:()=>{},link:async()=>{},unlink:async()=>{}}),
   centralCampaignId:campaign,clearTimeout,setTimeout,
   URL:{createObjectURL:()=> 'blob:preview',revokeObjectURL:()=>{}},
   document:{getElementById:id=>elems[id]||null,querySelector:()=>null,querySelectorAll:()=>[]},
