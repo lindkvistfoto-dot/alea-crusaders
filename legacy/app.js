@@ -61,7 +61,7 @@ async function loadRuleSkills(force=false){
 }
 async function loadRuleMagicRegistry(force=false){
  if(ruleMagicSchoolsLoaded&&ruleSpellsLoaded&&!force)return ruleSpells;
- try{return await withRuleRegistryLoad('spells',async()=>{let rows=await Promise.all([dbJson('rule_magic_schools?select=*&order=sort_order.asc,name.asc'),dbJson('rule_spells?select=*&order=sort_order.asc,name.asc')]);ruleMagicSchools=rows[0]||[];ruleSpells=rows[1]||[];ruleMagicSchoolsLoaded=true;ruleSpellsLoaded=true;return ruleSpells})}catch(e){ruleMagicSchools=[];ruleSpells=[];ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('spells',async()=>{let rows=await Promise.all([dbJson('rule_magic_schools?select=*&order=sort_order.asc,name.asc'),dbJson('rule_spells?select=*&order=sort_order.asc,name.asc')]);ruleMagicSchools=rows[0]||[];ruleSpells=rows[1]||[];ruleMagicSchoolsLoaded=true;ruleSpellsLoaded=true;linkCharacterSpellsToRegistry();if(current&&activeTab==='magic')renderMagic();return ruleSpells})}catch(e){ruleMagicSchools=[];ruleSpells=[];ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false;return []}
 }
 function magicSchoolOptions(selected=''){return '<option value="">— Välj magiskola —</option>'+ruleMagicSchools.map(s=>'<option value="'+escAttr(s.id)+'" '+(String(s.id)===String(selected)?'selected':'')+'>'+escAttr(s.name)+'</option>').join('')}
 function isRetiredSpellName(name){
@@ -1076,8 +1076,130 @@ function removeSkill(i){current.skills.splice(i,1);renderSkills()}
 function stepHeroStat(key,d){current.live=current.live||{};current.live[key]=Math.max(0,(+current.live[key]||0)+d);save();renderSkills()}function addLanguage(){current.languages.push({name:'',speak:'',readwrite:''});renderSkills()}function setLanguage(i,k,v){current.languages[i][k]=k==='name'?v:(v===''?'':+v)}function removeLanguage(i){current.languages.splice(i,1);renderSkills()}function addHeroAbility(){current.heroAbilities=current.heroAbilities||[];current.heroAbilities.push({name:''});renderSkills()}function setHeroAbility(i,v){current.heroAbilities[i].name=v}function removeHeroAbility(i){current.heroAbilities.splice(i,1);renderSkills()}
 function setSkill(i,k,v){if(k==='name')return;current.skills[i][k]=(v===''?'':+v);if(!editing)save()}
 function setLang(i,k,v){current.languages[i][k]=(k==='name'?v:(v===''?'':+v));save()}
-function maxSpellCount(c){let psy=Number(c?.base?.['Psykisk kraft']?.v),intel=Number(c?.base?.Intelligens?.v);if(!Number.isFinite(psy)||!Number.isFinite(intel))return '';return Math.ceil((psy+intel)/4)}function renderMagic(){current.spells=(current.spells||[]).filter(sp=>!isRetiredSpellName(sp?.name));current.familiaris=current.familiaris||[];let maxSp=maxSpellCount(current);$('maxSpells').innerHTML='Max antal: <b>'+(maxSp===''?'—':maxSp)+'</b>';let spells=current.spells||[];$('spelltable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">ERF</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+spells.map((x,i)=>{let canRoll=Number(x.fv)>0,rollBtn=canRoll?`<button type="button" class="skill-roll-btn" onclick="handleSpellRollClick(event,${i})" onpointerdown="startSpellRollPress(event,${i})" oncontextmenu="return false" title="Tryck för effektgrad 1 · håll inne för effektgrad" aria-label="Slå 1T20 för ${escAttr(x.name||'besvärjelse')}">🎲</button>`:'';return editing?`<div><input value="${escAttr(x.name||'')}" onchange="setSpell(${i},'name',this.value)"></div><div><input class="fv-input" type="number" value="${x.fv??''}" onchange="setSpell(${i},'fv',this.value)"></div><div class="skillnum"><input class="erf-edit-input" type="number" min="0" value="${x.erf??0}" onchange="setSpell(${i},'erf',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSpell(${i})">×</button></div>`:`<div><div class="skill-name-roll"><span>${escAttr(x.name||'—')}</span>${rollBtn}</div></div><div class="skillnum">${x.fv===0?0:(x.fv||'—')}</div><div class="skillnum">${erfDisplay('spells',i,x.erf)}</div>`}).join('');let schools=current.magicSchools||[];$('schooltable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">FV</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+schools.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setSchool(${i},'name',this.value)"></div><div><input class="fv-input" type="number" value="${x.fv??''}" onchange="setSchool(${i},'fv',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSchool(${i})">×</button></div>`:`<div>${x.name||'—'}</div><div class="skillnum">${x.fv===0?0:(x.fv||'—')}</div>`).join('');$('familiarisTable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+current.familiaris.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setFamiliaris(${i},this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeFamiliaris(${i})">×</button></div>`:`<div>${x.name||'—'}</div>`).join('')}
-function addFamiliaris(){current.familiaris.push({name:''});renderMagic()}function setFamiliaris(i,v){current.familiaris[i].name=v}function removeFamiliaris(i){current.familiaris.splice(i,1);renderMagic()}function addSpell(){current.spells.push({name:'',fv:'',erf:0});renderMagic()}function removeSpell(i){current.spells.splice(i,1);renderMagic()}function addSchool(){current.magicSchools.push({name:'',fv:''});renderMagic()}function removeSchool(i){current.magicSchools.splice(i,1);renderMagic()}function setSpell(i,k,v){if(k==='name'&&isRetiredSpellName(v)){alert('Besvärjelsen har tagits bort ur registret.');renderMagic();return}current.spells[i][k]=(k==='name'?v:(v===''?'':+v))}function setSchool(i,k,v){current.magicSchools[i][k]=(k==='name'?v:(v===''?'':+v))}
+function maxSpellCount(c){let psy=Number(c?.base?.['Psykisk kraft']?.v),intel=Number(c?.base?.Intelligens?.v);if(!Number.isFinite(psy)||!Number.isFinite(intel))return '';return Math.ceil((psy+intel)/4)}
+// Identity comes exclusively from rule_spells; per-character FV and ERF remain local.
+function spellRegistryKey(name){
+ return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/\s*\(\s*[KFR](?:\s*,\s*[KFR])*\s*\)\s*$/i,'')
+  .trim().toLocaleLowerCase('sv-SE').replace(/[^a-z0-9]+/g,'')
+}
+function findRuleSpell(item){
+ if(!item)return null;
+ let id=item.rule_id||item.spellId||item.spell_id;
+ if(id){let found=ruleSpells.find(r=>String(r.id)===String(id));if(found)return found}
+ let key=spellRegistryKey(item.name);
+ return key?(ruleSpells.find(r=>spellRegistryKey(r.name)===key||spellRegistryKey(r.spell_key)===key)||null):null
+}
+function linkCharacterSpellsToRegistry(){
+ if(!ruleSpellsLoaded)return false;
+ let changed=false;
+ (chars||[]).forEach(c=>{
+  if(!Array.isArray(c.spells))return;
+  let seen=new Map(),next=[];
+  for(let sp of c.spells){
+   if(!sp||isRetiredSpellName(sp.name)){changed=true;continue}
+   let r=findRuleSpell(sp);
+   if(!r){
+    if(!String(sp.name||'').trim()&&!sp.rule_id){changed=true;continue}
+    next.push(sp);continue
+   }
+   if(sp.rule_id!==r.id||sp.name!==r.name){sp.rule_id=r.id;sp.name=r.name;changed=true}
+   const existing=seen.get(r.id);
+   if(existing){
+    const fv=Number(sp.fv),was=Number(existing.fv);
+    if(sp.fv!==''&&Number.isFinite(fv)&&(!Number.isFinite(was)||existing.fv===''||fv>was))existing.fv=sp.fv;
+    existing.erf=(Number(existing.erf)||0)+(Number(sp.erf)||0);
+    changed=true
+   }else{seen.set(r.id,sp);next.push(sp)}
+  }
+  if(next.length!==c.spells.length){c.spells=next;changed=true}
+ });
+ if(changed){localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));scheduleCentralSave()}
+ return changed
+}
+function spellSchoolLabel(rule){return ruleMagicSchools.find(s=>String(s.id)===String(rule?.school_id))?.name||'—'}
+function renderMagic(){
+ current.spells=(current.spells||[]).filter(sp=>!isRetiredSpellName(sp?.name));
+ current.familiaris=current.familiaris||[];
+ let maxSp=maxSpellCount(current);$('maxSpells').innerHTML='Max antal: <b>'+(maxSp===''?'—':maxSp)+'</b>';
+ let spells=current.spells||[],el=$('spelltable');
+ el.style.setProperty('grid-template-columns',editing?'minmax(0,1fr) 62px 62px 86px':'minmax(0,1fr) 52px 48px 52px','important');
+ el.innerHTML=(editing
+  ?'<div class="skillhead">Besvärjelse</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">ERF</div><div class="skillhead editcol"></div>'
+  :'<div class="skillhead">Besvärjelse</div><div class="skillhead skill-roll-head" title="Besvärjelseslag">🎲</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">ERF</div>')+
+ spells.map((sp,i)=>{
+  const r=findRuleSpell(sp),name=r?.name||sp.name||'Okänd besvärjelse',linked=!!r,canRoll=linked&&Number(sp.fv)>0;
+  const info='<span class="skill-link" role="button" tabindex="0" onclick="showSpellInfo('+i+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showSpellInfo('+i+')}">'+escAttr(name)+'</span>';
+  const warning=linked?'':'<small class="spell-unlinked-warning">Saknas i masterregistret – koppla om</small>';
+  const rollBtn=canRoll?'<button type="button" class="skill-roll-btn" onclick="handleSpellRollClick(event,'+i+')" onpointerdown="startSpellRollPress(event,'+i+')" oncontextmenu="return false" title="Tryck för effektgrad 1 · håll inne för effektgrad" aria-label="Slå 1T20 för '+escAttr(name)+'">🎲</button>':'';
+  return editing
+   ?'<div class="character-spell-name">'+info+warning+'<button type="button" class="spell-master-change" onclick="changeSpellFromRegistry('+i+')" title="Välj i besvärjelseregistret">Byt</button></div><div class="skillnum"><input class="fv-input" type="number" min="0" value="'+escAttr(sp.fv??'')+'" onchange="setSpell('+i+',\'fv\',this.value)"></div><div class="skillnum"><input class="erf-edit-input" type="number" min="0" value="'+escAttr(sp.erf??0)+'" onchange="setSpell('+i+',\'erf\',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSpell('+i+')">×</button></div>'
+   :'<div class="character-spell-name">'+info+warning+'</div><div class="skill-roll-col">'+rollBtn+'</div><div class="skillnum">'+(sp.fv===0?0:(sp.fv||'—'))+'</div><div class="skillnum">'+erfDisplay('spells',i,sp.erf)+'</div>'
+ }).join('');
+ let schools=current.magicSchools||[];$('schooltable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">FV</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+schools.map((x,i)=>editing?'<div><input value="'+escAttr(x.name||'')+'" onchange="setSchool('+i+',\'name\',this.value)"></div><div><input class="fv-input" type="number" value="'+(x.fv??'')+'" onchange="setSchool('+i+',\'fv\',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSchool('+i+')">×</button></div>':'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+(x.fv===0?0:(x.fv||'—'))+'</div>').join('');
+ $('familiarisTable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+current.familiaris.map((x,i)=>editing?'<div><input value="'+escAttr(x.name||'')+'" onchange="setFamiliaris('+i+',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeFamiliaris('+i+')">×</button></div>':'<div>'+escAttr(x.name||'—')+'</div>').join('')
+}
+function addFamiliaris(){current.familiaris.push({name:''});renderMagic()}
+function setFamiliaris(i,v){current.familiaris[i].name=v}
+function removeFamiliaris(i){current.familiaris.splice(i,1);renderMagic()}
+function removeSpell(i){current.spells.splice(i,1);renderMagic()}
+function addSchool(){current.magicSchools.push({name:'',fv:''});renderMagic()}
+function removeSchool(i){current.magicSchools.splice(i,1);renderMagic()}
+function setSpell(i,k,v){
+ if(k==='name'||k==='rule_id')return;
+ if(k!=='fv'&&k!=='erf')return;
+ current.spells[i][k]=(v===''?'':Math.max(0,Number(v)||0))
+}
+function setSchool(i,k,v){current.magicSchools[i][k]=(k==='name'?v:(v===''?'':+v))}
+let characterSpellPickerIndex=null;
+async function addSpell(){await openCharacterSpellPicker(null)}
+async function changeSpellFromRegistry(i){await openCharacterSpellPicker(i)}
+async function openCharacterSpellPicker(index=null){
+ if(!current||!canEditCharacter(current))return;
+ if(!ruleSpellsLoaded)await loadRuleMagicRegistry();
+ if(!ruleSpellsLoaded){alert('Besvärjelseregistret kunde inte läsas. Försök igen.');return}
+ characterSpellPickerIndex=index;
+ const used=new Set((current.spells||[]).filter((_,i)=>i!==index).map(s=>findRuleSpell(s)?.id).filter(Boolean));
+ const available=ruleSpells.filter(r=>!isRetiredSpellName(r.name)&&!used.has(r.id));
+ if(!available.length){alert('Inga fler besvärjelser finns att välja i masterregistret.');return}
+ const groups=new Map();
+ for(const r of available){let name=spellSchoolLabel(r);if(!groups.has(name))groups.set(name,[]);groups.get(name).push(r)}
+ const options=[...groups].sort((a,b)=>a[0].localeCompare(b[0],'sv')).map(([name,items])=>'<optgroup label="'+escAttr(name)+'">'+items.sort((a,b)=>a.name.localeCompare(b.name,'sv')).map(r=>'<option value="'+escAttr(r.id)+'" '+(index!==null&&findRuleSpell(current.spells[index])?.id===r.id?'selected':'')+'>'+escAttr(r.name)+'</option>').join('')+'</optgroup>').join('');
+ const old=index===null?null:current.spells[index];
+ $('adminEditorTitle').textContent=index===null?'Lägg till besvärjelse':'Byt/koppla besvärjelse';
+ $('adminEditorBody').innerHTML='<div class="skill-picker-list"><label>Besvärjelse ur masterregistret<select id="characterSpellPick">'+options+'</select></label>'+(old?'<p class="muted">Tidigare: '+escAttr(old.name||'—')+'. Befintligt FV och ERF behålls.</p>':'<label>FV<input id="characterSpellFv" type="number" inputmode="numeric" min="0" value=""></label>')+'</div><div class="rule-editor-actions"><button type="button" class="btn" onclick="closeAdminEditor()">Avbryt</button><button type="button" class="btn primary" onclick="confirmCharacterSpellPick()">'+(index===null?'Lägg till':'Koppla besvärjelse')+'</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+function confirmCharacterSpellPick(){
+ if(!current||!canEditCharacter(current))return;
+ const id=$('characterSpellPick')?.value,rule=ruleSpells.find(r=>String(r.id)===String(id));
+ if(!rule||isRetiredSpellName(rule.name))return;
+ const i=characterSpellPickerIndex;
+ if((current.spells||[]).some((s,index)=>index!==i&&findRuleSpell(s)?.id===id)){alert('Besvärjelsen finns redan hos rollpersonen.');return}
+ if(i===null){
+  const fv=$('characterSpellFv')?.value??'';
+  current.spells.push({rule_id:rule.id,name:rule.name,fv:fv===''?'':Math.max(0,Number(fv)||0),erf:0})
+ }else if(current.spells?.[i]){
+  current.spells[i]={...current.spells[i],rule_id:rule.id,name:rule.name}
+ }else return;
+ characterSpellPickerIndex=null;closeAdminEditor();save();renderMagic()
+}
+async function showSpellInfo(i){
+ const spell=current?.spells?.[i];if(!spell)return;
+ if(!ruleSpellsLoaded)await loadRuleMagicRegistry();
+ const rule=findRuleSpell(spell);
+ $('skillModalTitle').textContent=rule?.name||spell.name||'Besvärjelse';
+ const meta=(label,value)=>'<span>'+label+': '+escAttr(value===null||value===undefined||value===''?'—':value)+'</span>';
+ if(!rule){
+  $('skillModalBody').innerHTML='<div class="skillmeta">'+meta('FV',spell.fv)+meta('ERF',spell.erf)+'</div><div class="rule-description">Denna äldre besvärjelse saknas i masterregistret. Välj Redigera → Byt för att koppla den till en befintlig besvärjelse. FV och ERF behålls.</div>'
+ }else{
+  const properties=[rule.kvick?'Kvick (K)':null,rule.fysisk?'Fysisk (F)':null,rule.ritual?'Ritual (R)':null].filter(Boolean).join(', ')||'—';
+  const description=t=>'<div class="rule-description character-spell-description">'+escAttr(t||'Ingen beskrivning är inlagd.')+'</div>';
+  $('skillModalBody').innerHTML='<div class="skillmeta">'+meta('FV',spell.fv)+meta('ERF',spell.erf)+meta('Magiskola',spellSchoolLabel(rule))+meta('Skolvärde',rule.school_value)+meta('Typ',properties)+meta('Skada',rule.damage_text)+meta('Räckvidd',rule.range_text)+meta('Varaktighet',rule.duration_text)+meta('PSY / EG',rule.psy_cost_text)+meta('Mål / område',rule.target_text)+'</div>'+description(rule.description)+(rule.effect_per_eg?'<h3>Effekt per effektgrad</h3>'+description(rule.effect_per_eg):'')+(rule.resistance_text?'<h3>Motstånd / särskilda regler</h3>'+description(rule.resistance_text):'')+(rule.notes?'<h3>Noteringar</h3>'+description(rule.notes):'')+'<p class="muted">Källa: '+escAttr(rule.source_label||'Masterregister')+'</p>'
+ }
+ $('skillModal').classList.remove('hidden')
+}
+
 let armorPickerMaterialKey='standard';
 async function openArmorPicker(){
  if(!current)return;
@@ -3149,7 +3271,7 @@ function handleSpellRollClick(e,i){
  rollSpell(i,1);
 }
 function openSpellRollMenu(i){
- let sp=current?.spells?.[i];if(!sp||!(Number(sp.fv)>0))return;
+ let sp=current?.spells?.[i];if(!sp||!findRuleSpell(sp)||!(Number(sp.fv)>0))return;
  spellRollMenuState={index:i,effectGrade:1,name:sp.name||'Besvärjelse',fv:Number(sp.fv)};
  $('spellRollMenuTitle').textContent=spellRollMenuState.name;
  renderSpellRollMenu();
@@ -3168,7 +3290,7 @@ function chooseSpellEffectGrade(eg){let s=spellRollMenuState;if(!s)return;let ps
 function stepSpellEffectGrade(d){let s=spellRollMenuState;if(!s)return;let psy=Math.max(0,Number(current?.live?.PSY)||0);if(psy<1)return;s.effectGrade=Math.max(1,Math.min(psy,(Number(s.effectGrade)||1)+d));renderSpellRollMenu()}
 function rollSpellCustom(){let s=spellRollMenuState;if(!s)return;let psy=Math.max(0,Number(current?.live?.PSY)||0),eg=Math.max(1,Number(s.effectGrade)||1);if(eg>psy)return;let i=s.index;closeSpellRollMenu();rollSpell(i,eg)}
 function rollSpell(i,effectGrade=1){
- let sp=current?.spells?.[i];if(!sp)return;
+ let sp=current?.spells?.[i];if(!sp||!findRuleSpell(sp))return;
  let fv=Number(sp.fv);if(!(fv>0))return;
  effectGrade=Math.max(1,Math.floor(Number(effectGrade)||1));
  let psy=Math.max(0,Number(current?.live?.PSY)||0);
