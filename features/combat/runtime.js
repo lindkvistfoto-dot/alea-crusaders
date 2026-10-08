@@ -749,13 +749,14 @@ function combatRuntimeHexCells(){
    const x=g.xPitch*(q+r/2)+g.offsetX,y=g.rowPitch*r+g.offsetY;
    if(x<-g.size||x>g.width+g.size||y<-g.size||y>g.height+g.size)continue;
    const key=q+','+r,terrain=terrainByKey.get(key)||null;
-   cells.push({
-    q,r,x,y,key,
-    movement_mode:terrain?.movement_mode||'free',
-    sight_mode:terrain?.sight_mode||'clear',
-    movement_cost:Number(terrain?.movement_cost)||1,
-    notes:terrain?.notes||''
-   })
+   const areaTerrain=combatAreaTerrainForHex(q,r);
+   const baseMovement=terrain?.movement_mode||'free',baseSight=terrain?.sight_mode||'clear';
+   const movement_mode=baseMovement==='blocked'||areaTerrain.movement==='blocked'?'blocked':
+    baseMovement==='difficult'||areaTerrain.movement==='difficult'?'difficult':'free';
+   const sight_mode=baseSight==='blocked'||areaTerrain.sight==='blocked'?'blocked':
+    baseSight==='obscuring'||areaTerrain.sight==='obscuring'?'obscuring':'clear';
+   cells.push({q,r,x,y,key,movement_mode,sight_mode,
+    movement_cost:movement_mode==='difficult'?2:Number(terrain?.movement_cost)||1,notes:terrain?.notes||''})
   }
  }
  return cells
@@ -1756,6 +1757,7 @@ async function endCombatTurn(event,combatantId){
  const combatId=activeCombat.id;
  const undoSnapshot=await window.combatUndoBeforeActorAction?.();
  try{
+  await combatTickAreaStay(actor,currentRound);
   await combatTickOngoingEffects(actor,currentRound);
   await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
    combat_id:combatId,campaign_id:centralCampaignId,round_number:currentRound,
@@ -1795,7 +1797,7 @@ async function endCombatTurn(event,combatantId){
 }
 async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
  const selectedTargetBeforeLoad=combatSelectedTargetId;
- activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
+ activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
   const instanceQuery=combatId
@@ -3417,14 +3419,52 @@ async function combatTickOngoingEffects(combatant,round){
  }
  return results
 }
-let combatEffectRegistry=[],combatActiveEffects=[];
+let combatEffectRegistry=[],combatActiveEffects=[],combatAreaEffects=[];
+let combatAreaPlacementActive=false,combatAreaDraftCenter=null;
+function combatAreaActive(row,round=Number(activeCombat?.round_number)||1){
+ if(!row||row.status!=='active'||Number(row.applied_round)>round||
+  (row.expires_round!=null&&Number(row.expires_round)<round))return false;
+ const def=combatEffectDefinition({effect_id:row.effect_id});
+ return !!def?.active&&['area','hex'].includes(def.target_type)
+}
+function combatAreasForHex(q,r,round=Number(activeCombat?.round_number)||1){
+ const cell={q:Number(q),r:Number(r)};
+ return combatAreaEffects.filter(area=>combatAreaActive(area,round)&&
+  combatAxialDistance(cell,{q:area.center_q,r:area.center_r})<=Number(area.radius))
+}
+function combatAreaTerrainForHex(q,r){
+ const areas=combatAreasForHex(q,r);
+ let movement='free',sight='clear';
+ for(const area of areas){
+  const def=combatEffectDefinition({effect_id:area.effect_id}),mod=def?.modifiers||{};
+  if(mod.type!=='area_terrain')continue;
+  if(mod.movement_mode==='blocked')movement='blocked';
+  else if(mod.movement_mode==='difficult'&&movement==='free')movement='difficult';
+  if(mod.sight_mode==='blocked')sight='blocked';
+  else if(mod.sight_mode==='obscuring'&&sight==='clear')sight='obscuring'
+ }
+ return {movement,sight}
+}
+async function combatTickAreaStay(combatant,round){
+ if(!combatant||!combatCanManage()||!activeCombat)return [];
+ if(!combatAreasForHex(combatant.q,combatant.r,round).length)return [];
+ return await dbJson('rpc/resolve_combat_area_stay',{
+  method:'POST',headers:{'Prefer':'return=representation'},
+  body:JSON.stringify({p_combatant_id:combatant.id,p_round:round})
+ })
+}
 async function combatLoadEffects(){
  const registry=await dbJson('rule_effects?select=*&order=name.asc');
  combatEffectRegistry=Array.isArray(registry)?registry:[];
  if(activeCombat){
-  const assigned=await dbJson('combatant_effects?combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=*&order=created_at.asc');
-  combatActiveEffects=Array.isArray(assigned)?assigned:[]
- }else combatActiveEffects=[]
+  const cid=encodeURIComponent(activeCombat.id);
+  const [assigned,areas]=await Promise.all([
+   dbJson('combatant_effects?combat_id=eq.'+cid+'&select=*&order=created_at.asc'),
+   dbJson('combat_area_effects?combat_id=eq.'+cid+'&select=*&order=created_at.asc')
+  ]);
+  combatActiveEffects=Array.isArray(assigned)?assigned:[];
+  combatAreaEffects=Array.isArray(areas)?areas:[]
+ }else{combatActiveEffects=[];combatAreaEffects=[]}
 }
 function combatEffectDefinition(row){return combatEffectRegistry.find(def=>def.id===row.effect_id)}
 function combatEffectIsActive(row,round=Number(activeCombat?.round_number)||1,now=Date.now()){
