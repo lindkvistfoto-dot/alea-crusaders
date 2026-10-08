@@ -5729,3 +5729,22 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-turn-stats{grid-template-columns:repeat(7,minmax(78px,1fr));overflow-x:auto}
  .combat-turn-stats>div{min-width:78px}
 }
+
+
+/* v0.33.98 — shield master: full horizontal table, same behavior as weapon master */
+.adminshieldtable{
+ grid-template-columns:64px 155px 82px 105px 58px 58px 58px 100px 180px 74px 105px 86px;
+ width:auto;
+ min-width:1125px;
+ overflow:auto;
+}
+@media(max-width:700px){
+ .adminshieldtable{
+  grid-template-columns:64px 155px 82px 100px 54px 54px 54px 94px 170px 70px 100px 78px;
+  width:auto;
+  min-width:1075px;
+  overflow:auto;
+  font-size:13px;
+ }
+ .adminshieldtable>.ahead{display:block}
+}
