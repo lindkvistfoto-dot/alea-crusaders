@@ -25,10 +25,10 @@ describe('SLP magiarena',()=>{
 describe('SLP magier i den pågående stridsvyn',()=>{
  const spellStart=rt.indexOf('function combatSpellOptions(');
  const spellEnd=rt.indexOf('async function combatMagicButton(',spellStart);
- test('magimenyn hämtar 88 FV 15-besvärjelser från sparad state.attack_profile',()=>{
+ test('magimenyn hämtar 91 FV 15-besvärjelser från sparad state.attack_profile',()=>{
   expect(spellStart).toBeGreaterThan(-1);
   expect(spellEnd).toBeGreaterThan(spellStart);
-  const rules=Array.from({length:88},(_,i)=>({
+  const rules=Array.from({length:91},(_,i)=>({
    id:'rule-'+i,name:i===0?'ELD (F)':'TESTBESVÄRJELSE '+i,
    attack_magic:i===0,damage_text:i===0?'1T6 per EG':'',school_id:'elementarmagi'
   }));
@@ -45,10 +45,10 @@ describe('SLP magier i den pågående stridsvyn',()=>{
    combatMagicBinding:()=>({supported:true})};
   runInNewContext(rt.slice(spellStart,spellEnd)+'this.spellOptions=combatSpellOptions;this.spellChooser=combatSpellChooserHtml;',ui);
   const options=ui.spellOptions(battleCombatant);
-  expect(options).toHaveLength(88);
+  expect(options).toHaveLength(91);
   expect(options.every(spell=>spell.fv===15&&spell.school_fv===15)).toBe(true);
   const html=ui.spellChooser(battleCombatant,null);
-  expect((html.match(/combat-weapon-choice-btn/g)||[])).toHaveLength(88);
+  expect((html.match(/combat-weapon-choice-btn/g)||[])).toHaveLength(91);
   expect(html).toContain('ELD (F)');
   expect(html).not.toContain('Rollfiguren har inga besvärjelser.');
  });

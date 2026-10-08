@@ -4931,11 +4931,17 @@ async function combatReturnToReserve(id){
 }
 // SL confirms which elemental was summoned after a successful Expert spell roll.
 // The general Expert EG/scaling stats are not verified: use the editable SLP template.
+// Only the FIRE specialization can create the Eldsalamander NPC.
+// Historical already-resolved actions with the former generic (F) name remain valid.
+function combatIsFireElementalSummonName(name){
+ const value=String(name||'').trim().toLocaleUpperCase('sv-SE');
+ return /^FRAMMANA\/SKICKA BORT ELEMENTAR(?:\s*[–—-]\s*ELD\s*\(F\)|\s*\(F\))$/.test(value)
+}
 let combatSummonBusy=false;
 function combatSummonActionCandidates(){
  return (Array.isArray(combatActions)?combatActions:[]).filter(action=>
   action.status==='resolved'&&action.result?.success===true&&!action.result?.blocked_by_beskyddare&&
-  /^FRAMMANA\/SKICKA BORT ELEMENTAR(?:\s|\(|$)/i.test(String(action.source_data?.spell_name||action.result?.spell_name||'')) &&
+  combatIsFireElementalSummonName(action.source_data?.spell_name||action.result?.spell_name) &&
   combatants.some(c=>String(c.id)===String(action.combatant_id))
  )
 }
@@ -4945,7 +4951,7 @@ function combatSummonPanelHtml(){
  const spawned=combatants.filter(c=>String(c.source_instance_key||'').startsWith('summon:')&&c.state?.summon_template_key==='eldsalamander_frammanad');
  return '<details class="combat-effects-admin combat-summon-admin"><summary>Framkallade elementarer ('+
   spawned.filter(c=>!c.state?.summon_dismissed).length+')</summary>'+
-  '<p class="combat-action-note">Efter ett lyckat FRAMMANA/SKICKA BORT ELEMENTAR väljer SL om varelsen är en eldsalamander. Den skapas som reserv på magikerns sida och placeras sedan på kartan. Kontrollera EG, varaktighet och kontroll enligt Expert.</p>'+
+  '<p class="combat-action-note">En lyckad FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F) kan skapa en eldsalamander som reserv på magikerns sida. SL placerar den på kartan. Luft-, jord- och vattenelementarer hanteras tills vidare manuellt. Kontrollera EG, varaktighet och kontroll enligt Expert.</p>'+
   (candidates.length?candidates.map(action=>{
     const actor=combatants.find(c=>String(c.id)===String(action.combatant_id));
     const existing=combatants.find(c=>String(c.source_instance_key)==='summon:'+action.id);

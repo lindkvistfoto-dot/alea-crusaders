@@ -8,7 +8,7 @@ if(start<0||end<start)throw Error('Missing elemental GM summon controls');
 const section=runtime.slice(start,end);
 const caster={id:'actor-1',name_snapshot:'Magikern',side:'heroes',q:2,r:3,sort_order:2,status:'active'};
 const successful={id:'spell-1',combatant_id:'actor-1',status:'resolved',round_number:4,
- source_data:{spell_name:'FRAMMANA/SKICKA BORT ELEMENTAR (F)'},
+ source_data:{spell_name:'FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F)'},
  result:{success:true,effect_grade:3}};
 const sample={id:'elemental-1',name:'Eldsalamander',active:true,
  npc_key:'eldsalamander_frammanad',attributes:{FYS:0,STO:8,SMI:11,PSY:12,KP:11,FORFLYTTNING:10},
@@ -50,8 +50,14 @@ describe('Eldsalamander – SL creates creature after Expert summon',()=>{
   const x=setup();
   x.combatActions[0].source_data.spell_name='TILLKALLA VARELSE';
   expect(x.api.candidates()).toHaveLength(0);
-  x.combatActions[0].source_data.spell_name=successful.source_data.spell_name;
-  x.combatActions[0].status='planned';
+  for(const element of ['LUFT','JORD','VATTEN']){
+   x.combatActions[0].source_data.spell_name='FRAMMANA/SKICKA BORT ELEMENTAR – '+element+' (F)';
+   expect(x.api.candidates()).toHaveLength(0);
+ }
+ x.combatActions[0].source_data.spell_name='FRAMMANA/SKICKA BORT ELEMENTAR (F)';
+ expect(x.api.candidates()).toHaveLength(1); // Old resolved casts still work.
+ x.combatActions[0].source_data.spell_name=successful.source_data.spell_name;
+ x.combatActions[0].status='planned';
   expect(x.api.candidates()).toHaveLength(0)
  });
  it('instantiates a reusable NPC in reserve with caster side, verified KP and action link',async()=>{
