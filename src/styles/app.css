@@ -6131,3 +6131,53 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .gimli-row small{display:block;color:#d3c0a5;margin-top:4px}
 #gimliStoredPreview{margin:12px 0}
 @media(max-width:650px){.gimli-form{grid-template-columns:1fr;padding:12px}.gimli-form>label{grid-column:1/-1}.gimli-actions .btn{width:100%}}
+
+/* Bilbo v0.34.79 – accessible private image and material library */
+.bilbo-page-header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bilbo-controls{display:grid;grid-template-columns:minmax(150px,2fr) repeat(3,minmax(120px,1fr));gap:11px;margin:14px 0}
+.bilbo-controls label,.bilbo-metadata label,.bilbo-note label{display:flex;flex-direction:column;gap:6px;min-width:0;font:650 13px system-ui,sans-serif;color:#f1e2c8}
+.bilbo-controls input,.bilbo-controls select,.bilbo-metadata input,.bilbo-metadata select,.bilbo-metadata textarea,.bilbo-note textarea{width:100%;min-height:42px;box-sizing:border-box;border:1px solid #967d58;border-radius:8px;padding:9px 11px;background:#201b16;color:#fff1d9;font-size:16px}
+.bilbo-controls :is(input,select):focus-visible,.bilbo-metadata :is(input,textarea,select):focus-visible,.bilbo-note textarea:focus-visible{outline:2px solid #90c7d1;outline-offset:1px}
+.bilbo-toolbar{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:12px;color:#e5d7bc;font-size:13px}
+#bilboNotice{flex:1;min-width:180px}
+#bilboNotice.is-error{color:#ffc2b2}
+.bilbo-view-choice{display:flex;gap:4px}
+.bilbo-view-choice button,.bilbo-pagination button{min-height:36px;border:1px solid #907451;border-radius:7px;background:#33291e;color:#f8e8ce;padding:6px 11px;font:650 12px system-ui,sans-serif;cursor:pointer}
+.bilbo-view-choice button:hover,.bilbo-pagination button:hover:not(:disabled){background:#5c4329}
+.bilbo-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,350px);gap:15px;align-items:start}
+.bilbo-gallery{min-width:0}
+.bilbo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.bilbo-card{display:flex;flex-direction:column;min-width:0;padding:0;overflow:hidden;border:1px solid #796245;border-radius:10px;background:#27231e;color:#f9ecd7;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.bilbo-card:hover,.bilbo-card:focus-visible,.bilbo-card.is-selected{border-color:#dbbb85;background:#3c3024;outline-offset:2px}
+.bilbo-card.is-archived{opacity:.8}
+.bilbo-card-media{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;width:100%;background:#171b1b;color:#c2b69e;font-size:46px;overflow:hidden}
+.bilbo-card-media img{display:block;width:100%;height:100%;object-fit:contain}
+.bilbo-thumbnail-error{font-size:26px}
+.bilbo-card-label{padding:9px 10px;min-width:0}
+.bilbo-card-label strong{display:block;font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.bilbo-card-label small{display:block;margin-top:5px;font-size:11px;color:#dfcfb4}
+.bilbo-grid.is-list{grid-template-columns:1fr;gap:7px}
+.bilbo-grid.is-list .bilbo-card{flex-direction:row;align-items:center}
+.bilbo-grid.is-list .bilbo-card-media{width:88px;min-width:88px;aspect-ratio:4/3;font-size:25px}
+.bilbo-grid.is-list .bilbo-card-label{flex:1}
+.bilbo-details{position:sticky;top:10px;max-height:min(83vh,980px);overflow:auto;min-width:0;border:1px solid #806a4b;border-radius:12px;background:#27221d;padding:12px;color:#f1e2cd}
+.bilbo-empty{padding:24px 14px;text-align:center;line-height:1.5;color:#dbcbb0;grid-column:1/-1;border:1px dashed #6e5e48;border-radius:9px}
+.bilbo-detail-heading{display:flex;align-items:start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.bilbo-detail-heading h3{margin:0;color:#ffe0ae;font-size:18px;overflow-wrap:anywhere}
+.bilbo-detail-heading small{color:#e9ceb0}
+.bilbo-detail-heading button{flex-shrink:0}
+.bilbo-full-preview{display:flex;align-items:center;justify-content:center;min-height:120px;max-height:360px;overflow:auto;border-radius:9px;background:#111717;margin-bottom:12px;color:#e7d2ae;text-align:center}
+.bilbo-full-preview a{display:block;max-width:100%;color:#c5eaf4;padding:8px}
+.bilbo-full-preview img{display:block;max-width:100%;max-height:335px;object-fit:contain}
+.bilbo-metadata,.bilbo-note{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.bilbo-metadata button,.bilbo-note button{align-self:flex-start;min-height:40px}
+.bilbo-note{padding:10px;border:1px dashed #8f7953;border-radius:9px;background:#32291e}
+.bilbo-note textarea{background:#171715}
+.bilbo-detail-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.bilbo-detail-info{font-size:12px;line-height:1.55;color:#ded0b7;margin:8px 0}
+.bilbo-pagination{display:flex;justify-content:center;align-items:center;gap:15px;margin:16px 0}
+.bilbo-pagination button:disabled{opacity:.42;cursor:default}
+.bilbo-back-link{margin-left:auto}
+@media(max-width:1080px){.bilbo-columns{grid-template-columns:minmax(0,1fr) minmax(260px,310px)}.bilbo-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.bilbo-columns{grid-template-columns:1fr}.bilbo-details{position:static;max-height:none}.bilbo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bilbo-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:400px){.bilbo-controls{grid-template-columns:1fr}.bilbo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.bilbo-card-label{padding:7px}.bilbo-pagination{gap:8px}}
