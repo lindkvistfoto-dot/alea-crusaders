@@ -3323,6 +3323,10 @@ async function combatCastManualSpell(actor,action,target=null){
    (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':healing?' · inväntar läkning i resultatkortet':' · SL avgör effekten'):' · ingen automatisk effekt'),
   details:result,player_visible:true
  })});
+ if(result.success&&!result.blocked_by_beskyddare&&combatElementalSummonDefinition(spellName)){
+  action.status='resolved';action.result=result;
+  await combatCreateElementalFromSpell(action.id,{skipReload:true,silent:true});
+ }
  await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
 // SL applies a verified amount for HELA in the current combat. The Expert
@@ -4036,7 +4040,7 @@ function combatantCard(c,index=0){
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
    '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
-   '<div class="meta">'+roleLabel+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
+   '<div class="meta">'+roleLabel+(c.state?.summoner_id?' · Styrs av '+escAttr(combatSummonerName(c)):'')+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
   '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
@@ -4467,7 +4471,7 @@ function combatTurnPanelHtml(){
  return '<div class="combat-topbar combat-turn-panel">'+head+
   '<div class="combat-turn-actor">'+
    combatTurnPortraitHtml(actor)+
-   '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
+   '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b></div>'+
     '<div><span>KP</span><b>'+kpCurrent+'/'+kpMax+'</b></div>'+
@@ -4929,112 +4933,129 @@ async function combatReturnToReserve(id){
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(e){alert('Kunde inte sätta kombatanten i reserv: '+e.message)}
 }
-// SL confirms which elemental was summoned after a successful Expert spell roll.
-// The general Expert EG/scaling stats are not verified: use the editable SLP template.
-// Only the FIRE specialization can create the Eldsalamander NPC.
-// Historical already-resolved actions with the former generic (F) name remain valid.
-function combatIsFireElementalSummonName(name){
+// Mage-owned elementals: each successful casting creates an instance of its fixed NPC.
+const ELEMENTAL_SUMMON_TEMPLATES={
+ ELD:{name:'Eldsalamander',key:'eldsalamander_frammanad',element:'eld'},
+ LUFT:{name:'Sylf',key:'sylf_frammanad',element:'luft'},
+ JORD:{name:'Gnom',key:'gnom_frammanad',element:'jord'},
+ VATTEN:{name:'Undin',key:'undin_frammanad',element:'vatten'}
+};
+function combatElementalSummonDefinition(name){
  const value=String(name||'').trim().toLocaleUpperCase('sv-SE');
- return /^FRAMMANA\/SKICKA BORT ELEMENTAR(?:\s*[–—-]\s*ELD\s*\(F\)|\s*\(F\))$/.test(value)
+ const match=/^FRAMMANA\/SKICKA BORT ELEMENTAR\s*[–—-]\s*(ELD|LUFT|JORD|VATTEN)\s*\(F\)$/.exec(value);
+ return match?ELEMENTAL_SUMMON_TEMPLATES[match[1]]:
+  value==='FRAMMANA/SKICKA BORT ELEMENTAR (F)'?ELEMENTAL_SUMMON_TEMPLATES.ELD:null
+}
+function combatIsFireElementalSummonName(name){
+ return combatElementalSummonDefinition(name)?.element==='eld'
+}
+function combatSummonerName(c){
+ return (combatants||[]).find(mage=>String(mage.id)===String(c?.state?.summoner_id))?.name_snapshot||
+  c?.state?.summoner_name||'Magikern'
 }
 let combatSummonBusy=false;
 function combatSummonActionCandidates(){
  return (Array.isArray(combatActions)?combatActions:[]).filter(action=>
   action.status==='resolved'&&action.result?.success===true&&!action.result?.blocked_by_beskyddare&&
-  combatIsFireElementalSummonName(action.source_data?.spell_name||action.result?.spell_name) &&
-  combatants.some(c=>String(c.id)===String(action.combatant_id))
- )
+  !!combatElementalSummonDefinition(action.source_data?.spell_name||action.result?.spell_name)&&
+  combatants.some(c=>String(c.id)===String(action.combatant_id)))
 }
 function combatSummonPanelHtml(){
  if(!combatCanManage()||!activeCombat)return '';
  const candidates=combatSummonActionCandidates();
- const spawned=combatants.filter(c=>String(c.source_instance_key||'').startsWith('summon:')&&c.state?.summon_template_key==='eldsalamander_frammanad');
+ const spawned=combatants.filter(c=>String(c.source_instance_key||'').startsWith('summon:')&&
+  Object.values(ELEMENTAL_SUMMON_TEMPLATES).some(template=>template.key===c.state?.summon_template_key));
  return '<details class="combat-effects-admin combat-summon-admin"><summary>Framkallade elementarer ('+
   spawned.filter(c=>!c.state?.summon_dismissed).length+')</summary>'+
-  '<p class="combat-action-note">En lyckad FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F) kan skapa en eldsalamander som reserv på magikerns sida. SL placerar den på kartan. Luft-, jord- och vattenelementarer hanteras tills vidare manuellt. Kontrollera EG, varaktighet och kontroll enligt Expert.</p>'+
+  '<p class="combat-action-note">Efter ett lyckat kast skapas den fasta SLP-mallen i reserv. SL sätter ut den på en ledig hex. Elementaren tillhör och styrs av magikern och får eget initiativ nästa stridsrunda. Kontrollera varaktighet och egenskaper mot Expert.</p>'+
   (candidates.length?candidates.map(action=>{
-    const actor=combatants.find(c=>String(c.id)===String(action.combatant_id));
-    const existing=combatants.find(c=>String(c.source_instance_key)==='summon:'+action.id);
-    return '<div class="combat-gm-placement-row"><span><b>'+escAttr(actor?.name_snapshot||'Magiker')+
-      '</b><small>Lyckad frammaning · EG '+escAttr(action.result.effect_grade||1)+
-      ' · SR '+escAttr(action.round_number||'?')+'</small></span>'+
-      '<button type="button" class="smallbtn" '+(existing||combatSummonBusy?'disabled':'')+
-      ' onclick="combatCreateEldsalamanderFromSpell(\''+escAttr(action.id)+'\')">'+
-      (existing?'Redan skapad':'Skapa eldsalamander')+'</button></div>'
+   const def=combatElementalSummonDefinition(action.source_data?.spell_name||action.result?.spell_name);
+   const actor=combatants.find(c=>String(c.id)===String(action.combatant_id));
+   const existing=combatants.find(c=>String(c.source_instance_key)==='summon:'+action.id);
+   return '<div class="combat-gm-placement-row"><span><b>'+escAttr(actor?.name_snapshot||'Magiker')+' → '+escAttr(def.name)+
+    '</b><small>Lyckad frammaning · EG '+escAttr(action.result.effect_grade||1)+' · SR '+escAttr(action.round_number||'?')+'</small></span>'+
+    '<button type="button" class="smallbtn" '+(existing||combatSummonBusy?'disabled':'')+
+    ' onclick="combatCreateElementalFromSpell(\''+escAttr(action.id)+'\')">'+
+    (existing?'Redan skapad':'Skapa '+def.name.toLocaleLowerCase('sv-SE'))+'</button></div>'
   }).join(''):'<p class="combat-action-note">Inga lyckade elementarframbesvärjelser under de senast inlästa rundorna.</p>')+
-  (spawned.length?'<h4>Skapade eldsalamandrar</h4>'+spawned.map(c=>
-    '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>'+
-    (c.state?.summon_dismissed?'Bortskickad':combatGmIsReserve(c)?'Reserv – sätt ut via Uppställning':'Finns i striden')+
-    '</small></span>'+(c.state?.summon_dismissed?'':'<button type="button" class="smallbtn" onclick="combatDismissEldsalamander(\''+
-    escAttr(c.id)+'\')">Skicka bort</button>')+'</div>').join(''):'')+
-  '</details>'
+  (spawned.length?'<h4>Frammanade elementarer</h4>'+spawned.map(c=>
+   '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>Styrs av '+
+   escAttr(combatSummonerName(c))+' · '+
+   (c.state?.summon_dismissed?'Bortskickad':combatGmIsReserve(c)?'Reserv – sätt ut via Uppställning':'Finns i striden')+
+   '</small></span>'+(c.state?.summon_dismissed?'':'<button type="button" class="smallbtn" onclick="combatDismissElemental(\''+
+   escAttr(c.id)+'\')">Skicka bort</button>')+'</div>').join(''):'')+'</details>'
 }
-async function combatCreateEldsalamanderFromSpell(actionId){
- if(!combatCanManage()||!activeCombat||combatSummonBusy)return;
+async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=false}={}){
+ if(!combatCanManage()||!activeCombat||combatSummonBusy)return false;
  const action=combatSummonActionCandidates().find(row=>String(row.id)===String(actionId));
- if(!action){alert('Hittade inget lyckat elementarkast att koppla varelsen till.');return}
+ const def=combatElementalSummonDefinition(action?.source_data?.spell_name||action?.result?.spell_name);
+ if(!action||!def){if(!silent)alert('Saknar giltigt lyckat elementarkast.');return false}
  const sourceKey='summon:'+action.id;
  if(combatants.some(c=>String(c.source_instance_key)===sourceKey)){
-  alert('Den här frammaningen har redan skapat en varelse.');return
+  if(!silent)alert('Denna frambesvärjelse har redan skapat en varelse.');return false
  }
  const caster=combatants.find(c=>String(c.id)===String(action.combatant_id));
- if(!caster)return;
+ if(!caster)return false;
  combatSummonBusy=true;
  try{
   const templates=await dbJson('campaign_npcs?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+
-   '&npc_key=eq.eldsalamander_frammanad&select=*&limit=1');
+   '&npc_key=eq.'+encodeURIComponent(def.key)+'&select=*&limit=1');
   const template=templates?.[0];
-  if(!template||template.active===false)throw Error('SLP-mallen Eldsalamander saknas eller är inaktiv.');
+  if(!template||template.active===false)throw Error('SLP-mallen '+def.name+' saknas eller är inaktiv.');
   const stats=combatSourceStats({source_type:'npc',source_id:template.id,state:{}},{
-   npcs:new Map([[template.id,template]]),characters:new Map(),monsters:new Map()
-  });
-  if(!Number.isFinite(stats.max_kp)||stats.max_kp<1)
-   throw Error('Eldsalamandern saknar giltiga KP i sin SLP-mall.');
+   npcs:new Map([[template.id,template]]),characters:new Map(),monsters:new Map()});
+  if(!Number.isFinite(stats.max_kp)||stats.max_kp<1)throw Error(def.name+' saknar giltiga KP.');
   const nextId=crypto.randomUUID();
   const row={id:nextId,combat_id:activeCombat.id,campaign_id:centralCampaignId,
    source_type:'npc',source_id:template.id,source_instance_key:sourceKey,
-   name_snapshot:template.name||'Eldsalamander',side:caster.side||'neutral',
-   controller_user_id:null,q:Number(caster.q)||0,r:Number(caster.r)||0,
-   flying:false,visible_to_players:true,
+   name_snapshot:template.name||def.name,side:caster.side||'neutral',
+   controller_user_id:caster.controller_user_id||null,q:Number(caster.q)||0,r:Number(caster.r)||0,
+   flying:stats.flying===true,visible_to_players:true,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,
    status:'removed',action_plan:[],
    state:{in_reserve:true,smi:stats.smi,sty:stats.sty,sto:stats.sto,
     attributes:stats.attributes,attack_profile:stats.attack_profile,
-    summon_template_key:'eldsalamander_frammanad',summoning_action_id:action.id,
-    summoner_id:caster.id,effect_grade:Number(action.result.effect_grade)||1,
+    summon_template_key:def.key,summon_element:def.element,summoning_action_id:action.id,
+    summoner_id:caster.id,summoner_name:caster.name_snapshot,summon_controller:'summoner',
+    effect_grade:Number(action.result.effect_grade)||1,
     summon_duration_note:'SL avgör antal SR enligt Expert-reglerna.'},
    sort_order:Math.max(0,...combatants.map(c=>Number(c.sort_order)||0))+1};
-  const saved=await dbJson('combatants?select=id',{
-   method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)
-  });
-  if(!Array.isArray(saved)||saved.length!==1)throw Error('Kunde inte skapa eldsalamandern i striden.');
-  await dbJson('combat_log',{method:'POST',headers:{Prefer:'return=minimal'},
-   body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,
-    round_number:Number(activeCombat.round_number)||1,phase:'magic',
-    actor_id:caster.id,target_id:nextId,event_type:'summon_elemental',
-    message:caster.name_snapshot+' frammanar en eldsalamander · SL placerar varelsen',
-    details:{action_id:action.id,effect_grade:row.state.effect_grade,source_id:template.id,source_key:sourceKey},
-    player_visible:true})}).catch(error=>console.warn('Eldsalamander skapad men loggningen misslyckades',error));
-  await loadActiveCombat(null,{preserveSelectedTarget:true});
-  combatGmPlacementId=nextId;renderCombat();
- }catch(error){alert('Kunde inte skapa eldsalamander: '+(error?.message||error))}
- finally{combatSummonBusy=false}
+  const saved=await dbJson('combatants?select=id',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)});
+  if(!Array.isArray(saved)||saved.length!==1)throw Error('Kunde inte skapa '+def.name+' i striden.');
+  await dbJson('combat_log',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,
+   round_number:Number(activeCombat.round_number)||1,phase:'magic',
+   actor_id:caster.id,target_id:nextId,event_type:'summon_elemental',
+   message:caster.name_snapshot+' frammanar '+(template.name||def.name)+' · SL placerar varelsen',
+   details:{action_id:action.id,effect_grade:row.state.effect_grade,element:def.element,
+    summoner_id:caster.id,controller_user_id:row.controller_user_id,source_id:template.id,source_key:sourceKey},
+   player_visible:true})}).catch(error=>console.warn('Elementar skapad men loggningen misslyckades',error));
+  combatGmPlacementId=nextId;
+  if(!skipReload){await loadActiveCombat(null,{preserveSelectedTarget:true});renderCombat()}
+  return true
+ }catch(error){
+  if(silent)console.warn('Kunde inte automatiskt skapa elementar',error);
+  else alert('Kunde inte skapa elementar: '+(error?.message||error));
+  return false
+ }finally{combatSummonBusy=false}
 }
-async function combatDismissEldsalamander(id){
+async function combatCreateEldsalamanderFromSpell(actionId){return combatCreateElementalFromSpell(actionId)}
+async function combatDismissElemental(id){
  if(!combatCanManage()||!activeCombat)return;
- const row=combatants.find(c=>String(c.id)===String(id)&&c.state?.summon_template_key==='eldsalamander_frammanad'&&!c.state?.summon_dismissed);
+ const row=combatants.find(c=>String(c.id)===String(id)&&
+  Object.values(ELEMENTAL_SUMMON_TEMPLATES).some(def=>def.key===c.state?.summon_template_key)&&!c.state?.summon_dismissed);
  if(!row)return;
  if(!confirm('Skicka bort '+row.name_snapshot+' från striden?'))return;
  try{
   await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
    method:'PATCH',headers:{Prefer:'return=minimal'},
-   body:JSON.stringify({status:'removed',state:{...row.state,in_reserve:false,summon_dismissed:true},updated_at:new Date().toISOString()})
-  });
+   body:JSON.stringify({status:'removed',state:{...row.state,in_reserve:false,summon_dismissed:true},updated_at:new Date().toISOString()})});
   if(String(combatGmPlacementId||'')===String(row.id))combatGmPlacementId=null;
   await loadActiveCombat(null,{preserveSelectedTarget:true})
- }catch(error){alert('Kunde inte skicka bort eldsalamandern: '+(error?.message||error))}
+ }catch(error){alert('Kunde inte skicka bort elementaren: '+(error?.message||error))}
 }
+async function combatDismissEldsalamander(id){return combatDismissElemental(id)}
 
 function combatGmToolboxHtml(){
  if(!combatCanManage()||!activeCombat)return '';
