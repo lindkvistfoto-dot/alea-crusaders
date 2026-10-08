@@ -2530,8 +2530,17 @@ async function combatResolveTestFireball(actor,target,action){
  const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:outcome==='perfect'?Math.max(1,Math.floor(eg/2)):eg,spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  if(success){
-  const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6'};
-  result.damage=await combatResolveDamage(actor,target,pseudoWeapon,fullDamage,null);
+  const allocations=combatMagicTargetAllocations(action);
+  const targets=allocations.length?allocations:[{target_id:target.id,eg}];
+  result.target_results=[];
+  for(const allocation of targets){
+   const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
+   if(!victim)throw new Error('Målet saknas vid kastet.');
+   const pseudoWeapon={name:spellName,damage:action.source_data?.damage_text||'1T6'};
+   const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
+   result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
+  }
+  result.damage=result.target_results[0]?.damage;
   result.hit_resolved=true
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({target_combatant_id:target.id,status:'resolved',result,updated_at:new Date().toISOString()})});
@@ -2541,6 +2550,10 @@ async function rollCombatTestFireball(actorId,targetId){
  if(combatDiceBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId)),target=combatants.find(row=>String(row.id)===String(targetId)),action=combatChosenAction(actor);
  if(!actor||!target||action?.source_data?.casting_spell!==true||action.status!=='planned'||(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)||!combatFireballTargets().has(String(target.id)))return;
+ const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1);
+ if(allocations.length&&(allocations.reduce((n,t)=>n+t.eg,0)!==total||allocations.some(t=>!combatFireballTargets().has(String(t.target_id))))){
+  alert('Fördela samtliga effektgrader mellan giltiga mål före kastet.');return
+ }
  try{
   const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+
    '&combat_id=eq.'+encodeURIComponent(activeCombat.id)+
