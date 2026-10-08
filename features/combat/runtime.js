@@ -1649,20 +1649,20 @@ function combatMagicCastPreflight(combatant,spell,effectGrade){
  if(Number.isFinite(Number(combatant?.current_psy))&&combatant?.current_psy!=null&&rules.psy_cost>Number(combatant.current_psy))errors.push('Otillräcklig PSY');
  return {valid:errors.length===0,errors,effect_grade:eg,psy_cost:rules.psy_cost,casting:rules,rule:combatMagicRuleProfile(spell)}
 }
-// FALK: only verified bindings may cast; special damage and rituals require separate rules.
+// Casting mechanics are independent of effect automation. Unknown effects are resolved by SL.
 function combatMagicBinding(spell){
  const name=String(spell?.name||'').toUpperCase().replace(/\s*\([^)]*\)/g,'').trim();
  const effects={'FLYGA':'spell_flyga','FÖRROLLAD SÖMN':'condition_sleep',
  'PARALYSERING':'condition_paralysis','FÖRVIRRA':'condition_confusion',
  'PANIK':'condition_panic','RÄDSLA':'condition_fear','KONTROLLERA VARELSE':'condition_control'};
  if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
-  return {kind:'ritual',supported:false,reason:'Ritual kräver regelstyrd tid och SL-bedömning'};
+  return {kind:'manual',supported:true,ritual:true,reason:'Ritual · SL avgör tid och effekt'};
  if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
  if(name==='DIMMA')return {kind:'area',code:'area_fog',supported:true,requires_resistance:false};
  if(['ELD','BLIXT','ENERGISTRÅLE','FROST'].includes(name)&&
   /^\s*\d+T\d+\s+per\s+EG\s*$/i.test(String(spell?.damage_text||'')))
   return {kind:'damage',supported:true,requires_resistance:false};
- return {kind:'unimplemented',supported:false,reason:'Saknar verifierad effektkoppling i strid'};
+ return {kind:'manual',supported:true,reason:'SL avgör effekten'};
 }
 function combatMagicDamageFormula(spell,eg=1){
  const match=/^\s*(\d+)T(\d+)\s+per\s+EG\s*$/i.exec(String(spell?.damage_text||''));
@@ -1765,7 +1765,7 @@ function combatSpellChooserHtml(combatant,action){
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
  return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
   const key=combatSpellKey(spell),active=selectedKey===key,profile=combatMagicRuleProfile(spell),binding=combatMagicBinding(spell),summon=profile.category==='summon';
-  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+(!binding.supported?' · '+escAttr(binding.reason):'')+'</small></button>'
+  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+(binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'')+'</small></button>'
  }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
 }
 async function combatMagicButton(event,combatantId){
@@ -1787,6 +1787,17 @@ async function combatMagicButton(event,combatantId){
   if(data.casting_spell){
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
+   if(data.magic_binding?.kind==='manual'){
+    try{
+     const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.planned&select=id',{
+      method:'PATCH',headers:{'Prefer':'return=representation'},
+      body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})
+     });
+     if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('Besvärjelsen hanteras redan. Ladda om striden.');
+     action.status='resolving';await combatCastManualSpell(combatant,action)
+    }catch(error){console.error('Manuell besvärjelse kunde inte slutföras',error);alert('Besvärjelsen kunde inte slutföras: '+error.message);await loadActiveCombat(null,{preserveSelectedTarget:true})}
+    return
+   }
    if(data.magic_binding?.kind==='area'){
     if(!data.area_center){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
@@ -2910,6 +2921,12 @@ async function combatSetMagicDuration(actorId,delta){
 }
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
+ if(action.source_data.magic_binding?.kind==='manual'){
+  const ritual=action.source_data.magic_binding.ritual===true;
+  return '<div class="combat-spell-choice"><b>'+escAttr(action.source_data.spell_name||'Besvärjelse')+'</b>'+
+   '<small>'+ (ritual?'Ritual: SL avgör när förberedelsen är färdig.':'Effekten avgörs av SL och påverkar inte stridsvärden automatiskt.')+'</small>'+
+   '<small>'+ (ritual?'När SL har godkänt tidsåtgången, tryck ✦ för att slå kastet.':'Tryck ✦ för FV-slag och PSY-kostnad. SL avgör effekten vid lyckat kast.')+'</small></div>'
+ }
  const allocations=combatMagicTargetAllocations(action),total=Math.max(1,Number(action.source_data.effect_grade)||1),spent=allocations.reduce((n,t)=>n+t.eg,0);
  const candidates=[...combatFireballTargets().keys()];
  const statusSpell=combatSupportedStatusSpell(action);
@@ -2966,6 +2983,34 @@ function combatSpellEffectTargets(actor,action){
  return combatants.filter(target=>!['dead','removed'].includes(target.status)&&
   (target.visible_to_players!==false||combatCanManage())&&
   combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
+}
+async function combatCastManualSpell(actor,action){
+ if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
+ const data=action?.source_data||{};
+ if(data.magic_binding?.kind!=='manual')throw new Error('Endast besvärjelser med SL-styrd effekt kan hanteras manuellt.');
+ const spellName=data.spell_name||'Besvärjelse',eg=Math.max(1,Number(data.effect_grade)||1);
+ const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
+ const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot,fv);
+ const cost=combatMagicPsyCost(rolled.outcome,eg);
+ await combatSpendMagicPsy(actor,cost);
+ const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
+ const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,
+  confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,
+  spell_name:spellName,manual_effect:true,effect_applied:false,
+  gm_resolution_required:rolled.success,ritual:data.magic_binding.ritual===true};
+ if(erf)result.erf=erf;
+ combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ const round=Number(activeCombat.round_number)||1;
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
+  headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:null,result,updated_at:new Date().toISOString()})});
+ await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+  combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
+  actor_id:actor.id,target_id:null,event_type:'spell_manual',
+  message:actor.name_snapshot+' kastar '+spellName+' · '+combatOutcomeLabel(rolled.outcome)+
+   (rolled.success?' · SL avgör effekten':' · ingen automatisk effekt'),
+  details:result,player_visible:true
+ })});
+ await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
 async function combatCastStatusSpell(actor,target,action){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
