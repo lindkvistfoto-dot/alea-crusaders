@@ -1,0 +1,10 @@
+/* Galadriel v0.34.87 — compact connection status for material presenters. */
+.galadriel-status{
+ margin:0 0 18px;padding:10px 13px;border:1px solid #7e7c68;border-radius:9px;
+ background:#292a2a;color:#e5dec8;font:650 12px/1.55 system-ui,Arial,sans-serif;
+}
+.galadriel-status.galadriel-connected{
+ border-color:#799986;background:#20352a;color:#d3ecd8;
+}
+.galadriel-status[data-live="no"]{color:#e5d7b0}
+@media(max-width:720px){.galadriel-status{font-size:11px;padding:10px}}
