@@ -42,6 +42,16 @@ describe("application architecture smoke checks", () => {
     }
   });
 
+  test("combat effect registry persists and renders status effects", () => {
+    const combat = read("features/combat/runtime.js");
+    expect(combat).toContain("async function combatLoadEffects()");
+    expect(combat).toContain("combatant_effects?combat_id=eq.");
+    expect(combat).toContain("async function combatApplyEffect()");
+    expect(combat).toContain("async function combatRemoveEffect(");
+    expect(combat).toContain("combatantEffectsHtml(c)+");
+    expect(combat).toContain("combatEffectsAdminHtml()+combatTurnPanelHtml()");
+  });
+
   test("area spell centers use hex radius and range checks", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("function combatMagicAreaCells(center,radius)");
