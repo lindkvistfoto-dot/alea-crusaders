@@ -25,6 +25,16 @@ BEGIN
    WHERE (abs(fp.q-v_area.center_q)+abs(fp.r-v_area.center_r)+
     abs(fp.q-v_area.center_q+fp.r-v_area.center_r))/2<=v_area.radius
   );
+  v_new_inside:=EXISTS(
+   SELECT 1 FROM public.alea_footprint_cells(NEW.q,NEW.r,
+    public.alea_footprint_shape(NEW.state,NEW.name_snapshot),
+    coalesce((NEW.state->'footprint'->>'facing')::integer,0)) fp
+   WHERE (abs(fp.q-v_area.center_q)+abs(fp.r-v_area.center_r)+
+    abs(fp.q-v_area.center_q+fp.r-v_area.center_r))/2<=v_area.radius
+  );
+  IF v_old_inside IS DISTINCT FROM v_new_inside THEN
+   v_event:=CASE WHEN v_new_inside THEN 'enter' ELSE 'exit' END;
+   PERFORM private.haj_area_event(v_area.id,NEW.id,v_round,v_event);
   END IF;
  END LOOP;
  RETURN NEW;
