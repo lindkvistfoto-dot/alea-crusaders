@@ -1761,7 +1761,10 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    result.hit_location=await combatResolveHitLocation(actor,target,attackMode,defenseMode);
    result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location);
    result.hit_resolved=true;
-   if(attackMode==='melee')(typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit')
+   if(attackMode==='melee'){
+    (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
+    (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.hit')
+   }
   }
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
