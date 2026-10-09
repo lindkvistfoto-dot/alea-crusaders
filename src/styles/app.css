@@ -6602,3 +6602,30 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
 @media(prefers-reduced-motion:reduce){
  .combat-melee-fx,.combat-melee-fx *{animation:none!important}
 }
+
+/* v0.35.22 – audio mixer and admin sound registry */
+.alea-audio-dock{position:fixed;bottom:14px;left:14px;display:flex;gap:4px;align-items:center;z-index:6500;filter:drop-shadow(0 3px 12px #0008)}
+.alea-audio-dock>button{border:1px solid #b89c60;background:#201c18;color:#f9e6b7;border-radius:9px;padding:9px 12px;font-size:14px;font-weight:600;cursor:pointer}
+.alea-audio-dock>button:focus-visible,.alea-audio-panel input:focus-visible{outline:3px solid #e3c16c;outline-offset:2px}
+.alea-audio-panel{position:absolute;bottom:48px;left:0;min-width:280px;max-width:min(340px,90vw);padding:14px;border:1px solid #ad9263;border-radius:13px;background:#211f1d;color:#f1e9db;box-shadow:0 12px 35px #000a}
+.alea-audio-panel[hidden]{display:none}
+.alea-audio-panel p{font-size:12px;line-height:1.5;color:#cdbfa9;margin:4px 0 12px}
+.alea-audio-panel label{display:grid;grid-template-columns:95px minmax(80px,1fr) 45px;gap:9px;align-items:center;margin:9px 0;font-size:12px}
+.alea-audio-panel input{accent-color:#ba9454;min-width:0}
+.alea-audio-panel output{text-align:right;font-variant-numeric:tabular-nums}
+.alea-audio-panel small{display:block;color:#bfb19c;margin-top:10px}
+.alea-sound-table{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.alea-sound-row{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(120px,1fr) 110px minmax(90px,.8fr) 72px;align-items:center;gap:12px;padding:12px;border:1px solid var(--line,#524b3c);border-radius:10px;background:var(--card,#24221e)}
+.alea-sound-row label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted,#b3a895)}
+.alea-sound-row input[type="text"],.alea-sound-row select{max-width:100%;width:100%;min-width:0;box-sizing:border-box;border:1px solid #80735a;padding:7px;background:#282621;color:#f7e8c7;border-radius:5px}
+.alea-sound-row input[type="range"]{width:100%;accent-color:#b9954c}
+.alea-sound-identity{display:flex;flex-direction:column;gap:4px}
+.alea-sound-identity code{font-size:12px;color:#bf9e69}
+.alea-sound-identity small{font-size:11px;color:var(--muted,#a7a29c)}
+.alea-sound-row .alea-sound-check{flex-direction:row;align-items:center;white-space:nowrap}
+.alea-sound-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.alea-sound-actions button,.alea-sound-upload{border:1px solid #9c8357;color:#ecd8a5;background:#322d24;padding:7px 12px;border-radius:7px;cursor:pointer;font:inherit;font-size:12px}
+.alea-sound-actions button:disabled{opacity:.5;cursor:wait}
+#adminSoundStatus.error{color:#f19a95}
+@media(max-width:900px){.alea-sound-row{grid-template-columns:1fr 1fr}.alea-sound-identity{grid-column:1/-1}.alea-sound-actions{grid-column:1/-1}}
+@media(max-width:520px){.alea-audio-dock{bottom:7px;left:7px}.alea-audio-dock>button{padding:7px 9px}.alea-sound-row{grid-template-columns:1fr}.alea-sound-identity,.alea-sound-actions{grid-column:1}}

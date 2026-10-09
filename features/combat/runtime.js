@@ -100,6 +100,7 @@ async function combatRollDice(specs,label='Slag'){
  const layer=$('combatDiceLayer'),readout=$('combatDiceReadout');
  layer?.classList.add('rolling');
  if(readout){readout.innerHTML='<b>'+escAttr(label)+'</b><span>Tärningarna rullar…</span>';readout.classList.add('show')}
+ window.aleaAudio?.play('dice.roll');
  try{
   let rolls=null;
   if(typeof window.alea3dCombatRoll==='function'){
@@ -125,6 +126,7 @@ async function combatRollDice(specs,label='Slag'){
   const total=rolls.reduce((sum,row)=>sum+row.value,0);
   combatDiceLastRoll={label,rolls,total,expression:combatDiceExpression(rolls)};
   combatRenderDiceReadout(label,rolls);
+  window.aleaAudio?.play('dice.land');
   return combatDiceLastRoll
  }finally{
   combatDiceBusy=false;
@@ -1226,6 +1228,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
    details:parryResult,player_visible:true
   })});
   combatShowOutcomeOverlay(rolled.outcome,'Parering · '+option.name+' · T20 '+rolled.roll+' mot FV '+option.fv);
+  window.aleaAudio?.play(rolled.success?'melee.parry':'melee.hit');
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte genomföra parering',error);
@@ -1252,6 +1255,7 @@ async function declineCombatParry(defenderId,attackActionId){
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({result:attackResult,updated_at:new Date().toISOString()})
   });
+  window.aleaAudio?.play('melee.hit');
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte avstå parering',error);
@@ -1716,10 +1720,12 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
  const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null;
+ if(attackMode==='melee')window.aleaAudio?.play('melee.swing');
  let rolled;
  try{rolled=await combatExpertRoll(label,fv)}
  catch(error){meleeFx?.stop();throw error}
  meleeFx?.finish(rolled.outcome);
+ if(attackMode==='melee'&&!rolled.success)window.aleaAudio?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
@@ -1747,7 +1753,8 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    const defenseMode=attackMode==='melee'?'undefended':'ranged';
    result.hit_location=await combatResolveHitLocation(actor,target,attackMode,defenseMode);
    result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location);
-   result.hit_resolved=true
+   result.hit_resolved=true;
+   if(attackMode==='melee')window.aleaAudio?.play('melee.hit')
   }
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{

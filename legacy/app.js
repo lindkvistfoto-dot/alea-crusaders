@@ -971,6 +971,7 @@ const ADMIN_SECTION_META={
  skills:['Färdigheter','Centralt regelregister'],
  spells:['Besvärjelser','Magiskolor och besvärjelser enligt Expert'],
  effects:['Effekter','Tillstånd, skydd och områdeseffekter'],
+ sounds:['Ljudregister','Ljud för strid, tärningar och magi'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1007,7 +1008,10 @@ async function openAdminSection(key='overview'){
  if(isOverview)renderAdminOverviewCounts();
  let ruleDef=adminRuleRegistryDef(activeAdminSection);
  if(ruleDef){await refreshAdminRuleRegistry(activeAdminSection);}
- if(activeAdminSection==='events'){
+ if(activeAdminSection==='sounds'){
+  window.aleaAudio?.mountAdmin?.();
+  await window.aleaAudio?.renderAdmin?.()
+ }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
  }else if(activeAdminSection==='library'){
