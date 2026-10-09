@@ -472,10 +472,28 @@ function shopArmorInstance(item){
   };
 }
 
+/* v0.35.12 — only actual food rations belong in provisionsDays.
+   Do not treat everything in the 'Proviant' shop category as food (e.g. candles). */
+function shopProvisionsDaysForPurchase(item,purchases=1){
+  const rawQty=Number(purchases);
+  const qty=Number.isFinite(rawQty)?Math.max(1,Math.floor(rawQty)):1;
+  const metaDays=Number(item?.metadata?.provisions_days);
+  const explicitDays=Number.isFinite(metaDays)&&Number.isInteger(metaDays)&&metaDays>0?metaDays:0;
+  const rationDays=item?.itemKey==='travel_rations_day'
+    ?Math.max(1,Math.floor(Number(item.quantityPerPurchase)||1)):0;
+  const perPurchase=explicitDays||rationDays;
+  return Math.max(0,Math.min(999999,qty*perPurchase));
+}
 function shopAddPurchasedItem(c,item,purchases=1){
   const qty=Math.max(1,Math.floor(Number(purchases)||1));
   ensureEquipmentState(c);
   c.projectiles=c.projectiles||[];
+  const provisionDays=shopProvisionsDaysForPurchase(item,qty);
+  if(provisionDays>0){
+    const existing=Number(c.provisionsDays);
+    c.provisionsDays=Math.min(999999,Math.max(0,Number.isFinite(existing)?Math.floor(existing):0)+provisionDays);
+    return;
+  }
   if(item.source==='weapon'||item.purchaseKind==='weapon'){
     const rule=(ruleWeapons||[]).find(r=>r.id===item.sourceId);
     for(let i=0;i<qty;i++){
@@ -557,6 +575,7 @@ async function shopCheckout(){
   try{
     shopEnsureCoins(draft);
     rows.forEach(({row,item})=>shopAddPurchasedItem(draft,item,row.qty));
+    const addedProvisionDays=rows.reduce((sum,{row,item})=>sum+shopProvisionsDaysForPurchase(item,row.qty),0);
     if(!shopSpendCarriedCoins(draft,cost))throw new Error('Börsen räcker inte till köpet.');
     if(typeof syncCharacterToCentral==='function')await syncCharacterToCentral(draft);
     const index=(chars||[]).findIndex(c=>String(c.id)===String(buyer.id));
@@ -567,7 +586,7 @@ async function shopCheckout(){
     shopCart=[];saveShopCart();
     const status=document.getElementById('shopCartNotice');
     renderShopCart();
-    if(status)status.textContent='✓ '+buyerName+' har fått varorna. '+shopMoneyLabel(shopCarriedValueKm(draft))+' återstår i börsen.';
+    if(status)status.textContent='✓ '+buyerName+' har fått varorna. '+shopMoneyLabel(shopCarriedValueKm(draft))+' återstår i börsen.'+(addedProvisionDays?' +'+addedProvisionDays+' dagars proviant tillagd.':'');
     if(typeof renderCards==='function')renderCards();
   }catch(error){
     alert('Köpet kunde inte genomföras: '+(error?.message||error));
