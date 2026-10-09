@@ -75,8 +75,8 @@ describe('Campaign audio soundboard sync',()=>{
    expect(start).toBeGreaterThan(-1);
    const end=runtime.indexOf('\n}',start)+2;
    const snippet=runtime.slice(start,end);
-   expect(snippet).toContain("window.aleaAudio?.play('magic.cast')");
-   expect(snippet).toContain("window.aleaAudio?.spellResult(")
+   expect(snippet).toContain("window.aleaAudio:null)?.play('magic.cast')");
+   expect(snippet).toContain("window.aleaAudio:null)?.spellResult(")
   }
   const html=text('index.html');
   expect(html).toContain('features/audio/board.js?v=0.35.23')
