@@ -2,7 +2,7 @@
 create table if not exists public.campaign_journal_entries (
  id uuid primary key default gen_random_uuid(),
  campaign_id uuid not null references public.campaigns(id) on delete cascade,
- event_type text not null check (event_type in ('skill','spell','dice','combat','day','note')),
+ event_type text not null check (event_type in ('skill','spell','combat','day','note')),
  title text not null check (char_length(title) between 1 and 180),
  message text not null default '',
  actor_name text not null default '',
@@ -25,7 +25,7 @@ drop policy if exists journal_insert on public.campaign_journal_entries;
 create policy journal_insert on public.campaign_journal_entries for insert to authenticated
  with check (created_by=(select auth.uid()) and source_key is null
  and ((select private.is_admin()) or (select private.is_campaign_gm(campaign_id))
- or (event_type in ('skill','spell','dice') and player_visible and
+ or (event_type in ('skill','spell') and player_visible and
      (select private.is_campaign_member(campaign_id)))));
 
 create or replace function private.append_combat_to_journal()
