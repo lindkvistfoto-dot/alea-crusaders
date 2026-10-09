@@ -4,6 +4,8 @@ import {runInNewContext} from 'node:vm';
 
 const src=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
+const placement=src.slice(src.indexOf('function combatMovementOccupied('),src.indexOf('function combatSetMovementPreview('));
 const sql=(name)=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
 const schema=sql('20261008112000_haj_area_schema.sql');
 const events=sql('20261008112100_haj_area_runtime.sql');
@@ -33,11 +35,11 @@ function areaHarness(areas=[],round=2){
  return ctx.haj
 }
 function movementHarness(cells,budget=6){
- const ctx={activeCombat:{phase:'movement'},combatRuntimeHexCells:()=>cells,combatCannotMove:()=>false,
+ const ctx={activeCombat:{phase:'movement'},combatants:[],combatRuntimeHexCells:()=>cells,combatCannotMove:()=>false,
  combatMovementAllowance:()=>budget,combatFlightCapabilities:()=>({ignore_terrain:false}),
  combatHexNeighbors:(q,r)=>[[q+1,r],[q-1,r]],combatTerrainIsWall:c=>c.notes==='wall',
  combatMentalMovementAllowed:()=>true};
- runInNewContext(src.slice(moveFrom,moveTo)+'\nthis.movement={combatReachableHexes,combatMovementHexPath}',ctx);
+ runInNewContext(footprint+'\n'+placement+'\n'+src.slice(moveFrom,moveTo)+'\nthis.movement={combatReachableHexes,combatMovementHexPath}',ctx);
  return ctx.movement
 }
 describe('HAJ: persistent hex and area effects',()=>{
@@ -116,7 +118,7 @@ describe('HAJ: persistent hex and area effects',()=>{
   expect(path).toContain("RAISE EXCEPTION 'Movement path contains a nonadjacent hex'");
   expect(path).toContain('v_flight');
   expect(path).toContain('v_remaining:=v_remaining-v_cost');
-  expect(src).toContain("dbJson('rpc/haj_move_combatant'")
+  expect(src).toContain("dbJson('rpc/alea_move_multhex'")
  });
  test('area center is selected on map and new zones persist in Supabase',()=>{
   expect(src).toContain('combatToggleAreaPlacement()');
