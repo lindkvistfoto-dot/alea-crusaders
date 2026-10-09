@@ -9,6 +9,7 @@ let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,c
 const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
 let supabaseSession=null,supabaseProfile=null;
+let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
 let ruleSkills=[],ruleSkillsLoaded=false;let ruleMagicSchools=[],ruleMagicSchoolsLoaded=false;let ruleSpells=[],ruleSpellsLoaded=false;let ruleEffects=[],ruleEffectsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleShields=[],ruleShieldsLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;let ruleSocialStands=[],ruleSocialStandsLoaded=false;
 let centralCampaignId=null,centralReady=false,centralSaveTimer=null,centralCampaignRole=null,centralCharacterSnapshots=new Map(),campaignPlayerProfiles=[],campaignDayState=null,campaignErfAwards=[],campaignCharacterRestStates=[],campaignSites=[],campaignLocations=[],campaignLocationEventLinks=[],campaignEvents=[],campaignNpcs=[],campaignMonsters=[],campaignCombatScenes=[],campaignContentReady=false,currentLocationContentId=null,currentLocationAssets=[],locationAssetUrlCache=new Map();let activeCombat=null,combatants=[],combatHexes=[],combatActions=[],combatLogRows=[],combatSelectedTargetId=null,combatReturn='home';
 function asBool(v){return v===true||v===1||v==='1'||String(v).toLowerCase()==='true'}
@@ -20,7 +21,7 @@ function toggleLoginPassword(){let e=$('loginPassword');e.type=e.type==='passwor
 syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
-async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
+async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
 async function authFetch(path,options={}){let headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json',...(options.headers||{})};return fetch(SUPABASE_URL+path,{...options,headers})}
 async function loadProfile(){if(!supabaseSession?.user?.id)return null;const auth={'Authorization':'Bearer '+supabaseSession.access_token};let path='/rest/v1/profiles?id=eq.'+encodeURIComponent(supabaseSession.user.id)+'&select=id,display_name,email,is_admin';let r=await authFetch(path,{headers:auth});if(!r.ok)throw new Error('Kunde inte läsa användarprofilen ('+r.status+').');let rows=await r.json();supabaseProfile=rows[0]||null;if(!supabaseProfile&&supabaseSession.user.email){path='/rest/v1/profiles?email=eq.'+encodeURIComponent(supabaseSession.user.email)+'&select=id,display_name,email,is_admin';r=await authFetch(path,{headers:auth});if(r.ok){rows=await r.json();supabaseProfile=rows[0]||null}}return supabaseProfile}
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
@@ -33,6 +34,7 @@ const RULE_REGISTRY_DEFS={
  professions:{label:'Yrken',table:'rule_professions',countId:'adminCountProfessions',section:'professions',load:()=>loadRuleProfessions(),render:()=>renderAdminProfessions(),count:()=>ruleProfessions.length},
  races:{label:'Raser',table:'rule_races',countId:'adminCountRaces',section:'races',load:()=>loadRuleRaces(),render:()=>renderAdminRaces(),count:()=>ruleRaces.length},
  stands:{label:'Stånd',table:'rule_social_stands',countId:'adminCountStands',section:'stands',load:()=>loadRuleSocialStands(),render:()=>renderAdminSocialStands(),count:()=>ruleSocialStands.length},
+ projectiles:{label:'Projektiler',table:'rule_projectile_types',countId:'adminCountProjectiles',section:'projectiles',load:()=>loadRuleProjectileTypes(),render:()=>renderAdminProjectiles(),count:()=>ruleProjectileTypes.length},
  weapons:{label:'Vapen',table:'rule_weapons',countId:'adminCountWeapons',section:'weapons',load:()=>loadRuleWeapons(),render:()=>renderAdminWeapons(),count:()=>ruleWeapons.length},
  armors:{label:'Rustningar',table:'rule_armor_types',countId:'adminCountArmors',section:'armors',load:()=>loadRuleArmorRegistry(),render:()=>renderAdminArmors(),count:()=>ruleArmorTypes.length},
  shields:{label:'Sköldar',table:'rule_shields',countId:'adminCountShields',section:'shields',load:()=>loadRuleShields(),render:()=>renderAdminShields(),count:()=>ruleShields.length}
@@ -42,7 +44,7 @@ function adminRuleRegistryDef(key){return RULE_REGISTRY_DEFS[key]||null}
 async function refreshAdminRuleRegistry(key,force=false){
  let def=adminRuleRegistryDef(key);if(!def)return false;
  if(force){
-  if(key==='skills')ruleSkillsLoaded=false;else if(key==='spells'){ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false}else if(key==='effects')ruleEffectsLoaded=false;else if(key==='professions')ruleProfessionsLoaded=false;else if(key==='races'){ruleRacesLoaded=false;ruleRaceAttributesLoaded=false}else if(key==='stands')ruleSocialStandsLoaded=false;else if(key==='weapons')ruleWeaponsLoaded=false;else if(key==='armors')ruleArmorLoaded=false;else if(key==='shields')ruleShieldsLoaded=false
+  if(key==='projectiles')ruleProjectileTypesLoaded=false;else if(key==='skills')ruleSkillsLoaded=false;else if(key==='spells'){ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false}else if(key==='effects')ruleEffectsLoaded=false;else if(key==='professions')ruleProfessionsLoaded=false;else if(key==='races'){ruleRacesLoaded=false;ruleRaceAttributesLoaded=false}else if(key==='stands')ruleSocialStandsLoaded=false;else if(key==='weapons')ruleWeaponsLoaded=false;else if(key==='armors')ruleArmorLoaded=false;else if(key==='shields')ruleShieldsLoaded=false
  }
  await def.load();def.render();renderAdminOverviewCounts();return RULE_REGISTRY_STATUS[key]?.state==='loaded'
 }
@@ -262,6 +264,72 @@ function weaponMasterOptions(item){
   ruleWeapons.map(r=>'<option value="'+escAttr(r.id)+'" '+(r.id===selected?'selected':'')+'>'+escAttr(r.name)+' · '+escAttr(r.handling)+' · STY '+escAttr(r.strength_group)+'</option>').join('')+
   '<option value="__custom__" '+(!linked&&String(item?.name||'').trim()?'selected':'')+'>Eget vapen…</option>'
 }
+
+/* v0.35.13 — centralized ammunition types. */
+async function loadRuleProjectileTypes(force=false){
+ if(ruleProjectileTypesLoaded&&!force)return ruleProjectileTypes;
+ try{ruleProjectileTypes=await dbJson('rule_projectile_types?select=*&order=sort_order.asc,name.asc');ruleProjectileTypesLoaded=true}
+ catch(e){ruleProjectileTypesLoaded=false;ruleProjectileTypes=[];console.error('Kunde inte läsa projektilregistret',e)}
+ return ruleProjectileTypes
+}
+function projectileKeyFromName(name){
+ const n=String(name||'').toLocaleLowerCase('sv-SE').trim();
+ if(n.includes('skäkt')||n.includes('armborst'))return 'bolt';
+ if(n.includes('blåsrör'))return 'dart';
+ if(n.includes('kastspjut'))return 'javelin';
+ if(n.includes('kastyx'))return 'throwing_axe';
+ if(n.includes('kastkniv'))return 'throwing_knife';
+ if(n.includes('kaststjärn'))return 'throwing_star';
+ if(n.includes('bola'))return 'bola';
+ if(n.includes('pil'))return 'arrow';
+ if(n.includes('sten')||n.includes('slung'))return 'stone';
+ return ''
+}
+function characterProjectileKey(row){
+ return row?.projectileKey||row?.projectile_key||projectileKeyFromName(row?.name)
+}
+function ruleProjectileFromKey(key){return ruleProjectileTypes.find(p=>p.projectile_key===key)||null}
+function projectileMasterOptions(row){
+ const selected=characterProjectileKey(row);
+ return '<option value="">— Välj projektiltyp —</option>'+
+  ruleProjectileTypes.filter(p=>p.active!==false).map(p=>'<option value="'+escAttr(p.projectile_key)+'"'+(p.projectile_key===selected?' selected':'')+'>'+escAttr(p.name)+'</option>').join('')
+}
+function setProjectileMaster(index,key){
+ if(!current||!canEditCharacter(current))return;
+ const p=ruleProjectileFromKey(key),item=current.projectiles?.[index];
+ if(!p||!item)return;
+ item.projectileKey=p.projectile_key;item.name=p.name;
+ save();renderWeapons()
+}
+function renderAdminProjectiles(){
+ const el=$('adminProjectileTable'),st=$('adminProjectileStatus');
+ if(!el)return;
+ if(st)st.textContent=ruleProjectileTypesLoaded?ruleProjectileTypes.length+' projektiltyper · vapenlänkar kommer från vapenregistret.':'Registret kunde inte läsas.';
+ const weaponsByKey=key=>ruleWeapons.filter(w=>w.projectile_key===key).map(w=>w.name).join(', ');
+ el.innerHTML='<div class="projectile-rule-header"><b>Typ</b><b>Återhämtning</b><b>Vapen</b><b>Åtgärder</b></div>'+
+  ruleProjectileTypes.map(p=>'<div class="projectile-rule-row"><b>'+escAttr(p.name)+'</b><span>'+p.recovery_percent+' %</span><span>'+escAttr(weaponsByKey(p.projectile_key)||'—')+'</span><button class="smallbtn" onclick="editRuleProjectile(\''+escAttr(p.projectile_key)+'\')">✎</button></div>').join('')
+}
+function editRuleProjectile(key){
+ if(!activeUser()?.admin)return;
+ const p=ruleProjectileFromKey(key);if(!p)return;
+ $('adminEditorTitle').textContent='Projektiltyp: '+p.name;
+ $('adminEditorBody').innerHTML='<div class="rule-editor-grid">'+
+  '<label class="wide">Namn<input id="rpName" value="'+escAttr(p.name)+'"></label>'+
+  '<label>Återhämtning (%)<input id="rpRecovery" type="number" min="80" max="90" value="'+p.recovery_percent+'"></label>'+
+  '<label class="wide">Beskrivning<input id="rpDesc" value="'+escAttr(p.description||'')+'"></label>'+
+  '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button>'+
+  '<button class="btn primary" onclick="saveRuleProjectile(\''+escAttr(p.projectile_key)+'\')">Spara</button></div></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+async function saveRuleProjectile(key){
+ if(!activeUser()?.admin)return;
+ const p=ruleProjectileFromKey(key),name=$('rpName')?.value.trim(),rate=Number($('rpRecovery')?.value);
+ if(!p||!name||!Number.isInteger(rate)||rate<80||rate>90)return alert('Ange namn och återhämtning 80–90 %.');
+ try{
+  await dbJson('rule_projectile_types?projectile_key=eq.'+encodeURIComponent(key),{method:'PATCH',body:JSON.stringify({name,recovery_percent:rate,description:$('rpDesc')?.value.trim()||''})});
+  closeAdminEditor();await loadRuleProjectileTypes(true);renderAdminProjectiles()
+ }catch(e){alert('Kunde inte spara projektiltyp: '+e.message)}
+}
 function copyRuleWeaponToInstance(target,rule){
  if(!target||!rule)return target;
  target.weaponTypeId=rule.id;target.weapon_id=rule.id;target.weaponCategory=rule.category||'melee';
@@ -272,6 +340,7 @@ function copyRuleWeaponToInstance(target,rule){
  target.price=rule.price==null?'':Number(rule.price);target.range=rule.range_text||'';
  target.reloadRounds=rule.reload_rounds==null?'':Number(rule.reload_rounds);
  target.tags=Array.isArray(rule.tags)?[...rule.tags]:[];target.masterNotes=rule.notes||'';
+ target.projectileKey=rule.projectile_key||null;
  target.skillId=rule.skill_id||'';
  target.skillName=(ruleSkills||[]).find(skill=>skill.id===rule.skill_id)?.name||'';
  target.iconKey=rule.icon_key||'generic';target.icon_key=rule.icon_key||'generic';
@@ -279,8 +348,18 @@ function copyRuleWeaponToInstance(target,rule){
 }
 function setCharacterWeaponMaster(i,value){
  let w=current?.weapons?.[i];if(!w)return;
+ const previousTypeId=w.weaponTypeId||w.weapon_id||'';
  if(value&&value!=='__custom__'){
-  let rule=ruleWeapons.find(r=>r.id===value);if(rule)copyRuleWeaponToInstance(w,rule)
+  let rule=ruleWeapons.find(r=>r.id===value);
+  if(rule){
+   copyRuleWeaponToInstance(w,rule);
+   if(rule.category==='thrown'&&rule.projectile_key&&previousTypeId!==rule.id){
+    current.projectiles=current.projectiles||[];
+    let existing=current.projectiles.find(p=>characterProjectileKey(p)===rule.projectile_key);
+    if(existing){existing.count=(Math.max(0,Number(existing.count)||0)+1);existing.projectileKey=rule.projectile_key}
+    else current.projectiles.push({projectileKey:rule.projectile_key,name:ruleProjectileFromKey(rule.projectile_key)?.name||rule.name,count:1});
+   }
+  }
  }else if(value==='__custom__'){
   w.weaponTypeId='';w.weapon_id='';w.weaponCategory=w.weaponCategory||'melee';w.skillId='';w.skillName=''
  }else{
@@ -544,6 +623,7 @@ function editRuleWeapon(id=''){
    '<label class="wide">Namn<input id="rwName" value="'+escAttr(r?.name||'')+'"></label>'+
    '<label>Ikon<select id="rwIconKey">'+ruleWeaponIconOptions(r?.icon_key||'')+'</select></label>'+
    '<label>Kategori<select id="rwCategory"><option value="melee" '+(category==='melee'?'selected':'')+'>Närstrid</option><option value="projectile" '+(category==='projectile'?'selected':'')+'>Projektil</option><option value="thrown" '+(category==='thrown'?'selected':'')+'>Kastvapen</option></select></label>'+
+   '<label>Projektiltyp<select id="rwProjectileKey"><option value="">Ingen</option>'+ruleProjectileTypes.map(p=>'<option value="'+escAttr(p.projectile_key)+'" '+(p.projectile_key===r?.projectile_key?'selected':'')+'>'+escAttr(p.name)+'</option>').join('')+'</select></label>'+ 
    '<label>Färdighet<select id="rwSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'')+'</select></label>'+
    '<label>Grepp<select id="rwHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
    '<label>STY-grupp<input id="rwStrengthGroup" type="number" min="0" step="1" value="'+escAttr(r?.strength_group??0)+'"></label>'+
@@ -570,6 +650,7 @@ async function saveRuleWeapon(id=''){
    icon_key:$('rwIconKey')?.value||'generic',
    category:$('rwCategory')?.value||'melee',
    skill_id:skillId,
+   projectile_key:$('rwProjectileKey')?.value||null,
    handling:$('rwHandling')?.value||'1H',
    strength_group:ruleWeaponNumberValue('rwStrengthGroup',{integer:true}),
    damage:$('rwDamage')?.value.trim()||'',
@@ -893,6 +974,7 @@ const ADMIN_SECTION_META={
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
+ projectiles:['Projektiler','Centralt register för ammunition och kastvapen'],
  weapons:['Vapen','Centralt vapenregister'],
  armors:['Rustningar','Centralt rustningsregister enligt Expert'],
  shields:['Sköldar','Centralt sköldregister enligt Expert'],
@@ -1367,11 +1449,11 @@ function renderWeapons(){
  let ps=current.projectiles||[];
  $('projectiletable').innerHTML=editing?
   ps.map((x,i)=>'<div class="character-equip-edit-row projectile-edit-row">'+
-   characterEquipmentEditField('Projektil','<input value="'+escAttr(x.name||'')+'" onchange="setProjectile('+i+',\'name\',this.value)" aria-label="Projektilnamn">','wide')+
+   characterEquipmentEditField('Projektil','<select onchange="setProjectileMaster('+i+',this.value)" aria-label="Projektiltyp">'+projectileMasterOptions(x)+'</select>','wide')+
    characterEquipmentEditField('Antal',projectileStepper(i,x.count))+
    characterEquipmentEditActions('removeProjectile',i)+'</div>').join(''):
   '<div class="skillhead">Namn</div><div class="skillhead skillnum">Antal</div>'+
-  ps.map((x,i)=>'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+projectileStepper(i,x.count)+'</div>').join('');
+  ps.map((x,i)=>'<div>'+escAttr(ruleProjectileFromKey(characterProjectileKey(x))?.name||x.name||'—')+'</div><div class="skillnum">'+projectileStepper(i,x.count)+'</div>').join('');
  let ar=current.armor||[];
  $('armortable').innerHTML=editing?
   ar.map((x,i)=>'<div class="character-equip-edit-row armor-edit-row">'+
@@ -1397,7 +1479,7 @@ function renderWeapons(){
   '<div class="skillhead">Sköld</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">BEP</div><div class="skillhead skillnum">ERF</div>'+
   sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b><small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
    '<div class="skillnum">'+escAttr(x.fv??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div><div class="skillnum">'+erfDisplay('shields',i,x.erf)+'</div>').join('')
-}function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){current.projectiles.push({name:'',count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
+}function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){let p=ruleProjectileTypes.find(p=>p.active!==false);if(!p)return alert('Projektilregistret är tomt.');current.projectiles.push({projectileKey:p.projectile_key,name:p.name,count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
 const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Överkropp',arms:'Arm',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
 function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'}[kind]||''}
 function currentEquipSlotHtml(slot){

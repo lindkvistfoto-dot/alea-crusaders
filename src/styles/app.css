@@ -6487,3 +6487,28 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
  padding:5px 8px;border:1px solid #5a9c70;border-radius:7px;
  background:#1c4530;color:#e9ffde;font-size:12px;font-weight:800
 }
+
+
+/* v0.35.13 — projectile registry and end-of-battle recovery controls. */
+.projectile-master-table{width:100%;min-width:0;display:flex;flex-direction:column;gap:5px}
+.projectile-rule-header,.projectile-rule-row{display:grid;grid-template-columns:minmax(100px,1fr) 100px minmax(120px,2fr) 60px;align-items:center;gap:8px;padding:9px 10px;border:1px solid #66553f;border-radius:7px}
+.projectile-rule-header{color:#ebcd9b;background:#241e16;font-size:12px}
+.projectile-rule-row{background:#191712;color:#f4e2c9;font-size:13px}
+.projectile-rule-row span{line-height:1.5}
+.projectile-rule-row button{min-height:36px}
+.combat-ammo-admin{margin-top:12px;border:1px solid #715d42;border-radius:9px;padding:11px;background:#1c1b16;color:#eee0cb}
+.combat-ammo-admin summary{cursor:pointer;font-weight:800;color:#f2d1a0}
+.combat-ammo-results{display:grid;gap:5px;margin:10px 0}
+.combat-ammo-results>div{padding:6px 8px;border-radius:6px;border:1px solid #524835;background:#211f19;font-size:12px}
+.combat-ammo-finish{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px}
+.combat-ammo-finish label{display:flex;align-items:center;gap:7px;font-size:12px}
+.combat-ammo-finish input[type=number]{width:66px;padding:7px;background:#141512;border:1px solid #796748;border-radius:5px;color:#fff}
+.combat-ammo-finish>small{width:100%;line-height:1.55;color:#ccb99b}
+@media(max-width:640px){
+ .projectile-rule-header{display:none}
+ .projectile-rule-row{grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:start}
+ .projectile-rule-row>span:nth-of-type(2){grid-column:1/-1;grid-row:2}
+ .projectile-rule-row button{grid-column:2;grid-row:1}
+ .combat-ammo-finish{align-items:stretch;flex-direction:column}
+ .combat-ammo-finish label{min-height:40px}
+}

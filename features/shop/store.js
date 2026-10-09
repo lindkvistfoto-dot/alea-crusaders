@@ -511,15 +511,23 @@ function shopAddPurchasedItem(c,item,purchases=1){
       if(rule)copyRuleWeaponToInstance(w,rule);
       w.fv=10;w.erf=0;w.shopSource='targans_gille';
       c.weapons.push(w);
+      if(rule?.category==='thrown'&&rule.projectile_key){
+        const stock=c.projectiles.find(x=>x.projectileKey===rule.projectile_key);
+        if(stock)stock.count=(Number(stock.count)||0)+1;
+        else c.projectiles.push({projectileKey:rule.projectile_key,name:ruleProjectileFromKey(rule.projectile_key)?.name||rule.name,count:1});
+      }
     }
     return;
   }
   if(item.purchaseKind==='projectile'){
     const name=String(item.metadata?.projectile_name||item.name||'Projektiler').replace(/,\s*\d+\s*st\.?$/i,'');
     const count=qty*Math.max(1,Number(item.quantityPerPurchase)||1);
-    const existing=c.projectiles.find(p=>(p.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);
-    if(existing)existing.count=Math.max(0,Number(existing.count)||0)+count;
-    else c.projectiles.push({name,count});
+    const projectileKey=projectileKeyFromName(name);
+    const definition=ruleProjectileFromKey(projectileKey);
+    const existing=c.projectiles.find(p=>projectileKey&&
+      (p.projectileKey===projectileKey||projectileKeyFromName(p.name)===projectileKey));
+    if(existing){existing.count=Math.max(0,Number(existing.count)||0)+count;existing.projectileKey=projectileKey;if(definition)existing.name=definition.name}
+    else c.projectiles.push({projectileKey:projectileKey||null,name:definition?.name||name,count});
     return;
   }
   if(item.purchaseKind==='armor'){

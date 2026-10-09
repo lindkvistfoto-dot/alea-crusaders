@@ -1683,10 +1683,29 @@ async function rollCombatAttack(actorId,targetId){
  if(!weapon)return;
  const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
  if(!info)return;
+ const projectileKey=info.mode==='ranged'?combatWeaponProjectileKey(weapon):'';
+ let consumed=false;
  try{
+  if(info.mode==='ranged'&&!projectileKey&&['projectile','thrown'].includes(combatWeaponCategory(weapon)))
+   throw new Error('Vapnet saknar projektiltyp i vapenregistret.');
+  if(projectileKey){
+   if(combatAmmoStock(actor,projectileKey)<1)throw new Error('Slut på ammunition. Fyll på projektiler under rollpersonens Vapen.');
+   const response=await dbJson('rpc/combat_spend_ammunition',{method:'POST',body:JSON.stringify({
+    p_action_id:action.id,p_weapon_key:combatWeaponKey(weapon),p_projectile_key:projectileKey
+   })});
+   if(response?.already_spent)throw new Error('Detta skott har redan förbrukat ammunition.');
+   consumed=true;
+   await combatReloadAmmoCharacter(actor);
+  }
   await combatResolveAttackAction(actor,target,action,weapon,info.mode);
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(error){
+  if(consumed){
+   try{
+    const refunded=await dbJson('rpc/combat_refund_ammunition',{method:'POST',body:JSON.stringify({p_action_id:action.id})});
+    if(refunded===true)await combatReloadAmmoCharacter(actor)
+   }catch(refundError){console.error('Kunde inte återställa projektil efter avbruten attack',refundError)}
+  }
   console.error('Kunde inte slå attack',error);
   alert('Attackslaget kunde inte genomföras: '+(error?.message||error))
  }
@@ -1701,6 +1720,11 @@ function combatAttackExecutionHtml(target){
  if(!weapon)return '';
  const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
  if(!info)return '';
+ const ammoKey=info.mode==='ranged'?combatWeaponProjectileKey(weapon):'';
+ if(info.mode==='ranged'&&(!ammoKey||combatAmmoStock(actor,ammoKey)<1))
+  return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>'+
+   (ammoKey?'Slut på ammunition. Lägg till '+escAttr((typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(ammoKey)?.name:null)||ammoKey)+' under Vapen → Projektiler.':'Vapnet saknar projektiltyp i grundregistret.')+
+   '</span></div>';
  const fv=combatAttackFv(weapon,actor);
  if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slås ännu.</span></div>';
  return '<div class="combat-attack-execute">'+
@@ -1730,8 +1754,8 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
 }
 function combatWeaponAttackHint(weapon,combatant){
  const category=combatWeaponCategory(weapon),fv=combatAttackFv(weapon,combatant),fvText=fv==null?'FV — · ':'FV '+fv+' · ';
- if(category==='thrown')return fvText+'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex';
- if(category==='projectile')return fvText+'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex';
+ if(category==='thrown')return fvText+'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex'+(combatAmmoHint(combatant,weapon)?' · '+combatAmmoHint(combatant,weapon):'');
+ if(category==='projectile')return fvText+'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex'+(combatAmmoHint(combatant,weapon)?' · '+combatAmmoHint(combatant,weapon):'');
  return fvText+'Närstrid · '+combatMeleeReachHexesForWeapon(weapon)+' hex'
 }
 function combatAttackWeaponChooserHtml(combatant,action,def){
@@ -2243,6 +2267,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    await combatLoadEffects();
+   await combatLoadAmmoSpends();
    await combatExpireElapsedEffects();
    const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
    if(combatGmPlacementId&&!combatants.some(row=>String(row.id)===String(combatGmPlacementId)))combatGmPlacementId=null;
@@ -2694,6 +2719,90 @@ function combatAvailableWeapons(combatant,mode='auto'){
 }
 function combatWeaponKey(weapon){
  return String(weapon?.equipId||weapon?.weapon_id||weapon?.weaponTypeId||weapon?.id||weapon?.name||'')
+}
+
+/* v0.35.13 — authoritative projectile types and per-shot server-side stock updates. */
+let combatAmmoSpends=[],combatAmmoLastSummary=null;
+function combatWeaponProjectileKey(weapon){
+ if(!weapon||weapon._unarmed)return '';
+ const rule=typeof ruleWeaponForItem==='function'?ruleWeaponForItem(weapon):null;
+ return String(rule?.projectile_key||weapon.projectileKey||weapon.projectile_key||'');
+}
+function combatAmmoStock(combatant,key){
+ if(!key)return null;
+ const profile=combatAttackProfile(combatant);
+ const stocks=Array.isArray(profile.projectiles)?profile.projectiles:[];
+ return stocks.reduce((sum,p)=>{
+  const kind=p.projectileKey||p.projectile_key||(typeof projectileKeyFromName==='function'?projectileKeyFromName(p.name):'');
+  return sum+(kind===key?Math.max(0,Math.floor(Number(p.count)||0)):0)
+ },0)
+}
+function combatAmmoHint(combatant,weapon){
+ const key=combatWeaponProjectileKey(weapon);if(!key)return '';
+ const name=(typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(key)?.name:null)||key;
+ return name+' '+combatAmmoStock(combatant,key)+' kvar';
+}
+async function combatReloadAmmoCharacter(combatant){
+ if(combatant?.source_type!=='character')return;
+ const row=(await dbJson('characters?id=eq.'+encodeURIComponent(combatant.source_id)+'&select=id,data&limit=1'))?.[0];
+ if(!row)return;
+ const local=(typeof chars!=='undefined'?chars:[]).find(c=>String(c._dbId||c.id)===String(row.id));
+ if(local){
+  local.projectiles=Array.isArray(row.data?.projectiles)?row.data.projectiles:[];
+  if(typeof centralCharacterSnapshots!=='undefined'&&centralCharacterSnapshots?.set&&typeof characterSyncFingerprint==='function')
+   centralCharacterSnapshots.set(row.id,characterSyncFingerprint(local))
+ }
+ const state={...(combatant.state||{})},profile={...(state.attack_profile||{})};
+ profile.projectiles=Array.isArray(row.data?.projectiles)?row.data.projectiles:[];
+ combatant.state={...state,attack_profile:profile}
+}
+async function combatLoadAmmoSpends(){
+ if(!activeCombat||!combatCanManage()){combatAmmoSpends=[];return}
+ try{combatAmmoSpends=await dbJson('combat_ammunition_spends?combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=*&order=created_at.asc')||[]}
+ catch(error){combatAmmoSpends=[];console.warn('Kunde inte läsa projektilförbrukning',error)}
+}
+function combatAmmoSummaryHtml(){
+ if(!activeCombat||!combatCanManage())return '';
+ const ended=activeCombat.status==='completed';
+ const spent=combatAmmoSpends.length,recovered=combatAmmoSpends.filter(e=>e.recovered).length;
+ const groups=new Map();
+ combatAmmoSpends.forEach(entry=>{
+  const type=entry.projectile_key,actor=combatants.find(c=>String(c.id)===String(entry.combatant_id));
+  const key=entry.combatant_id+'|'+type,old=groups.get(key)||{name:actor?.name_snapshot||'Kombatant',type,used:0,recovered:0};
+  old.used++;if(entry.recovered)old.recovered++;groups.set(key,old)
+ });
+ const names=key=>(typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(key)?.name:null)||key;
+ return '<details class="combat-ammo-admin" '+(ended?'open':'')+'><summary>🏹 Projektiler · '+spent+' avfyrade'+(ended?' · '+recovered+' återvunna':'')+'</summary>'+
+  '<div class="combat-ammo-results">'+
+   (groups.size?[...groups.values()].map(g=>'<div><b>'+escAttr(g.name)+'</b> · '+escAttr(names(g.type))+
+    ' · avfyrade '+g.used+(ended?' · hela '+g.recovered+' · förlorade '+(g.used-g.recovered):'')+'</div>').join(''):'Inga projektiler har förbrukats i denna strid.')+
+  '</div>'+
+  (!ended?'<div class="combat-ammo-finish">'+
+   '<label><input id="combatAmmoRecoverAllowed" type="checkbox"> Berättelsen tillåter att projektiler samlas upp</label>'+
+   '<label>Chans (%) <input id="combatAmmoRecoverChance" type="number" min="80" max="90" value="85"></label>'+
+   '<button type="button" class="btn primary" onclick="combatFinishAndRecover()">Avsluta strid & sammanfatta</button>'+
+   '<small>SL avgör om uppsamling går att göra. Varje använd projektil prövas en gång (85 % som standard). Inget avdrag görs vid omladdning.</small></div>':
+   '<p>Striden avslutad. Totalt '+spent+' avfyrade, '+recovered+' återvunna, '+(spent-recovered)+' förlorade.</p>')+
+ '</details>'
+}
+async function combatFinishAndRecover(){
+ if(!combatCanManage()||!activeCombat||!['active','paused'].includes(activeCombat.status))return;
+ const allow=$('combatAmmoRecoverAllowed')?.checked===true,percent=Number($('combatAmmoRecoverChance')?.value||85);
+ if(!Number.isInteger(percent)||percent<80||percent>90)return alert('Ange 80–90 % återhämtningschans.');
+ const ok=await askConfirm('Avsluta striden',
+  'Striden avslutas. '+(allow?'SL tillåter uppsamling, '+percent+' % chans per projektil.':'Ingen uppsamling: alla använda projektiler förloras.')+
+  ' Detta kan inte göras om.','Avsluta striden');
+ if(!ok)return;
+ const combatId=activeCombat.id;
+ try{
+  const result=await dbJson('rpc/combat_finish_and_recover',{method:'POST',body:JSON.stringify({
+   p_combat_id:combatId,p_allow_recovery:allow,p_percent:percent})});
+  combatAmmoLastSummary=result;
+  // Refresh the actual character inventory, not just the battle snapshot.
+  for(const actor of combatants.filter(c=>c.source_type==='character'))await combatReloadAmmoCharacter(actor);
+  await loadActiveCombat(combatId);
+  renderCombat();
+ }catch(error){alert('Kunde inte sammanfatta striden: '+error.message)}
 }
 function combatAttackWeaponOptions(combatant,mode='auto'){
  const weapons=combatAvailableWeapons(combatant,mode),seen=new Set();
@@ -5110,7 +5219,7 @@ async function combatDismissEldsalamander(id){return combatDismissElemental(id)}
 
 function combatGmToolboxHtml(){
  if(!combatCanManage()||!activeCombat)return '';
- return '<section id="combatGmToolbox" class="combat-gm-toolbox"><h3>SL · Stridskontroll</h3><p class="combat-action-note">Skapa områden och tilldela effekter i striden. Regeldefinitioner finns i Administration → Effekter.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+combatAreasAdminHtml()+combatEffectsAdminHtml()+'</section>'
+ return '<section id="combatGmToolbox" class="combat-gm-toolbox"><h3>SL · Stridskontroll</h3><p class="combat-action-note">Skapa områden och tilldela effekter i striden. Regeldefinitioner finns i Administration → Effekter.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+combatAreasAdminHtml()+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</section>'
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
