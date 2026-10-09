@@ -6662,14 +6662,14 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
 .alea-soundboard-location button{background:#624723;color:#fce7bf;border:1px solid #a98853;border-radius:7px;padding:7px 9px;cursor:pointer;white-space:nowrap}
 @media(max-width:700px){.alea-sound-filters{grid-template-columns:1fr}.alea-soundboard-location{flex-wrap:wrap}.alea-soundboard-location select{flex-basis:100%}}
 
-/* v0.35.26 – audio controls must never intercept login/home input.
+/* v0.35.27 – audio controls must never intercept login/home input.
    The sound engine starts only on explicit sound/game interactions. */
 #loginScreen:not(.hidden) ~ #aleaAudioDock,
 #loginScreen:not(.hidden) ~ #aleaSoundboard,
 body:has(#home:not(.hidden)) #aleaAudioDock,
 body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 
-/* v0.35.26 – Gandalf inventory */
+/* v0.35.27 – Gandalf inventory */
 .alea-sound-filters{grid-template-columns:repeat(3,minmax(0,1fr))}
 .alea-sound-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .alea-sound-tags span{font-size:10px;border-radius:99px;background:#3e352a;border:1px solid #786449;color:#eed5a4;padding:2px 7px}
@@ -6683,3 +6683,8 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 .alea-sound-brief-note{font-size:11px;color:#baaa91}
 @media(max-width:750px){.alea-sound-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.alea-sound-brief-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:500px){.alea-sound-filters{grid-template-columns:1fr}.alea-sound-brief-grid{grid-template-columns:1fr}.alea-sound-brief-wide{grid-column:1}}
+
+/* v0.35.27 – Aragorn: sound-source links and license review */
+.alea-sound-source-link{display:inline-flex;width:max-content;max-width:100%;color:#9fcce8;border:1px solid #426a83;border-radius:6px;padding:5px 9px;font-size:12px;text-decoration:none}
+.alea-sound-source-link:hover,.alea-sound-source-link:focus-visible{background:#223a49;color:#effbff;outline:2px solid #9fcce8;outline-offset:2px}
+.alea-sound-brief-grid input[type="url"],.alea-sound-brief-grid input[type="text"]{word-break:break-all}

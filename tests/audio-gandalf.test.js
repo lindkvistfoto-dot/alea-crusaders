@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-describe('Gandalf sound inventory v0.35.26',()=>{
+describe('Gandalf sound inventory v0.35.27',()=>{
  it('records 52 sounds with 25 planned future cues without publishing recordings',()=>{
   const sql=read('supabase/migrations/20261009141000_gandalf_inventory_v03526.sql');
   const cat=read('supabase/migrations/20261009140000_gandalf_categories_v03526.sql');
