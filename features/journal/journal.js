@@ -7,17 +7,39 @@ const jOutcome={success:'Lyckat',fail:'Misslyckat',special:'Särskilt',perfect:'
 const jCampaign=()=>String(centralCampaignId||'');
 const jAuth=()=>!!(supabaseSession?.access_token&&activeUser()&&jCampaign());
 const jGM=()=>!!(activeUser()?.admin||centralCampaignRole==='gm');
-const jState={id:'',rows:[],limit:150,busy:false,queued:false,last:0,visible:false,previous:'home',error:''};
+const jState={id:'',rows:[],limit:150,busy:false,queued:false,last:0,visible:false,previous:'home',error:'',openRowId:''};
 const jTime=v=>{try{return new Intl.DateTimeFormat('sv-SE',{dateStyle:'short',timeStyle:'short'}).format(new Date(v))}catch(_){return ''}};
-function jRow(r){
+function jRow(r,feed=false){
  const type=jKind[r.event_type]||['•','Händelse'],out=jOutcome[r.outcome]||r.outcome;
- return '<article class="journal-row"><span class="journal-row-icon">'+type[0]+'</span><div class="journal-row-main"><div class="journal-row-top"><strong>'+jEsc(r.title)+'</strong>'+(out?'<span class="journal-outcome">'+jEsc(out)+'</span>':'')+(!r.player_visible?'<span class="journal-private">Endast SL</span>':'')+'</div><p>'+jEsc(r.message)+'</p><small>'+jEsc(type[1])+(r.actor_name?' · '+jEsc(r.actor_name):'')+'</small></div><time>'+jEsc(jTime(r.created_at))+'</time></article>';
+ const id=String(r.id||''),title=jEsc(r.title||'Händelse'),date=jEsc(jTime(r.created_at));
+ const expanded=!feed&&jState.openRowId===id;
+ const target=feed?'data-journal-open':'data-journal-toggle';
+ const triggerLabel=(feed?'Öppna i journalen: ':'Visa eller dölj: ')+title;
+ return '<article class="journal-row'+(feed?' journal-row-feed':'')+(expanded?' is-expanded':'')+'" data-journal-row-id="'+jEsc(id)+'">'+
+  '<button type="button" class="journal-row-trigger" '+target+'="'+jEsc(id)+'" aria-label="'+triggerLabel+'"'+
+  (feed?'':' aria-expanded="'+expanded+'" aria-controls="journal-detail-'+jEsc(id)+'"')+'>'+
+   '<span class="journal-row-icon" aria-hidden="true">'+type[0]+'</span>'+
+   '<span class="journal-row-main"><span class="journal-row-top"><strong>'+title+'</strong>'+
+    (r.actor_name?'<span class="journal-row-actor">'+jEsc(r.actor_name)+'</span>':'')+'</span></span>'+
+   (out?'<span class="journal-outcome">'+jEsc(out)+'</span>':'')+
+   (!r.player_visible?'<span class="journal-private">Endast SL</span>':'')+
+   '<time datetime="'+jEsc(r.created_at||'')+'">'+date+'</time>'+
+   '<span class="journal-row-arrow" aria-hidden="true">'+(feed?'›':expanded?'▴':'▾')+'</span>'+
+  '</button>'+
+  (feed?'':'<div id="journal-detail-'+jEsc(id)+'" class="journal-row-details"'+(expanded?'':' hidden')+'>'+
+   '<p>'+jEsc(r.message||'Ingen ytterligare information.')+'</p>'+
+   '<div class="journal-row-details-meta"><span>'+jEsc(type[1])+'</span>'+
+    (r.actor_name?'<span>'+jEsc(r.actor_name)+'</span>':'')+
+    (out?'<span>'+jEsc(out)+'</span>':'')+
+    '<time datetime="'+jEsc(r.created_at||'')+'">'+date+'</time>'+
+   '</div></div>')+
+  '</article>'
 }
 let journalSync;
 function jRender(){
  jGet('journalFeed')?.classList.toggle('hidden',!jAuth());
  if(!jAuth())return;
- jGet('journalLatest').innerHTML=jState.rows.length?jState.rows.slice(0,8).map(jRow).join(''):'<div class="journal-empty">Inga händelser ännu.</div>';
+ jGet('journalLatest').innerHTML=jState.rows.length?jState.rows.slice(0,8).map(r=>jRow(r,true)).join(''):'<div class="journal-empty">Inga händelser ännu.</div>';
  const term=jGet('journalSearch').value.toLocaleLowerCase('sv').trim(),kind=jGet('journalType').value;
  const filtered=jState.rows.filter(r=>(!kind||r.event_type===kind)&&(!term||[r.title,r.message,r.actor_name,r.outcome].join(' ').toLocaleLowerCase('sv').includes(term)));
  jGet('journalAll').innerHTML=filtered.length?filtered.map(jRow).join(''):'<div class="journal-empty">'+jEsc(jState.error||'Inga händelser matchar sökningen.')+'</div>';
@@ -30,7 +52,7 @@ function jRender(){
 async function jRefresh(){
  if(!jAuth())return;
  const id=jCampaign();
- if(id!==jState.id){jState.id=id;jState.rows=[];jState.limit=150;jState.error='';jRender()}
+ if(id!==jState.id){jState.id=id;jState.rows=[];jState.limit=150;jState.error='';jState.openRowId='';jRender()}
  if(jState.busy){jState.queued=true;return}
  jState.busy=true;
  try{
@@ -82,6 +104,32 @@ function jMount(){
    supabaseUrl:SUPABASE_URL,publishableKey:SUPABASE_KEY,onRefresh:jRefresh,onStatus:jRender});
  jGet('journalNavBtn').addEventListener('click',jOpen);
  jGet('journalFeedOpen').addEventListener('click',jOpen);
+ jGet('journalLatest').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-journal-open]');
+  if(!button||!jAuth()||jState.id!==jCampaign())return;
+  const id=button.dataset.journalOpen;
+  if(!jState.rows.some(row=>String(row.id)===id))return;
+  jState.openRowId=id;
+  jGet('journalSearch').value='';
+  jGet('journalType').value='';
+  jOpen();
+  jRender();
+  requestAnimationFrame(()=>{
+   const row=[...jGet('journalAll').querySelectorAll('[data-journal-row-id]')].find(el=>el.dataset.journalRowId===id);
+   row?.scrollIntoView({block:'center'});
+   row?.querySelector('.journal-row-trigger')?.focus({preventScroll:true})
+  })
+ });
+ jGet('journalAll').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-journal-toggle]');
+  if(!button||!jAuth()||jState.id!==jCampaign())return;
+  const id=button.dataset.journalToggle;
+  if(!jState.rows.some(row=>String(row.id)===id))return;
+  jState.openRowId=jState.openRowId===id?'':id;
+  jRender();
+  const updated=[...jGet('journalAll').querySelectorAll('button[data-journal-toggle]')].find(el=>el.dataset.journalToggle===id);
+  updated?.focus({preventScroll:true})
+ });
  jGet('journalBack').addEventListener('click',()=>jClose(true));
  jGet('journalSearch').addEventListener('input',jRender);
  jGet('journalType').addEventListener('change',jRender);
@@ -89,7 +137,7 @@ function jMount(){
  jGet('journalMore').addEventListener('click',()=>{jState.limit+=150;void jRefresh()});
  document.querySelector('header').addEventListener('click',e=>{if(jState.visible&&e.target.closest('button')&&!e.target.closest('#journalNavBtn'))jClose(false)},true);
  journalSync.start();
- setInterval(()=>{if(!jAuth()){jState.id='';jState.rows=[];return}
+ setInterval(()=>{if(!jAuth()){jState.id='';jState.rows=[];jState.openRowId='';return}
   if(jCampaign()!==jState.id||Date.now()-jState.last>(journalSync.connected()?60000:15000))void jRefresh()
  },5000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&jAuth()){journalSync.tick();void jRefresh()}});
