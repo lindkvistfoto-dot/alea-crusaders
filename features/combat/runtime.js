@@ -5070,9 +5070,10 @@ function combatGmPlacementHtml(){
   '<p class="combat-action-note">Välj en kombatant och klicka sedan på en ledig hex. Oplacerade reserver syns bara här. Förstärkningar får initiativ nästa stridsrunda.</p>'+
   '<div class="combat-gm-placements">'+entries.map(c=>{
    const isReserve=combatGmIsReserve(c),selected=String(combatGmPlacementId||'')===String(c.id);
-   return '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>'+(isReserve?'Reserv':'Hex '+c.q+', '+c.r)+'</small></span>'+
+   return '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>'+(isReserve?'Reserv':'Hex '+c.q+', '+c.r)+' · '+COMBAT_FOOTPRINT_LABELS[combatFootprintShape(c)]+' · riktning '+(combatFootprintFacing(c)+1)+'/6</small></span>'+
     '<button type="button" class="smallbtn'+(selected?' active':'')+'" onclick="combatSelectGmPlacement(\''+escAttr(c.id)+'\')">'+(selected?'Avbryt':isReserve?'Sätt ut':'Flytta')+'</button>'+
-    (canReturn&&!isReserve?'<button type="button" class="smallbtn" onclick="combatReturnToReserve(\''+escAttr(c.id)+'\')">Till reserv</button>':'')+'</div>'
+    (!isReserve&&combatFootprintShape(c)!=='single'?'<button type="button" class="smallbtn" title="Vrid vänster" onclick="combatRotateFootprint(\\''+c.id+'\\',-1)">↶</button><button type="button" class="smallbtn" title="Vrid höger" onclick="combatRotateFootprint(\\''+c.id+'\\',1)">↷</button>':'')+
+     (canReturn&&!isReserve?'<button type="button" class="smallbtn" onclick="combatReturnToReserve(\''+escAttr(c.id)+'\')">Till reserv</button>':'')+'</div>'
   }).join('')+'</div></details>'
 }
 function combatGmPlacementHintHtml(){
@@ -5095,6 +5096,17 @@ function combatSelectGmPlacement(id){
  if(combatGmPlacementId){combatAreaPlacementActive=false;combatAreaDraftCenter=null;combatMovementPlan=null}
  renderCombat();
  if(combatGmPlacementId)requestAnimationFrame(()=>$('combatBody')?.querySelector('.combat-board-wrap')?.scrollIntoView({behavior:'smooth',block:'center'}))
+}
+async function combatRotateFootprint(id,delta){
+ if(!combatCanManage()||!activeCombat)return;
+ const actor=combatants.find(c=>String(c.id)===String(id));
+ if(!actor||actor.status==='removed'||actor.status==='dead')return;
+ const facing=(combatFootprintFacing(actor)+Number(delta)+6)%6;
+ try{
+  await dbJson('rpc/alea_rotate_multhex',{method:'POST',headers:{Prefer:'return=representation'},
+   body:JSON.stringify({p_combatant_id:actor.id,p_facing:facing})});
+  await loadActiveCombat(null,{preserveSelectedTarget:true});
+ }catch(error){alert('Kunde inte vrida varelsen: '+(error?.message||error))}
 }
 async function combatChooseGmHex(event,q,r){
  event?.stopPropagation?.();
