@@ -643,7 +643,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:row.start_q==null||row.start_r==null?'removed':'active',action_plan:[],
-   state:{...(row.state||{}),in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -1022,7 +1022,7 @@ function combatAntimagicOptions(caster,ids){
    const spell=combatSpellOptions(mage).find(s=>String(s.name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim()==='ANTIMAGI');
    if(!spell||Number(mage.current_psy)<1)continue;
    const reach=combatSpellRangeHexes(mage,{source_data:{range_text:spell.range_text,effect_grade:1}});
-   if(combatAxialDistance(mage,target)>reach||!combatHasLineOfSight(mage,target))continue;
+   if(combatFootprintDistance(mage,target)>reach||!combatHasLineOfSight(mage,target))continue;
    options.push({mage,target,spell,maxGrade:Math.max(1,Math.min(Number(spell.school_fv)||1,Number(mage.current_psy)||1))})
   }
  }
@@ -2479,14 +2479,25 @@ function combatIsMovementPlanning(combatant){
 function combatCanPlanMovement(combatant){
  return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&activeCombat?.phase==='movement'&&!combatCannotMove(combatant)&&combatMovementBudget(combatant)>0
 }
-function combatMovementOccupied(combatant,q,r){
- return combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(combatant?.id||'')&&Number(row.q)===Number(q)&&Number(row.r)===Number(r))
+function combatMovementOccupied(combatant,q,r,facing=combatFootprintFacing(combatant)){
+ const proposal={...combatant,q,r,state:{...(combatant?.state||{}),footprint:{shape:combatFootprintShape(combatant),facing}}};
+ return combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(combatant?.id||'')&&combatFootprintOverlaps(proposal,row))
+}
+function combatFootprintCanStand(actor,q,r,facing=combatFootprintFacing(actor)){
+ if(!actor)return false;
+ const terrain=new Map(combatRuntimeHexCells().map(cell=>[cell.key,cell]));
+ const flight=combatFlightCapabilities(actor);
+ const footprint=combatFootprintCells(actor,q,r,facing);
+ return footprint.length>0&&footprint.every(cell=>{
+  const found=terrain.get(combatFootprintKey(cell));
+  return found&&!combatTerrainIsWall(found)&&(found.movement_mode!=='blocked'||flight.ignore_terrain)
+ })&&!combatMovementOccupied(actor,q,r,facing)
 }
 function combatSetMovementPreview(q,r,{render=true}={}){
  const actor=combatMovementPlanningActor();if(!actor)return false;
  q=Number(q);r=Number(r);
  const key=q+','+r,reachable=combatReachableHexes(actor),cost=reachable.get(key);
- if(cost==null||combatMovementOccupied(actor,q,r))return false;
+ if(cost==null||!combatFootprintCanStand(actor,q,r))return false;
  combatMovementPlan={...combatMovementPlan,q,r,cost:Number(cost)||0};
  if(render)renderCombat();
  return true
@@ -2644,15 +2655,17 @@ function combatIgnoresSightObstacle(actor,cell){
 function combatHasLineOfSight(actor,target){
  if(!actor||!target)return false;
  const terrain=new Map(combatRuntimeHexCells().map(cell=>[cell.key,cell]));
- const line=combatHexLine(actor,target);
  const flight=combatFlightCapabilities(actor);
- for(let i=1;i<line.length-1;i++){
-  const cell=terrain.get(line[i].q+','+line[i].r);
-  if(combatTerrainIsWall(cell))return false;
-  if(cell?.sight_mode==='blocked'&&!flight.ignore_terrain)return false;
-  if(cell?.sight_mode==='obscuring'&&!combatIgnoresSightObstacle(actor,cell))return false
- }
- return true
+ return combatFootprintCells(actor).some(a=>combatFootprintCells(target).some(b=>{
+  const line=combatHexLine(a,b);
+  for(let i=1;i<line.length-1;i++){
+   const cell=terrain.get(line[i].q+','+line[i].r);
+   if(combatTerrainIsWall(cell))return false;
+   if(cell?.sight_mode==='blocked'&&!flight.ignore_terrain)return false;
+   if(cell?.sight_mode==='obscuring'&&!combatIgnoresSightObstacle(actor,cell))return false
+  }
+  return true
+ }))
 }
 function combatAttackProfile(combatant){
  const stored=combatant?.state?.attack_profile&&typeof combatant.state.attack_profile==='object'?combatant.state.attack_profile:{};
@@ -3087,7 +3100,7 @@ function combatWeaponRangeHexes(weapon,combatant){
 function combatAttackModeForTarget(actor,target,weapon,preferredMode='auto'){
  if(!actor||!target||!weapon)return null;
  if(preferredMode==='melee'||preferredMode==='ranged')return preferredMode;
- const category=combatWeaponCategory(weapon),distance=combatAxialDistance(actor,target);
+ const category=combatWeaponCategory(weapon),distance=combatFootprintDistance(actor,target);
  if(category==='thrown')return distance===1?'melee':'ranged';
  if(category==='projectile')return 'ranged';
  return 'melee'
@@ -3110,7 +3123,7 @@ function combatAttackTargetInfo(actor,target,weapon,preferredMode='auto'){
  if(!actor||!target||!weapon)return null;
  if(String(target.id)===String(actor.id)||target.visible_to_players===false)return null;
  if(!combatCanTargetHostile(actor,target))return null;
- const distance=combatAxialDistance(actor,target);
+ const distance=combatFootprintDistance(actor,target);
  if(distance<1||!combatHasLineOfSight(actor,target))return null;
  const mode=combatAttackModeForTarget(actor,target,weapon,preferredMode);
  if(!mode)return null;
@@ -3146,7 +3159,7 @@ function combatFireballTargets(){
  const out=new Map(),range=combatSpellRangeHexes(actor,action);
  for(const target of combatants){
   if(!combatCanTargetHostile(actor,target))continue;
-  const distance=combatAxialDistance(actor,target);
+  const distance=combatFootprintDistance(actor,target);
   if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
  }
  return out
@@ -3225,7 +3238,8 @@ function combatMagicAreaCells(center,radius){
 }
 function combatMagicAreaCombatants(center,radius){
  const affected=new Set(combatMagicAreaCells(center,radius).map(cell=>cell.key));
- return combatants.filter(row=>!['dead','removed'].includes(row.status)&&affected.has(Number(row.q)+','+Number(row.r)))
+ return combatants.filter(row=>!['dead','removed'].includes(row.status)&&
+  combatFootprintCells(row).some(cell=>affected.has(combatFootprintKey(cell))))
 }
 async function combatSetMagicAreaCenter(actorId,q,r,radius=0){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
@@ -3402,7 +3416,7 @@ function combatSpellEffectTargets(actor,action){
  const maxRange=touch?1:combatSpellRangeHexes(actor,action);
  return combatants.filter(target=>!['dead','removed'].includes(target.status)&&
   (target.visible_to_players!==false||combatCanManage())&&
-  combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
+  combatFootprintDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target))
 }
 async function combatCastManualSpell(actor,action,target=null){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
@@ -3571,7 +3585,7 @@ async function combatCastAreaSpell(actor,action){
   const cubeArea=data.magic_binding?.cube?{effect_id:effect.id,center_q:center.q,center_r:center.r,
     parameters:combatBeskyddareAreaParameters(data,action.id)}:null;
    const affected=combatants.filter(row=>!['dead','removed'].includes(row.status)&&
-    (cubeArea?combatBeskyddareContains(cubeArea,row):combatAxialDistance(row,center)<=radius)).map(row=>row.id);
+    (cubeArea?combatFootprintCells(row).some(cell=>combatBeskyddareContains(cubeArea,cell)):combatFootprintIntersectsRadius(row,center,radius))).map(row=>row.id);
   if(await combatDeferForAntimagic(actor,action,result,affected,'area')){
    await loadActiveCombat(null,{preserveSelectedTarget:true});return
   }
@@ -3725,9 +3739,10 @@ function combatReachableHexes(combatant){
   const [q,r]=current.key.split(',').map(Number);
   for(const [nq,nr] of combatHexNeighbors(q,r)){
    const key=nq+','+nr,cell=cellByKey.get(key);
-   if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue;
+   if(!cell||!combatFootprintCanStand(combatant,nq,nr))continue;
    if(!combatMentalMovementAllowed(combatant,{q,r},{q:nq,r:nr}))continue;
-   const stepCost=flight.ignore_terrain?1:cell.movement_mode==='difficult'?2:1;
+   const footprint=combatFootprintCells(combatant,nq,nr);
+   const stepCost=flight.ignore_terrain?1:footprint.some(c=>cellByKey.get(combatFootprintKey(c))?.movement_mode==='difficult')?2:1;
    const nextCost=current.cost+stepCost;
    if(nextCost>budget)continue;
    const known=out.get(key);
@@ -3783,13 +3798,13 @@ async function commitCombatMovementPlan(){
  const actor=combatMovementPlanningActor(),plan=combatMovementPlan;
  if(!actor||!plan||!combatCanPlanMovement(actor))return;
  const q=Number(plan.q),r=Number(plan.r),cost=Number(plan.cost)||0;
- if(cost<=0||combatMovementOccupied(actor,q,r))return;
+ if(cost<=0||!combatFootprintCanStand(actor,q,r))return;
  const route=combatMovementHexPath(actor,q,r);
  if(!route||route.cost!==cost)throw new Error('Förflyttningens väg stämmer inte längre. Försök igen.');
  const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
  await window.combatUndoBeforeActorAction?.();
  try{
-  const moved=await dbJson('rpc/haj_move_combatant',{
+  const moved=await dbJson('rpc/alea_move_multhex',{
    method:'POST',headers:{'Prefer':'return=representation'},
    body:JSON.stringify({p_combatant_id:actor.id,p_from_q:fromQ,p_from_r:fromR,
     p_expected_remaining:combatMovementBudget(actor),p_path:route.path})
@@ -4062,10 +4077,10 @@ function renderCombatMap(){
   const reachText=moveCost!=null
    ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
-  const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(planningActor?.id||'')&&Number(row.q)===cell.q&&Number(row.r)===cell.r);
+  const occupied=combatants.some(row=>row.status!=='removed'&&String(row.id)!==String(planningActor?.id||'')&&combatFootprintCells(row).some(pos=>pos.q===cell.q&&pos.r===cell.r));
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
-  if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked')cls.push('gm-placement-hex');
+  if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked'&&combatFootprintCanStand(combatants.find(c=>String(c.id)===String(combatGmPlacementId)),cell.q,cell.r))cls.push('gm-placement-hex');
    const clickable=gmPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
   const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
@@ -5083,7 +5098,7 @@ async function combatChooseGmHex(event,q,r){
  const row=combatants.find(c=>String(c.id)===String(combatGmPlacementId));
  const hex=combatRuntimeHexCells().find(c=>c.q===q&&c.r===r);
  if(!row||!hex||hex.movement_mode==='blocked'||combatTerrainIsWall(hex))return alert('Välj en tillgänglig, passerbar hex.');
- if(combatants.some(c=>c.id!==row.id&&c.status!=='removed'&&Number(c.q)===q&&Number(c.r)===r))return alert('Hexen är redan upptagen.');
+ if(!combatFootprintCanStand(row,q,r))return alert('Hela varelsens hexavtryck måste rymmas på fri mark utan andra kombatanter.');
  try{
   await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({q,r,status:'active',state:{...(row.state||{}),in_reserve:false},updated_at:new Date().toISOString()})});
   combatGmPlacementId=null;
