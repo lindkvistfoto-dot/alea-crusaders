@@ -346,7 +346,7 @@ async function saveCue(cueKey,patch){
  const allowed={};
  for(const key of ['title','category','volume','enabled','asset_path','priority','sound_kind','usage_hint','search_terms','target_variants','source_status','source_url','creator_credit','license_type','license_notes'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
  if(allowed.source_url&&!safeSourceUrl(allowed.source_url))throw new Error('Källan måste ha en giltig HTTPS-adress.');
- if(allowed.source_status==='verified'&&!(safeSourceUrl(allowed.source_url??current.source_url)&&String(allowed.license_type??current.license_type||'').trim()))
+ if(allowed.source_status==='verified'&&!(safeSourceUrl(allowed.source_url??current.source_url)&&String((allowed.license_type??current.license_type)||'').trim()))
   throw new Error('Ange källadress och licens före godkänd licensgranskning.');
  await dbJson('rule_sound_cues?cue_key=eq.'+encodeURIComponent(cueKey),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(allowed)});
  await load(true)
