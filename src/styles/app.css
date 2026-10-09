@@ -6480,3 +6480,10 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
  #equipmentPanel .provisions-counter{gap:12px}
  #equipmentPanel .provisions-header b{font-size:17px}
 }
+
+/* v0.35.10 — show paid inn-meal coverage on the current campaign day. */
+#equipmentPanel .provisions-covered{
+ flex:none;display:inline-flex;align-items:center;
+ padding:5px 8px;border:1px solid #5a9c70;border-radius:7px;
+ background:#1c4530;color:#e9ffde;font-size:12px;font-weight:800
+}

@@ -729,6 +729,42 @@ function renderInnCart(){
   renderInnBuyer();
 }
 
+/* v0.35.10 — Meals eaten at the inn replace today's carried provisions.
+   Travel rations are added to the pack instead; drinks and services never count as meals. */
+function innIsPreparedMeal(item){
+  const key=String(item?.itemKey||'');
+  return /^food_/.test(key)&&key!=='food_travel_ration';
+}
+function innFoodPurchaseSummary(rows){
+  let meal=false,rations=0;
+  for(const {item,row} of rows||[]){
+    const quantity=Math.max(0,Math.floor(Number(row?.qty)||0));
+    if(!quantity)continue;
+    if(innIsPreparedMeal(item))meal=true;
+    if(item?.itemKey==='food_travel_ration')rations+=quantity;
+  }
+  return {meal,rations};
+}
+async function innCurrentCampaignDay(){
+  if(!centralCampaignId)throw new Error('Värdshusets matköp kräver en aktiv kampanjdag.');
+  const rows=await dbJson('campaign_day_state?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=day_number&limit=1');
+  const day=Number(rows?.[0]?.day_number);
+  if(!Number.isInteger(day)||day<1)throw new Error('Kampanjens dag kunde inte läsas. Försök på nytt.');
+  return day;
+}
+function innApplyFoodPurchase(draft,rows,dayNumber){
+  const summary=innFoodPurchaseSummary(rows);
+  if(summary.meal){
+    const day=Number(dayNumber);
+    if(!Number.isInteger(day)||day<1)throw new Error('Kampanjens dag kunde inte fastställas. Öppna värdshuset igen och försök på nytt.');
+    draft.innMealDay=day;
+  }
+  if(summary.rations){
+    const existing=Number(draft.provisionsDays);
+    draft.provisionsDays=Math.min(999999,Math.max(0,Number.isFinite(existing)?Math.floor(existing):0)+summary.rations);
+  }
+  return summary;
+}
 async function innCheckout(){
   if(innCheckoutBusy)return;
   const buyer=innBuyerById();
@@ -758,6 +794,9 @@ async function innCheckout(){
   try{
     shopEnsureCoins(draft);
     if(!shopSpendCarriedCoins(draft,cost))throw new Error('Börsen räcker inte till notan.');
+    const foodSummary=innFoodPurchaseSummary(rows);
+    const foodDay=foodSummary.meal?await innCurrentCampaignDay():null;
+    innApplyFoodPurchase(draft,rows,foodDay);
     if(typeof syncCharacterToCentral==='function')await syncCharacterToCentral(draft);
 
     const index=(chars||[]).findIndex(c=>String(c.id)===String(buyer.id));
@@ -770,7 +809,9 @@ async function innCheckout(){
     saveInnCart();
     renderInnCart();
     const status=document.getElementById('innCartNotice');
-    if(status)status.innerHTML='✓ Notan är betald. '+shopMoneyHtml(shopCarriedValueKm(draft))+' återstår i börsen.';
+    if(status)status.innerHTML='✓ Notan är betald. '+shopMoneyHtml(shopCarriedValueKm(draft))+' återstår i börsen.'+
+      (foodSummary.meal?' Dagens mat är betald – ingen proviant förbrukas vid nästa dagbyte.':'')+
+      (foodSummary.rations?' +'+foodSummary.rations+' dagars reskost tillagd i provianten.':'');
     if(typeof renderCards==='function')renderCards();
   }catch(error){
     alert('Betalningen kunde inte genomföras: '+(error?.message||error));

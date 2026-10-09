@@ -1480,8 +1480,10 @@ function renderCharacterProvisions(){
  const el=$('characterProvisions');if(!el||!current)return;
  const days=characterProvisionsDays(),editAllowed=canEditCharacter(current);
  const one=days===1,empty=days===0;
+ const day=Number(campaignDayState?.day_number);
+ const mealCovered=Number.isInteger(day)&&day>0&&Number(current.innMealDay)===day;
  el.innerHTML='<div class="provisions-header"><div><b>🥖 Mat & proviant</b><small>Anges i hela dagar per rollperson</small></div>'+
-  (empty?'<span class="provisions-empty">Slut</span>':'')+'</div>'+
+  (mealCovered?'<span class="provisions-covered">Dagens mat betald</span>':empty?'<span class="provisions-empty">Slut</span>':'')+'</div>'+
   '<div class="provisions-counter">'+
    '<div class="provisions-value" aria-live="polite"><strong>'+days+'</strong><span>'+(one?'dag':'dagar')+'</span></div>'+
    (editAllowed?'<div class="provisions-stepper" role="group" aria-label="Ändra proviant">'+
@@ -1490,7 +1492,7 @@ function renderCharacterProvisions(){
     '</div>':'')+
   '</div>'+
   (editing&&editAllowed?'<label class="provisions-set">Ange antal dagar<input type="number" inputmode="numeric" min="0" max="999999" step="1" value="'+days+'" onchange="setCharacterProvisions(this.value)" aria-label="Mat och proviant i dagar"></label>':'')+
-  '<p class="provisions-note">En dag förbrukas automatiskt när SL startar en ny kampanjdag, med eller utan vila. Ingen förbrukning vid omladdning.</p>'
+  '<p class="provisions-note">'+(mealCovered?'Måltid köpt på värdshuset under dag '+day+'. Ingen proviant dras vid nästa dagbyte.':'En dag förbrukas när SL startar en ny dag, utom om en måltid betalats på värdshuset under dagen. Reskost ökar antalet proviantdagar.')+'</p>'
 }
 function setCharacterProvisions(value){
  if(!current||!canEditCharacter(current))return;
