@@ -22,7 +22,7 @@ describe('Sound registry and melee SFX',()=>{
  it('mounts a sound registry inside the normal administration navigation',()=>{
   expect(html).toContain("openAdminSection('sounds')");
   expect(html).toContain('id="adminSoundTable"');
-  expect(html).toContain('features/audio/engine.js?v=0.35.32');
+  expect(html).toContain('features/audio/engine.js?v='+JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version);
   expect(app).toContain("sounds:['Ljudregister'");
   expect(app).toContain("await window.aleaAudio?.renderAdmin?.()");
  });
