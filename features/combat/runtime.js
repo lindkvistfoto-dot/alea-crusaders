@@ -4316,32 +4316,83 @@ function combatSpellResultHtml(action){
     :combatDamageResultHtml(result.damage))+
   '</div></div>'
 }
+// Compact facts: keep FV, EG, CL, PSY and optional rule ranges readable on mobile.
+function combatMagicFactHtml(label,value,wide=false){
+ return '<div class="combat-magic-fact'+(wide?' wide':'')+'"><span>'+escAttr(label)+'</span><b>'+escAttr(value)+'</b></div>'
+}
+function combatMagicFactsHtml(data,action){
+ const eg=Math.max(1,Number(data.effect_grade)||1),fv=Number(data.spell_fv);
+ const cl=Number.isFinite(fv)&&fv>0?Math.max(1,fv-2*(eg-1)):'—';
+ const spent=action.status==='resolved'?action.result?.psy_cost:null;
+ return '<div class="combat-magic-facts" aria-label="Besvärjelsens värden">'+
+  combatMagicFactHtml('FV',data.spell_fv??'—')+
+  combatMagicFactHtml('EG',eg)+
+  combatMagicFactHtml('CL',cl)+
+  combatMagicFactHtml(action.status==='resolved'?'PSY använd':'PSY',spent??eg)+
+  (data.range_text?combatMagicFactHtml('Räckvidd',data.range_text,true):'')+
+  (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
+ '</div>'
+}
+function combatMagicHeaderHtml(actor,target,data){
+ const kind=data.magic_binding?.kind||'manual';
+ const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
+ const goal=target?.name_snapshot||(area?(data.area_center?'Område valt':'Välj område'):needsTarget?'Välj mål':'');
+ return '<div class="combat-magic-heading">'+
+  '<span class="combat-magic-eyebrow">MAGI · '+escAttr(data.spell_name||'Besvärjelse')+'</span>'+
+  '<b class="combat-magic-participants">'+escAttr(actor.name_snapshot)+(goal?' <span class="combat-magic-arrow" aria-hidden="true">→</span> '+escAttr(goal):'')+'</b>'+
+ '</div>'
+}
+function combatMagicStatusHtml(label,detail,state){
+ return '<div class="combat-magic-status" data-state="'+escAttr(state)+'" role="status" aria-live="polite">'+
+  '<strong>'+escAttr(label)+'</strong>'+(detail?'<span>'+escAttr(detail)+'</span>':'')+'</div>'
+}
 function combatSpellCastPanelHtml(){
  const activeActor=combatActiveActor(),chosen=combatChosenAction(activeActor);
- // Keep the last finished cast in the battle panel after the turn moves on,
- // but do not cover an attack or another newly chosen action.
+ // Keep the last finished cast visible, but never cover another action.
  const action=chosen||combatLatestResolvedSpellAction();
  if(combatActionDefinition(action)?.key!=='spell_cast'||!action?.source_data?.spell_prepared)return '';
  const actor=combatants.find(row=>String(row.id)===String(action.combatant_id))||activeActor;
  if(!actor)return '';
- const data=action.source_data||{},casting=data.casting_spell===true,resolved=action.status==='resolved';
+ const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
+ const casting=data.casting_spell===true,resolved=action.status==='resolved';
  const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
  const target=combatants.find(row=>String(row.id)===targetId)||null;
- const effect=Math.max(1,Number(data.effect_grade)||1),spell=escAttr(data.spell_name||'Besvärjelse');
- let instruction='';
- if(!resolved){
-  if(!casting)instruction='Besvärjelsen är förberedd. Tryck ✦ för att påbörja kastet.';
-  else if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1))instruction='Besvärjelsen förbereds till SR '+data.ready_round+'.';
-  else if(data.magic_binding?.kind==='manual')instruction='Tryck ✦ för att kasta. SL avgör besvärjelsens effekt efter färdighetsslaget.';
-  else if(data.magic_binding?.kind==='area')instruction=data.area_center?'Tryck ✦ för att kasta besvärjelsen på valt område.':'Välj ett centrum på kartan för besvärjelsen.';
-  else instruction=target?'Målet är valt. Tryck ✦ igen för att kasta '+spell+'.':'Välj mål för '+spell+'. Giltiga mål markeras på kartan.';
+ const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
+ let label='Vald besvärjelse',detail='',state='selected',instruction='';
+ if(resolved){
+  const outcomes={success:'Lyckat',special:'Särskilt',perfect:'Perfekt',fail:'Misslyckat',fumble:'Fummel'};
+  label=outcomes[action.result?.outcome]||'Genomförd';
+  detail='Färdighetsslag genomfört';state=String(action.result?.outcome||'resolved');
+ }else if(action.status==='resolving'||action.status==='pending'){
+  label='Kastas';detail=action.result?.awaiting_antimagic?'Väntar på Antimagi':'Väntar på resultat';state='resolving';
+ }else if(!casting){
+  detail=data.magic_casting?.quick?'Kvick besvärjelse':'Effekt efter förberedelse';
+  instruction='Tryck ✦ för att förbereda besvärjelsen.';
+ }else if(currentRound<readyRound){
+  label='Förbereder';detail='Klar i SR '+readyRound;state='preparing';
+  instruction='Vänta till SR '+readyRound+' innan du kastar.';
+ }else if(kind==='area'&&data.magic_binding?.cube&&!data.beskyddare_ritual_confirmed){
+  label='Väntar på SL';detail='Ritualen måste bekräftas';state='preparing';
+  instruction='SL bekräftar ritualen innan besvärjelsen kastas.';
+ }else if(kind==='area'&&!data.area_center){
+  label='Välj område';detail='Välj centrum på kartan';state='target';
+  instruction='Välj ett centrum på kartan.';
+ }else if(['damage','status','heal'].includes(kind)&&!target){
+  label='Välj mål';detail='Klar för färdighetsslag';state='target';
+  instruction=kind==='heal'?'Välj mål. Om ingen annan är inom räckvidd helas du automatiskt.':'Välj ett mål på kartan eller i turordningen.';
+ }else{
+  label='Klar att kasta';detail=data.magic_casting?.quick?'Kvick besvärjelse':'Effekt enligt besvärjelsens regler';state='ready';
+  instruction=kind==='manual'?'Tryck ✦ för att kasta. SL avgör effekten efter slaget.':
+   kind==='area'?'Tryck ✦ för att kasta på det valda området.':
+   'Målet är valt. Tryck ✦ igen för att kasta.';
  }
- const range=data.range_text?' · Räckvidd '+escAttr(data.range_text):'';
- const duration=data.duration_text?' · Varaktighet '+escAttr(data.duration_text):'';
- return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'"><div class="combat-mini-title"><span>MAGI · '+spell+'</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):'')+'</b></div>'+
-  '<div class="combat-magic-prepared"><span>'+(resolved?'GENOMFÖRD':'FÖRBEREDD')+'</span><b>'+spell+'</b><small>FV '+escAttr(data.spell_fv??'—')+' · Effektgrad '+effect+' · CL '+Math.max(1,(Number(data.spell_fv)||1)-2*(effect-1))+' · PSY '+effect+' · '+(data.magic_casting?.quick?'Kvick':'Effekt nästa SR')+range+duration+'</small></div>'+
+ return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
+  combatMagicHeaderHtml(actor,target,data)+
+  combatMagicStatusHtml(label,detail,state)+
+  combatMagicFactsHtml(data,action)+
   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
-  (resolved?combatSpellResultHtml(action):'')+'</section>'
+  (resolved?combatSpellResultHtml(action):'')+
+ '</section>'
 }
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;

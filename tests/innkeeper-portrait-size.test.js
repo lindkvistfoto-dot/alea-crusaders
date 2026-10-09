@@ -11,6 +11,6 @@ describe('Innkeeper portrait does not become a blurry stretched banner',()=>{
   expect(css).toContain('@media(max-width:820px)');
  });
  it('cache-busts the inn CSS after release',()=>{
-  expect(html).toContain('href="./features/inn/inn.css?v=0.35.02"');
+  expect(html).toContain('href="./features/inn/inn.css?v=0.35.03"');
  });
 });

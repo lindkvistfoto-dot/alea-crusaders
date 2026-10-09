@@ -6240,3 +6240,59 @@ body:not(.editing) #skilltable .skill-roll-btn{
  min-width:100%;
  overflow:visible;
 }
+
+/* v0.35.03 — compact, structured spell card for desktop and mobile. */
+.combat-mini-magic{min-width:0;overflow-wrap:anywhere}
+.combat-mini-magic .combat-magic-heading{display:flex;flex-direction:column;gap:4px;min-width:0}
+.combat-mini-magic .combat-magic-eyebrow{color:#d9b985;font-size:11px;font-weight:850;letter-spacing:.08em;line-height:1.35}
+.combat-mini-magic .combat-magic-participants{
+ color:#fff1d6;font:750 clamp(14px,3.7vw,18px)/1.35 Georgia,serif;
+ overflow-wrap:anywhere;min-width:0
+}
+.combat-mini-magic .combat-magic-arrow{color:#d8af71;margin:0 3px}
+.combat-mini-magic .combat-magic-status{
+ display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+ margin-top:10px;padding:7px 9px;border:1px solid rgba(195,151,94,.34);
+ border-radius:8px;background:rgba(219,174,108,.065)
+}
+.combat-mini-magic .combat-magic-status strong{
+ display:inline-block;padding:5px 9px;border:1px solid #ae8e5c;border-radius:6px;
+ background:#493820;color:#ffe6b6;font-size:12px;line-height:1.15
+}
+.combat-mini-magic .combat-magic-status>span{color:#e5ceaa;font-size:12px;line-height:1.35}
+.combat-mini-magic .combat-magic-status[data-state="ready"] strong,
+.combat-mini-magic .combat-magic-status[data-state="success"] strong,
+.combat-mini-magic .combat-magic-status[data-state="special"] strong,
+.combat-mini-magic .combat-magic-status[data-state="perfect"] strong{
+ background:#214b39;border-color:#589c78;color:#e5ffe9
+}
+.combat-mini-magic .combat-magic-status[data-state="fail"] strong,
+.combat-mini-magic .combat-magic-status[data-state="fumble"] strong{
+ background:#582923;border-color:#b16d5b;color:#ffddd2
+}
+.combat-mini-magic .combat-magic-facts{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px
+}
+.combat-mini-magic .combat-magic-fact{
+ display:flex;flex-direction:column;min-width:0;gap:4px;
+ padding:7px 8px;border-radius:7px;background:#171510;border:1px solid #5c4936
+}
+.combat-mini-magic .combat-magic-fact span{
+ color:#bea582;font-size:10px;line-height:1.2;font-weight:800;letter-spacing:.02em
+}
+.combat-mini-magic .combat-magic-fact b{
+ color:#f8e7c9;font-size:15px;line-height:1.2;overflow-wrap:anywhere
+}
+.combat-mini-magic .combat-magic-fact.wide{grid-column:span 2}
+.combat-mini-magic .combat-magic-fact.wide b{font-size:12px;font-weight:700;line-height:1.35}
+.combat-mini-magic .combat-mini-instruction{
+ margin-top:9px;padding:9px 10px;border-left:3px solid #b59260;border-radius:5px 8px 8px 5px;
+ color:#f1debd;background:rgba(208,166,105,.11);font-size:12px;line-height:1.45
+}
+@media(max-width:420px){
+ .combat-mini-magic{padding:10px}
+ .combat-mini-magic .combat-magic-facts{gap:5px}
+ .combat-mini-magic .combat-magic-fact{padding:7px 6px}
+ .combat-mini-magic .combat-magic-status{padding:7px}
+ .combat-mini-magic .combat-magic-participants{font-size:15px}
+}
