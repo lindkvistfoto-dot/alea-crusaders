@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.26 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.27 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
@@ -36,7 +36,11 @@ const defaults=[
 const categoryLabels={dice:'Tärningar',melee:'Närstrid',ranged:'Avståndsvapen',magic:'Magi',ambience:'Miljö',creature:'Varelser',event:'Händelser'};
 const legacyCueKeys=new Set(defaults.map(x=>x[0]));
 const priorityNames={1:'P1 – Måste ha',2:'P2 – Viktigt',3:'P3 – Senare'};
-const sourceNames={needed:'Behöver ljudfil',shortlisted:'Kandidater hittade',verified:'Licens granskad'};
+const sourceNames={needed:'Behöver ljudfil',shortlisted:'Kandidat hittad',verified:'Licens granskad'};
+function safeSourceUrl(value){
+ try{const url=new URL(String(value||''));return url.protocol==='https:'&&url.username===''&&url.password===''&&url.href.length<=1200?url.href:''}
+ catch(_){return ''}
+}
 const cues=new Map(defaults.map(([cue_key,title,category,volume])=>[cue_key,{cue_key,title,category,volume,asset_path:null,enabled:true}]));
 const clamp=value=>Math.max(0,Math.min(1,Number(value)||0));
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
@@ -340,7 +344,10 @@ async function saveCue(cueKey,patch){
  const current=cues.get(cueKey);
  if(!current)throw new Error('Ljudhändelsen saknas.');
  const allowed={};
- for(const key of ['title','category','volume','enabled','asset_path','priority','sound_kind','usage_hint','search_terms','target_variants','source_status'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
+ for(const key of ['title','category','volume','enabled','asset_path','priority','sound_kind','usage_hint','search_terms','target_variants','source_status','source_url','creator_credit','license_type','license_notes'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
+ if(allowed.source_url&&!safeSourceUrl(allowed.source_url))throw new Error('Källan måste ha en giltig HTTPS-adress.');
+ if(allowed.source_status==='verified'&&!(safeSourceUrl(allowed.source_url??current.source_url)&&String(allowed.license_type??current.license_type||'').trim()))
+  throw new Error('Ange källadress och licens före godkänd licensgranskning.');
  await dbJson('rule_sound_cues?cue_key=eq.'+encodeURIComponent(cueKey),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(allowed)});
  await load(true)
 }
@@ -373,11 +380,11 @@ function renderRows(){
  const priority=document.getElementById('adminSoundPriorityFilter')?.value||'all';
  const integration=document.getElementById('adminSoundIntegrationFilter')?.value||'all';
  const source=document.getElementById('adminSoundSourceFilter')?.value||'all';
- const all=adminRows(),uploaded=all.filter(row=>!!row.asset_path).length;
+ const all=adminRows(),uploaded=all.filter(row=>!!row.asset_path).length,shortlisted=all.filter(row=>!!row.source_url).length;
  const summary=document.getElementById('adminSoundInventoryStats');
  if(summary)summary.textContent=all.length+' ljud · '+all.filter(row=>row.integration_status==='connected').length+
   ' inkopplade · '+all.filter(row=>row.integration_status==='planned').length+
-  ' planerade · '+uploaded+' med inspelning · '+(all.length-uploaded)+' saknar inspelning.';
+  ' planerade · '+shortlisted+' källförslag · '+uploaded+' med inspelning · '+(all.length-uploaded)+' saknar inspelning.';
  const rows=all.filter(row=>(!search||(row.title+' '+row.cue_key+' '+(row.usage_hint||'')+
   ' '+(row.search_terms||'')).toLocaleLowerCase('sv').includes(search))&&
   (category==='all'||row.category===category)&&
@@ -390,12 +397,13 @@ function renderRows(){
  target.innerHTML=rows.length?rows.map(row=>{
   const url=safeAssetUrl(row.asset_path),canPreview=!!url||legacyCueKeys.has(row.cue_key);
   const priority=Number(row.priority)||2,kind=row.sound_kind||'oneshot';
+  const sourceLink=safeSourceUrl(row.source_url);
   return '<div class="alea-sound-row" data-sound-key="'+escapeHtml(row.cue_key)+'">'+
    '<div class="alea-sound-identity"><b>'+escapeHtml(row.title)+'</b><code>'+escapeHtml(row.cue_key)+'</code><small>'+
     (url?'✓ Kvalitetsfil uppladdad':canPreview?'Syntetiskt testljud':'Saknar ljudfil')+'</small>'+
     '<div class="alea-sound-tags"><span>'+escapeHtml(priorityNames[priority])+'</span><span>'+
     (row.integration_status==='planned'?'Ej inkopplad':'Inkopplad i spelet')+'</span><span>'+
-    (kind==='loop'?'Loop':'Ljudeffekt')+'</span></div></div>'+
+    (kind==='loop'?'Loop':'Ljudeffekt')+'</span></div>'+ (sourceLink?'<a class="alea-sound-source-link" href="'+escapeHtml(sourceLink)+'" target="_blank" rel="noopener noreferrer">↗ Lyssna på källan</a>':'')+'</div>'+
    '<label>Namn<input type="text" maxlength="120" data-field="title" value="'+escapeHtml(row.title)+'"></label>'+
    '<label>Kategori'+selection('category',categoryLabels,row.category)+'</label>'+
    '<label>Volym<input type="range" min="0" max="100" step="1" value="'+Math.round(clamp(row.volume)*100)+'" data-field="volume"></label>'+
@@ -404,7 +412,7 @@ function renderRows(){
     '<button type="button" data-audio-action="save">Spara</button>'+
     '<label class="alea-sound-upload">↑ Ljudfil<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4,.mp3,.ogg,.wav,.webm,.m4a" data-audio-upload hidden></label>'+
     (url?'<button type="button" data-audio-action="clear">Ta bort ljudfil</button>':'')+'</div>'+
-   '<details class="alea-sound-brief"><summary>Gandalf – Prioritet, användning och sökord</summary>'+
+   '<details class="alea-sound-brief"><summary>Gandalf &amp; Aragorn – Ljudbrief och källgranskning</summary>'+
     '<div class="alea-sound-brief-grid">'+
      '<label>Prioritet'+selection('priority',priorityNames,priority)+'</label>'+
      '<label>Speltyp'+selection('sound_kind',{oneshot:'Enstaka effekt',loop:'Sömlös loop'},kind)+'</label>'+
@@ -412,6 +420,11 @@ function renderRows(){
      '<label>Ljudkälla'+selection('source_status',sourceNames,row.source_status||'needed')+'</label>'+
      '<label class="alea-sound-brief-wide">När spelas ljudet?<textarea data-field="usage_hint" rows="2" maxlength="500">'+escapeHtml(row.usage_hint||'')+'</textarea></label>'+
      '<label class="alea-sound-brief-wide">Sökord på engelska<textarea data-field="search_terms" rows="2" maxlength="500">'+escapeHtml(row.search_terms||'')+'</textarea></label>'+
+     '<label class="alea-sound-brief-wide">Ljudkälla (HTTPS)<input type="url" data-field="source_url" placeholder="https://freesound.org/people/..." maxlength="1200" value="'+escapeHtml(row.source_url||'')+'"></label>'+
+     '<label>Upphovsperson<input type="text" data-field="creator_credit" maxlength="200" value="'+escapeHtml(row.creator_credit||'')+'"></label>'+
+     '<label>Licens<input type="text" data-field="license_type" maxlength="150" value="'+escapeHtml(row.license_type||'')+'"></label>'+
+     '<label class="alea-sound-brief-wide">Licens- och bearbetningsanteckningar<textarea data-field="license_notes" rows="3" maxlength="2000">'+escapeHtml(row.license_notes||'')+'</textarea></label>'+
+     '<p class="alea-sound-brief-wide alea-sound-brief-note">Kandidat ≠ uppladdad fil. Kontrollera licens och innehåll på källsidan innan filen bearbetas eller delas. Freesound kan kräva inloggning för nedladdning.</p>'+
      '<p class="alea-sound-brief-wide alea-sound-brief-note">'+(row.integration_status==='planned'?
        'Ljudet är inventerat men behöver kopplas till spelmekanik i en senare etapp.':
        'Ljudet har redan en uppspelningsväg i Alea Crusaders.')+'</p>'+
@@ -450,7 +463,11 @@ function mountAdmin(){
      target_variants:Number(row.querySelector('[data-field=target_variants]').value),
      source_status:row.querySelector('[data-field=source_status]').value,
      usage_hint:row.querySelector('[data-field=usage_hint]').value.slice(0,500),
-     search_terms:row.querySelector('[data-field=search_terms]').value.slice(0,500)})
+     search_terms:row.querySelector('[data-field=search_terms]').value.slice(0,500),
+     source_url:row.querySelector('[data-field=source_url]').value.trim(),
+     creator_credit:row.querySelector('[data-field=creator_credit]').value.trim().slice(0,200),
+     license_type:row.querySelector('[data-field=license_type]').value.trim().slice(0,150),
+     license_notes:row.querySelector('[data-field=license_notes]').value.trim().slice(0,2000)})
    }else if(action==='clear')await saveCue(key,{asset_path:null});
    renderRows();formStatus('Sparat: '+key)
   }catch(error){formStatus(error.message,true)}
