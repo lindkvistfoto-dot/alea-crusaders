@@ -1,6 +1,6 @@
 /* Frodo v0.34.85 — explicit show-now control for Legolas and Bilbo. */
 import {createFrodo} from './presentation.js?v=0.34.85';
-import {createLivePreview} from './live-preview.js?v=0.35.18';
+import {createLivePreview} from './live-preview.js?v=0.35.19';
 // Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountFrodo({
