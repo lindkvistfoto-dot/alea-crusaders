@@ -1,0 +1,272 @@
+/* Alea Crusaders v0.35.22 — audio bus, settings and admin registry.
+   Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
+(function(){
+'use strict';
+const STORE='alea_audio_prefs_v1';
+const BUCKET='alea-sound-effects';
+const defaults=[
+ ['dice.roll','Tärningar rullar','dice',.42],
+ ['dice.land','Tärningar landar','dice',.42],
+ ['melee.swing','Vapnet svingas','melee',.68],
+ ['melee.hit','Vapenträff','melee',.8],
+ ['melee.parry','Parering','melee',.84],
+ ['melee.miss','Missad attack','melee',.55],
+ ['melee.fumble','Fummel','melee',.58],
+ ['magic.cast','Besvärjelse','magic',.65],
+ ['magic.success','Magi lyckas','magic',.7],
+ ['magic.fail','Magi misslyckas','magic',.58]
+];
+const categoryLabels={dice:'Tärningar',melee:'Närstrid',magic:'Magi',ambience:'Miljö'};
+const cues=new Map(defaults.map(([cue_key,title,category,volume])=>[cue_key,{cue_key,title,category,volume,asset_path:null,enabled:true}]));
+const clamp=value=>Math.max(0,Math.min(1,Number(value)||0));
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
+function initialPrefs(){
+ const base={enabled:true,master:.75,dice:.75,melee:.9,magic:.8,ambience:.55};
+ try{const stored=JSON.parse(localStorage.getItem(STORE)||'{}');
+  for(const k of Object.keys(base))if(k in stored)base[k]=k==='enabled'?stored[k]!==false:clamp(stored[k]);
+ }catch(_error){}
+ return base
+}
+let prefs=initialPrefs(),context=null,output=null,loading=null,loaded=false;
+const currentlyPlaying=new Set();
+function userToken(){
+ try{return typeof supabaseSession!=='undefined'?supabaseSession?.access_token:null}
+ catch(_error){return null}
+}
+function unlock(){
+ if(!prefs.enabled)return;
+ const Constructor=window.AudioContext||window.webkitAudioContext;
+ if(!Constructor)return;
+ try{
+  if(!context){
+   context=new Constructor();
+   output=context.createGain();output.gain.value=1;output.connect(context.destination)
+  }
+  if(context.state==='suspended')context.resume().catch(()=>{});
+ }catch(error){console.warn('Alea audio unavailable',error)}
+}
+function setPrefs(changes){
+ prefs={...prefs,...changes};
+ for(const k of ['master','dice','melee','magic','ambience'])prefs[k]=clamp(prefs[k]);
+ prefs.enabled=prefs.enabled!==false;
+ try{localStorage.setItem(STORE,JSON.stringify(prefs))}catch(_error){}
+ if(!prefs.enabled)stopAll();
+ updateDock();
+ return {...prefs}
+}
+function stopAll(){
+ for(const item of currentlyPlaying){try{item.pause();item.currentTime=0}catch(_error){}}
+ currentlyPlaying.clear()
+}
+function volumeFor(cue){
+ return prefs.enabled&&cue.enabled?clamp(cue.volume)*prefs.master*clamp(prefs[cue.category]??1):0
+}
+function safeAssetUrl(path){
+ if(typeof path!=='string'||!/^[-a-zA-Z0-9_./]+\.(mp3|ogg|wav|webm|m4a)$/i.test(path)||path.includes('..'))return '';
+ return 'https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')
+}
+function oscillator(at,freq,end,duration,level,kind='triangle'){
+ const node=context.createOscillator(),amp=context.createGain();
+ node.type=kind;
+ node.frequency.setValueAtTime(Math.max(40,freq),at);
+ node.frequency.exponentialRampToValueAtTime(Math.max(40,end),at+duration);
+ amp.gain.setValueAtTime(.0001,at);
+ amp.gain.exponentialRampToValueAtTime(Math.max(.0002,level),at+.012);
+ amp.gain.exponentialRampToValueAtTime(.0001,at+duration);
+ node.connect(amp);amp.connect(output);
+ node.onended=()=>{node.disconnect();amp.disconnect()};
+ node.start(at);node.stop(at+duration+.015)
+}
+function rustle(at,duration,level,hz){
+ const sampleCount=Math.ceil(context.sampleRate*duration),buffer=context.createBuffer(1,sampleCount,context.sampleRate);
+ const channel=buffer.getChannelData(0);
+ for(let i=0;i<sampleCount;i++)channel[i]=(Math.random()*2-1)*(.55+.45*Math.sin(Math.PI*i/sampleCount));
+ const source=context.createBufferSource(),filter=context.createBiquadFilter(),amp=context.createGain();
+ source.buffer=buffer;filter.type='bandpass';filter.frequency.value=hz;filter.Q.value=.75;
+ amp.gain.setValueAtTime(.0001,at);
+ amp.gain.exponentialRampToValueAtTime(Math.max(.0002,level),at+.014);
+ amp.gain.exponentialRampToValueAtTime(.0001,at+duration);
+ source.connect(filter);filter.connect(amp);amp.connect(output);
+ source.onended=()=>{source.disconnect();filter.disconnect();amp.disconnect()};
+ source.start(at);source.stop(at+duration)
+}
+function synthetic(cueKey,gain){
+ if(!context||context.state!=='running')return false;
+ const now=context.currentTime+.008,s=Math.min(.32,gain*.23);
+ switch(cueKey){
+  case 'dice.roll':
+   for(let i=0;i<4;i++){rustle(now+i*.066,.065,s*.46,1100+i*300);oscillator(now+i*.07,470+i*80,180,.055,s*.3,'sine')}break;
+  case 'dice.land':
+   oscillator(now,450,145,.13,s,'triangle');oscillator(now+.07,260,120,.12,s*.55,'sine');break;
+  case 'melee.swing':case 'melee.miss':
+   rustle(now,.24,s*(cueKey==='melee.miss'?.7:1.1),1350);oscillator(now,620,100,.26,s*.45);break;
+  case 'melee.hit':
+   rustle(now,.14,s*.9,1900);oscillator(now,320,95,.36,s,'sawtooth');oscillator(now,720,245,.42,s*.45,'sine');break;
+  case 'melee.parry':
+   oscillator(now,970,365,.44,s,'triangle');oscillator(now+.025,1520,620,.32,s*.65,'sine');rustle(now,.085,s*.5,3800);break;
+  case 'melee.fumble':
+   oscillator(now,230,65,.42,s,'sawtooth');rustle(now+.06,.16,s*.45,520);break;
+  case 'magic.cast':
+   oscillator(now,170,930,.53,s*.8,'sine');oscillator(now+.09,450,1250,.5,s*.55);break;
+  case 'magic.success':
+   oscillator(now,480,840,.46,s*.75,'sine');oscillator(now+.12,720,1100,.36,s*.65);break;
+  case 'magic.fail':
+   oscillator(now,560,120,.55,s*.8);break;
+  default:return false
+ }
+ return true
+}
+function play(cueKey,{volume=1}={}){
+ const cue=cues.get(cueKey);
+ if(!cue)return false;
+ const gain=volumeFor(cue)*clamp(volume);
+ if(gain<=0)return false;
+ unlock();
+ const url=safeAssetUrl(cue.asset_path);
+ if(url){
+  const sound=new Audio(url);
+  sound.volume=clamp(gain);
+  currentlyPlaying.add(sound);
+  sound.onended=()=>currentlyPlaying.delete(sound);
+  sound.onerror=()=>currentlyPlaying.delete(sound);
+  sound.play().catch(()=>currentlyPlaying.delete(sound));
+  return true
+ }
+ return synthetic(cueKey,gain)
+}
+async function load(force=false){
+ if(!userToken()||typeof dbJson!=='function')return Array.from(cues.values());
+ if(loaded&&!force)return Array.from(cues.values());
+ if(loading&&!force)return loading;
+ loading=(async()=>{
+  const rows=await dbJson('rule_sound_cues?select=cue_key,title,category,asset_path,volume,enabled&order=category.asc,cue_key.asc');
+  if(Array.isArray(rows)){cues.clear();rows.forEach(row=>cues.set(row.cue_key,row));loaded=true}
+  return Array.from(cues.values())
+ })().finally(()=>{loading=null});
+ return loading
+}
+function updateDock(){
+ const root=document.getElementById('aleaAudioDock');
+ if(!root)return;
+ const mute=root.querySelector('[data-audio-mute]');
+ if(mute){mute.textContent=prefs.enabled?'🔊':'🔇';mute.setAttribute('aria-label',prefs.enabled?'Stäng av ljud':'Sätt på ljud');mute.setAttribute('aria-pressed',String(!prefs.enabled))}
+ for(const slider of root.querySelectorAll('[data-audio-volume]')){
+  const name=slider.dataset.audioVolume;
+  slider.value=Math.round((prefs[name]??0)*100);
+  const display=root.querySelector('[data-audio-value="'+name+'"]');
+  if(display)display.textContent=slider.value+' %'
+ }
+}
+function mountDock(){
+ if(document.getElementById('aleaAudioDock'))return;
+ const root=document.createElement('div');
+ root.id='aleaAudioDock';
+ root.className='alea-audio-dock';
+ root.innerHTML='<button type="button" class="alea-audio-mute" data-audio-mute aria-label="Stäng av ljud">🔊</button>'+
+  '<button type="button" class="alea-audio-settings" data-audio-settings aria-expanded="false" aria-controls="aleaAudioPanel">Ljud ⚙</button>'+
+  '<div id="aleaAudioPanel" class="alea-audio-panel" hidden><b>Ljudinställningar</b><p>Tärningar, strid och magi spelas på din egen enhet.</p>'+
+  ['master','dice','melee','magic','ambience'].map(k=>'<label><span>'+({master:'Huvudvolym',...categoryLabels}[k]||categoryLabels[k])+'</span><input type="range" min="0" max="100" step="5" data-audio-volume="'+k+'"><output data-audio-value="'+k+'"></output></label>').join('')+
+  '<small>Ljud aktiveras efter första klicket i spelet.</small></div>';
+ document.body.appendChild(root);
+ root.querySelector('[data-audio-mute]').addEventListener('click',()=>{setPrefs({enabled:!prefs.enabled});unlock()});
+ root.querySelector('[data-audio-settings]').addEventListener('click',event=>{
+  const panel=root.querySelector('#aleaAudioPanel'),show=panel.hidden;
+  panel.hidden=!show;
+  event.currentTarget.setAttribute('aria-expanded',String(show));
+ });
+ root.querySelectorAll('[data-audio-volume]').forEach(node=>node.addEventListener('input',()=>setPrefs({[node.dataset.audioVolume]:Number(node.value)/100})));
+ updateDock()
+}
+async function saveCue(cueKey,patch){
+ if(!/^[a-z][a-z0-9_.-]{1,79}$/.test(cueKey))throw new Error('Ogiltig ljudhändelse.');
+ if(!userToken())throw new Error('Logga in för att redigera ljud.');
+ const current=cues.get(cueKey);
+ if(!current)throw new Error('Ljudhändelsen saknas.');
+ const allowed={};
+ for(const key of ['title','category','volume','enabled','asset_path'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
+ await dbJson('rule_sound_cues?cue_key=eq.'+encodeURIComponent(cueKey),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(allowed)});
+ await load(true)
+}
+async function uploadCue(cueKey,file){
+ if(!file)throw new Error('Välj en ljudfil.');
+ const extensions={'audio/mpeg':'mp3','audio/ogg':'ogg','audio/wav':'wav','audio/x-wav':'wav','audio/webm':'webm','audio/mp4':'m4a'};
+ const ext=extensions[file.type];
+ if(!ext)throw new Error('Endast MP3, OGG, WAV, WebM och M4A stöds.');
+ if(file.size>8*1024*1024)throw new Error('Maxstorlek för ljud är 8 MB.');
+ const token=userToken();if(!token)throw new Error('Du måste vara inloggad.');
+ const path='effects/'+cueKey.replace(/[^a-z0-9-]/g,'-')+'-'+(globalThis.crypto?.randomUUID?.()||String(Date.now()))+'.'+ext;
+ const upload=await fetch('https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/'+BUCKET+'/'+path,{
+  method:'POST',headers:{apikey:'sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o',Authorization:'Bearer '+token,'Content-Type':file.type,'cache-control':'3600'},body:file
+ });
+ if(!upload.ok){const error=await upload.text();throw new Error('Uppladdningen misslyckades: '+error.slice(0,250))}
+ await saveCue(cueKey,{asset_path:path})
+}
+function formStatus(message,bad=false){
+ const el=document.getElementById('adminSoundStatus');
+ if(el){el.textContent=message;el.classList.toggle('error',bad)}
+}
+function adminRows(){
+ return [...cues.values()].sort((a,b)=>a.category.localeCompare(b.category)||a.cue_key.localeCompare(b.cue_key));
+}
+function renderRows(){
+ const target=document.getElementById('adminSoundTable');if(!target)return;
+ target.innerHTML=adminRows().map(row=>{
+  const url=safeAssetUrl(row.asset_path);
+  return '<div class="alea-sound-row" data-sound-key="'+escapeHtml(row.cue_key)+'">'+
+   '<div class="alea-sound-identity"><b>'+escapeHtml(row.title)+'</b><code>'+escapeHtml(row.cue_key)+'</code><small>'+(url?'Ljudfil uppladdad':'Syntetiskt testljud')+'</small></div>'+
+   '<label>Namn<input type="text" maxlength="120" data-field="title" value="'+escapeHtml(row.title)+'"></label>'+
+   '<label>Kategori<select data-field="category">'+Object.keys(categoryLabels).map(k=>'<option value="'+k+'"'+(k===row.category?' selected':'')+'>'+categoryLabels[k]+'</option>').join('')+'</select></label>'+
+   '<label>Volym<input type="range" min="0" max="100" step="1" value="'+Math.round(clamp(row.volume)*100)+'" data-field="volume"></label>'+
+   '<label class="alea-sound-check"><input type="checkbox" data-field="enabled"'+(row.enabled?' checked':'')+'> Aktiv</label>'+
+   '<div class="alea-sound-actions"><button type="button" data-audio-action="preview">▶ Testa</button><button type="button" data-audio-action="save">Spara</button>'+
+   '<label class="alea-sound-upload">↑ Ljudfil<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4,.mp3,.ogg,.wav,.webm,.m4a" data-audio-upload hidden></label>'+
+   (url?'<button type="button" data-audio-action="clear">Ta bort ljudfil</button>':'')+'</div>'+
+   '</div>'
+ }).join('');
+}
+async function renderAdmin(){
+ if(!document.getElementById('adminSoundTable'))return;
+ formStatus('Läser ljudregistret…');
+ try{await load(true);renderRows();formStatus(cues.size+' ljudhändelser · uppladdad fil används före testljud.')}
+ catch(error){formStatus('Kunde inte läsa ljudregistret: '+error.message,true);renderRows()}
+}
+let mountedAdmin=false;
+function mountAdmin(){
+ const target=document.getElementById('adminSoundTable');if(!target||mountedAdmin)return;
+ mountedAdmin=true;
+ target.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-audio-action]');if(!button)return;
+  const row=button.closest('[data-sound-key]');if(!row)return;
+  const key=row.dataset.soundKey;
+  const action=button.dataset.audioAction;
+  if(action==='preview'){unlock();play(key);return}
+  button.disabled=true;
+  try{
+   if(action==='save'){
+    const title=row.querySelector('[data-field=title]').value.trim();
+    if(!title)throw new Error('Namn krävs.');
+    await saveCue(key,{title,category:row.querySelector('[data-field=category]').value,
+     volume:Number(row.querySelector('[data-field=volume]').value)/100,
+     enabled:row.querySelector('[data-field=enabled]').checked})
+   }else if(action==='clear')await saveCue(key,{asset_path:null});
+   renderRows();formStatus('Sparat: '+key)
+  }catch(error){formStatus(error.message,true)}
+  finally{button.disabled=false}
+ });
+ target.addEventListener('change',async event=>{
+  const field=event.target.closest('[data-audio-upload]');if(!field)return;
+  const key=field.closest('[data-sound-key]')?.dataset.soundKey;
+  if(!key||!field.files?.[0])return;
+  field.disabled=true;formStatus('Laddar upp ljudfil…');
+  try{await uploadCue(key,field.files[0]);renderRows();formStatus('Ljudfil uppladdad: '+key)}
+  catch(error){formStatus(error.message,true);field.disabled=false}
+ });
+}
+function initialize(){
+ mountDock();mountAdmin();
+ document.addEventListener('pointerdown',()=>{unlock();if(!loaded&&userToken())load().catch(()=>{})},{passive:true});
+ document.addEventListener('keydown',()=>unlock(),{passive:true})
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
+window.aleaAudio={play,unlock,load,renderAdmin,mountAdmin,setPrefs,getPrefs:()=>({...prefs}),stopAll,cues:()=>[...cues.values()]};
+})();
