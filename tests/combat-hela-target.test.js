@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const source=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
+const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
 function excerpt(start,end){
  const begin=source.indexOf(start),finish=source.indexOf(end,begin+start.length);
  if(begin<0||finish<begin)throw Error('HELA-funktion saknas: '+start);
@@ -10,7 +11,7 @@ function excerpt(start,end){
 }
 function script(start,end,ctx,exports){
  const scope={...ctx};
- runInNewContext(excerpt(start,end)+'\n'+Object.entries(exports).map(([alias,name])=>'this.'+alias+'='+name+';').join('\n'),scope);
+ runInNewContext(footprint+'\n'+excerpt(start,end)+'\n'+Object.entries(exports).map(([alias,name])=>'this.'+alias+'='+name+';').join('\n'),scope);
  return scope
 }
 const caster={id:'caster',q:0,r:0,status:'active',name_snapshot:'Nox',current_kp:10,max_kp:10};
