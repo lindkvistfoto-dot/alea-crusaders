@@ -175,7 +175,7 @@ describe("application architecture smoke checks", () => {
     const combat = read("features/combat/runtime.js");
     const start = combat.indexOf("async function commitCombatMovement");
     const move = combat.slice(combat.indexOf("const fromQ=Number(actor.q)||0", Math.max(0,start)),combat.indexOf("async function moveActiveCombatantToHex("));
-    expect(move).toContain("'rpc/haj_move_combatant'");
+    expect(move).toContain("'rpc/alea_move_multhex'");
     expect(move).toContain("p_from_q:fromQ,p_from_r:fromR");
     expect(move).toContain("p_expected_remaining:combatMovementBudget(actor)");
     expect(move).toContain("!moved||String(moved.id)!==String(actor.id)");
@@ -1139,8 +1139,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatDestinationKeepsAction");
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
-    expect(combat).toContain("flight.ignore_terrain?1:cell.movement_mode==='difficult'?2:1");
-    expect(combat).toContain("if(!cell||combatTerrainIsWall(cell)||(cell.movement_mode==='blocked'&&!flight.ignore_terrain))continue");
+    expect(combat).toContain("flight.ignore_terrain?1:footprint.some(c=>cellByKey.get(combatFootprintKey(c))?.movement_mode==='difficult')?2:1");
+    expect(combat).toContain("if(!cell||!combatFootprintCanStand(combatant,nq,nr))continue");
     expect(combat).toContain("if(nextCost>budget)continue");
     expect(combat).toContain("cls.push('move-reachable')");
     expect(combat).toContain("'move-action-kept':'move-action-spent'");
