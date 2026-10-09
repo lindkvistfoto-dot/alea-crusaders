@@ -1,4 +1,4 @@
-/* Materialateljén, v0.35.17 — keeps existing access and sharing controls */
+/* Materialateljén, v0.35.18 — keeps existing access and sharing controls */
 #legolasPanel{--mat-gold:#ddbb81;--mat-line:rgba(221,187,129,.28);--mat-muted:#d1bfa0;background:radial-gradient(ellipse at 50% -20%,#473624 0%,#121815 57%,#0b0f0e 100%);color:#f5ebd9}
 #legolasPanel .legolas-panel-inner{width:min(1320px,100%);padding:clamp(14px,2.7vw,34px);border:1px solid rgba(221,187,129,.4);border-radius:20px;background:linear-gradient(135deg,#2b2922 0%,#202924 51%,#191e1b 100%);box-shadow:0 26px 80px #0009}
 #legolasPanel .legolas-heading{position:relative!important;min-height:115px;margin-bottom:17px;padding:clamp(17px,2.5vw,28px)!important;border:1px solid var(--mat-line);border-radius:16px;background:radial-gradient(circle at 95% 0%,#62503755,transparent 45%),linear-gradient(100deg,#393128,#26322d)!important;box-shadow:0 8px 25px #0003!important}
@@ -78,3 +78,32 @@
 
 /* Keep type chip visible when asynchronous thumbnails replace the image placeholder. */
 #legolasPanel .legolas-card{position:relative}
+
+/* SL sees the exact full-size image currently shared with players. */
+#legolasPanel .frodo-gm-preview{
+ margin:17px 0 4px;padding:12px;border:1px solid rgba(216,181,122,.28);
+ border-radius:12px;background:linear-gradient(145deg,#131c19,#19201c);
+}
+#legolasPanel .frodo-gm-preview.hidden{display:none!important}
+#legolasPanel .frodo-gm-preview-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 10px}
+#legolasPanel .frodo-gm-preview-top span{color:#e7c78c;font:750 10px/1.5 system-ui,sans-serif;letter-spacing:.15em}
+#legolasPanel .frodo-gm-preview-top button{
+ cursor:pointer;color:#f8e5c5;background:#3a3329;border:1px solid #9c835c;border-radius:8px;
+ padding:7px 12px;min-height:36px;font:650 12px system-ui,sans-serif
+}
+#legolasPanel .frodo-gm-preview-top button:hover:not(:disabled){background:#57452f}
+#legolasPanel .frodo-gm-preview-top button:disabled{opacity:.4;cursor:default}
+#legolasPanel .frodo-gm-preview-top button:focus-visible{outline:2px solid #94d2df;outline-offset:2px}
+#legolasPanel .frodo-gm-preview-stage{
+ display:flex;align-items:center;justify-content:center;min-height:145px;
+ max-height:385px;overflow:hidden;border:1px solid rgba(216,181,122,.16);border-radius:10px;
+ background:radial-gradient(ellipse at center,#28342e,#0a100e 80%);
+}
+#legolasPanel #frodoGmImage{
+ display:block;max-width:100%;width:auto;height:auto;max-height:375px;object-fit:contain;
+}
+#legolasPanel #frodoGmImage.hidden{display:none!important}
+#legolasPanel #frodoGmPreviewStatus{padding:20px;text-align:center;color:#d0c3ac;font-size:13px}
+#legolasPanel #frodoGmPreviewStatus.hidden{display:none!important}
+#legolasPanel #frodoGmPreviewCaption{margin:9px 2px 1px;color:#d5c7ad;font-size:12px;line-height:1.5}
+@media(max-width:720px){#legolasPanel .frodo-gm-preview{padding:9px}#legolasPanel .frodo-gm-preview-stage{max-height:290px}#legolasPanel #frodoGmImage{max-height:280px}}
