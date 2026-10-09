@@ -6233,3 +6233,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
 #spelltable .spell-master-change:hover{background:#44301f}
 #spelltable .spell-unlinked-warning{color:#e3a47b;font-size:11px;font-weight:700;width:100%}
 .character-spell-description{white-space:pre-wrap;line-height:1.55}
+
+/* v0.35.02 — allow horizontal scrolling of shield master inside the admin card */
+.admin-shield-scroll .adminshieldtable{
+ width:max-content;
+ min-width:100%;
+ overflow:visible;
+}

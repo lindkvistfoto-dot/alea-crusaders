@@ -49,4 +49,13 @@ describe('shield master BV/BEP',()=>{
   expect(elements.adminShieldTable.innerHTML).toContain('<div>—</div>');
   expect(elements.adminShieldStatus.textContent).toContain('1 saknar värden');
  });
+
+ test('shield registry can be scrolled horizontally without clipping BV/BEP columns',()=>{
+  const html=read('index.html');
+  const css=read('src/styles/app.css');
+  expect(html).toContain('class="admin-table-scroll admin-shield-scroll"');
+  expect(html).toContain('id="adminShieldTable" class="adminshieldtable"');
+  expect(css).toContain('.admin-table-scroll{width:100%;max-width:100%;overflow-x:auto;');
+  expect(css).toMatch(/\.admin-shield-scroll \.adminshieldtable\s*\{[^}]*width:max-content;[^}]*min-width:100%;[^}]*overflow:visible;/);
+ });
 });
