@@ -15,7 +15,7 @@ function setup(rows){
  runInNewContext(initiative+turn+'\nthis.api={deployed:combatIsOnBattlefield,eligible:combatInitiativeEligible,entries:combatInitiativeEntries,build:combatBuildInitiative,turns:combatTurnOrderIds};',env);
  return env;
 }
-describe('Reserves do not participate in combat rounds v0.35.29',()=>{
+describe('Reserves do not participate in combat rounds v0.35.30',()=>{
  it('initiative only rolls for deployed active combatants; origin hex 0,0 is valid',()=>{
   const on=combatant('on'),reserve=combatant('reserve',{state:{smi:18,in_reserve:true}}),
    removed=combatant('removed',{status:'removed'}),dead=combatant('dead',{status:'dead'}),

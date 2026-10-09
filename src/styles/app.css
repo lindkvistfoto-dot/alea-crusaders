@@ -6688,3 +6688,24 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 .alea-sound-source-link{display:inline-flex;width:max-content;max-width:100%;color:#9fcce8;border:1px solid #426a83;border-radius:6px;padding:5px 9px;font-size:12px;text-decoration:none}
 .alea-sound-source-link:hover,.alea-sound-source-link:focus-visible{background:#223a49;color:#effbff;outline:2px solid #9fcce8;outline-offset:2px}
 .alea-sound-brief-grid input[type="url"],.alea-sound-brief-grid input[type="text"]{word-break:break-all}
+
+/* v0.35.30 – perfect strikes: full damage and no mundane armor. */
+.combat-attack-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%}
+.combat-attack-result-main>.combat-attack-badges>strong{
+ display:inline-flex;align-items:center;justify-content:center;
+ border-radius:999px;padding:4px 8px;background:#7b302b;color:#fff4d9;
+ font-size:10px;font-weight:850;letter-spacing:.035em;line-height:1.2
+}
+.combat-attack-result-main>.combat-attack-badges>.combat-no-armor-badge{
+ background:#26594d;border:1px solid #7aa78e;color:#f0ffec
+}
+.combat-mini-attack .combat-attack-result-main>.combat-attack-badges>strong{
+ background:#6d2b27;color:#f5deb6;border:1px solid rgba(219,165,91,.38)
+}
+.combat-mini-attack .combat-attack-result-main>.combat-attack-badges>.combat-no-armor-badge{
+ background:#29453a;border-color:#688e77;color:#dbf4cf
+}
+@media(max-width:390px){
+ .combat-attack-badges{gap:4px}
+ .combat-attack-result-main>.combat-attack-badges>strong{font-size:9px;padding:4px 6px}
+}

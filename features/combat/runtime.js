@@ -1087,7 +1087,7 @@ async function combatFinalizeAntimagicSpell(caster,action){
    const original=combatants.find(c=>String(c.id)===String(allocation.target_id));if(!original)throw new Error('Magimålet saknas.');
    const victim=bounce&&String(original.id)===protectedId?caster:original;
    const formula=combatMagicDamageFormula(data,allocation.eg);if(!formula)throw new Error('Skadeformeln saknar regelstöd.');
-   const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null);
+   const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null,result.outcome==='perfect');
    result.target_results.push({target_id:victim.id,original_target_id:original.id,reflected:victim.id!==original.id,effect_grade:allocation.eg,damage})
   }
   result.damage=result.target_results.find(x=>x.damage)?.damage;result.hit_resolved=true
@@ -1229,7 +1229,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
    const attackMode=attack.result?.attack_mode||attack.source_data?.mode||'melee';
    const weapon=combatActionWeapon(attacker,attack,attackMode);
    attackResult.hit_location=await combatResolveHitLocation(attacker,defender,attackMode,'parry_failed');
-   if(weapon)attackResult.damage=await combatResolveDamage(attacker,defender,weapon,attack.result?.full_damage===true,attackResult.hit_location)
+   if(weapon)attackResult.damage=await combatResolveDamage(attacker,defender,weapon,attack.result?.full_damage===true,attackResult.hit_location,attack.result?.outcome==='perfect')
   }
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(attack.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -1265,7 +1265,7 @@ async function declineCombatParry(defenderId,attackActionId){
    opportunity.attacker,opportunity.defender,attackMode,'declined'
   );
   if(weapon)attackResult.damage=await combatResolveDamage(
-   opportunity.attacker,opportunity.defender,weapon,opportunity.attack.result?.full_damage===true,attackResult.hit_location
+   opportunity.attacker,opportunity.defender,weapon,opportunity.attack.result?.full_damage===true,attackResult.hit_location,opportunity.attack.result?.outcome==='perfect'
   );
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(opportunity.attack.id),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -1575,7 +1575,10 @@ function combatAttackResultHtml(action){
    '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
     (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
    '</div>'+
-   (full?'<strong>FULL SKADA</strong>':'')+
+   (full?'<div class="combat-attack-badges"><strong>FULL SKADA</strong>'+
+    (outcome==='perfect'&&(result.damage?.armor_ignored===true||result.awaiting_parry===true)
+     ?'<strong class="combat-no-armor-badge">INGEN RUSTNING</strong>':'')+
+   '</div>':'')+
    combatHitLocationResultHtml(result.hit_location)+
    (result.erf&&(result.erf.awarded>0||!result.erf.locked)
     ?'<div class="combat-erf-result '+(result.erf.awarded>0?'gained':'locked')+'">'+
@@ -1770,7 +1773,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    result.parry_decision=attackMode==='melee'?'unavailable':'not_applicable';
    const defenseMode=attackMode==='melee'?'undefended':'ranged';
    result.hit_location=await combatResolveHitLocation(actor,target,attackMode,defenseMode);
-   result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location);
+   result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location,outcome==='perfect');
    result.hit_resolved=true;
    if(attackMode==='melee'){
     (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
@@ -3073,7 +3076,7 @@ function combatArmorAbsorption(combatant){
  });
  return{absorption,names:[...new Set(names)]}
 }
-async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null){
+async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null,ignoreArmor=false){
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
@@ -3100,7 +3103,10 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  bonusValue=Math.floor(bonusValue);
  const gross=Math.max(0,weaponValue+bonusValue);
  const armor=combatArmorAbsorption(target),ward=combatProtectionValue(target,weapon?.damage_kind||'physical');
- const net=Math.max(0,gross-armor.absorption-ward.points);
+ // Perfect attacks inflict full damage without mundane armor absorption.
+ // Magical protection wards remain effective and are accounted for separately.
+ const effectiveArmor=ignoreArmor===true?0:armor.absorption;
+ const net=Math.max(0,gross-effectiveArmor-ward.points);
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
@@ -3121,7 +3127,9 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   damage_bonus:bonusSpec.formula||'Ingen',
   damage_bonus_value:bonusValue,
   gross_damage:gross,
-  armor_absorption:armor.absorption,
+  armor_absorption:effectiveArmor,
+  armor_original_absorption:armor.absorption,
+  armor_ignored:ignoreArmor===true,
   armor_names:armor.names,
   effect_protection:ward.points,protection_names:ward.names,
   net_damage:net,
@@ -3134,7 +3142,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'damage',actor_id:actor.id,target_id:target.id,event_type:defeated?'defeated':'damage',
   message:actor.name_snapshot+' träffar '+(hitLocation?.label||'målet')+' och gör '+net+' KP skada på '+target.name_snapshot+
-   ' ('+weaponValue+' + '+bonusValue+' − ABS '+armor.absorption+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
+   ' ('+weaponValue+' + '+bonusValue+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
  return result
@@ -3156,7 +3164,7 @@ function combatDamageResultHtml(damage){
   }
  }
  const armor=Math.max(0,Number(damage.armor_absorption)||0),ward=Math.max(0,Number(damage.effect_protection)||0),net=Math.max(0,Number(damage.net_damage)||0);
- const armorText=Array.isArray(damage.armor_names)&&damage.armor_names.length?damage.armor_names.join(', '):'ABS';
+ const armorText=damage.armor_ignored===true?'Ignorerad':Array.isArray(damage.armor_names)&&damage.armor_names.length?damage.armor_names.join(', '):'ABS';
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
   '<div class="combat-damage-grid">'+
    '<div class="combat-damage-col"><span>Skada</span><b>'+weaponValue+'</b><small>'+escAttr(weaponFormula)+'</small></div>'+
@@ -3773,7 +3781,7 @@ async function combatResolveTestFireball(actor,target,action){
    const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
    if(!formula)throw new Error('Skadeformeln är inte verifierad för vald effektgrad.');
    const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic',_spell_damage:true};
-   const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null);
+   const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null,outcome==='perfect');
    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
   }
   result.damage=result.target_results.find(x=>x.damage)?.damage;

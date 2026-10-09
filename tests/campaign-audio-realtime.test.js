@@ -79,6 +79,6 @@ describe('Campaign audio soundboard sync',()=>{
    expect(snippet).toContain("window.aleaAudio:null)?.spellResult(")
   }
   const html=text('index.html');
-  expect(html).toContain('features/audio/board.js?v=0.35.29')
+  expect(html).toContain('features/audio/board.js?v=0.35.30')
  });
 });
