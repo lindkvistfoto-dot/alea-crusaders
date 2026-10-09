@@ -2574,7 +2574,7 @@ async function loadCampaignPlaceData(){
  if(!centralCampaignId){campaignSites=[];campaignLocations=[];campaignLocationEventLinks=[];return}
  let [sites,locations,eventLinks]=await Promise.all([
   dbJson('campaign_sites?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,parent_site_id,site_key,name,site_type,sort_order&order=sort_order.asc,name.asc'),
-  dbJson('campaign_locations?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,location_key,name,location_type,sort_order&order=sort_order.asc,location_key.asc'),
+  dbJson('campaign_locations?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,location_key,name,location_type,ambience_cue_key,sort_order&order=sort_order.asc,location_key.asc'),
   dbJson('campaign_location_event_links?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=location_id,event_id,relation_kind')
  ]);
  campaignSites=Array.isArray(sites)?sites:[];campaignLocations=Array.isArray(locations)?locations:[];campaignLocationEventLinks=Array.isArray(eventLinks)?eventLinks:[];
@@ -2621,7 +2621,7 @@ function renderAdminMaps(){
  if($('adminSiteDetailMeta'))$('adminSiteDetailMeta').textContent=(site.site_type||'struktur')+' · '+directMaps.length+' kartor · '+directLocs.length+' platser';
  if(st)st.textContent=directMaps.length?directMaps.length+' kartor i denna platsstruktur.':'Inga kartor i denna platsstruktur ännu.';
  if(mt)mt.innerHTML=directMaps.length?'<div class="ahead">Karta</div><div class="ahead">Status</div><div class="ahead">Åtgärd</div>'+directMaps.map(m=>'<div><b>'+escAttr(m.name||'Namnlös karta')+'</b><div class="muted" style="font-size:11px">'+m.width+'×'+m.height+'</div></div><div>'+(m.id===campaignActiveMapId?'<span class="admin-map-current">AKTUELL</span> ':'')+(m.player_visible?'<span class="admin-map-visible">SPELARE</span>':'<span class="admin-map-hidden">DOLD</span>')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMap(\''+m.id+'\')" title="Redigera karta">✎</button><button class="smallbtn" onclick="openMapAreaEditor(\''+m.id+'\')" title="Definiera polygoner">⬡</button><button class="smallbtn admin-map-toggle '+(m.id===campaignActiveMapId?'active':'')+'" onclick="activateCampaignMapById(\''+m.id+'\')" title="'+(m.id===campaignActiveMapId?'Aktuell karta':'Gör aktuell')+'">📍</button><button class="smallbtn admin-map-toggle '+(m.player_visible?'active':'')+'" onclick="toggleMapPlayerVisibility(\''+m.id+'\')" title="'+(m.player_visible?'Dölj för spelare':'Gör tillgänglig för spelare')+'">👁</button><button class="deletebtn" onclick="deleteCampaignMap(\''+m.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga kartor ännu. Lägg till exempelvis Bottenvåning, Våning 2 eller Krypta.</div>';
- if(lt)lt.innerHTML=directLocs.length?'<div class="ahead">ID</div><div class="ahead">Namn</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+directLocs.map(l=>'<div>'+escAttr(l.location_key||'—')+'</div><div>'+escAttr(l.name||'—')+(locationEventSummary(l.id)?'<div class="location-event-mini">⚡ '+escAttr(locationEventSummary(l.id))+'</div>':'')+'</div><div>'+escAttr(l.location_type||'—')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignLocation(\''+l.id+'\')" title="Grunddata">✎</button><button class="smallbtn" onclick="editLocationContent(\''+l.id+'\')" title="Beskrivning, bilder och kopplingar">📖</button><button class="deletebtn" onclick="deleteCampaignLocation(\''+l.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga rum eller platser i strukturen ännu.</div>'
+ if(lt)lt.innerHTML=directLocs.length?'<div class="ahead">ID</div><div class="ahead">Namn</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+directLocs.map(l=>'<div>'+escAttr(l.location_key||'—')+'</div><div>'+escAttr(l.name||'—')+(locationEventSummary(l.id)?'<div class="location-event-mini">⚡ '+escAttr(locationEventSummary(l.id))+'</div>':'')+(l.ambience_cue_key?'<div class="location-sound-mini">♫ '+escAttr(window.aleaAudio?.cues?.().find(c=>c.cue_key===l.ambience_cue_key)?.title||l.ambience_cue_key)+'</div>':'')+'</div><div>'+escAttr(l.location_type||'—')+'</div><div class="admin-map-actions">'+(l.ambience_cue_key?'<button class="smallbtn" type="button" onclick="window.aleaSoundboard?.playLocation(\''+l.id+'\')" title="Spela platsljud för alla deltagare">♫ ▶</button>':'')<button class="smallbtn" onclick="editCampaignLocation(\''+l.id+'\')" title="Grunddata">✎</button><button class="smallbtn" onclick="editLocationContent(\''+l.id+'\')" title="Beskrivning, bilder och kopplingar">📖</button><button class="deletebtn" onclick="deleteCampaignLocation(\''+l.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga rum eller platser i strukturen ännu.</div>'
 }
 function siteOptions(selected='',allowNone=true,excludeId=''){
  let rows=campaignSites.filter(s=>s.id!==excludeId).map(s=>`<option value="${s.id}" ${selected===s.id?'selected':''}>${escAttr(sitePath(s.id))}</option>`).join('');
@@ -2752,19 +2752,26 @@ async function deleteCampaignSite(id){
  if(!await askConfirm('Ta bort platsstruktur',`Vill du ta bort ${s.name}? Strukturen kan bara tas bort om inga kartor, understrukturer eller platser använder den.`,'Ta bort',true))return;
  try{await dbJson('campaign_sites?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadCampaignPlaceData();renderAdminMaps()}catch(e){alert('Kunde inte ta bort platsstrukturen: '+e.message)}
 }
+function locationAmbienceOptions(selected=''){
+ const cues=window.aleaAudio?.cues?.()||[];
+ const oneShots=new Set(['ambience.thunder','ambience.door','ambience.ghost','ambience.battle']);
+ return '<option value="">Ingen ljudmiljö</option>'+cues.filter(c=>c.category==='ambience'&&!oneShots.has(c.cue_key))
+  .map(c=>'<option value="'+escAttr(c.cue_key)+'"'+(selected===c.cue_key?' selected':'')+'>'+
+   escAttr(c.title)+'</option>').join('')
+}
 function editCampaignLocation(id='',preferredSiteId=''){
  let l=id?campaignLocations.find(x=>x.id===id):null;
  if(!campaignSites.length){alert('Skapa först en platsstruktur, till exempel Grottan.');return}
  let siteId=l?.site_id||preferredSiteId||adminSelectedSiteId||campaignSites[0].id,suggested=l?.location_key||nextLocationKey(siteId);
  $('adminEditorTitle').textContent=l?'Redigera rum / plats':'Lägg till rum / plats';
- $('adminEditorBody').innerHTML=`<div class="adminform"><label>Platsstruktur<select id="alSite" onchange="${l?'':'updateAutoLocationKey()'}">${siteOptions(siteId,false)}</select></label><label>Rums-/plats-ID <span class="muted">(föreslaget automatiskt)</span><input id="alKey" value="${escAttr(suggested)}" placeholder="t.ex. 11"></label><label>Namn<input id="alName" value="${escAttr(l?.name||'')}" placeholder="t.ex. Sakristian"></label><label>Typ<select id="alType">${['room','corridor','building','outdoor','cave','passage','stairs','area','other'].map(t=>`<option value="${t}" ${(l?.location_type||'room')===t?'selected':''}>${t}</option>`).join('')}</select></label><div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveCampaignLocation('${id}')">Spara</button></div></div>`;
+ $('adminEditorBody').innerHTML=`<div class="adminform"><label>Platsstruktur<select id="alSite" onchange="${l?'':'updateAutoLocationKey()'}">${siteOptions(siteId,false)}</select></label><label>Rums-/plats-ID <span class="muted">(föreslaget automatiskt)</span><input id="alKey" value="${escAttr(suggested)}" placeholder="t.ex. 11"></label><label>Namn<input id="alName" value="${escAttr(l?.name||'')}" placeholder="t.ex. Sakristian"></label><label>Typ<select id="alType">${['room','corridor','building','outdoor','cave','passage','stairs','area','other'].map(t=>`<option value="${t}" ${(l?.location_type||'room')===t?'selected':''}>${t}</option>`).join('')}</select></label><label>Miljöljud <span class="muted">(spelas när SL aktiverar platsljudet)</span><select id="alAmbience">${locationAmbienceOptions(l?.ambience_cue_key||'')}</select></label><div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveCampaignLocation('${id}')">Spara</button></div></div>`;
  $('adminEditor').classList.remove('hidden');
 }
 async function saveCampaignLocation(id=''){
  let site_id=$('alSite').value,location_key=$('alKey').value.trim(),name=$('alName').value.trim(),location_type=$('alType').value;
  if(!site_id||!name){alert('Struktur och namn måste anges.');return}
  if(!location_key)location_key=nextLocationKey(site_id,id);
- let body={campaign_id:centralCampaignId,site_id,location_key,name,location_type};
+ let body={campaign_id:centralCampaignId,site_id,location_key,name,location_type,ambience_cue_key:$('alAmbience').value||null};
  try{if(id)await dbJson('campaign_locations?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(body)});else{body.created_by=supabaseSession.user.id;await dbJson('campaign_locations',{method:'POST',body:JSON.stringify(body)})}closeAdminEditor();await loadCampaignPlaceData();renderAdminMaps()}catch(e){alert('Kunde inte spara platsen: '+e.message)}
 }
 
