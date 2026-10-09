@@ -6717,3 +6717,26 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 @media(prefers-reduced-motion:reduce){
  .combat-melee-sprite{display:none}
 }
+
+
+/* v0.35.34 – kampanjtid: SL-snabbval vid dagknappen */
+.campaign-time-control{position:relative;display:inline-flex;flex:0 0 auto;align-items:center}
+.campaign-time-control .time-nav{white-space:nowrap;min-width:108px;border-color:#89704d;background:#31271c}
+.campaign-time-control .time-nav:focus-visible,.campaign-time-option:focus-visible{outline:2px solid #f6cf89;outline-offset:2px}
+.campaign-time-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:min(340px,92vw);padding:14px;border:1px solid #a17b4b;border-radius:14px;background:#201911;color:#f9eacf;box-shadow:0 16px 48px #000b}
+.campaign-time-menu-title{font:700 17px Georgia,serif;margin:0 0 12px}
+.campaign-time-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.campaign-time-option{display:flex;align-items:center;gap:8px;text-align:left;min-height:50px;padding:8px 10px;border:1px solid #6f5639;border-radius:9px;background:#322619;color:#ffeac8;cursor:pointer;font:600 13px system-ui,sans-serif}
+.campaign-time-option span:first-child{font-size:22px;line-height:1}
+.campaign-time-option:hover{background:#4a3624;border-color:#bd945a}
+.campaign-time-option.selected{background:#5a4228;border-color:#efbd6e;box-shadow:inset 0 0 0 1px #efbd6e}
+.campaign-time-option:disabled{opacity:.55;cursor:wait}
+.campaign-time-note,.campaign-time-readonly{font:12px system-ui,sans-serif;color:#c6ab82;margin:12px 0 0}
+.campaign-day-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:650px){
+ header #campaignTimeControl{order:19}
+ .campaign-time-control .time-nav{min-width:0;padding:7px 9px;font-size:13px}
+ .campaign-time-menu{right:-14px}
+ .campaign-day-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:380px){.campaign-day-summary{grid-template-columns:1fr}}

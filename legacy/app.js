@@ -2180,7 +2180,7 @@ async function loadCampaignDayState(){
  campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];
  if(!centralCampaignId){renderCampaignDayHeader();return null}
  try{
-  let rows=await dbJson('campaign_day_state?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=campaign_id,day_number,weather,with_rest,rest_hours,erf_cycle,erf_enabled,started_at&limit=1');
+  let rows=await dbJson('campaign_day_state?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=campaign_id,day_number,weather,with_rest,rest_hours,erf_cycle,erf_enabled,started_at,time_of_day&limit=1');
   campaignDayState=rows?.[0]||null;
   await Promise.all([loadCampaignCharacterRestStates(),loadCampaignErfAwards()])
  }catch(e){console.warn('Kunde inte läsa dag/väder',e)}
@@ -2222,14 +2222,83 @@ function rememberCurrentErfAward(group,item,amount=1,reason='success',c=current)
 }
 function renderCampaignDayHeader(){
  let b=$('dayNavBtn');if(!b)return;
- if(!campaignDayState){b.classList.add('hidden');return}
+ if(!campaignDayState){b.classList.add('hidden');renderCampaignTimeHeader();return}
  b.classList.remove('hidden');
  b.classList.toggle('rested',!!campaignDayState.with_rest);
  b.classList.toggle('norest',!campaignDayState.with_rest);
  let w=String(campaignDayState.weather||'').trim();
  b.textContent='📅 Dag '+campaignDayState.day_number;
- let rh=Number(campaignDayState.rest_hours)||0;b.title='Dag '+campaignDayState.day_number+(w?' · '+w:'')+(rh>0?' · vila '+rh+' h':' · utan vila')
+ let rh=Number(campaignDayState.rest_hours)||0;b.title='Dag '+campaignDayState.day_number+(w?' · '+w:'')+(rh>0?' · vila '+rh+' h':' · utan vila');renderCampaignTimeHeader()
 }
+
+const CAMPAIGN_DAY_TIMES=[
+ {key:'dawn',icon:'🌅',name:'Gryning'},
+ {key:'morning',icon:'🌤️',name:'Morgon'},
+ {key:'midday',icon:'☀️',name:'Mitt på dagen'},
+ {key:'afternoon',icon:'🌞',name:'Eftermiddag'},
+ {key:'evening',icon:'🌇',name:'Kväll'},
+ {key:'night',icon:'🌙',name:'Natt'}
+];
+let campaignTimeSaving=false;
+function campaignTimeEntry(value){
+ return CAMPAIGN_DAY_TIMES.find(t=>t.key===value)||CAMPAIGN_DAY_TIMES[1]
+}
+function closeCampaignTimeMenu(){
+ $('campaignTimeMenu')?.classList.add('hidden');
+ $('campaignTimeBtn')?.setAttribute('aria-expanded','false')
+}
+function renderCampaignTimeHeader(){
+ const control=$('campaignTimeControl'),btn=$('campaignTimeBtn'),menu=$('campaignTimeMenu');
+ if(!control||!btn||!menu)return;
+ if(!campaignDayState){control.classList.add('hidden');closeCampaignTimeMenu();return}
+ control.classList.remove('hidden');
+ const now=campaignTimeEntry(campaignDayState.time_of_day);
+ btn.textContent=now.icon+' '+now.name;
+ btn.title='Tid på dygnet: '+now.name+(campaignDayManager()?' · Klicka för att ändra':' · Endast SL kan ändra');
+ btn.disabled=campaignTimeSaving;
+ if(campaignDayManager()){
+  menu.innerHTML='<div class="campaign-time-menu-title">Tid på dygnet</div><div class="campaign-time-options">'+
+   CAMPAIGN_DAY_TIMES.map(t=>'<button type="button" class="campaign-time-option'+(t.key===now.key?' selected':'')+
+     '" aria-pressed="'+(t.key===now.key?'true':'false')+'" onclick="setCampaignTimeOfDay(\''+t.key+'\')"'+
+     (campaignTimeSaving?' disabled':'')+'><span aria-hidden="true">'+t.icon+'</span><span>'+t.name+'</span></button>').join('')+
+   '</div><div class="campaign-time-note">Ändrar inte dag, väder eller vilotid.</div>';
+ }else{
+  menu.innerHTML='<div class="campaign-time-menu-title">Tid på dygnet</div><p class="campaign-time-readonly">'+now.icon+' '+now.name+' · SL styr tiden.</p>'
+ }
+}
+function toggleCampaignTimeMenu(event){
+ event?.stopPropagation();
+ if(!campaignDayState||campaignTimeSaving)return;
+ const menu=$('campaignTimeMenu'),btn=$('campaignTimeBtn');if(!menu||!btn)return;
+ const open=menu.classList.contains('hidden');
+ menu.classList.toggle('hidden',!open);
+ btn.setAttribute('aria-expanded',String(open))
+}
+async function setCampaignTimeOfDay(value){
+ if(!campaignDayManager()||!centralCampaignId||campaignTimeSaving||!CAMPAIGN_DAY_TIMES.some(t=>t.key===value))return;
+ const campaign=centralCampaignId;
+ campaignTimeSaving=true;renderCampaignTimeHeader();
+ try{
+  const result=await dbJson('rpc/set_campaign_time_of_day',{method:'POST',
+   body:JSON.stringify({p_campaign_id:campaign,p_time_of_day:value})});
+  if(campaign!==centralCampaignId)return;
+  const state=Array.isArray(result)?result[0]:result;
+  if(!state||state.campaign_id!==campaign)throw Error('Ingen dagstatus returnerades.');
+  campaignDayState=state;
+  closeCampaignTimeMenu();
+  renderCampaignDayHeader();
+  if(!$('campaignDayModal')?.classList.contains('hidden'))renderCampaignDayModal();
+  showBackupToast('✓ Tid på dygnet: '+campaignTimeEntry(value).name)
+ }catch(e){alert('Kunde inte ändra tiden på dygnet: '+e.message)}
+ finally{campaignTimeSaving=false;renderCampaignTimeHeader()}
+}
+document.addEventListener('click',event=>{
+ if(!event.target.closest('#campaignTimeControl'))closeCampaignTimeMenu()
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape')closeCampaignTimeMenu()
+});
+
 function campaignDayManager(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 async function openCampaignDay(){
  if(!campaignDayState)await loadCampaignDayState();
@@ -2257,7 +2326,7 @@ function renderCampaignDayModal(){
  if(!campaignDayState){el.innerHTML='<div class="muted">Ingen dagstatus finns för kampanjen.</div>';return}
  let d=campaignDayState,w=String(d.weather||''),manager=campaignDayManager(),hours=Number(d.rest_hours)||0;
  let status=hours>0?(hours+' h vila'):'Ingen vila';
- let summary='<div class="campaign-day-summary"><div class="campaign-day-card"><div class="k">Dag</div><div class="v">'+d.day_number+'</div></div><div class="campaign-day-card"><div class="k">Väder</div><div class="v">'+escAttr(w||'Ej angivet')+'</div></div><div class="campaign-day-card"><div class="k">Vila</div><div class="v">'+status+'</div></div></div>';
+ let summary='<div class="campaign-day-summary"><div class="campaign-day-card"><div class="k">Dag</div><div class="v">'+d.day_number+'</div></div><div class="campaign-day-card"><div class="k">Väder</div><div class="v">'+escAttr(w||'Ej angivet')+'</div></div><div class="campaign-day-card"><div class="k">Vila</div><div class="v">'+status+'</div></div><div class="campaign-day-card"><div class="k">Tid</div><div class="v">'+campaignTimeEntry(d.time_of_day).icon+' '+campaignTimeEntry(d.time_of_day).name+'</div></div></div>';
  let note='<div class="campaign-day-note">Varje hel vilad timme återställer <b>1 PSY</b> upp till rollpersonens start-/maxvärde. En ny ERF-period öppnas normalt efter minst <b>6 timmars vila</b>. Alla raser i kategorin <b>Älvfolk</b> behöver bara <b>2 timmar</b>. En färdighet som redan fått ERF förblir annars låst.</div><div class="rest-rule-grid"><div class="rest-rule-card"><b>Övriga raser</b><br>6 h vila → ERF-gränsen nollställs.</div><div class="rest-rule-card"><b>Älvfolk</b><br>2 h vila → ERF-gränsen nollställs.</div></div>';
  let restStatus=characterRestThresholdHtml(hours);
  if(!manager){el.innerHTML=summary+note+restStatus;return}
