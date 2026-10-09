@@ -1390,7 +1390,7 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innPage"');
     expect(html).toContain('id="innCartLines"');
     expect(html).toContain('id="innBuyerSelect"');
-    expect(html).toContain("./features/inn/inn.css?v=0.35.13");
+    expect(html).toContain("./features/inn/inn.css?v=0.35.14");
     expect(html).toContain("./features/inn/inn.js?v=0.33.42");
     expect(inn).toContain("rule_inn_items?active=eq.true");
     expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
@@ -1524,7 +1524,7 @@ describe("application architecture smoke checks", () => {
     const end = legacy.indexOf("const RULE_REGISTRY_STATUS=", start);
     const contract = legacy.slice(start, end);
     for (const field of ["table:","countId:","section:","load:","render:","count:"]) {
-      expect((contract.match(new RegExp(field,"g"))||[]).length, field).toBe(9);
+      expect((contract.match(new RegExp(field,"g"))||[]).length, field).toBe(10);
     }
   });
 

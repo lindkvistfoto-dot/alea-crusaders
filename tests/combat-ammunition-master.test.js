@@ -46,6 +46,10 @@ describe('Ammo registry / range weapon linkage',()=>{
   expect(runtime).toContain('id="combatAmmoRecoverChance"');
   expect(runtime).toContain('Avsluta strid & sammanfatta');
   expect(runtime).toContain("rpc/combat_finish_and_recover");
+  expect(runtime).toContain("combatAmmoSpends.length>0");
+  expect(runtime).toContain("Avsluta först striden och välj om projektiler kan återhämtas");
+  expect(runtime).toContain("combatWeaponCategory(weapon)!=='thrown'");
+  expect(runtime).toContain("combatAmmoStock(combatant,combatWeaponProjectileKey(weapon))>0");
   expect(runtime).toContain("combatAmmoSummaryHtml()+'</section>'");
  });
  it('old characters are recognized and new equipment uses master selection',()=>{

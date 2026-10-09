@@ -714,6 +714,10 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
 
 async function combatStartScene(sceneId,{reset=false,prepare=false}={}){
  if(!combatCanManage()||combatSceneBusy)return;
+ if(activeCombat?.status!=='completed'&&combatAmmoSpends.length>0){
+  alert('Avsluta först striden och välj om projektiler kan återhämtas innan du byter eller återställer stridsscen.');
+  return;
+ }
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  const previousCombatId=activeCombat?.id||null;
@@ -2713,6 +2717,9 @@ function combatAvailableWeapons(combatant,mode='auto'){
   ...(Array.isArray(combatant?.state?.dropped_weapon_keys)?combatant.state.dropped_weapon_keys:[])
  ].map(String));
  if(disabled.size)available=available.filter(weapon=>!disabled.has(combatWeaponKey(weapon)));
+ // A thrown object cannot be wielded again after leaving the hand.
+ available=available.filter(weapon=>combatWeaponCategory(weapon)!=='thrown'||
+  !combatWeaponProjectileKey(weapon)||combatAmmoStock(combatant,combatWeaponProjectileKey(weapon))>0);
  if(mode==='auto')return available;
  if(mode==='melee')return available.filter(weapon=>combatWeaponCategory(weapon)==='melee');
  return available.filter(weapon=>['projectile','thrown'].includes(combatWeaponCategory(weapon)))
