@@ -4107,9 +4107,12 @@ function renderCombatMap(){
   const key=displayQ+','+displayR;
   let cell=byCoord.get(key);
   if(!cell)cell={x:g.xPitch*(displayQ+displayR/2)+g.offsetX,y:g.rowPitch*displayR+g.offsetY};
-  return{c,isPlanning,cell}
+  const footprint=combatFootprintCells(c,displayQ,displayR);
+  const points=footprint.map(pos=>byCoord.get(combatFootprintKey(pos))||{x:g.xPitch*(pos.q+pos.r/2)+g.offsetX,y:g.rowPitch*pos.r+g.offsetY});
+  const centroid=points.length?{x:points.reduce((n,p)=>n+p.x,0)/points.length,y:points.reduce((n,p)=>n+p.y,0)/points.length}:cell;
+  return{c,isPlanning,cell:centroid,footprint,points}
  }).sort((a,b)=>a.cell.y-b.cell.y);
- const tokens=tokenRows.map(({c,isPlanning,cell})=>{
+ const tokens=tokenRows.map(({c,isPlanning,cell,footprint,points})=>{
   const side=c.side==='heroes'?'hero':c.side==='enemies'?'enemy':'neutral',selected=combatSelectedTargetId===c.id?' selected':'',turn=combatIsActiveTurn(c)?' active-turn':'';
   const attack=attackTargets.get(String(c.id)),targetClass=attack?' attack-target':'',planningClass=isPlanning?' movement-planning':'',defeated=c.status==='dead';
   const targetTitle=attack?' · möjligt mål · '+attack.distance+' hex':'';
@@ -4121,7 +4124,8 @@ function renderCombatMap(){
    const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass);
    visual=miniature||('<circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text>')
   }
-  return '<g class="combat-token-group'+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+visual+'<title>'+escAttr(c.name_snapshot)+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
+  const footprintVisual=footprint.length>1?points.map(p=>'<polygon class="combat-footprint-hex" points="'+combatHexPoints(p.x,p.y,g.size*.94)+'" fill="'+(side==='hero'?'#4fa86d':side==='enemy'?'#cb5e52':'#739ec0')+'" fill-opacity="'+(isPlanning?'.4':'.24')+'" stroke="'+(attack?'#f5cb69':side==='hero'?'#79d9a0':side==='enemy'?'#ff9a86':'#9bc9e3')+'" stroke-width="'+(selected||turn?'3':'1.8')+'"/>').join(''):'';
+  return '<g class="combat-token-group'+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+visual+'<title>'+escAttr(c.name_snapshot)+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
  }).join('');
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
