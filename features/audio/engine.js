@@ -201,13 +201,15 @@ function synthetic(cueKey,gain){
  return true
 }
 function spellResult(name,outcome){
- const success=['success','special','perfect'].includes(outcome);
- if(!success)return play('magic.fail');
  const normalized=String(name||'').toUpperCase();
- if(/ANTIMAGI/.test(normalized))return play('magic.antimagic');
- if(/^(ELD|ELDKLOT)/.test(normalized))return play('magic.fire');
- if(/HELA|LÄK|LÄKEDOM/.test(normalized))return play('magic.heal');
- return play('magic.success')
+ let cue='magic.success';
+ if(!['success','special','perfect'].includes(outcome))cue='magic.fail';
+ else if(/ANTIMAGI/.test(normalized))cue='magic.antimagic';
+ else if(/^(ELD|ELDKLOT)/.test(normalized))cue='magic.fire';
+ else if(/HELA|LÄK|LÄKEDOM/.test(normalized))cue='magic.heal';
+ const played=play(cue);
+ window.aleaSoundboard?.broadcastCue?.(cue);
+ return played
 }
 function play(cueKey,{volume=1}={}){
  const cue=cues.get(cueKey);
