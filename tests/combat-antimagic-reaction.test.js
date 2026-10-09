@@ -2,6 +2,7 @@ import {describe,test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const source=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
+const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
 const start=source.indexOf('function combatAntimagicOptions('),end=source.indexOf('async function chooseCombatParry(',start);
 if(start<0||end<start)throw Error('Antimagic helpers missing');
 const code=source.slice(start,end);
@@ -28,7 +29,7 @@ function harness(known=true,spent=false){
   document:{getElementById:()=>({value:'2'})},crypto:{randomUUID:()=> 'new-reaction'},alert:()=>{},
   dbJson:async(path,options={})=>{writes.push({path,body:options.body?JSON.parse(options.body):null});return path.includes('status=eq.pending')?[{id:'spell'}]:[]}
  };
- runInNewContext(code+'this.api={combatAntimagicOptions,combatPendingAntimagic,combatAntimagicEgResistance,combatAntimagicPromptHtml,combatChooseAntimagic,combatDeclineAntimagic};',env);
+ runInNewContext(footprint+'\n'+code+'this.api={combatAntimagicOptions,combatPendingAntimagic,combatAntimagicEgResistance,combatAntimagicPromptHtml,combatChooseAntimagic,combatDeclineAntimagic};',env);
  return {env,caster,target,action,writes,damage,api:env.api}
 }
 describe('Antimagi som reaktion',()=>{
