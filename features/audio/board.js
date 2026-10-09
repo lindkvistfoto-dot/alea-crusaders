@@ -128,6 +128,17 @@ async function writeAmbience(key){
  }catch(error){notice('Kunde inte ändra ljudmiljö: '+error.message,true)}
  finally{store.busy=false;snapshot()}
 }
+async function broadcastCue(cueKey){
+ if(!authenticated()||!isGM()||!audio()?.cues().some(c=>c.cue_key===cueKey))return false;
+ const id=crypto.randomUUID(),scope=store.campaign;
+ if(!scope)return false;
+ markSeen(id);
+ try{
+  await dbJson('campaign_audio_events',{method:'POST',headers:{Prefer:'return=minimal'},
+   body:JSON.stringify({id,campaign_id:scope,cue_key:cueKey,created_by:user()})});
+  return true
+ }catch(error){console.warn('Kunde inte dela automatiskt stridsljud',error);return false}
+}
 async function sendCue(cueKey){
  if(!isGM()||!authenticated()||!EFFECTS.some(x=>x[0]===cueKey))return;
  store.busy=true;snapshot();
@@ -200,4 +211,4 @@ function init(){
  window.setInterval(()=>checkSession().catch(()=>{}),3000)
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-window.aleaSoundboard={writeAmbience,sendCue,acceptEvent,acceptState,status:()=>sync.status(),snapshot:()=>({...store,seen:undefined})};
+window.aleaSoundboard={writeAmbience,sendCue,broadcastCue,acceptEvent,acceptState,status:()=>sync.status(),snapshot:()=>({...store,seen:undefined})};
