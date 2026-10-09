@@ -16,7 +16,7 @@ function context(editing=false,allowed=true){
  const current={provisionsDays:5};
  const el={innerHTML:''};
  let saves=0;
- const scope={current,editing,canEditCharacter:()=>allowed,$:id=>id==='characterProvisions'?el:null,save:()=>saves++};
+ const scope={current,editing,campaignDayState:{day_number:7},canEditCharacter:()=>allowed,$:id=>id==='characterProvisions'?el:null,save:()=>saves++};
  runInNewContext(panel+';this.api={characterProvisionsDays,renderCharacterProvisions,setCharacterProvisions,stepCharacterProvisions}',scope);
  return {current,el,scope,api:scope.api,get saves(){return saves}};
 }
@@ -40,6 +40,19 @@ describe('Mat och proviant på rollpersonen',()=>{
   x.api.stepCharacterProvisions(-1);
   expect(x.current.provisionsDays).toBe(4);
   expect(x.saves).toBe(1);
+ });
+ test('betald måltid under aktuell dag visas utan att ändra proviantvärdet',()=>{
+  const x=context(false);
+  x.current.innMealDay=7;
+  x.api.renderCharacterProvisions();
+  expect(x.el.innerHTML).toContain('Dagens mat betald');
+  expect(x.el.innerHTML).toContain('Ingen proviant dras vid nästa dagbyte');
+  expect(x.el.innerHTML).toContain('<strong>5</strong>');
+  x.scope.campaignDayState.day_number=8;
+  x.api.renderCharacterProvisions();
+  expect(x.el.innerHTML).not.toContain('Dagens mat betald');
+  expect(x.current.provisionsDays).toBe(5);
+  expect(x.saves).toBe(0);
  });
  test('värdet kan skrivas direkt i redigeringsläge och aldrig bli negativt',()=>{
   const x=context(true);
