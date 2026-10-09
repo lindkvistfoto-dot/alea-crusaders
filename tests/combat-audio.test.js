@@ -28,11 +28,11 @@ describe('Sound registry and melee SFX',()=>{
  });
  it('synchronizes roll/landing and only plays hit after a non-parried strike',()=>{
   const roll=combat.indexOf("async function combatRollDice(");
-  expect(combat.indexOf("window.aleaAudio?.play('dice.roll')",roll)).toBeLessThan(combat.indexOf("window.alea3dCombatRoll",roll));
-  expect(combat.indexOf("window.aleaAudio?.play('dice.land')",roll)).toBeGreaterThan(combat.indexOf("combatRenderDiceReadout(label,rolls);",roll));
+  expect(combat.indexOf("window.aleaAudio:null)?.play('dice.roll')",roll)).toBeLessThan(combat.indexOf("window.alea3dCombatRoll",roll));
+  expect(combat.indexOf("window.aleaAudio:null)?.play('dice.land')",roll)).toBeGreaterThan(combat.indexOf("combatRenderDiceReadout(label,rolls);",roll));
   const attack=combat.indexOf("async function combatResolveAttackAction(");
-  const swing=combat.indexOf("window.aleaAudio?.play('melee.swing')",attack);
-  const hit=combat.indexOf("window.aleaAudio?.play('melee.hit')",attack);
+  const swing=combat.indexOf("window.aleaAudio:null)?.play('melee.swing')",attack);
+  const hit=combat.indexOf("window.aleaAudio:null)?.play('melee.hit')",attack);
   expect(swing).toBeGreaterThan(attack);
   expect(swing).toBeLessThan(combat.indexOf("rolled=await combatExpertRoll(label,fv)",attack));
   expect(hit).toBeGreaterThan(combat.indexOf("result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location);",attack));
