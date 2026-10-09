@@ -24,9 +24,8 @@
   background:rgba(103,47,24,.50);
   color:#e6b27e;
 }
-/* The source innkeeper portrait is a tiny JPEG; never magnify it into
-   the shop's wide banner. Keep it at its intended ~320 x 240 display size
-   until a real high-resolution original can replace the asset. */
+/* Innkeeper portrait is now a sharp 1536x1152 JPEG (v0.35.04).
+   Keep the existing restrained 4:3 layout, with full-resolution source for crisp mobile rendering. */
 .inn-hero.shop-hero-photo{
   grid-template-columns:minmax(0,320px) minmax(0,1fr);
   min-height:240px;
