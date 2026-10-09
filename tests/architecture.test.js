@@ -33,6 +33,7 @@ describe("application architecture smoke checks", () => {
     const files = [
       "features/combat/admin-scenes.js",
       "features/combat/runtime.js",
+      "features/audio/engine.js",
       "features/shop/store.js",
       "features/character/glowup.js",
       "legacy/app.js",
