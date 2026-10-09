@@ -9,7 +9,7 @@ const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.u
 
 describe('Gandalf – aktuell utrustning',()=>{
  it('loads the two user-provided graphics independently from interactive slots',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.42');
+   expect(html).toContain('current-equipment-gandalf.css?v=0.35.44');
    expect(css).toContain('assets/gandalf-slot.webp');
    expect(css).toContain('assets/gandalf-hall.webp');
    for(const name of ['gandalf-slot.webp','gandalf-hall.webp'])

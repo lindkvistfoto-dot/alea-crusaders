@@ -1506,6 +1506,14 @@ function showCurrentEquipmentProjectileInfo(){
  if(typeof showBackupToast==='function')showBackupToast('Projektiler kopplas i Frodo-steget');
  else alert('Projektilrutan kopplas till ammunition i Frodo-steget.');
 }
+/* Aragorn: only the clothed/base cutout belongs in the current-equipment stage.
+   The armored variant remains in the character's Bilder gallery for later use. */
+function currentEquipmentFigureHtml(character){
+ const image=character?.figureImages?.base;
+ const valid=typeof image==='string'&&/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(image);
+ if(valid)return '<img class="gandalf-equip-character" src="'+image+'" alt="">';
+ return '<div class="gandalf-equip-figure-missing">Helfigur saknas<small>Ladda upp bilden med kläder under fliken Bilder.</small></div>';
+}
 function renderCurrentEquipment(){
  if(!current)return;ensureEquipmentState(current);
  const el=$('currentEquipmentBody');if(!el)return;
@@ -1513,7 +1521,7 @@ function renderCurrentEquipment(){
  const two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
  const hands=two?gandalfTwoHandSlotHtml(leftItem):currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand');
  el.innerHTML='<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
-  '<div class="gandalf-equip-center" aria-hidden="true"></div>'+
+  '<div class="gandalf-equip-center" aria-hidden="true">'+currentEquipmentFigureHtml(current)+'</div>'+
   ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
   hands+
   '<button type="button" class="gandalf-equip-slot gandalf-equip-projectiles empty" onclick="showCurrentEquipmentProjectileInfo()" title="Projektiler kopplas i Frodo-steget" aria-label="Projektiler, kommer i nästa steg">'+

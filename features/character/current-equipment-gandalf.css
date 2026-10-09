@@ -1,4 +1,4 @@
-/* Gandalf · v0.35.42 · Current equipment, art-driven interface.
+/* Gandalf / Aragorn · v0.35.44 · Current equipment, art-driven interface.
    Images: user-provided hall and magic slot frame. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
@@ -58,11 +58,43 @@
   pointer-events:none;
   background:radial-gradient(ellipse at 50% 49%,transparent 17%,rgba(0,0,0,.07) 67%,rgba(0,0,0,.27));
 }
+/* Aragorn: the clothed, transparent cutout floats over the hall without
+   obscuring any clickable armor, weapon or ammunition positions. */
 .gandalf-equip-scene .gandalf-equip-center{
   position:absolute;
-  inset:9% 34% 8%;
-  background:radial-gradient(ellipse at 50% 28%,rgba(244,196,115,.08),transparent 70%);
+  z-index:0;
+  inset:7% 29% 5%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  background:radial-gradient(ellipse at 50% 43%,rgba(244,196,115,.08),transparent 73%);
   pointer-events:none;
+}
+.gandalf-equip-character{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center bottom;
+  filter:drop-shadow(0 7px 15px rgba(0,0,0,.77));
+}
+.gandalf-equip-figure-missing{
+  margin:auto;
+  max-width:85%;
+  padding:12px 9px;
+  border:1px dashed rgba(235,202,143,.6);
+  border-radius:10px;
+  background:rgba(17,15,13,.66);
+  color:#ead8b7;
+  font:700 clamp(10px,1.3vw,15px)/1.4 Georgia,serif;
+  text-align:center;
+  text-shadow:0 1px 3px #000;
+}
+.gandalf-equip-figure-missing small{
+  display:block;
+  margin-top:7px;
+  font:400 clamp(8px,1.1vw,13px)/1.4 system-ui,sans-serif;
+  color:#d7c5a8;
 }
 .gandalf-equip-slot{
   position:absolute;
@@ -156,6 +188,8 @@
   #currentEquipmentModal{padding:4px}
   #currentEquipmentModal .current-equipment-modal{width:100%;max-height:calc(100dvh - 8px);padding:9px 7px 13px;border-radius:11px}
   #currentEquipmentModal .current-equipment-intro{font-size:11px;margin:6px 2px 8px}
+  .gandalf-equip-scene .gandalf-equip-center{inset:10% 29% 5%}
+  .gandalf-equip-figure-missing{padding:6px 4px}
   .gandalf-equip-slot{width:18.1%}
   .gandalf-equip-head,.gandalf-equip-arms,.gandalf-equip-torso,.gandalf-equip-legs{left:9.7%}
   .gandalf-equip-head{top:11%}
