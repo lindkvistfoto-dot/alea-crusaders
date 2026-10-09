@@ -3656,7 +3656,7 @@ async function combatCastAreaSpell(actor,action){
  if(binding?.kind!=='area'||!binding.supported||!center||
   !Number.isInteger(radius)||radius<0||radius>15||
   !combatRuntimeHexCells().some(c=>c.q===Number(center.q)&&c.r===Number(center.r)))
-  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.'); if(combatAxialDistance(actor,center)>combatSpellRangeHexes(actor,action)||!combatHasLineOfSight(actor,center))
+  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.'); if(combatFootprintDistance(actor,center)>combatSpellRangeHexes(actor,action)||!combatHasLineOfSight(actor,center))
   throw new Error('Områdets centrum är inte längre inom räckvidd och fri sikt.');
 
  const effect=combatEffectRegistry.find(row=>row.code===binding.code&&row.active);
@@ -4825,7 +4825,7 @@ function combatAreaTerrainForHex(q,r){
 }
 async function combatTickAreaStay(combatant,round){
  if(!combatant||!combatCanManage()||!activeCombat)return [];
- if(!combatAreasForHex(combatant.q,combatant.r,round).length)return [];
+ if(!combatFootprintCells(combatant).some(c=>combatAreasForHex(c.q,c.r,round).length))return [];
  return await dbJson('rpc/resolve_combat_area_stay',{
   method:'POST',headers:{'Prefer':'return=representation'},
   body:JSON.stringify({p_combatant_id:combatant.id,p_round:round})
@@ -5195,6 +5195,7 @@ async function combatRotateFootprint(id,delta){
  const actor=combatants.find(c=>String(c.id)===String(id));
  if(!actor||actor.status==='removed'||actor.status==='dead')return;
  const facing=(combatFootprintFacing(actor)+Number(delta)+6)%6;
+ if(!combatFootprintCanStand(actor,actor.q,actor.r,facing))return alert('Riktningen får inte plats på kartan.');
  try{
   await dbJson('rpc/alea_rotate_multhex',{method:'POST',headers:{Prefer:'return=representation'},
    body:JSON.stringify({p_combatant_id:actor.id,p_facing:facing})});
