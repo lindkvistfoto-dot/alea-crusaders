@@ -1133,7 +1133,8 @@ async function combatResolveAntimagic(actionId,mageId=null,targetId=null,eg=1){
    const payload={phase:'reaction',action_type:'spell',slot_key:'primary',source_data:{action_key:'antimagic_reaction',label:'Antimagi',mode:'reaction',spell_name:spell.name,effect_grade:eg,reaction_to_action_id:action.id,protect_target_id:String(targetId)},target_combatant_id:String(targetId),status:'resolving',result:{},player_visible:true};
    if(old)await dbJson('combat_actions?id=eq.'+encodeURIComponent(old.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...payload,updated_at:new Date().toISOString()})});
    else await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({id:reactionId,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:mage.id,round_number:Number(activeCombat.round_number)||1,sequence:Math.max(0,(Number(mage.state?.initiative_rank)||1)-1),...payload,created_by:activeUser()?.id||null})});
-   const fv=Math.max(1,Number(spell.fv)-2*(eg-1)),rolled=await combatExpertRoll('Antimagi · '+mage.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
+   window.aleaAudio?.play('magic.cast');
+ const fv=Math.max(1,Number(spell.fv)-2*(eg-1)),rolled=await combatExpertRoll('Antimagi · '+mage.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
    await combatSpendMagicPsy(mage,cost);
    let resistance=null;
    if(rolled.success){
@@ -1145,7 +1146,8 @@ async function combatResolveAntimagic(actionId,mageId=null,targetId=null,eg=1){
    const erf=await combatAwardSpellErf(mage,{source_data:{spell_name:spell.name,spell_id:spell.rule_id}},rolled.outcome);if(erf)antimagic.erf=erf;
    await dbJson('combat_actions?id=eq.'+encodeURIComponent(reactionId),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result:antimagic,updated_at:new Date().toISOString()})});
    await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'reaction',actor_id:mage.id,target_id:caster.id,event_type:'antimagic',message:mage.name_snapshot+' kastar Antimagi · '+combatOutcomeLabel(rolled.outcome)+(resistance?(resistance.penetrates?' · magin går igenom':' · magin studsar tillbaka'):''),details:antimagic,player_visible:true})});
-   combatShowOutcomeOverlay(rolled.outcome,'Antimagi · T20 '+rolled.roll+' mot FV '+fv)
+   combatShowOutcomeOverlay(rolled.outcome,'Antimagi · T20 '+rolled.roll+' mot FV '+fv);
+   window.aleaAudio?.spellResult('Antimagi',rolled.outcome)
   }
   action.result={...snapshot,antimagic,awaiting_antimagic:false};
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({result:action.result,updated_at:new Date().toISOString()})});
@@ -3526,6 +3528,7 @@ async function combatCastManualSpell(actor,action,target=null){
   throw new Error('HELA kräver ett giltigt mål inom beröringsavstånd.');
  const spellName=data.spell_name||'Besvärjelse',eg=Math.max(1,Number(data.effect_grade)||1);
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
+ window.aleaAudio?.play('magic.cast');
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot,fv);
  const cost=combatMagicPsyCost(rolled.outcome,eg);
  await combatSpendMagicPsy(actor,cost);
@@ -3543,6 +3546,7 @@ async function combatCastManualSpell(actor,action,target=null){
   if(result.barrier.blocked){result.blocked_by_beskyddare=true;result.gm_resolution_required=false;result.healing_pending=false}
  }
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ window.aleaAudio?.spellResult(spellName,rolled.outcome);
  const round=Number(activeCombat.round_number)||1;
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
   headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:target?.id||null,result,updated_at:new Date().toISOString()})});
@@ -3625,6 +3629,7 @@ async function combatCastStatusSpell(actor,target,action){
  const effect=combatEffectRegistry.find(row=>row.code===code&&row.active);
  if(!effect)throw new Error('Besvärjelsens effekt saknas i effektregistret.');
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
+ window.aleaAudio?.play('magic.cast');
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const cost=combatMagicPsyCost(rolled.outcome,eg);
  const round=Number(activeCombat.round_number)||1;
@@ -3638,6 +3643,7 @@ async function combatCastStatusSpell(actor,target,action){
   if(result.barrier.blocked)result.blocked_by_beskyddare=true
  }
  combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ window.aleaAudio?.spellResult(spellName,rolled.outcome);
  if(rolled.success&&!resisted&&!result.blocked_by_beskyddare&&await combatDeferForAntimagic(actor,action,result,[target.id],'status')){
   await loadActiveCombat(null,{preserveSelectedTarget:true});return
  }
@@ -3669,6 +3675,7 @@ async function combatCastAreaSpell(actor,action){
  const effect=combatEffectRegistry.find(row=>row.code===binding.code&&row.active);
  if(!effect)throw new Error('Områdeseffekten finns inte i registret.');
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
+ window.aleaAudio?.play('magic.cast');
  const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
  await combatSpendMagicPsy(actor,cost);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
@@ -3677,6 +3684,7 @@ async function combatCastAreaSpell(actor,action){
   effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,area_center:center,area_radius:radius};
  if(erf)result.erf=erf;
  combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
+ window.aleaAudio?.spellResult(data.spell_name,rolled.outcome);
  if(rolled.success){
   result.barrier=await combatResolveBeskyddarePassage(actor,center,eg);
   if(result.barrier.blocked)result.blocked_by_beskyddare=true
@@ -3709,10 +3717,12 @@ async function combatCastAreaSpell(actor,action){
  await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
 async function combatResolveTestFireball(actor,target,action){
+ window.aleaAudio?.play('magic.cast');
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatMagicPsyCost(outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ window.aleaAudio?.spellResult(spellName,outcome);
  await combatSpendMagicPsy(actor,result.psy_cost);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  if(erf)result.erf=erf;
