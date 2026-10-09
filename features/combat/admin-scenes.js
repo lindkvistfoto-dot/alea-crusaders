@@ -563,16 +563,21 @@ function renderEventCombatHexCanvas(){
  }).join('');
  let tokenSize=g.size*.92,tokenPts=eventCombatHexPolygon(0,0,tokenSize),tokenDefs='',tokens=(st.combatants||[]).map(c=>{
   let key=sceneCombatantPlacementKey(c),cell=cellMap.get(key);if(!key||!cell)return '';
+   const footprint=combatFootprintCells({name:c.name,state:c.state,q:c.start_q,r:c.start_r});
+   const centers=footprint.map(p=>cellMap.get(combatFootprintKey(p))).filter(Boolean);
+   if(centers.length!==footprint.length)return '';
+   const center={x:centers.reduce((n,p)=>n+p.x,0)/centers.length,y:centers.reduce((n,p)=>n+p.y,0)/centers.length};
+   const shapeOverlay=footprint.length>1?centers.map(p=>'<polygon points="'+eventCombatHexPolygon(p.x,p.y,g.size*.94)+'" fill="#b89c57" fill-opacity=".26" stroke="#edcd86" stroke-width="2"/>').join(''):'';
   let active=st.placementCombatantId===c.id?' active':'',type=['player','npc','enemy','monster'].includes(c.combatant_type)?c.combatant_type:'npc',url=sceneCombatantIconUrl(c);
   let clipId='ecTokenClip_'+String(c.id).replace(/[^a-zA-Z0-9_-]/g,'_');
   tokenDefs+='<clipPath id="'+clipId+'"><polygon points="'+tokenPts+'"/></clipPath>';
   let content=url
    ?'<image href="'+escAttr(url)+'" x="'+(-tokenSize).toFixed(1)+'" y="'+(-tokenSize).toFixed(1)+'" width="'+(tokenSize*2).toFixed(1)+'" height="'+(tokenSize*2).toFixed(1)+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'
    :'<polygon class="ec-token-fallback" points="'+tokenPts+'"/><text class="ec-token-glyph" y="'+(tokenSize*.08).toFixed(1)+'">'+escAttr(combatIconFallbackGlyph(type))+'</text>';
-  return '<g class="ec-combatant-token '+type+active+'" data-combatant-id="'+c.id+'" transform="translate('+cell.x.toFixed(1)+' '+cell.y.toFixed(1)+')">'+
+  return shapeOverlay+'<g class="ec-combatant-token '+type+active+'" data-combatant-id="'+c.id+'" transform="translate('+center.x.toFixed(1)+' '+center.y.toFixed(1)+')">'+
    content+
    '<polygon class="ec-token-border" points="'+tokenPts+'"/>'+
-   '<title>'+escAttr(c.name||'Kombatant')+' · starthex '+key+'</title>'+
+   '<title>'+escAttr(c.name||'Kombatant')+' · '+footprint.length+' hex · starthex '+key+'</title>'+
   '</g>'
  }).join('');
  let defs='<defs>'+
