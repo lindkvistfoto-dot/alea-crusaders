@@ -6854,42 +6854,63 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  }
 }
 
-/* v0.35.37 — tunna kartutsnittsval ovanpå hexkartan. */
+/* v0.35.38 — smal sidopanel med vertikala kartutsnitt. */
 .combat-map-presets{
  position:absolute;
- left:6px;
+ z-index:5;
+ left:0;
  top:50%;
  transform:translateY(-50%);
  display:flex;
  flex-direction:column;
- gap:4px;
- z-index:5;
+ box-sizing:border-box;
+ width:34px;
+ gap:2px;
+ padding:4px 3px 4px 0;
+ border:1px solid #9a7850;
+ border-left:0;
+ border-radius:0 9px 9px 0;
+ background:rgba(24,18,13,.96);
+ box-shadow:2px 3px 12px rgba(0,0,0,.55);
  pointer-events:auto;
 }
 .combat-map-preset{
+ display:flex;
+ flex:0 0 auto;
+ align-items:center;
+ justify-content:center;
  box-sizing:border-box;
- width:52px;
- min-height:32px;
- padding:5px 3px;
- border:1px solid #9a7850;
- border-radius:5px;
- background:rgba(29,22,17,.92);
- box-shadow:0 2px 6px rgba(0,0,0,.5);
+ width:30px;
+ min-height:74px;
+ padding:7px 2px;
+ border:1px solid transparent;
+ border-radius:0 5px 5px 0;
+ background:transparent;
  color:#eddbbd;
- font:700 11px/1.1 system-ui,sans-serif;
+ font:700 11px/1 system-ui,sans-serif;
  text-align:center;
  cursor:pointer;
  touch-action:manipulation;
 }
+.combat-map-preset:not(:last-child){border-bottom-color:rgba(154,120,80,.5)}
+.combat-map-preset .combat-map-preset-text{
+ display:inline-block;
+ writing-mode:vertical-rl;
+ text-orientation:mixed;
+ transform:rotate(180deg);
+ white-space:nowrap;
+ letter-spacing:.05em;
+}
+.combat-map-preset:hover:not(:disabled){background:rgba(232,196,140,.14)}
 .combat-map-preset.selected{
  background:#e8c48c;
  border-color:#ffdf9f;
  color:#211911;
- box-shadow:0 0 0 1px rgba(255,224,164,.65);
+ box-shadow:0 0 0 1px rgba(255,224,164,.3);
 }
-.combat-map-preset:focus-visible{outline:2px solid #f9e3bd;outline-offset:2px}
+.combat-map-preset:focus-visible{outline:2px solid #f9e3bd;outline-offset:1px}
 .combat-map-preset:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:700px){
- .combat-map-presets{left:4px;gap:3px}
- .combat-map-preset{width:48px;min-height:30px;font-size:10px;padding:5px 2px}
+ .combat-map-presets{width:30px;padding:3px 2px 3px 0}
+ .combat-map-preset{width:27px;min-height:70px;padding:5px 2px;font-size:10px}
 }

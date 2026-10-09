@@ -904,13 +904,13 @@ function combatMapFooterHtml(){
 }
 function combatMapPresetsHtml(){
  const active=combatActiveActor();
- const presets=[['near','Nära','5 hex runt aktuell kombatant'],['medium','Mellan','10 hex runt aktuell kombatant'],['large','Stor','Visa hela kartan']];
+ const presets=[['near','Nära','3 hex runt aktuell kombatant'],['medium','Mellan','6 hex runt aktuell kombatant'],['large','Stor','Visa hela kartan']];
  return '<div class="combat-map-presets" role="group" aria-label="Kartutsnitt">'+
   presets.map(([key,label,description])=>
    '<button type="button" class="combat-map-preset'+(combatMapPreset===key?' selected':'')+
    '" data-map-preset="'+key+'" title="'+description+'" aria-label="'+label+' – '+description+
    '" aria-pressed="'+(combatMapPreset===key?'true':'false')+'" onclick="combatMapSetPreset(\''+key+'\')"'+
-   (!active&&key!=='large'?' disabled':'')+'>'+label+'</button>'
+   (!active&&key!=='large'?' disabled':'')+'><span class="combat-map-preset-text">'+label+'</span></button>'
   ).join('')+'</div>'
 }
 
@@ -4087,7 +4087,7 @@ function combatHexPoints(x,y,size){
 const COMBAT_MAP_MIN_ZOOM=1,COMBAT_MAP_MAX_ZOOM=8;
 
 function combatMapPresetViewport(g,actor,radius){
- if(!g||!actor||![5,10].includes(radius))return null;
+ if(!g||!actor||![3,6].includes(radius))return null;
  const q=Number(actor.q),r=Number(actor.r);
  if(!Number.isFinite(q)||!Number.isFinite(r))return null;
  // Axial hex coordinates: fit all six corners of the requested hex radius.
@@ -4105,7 +4105,7 @@ function combatMapRecenterPreset(g){
  if(!g||!['near','medium'].includes(combatMapPreset))return;
  const actor=combatActiveActor(),key=combatMapPresetActorPosition(actor);
  if(!actor||!key||key===combatMapPresetActorKey)return;
- const view=combatMapPresetViewport(g,actor,combatMapPreset==='near'?5:10);
+ const view=combatMapPresetViewport(g,actor,combatMapPreset==='near'?3:6);
  if(!view)return;
  combatMapView=view;combatMapPresetActorKey=key
 }
@@ -4115,7 +4115,7 @@ function combatMapSetPreset(preset){
  const g=combatMapViewGeometry(),actor=combatActiveActor();
  if(!g||!actor)return;
  combatMapEnsureView(g);
- const view=combatMapPresetViewport(g,actor,preset==='near'?5:10);
+ const view=combatMapPresetViewport(g,actor,preset==='near'?3:6);
  if(!view)return;
  combatMapPreset=preset;
  combatMapPresetActorKey=combatMapPresetActorPosition(actor);
