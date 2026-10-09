@@ -53,7 +53,9 @@ describe('Admin · effektregister – live data and CRUD',()=>{
  test('reserves do not enter initiative or the tactical map before placement',()=>{
   expect(runtime).toContain("status:row.start_q==null||row.start_r==null?'removed':'active'");
   expect(runtime).toContain('in_reserve:row.start_q==null||row.start_r==null');
-  expect(runtime).toContain("row.visible_to_players!==false&&row.status!=='removed'");
+  expect(runtime).toContain("function combatIsOnBattlefield(row)");
+  expect(runtime).toContain("return combatIsOnBattlefield(row)&&row.visible_to_players!==false");
+  expect(runtime).toContain("const visible=(rows||[]).filter(combatInitiativeEligible)");
   expect(runtime).toContain('async function combatChooseGmHex(event,q,r)');
   expect(runtime).toContain('async function combatPlayPreparedScene()');
  });

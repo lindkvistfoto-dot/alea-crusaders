@@ -15,7 +15,7 @@ function setup(rows){
  runInNewContext(initiative+turn+'\nthis.api={deployed:combatIsOnBattlefield,eligible:combatInitiativeEligible,entries:combatInitiativeEntries,build:combatBuildInitiative,turns:combatTurnOrderIds};',env);
  return env;
 }
-describe('Reserves do not participate in combat rounds v0.35.28',()=>{
+describe('Reserves do not participate in combat rounds v0.35.29',()=>{
  it('initiative only rolls for deployed active combatants; origin hex 0,0 is valid',()=>{
   const on=combatant('on'),reserve=combatant('reserve',{state:{smi:18,in_reserve:true}}),
    removed=combatant('removed',{status:'removed'}),dead=combatant('dead',{status:'dead'}),
@@ -35,7 +35,9 @@ describe('Reserves do not participate in combat rounds v0.35.28',()=>{
   for(const k of ['initiative_rank','initiative_roll','initiative_total'])expect(reserve.state[k]).toBeUndefined();
  });
  it('new reinforcements placed after initiative are only eligible next SR',()=>{
-  const a=combatant('a'),b=combatant('b'),reserve=combatant('reserve',{state:{smi:10,in_reserve:true}});
+  const a=combatant('a',{state:{smi:12,initiative_rank:1}}),
+   b=combatant('b',{state:{smi:12,initiative_rank:2}}),
+   reserve=combatant('reserve',{state:{smi:10,in_reserve:true}});
   const env=setup([a,b,reserve]);
   env.activeCombat.initiative={status:'resolved',order:['reserve','a','b']};
   expect(Array.from(env.api.turns())).toEqual(['a','b']);
@@ -43,6 +45,7 @@ describe('Reserves do not participate in combat rounds v0.35.28',()=>{
   expect(Array.from(env.api.turns())).toEqual(['a','b']);
   a.status='dead';b.status='dead';
   expect(Array.from(env.api.turns())).toEqual([]);
+  reserve.state.initiative_rank=1; // next SR initiative has now been rolled
   env.activeCombat.initiative={status:'resolved',order:['reserve']};
   expect(Array.from(env.api.turns())).toEqual(['reserve']);
  });

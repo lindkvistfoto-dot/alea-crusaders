@@ -2304,7 +2304,8 @@ function combatRowActionMenuHtml(combatant){
 function combatTurnOrderIds(){
  const initiative=activeCombat?.initiative||{};
  const fromInitiative=Array.isArray(initiative.order)?initiative.order.map(String):[];
- const valid=new Set((combatants||[]).filter(combatInitiativeEligible).map(row=>String(row.id)));
+ const valid=new Set((combatants||[]).filter(row=>combatInitiativeEligible(row)&&
+  row.state?.initiative_rank!=null).map(row=>String(row.id)));
  const ordered=fromInitiative.filter(id=>valid.has(id));
  // A reinforcement placed during the round awaits next round's initiative roll.
  if(initiative.status==='resolved'||fromInitiative.length)return ordered;
