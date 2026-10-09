@@ -6512,3 +6512,93 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
  .combat-ammo-finish{align-items:stretch;flex-direction:column}
  .combat-ammo-finish label{min-height:40px}
 }
+
+/* v0.35.21 — melee cinematic choreography, directly on the hex-map SVG. */
+.combat-melee-fx{--melee-flash:#f9d583;--melee-light:#fff4d5;pointer-events:none}
+.combat-melee-fx .combat-melee-windup{
+ fill:rgba(255,218,137,.08);stroke:var(--melee-flash);
+ stroke-width:2.6;vector-effect:non-scaling-stroke;
+ transform-box:fill-box;transform-origin:center;
+ animation:combat-melee-charge .85s ease-out both
+}
+.combat-melee-fx .combat-melee-rush{
+ fill:none;stroke:#f7c471;stroke-width:4;stroke-linecap:round;
+ vector-effect:non-scaling-stroke;stroke-dasharray:100;stroke-dashoffset:100;
+ filter:drop-shadow(0 0 5px rgba(255,190,99,.9));
+ animation:combat-melee-draw .95s .08s ease-out both
+}
+.combat-melee-fx .combat-melee-slash-glow,.combat-melee-fx .combat-melee-slash{
+ fill:none;stroke-linecap:round;stroke-linejoin:round;
+ vector-effect:non-scaling-stroke;stroke-dasharray:100;stroke-dashoffset:100
+}
+.combat-melee-fx .combat-melee-slash-glow{
+ stroke:rgba(252,174,70,.88);stroke-width:13;
+ filter:drop-shadow(0 0 12px rgba(255,175,81,.85));
+ animation:combat-melee-draw .95s .29s cubic-bezier(.23,.72,.36,1) both
+}
+.combat-melee-fx .combat-melee-slash{
+ stroke:#fff8e8;stroke-width:4.5;
+ filter:drop-shadow(0 0 4px rgba(255,255,255,.9));
+ animation:combat-melee-draw .9s .32s cubic-bezier(.23,.72,.36,1) both
+}
+.combat-melee-fx .combat-melee-impact-ring,.combat-melee-fx .combat-melee-spark,
+.combat-melee-fx .combat-melee-outcome{opacity:0}
+.combat-melee-fx .combat-melee-impact-ring{
+ fill:rgba(255,219,145,.13);stroke:var(--melee-flash);stroke-width:4;
+ vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center;
+ filter:drop-shadow(0 0 9px var(--melee-flash))
+}
+.combat-melee-fx .combat-melee-spark{
+ stroke:var(--melee-light);stroke-width:3.5;stroke-linecap:round;
+ vector-effect:non-scaling-stroke;
+ filter:drop-shadow(0 0 5px var(--melee-flash))
+}
+.combat-melee-fx .combat-melee-outcome{
+ font:900 19px Georgia,serif;letter-spacing:1.5px;
+ fill:var(--melee-light);stroke:#24170e;stroke-width:5;
+ stroke-linejoin:round;paint-order:stroke fill;
+ filter:drop-shadow(0 3px 5px rgba(0,0,0,.85))
+}
+.combat-melee-fx.resolved .combat-melee-impact-ring{
+ animation:combat-melee-impact .8s ease-out both
+}
+.combat-melee-fx.resolved .combat-melee-spark{
+ animation:combat-melee-sparks .65s var(--melee-delay,0ms) ease-out both
+}
+.combat-melee-fx.resolved .combat-melee-outcome{
+ animation:combat-melee-label 1.05s ease-out both
+}
+.combat-melee-fx.miss{--melee-flash:#9cacc3;--melee-light:#e2e8f2}
+.combat-melee-fx.fumble{--melee-flash:#df6b5a;--melee-light:#ffbaa5}
+@keyframes combat-melee-charge{
+ 0%{opacity:0;transform:scale(.65)}
+ 27%{opacity:.9;transform:scale(1.05)}
+ 75%{opacity:.65;transform:scale(1.15)}
+ 100%{opacity:0;transform:scale(1.55)}
+}
+@keyframes combat-melee-draw{
+ 0%{opacity:0;stroke-dashoffset:100}
+ 15%{opacity:1}
+ 72%{opacity:1;stroke-dashoffset:0}
+ 100%{opacity:0;stroke-dashoffset:0}
+}
+@keyframes combat-melee-impact{
+ 0%{opacity:0;transform:scale(.35)}
+ 16%{opacity:1;transform:scale(.92)}
+ 45%{opacity:.85;transform:scale(1.22)}
+ 100%{opacity:0;transform:scale(2)}
+}
+@keyframes combat-melee-sparks{
+ 0%{opacity:0;stroke-dasharray:0 100}
+ 24%{opacity:1;stroke-dasharray:100 0}
+ 100%{opacity:0;stroke-dasharray:0 100}
+}
+@keyframes combat-melee-label{
+ 0%{opacity:0;transform:translateY(8px) scale(.9)}
+ 18%{opacity:1;transform:translateY(-3px) scale(1.08)}
+ 70%{opacity:1;transform:translateY(-9px) scale(1)}
+ 100%{opacity:0;transform:translateY(-16px) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-melee-fx,.combat-melee-fx *{animation:none!important}
+}
