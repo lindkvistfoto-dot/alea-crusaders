@@ -94,12 +94,13 @@ export function createLegolas({
   const panel=doc().createElement('section');panel.id='legolasPanel';panel.className='legolas-panel hidden';
   panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','legolasTitle');
   panel.innerHTML='<div class="legolas-panel-inner">'+
-   '<header class="legolas-heading"><div><h2 id="legolasTitle">🏹 Legolas · Material</h2><p id="legolasSubhead">Kampanjens bilder och dokument</p></div>'+
+   '<header class="legolas-heading"><div class="legolas-heading-copy"><span class="legolas-eyebrow">ALEA CRUSADERS · KAMPANJARKIV</span><h2 id="legolasTitle">Material & bilder</h2><p id="legolasSubhead">Kampanjens bilder och dokument</p></div>'+
    '<button type="button" class="legolas-close" id="legolasClosePanel" aria-label="Stäng materialpanelen">✕</button></header>'+
-   '<div id="legolasGmQueue" class="legolas-queue hidden"><div class="legolas-queue-top"><strong>SL:s urval inför visning</strong><span id="legolasQueueCount">0 bilder</span></div>'+
-    '<p>Detta är en privat förhandsvisning. Inget delas med spelarna förrän du väljer Visa nu i en senare etapp.</p>'+
+   '<div id="legolasGmQueue" class="legolas-queue hidden"><div class="legolas-queue-top"><strong>Utvalda för visning</strong><span id="legolasQueueCount">0 bilder</span></div>'+
+    '<p>Förbered bilder i lugn och ro. Endast det material du aktivt visar blir synligt för spelarna.</p>'+
     '<div id="legolasQueueItems" class="legolas-queue-items"></div>'+
     '<div class="legolas-queue-actions"><button type="button" id="legolasPreviewQueue">Förhandsvisa urval</button><button type="button" id="legolasClearQueue">Rensa urval</button></div></div>'+
+   '<div class="legolas-library-heading"><div><span class="legolas-eyebrow">BLÄDDRA I ARKIVET</span><h3>Utforska material</h3></div><span id="legolasResults" class="legolas-results">Bilder och dokument</span></div>'+
    '<div class="legolas-filters"><label>Sök<input id="legolasSearch" type="search" maxlength="80" placeholder="Bild, plats, person…" autocomplete="off"></label>'+
     '<label>Kategori<select id="legolasCategory">'+Object.entries(categories).map(([k,v])=>'<option value="'+k+'">'+safe(v)+'</option>').join('')+'</select></label>'+
     '<button type="button" id="legolasRefresh">↻ Uppdatera</button></div>'+
@@ -198,7 +199,7 @@ export function createLegolas({
   state.lastFocus=doc().activeElement;
   state.panelOpen=true;
   el('legolasPanel').classList.remove('hidden');
-  el('legolasSubhead').textContent=isGM()?'SL:s material och förhandsvisning':'Material som har delats med dig';
+  el('legolasSubhead').textContent=isGM()?'Samla, förhandsvisa och dela kampanjens berättelser':'Upptäck de bilder och dokument som SL har delat';
   updateQueue();syncScroll();
   el('legolasClosePanel').focus();
   loadPage();
@@ -221,7 +222,7 @@ export function createLegolas({
   const picked=state.selection.has(row.id);
   return '<article class="legolas-card">'+
    '<button type="button" class="legolas-card-preview" data-legolas-open="'+safe(row.id)+'" aria-label="Förhandsvisa '+safe(row.title)+'">'+
-    '<span class="legolas-card-media" data-legolas-thumb="'+safe(row.id)+'">'+symbol+'</span>'+
+    '<span class="legolas-card-media" data-legolas-thumb="'+safe(row.id)+'">'+symbol+'<span class="legolas-card-kind">'+(row.asset_kind==='image'?'BILD':row.asset_kind==='document'?'DOKUMENT':'MATERIAL')+'</span></span>'+
     '<span class="legolas-card-title">'+safe(row.title)+'</span><small>'+safe(categories[row.category]||'Övrigt')+'</small></button>'+
    (isGM()&&row.asset_kind==='image'?
      '<button type="button" class="legolas-pick" data-legolas-pick="'+safe(row.id)+'" aria-pressed="'+picked+'">'+(picked?'✓ Vald':'+ Välj')+'</button>':'')+
@@ -234,6 +235,7 @@ export function createLegolas({
    '<div class="legolas-empty">'+(isGM()?'Inget material i biblioteket. Lägg till bilder under Administration → Bildbibliotek.':
     'Inget material har delats med dig ännu.')+'</div>';
   el('legolasPageNumber').textContent='Sida '+(state.page+1);
+  const results=el('legolasResults');if(results)results.textContent=state.rows.length+' material på sidan';
   el('legolasPrevious').disabled=state.page<=0;
   el('legolasNext').disabled=!state.hasNext;
  }

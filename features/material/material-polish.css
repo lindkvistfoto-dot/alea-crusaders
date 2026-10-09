@@ -1,0 +1,77 @@
+/* Materialateljén, v0.35.15 — keeps existing access and sharing controls */
+#legolasPanel{--mat-gold:#ddbb81;--mat-line:rgba(221,187,129,.28);--mat-muted:#d1bfa0;background:radial-gradient(ellipse at 50% -20%,#473624 0%,#121815 57%,#0b0f0e 100%);color:#f5ebd9}
+#legolasPanel .legolas-panel-inner{width:min(1320px,100%);padding:clamp(14px,2.7vw,34px);border:1px solid rgba(221,187,129,.4);border-radius:20px;background:linear-gradient(135deg,#2b2922 0%,#202924 51%,#191e1b 100%);box-shadow:0 26px 80px #0009}
+#legolasPanel .legolas-heading{position:relative!important;min-height:115px;margin-bottom:17px;padding:clamp(17px,2.5vw,28px)!important;border:1px solid var(--mat-line);border-radius:16px;background:radial-gradient(circle at 95% 0%,#62503755,transparent 45%),linear-gradient(100deg,#393128,#26322d)!important;box-shadow:0 8px 25px #0003!important}
+#legolasPanel .legolas-heading:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:15px 0 0 15px;background:linear-gradient(#f2d092,#8a633b)}
+.legolas-eyebrow,.frodo-eyebrow,.sam-eyebrow{display:block;margin:0 0 6px;color:#d7b57d;font:750 10px/1.4 system-ui,sans-serif;letter-spacing:.19em}
+#legolasPanel .legolas-heading h2{font:700 clamp(26px,3.3vw,39px)/1.2 Georgia,serif;color:#ffe9c7;margin:0;text-shadow:0 3px 15px #0005}
+#legolasPanel .legolas-heading p{margin:6px 0 0;color:#e5d4b9;font-size:13px;line-height:1.5}
+#legolasPanel .legolas-close{align-self:flex-start;border-color:#a78c68;border-radius:11px;background:#1b2521da;color:#fff1d9}
+#legolasPanel .frodo-panel,#legolasPanel .sam-folder,#legolasPanel .legolas-queue{margin:0 0 15px;border-radius:14px;box-shadow:0 8px 25px #0002,inset 0 1px #ffffff0c}
+#legolasPanel .frodo-panel{padding:clamp(15px,2vw,23px);background:linear-gradient(110deg,#4a3829,#2c332c 64%,#26352b);border:1px solid #b09264a8}
+#legolasPanel .frodo-panel.frodo-is-active{background:radial-gradient(circle at 95% 0,#63997833,transparent 42%),linear-gradient(110deg,#274533,#29382e);border-color:#9bc8a6}
+#legolasPanel .frodo-heading-copy strong{display:block;color:#f8dfad;font:700 clamp(19px,2.3vw,25px) Georgia,serif}
+#legolasPanel .frodo-heading-copy strong span{color:#c7a573;margin-right:5px}
+#legolasPanel .frodo-is-active .frodo-heading-copy strong span{color:#93ecb0}
+#legolasPanel #frodoCurrent{max-width:52%;color:#f2e2c5;background:#0003;border:1px solid #ffffff20;border-radius:9px;padding:9px 12px;font-size:13px}
+#legolasPanel .frodo-actions{gap:9px;margin-top:16px}
+#legolasPanel .frodo-actions button{padding:10px 15px;min-height:43px;border-radius:10px;transition:transform .15s,filter .15s}
+#legolasPanel .frodo-actions button:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.15)}
+#legolasPanel .frodo-actions .frodo-primary,#legolasPanel .sam-share-primary{background:linear-gradient(#4c805e,#305941);border-color:#9fcaad;color:#f5fff3}
+#legolasPanel .sam-folder{padding:clamp(15px,2vw,22px);background:linear-gradient(110deg,#293a2e,#242d25);border:1px solid #a7ba8a77}
+#legolasPanel .sam-header h3{margin:0;color:#f4e5c6;font:700 22px Georgia,serif}
+#legolasPanel .sam-header p{margin-top:6px;color:#d5ddcb}
+#legolasPanel .sam-item{background:#101c16a8;border-color:#a5bc8740;border-radius:10px}
+#legolasPanel .sam-item:hover{border-color:#a5bc8799;background:#2f4333}
+#legolasPanel .legolas-queue{padding:clamp(15px,2vw,22px);background:linear-gradient(100deg,#373025,#302c26);border:1px solid var(--mat-line)}
+#legolasPanel .legolas-queue-top strong{font:700 18px Georgia,serif;color:#ffe0ad}
+#legolasPanel .legolas-queue-top span{padding:5px 10px;border:1px solid var(--mat-line);border-radius:20px;background:#12140f55}
+#legolasPanel .legolas-queue p{font-size:13px;color:#e5d1b1}
+#legolasPanel .legolas-queue-chip{border-color:#c8a577;background:#57412c}
+#legolasPanel .legolas-library-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;border-bottom:1px solid var(--mat-line);padding:0 2px 12px;margin:24px 0 15px}
+#legolasPanel .legolas-library-heading h3{margin:0;font:700 clamp(22px,2.4vw,29px) Georgia,serif;color:#f6dfb5}
+#legolasPanel .legolas-results{color:var(--mat-muted);font-size:12px;white-space:nowrap;padding-bottom:3px}
+#legolasPanel .legolas-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr) auto;gap:12px;align-items:end;padding:15px;border:1px solid #d9b57c29;border-radius:12px;background:#07100d45}
+#legolasPanel .legolas-filters label{font-size:12px;color:#e3cfac}
+#legolasPanel .legolas-filters :is(input,select){background:#151e1a;border:1px solid #917650;border-radius:10px;min-height:46px;color:#fff3dc;padding:10px 12px}
+#legolasPanel .legolas-filters :is(input,select):focus-visible{border-color:#ebc38b;box-shadow:0 0 0 3px #b78b4233}
+#legolasPanel .legolas-filters button{min-height:46px;border-radius:10px}
+#legolasPanel .legolas-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:15px}
+#legolasPanel .legolas-card{background:linear-gradient(#343127,#252b26);border:1px solid #d7b57c44;border-radius:14px;box-shadow:0 7px 19px #0004;transition:transform .17s,border-color .17s,box-shadow .17s}
+#legolasPanel .legolas-card:hover,#legolasPanel .legolas-card:focus-within{transform:translateY(-3px);border-color:#d6b37a;box-shadow:0 13px 25px #0006}
+#legolasPanel .legolas-card-media{position:relative;aspect-ratio:5/4;background:radial-gradient(ellipse at center,#34433b,#151d19 80%);color:#d2bea0}
+#legolasPanel .legolas-card-media img{object-fit:cover}
+#legolasPanel .legolas-card-kind{position:absolute;z-index:2;top:10px;left:10px;border-radius:6px;padding:4px 8px;border:1px solid #d9b57c66;background:#151e1bdd;color:#f2ddae;font:750 9px/1.4 system-ui,sans-serif;letter-spacing:.12em}
+#legolasPanel .legolas-card-title{margin:12px 12px 3px;color:#fff0da;font-size:15px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.65em}
+#legolasPanel .legolas-card-preview small{margin:2px 12px 11px;color:#d2bea0}
+#legolasPanel .legolas-pick,#legolasPanel .legolas-sam-share{border-radius:9px;margin:0 11px 9px;min-height:39px}
+#legolasPanel .legolas-pick[aria-pressed=true]{background:#395f4b;border-color:#a5d2ac}
+#legolasPanel .legolas-empty{padding:44px 16px;border-radius:14px;background:#111c1699;border-color:#d9b57c66}
+#legolasPanel .legolas-pagination span{color:#efdfc3}
+#legolasViewer .legolas-viewer-header,#legolasViewer .legolas-viewer-footer{background:linear-gradient(110deg,#302b23,#1b2922)!important;border-color:#d7b47c55}
+#legolasViewer .legolas-viewer-heading strong{font:700 clamp(17px,2.2vw,24px) Georgia,serif;color:#fff0d4}
+#legolasViewer .legolas-stage{background:radial-gradient(ellipse at center,#28342d,#0a100e 77%)}
+/* Bilbo: same visual rhythm in the administrative image library */
+#admin .bilbo-controls{padding:15px;border:1px solid #d7b47c33;border-radius:13px;background:#131b174d}
+#admin .bilbo-grid{grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:13px}
+#admin .bilbo-card{background:linear-gradient(#302c23,#252a25);border:1px solid #d7b47c50;border-radius:13px;box-shadow:0 7px 18px #0003;transition:transform .17s,border-color .17s}
+#admin .bilbo-card:hover,#admin .bilbo-card:focus-visible{transform:translateY(-2px);border-color:#e1c08c}
+#admin .bilbo-card-media{aspect-ratio:5/4;background:radial-gradient(#36433b,#161e1a)}
+#admin .bilbo-card-media img{object-fit:cover}
+#admin .bilbo-card-label{padding:11px}
+#admin .bilbo-details{border-radius:14px;background:linear-gradient(#302b24,#222923);border-color:#d7b47c66;box-shadow:0 9px 25px #0004}
+@media(max-width:900px){#legolasPanel #frodoCurrent{max-width:100%}#legolasPanel .legolas-grid{grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:11px}}
+@media(max-width:720px){
+ #legolasPanel{padding:0}#legolasPanel .legolas-panel-inner{border:0;border-radius:0;min-height:100dvh;padding:12px}
+ #legolasPanel .legolas-heading{min-height:0;padding:17px!important}#legolasPanel .legolas-heading h2{font-size:27px}
+ #legolasPanel .legolas-filters{grid-template-columns:repeat(2,minmax(0,1fr));padding:11px;gap:10px}
+ #legolasPanel .legolas-filters label:first-child,#legolasPanel .legolas-filters button{grid-column:1/-1}
+ #legolasPanel .legolas-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #legolasPanel .legolas-card-media{aspect-ratio:4/3}
+ #legolasPanel .legolas-card-title{font-size:13px;margin:9px 9px 3px}
+ #legolasPanel .legolas-card-preview small{font-size:11px;margin:2px 9px 8px}
+ #legolasPanel .legolas-pick,#legolasPanel .legolas-sam-share{margin:0 7px 7px;padding:8px 3px;font-size:11px}
+ #admin .bilbo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+}
+@media(max-width:390px){#legolasPanel .legolas-library-heading{flex-direction:column;align-items:start;gap:5px}#legolasPanel .legolas-card-kind{font-size:8px;padding:3px 6px}}
+@media(prefers-reduced-motion:reduce){#legolasPanel .legolas-card,#admin .bilbo-card,#legolasPanel .frodo-actions button{transition:none;transform:none!important}}

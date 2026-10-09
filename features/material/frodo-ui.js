@@ -90,7 +90,7 @@ export function mountFrodo({
   panel.id='frodoPanel';panel.className='frodo-panel';
   panel.setAttribute('aria-label','Materialvisning för deltagare');
   panel.innerHTML=
-   '<div class="frodo-panel-heading"><strong>🧙 Frodo · Visa nu</strong>'+
+   '<div class="frodo-panel-heading"><div class="frodo-heading-copy"><span class="frodo-eyebrow">PRESENTATION · DIREKT</span><strong><span aria-hidden="true">◉</span> Aktuell visning</strong></div>'+
     '<span id="frodoCurrent" role="status" aria-live="polite">Hämtar aktuell visning…</span></div>'+
    '<div id="frodoGmActions" class="frodo-actions hidden">'+
     '<button type="button" id="frodoShowQueue" class="frodo-primary">📡 Visa första valda</button>'+

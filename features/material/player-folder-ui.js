@@ -97,7 +97,7 @@ export function mountSam({
   const section=doc().createElement('section');section.id='samPanel';section.className='sam-folder';
   section.setAttribute('aria-label','Spelarmapp');
   section.innerHTML=
-   '<div class="sam-header"><div><h3>🌿 Sam · Spelarmapp</h3>'+
+   '<div class="sam-header"><div><span class="sam-eyebrow">SPARADE FYND</span><h3>Spelarmapp</h3>'+
     '<p id="samSubtitle"></p></div><button type="button" id="samRefresh">↻ Uppdatera</button></div>'+
    '<div class="sam-actions hidden" id="samGmActions">'+
     '<button type="button" id="samShareSelection" class="sam-share-primary">📁 Dela markerade (0)</button>'+
