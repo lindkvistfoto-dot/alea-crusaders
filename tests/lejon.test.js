@@ -120,7 +120,7 @@ describe('LEJON – behavior-tested Expert magic across real cast flows',()=>{
  test('area outside range or through wall is rejected before roll and PSY spending',async()=>{
   for(const conditions of [{distance:21},{sight:false}]){
    const x=harness(conditions);
-   await expect(x.api.combatCastAreaSpell(x.actor,areaAction())).rejects.toThrow();
+   await expect(x.api.combatCastAreaSpell(x.actor,areaAction({area_center:{q:conditions.distance??1,r:0}}))).rejects.toThrow();
    expect(magicWrites(x.calls,'combatants')).toHaveLength(0);
    expect(magicWrites(x.calls,'combat_area_effects')).toHaveLength(0);
   }
