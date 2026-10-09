@@ -6650,3 +6650,14 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
 .alea-soundboard-panel p.error{color:#ff9c8c}
 .alea-soundboard-panel .alea-soundboard-help{color:#b7a98d;font-size:11px}
 @media(max-width:520px){.alea-soundboard{right:7px;bottom:7px}.alea-soundboard-launch{padding:8px 10px}.alea-soundboard-panel{bottom:40px;max-height:70vh}}
+
+/* v0.35.24 – full audio catalogue and location sound controls */
+.alea-sound-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin:12px 0 18px}
+.alea-sound-filters label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:12px;color:var(--muted,#dbc3a1)}
+.alea-sound-filters input,.alea-sound-filters select{box-sizing:border-box;width:100%;padding:10px;border:1px solid #7e6144;border-radius:7px;background:#25211d;color:#f6e9d4;font:inherit}
+.alea-sound-filters input:focus-visible,.alea-sound-filters select:focus-visible{outline:2px solid #e7ba65;outline-offset:2px}
+.location-sound-mini{margin-top:5px;color:#b99459;font-size:12px;line-height:1.4}
+.alea-soundboard-location{display:flex;gap:5px;margin:8px 0 12px}
+.alea-soundboard-location select{min-width:0;flex:1;background:#30291f;color:#f6e7c9;border:1px solid #90744a;border-radius:7px;padding:7px}
+.alea-soundboard-location button{background:#624723;color:#fce7bf;border:1px solid #a98853;border-radius:7px;padding:7px 9px;cursor:pointer;white-space:nowrap}
+@media(max-width:700px){.alea-sound-filters{grid-template-columns:1fr}.alea-soundboard-location{flex-wrap:wrap}.alea-soundboard-location select{flex-basis:100%}}
