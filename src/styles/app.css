@@ -747,7 +747,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-empty{border:1px solid rgba(116,83,46,.4);border-radius:14px;background:#f6eddd;padding:28px;text-align:center;color:#5c4a38}
 .combat-empty h3{margin:0 0 8px;color:#6d211d}
 .combat-empty .combat-foundation-note{max-width:700px;margin:10px auto 0;line-height:1.5}
-.combat-shell{display:grid;grid-template-columns:240px minmax(0,1fr) 270px;gap:12px;align-items:start}
+.combat-shell{display:grid;grid-template-columns:240px minmax(0,1fr);gap:12px;align-items:start}
 .combat-topbar{grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid #8e6b43;border-radius:12px;background:#211912;color:#f2dfbf;padding:10px 12px}
 .combat-round{font:800 18px Georgia,serif;color:#f2ca83}
 .combat-phase{padding:5px 9px;border-radius:999px;background:#6f221f;color:#fff0d7;font-weight:800;font-size:13px}
@@ -837,7 +837,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
  .combat-shell{grid-template-columns:1fr}
  .combat-topbar,.combat-log{grid-column:1}
 
- .combat-participants{order:2}.combat-board-wrap{order:1}.combat-target{order:3}.combat-log{order:4}
+ .combat-participants{order:2}.combat-board-wrap{order:1}.combat-log{order:3}
  .combat-schema-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:560px){
@@ -2713,7 +2713,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 /* v0.33.25 — kompakt turordningsrad och planerad/låst förflyttning */
 @media(min-width:981px){
- .combat-shell{grid-template-columns:320px minmax(0,1fr) 270px}
+ .combat-shell{grid-template-columns:320px minmax(0,1fr)}
 }
 .combatant-card{
  grid-template-columns:50px minmax(0,1fr) 98px 62px;
@@ -2884,7 +2884,7 @@ body:not(.editing) #skilltable .skill-roll-btn{
 
 /* v0.33.27 — tre kompakta turkontroller: förflyttning, action, avsluta drag */
 @media(min-width:981px){
- .combat-shell{grid-template-columns:360px minmax(0,1fr) 270px}
+ .combat-shell{grid-template-columns:360px minmax(0,1fr)}
 }
 .combat-participants,
 .combat-participant-list{overflow:visible}

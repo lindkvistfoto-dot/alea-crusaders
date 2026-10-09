@@ -4578,12 +4578,6 @@ function combatAttackTargetSummaryHtml(combatant){
  const targets=combatPossibleAttackTargets(combatant,mode,weapon);
  return '<div class="combat-attack-summary"><b>'+targets.size+' möjliga mål</b><span>'+escAttr(weapon.name||'Obeväpnad')+' · '+escAttr(combatWeaponAttackHint(weapon,combatant))+' · fri LoS krävs</span></div>'
 }
-function combatTargetHtml(){
- let c=combatants.find(x=>x.id===combatSelectedTargetId);if(!c)return'<div class="combat-target-body"><div class="combat-target-note">Klicka på en pjäs eller deltagare för att se dess värden. När attackläget är aktivt kan endast markerade, giltiga mål väljas.</div></div>';
- let kp=(c.current_kp==null?'—':c.current_kp)+(c.max_kp==null?'':' / '+c.max_kp),psy=(c.current_psy==null?'—':c.current_psy)+(c.max_psy==null?'':' / '+c.max_psy);
- return'<div class="combat-target-body"><div class="combat-target-name">'+(c.status==='dead'?'☠ ':'')+escAttr(c.name_snapshot)+'</div><div class="combat-target-stat"><span>Sida</span><b>'+combatSideLabel(c.side)+'</b></div><div class="combat-target-stat"><span>Initiativ</span><b>'+(c.state?.initiative_total!=null?('#'+c.state.initiative_rank+' · '+c.state.initiative_total+' (SMI '+c.state.smi+' + T10 '+c.state.initiative_roll+')'):'—')+'</b></div><div class="combat-target-stat"><span>KP</span><b>'+kp+'</b></div><div class="combat-target-stat"><span>PSY</span><b>'+psy+'</b></div><div class="combat-target-stat"><span>Position</span><b>'+c.q+', '+c.r+'</b></div><div class="combat-target-stat"><span>Status</span><b>'+(c.status==='dead'?'Nedkämpad':'Aktiv')+'</b></div><div class="combat-target-stat"><span>Förflyttning kvar</span><b>'+combatMovementBudget(c)+' / '+combatMovementMaximum(c)+'</b></div></div>'
-}
-
 function combatAttackPanelWeaponHtml(actor,action,target){
  const def=combatActionDefinition(action);if(def?.type!=='attack')return '';
  const mode=def.mode||action?.source_data?.mode||'auto';
@@ -5486,7 +5480,7 @@ function renderCombat(){
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><aside class="combat-panel combat-target"><h3>Markerat mål</h3>'+combatTargetHtml()+'</aside><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }

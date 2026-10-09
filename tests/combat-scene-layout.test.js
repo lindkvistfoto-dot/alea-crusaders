@@ -28,4 +28,15 @@ describe('SL stridscen under turordningslistan',()=>{
   expect(css).toContain('.combat-participants .combat-gm-controls{');
   expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
  });
+ test('markerat mål-rutan är borttagen men målmarkering och stridslogg finns kvar',()=>{
+  expect(render).not.toContain('<h3>Markerat mål</h3>');
+  expect(render).not.toContain('combat-panel combat-target');
+  expect(render).not.toContain('combatTargetHtml()');
+  expect(runtime).toContain('combatSelectedTargetId');
+  expect(render).toContain('<h3>Stridslogg</h3>');
+  expect(render).toContain('combatAttackPanelHtml()');
+  expect(css).toContain('.combat-shell{grid-template-columns:360px minmax(0,1fr)}');
+  expect(css).toContain('.combat-participants{order:2}.combat-board-wrap{order:1}.combat-log{order:3}');
+ });
+
 });
