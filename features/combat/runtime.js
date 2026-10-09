@@ -1622,11 +1622,104 @@ async function combatAwardAttackErf(actor,weapon,outcome){
   return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'}
  }
 }
+
+/* v0.35.21 — melee choreography is visual only; dice remain authoritative. */
+function combatStartMeleeFx(actor,target){
+ const svg=document.querySelector('#combatPage .combat-board .combat-map-svg');
+ const g=combatRuntimeGeometry();
+ if(!svg||!g||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return null;
+ const center=combatant=>{
+  if(!combatant||combatant.q==null||combatant.r==null||combatant.state?.in_reserve)return null;
+  const cells=combatFootprintCells(combatant);
+  if(!cells.length)return null;
+  let x=0,y=0;
+  for(const pos of cells){
+   const q=Number(pos.q),r=Number(pos.r);
+   if(!Number.isFinite(q)||!Number.isFinite(r))return null;
+   x+=g.xPitch*(q+r/2)+g.offsetX;
+   y+=g.rowPitch*r+g.offsetY;
+  }
+  return{x:x/cells.length,y:y/cells.length}
+ };
+ const a=center(actor),b=center(target);
+ if(!a||!b)return null;
+ const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
+ if(!Number.isFinite(distance)||distance<.01)return null;
+ const ux=dx/distance,uy=dy/distance,px=-uy,py=ux,size=Math.max(9,Number(g.size)||15);
+ const ns='http://www.w3.org/2000/svg';
+ const fx=document.createElementNS(ns,'g');
+ fx.setAttribute('class','combat-melee-fx');
+ fx.setAttribute('aria-hidden','true');
+ fx.setAttribute('pointer-events','none');
+ fx.dataset.meleeActor=String(actor.id);
+ const add=(name,cls,attrs={})=>{
+  const node=document.createElementNS(ns,name);
+  node.setAttribute('class',cls);
+  Object.entries(attrs).forEach(([key,value])=>node.setAttribute(key,String(value)));
+  fx.appendChild(node);
+  return node
+ };
+ const pos=(x,y)=>x.toFixed(2)+' '+y.toFixed(2);
+ add('circle','combat-melee-windup',{cx:a.x,cy:a.y,r:size*.78});
+ const arc='M '+pos(a.x+ux*size*.26,a.y+uy*size*.26)+
+  ' Q '+pos((a.x+b.x)/2+px*size*.65,(a.y+b.y)/2+py*size*.65)+
+  ' '+pos(b.x-ux*size*.23,b.y-uy*size*.23);
+ add('path','combat-melee-rush',{d:arc,pathLength:100});
+ const slash='M '+pos(b.x-px*size*.88-ux*size*.30,b.y-py*size*.88-uy*size*.30)+
+  ' Q '+pos(b.x+ux*size*.64,b.y+uy*size*.64)+
+  ' '+pos(b.x+px*size*.89+ux*size*.23,b.y+py*size*.89+uy*size*.23);
+ add('path','combat-melee-slash-glow',{d:slash,pathLength:100});
+ add('path','combat-melee-slash',{d:slash,pathLength:100});
+ add('circle','combat-melee-impact-ring',{cx:b.x,cy:b.y,r:size*.57});
+ for(let i=0;i<8;i++){
+  const angle=2*Math.PI*i/8, vx=Math.cos(angle),vy=Math.sin(angle);
+  add('line','combat-melee-spark',{
+   x1:b.x+vx*size*.30,y1:b.y+vy*size*.30,
+   x2:b.x+vx*size*1.00,y2:b.y+vy*size*1.00
+  }).style.setProperty('--melee-delay',i*27+'ms');
+ }
+ const caption=add('text','combat-melee-outcome',{
+  x:b.x,y:b.y-size*1.15,'text-anchor':'middle'
+ });
+ svg.appendChild(fx);
+ const token=[...svg.querySelectorAll('.combat-token-group')].find(el=>el.getAttribute('data-token-id')===String(actor.id));
+ const lunge=token?.animate?.([
+  {transform:'translate(0px,0px)',offset:0},
+  {transform:'translate('+(ux*size*.36)+'px,'+(uy*size*.36)+'px)',offset:.38},
+  {transform:'translate('+(ux*size*.21)+'px,'+(uy*size*.21)+'px)',offset:.57},
+  {transform:'translate(0px,0px)',offset:1}
+ ],{duration:800,easing:'ease-in-out'});
+ let timer=null,finished=false;
+ return{
+  finish(outcome){
+   if(finished)return;
+   finished=true;
+   const kind=['success','special','perfect'].includes(outcome)?'success':outcome==='fumble'?'fumble':'miss';
+   fx.classList.add('resolved',kind);
+   caption.textContent={
+    success:'LYCKAT',special:'SÄRSKILT',perfect:'PERFEKT',
+    fail:'MISSLYCKAT',fumble:'FUMMEL'
+   }[outcome]||'MISSLYCKAT';
+   timer=setTimeout(()=>fx.remove(),1100)
+  },
+  stop(){
+   if(timer)clearTimeout(timer);
+   lunge?.cancel?.();
+   fx.remove();
+   finished=true
+  }
+ }
+}
+
 async function combatResolveAttackAction(actor,target,action,weapon,attackMode='melee'){
  const fv=combatAttackFv(weapon,actor);
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
- const rolled=await combatExpertRoll(label,fv);
+ const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null;
+ let rolled;
+ try{rolled=await combatExpertRoll(label,fv)}
+ catch(error){meleeFx?.stop();throw error}
+ meleeFx?.finish(rolled.outcome);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
