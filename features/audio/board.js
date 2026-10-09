@@ -96,7 +96,8 @@ async function recentEvents(){
   '&order=created_at.asc&limit=75';
  const rows=await dbJson(url);
  if(id!==store.campaign||!Array.isArray(rows))return;
- rows.forEach(acceptEvent)
+ rows.forEach(acceptEvent);
+ if(rows.length){const latest=Date.parse(rows[rows.length-1].created_at);if(Number.isFinite(latest))store.since=new Date(Math.max(Date.parse(store.since),latest-1000)).toISOString()}
 }
 const sync=createAudioRealtime({
  getCampaign:campaign,getToken:token,isAuthenticated:authenticated,

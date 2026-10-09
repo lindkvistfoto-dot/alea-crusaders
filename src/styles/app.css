@@ -6629,3 +6629,24 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
 #adminSoundStatus.error{color:#f19a95}
 @media(max-width:900px){.alea-sound-row{grid-template-columns:1fr 1fr}.alea-sound-identity{grid-column:1/-1}.alea-sound-actions{grid-column:1/-1}}
 @media(max-width:520px){.alea-audio-dock{bottom:7px;left:7px}.alea-audio-dock>button{padding:7px 9px}.alea-sound-row{grid-template-columns:1fr}.alea-sound-identity,.alea-sound-actions{grid-column:1}}
+
+/* Alea Crusaders v0.35.23 – SL soundboard */
+.alea-soundboard{position:fixed;right:14px;bottom:14px;z-index:6600}
+.alea-soundboard[hidden],.alea-soundboard-panel[hidden]{display:none!important}
+.alea-soundboard-launch{background:#34291d;border:1px solid #d9af69;color:#ffdfab;padding:10px 15px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 12px #0007}
+.alea-soundboard-panel{position:absolute;right:0;bottom:47px;width:min(360px,calc(100vw - 22px));max-height:78vh;overflow:auto;background:#201d1a;color:#f5e7c9;border:1px solid #a98757;border-radius:13px;padding:15px;box-sizing:border-box;box-shadow:0 15px 40px #000a}
+.alea-soundboard-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.alea-soundboard-heading>b{font-size:17px}
+.alea-soundboard-heading>span{font-size:10px;color:#a1d2a5}
+.alea-soundboard-panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#d6b17c;margin:14px 0 8px}
+.alea-soundboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.alea-soundboard-grid button,.alea-soundboard-active button{background:#3b3229;border:1px solid #7d6749;border-radius:7px;color:#f4dfb9;padding:10px 7px;font-size:13px;cursor:pointer}
+.alea-soundboard-grid button.active{border-color:#ebc777;background:#70562d;box-shadow:0 0 0 1px #ddb87766 inset}
+.alea-soundboard button:focus-visible{outline:3px solid #ffe2a4;outline-offset:2px}
+.alea-soundboard button:disabled{opacity:.55;cursor:wait}
+.alea-soundboard-active{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:12px;font-size:12px;color:#d5c6ab}
+.alea-soundboard-active button{background:#52302f;border-color:#95615a;font-size:11px;padding:6px 8px}
+.alea-soundboard-panel p{margin:10px 0 4px;font-size:12px;line-height:1.4}
+.alea-soundboard-panel p.error{color:#ff9c8c}
+.alea-soundboard-panel .alea-soundboard-help{color:#b7a98d;font-size:11px}
+@media(max-width:520px){.alea-soundboard{right:7px;bottom:7px}.alea-soundboard-launch{padding:8px 10px}.alea-soundboard-panel{bottom:40px;max-height:70vh}}
