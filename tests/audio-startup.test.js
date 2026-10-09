@@ -31,7 +31,7 @@ function bootEngine({inGame=false,session=false}={}){
  return{bus:window.aleaAudio,events,created:()=>created,fetches:()=>fetches,played}
 }
 
-describe('Startup-safe optional sound controls v0.35.25',()=>{
+describe('Startup-safe optional sound controls v0.35.26',()=>{
  it('never creates AudioContext or queries audio registry on ordinary login/home pointer or key interactions',()=>{
   const app=bootEngine({session:true,inGame:false});
   for(let i=0;i<8;i++){app.events.get('pointerdown')();app.events.get('keydown')()}

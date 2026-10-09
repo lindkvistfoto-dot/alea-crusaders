@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-describe('Location sound ambience v0.35.25',()=>{
+describe('Location sound ambience v0.35.26',()=>{
  it('has campaign-scoped location sound assignments and one current source location',()=>{
   const sql=read('supabase/migrations/20261009132500_location_ambience_v03524.sql');
   expect(sql).toContain('ambience_cue_key text references public.rule_sound_cues');

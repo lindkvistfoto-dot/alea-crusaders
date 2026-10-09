@@ -2755,7 +2755,7 @@ async function deleteCampaignSite(id){
 function locationAmbienceOptions(selected=''){
  const cues=window.aleaAudio?.cues?.()||[];
  const oneShots=new Set(['ambience.thunder','ambience.door','ambience.ghost','ambience.battle']);
- return '<option value="">Ingen ljudmiljö</option>'+cues.filter(c=>c.category==='ambience'&&!oneShots.has(c.cue_key))
+ return '<option value="">Ingen ljudmiljö</option>'+cues.filter(c=>c.category==='ambience'&&!oneShots.has(c.cue_key)&&(c.integration_status!=='planned'||!!c.asset_path))
   .map(c=>'<option value="'+escAttr(c.cue_key)+'"'+(selected===c.cue_key?' selected':'')+'>'+
    escAttr(c.title)+'</option>').join('')
 }
