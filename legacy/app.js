@@ -1343,18 +1343,27 @@ function characterEquipmentEditField(label,content,extra=''){
 }
 function renderWeapons(){
  ensureEquipmentState(current);current.projectiles=current.projectiles||[];let ws=current.weapons||[];
- $('weapontable').innerHTML='<div class="weapon-head"><div>Vapen</div><div class="skillnum">FV</div><div class="skillnum">Skada</div><div class="skillnum">BV</div><div class="skillnum">Vapenl.</div><div class="skillnum">Räckv.</div><div class="skillnum">BEP</div><div class="skillnum">ERF</div>'+(editing?'<div class="skillnum">Åtg.</div>':'')+'</div>'+
-  ws.map((x,i)=>{
-   if(editing)return '<div class="weapon-row"><div><div class="weapon-choice-stack"><select onchange="setCharacterWeaponMaster('+i+',this.value)">'+weaponMasterOptions(x)+'</select><input value="'+escAttr(x.name||'')+'" onchange="setWeapon('+i+',\'name\',this.value)" aria-label="Eget vapennamn"></div></div>'+
-    weaponLinkedFvHtml(x,i,true)+
-    ['damage','bv','length','range','bep'].map(k=>'<div><input value="'+escAttr((k==='bep'?(x.bep??x.weight):x[k])??'')+'" onchange="setWeapon('+i+',\''+k+'\',this.value)"></div>').join('')+
-    weaponLinkedErfHtml(x,i,true)+
-    '<div class="rowactions"><button class="smallbtn" type="button" onclick="openWeaponInstanceEditor(\'character\','+i+')" title="Alla vapendata">⚙</button><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeWeapon('+i+')">×</button></div></div>';
-   return '<div class="weapon-row"><div><span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span></div>'+
-    weaponLinkedFvHtml(x,i,false)+
-    '<div class="skillnum">'+escAttr(x.damage||'—')+'</div><div class="skillnum">'+escAttr(x.bv||'—')+'</div><div class="skillnum">'+escAttr(x.length||'—')+'</div><div class="skillnum">'+escAttr(x.range||'—')+'</div><div class="skillnum">'+escAttr((x.bep??x.weight)===''?'—':(x.bep??x.weight??'—'))+'</div>'+
-    weaponLinkedErfHtml(x,i,false)+'</div>'
-  }).join('');
+ $('weapontable').innerHTML=editing?
+  ws.map((x,i)=>'<div class="character-equip-edit-row weapon-edit-row">'+
+   characterEquipmentEditField('Vapentyp ur grundtabellen','<select aria-label="Vapentyp ur grundtabellen" onchange="setCharacterWeaponMaster('+i+',this.value)">'+weaponMasterOptions(x)+'</select>','wide')+
+   characterEquipmentEditField('Vapennamn','<input value="'+escAttr(x.name||'')+'" onchange="setWeapon('+i+',\'name\',this.value)" aria-label="Vapennamn">','wide')+
+   characterEquipmentEditField('FV',weaponLinkedFvHtml(x,i,true))+
+   characterEquipmentEditField('Skada','<input value="'+escAttr(x.damage??'')+'" onchange="setWeapon('+i+',\'damage\',this.value)" aria-label="Skada">')+
+   characterEquipmentEditField('BV','<input type="number" step="any" inputmode="decimal" value="'+escAttr(x.bv??'')+'" onchange="setWeapon('+i+',\'bv\',this.value)" aria-label="BV">')+
+   characterEquipmentEditField('Vapenlängd','<input type="number" step="any" inputmode="decimal" value="'+escAttr(x.length??'')+'" onchange="setWeapon('+i+',\'length\',this.value)" aria-label="Vapenlängd">')+
+   characterEquipmentEditField('Räckvidd','<input value="'+escAttr(x.range??'')+'" onchange="setWeapon('+i+',\'range\',this.value)" aria-label="Räckvidd">')+
+   characterEquipmentEditField('BEP','<input type="number" step="any" inputmode="decimal" value="'+escAttr(x.bep??x.weight??'')+'" onchange="setWeapon('+i+',\'bep\',this.value)" aria-label="BEP">')+
+   characterEquipmentEditField('ERF',weaponLinkedErfHtml(x,i,true))+
+   '<div class="character-equip-actions rowactions">'+
+    '<button class="smallbtn" type="button" onclick="openWeaponInstanceEditor(\'character\','+i+')" title="Alla vapendata" aria-label="Alla vapendata">⚙</button>'+
+    '<button class="confirmbtn" type="button" onclick="confirmRow(this)" title="Bekräfta rad" aria-label="Spara vapenraden">✓</button>'+
+    '<button class="deletebtn" type="button" onclick="removeWeapon('+i+')" title="Ta bort vapen" aria-label="Ta bort vapen">×</button>'+
+   '</div></div>').join(''):
+  '<div class="weapon-head"><div>Vapen</div><div class="skillnum">FV</div><div class="skillnum">Skada</div><div class="skillnum">BV</div><div class="skillnum">Vapenl.</div><div class="skillnum">Räckv.</div><div class="skillnum">BEP</div><div class="skillnum">ERF</div></div>'+
+  ws.map((x,i)=>'<div class="weapon-row"><div><span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span></div>'+
+   weaponLinkedFvHtml(x,i,false)+
+   '<div class="skillnum">'+escAttr(x.damage||'—')+'</div><div class="skillnum">'+escAttr(x.bv||'—')+'</div><div class="skillnum">'+escAttr(x.length||'—')+'</div><div class="skillnum">'+escAttr(x.range||'—')+'</div><div class="skillnum">'+escAttr((x.bep??x.weight)===''?'—':(x.bep??x.weight??'—'))+'</div>'+
+   weaponLinkedErfHtml(x,i,false)+'</div>').join('');
  let ps=current.projectiles||[];
  $('projectiletable').innerHTML=editing?
   ps.map((x,i)=>'<div class="character-equip-edit-row projectile-edit-row">'+

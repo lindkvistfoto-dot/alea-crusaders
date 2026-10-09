@@ -6386,3 +6386,52 @@ body:not(.editing) #view #weaponsPanel #shieldtable{
  }
  body.editing #view #weaponsPanel .character-equip-field{font-size:12px}
 }
+
+
+/* v0.35.08 — weapon editing uses compact two-column cards, not a 9-column grid.
+   The legacy weapon row and table widths remain exclusively for read-only mode. */
+body.editing #view #weaponsPanel #weapontable{
+ display:flex!important;flex-direction:column!important;gap:10px!important;
+ grid-template-columns:none!important;
+ overflow:visible!important;width:100%!important;min-width:0!important;
+ max-width:100%!important;border:0!important;border-radius:0!important;
+ background:transparent!important;box-shadow:none!important;
+}
+body.editing #view #weaponsPanel .section:has(> #weapontable){
+ min-width:0!important;max-width:100%!important;overflow-x:hidden!important;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-field>.skillnum,
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-field>div:not(.skillnum){
+ display:flex;align-items:center;min-width:0;min-height:42px;
+ padding:0;margin:0;text-align:left;justify-content:flex-start;
+ font-size:16px;color:#f3e7cc;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-field>div.skillnum:has(.calculated-value){
+ padding:8px 10px;border:1px solid #3c604c;border-radius:8px;
+ background:#13241b;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-field .calculated-value{
+ font-size:16px;font-weight:800;opacity:1;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-field .erf-edit-input{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+}
+body.editing #view #weaponsPanel #weapontable .weapon-edit-row
+.character-equip-actions .smallbtn{
+ width:42px;min-width:42px;height:42px;padding:0;font-size:21px;
+ display:inline-flex;align-items:center;justify-content:center;
+}
+@media(max-width:650px){
+ body.editing #view #weaponsPanel #weapontable .weapon-edit-row{
+  gap:8px!important;padding:10px!important;
+ }
+}
