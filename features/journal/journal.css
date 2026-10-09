@@ -1,0 +1,29 @@
+.journal-feed,.journal-page{--jbg:#181d29;--jgold:#dab77a;--jink:#f5f0e6;--jmuted:#c6bdaf;color:var(--jink);background:linear-gradient(145deg,#22283a,#171b28);border:1px solid #66563f;border-radius:16px;box-shadow:0 6px 22px #0002}
+.journal-feed{margin:20px auto 32px;max-width:1380px;padding:14px 18px}
+.journal-feed-head,.journal-page-head,.journal-toolbar,.journal-row-top,.journal-note-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.journal-feed h3,.journal-page h2,.journal-notes h3{margin:0;color:#f5d29a}
+.journal-feed-head span,.journal-page-head p,.journal-row small,.journal-row time,.journal-connection{font-size:.8rem;color:var(--jmuted)}
+.journal-feed-rows{max-height:270px;overflow-y:auto;margin-top:12px}
+.journal-page{max-width:1320px;margin:14px auto 24px;padding:22px}
+.journal-page-head p{margin:6px 0 0}
+.journal-toolbar{justify-content:flex-start;margin:22px 0 12px}
+.journal-toolbar input,.journal-toolbar select,.journal-notes textarea{background:#101522;color:#fff;border:1px solid #78674d;border-radius:8px;padding:10px;font:inherit;max-width:100%}
+.journal-toolbar input{flex:1;min-width:220px}
+.journal-connection{margin-left:auto}
+.journal-row{display:flex;gap:13px;align-items:flex-start;border-top:1px solid #ffffff20;padding:12px 4px}
+.journal-row-icon{font-size:1.35rem;width:32px;text-align:center;flex:none}
+.journal-row-main{flex:1;min-width:0}
+.journal-row-top{justify-content:flex-start;gap:8px}
+.journal-row-main strong{font-size:1rem;color:#fff4dc}
+.journal-row p{margin:4px 0 3px;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;color:var(--jink)}
+.journal-row time{white-space:nowrap;margin-left:auto}
+.journal-outcome{font-size:.75rem;font-weight:700;background:#524628;border:1px solid #8c7541;color:#ffe2a7;border-radius:10px;padding:2px 8px}
+.journal-private{font-size:.73rem;border:1px solid #d8a171;border-radius:10px;padding:2px 8px}
+.journal-notes{border:1px solid #786448;border-radius:12px;padding:14px;margin:20px 0}
+.journal-notes textarea{display:block;width:100%;min-height:90px;margin:12px 0}
+.journal-note-actions{justify-content:flex-end}
+.journal-note-actions label{display:flex;align-items:center;gap:6px}
+.journal-empty{padding:16px;color:#d8cdbb}
+.journal-rows{margin-top:12px}
+#journalMore{margin-top:14px}
+@media(max-width:650px){.journal-page{padding:12px}.journal-row time{font-size:.68rem}.journal-feed{margin:14px 7px 24px}.journal-toolbar input{min-width:120px}.journal-page-head h2{font-size:1.2rem}}
