@@ -876,19 +876,28 @@ function combatMapFrameStyle(){
  return 'aspect-ratio:'+width+' / '+height
 }
 function combatMapFooterHtml(){
- const name=combatRuntimeMapMeta?.name||activeCombat?.name||'Stridskarta';
+ const names=[combatRuntimeMapMeta?.name,activeCombat?.name].map(value=>String(value||'').trim());
+ const name=names.find(label=>label&&!/^(?:file[\\s_-]*)?[0-9a-f]{16,}(?:\\.[a-z0-9]+)?$/i.test(label))||'Aktiv stridsscen';
  return '<div class="combat-board-footer">'+
-  '<div class="combat-board-description"><span>Hexkarta</span><small>'+escAttr(name)+'</small></div>'+
-  '<div class="combat-map-zoom-controls">'+
-   '<button type="button" title="Zooma ut" aria-label="Zooma ut" onclick="combatMapZoomStep(-1)">−</button>'+
-   '<button id="combatMapZoomLabel" type="button" title="Återställ kartvy" onclick="combatMapResetView()">'+Math.round((combatMapView.zoom||1)*100)+'%</button>'+
-   '<button type="button" title="Zooma in" aria-label="Zooma in" onclick="combatMapZoomStep(1)">+</button>'+
-   '<button type="button" class="combat-map-fit-btn" title="Fokusera alla kombatanter" aria-label="Fokusera alla kombatanter" onclick="combatMapFitCombatants()">◎</button>'+
-   '<button type="button" title="Återställ kartvy" aria-label="Återställ kartvy" onclick="combatMapResetView()">⌂</button>'+
+  '<div class="combat-board-footer-head">'+
+   '<div class="combat-board-description"><span>Hexkarta</span><small>'+escAttr(name)+'</small></div>'+
+   '<div class="combat-map-zoom-controls" role="group" aria-label="Kartans zoom och position">'+
+    '<button type="button" title="Zooma ut" aria-label="Zooma ut" onclick="combatMapZoomStep(-1)">−</button>'+
+    '<button id="combatMapZoomLabel" type="button" title="Återställ kartvy" aria-label="Zoomnivå, återställ kartvy" onclick="combatMapResetView()">'+Math.round((combatMapView.zoom||1)*100)+'%</button>'+
+    '<button type="button" title="Zooma in" aria-label="Zooma in" onclick="combatMapZoomStep(1)">+</button>'+
+    '<button type="button" class="combat-map-fit-btn" title="Fokusera alla kombatanter" aria-label="Fokusera alla kombatanter" onclick="combatMapFitCombatants()">◎</button>'+
+    '<button type="button" title="Återställ kartvy" aria-label="Återställ kartvy" onclick="combatMapResetView()">⌂</button>'+
+   '</div>'+
   '</div>'+
-  '<div class="combat-board-legends">'+
-   '<div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div>'+
-   '<div class="combat-legend"><span>Fri</span><span>Svår</span><span>Blockerad</span></div>'+
+  '<div class="combat-board-legends" aria-label="Kartförklaring">'+
+   '<div class="combat-board-legend-group combat-board-terrain">'+
+    '<div class="combat-board-legend-title">Terräng</div>'+
+    '<div class="combat-legend"><span class="terrain-free">Fri</span><span class="terrain-difficult">Svår</span><span class="terrain-blocked">Blockerad</span></div>'+
+   '</div>'+
+   '<div class="combat-board-legend-group combat-board-status">'+
+    '<div class="combat-board-legend-title">Under strid</div>'+
+    '<div class="combat-move-legend"><span class="keep-action">Handling kvar</span><span class="spend-action">Full rörelse</span></div>'+
+   '</div>'+
   '</div>'+
  '</div>'
 }

@@ -6740,3 +6740,116 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  .campaign-day-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:380px){.campaign-day-summary{grid-template-columns:1fr}}
+
+
+/* v0.35.36 – sammanhållen och mobilanpassad panel under hexkartan. */
+.combat-board-footer{
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+ padding:12px 14px;
+}
+.combat-board-footer-head{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ gap:12px;
+ min-width:0;
+}
+.combat-board-footer .combat-board-description{grid-area:auto;gap:3px}
+.combat-board-footer .combat-board-description span{
+ color:#f0d7aa;
+ font:700 18px/1.2 Georgia,serif;
+}
+.combat-board-footer .combat-board-description small{
+ color:#bfa987;
+ font-size:11px;
+}
+.combat-board-footer .combat-map-zoom-controls{
+ grid-area:auto;
+ justify-self:end;
+ display:grid;
+ grid-template-columns:repeat(5,auto);
+ gap:6px;
+}
+.combat-board-footer .combat-map-zoom-controls button{
+ min-width:38px;
+ width:100%;
+ height:38px;
+ border-radius:8px;
+ font-size:17px;
+}
+.combat-board-footer #combatMapZoomLabel{
+ min-width:62px;
+ font-size:12px;
+ font-variant-numeric:tabular-nums;
+}
+.combat-board-footer .combat-board-legends{
+ grid-area:auto;
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;
+ align-items:stretch;
+ justify-content:stretch;
+}
+.combat-board-footer .combat-board-legend-group{
+ min-width:0;
+ padding:9px 11px;
+ border:1px solid #5b4835;
+ border-radius:9px;
+ background:rgba(255,244,219,.035);
+}
+.combat-board-footer .combat-board-legend-title{
+ color:#bea47f;
+ font:800 10px/1.3 system-ui,sans-serif;
+ letter-spacing:.09em;
+ text-transform:uppercase;
+ margin:0 0 7px;
+}
+.combat-board-footer .combat-legend,
+.combat-board-footer .combat-move-legend{
+ display:flex;
+ align-items:center;
+ justify-content:flex-start;
+ flex-wrap:wrap;
+ gap:7px 13px;
+ font-size:12px;
+ line-height:1.3;
+ color:#e2ceb0;
+ width:auto;
+}
+.combat-board-footer .combat-legend span{
+ display:inline-flex;
+ align-items:center;
+ gap:5px;
+ white-space:nowrap;
+}
+.combat-board-footer .combat-legend span:before{font-size:14px}
+.combat-board-footer .combat-legend .terrain-free:before{color:#bacdae}
+.combat-board-footer .combat-legend .terrain-difficult:before{color:#d9a457}
+.combat-board-footer .combat-legend .terrain-blocked:before{color:#bc6e67}
+@media(max-width:700px){
+ .combat-board-footer{gap:9px;padding:12px}
+ .combat-board-footer-head{grid-template-columns:minmax(0,1fr);gap:10px}
+ .combat-board-footer .combat-map-zoom-controls{
+  justify-self:stretch;
+  width:100%;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.45fr) repeat(3,minmax(0,1fr));
+  gap:7px;
+ }
+ .combat-board-footer .combat-map-zoom-controls button{
+  min-width:0;
+  height:42px;
+  padding:0 4px;
+ }
+ .combat-board-footer #combatMapZoomLabel{min-width:0}
+ .combat-board-footer .combat-board-legends{
+  grid-template-columns:minmax(0,1fr);
+  gap:8px;
+ }
+ .combat-board-footer .combat-board-legend-group{padding:8px 10px}
+ .combat-board-footer .combat-move-legend{
+  width:auto;
+  justify-content:flex-start;
+ }
+}

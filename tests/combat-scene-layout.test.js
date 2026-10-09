@@ -39,4 +39,28 @@ describe('SL stridscen under turordningslistan',()=>{
   expect(css).toContain('.combat-participants{order:2}.combat-board-wrap{order:1}.combat-log{order:3}');
  });
 
+ test('hexkartans panel har ordnade kontroller och separata terräng- och stridsförklaringar',()=>{
+  const footer=runtime.slice(runtime.indexOf('function combatMapFooterHtml(){'),runtime.indexOf('function combatRuntimeHexCells(){'));
+  expect(footer).toContain('combat-board-footer-head');
+  expect(footer).toContain('role="group" aria-label="Kartans zoom och position"');
+  for(const command of ['combatMapZoomStep(-1)','combatMapZoomStep(1)','combatMapFitCombatants()','combatMapResetView()'])
+   expect(footer).toContain(command);
+  expect(footer).toContain('combat-board-legend-title">Terräng');
+  expect(footer).toContain('combat-board-legend-title">Under strid');
+  expect(footer.indexOf('combat-board-terrain')).toBeLessThan(footer.indexOf('combat-board-status'));
+  expect(css).toContain('.combat-board-footer-head{');
+  expect(css).toContain('.combat-board-footer .combat-board-legend-group{');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) minmax(0,1.45fr) repeat(3,minmax(0,1fr));');
+ });
+ test('kartpanelen visar aldrig det tekniska fil-ID:t som titel',()=>{
+  const footer=runtime.slice(runtime.indexOf('function combatMapFooterHtml(){'),runtime.indexOf('function combatRuntimeHexCells(){'));
+  const renderFooter=new Function('combatRuntimeMapMeta','activeCombat','combatMapView','escAttr',footer+'; return combatMapFooterHtml()');
+  const renderName=(name,sceneName='Skelettbyn')=>renderFooter({name},{name:sceneName},{zoom:1},value=>String(value));
+  const technical='file 000000004660820ab1143ad0e745c8ca';
+  expect(renderName(technical)).not.toContain(technical);
+  expect(renderName(technical)).toContain('Skelettbyn');
+  expect(renderName('Övervuxen bygata')).toContain('Övervuxen bygata');
+  expect(renderName('',technical)).toContain('Aktiv stridsscen');
+ });
+
 });
