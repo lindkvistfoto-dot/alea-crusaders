@@ -10,7 +10,7 @@ describe('Location sound ambience v0.35.24',()=>{
   expect(sql).toContain("when 'Kyrkan' then 'ambience.crypt'");
   const app=read('legacy/app.js');
   expect(app).toContain('id="alAmbience"');
-  expect(app).toContain('ambience_cue_key:$(\\'alAmbience\\').value||null'.replaceAll('\\',''));
+  expect(app).toContain("ambience_cue_key:$('alAmbience').value||null");
   expect(app).toContain('window.aleaSoundboard?.playLocation(');
   expect(app).toContain('ambience_cue_key,sort_order');
  });
@@ -28,7 +28,7 @@ describe('Location sound ambience v0.35.24',()=>{
   expect(html).toContain('id="adminSoundSearch"');
   expect(html).toContain('id="adminSoundCategory"');
   expect(html).toContain('id="adminSoundFileFilter"');
-  expect(engine).toContain('fileFilter===\\'uploaded\\''.replaceAll('\\',''));
+  expect(engine).toContain("fileFilter==='uploaded'");
  });
  it('fades successive synthetic ambiences through gain ramps instead of hard-stopping old sound',()=>{
   const slopes=[],timeouts=[];
