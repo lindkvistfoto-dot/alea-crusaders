@@ -45,7 +45,7 @@
   margin:0 auto;
   overflow:hidden;
   background-color:#0c0d0b;
-  background-image:url("./assets/gandalf-hall.jpg");
+  background-image:url("./assets/gandalf-hall.webp");
   background-size:100% 100%;
   background-position:center;
   box-shadow:0 5px 25px #000b,inset 0 0 14px #0008;
@@ -96,7 +96,7 @@
   padding:17%;
   box-sizing:border-box;
   background-color:#241810;
-  background-image:url("./assets/gandalf-slot.jpg");
+  background-image:url("./assets/gandalf-slot.webp");
   background-size:100% 100%;
   background-position:center;
   background-repeat:no-repeat;
