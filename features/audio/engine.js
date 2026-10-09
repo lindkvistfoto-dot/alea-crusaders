@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.27 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.28 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
