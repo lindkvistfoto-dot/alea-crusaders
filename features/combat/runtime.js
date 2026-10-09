@@ -101,6 +101,7 @@ async function combatRollDice(specs,label='Slag'){
  layer?.classList.add('rolling');
  if(readout){readout.innerHTML='<b>'+escAttr(label)+'</b><span>Tärningarna rullar…</span>';readout.classList.add('show')}
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('dice.roll');
+ (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('dice.roll');
  try{
   let rolls=null;
   if(typeof window.alea3dCombatRoll==='function'){
@@ -127,6 +128,7 @@ async function combatRollDice(specs,label='Slag'){
   combatDiceLastRoll={label,rolls,total,expression:combatDiceExpression(rolls)};
   combatRenderDiceReadout(label,rolls);
   (typeof window!=='undefined'?window.aleaAudio:null)?.play('dice.land');
+ (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('dice.land');
   return combatDiceLastRoll
  }finally{
   combatDiceBusy=false;
@@ -1231,6 +1233,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
   })});
   combatShowOutcomeOverlay(rolled.outcome,'Parering · '+option.name+' · T20 '+rolled.roll+' mot FV '+option.fv);
   (typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.success?'melee.parry':'melee.hit');
+ (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.success?'melee.parry':'melee.hit');
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte genomföra parering',error);
@@ -1258,6 +1261,7 @@ async function declineCombatParry(defenderId,attackActionId){
    body:JSON.stringify({result:attackResult,updated_at:new Date().toISOString()})
   });
   (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
+ (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.hit');
   await loadActiveCombat()
  }catch(error){
   console.error('Kunde inte avstå parering',error);
@@ -1723,11 +1727,12 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
  const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null;
  if(attackMode==='melee')(typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.swing');
+ (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.swing');
  let rolled;
  try{rolled=await combatExpertRoll(label,fv)}
  catch(error){meleeFx?.stop();throw error}
  meleeFx?.finish(rolled.outcome);
- if(attackMode==='melee'&&!rolled.success)(typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');
+ if(attackMode==='melee'&&!rolled.success){(typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss'); (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');}
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
