@@ -3,12 +3,13 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
+const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
 function slice(start,end){
  const a=runtime.indexOf(start),b=runtime.indexOf(end,a+start.length);
  if(a<0||b<a)throw Error('Missing LEJON code '+start+' -> '+end);
  return runtime.slice(a,b);
 }
-const code=[
+const code=footprint+'\n'+[
  slice('function combatMagicCastingRules(', 'function combatSpellOptions('),
  slice('function combatSpellRangeHexes(', 'function combatCurrentAttackTargets('),
  slice('function combatEffectIsActive(', 'function combatEffectExpiry(')
