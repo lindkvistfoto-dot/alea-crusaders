@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.24 – GM soundboard + player audio synchronization. */
+/* Alea Crusaders v0.35.25 – GM soundboard + player audio synchronization. */
 import {createAudioRealtime} from './realtime.js?v=0.35.23';
 const AUDIO_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const AUDIO_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
@@ -236,11 +236,11 @@ function mount(){
  });
  root.addEventListener('click',event=>{
   const env=event.target.closest('[data-ambience]');
-  if(env){writeAmbience(env.dataset.ambience||null);return}
+  if(env){audio()?.unlock();writeAmbience(env.dataset.ambience||null);return}
   if(event.target.closest('[data-refresh-locations]')){loadLocations(true).catch(error=>notice(error.message,true));return}
   if(event.target.closest('[data-play-location]')){
    const id=document.getElementById('aleaLocationSoundSelect')?.value;
-   if(id)playLocation(id);
+   if(id){audio()?.unlock();playLocation(id)}
    else notice('Välj först en plats med tilldelat ljud.',true);
    return
   }

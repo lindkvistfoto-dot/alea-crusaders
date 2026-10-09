@@ -6661,3 +6661,10 @@ body.editing #view #weaponsPanel #weapontable .weapon-edit-row
 .alea-soundboard-location select{min-width:0;flex:1;background:#30291f;color:#f6e7c9;border:1px solid #90744a;border-radius:7px;padding:7px}
 .alea-soundboard-location button{background:#624723;color:#fce7bf;border:1px solid #a98853;border-radius:7px;padding:7px 9px;cursor:pointer;white-space:nowrap}
 @media(max-width:700px){.alea-sound-filters{grid-template-columns:1fr}.alea-soundboard-location{flex-wrap:wrap}.alea-soundboard-location select{flex-basis:100%}}
+
+/* v0.35.25 – audio controls must never intercept login/home input.
+   The sound engine starts only on explicit sound/game interactions. */
+#loginScreen:not(.hidden) ~ #aleaAudioDock,
+#loginScreen:not(.hidden) ~ #aleaSoundboard,
+body:has(#home:not(.hidden)) #aleaAudioDock,
+body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}

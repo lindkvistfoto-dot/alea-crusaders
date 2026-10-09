@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.24 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.25 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
@@ -132,7 +132,9 @@ function setAmbience(cueKey){
  stopAmbience();
  activeAmbience=cueKey||null;
  if(!cueKey||!prefs.enabled||!cue.enabled)return true;
- unlock();
+ // A synchronized ambience must never create a Web Audio engine at login/home.
+ // The next explicit game gesture (or an intentional soundboard action) unlocks it.
+ if(!context)return true;
  const voice=createAmbientVoice(cueKey);
  if(!voice)return false;
  ambientVoice=voice;
@@ -317,7 +319,10 @@ function mountDock(){
   ['master','dice','melee','magic','ambience'].map(k=>'<label><span>'+({master:'Huvudvolym',...categoryLabels}[k]||categoryLabels[k])+'</span><input type="range" min="0" max="100" step="5" data-audio-volume="'+k+'"><output data-audio-value="'+k+'"></output></label>').join('')+
   '<small>Ljud aktiveras efter första klicket i spelet.</small></div>';
  document.body.appendChild(root);
- root.querySelector('[data-audio-mute]').addEventListener('click',()=>{setPrefs({enabled:!prefs.enabled});unlock()});
+ root.querySelector('[data-audio-mute]').addEventListener('click',()=>{
+  setPrefs({enabled:!prefs.enabled});
+  if(prefs.enabled){unlock();if(activeAmbience&&!ambientVoice)setAmbience(activeAmbience)}
+ });
  root.querySelector('[data-audio-settings]').addEventListener('click',event=>{
   const panel=root.querySelector('#aleaAudioPanel'),show=panel.hidden;
   panel.hidden=!show;
@@ -420,10 +425,23 @@ function mountAdmin(){
   catch(error){formStatus(error.message,true);field.disabled=false}
  });
 }
+function gameSoundAllowed(){
+ return !!document.getElementById('loginScreen')?.classList.contains('hidden')&&
+        !!document.getElementById('home')?.classList.contains('hidden')
+}
+function onGameGesture(){
+ // Do not initialize AudioContext or fetch the sound registry on ordinary page clicks.
+ // AudioContext is created by an actual sound action, or to resume a pending
+ // synchronized ambience after the player actively enters a game screen.
+ if(!prefs.enabled||!activeAmbience||!gameSoundAllowed())return;
+ if(!context||context.state==='suspended')unlock();
+ if(context&&!ambientVoice)setAmbience(activeAmbience)
+}
 function initialize(){
- mountDock();mountAdmin();
- document.addEventListener('pointerdown',()=>{unlock();if(!loaded&&userToken())load().catch(()=>{})},{passive:true});
- document.addEventListener('keydown',()=>unlock(),{passive:true})
+ try{mountDock()}catch(error){console.warn('Kunde inte visa ljudkontrollen',error)}
+ try{mountAdmin()}catch(error){console.warn('Kunde inte starta ljudadmin',error)}
+ document.addEventListener('pointerdown',onGameGesture,{passive:true});
+ document.addEventListener('keydown',onGameGesture,{passive:true})
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
 window.aleaAudio={play,spellResult,setAmbience,stopAmbience,unlock,load,renderAdmin,mountAdmin,setPrefs,getPrefs:()=>({...prefs}),stopAll,cues:()=>[...cues.values()],activeAmbience:()=>activeAmbience};

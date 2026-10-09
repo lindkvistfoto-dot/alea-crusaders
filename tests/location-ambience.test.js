@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-describe('Location sound ambience v0.35.24',()=>{
+describe('Location sound ambience v0.35.25',()=>{
  it('has campaign-scoped location sound assignments and one current source location',()=>{
   const sql=read('supabase/migrations/20261009132500_location_ambience_v03524.sql');
   expect(sql).toContain('ambience_cue_key text references public.rule_sound_cues');
@@ -46,6 +46,10 @@ describe('Location sound ambience v0.35.24',()=>{
    setTimeout:(fn)=>{timeouts.push(fn);return timeouts.length},clearTimeout(){}};
   vm.runInNewContext(read('features/audio/engine.js'),ctx);
   const bus=window.aleaAudio;
+  // Explicit game gesture unlocks the audio context; a campaign state sync alone must not.
+  expect(bus.setAmbience('ambience.rain')).toBe(true);
+  expect(slopes).toHaveLength(0);
+  bus.unlock();
   expect(bus.setAmbience('ambience.rain')).toBe(true);
   expect(bus.activeAmbience()).toBe('ambience.rain');
   expect(bus.setAmbience('ambience.crypt')).toBe(true);
