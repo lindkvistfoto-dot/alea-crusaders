@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.22 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.23 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
@@ -14,7 +14,18 @@ const defaults=[
  ['melee.fumble','Fummel','melee',.58],
  ['magic.cast','Besvärjelse','magic',.65],
  ['magic.success','Magi lyckas','magic',.7],
- ['magic.fail','Magi misslyckas','magic',.58]
+ ['magic.fail','Magi misslyckas','magic',.58],
+ ['magic.fire','Eldmagi','magic',.82],
+ ['magic.heal','Helning','magic',.67],
+ ['magic.antimagic','Antimagi','magic',.72],
+ ['ambience.rain','Regn','ambience',.46],
+ ['ambience.wind','Vind','ambience',.4],
+ ['ambience.cave','Grotta','ambience',.40],
+ ['ambience.tavern','Värdshus','ambience',.43],
+ ['ambience.thunder','Åska','ambience',.85],
+ ['ambience.door','Dörr','ambience',.62],
+ ['ambience.ghost','Andar','ambience',.62],
+ ['ambience.battle','Stridsmuller','ambience',.68]
 ];
 const categoryLabels={dice:'Tärningar',melee:'Närstrid',magic:'Magi',ambience:'Miljö'};
 const cues=new Map(defaults.map(([cue_key,title,category,volume])=>[cue_key,{cue_key,title,category,volume,asset_path:null,enabled:true}]));
@@ -29,6 +40,63 @@ function initialPrefs(){
 }
 let prefs=initialPrefs(),context=null,output=null,loading=null,loaded=false;
 const currentlyPlaying=new Set();
+let activeAmbience=null,ambientAudio=null,ambientNodes=null;
+function ambientGain(){
+ const cue=cues.get(activeAmbience);
+ return cue?volumeFor(cue)*.7:0
+}
+function stopAmbience({preserve=false}={}){
+ if(ambientAudio){
+  const player=ambientAudio;ambientAudio=null;
+  try{player.pause();player.currentTime=0}catch(_error){}
+ }
+ if(ambientNodes){
+  try{ambientNodes.source.stop()}catch(_error){}
+  try{ambientNodes.source.disconnect();ambientNodes.filter.disconnect();ambientNodes.gain.disconnect()}catch(_error){}
+  ambientNodes=null
+ }
+ if(!preserve)activeAmbience=null
+}
+function setAmbience(cueKey){
+ const cue=cueKey?cues.get(cueKey):null;
+ if(cueKey&&(!cue||cue.category!=='ambience'))return false;
+ if(cueKey===activeAmbience&&(ambientAudio||ambientNodes)){
+  if(ambientAudio)ambientAudio.volume=clamp(ambientGain());
+  if(ambientNodes)ambientNodes.gain.gain.value=ambientGain();
+  return true
+ }
+ stopAmbience();
+ activeAmbience=cueKey||null;
+ if(!cueKey||!prefs.enabled||!cue.enabled)return true;
+ unlock();
+ const url=safeAssetUrl(cue.asset_path);
+ if(url){
+  const player=new Audio(url);
+  player.loop=true;player.volume=clamp(ambientGain());
+  ambientAudio=player;
+  player.play().catch(error=>{console.warn('Ambience blocked',error)});
+  return true
+ }
+ if(!context)return false;
+ const seconds=3,frames=Math.floor(seconds*context.sampleRate);
+ const buffer=context.createBuffer(1,frames,context.sampleRate);
+ const data=buffer.getChannelData(0);
+ for(let i=0;i<frames;i++){
+  const t=i/context.sampleRate;
+  const n=Math.random()*2-1;
+  data[i]=cueKey==='ambience.cave'? n*.10+Math.sin(t*Math.PI*2*62)*.12:
+   cueKey==='ambience.tavern'?n*.3+Math.sin(t*Math.PI*2*170)*.065:n*.65
+ }
+ const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();
+ source.buffer=buffer;source.loop=true;
+ filter.type='lowpass';
+ filter.frequency.value=cueKey==='ambience.rain'?2200:cueKey==='ambience.wind'?700:cueKey==='ambience.cave'?330:950;
+ gain.gain.value=ambientGain();
+ source.connect(filter);filter.connect(gain);gain.connect(output);
+ source.start();ambientNodes={source,filter,gain};
+ return true
+}
+
 function userToken(){
  try{return typeof supabaseSession!=='undefined'?supabaseSession?.access_token:null}
  catch(_error){return null}
@@ -51,10 +119,12 @@ function setPrefs(changes){
  prefs.enabled=prefs.enabled!==false;
  try{localStorage.setItem(STORE,JSON.stringify(prefs))}catch(_error){}
  if(!prefs.enabled)stopAll();
+ else if(activeAmbience)setAmbience(activeAmbience);
  updateDock();
  return {...prefs}
 }
 function stopAll(){
+ stopAmbience({preserve:true});
  for(const item of currentlyPlaying){try{item.pause();item.currentTime=0}catch(_error){}}
  currentlyPlaying.clear()
 }
@@ -112,9 +182,32 @@ function synthetic(cueKey,gain){
    oscillator(now,480,840,.46,s*.75,'sine');oscillator(now+.12,720,1100,.36,s*.65);break;
   case 'magic.fail':
    oscillator(now,560,120,.55,s*.8);break;
+  case 'magic.fire':
+   rustle(now,.53,s*.88,1600);oscillator(now,140,1300,.62,s,'sawtooth');break;
+  case 'magic.heal':
+   oscillator(now,320,640,.7,s*.8,'sine');oscillator(now+.15,480,960,.65,s*.62);break;
+  case 'magic.antimagic':
+   oscillator(now,1180,135,.55,s,'triangle');oscillator(now+.05,750,270,.45,s*.45);break;
+  case 'ambience.thunder':
+   rustle(now,.7,s*1.5,170);oscillator(now,120,48,.8,s,'sawtooth');break;
+  case 'ambience.door':
+   oscillator(now,320,75,.54,s,'sawtooth');rustle(now+.14,.16,s*.5,800);break;
+  case 'ambience.ghost':
+   oscillator(now,210,650,.75,s*.72,'sine');oscillator(now+.12,300,780,.65,s*.55);break;
+  case 'ambience.battle':
+   rustle(now,.42,s*.88,470);oscillator(now,85,160,.48,s,'triangle');break;
   default:return false
  }
  return true
+}
+function spellResult(name,outcome){
+ const success=['success','special','perfect'].includes(outcome);
+ if(!success)return play('magic.fail');
+ const normalized=String(name||'').toUpperCase();
+ if(/ANTIMAGI/.test(normalized))return play('magic.antimagic');
+ if(/^(ELD|ELDKLOT)/.test(normalized))return play('magic.fire');
+ if(/HELA|LÄK|LÄKEDOM/.test(normalized))return play('magic.heal');
+ return play('magic.success')
 }
 function play(cueKey,{volume=1}={}){
  const cue=cues.get(cueKey);
@@ -268,5 +361,5 @@ function initialize(){
  document.addEventListener('keydown',()=>unlock(),{passive:true})
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initialize,{once:true});else initialize();
-window.aleaAudio={play,unlock,load,renderAdmin,mountAdmin,setPrefs,getPrefs:()=>({...prefs}),stopAll,cues:()=>[...cues.values()]};
+window.aleaAudio={play,spellResult,setAmbience,stopAmbience,unlock,load,renderAdmin,mountAdmin,setPrefs,getPrefs:()=>({...prefs}),stopAll,cues:()=>[...cues.values()],activeAmbience:()=>activeAmbience};
 })();
