@@ -182,6 +182,8 @@ function sceneCombatantRowHtml(c){
    '<select id="sceneCombatantType_'+c.id+'">'+
     ['player','npc','enemy','monster'].map(t=>'<option value="'+t+'" '+(c.combatant_type===t?'selected':'')+'>'+sceneCombatantTypeLabel(t)+'</option>').join('')+
    '</select>'+
+   '<label>Hexform <select id="sceneCombatantShape_'+c.id+'">'+Object.entries(COMBAT_FOOTPRINT_LABELS).map(([k,label])=>'<option value="'+k+'"'+(combatFootprintShape({name:c.name,state:c.state})===k?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+   '<label>Riktning <select id="sceneCombatantFacing_'+c.id+'">'+Array.from({length:6},(_,i)=>'<option value="'+i+'"'+(combatFootprintFacing(c)===i?' selected':'')+'>'+(i+1)+'/6</option>').join('')+'</select></label>'+
    '<button class="smallbtn" type="button" onclick="saveSceneCombatantEdit(\''+c.id+'\')">✓</button>'+
    '<button class="smallbtn" type="button" onclick="cancelSceneCombatantEdit()">Avbryt</button>'+
   '</div></div>'
@@ -309,7 +311,12 @@ function cancelSceneCombatantEdit(){if(!eventCombatEditorState)return;eventComba
 function saveSceneCombatantEdit(id){
  let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!c)return;
  let name=String($('sceneCombatantName_'+id)?.value||'').trim();if(!name){alert('Kombatanten måste ha ett namn.');return}
- c.name=name;c.combatant_type=$('sceneCombatantType_'+id)?.value||c.combatant_type;c.updated_at=new Date().toISOString();st.editingCombatantId=null;st.dirty=true;renderSceneCombatantsSection()
+ const shape=$('sceneCombatantShape_'+id)?.value||combatFootprintShape(c),facing=Number($('sceneCombatantFacing_'+id)?.value??combatFootprintFacing(c));
+ if(!Object.hasOwn(COMBAT_FOOTPRINT_OFFSETS,shape)||!Number.isInteger(facing)||facing<0||facing>5)return alert('Ogiltig hexform eller riktning.');
+ c.name=name;c.combatant_type=$('sceneCombatantType_'+id)?.value||c.combatant_type;
+ c.state={...(c.state||{}),footprint:{shape,facing}};
+ if(c.start_q!=null&&!sceneCombatantCanFit(c,c.start_q,c.start_r)){c.start_q=null;c.start_r=null;alert('Ny form får inte plats på startpositionen. Placera varelsen på nytt.')}
+ c.updated_at=new Date().toISOString();st.editingCombatantId=null;st.dirty=true;renderSceneCombatantsSection();renderEventCombatHexCanvas()
 }
 function deleteSceneCombatant(id){
  let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!st||!c)return;
@@ -330,7 +337,17 @@ function clearAllSceneCombatantPlacements(markDirty=true){
 }
 function sceneCombatantAtHex(key,exceptId=''){
  let st=eventCombatEditorState;
- return st?.combatants?.find(c=>c.id!==exceptId&&sceneCombatantPlacementKey(c)===key)||null
+ return st?.combatants?.find(c=>c.id!==exceptId&&c.start_q!=null&&c.start_r!=null&&
+  combatFootprintCells({name:c.name,state:c.state,q:c.start_q,r:c.start_r}).some(p=>combatFootprintKey(p)===key))||null
+}
+function sceneCombatantCanFit(c,q,r){
+ const st=eventCombatEditorState;if(!st)return false;
+ const cells=combatFootprintCells({name:c?.name,state:c?.state,q,r});
+ const allowed=new Set(eventCombatHexCells().map(p=>p.key));
+ return cells.length>0&&cells.every(p=>{
+  const key=combatFootprintKey(p),h=st.hexes.get(key);
+  return allowed.has(key)&&h?.movement_mode!=='blocked'&&!/(?:^|[\s,;|])(?:wall|vägg|mur)(?:$|[\s,;|])/i.test(String(h?.notes||''))&&!sceneCombatantAtHex(key,c.id)
+ })
 }
 function sceneCombatantTokenLabel(c){
  let parts=String(c?.name||'?').trim().split(/\s+/).filter(Boolean);
@@ -363,8 +380,9 @@ function placeSceneCombatantAtHex(id,key){
  let st=eventCombatEditorState,c=st?.combatants?.find(x=>x.id===id);if(!st||!c||!key)return false;
  let terrain=st.hexes.get(key);
  if(terrain?.movement_mode==='blocked'){alert('Kombatanten kan inte starta på en ogenomtränglig hex.');return false}
- let occupied=sceneCombatantAtHex(key,id);
- if(occupied){alert('Hex '+key+' används redan av '+(occupied.name||'en annan kombatant')+'.');return false}
+ if(!sceneCombatantCanFit(c,...String(key).split(',').map(Number))){
+  alert('Hela varelsens hexavtryck måste rymmas på fri mark, utan andra kombatanter.');return false
+ }
  let parts=String(key).split(',').map(Number);
  if(parts.length!==2||parts.some(v=>!Number.isInteger(v)))return false;
  c.start_q=parts[0];c.start_r=parts[1];st.placementCombatantId=id;st.dirty=true;
