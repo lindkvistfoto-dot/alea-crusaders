@@ -1273,6 +1273,74 @@ function weaponLinkedErfHtml(item,index,editingMode=false){
   ?'<div><input class="erf-edit-input" type="number" min="0" value="'+escAttr(item?.erf??0)+'" onchange="setWeapon('+index+',\'erf\',this.value)"></div>'
   :'<div class="skillnum">'+erfDisplayItem('weapons',item,item?.erf)+'</div>'
 }
+
+/* v0.35.06 — character shields must be instances of rule_shields, never free-text types. */
+function characterShieldRule(item){
+ if(!item)return null;
+ return ruleShields.find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''))||
+  ruleShields.find(r=>item.shieldKey&&String(r.shield_key)===String(item.shieldKey))||
+  ruleShields.find(r=>String(r.name||'').localeCompare(String(item.name||''),'sv',{sensitivity:'base'})===0)||null
+}
+function characterShieldMasterOptions(item){
+ const currentRule=characterShieldRule(item);
+ const old=item?.name&&!currentRule?'Tidigare: '+item.name+' (välj ur registret)':'Välj sköld ur grundtabellen';
+ const placeholder='<option value=""'+(!currentRule?' selected':'')+'>'+escAttr(old)+'</option>';
+ return placeholder+ruleShields.map(r=>
+  '<option value="'+escAttr(r.id)+'"'+(currentRule&&String(currentRule.id)===String(r.id)?' selected':'')+'>'+
+  escAttr(r.name)+' · BV '+escAttr(r.bv??'—')+' · BEP '+escAttr(r.bep??'—')+
+  '</option>').join('')
+}
+function applyCharacterShieldMaster(item,rule){
+ return {...item,shieldTypeId:rule.id,shieldKey:rule.shield_key||'',
+  shield_id:rule.id,name:rule.name,bv:rule.bv??null,bep:rule.bep??null,
+  abs:rule.absorption??null,size_class:rule.size_class||null,
+  icon_key:rule.icon_key||null,skill_id:rule.skill_id||'skoldar',
+  passive_coverage:rule.passive_coverage||'',
+  projectile_block_min:rule.projectile_block_min??null,
+  projectile_block_max:rule.projectile_block_max??null,
+  can_parry_thrown:rule.can_parry_thrown!==false,
+  destruction_chance_per_excess:rule.destruction_chance_per_excess??null,
+  price:rule.price??null}
+}
+function setCharacterShieldMaster(index,id){
+ if(!current||!canEditCharacter(current))return;
+ const rule=ruleShields.find(r=>String(r.id)===String(id));
+ const old=current.shields?.[index];
+ if(!rule||!old){renderWeapons();return}
+ // Preserve instance identity (equipped hand), training (FV) and experience (ERF).
+ current.shields[index]=applyCharacterShieldMaster(old,rule);
+ save();renderWeapons();refreshTotalBep()
+}
+async function addShield(){
+ if(!current||!canEditCharacter(current))return;
+ if(!ruleShieldsLoaded)await loadRuleShields();
+ if(!ruleShieldsLoaded||!ruleShields.length){
+  alert('Sköldregistret kunde inte läsas. Ingen fristående sköld skapas.');return
+ }
+ const choices=ruleShields.map(r=>'<option value="'+escAttr(r.id)+'">'+
+  escAttr(r.name)+' · BV '+escAttr(r.bv??'—')+' · BEP '+escAttr(r.bep??'—')+'</option>').join('');
+ $('adminEditorTitle').textContent='Lägg till sköld från grundtabellen';
+ $('adminEditorBody').innerHTML='<div class="skill-picker-list"><label>Sköldtyp<select id="characterShieldPick">'+choices+'</select></label>'+
+  '<p class="muted">BV, BEP, storlek och övriga skyddsvärden hämtas från sköldregistret. FV och ERF är individuella.</p></div>'+
+  '<div class="rule-editor-actions"><button type="button" class="btn" onclick="closeAdminEditor()">Avbryt</button>'+
+  '<button type="button" class="btn primary" onclick="confirmCharacterShieldPick()">Lägg till sköld</button></div>';
+ $('adminEditor').classList.remove('hidden')
+}
+function confirmCharacterShieldPick(){
+ if(!current||!canEditCharacter(current))return;
+ const id=$('characterShieldPick')?.value,rule=ruleShields.find(r=>String(r.id)===String(id));
+ if(!rule)return;
+ current.shields=current.shields||[];
+ current.shields.push(applyCharacterShieldMaster({equipId:newEquipItemId('shield'),fv:'',erf:0},rule));
+ closeAdminEditor();save();renderWeapons();refreshTotalBep();showBackupToast('✓ Sköld tillagd')
+}
+function characterEquipmentEditActions(remove,index){
+ return '<div class="character-equip-actions"><button type="button" class="confirmbtn" onclick="confirmRow(this)" aria-label="Bekräfta ändring" title="Bekräfta">✓</button>'+
+  '<button type="button" class="deletebtn" onclick="'+remove+'('+index+')" aria-label="Ta bort" title="Ta bort">×</button></div>'
+}
+function characterEquipmentEditField(label,content,extra=''){
+ return '<label class="character-equip-field '+extra+'"><span>'+label+'</span>'+content+'</label>'
+}
 function renderWeapons(){
  ensureEquipmentState(current);current.projectiles=current.projectiles||[];let ws=current.weapons||[];
  $('weapontable').innerHTML='<div class="weapon-head"><div>Vapen</div><div class="skillnum">FV</div><div class="skillnum">Skada</div><div class="skillnum">BV</div><div class="skillnum">Vapenl.</div><div class="skillnum">Räckv.</div><div class="skillnum">BEP</div><div class="skillnum">ERF</div>'+(editing?'<div class="skillnum">Åtg.</div>':'')+'</div>'+
@@ -1287,7 +1355,40 @@ function renderWeapons(){
     '<div class="skillnum">'+escAttr(x.damage||'—')+'</div><div class="skillnum">'+escAttr(x.bv||'—')+'</div><div class="skillnum">'+escAttr(x.length||'—')+'</div><div class="skillnum">'+escAttr(x.range||'—')+'</div><div class="skillnum">'+escAttr((x.bep??x.weight)===''?'—':(x.bep??x.weight??'—'))+'</div>'+
     weaponLinkedErfHtml(x,i,false)+'</div>'
   }).join('');
- let ps=current.projectiles||[];$('projectiletable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">Antal</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+ps.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setProjectile(${i},'name',this.value)"></div><div class="skillnum"><span class="calculated-value">${Math.max(0,+x.count||0)}</span></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeProjectile(${i})">×</button></div>`:`<div>${x.name||'—'}</div><div class="skillnum">${projectileStepper(i,x.count)}</div>`).join('');let ar=current.armor||[];$('armortable').innerHTML='<div class="skillhead">Rustning</div><div class="skillhead skillnum">Mtrl</div><div class="skillhead skillnum">ABS</div><div class="skillhead skillnum">BEP</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+ar.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setArmor(${i},'name',this.value)"></div><div>${ruleArmorLoaded?armorMaterialSelect(i,x):`<input value="${escAttr(x.material??'')}" onchange="setArmor(${i},'material',this.value)">`}</div><div><input type="number" value="${x.abs??''}" onchange="setArmor(${i},'abs',this.value)"></div><div><input type="number" value="${x.bep??''}" onchange="setArmor(${i},'bep',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeArmor(${i})">×</button></div>`:`<div>${escAttr(x.name||'—')}</div><div class="skillnum">${escAttr(x.material||'Standard')}</div><div class="skillnum">${x.abs===0?0:(x.abs||'—')}</div><div class="skillnum">${x.bep===0?0:(x.bep||'—')}</div>`).join('');let sh=current.shields||[];$('shieldtable').innerHTML='<div class="skillhead">Sköld</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">BEP</div><div class="skillhead skillnum">ERF</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+sh.map((x,i)=>editing?`<div><input value="${x.name||''}" onchange="setShield(${i},'name',this.value)"></div><div><input class="fv-input" type="number" value="${x.fv??''}" onchange="setShield(${i},'fv',this.value)"></div><div><input value="${x.bep??''}" onchange="setShield(${i},'bep',this.value)"></div><div><input class="erf-edit-input" type="number" min="0" value="${x.erf??0}" onchange="setShield(${i},'erf',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeShield(${i})">×</button></div>`:`<div>${x.name||'—'}</div><div class="skillnum">${x.fv||'—'}</div><div class="skillnum">${x.bep||'—'}</div><div class="skillnum">${erfDisplay('shields',i,x.erf)}</div>`).join('')}function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){current.projectiles.push({name:'',count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function addShield(){current.shields.push({equipId:newEquipItemId('shield'),name:'',fv:'',erf:'',bep:''});save();render()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
+ let ps=current.projectiles||[];
+ $('projectiletable').innerHTML=editing?
+  ps.map((x,i)=>'<div class="character-equip-edit-row projectile-edit-row">'+
+   characterEquipmentEditField('Projektil','<input value="'+escAttr(x.name||'')+'" onchange="setProjectile('+i+',\'name\',this.value)" aria-label="Projektilnamn">','wide')+
+   characterEquipmentEditField('Antal',projectileStepper(i,x.count))+
+   characterEquipmentEditActions('removeProjectile',i)+'</div>').join(''):
+  '<div class="skillhead">Namn</div><div class="skillhead skillnum">Antal</div>'+
+  ps.map((x,i)=>'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+projectileStepper(i,x.count)+'</div>').join('');
+ let ar=current.armor||[];
+ $('armortable').innerHTML=editing?
+  ar.map((x,i)=>'<div class="character-equip-edit-row armor-edit-row">'+
+   characterEquipmentEditField('Rustning','<input value="'+escAttr(x.name||'')+'" onchange="setArmor('+i+',\'name\',this.value)" aria-label="Rustning">','wide')+
+   characterEquipmentEditField('Material',ruleArmorLoaded?armorMaterialSelect(i,x):'<input value="'+escAttr(x.material??'')+'" onchange="setArmor('+i+',\'material\',this.value)">','wide')+
+   characterEquipmentEditField('ABS','<input type="number" inputmode="numeric" value="'+escAttr(x.abs??'')+'" onchange="setArmor('+i+',\'abs\',this.value)">')+
+   characterEquipmentEditField('BEP','<input type="number" inputmode="decimal" value="'+escAttr(x.bep??'')+'" onchange="setArmor('+i+',\'bep\',this.value)">')+
+   characterEquipmentEditActions('removeArmor',i)+'</div>').join(''):
+  '<div class="skillhead">Rustning</div><div class="skillhead skillnum">Mtrl</div><div class="skillhead skillnum">ABS</div><div class="skillhead skillnum">BEP</div>'+
+  ar.map(x=>'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+escAttr(x.material||'Standard')+'</div><div class="skillnum">'+escAttr(x.abs??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div>').join('');
+ let sh=current.shields||[];
+ $('shieldtable').innerHTML=editing?
+  sh.map((x,i)=>{const rule=characterShieldRule(x);
+   const bv=rule?.bv??x.bv,be=rule?.bep??x.bep;
+   return '<div class="character-equip-edit-row shield-edit-row">'+
+    characterEquipmentEditField('Sköld ur grundtabellen','<select aria-label="Sköld ur grundtabellen" onchange="setCharacterShieldMaster('+i+',this.value)">'+characterShieldMasterOptions(x)+'</select>','wide')+
+    characterEquipmentEditField('BV','<output>'+escAttr(bv??'—')+'</output>')+
+    characterEquipmentEditField('BEP','<output>'+escAttr(be??'—')+'</output>')+
+    characterEquipmentEditField('FV','<input class="fv-input" type="number" inputmode="numeric" value="'+escAttr(x.fv??'')+'" onchange="setShield('+i+',\'fv\',this.value)">')+
+    characterEquipmentEditField('ERF','<input type="number" inputmode="numeric" min="0" value="'+escAttr(x.erf??0)+'" onchange="setShield('+i+',\'erf\',this.value)">')+
+    characterEquipmentEditActions('removeShield',i)+'</div>'
+  }).join(''):
+  '<div class="skillhead">Sköld</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">BEP</div><div class="skillhead skillnum">ERF</div>'+
+  sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b><small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
+   '<div class="skillnum">'+escAttr(x.fv??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div><div class="skillnum">'+erfDisplay('shields',i,x.erf)+'</div>').join('')
+}function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){current.projectiles.push({name:'',count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
 const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Överkropp',arms:'Arm',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
 function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'}[kind]||''}
 function currentEquipSlotHtml(slot){
