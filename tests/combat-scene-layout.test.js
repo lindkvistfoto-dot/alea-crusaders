@@ -63,4 +63,47 @@ describe('SL stridscen under turordningslistan',()=>{
   expect(renderName('',technical)).toContain('Aktiv stridsscen');
  });
 
+ test('kartans tre vänsterknappar erbjuder 5, 10 och hela kartan',()=>{
+  const markup=runtime.slice(runtime.indexOf('function combatMapPresetsHtml(){'),runtime.indexOf('function combatRuntimeHexCells(){'));
+  expect(markup).toContain("['near','Nära','5 hex runt aktuell kombatant']");
+  expect(markup).toContain("['medium','Mellan','10 hex runt aktuell kombatant']");
+  expect(markup).toContain("['large','Stor','Visa hela kartan']");
+  expect(markup).toContain('aria-pressed');
+  expect(markup).toContain('combatMapSetPreset(');
+  expect(render).toContain('renderCombatMap()+combatMapPresetsHtml()');
+  expect(css).toContain('.combat-map-presets{');
+  expect(css).toContain('left:6px;');
+  expect(css).toContain('.combat-map-preset.selected{');
+ });
+ test('hexradie 5 och 10 täcks i presetsens synfält',()=>{
+  const a=runtime.indexOf('function combatMapPresetViewport(');
+  const b=runtime.indexOf('function combatMapPresetActorPosition(',a);
+  const calc=new Function('COMBAT_MAP_MIN_ZOOM','COMBAT_MAP_MAX_ZOOM',runtime.slice(a,b)+';return combatMapPresetViewport')(1,8);
+  const g={width:1600,height:1000,size:20,xPitch:Math.sqrt(3)*20,rowPitch:30,offsetX:40,offsetY:25};
+  const actor={q:15,r:10};
+  const near=calc(g,actor,5),medium=calc(g,actor,10);
+  expect(near.zoom).toBeGreaterThan(medium.zoom);
+  const cx=g.xPitch*(actor.q+actor.r/2)+g.offsetX,cy=g.rowPitch*actor.r+g.offsetY;
+  for(const [radius,view] of [[5,near],[10,medium]]){
+   const w=g.width/view.zoom,h=g.height/view.zoom;
+   for(let q=-radius;q<=radius;q++)for(let r=-radius;r<=radius;r++){
+    if((Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2>radius)continue;
+    const x=cx+g.xPitch*(q+r/2),y=cy+g.rowPitch*r;
+    expect(x).toBeGreaterThanOrEqual(view.x-1e-7);
+    expect(x).toBeLessThanOrEqual(view.x+w+1e-7);
+    expect(y).toBeGreaterThanOrEqual(view.y-1e-7);
+    expect(y).toBeLessThanOrEqual(view.y+h+1e-7)
+   }
+  }
+  expect(calc(g,actor,7)).toBeNull();
+  expect(calc(g,null,5)).toBeNull()
+ });
+ test('närvy följer aktiv kombatant medan vanlig zoom får förbli fri',()=>{
+  expect(runtime).toContain("let combatMapPreset='large',combatMapPresetActorKey='';");
+  expect(runtime).toContain('combatMapRecenterPreset(g);');
+  expect(runtime).toContain("combatMapPreset=null;combatMapPresetActorKey='';");
+  expect(runtime).toContain("combatMapPreset='large';combatMapPresetActorKey='';");
+  expect(runtime).toContain('combatMapSyncPresetButtons()');
+ });
+
 });

@@ -142,6 +142,7 @@ let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoadi
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 let combatActionMenuId=null,combatActionMenuKind=null;
 let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
+let combatMapPreset='large',combatMapPresetActorKey='';
 
 function combatSceneFromId(id){
  return (campaignCombatScenes||[]).find(scene=>String(scene.id)===String(id))||null
@@ -901,6 +902,18 @@ function combatMapFooterHtml(){
   '</div>'+
  '</div>'
 }
+function combatMapPresetsHtml(){
+ const active=combatActiveActor();
+ const presets=[['near','Nära','5 hex runt aktuell kombatant'],['medium','Mellan','10 hex runt aktuell kombatant'],['large','Stor','Visa hela kartan']];
+ return '<div class="combat-map-presets" role="group" aria-label="Kartutsnitt">'+
+  presets.map(([key,label,description])=>
+   '<button type="button" class="combat-map-preset'+(combatMapPreset===key?' selected':'')+
+   '" data-map-preset="'+key+'" title="'+description+'" aria-label="'+label+' – '+description+
+   '" aria-pressed="'+(combatMapPreset===key?'true':'false')+'" onclick="combatMapSetPreset(\''+key+'\')"'+
+   (!active&&key!=='large'?' disabled':'')+'>'+label+'</button>'
+  ).join('')+'</div>'
+}
+
 function combatRuntimeHexCells(){
  const g=combatRuntimeGeometry();if(!g)return[];
  const terrainByKey=new Map((combatHexes||[]).map(row=>[Number(row.q)+','+Number(row.r),row]));
@@ -4072,6 +4085,54 @@ function combatHexPoints(x,y,size){
  let pts=[];for(let i=0;i<6;i++){let a=(Math.PI/180)*(60*i-30);pts.push((x+size*Math.cos(a)).toFixed(1)+','+(y+size*Math.sin(a)).toFixed(1))}return pts.join(' ')
 }
 const COMBAT_MAP_MIN_ZOOM=1,COMBAT_MAP_MAX_ZOOM=8;
+
+function combatMapPresetViewport(g,actor,radius){
+ if(!g||!actor||![5,10].includes(radius))return null;
+ const q=Number(actor.q),r=Number(actor.r);
+ if(!Number.isFinite(q)||!Number.isFinite(r))return null;
+ // Axial hex coordinates: fit all six corners of the requested hex radius.
+ const centerX=g.xPitch*(q+r/2)+g.offsetX,centerY=g.rowPitch*r+g.offsetY;
+ const margin=.75;
+ const width=(radius+margin)*2*g.xPitch,height=(radius+margin)*2*g.rowPitch;
+ const zoom=Math.max(COMBAT_MAP_MIN_ZOOM,Math.min(COMBAT_MAP_MAX_ZOOM,g.width/width,g.height/height));
+ const viewportWidth=g.width/zoom,viewportHeight=g.height/zoom;
+ return{zoom,x:centerX-viewportWidth/2,y:centerY-viewportHeight/2}
+}
+function combatMapPresetActorPosition(actor){
+ return actor?String(actor.id)+'|'+Number(actor.q)+','+Number(actor.r):''
+}
+function combatMapRecenterPreset(g){
+ if(!g||!['near','medium'].includes(combatMapPreset))return;
+ const actor=combatActiveActor(),key=combatMapPresetActorPosition(actor);
+ if(!actor||!key||key===combatMapPresetActorKey)return;
+ const view=combatMapPresetViewport(g,actor,combatMapPreset==='near'?5:10);
+ if(!view)return;
+ combatMapView=view;combatMapPresetActorKey=key
+}
+function combatMapSetPreset(preset){
+ if(!['near','medium','large'].includes(preset))return;
+ if(preset==='large'){combatMapResetView();return}
+ const g=combatMapViewGeometry(),actor=combatActiveActor();
+ if(!g||!actor)return;
+ combatMapEnsureView(g);
+ const view=combatMapPresetViewport(g,actor,preset==='near'?5:10);
+ if(!view)return;
+ combatMapPreset=preset;
+ combatMapPresetActorKey=combatMapPresetActorPosition(actor);
+ combatMapView=view;
+ combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
+ combatMapEnsureView(g);
+ combatMapApplyView()
+}
+function combatMapSyncPresetButtons(){
+ document.querySelectorAll('#combatPage .combat-map-preset').forEach(button=>{
+  const selected=button.dataset.mapPreset===combatMapPreset;
+  button.classList.toggle('selected',selected);
+  button.setAttribute('aria-pressed',String(selected));
+  button.disabled=button.dataset.mapPreset!=='large'&&!combatActiveActor()
+ })
+}
+
 function combatMapViewGeometry(){
  return combatRuntimeGeometry()
 }
@@ -4081,8 +4142,10 @@ function combatMapEnsureView(g){
  if(combatMapViewKey!==key){
   combatMapViewKey=key;
   combatMapView={zoom:1,x:0,y:0};
+  combatMapPreset='large';combatMapPresetActorKey='';
   combatMapPan=null;combatMapPointers.clear();combatMapPinch=null
  }
+ combatMapRecenterPreset(g);
  const zoom=Math.max(1,Math.min(COMBAT_MAP_MAX_ZOOM,Number(combatMapView.zoom)||1));
  const width=g.width/zoom,height=g.height/zoom;
  combatMapView.zoom=zoom;
@@ -4100,7 +4163,8 @@ function combatMapApplyView(){
  const view=combatMapViewBox(g);
  svg.setAttribute('viewBox',view.x+' '+view.y+' '+view.width+' '+view.height);
  const label=$('combatMapZoomLabel');if(label)label.textContent=Math.round(combatMapView.zoom*100)+'%';
- svg.classList.toggle('zoomed',combatMapView.zoom>1.001)
+ svg.classList.toggle('zoomed',combatMapView.zoom>1.001);
+ combatMapSyncPresetButtons()
 }
 function combatMapZoomAt(clientX,clientY,nextZoom){
  const svg=document.querySelector('#combatPage .combat-map-svg'),g=combatMapViewGeometry();
@@ -4116,6 +4180,7 @@ function combatMapZoomAt(clientX,clientY,nextZoom){
  combatMapView.zoom=zoom;
  combatMapView.x=anchorX-px*width;
  combatMapView.y=anchorY-py*height;
+ combatMapPreset=null;combatMapPresetActorKey='';
  combatMapEnsureView(g);
  combatMapApplyView()
 }
@@ -4126,7 +4191,8 @@ function combatMapZoomStep(direction){
  combatMapZoomAt(rect.left+rect.width/2,rect.top+rect.height/2,combatMapView.zoom*factor)
 }
 function combatMapResetView(){
- combatMapView={zoom:1,x:0,y:0};combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
+ combatMapView={zoom:1,x:0,y:0};combatMapPreset='large';combatMapPresetActorKey='';
+ combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
  combatMapApplyView()
 }
 function combatMapCombatantCenters(g=combatMapViewGeometry()){
@@ -4160,6 +4226,7 @@ function combatMapFitCombatants(){
  combatMapView.zoom=zoom;
  combatMapView.x=centerX-viewWidth/2;
  combatMapView.y=centerY-viewHeight/2;
+ combatMapPreset=null;combatMapPresetActorKey='';
  combatMapPan=null;combatMapPointers.clear();combatMapPinch=null;
  combatMapEnsureView(g);
  combatMapApplyView()
@@ -4233,6 +4300,7 @@ function combatMapPointerMove(event){
  if(rect.width<=0||rect.height<=0)return;
  combatMapView.x-=dx*(view.width/rect.width);
  combatMapView.y-=dy*(view.height/rect.height);
+ combatMapPreset=null;combatMapPresetActorKey='';
  combatMapEnsureView(g);
  combatMapApplyView();
  combatMapSuppressClickUntil=Date.now()+350
@@ -5489,7 +5557,7 @@ function renderCombat(){
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+'</div>'+combatMapFooterHtml()+'</div><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+combatMapPresetsHtml()+'</div>'+combatMapFooterHtml()+'</div><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
