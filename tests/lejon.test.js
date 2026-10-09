@@ -17,7 +17,7 @@ const code=footprint+'\n'+[
 
 function harness({outcome='success',sight=true,distance=1,psy=9}={}){
  const actor={id:'hero',name_snapshot:'Besvärjare',source_type:'npc',source_id:'npc1',q:0,r:0,current_psy:psy};
- const target={id:'target',name_snapshot:'Fienden',q:1,r:0,status:'active'};
+ const target={id:'target',name_snapshot:'Fienden',q:distance,r:0,status:'active'};
  const calls=[],damage=[];
  const ctx={
   activeCombat:{id:'fight',round_number:5},centralCampaignId:'camp',
