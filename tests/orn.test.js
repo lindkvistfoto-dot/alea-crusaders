@@ -4,6 +4,8 @@ import {runInNewContext} from 'node:vm';
 
 const combat=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../features/combat/admin-scenes.js',import.meta.url),'utf8');
+const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
+const placement=combat.slice(combat.indexOf('function combatMovementOccupied('),combat.indexOf('function combatSetMovementPreview('));
 
 const flight={id:'flight',code:'spell_flyga',active:true,modifiers:{
  type:'flight',ignore_terrain:true,ignore_obscuring_intermediate:true
@@ -15,7 +17,7 @@ const hex=(q,r,movement_mode='free',sight_mode='clear',notes='')=>({q,r,key:q+',
 const paths=(intermediate=hex(1,0))=>[hex(0,0),intermediate,hex(2,0)];
 function harness({cells=paths(),effects=[],defs=[flight],character=actor}={}){
  const context={
-  combatRuntimeHexCells:()=>cells,combatActiveEffects:effects,combatEffectRegistry:defs,
+  combatRuntimeHexCells:()=>cells,combatActiveEffects:effects,combatEffectRegistry:defs,combatants:[],
   combatEffectDefinition:effect=>defs.find(d=>d.id===effect.effect_id),
   combatEffectIsActive:effect=>effect.status==='active',
   combatNumber:(v,fallback=null)=>v==null||v===''?fallback:Number(v),
@@ -25,7 +27,7 @@ function harness({cells=paths(),effects=[],defs=[flight],character=actor}={}){
  const start=combat.indexOf('function combatAxialDistance('),stop=combat.indexOf('function combatAttackProfile(',start);
  const moveStart=combat.indexOf('function combatReachableHexes('),moveEnd=combat.indexOf('async function combatRecordFullMoveAction(',moveStart);
  if(start<0||stop<start||moveStart<0||moveEnd<moveStart)throw Error('Missing ÖRN runtime slice');
- runInNewContext(combat.slice(start,stop)+'\n'+combat.slice(moveStart,moveEnd)+
+ runInNewContext(footprint+'\n'+placement+'\n'+combat.slice(start,stop)+'\n'+combat.slice(moveStart,moveEnd)+
   '\nthis.rules={combatIsFlying,combatFlightCapabilities,combatTerrainIsWall,combatHasLineOfSight,combatReachableHexes,combatIgnoresSightObstacle};',context);
  return context.rules
 }
@@ -102,7 +104,7 @@ describe('ÖRN flight movement, visibility and solid walls',()=>{
  });
  test('movement, attack and spell target selection share LOS and flight flags',()=>{
   expect(combat).toContain('if(mode===\'melee\'&&(combatIsFlying(actor)||combatIsFlying(target)))return null;');
-  expect(combat).toContain('combatAxialDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target)');
+  expect(combat).toContain('combatFootprintDistance(actor,target)<=(touch?1:maxRange)&&combatHasLineOfSight(actor,target)');
   expect(combat).toContain('distance<=range&&combatHasLineOfSight(actor,target)');
   expect(combat).toContain('distance<1||!combatHasLineOfSight(actor,target)');
  });
