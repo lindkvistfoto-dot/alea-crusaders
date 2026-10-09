@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.25 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.26 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
@@ -33,12 +33,15 @@ const defaults=[
  ['ambience.fire','Brasa','ambience',.40],
  ['ambience.night','Nattens vind','ambience',.42]
 ];
-const categoryLabels={dice:'Tärningar',melee:'Närstrid',magic:'Magi',ambience:'Miljö'};
+const categoryLabels={dice:'Tärningar',melee:'Närstrid',ranged:'Avståndsvapen',magic:'Magi',ambience:'Miljö',creature:'Varelser',event:'Händelser'};
+const legacyCueKeys=new Set(defaults.map(x=>x[0]));
+const priorityNames={1:'P1 – Måste ha',2:'P2 – Viktigt',3:'P3 – Senare'};
+const sourceNames={needed:'Behöver ljudfil',shortlisted:'Kandidater hittade',verified:'Licens granskad'};
 const cues=new Map(defaults.map(([cue_key,title,category,volume])=>[cue_key,{cue_key,title,category,volume,asset_path:null,enabled:true}]));
 const clamp=value=>Math.max(0,Math.min(1,Number(value)||0));
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
 function initialPrefs(){
- const base={enabled:true,master:.75,dice:.75,melee:.9,magic:.8,ambience:.55};
+ const base={enabled:true,master:.75,dice:.75,melee:.9,ranged:.85,magic:.8,ambience:.55,creature:.8,event:.8};
  try{const stored=JSON.parse(localStorage.getItem(STORE)||'{}');
   for(const k of Object.keys(base))if(k in stored)base[k]=k==='enabled'?stored[k]!==false:clamp(stored[k]);
  }catch(_error){}
@@ -169,7 +172,7 @@ function unlock(){
 }
 function setPrefs(changes){
  prefs={...prefs,...changes};
- for(const k of ['master','dice','melee','magic','ambience'])prefs[k]=clamp(prefs[k]);
+ for(const k of ['master','dice','melee','ranged','magic','ambience','creature','event'])prefs[k]=clamp(prefs[k]);
  prefs.enabled=prefs.enabled!==false;
  try{localStorage.setItem(STORE,JSON.stringify(prefs))}catch(_error){}
  if(!prefs.enabled)stopAll();
@@ -290,7 +293,7 @@ async function load(force=false){
  if(loaded&&!force)return Array.from(cues.values());
  if(loading&&!force)return loading;
  loading=(async()=>{
-  const rows=await dbJson('rule_sound_cues?select=cue_key,title,category,asset_path,volume,enabled&order=category.asc,cue_key.asc');
+  const rows=await dbJson('rule_sound_cues?select=cue_key,title,category,asset_path,volume,enabled,priority,sound_kind,usage_hint,search_terms,target_variants,integration_status,source_status,source_url,creator_credit,license_type,license_notes&order=priority.asc,category.asc,cue_key.asc');
   if(Array.isArray(rows)){cues.clear();rows.forEach(row=>cues.set(row.cue_key,row));loaded=true}
   return Array.from(cues.values())
  })().finally(()=>{loading=null});
@@ -316,7 +319,7 @@ function mountDock(){
  root.innerHTML='<button type="button" class="alea-audio-mute" data-audio-mute aria-label="Stäng av ljud">🔊</button>'+
   '<button type="button" class="alea-audio-settings" data-audio-settings aria-expanded="false" aria-controls="aleaAudioPanel">Ljud ⚙</button>'+
   '<div id="aleaAudioPanel" class="alea-audio-panel" hidden><b>Ljudinställningar</b><p>Tärningar, strid och magi spelas på din egen enhet.</p>'+
-  ['master','dice','melee','magic','ambience'].map(k=>'<label><span>'+({master:'Huvudvolym',...categoryLabels}[k]||categoryLabels[k])+'</span><input type="range" min="0" max="100" step="5" data-audio-volume="'+k+'"><output data-audio-value="'+k+'"></output></label>').join('')+
+  ['master','dice','melee','ranged','magic','ambience','creature','event'].map(k=>'<label><span>'+({master:'Huvudvolym',...categoryLabels}[k]||categoryLabels[k])+'</span><input type="range" min="0" max="100" step="5" data-audio-volume="'+k+'"><output data-audio-value="'+k+'"></output></label>').join('')+
   '<small>Ljud aktiveras efter första klicket i spelet.</small></div>';
  document.body.appendChild(root);
  root.querySelector('[data-audio-mute]').addEventListener('click',()=>{
@@ -337,7 +340,7 @@ async function saveCue(cueKey,patch){
  const current=cues.get(cueKey);
  if(!current)throw new Error('Ljudhändelsen saknas.');
  const allowed={};
- for(const key of ['title','category','volume','enabled','asset_path'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
+ for(const key of ['title','category','volume','enabled','asset_path','priority','sound_kind','usage_hint','search_terms','target_variants','source_status'])if(Object.prototype.hasOwnProperty.call(patch,key))allowed[key]=patch[key];
  await dbJson('rule_sound_cues?cue_key=eq.'+encodeURIComponent(cueKey),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(allowed)});
  await load(true)
 }
@@ -360,41 +363,72 @@ function formStatus(message,bad=false){
  if(el){el.textContent=message;el.classList.toggle('error',bad)}
 }
 function adminRows(){
- return [...cues.values()].sort((a,b)=>a.category.localeCompare(b.category)||a.cue_key.localeCompare(b.cue_key));
+ return [...cues.values()].sort((a,b)=>(Number(a.priority)||2)-(Number(b.priority)||2)||a.category.localeCompare(b.category)||a.cue_key.localeCompare(b.cue_key));
 }
 function renderRows(){
  const target=document.getElementById('adminSoundTable');if(!target)return;
  const search=String(document.getElementById('adminSoundSearch')?.value||'').trim().toLocaleLowerCase('sv');
  const category=document.getElementById('adminSoundCategory')?.value||'all';
  const fileFilter=document.getElementById('adminSoundFileFilter')?.value||'all';
- const rows=adminRows().filter(row=>(!search||(row.title+' '+row.cue_key).toLocaleLowerCase('sv').includes(search))&&
+ const priority=document.getElementById('adminSoundPriorityFilter')?.value||'all';
+ const integration=document.getElementById('adminSoundIntegrationFilter')?.value||'all';
+ const source=document.getElementById('adminSoundSourceFilter')?.value||'all';
+ const all=adminRows(),uploaded=all.filter(row=>!!row.asset_path).length;
+ const summary=document.getElementById('adminSoundInventoryStats');
+ if(summary)summary.textContent=all.length+' ljud · '+all.filter(row=>row.integration_status==='connected').length+
+  ' inkopplade · '+all.filter(row=>row.integration_status==='planned').length+
+  ' planerade · '+uploaded+' med inspelning · '+(all.length-uploaded)+' saknar inspelning.';
+ const rows=all.filter(row=>(!search||(row.title+' '+row.cue_key+' '+(row.usage_hint||'')+
+  ' '+(row.search_terms||'')).toLocaleLowerCase('sv').includes(search))&&
   (category==='all'||row.category===category)&&
-  (fileFilter==='all'||(fileFilter==='uploaded'?!!row.asset_path:!row.asset_path)));
+  (fileFilter==='all'||(fileFilter==='uploaded'?!!row.asset_path:!row.asset_path))&&
+  (priority==='all'||String(row.priority||2)===priority)&&
+  (integration==='all'||row.integration_status===integration)&&
+  (source==='all'||row.source_status===source));
+ const selection=(field,values,current)=>'<select data-field="'+field+'">'+Object.entries(values).map(([key,label])=>
+  '<option value="'+escapeHtml(key)+'"'+(String(key)===String(current)?' selected':'')+'>'+escapeHtml(label)+'</option>').join('')+'</select>';
  target.innerHTML=rows.length?rows.map(row=>{
-  const url=safeAssetUrl(row.asset_path);
+  const url=safeAssetUrl(row.asset_path),canPreview=!!url||legacyCueKeys.has(row.cue_key);
+  const priority=Number(row.priority)||2,kind=row.sound_kind||'oneshot';
   return '<div class="alea-sound-row" data-sound-key="'+escapeHtml(row.cue_key)+'">'+
-   '<div class="alea-sound-identity"><b>'+escapeHtml(row.title)+'</b><code>'+escapeHtml(row.cue_key)+'</code><small>'+(url?'Ljudfil uppladdad':'Syntetiskt testljud')+'</small></div>'+
+   '<div class="alea-sound-identity"><b>'+escapeHtml(row.title)+'</b><code>'+escapeHtml(row.cue_key)+'</code><small>'+
+    (url?'✓ Kvalitetsfil uppladdad':canPreview?'Syntetiskt testljud':'Saknar ljudfil')+'</small>'+
+    '<div class="alea-sound-tags"><span>'+escapeHtml(priorityNames[priority])+'</span><span>'+
+    (row.integration_status==='planned'?'Ej inkopplad':'Inkopplad i spelet')+'</span><span>'+
+    (kind==='loop'?'Loop':'Ljudeffekt')+'</span></div></div>'+
    '<label>Namn<input type="text" maxlength="120" data-field="title" value="'+escapeHtml(row.title)+'"></label>'+
-   '<label>Kategori<select data-field="category">'+Object.keys(categoryLabels).map(k=>'<option value="'+k+'"'+(k===row.category?' selected':'')+'>'+categoryLabels[k]+'</option>').join('')+'</select></label>'+
+   '<label>Kategori'+selection('category',categoryLabels,row.category)+'</label>'+
    '<label>Volym<input type="range" min="0" max="100" step="1" value="'+Math.round(clamp(row.volume)*100)+'" data-field="volume"></label>'+
    '<label class="alea-sound-check"><input type="checkbox" data-field="enabled"'+(row.enabled?' checked':'')+'> Aktiv</label>'+
-   '<div class="alea-sound-actions"><button type="button" data-audio-action="preview">▶ Testa</button><button type="button" data-audio-action="save">Spara</button>'+
-   '<label class="alea-sound-upload">↑ Ljudfil<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4,.mp3,.ogg,.wav,.webm,.m4a" data-audio-upload hidden></label>'+
-   (url?'<button type="button" data-audio-action="clear">Ta bort ljudfil</button>':'')+'</div>'+
-   '</div>'
- }).join(''):'<p class="note">Inga ljud matchar sökningen.</p>';
+   '<div class="alea-sound-actions"><button type="button" data-audio-action="preview"'+(canPreview?'':' disabled title="Ladda upp en ljudfil först"')+'>▶ Testa</button>'+
+    '<button type="button" data-audio-action="save">Spara</button>'+
+    '<label class="alea-sound-upload">↑ Ljudfil<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4,.mp3,.ogg,.wav,.webm,.m4a" data-audio-upload hidden></label>'+
+    (url?'<button type="button" data-audio-action="clear">Ta bort ljudfil</button>':'')+'</div>'+
+   '<details class="alea-sound-brief"><summary>Gandalf – Prioritet, användning och sökord</summary>'+
+    '<div class="alea-sound-brief-grid">'+
+     '<label>Prioritet'+selection('priority',priorityNames,priority)+'</label>'+
+     '<label>Speltyp'+selection('sound_kind',{oneshot:'Enstaka effekt',loop:'Sömlös loop'},kind)+'</label>'+
+     '<label>Önskade varianter<input type="number" min="1" max="8" data-field="target_variants" value="'+(Number(row.target_variants)||1)+'"></label>'+
+     '<label>Ljudkälla'+selection('source_status',sourceNames,row.source_status||'needed')+'</label>'+
+     '<label class="alea-sound-brief-wide">När spelas ljudet?<textarea data-field="usage_hint" rows="2" maxlength="500">'+escapeHtml(row.usage_hint||'')+'</textarea></label>'+
+     '<label class="alea-sound-brief-wide">Sökord på engelska<textarea data-field="search_terms" rows="2" maxlength="500">'+escapeHtml(row.search_terms||'')+'</textarea></label>'+
+     '<p class="alea-sound-brief-wide alea-sound-brief-note">'+(row.integration_status==='planned'?
+       'Ljudet är inventerat men behöver kopplas till spelmekanik i en senare etapp.':
+       'Ljudet har redan en uppspelningsväg i Alea Crusaders.')+'</p>'+
+    '</div></details></div>'
+ }).join(''):'<p class="note">Inga ljud matchar sökningen.</p>'
 }
 async function renderAdmin(){
  if(!document.getElementById('adminSoundTable'))return;
  formStatus('Läser ljudregistret…');
- try{await load(true);renderRows();formStatus(cues.size+' ljudhändelser · uppladdad fil används före testljud.')}
+ try{await load(true);renderRows();formStatus(cues.size+' ljudhändelser · uppladdade kvalitetsljud används före syntetiska ljud.')}
  catch(error){formStatus('Kunde inte läsa ljudregistret: '+error.message,true);renderRows()}
 }
 let mountedAdmin=false;
 function mountAdmin(){
  const target=document.getElementById('adminSoundTable');if(!target||mountedAdmin)return;
  mountedAdmin=true;
- ['adminSoundSearch','adminSoundCategory','adminSoundFileFilter'].forEach(id=>{
+ ['adminSoundSearch','adminSoundCategory','adminSoundFileFilter','adminSoundPriorityFilter','adminSoundIntegrationFilter','adminSoundSourceFilter'].forEach(id=>{
   document.getElementById(id)?.addEventListener('input',renderRows)
  });
  target.addEventListener('click',async event=>{
@@ -410,7 +444,13 @@ function mountAdmin(){
     if(!title)throw new Error('Namn krävs.');
     await saveCue(key,{title,category:row.querySelector('[data-field=category]').value,
      volume:Number(row.querySelector('[data-field=volume]').value)/100,
-     enabled:row.querySelector('[data-field=enabled]').checked})
+     enabled:row.querySelector('[data-field=enabled]').checked,
+     priority:Number(row.querySelector('[data-field=priority]').value),
+     sound_kind:row.querySelector('[data-field=sound_kind]').value,
+     target_variants:Number(row.querySelector('[data-field=target_variants]').value),
+     source_status:row.querySelector('[data-field=source_status]').value,
+     usage_hint:row.querySelector('[data-field=usage_hint]').value.slice(0,500),
+     search_terms:row.querySelector('[data-field=search_terms]').value.slice(0,500)})
    }else if(action==='clear')await saveCue(key,{asset_path:null});
    renderRows();formStatus('Sparat: '+key)
   }catch(error){formStatus(error.message,true)}
