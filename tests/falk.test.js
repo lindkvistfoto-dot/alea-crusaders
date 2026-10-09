@@ -106,7 +106,7 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
  test('area casting repeats range and blocked-sight validation immediately before the roll',()=>{
   const start=src.indexOf('async function combatCastAreaSpell('),end=src.indexOf('async function combatResolveTestFireball(',start);
   const area=src.slice(start,end);
-  expect(area).toContain('combatAxialDistance(actor,center)>combatSpellRangeHexes(actor,action)');
+  expect(area).toContain('combatFootprintDistance(actor,center)>combatSpellRangeHexes(actor,action)');
   expect(area).toContain('!combatHasLineOfSight(actor,center)');
   expect(area.indexOf('combatAxialDistance(actor,center)>combatSpellRangeHexes')).toBeLessThan(area.indexOf('await combatExpertRoll('));
  });
