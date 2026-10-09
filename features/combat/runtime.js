@@ -5072,7 +5072,7 @@ function combatGmPlacementHtml(){
    const isReserve=combatGmIsReserve(c),selected=String(combatGmPlacementId||'')===String(c.id);
    return '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>'+(isReserve?'Reserv':'Hex '+c.q+', '+c.r)+' · '+COMBAT_FOOTPRINT_LABELS[combatFootprintShape(c)]+' · riktning '+(combatFootprintFacing(c)+1)+'/6</small></span>'+
     '<button type="button" class="smallbtn'+(selected?' active':'')+'" onclick="combatSelectGmPlacement(\''+escAttr(c.id)+'\')">'+(selected?'Avbryt':isReserve?'Sätt ut':'Flytta')+'</button>'+
-    (!isReserve&&combatFootprintShape(c)!=='single'?'<button type="button" class="smallbtn" title="Vrid vänster" onclick="combatRotateFootprint(\\''+c.id+'\\',-1)">↶</button><button type="button" class="smallbtn" title="Vrid höger" onclick="combatRotateFootprint(\\''+c.id+'\\',1)">↷</button>':'')+
+    (!isReserve&&combatFootprintShape(c)!=='single'?'<button type="button" class="smallbtn" title="Vrid vänster" onclick="combatRotateFootprint(\''+c.id+'\',-1)">↶</button><button type="button" class="smallbtn" title="Vrid höger" onclick="combatRotateFootprint(\''+c.id+'\',1)">↷</button>':'')+
      (canReturn&&!isReserve?'<button type="button" class="smallbtn" onclick="combatReturnToReserve(\''+escAttr(c.id)+'\')">Till reserv</button>':'')+'</div>'
   }).join('')+'</div></details>'
 }
