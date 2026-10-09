@@ -1287,8 +1287,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.33.42");
-    expect(html).toContain("./features/shop/store.js?v=0.33.42");
+    expect(html).toContain("./features/shop/store.css?v=0.35.40");
+    expect(html).toContain("./features/shop/store.js?v=0.35.40");
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
