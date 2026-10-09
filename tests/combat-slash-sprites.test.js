@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync,existsSync,readdirSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js'),css=read('src/styles/app.css');
-describe('Cethiel CC0 sprites integrated in live melee combat v0.35.31',()=>{
+describe('Cethiel CC0 sprites integrated in live melee combat v0.35.32',()=>{
  it('chooses normal/special/perfect slashes from actual dice results',()=>{
   const style=runtime.slice(runtime.indexOf('function combatSlashSpriteStyle('),runtime.indexOf('function combatSlashSpritePath('));
   expect(style).toContain("outcome==='perfect'?'fire'");
@@ -21,7 +21,7 @@ describe('Cethiel CC0 sprites integrated in live melee combat v0.35.31',()=>{
  it('starts while dice roll, resolves after result, and retains SVG fallback',()=>{
   const action=runtime.slice(runtime.indexOf('function combatStartMeleeFx('),runtime.indexOf('async function combatResolveAttackAction('));
   expect(action).toContain("spriteAnimation=combatSlashSpriteOnMap(fx,b,size,style,slashVariant,rotation)");
-  expect(action).toContain("image"); // Render function keeps animated SVG fallback.
+  expect(action).toContain("add('path','combat-melee-slash'"); // SVG fallback stays in place.
   expect(runtime).toContain("const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null");
   expect(runtime).toContain("meleeFx?.finish(rolled.outcome)");
   expect(runtime).toContain("image.addEventListener('error',stop");
@@ -37,9 +37,8 @@ describe('Cethiel CC0 sprites integrated in live melee combat v0.35.31',()=>{
   expect(workflow).toContain('contents: write');
   expect(workflow).toContain('python scripts/import-weapon-slashes.py');
   const assetDir=new URL('../assets/combat/slashes/',import.meta.url);
-  if(existsSync(assetDir)){
-   const names=readdirSync(assetDir).filter(n=>/^(classic|purple|blue|fire)-slash-[1-5]\.png$/.test(n));
-   expect(names).toHaveLength(20)
-  }
+  expect(existsSync(assetDir)).toBe(true);
+  const names=readdirSync(assetDir).filter(n=>/^(classic|purple|blue|fire)-slash-[1-5]\.png$/.test(n));
+  expect(names).toHaveLength(20);
  });
 });

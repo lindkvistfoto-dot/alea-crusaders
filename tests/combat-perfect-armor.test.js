@@ -34,7 +34,7 @@ function harness({ward=0,armor=5,before=11}={}){
  const weapon={name:'Kastspjut',damage:'1T6+1'};
  return {api:env.api,actor,target,weapon,writes};
 }
-describe('Perfect hit penetrates armor v0.35.31',()=>{
+describe('Perfect hit penetrates armor v0.35.32',()=>{
  it('perfect Kastspjut hits for 7 without the 5-point ring mail, and flags bypass in event log',async()=>{
   const x=harness();
   const dmg=await x.api.damage(x.actor,x.target,x.weapon,true,{label:'Vänster arm'},true);
