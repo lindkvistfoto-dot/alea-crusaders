@@ -7,11 +7,16 @@ const feature=readFileSync(new URL('../features/character/figure-images.js',impo
 const styles=readFileSync(new URL('../features/character/figure-images.css',import.meta.url),'utf8');
 
 describe('rollfigurens helfigursbilder',()=>{
-  it('loads figure upload immediately next to the existing portrait',()=>{
-    expect(page).toContain('features/character/figure-images.css?v=0.35.41');
-    expect(page).toContain('features/character/figure-images.js?v=0.35.41');
+  it('loads the existing image manager in its own Bilder tab after Utrustning',()=>{
+    expect(page).toContain('features/character/figure-images.css?v=0.35.43');
+    expect(page).toContain('features/character/figure-images.js?v=0.35.43');
     expect(app).toContain('window.aleaRenderCharacterFigureGallery?.()');
-    expect(feature).toContain("hero.insertAdjacentElement('afterend',host)");
+    expect(page).toMatch(/id="tabEquipment"[^>]*>Utrustning<\/button><button id="tabImages"[^>]*>Bilder<\/button>/);
+    expect(page).toContain('id="imagesPanel"');
+    expect(page).toContain('id="characterFigureGallery"');
+    expect(app).toContain("$('imagesPanel').classList.toggle('hidden',t!=='images')");
+    expect(feature).toContain("document.getElementById('characterFigureGallery')");
+    expect(feature).not.toContain("hero.insertAdjacentElement('afterend',host)");
     expect(feature).toContain('Helfigur');
     expect(feature).toContain('Helfigur (rustning)');
   });

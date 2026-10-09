@@ -1,4 +1,4 @@
-/* v0.35.41: portraits and full figures next to the character photo */
+/* v0.35.43: dedicated Bilder tab for full-figure gallery and administration */
 #view .character-figure-gallery{
   margin:12px 0 16px;
   padding:12px 14px;
@@ -29,3 +29,6 @@
 .character-figure-viewer-card>button{position:absolute;right:9px;top:9px;width:33px;height:33px;border:1px solid #9c7a49;border-radius:8px;color:#fff;background:#241b16;cursor:pointer;font-size:23px;z-index:1}
 @media(max-width:850px){.character-figure-grid{grid-template-columns:1fr}}
 @media(max-width:460px){#view .character-figure-gallery{padding:10px}.character-figure-heading{flex-wrap:wrap}.character-figure-item{gap:10px}.character-figure-preview{width:82px;height:116px;flex-basis:82px}.character-figure-description strong{font-size:13px}}
+
+#imagesPanel .character-figure-intro{color:#b9c9ba;font-size:13px;line-height:1.5;margin:0 0 12px}
+#imagesPanel .character-figure-gallery{margin:0 0 10px}

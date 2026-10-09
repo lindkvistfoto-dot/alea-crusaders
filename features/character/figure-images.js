@@ -33,24 +33,12 @@
     return picker;
   }
   function ensureGallery(){
-    let host=document.getElementById('characterFigureGallery');
-    if(host)return host;
-    const portrait=document.getElementById('portrait');
-    const hero=portrait?.closest('.hero');
-    if(!hero)return null;
-    host=document.createElement('section');
-    host.id='characterFigureGallery';
-    host.className='character-figure-gallery';
-    host.setAttribute('aria-label','Helfigursbilder');
-    hero.insertAdjacentElement('afterend',host);
-    return host;
+    return document.getElementById('characterFigureGallery');
   }
   function renderGallery(){
     const host=ensureGallery();
     if(!host||!current){if(host)host.hidden=true;return}
-    const any=TYPES.some(t=>getSource(current,t.key));
-    host.hidden=!editing&&!any;
-    if(host.hidden)return;
+    host.hidden=false; // Dedicated Bilder tab always shows upload placeholders.
     const allowEdit=editing&&canEditCharacter(current);
     host.innerHTML='<div class="character-figure-heading"><b>Rollperson · Bilder</b><span>Helfigurer för utrustningsvyn</span></div>'+
       '<div class="character-figure-grid">'+TYPES.map(type=>{
