@@ -1,0 +1,175 @@
+/* Gandalf · v0.35.42 · Current equipment, art-driven interface.
+   Images: user-provided hall and magic slot frame. Artwork remains separate from
+   interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
+#currentEquipmentModal{
+  padding:10px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+#currentEquipmentModal .current-equipment-modal{
+  width:min(1000px,97vw);
+  max-height:calc(100dvh - 20px);
+  overflow-y:auto;
+  border:1px solid #94744d;
+  border-radius:17px;
+  padding:12px 16px 18px;
+  color:#ecdec8;
+  background:linear-gradient(145deg,#1c1915,#0d100e);
+  box-shadow:0 20px 60px #000c;
+}
+#currentEquipmentModal .modalhead{
+  margin:0 0 5px;
+  padding:0 4px 9px;
+  border-bottom:1px solid #76562d;
+}
+#currentEquipmentModal .modalhead h2{
+  color:#f8dfaa;
+  font:700 clamp(19px,2.3vw,27px) Georgia,serif;
+  text-shadow:0 1px 3px #000;
+}
+#currentEquipmentModal .modalclose{
+  color:#f6d9a2;
+  border-color:#9c7a45;
+  background:#34291a;
+}
+#currentEquipmentModal .current-equipment-intro{
+  color:#c9bba0;
+  margin:5px 4px 12px;
+  font-size:13px;
+}
+.gandalf-equip-scene{
+  position:relative;
+  isolation:isolate;
+  width:min(100%,880px);
+  aspect-ratio:1/1;
+  margin:0 auto;
+  overflow:hidden;
+  background-color:#0c0d0b;
+  background-image:url("./assets/gandalf-hall.jpg");
+  background-size:100% 100%;
+  background-position:center;
+  box-shadow:0 5px 25px #000b,inset 0 0 14px #0008;
+}
+.gandalf-equip-scene::before{
+  position:absolute;
+  content:"";
+  inset:2.8%;
+  z-index:0;
+  pointer-events:none;
+  background:radial-gradient(ellipse at 50% 49%,transparent 17%,rgba(0,0,0,.07) 67%,rgba(0,0,0,.27));
+}
+.gandalf-equip-scene .gandalf-equip-center{
+  position:absolute;
+  inset:9% 34% 8%;
+  background:radial-gradient(ellipse at 50% 28%,rgba(244,196,115,.08),transparent 70%);
+  pointer-events:none;
+}
+.gandalf-equip-slot{
+  position:absolute;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:1px;
+  width:15.9%;
+  padding:0;
+  background:none;
+  border:0;
+  color:#ffe3b2;
+  cursor:pointer;
+  font:inherit;
+  transition:filter .16s ease,transform .16s ease;
+  overflow:visible;
+}
+.gandalf-equip-slot:hover{
+  filter:drop-shadow(0 0 9px rgba(255,195,79,.6));
+  transform:translateY(-2px);
+}
+.gandalf-equip-slot:focus-visible{outline:2px solid #f8d282;outline-offset:3px;z-index:3}
+.gandalf-equip-face{
+  position:relative;
+  display:grid;
+  place-items:center;
+  flex:none;
+  aspect-ratio:1/1;
+  width:100%;
+  padding:17%;
+  box-sizing:border-box;
+  background-color:#241810;
+  background-image:url("./assets/gandalf-slot.jpg");
+  background-size:100% 100%;
+  background-position:center;
+  background-repeat:no-repeat;
+}
+.gandalf-equip-value{
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  max-width:100%;
+  max-height:100%;
+  padding:3px;
+  border-radius:5px;
+  background:rgba(12,10,8,.77);
+  font:700 clamp(10px,1.35vw,15px)/1.22 Georgia,serif;
+  color:#fff1ca;
+  text-align:center;
+  overflow-wrap:anywhere;
+  text-shadow:0 1px 2px #000;
+}
+.gandalf-equip-label{
+  align-self:stretch;
+  display:block;
+  min-height:1.25em;
+  text-align:center;
+  color:#f8d9a4;
+  font:700 clamp(10px,1.5vw,17px)/1.25 Georgia,serif;
+  letter-spacing:.015em;
+  text-shadow:0 1px 3px #000,0 0 9px #000;
+  white-space:normal;
+}
+.gandalf-equip-head{top:9.5%;left:14.6%}
+.gandalf-equip-arms{top:29%;left:14.6%}
+.gandalf-equip-torso{top:48.5%;left:14.6%}
+.gandalf-equip-legs{top:68%;left:14.6%}
+.gandalf-equip-leftHand{top:21%;left:65%}
+.gandalf-equip-rightHand{top:21%;left:82%}
+.gandalf-equip-projectiles{top:44%;left:73.6%}
+.gandalf-equip-twohand{top:21%;left:65%;width:33%}
+.gandalf-equip-twohand .gandalf-equip-face{
+  aspect-ratio:2.07 / 1;
+  background-size:100% 100%;
+}
+.gandalf-equip-twohand .gandalf-equip-label{white-space:normal}
+#currentEquipmentModal .current-equipment-picker{
+  max-width:880px;
+  margin:14px auto 0;
+  border:1px solid #816440;
+  border-radius:12px;
+  background:#f3e5c9;
+  padding:12px 16px 16px;
+  box-shadow:0 5px 18px #0005;
+}
+#currentEquipmentModal .current-equipment-pickerhead h3{color:#57371e}
+#currentEquipmentModal .current-equipment-picker-close{color:#694526}
+@media(max-width:620px){
+  #currentEquipmentModal{padding:4px}
+  #currentEquipmentModal .current-equipment-modal{width:100%;max-height:calc(100dvh - 8px);padding:9px 7px 13px;border-radius:11px}
+  #currentEquipmentModal .current-equipment-intro{font-size:11px;margin:6px 2px 8px}
+  .gandalf-equip-slot{width:18.1%}
+  .gandalf-equip-head,.gandalf-equip-arms,.gandalf-equip-torso,.gandalf-equip-legs{left:9.7%}
+  .gandalf-equip-head{top:11%}
+  .gandalf-equip-arms{top:30.5%}
+  .gandalf-equip-torso{top:50%}
+  .gandalf-equip-legs{top:69.5%}
+  .gandalf-equip-leftHand{left:60.9%}
+  .gandalf-equip-rightHand{left:80.1%}
+  .gandalf-equip-projectiles{left:70.6%;top:45%}
+  .gandalf-equip-twohand{left:60.9%;width:37.3%}
+  .gandalf-equip-value{font-size:clamp(8px,2.2vw,12px);line-height:1.1}
+  .gandalf-equip-label{font-size:clamp(8px,2.5vw,13px)}
+  #currentEquipmentModal .current-equipment-picker{padding:12px 8px}
+}
+@media(prefers-reduced-motion:reduce){
+  .gandalf-equip-slot{transition:none}
+}
