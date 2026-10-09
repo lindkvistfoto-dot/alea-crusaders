@@ -13,11 +13,11 @@ describe('Innkeeper portrait does not become a blurry stretched banner',()=>{
   expect(css).toContain('@media(max-width:820px)');
  });
  it('cache-busts the inn CSS after release',()=>{
-  expect(html).toContain('href="./features/inn/inn.css?v=0.35.04"');
+  expect(html).toContain('href="./features/inn/inn.css?v=0.35.05"');
  });
 
  it('uses the new high-resolution innkeeper photo and cache-busts its URL',()=>{
-  expect(inn).toContain("const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.35.04'");
+  expect(inn).toContain("const INN_HERO_SRC='./assets/innkeeper-hero.jpg?v=0.35.05'");
   // JPEG Start of Image.
   expect(portrait[0]).toBe(0xff);
   expect(portrait[1]).toBe(0xd8);
