@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.23 — audio bus, settings and admin registry.
+/* Alea Crusaders v0.35.24 — audio bus, settings and admin registry.
    Web Audio sounds are temporary previews; uploaded sound effects take precedence. */
 (function(){
 'use strict';
@@ -25,7 +25,13 @@ const defaults=[
  ['ambience.thunder','Åska','ambience',.85],
  ['ambience.door','Dörr','ambience',.62],
  ['ambience.ghost','Andar','ambience',.62],
- ['ambience.battle','Stridsmuller','ambience',.68]
+ ['ambience.battle','Stridsmuller','ambience',.68],
+ ['ambience.forest','Skog och nattfåglar','ambience',.42],
+ ['ambience.water','Rinnande vatten','ambience',.48],
+ ['ambience.ruins','Övergivna ruiner','ambience',.46],
+ ['ambience.crypt','Krypta och viskningar','ambience',.52],
+ ['ambience.fire','Brasa','ambience',.40],
+ ['ambience.night','Nattens vind','ambience',.42]
 ];
 const categoryLabels={dice:'Tärningar',melee:'Närstrid',magic:'Magi',ambience:'Miljö'};
 const cues=new Map(defaults.map(([cue_key,title,category,volume])=>[cue_key,{cue_key,title,category,volume,asset_path:null,enabled:true}]));
@@ -40,60 +46,106 @@ function initialPrefs(){
 }
 let prefs=initialPrefs(),context=null,output=null,loading=null,loaded=false;
 const currentlyPlaying=new Set();
-let activeAmbience=null,ambientAudio=null,ambientNodes=null;
-function ambientGain(){
- const cue=cues.get(activeAmbience);
+let activeAmbience=null,ambientVoice=null;
+const fadingVoices=new Set();
+const FADE_SECONDS=1.7;
+function ambientGain(cueKey=activeAmbience){
+ const cue=cues.get(cueKey);
  return cue?volumeFor(cue)*.7:0
 }
-function stopAmbience({preserve=false}={}){
- if(ambientAudio){
-  const player=ambientAudio;ambientAudio=null;
-  try{player.pause();player.currentTime=0}catch(_error){}
+function retireVoice(voice){
+ if(!voice||voice.retired)return;
+ voice.retired=true;
+ if(voice.timer)clearTimeout(voice.timer);
+ if(ambientVoice===voice)ambientVoice=null;
+ fadingVoices.delete(voice);
+ try{voice.audio?.pause();if(voice.audio)voice.audio.currentTime=0}catch(_error){}
+ try{voice.source?.stop?.()}catch(_error){}
+ try{voice.source?.disconnect?.()}catch(_error){}
+ try{voice.filter?.disconnect?.()}catch(_error){}
+ try{voice.gain.disconnect()}catch(_error){}
+}
+function fadeVoice(voice,target,duration=FADE_SECONDS){
+ if(!voice||voice.retired)return;
+ const now=context?.currentTime||0,gain=voice.gain.gain;
+ gain.cancelScheduledValues(now);
+ gain.setValueAtTime(gain.value,now);
+ gain.linearRampToValueAtTime(Math.max(0,target),now+Math.max(0.05,duration));
+ if(target===0){
+  fadingVoices.add(voice);
+  if(voice.timer)clearTimeout(voice.timer);
+  voice.timer=setTimeout(()=>retireVoice(voice),(duration+.12)*1000)
  }
- if(ambientNodes){
-  try{ambientNodes.source.stop()}catch(_error){}
-  try{ambientNodes.source.disconnect();ambientNodes.filter.disconnect();ambientNodes.gain.disconnect()}catch(_error){}
-  ambientNodes=null
+}
+function createAmbientVoice(cueKey){
+ if(!context||!output)return null;
+ const cue=cues.get(cueKey);if(!cue?.enabled)return null;
+ const gain=context.createGain();gain.gain.value=0;gain.connect(output);
+ const url=safeAssetUrl(cue.asset_path);
+ if(url){
+  const player=new Audio(url);player.loop=true;player.volume=1;
+  const source=context.createMediaElementSource(player);
+  source.connect(gain);
+  const voice={key:cueKey,audio:player,source,gain,retired:false,timer:null};
+  player.play().catch(error=>console.warn('Miljöljudet väntar på användarklick',error));
+  return voice
  }
+ const seconds=4,frames=Math.floor(seconds*context.sampleRate),buffer=context.createBuffer(1,frames,context.sampleRate);
+ const data=buffer.getChannelData(0);
+ for(let i=0;i<frames;i++){
+  const t=i/context.sampleRate,n=Math.random()*2-1;
+  if(cueKey==='ambience.cave'||cueKey==='ambience.crypt')
+   data[i]=n*.09+Math.sin(t*Math.PI*2*(cueKey==='ambience.crypt'?55:62))*.12;
+  else if(cueKey==='ambience.tavern')data[i]=n*.26+Math.sin(t*Math.PI*2*170)*.06;
+  else if(cueKey==='ambience.water')data[i]=n*.70+Math.sin(t*Math.PI*2*420)*.08;
+  else if(cueKey==='ambience.fire')data[i]=n*(Math.random()>.985?1:.16);
+  else if(cueKey==='ambience.forest')data[i]=n*.20+Math.sin(t*Math.PI*2*(400+Math.sin(t*5)*150))*.055;
+  else if(cueKey==='ambience.ruins')data[i]=n*.20+Math.sin(t*Math.PI*2*100)*.035;
+  else data[i]=n*.65
+ }
+ const source=context.createBufferSource(),filter=context.createBiquadFilter();
+ source.buffer=buffer;source.loop=true;filter.type='lowpass';
+ filter.frequency.value=({
+  'ambience.rain':2400,'ambience.wind':680,'ambience.night':420,
+  'ambience.cave':290,'ambience.crypt':300,'ambience.tavern':950,
+  'ambience.water':1500,'ambience.fire':900,'ambience.forest':1900,'ambience.ruins':480
+ })[cueKey]||1000;
+ source.connect(filter);filter.connect(gain);source.start();
+ return{key:cueKey,source,filter,gain,retired:false,timer:null}
+}
+function stopAmbience({preserve=false,immediate=false}={}){
+ const voice=ambientVoice;ambientVoice=null;
+ if(voice){
+  if(immediate)retireVoice(voice);
+  else fadeVoice(voice,0)
+ }
+ if(immediate)for(const old of [...fadingVoices])retireVoice(old);
  if(!preserve)activeAmbience=null
 }
 function setAmbience(cueKey){
  const cue=cueKey?cues.get(cueKey):null;
  if(cueKey&&(!cue||cue.category!=='ambience'))return false;
- if(cueKey===activeAmbience&&(ambientAudio||ambientNodes)){
-  if(ambientAudio)ambientAudio.volume=clamp(ambientGain());
-  if(ambientNodes)ambientNodes.gain.gain.value=ambientGain();
+ if(cueKey===activeAmbience&&ambientVoice){
+  fadeVoice(ambientVoice,ambientGain());
   return true
  }
  stopAmbience();
  activeAmbience=cueKey||null;
  if(!cueKey||!prefs.enabled||!cue.enabled)return true;
  unlock();
- const url=safeAssetUrl(cue.asset_path);
- if(url){
-  const player=new Audio(url);
-  player.loop=true;player.volume=clamp(ambientGain());
-  ambientAudio=player;
-  player.play().catch(error=>{console.warn('Ambience blocked',error)});
-  return true
- }
- if(!context)return false;
- const seconds=3,frames=Math.floor(seconds*context.sampleRate);
- const buffer=context.createBuffer(1,frames,context.sampleRate);
- const data=buffer.getChannelData(0);
- for(let i=0;i<frames;i++){
-  const t=i/context.sampleRate;
-  const n=Math.random()*2-1;
-  data[i]=cueKey==='ambience.cave'? n*.10+Math.sin(t*Math.PI*2*62)*.12:
-   cueKey==='ambience.tavern'?n*.3+Math.sin(t*Math.PI*2*170)*.065:n*.65
- }
- const source=context.createBufferSource(),filter=context.createBiquadFilter(),gain=context.createGain();
- source.buffer=buffer;source.loop=true;
- filter.type='lowpass';
- filter.frequency.value=cueKey==='ambience.rain'?2200:cueKey==='ambience.wind'?700:cueKey==='ambience.cave'?330:950;
- gain.gain.value=ambientGain();
- source.connect(filter);filter.connect(gain);gain.connect(output);
- source.start();ambientNodes={source,filter,gain};
+ const voice=createAmbientVoice(cueKey);
+ if(!voice)return false;
+ ambientVoice=voice;
+ fadeVoice(voice,ambientGain());
+ return true
+}
+function previewAmbience(cueKey){
+ if(!cues.has(cueKey)||cues.get(cueKey).category!=='ambience')return false;
+ unlock();
+ if(!prefs.enabled)return false;
+ const voice=createAmbientVoice(cueKey);if(!voice)return false;
+ fadeVoice(voice,Math.min(.55,ambientGain(cueKey)),.35);
+ setTimeout(()=>fadeVoice(voice,0,.7),4000);
  return true
 }
 
@@ -124,7 +176,7 @@ function setPrefs(changes){
  return {...prefs}
 }
 function stopAll(){
- stopAmbience({preserve:true});
+ stopAmbience({preserve:true,immediate:true});
  for(const item of currentlyPlaying){try{item.pause();item.currentTime=0}catch(_error){}}
  currentlyPlaying.clear()
 }
@@ -213,6 +265,8 @@ function spellResult(name,outcome){
 }
 function play(cueKey,{volume=1}={}){
  const cue=cues.get(cueKey);
+ if(cue?.category==='ambience'&&cueKey.startsWith('ambience.')&&
+    !['ambience.thunder','ambience.door','ambience.ghost','ambience.battle'].includes(cueKey))return previewAmbience(cueKey);
  if(!cue)return false;
  const gain=volumeFor(cue)*clamp(volume);
  if(gain<=0)return false;
@@ -305,7 +359,13 @@ function adminRows(){
 }
 function renderRows(){
  const target=document.getElementById('adminSoundTable');if(!target)return;
- target.innerHTML=adminRows().map(row=>{
+ const search=String(document.getElementById('adminSoundSearch')?.value||'').trim().toLocaleLowerCase('sv');
+ const category=document.getElementById('adminSoundCategory')?.value||'all';
+ const fileFilter=document.getElementById('adminSoundFileFilter')?.value||'all';
+ const rows=adminRows().filter(row=>(!search||(row.title+' '+row.cue_key).toLocaleLowerCase('sv').includes(search))&&
+  (category==='all'||row.category===category)&&
+  (fileFilter==='all'||(fileFilter==='uploaded'?!!row.asset_path:!row.asset_path)));
+ target.innerHTML=rows.length?rows.map(row=>{
   const url=safeAssetUrl(row.asset_path);
   return '<div class="alea-sound-row" data-sound-key="'+escapeHtml(row.cue_key)+'">'+
    '<div class="alea-sound-identity"><b>'+escapeHtml(row.title)+'</b><code>'+escapeHtml(row.cue_key)+'</code><small>'+(url?'Ljudfil uppladdad':'Syntetiskt testljud')+'</small></div>'+
@@ -317,7 +377,7 @@ function renderRows(){
    '<label class="alea-sound-upload">↑ Ljudfil<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4,.mp3,.ogg,.wav,.webm,.m4a" data-audio-upload hidden></label>'+
    (url?'<button type="button" data-audio-action="clear">Ta bort ljudfil</button>':'')+'</div>'+
    '</div>'
- }).join('');
+ }).join(''):'<p class="note">Inga ljud matchar sökningen.</p>';
 }
 async function renderAdmin(){
  if(!document.getElementById('adminSoundTable'))return;
@@ -329,6 +389,9 @@ let mountedAdmin=false;
 function mountAdmin(){
  const target=document.getElementById('adminSoundTable');if(!target||mountedAdmin)return;
  mountedAdmin=true;
+ ['adminSoundSearch','adminSoundCategory','adminSoundFileFilter'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',renderRows)
+ });
  target.addEventListener('click',async event=>{
   const button=event.target.closest('[data-audio-action]');if(!button)return;
   const row=button.closest('[data-sound-key]');if(!row)return;
