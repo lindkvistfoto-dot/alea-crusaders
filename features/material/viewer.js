@@ -222,7 +222,7 @@ export function createLegolas({
   const picked=state.selection.has(row.id);
   return '<article class="legolas-card">'+
    '<button type="button" class="legolas-card-preview" data-legolas-open="'+safe(row.id)+'" aria-label="Förhandsvisa '+safe(row.title)+'">'+
-    '<span class="legolas-card-media" data-legolas-thumb="'+safe(row.id)+'">'+symbol+'<span class="legolas-card-kind">'+(row.asset_kind==='image'?'BILD':row.asset_kind==='document'?'DOKUMENT':'MATERIAL')+'</span></span>'+
+    '<span class="legolas-card-media" data-legolas-thumb="'+safe(row.id)+'">'+symbol+'</span><span class="legolas-card-kind">'+(row.asset_kind==='image'?'BILD':row.asset_kind==='document'?'DOKUMENT':'MATERIAL')+'</span>'+
     '<span class="legolas-card-title">'+safe(row.title)+'</span><small>'+safe(categories[row.category]||'Övrigt')+'</small></button>'+
    (isGM()&&row.asset_kind==='image'?
      '<button type="button" class="legolas-pick" data-legolas-pick="'+safe(row.id)+'" aria-pressed="'+picked+'">'+(picked?'✓ Vald':'+ Välj')+'</button>':'')+
