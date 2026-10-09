@@ -1484,18 +1484,42 @@ function renderWeapons(){
   sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b><small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
    '<div class="skillnum">'+escAttr(x.fv??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div><div class="skillnum">'+erfDisplay('shields',i,x.erf)+'</div>').join('')
 }function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){let p=ruleProjectileTypes.find(p=>p.active!==false);if(!p)return alert('Projektilregistret är tomt.');current.projectiles.push({projectileKey:p.projectile_key,name:p.name,count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
-const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Överkropp',arms:'Arm',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
+const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Kropp',arms:'Armar',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
 function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'}[kind]||''}
+/* Gandalf: visually compose the existing equipment states over the supplied art assets.
+   Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
 function currentEquipSlotHtml(slot){
- let ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
- return '<button type="button" class="current-equip-slot '+(item?'':'empty')+'" onclick="openCurrentEquipmentPicker(\''+slot+'\')"><span class="slot-label">'+label+'</span><span class="slot-value">'+escAttr(item?.name||'Välj utrustning')+'</span><span class="slot-kind">'+(item?escAttr(currentEquipKindLabel(ref.kind)):'Klicka för att välja')+'</span></button>'
+ const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
+ const value=item?.name||'',occupied=!!item;
+ return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+'" '+
+   'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
+   '<span class="gandalf-equip-face">'+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
+   '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
+}
+function gandalfTwoHandSlotHtml(item){
+ return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped" '+
+  'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Båda händerna, tvåhandsvapen: '+escAttr(item.name||'Vapen')+'">'+
+  '<span class="gandalf-equip-face"><span class="gandalf-equip-value">'+escAttr(item.name||'Vapen')+'</span></span>'+
+  '<span class="gandalf-equip-label">Båda händerna · tvåhandsvapen</span></button>'
+}
+function showCurrentEquipmentProjectileInfo(){
+ if(typeof showBackupToast==='function')showBackupToast('Projektiler kopplas i Frodo-steget');
+ else alert('Projektilrutan kopplas till ammunition i Frodo-steget.');
 }
 function renderCurrentEquipment(){
- if(!current)return;ensureEquipmentState(current);let el=$('currentEquipmentBody');if(!el)return;
- let eq=current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left),two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
- let hands=two?'<div class="current-equipment-hands"><button type="button" class="current-equip-slot twohand" onclick="openCurrentEquipmentPicker(\'leftHand\')"><span class="slot-label">Båda händerna · tvåhandsvapen</span><span class="slot-value">'+escAttr(leftItem.name||'Vapen')+'</span><span class="slot-kind">Vänster + höger hand</span></button></div>':'<div class="current-equipment-hands">'+currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand')+'</div>';
- el.innerHTML='<div class="current-equipment-bodygrid">'+['head','torso','arms','legs'].map(currentEquipSlotHtml).join('')+'</div>'+hands+'<div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
- if(currentEquipmentPickerSlot)renderCurrentEquipmentPicker()
+ if(!current)return;ensureEquipmentState(current);
+ const el=$('currentEquipmentBody');if(!el)return;
+ const eq=current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left);
+ const two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
+ const hands=two?gandalfTwoHandSlotHtml(leftItem):currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand');
+ el.innerHTML='<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
+  '<div class="gandalf-equip-center" aria-hidden="true"></div>'+
+  ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
+  hands+
+  '<button type="button" class="gandalf-equip-slot gandalf-equip-projectiles empty" onclick="showCurrentEquipmentProjectileInfo()" title="Projektiler kopplas i Frodo-steget" aria-label="Projektiler, kommer i nästa steg">'+
+  '<span class="gandalf-equip-face"></span><span class="gandalf-equip-label">Projektiler</span></button>'+
+  '</section><div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
+ if(currentEquipmentPickerSlot)renderCurrentEquipmentPicker();
 }
 function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);if(refreshEquippedWeaponGrip(current))save();currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
 function closeCurrentEquipment(){currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden')}
