@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-describe('Ljud-Aragorn source shortlist v0.35.30',()=>{
+describe('Ljud-Aragorn source shortlist v0.35.31',()=>{
  it('records 19 source URLs with individual creator and CC0 rights-notes',()=>{
   const sql=read('supabase/migrations/20261009164500_aragorn_sources_v03527.sql');
   expect(sql).toContain("'dice.roll'");

@@ -6689,7 +6689,7 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 .alea-sound-source-link:hover,.alea-sound-source-link:focus-visible{background:#223a49;color:#effbff;outline:2px solid #9fcce8;outline-offset:2px}
 .alea-sound-brief-grid input[type="url"],.alea-sound-brief-grid input[type="text"]{word-break:break-all}
 
-/* v0.35.30 – perfect strikes: full damage and no mundane armor. */
+/* v0.35.31 – perfect strikes: full damage and no mundane armor. */
 .combat-attack-badges{display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%}
 .combat-attack-result-main>.combat-attack-badges>strong{
  display:inline-flex;align-items:center;justify-content:center;
@@ -6708,4 +6708,12 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 @media(max-width:390px){
  .combat-attack-badges{gap:4px}
  .combat-attack-result-main>.combat-attack-badges>strong{font-size:9px;padding:4px 6px}
+}
+
+/* v0.35.31 – imported, frame-based CC0 melee slashes on the battle map. */
+.combat-melee-sprite{opacity:1;overflow:hidden;pointer-events:none;filter:drop-shadow(0 0 6px rgba(250,209,117,.65))}
+.combat-melee-fx.slash-sprite-active .combat-melee-slash,
+.combat-melee-fx.slash-sprite-active .combat-melee-slash-glow{opacity:0!important}
+@media(prefers-reduced-motion:reduce){
+ .combat-melee-sprite{display:none}
 }

@@ -1648,6 +1648,60 @@ async function combatAwardAttackErf(actor,weapon,outcome){
 }
 
 /* v0.35.21 — melee choreography is visual only; dice remain authoritative. */
+
+/* Cethiel CC0 weapon slash sprites: 5 variants × 4 colors, 6 frames each. */
+const COMBAT_SLASH_SPRITE_DIR='./assets/combat/slashes/';
+function combatSlashSpriteStyle(outcome,enchanted=false){
+ if(!['success','special','perfect'].includes(outcome))return null;
+ return enchanted?'purple':outcome==='perfect'?'fire':outcome==='special'?'blue':'classic'
+}
+function combatSlashSpritePath(style,variant){
+ if(!['classic','purple','blue','fire'].includes(style)||!Number.isInteger(variant)||variant<1||variant>5)return '';
+ return COMBAT_SLASH_SPRITE_DIR+style+'-slash-'+variant+'.png'
+}
+function combatSlashSpriteOnMap(group,target,size,style,variant,rotation=0){
+ const path=combatSlashSpritePath(style,variant);
+ if(!path||!group?.isConnected)return null;
+ const ns='http://www.w3.org/2000/svg';
+ const viewport=document.createElementNS(ns,'svg');
+ viewport.setAttribute('class','combat-melee-sprite');
+ viewport.setAttribute('x',String(target.x-size*1.54));
+ viewport.setAttribute('y',String(target.y-size*1.85));
+ viewport.setAttribute('width',String(size*3.08));
+ viewport.setAttribute('height',String(size*3.70));
+ viewport.setAttribute('viewBox','0 0 126 150');
+ viewport.setAttribute('overflow','hidden');
+ viewport.setAttribute('pointer-events','none');
+ viewport.setAttribute('transform','rotate('+rotation+' '+target.x+' '+target.y+')');
+ const image=document.createElementNS(ns,'image');
+ image.setAttribute('href',path);
+ image.setAttribute('width','756');
+ image.setAttribute('height','150');
+ image.setAttribute('x','0');
+ image.setAttribute('y','0');
+ image.setAttribute('preserveAspectRatio','none');
+ let interval=null,finished=false;
+ const stop=()=>{
+  finished=true;
+  if(interval!==null){clearInterval(interval);interval=null}
+  viewport.remove()
+ };
+ image.addEventListener('error',stop,{once:true});
+ image.addEventListener('load',()=>{
+  if(finished||!group.isConnected){stop();return}
+  group.classList.add('slash-sprite-active');
+  let frame=0;
+  interval=setInterval(()=>{
+   frame+=1;
+   if(frame>=6){stop();return}
+   viewport.setAttribute('viewBox',String(frame*126)+' 0 126 150')
+  },90)
+ },{once:true});
+ viewport.appendChild(image);
+ group.appendChild(viewport);
+ return{stop}
+}
+
 function combatStartMeleeFx(actor,target){
  const svg=document.querySelector('#combatPage .combat-board .combat-map-svg');
  const g=combatRuntimeGeometry();
@@ -1670,6 +1724,14 @@ function combatStartMeleeFx(actor,target){
  const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);
  if(!Number.isFinite(distance)||distance<.01)return null;
  const ux=dx/distance,uy=dy/distance,px=-uy,py=ux,size=Math.max(9,Number(g.size)||15);
+ const slashVariant=1+Math.floor(Math.random()*5);
+ // Cache likely result colors while the 3D dice are rolling.
+ const preloadedSlashes=[];
+ if(typeof Image==='function')for(const style of ['classic','blue','fire']){
+  const preload=new Image();
+  preload.src=combatSlashSpritePath(style,slashVariant);
+  preloadedSlashes.push(preload)
+ }
  const ns='http://www.w3.org/2000/svg';
  const fx=document.createElementNS(ns,'g');
  fx.setAttribute('class','combat-melee-fx');
@@ -1713,13 +1775,18 @@ function combatStartMeleeFx(actor,target){
   {transform:'translate('+(ux*size*.21)+'px,'+(uy*size*.21)+'px)',offset:.57},
   {transform:'translate(0px,0px)',offset:1}
  ],{duration:800,easing:'ease-in-out'});
- let timer=null,finished=false;
+ let timer=null,finished=false,spriteAnimation=null;
  return{
   finish(outcome){
    if(finished)return;
    finished=true;
    const kind=['success','special','perfect'].includes(outcome)?'success':outcome==='fumble'?'fumble':'miss';
    fx.classList.add('resolved',kind);
+   const style=combatSlashSpriteStyle(outcome);
+   if(style){
+    const rotation=Math.atan2(dy,dx)*180/Math.PI-90;
+    spriteAnimation=combatSlashSpriteOnMap(fx,b,size,style,slashVariant,rotation)
+   }
    caption.textContent={
     success:'LYCKAT',special:'SÄRSKILT',perfect:'PERFEKT',
     fail:'MISSLYCKAT',fumble:'FUMMEL'
@@ -1728,6 +1795,7 @@ function combatStartMeleeFx(actor,target){
   },
   stop(){
    if(timer)clearTimeout(timer);
+   spriteAnimation?.stop();
    lunge?.cancel?.();
    fx.remove();
    finished=true
