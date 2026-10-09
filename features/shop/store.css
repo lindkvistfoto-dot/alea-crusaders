@@ -366,3 +366,33 @@ font-family:Georgia,serif;text-align:center;text-transform:uppercase;letter-spac
   .shop-coin{width:16px;height:16px;flex-basis:16px}
   .shop-money-unit{gap:3px}
 }
+
+/* v0.35.40: Alkemistens fristående butik använder beprövat köpflöde. */
+.shop-alchemy .shop-hero.shop-hero-photo{border-color:#807d4c}
+.shop-alchemy .shop-hero-media{
+ background:
+  radial-gradient(ellipse at 45% 70%,rgba(105,198,90,.44),transparent 26%),
+  radial-gradient(ellipse at 60% 76%,rgba(137,51,157,.33),transparent 28%),
+  linear-gradient(120deg,#3c2318,#180f0c 60%,#090e0c);
+}
+.shop-alchemy .shop-hero-media::before{
+ content:'🧙‍♀️\\a 🔮';
+ position:absolute;inset:0;display:grid;place-content:center;
+ z-index:1;white-space:pre;text-align:center;line-height:1.3;font-size:84px;
+ filter:drop-shadow(0 5px 12px #0009);
+}
+.shop-alchemy .shop-hero-image-fallback{z-index:3;place-content:end center;padding:0 14px 16px;background:linear-gradient(180deg,transparent 65%,rgba(12,6,4,.65))}
+.shop-alchemy .shop-hero-image-fallback span{font-size:12px}
+.shop-alchemy .shop-hero-image-fallback b{font-size:28px}
+.shop-alchemy .shop-hero-copy{background:linear-gradient(135deg,#211b15,#14150e)!important}
+.shop-alchemy .shop-hero-kicker{border-color:#879960;color:#c9dd95}
+.shop-alchemy .shop-row-buy{background:linear-gradient(180deg,#596a37,#344329);border-color:#8b9a64}
+.shop-price-pending{color:#d9b985;font-size:12px;font-weight:600;white-space:normal}
+.shop-row-buy:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.35)}
+.shop-alchemy-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 14px;padding:9px 0 0;margin:7px 0 0;border-top:1px solid #ffffff23}
+.shop-alchemy-facts>div{display:block;min-width:0}
+.shop-alchemy-facts dt{font-size:11px;line-height:1.35;color:#ceae7f;font-weight:800}
+.shop-alchemy-facts dd{font-size:12px;line-height:1.45;color:#e9dbc4;margin:2px 0 0;overflow-wrap:anywhere}
+.shop-alchemy-price-edit{margin-top:10px;border:1px solid #c5a668;background:#382819;color:#f8e7c2;border-radius:7px;padding:7px 10px;cursor:pointer}
+.shop-alchemy .shop-item-row.expanded{border-color:#8b9763}
+@media(max-width:560px){.shop-alchemy-facts{grid-template-columns:1fr}.shop-alchemy .shop-hero-media::before{font-size:72px}}

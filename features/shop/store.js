@@ -1,5 +1,8 @@
 /* Targans Gille — player-facing shop browser, cart and character checkout. */
 const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1';
+const ALCHEMY_CART_STORAGE_KEY='alea_alchemy_cart_v1';
+let shopMode='general';
+const shopStorageKey=()=>shopMode==='alchemy'?ALCHEMY_CART_STORAGE_KEY:SHOP_CART_STORAGE_KEY;
 const SHOP_CURRENCY_KM={GM:100,SM:10,KM:1};
 const SHOP_CATEGORY_ORDER=['Alla','Vapen','Rustning','Sköld','Vapentillbehör','Äventyr','Proviant','Behållare','Verktyg','Kläder','Transport'];
 let shopCatalog=[];
@@ -16,6 +19,7 @@ const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.33.42';
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
   if(!img)return;
+  if(shopMode==='alchemy'){img.classList.remove('loaded');img.removeAttribute('src');img.dataset.shopHeroLoaded='0';return}
   if(img.dataset.shopHeroLoaded==='1')return;
   img.dataset.shopHeroLoaded='1';
   img.onload=()=>img.classList.add('loaded');
@@ -37,7 +41,7 @@ function shopEsc(value){
 
 function loadShopCart(){
   try{
-    const value=JSON.parse(localStorage.getItem(SHOP_CART_STORAGE_KEY)||'[]');
+    const value=JSON.parse(localStorage.getItem(shopStorageKey())||'[]');
     if(!Array.isArray(value))return [];
     return value
       .map(row=>({key:String(row?.key||''),qty:Math.max(1,Math.min(99,Number(row?.qty)||1))}))
@@ -48,7 +52,7 @@ function loadShopCart(){
 }
 
 function saveShopCart(){
-  localStorage.setItem(SHOP_CART_STORAGE_KEY,JSON.stringify(shopCart));
+  localStorage.setItem(shopStorageKey(),JSON.stringify(shopCart));
 }
 
 function shopWeaponCategoryLabel(category){
@@ -141,7 +145,7 @@ async function loadShopCatalog(force=false){
 }
 
 function shopCategories(){
-  const found=new Set(shopCatalog.map(item=>item.category).filter(Boolean));
+  const found=new Set(shopCatalog.filter(item=>!!item.metadata?.alchemy===(shopMode==='alchemy')).map(item=>item.category).filter(Boolean));
   const ordered=SHOP_CATEGORY_ORDER.filter(name=>name==='Alla'||found.has(name));
   const extra=[...found].filter(name=>!SHOP_CATEGORY_ORDER.includes(name)).sort((a,b)=>a.localeCompare(b,'sv'));
   return [...ordered,...extra];
@@ -174,6 +178,7 @@ function shopCurrencyAmountHtml(amount,currency){
 }
 
 function shopPriceLabel(item){
+  if(item.metadata?.price_pending)return 'Pris enligt SL';
   if(item.priceAmount===null||item.priceAmount===undefined||Number.isNaN(Number(item.priceAmount)))return 'Pris saknas';
   const amount=Number(item.priceAmount);
   const text=Number.isInteger(amount)?String(amount):String(amount).replace('.',',');
@@ -181,6 +186,7 @@ function shopPriceLabel(item){
 }
 
 function shopPriceHtml(item){
+  if(item.metadata?.price_pending)return '<span class="shop-price-pending">Pris enligt SL</span>';
   if(item.priceAmount===null||item.priceAmount===undefined||Number.isNaN(Number(item.priceAmount)))return 'Pris saknas';
   return shopCurrencyAmountHtml(item.priceAmount,item.priceCurrency||'SM');
 }
@@ -194,6 +200,7 @@ function shopBepLabel(item){
 function shopFilteredItems(){
   const query=shopSearch.trim().toLocaleLowerCase('sv-SE');
   return shopCatalog.filter(item=>{
+    if(Boolean(item.metadata?.alchemy)!==(shopMode==='alchemy'))return false;
     if(shopCategory!=='Alla'&&item.category!==shopCategory)return false;
     if(!query)return true;
     const hay=[item.name,item.description,item.category,item.subcategory,item.itemKey]
@@ -213,7 +220,42 @@ function shopItemDetailsHtml(item){
   const bep=shopBepLabel(item);
   if(bep)pills.push('<span>'+bep+'</span>');
   if(item.quantityPerPurchase>1)pills.push('<span>'+item.quantityPerPurchase+' st/köp</span>');
+  if(item.metadata?.alchemy){
+    const m=item.metadata;
+    if(m.kind)pills.push('<span>'+shopEsc(m.kind)+'</span>');
+    if(m.rarity)pills.push('<span>'+shopEsc(m.rarity)+'</span>');
+  }
   return pills.join('');
+}
+function shopAlchemyDetailsHtml(item){
+ if(!item.metadata?.alchemy)return '';
+ const m=item.metadata;
+ const fields=m.kind==='växt'
+  ?[['Typ',m.type],['Vanlighet',m.rarity],['Klimatzon',m.climate],['Växtplats',m.habitat],['Använd del',m.parts],['Skördetid',m.season],['Utseende',m.appearance],['Frukt',m.fruits]]
+  :[['Form',m.form],['Intag',m.consumption],['Tid till effekt',m.onset],['Verkningstid',m.duration],['Efterverkning',m.after_effect],['Efterverkningstid',m.after_duration],['Ingredienser',m.ingredients],['Tillverkning',m.skill]];
+ const details=fields.filter(([,value])=>String(value||'').trim());
+ return '<dl class="shop-alchemy-facts">'+details.map(([label,value])=>
+  '<div><dt>'+shopEsc(label)+'</dt><dd>'+shopEsc(value)+'</dd></div>').join('')+'</dl>'+
+  (typeof activeUser==='function'&&activeUser()?.admin
+   ?'<button type="button" class="shop-alchemy-price-edit" onclick="shopEditAlchemyPrice(\''+shopEsc(item.key)+'\')">✎ Sätt / ändra SL-pris</button>':'');
+}
+async function shopEditAlchemyPrice(key){
+ if(!activeUser()?.admin)return;
+ const item=shopItemByKey(key);
+ if(!item||!item.metadata?.alchemy||item.source!=='shop')return;
+ const input=prompt('Pris för '+item.name+' i silvermynt (SM):',item.metadata.price_pending?'':String(item.priceAmount));
+ if(input===null)return;
+ const price=Number(String(input).trim());
+ if(!Number.isInteger(price)||price<0||price>999999){alert('Ange ett heltal mellan 0 och 999 999 SM.');return}
+ const metadata={...item.metadata,price_pending:false,price_note:'Pris satt av SL'};
+ try{
+  await dbJson('rule_shop_items?id=eq.'+encodeURIComponent(item.sourceId),{
+   method:'PATCH',headers:{Prefer:'return=minimal'},
+   body:JSON.stringify({price_amount:price,price_currency:'SM',metadata})
+  });
+  await loadShopCatalog(true);
+  renderShopItems();renderShopCart();
+ }catch(error){alert('Kunde inte spara priset: '+(error?.message||error))}
 }
 
 function renderShopCategories(){
@@ -262,11 +304,12 @@ function renderShopItems(){
           '<span>'+qty+'</span>'+
           '<button type="button" onclick="shopChangeRowQuantity(\''+key+'\',1)" aria-label="Öka antal">+</button>'+
         '</div>'+
-        '<button type="button" class="shop-row-buy" onclick="shopAddItem(\''+key+'\','+qty+')">Köp</button>'+
+        '<button type="button" class="shop-row-buy" onclick="shopAddItem(\''+key+'\','+qty+')"'+(item.metadata?.price_pending?' disabled title="Fråga SL om pris"':'')+'>'+(item.metadata?.price_pending?'Fråga SL':'Köp')+'</button>'+
       '</div>'+
       '<div class="shop-item-details '+(expanded?'':'hidden')+'">'+
         (details?'<div class="shop-item-meta">'+details+'</div>':'')+
         description+
+        shopAlchemyDetailsHtml(item)+
         '<div class="shop-item-detail-price">Pris: <b>'+shopPriceHtml(item)+'</b></div>'+
       '</div>'+
     '</article>';
@@ -279,7 +322,7 @@ function shopItemByKey(key){
 
 function shopAddItem(key,quantity=1){
   const item=shopItemByKey(key);
-  if(!item)return;
+  if(!item||item.metadata?.price_pending)return;
   const qty=Math.max(1,Math.min(99,Math.floor(Number(quantity)||1)));
   const existing=shopCart.find(row=>row.key===key);
   if(existing)existing.qty=Math.min(99,existing.qty+qty);
@@ -332,7 +375,7 @@ function shopCartTotals(rows){
 
 
 function shopCartRows(){
-  return shopCart.map(row=>({row,item:shopItemByKey(row.key)})).filter(x=>x.item);
+  return shopCart.map(row=>({row,item:shopItemByKey(row.key)})).filter(x=>x.item&&Boolean(x.item.metadata?.alchemy)===(shopMode==='alchemy')&&!x.item.metadata?.price_pending);
 }
 
 function shopCurrencyValueKm(currency){
@@ -555,7 +598,8 @@ function shopAddPurchasedItem(c,item,purchases=1){
     name:item.name||'Utrustning',
     bep:item.bep==null?'':Number(item.bep),
     shopItemKey:item.itemKey||'',
-    purchaseKind:item.purchaseKind||'equipment'
+    purchaseKind:item.purchaseKind||'equipment',
+    ...(item.metadata?.alchemy?{alchemy:{...item.metadata},shopSource:'alchemy',sourceItemId:item.sourceId}: {})
   });
 }
 
@@ -573,8 +617,8 @@ async function shopCheckout(){
   const units=rows.reduce((sum,x)=>sum+(Number(x.row.qty)||0),0);
   const buyerName=buyer.identity?.namn||buyer.name||'rollfiguren';
   const ok=await askConfirm(
-    'Handla hos Targan',
-    'Köp '+units+' varor till '+buyerName+' för '+shopMoneyLabel(cost)+'? Targan växlar mynten automatiskt.',
+    shopMode==='alchemy'?'Handla hos alkemisten':'Handla hos Targan',
+    'Köp '+units+' varor till '+buyerName+' för '+shopMoneyLabel(cost)+'? Mynten växlas automatiskt.',
     'Köp'
   );
   if(!ok)return;
@@ -646,7 +690,30 @@ function shopSetSearch(value){
   renderShopItems();
 }
 
-async function openShop(){
+async function openAlchemyShop(){return openShop('alchemy')}
+async function openShop(mode='general'){
+  const alchemy=mode==='alchemy';
+  shopMode=alchemy?'alchemy':'general';
+  shopCart=loadShopCart();
+  shopSearch='';shopCategory='Alla';shopExpandedItemKey='';
+  const page=document.getElementById('shopPage');
+  page?.classList.toggle('shop-alchemy',alchemy);
+  const title=document.getElementById('shopTitle');
+  if(title)title.textContent=alchemy?'Häxans brygder':'Targans Gille';
+  const kicker=page?.querySelector('.shop-hero-kicker');
+  if(kicker)kicker.textContent=alchemy?'Trolldrycker, gifter & växter':'Handelshus';
+  const intro=page?.querySelector('.shop-hero-copy p');
+  if(intro)intro.textContent=alchemy
+   ?'I skenet från kitteln väntar underliga preparat och sällsynta örter. Läs om deras verkningar, välj en rollfigur och betala ur den burna börsen.'
+   :'Vapen, rustningar, rep, proviant och allt annat en äventyrare kan betala för. Targan har det mesta — och det som saknas går säkert att ordna.';
+  const fallback=page?.querySelector('.shop-hero-image-fallback');
+  if(fallback)fallback.innerHTML=alchemy?'<span>Häxans</span><b>Brygder</b>':'<span>Targans</span><b>Gille</b>';
+  const search=page?.querySelector('.shop-search input');
+  if(search){search.value='';search.placeholder=alchemy?'Sök trolldrycker, gifter och växter…':'Sök bland Targans varor…';search.setAttribute('aria-label',search.placeholder)}
+  const note=page?.querySelector('.shop-exchange-note');
+  if(note)note.textContent=alchemy?'Varor utan pris inväntar besked från SL. Köpta preparat och växter förs direkt till rollfigurens utrustning. 1 GM = 10 SM = 100 KM.':'Targan tar betalning ur den burna börsen och växlar automatiskt: 1 GM = 10 SM = 100 KM.';
+  document.getElementById('journalPage')?.classList.add('hidden');
+  window.aleaJournalClose?.(false);
   editing=false;
   document.getElementById('home')?.classList.add('hidden');
   document.getElementById('view')?.classList.add('hidden');
