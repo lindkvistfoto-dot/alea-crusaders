@@ -42,7 +42,7 @@ function jRender(){
  jGet('journalLatest').innerHTML=jState.rows.length?jState.rows.slice(0,8).map(r=>jRow(r,true)).join(''):'<div class="journal-empty">Inga händelser ännu.</div>';
  const term=jGet('journalSearch').value.toLocaleLowerCase('sv').trim(),kind=jGet('journalType').value;
  const filtered=jState.rows.filter(r=>(!kind||r.event_type===kind)&&(!term||[r.title,r.message,r.actor_name,r.outcome].join(' ').toLocaleLowerCase('sv').includes(term)));
- jGet('journalAll').innerHTML=filtered.length?filtered.map(jRow).join(''):'<div class="journal-empty">'+jEsc(jState.error||'Inga händelser matchar sökningen.')+'</div>';
+ jGet('journalAll').innerHTML=filtered.length?filtered.map(r=>jRow(r,false)).join(''):'<div class="journal-empty">'+jEsc(jState.error||'Inga händelser matchar sökningen.')+'</div>';
  jGet('journalMore').classList.toggle('hidden',jState.rows.length<jState.limit);
  jGet('journalNotes').classList.toggle('hidden',!jGM());
  const online=journalSync?.connected();

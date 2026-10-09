@@ -74,6 +74,7 @@ describe('compact clickable journal entries',()=>{
    .not.toContain('<script>');
   expect(source).toContain("jState.openRowId='';jRender()");
   expect(source).toContain("jGet('journalAll').addEventListener('click'");
+  expect(source).toContain('filtered.map(r=>jRow(r,false))');
   expect(source).toContain("jState.openRowId=jState.openRowId===id?'':id");
   expect(source).toContain("onRefresh:jRefresh");
   expect(css).toContain('.journal-row-trigger{');
