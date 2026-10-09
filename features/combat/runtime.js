@@ -384,8 +384,16 @@ function combatRollD10(){
 }
 const COMBAT_INITIATIVE_COLORS=['#d7544d','#4f86c6','#d4a72c','#68a05d','#9a69b4','#d87b39','#49a5a0','#cc6f92','#7e6ac8','#8a7a55'];
 let combatInitiativeVisuals=new Map();
+// Reserve combatants have placeholder coordinates. The flag is authoritative.
+function combatIsOnBattlefield(row){
+ return !!row&&row.state?.in_reserve!==true&&!['dead','removed'].includes(row.status)&&
+  row.q!=null&&row.r!=null&&Number.isFinite(Number(row.q))&&Number.isFinite(Number(row.r))
+}
+function combatInitiativeEligible(row){
+ return combatIsOnBattlefield(row)&&row.visible_to_players!==false
+}
 function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=new Map()){
- const visible=(rows||[]).filter(row=>row.visible_to_players!==false&&row.status!=='removed');
+ const visible=(rows||[]).filter(combatInitiativeEligible);
  const results=visible.map((row,index)=>{
   const smi=Math.max(0,combatNumber(combatEffectiveAttribute(row,'SMI'),combatNumber(row.state?.smi,10)));
   const die=combatNumber(dieByCombatant.get(String(row.id)),combatRollD10());
@@ -407,6 +415,9 @@ function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=ne
    row.sort_order=rank-1;
    row.state={...(row.state||{}),initiative_roll:result.die,initiative_total:result.total,initiative_rank:rank}
   }else{
+   const state={...(row.state||{})};
+   delete state.initiative_rank;delete state.initiative_roll;delete state.initiative_total;
+   row.state=state;
    row.sort_order=1000+(Number(row.sort_order)||index)
   }
  });
@@ -419,7 +430,7 @@ function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=ne
  }
 }
 function combatInitiativeEntries(rows){
- return (rows||[]).filter(row=>row.visible_to_players!==false&&row.status!=='removed').map((row,index)=>({
+ return (rows||[]).filter(combatInitiativeEligible).map((row,index)=>({
   combatant_id:String(row.id),
   name:row.name_snapshot||'Kombatant',
   smi:Math.max(0,combatNumber(row.state?.smi,10)),
@@ -546,7 +557,7 @@ async function combatRollAndApplyInitiative(instanceId,{roundNumber=null}={}){
  if(!entries.length){
   await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
-   body:JSON.stringify({initiative:{formula:'SMI+1T10',status:'resolved',rolled_at:new Date().toISOString(),order:[],results:[]},phase:'movement'})
+   body:JSON.stringify({initiative:{formula:'SMI+1T10',status:'resolved',rolled_at:new Date().toISOString(),order:[],results:[]},active_actor_id:null,phase:'movement'})
   });
   return
  }
@@ -600,7 +611,7 @@ async function combatRollAndApplyInitiative(instanceId,{roundNumber=null}={}){
 function combatCaptureInitiativeForReset(){
  const previous=activeCombat?.initiative&&typeof activeCombat.initiative==='object'?activeCombat.initiative:{};
  const resultById=new Map((Array.isArray(previous.results)?previous.results:[]).map(result=>[String(result.combatant_id),result]));
- const entries=(combatants||[]).map(row=>{
+ const entries=(combatants||[]).filter(combatInitiativeEligible).map(row=>{
   const key=String(row.source_instance_key||'');
   const rank=combatNumber(row.state?.initiative_rank,null);
   const roll=combatNumber(row.state?.initiative_roll,null);
@@ -659,7 +670,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
   const rowByKey=new Map(combatantRows.map(row=>[String(row.source_instance_key||''),row]));
   const order=[],results=[];
   preservedEntries.forEach((entry,index)=>{
-   const row=rowByKey.get(String(entry.key||''));if(!row)return;
+   const row=rowByKey.get(String(entry.key||''));if(!combatInitiativeEligible(row))return;
    const rank=Math.max(1,combatNumber(entry.rank,index+1));
    const roll=combatNumber(entry.roll,null),total=combatNumber(entry.total,null),smi=combatNumber(entry.smi,combatNumber(row.state?.smi,10));
    row.sort_order=rank-1;
@@ -773,7 +784,7 @@ async function prepareCombatScene(){
 }
 async function combatPlayPreparedScene(){
  if(!combatCanManage()||!activeCombat?.id||combatSceneBusy)return;
- if(!combatants.some(c=>c.status==='active'))return alert('Placera minst en kombatant innan Play.');
+ if(!combatants.some(combatInitiativeEligible))return alert('Placera minst en kombatant på hexkartan innan Play.');
  combatGmPlacementId=null;
  const id=activeCombat.id,settings={...(activeCombat.settings||{}),reset_ready_for_play:false};
  combatSceneBusy=true;renderCombatGmControls();
@@ -912,7 +923,7 @@ const COMBAT_PRIMARY_ACTIONS=[
  {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
 ];
 function combatIsActiveTurn(combatant){
- return !!combatant&&String(activeCombat?.active_actor_id||'')===String(combatant.id)
+ return combatIsOnBattlefield(combatant)&&String(activeCombat?.active_actor_id||'')===String(combatant.id)
 }
 function combatChosenAction(combatant){
  if(!combatant||!activeCombat)return null;
@@ -2291,11 +2302,13 @@ function combatRowActionMenuHtml(combatant){
  '</div>'
 }
 function combatTurnOrderIds(){
- const fromInitiative=Array.isArray(activeCombat?.initiative?.order)?activeCombat.initiative.order.map(String):[];
- const valid=new Set((combatants||[]).filter(row=>!['dead','removed'].includes(row.status)).map(row=>String(row.id)));
+ const initiative=activeCombat?.initiative||{};
+ const fromInitiative=Array.isArray(initiative.order)?initiative.order.map(String):[];
+ const valid=new Set((combatants||[]).filter(combatInitiativeEligible).map(row=>String(row.id)));
  const ordered=fromInitiative.filter(id=>valid.has(id));
- if(ordered.length)return ordered;
- return (combatants||[]).filter(row=>!['dead','removed'].includes(row.status))
+ // A reinforcement placed during the round awaits next round's initiative roll.
+ if(initiative.status==='resolved'||fromInitiative.length)return ordered;
+ return (combatants||[]).filter(combatInitiativeEligible)
   .slice().sort((a,b)=>(combatNumber(a.state?.initiative_rank,999)-combatNumber(b.state?.initiative_rank,999))||(Number(a.sort_order)||0)-(Number(b.sort_order)||0))
   .map(row=>String(row.id))
 }
@@ -2327,7 +2340,7 @@ async function endCombatTurn(event,combatantId){
    details:{next_actor_id:nextActorId,new_round:newRound,round_number:round},player_visible:true
   })});
   if(newRound){
-   await Promise.all((combatants||[]).filter(row=>!['dead','removed'].includes(row.status)).map(row=>dbJson('combatants?id=eq.'+encodeURIComponent(row.id),{
+   await Promise.all((combatants||[]).filter(combatInitiativeEligible).map(row=>dbJson('combatants?id=eq.'+encodeURIComponent(row.id),{
     method:'PATCH',headers:{'Prefer':'return=minimal'},
     body:JSON.stringify({movement_remaining:combatMovementMaximum(row),updated_at:new Date().toISOString()})
    })));
@@ -2577,7 +2590,7 @@ function combatSelectedCombatant(){
  return combatants.find(row=>String(row.id)===String(combatSelectedTargetId))||null
 }
 function combatActiveActor(){
- return combatants.find(row=>String(row.id)===String(activeCombat?.active_actor_id||''))||null
+ return combatants.find(row=>combatIsOnBattlefield(row)&&String(row.id)===String(activeCombat?.active_actor_id||''))||null
 }
 function combatMovementPlanningActor(){
  const actor=combatActiveActor();
@@ -5235,7 +5248,7 @@ async function combatChooseGmHex(event,q,r){
  if(!row||!hex||hex.movement_mode==='blocked'||combatTerrainIsWall(hex))return alert('Välj en tillgänglig, passerbar hex.');
  if(!combatFootprintCanStand(row,q,r))return alert('Hela varelsens hexavtryck måste rymmas på fri mark utan andra kombatanter.');
  try{
-  await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({q,r,status:'active',state:{...(row.state||{}),in_reserve:false},updated_at:new Date().toISOString()})});
+  await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({q,r,status:'active',state:{...Object.fromEntries(Object.entries(row.state||{}).filter(([k])=>!combatGmIsReserve(row)||!['initiative_rank','initiative_roll','initiative_total'].includes(k))),in_reserve:false},updated_at:new Date().toISOString()})});
   combatGmPlacementId=null;
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(e){alert('Kunde inte placera kombatanten: '+e.message)}
@@ -5245,7 +5258,7 @@ async function combatReturnToReserve(id){
  const row=combatants.find(c=>String(c.id)===String(id));
  if(!row||row.status==='removed'||row.status==='dead')return;
  try{
-  await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',state:{...(row.state||{}),in_reserve:true},updated_at:new Date().toISOString()})});
+  await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',state:{...Object.fromEntries(Object.entries(row.state||{}).filter(([k])=>!['initiative_rank','initiative_roll','initiative_total'].includes(k))),in_reserve:true},updated_at:new Date().toISOString()})});
   if(String(combatGmPlacementId)===String(id))combatGmPlacementId=null;
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(e){alert('Kunde inte sätta kombatanten i reserv: '+e.message)}
@@ -5392,7 +5405,7 @@ function renderCombat(){
   renderCombatGmControls();return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
- let displayedCombatants=combatants.filter(c=>c.state?.in_reserve!==true);
+ let displayedCombatants=combatants.filter(c=>c.state?.in_reserve!==true&&c.status!=='removed');
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
