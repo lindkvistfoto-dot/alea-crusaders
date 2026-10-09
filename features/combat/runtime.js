@@ -877,7 +877,7 @@ function combatMapFrameStyle(){
 }
 function combatMapFooterHtml(){
  const names=[combatRuntimeMapMeta?.name,activeCombat?.name].map(value=>String(value||'').trim());
- const name=names.find(label=>label&&!/^(?:file[\\s_-]*)?[0-9a-f]{16,}(?:\\.[a-z0-9]+)?$/i.test(label))||'Aktiv stridsscen';
+ const name=names.find(label=>label&&!/^(?:file[\s_-]*)?[0-9a-f]{16,}(?:\.[a-z0-9]+)?$/i.test(label))||'Aktiv stridsscen';
  return '<div class="combat-board-footer">'+
   '<div class="combat-board-footer-head">'+
    '<div class="combat-board-description"><span>Hexkarta</span><small>'+escAttr(name)+'</small></div>'+
