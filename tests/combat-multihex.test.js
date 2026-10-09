@@ -8,7 +8,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sql=readFileSync(new URL('../supabase/migrations/20261009164500_multihex_area_and_terrain.sql',import.meta.url),'utf8');
 const geo=runInNewContext(source+`
 this.geo={shape:combatFootprintShape,face:combatFootprintFacing,cells:combatFootprintCells,
- overlap:combatFootprintOverlaps,distance:combatFootprintDistance,area:combatFootprintIntersectsRadius};`,{}).geo;
+ overlap:combatFootprintOverlaps,distance:combatFootprintDistance,area:combatFootprintIntersectsRadius};`,{});
 const actor=(name,shape,q,r,facing=0)=>({id:name,name_snapshot:name,q,r,state:{footprint:{shape,facing}}});
 const positions=c=>Array.from(c,x=>x.q+','+x.r);
 describe('Flerhex · geometri och expertmallar',()=>{
