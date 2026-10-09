@@ -1,4 +1,4 @@
-/* Materialateljén, v0.35.16 — keeps existing access and sharing controls */
+/* Materialateljén, v0.35.17 — keeps existing access and sharing controls */
 #legolasPanel{--mat-gold:#ddbb81;--mat-line:rgba(221,187,129,.28);--mat-muted:#d1bfa0;background:radial-gradient(ellipse at 50% -20%,#473624 0%,#121815 57%,#0b0f0e 100%);color:#f5ebd9}
 #legolasPanel .legolas-panel-inner{width:min(1320px,100%);padding:clamp(14px,2.7vw,34px);border:1px solid rgba(221,187,129,.4);border-radius:20px;background:linear-gradient(135deg,#2b2922 0%,#202924 51%,#191e1b 100%);box-shadow:0 26px 80px #0009}
 #legolasPanel .legolas-heading{position:relative!important;min-height:115px;margin-bottom:17px;padding:clamp(17px,2.5vw,28px)!important;border:1px solid var(--mat-line);border-radius:16px;background:radial-gradient(circle at 95% 0%,#62503755,transparent 45%),linear-gradient(100deg,#393128,#26322d)!important;box-shadow:0 8px 25px #0003!important}
