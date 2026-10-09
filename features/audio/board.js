@@ -63,7 +63,12 @@ function markSeen(id){
 function acceptEvent(row){
  if(!row||row.campaign_id!==store.campaign||typeof row.id!=='string'||
     typeof row.cue_key!=='string'||!markSeen(row.id))return false;
- if(row.created_at && Date.parse(row.created_at)<Date.parse(store.since)-2000)return false;
+ if(row.created_at){
+  const timestamp=Date.parse(row.created_at);
+  // Never replay old one-shot effects after a laptop wakes or Realtime reconnects.
+  if(!Number.isFinite(timestamp)||timestamp<Date.parse(store.since)-2000||
+     Math.abs(Date.now()-timestamp)>15000)return false
+ }
  audio()?.play(row.cue_key);
  store.received++;
  return true
