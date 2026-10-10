@@ -359,13 +359,21 @@ function setProjectileMaster(index,key){
  item.projectileKey=p.projectile_key;item.name=p.name;
  save();renderWeapons()
 }
+function projectileImageHtml(key,name){
+ const path=ruleProjectileFromKey(key)?.image_path;
+ const url=window.aleaEquipmentArt?.src(path);
+ return url?'<img class="projectile-inventory-art" src="'+escAttr(url)+'" alt="'+escAttr(name||'Projektil')+'" loading="lazy">':'';
+}
 function renderAdminProjectiles(){
  const el=$('adminProjectileTable'),st=$('adminProjectileStatus');
  if(!el)return;
- if(st)st.textContent=ruleProjectileTypesLoaded?ruleProjectileTypes.length+' projektiltyper · vapenlänkar kommer från vapenregistret.':'Registret kunde inte läsas.';
+ if(st)st.textContent=ruleProjectileTypesLoaded?ruleProjectileTypes.length+' projektiltyper · gemensamma bilder sparas i masterregistret.':'Registret kunde inte läsas.';
  const weaponsByKey=key=>ruleWeapons.filter(w=>w.projectile_key===key).map(w=>w.name).join(', ');
- el.innerHTML='<div class="projectile-rule-header"><b>Typ</b><b>Återhämtning</b><b>Vapen</b><b>Åtgärder</b></div>'+
-  ruleProjectileTypes.map(p=>'<div class="projectile-rule-row"><b>'+escAttr(p.name)+'</b><span>'+p.recovery_percent+' %</span><span>'+escAttr(weaponsByKey(p.projectile_key)||'—')+'</span><button class="smallbtn" onclick="editRuleProjectile(\''+escAttr(p.projectile_key)+'\')">✎</button></div>').join('')
+ el.innerHTML='<div class="projectile-rule-header"><b>Typ och bild</b><b>Återhämtning</b><b>Vapen</b><b>Åtgärder</b></div>'+
+  ruleProjectileTypes.map(p=>'<div class="projectile-rule-row"><div class="projectile-art-name">'+
+   (window.aleaEquipmentArt?.thumbnail(p.image_path,'<span class="projectile-art-missing" aria-hidden="true">◇</span>',p.name)||'')+
+   '<b>'+escAttr(p.name)+'</b></div><span>'+p.recovery_percent+' %</span><span>'+escAttr(weaponsByKey(p.projectile_key)||'—')+
+   '</span><button class="smallbtn" type="button" aria-label="Redigera '+escAttr(p.name)+'" onclick="editRuleProjectile(\''+escAttr(p.projectile_key)+'\')">✎</button></div>').join('')
 }
 function editRuleProjectile(key){
  if(!activeUser()?.admin)return;
@@ -375,18 +383,41 @@ function editRuleProjectile(key){
   '<label class="wide">Namn<input id="rpName" value="'+escAttr(p.name)+'"></label>'+
   '<label>Återhämtning (%)<input id="rpRecovery" type="number" min="80" max="90" value="'+p.recovery_percent+'"></label>'+
   '<label class="wide">Beskrivning<input id="rpDesc" value="'+escAttr(p.description||'')+'"></label>'+
+  (window.aleaEquipmentArt?.start('projectile',p)||'')+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button>'+
   '<button class="btn primary" onclick="saveRuleProjectile(\''+escAttr(p.projectile_key)+'\')">Spara</button></div></div>';
  $('adminEditor').classList.remove('hidden')
 }
+let projectileSaveInProgress=false;
 async function saveRuleProjectile(key){
- if(!activeUser()?.admin)return;
+ if(!activeUser()?.admin||projectileSaveInProgress)return;
  const p=ruleProjectileFromKey(key),name=$('rpName')?.value.trim(),rate=Number($('rpRecovery')?.value);
  if(!p||!name||!Number.isInteger(rate)||rate<80||rate>90)return alert('Ange namn och återhämtning 80–90 %.');
+ projectileSaveInProgress=true;
+ const saveButton=$('adminEditorBody')?.querySelector('.rule-editor-actions .primary')||null;
+ if(saveButton)saveButton.disabled=true;
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
+ let artChange=null;
  try{
-  await dbJson('rule_projectile_types?projectile_key=eq.'+encodeURIComponent(key),{method:'PATCH',body:JSON.stringify({name,recovery_percent:rate,description:$('rpDesc')?.value.trim()||''})});
-  closeAdminEditor();await loadRuleProjectileTypes(true);renderAdminProjectiles()
- }catch(e){alert('Kunde inte spara projektiltyp: '+e.message)}
+  artChange=await window.aleaEquipmentArt.prepare('projectile',key,artContext);
+  await dbJson('rule_projectile_types?projectile_key=eq.'+encodeURIComponent(key),{
+   method:'PATCH',body:JSON.stringify({
+    name,recovery_percent:rate,description:$('rpDesc')?.value.trim()||'',
+    image_path:artChange.path
+   })
+  });
+  if(artChange.old&&artChange.old!==artChange.path)
+   window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Projektilbild kunde inte rensas',e));
+  closeAdminEditor();
+  await loadRuleProjectileTypes(true);renderAdminProjectiles();
+  if(current&&$('projectiletable'))renderWeapons()
+ }catch(e){
+  if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});
+  alert('Kunde inte spara projektiltyp: '+e.message)
+ }finally{
+  projectileSaveInProgress=false;
+  if(saveButton)saveButton.disabled=false
+ }
 }
 function copyRuleWeaponToInstance(target,rule){
  if(!target||!rule)return target;
@@ -1550,7 +1581,8 @@ function renderWeapons(){
    characterEquipmentEditField('Antal',projectileStepper(i,x.count))+
    characterEquipmentEditActions('removeProjectile',i)+'</div>').join(''):
   '<div class="skillhead">Namn</div><div class="skillhead skillnum">Antal</div>'+
-  ps.map((x,i)=>'<div>'+escAttr(ruleProjectileFromKey(characterProjectileKey(x))?.name||x.name||'—')+'</div><div class="skillnum">'+projectileStepper(i,x.count)+'</div>').join('');
+  ps.map((x,i)=>'<div class="projectile-inventory-name">'+projectileImageHtml(characterProjectileKey(x),x.name)+
+   '<span>'+escAttr(ruleProjectileFromKey(characterProjectileKey(x))?.name||x.name||'—')+'</span></div><div class="skillnum">'+projectileStepper(i,x.count)+'</div>').join('');
  let ar=current.armor||[];
  $('armortable').innerHTML=editing?
   ar.map((x,i)=>'<div class="character-equip-edit-row armor-edit-row">'+
