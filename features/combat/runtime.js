@@ -5623,7 +5623,19 @@ function renderCombat(){
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
- body.innerHTML='<div class="combat-shell">'+combatTurnPanelHtml()+'<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside><div class="combat-board-wrap">'+combatGmPlacementHintHtml()+combatAttackPanelHtml()+'<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+combatMapPresetsHtml()+'</div>'+combatMapFooterHtml()+'</div><section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section></div>'+combatantDetailsPopupHtml();
+ body.innerHTML='<div class="combat-shell combat-shell-live">'+
+  '<div class="combat-left-column">'+combatTurnPanelHtml()+combatAttackPanelHtml()+'</div>'+
+  '<div class="combat-center-column">'+
+   '<div class="combat-board-wrap">'+combatGmPlacementHintHtml()+
+    '<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+combatMapPresetsHtml()+'</div>'+combatMapFooterHtml()+
+   '</div>'+
+   '<div class="combat-below-map"><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+
+    combatGmToolboxHtml()+
+    '<section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+
+   '</div>'+
+  '</div>'+
+  '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside>'+
+ '</div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
