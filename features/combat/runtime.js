@@ -2646,10 +2646,15 @@ function combatPortraitHexPoints(size){
  return combatHexPoints(0,0,size)
 }
 function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
- if(combatant?.source_type!=='character')return '';
- const portrait=combatPlayerPortraitSource(combatant);
+ if(!combatant)return '';
+ // Rollpersoner, SLP och fiender använder samma hexbricka och sina redan
+ // registrerade porträtt. Hämta motståndarnas bild via stridens bildcache.
+ const portraitUrl=combatant.source_type==='character'
+  ?combatPlayerPortraitSource(combatant)?.url||''
+  :combatRowPortraitUrl(combatant);
  const scale=Math.max(.55,g.size/42);
- if(!portrait){
+ if(!portraitUrl){
+  if(combatant.source_type!=='character')return '';
   const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
   const figure=kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck();
   return '<g class="combat-miniature '+kind+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
@@ -2660,18 +2665,19 @@ function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
    '<rect class="combat-mini-hit" x="-31" y="-64" width="62" height="78" rx="8"/>'+
   '</g>'
  }
- const safeId=String(combatant.id||combatant.source_id||'player').replace(/[^a-zA-Z0-9_-]/g,'_');
+ const safeId=String(combatant.id||combatant.source_id||'combatant').replace(/[^a-zA-Z0-9_-]/g,'_');
+ const sideClass=combatant.source_type==='npc'?' npc-mini':combatant.source_type==='monster'?' enemy-mini':' player-mini';
  const clipId='combatPortraitClip_'+safeId;
  const outer=combatPortraitHexPoints(34),inner=combatPortraitHexPoints(28.7);
  const depthOffset=2.5;
- return '<g class="combat-miniature combat-portrait-hex'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+ return '<g class="combat-miniature combat-portrait-hex'+sideClass+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
   '<defs><clipPath id="'+clipId+'"><polygon points="'+inner+'"/></clipPath></defs>'+
   '<g class="combat-portrait-visual" transform="translate(0 -'+depthOffset+')">'+
    '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
    '<polygon class="combat-portrait-frame-back" points="'+outer+'"/>'+
    '<polygon class="combat-portrait-green-ring" points="'+outer+'"/>'+
    '<polygon class="combat-portrait-inner-frame" points="'+combatPortraitHexPoints(30.7)+'"/>'+
-   '<image class="combat-portrait-image" href="'+escAttr(portrait.url)+'" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'+
+   '<image class="combat-portrait-image" href="'+escAttr(portraitUrl)+'" x="-31" y="-31" width="62" height="62" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>'+
    '<polygon class="combat-portrait-image-edge" points="'+inner+'"/>'+
    '<polyline class="combat-portrait-bevel-light" points="-29.4,-17 0,-34 29.4,-17"/>'+
    '<polyline class="combat-portrait-bevel-dark" points="29.4,17 0,34 -29.4,17"/>'+
