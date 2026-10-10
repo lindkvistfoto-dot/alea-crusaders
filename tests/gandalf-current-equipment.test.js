@@ -9,7 +9,7 @@ const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.u
 
 describe('Gandalf – aktuell utrustning',()=>{
  it('keeps the hall and original slot artwork while showing a transparent golden frame',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.48');
+   expect(html).toContain('current-equipment-gandalf.css?v=0.35.49');
    expect(css).toContain('assets/gandalf-slot-transparent.svg');
    expect(css).toContain('assets/gandalf-hall.webp');
    for(const name of ['gandalf-slot.webp','gandalf-slot-transparent.svg','gandalf-hall.webp'])
