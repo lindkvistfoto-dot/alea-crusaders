@@ -78,7 +78,7 @@ describe('Aktiv kombatants tydliga turmarkering',()=>{
   expect(svg.match(/class="combat-active-turn-badge"/g)).toHaveLength(1);
   expect(svg).toContain('combat-token-group active-turn" data-token-id="hero"');
   expect(svg).not.toContain('combat-token-group active-turn" data-token-id="enemy"');
-  expect(svg).toContain('translate(123.94 71.86) scale(1)');
+  expect(svg).toContain('translate(123.94 71.86) scale(1.000)');
  });
  it('byter automatiskt markering när turen går till fienden',()=>{
   const svg=mapFor([hero,enemy],'enemy');
