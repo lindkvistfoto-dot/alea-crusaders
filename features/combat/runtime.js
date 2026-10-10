@@ -4372,6 +4372,18 @@ function combatMapPointerEnd(event){
    :{pointerId:id,startX:pt.x,startY:pt.y,lastX:pt.x,lastY:pt.y,moved:false}
  }
 }
+function combatMovementHitTargetsHtml(cells,reachable,planningActor,originKey,g){
+ if(!planningActor)return '';
+ // Hit targets are drawn ABOVE the preview miniature: after the first click
+ // the active miniature moves over the destination and otherwise steals click #2.
+ // The shapes have no visible paint, so existing terrain and token art stay intact.
+ return cells.filter(cell=>cell.key!==originKey&&reachable.get(cell.key)>0&&
+  !combatMovementOccupied(planningActor,cell.q,cell.r))
+  .map(cell=>'<polygon class="combat-hex move-reachable combat-movement-hit" data-q="'+cell.q+'" data-r="'+cell.r+
+   '" style="fill:transparent;stroke:none;pointer-events:all;cursor:pointer" onclick="previewCombatMovementToHex(event,'+
+   cell.q+','+cell.r+')" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+
+   '"><title>Förflytta till '+cell.q+','+cell.r+' · dubbelklicka för att genomföra</title></polygon>').join('')
+}
 function renderCombatMap(){
  const g=combatRuntimeGeometry();
  if(!g){
@@ -4462,10 +4474,14 @@ function renderCombatMap(){
   const footprintVisual=footprint.length>1?points.map(p=>'<polygon class="combat-footprint-hex" points="'+combatHexPoints(p.x,p.y,g.size*.94)+'" fill="'+(side==='hero'?'#4fa86d':side==='enemy'?'#cb5e52':'#739ec0')+'" fill-opacity="'+(isPlanning?'.4':'.24')+'" stroke="'+(attack?'#f5cb69':side==='hero'?'#79d9a0':side==='enemy'?'#ff9a86':'#9bc9e3')+'" stroke-width="'+(selected||turn?'3':'1.8')+'"/>').join(''):'';
   return '<g class="combat-token-group'+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+visual+'<title>'+escAttr(c.name_snapshot)+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
  }).join('');
+ // Invisible click layer ABOVE miniatures; ensures the preview cannot swallow
+ // the second click while planning a desktop double-click movement.
+ const movementHitTargets=planningActor&&!gmPlaceMode&&!spellAreaMode&&!areaMode
+  ?combatMovementHitTargetsHtml(cells,reachable,planningActor,originKey,g):'';
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+movementHitTargets+'</svg>'
 }
 
 function combatRowPortraitUrl(combatant){
