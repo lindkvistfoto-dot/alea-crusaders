@@ -69,3 +69,22 @@
  .item-art-zone .item-art-controls small{font-size:10px}
  .item-art-zone .item-art-upload{padding:8px}
 }
+
+/* v0.35.70 · shared master images for projectiles. */
+.projectile-art-name,.projectile-inventory-name{display:flex;align-items:center;gap:8px;min-width:0}
+.projectile-art-name>b,.projectile-inventory-name>span{min-width:0;overflow-wrap:anywhere}
+.projectile-art-name .admin-weapon-icon{min-width:42px;flex:none}
+.projectile-art-name .admin-weapon-icon img{width:44px;height:44px;object-fit:contain}
+.projectile-art-missing{display:grid;place-items:center;width:44px;height:44px;border:1px dashed #7d674b;border-radius:7px;color:#a38e71;font-size:26px;flex:none}
+.projectile-inventory-art{width:40px;height:40px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 3px #0008)}
+@media(max-width:620px){
+ .projectile-rule-header{display:none}
+ .projectile-rule-row{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:9px}
+ .projectile-rule-row>.projectile-art-name{grid-column:1;grid-row:1}
+ .projectile-rule-row>button{grid-column:2;grid-row:1;justify-self:end}
+ .projectile-rule-row>span:nth-child(2){grid-column:1/-1}
+ .projectile-rule-row>span:nth-child(2)::before{content:'Återhämtning: ';color:#b9a285}
+ .projectile-rule-row>span:nth-child(3){grid-column:1/-1;font-size:11px;color:#c3b59a;overflow-wrap:anywhere}
+ .projectile-rule-row>span:nth-child(3)::before{content:'Vapen: ';color:#b9a285}
+ .projectile-inventory-art{width:32px;height:32px}
+}
