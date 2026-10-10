@@ -16,7 +16,7 @@ describe('SLP magiarena',()=>{
   expect(result.attack_profile.spells[0]).toMatchObject({rule_id:'fire',fv:15,school_fv:15,damage_text:'1T6 per EG'});
   expect(result.attack_profile.spells[1]).toMatchObject({rule_id:'fly',fv:15})
  });
- test('SLP-hämtningen inkluderar besvärjelser',()=>expect(rt).toContain('&select=id,name,attributes,weapons,shield,armor,spells'));
+ test('SLP-hämtningen inkluderar besvärjelser',()=>expect(rt).toContain('&select=id,name,image_path,attributes,weapons,shield,armor,spells'));
  test('SLP-administration kan tilldela, ändra och spara FV',()=>{
   for(const marker of ['function renderAdminNpcSpells()', 'function addAllAdminNpcSpells()', 'function sanitizeNpcSpells(list)', 'spells:sanitizeNpcSpells(adminNpcDraft?.spells)'])expect(adm).toContain(marker)
  })
