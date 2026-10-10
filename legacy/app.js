@@ -785,9 +785,13 @@ function editRuleArmor(id=''){
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleArmor(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden')
 }
+let ruleArmorSaveInProgress=false;
 async function saveRuleArmor(id=''){
- if(!activeUser()?.admin)return;
+ if(!activeUser()?.admin||ruleArmorSaveInProgress)return;
  let name=$('raName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
+ ruleArmorSaveInProgress=true;
+ const saveButton=$('adminEditorBody')?.querySelector('.rule-editor-actions .primary')||null;
+ if(saveButton)saveButton.disabled=true;
  let existing=id?ruleArmorTypes.find(x=>x.id===id):null;
  const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
  let artChange=null;
@@ -816,6 +820,7 @@ async function saveRuleArmor(id=''){
   for(const oldPath of artChange.old)window.aleaEquipmentArt.removeStored(oldPath,artContext).catch(e=>console.warn('Rustningsbild kunde inte rensas',e));
   closeAdminEditor();await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
  }catch(e){if(artChange?.uploaded?.length)await Promise.all(artChange.uploaded.map(path=>window.aleaEquipmentArt.removeStored(path,artContext).catch(()=>{})));alert('Kunde inte spara rustningen: '+e.message)}
+ finally{ruleArmorSaveInProgress=false;if(saveButton)saveButton.disabled=false;}
 }
 async function deleteRuleArmor(id){
  if(!activeUser()?.admin)return;
