@@ -1548,10 +1548,11 @@ function currentEquipSlotHtml(slot){
 }
 function gandalfTwoHandSlotHtml(item){
  const art=window.aleaEquipmentArt?.imageTag(ruleWeaponForItem(item)?.image_path)||'';
+ const name=escAttr(item.name||'Vapen');
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped" '+
-  'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Båda händerna, tvåhandsvapen: '+escAttr(item.name||'Vapen')+'">'+
-  '<span class="gandalf-equip-face">'+art+'<span class="gandalf-equip-value">'+escAttr(item.name||'Vapen')+'</span></span>'+
-  '<span class="gandalf-equip-label">Båda händerna · tvåhandsvapen</span></button>'
+  'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
+  '<span class="gandalf-equip-face">'+(art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
+  '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 function showCurrentEquipmentProjectileInfo(){
  if(typeof showBackupToast==='function')showBackupToast('Projektiler kopplas i Frodo-steget');
