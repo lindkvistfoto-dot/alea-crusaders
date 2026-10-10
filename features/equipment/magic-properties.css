@@ -1,0 +1,90 @@
+/* v0.35.84 – magic-property registry and per-artifact power editor */
+.magic-property-registry{
+ min-width:0;
+ margin-top:22px;
+ padding-top:16px;
+}
+.magic-property-registry .admin-subsection-head{flex-wrap:wrap}
+.magic-property-registry .admin-subsection-head p{margin:4px 0 0}
+.magic-property-search{
+ display:flex;align-items:center;gap:10px;max-width:580px;
+ margin:12px 0;color:#dbc59e;font-weight:700;font-size:12px;
+}
+.magic-property-search input{
+ flex:1;min-width:0;box-sizing:border-box;
+ border:1px solid #856648;border-radius:8px;background:#231b15;
+ color:#f7e4c6;padding:9px 10px;
+}
+.magic-property-table{
+ border:1px solid #715437;border-radius:10px;overflow:hidden;
+ color:#eaddc4;
+}
+.magic-property-head,.magic-property-row{
+ display:grid;grid-template-columns:minmax(125px,1.2fr) minmax(85px,.7fr) minmax(170px,1.7fr) 70px 125px;
+ gap:8px;align-items:center;padding:10px 12px;
+}
+.magic-property-head{background:#513623;color:#f1d5a9;font-size:11px}
+.magic-property-row{background:#211a14;border-top:1px solid #5c452e;font-size:12px}
+.magic-property-row:nth-child(2n+1){background:#292018}
+.magic-property-row.inactive{opacity:.62}
+.magic-property-row strong,.magic-property-row small{display:block;overflow-wrap:anywhere}
+.magic-property-row strong{font-size:13px;color:#efdaa9}
+.magic-property-row small{margin-top:3px;color:#ac9b82;font-size:10px}
+.magic-property-description{overflow-wrap:anywhere;line-height:1.35;color:#d9c2a1}
+.magic-property-actions{display:flex;gap:5px;justify-content:flex-end}
+.magic-property-actions button{min-height:36px}
+.magic-property-empty{padding:12px}
+.magic-property-editor .wide,.magic-power-editor .wide{grid-column:1/-1}
+.magic-property-editor textarea,.magic-power-editor textarea{min-height:85px}
+.magic-property-editor .admincheck,.magic-power-editor .admincheck{
+ display:flex;align-items:center;gap:7px;
+}
+.magic-property-editor .admincheck input,.magic-power-editor .admincheck input{flex:0 0 auto}
+.magic-power-editor [hidden]{display:none!important}
+.magic-power-editor .rule-editor-note{color:#cdb68e;margin:0}
+.magic-power-list{display:grid;gap:10px;color:#ede0c8}
+.magic-power-list>.rule-editor-note{margin:0}
+.magic-power-item{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;gap:10px;
+ padding:10px 11px;border:1px solid #785a37;
+ border-radius:9px;background:linear-gradient(130deg,#30271b,#1e1915);
+}
+.magic-power-item.inactive{opacity:.62}
+.magic-power-item>div{min-width:0}
+.magic-power-item strong,.magic-power-item small{display:block;overflow-wrap:anywhere}
+.magic-power-item strong{font-size:14px;color:#f4db9e}
+.magic-power-item small{font-size:11px;line-height:1.35;color:#bca88b;margin-top:4px}
+.magic-power-buttons{display:flex;gap:5px;align-items:center}
+.magic-power-buttons button{min-height:37px}
+.magic-artifact-actions{gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.magic-artifact-actions button{min-height:35px}
+.magic-artifact-head,.magic-artifact-row{
+ grid-template-columns:minmax(130px,1.4fr) minmax(130px,1.15fr)
+ minmax(165px,1.7fr) 66px minmax(155px,1.4fr);
+}
+@media(max-width:700px){
+ .magic-property-search{flex-direction:column;align-items:stretch;gap:5px}
+ .magic-property-table{border:0;display:grid;gap:8px;overflow:visible}
+ .magic-property-head{display:none}
+ .magic-property-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;
+  gap:5px 9px;border:1px solid #69523a;border-radius:10px;padding:10px;
+ }
+ .magic-property-row>div:nth-child(1){grid-column:1;grid-row:1}
+ .magic-property-row>div:nth-child(2){grid-column:1;grid-row:2;color:#b8a184}
+ .magic-property-row>.magic-property-description{grid-column:1/-1;grid-row:3}
+ .magic-property-row>div:nth-child(4){grid-column:1;grid-row:4;color:#ad997e}
+ .magic-property-row>div:nth-child(4):before{content:"Används av: "}
+ .magic-property-row>.magic-property-actions{grid-column:2;grid-row:1/span 2}
+ .magic-property-actions{flex-direction:column}
+ .magic-property-actions button{min-height:39px}
+ .magic-power-item{grid-template-columns:minmax(0,1fr);gap:8px}
+ .magic-power-buttons{justify-content:flex-start}
+ .magic-power-buttons button{min-width:88px;min-height:40px}
+ .magic-artifact-actions{
+  grid-column:2;grid-row:1/span 2;
+  display:flex;flex-direction:column;
+ }
+ .magic-artifact-actions button{min-height:37px;width:100%;min-width:96px}
+}
