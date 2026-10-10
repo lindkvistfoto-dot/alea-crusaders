@@ -4944,32 +4944,98 @@ function combatTurnActionState(combatant){
  if(def)return{key:'other',label:'Övriga handlingar'};
  return{key:'none',label:'Redo'}
 }
+/* Real master artwork for the active combatant: equipped weapons, shield,
+   chest armor and the ammunition for currently equipped ranged weapons only. */
 function combatTurnEquipmentHtml(combatant){
- const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{},weapons=Array.isArray(profile.weapons)?profile.weapons:[],shields=Array.isArray(profile.shields)?profile.shields:[],armor=Array.isArray(profile.armor)?profile.armor:[],projectiles=Array.isArray(profile.projectiles)?profile.projectiles:[];
- const itemForRef=ref=>{
-  if(!ref?.itemId)return null;
-  const list=ref.kind==='weapon'?weapons:ref.kind==='shield'?shields:[];
-  return list.find(item=>String(item.equipId||item.id||'')===String(ref.itemId))||null
+ const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
+ const weapons=Array.isArray(profile.weapons)?profile.weapons:[];
+ const shields=Array.isArray(profile.shields)?profile.shields:[];
+ const armor=Array.isArray(profile.armor)?profile.armor:[];
+ const masterArt=path=>typeof window!=='undefined'?window.aleaEquipmentArt?.src(path)||'':'';
+ const srcImg=(path,cls='')=>{
+  const url=masterArt(path);
+  return url?'<img class="'+cls+'" src="'+escAttr(url)+'" alt="" loading="lazy">':'';
  };
+ const itemForRef=(ref,kind)=>ref?.itemId?
+  (kind==='weapon'?weapons:kind==='shield'?shields:armor).find(
+   item=>String(item.equipId||item.id||'')===String(ref.itemId))||null:null;
+ const weaponRule=item=>item?(typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null):null;
+ const shieldRule=item=>item?(typeof characterShieldRule==='function'?characterShieldRule(item):
+  (typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''))):null;
+ const imageTile=(kind,label,item,path,wide=false)=>{
+  const img=srcImg(path,'combat-turn-art');
+  const name=item?.name||'Ingen';
+  return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+'">'+
+   '<span>'+escAttr(label)+'</span>'+
+   '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+'</div>'+
+   '<small title="'+escAttr(name)+'">'+escAttr(name)+'</small></div>';
+ };
+ const left=eq.leftHand,right=eq.rightHand;
+ const merged=!!(left?.kind==='weapon'&&right?.kind==='weapon'&&left.itemId&&
+  String(left.itemId)===String(right.itemId)&&
+  (Number(left.hands)===2||Number(right.hands)===2));
+ const shownWeapons=[],seenKeys=new Set();
  const hand=(slot,label)=>{
-  const ref=eq[slot],item=itemForRef(ref);
-  let name=item?.name||'Tom hand',src='';
-  if(ref?.kind==='weapon'&&item){
-   const rule=(typeof ruleWeapons!=='undefined'?ruleWeapons:[]).find(r=>String(r.id)===String(item.weaponTypeId||item.weapon_id||''));
-   const key=item.iconKey||item.icon_key||rule?.icon_key||'generic';src='./assets/weapon-icons/'+key+'.svg'
-  }else if(ref?.kind==='shield'&&item){
-   const rule=(typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''));
-   const key=item.iconKey||item.icon_key||rule?.icon_key||'shield-medium';src='./assets/armor-icons/'+key+'.svg'
+  const ref=eq[slot],kind=ref?.kind,item=kind==='weapon'?itemForRef(ref,'weapon'):kind==='shield'?itemForRef(ref,'shield'):null;
+  if(kind==='weapon'&&item){
+   const rule=weaponRule(item),key=String(item.equipId||item.id||ref.itemId);
+   if(!seenKeys.has(key)){shownWeapons.push({item,rule});seenKeys.add(key)}
+   return imageTile('weapon',label,item,rule?.image_path||item.image_path);
   }
-  return '<div class="combat-turn-equip"><span>'+label+'</span>'+(src?'<img src="'+escAttr(src)+'" alt="">':'<b>—</b>')+'<small>'+escAttr(name)+'</small></div>'
+  if(kind==='shield'&&item)return imageTile('shield',label,item,shieldRule(item)?.image_path||item.image_path);
+  return imageTile('empty',label,null,null)
  };
- const worn=armor.find(item=>['torso','body'].includes(String(item.slot||'').toLowerCase()))||armor[0]||null;
- const armorRule=worn&&(typeof ruleArmorTypes!=='undefined'?ruleArmorTypes:[]).find(r=>String(r.id)===String(worn.armorTypeId||worn.armor_type_id||''));
- const armorKey=worn?.iconKey||worn?.icon_key||armorRule?.icon_key||'generic';
- const armorHtml='<div class="combat-turn-equip"><span>Rustning</span>'+(worn?'<img src="./assets/armor-icons/'+escAttr(armorKey)+'.svg" alt="">':'<b>—</b>')+'<small>'+escAttr(worn?.name||'Ingen')+'</small></div>';
- const projectileTotal=projectiles.reduce((sum,p)=>sum+Math.max(0,Number(p?.count)||0),0);
- const projectileHtml='<div class="combat-turn-equip projectile"><span>Projektiler</span><b>'+projectileTotal+'</b><small>'+escAttr(projectiles.filter(p=>Number(p?.count)>0).map(p=>p.name).filter(Boolean).join(', ')||'Inga')+'</small></div>';
- return hand('leftHand','Vänster hand')+hand('rightHand','Höger hand')+armorHtml+projectileHtml
+ let hands;
+ if(merged){
+  const item=itemForRef(left,'weapon');
+  if(item){
+   const rule=weaponRule(item);
+   shownWeapons.push({item,rule});
+   hands=imageTile('weapon','Båda händerna',item,rule?.image_path||item.image_path,true);
+  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
+ }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
+ // Older NPCs/enemies may have no selected hand slots at all.
+ // In that case only display armor; never invent a loadout for the HUD.
+ const torsoRef=eq.torso||eq.body;
+ const torsoItem=torsoRef?.kind==='armor'?itemForRef(torsoRef,'armor'):null;
+ const worn=torsoItem||armor.find(item=>['torso','body','chest'].includes(
+  String(item.slot||item.zone||'').toLowerCase()))||armor[0]||null;
+ const armorRule=worn?(typeof ruleArmorTypes!=='undefined'?ruleArmorTypes:[]).find(r=>
+  String(r.id)===String(worn.armorTypeId||worn.armor_type_id||'')||
+  (worn.armorTypeKey&&r.type_key===worn.armorTypeKey)||
+  String(r.name||'').localeCompare(String(worn.name||''),'sv',{sensitivity:'base'})===0):null;
+ const armorArt=armorRule?.image_torso_path||armorRule?.image_path||worn?.image_torso_path||worn?.image_path;
+ const armorHtml=imageTile('armor','Rustning',worn,armorArt);
+ const projectileEntries=[],projectileKeys=new Set();
+ for(const {item,rule} of shownWeapons){
+  const category=rule?.category||item.weaponCategory||item.category;
+  if(category!=='projectile'&&category!=='thrown')continue;
+  const key=String(rule?.projectile_key||item.projectileKey||item.projectile_key||
+   (typeof canonicalWeaponProjectileKey==='function'?
+    canonicalWeaponProjectileKey(category,rule?.name||item.name,rule?.icon_key||item.icon_key,rule?.tags||item.tags):''));
+  if(!key||projectileKeys.has(key))continue;
+  projectileKeys.add(key);
+  const projectile=typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(key):null;
+  const imagePath=category==='thrown'?(rule?.image_path||item.image_path||
+   (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path)):
+   (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path);
+  const count=typeof combatAmmoStock==='function'?Math.max(0,combatAmmoStock(combatant,key)||0):0;
+  projectileEntries.push({name:projectile?.name||key,count,imagePath});
+ }
+ const total=projectileEntries.map(row=>row.count).join(' / ');
+ const description=projectileEntries.map(row=>row.name+': '+row.count+' kvar').join('; ');
+ const ammoImages=projectileEntries.map(row=>srcImg(row.imagePath,'combat-turn-art')||
+  '<b class="combat-turn-ammo-placeholder">'+escAttr(row.name)+'</b>').join('');
+ const projectileHtml='<div class="combat-turn-equip combat-turn-equip-art projectile'+
+  (projectileEntries.length>1?' dual':'')+'"><span>Projektiler</span>'+
+  '<div class="combat-turn-art-frame">'+(projectileEntries.length?
+   '<div class="combat-turn-ammo-images">'+ammoImages+'</div>'+
+   '<b class="combat-turn-ammo-count'+(projectileEntries.some(row=>row.count===0)?' out':'')+
+   '" title="'+escAttr(description)+'">'+total+'</b>':
+   '<b class="combat-turn-art-empty">—</b>')+'</div>'+
+  '<small title="'+escAttr(description||'Inga projektiler valda')+'">'+
+  escAttr(projectileEntries.map(row=>row.name).join(' / ')||'Inga')+'</small></div>';
+ return hands+armorHtml+projectileHtml;
 }
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
