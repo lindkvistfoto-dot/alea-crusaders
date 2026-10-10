@@ -784,8 +784,8 @@ function renderAdminWeapons(){
  let covered=ruleWeapons.filter(r=>!!ruleWeaponIconDef(r.icon_key)).length;
  if(st)st.textContent=ruleWeapons.length+' vapen i regelregistret · Ikontäckning '+covered+'/'+ruleWeapons.length+'.';
  if(!ruleWeapons.length){el.innerHTML='<div class="admin-weapon-empty">Inga vapen finns ännu. Lägg till det första vapnet.</div>';return}
- el.innerHTML='<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+
-  ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div class="admin-weapon-icon-cell">'+ruleWeaponIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-weapon-icon-key">'+escAttr(r.icon_key||'—')+'</small></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+ruleWeaponProjectileLabel(r)+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
+ el.innerHTML='<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Magisk</div><div class="ahead">Åtgärd</div>'+
+  ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div class="admin-weapon-icon-cell">'+ruleWeaponIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-weapon-icon-key">'+escAttr(r.icon_key||'—')+'</small></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+ruleWeaponProjectileLabel(r)+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="admin-magical-cell">'+(r.is_magical?'✦ Ja':'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
 }
 function editRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let r=id?ruleWeapons.find(x=>x.id===id):null;
@@ -811,7 +811,8 @@ function editRuleWeapon(id=''){
    '<label>Omladdning, rundor<input id="rwReload" type="number" min="0" step="1" value="'+escAttr(r?.reload_rounds??'')+'"></label>'+
    '<label>Sorteringsordning<input id="rwSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleWeapons.length+1)*10))+'"></label>'+
    '<label class="wide">Taggar<input id="rwTags" value="'+escAttr(tags)+'" placeholder="kommaseparerade, t.ex. klinga, militär"></label>'+
-   '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+   '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+ 
+   '<label class="wide admincheck"><input id="rwMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk vapentyp (gäller själva registerposten)</label>'+
   (window.aleaEquipmentArt?.start('weapon',r)||'')+
   '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden');
@@ -852,6 +853,7 @@ async function saveRuleWeapon(id=''){
    range_text:$('rwRange')?.value.trim()||'',
    reload_rounds:ruleWeaponNumberValue('rwReload',{nullable:true,integer:true}),
    notes:$('rwNotes')?.value.trim()||'',
+   is_magical:!!$('rwMagical')?.checked,
    sort_order:Number($('rwSort')?.value||0),
    tags:($('rwTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
    updated_at:new Date().toISOString()
@@ -927,7 +929,7 @@ function renderAdminArmors(){
  let expert=ruleArmorTypes.filter(r=>asBool(r.canonical_expert)).length;
  if(st)st.textContent=ruleArmorTypes.length+' rustningstyper · '+expert+' kanoniska Expertposter · '+ruleArmorMaterials.length+' materialregler.';
  if(!ruleArmorTypes.length){el.innerHTML='<div class="admin-master-empty">Inga rustningar finns ännu.</div>';return}
- const header=['Ikon','Rustning','Typ','ABS','Viktkod','BEP (STO 9–12)','Pris/BEP (sm)','Expert','Källa','Beskrivning','Åtgärd'];
+ const header=['Ikon','Rustning','Typ','ABS','Viktkod','BEP (STO 9–12)','Pris/BEP (sm)','Expert','Magisk','Källa','Beskrivning','Åtgärd'];
  el.innerHTML=
   '<div class="armor-admin-row armor-admin-header">'+header.map(x=>'<div class="ahead">'+x+'</div>').join('')+'</div>'+
   ruleArmorTypes.map(r=>
@@ -939,7 +941,8 @@ function renderAdminArmors(){
     '<div class="armor-cell-weight"><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
     '<div class="armor-cell-bep">'+(r.bep??'—')+'</div>'+
     '<div class="armor-cell-price">'+(r.price_per_bep??'—')+'</div>'+
-    '<div class="armor-cell-expert">'+(asBool(r.canonical_expert)?'Ja':'Nej')+'</div>'+
+    '<div class="armor-cell-expert">'+(asBool(r.canonical_expert)?'Ja':'Nej')+'</div>'+ 
+    '<div class="admin-magical-cell">'+(r.is_magical?'✦ Ja':'—')+'</div>'+
     '<div class="armor-cell-source"><span class="admin-source-badge '+(asBool(r.canonical_expert)?'expert':'extra')+'">'+escAttr(r.source_label||'—')+'</span></div>'+
     '<div class="armor-cell-description admin-master-description">'+escAttr(r.description||'—')+'</div>'+
     '<div class="armor-cell-actions adminactions"><button class="smallbtn" onclick="editRuleArmor(\''+r.id+'\')" title="Redigera" aria-label="Redigera '+escAttr(r.name||'rustning')+'">✎</button><button class="deletebtn" onclick="deleteRuleArmor(\''+r.id+'\')" title="Ta bort" aria-label="Ta bort '+escAttr(r.name||'rustning')+'">×</button></div>'+
@@ -962,7 +965,8 @@ function editRuleArmor(id=''){
    '<label>Pris / BEP (sm)<input id="raPricePerBep" type="number" min="0" step="0.01" value="'+escAttr(r?.price_per_bep??'')+'"></label>'+
    '<label>Källa<input id="raSource" value="'+escAttr(r?.source_label||'Alea-tillägg')+'" placeholder="t.ex. Expert E51-52"></label>'+
    '<label>Sorteringsordning<input id="raSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleArmorTypes.length+1)*10))+'"></label>'+
-   '<label class="wide admincheck"><input id="raCanonical" type="checkbox" '+(asBool(r?.canonical_expert)?'checked':'')+'> Kanonisk Expert-rustning</label>'+
+   '<label class="wide admincheck"><input id="raCanonical" type="checkbox" '+(asBool(r?.canonical_expert)?'checked':'')+'> Kanonisk Expert-rustning</label>'+ 
+   '<label class="wide admincheck"><input id="raMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk rustningstyp (gäller själva registerposten)</label>'+
    '<label class="wide">Beskrivning<textarea id="raDescription">'+escAttr(r?.description||'')+'</textarea></label>'+
   (window.aleaEquipmentArt?.start('armor',r)||'')+
   '</div><div class="rule-editor-note">Expert anger viktkod A–K; BEP-värdet används tills den STO-beroende vikttabellen kopplas direkt till rollfiguren.</div>'+
@@ -992,6 +996,7 @@ async function saveRuleArmor(id=''){
    price_per_bep:ruleMasterNumberValue('raPricePerBep',{nullable:true}),
    source_label:$('raSource')?.value.trim()||'Alea-tillägg',
    canonical_expert:!!$('raCanonical')?.checked,
+   is_magical:!!$('raMagical')?.checked,
    description:$('raDescription')?.value.trim()||'',
    sort_order:Number($('raSort')?.value||0),
    updated_at:new Date().toISOString()
@@ -1027,7 +1032,7 @@ function renderAdminShields(){
  if(!ruleShields.length){el.innerHTML='<div class="admin-master-empty">Inga sköldar finns ännu.</div>';return}
  const cell=v=>escAttr(v===null||v===undefined||v===''?'—':String(v));
  el.innerHTML=
-  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">BV</div><div class="ahead">BEP</div><div class="ahead">Pris</div><div class="ahead">Skydd projektil (passivt)</div><div class="ahead">Åtgärd</div>'+
+  '<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Storlek</div><div class="ahead">BV</div><div class="ahead">BEP</div><div class="ahead">Pris</div><div class="ahead">Skydd projektil (passivt)</div><div class="ahead">Magisk</div><div class="ahead">Åtgärd</div>'+
   ruleShields.map(r=>{
    let projectile=(r.projectile_block_min!=null&&r.projectile_block_max!=null)?'1T20: '+r.projectile_block_min+'–'+r.projectile_block_max:'—';
    let passive=[projectile,r.passive_coverage].filter(Boolean).join(' · ');
@@ -1037,7 +1042,8 @@ function renderAdminShields(){
     '<div>'+cell(r.bv)+'</div>'+
     '<div>'+cell(r.bep)+'</div>'+
     '<div>'+cell(r.price!=null?r.price+' sm':null)+'</div>'+
-    '<div>'+cell(passive)+'</div>'+
+    '<div>'+cell(passive)+'</div>'+ 
+    '<div class="admin-magical-cell">'+(r.is_magical?'✦ Ja':'—')+'</div>'+
     '<div class="adminactions"><button class="smallbtn" onclick="editRuleShield(\''+escAttr(r.id)+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleShield(\''+escAttr(r.id)+'\')" title="Ta bort">×</button></div>'
   }).join('')+
   '<div class="admin-master-footnote">BV är inledningsvis baserat på registrens sköldtålighet (ABS 8/12/16); BEP och pris kommer från grundreglernas butiksregister (1988). Expert E55 styr passivt skydd och projektiler. Alla värden kan redigeras.</div>'
@@ -1063,7 +1069,8 @@ function editRuleShield(id=''){
    '<label>Källa<input id="rsSource" value="'+escAttr(r?.source_label||'Expert E55')+'"></label>'+
    '<label>Sorteringsordning<input id="rsSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleShields.length+1)*10))+'"></label>'+
    '<label class="wide">Passivt skydd<input id="rsCoverage" value="'+escAttr(r?.passive_coverage||'')+'" placeholder="t.ex. Sköldarm + bröstkorg"></label>'+
-   '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+
+   '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+ 
+   '<label class="wide admincheck"><input id="rsMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk sköldtyp (gäller själva registerposten)</label>'+
    '<label class="wide">Noteringar<textarea id="rsNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
   (window.aleaEquipmentArt?.start('shield',r)||'')+
   '</div><div class="rule-editor-note">Expert E55 reglerar passivt skydd och projektiler. Sköldarnas grundvärden för BEP, pris och tålighet kommer från Aleas befintliga grundregelsregister (1988). BV är initialt samma som registrerat tålighetsvärde och kan justeras separat från ABS.</div>'+
@@ -1096,6 +1103,7 @@ async function saveRuleShield(id=''){
    projectile_block_max:max,
    passive_coverage:$('rsCoverage')?.value.trim()||'',
    can_parry_thrown:!!$('rsParryThrown')?.checked,
+   is_magical:!!$('rsMagical')?.checked,
    destruction_chance_per_excess:risk/100,
    source_label:$('rsSource')?.value.trim()||'Expert E55',
    notes:$('rsNotes')?.value.trim()||'',
@@ -1197,6 +1205,7 @@ const ADMIN_SECTION_META={
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
  equipment:['Utrustning','Gemensamt register för facklor, lyktor och övriga föremål'],
+ artifacts:['Magiska artefakter','Register för amuletter, magiska vapen och andra förtrollade föremål'],
  projectiles:['Projektiler','Centralt register för ammunition och kastvapen'],
  weapons:['Vapen','Centralt vapenregister'],
  armors:['Rustningar','Centralt rustningsregister enligt Expert'],
@@ -1212,6 +1221,7 @@ function renderAdminOverviewCounts(){
  set('adminCountEnemies',campaignMonsters.length);
  set('adminCountScenes',campaignCombatScenes.length);
  set('adminCountEquipment',window.aleaEquipmentCatalog?.count()||0);
+ set('adminCountArtifacts',window.aleaMagicArtifacts?.count()||0);
  set('adminCountPlaces',campaignSites.length);
  Object.entries(RULE_REGISTRY_DEFS).forEach(([key,def])=>set(def.countId,ruleRegistryCount(key,def.count())));
  set('adminCountCampaigns',adminData.campaigns.length);
@@ -1231,7 +1241,10 @@ async function openAdminSection(key='overview'){
  if(isOverview)renderAdminOverviewCounts();
  let ruleDef=adminRuleRegistryDef(activeAdminSection);
  if(ruleDef){await refreshAdminRuleRegistry(activeAdminSection);}
- if(activeAdminSection==='equipment'){
+ if(activeAdminSection==='artifacts'){
+  await window.aleaMagicArtifacts?.refresh();
+  renderAdminOverviewCounts();
+ }else if(activeAdminSection==='equipment'){
   await window.aleaEquipmentCatalog?.refresh();
   renderAdminOverviewCounts();
  }else if(activeAdminSection==='sounds'){
