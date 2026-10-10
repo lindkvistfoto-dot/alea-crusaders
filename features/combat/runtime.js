@@ -4484,6 +4484,22 @@ function renderCombatMap(){
  return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+movementHitTargets+'</svg>'
 }
 
+// SLP/fienders porträtt lagras som image_path i campaign-actor-images.
+// Hämta via samma autentiserade bildcache som i Administration, inte som publik URL.
+const combatNpcPortraitRequests=new Set();
+function combatNpcPortraitSrc(path){
+ const key=String(path||'').trim();
+ if(!key||typeof npcPortraitCachedUrl!=='function')return '';
+ const cached=npcPortraitCachedUrl(key);
+ if(cached)return cached;
+ if(!combatNpcPortraitRequests.has(key)&&typeof getNpcPortraitUrl==='function'){
+  combatNpcPortraitRequests.add(key);
+  Promise.resolve().then(()=>getNpcPortraitUrl(key)).then(url=>{
+   if(url&&activeCombat&&typeof renderCombat==='function')renderCombat();
+  }).catch(error=>console.warn('Kunde inte läsa SLP-/fiendeporträtt i strid',error));
+ }
+ return '';
+}
 function combatRowPortraitUrl(combatant){
  if(!combatant)return '';
  if(combatant.source_type==='character'){
@@ -4495,6 +4511,10 @@ function combatRowPortraitUrl(combatant){
  else if(combatant.source_type==='monster'&&typeof campaignMonsters!=='undefined')source=(campaignMonsters||[]).find(row=>String(row.id)===String(combatant.source_id));
  if(!source)return '';
  const data=source.data&&typeof source.data==='object'?source.data:source;
+ // SLP och monster använder samma bildfält i sina respektive masterregister.
+ const imagePath=source.image_path||data.image_path||'';
+ const storedPortrait=combatNpcPortraitSrc(imagePath);
+ if(storedPortrait)return storedPortrait;
  const direct=data.portrait||data.portrait_url||data.image_url||source.portrait_url||source.image_url||'';
  if(direct)return String(direct);
  const iconPath=source.combat_icon_path||data.combatIconPath||data.combat_icon_path||'';
