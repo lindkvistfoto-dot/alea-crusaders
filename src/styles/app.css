@@ -7088,3 +7088,122 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
   #dicePage .dice-actionrow{margin-top:8px}
   #dicePage .dice-controls{margin-top:10px}
 }
+
+
+/* v0.35.68 — three-column desktop combat scene (1:2:1) */
+/* The active battle layout only: keep preview and idle screens unchanged. */
+.combat-shell-live > .combat-left-column,
+.combat-shell-live > .combat-center-column{min-width:0}
+.combat-shell-live .combat-left-column{
+ display:flex;flex-direction:column;align-items:stretch;gap:12px;
+}
+.combat-shell-live .combat-center-column{
+ display:flex;flex-direction:column;align-items:stretch;gap:12px;
+}
+.combat-shell-live .combat-below-map{
+ display:flex;flex-direction:column;gap:12px;min-width:0;
+}
+.combat-shell-live .combat-below-map .combat-log{
+ grid-column:auto;min-width:0;
+}
+.combat-shell-live .combat-below-map .combat-gm-toolbox{
+ grid-column:auto;min-width:0;width:100%;margin:0;
+}
+.combat-shell-live .combat-below-map .combat-gm-placements{
+ grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));
+}
+.combat-shell-live .combat-below-map .combat-gm-controls{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;min-width:0;margin:0;padding:10px;
+}
+.combat-shell-live .combat-below-map .combat-gm-control-copy,
+.combat-shell-live .combat-below-map .combat-gm-controls select,
+.combat-shell-live .combat-below-map .combat-gm-active{
+ grid-column:1/-1;min-width:0;justify-self:stretch;text-align:left;
+}
+.combat-shell-live .combat-below-map .combat-gm-controls .btn{
+ width:100%;min-width:0;padding:8px 6px;font-size:12px;
+}
+.combat-shell-live .combat-turn-panel{grid-column:auto;min-width:0}
+.combat-shell-live .combat-left-column > .combat-mini-attack{
+ min-width:0;border:1px solid #765c3e;border-radius:12px;overflow:visible;
+}
+.combat-shell-live > .combat-participants{min-width:0}
+
+/* On computers, the hex map gets precisely twice each side column's width. */
+@media(min-width:1024px){
+ main:has(> #combatPage:not(.hidden)){max-width:1600px}
+ #combatPage .combatpage{max-width:1550px;padding:12px 8px}
+ .combat-shell.combat-shell-live{
+  grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);
+  gap:12px;align-items:start;
+ }
+ .combat-shell-live .combat-left-column .combat-turn-head{
+  grid-template-columns:minmax(0,1fr) auto;gap:5px;
+ }
+ .combat-shell-live .combat-turn-head .combat-round{grid-column:1;grid-row:1}
+ .combat-shell-live .combat-turn-head .combat-turn-undo-btn{grid-column:2;grid-row:1}
+ .combat-shell-live .combat-turn-head .combat-turn-action-status{
+  grid-column:1/-1;grid-row:2;justify-self:start;white-space:normal;
+ }
+ .combat-shell-live .combat-turn-head .combat-status{display:none}
+ .combat-shell-live .combat-turn-actor{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  grid-template-areas:"portrait identity" "vitals vitals" "actions actions";
+  gap:8px;min-width:0;
+ }
+ .combat-shell-live .combat-turn-portrait{
+  width:44px;height:49px;flex-basis:44px;
+ }
+ .combat-shell-live .combat-turn-identity b{font-size:15px}
+ .combat-shell-live .combat-turn-vitals{
+  grid-template-columns:repeat(3,minmax(0,1fr));width:100%;
+ }
+ .combat-shell-live .combat-turn-vitals>div{padding:5px 3px}
+ .combat-shell-live .combat-turn-vitals span{font-size:7px}
+ .combat-shell-live .combat-turn-vitals b{font-size:12px}
+ .combat-shell-live .combat-turn-actions{
+  width:100%;justify-content:space-between;gap:3px;
+ }
+ .combat-shell-live .combat-turn-actions .combat-turn-action-tool{
+  width:38px;flex:0 1 38px;min-width:0;
+ }
+ .combat-shell-live .combat-turn-actions .combat-row-tool-btn{
+  width:100%;min-width:0;height:38px;
+ }
+ .combat-shell-live .combat-turn-actions .combat-row-action-menu{
+  top:42px;left:0;transform:none;width:220px;max-width:calc(100vw - 30px);
+ }
+ .combat-shell-live .combat-turn-stats>div{padding:6px 2px}
+ .combat-shell-live .combat-turn-equip small{font-size:8px}
+ .combat-shell-live .combat-participants .combatant-card{
+  grid-template-columns:30px 36px minmax(0,1fr) 34px;
+  gap:5px;padding:6px 5px;
+ }
+ .combat-shell-live .combat-participants .combat-order-number{
+  min-width:30px;width:30px;
+ }
+ .combat-shell-live .combat-participants .combat-row-portrait{
+  width:36px;height:38px;
+ }
+ .combat-shell-live .combat-mini-attack{padding:9px 7px}
+ .combat-shell-live .combat-mini-duel{
+  grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr);gap:3px;
+ }
+ .combat-shell-live .combat-mini-side{padding:6px 4px}
+ .combat-shell-live .combat-mini-title{flex-wrap:wrap;gap:3px}
+ .combat-shell-live .combat-mini-title b{font-size:12px}
+}
+
+/* Smaller windows continue as a single-column battle UI, without clipping. */
+@media(max-width:1023px){
+ .combat-shell.combat-shell-live{display:flex;flex-direction:column;gap:12px}
+ .combat-shell-live .combat-left-column,
+ .combat-shell-live .combat-center-column{display:contents}
+ .combat-shell-live .combat-turn-panel{order:1;width:100%}
+ .combat-shell-live .combat-left-column > .combat-mini-attack{order:2;width:100%}
+ .combat-shell-live .combat-board-wrap{order:3;width:100%}
+ .combat-shell-live > .combat-participants{order:4;width:100%}
+ .combat-shell-live .combat-below-map{order:5;width:100%}
+}
