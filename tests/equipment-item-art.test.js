@@ -55,7 +55,7 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
   for(const table of ['rule_weapons','rule_shields','rule_armor_types'])expect(app).toContain(table);
   expect((app.match(/payload.image_path=artChange.path/g)||[]).length).toBe(2);
   expect(app).toContain('Object.assign(payload,artChange.paths)');
-  expect((app.match(/aleaEquipmentArt\?\.thumbnail/g)||[]).length).toBe(3);
+  expect((app.match(/aleaEquipmentArt\?\.thumbnail/g)||[]).length).toBe(4);
   expect(app).toContain('function currentEquipmentItemArtPath(');
   expect(app).toContain('characterShieldRule(item)?.image_path');
   expect(app).toContain('ruleWeaponForItem(item)?.image_path');
