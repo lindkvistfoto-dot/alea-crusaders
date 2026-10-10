@@ -9,7 +9,7 @@ const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.u
 
 describe('Gandalf – aktuell utrustning',()=>{
  it('keeps the hall and original slot artwork while showing a transparent golden frame',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.47');
+   expect(html).toContain('current-equipment-gandalf.css?v=0.35.48');
    expect(css).toContain('assets/gandalf-slot-transparent.svg');
    expect(css).toContain('assets/gandalf-hall.webp');
    for(const name of ['gandalf-slot.webp','gandalf-slot-transparent.svg','gandalf-hall.webp'])
@@ -42,20 +42,23 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(app).toContain('showCurrentEquipmentProjectileInfo');
    expect(app).toContain('Projektiler kopplas i Frodo-steget');
  });
- it('uses four large edge-aligned armor slots with vertical labels and bigger right-hand controls',()=>{
-   expect(css).toMatch(/\.gandalf-equip-slot\{[^}]*width:22\.5%/);
-   expect(css).toContain('width:29%');
-   expect(css).toContain('flex-direction:row-reverse');
+ it('packs four enlarged armor frames with narrow gaps and overlays vertical labels',()=>{
+   expect(css).toContain('left:0.3%');
+   expect(css).toContain('width:24.3%');
+   expect(css).toContain('inset:0 auto 0 0');
    expect(css).toContain('writing-mode:vertical-rl');
-   expect(css).toContain('flex:0 0 77%');
-   for(const [slot,top] of [['head','1'],['arms','25.5'],['torso','50'],['legs','74.5']])
+   expect(css).toContain('pointer-events:none');
+   for(const [slot,top] of [['head','0.6'],['arms','25.3'],['torso','50'],['legs','74.7']])
      expect(css).toContain(`.gandalf-equip-${slot}{top:${top}%}`);
-   expect(css).toContain('.gandalf-equip-leftHand{top:1%;right:24.5%;left:auto}');
-   expect(css).toContain('.gandalf-equip-rightHand{top:1%;right:1%;left:auto}');
-   expect(css).toContain('.gandalf-equip-projectiles{top:29%;right:1%;left:auto}');
-   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:46%}');
-   expect(css).toContain('inset:1% 1% 1% 30%');
-   expect(css).not.toContain('.gandalf-equip-slot{width:18.1%}');
+ });
+ it('centers the figure and stacks hand and ammo slots vertically',()=>{
+   expect(css).toContain('inset:1% 25% 1% 25%');
+   expect(css).toContain('justify-content:center');
+   expect(css).toContain('.gandalf-equip-leftHand{top:1%;right:1%;left:auto;width:23%}');
+   expect(css).toContain('.gandalf-equip-rightHand{top:27%;right:1%;left:auto;width:23%}');
+   expect(css).toContain('.gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}');
+   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%}');
+   expect(css).toContain('background-size:100% 50%,100% 50%');
  });
  it('does not accidentally hardcode a character into Gandalf background',()=>{
    expect(app).toContain('gandalf-equip-center');
