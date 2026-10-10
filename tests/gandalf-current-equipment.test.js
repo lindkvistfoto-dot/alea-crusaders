@@ -43,7 +43,7 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(app).toContain('Projektiler kopplas i Frodo-steget');
  });
  it('uses four large edge-aligned armor slots with vertical labels and bigger right-hand controls',()=>{
-   expect(css).toMatch(/\\.gandalf-equip-slot\\{[^}]*width:22\\.5%/);
+   expect(css).toMatch(/\.gandalf-equip-slot\{[^}]*width:22\.5%/);
    expect(css).toContain('width:29%');
    expect(css).toContain('flex-direction:row-reverse');
    expect(css).toContain('writing-mode:vertical-rl');
