@@ -83,6 +83,45 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
   expect(after.old[0]).toBe(armorPaths.image_head_path);
   art.reset();
  });
+ it('keeps saving all four images even when editor state resets during the first upload',async()=>{
+  const win={},uploads=[];
+  let art=null,seq=0;
+  const mockWindow={};
+  const ImageStub=class{
+   constructor(){this.naturalWidth=450;this.naturalHeight=450}
+   set src(value){Promise.resolve().then(()=>this.onload())}
+  };
+  const ctx={
+   window:mockWindow,
+   crypto:{randomUUID:()=>id},
+   URL:{createObjectURL:()=>('blob:test-'+(++seq)),revokeObjectURL(){}},
+   Image:ImageStub,
+   document:{
+    getElementById:()=>null,
+    createElement:()=>({
+     getContext:()=>({clearRect(){},drawImage(){}}),
+     toBlob:(callback,type)=>callback({type,size:5000})
+    })
+   },
+   fetch:async(url,options)=>{
+    uploads.push({url,method:options.method});
+    if(uploads.length===1)art.reset();
+    return {ok:true,status:200};
+   },
+   alert:()=>{throw new Error('Unexpected upload error')}
+  };
+  runInNewContext(artSource,ctx);
+  art=mockWindow.aleaEquipmentArt;
+  art.configure('https://example.supabase.co');
+  art.startArmor({});
+  for(const zone of ['head','arms','torso','legs'])
+   await art.choose({type:'image/png',size:15000},zone);
+  const saved=await art.prepareArmor(id,{token:'test',key:'test'});
+  expect(uploads).toHaveLength(4);
+  expect(saved.uploaded).toHaveLength(4);
+  for(const zone of ['head','arms','torso','legs'])
+   expect(saved.paths['image_'+zone+'_path']).toContain('armor/'+zone+'/'+id+'/');
+ });
  it('chooses the image belonging to each armor zone and retains the legacy fallback',()=>{
   const art=artFixture();
   const rule={image_path:path};
