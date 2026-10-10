@@ -7073,3 +7073,18 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
   border:1px solid rgba(184,145,82,.22);
  }
 }
+
+
+/* v0.35.67 — desktop dice bowl: keep tray and dice choices visible without scrolling */
+@media (min-width:761px){
+  /* The image stays square, but its size is governed by available viewport height.
+     Reserve room for the two-row navigation, title, roll result and dice picker. */
+  #dicePage .dice-tray{
+    width:min(100%,640px,max(240px,calc(100vh - 455px)));
+    width:min(100%,640px,max(240px,calc(100dvh - 455px)));
+    margin-inline:auto;
+  }
+  #dicePage .dicehead{margin-bottom:8px}
+  #dicePage .dice-actionrow{margin-top:8px}
+  #dicePage .dice-controls{margin-top:10px}
+}
