@@ -1,4 +1,4 @@
-/* Gandalf / Aragorn · v0.35.45 · Current equipment, art-driven interface.
+/* Gandalf / Aragorn · v0.35.46 · Current equipment, art-driven interface.
    Images: user-provided hall and magic slot frame. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
@@ -75,7 +75,7 @@
   flex:0 0 auto;
   width:auto;
   max-width:none;
-  height:100%;
+  height:95%;
   object-fit:contain;
   object-position:center bottom;
   filter:drop-shadow(0 7px 15px rgba(0,0,0,.77));
@@ -105,7 +105,7 @@
   flex-direction:column;
   align-items:stretch;
   gap:1px;
-  width:15.9%;
+  width:19.1%;
   padding:0;
   background:none;
   border:0;
@@ -162,14 +162,15 @@
   text-shadow:0 1px 3px #000,0 0 9px #000;
   white-space:normal;
 }
-.gandalf-equip-head{top:9.5%;left:14.6%}
-.gandalf-equip-arms{top:29%;left:14.6%}
-.gandalf-equip-torso{top:48.5%;left:14.6%}
-.gandalf-equip-legs{top:68%;left:14.6%}
-.gandalf-equip-leftHand{top:21%;left:65%}
-.gandalf-equip-rightHand{top:21%;left:82%}
-.gandalf-equip-projectiles{top:44%;left:73.6%}
-.gandalf-equip-twohand{top:21%;left:65%;width:33%}
+/* Full-size armor slots hug the left edge; weapon and ammunition slots align to the right. */
+.gandalf-equip-head{top:3%;left:1%}
+.gandalf-equip-arms{top:27%;left:1%}
+.gandalf-equip-torso{top:51%;left:1%}
+.gandalf-equip-legs{top:75%;left:1%}
+.gandalf-equip-leftHand{top:3%;right:21%;left:auto}
+.gandalf-equip-rightHand{top:3%;right:1%;left:auto}
+.gandalf-equip-projectiles{top:29%;right:1%;left:auto}
+.gandalf-equip-twohand{top:3%;right:1%;left:auto;width:39.1%}
 .gandalf-equip-twohand .gandalf-equip-face{
   aspect-ratio:2.07 / 1;
   background-size:100% 100%;
@@ -192,16 +193,7 @@
   #currentEquipmentModal .current-equipment-intro{font-size:11px;margin:6px 2px 8px}
   .gandalf-equip-scene .gandalf-equip-center{inset:1% 29% 1%}
   .gandalf-equip-figure-missing{padding:6px 4px}
-  .gandalf-equip-slot{width:18.1%}
-  .gandalf-equip-head,.gandalf-equip-arms,.gandalf-equip-torso,.gandalf-equip-legs{left:9.7%}
-  .gandalf-equip-head{top:11%}
-  .gandalf-equip-arms{top:30.5%}
-  .gandalf-equip-torso{top:50%}
-  .gandalf-equip-legs{top:69.5%}
-  .gandalf-equip-leftHand{left:60.9%}
-  .gandalf-equip-rightHand{left:80.1%}
-  .gandalf-equip-projectiles{left:70.6%;top:45%}
-  .gandalf-equip-twohand{left:60.9%;width:37.3%}
+  /* Use the same edge-aligned geometry on phones as on desktop. */
   .gandalf-equip-value{font-size:clamp(8px,2.2vw,12px);line-height:1.1}
   .gandalf-equip-label{font-size:clamp(8px,2.5vw,13px)}
   #currentEquipmentModal .current-equipment-picker{padding:12px 8px}
