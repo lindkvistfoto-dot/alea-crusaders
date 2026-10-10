@@ -277,3 +277,49 @@
 @media(prefers-reduced-motion:reduce){
   .gandalf-equip-slot{transition:none}
 }
+
+/* v0.35.72 — ammunition follows equipped ranged/thrown weapons automatically. */
+.gandalf-equip-projectiles .gandalf-equip-face{overflow:hidden}
+.gandalf-equip-projectiles .gandalf-ammo-images{
+ position:absolute;inset:17% 13% 18%;
+ display:flex;align-items:center;justify-content:center;gap:3px;min-width:0;
+}
+.gandalf-equip-projectiles .gandalf-ammo-item{
+ flex:1 1 0;min-width:0;height:100%;position:relative;
+ display:grid;place-items:center;
+}
+.gandalf-equip-projectiles .gandalf-ammo-item img{
+ width:100%;height:100%;object-fit:contain;
+ filter:drop-shadow(0 2px 3px rgba(0,0,0,.8));
+}
+.gandalf-equip-projectiles .gandalf-ammo-count{
+ position:absolute;bottom:0;right:0;min-width:20px;min-height:20px;
+ display:grid;place-items:center;box-sizing:border-box;padding:2px 4px;
+ border:1px solid #d8ab67;border-radius:999px;
+ background:#2d2116;color:#fbe6bc;
+ font:700 clamp(9px,1.1vw,13px)/1 system-ui,sans-serif;
+ box-shadow:0 2px 5px #000b;
+}
+.gandalf-equip-projectiles .gandalf-ammo-item.out .gandalf-ammo-count{
+ color:#ffb9ae;border-color:#c87765;background:#4a1d1b;
+}
+.gandalf-equip-projectiles .gandalf-ammo-fallback{
+ display:block;max-width:100%;overflow-wrap:anywhere;text-align:center;
+ color:#f5dfa9;font:700 clamp(8px,1.1vw,12px)/1.25 Georgia,serif;
+}
+.gandalf-equip-projectiles .gandalf-ammo-empty{
+ color:#ac9b83;font:700 clamp(20px,3vw,32px)/1 Georgia,serif;
+}
+.gandalf-equip-projectiles .gandalf-equip-label small{
+ display:block;max-width:100%;margin-top:2px;color:#e7d6b6;
+ font:400 clamp(8px,1.07vw,12px)/1.25 system-ui,sans-serif;
+ overflow-wrap:anywhere;
+}
+.gandalf-equip-projectiles.dual .gandalf-ammo-images{inset:17% 11% 18%}
+@media(max-width:620px){
+ .gandalf-equip-projectiles .gandalf-ammo-images{inset:18% 13% 20%}
+ .gandalf-equip-projectiles .gandalf-ammo-count{
+  min-width:14px;min-height:14px;font-size:9px;padding:1px 2px;
+ }
+ .gandalf-equip-projectiles .gandalf-equip-label small{font-size:8px}
+}
