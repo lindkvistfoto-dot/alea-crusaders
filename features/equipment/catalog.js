@@ -50,14 +50,15 @@
   const text=String(search?.value||'').toLocaleLowerCase('sv-SE').trim();
   const subset=rows.filter(r=>!text||[r.name,r.category,r.item_key,r.description].some(s=>String(s||'').toLocaleLowerCase('sv-SE').includes(text)));
   if(status)status.textContent=rows.length+' varor i gemensamma registret · '+rows.filter(r=>r.can_carry&&r.purchase_kind==='equipment').length+' kan bäras.';
-  el.innerHTML='<div class="equipment-admin-header"><b>Bild / Namn</b><b>Kategori</b><b>BEP</b><b>Pris</b><b>Kan bäras</b><b>Åtgärder</b></div>'+
+  el.innerHTML='<div class="equipment-admin-header"><b>Bild / Namn</b><b>Kategori</b><b>BEP</b><b>Pris</b><b>Kan bäras</b><b>Magisk</b><b>Åtgärder</b></div>'+
    subset.map(r=>{
     const thumb=window.aleaEquipmentArt?.thumbnail(r.image_path,'<span class="equipment-admin-noart">◇</span>',r.name)||'<span class="equipment-admin-noart">◇</span>';
     return '<div class="equipment-admin-row'+(r.active?'':' inactive')+'">'+
      '<div class="equipment-admin-name">'+thumb+'<div><strong>'+safe(r.name)+'</strong><small>'+safe(r.item_key)+(r.active?'':' · Inaktiv')+'</small></div></div>'+
      '<span>'+safe(r.category)+'</span><span>'+safe(r.bep??'—')+'</span>'+
      '<span>'+safe(r.price_amount)+' '+safe(r.price_currency)+'</span>'+
-     '<span class="equipment-admin-carry">'+(r.can_carry?'Ja':'—')+'</span>'+
+     '<span class="equipment-admin-carry">'+(r.can_carry?'Ja':'—')+'</span>'+ 
+     '<span class="admin-magical-cell">'+(r.is_magical?'✦ Ja':'—')+'</span>'+
      '<div class="equipment-admin-actions"><button type="button" class="smallbtn" onclick="editRuleEquipment(\''+safe(r.id)+'\')">Redigera</button>'+
      '<button type="button" class="deletebtn" title="Ta bort" onclick="deleteRuleEquipment(\''+safe(r.id)+'\')">×</button></div></div>'
    }).join('')+
@@ -87,7 +88,8 @@
    field('Antal per köp','<input id="reiQuantity" type="number" min="1" step="1" value="'+safe(r?.quantity_per_purchase??1)+'">')+
    field('Sorteringsordning','<input id="reiOrder" type="number" step="1" value="'+safe(r?.sort_order??0)+'">')+
    '<label class="wide">Beskrivning<textarea id="reiDesc" rows="3">'+safe(r?.description||'')+'</textarea></label>'+
-   '<label class="admincheck wide"><input id="reiCarry" type="checkbox" '+(r?.can_carry?'checked':'')+'> Kan bäras i handen (Aktuell utrustning)</label>'+
+   '<label class="admincheck wide"><input id="reiCarry" type="checkbox" '+(r?.can_carry?'checked':'')+'> Kan bäras i handen (Aktuell utrustning)</label>'+ 
+   '<label class="admincheck wide"><input id="reiMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magiskt föremål (gäller själva registerposten)</label>'+
    '<label class="admincheck wide"><input id="reiActive" type="checkbox" '+(r?.active===false?'':'checked')+'> Säljs/visas i butik</label>'+
    (window.aleaEquipmentArt?.start('equipment',r)||'')+
    '<div class="rule-editor-actions"><button class="btn" type="button" onclick="closeAdminEditor()">Avbryt</button>'+
@@ -120,6 +122,7 @@
    bep,price_amount:price,price_currency:elem('reiCurrency')?.value||'SM',
    quantity_per_purchase:qty,sort_order:order,
    can_carry:kind==='equipment'&&!!elem('reiCarry')?.checked,
+   is_magical:!!elem('reiMagical')?.checked,
    active:!!elem('reiActive')?.checked,
    updated_at:new Date().toISOString()
   };
@@ -155,7 +158,7 @@
    if(typeof loadShopCatalog==='function')loadShopCatalog(true).catch(()=>{});
   }catch(e){alert('Kunde inte ta bort utrustning: '+e.message)}
  }
- window.aleaEquipmentCatalog={load,get,canCarry,torchCount,imagePath,count:()=>rows.length,refresh,render};
+ window.aleaEquipmentCatalog={load,get,canCarry,torchCount,imagePath,count:()=>rows.length,all:()=>[...rows],refresh,render};
  window.editRuleEquipment=editor;
  window.saveRuleEquipment=saveItem;
  window.deleteRuleEquipment=removeItem;
