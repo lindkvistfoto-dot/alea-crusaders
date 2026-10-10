@@ -111,7 +111,7 @@ describe('Magiska egenskaper som återanvändbara förmågor',()=>{
  });
  it('visar rätt formulär för att konfigurera Eldpil, EG, PSY och laddningskostnad',async()=>{
   const t=harness();await t.api.load();
-  await t.scope.editArtifactPower(aid,pid);
+  await t.scope.window.editArtifactPower(aid,pid);
   expect(t.scope.loadRuleMagicRegistry).toHaveBeenCalled();
   const editor=t.nodes.adminEditorBody.innerHTML;
   expect(editor).toContain('Eldpil');
@@ -125,7 +125,7 @@ describe('Magiska egenskaper som återanvändbara förmågor',()=>{
  });
  it('sparar kopplad besvärjelse med egen effektgrad och användningsvillkor',async()=>{
   const t=harness();await t.api.load();
-  await t.scope.saveArtifactPower(aid,pid);
+  await t.scope.window.saveArtifactPower(aid,pid);
   const patch=t.calls.find(x=>x.options.method==='PATCH');
   expect(patch.url).toContain('rule_magic_artifact_powers?id=eq.');
   const body=JSON.parse(patch.options.body);
@@ -141,7 +141,7 @@ describe('Magiska egenskaper som återanvändbara förmågor',()=>{
  it('kräver besvärjelse för egenskapstypen Besvärjelse',async()=>{
   const t=harness();await t.api.load();
   t.nodes.mapSpell.value='';
-  await t.scope.saveArtifactPower(aid,pid);
+  await t.scope.window.saveArtifactPower(aid,pid);
   expect(t.scope.alert).toHaveBeenCalledWith(expect.stringContaining('Välj en besvärjelse'));
   expect(t.calls.filter(x=>x.options.method==='PATCH')).toHaveLength(0);
  });
