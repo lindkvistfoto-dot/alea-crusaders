@@ -1,0 +1,40 @@
+/* v0.35.76: centrally managed general equipment and carryable artwork. */
+.equipment-admin-search{display:flex;gap:10px;align-items:center;max-width:600px;margin:10px 0 14px;color:#d8c29f;font-weight:700}
+.equipment-admin-search input{flex:1;min-width:0;max-width:420px;padding:8px 10px;border:1px solid #836343;border-radius:8px;background:#241d17;color:#f9e8c6}
+.equipment-admin-table{display:grid;gap:0;color:#e9d8bd;border:1px solid #756043;border-radius:9px;overflow:hidden}
+.equipment-admin-header,.equipment-admin-row{display:grid;grid-template-columns:minmax(160px,2.3fr) minmax(88px,1fr) 62px 84px 91px 118px;gap:8px;align-items:center;padding:8px 12px}
+.equipment-admin-header{background:#493225;color:#fae2b8;font-size:11px}
+.equipment-admin-row{border-top:1px solid #59462e;background:#201b17;font-size:12px}
+.equipment-admin-row:nth-child(2n){background:#2a221c}
+.equipment-admin-row.inactive{opacity:.65}
+.equipment-admin-name{display:flex;align-items:center;gap:8px;min-width:0}
+.equipment-admin-name>div{min-width:0}
+.equipment-admin-name strong,.equipment-admin-name small{display:block;overflow-wrap:anywhere}
+.equipment-admin-name small{font-size:10px;color:#ad9773;margin-top:3px}
+.equipment-admin-name .admin-weapon-icon{flex:0 0 44px;min-width:44px;min-height:44px}
+.equipment-admin-name .admin-weapon-icon img{width:44px;height:44px;object-fit:contain}
+.equipment-admin-noart{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border:1px dashed #8d7151;border-radius:6px;color:#b49a75;font-size:25px}
+.equipment-admin-carry{font-weight:800;color:#bcdda9}
+.equipment-admin-actions{display:flex;gap:5px;justify-content:end;align-items:center}
+.equipment-admin-actions .smallbtn{min-height:33px}
+.equipment-master-editor .item-art-editor{grid-column:1/-1}
+.equipment-master-editor .admincheck{display:flex;gap:8px;align-items:center;justify-content:start}
+.equipment-master-editor .admincheck input{flex:0 0 auto}
+.gandalf-equip-face>.gandalf-equip-stack-count{
+ position:absolute;z-index:4;right:8%;bottom:8%;min-width:24px;min-height:24px;
+ display:grid;place-items:center;padding:3px 6px;box-sizing:border-box;
+ border:1px solid #d8ab67;border-radius:99px;background:#2d2116;color:#fbe6bc;
+ font:800 clamp(12px,1.45vw,17px)/1 system-ui,sans-serif;
+ font-variant-numeric:tabular-nums;box-shadow:0 2px 6px #000c;
+ pointer-events:none
+}
+@media(max-width:700px){
+ .equipment-admin-header{display:none}
+ .equipment-admin-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 9px;padding:9px 10px}
+ .equipment-admin-name{grid-column:1;grid-row:1}
+ .equipment-admin-actions{grid-column:2;grid-row:1}
+ .equipment-admin-row>span{font-size:11px;color:#c5b399}
+ .equipment-admin-row>.equipment-admin-carry{color:#bde1a8}
+ .equipment-admin-search{flex-direction:column;align-items:stretch}
+ .gandalf-equip-face>.gandalf-equip-stack-count{min-width:18px;min-height:18px;padding:2px 4px;font-size:11px}
+}
