@@ -7,6 +7,7 @@ const artSource=read('features/equipment/art.js');
 const css=read('features/equipment/art.css');
 const app=read('legacy/app.js');
 const html=read('index.html');
+const version=JSON.parse(read('package.json')).version;
 const id='f53b9568-81ec-4623-ac6d-dd452177a769';
 const path='weapon/'+id+'/'+id+'.webp';
 
@@ -19,8 +20,8 @@ function artFixture(){
 
 describe('Gemensamma inventariebilder i regelregister',()=>{
  it('loads artwork utilities before the app and transparent styles after the equipment scene',()=>{
-  expect(html).toContain('features/equipment/art.js?v=0.35.57');
-  expect(html).toContain('features/equipment/art.css?v=0.35.57');
+  expect(html).toContain('features/equipment/art.js?v='+version);
+  expect(html).toContain('features/equipment/art.css?v='+version);
   expect(html.indexOf('features/equipment/art.js')).toBeLessThan(html.indexOf('legacy/app.js'));
   expect(html.indexOf('features/equipment/art.css')).toBeGreaterThan(html.indexOf('current-equipment-gandalf.css'));
   expect(css).toContain('object-fit:contain');

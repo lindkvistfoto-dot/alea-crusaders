@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 const app=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../features/character/current-equipment-gandalf.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const version=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version;
 const functionStart=app.indexOf('function currentEquipmentFigureHtml(character){');
 const functionEnd=app.indexOf('function renderCurrentEquipment(){',functionStart);
 const figureHtml=new Function(app.slice(functionStart,functionEnd)+';return currentEquipmentFigureHtml')();
@@ -34,7 +35,7 @@ describe('Aragorn – helfigur i aktuell utrustning',()=>{
   expect(css).toContain('pointer-events:none');
   expect(css).toContain('.gandalf-equip-character');
   expect(css).toContain('@media(max-width:620px)');
-  expect(html).toContain('Alea Crusaders v0.35.57');
+  expect(html).toContain('Alea Crusaders v'+version);
   expect(html).toContain('id="tabImages"');
  });
 });

@@ -5,11 +5,12 @@ const page=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 const feature=readFileSync(new URL('../features/character/figure-images.js',import.meta.url),'utf8');
 const styles=readFileSync(new URL('../features/character/figure-images.css',import.meta.url),'utf8');
+const version=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8')).version;
 
 describe('rollfigurens helfigursbilder',()=>{
   it('loads the existing image manager in its own Bilder tab after Utrustning',()=>{
-    expect(page).toContain('features/character/figure-images.css?v=0.35.57');
-    expect(page).toContain('features/character/figure-images.js?v=0.35.57');
+    expect(page).toContain('features/character/figure-images.css?v='+version);
+    expect(page).toContain('features/character/figure-images.js?v='+version);
     expect(app).toContain('window.aleaRenderCharacterFigureGallery?.()');
     expect(page).toMatch(/id="tabEquipment"[^>]*>Utrustning<\/button><button id="tabImages"[^>]*>Bilder<\/button>/);
     expect(page).toContain('id="imagesPanel"');
