@@ -1090,7 +1090,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("Math.min(COMBAT_MAP_MAX_ZOOM,zoomX,zoomY)");
     expect(combat).toContain('title="Fokusera alla kombatanter"');
     expect(combat).toContain("onwheel=\"combatMapWheel(event)\"");
-    expect(combat).toContain("ondblclick=\"combatMapResetView()\"");
+    expect(combat).toContain("ondblclick=\"combatMapDoubleClick(event)\"");
+    expect(combat).toContain("function combatMapDoubleClick(event)");
+    expect(combat).toContain("if(!actor)return combatMapResetView()");
     expect(combat).toContain("Math.min(COMBAT_MAP_MAX_ZOOM");
     expect(combat).toContain("if(event.target?.closest?.('.combat-token-group'))return");
     expect(combat).toContain("name.includes('astrid')");
