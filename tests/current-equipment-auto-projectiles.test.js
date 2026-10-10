@@ -109,6 +109,35 @@ describe('Automatiska projektiler i Aktuell utrustning',()=>{
   expect(html).toContain('projectile/bolt.webp');
   expect(html).toContain('weapon/axe.webp');
  });
+ it('anchors ONE readable count in the lower-right of the projectile frame, not on the picture',()=>{
+  const {character:c,api}=fixture();
+  c.currentEquipment.leftHand=ref('bow');
+  const html=api.currentEquipProjectileSlotHtml(c);
+  expect(html).toContain('<span class="gandalf-ammo-count"');
+  expect(html).toContain('>6</span></span><span class="gandalf-equip-label">');
+  expect(html.match(/class="gandalf-ammo-count/g)).toHaveLength(1);
+  expect(html.indexOf('gandalf-ammo-count')).toBeGreaterThan(html.indexOf('gandalf-ammo-images'));
+  expect(css).toContain('.gandalf-equip-face>.gandalf-ammo-count');
+  expect(css).toContain('bottom:8%;right:8%');
+ });
+ it('shows dual ammunition amounts in the same lower-right counter without adding them together',()=>{
+  const {character:c,api}=fixture();
+  c.currentEquipment.leftHand=ref('xbow');
+  c.currentEquipment.rightHand=ref('axe');
+  const html=api.currentEquipProjectileSlotHtml(c);
+  expect(html.match(/class="gandalf-ammo-count/g)).toHaveLength(1);
+  expect(html).toContain('>3 / 1</span>');
+  c.currentEquipment.leftHand=null;
+  const after=api.currentEquipProjectileSlotHtml(c);
+  expect(after).toContain('>1</span>');
+  expect(after).not.toContain('>3 / 1</span>');
+ });
+ it('does not show an ammunition number when no ranged weapon is equipped',()=>{
+  const {character:c,api}=fixture();
+  expect(api.currentEquipProjectileSlotHtml(c)).not.toContain('class="gandalf-ammo-count');
+  c.currentEquipment.leftHand=ref('sword');
+  expect(api.currentEquipProjectileSlotHtml(c)).not.toContain('class="gandalf-ammo-count');
+ });
  it('shows zero ammunition without manufacturing stock or mutating the character',()=>{
   const {character:c,api,messages}=fixture();
   c.projectiles=[];
