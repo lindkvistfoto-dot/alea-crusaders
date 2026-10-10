@@ -163,43 +163,47 @@
   text-shadow:0 1px 3px #000,0 0 9px #000;
   white-space:normal;
 }
-/* Four almost full-height rows: vertical labels at far left, large golden squares to their right. */
+/* Armor: four large square frames, a hairline gap, as close to the left edge as possible.
+   Armor text overlays each frame's far-left edge instead of reserving a column. */
 .gandalf-equip-scene .gandalf-equip-head,
 .gandalf-equip-scene .gandalf-equip-arms,
 .gandalf-equip-scene .gandalf-equip-torso,
 .gandalf-equip-scene .gandalf-equip-legs{
-  left:1%;
-  width:29%;
-  flex-direction:row-reverse;
-  align-items:center;
-  justify-content:space-between;
+  left:0.3%;
+  width:24.3%;
+  flex-direction:column;
+  align-items:stretch;
   gap:0;
 }
-.gandalf-equip-head{top:1%}
-.gandalf-equip-arms{top:25.5%}
+.gandalf-equip-head{top:0.6%}
+.gandalf-equip-arms{top:25.3%}
 .gandalf-equip-torso{top:50%}
-.gandalf-equip-legs{top:74.5%}
+.gandalf-equip-legs{top:74.7%}
 .gandalf-equip-scene .gandalf-equip-head .gandalf-equip-face,
 .gandalf-equip-scene .gandalf-equip-arms .gandalf-equip-face,
 .gandalf-equip-scene .gandalf-equip-torso .gandalf-equip-face,
 .gandalf-equip-scene .gandalf-equip-legs .gandalf-equip-face{
-  flex:0 0 77%;
-  width:77%;
+  flex:0 0 auto;
+  width:100%;
 }
 .gandalf-equip-scene .gandalf-equip-head .gandalf-equip-label,
 .gandalf-equip-scene .gandalf-equip-arms .gandalf-equip-label,
 .gandalf-equip-scene .gandalf-equip-torso .gandalf-equip-label,
 .gandalf-equip-scene .gandalf-equip-legs .gandalf-equip-label{
-  flex:0 0 17%;
+  position:absolute;
+  z-index:2;
+  inset:0 auto 0 0;
+  width:15%;
+  height:100%;
   min-height:0;
   display:flex;
-  justify-content:center;
   align-items:center;
-  align-self:center;
+  justify-content:center;
   writing-mode:vertical-rl;
   transform:rotate(180deg);
   white-space:nowrap;
   font-size:clamp(10px,1.5vw,17px);
+  pointer-events:none;
 }
 /* The left side of the character starts immediately after the armor column. */
 /* Large hand slots stay side by side at the top right; ammo lines up with right hand. */
