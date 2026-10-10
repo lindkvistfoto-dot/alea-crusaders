@@ -8,15 +8,18 @@ const css=read('features/character/current-equipment-gandalf.css');
 const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.url);
 
 describe('Gandalf – aktuell utrustning',()=>{
- it('keeps the hall and original slot artwork while showing a transparent golden frame',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.57');
-   expect(css).toContain('assets/gandalf-slot-transparent.svg');
+ it('uses the provided transparent square and tall gold frames without changing the hall',()=>{
+   expect(html).toContain('current-equipment-gandalf.css?v=0.35.58');
+   expect(css).toContain('assets/alea-frame-square-transparent.png');
+   expect(css).toContain('assets/alea-frame-tall-transparent.png');
    expect(css).toContain('assets/gandalf-hall.webp');
-   for(const name of ['gandalf-slot.webp','gandalf-slot-transparent.svg','gandalf-hall.webp'])
+   for(const name of ['alea-frame-square-transparent.png','alea-frame-tall-transparent.png','gandalf-hall.webp'])
      expect(existsSync(assetPath(name))).toBe(true);
-   const transparent=read('features/character/assets/gandalf-slot-transparent.svg');
-   expect(transparent).toContain('<feColorMatrix');
-   expect(transparent).toContain('data:image/webp;base64,');
+   for(const name of ['alea-frame-square-transparent.png','alea-frame-tall-transparent.png']){
+     const png=readFileSync(assetPath(name));
+     expect(Array.from(png.subarray(0,8))).toEqual([137,80,78,71,13,10,26,10]);
+     expect(png[25]).toBe(6); // PNG RGBA: transparent exterior remains transparent
+   }
    expect(css).toContain('background-color:transparent');
    expect(css).toContain('background:transparent');
  });
@@ -57,11 +60,11 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(css).toContain('.gandalf-equip-leftHand{top:1%;right:1%;left:auto;width:23%}');
    expect(css).toContain('.gandalf-equip-rightHand{top:27%;right:1%;left:auto;width:23%}');
    expect(css).toContain('.gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}');
-   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%;gap:2px}');
-   expect(css).toContain('background-image:url("./assets/gandalf-twohand-frame.svg")');
-   expect(css).toContain('.gandalf-equip-twohand .gandalf-equip-face::after');
+   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:46%;gap:2px}');
+   expect(css).toContain('background-image:url("./assets/alea-frame-tall-transparent.png")');
+   expect(css).not.toContain('.gandalf-equip-twohand .gandalf-equip-face::after');
    expect(css).not.toContain('background-size:100% 50%,100% 50%');
-   expect(existsSync(assetPath('gandalf-twohand-frame.svg'))).toBe(true);
+   expect(existsSync(assetPath('alea-frame-tall-transparent.png'))).toBe(true);
  });
  it('does not accidentally hardcode a character into Gandalf background',()=>{
    expect(app).toContain('gandalf-equip-center');

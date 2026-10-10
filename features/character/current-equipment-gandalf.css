@@ -1,5 +1,5 @@
-/* Gandalf / Aragorn · v0.35.54 · Current equipment, art-driven interface.
-   Images: user-provided hall and magic slot frame. Artwork remains separate from
+/* Alea Crusaders · v0.35.58 · Current equipment, art-driven interface.
+   Images: user-provided hall, square and tall sword-and-laurel frames. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
   padding:10px;
@@ -132,7 +132,7 @@
   padding:17%;
   box-sizing:border-box;
   background-color:transparent;
-  background-image:url("./assets/gandalf-slot-transparent.svg");
+  background-image:url("./assets/alea-frame-square-transparent.png");
   background-size:100% 100%;
   background-position:center;
   background-repeat:no-repeat;
@@ -212,7 +212,7 @@
 .gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}
 /* A two-handed weapon merges left/right hand slots into ONE continuous tall
    golden frame. The individual hand slots are not rendered while this is active. */
-.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%;gap:2px}
+.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:46%;gap:2px}
 .gandalf-equip-twohand .gandalf-equip-face{
   flex:1 1 auto;
   min-height:0;
@@ -220,21 +220,11 @@
   aspect-ratio:auto;
   padding:8% 10%;
   overflow:hidden;
-  background-image:url("./assets/gandalf-twohand-frame.svg");
+  background-image:url("./assets/alea-frame-tall-transparent.png");
   background-size:100% 100%;
   background-position:center;
 }
-/* Gold details sit in front of the artwork, while the weapon rests over
-   the dark center of the continuous frame. */
-.gandalf-equip-twohand .gandalf-equip-face::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:3;
-  pointer-events:none;
-  background:url("./assets/gandalf-twohand-frame.svg") center/100% 100% no-repeat;
-  mix-blend-mode:screen;
-}
+/* The transparent PNG is the single frame layer. Do not duplicate it over the weapon. */
 .gandalf-equip-twohand .gandalf-equip-value{
   position:relative;
   z-index:2;

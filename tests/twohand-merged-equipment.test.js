@@ -140,14 +140,13 @@ describe('Sammanhängande tvåhandsruta',()=>{
   expect(app).toContain("Number(left.hands)===2&&equipRefEquals(left,right)");
  });
  it('uses a real continuous tall frame, not two stacked square backgrounds',()=>{
-  const asset=new URL('../features/character/assets/gandalf-twohand-frame.svg',import.meta.url);
+  const asset=new URL('../features/character/assets/alea-frame-tall-transparent.png',import.meta.url);
   expect(existsSync(asset)).toBe(true);
-  const svg=read('features/character/assets/gandalf-twohand-frame.svg');
-  expect(svg).toContain('viewBox="0 0 256 560"');
-  expect(svg).toContain('continuous ornate frame');
-  expect(svg).toContain('<use href="#spark"');
-  expect(css).toContain('background-image:url("./assets/gandalf-twohand-frame.svg")');
-  expect(css).toContain('.gandalf-equip-twohand .gandalf-equip-face::after');
+  const png=readFileSync(asset);
+  expect(Array.from(png.subarray(0,8))).toEqual([137,80,78,71,13,10,26,10]);
+  expect(png[25]).toBe(6);
+  expect(css).toContain('background-image:url("./assets/alea-frame-tall-transparent.png")');
+  expect(css).not.toContain('.gandalf-equip-twohand .gandalf-equip-face::after');
   expect(css).not.toContain('background-size:100% 50%,100% 50%');
   expect(artCss).toContain('.gandalf-equip-twohand .gandalf-equip-art');
   expect(css).toContain('.gandalf-equip-projectiles{top:53%');
