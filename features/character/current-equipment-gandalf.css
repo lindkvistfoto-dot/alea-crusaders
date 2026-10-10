@@ -1,4 +1,4 @@
-/* Gandalf / Aragorn · v0.35.49 · Current equipment, art-driven interface.
+/* Gandalf / Aragorn · v0.35.54 · Current equipment, art-driven interface.
    Images: user-provided hall and magic slot frame. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
@@ -210,17 +210,54 @@
 .gandalf-equip-leftHand{top:1%;right:1%;left:auto;width:23%}
 .gandalf-equip-rightHand{top:27%;right:1%;left:auto;width:23%}
 .gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}
-/* A two-handed weapon occupies both hand positions in the new vertical stack. */
-.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%}
+/* A two-handed weapon merges left/right hand slots into ONE continuous tall
+   golden frame. The individual hand slots are not rendered while this is active. */
+.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%;gap:2px}
 .gandalf-equip-twohand .gandalf-equip-face{
   flex:1 1 auto;
   min-height:0;
+  height:auto;
   aspect-ratio:auto;
-  background-image:url("./assets/gandalf-slot-transparent.svg"),url("./assets/gandalf-slot-transparent.svg");
-  background-size:100% 50%,100% 50%;
-  background-position:center top,center bottom;
+  padding:8% 10%;
+  overflow:hidden;
+  background-image:url("./assets/gandalf-twohand-frame.svg");
+  background-size:100% 100%;
+  background-position:center;
 }
-.gandalf-equip-twohand .gandalf-equip-label{white-space:normal;flex:none}
+/* Gold details sit in front of the artwork, while the weapon rests over
+   the dark center of the continuous frame. */
+.gandalf-equip-twohand .gandalf-equip-face::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+  background:url("./assets/gandalf-twohand-frame.svg") center/100% 100% no-repeat;
+  mix-blend-mode:screen;
+}
+.gandalf-equip-twohand .gandalf-equip-value{
+  position:relative;
+  z-index:2;
+  font-size:clamp(11px,1.6vw,17px);
+  line-height:1.2;
+  padding:7px;
+  max-width:86%;
+  background:rgba(10,8,7,.65);
+}
+.gandalf-equip-twohand .gandalf-equip-label{
+  white-space:normal;
+  flex:none;
+  line-height:1.1;
+  font-size:clamp(10px,1.35vw,15px);
+  overflow-wrap:anywhere;
+}
+.gandalf-equip-twohand .gandalf-equip-label small{
+  display:block;
+  margin-top:3px;
+  font:400 clamp(8px,1.1vw,12px)/1.2 system-ui,sans-serif;
+  color:#dec69d;
+}
+
 #currentEquipmentModal .current-equipment-picker{
   max-width:880px;
   margin:14px auto 0;
