@@ -46,16 +46,16 @@
   const search=String($('adminMagicArtifactSearch')?.value||'').toLocaleLowerCase('sv-SE').trim();
   const kind=$('adminMagicArtifactFilter')?.value||'all';
   const subset=rows.filter(row=>(kind==='all'||row.item_type===kind)&&(!search||
-   [row.name,row.artifact_key,row.appearance,row.magic_properties,row.activation,row.gm_notes].some(value=>String(value||'').toLocaleLowerCase('sv-SE').includes(search))));
+   [row.name,row.artifact_key,row.appearance,row.magic_properties,row.activation,row.gm_notes,window.aleaMagicProperties?.summary?.(row.id)].some(value=>String(value||'').toLocaleLowerCase('sv-SE').includes(search))));
   if(status)status.textContent=rows.length+' magiska artefakter i registret · '+rows.filter(row=>row.active).length+' aktiva. Bara administratörer kan läsa och ändra dem.';
   el.innerHTML='<div class="magic-artifact-head"><b>Artefakt</b><b>Typ / grundföremål</b><b>Magiska egenskaper</b><b>Laddningar</b><b>Åtgärder</b></div>'+
    subset.map(row=>
     '<div class="magic-artifact-row'+(row.active?'':' inactive')+'">'+
      '<div class="magic-artifact-name"><strong>'+esc(row.name)+'</strong><small>'+esc(row.artifact_key)+' · '+esc(rarities[row.rarity]||row.rarity)+'</small></div>'+
      '<div class="magic-artifact-base"><b>'+esc(types[row.item_type]||row.item_type)+'</b><small>'+esc(baseLabel(row))+'</small></div>'+
-     '<div class="magic-artifact-property" title="'+esc(row.magic_properties||'')+'">'+esc(row.magic_properties||'Ej angiven')+'</div>'+
+     '<div class="magic-artifact-property" title="'+esc(row.magic_properties||'')+'">'+esc(window.aleaMagicProperties?.summary?.(row.id)||row.magic_properties||'Ej angiven')+'</div>'+
      '<div class="magic-artifact-charges">'+(row.max_charges==null?'—':esc(row.max_charges))+'</div>'+
-     '<div class="magic-artifact-actions"><button type="button" class="smallbtn" onclick="editMagicArtifact(\''+esc(row.id)+'\')">Redigera</button>'+
+     '<div class="magic-artifact-actions"><button type="button" class="smallbtn" onclick="openArtifactPowers(\''+esc(row.id)+'\')">Egenskaper</button><button type="button" class="smallbtn" onclick="editMagicArtifact(\''+esc(row.id)+'\')">Redigera</button>'+
       '<button type="button" class="deletebtn" onclick="deleteMagicArtifact(\''+esc(row.id)+'\')" title="Ta bort">×</button></div>'+
     '</div>').join('')+
    (!subset.length?'<div class="magic-artifact-empty">Inga artefakter matchar urvalet.</div>':'');
@@ -107,7 +107,7 @@
    '<label class="wide">Aktivering / begränsningar<textarea id="rmaActivation" rows="3">'+esc(row?.activation||'')+'</textarea></label>'+
    '<label class="wide">SL-anteckningar (hemligt)<textarea id="rmaNotes" rows="3">'+esc(row?.gm_notes||'')+'</textarea></label>'+
    '<label class="wide admincheck"><input type="checkbox" id="rmaActive"'+(row?.active===false?'':' checked')+'> Aktiv artefakt</label>'+
-   '<p class="wide rule-editor-note">Grundföremålet används bara som mall. Det gör inte alla vanliga exemplar magiska. Bonus och laddningar registreras nu, men förändrar inte stridsberäkningar automatiskt.</p>'+
+   '<p class="wide rule-editor-note">Efter att du sparat kan du lägga till flera konfigurerbara magiska egenskaper via knappen Egenskaper i artefaktlistan. Grundföremålet är bara en mall. Effekter aktiveras ännu inte automatiskt i strid.</p>'+
    '<div class="rule-editor-actions wide"><button type="button" class="btn" onclick="closeAdminEditor()">Avbryt</button>'+
     '<button type="button" class="btn primary" onclick="saveMagicArtifact(\''+esc(id)+'\')">Spara</button></div>'+
    '</div>';
