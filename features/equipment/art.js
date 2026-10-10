@@ -1,11 +1,17 @@
-/* Alea equipment art · v0.35.50
+/* Alea equipment art · v0.35.51
    Shared, admin-managed image assets for the weapon, armor and shield master registers. */
 (function(){
  'use strict';
  const BUCKET='alea-equipment-art';
  const MAX_UPLOAD=12*1024*1024,MAX_STORED=3*1024*1024;
  const TYPES=new Set(['weapon','armor','shield']);
- const VALID_PATH=/^(weapon|armor|shield)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(webp|png)$/;
+ const VALID_PATH=/^(?:(?:weapon|armor|shield)\/[0-9a-f-]{36}|armor\/(?:head|arms|torso|legs)\/[0-9a-f-]{36})\/[0-9a-f-]{36}\.(?:webp|png)$/;
+ const ARMOR_ZONES=Object.freeze([['head','Huvud'],['arms','Armar'],['torso','Torso'],['legs','Ben']]);
+ const armorColumn=z=>'image_'+z+'_path';
+ function armorImagePathForSlot(rule,slot){
+  const zone=slot==='head'||slot==='arms'||slot==='torso'||slot==='legs'?slot:null;
+  return (zone?rule?.[armorColumn(zone)]:null)||rule?.image_path||null;
+ }
  let baseUrl='',draft=null;
  function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  function configure(url){baseUrl=String(url||'').replace(/\/$/,'')}
@@ -13,35 +19,64 @@
   if(!VALID_PATH.test(String(path||''))||!baseUrl)return '';
   return baseUrl+'/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/');
  }
+ function releasePreview(piece){if(piece?.previewUrl)URL.revokeObjectURL(piece.previewUrl)}
  function reset(){
-  if(draft?.previewUrl)URL.revokeObjectURL(draft.previewUrl);
+  if(draft?.pieces)Object.values(draft.pieces).forEach(releasePreview);
+  else releasePreview(draft);
   draft=null;
  }
- function visual(){
-  if(!draft)return '';
-  const url=draft.previewUrl||(draft.removed?'':src(draft.original));
+ function visualPiece(piece){
+  if(!piece)return '';
+  const url=piece.previewUrl||(piece.removed?'':src(piece.original));
   return url?'<img src="'+escapeHtml(url)+'" alt="Förhandsvisning av föremålsbild">':'<span class="item-art-empty">Ingen bild – standardikon visas</span>';
  }
- function refresh(){
-  const host=document.getElementById('itemArtPreview');
-  if(host)host.innerHTML=visual();
-  const status=document.getElementById('itemArtStatus');
-  if(status)status.textContent=draft?.blob?'Ny bild vald – sparas tillsammans med registerposten.':draft?.removed?'Bilden tas bort när du sparar.':draft?.original?'Sparad bild från registret.':'Välj en bild till föremålet.';
+ function pieceStatus(piece){
+  return piece?.blob?'Ny bild vald – sparas när du klickar Spara.':
+   piece?.removed?'Bilden tas bort när du sparar.':
+   piece?.original?'Sparad bild från registret.':'Ingen bild vald.';
+ }
+ function refresh(zone){
+  const piece=draft?.pieces?(draft.pieces[zone]||null):draft;
+  const id=draft?.pieces?'itemArtPreview-'+zone:'itemArtPreview';
+  const statusId=draft?.pieces?'itemArtStatus-'+zone:'itemArtStatus';
+  const host=document.getElementById(id);
+  if(host)host.innerHTML=visualPiece(piece);
+  const status=document.getElementById(statusId);
+  if(status)status.textContent=pieceStatus(piece);
+ }
+ function makePiece(path){
+  return {original:VALID_PATH.test(String(path||''))?path:null,removed:false,blob:null,previewUrl:null};
+ }
+ function startArmor(rule){
+  reset();
+  draft={kind:'armor',pieces:Object.fromEntries(ARMOR_ZONES.map(([zone])=>[zone,makePiece(rule?.[armorColumn(zone)])]))};
+  return '<section class="item-art-editor item-art-armor wide" aria-label="Rustningsbilder">'+
+   '<div class="item-art-heading"><strong>Rustningsbilder · fyra kroppsdelar</strong><span>Varje bild är knuten till sin kroppsdel i ordinarie rustningssystem. PNG och WebP med transparens rekommenderas.</span></div>'+
+   '<div class="item-art-armor-grid">'+ARMOR_ZONES.map(([zone,label])=>{
+    const piece=draft.pieces[zone];
+    return '<div class="item-art-zone"><strong>'+label+'</strong>'+
+     '<div id="itemArtPreview-'+zone+'" class="item-art-preview">'+visualPiece(piece)+'</div>'+
+     '<div class="item-art-controls"><label class="item-art-upload">Välj bild<input type="file" accept="image/png,image/jpeg,image/webp" onchange="window.aleaEquipmentArt.choose(this.files[0],\''+zone+'\');this.value=\'\'"></label>'+
+     '<button type="button" class="smallbtn" onclick="window.aleaEquipmentArt.remove(\''+zone+'\')">Ta bort</button>'+
+     '<small id="itemArtStatus-'+zone+'">'+pieceStatus(piece)+'</small></div></div>';
+   }).join('')+'</div><small>Max 12 MB vid val. Bilder anpassas till max 900 px och lagras centralt per rustningstyp.</small></section>';
  }
  function start(kind,rule){
+  if(kind==='armor')return startArmor(rule);
   reset();
   if(!TYPES.has(kind))return '';
-  draft={kind,original:VALID_PATH.test(String(rule?.image_path||''))?rule.image_path:null,removed:false,blob:null,previewUrl:null};
+  draft={kind,...makePiece(rule?.image_path)};
   return '<section class="item-art-editor wide" aria-label="Inventariebild">'+
-   '<div class="item-art-heading"><strong>Inventariebild</strong><span>Vapen, sköldar och rustning kan ha unik bild. PNG eller WebP med transparens rekommenderas.</span></div>'+
-   '<div class="item-art-editor-content"><div id="itemArtPreview" class="item-art-preview">'+visual()+'</div>'+
+   '<div class="item-art-heading"><strong>Inventariebild</strong><span>Vapen och sköldar kan ha unik bild. PNG eller WebP med transparens rekommenderas.</span></div>'+
+   '<div class="item-art-editor-content"><div id="itemArtPreview" class="item-art-preview">'+visualPiece(draft)+'</div>'+
    '<div class="item-art-controls"><label class="item-art-upload">Välj bild<input type="file" accept="image/png,image/jpeg,image/webp" onchange="window.aleaEquipmentArt.choose(this.files[0]);this.value=\'\'"></label>'+
    '<button type="button" class="smallbtn" onclick="window.aleaEquipmentArt.remove()">Ta bort bild</button>'+
-   '<small id="itemArtStatus"></small><small>Bild normaliseras till max 900 px och sparas centralt, inte i rollfiguren.</small></div></div></section>';
+   '<small id="itemArtStatus">'+pieceStatus(draft)+'</small><small>Bild normaliseras till max 900 px och sparas centralt, inte i rollfiguren.</small></div></div></section>';
  }
- async function choose(file){
+ async function choose(file,zone=null){
   if(!file||!draft)return;
-  const active=draft;
+  const active=draft?.pieces?draft.pieces[zone]:draft;
+  if(!active)return;
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>MAX_UPLOAD){
    alert('Välj PNG, JPG eller WebP, högst 12 MB.');return;
   }
@@ -62,18 +97,19 @@
    let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.86));
    if(!blob||blob.type!=='image/webp')blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
    if(!blob||blob.size>MAX_STORED)throw new Error('Bilden är för stor efter bearbetning (max 3 MB).');
-   if(draft!==active)return;
-   if(active.previewUrl)URL.revokeObjectURL(active.previewUrl);
+   if((draft?.pieces?draft.pieces[zone]:draft)!==active)return;
+   releasePreview(active);
    active.previewUrl=URL.createObjectURL(blob);
    active.blob=blob;active.removed=false;
-   refresh();
+   refresh(zone);
   }catch(e){alert('Kunde inte välja föremålsbild: '+e.message)}
   finally{if(source)URL.revokeObjectURL(source)}
  }
- function remove(){
-  if(!draft)return;
-  if(draft.previewUrl)URL.revokeObjectURL(draft.previewUrl);
-  draft.previewUrl=null;draft.blob=null;draft.removed=true;refresh();
+ function remove(zone=null){
+  const active=draft?.pieces?draft.pieces[zone]:draft;
+  if(!active)return;
+  releasePreview(active);
+  active.previewUrl=null;active.blob=null;active.removed=true;refresh(zone);
  }
  function authHeaders(ctx){return {'apikey':ctx.key,'Authorization':'Bearer '+ctx.token}}
  async function removeStored(path,ctx){
@@ -101,6 +137,38 @@
   }
   return{path,old:original,uploaded:path};
  }
+ async function uploadPiece(blob,path,ctx){
+  const response=await fetch(baseUrl+'/storage/v1/object/'+BUCKET+'/'+path,{
+   method:'POST',headers:{...authHeaders(ctx),'Content-Type':blob.type,'x-upsert':'false'},body:blob
+  });
+  if(!response.ok){
+   const data=await response.json().catch(()=>null);
+   throw new Error(data?.message||data?.error||'Bilduppladdningen misslyckades ('+response.status+').');
+  }
+ }
+ async function prepareArmor(id,ctx){
+  if(draft?.kind!=='armor'||!draft.pieces)throw new Error('Öppna rustningseditorn igen.');
+  if(!/^[0-9a-f-]{36}$/.test(id))throw new Error('Ogiltigt rustnings-ID.');
+  const paths={},old=[],uploaded=[];
+  try{
+   for(const [zone] of ARMOR_ZONES){
+    const part=draft.pieces[zone],key=armorColumn(zone);
+    if(part.removed){paths[key]=null;if(part.original)old.push(part.original);continue;}
+    if(!part.blob){paths[key]=part.original;continue;}
+    if(!ctx?.token||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
+    const ext=part.blob.type==='image/webp'?'webp':'png';
+    const path='armor/'+zone+'/'+id+'/'+crypto.randomUUID()+'.'+ext;
+    await uploadPiece(part.blob,path,ctx);
+    uploaded.push(path);
+    paths[key]=path;
+    if(part.original)old.push(part.original);
+   }
+  }catch(e){
+   await Promise.all(uploaded.map(path=>removeStored(path,ctx).catch(()=>{})));
+   throw e;
+  }
+  return {paths,old,uploaded};
+ }
  function thumbnail(path,fallback,caption=''){
   const url=src(path);
   return url?'<span class="admin-weapon-icon item-art-thumb" title="Inventariebild"><img src="'+escapeHtml(url)+'" alt="'+escapeHtml(caption)+'" loading="lazy"><small>Bild</small></span>':fallback;
@@ -109,5 +177,5 @@
   const url=src(path);
   return url?'<img class="gandalf-equip-art" src="'+escapeHtml(url)+'" alt="" loading="lazy">':'';
  }
- window.aleaEquipmentArt={configure,src,start,choose,remove,reset,prepare,removeStored,thumbnail,imageTag};
+ window.aleaEquipmentArt={configure,src,start,startArmor,choose,remove,reset,prepare,prepareArmor,removeStored,thumbnail,imageTag,armorImagePathForSlot,ARMOR_ZONES};
 })();
