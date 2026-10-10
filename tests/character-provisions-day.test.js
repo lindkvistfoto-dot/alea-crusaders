@@ -24,7 +24,7 @@ describe('Mat och proviant på rollpersonen',()=>{
  test('finns som egen sektion under Utrustning på alla skärmstorlekar',()=>{
   const equipment=html.indexOf('id="equipmentPanel"');
   const provisions=html.indexOf('id="characterProvisions"');
-  const artifacts=html.indexOf('>Magiska artefakter</h2>');
+  const artifacts=html.indexOf('>Magiska artefakter</h2>',provisions);
   expect(equipment).toBeGreaterThan(0);
   expect(provisions).toBeGreaterThan(equipment);
   expect(artifacts).toBeGreaterThan(provisions);
