@@ -646,6 +646,9 @@ function editRuleWeapon(id=''){
 async function saveRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let name=$('rwName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let skillId=$('rwSkillId')?.value||'';if(!skillId){alert('Färdighet måste anges för varje vapen.');return}
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ let artChange=null;
+ const artId=id||crypto.randomUUID();
  try{
   let payload={
    name,
@@ -668,10 +671,14 @@ async function saveRuleWeapon(id=''){
    tags:($('rwTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
    updated_at:new Date().toISOString()
   };
+  artChange=await window.aleaEquipmentArt.prepare('weapon',artId,artContext);
+  payload.image_path=artChange.path;
+  if(!id)payload.id=artId;
   if(id)await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else await dbJson('rule_weapons',{method:'POST',body:JSON.stringify(payload)});
+  if(artChange.old&&artChange.old!==artChange.path)window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Föremålsbild kunde inte rensas',e));
   closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render()
- }catch(e){alert('Kunde inte spara vapnet: '+e.message)}
+ }catch(e){if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});alert('Kunde inte spara vapnet: '+e.message)}
 }
 async function deleteRuleWeapon(id){
  if(!activeUser()?.admin)return;let r=ruleWeapons.find(x=>x.id===id);if(!r)return;
@@ -775,6 +782,9 @@ async function saveRuleArmor(id=''){
  if(!activeUser()?.admin)return;
  let name=$('raName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let existing=id?ruleArmorTypes.find(x=>x.id===id):null;
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ let artChange=null;
+ const artId=id||crypto.randomUUID();
  try{
   let payload={
    type_key:existing?.type_key||ruleMasterKeyFromName(name,'armor'),
@@ -791,10 +801,14 @@ async function saveRuleArmor(id=''){
    sort_order:Number($('raSort')?.value||0),
    updated_at:new Date().toISOString()
   };
+  artChange=await window.aleaEquipmentArt.prepare('armor',artId,artContext);
+  payload.image_path=artChange.path;
+  if(!id)payload.id=artId;
   if(id)await dbJson('rule_armor_types?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else await dbJson('rule_armor_types',{method:'POST',body:JSON.stringify(payload)});
+  if(artChange.old&&artChange.old!==artChange.path)window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Föremålsbild kunde inte rensas',e));
   closeAdminEditor();await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
- }catch(e){alert('Kunde inte spara rustningen: '+e.message)}
+ }catch(e){if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});alert('Kunde inte spara rustningen: '+e.message)}
 }
 async function deleteRuleArmor(id){
  if(!activeUser()?.admin)return;
@@ -864,6 +878,9 @@ async function saveRuleShield(id=''){
  if(!activeUser()?.admin)return;
  let name=$('rsName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let skillId=$('rsSkillId')?.value||'skoldar',existing=id?ruleShields.find(x=>x.id===id):null;
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ let artChange=null;
+ const artId=id||crypto.randomUUID();
  try{
   let min=ruleMasterNumberValue('rsProjectileMin',{integer:true,min:1});
   let max=ruleMasterNumberValue('rsProjectileMax',{integer:true,min:1});
@@ -889,10 +906,14 @@ async function saveRuleShield(id=''){
    sort_order:Number($('rsSort')?.value||0),
    updated_at:new Date().toISOString()
   };
+  artChange=await window.aleaEquipmentArt.prepare('shield',artId,artContext);
+  payload.image_path=artChange.path;
+  if(!id)payload.id=artId;
   if(id)await dbJson('rule_shields?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else await dbJson('rule_shields',{method:'POST',body:JSON.stringify(payload)});
+  if(artChange.old&&artChange.old!==artChange.path)window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Föremålsbild kunde inte rensas',e));
   closeAdminEditor();await loadRuleShields(true);renderAdminShields();renderAdminOverviewCounts()
- }catch(e){alert('Kunde inte spara skölden: '+e.message)}
+ }catch(e){if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});alert('Kunde inte spara skölden: '+e.message)}
 }
 async function deleteRuleShield(id){
  if(!activeUser()?.admin)return;
