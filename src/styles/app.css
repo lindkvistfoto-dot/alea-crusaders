@@ -7428,3 +7428,96 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  font:900 22px Georgia,serif;
  text-shadow:0 1px 2px #000;
 }
+
+
+/* v0.35.82 — tydlig markering för den som är på tur.
+   Yttre guldhalo; spelarnas gröna, SLP:s blå och fiendernas röda
+   porträttramar behålls innanför markeringen. */
+.combat-map-svg .combat-active-turn-aura,
+.combat-map-svg .combat-active-turn-outline{
+ pointer-events:none;
+ stroke-linejoin:round;
+ vector-effect:non-scaling-stroke;
+}
+.combat-map-svg .combat-active-turn-aura{
+ fill:rgba(255,202,79,.13);
+ stroke:rgba(255,197,75,.65);
+ stroke-width:7;
+ filter:drop-shadow(0 0 7px rgba(255,196,64,.94));
+ animation:combat-active-turn-pulse 2.25s ease-in-out infinite;
+}
+.combat-map-svg .combat-active-turn-outline{
+ fill:none;
+ stroke:#ffe39a;
+ stroke-width:3;
+}
+.combat-map-svg .combat-active-turn-badge{
+ pointer-events:none;
+ filter:drop-shadow(0 2px 3px rgba(0,0,0,.9));
+}
+.combat-map-svg .combat-active-turn-badge rect{
+ fill:#38230f;
+ stroke:#ffe29c;
+ stroke-width:2;
+}
+.combat-map-svg .combat-active-turn-badge text{
+ fill:#fff5d5;
+ font:900 10px/1 Georgia,serif;
+ letter-spacing:.06em;
+ dominant-baseline:middle;
+}
+@keyframes combat-active-turn-pulse{
+ 0%,100%{opacity:.72;stroke-width:6}
+ 50%{opacity:1;stroke-width:9}
+}
+/* Spelarens, fiendens och SLP:ns roll behålls via originalporträttet,
+   medan guldramen och textbadgen markerar VEMS tur det är. */
+.combat-participants .combatant-card.active-turn{
+ background:linear-gradient(115deg,rgba(242,185,80,.25),rgba(231,157,48,.08) 58%,rgba(19,14,11,.9)),
+            linear-gradient(180deg,#312214,#1b150f);
+ border-color:#f4ca70;
+ box-shadow:inset 5px 0 0 #f5ca6f,
+            0 0 0 2px rgba(255,214,124,.83),
+            0 0 16px rgba(240,173,58,.43);
+}
+.combat-participants .combatant-card.active-turn .combat-order-number{
+ border-color:#f4d28d;
+ color:#fff1ca;
+ background:linear-gradient(180deg,#9c6c27,#563613);
+}
+.combat-participants .combatant-card.active-turn .combat-row-portrait{
+ filter:drop-shadow(0 0 5px rgba(255,212,113,.88));
+}
+.combat-participants .combatant-card.active-turn .name{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ overflow:hidden;
+}
+.combat-participants .combatant-card .combatant-name-text{
+ min-width:0;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+.combat-participants .combat-turn-now-label{
+ display:inline-flex;
+ flex:0 0 auto;
+ align-items:center;
+ justify-content:center;
+ border:1px solid #f5d58d;
+ border-radius:4px;
+ padding:2px 5px;
+ background:#e8b650;
+ color:#281a0b;
+ font:900 9px/1 system-ui,sans-serif;
+ letter-spacing:.045em;
+ white-space:nowrap;
+}
+@media(max-width:420px){
+ .combat-participants .combatant-card.active-turn .name{gap:4px}
+ .combat-participants .combat-turn-now-label{font-size:8px;padding:2px 4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-map-svg .combat-active-turn-aura{animation:none;opacity:1}
+}
