@@ -4,8 +4,8 @@
  'use strict';
  const BUCKET='alea-equipment-art';
  const MAX_UPLOAD=12*1024*1024,MAX_STORED=3*1024*1024;
- const TYPES=new Set(['weapon','armor','shield']);
- const VALID_PATH=/^(?:(?:weapon|armor|shield)\/[0-9a-f-]{36}|armor\/(?:head|arms|torso|legs)\/[0-9a-f-]{36})\/[0-9a-f-]{36}\.(?:webp|png)$/;
+ const TYPES=new Set(['weapon','armor','shield','projectile']);
+ const VALID_PATH=/^(?:(?:weapon|armor|shield)\/[0-9a-f-]{36}|armor\/(?:head|arms|torso|legs)\/[0-9a-f-]{36}|projectile\/[a-z][a-z0-9_]{1,50})\/[0-9a-f-]{36}\.(?:webp|png)$/;
  const ARMOR_ZONES=Object.freeze([['head','Huvud'],['arms','Armar'],['torso','Torso'],['legs','Ben']]);
  const armorColumn=z=>'image_'+z+'_path';
  function armorImagePathForSlot(rule,slot){
@@ -67,7 +67,7 @@
   if(!TYPES.has(kind))return '';
   draft={kind,...makePiece(rule?.image_path)};
   return '<section class="item-art-editor wide" aria-label="Inventariebild">'+
-   '<div class="item-art-heading"><strong>Inventariebild</strong><span>Vapen och sköldar kan ha unik bild. PNG eller WebP med transparens rekommenderas.</span></div>'+
+   '<div class="item-art-heading"><strong>Inventariebild</strong><span>Vapen, sköldar och projektiltyper kan ha en gemensam bild. PNG eller WebP med transparens rekommenderas.</span></div>'+
    '<div class="item-art-editor-content"><div id="itemArtPreview" class="item-art-preview">'+visualPiece(draft)+'</div>'+
    '<div class="item-art-controls"><label class="item-art-upload">Välj bild<input type="file" accept="image/png,image/jpeg,image/webp" onchange="window.aleaEquipmentArt.choose(this.files[0]);this.value=\'\'"></label>'+
    '<button type="button" class="smallbtn" onclick="window.aleaEquipmentArt.remove()">Ta bort bild</button>'+
@@ -139,7 +139,7 @@
  }
  async function prepare(kind,id,ctx){
   if(!TYPES.has(kind)||!draft||draft.kind!==kind)throw new Error('Öppna föremålseditorn igen.');
-  if(!/^[0-9a-f-]{36}$/.test(id))throw new Error('Ogiltigt föremåls-ID.');
+  if(!(kind==='projectile'?/^[a-z][a-z0-9_]{1,50}$/:/^[0-9a-f-]{36}$/).test(id))throw new Error('Ogiltigt föremåls-ID.');
   const original=draft.original;
   if(draft.removed)return{path:null,old:original,uploaded:null};
   if(!draft.blob)return{path:original,old:null,uploaded:null};
