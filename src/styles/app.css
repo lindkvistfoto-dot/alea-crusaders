@@ -3305,6 +3305,16 @@ body:not(.editing) #skilltable .skill-roll-btn{
 }
 
 
+/* SLP/fiende-porträtt använder samma upphöjda hexbricka som rollpersoner.
+   Behåll lagfärgen runt porträttet även under den aktiva turen; markeringar
+   för valt mål och attack får fortsatt sin särskilda färg. */
+.combat-miniature.combat-portrait-hex.npc-mini:not(.selected):not(.attack-target) .combat-portrait-green-ring{
+ stroke:#3984c6;
+}
+.combat-miniature.combat-portrait-hex.enemy-mini:not(.selected):not(.attack-target) .combat-portrait-green-ring{
+ stroke:#c64d45;
+}
+
 /* v0.33.35 — fyra tydliga turkontroller: flytta, attack, andra actions, sluta drag */
 .combatant-card{
  grid-template-columns:44px minmax(0,1fr) 140px 48px;
