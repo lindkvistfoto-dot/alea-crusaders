@@ -4,30 +4,61 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../src/styles/app.css',import.meta.url),'utf8');
 const render=runtime.slice(runtime.indexOf('function renderCombat(){'),runtime.indexOf("document.addEventListener('keydown'",runtime.indexOf('function renderCombat(){')));
-describe('SL stridscen under turordningslistan',()=>{
+describe('Trekolumnig stridsvy med SL-kontroller under kartan',()=>{
  test('SL-rutan finns inte kvar ovanför stridsvyn i index',()=>{
   expect(html).not.toContain('id="combatGmControls"');
  });
- test('rutan skapas efter turordningslistan under både aktiv strid och före Play',()=>{
+ test('SL-rutan skapas under kartan vid aktiv strid och före Play i vänteläget',()=>{
   expect((render.match(/id="combatGmControls"/g)||[])).toHaveLength(2);
-  const active=render.indexOf("'+participantHtml+'</div><div id=");
-  expect(active).toBeGreaterThan(-1);
-  expect(render.slice(active,active+125)).toContain('combatGmControls');
+  expect(render).toContain('<div class="combat-below-map"><div id="combatGmControls"');
   expect(render).toContain('combat-shell combat-shell-idle');
   expect(render).toContain('renderCombatGmControls();return');
  });
- test('SL stridskontroll visas direkt under SL stridsscen i samma sidokolumn',()=>{
+ test('SL stridskontroll och logg visas efter hexkartan i mittenkolumnen',()=>{
   expect((render.match(/combatGmToolboxHtml\(\)/g)||[])).toHaveLength(1);
-  expect(render).toContain(`id="combatGmControls" class="combat-gm-controls hidden"></div>'+combatGmToolboxHtml()+'</aside>`);
+  expect(render).toContain(`id="combatGmControls" class="combat-gm-controls hidden"></div>'+`);
+  expect(render).toContain(`combatGmToolboxHtml()+`);
+  expect(render).toContain(`'<section class="combat-log">`);
   expect(render).not.toContain(`+'</div></section>'+combatGmToolboxHtml()+'</div>'`);
-  expect(css).toContain('.combat-participants .combat-gm-toolbox{');
+  expect(css).toContain('.combat-shell-live .combat-below-map .combat-gm-toolbox{');
   expect(css).toContain('grid-template-columns:minmax(0,1fr);');
  });
  test('SL-kontrollerna återskapas vid varje omrendering',()=>{
   expect(render).toContain(' renderCombatGmControls();\n requestAnimationFrame(');
-  expect(css).toContain('.combat-participants .combat-gm-controls{');
+  expect(css).toContain('.combat-shell-live .combat-below-map .combat-gm-controls{');
   expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
  });
+
+ test('desktop layout uses 1:2:1 columns: round and attack left, map center, initiative right',()=>{
+  expect(render).toContain('combat-shell combat-shell-live');
+  const left=render.indexOf('combat-left-column');
+  const turn=render.indexOf('combatTurnPanelHtml()',left);
+  const attack=render.indexOf('combatAttackPanelHtml()',left);
+  const center=render.indexOf('combat-center-column');
+  const map=render.indexOf('renderCombatMap()+combatMapPresetsHtml()',center);
+  const below=render.indexOf('combat-below-map',center);
+  const right=render.indexOf('combat-panel combat-participants',below);
+  expect(left).toBeGreaterThan(-1);
+  expect(left).toBeLessThan(center);
+  expect(turn).toBeGreaterThan(left);
+  expect(attack).toBeGreaterThan(turn);
+  expect(attack).toBeLessThan(center);
+  expect(map).toBeGreaterThan(center);
+  expect(below).toBeGreaterThan(map);
+  expect(right).toBeGreaterThan(below);
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr)');
+ });
+ test('small screens remain stacked and all existing actions are still available',()=>{
+  expect(css).toContain('@media(max-width:1023px)');
+  expect(css).toContain('.combat-shell.combat-shell-live{display:flex;flex-direction:column;gap:12px}');
+  expect(css).toContain('.combat-shell-live .combat-left-column,');
+  expect(render).toContain('combatAttackPanelHtml()');
+  expect(render).toContain('combatGmPlacementHintHtml()');
+  expect(render).toContain('combatMapFooterHtml()');
+  expect(render).toContain('combatGmToolboxHtml()');
+  expect(render).toContain('combatantDetailsPopupHtml()');
+ });
+
  test('markerat mål-rutan är borttagen men målmarkering och stridslogg finns kvar',()=>{
   expect(render).not.toContain('<h3>Markerat mål</h3>');
   expect(render).not.toContain('combat-panel combat-target');
