@@ -339,6 +339,7 @@ function projectileKeyFromName(name){
  if(n.includes('kastkniv'))return 'throwing_knife';
  if(n.includes('kaststjärn'))return 'throwing_star';
  if(n.includes('bola'))return 'bola';
+ if(n.includes('lasso'))return 'lasso';
  if(n.includes('pil'))return 'arrow';
  if(n.includes('sten')||n.includes('slung'))return 'stone';
  return ''
@@ -359,19 +360,29 @@ function setProjectileMaster(index,key){
  item.projectileKey=p.projectile_key;item.name=p.name;
  save();renderWeapons()
 }
+const THROWING_PROJECTILE_KEYS=new Set(['throwing_axe','javelin','throwing_knife','throwing_star','bola','lasso']);
+function projectileThrownWeapon(key){
+ return ruleWeapons.find(w=>w.category==='thrown'&&w.projectile_key===key)||null
+}
+function projectileMasterImagePath(projectile){
+ if(!projectile)return null;
+ const thrown=projectileThrownWeapon(projectile.projectile_key);
+ // A thrown item IS its own ammunition: reuse the weapon's single shared image.
+ return thrown?thrown.image_path||null:projectile.image_path||null
+}
 function projectileImageHtml(key,name){
- const path=ruleProjectileFromKey(key)?.image_path;
+ const path=projectileMasterImagePath(ruleProjectileFromKey(key));
  const url=window.aleaEquipmentArt?.src(path);
  return url?'<img class="projectile-inventory-art" src="'+escAttr(url)+'" alt="'+escAttr(name||'Projektil')+'" loading="lazy">':'';
 }
 function renderAdminProjectiles(){
  const el=$('adminProjectileTable'),st=$('adminProjectileStatus');
  if(!el)return;
- if(st)st.textContent=ruleProjectileTypesLoaded?ruleProjectileTypes.length+' projektiltyper · gemensamma bilder sparas i masterregistret.':'Registret kunde inte läsas.';
+ if(st)st.textContent=ruleProjectileTypesLoaded?ruleProjectileTypes.length+' projektiltyper · kastvapen återanvänder sin vapenbild.':'Registret kunde inte läsas.';
  const weaponsByKey=key=>ruleWeapons.filter(w=>w.projectile_key===key).map(w=>w.name).join(', ');
  el.innerHTML='<div class="projectile-rule-header"><b>Typ och bild</b><b>Återhämtning</b><b>Vapen</b><b>Åtgärder</b></div>'+
   ruleProjectileTypes.map(p=>'<div class="projectile-rule-row"><div class="projectile-art-name">'+
-   (window.aleaEquipmentArt?.thumbnail(p.image_path,'<span class="projectile-art-missing" aria-hidden="true">◇</span>',p.name)||'')+
+   (window.aleaEquipmentArt?.thumbnail(projectileMasterImagePath(p),'<span class="projectile-art-missing" aria-hidden="true">◇</span>',p.name)||'')+
    '<b>'+escAttr(p.name)+'</b></div><span>'+p.recovery_percent+' %</span><span>'+escAttr(weaponsByKey(p.projectile_key)||'—')+
    '</span><button class="smallbtn" type="button" aria-label="Redigera '+escAttr(p.name)+'" onclick="editRuleProjectile(\''+escAttr(p.projectile_key)+'\')">✎</button></div>').join('')
 }
@@ -383,7 +394,9 @@ function editRuleProjectile(key){
   '<label class="wide">Namn<input id="rpName" value="'+escAttr(p.name)+'"></label>'+
   '<label>Återhämtning (%)<input id="rpRecovery" type="number" min="80" max="90" value="'+p.recovery_percent+'"></label>'+
   '<label class="wide">Beskrivning<input id="rpDesc" value="'+escAttr(p.description||'')+'"></label>'+
-  (window.aleaEquipmentArt?.start('projectile',p)||'')+
+  (projectileThrownWeapon(key)
+   ?'<section class="item-art-editor wide" aria-label="Gemensam kastvapenbild"><div class="item-art-heading"><strong>Bild från kastvapnet</strong><span>Den här projektilen använder alltid samma bild som vapnet. Ändra bilden i Admin → Vapen.</span></div><div class="projectile-linked-weapon">'+(window.aleaEquipmentArt?.thumbnail(projectileMasterImagePath(p),'<span class="projectile-art-missing">◇</span>',p.name)||'')+'<strong>'+escAttr(projectileThrownWeapon(key)?.name||p.name)+'</strong></div></section>'
+   :(window.aleaEquipmentArt?.start('projectile',p)||''))+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button>'+
   '<button class="btn primary" onclick="saveRuleProjectile(\''+escAttr(p.projectile_key)+'\')">Spara</button></div></div>';
  $('adminEditor').classList.remove('hidden')
@@ -399,11 +412,12 @@ async function saveRuleProjectile(key){
  const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  let artChange=null;
  try{
-  artChange=await window.aleaEquipmentArt.prepare('projectile',key,artContext);
+  const borrowed=!!projectileThrownWeapon(key);
+  if(!borrowed)artChange=await window.aleaEquipmentArt.prepare('projectile',key,artContext);
   await dbJson('rule_projectile_types?projectile_key=eq.'+encodeURIComponent(key),{
    method:'PATCH',body:JSON.stringify({
     name,recovery_percent:rate,description:$('rpDesc')?.value.trim()||'',
-    image_path:artChange.path
+    ...(!borrowed?{image_path:artChange.path}:{})
    })
   });
   if(artChange.old&&artChange.old!==artChange.path)
