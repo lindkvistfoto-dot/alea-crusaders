@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
-const start=runtime.indexOf('const combatNpcPortraitRequests=new Set();');
+const start=runtime.indexOf('const combatNpcPortraitRequests=new Map();');
 const end=runtime.indexOf('function combatantCard(',start);
 if(start<0||end<start)throw new Error('Combat portrait helpers missing');
 const isolated=runtime.slice(start,end);
