@@ -57,7 +57,7 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(css).toContain('.gandalf-equip-leftHand{top:1%;right:1%;left:auto;width:23%}');
    expect(css).toContain('.gandalf-equip-rightHand{top:27%;right:1%;left:auto;width:23%}');
    expect(css).toContain('.gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}');
-   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%}');
+   expect(css).toContain('.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%;gap:2px}');
    expect(css).toContain('background-image:url("./assets/gandalf-twohand-frame.svg")');
    expect(css).toContain('.gandalf-equip-twohand .gandalf-equip-face::after');
    expect(css).not.toContain('background-size:100% 50%,100% 50%');
