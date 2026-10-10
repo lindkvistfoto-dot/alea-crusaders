@@ -1516,18 +1516,32 @@ const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Kropp',arms:'Armar',legs:'Ben',l
 function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'}[kind]||''}
 /* Gandalf: visually compose the existing equipment states over the supplied art assets.
    Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
+function currentEquipmentItemArtPath(ref,item){
+ if(!ref||!item)return null;
+ if(ref.kind==='weapon')return ruleWeaponForItem(item)?.image_path||null;
+ if(ref.kind==='shield')return characterShieldRule(item)?.image_path||null;
+ if(ref.kind==='armor'){
+  const type=armorTypeById(item.armorTypeId||item.armor_type_id||'')||
+   armorTypeByKey(item.armorTypeKey||item.armor_type_key||'')||
+   ruleArmorTypes.find(r=>r.name&&(String(item.name||'')===String(r.name)||String(item.name||'').startsWith(String(r.name)+' (')))||null;
+  return type?.image_path||null;
+ }
+ return null;
+}
 function currentEquipSlotHtml(slot){
  const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
+ const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item))||'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 function gandalfTwoHandSlotHtml(item){
+ const art=window.aleaEquipmentArt?.imageTag(ruleWeaponForItem(item)?.image_path)||'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Båda händerna, tvåhandsvapen: '+escAttr(item.name||'Vapen')+'">'+
-  '<span class="gandalf-equip-face"><span class="gandalf-equip-value">'+escAttr(item.name||'Vapen')+'</span></span>'+
+  '<span class="gandalf-equip-face">'+art+'<span class="gandalf-equip-value">'+escAttr(item.name||'Vapen')+'</span></span>'+
   '<span class="gandalf-equip-label">Båda händerna · tvåhandsvapen</span></button>'
 }
 function showCurrentEquipmentProjectileInfo(){
