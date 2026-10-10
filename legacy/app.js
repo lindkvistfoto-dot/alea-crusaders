@@ -1243,6 +1243,8 @@ async function openAdminSection(key='overview'){
  if(ruleDef){await refreshAdminRuleRegistry(activeAdminSection);}
  if(activeAdminSection==='artifacts'){
   await window.aleaMagicArtifacts?.refresh();
+  await Promise.all([window.aleaMagicProperties?.refresh?.(),loadRuleMagicRegistry()]);
+  window.aleaMagicProperties?.render?.();
   renderAdminOverviewCounts();
  }else if(activeAdminSection==='equipment'){
   await window.aleaEquipmentCatalog?.refresh();
