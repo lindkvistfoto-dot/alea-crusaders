@@ -122,9 +122,11 @@ describe('Sammanhängande tvåhandsruta',()=>{
  it('does not rotate single-hand equipment and leaves the original image asset untouched',()=>{
   expect(artCss).toContain('.gandalf-equip-twohand .gandalf-equip-art');
   expect(artCss).toContain('.gandalf-equip-face[data-twohand-profile="staff"] .gandalf-equip-art');
-  expect(artCss).toContain('brightness(1.15) contrast(1.16)');
+  expect(artCss).toContain('brightness(1.06) contrast(1.28)');
   expect(artCss).toContain('.gandalf-equip-face[data-twohand-profile="staff"]::after');
-  expect(artCss).toContain('opacity:.58');
+  expect(artCss).toContain('opacity:0');
+  expect(artCss).toContain('drop-shadow(0 0 1px rgba(14,9,4,.95))');
+  expect(artCss).toContain('drop-shadow(0 2px 3px rgba(0,0,0,.9))');
   expect(artCss).toContain('var(--twohand-rotate,-17deg)');
   expect(artCss).toContain('var(--twohand-scale,1.32)');
   expect(artCss).not.toContain('transform:rotate(-17deg)');
