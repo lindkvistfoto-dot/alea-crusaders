@@ -1,4 +1,4 @@
-/* Gandalf / Aragorn · v0.35.44 · Current equipment, art-driven interface.
+/* Gandalf / Aragorn · v0.35.45 · Current equipment, art-driven interface.
    Images: user-provided hall and magic slot frame. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
@@ -63,7 +63,7 @@
 .gandalf-equip-scene .gandalf-equip-center{
   position:absolute;
   z-index:0;
-  inset:7% 29% 5%;
+  inset:1% 29% 1%;
   display:flex;
   align-items:flex-end;
   justify-content:center;
@@ -72,7 +72,9 @@
 }
 .gandalf-equip-character{
   display:block;
-  width:100%;
+  flex:0 0 auto;
+  width:auto;
+  max-width:none;
   height:100%;
   object-fit:contain;
   object-position:center bottom;
@@ -188,7 +190,7 @@
   #currentEquipmentModal{padding:4px}
   #currentEquipmentModal .current-equipment-modal{width:100%;max-height:calc(100dvh - 8px);padding:9px 7px 13px;border-radius:11px}
   #currentEquipmentModal .current-equipment-intro{font-size:11px;margin:6px 2px 8px}
-  .gandalf-equip-scene .gandalf-equip-center{inset:10% 29% 5%}
+  .gandalf-equip-scene .gandalf-equip-center{inset:1% 29% 1%}
   .gandalf-equip-figure-missing{padding:6px 4px}
   .gandalf-equip-slot{width:18.1%}
   .gandalf-equip-head,.gandalf-equip-arms,.gandalf-equip-torso,.gandalf-equip-legs{left:9.7%}
