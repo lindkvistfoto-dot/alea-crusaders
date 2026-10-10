@@ -87,8 +87,8 @@ describe('Sammanhängande tvåhandsruta',()=>{
   expect(html).toContain('gandalf-equip-twohand');
   expect(html).toContain('<span class="gandalf-equip-face" data-twohand-profile="staff" style="');
   expect(html).toContain('><img class="gandalf-equip-art"></span>');
-  expect(html).toContain('--twohand-rotate:-22deg');
-  expect(html).toContain('--twohand-scale:1.52');
+  expect(html).toContain('--twohand-rotate:-35deg');
+  expect(html).toContain('--twohand-scale:1.58');
   expect(html).toContain('<span class="gandalf-equip-label"><b>Stav</b><small>Båda händerna</small></span>');
   expect(html).toContain("openCurrentEquipmentPicker('leftHand')");
   ctx.window.aleaEquipmentArt.imageTag=()=> '';
@@ -99,8 +99,8 @@ describe('Sammanhängande tvåhandsruta',()=>{
   const ctx={ruleWeaponForItem:()=>rule};
   runInNewContext(twohand,ctx);
   const cases=[
-   [{name:'Trästav',icon_key:'staff',tags:['staff','wood']},'staff',-22],
-   [{name:'Lyra stav'},'staff',-22],
+   [{name:'Trästav',icon_key:'staff',tags:['staff','wood']},'staff',-35],
+   [{name:'Lyra stav'},'staff',-35],
    [{name:'Långspjut',icon_key:'spear',tags:['spear']},'polearm',-18],
    [{name:'Hillebard',icon_key:'halberd',tags:['polearm','axe']},'polearm',-18],
    [{name:'Bastardsvärd',icon_key:'sword',tags:['sword']},'sword',-15],
@@ -121,6 +121,10 @@ describe('Sammanhängande tvåhandsruta',()=>{
  });
  it('does not rotate single-hand equipment and leaves the original image asset untouched',()=>{
   expect(artCss).toContain('.gandalf-equip-twohand .gandalf-equip-art');
+  expect(artCss).toContain('.gandalf-equip-face[data-twohand-profile="staff"] .gandalf-equip-art');
+  expect(artCss).toContain('brightness(1.15) contrast(1.16)');
+  expect(artCss).toContain('.gandalf-equip-face[data-twohand-profile="staff"]::after');
+  expect(artCss).toContain('opacity:.58');
   expect(artCss).toContain('var(--twohand-rotate,-17deg)');
   expect(artCss).toContain('var(--twohand-scale,1.32)');
   expect(artCss).not.toContain('transform:rotate(-17deg)');
