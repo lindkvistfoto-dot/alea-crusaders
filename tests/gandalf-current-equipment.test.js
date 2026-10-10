@@ -9,7 +9,7 @@ const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.u
 
 describe('Gandalf – aktuell utrustning',()=>{
  it('loads the two user-provided graphics independently from interactive slots',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.45');
+   expect(html).toContain('current-equipment-gandalf.css?v=0.35.46');
    expect(css).toContain('assets/gandalf-slot.webp');
    expect(css).toContain('assets/gandalf-hall.webp');
    for(const name of ['gandalf-slot.webp','gandalf-hall.webp'])
@@ -36,6 +36,16 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(app).toContain('gandalf-equip-projectiles');
    expect(app).toContain('showCurrentEquipmentProjectileInfo');
    expect(app).toContain('Projektiler kopplas i Frodo-steget');
+ });
+ it('enlarges and edge-aligns the armor, weapon, and projectile slots on all screens',()=>{
+   expect(css).toMatch(/\.gandalf-equip-slot\{[^}]*width:19\.1%/);
+   for(const [slot,top] of [['head',3],['arms',27],['torso',51],['legs',75]])
+     expect(css).toContain(`.gandalf-equip-${slot}{top:${top}%;left:1%}`);
+   expect(css).toContain('.gandalf-equip-leftHand{top:3%;right:21%;left:auto}');
+   expect(css).toContain('.gandalf-equip-rightHand{top:3%;right:1%;left:auto}');
+   expect(css).toContain('.gandalf-equip-projectiles{top:29%;right:1%;left:auto}');
+   expect(css).toContain('.gandalf-equip-twohand{top:3%;right:1%;left:auto;width:39.1%}');
+   expect(css).not.toContain('.gandalf-equip-slot{width:18.1%}');
  });
  it('does not accidentally hardcode a character into Gandalf background',()=>{
    expect(app).toContain('gandalf-equip-center');
