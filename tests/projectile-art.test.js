@@ -97,7 +97,7 @@ describe('Projektilbilder i Admin',()=>{
   expect(app).toContain("aleaEquipmentArt?.start('projectile',p)");
   expect(app).toContain("aleaEquipmentArt.prepare('projectile',key,artContext)");
   expect(app).toContain('image_path:artChange.path');
-  expect(app).toContain('aleaEquipmentArt?.thumbnail(p.image_path');
+  expect(app).toContain('aleaEquipmentArt?.thumbnail(projectileMasterImagePath(p)');
   expect(app).toContain('function projectileImageHtml(key,name)');
   expect(app).toContain('projectileImageHtml(characterProjectileKey(x),x.name)');
   expect(app).toContain('loadRuleProjectileTypes(true);renderAdminProjectiles()');
