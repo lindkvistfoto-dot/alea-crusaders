@@ -15,7 +15,22 @@
 .gandalf-equip-face:has(.gandalf-equip-art){padding:0}
 .gandalf-equip-art{position:absolute;inset:4% 4% 17%;height:79%;width:92%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
 .gandalf-equip-face:has(.gandalf-equip-art) .gandalf-equip-value{position:absolute;z-index:2;bottom:5%;left:7%;right:7%;max-height:24%;font-size:clamp(8px,1.05vw,12px);line-height:1.15;background:rgba(16,12,10,.62);text-shadow:0 1px 3px #000}
-.gandalf-equip-twohand .gandalf-equip-art{inset:4% 5% 17%;width:90%;height:79%}
+/* Artwork rests inside the tall merged frame; rotate the standard diagonal
+   weapon sprite slightly toward vertical without changing its source image. */
+.gandalf-equip-twohand .gandalf-equip-art{
+ position:absolute;
+ inset:auto;
+ top:7%;
+ left:-23%;
+ width:146%;
+ height:85%;
+ max-width:none;
+ z-index:2;
+ object-fit:contain;
+ transform:rotate(-17deg);
+ transform-origin:center;
+ filter:drop-shadow(0 4px 6px rgba(0,0,0,.76));
+}
 @media(max-width:620px){
  .item-art-editor-content{gap:9px}
  .item-art-preview{width:108px}
