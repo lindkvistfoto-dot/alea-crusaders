@@ -111,12 +111,30 @@
   releasePreview(active);
   active.previewUrl=null;active.blob=null;active.removed=true;refresh(zone);
  }
- function authHeaders(ctx){return {'apikey':ctx.key,'Authorization':'Bearer '+ctx.token}}
+ /* v0.35.69 — storage requests must never reuse an expired editor-open token. */
+ function authHeaders(ctx,token){return {'apikey':ctx.key,'Authorization':'Bearer '+token}}
+ async function expiredStorageJwt(response){
+  if(response.status===401)return true;
+  if(response.status!==400&&response.status!==403)return false;
+  const message=await response.clone().text().catch(()=>'');
+  return /(?:["']?exp["']?\s+claim\s+timestamp\s+check\s+failed|jwt\s*(?:token\s*)?expired|token(?:\s+has)?\s+expired)/i.test(message);
+ }
+ async function storageFetch(path,options,ctx){
+  if(!ctx?.key||!ctx?.token&&typeof ctx?.getToken!=='function')
+   throw new Error('Inloggningen saknas. Logga in igen.');
+  const token=typeof ctx.getToken==='function'?await ctx.getToken():ctx.token;
+  let headers={...authHeaders(ctx,token),...(options.headers||{})};
+  const url=baseUrl+'/storage/v1/'+path;
+  let response=await fetch(url,{...options,headers});
+  if(typeof ctx.getToken==='function'&&await expiredStorageJwt(response)){
+   headers={...headers,Authorization:'Bearer '+await ctx.getToken(true,token)};
+   response=await fetch(url,{...options,headers});
+  }
+  return response;
+ }
  async function removeStored(path,ctx){
-  if(!src(path)||!ctx?.token)return;
-  const res=await fetch(baseUrl+'/storage/v1/object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{
-   method:'DELETE',headers:authHeaders(ctx)
-  });
+  if(!src(path)||!ctx?.token&&typeof ctx?.getToken!=='function')return;
+  const res=await storageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'DELETE'},ctx);
   if(!res.ok&&res.status!==404)throw new Error('Kunde inte radera tidigare bild ('+res.status+').');
  }
  async function prepare(kind,id,ctx){
@@ -125,12 +143,12 @@
   const original=draft.original;
   if(draft.removed)return{path:null,old:original,uploaded:null};
   if(!draft.blob)return{path:original,old:null,uploaded:null};
-  if(!ctx?.token||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
+  if((!ctx?.token&&typeof ctx?.getToken!=='function')||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
   const ext=draft.blob.type==='image/webp'?'webp':'png';
   const path=kind+'/'+id+'/'+crypto.randomUUID()+'.'+ext;
-  const response=await fetch(baseUrl+'/storage/v1/object/'+BUCKET+'/'+path,{
-   method:'POST',headers:{...authHeaders(ctx),'Content-Type':draft.blob.type,'x-upsert':'false'},body:draft.blob
-  });
+  const response=await storageFetch('object/'+BUCKET+'/'+path,{
+   method:'POST',headers:{'Content-Type':draft.blob.type,'x-upsert':'false'},body:draft.blob
+  },ctx);
   if(!response.ok){
    const data=await response.json().catch(()=>null);
    throw new Error(data?.message||data?.error||'Bilduppladdningen misslyckades ('+response.status+').');
@@ -138,9 +156,9 @@
   return{path,old:original,uploaded:path};
  }
  async function uploadPiece(blob,path,ctx){
-  const response=await fetch(baseUrl+'/storage/v1/object/'+BUCKET+'/'+path,{
-   method:'POST',headers:{...authHeaders(ctx),'Content-Type':blob.type,'x-upsert':'false'},body:blob
-  });
+  const response=await storageFetch('object/'+BUCKET+'/'+path,{
+   method:'POST',headers:{'Content-Type':blob.type,'x-upsert':'false'},body:blob
+  },ctx);
   if(!response.ok){
    const data=await response.json().catch(()=>null);
    throw new Error(data?.message||data?.error||'Bilduppladdningen misslyckades ('+response.status+').');
@@ -163,7 +181,7 @@
     const {zone}=part,key=armorColumn(zone);
     if(part.removed){paths[key]=null;if(part.original)old.push(part.original);continue;}
     if(!part.blob){paths[key]=part.original;continue;}
-    if(!ctx?.token||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
+    if((!ctx?.token&&typeof ctx?.getToken!=='function')||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
     const ext=part.blob.type==='image/webp'?'webp':'png';
     const path='armor/'+zone+'/'+id+'/'+crypto.randomUUID()+'.'+ext;
     await uploadPiece(part.blob,path,ctx);
