@@ -19,8 +19,8 @@ function artFixture(){
 
 describe('Gemensamma inventariebilder i regelregister',()=>{
  it('loads artwork utilities before the app and transparent styles after the equipment scene',()=>{
-  expect(html).toContain('features/equipment/art.js?v=0.35.56');
-  expect(html).toContain('features/equipment/art.css?v=0.35.56');
+  expect(html).toContain('features/equipment/art.js?v=0.35.57');
+  expect(html).toContain('features/equipment/art.css?v=0.35.57');
   expect(html.indexOf('features/equipment/art.js')).toBeLessThan(html.indexOf('legacy/app.js'));
   expect(html.indexOf('features/equipment/art.css')).toBeGreaterThan(html.indexOf('current-equipment-gandalf.css'));
   expect(css).toContain('object-fit:contain');
