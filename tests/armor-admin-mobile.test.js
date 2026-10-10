@@ -28,11 +28,11 @@ function renderArmors(){
  return {html:table.innerHTML,status:status.textContent};
 }
 describe('Rustningsadmin på mobil',()=>{
- it('groups all 11 values into one row so responsive CSS never splits edit actions from the item',()=>{
+ it('groups all 12 values into one row so responsive CSS never splits edit actions from the item',()=>{
   const {html,status}=renderArmors();
   expect(status).toContain('2 rustningstyper');
   expect(html.match(/class="armor-admin-row armor-admin-record"/g)).toHaveLength(2);
-  expect(html.match(/class="ahead"/g)).toHaveLength(11);
+  expect(html.match(/class="ahead"/g)).toHaveLength(12);
   expect(html.match(/class="armor-cell-actions adminactions"/g)).toHaveLength(2);
   expect(html.match(/class="armor-cell-name"/g)).toHaveLength(2);
   for(const id of ['aaaaaaaa-1111-4444-9999-aaaaaaaaaaaa','bbbbbbbb-2222-4444-9999-bbbbbbbbbbbb']){
@@ -51,7 +51,7 @@ describe('Rustningsadmin på mobil',()=>{
   expect(responsive).toContain('min-height:42px');
   expect(responsive).toContain('touch-action:manipulation');
  });
- it('desktop row keeps all 11 columns and an independently scrollable table where needed',()=>{
+ it('desktop row keeps all 12 columns and an independently scrollable table where needed',()=>{
   expect(responsive).toContain('grid-template-columns:64px minmax(155px,1.4fr)');
   expect(responsive).toContain('min-width:1100px');
   expect(responsive).toContain('overflow-x:auto');
