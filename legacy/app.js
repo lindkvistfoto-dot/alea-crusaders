@@ -1791,14 +1791,17 @@ function currentEquipProjectileSlotHtml(character){
   const url=window.aleaEquipmentArt?.src(p.imagePath)||'';
   return '<span class="gandalf-ammo-item'+(p.count===0?' out':'')+'">'+
    (url?'<img src="'+escAttr(url)+'" alt="" loading="lazy">':
-    '<span class="gandalf-ammo-fallback">'+escAttr(p.name)+'</span>')+
-   '<span class="gandalf-ammo-count" title="'+escAttr(p.name+': '+p.count+' kvar')+'">'+p.count+'</span></span>'
+    '<span class="gandalf-ammo-fallback">'+escAttr(p.name)+'</span>')+'</span>'
  }).join(''):'';
- const short=occupied?entries.map(p=>p.name+' · '+p.count).join(' / '):'Inget valt';
+ // A single counter belongs to the frame, anchored to its bottom-right corner.
+ // With two equipped ranged weapons the counter mirrors left/right image order.
+ const counter=occupied?'<span class="gandalf-ammo-count'+(entries.some(p=>p.count===0)?' out':'')+
+  '" title="'+escAttr(description)+'">'+entries.map(p=>p.count).join(dual?' / ':'')+'</span>':'';
+ const short=occupied?entries.map(p=>p.name).join(' / '):'Inget valt';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-projectiles'+(occupied?' equipped':' empty')+(dual?' dual':'')+
   '" onclick="showCurrentEquipmentProjectileInfo()" title="'+escAttr(description)+'" aria-label="Projektiler: '+escAttr(description)+'">'+
   '<span class="gandalf-equip-face">'+(occupied?'<span class="gandalf-ammo-images">'+thumb+'</span>':
-   '<span class="gandalf-ammo-empty">—</span>')+'</span>'+
+   '<span class="gandalf-ammo-empty">—</span>')+counter+'</span>'+
   '<span class="gandalf-equip-label">Projektiler<small>'+escAttr(short)+'</small></span></button>'
 }
 function showCurrentEquipmentProjectileInfo(){
