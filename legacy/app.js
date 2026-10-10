@@ -1965,8 +1965,159 @@ function stepCharacterProvisions(delta){
  if(!current||!canEditCharacter(current))return;
  setCharacterProvisions(characterProvisionsDays()+delta)
 }
-function renderEquipment(){current.equipment=current.equipment||[];current.artifacts=current.artifacts||[];current.coins=current.coins||{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}};$('inventorytable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">BEP</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+current.equipment.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setEquipment(${i},'name',this.value)"></div><div><input value="${x.bep??''}" onchange="setEquipment(${i},'bep',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeEquipment(${i})">×</button></div>`:`<div>${x.name||'—'}</div><div class="skillnum">${x.bep||'—'}</div>`).join('');$('artifacttable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+current.artifacts.map((x,i)=>editing?`<div><input value="${escAttr(x.name||'')}" onchange="setArtifact(${i},this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeArtifact(${i})">×</button></div>`:`<div>${x.name||'—'}</div>`).join('');let totalBep=calculateTotalBep();$('totalBep').innerHTML=`Samlad BEP: <b>${formatBep(totalBep)}</b> <span class="muted">(rustning + sköld + vapen + utrustning)</span>`;renderCharacterProvisions();let c=current.coins;$('cointable').innerHTML='<div class="skillhead"></div><div class="skillhead">GM</div><div class="skillhead">SM</div><div class="skillhead">KM</div>'+coinRow('Buret','carried',c.carried)+coinRow('I förvar','stored',c.stored)}
-function refreshTotalBep(){let el=$('totalBep');if(el){let n=calculateTotalBep();el.innerHTML=`Samlad BEP: <b>${formatBep(n)}</b> <span class="muted">(rustning + sköld + vapen + utrustning)</span>`}}function bepNumber(v){if(v===null||v===undefined||v==='')return 0;let n=parseFloat(String(v).replace(',','.'));return Number.isFinite(n)?n:0}function calculateTotalBep(){let armor=(current.armor||[]).reduce((a,x)=>a+bepNumber(x.bep),0);let shields=(current.shields||[]).reduce((a,x)=>a+bepNumber(x.bep),0);let weapons=(current.weapons||[]).reduce((a,x)=>a+bepNumber(x.bep??x.weight),0);let equipment=(current.equipment||[]).reduce((a,x)=>a+bepNumber(x.bep),0);return armor+shields+weapons+equipment}function formatBep(n){return Number.isInteger(n)?String(n):String(Math.round(n*100)/100).replace('.',',')}function coinRow(label,key,o){return `<div>${label}</div>`+['GM','SM','KM'].map(k=>`<div><div class="coin-stepper"><button onclick="stepCoin('${key}','${k}',-1)">−</button><span class="coinval">${o[k]??0}</span><button onclick="stepCoin('${key}','${k}',1)">+</button></div></div>`).join('')}function addEquipment(){current.equipment.push({equipId:newEquipItemId('equipment'),name:'',bep:''});save();renderEquipment()}function removeEquipment(i){let x=current.equipment[i];if(x?.equipId)clearEquippedItemRefs(current,'equipment',x.equipId);current.equipment.splice(i,1);save();renderEquipment()}function addArtifact(){current.artifacts.push({name:''});renderEquipment()}function removeArtifact(i){current.artifacts.splice(i,1);renderEquipment()}function setEquipment(i,k,v){current.equipment[i][k]=v;save();refreshTotalBep()}function setArtifact(i,v){current.artifacts[i].name=v;save()}function setCoin(group,k,v){current.coins[group][k]=Math.max(0,+v||0);save();renderEquipment()}function erfDisplayItem(group,item,v){
+/* Inventory units remain in the character's JSON. Display identical rows as
+   one virtual stack, retaining every equipped instance's equipId. */
+function equipmentItemCount(item){
+ const value=item?.count??item?.quantity??1;
+ const count=Number(value);
+ return Number.isFinite(count)?Math.max(0,Math.floor(count)):1
+}
+function equipmentStackKey(item,index){
+ const keys=Object.keys(item||{}).filter(k=>!['equipId','count','quantity'].includes(k)).sort();
+ // Unsaved blank editor rows should not collapse together.
+ if(!String(item?.name||'').trim())return 'blank:'+index;
+ return JSON.stringify(keys.map(k=>[k,k==='bep'?bepNumber(item[k]):item[k]]))
+}
+function characterEquipmentStacks(items){
+ const groups=[],byKey=new Map();
+ (Array.isArray(items)?items:[]).forEach((item,index)=>{
+  const key=equipmentStackKey(item,index);
+  let group=byKey.get(key);
+  if(!group){group={item,indices:[],count:0};byKey.set(key,group);groups.push(group)}
+  group.indices.push(index);
+  group.count+=equipmentItemCount(item)
+ });
+ return groups
+}
+function renderEquipment(){
+ current.equipment=current.equipment||[];
+ current.artifacts=current.artifacts||[];
+ current.coins=current.coins||{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}};
+ const table=$('inventorytable');
+ const groups=characterEquipmentStacks(current.equipment);
+ table.classList.toggle('equipment-stack-editing',!!editing);
+ table.innerHTML='<div class="skillhead">Namn</div>'+
+  '<div class="skillhead skillnum">Antal</div>'+
+  '<div class="skillhead skillnum">BEP/st</div>'+
+  (editing?'<div class="skillhead equipment-stack-actions-head">Åtgärd</div>':'')+
+  groups.map(g=>{
+   const item=g.item,i=g.indices[0],amount=g.count,name=escAttr(item.name||'');
+   return editing?
+    '<div><input aria-label="Föremålsnamn" value="'+name+'" onchange="setEquipmentStackField('+i+',\'name\',this.value)"></div>'+
+    '<div><input class="equipment-stack-quantity" aria-label="Antal '+name+'" type="number" min="1" max="9999" step="1" value="'+amount+'" onchange="setEquipmentStackCount('+i+',this.value)"></div>'+
+    '<div><input aria-label="BEP per styck för '+name+'" inputmode="decimal" value="'+escAttr(item.bep??'')+'" onchange="setEquipmentStackField('+i+',\'bep\',this.value)"></div>'+
+    '<div class="rowactions equipment-stack-actions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button>'+
+    '<button class="deletebtn" onclick="removeEquipmentStack('+i+')" aria-label="Ta bort '+name+' ('+amount+' st)" title="Ta bort hela raden">×</button></div>'
+    :'<div>'+escAttr(item.name||'—')+'</div><div class="skillnum">'+amount+'</div>'+
+    '<div class="skillnum">'+escAttr(item.bep??'—')+'</div>'
+  }).join('');
+ $('artifacttable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+
+  current.artifacts.map((x,i)=>editing?'<div><input value="'+escAttr(x.name||'')+'" onchange="setArtifact('+i+',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeArtifact('+i+')">×</button></div>':
+  '<div>'+escAttr(x.name||'—')+'</div>').join('');
+ refreshTotalBep();
+ renderCharacterProvisions();
+ const c=current.coins;
+ $('cointable').innerHTML='<div class="skillhead"></div><div class="skillhead">GM</div><div class="skillhead">SM</div><div class="skillhead">KM</div>'+
+  coinRow('Buret','carried',c.carried)+coinRow('I förvar','stored',c.stored)
+}
+function refreshTotalBep(){
+ const el=$('totalBep');
+ if(el){const n=calculateTotalBep();el.innerHTML='Samlad BEP: <b>'+formatBep(n)+'</b> <span class="muted">(rustning + sköld + vapen + utrustning)</span>'}
+}
+function bepNumber(v){
+ if(v===null||v===undefined||v==='')return 0;
+ const n=parseFloat(String(v).replace(',','.'));
+ return Number.isFinite(n)?n:0
+}
+function calculateTotalBep(){
+ const armor=(current.armor||[]).reduce((a,x)=>a+bepNumber(x.bep),0);
+ const shields=(current.shields||[]).reduce((a,x)=>a+bepNumber(x.bep),0);
+ const weapons=(current.weapons||[]).reduce((a,x)=>a+bepNumber(x.bep??x.weight),0);
+ const equipment=(current.equipment||[]).reduce((a,x)=>a+bepNumber(x.bep)*equipmentItemCount(x),0);
+ return armor+shields+weapons+equipment
+}
+function formatBep(n){
+ return Number.isInteger(n)?String(n):String(Math.round(n*100)/100).replace('.',',')
+}
+function coinRow(label,key,o){
+ return '<div>'+label+'</div>'+['GM','SM','KM'].map(k=>
+  '<div><div class="coin-stepper"><button onclick="stepCoin(\''+key+'\',\''+k+'\',-1)">−</button><span class="coinval">'+(o[k]??0)+
+  '</span><button onclick="stepCoin(\''+key+'\',\''+k+'\',1)">+</button></div></div>').join('')
+}
+function addEquipment(){
+ current.equipment.push({equipId:newEquipItemId('equipment'),name:'',bep:''});
+ save();renderEquipment()
+}
+function equipmentStackForIndex(index){
+ return characterEquipmentStacks(current.equipment||[]).find(g=>g.indices.includes(Number(index)))||null
+}
+function removeEquipmentStack(index){
+ const group=equipmentStackForIndex(index);
+ if(!group)return;
+ const members=group.indices.map(i=>current.equipment[i]);
+ for(const item of members)if(item.equipId)clearEquippedItemRefs(current,'equipment',item.equipId);
+ const remove=new Set(members);
+ current.equipment=current.equipment.filter(x=>!remove.has(x));
+ save();renderEquipment()
+}
+function removeEquipment(index){removeEquipmentStack(index)}
+function setEquipmentStackField(index,key,value){
+ if(!['name','bep'].includes(key))return;
+ const group=equipmentStackForIndex(index);
+ if(!group)return;
+ for(const i of group.indices)current.equipment[i][key]=value;
+ save();renderEquipment()
+}
+function setEquipmentStackCount(index,value){
+ const group=equipmentStackForIndex(index);
+ if(!group)return;
+ const target=Number(value);
+ if(!Number.isInteger(target)||target<1||target>9999){
+  alert('Antal måste vara ett heltal mellan 1 och 9999.');renderEquipment();return
+ }
+ const delta=target-group.count;
+ if(!delta){renderEquipment();return}
+ if(delta>0){
+  // Expand just one surviving row; no artificial equipIds or duplicate stock.
+  const item=current.equipment[group.indices[0]];
+  const count=equipmentItemCount(item)+delta;
+  if(item.quantity!=null&&item.count==null)item.quantity=count;
+  else item.count=count
+ }else{
+  // Delete unused instances before an equipped one so the hand slot remains valid.
+  const equippedIds=new Set(['leftHand','rightHand'].map(slot=>{
+   const ref=current.currentEquipment?.[slot];
+   return ref?.kind==='equipment'?ref.itemId:null
+  }).filter(Boolean));
+  const candidates=group.indices.map(i=>current.equipment[i]).sort((a,b)=>
+   Number(equippedIds.has(a.equipId))-Number(equippedIds.has(b.equipId)));
+  let remaining=-delta;
+  for(const item of candidates){
+   if(!remaining)break;
+   const owned=equipmentItemCount(item),take=Math.min(owned,remaining);
+   const next=owned-take;
+   if(next===0){
+    if(item.equipId)clearEquippedItemRefs(current,'equipment',item.equipId);
+    const idx=current.equipment.indexOf(item);
+    if(idx>=0)current.equipment.splice(idx,1)
+   }else if(item.quantity!=null&&item.count==null)item.quantity=next;
+   else item.count=next;
+   remaining-=take
+  }
+ }
+ save();renderEquipment()
+}
+function addArtifact(){current.artifacts.push({name:''});renderEquipment()}
+function removeArtifact(i){current.artifacts.splice(i,1);renderEquipment()}
+function setEquipment(i,k,v){setEquipmentStackField(i,k,v)}
+function setArtifact(i,v){current.artifacts[i].name=v;save()}
+function setCoin(group,k,v){current.coins[group][k]=Math.max(0,+v||0);save();renderEquipment()}
+function stepCoin(group,k,d){
+ current.coins=current.coins||{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}};
+ current.coins[group][k]=Math.max(0,(+current.coins[group][k]||0)+d);
+ save();renderEquipment()
+}
+function erfDisplayItem(group,item,v){
  let n=(v===''||v==null)?0:(+v||0),earned=hasCurrentErfAward(group,item,current);
  return '<span class="erf-static" title="'+(earned?'ERF redan erhållet under aktuell viloperiod':'Ingen ERF erhållen ännu under aktuell viloperiod')+'"><span class="erfval">'+n+'</span>'+(earned?'<span class="erf-earned-badge" aria-label="ERF redan erhållet">✓</span>':'')+'</span>'
 }
