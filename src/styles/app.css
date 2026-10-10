@@ -3105,8 +3105,10 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-miniature{
  cursor:pointer;
  pointer-events:none;
- transform-box:fill-box;
- transform-origin:center bottom;
+ /* Hexbrickans SVG translate(x y) placerar dess lokala (0,0) mitt i
+    karthexen. fill-box/center bottom flyttade den punkten vid scale(). */
+ transform-box:view-box;
+ transform-origin:0 0;
 }
 .combat-mini-hit{
  fill:transparent;
