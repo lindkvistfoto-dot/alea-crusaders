@@ -715,7 +715,8 @@ function ruleShieldIconSrc(key){let d=ruleShieldIconDef(key);return './assets/ar
 function ruleArmorIconHtml(rule){
  let d=ruleArmorIconDef(rule?.icon_key);
  const fallback='<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleArmorIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
- return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
+ const preview=rule?.image_torso_path||rule?.image_head_path||rule?.image_arms_path||rule?.image_legs_path||rule?.image_path;
+ return window.aleaEquipmentArt?.thumbnail(preview,fallback,rule?.name)||fallback;
 }
 function ruleShieldIconHtml(rule){
  let d=ruleShieldIconDef(rule?.icon_key);
@@ -746,7 +747,7 @@ function renderAdminArmors(){
   '<div class="ahead">Ikon</div><div class="ahead">Rustning</div><div class="ahead">Typ</div><div class="ahead">ABS</div><div class="ahead">Viktkod</div><div class="ahead">BEP (STO 9–12)</div><div class="ahead">Pris/BEP (sm)</div><div class="ahead">Expert</div><div class="ahead">Källa</div><div class="ahead">Beskrivning</div><div class="ahead">Åtgärd</div>'+
   ruleArmorTypes.map(r=>
    '<div class="admin-weapon-icon-cell">'+ruleArmorIconHtml(r)+'</div>'+
-   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small></div>'+
+   '<div><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small><small class="item-art-armor-count">'+['head','arms','torso','legs'].filter(z=>r['image_'+z+'_path']).length+'/4 rustningsbilder</small></div>'+
    '<div>'+escAttr(ruleArmorCategoryLabel(r.category))+'</div>'+
    '<div><b>'+(r.absorption??'—')+'</b></div>'+
    '<div><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
@@ -804,14 +805,14 @@ async function saveRuleArmor(id=''){
    sort_order:Number($('raSort')?.value||0),
    updated_at:new Date().toISOString()
   };
-  artChange=await window.aleaEquipmentArt.prepare('armor',artId,artContext);
-  payload.image_path=artChange.path;
+  artChange=await window.aleaEquipmentArt.prepareArmor(artId,artContext);
+  Object.assign(payload,artChange.paths);
   if(!id)payload.id=artId;
   if(id)await dbJson('rule_armor_types?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else await dbJson('rule_armor_types',{method:'POST',body:JSON.stringify(payload)});
-  if(artChange.old&&artChange.old!==artChange.path)window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Föremålsbild kunde inte rensas',e));
+  for(const oldPath of artChange.old)window.aleaEquipmentArt.removeStored(oldPath,artContext).catch(e=>console.warn('Rustningsbild kunde inte rensas',e));
   closeAdminEditor();await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
- }catch(e){if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});alert('Kunde inte spara rustningen: '+e.message)}
+ }catch(e){if(artChange?.uploaded?.length)await Promise.all(artChange.uploaded.map(path=>window.aleaEquipmentArt.removeStored(path,artContext).catch(()=>{})));alert('Kunde inte spara rustningen: '+e.message)}
 }
 async function deleteRuleArmor(id){
  if(!activeUser()?.admin)return;
@@ -1516,7 +1517,7 @@ const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Kropp',arms:'Armar',legs:'Ben',l
 function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'}[kind]||''}
 /* Gandalf: visually compose the existing equipment states over the supplied art assets.
    Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
-function currentEquipmentItemArtPath(ref,item){
+function currentEquipmentItemArtPath(ref,item,slot){
  if(!ref||!item)return null;
  if(ref.kind==='weapon')return ruleWeaponForItem(item)?.image_path||null;
  if(ref.kind==='shield')return characterShieldRule(item)?.image_path||null;
@@ -1524,14 +1525,14 @@ function currentEquipmentItemArtPath(ref,item){
   const type=armorTypeById(item.armorTypeId||item.armor_type_id||'')||
    armorTypeByKey(item.armorTypeKey||item.armor_type_key||'')||
    ruleArmorTypes.find(r=>r.name&&(String(item.name||'')===String(r.name)||String(item.name||'').startsWith(String(r.name)+' (')))||null;
-  return type?.image_path||null;
+  return window.aleaEquipmentArt?.armorImagePathForSlot(type,slot)||type?.image_path||null;
  }
  return null;
 }
 function currentEquipSlotHtml(slot){
  const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
- const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item))||'';
+ const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
    '<span class="gandalf-equip-face">'+art+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
