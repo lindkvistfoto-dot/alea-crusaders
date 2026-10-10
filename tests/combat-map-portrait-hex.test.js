@@ -48,6 +48,15 @@ describe('Porträtt i hexagonkartan',()=>{
   expect(runtime).toContain('visual=miniature||(');
   expect(runtime).toContain('combatTokenInitials(c.name_snapshot)');
  });
+ test('hexbrickan använder SVG-vyns origo i stället för sin egen nederkant',()=>{
+  const baseRule=css.match(/\.combat-miniature\s*\{([^}]+)\}/)?.[1]||'';
+  // Ett g-element översätts till exakt centerkoordinat. Om skalan har en
+  // annan pivot flyttas även (0,0) och modellen hamnar mellan karthexar.
+  expect(baseRule).toMatch(/transform-box:\s*view-box\s*;/);
+  expect(baseRule).toMatch(/transform-origin:\s*0\s+0\s*;/);
+  expect(mini).toContain("transform=\"translate('+cell.x+' '+cell.y+') scale(");
+  expect(runtime).toContain("combatHexPoints(cell.x,cell.y,g.size*.97)");
+ });
  test('mapparen återanvänder samma porträtthämtare som turordningen',()=>{
   expect(mini).toContain('combatRowPortraitUrl(combatant)');
   expect(runtime).toContain('const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass)');
