@@ -159,7 +159,7 @@ describe('Automatiska projektiler i Aktuell utrustning',()=>{
   expect(c.currentEquipment).not.toHaveProperty('projectile');
   expect(c.currentEquipment).not.toHaveProperty('ammo');
   expect(app).toContain('currentEquipProjectileSlotHtml(current)');
-  expect(css).toContain('.gandalf-equip-projectiles .gandalf-ammo-count');
+  expect(css).toContain('.gandalf-equip-projectiles .gandalf-equip-face>.gandalf-ammo-count');
   expect(css).toContain('@media(max-width:620px)');
  });
 });
