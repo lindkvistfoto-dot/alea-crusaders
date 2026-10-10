@@ -34,7 +34,7 @@ describe('Aragorn – helfigur i aktuell utrustning',()=>{
   expect(css).toContain('pointer-events:none');
   expect(css).toContain('.gandalf-equip-character');
   expect(css).toContain('@media(max-width:620px)');
-  expect(html).toContain('Alea Crusaders v0.35.56');
+  expect(html).toContain('Alea Crusaders v0.35.57');
   expect(html).toContain('id="tabImages"');
  });
 });
