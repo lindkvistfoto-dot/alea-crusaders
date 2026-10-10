@@ -12,7 +12,7 @@ const path='weapon/'+id+'/'+id+'.webp';
 
 function artFixture(){
  const w={};
- runInNewContext(artSource,{window:w,URL:{revokeObjectURL(){}}});
+ runInNewContext(artSource,{window:w,URL:{revokeObjectURL(){}},document:{getElementById(){return null;}}});
  w.aleaEquipmentArt.configure('https://example.supabase.co');
  return w.aleaEquipmentArt;
 }
