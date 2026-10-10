@@ -1546,12 +1546,49 @@ function currentEquipSlotHtml(slot){
    '<span class="gandalf-equip-face">'+art+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
+/* Narsil-style: one square master asset per weapon. Its two-hand placement is
+   selected from the actual weapon master (tags/icon/name); no rotated file is saved.
+   Numbers are deliberately conservative to avoid cropping in the tall gold frame. */
+function twoHandDisplayProfile(item){
+ const rule=ruleWeaponForItem(item)||{};
+ const descriptors=[rule.icon_key,rule.name,item?.name,item?.icon_key,
+  ...(Array.isArray(rule.tags)?rule.tags:[])]
+  .filter(Boolean).join(' ').toLocaleLowerCase('sv-SE');
+ const profiles={
+  standard:{rotate:-17,scale:1.32,x:5,y:19,width:90,height:62},
+  staff:{rotate:-22,scale:1.52,x:5,y:20,width:90,height:60},
+  polearm:{rotate:-18,scale:1.45,x:5,y:19,width:90,height:62},
+  sword:{rotate:-15,scale:1.48,x:5,y:19,width:90,height:62},
+  bow:{rotate:-8,scale:1.34,x:5,y:20,width:90,height:60},
+  crossbow:{rotate:-6,scale:1.22,x:5,y:22,width:90,height:56},
+  axe:{rotate:-12,scale:1.42,x:5,y:19,width:90,height:62}
+ };
+ let type='standard';
+ if(/armborst|arbalest|crossbow/.test(descriptors))type='crossbow';
+ else if(/båge|bow/.test(descriptors))type='bow';
+ else if(/hillebard|halberd|polearm|naginata|glaive|pålyxa/.test(descriptors))type='polearm';
+ else if(/staff|stav|quarterstaff/.test(descriptors))type='staff';
+ else if(/spjut|spear|pik|spetum|treudd/.test(descriptors))type='polearm';
+ else if(/svärd|sword|bastard|katana|sabel|no-dachi/.test(descriptors))type='sword';
+ else if(/yxa|axe|hatchet/.test(descriptors))type='axe';
+ return {type,...profiles[type]};
+}
 function gandalfTwoHandSlotHtml(item){
  const art=window.aleaEquipmentArt?.imageTag(ruleWeaponForItem(item)?.image_path)||'';
  const name=escAttr(item.name||'Vapen');
+ const profile=twoHandDisplayProfile(item);
+ const cssVars=[
+  '--twohand-rotate:'+profile.rotate+'deg',
+  '--twohand-scale:'+profile.scale,
+  '--twohand-x:'+profile.x+'%',
+  '--twohand-y:'+profile.y+'%',
+  '--twohand-width:'+profile.width+'%',
+  '--twohand-height:'+profile.height+'%'
+ ].join(';');
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
-  '<span class="gandalf-equip-face">'+(art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
+  '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
+   (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 function showCurrentEquipmentProjectileInfo(){
