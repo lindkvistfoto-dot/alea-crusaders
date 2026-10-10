@@ -6,7 +6,7 @@
  'use strict';
  let rows=[],loaded=false,pending=null,saving=false;
  const $=id=>document.getElementById(id);
- const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[ch]));
+ const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#39;','"':'&quot;'}[ch]));
  const types={amulet:'Amulett',ring:'Ring',weapon:'Vapen',armor:'Rustning',shield:'Sköld',staff:'Stav',wand:'Trollstav',equipment:'Utrustning',other:'Övrigt'};
  const bases={weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'};
  const rarities={common:'Vanlig',uncommon:'Ovanlig',rare:'Sällsynt',legendary:'Legendarisk',unique:'Unik'};
