@@ -125,6 +125,8 @@ function normalizeShopItem(row){
     priceCurrency:row.price_currency||'SM',
     purchaseKind:row.purchase_kind||'equipment',
     quantityPerPurchase:Number(row.quantity_per_purchase)||1,
+    canCarry:!!row.can_carry,
+    imagePath:row.image_path||null,
     sortOrder:Number(row.sort_order)||0,
     metadata:row.metadata||{}
   };
@@ -609,6 +611,7 @@ function shopAddPurchasedItem(c,item,purchases=1){
     name:item.name||'Utrustning',
     bep:item.bep==null?'':Number(item.bep),
     shopItemKey:item.itemKey||'',
+    shopSourceId:item.sourceId||null,
     purchaseKind:item.purchaseKind||'equipment',
     ...(item.metadata?.alchemy?{alchemy:{...item.metadata},shopSource:'alchemy',sourceItemId:item.sourceId}: {})
   });
