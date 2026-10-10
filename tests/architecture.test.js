@@ -24,9 +24,9 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain("./features/combat/runtime.js");
     expect(html).toContain("./legacy/app.js");
     expect(html).toContain("./src/main.js");
-    expect(html).toContain("./features/character/glowup.css?v=0.35.47");
-    expect(html).toContain("./features/character/glowup.js?v=0.35.47");
-    expect(html).toContain("./features/map/glowup.css?v=0.35.47");
+    expect(html).toContain("./features/character/glowup.css?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./features/character/glowup.js?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./features/map/glowup.css?v="+JSON.parse(read("package.json")).version);
   });
 
   test("classic application scripts are syntactically valid", () => {
@@ -698,8 +698,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("async function loadCombatSceneChoices");
     expect(combat).toContain("function renderCombatGmControls");
     expect(combat).toContain('id="combatScenePicker"');
-    expect(html).toContain("./features/combat/hit-body-model.js?v=0.35.47");
-    expect(html).toContain("./features/combat/hit-body-zones.js?v=0.35.47");
+    expect(html).toContain("./features/combat/hit-body-model.js?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./features/combat/hit-body-zones.js?v="+JSON.parse(read("package.json")).version);
     expect(html).toContain("./features/combat/runtime.js?v="+JSON.parse(read("package.json")).version);
     expect(html).toContain("./legacy/app.js?v="+JSON.parse(read("package.json")).version);
     expect(combat).toContain("async function playCombatScene");
@@ -1260,7 +1260,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
     expect(html).toContain('class="map-title-icon"');
-    expect(html).toContain("./features/map/glowup.css?v=0.35.47");
+    expect(html).toContain("./features/map/glowup.css?v="+JSON.parse(read("package.json")).version);
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");
     expect(css).toContain("color:#d0a052");
@@ -1287,8 +1287,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="shopNavBtn"');
     expect(html).toContain('id="shopPage"');
     expect(html).toContain('id="shopCartLines"');
-    expect(html).toContain("./features/shop/store.css?v=0.35.47");
-    expect(html).toContain("./features/shop/store.js?v=0.35.47");
+    expect(html).toContain("./features/shop/store.css?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./features/shop/store.js?v="+JSON.parse(read("package.json")).version);
     expect(shop).toContain("rule_shop_items?active=eq.true");
     expect(shop).toContain("loadRuleWeapons(force)");
     expect(shop).toContain("const SHOP_CART_STORAGE_KEY='alea_targans_gille_cart_v1'");
@@ -1391,8 +1391,8 @@ describe("application architecture smoke checks", () => {
     expect(html).toContain('id="innPage"');
     expect(html).toContain('id="innCartLines"');
     expect(html).toContain('id="innBuyerSelect"');
-    expect(html).toContain("./features/inn/inn.css?v=0.35.47");
-    expect(html).toContain("./features/inn/inn.js?v=0.35.47");
+    expect(html).toContain("./features/inn/inn.css?v="+JSON.parse(read("package.json")).version);
+    expect(html).toContain("./features/inn/inn.js?v="+JSON.parse(read("package.json")).version);
     expect(inn).toContain("rule_inn_items?active=eq.true");
     expect(inn).toContain("const INN_CART_STORAGE_KEY='alea_inn_cart_v1'");
     expect(html).not.toContain('id="innCategories"');
