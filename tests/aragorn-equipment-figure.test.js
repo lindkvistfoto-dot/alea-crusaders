@@ -25,14 +25,16 @@ describe('Aragorn – helfigur i aktuell utrustning',()=>{
   expect(app).toContain("'<div class=\"gandalf-equip-center\" aria-hidden=\"true\">'+currentEquipmentFigureHtml(current)+'</div>'");
   expect(css).toContain('object-fit:contain');
   expect(css).toContain('inset:1% 25% 1% 25%');
-  expect(css).toContain('max-width:100%');
+  expect(css).toContain('width:auto');
+  expect(css).toContain('max-width:none');
+  expect(css).not.toMatch(/\.gandalf-equip-character\{[^}]*width:100%/);
   expect(css).toContain('justify-content:center');
   expect(css).toMatch(/\.gandalf-equip-character\{[^}]*height:95%/);
   expect(css).toContain('object-position:center bottom');
   expect(css).toContain('pointer-events:none');
   expect(css).toContain('.gandalf-equip-character');
   expect(css).toContain('@media(max-width:620px)');
-  expect(html).toContain('Alea Crusaders v0.35.48');
+  expect(html).toContain('Alea Crusaders v0.35.49');
   expect(html).toContain('id="tabImages"');
  });
 });
