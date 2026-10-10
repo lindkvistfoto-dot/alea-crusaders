@@ -59,9 +59,10 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   expect(runtime).toContain('async function combatChooseGmHex(event,q,r)');
   expect(runtime).toContain('async function combatPlayPreparedScene()');
  });
- test('GM toolbox is after combat log and manual assignment is its last tool',()=>{
+ test('GM toolbox is below the map and manual assignment is its last tool',()=>{
   const render=runtime.slice(runtime.indexOf('function renderCombat(){'));
-  expect(render.indexOf("'+combatGmToolboxHtml()+'")).toBeGreaterThan(render.indexOf('combatTurnPanelHtml()'));
+  expect(render.indexOf('combatGmToolboxHtml()')).toBeGreaterThan(render.indexOf('renderCombatMap()+combatMapPresetsHtml()'));
+  expect(render.indexOf('combatGmToolboxHtml()')).toBeLessThan(render.indexOf('<section class="combat-log">'));
   const toolbox=runtime.slice(runtime.indexOf('function combatGmToolboxHtml(){'),runtime.indexOf('function renderCombat(){'));
   expect(toolbox.indexOf('combatAreasAdminHtml()')).toBeLessThan(toolbox.indexOf('combatEffectsAdminHtml()'));
  });
