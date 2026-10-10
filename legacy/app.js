@@ -8,6 +8,7 @@ const defaults=[
 let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
 const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
 const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
+window.aleaEquipmentArt?.configure(SUPABASE_URL);
 let supabaseSession=null,supabaseProfile=null;
 let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
 let ruleSkills=[],ruleSkillsLoaded=false;let ruleMagicSchools=[],ruleMagicSchoolsLoaded=false;let ruleSpells=[],ruleSpellsLoaded=false;let ruleEffects=[],ruleEffectsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleShields=[],ruleShieldsLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;let ruleSocialStands=[],ruleSocialStandsLoaded=false;
@@ -638,6 +639,7 @@ function editRuleWeapon(id=''){
    '<label>Sorteringsordning<input id="rwSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleWeapons.length+1)*10))+'"></label>'+
    '<label class="wide">Taggar<input id="rwTags" value="'+escAttr(tags)+'" placeholder="kommaseparerade, t.ex. klinga, militär"></label>'+
    '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+  (window.aleaEquipmentArt?.start('weapon',r)||'')+
   '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden')
 }
@@ -764,6 +766,7 @@ function editRuleArmor(id=''){
    '<label>Sorteringsordning<input id="raSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleArmorTypes.length+1)*10))+'"></label>'+
    '<label class="wide admincheck"><input id="raCanonical" type="checkbox" '+(asBool(r?.canonical_expert)?'checked':'')+'> Kanonisk Expert-rustning</label>'+
    '<label class="wide">Beskrivning<textarea id="raDescription">'+escAttr(r?.description||'')+'</textarea></label>'+
+  (window.aleaEquipmentArt?.start('armor',r)||'')+
   '</div><div class="rule-editor-note">Expert anger viktkod A–K; BEP-värdet används tills den STO-beroende vikttabellen kopplas direkt till rollfiguren.</div>'+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleArmor(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden')
@@ -852,6 +855,7 @@ function editRuleShield(id=''){
    '<label class="wide">Passivt skydd<input id="rsCoverage" value="'+escAttr(r?.passive_coverage||'')+'" placeholder="t.ex. Sköldarm + bröstkorg"></label>'+
    '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+
    '<label class="wide">Noteringar<textarea id="rsNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+  (window.aleaEquipmentArt?.start('shield',r)||'')+
   '</div><div class="rule-editor-note">Expert E55 reglerar passivt skydd och projektiler. Sköldarnas grundvärden för BEP, pris och tålighet kommer från Aleas befintliga grundregelsregister (1988). BV är initialt samma som registrerat tålighetsvärde och kan justeras separat från ABS.</div>'+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleShield(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden')
