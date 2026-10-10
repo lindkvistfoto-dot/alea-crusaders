@@ -7336,3 +7336,39 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
   right:1px;bottom:1px;min-width:18px;min-height:18px;font-size:11px;
  }
 }
+
+/* v0.35.77: character equipment is one row per exact item, with editable quantity. */
+.inventorytable{
+ grid-template-columns:minmax(0,1fr) minmax(68px,82px) minmax(80px,96px);
+}
+.inventorytable.equipment-stack-editing{
+ grid-template-columns:minmax(0,1fr) minmax(65px,86px) minmax(70px,90px) minmax(76px,96px);
+}
+.inventorytable>.skillhead.skillnum{white-space:nowrap}
+.inventorytable>.skillnum{
+ display:flex;align-items:center;justify-content:center;
+ font-variant-numeric:tabular-nums;
+}
+.inventorytable>.equipment-stack-actions-head{text-align:center}
+.inventorytable>.equipment-stack-actions{
+ display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:nowrap;
+}
+.inventorytable>.equipment-stack-actions button{
+ flex:0 0 auto;min-width:29px;margin:0;padding:4px 6px;
+}
+.inventorytable input.equipment-stack-quantity{
+ min-width:0;width:100%;text-align:center;font-variant-numeric:tabular-nums;
+}
+@media(max-width:700px){
+ .inventorytable{
+  grid-template-columns:minmax(0,1fr) minmax(53px,68px) minmax(67px,82px);
+ }
+ .inventorytable.equipment-stack-editing{
+  grid-template-columns:minmax(0,1fr) 58px 66px 69px;
+ }
+ .inventorytable>div{padding:9px 5px}
+ .inventorytable>.skillhead{font-size:12px}
+ .inventorytable input{font-size:13px;padding:5px 3px}
+ .inventorytable>.equipment-stack-actions{gap:2px}
+ .inventorytable>.equipment-stack-actions button{min-width:28px;padding:4px 3px}
+}
