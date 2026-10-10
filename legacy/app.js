@@ -23,7 +23,63 @@ syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
 async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
-async function authFetch(path,options={}){let headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json',...(options.headers||{})};return fetch(SUPABASE_URL+path,{...options,headers})}
+/* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */
+let supabaseRefreshPromise=null;
+function supabaseTokenExpiry(){
+ if(!supabaseSession)return 0;
+ try{
+  const part=String(supabaseSession.access_token||'').split('.')[1];
+  if(part&&typeof atob==='function'){
+   const claims=JSON.parse(atob(part.replace(/-/g,'+').replace(/_/g,'/')));
+   if(Number(claims.exp)>0)return Number(claims.exp);
+  }
+ }catch(e){}
+ return Number(supabaseSession.expires_at)||0;
+}
+async function refreshSupabaseSession(){
+ if(supabaseRefreshPromise)return supabaseRefreshPromise;
+ supabaseRefreshPromise=(async()=>{
+  const previous=supabaseSession;
+  if(!previous?.refresh_token)throw new Error('Inloggningen har gått ut. Logga in igen.');
+  const response=await authFetch('/auth/v1/token?grant_type=refresh_token',{
+   method:'POST',body:JSON.stringify({refresh_token:previous.refresh_token})
+  });
+  const fresh=await response.json().catch(()=>({}));
+  if(!response.ok||!fresh.access_token)throw new Error('Inloggningen kunde inte förnyas. Logga in igen.');
+  storeSession({...previous,...fresh,refresh_token:fresh.refresh_token||previous.refresh_token});
+  return supabaseSession.access_token;
+ })();
+ try{return await supabaseRefreshPromise}finally{supabaseRefreshPromise=null}
+}
+async function freshSupabaseAccessToken(force=false,failedToken=''){
+ if(!supabaseSession?.access_token)throw new Error('Du behöver logga in igen.');
+ // A concurrent request may already have refreshed the token. Avoid rotating twice.
+ if(failedToken&&failedToken!==supabaseSession.access_token)force=false;
+ const expiry=supabaseTokenExpiry();
+ if(force||(expiry&&expiry*1000-Date.now()<120000))return refreshSupabaseSession();
+ return supabaseSession.access_token;
+}
+async function expiredJwtResponse(response){
+ if(response.status===401)return true;
+ if(response.status!==400&&response.status!==403)return false;
+ const message=await response.clone().text().catch(()=>'');
+ return /(?:["']?exp["']?\s+claim\s+timestamp\s+check\s+failed|jwt\s*(?:token\s*)?expired|token(?:\s+has)?\s+expired)/i.test(message);
+}
+async function authFetch(path,options={}){
+ const headers={'apikey':SUPABASE_KEY,'Content-Type':'application/json',...(options.headers||{})};
+ const authorized=/^Bearer\s+/i.test(String(headers.Authorization||headers.authorization||''));
+ if(authorized){
+  headers.Authorization='Bearer '+await freshSupabaseAccessToken();
+  delete headers.authorization;
+ }
+ let response=await fetch(SUPABASE_URL+path,{...options,headers});
+ if(authorized&&await expiredJwtResponse(response)){
+  const failedToken=headers.Authorization.slice(7);
+  headers.Authorization='Bearer '+await freshSupabaseAccessToken(true,failedToken);
+  response=await fetch(SUPABASE_URL+path,{...options,headers});
+ }
+ return response;
+}
 async function loadProfile(){if(!supabaseSession?.user?.id)return null;const auth={'Authorization':'Bearer '+supabaseSession.access_token};let path='/rest/v1/profiles?id=eq.'+encodeURIComponent(supabaseSession.user.id)+'&select=id,display_name,email,is_admin';let r=await authFetch(path,{headers:auth});if(!r.ok)throw new Error('Kunde inte läsa användarprofilen ('+r.status+').');let rows=await r.json();supabaseProfile=rows[0]||null;if(!supabaseProfile&&supabaseSession.user.email){path='/rest/v1/profiles?email=eq.'+encodeURIComponent(supabaseSession.user.email)+'&select=id,display_name,email,is_admin';r=await authFetch(path,{headers:auth});if(r.ok){rows=await r.json();supabaseProfile=rows[0]||null}}return supabaseProfile}
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
 function cleanCharacterForDb(c){let d=JSON.parse(JSON.stringify(c));delete d._dbId;delete d._persistedOwnerId;delete d._combatIconUrl;delete d.combatIconPath;return d}
@@ -647,7 +703,7 @@ function editRuleWeapon(id=''){
 async function saveRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let name=$('rwName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let skillId=$('rwSkillId')?.value||'';if(!skillId){alert('Färdighet måste anges för varje vapen.');return}
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  let artChange=null;
  const artId=id||crypto.randomUUID();
  try{
@@ -793,7 +849,7 @@ async function saveRuleArmor(id=''){
  const saveButton=$('adminEditorBody')?.querySelector('.rule-editor-actions .primary')||null;
  if(saveButton)saveButton.disabled=true;
  let existing=id?ruleArmorTypes.find(x=>x.id===id):null;
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  let artChange=null;
  const artId=id||crypto.randomUUID();
  try{
@@ -890,7 +946,7 @@ async function saveRuleShield(id=''){
  if(!activeUser()?.admin)return;
  let name=$('rsName')?.value.trim()||'';if(!name){alert('Namn måste anges.');return}
  let skillId=$('rsSkillId')?.value||'skoldar',existing=id?ruleShields.find(x=>x.id===id):null;
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY};
+ const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  let artChange=null;
  const artId=id||crypto.randomUUID();
  try{
@@ -966,7 +1022,7 @@ async function syncCharacterToCentral(c){
  if(c._dbId)centralCharacterSnapshots.set(c._dbId,fingerprint)
 }
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
-function storeSession(x){supabaseSession=x||null;if(x)localStorage.setItem('alea_supabase_session',JSON.stringify(x));else localStorage.removeItem('alea_supabase_session')}
+function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession)localStorage.setItem('alea_supabase_session',JSON.stringify(supabaseSession));else localStorage.removeItem('alea_supabase_session')}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
 async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
 async function restoreSession(){let raw=localStorage.getItem('alea_supabase_session');if(!raw)return false;try{supabaseSession=JSON.parse(raw);if(!supabaseSession?.refresh_token)throw 0;let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
