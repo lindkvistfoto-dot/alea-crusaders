@@ -58,23 +58,22 @@
   pointer-events:none;
   background:radial-gradient(ellipse at 50% 49%,transparent 17%,rgba(0,0,0,.07) 67%,rgba(0,0,0,.27));
 }
-/* Aragorn: the clothed, transparent cutout floats over the hall without
-   obscuring any clickable armor, weapon or ammunition positions. */
+/* Aragorn: figure centered between both equipment columns, without intercepting clicks. */
 .gandalf-equip-scene .gandalf-equip-center{
   position:absolute;
   z-index:0;
-  inset:1% 1% 1% 30%;
+  inset:1% 25% 1% 25%;
   display:flex;
   align-items:flex-end;
-  justify-content:flex-start;
-  background:radial-gradient(ellipse at 28% 43%,rgba(244,196,115,.06),transparent 55%);
+  justify-content:center;
+  background:radial-gradient(ellipse at 50% 43%,rgba(244,196,115,.06),transparent 58%);
   pointer-events:none;
 }
 .gandalf-equip-character{
   display:block;
   flex:0 0 auto;
-  width:auto;
-  max-width:none;
+  width:100%;
+  max-width:100%;
   height:95%;
   object-fit:contain;
   object-position:center bottom;
@@ -205,17 +204,21 @@
   font-size:clamp(10px,1.5vw,17px);
   pointer-events:none;
 }
-/* The left side of the character starts immediately after the armor column. */
-/* Large hand slots stay side by side at the top right; ammo lines up with right hand. */
-.gandalf-equip-leftHand{top:1%;right:24.5%;left:auto}
-.gandalf-equip-rightHand{top:1%;right:1%;left:auto}
-.gandalf-equip-projectiles{top:29%;right:1%;left:auto}
-.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:46%}
+/* Three large right-side slots, vertically stacked outside the centered figure. */
+.gandalf-equip-leftHand{top:1%;right:1%;left:auto;width:23%}
+.gandalf-equip-rightHand{top:27%;right:1%;left:auto;width:23%}
+.gandalf-equip-projectiles{top:53%;right:1%;left:auto;width:23%}
+/* A two-handed weapon occupies both hand positions in the new vertical stack. */
+.gandalf-equip-twohand{top:1%;right:1%;left:auto;width:23%;height:50.5%}
 .gandalf-equip-twohand .gandalf-equip-face{
-  aspect-ratio:2.07 / 1;
-  background-size:100% 100%;
+  flex:1 1 auto;
+  min-height:0;
+  aspect-ratio:auto;
+  background-image:url("./assets/gandalf-slot-transparent.svg"),url("./assets/gandalf-slot-transparent.svg");
+  background-size:100% 50%,100% 50%;
+  background-position:center top,center bottom;
 }
-.gandalf-equip-twohand .gandalf-equip-label{white-space:normal}
+.gandalf-equip-twohand .gandalf-equip-label{white-space:normal;flex:none}
 #currentEquipmentModal .current-equipment-picker{
   max-width:880px;
   margin:14px auto 0;
@@ -231,7 +234,7 @@
   #currentEquipmentModal{padding:4px}
   #currentEquipmentModal .current-equipment-modal{width:100%;max-height:calc(100dvh - 8px);padding:9px 7px 13px;border-radius:11px}
   #currentEquipmentModal .current-equipment-intro{font-size:11px;margin:6px 2px 8px}
-  .gandalf-equip-scene .gandalf-equip-center{inset:1% 1% 1% 30%}
+  .gandalf-equip-scene .gandalf-equip-center{inset:1% 25% 1% 25%}
   .gandalf-equip-figure-missing{padding:6px 4px}
   /* Keep the larger layout and vertical armor labels even on phones. */
   .gandalf-equip-scene .gandalf-equip-head .gandalf-equip-label,
