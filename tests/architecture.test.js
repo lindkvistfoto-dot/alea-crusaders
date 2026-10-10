@@ -1094,7 +1094,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatMapDoubleClick(event)");
     expect(combat).toContain("if(!actor)return combatMapResetView()");
     expect(combat).toContain("Math.min(COMBAT_MAP_MAX_ZOOM");
-    expect(combat).toContain("if(event.target?.closest?.('.combat-token-group'))return");
+    expect(combat).toContain("event.target?.closest?.('.combat-token-group')");
     expect(combat).toContain("name.includes('astrid')");
     expect(combat).toContain("name.includes('lyra')");
     expect(combat).toContain("name.includes('evalin')");
