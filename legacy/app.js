@@ -168,10 +168,11 @@ function ruleWeaponIconSrc(key){
 }
 function ruleWeaponIconHtml(rule){
  let key=String(rule?.icon_key||''),def=ruleWeaponIconDef(key),missing=!def;
- return '<span class="admin-weapon-icon'+(missing?' missing':'')+'" title="'+escAttr(def?.label||'Ikon saknas')+'">'+
+ const fallback='<span class="admin-weapon-icon'+(missing?' missing':'')+'" title="'+escAttr(def?.label||'Ikon saknas')+'">'+
   '<img src="'+escAttr(ruleWeaponIconSrc(key))+'" alt="" aria-hidden="true">'+
   '<small>'+escAttr(def?.label||'SAKNAS')+'</small>'+
  '</span>'
+ return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
 }
 function ruleWeaponIconOptions(selected=''){
  selected=String(selected||'');
@@ -713,11 +714,13 @@ function ruleArmorIconSrc(key){let d=ruleArmorIconDef(key);return './assets/armo
 function ruleShieldIconSrc(key){let d=ruleShieldIconDef(key);return './assets/armor-icons/'+(d?.key||'shield-medium')+'.svg'}
 function ruleArmorIconHtml(rule){
  let d=ruleArmorIconDef(rule?.icon_key);
- return '<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleArmorIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+ const fallback='<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleArmorIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+ return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
 }
 function ruleShieldIconHtml(rule){
  let d=ruleShieldIconDef(rule?.icon_key);
- return '<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleShieldIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+ const fallback='<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleShieldIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
+ return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
 }
 function ruleArmorIconOptions(selected=''){return '<option value="">— Välj ikon —</option>'+RULE_ARMOR_ICON_DEFS.map(x=>'<option value="'+x.key+'" '+(x.key===selected?'selected':'')+'>'+x.label+'</option>').join('')}
 function ruleShieldIconOptions(selected=''){return '<option value="">— Välj ikon —</option>'+RULE_SHIELD_ICON_DEFS.map(x=>'<option value="'+x.key+'" '+(x.key===selected?'selected':'')+'>'+x.label+'</option>').join('')}
@@ -1064,7 +1067,7 @@ function closeAdminEditor(){
  if(st?.pendingUploadPath&&st.pendingUploadPath!==st.originalBackgroundPath){
   deleteCombatSceneStoredImage(st.pendingUploadPath).catch(e=>console.warn('Kunde inte rensa osparad stridsbild',e))
  }
- eventCombatEditorState=null;resetAdminCombatIconDraft();resetAdminNpcDraft();
+ eventCombatEditorState=null;resetAdminCombatIconDraft();resetAdminNpcDraft();window.aleaEquipmentArt?.reset();
  let modal=document.querySelector('#adminEditor .admineditor');if(modal){modal.classList.remove('event-combat-editor');modal.classList.remove('slp-editor');modal.classList.remove('enemy-editor')}
  $('adminEditor').classList.add('hidden')
 }
