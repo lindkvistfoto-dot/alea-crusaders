@@ -38,3 +38,18 @@
  .equipment-admin-search{flex-direction:column;align-items:stretch}
  .gandalf-equip-face>.gandalf-equip-stack-count{min-width:18px;min-height:18px;padding:2px 4px;font-size:11px}
 }
+
+/* The same owned torch count is visible in the combat round's carried hand. */
+.combat-turn-equip-art.carryable .combat-turn-ammo-count{
+ position:absolute;z-index:2;right:3px;bottom:2px;
+ min-width:22px;min-height:22px;display:grid;place-items:center;
+ padding:3px 5px;box-sizing:border-box;
+ border:1px solid #d1a667;border-radius:99px;
+ background:#2e2115;color:#ffe4b4;
+ font:800 13px/1 system-ui,sans-serif;
+ font-variant-numeric:tabular-nums;
+ box-shadow:0 2px 5px #000b;pointer-events:none
+}
+@media(max-width:700px){
+ .combat-turn-equip-art.carryable .combat-turn-ammo-count{min-width:18px;min-height:18px;font-size:11px;padding:2px 4px}
+}
