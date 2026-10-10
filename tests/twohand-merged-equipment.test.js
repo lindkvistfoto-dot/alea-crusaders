@@ -8,7 +8,7 @@ const css=read('features/character/current-equipment-gandalf.css');
 const artCss=read('features/equipment/art.css');
 const selection=app.slice(app.indexOf('function clearTwoHandIfNeeded(){'),app.indexOf('/* v0.35.09 — Food & provisions',app.indexOf('function clearTwoHandIfNeeded(){')));
 const render=app.slice(app.indexOf('function renderCurrentEquipment(){'),app.indexOf('function openCurrentEquipment(){'));
-const twohand=app.slice(app.indexOf('function gandalfTwoHandSlotHtml(item){'),app.indexOf('function showCurrentEquipmentProjectileInfo(){'));
+const twohand=app.slice(app.indexOf('function twoHandDisplayProfile(item){'),app.indexOf('function showCurrentEquipmentProjectileInfo(){'));
 
 function fixture(hands=2){
  const current={weapons:[{equipId:'staff',name:'Stav'},{equipId:'bastard',name:'Bastardsvärd'}],
@@ -85,11 +85,53 @@ describe('Sammanhängande tvåhandsruta',()=>{
   runInNewContext(twohand,ctx);
   const html=ctx.gandalfTwoHandSlotHtml({name:'Stav'});
   expect(html).toContain('gandalf-equip-twohand');
-  expect(html).toContain('<span class="gandalf-equip-face"><img class="gandalf-equip-art"></span>');
+  expect(html).toContain('<span class="gandalf-equip-face" data-twohand-profile="staff" style="');
+  expect(html).toContain('><img class="gandalf-equip-art"></span>');
+  expect(html).toContain('--twohand-rotate:-22deg');
+  expect(html).toContain('--twohand-scale:1.52');
   expect(html).toContain('<span class="gandalf-equip-label"><b>Stav</b><small>Båda händerna</small></span>');
   expect(html).toContain("openCurrentEquipmentPicker('leftHand')");
   ctx.window.aleaEquipmentArt.imageTag=()=> '';
   expect(ctx.gandalfTwoHandSlotHtml({name:'Stav'})).toContain('gandalf-equip-value');
+ });
+ it('classifies master-register weapon types with crossbow ahead of bow and polearm ahead of axe',()=>{
+  let rule={};
+  const ctx={ruleWeaponForItem:()=>rule};
+  runInNewContext(twohand,ctx);
+  const cases=[
+   [{name:'Trästav',icon_key:'staff',tags:['staff','wood']},'staff',-22],
+   [{name:'Lyra stav'},'staff',-22],
+   [{name:'Långspjut',icon_key:'spear',tags:['spear']},'polearm',-18],
+   [{name:'Hillebard',icon_key:'halberd',tags:['polearm','axe']},'polearm',-18],
+   [{name:'Bastardsvärd',icon_key:'sword',tags:['sword']},'sword',-15],
+   [{name:'Tvåhandssvärd',icon_key:'sword'},'sword',-15],
+   [{name:'Långbåge',icon_key:'bow',tags:['bow']},'bow',-8],
+   [{name:'Tungt armborst',icon_key:'crossbow',tags:['crossbow','projectile']},'crossbow',-6],
+   [{name:'Tvåhandsyxa',icon_key:'axe',tags:['axe']},'axe',-12],
+   [{name:'Främmande vapen',icon_key:'unknown'},'standard',-17]
+  ];
+  for(const [master,expected,rotate] of cases){
+   rule=master.name==='Lyra stav'?{}:master;
+   const p=ctx.twoHandDisplayProfile({name:master.name});
+   expect(p.type).toBe(expected);
+   expect(p.rotate).toBe(rotate);
+   for(const field of ['scale','width','height','x','y'])
+    expect(Number.isFinite(p[field])).toBe(true);
+  }
+ });
+ it('does not rotate single-hand equipment and leaves the original image asset untouched',()=>{
+  expect(artCss).toContain('.gandalf-equip-twohand .gandalf-equip-art');
+  expect(artCss).toContain('var(--twohand-rotate,-17deg)');
+  expect(artCss).toContain('var(--twohand-scale,1.32)');
+  expect(artCss).not.toContain('transform:rotate(-17deg)');
+  const rule={name:'Trästav',icon_key:'staff',image_path:'weapon/asset.webp',tags:['staff']};
+  const ctx={ruleWeaponForItem:()=>rule};
+  runInNewContext(twohand,ctx);
+  const before=JSON.stringify(rule);
+  ctx.twoHandDisplayProfile({name:'Trästav'});
+  expect(JSON.stringify(rule)).toBe(before);
+  expect(app).toContain("currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand')");
+  expect(app).toContain("Number(left.hands)===2&&equipRefEquals(left,right)");
  });
  it('uses a real continuous tall frame, not two stacked square backgrounds',()=>{
   const asset=new URL('../features/character/assets/gandalf-twohand-frame.svg',import.meta.url);
