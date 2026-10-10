@@ -60,6 +60,18 @@ describe('Porträtt i turordning – SLP och fiender',()=>{
   expect(t.api.combatRowPortraitHtml(unnamed,'npc-row')).toContain('>OR</b>');
   expect(t.api.combatRowPortraitHtml({id:'hero-1',source_type:'character',name_snapshot:'Astrid'},'player-row')).toContain('<img src="blob:hero-portrait"');
  });
+ test('porträtt fungerar utan förladdat SLP-/fienderegister',async()=>{
+  const t=mount();
+  const row={...enemy,source_id:'hidden-monster',state:{portrait_image_path:'battle/hidden-monster.webp'}};
+  expect(t.api.combatRowPortraitHtml(row,'enemy-row')).toContain('>SK</b>');
+  await vi.waitFor(()=>expect(t.renders()).toBe(1));
+  expect(t.api.combatRowPortraitHtml(row,'enemy-row')).toContain('<img src="blob:battle/hidden-monster.webp"');
+ });
+ test('ny strid sparar bildsökvägarna i kombatanternas state',()=>{
+  expect(runtime).toContain('portrait_image_path:stats.portrait_image_path');
+  expect(runtime).toContain("&select=id,name,image_path,attributes,weapons,shield,armor,spells'");
+  expect(runtime).toContain("&select=id,name,image_path,attributes,weapons,shield,armor'");
+ });
  test('aktiv turpanel använder samma bildkälla som turordningen',()=>{
   expect(runtime).toContain('const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant.name_snapshot');
   expect(runtime).toContain('combatRowPortraitHtml(c,roleClass)');
