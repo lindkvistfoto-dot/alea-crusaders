@@ -79,7 +79,8 @@ describe('Mat och proviant på rollpersonen',()=>{
   expect(x.el.innerHTML).not.toContain('provisions-stepper');
   expect(x.saves).toBe(0);
   expect(app).toContain('equipment:[],provisionsDays:0,artifacts:[]');
-  expect(app).toContain('renderCharacterProvisions();let c=current.coins');
+  expect(app).toContain('renderCharacterProvisions();');
+  expect(app).toContain('const c=current.coins;');
  });
  test('förbrukning sker server-side exakt vid ökat dagnummer och inte vid render',()=>{
   expect(migration).toContain('after update of day_number on public.campaign_day_state');
