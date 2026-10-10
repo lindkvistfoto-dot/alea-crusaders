@@ -1,4 +1,4 @@
-/* Alea equipment art editor and equipped-slot previews · v0.35.50 */
+/* Alea equipment art editor and equipped-slot previews · v0.35.51 */
 .item-art-editor{grid-column:1/-1;border:1px solid #af8753;border-radius:11px;background:linear-gradient(140deg,#fdf2d8,#ead5ae);padding:12px;color:#382719}
 .item-art-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
 .item-art-heading strong{font:700 17px Georgia,serif;color:#5c3517}
@@ -22,4 +22,22 @@
  .item-art-controls{gap:7px}
  .item-art-controls small{font-size:11px}
  .gandalf-equip-face:has(.gandalf-equip-art) .gandalf-equip-value{font-size:9px}
+}
+
+/* Four-piece body-zone images in the regular armor ruleset. */
+.item-art-armor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0 10px}
+.item-art-zone{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;padding:12px 8px;background:rgba(72,48,28,.08);border:1px solid rgba(92,53,23,.22);border-radius:10px}
+.item-art-zone>strong{font:700 15px Georgia,serif;color:#5c3517}
+.item-art-zone .item-art-preview{width:min(100%,150px);max-width:none;align-self:center}
+.item-art-zone .item-art-controls{align-items:center;gap:6px;text-align:center;width:100%}
+.item-art-zone .item-art-controls small{max-width:100%;overflow-wrap:anywhere}
+.item-art-zone .item-art-upload{min-height:36px;box-sizing:border-box}
+.item-art-armor>small{display:block;font:12px/1.45 system-ui,sans-serif;color:#5f4f39}
+.item-art-armor-count{display:block;font-size:11px;color:#786548;font-weight:650;margin-top:2px}
+@media(max-width:440px){
+ .item-art-armor-grid{gap:7px}
+ .item-art-zone{padding:8px 3px}
+ .item-art-zone .item-art-preview{width:min(100%,118px)}
+ .item-art-zone .item-art-controls small{font-size:10px}
+ .item-art-zone .item-art-upload{padding:8px}
 }
