@@ -2915,7 +2915,7 @@ function combatAttackProfile(combatant){
   weapons:Array.isArray(stored.weapons)?stored.weapons:[],
   currentEquipment:stored.currentEquipment||null,
   shields:Array.isArray(stored.shields)?stored.shields:[],
-  armor:Array.isArray(stored.armor)?stored.armor:[],projectiles:Array.isArray(stored.projectiles)?stored.projectiles:[],
+  armor:Array.isArray(stored.armor)?stored.armor:[],equipment:Array.isArray(stored.equipment)?stored.equipment:[],projectiles:Array.isArray(stored.projectiles)?stored.projectiles:[],
   damage_bonus:stored.damage_bonus??null,
   sty:combatNumber(stored.sty,combatNumber(combatant?.state?.sty,10)),
   sto:combatNumber(stored.sto,combatNumber(combatant?.state?.sto,10)),
@@ -2936,7 +2936,7 @@ function combatAttackProfile(combatant){
   ...stored,
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(src.weapons)?src.weapons:(Array.isArray(stored.weapons)?stored.weapons:[])),
   currentEquipment:data.currentEquipment||stored.currentEquipment||null,
-  shields,armor,projectiles:Array.isArray(data.projectiles)?data.projectiles:(Array.isArray(stored.projectiles)?stored.projectiles:[]),
+  shields,armor,equipment:Array.isArray(data.equipment)?data.equipment:(Array.isArray(stored.equipment)?stored.equipment:[]),projectiles:Array.isArray(data.projectiles)?data.projectiles:(Array.isArray(stored.projectiles)?stored.projectiles:[]),
   damage_bonus:derived.Skadebonus??derived.skadebonus??stored.damage_bonus??null,
   sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),sty),
   sto:combatNumber(combatEffectiveAttribute(combatant,'STO'),sto),
@@ -4951,23 +4951,25 @@ function combatTurnEquipmentHtml(combatant){
  const weapons=Array.isArray(profile.weapons)?profile.weapons:[];
  const shields=Array.isArray(profile.shields)?profile.shields:[];
  const armor=Array.isArray(profile.armor)?profile.armor:[];
+ const equipment=Array.isArray(profile.equipment)?profile.equipment:[];
  const masterArt=path=>typeof window!=='undefined'?window.aleaEquipmentArt?.src(path)||'':'';
  const srcImg=(path,cls='')=>{
   const url=masterArt(path);
   return url?'<img class="'+cls+'" src="'+escAttr(url)+'" alt="" loading="lazy">':'';
  };
  const itemForRef=(ref,kind)=>ref?.itemId?
-  (kind==='weapon'?weapons:kind==='shield'?shields:armor).find(
+  (kind==='weapon'?weapons:kind==='shield'?shields:kind==='equipment'?equipment:armor).find(
    item=>String(item.equipId||item.id||'')===String(ref.itemId))||null:null;
  const weaponRule=item=>item?(typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null):null;
  const shieldRule=item=>item?(typeof characterShieldRule==='function'?characterShieldRule(item):
   (typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''))):null;
- const imageTile=(kind,label,item,path,wide=false)=>{
+ const imageTile=(kind,label,item,path,wide=false,count=null)=>{
   const img=srcImg(path,'combat-turn-art');
   const name=item?.name||'Ingen';
   return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+'">'+
    '<span>'+escAttr(label)+'</span>'+
-   '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+'</div>'+
+   '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+
+    (count===null?'':'<b class="combat-turn-ammo-count" title="'+count+' facklor kvar">'+count+'</b>')+'</div>'+
    '<small title="'+escAttr(name)+'">'+escAttr(name)+'</small></div>';
  };
  const left=eq.leftHand,right=eq.rightHand;
@@ -4976,13 +4978,18 @@ function combatTurnEquipmentHtml(combatant){
   (Number(left.hands)===2||Number(right.hands)===2));
  const shownWeapons=[],seenKeys=new Set();
  const hand=(slot,label)=>{
-  const ref=eq[slot],kind=ref?.kind,item=kind==='weapon'?itemForRef(ref,'weapon'):kind==='shield'?itemForRef(ref,'shield'):null;
+  const ref=eq[slot],kind=ref?.kind,item=['weapon','shield','equipment'].includes(kind)?itemForRef(ref,kind):null;
   if(kind==='weapon'&&item){
    const rule=weaponRule(item),key=String(item.equipId||item.id||ref.itemId);
    if(!seenKeys.has(key)){shownWeapons.push({item,rule});seenKeys.add(key)}
    return imageTile('weapon',label,item,rule?.image_path||item.image_path);
   }
   if(kind==='shield'&&item)return imageTile('shield',label,item,shieldRule(item)?.image_path||item.image_path);
+  if(kind==='equipment'&&item){
+   const catalog=window.aleaEquipmentCatalog;
+   const count=catalog?.torchCount({equipment},item)??null;
+   return imageTile('carryable',label,item,catalog?.imagePath(item)||item.image_path,false,count)
+  }
   return imageTile('empty',label,null,null)
  };
  let hands;
