@@ -1,7 +1,7 @@
 {
   "name": "alea-crusaders",
   "private": true,
-  "version": "0.35.72",
+  "version": "0.35.73",
   "type": "module",
   "scripts": {
     "dev": "vite",
