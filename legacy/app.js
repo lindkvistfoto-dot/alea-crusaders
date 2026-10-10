@@ -22,7 +22,28 @@ function toggleLoginPassword(){let e=$('loginPassword');e.type=e.type==='passwor
 syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
-async function enterApp(){$('loginScreen').classList.add('hidden');document.querySelector('header').classList.remove('hidden');document.querySelector('main').classList.remove('hidden');refreshAuthUI();try{await loadCentralData();await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);await loadCampaignDayState()}catch(e){console.error('Central data:',e);alert('Kunde inte läsa central data från Supabase: '+e.message)}goHome();refreshAuthUI()}
+/* Navigation must not be reset by asynchronous startup: the user may already
+   have opened a character, map, shop or dice view while central data loads. */
+async function enterApp(){
+ $('loginScreen').classList.add('hidden');
+ document.querySelector('header').classList.remove('hidden');
+ document.querySelector('main').classList.remove('hidden');
+ goHome(); // Initial route only. Never force it again after awaits.
+ refreshAuthUI();
+ try{
+  await loadCentralData();
+  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);
+  await loadCampaignDayState();
+ }catch(e){
+  console.error('Central data:',e);
+  alert('Kunde inte läsa central data från Supabase: '+e.message)
+ }finally{
+  // Roster may have opened before campaign characters were fetched.
+  // Refresh content only, without changing the currently visible page.
+  renderCards();
+  refreshAuthUI()
+ }
+}
 /* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */
 let supabaseRefreshPromise=null;
 function supabaseTokenExpiry(){
