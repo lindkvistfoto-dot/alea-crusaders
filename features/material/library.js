@@ -2,9 +2,9 @@
 import './zip-import.js?v=0.34.92';
 import './storage.js?v=0.34.92';
 import {createAragorn} from './links.js?v=0.34.83';
-import {createLegolas} from './viewer.js?v=0.35.82';
-import {mountFrodo} from './frodo-ui.js?v=0.35.82';
-import {mountSam} from './player-folder-ui.js?v=0.35.82';
+import {createLegolas} from './viewer.js?v=0.35.83';
+import {mountFrodo} from './frodo-ui.js?v=0.35.83';
+import {mountSam} from './player-folder-ui.js?v=0.35.83';
 import {mountGaladriel} from './galadriel-ui.js?v=0.34.91';
 
 const BILBO_PAGE_SIZE=24;
