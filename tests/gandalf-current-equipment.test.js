@@ -9,7 +9,7 @@ const assetPath=name=>new URL('../features/character/assets/'+name,import.meta.u
 
 describe('Gandalf – aktuell utrustning',()=>{
  it('uses the provided transparent square and tall gold frames without changing the hall',()=>{
-   expect(html).toContain('current-equipment-gandalf.css?v=0.35.58');
+   expect(html).toContain('current-equipment-gandalf.css?v='+JSON.parse(read('package.json')).version);
    expect(css).toContain('assets/alea-frame-square-transparent.png');
    expect(css).toContain('assets/alea-frame-tall-transparent.png');
    expect(css).toContain('assets/gandalf-hall.webp');

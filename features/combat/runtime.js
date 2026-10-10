@@ -4261,7 +4261,7 @@ function combatMapPointerDown(event){
   }
   return
  }
- try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
+ // Do not capture on mouse-down: the destination polygon must receive its click.
  combatMapPan={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY,moved:false}
 }
 function combatMapPointerMove(event){
@@ -4292,7 +4292,11 @@ function combatMapPointerMove(event){
  const pan=combatMapPan;
  if(!pan||pan.pointerId!==event.pointerId)return;
  const dx=event.clientX-pan.lastX,dy=event.clientY-pan.lastY;
- if(Math.abs(event.clientX-pan.startX)+Math.abs(event.clientY-pan.startY)>5)pan.moved=true;
+ if(!pan.moved&&Math.abs(event.clientX-pan.startX)+Math.abs(event.clientY-pan.startY)>5){
+  pan.moved=true;
+  // Capture only after a genuine pan starts, so ordinary hex clicks are not retargeted to the SVG.
+  try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
+ }
  pan.lastX=event.clientX;pan.lastY=event.clientY;
  if(!pan.moved)return;
  event.preventDefault();
