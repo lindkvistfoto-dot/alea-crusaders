@@ -26,12 +26,12 @@ describe('Aragorn – helfigur i aktuell utrustning',()=>{
   expect(css).toContain('object-fit:contain');
   expect(css).toContain('inset:1% 29% 1%');
   expect(css).toContain('max-width:none');
-  expect(css).toMatch(/\.gandalf-equip-character\{[^}]*height:100%/);
+  expect(css).toMatch(/\.gandalf-equip-character\{[^}]*height:95%/);
   expect(css).toContain('object-position:center bottom');
   expect(css).toContain('pointer-events:none');
   expect(css).toContain('.gandalf-equip-character');
   expect(css).toContain('@media(max-width:620px)');
-  expect(html).toContain('Alea Crusaders v0.35.45');
+  expect(html).toContain('Alea Crusaders v0.35.46');
   expect(html).toContain('id="tabImages"');
  });
 });
