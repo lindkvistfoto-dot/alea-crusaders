@@ -1755,9 +1755,58 @@ function gandalfTwoHandSlotHtml(item){
    (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
+/* Automatic ammunition in Aktuell utrustning.
+   Derived from equipped hands + shared master rules; NEVER adds stock or saves a
+   duplicate projectile selection to the character. Two-hand refs count only once. */
+function currentEquipmentProjectileEntries(character){
+ const hands=['leftHand','rightHand'],eq=character?.currentEquipment||{},seenWeapons=new Set(),byKey=new Map();
+ for(const slot of hands){
+  const ref=eq[slot];
+  if(ref?.kind!=='weapon'||!ref.itemId||seenWeapons.has(ref.itemId))continue;
+  seenWeapons.add(ref.itemId);
+  const item=equipItemByRef(character,ref);
+  if(!item)continue;
+  const master=ruleWeaponForItem(item),category=master?.category||item.weaponCategory||item.category;
+  if(category!=='projectile'&&category!=='thrown')continue;
+  const key=master?.projectile_key||item.projectileKey||item.projectile_key||
+   canonicalWeaponProjectileKey(category,master?.name||item.name,master?.icon_key||item.icon_key,master?.tags||item.tags);
+  const projectile=ruleProjectileFromKey(key);
+  if(!key||!projectile)continue;
+  const imagePath=category==='thrown'?(master?.image_path||projectileMasterImagePath(projectile)):
+   projectileMasterImagePath(projectile);
+  const row=byKey.get(key);
+  if(row){row.weapons.push(item.name||master?.name||'Vapen');continue}
+  const count=(character.projectiles||[]).reduce((total,stock)=>
+   total+(characterProjectileKey(stock)===key?Math.max(0,Math.floor(Number(stock.count)||0)):0),0);
+  byKey.set(key,{key,name:projectile.name,count,imagePath,
+   weapons:[item.name||master?.name||'Vapen'],category});
+ }
+ return [...byKey.values()]
+}
+function currentEquipProjectileSlotHtml(character){
+ const entries=currentEquipmentProjectileEntries(character);
+ const occupied=entries.length>0,dual=entries.length>1;
+ const description=occupied?entries.map(p=>p.name+': '+p.count+' kvar').join('; '):'Inget avståndsvapen utrustat';
+ const thumb=occupied?entries.map(p=>{
+  const url=window.aleaEquipmentArt?.src(p.imagePath)||'';
+  return '<span class="gandalf-ammo-item'+(p.count===0?' out':'')+'">'+
+   (url?'<img src="'+escAttr(url)+'" alt="" loading="lazy">':
+    '<span class="gandalf-ammo-fallback">'+escAttr(p.name)+'</span>')+
+   '<span class="gandalf-ammo-count" title="'+escAttr(p.name+': '+p.count+' kvar')+'">'+p.count+'</span></span>'
+ }).join(''):'';
+ const short=occupied?entries.map(p=>p.name+' · '+p.count).join(' / '):'Inget valt';
+ return '<button type="button" class="gandalf-equip-slot gandalf-equip-projectiles'+(occupied?' equipped':' empty')+(dual?' dual':'')+
+  '" onclick="showCurrentEquipmentProjectileInfo()" title="'+escAttr(description)+'" aria-label="Projektiler: '+escAttr(description)+'">'+
+  '<span class="gandalf-equip-face">'+(occupied?'<span class="gandalf-ammo-images">'+thumb+'</span>':
+   '<span class="gandalf-ammo-empty">—</span>')+'</span>'+
+  '<span class="gandalf-equip-label">Projektiler<small>'+escAttr(short)+'</small></span></button>'
+}
 function showCurrentEquipmentProjectileInfo(){
- if(typeof showBackupToast==='function')showBackupToast('Projektiler kopplas i Frodo-steget');
- else alert('Projektilrutan kopplas till ammunition i Frodo-steget.');
+ const entries=currentEquipmentProjectileEntries(current);
+ const message=entries.length?entries.map(p=>p.name+': '+p.count+' kvar'+(p.count===0?' – fyll på under Vapen → Projektiler':'')).join(' · '):
+  'Utrusta en pilbåge, ett armborst, en slunga, ett blåsrör eller ett kastvapen. Då visas projektilen automatiskt här.';
+ if(typeof showBackupToast==='function')showBackupToast(message);
+ else alert(message);
 }
 /* Aragorn: only the clothed/base cutout belongs in the current-equipment stage.
    The armored variant remains in the character's Bilder gallery for later use. */
@@ -1777,8 +1826,7 @@ function renderCurrentEquipment(){
   '<div class="gandalf-equip-center" aria-hidden="true">'+currentEquipmentFigureHtml(current)+'</div>'+
   ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
   hands+
-  '<button type="button" class="gandalf-equip-slot gandalf-equip-projectiles empty" onclick="showCurrentEquipmentProjectileInfo()" title="Projektiler kopplas i Frodo-steget" aria-label="Projektiler, kommer i nästa steg">'+
-  '<span class="gandalf-equip-face"></span><span class="gandalf-equip-label">Projektiler</span></button>'+
+  currentEquipProjectileSlotHtml(current)+
   '</section><div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
  if(currentEquipmentPickerSlot)renderCurrentEquipmentPicker();
 }
