@@ -6914,3 +6914,161 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  .combat-map-presets{width:30px;padding:3px 2px 3px 0}
  .combat-map-preset{width:27px;min-height:70px;padding:5px 2px;font-size:10px}
 }
+
+/* v0.35.52: armor admin desktop table + accessible mobile cards.
+   The old 980px-wide grid pushed the edit buttons off-screen on phones. */
+.adminarmortable{
+ display:block;
+ width:100%;
+ min-width:0;
+ max-width:100%;
+ box-sizing:border-box;
+ overflow-x:auto;
+ overflow-y:visible;
+}
+.armor-admin-row{
+ display:grid;
+ grid-template-columns:64px minmax(155px,1.4fr) 82px 56px 64px 100px 96px 62px 95px minmax(165px,1fr) 90px;
+ min-width:1100px;
+ align-items:stretch;
+ border-bottom:1px solid #443527;
+}
+.armor-admin-row>div{
+ min-width:0;
+ padding:10px 8px;
+ box-sizing:border-box;
+ overflow-wrap:anywhere;
+}
+.armor-admin-header>div{
+ background:#6d1e1e;
+ font-weight:800;
+ white-space:normal;
+}
+.armor-admin-record:nth-of-type(odd)>div{background:rgba(255,255,255,.025)}
+.armor-admin-row .armor-cell-actions{
+ display:flex;
+ flex-direction:row;
+ justify-content:center;
+ align-items:center;
+ gap:5px;
+}
+.armor-admin-row .armor-cell-actions button{
+ flex:0 0 auto;
+ min-width:33px;
+ min-height:36px;
+}
+.adminarmortable>.admin-master-footnote{padding:12px}
+@media(max-width:700px){
+ .adminarmortable{
+  display:flex;
+  flex-direction:column;
+  overflow:visible;
+  border:0;
+  background:transparent;
+  gap:9px;
+  font-size:13px;
+ }
+ .armor-admin-header{display:none}
+ .armor-admin-record{
+  display:grid;
+  grid-template-columns:60px minmax(0,1fr) 88px;
+  grid-template-rows:auto auto auto auto auto;
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+  gap:7px 9px;
+  padding:12px 10px;
+  border:1px solid #695139;
+  border-radius:11px;
+  background:linear-gradient(145deg,#2b231b,#1c1713);
+ }
+ .armor-admin-record>div{
+  display:block;
+  min-width:0;
+  padding:0;
+  border:0;
+  background:transparent!important;
+ }
+ .armor-admin-record .armor-cell-icon{
+  grid-column:1;
+  grid-row:1/span 2;
+  display:grid;
+  align-content:start;
+  justify-items:center;
+ }
+ .armor-admin-record .armor-cell-name{
+  grid-column:2;
+  grid-row:1;
+  align-self:center;
+  line-height:1.25;
+ }
+ .armor-admin-record .armor-cell-name b{
+  color:#f1ddba;
+  font-size:15px;
+  overflow-wrap:anywhere;
+ }
+ .armor-admin-record .armor-cell-type{
+  grid-column:2;
+  grid-row:2;
+  align-self:start;
+  font-size:12px;
+  color:#cbb590;
+ }
+ .armor-admin-record .armor-cell-actions{
+  grid-column:3;
+  grid-row:1/span 2;
+  align-self:start;
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+ }
+ .armor-admin-record .armor-cell-actions button{
+  min-width:39px;
+  min-height:42px;
+  padding:6px;
+  touch-action:manipulation;
+ }
+ .armor-admin-record .armor-cell-abs{grid-column:1;grid-row:3}
+ .armor-admin-record .armor-cell-weight{grid-column:2;grid-row:3}
+ .armor-admin-record .armor-cell-bep{grid-column:3;grid-row:3}
+ .armor-admin-record .armor-cell-price{grid-column:1;grid-row:4}
+ .armor-admin-record .armor-cell-expert{grid-column:2;grid-row:4}
+ .armor-admin-record .armor-cell-source{grid-column:3;grid-row:4}
+ .armor-admin-record .armor-cell-description{
+  grid-column:1/-1;
+  grid-row:5;
+  color:#cdbda7;
+  font-size:12px;
+  line-height:1.4;
+  padding-top:6px;
+  border-top:1px solid rgba(184,145,82,.22);
+ }
+ .armor-admin-record .armor-cell-abs:before,
+ .armor-admin-record .armor-cell-weight:before,
+ .armor-admin-record .armor-cell-bep:before,
+ .armor-admin-record .armor-cell-price:before,
+ .armor-admin-record .armor-cell-expert:before,
+ .armor-admin-record .armor-cell-source:before{
+  display:block;
+  margin-bottom:3px;
+  font:700 10px/1.2 system-ui,sans-serif;
+  color:#b6a183;
+  letter-spacing:.02em;
+ }
+ .armor-admin-record .armor-cell-abs:before{content:"ABS"}
+ .armor-admin-record .armor-cell-weight:before{content:"Viktkod"}
+ .armor-admin-record .armor-cell-bep:before{content:"BEP"}
+ .armor-admin-record .armor-cell-price:before{content:"Pris/BEP"}
+ .armor-admin-record .armor-cell-expert:before{content:"Expert"}
+ .armor-admin-record .armor-cell-source:before{content:"Källa"}
+ .armor-admin-record .admin-source-badge{
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+ .adminarmortable>.admin-master-footnote{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid rgba(184,145,82,.22);
+ }
+}
