@@ -396,3 +396,15 @@ font-family:Georgia,serif;text-align:center;text-transform:uppercase;letter-spac
 .shop-alchemy-price-edit{margin-top:10px;border:1px solid #c5a668;background:#382819;color:#f8e7c2;border-radius:7px;padding:7px 10px;cursor:pointer}
 .shop-alchemy .shop-item-row.expanded{border-color:#8b9763}
 @media(max-width:560px){.shop-alchemy-facts{grid-template-columns:1fr}.shop-alchemy .shop-hero-media::before{font-size:72px}}
+
+
+/* v0.35.63 — illustrated alchemist shop (user-supplied photograph). */
+.shop-alchemy .shop-hero-media::before{content:none}
+.shop-alchemy .shop-hero-media img{
+  object-position:center 46%;
+  filter:saturate(1.03) contrast(1.02) brightness(.97);
+}
+.shop-alchemy .shop-hero-media img.loaded + .shop-hero-image-fallback{
+  visibility:hidden;
+  opacity:0;
+}
