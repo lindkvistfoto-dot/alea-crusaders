@@ -32,7 +32,7 @@ async function enterApp(){
  refreshAuthUI();
  try{
   await loadCentralData();
-  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps()]);
+  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(),window.aleaEquipmentCatalog?.load()]);
   await loadCampaignDayState();
  }catch(e){
   console.error('Central data:',e);
@@ -1196,6 +1196,7 @@ const ADMIN_SECTION_META={
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
+ equipment:['Utrustning','Gemensamt register för facklor, lyktor och övriga föremål'],
  projectiles:['Projektiler','Centralt register för ammunition och kastvapen'],
  weapons:['Vapen','Centralt vapenregister'],
  armors:['Rustningar','Centralt rustningsregister enligt Expert'],
@@ -1210,6 +1211,7 @@ function renderAdminOverviewCounts(){
  set('adminCountPeople',campaignNpcs.length);
  set('adminCountEnemies',campaignMonsters.length);
  set('adminCountScenes',campaignCombatScenes.length);
+ set('adminCountEquipment',window.aleaEquipmentCatalog?.count()||0);
  set('adminCountPlaces',campaignSites.length);
  Object.entries(RULE_REGISTRY_DEFS).forEach(([key,def])=>set(def.countId,ruleRegistryCount(key,def.count())));
  set('adminCountCampaigns',adminData.campaigns.length);
@@ -1229,7 +1231,10 @@ async function openAdminSection(key='overview'){
  if(isOverview)renderAdminOverviewCounts();
  let ruleDef=adminRuleRegistryDef(activeAdminSection);
  if(ruleDef){await refreshAdminRuleRegistry(activeAdminSection);}
- if(activeAdminSection==='sounds'){
+ if(activeAdminSection==='equipment'){
+  await window.aleaEquipmentCatalog?.refresh();
+  renderAdminOverviewCounts();
+ }else if(activeAdminSection==='sounds'){
   window.aleaAudio?.mountAdmin?.();
   await window.aleaAudio?.renderAdmin?.()
  }else if(activeAdminSection==='events'){
@@ -1714,6 +1719,7 @@ function currentEquipmentItemArtPath(ref,item,slot){
  if(!ref||!item)return null;
  if(ref.kind==='weapon')return ruleWeaponForItem(item)?.image_path||null;
  if(ref.kind==='shield')return characterShieldRule(item)?.image_path||null;
+ if(ref.kind==='equipment')return window.aleaEquipmentCatalog?.imagePath(item)||null;
  if(ref.kind==='armor'){
   const type=armorTypeById(item.armorTypeId||item.armor_type_id||'')||
    armorTypeByKey(item.armorTypeKey||item.armor_type_key||'')||
@@ -1726,9 +1732,12 @@ function currentEquipSlotHtml(slot){
  const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
  const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
+ const torchCount=ref?.kind==='equipment'?window.aleaEquipmentCatalog?.torchCount(current,item):null;
+ const countBadge=torchCount!==null&&torchCount!==undefined?
+  '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+art+(occupied?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+countBadge+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 /* Narsil-style: one square master asset per weapon. Its two-hand placement is
@@ -1856,7 +1865,13 @@ function renderCurrentEquipment(){
 }
 function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);if(refreshEquippedWeaponGrip(current))save();currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
 function closeCurrentEquipment(){currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden')}
-function openCurrentEquipmentPicker(slot){currentEquipmentPickerSlot=slot;renderCurrentEquipment()}
+function openCurrentEquipmentPicker(slot){
+ currentEquipmentPickerSlot=slot;renderCurrentEquipment();
+ // The master catalogue may still be loading after login.
+ window.aleaEquipmentCatalog?.load().then(()=>{
+  if(currentEquipmentPickerSlot===slot)renderCurrentEquipmentPicker()
+ }).catch(e=>console.warn('Bärbara föremål kunde inte hämtas',e))
+}
 function closeCurrentEquipmentPicker(){currentEquipmentPickerSlot=null;renderCurrentEquipment()}
 function equipmentChoiceRow(kind,item,slot){
  let id=escAttr(item.equipId),name=escAttr(item.name||'Namnlös'),meta=currentEquipKindLabel(kind),actions='';
@@ -1876,13 +1891,13 @@ function equipmentChoiceRow(kind,item,slot){
   }
  }
  if(kind==='shield')meta+=' · FV '+escAttr(item.fv||'—')+' · BEP '+escAttr(item.bep||'—');
- if(kind==='equipment')meta+=' · BEP '+escAttr(item.bep||'—');
+ if(kind==='equipment')meta+=' · BEP '+escAttr(item.bep??'—');
  if(kind!=='weapon')actions='<button type="button" onclick="chooseCurrentEquipment(\''+slot+'\',\''+kind+'\',\''+id+'\',1)">Välj</button>';
  return '<div class="current-equipment-choice"><div><div class="current-equipment-choice-name">'+name+'</div><div class="current-equipment-choice-meta">'+meta+'</div></div><div class="current-equipment-choice-actions">'+actions+'</div></div>'
 }
 function renderCurrentEquipmentPicker(){
  let slot=currentEquipmentPickerSlot,el=$('currentEquipmentPicker');if(!slot||!el)return;el.classList.remove('hidden');
- let hand=slot==='leftHand'||slot==='rightHand',groups=hand?[['weapon','Vapen',current.weapons||[]],['shield','Sköldar',current.shields||[]],['equipment','Utrustning',current.equipment||[]]]:[['armor','Rustning',current.armor||[]]];
+ let hand=slot==='leftHand'||slot==='rightHand',groups=hand?[['weapon','Vapen',current.weapons||[]],['shield','Sköldar',current.shields||[]],['equipment','Utrustning som kan bäras',(current.equipment||[]).filter(x=>window.aleaEquipmentCatalog?.canCarry(x))]]:[['armor','Rustning',current.armor||[]]];
  let html='<div class="current-equipment-pickerhead"><h3>Välj · '+escAttr(CURRENT_EQUIP_LABELS[slot])+'</h3><button class="current-equipment-picker-close" onclick="closeCurrentEquipmentPicker()">×</button></div><button type="button" class="current-equipment-emptybtn" onclick="clearCurrentEquipmentSlot(\''+slot+'\')">— Tomt fält —</button>';
  groups.forEach(([kind,label,items])=>{html+='<div class="current-equipment-group"><h4>'+label+'</h4>'+(items.length?items.map(item=>equipmentChoiceRow(kind,item,slot)).join(''):'<div class="muted">Inget tillagt.</div>')+'</div>'});
  el.innerHTML=html;setTimeout(()=>el.scrollIntoView({block:'nearest',behavior:'smooth'}),0)
@@ -1892,6 +1907,9 @@ function clearTwoHandIfNeeded(){
  if(l&&r&&equipRefEquals(l,r)&&(Number(l.hands)===2||Number(r.hands)===2)){eq.leftHand=null;eq.rightHand=null}
 }
 function chooseCurrentEquipment(slot,kind,itemId,hands=1){
+ if(kind==='equipment'&&!window.aleaEquipmentCatalog?.canCarry((current?.equipment||[]).find(x=>x.equipId===itemId))){
+  alert('Detta föremål är inte markerat Kan bäras i utrustningsregistret.');return
+ }
  ensureEquipmentState(current);let eq=current.currentEquipment,hand=slot==='leftHand'||slot==='rightHand';
  if(!hand){eq[slot]={kind,itemId};currentEquipmentPickerSlot=null;save();renderCurrentEquipment();return}
  clearTwoHandIfNeeded();
