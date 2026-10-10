@@ -4479,7 +4479,17 @@ function renderCombatMap(){
    visual=miniature||('<circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text>')
   }
   const footprintVisual=footprint.length>1?points.map(p=>'<polygon class="combat-footprint-hex" points="'+combatHexPoints(p.x,p.y,g.size*.94)+'" fill="'+(side==='hero'?'#4fa86d':side==='enemy'?'#cb5e52':'#739ec0')+'" fill-opacity="'+(isPlanning?'.4':'.24')+'" stroke="'+(attack?'#f5cb69':side==='hero'?'#79d9a0':side==='enemy'?'#ff9a86':'#9bc9e3')+'" stroke-width="'+(selected||turn?'3':'1.8')+'"/>').join(''):'';
-  return '<g class="combat-token-group'+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+visual+'<title>'+escAttr(c.name_snapshot)+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
+  // Turmarkeringen ligger UTANFÖR lagfärgad porträttram och fungerar även
+  // för generiska cirkeltokens. Alltid förankrad i karthexens centrum.
+  const turnHalo=turn&&!defeated
+   ?'<polygon class="combat-active-turn-aura" points="'+combatHexPoints(cell.x,cell.y,g.size*.94)+'"/>'+
+    '<polygon class="combat-active-turn-outline" points="'+combatHexPoints(cell.x,cell.y,g.size*.88)+'"/>'
+   :'';
+  const turnBadge=turn&&!defeated
+   ?'<g class="combat-active-turn-badge" transform="translate('+(cell.x+g.size*.57)+' '+(cell.y-g.size*.67)+') scale('+(g.size/42).toFixed(3)+')">'+
+    '<rect x="-18" y="-10" width="36" height="18" rx="6"/><text x="0" y="0" text-anchor="middle">TUR</text></g>'
+   :'';
+  return '<g class="combat-token-group'+(turn?' active-turn':'')+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+turnHalo+visual+turnBadge+'<title>'+escAttr(c.name_snapshot)+(turn?' · på tur':'')+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
  }).join('');
  // Invisible click layer ABOVE miniatures; ensures the preview cannot swallow
  // the second click while planning a desktop double-click movement.
@@ -4551,7 +4561,7 @@ function combatantCard(c,index=0){
   '<span class="combat-order-number"><b>'+order+'</b></span>'+
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
-   '<div class="name">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</div>'+
+   '<div class="name"><span class="combatant-name-text">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</span>'+(turn?'<span class="combat-turn-now-label">PÅ TUR</span>':'')+'</div>'+
    '<div class="meta">'+roleLabel+(c.state?.summoner_id?' · Styrs av '+escAttr(combatSummonerName(c)):'')+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
