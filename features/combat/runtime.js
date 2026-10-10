@@ -140,6 +140,7 @@ let combatGmPlacementId=null;
 let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
+let combatMovementLastClick=null,combatMovementCommitting=false,combatMapLastPointerType='mouse';
 let combatActionMenuId=null,combatActionMenuKind=null;
 let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
 let combatMapPreset='large',combatMapPresetActorKey='';
@@ -2722,10 +2723,21 @@ function combatSetMovementPreview(q,r,{render=true}={}){
 function previewCombatMovementToHex(event,q,r){
  event?.stopPropagation?.();
  if(Date.now()<combatMapSuppressClickUntil)return false;
- return combatSetMovementPreview(q,r)
+ const actor=combatMovementPlanningActor();if(!actor)return false;
+ // Clicking a destination rebuilds the SVG; track mouse clicks independently
+ // because some browsers no longer dispatch dblclick to the replaced polygon.
+ const now=Date.now(),last=combatMovementLastClick;
+ const mouseClick=combatMapLastPointerType==='mouse'&&Number(event?.detail)>0;
+ const isDouble=mouseClick&&last?.actorId===String(actor.id)&&
+  last.q===Number(q)&&last.r===Number(r)&&now>=last.when&&now-last.when<=500;
+ if(!combatSetMovementPreview(q,r,{render:!isDouble})){combatMovementLastClick=null;return false}
+ combatMovementLastClick=mouseClick&&!isDouble
+  ?{actorId:String(actor.id),q:Number(q),r:Number(r),when:now}:null;
+ return isDouble?commitCombatMovementPlan():true
 }
 function combatMovementButton(event,combatantId){
  event?.stopPropagation?.();
+ combatMovementLastClick=null;
  combatActionMenuId=null;
  const actor=combatActiveActor();
  if(!actor||String(actor.id)!==String(combatantId)||!combatCanPlanMovement(actor))return;
@@ -2762,6 +2774,7 @@ function combatNearestRuntimeCell(point){
  return best
 }
 function combatMovementDragStart(event,combatantId){
+ combatMovementLastClick=null;
  const actor=combatMovementPlanningActor();
  if(!actor||String(actor.id)!==String(combatantId))return;
  event.stopPropagation();event.preventDefault();
@@ -4026,14 +4039,15 @@ async function combatRecordFullMoveAction(combatant){
 }
 async function commitCombatMovementPlan(){
  const actor=combatMovementPlanningActor(),plan=combatMovementPlan;
- if(!actor||!plan||!combatCanPlanMovement(actor))return;
+ if(combatMovementCommitting||!actor||!plan||!combatCanPlanMovement(actor))return;
  const q=Number(plan.q),r=Number(plan.r),cost=Number(plan.cost)||0;
  if(cost<=0||!combatFootprintCanStand(actor,q,r))return;
  const route=combatMovementHexPath(actor,q,r);
  if(!route||route.cost!==cost)throw new Error('Förflyttningens väg stämmer inte längre. Försök igen.');
  const fromQ=Number(actor.q)||0,fromR=Number(actor.r)||0;
- await window.combatUndoBeforeActorAction?.();
+ combatMovementCommitting=true;
  try{
+  await window.combatUndoBeforeActorAction?.();
   const moved=await dbJson('rpc/alea_move_multhex',{
    method:'POST',headers:{'Prefer':'return=representation'},
    body:JSON.stringify({p_combatant_id:actor.id,p_from_q:fromQ,p_from_r:fromR,
@@ -4051,6 +4065,8 @@ async function commitCombatMovementPlan(){
  }catch(error){
   console.error('Kunde inte låsa förflyttning',error);
   alert('Kunde inte låsa förflyttningen: '+(error?.message||error))
+ }finally{
+  combatMovementCommitting=false
  }
 }
 async function moveActiveCombatantToHex(q,r){
@@ -4240,10 +4256,39 @@ function combatMapWheel(event){
 function combatMapTouchGate(event){
  if((event.touches?.length||0)>=2&&event.cancelable)event.preventDefault()
 }
+function combatMapDoubleClick(event){
+ const actor=combatMovementPlanningActor();
+ if(!actor)return combatMapResetView();
+ // Desktop double-clicking a reachable hex is the shortcut for select + move.
+ if(combatMapLastPointerType!=='mouse')return combatMapResetView();
+ event?.preventDefault?.();event?.stopPropagation?.();
+ if(combatMovementCommitting||combatGmPlacementId||combatAreaPlacementActive)return;
+ if(event?.target?.closest?.('.combat-token-group'))return;
+ let q,r;
+ const polygon=event?.target?.closest?.('polygon.combat-hex.move-reachable');
+ if(polygon){
+  q=Number(polygon.dataset.q);r=Number(polygon.dataset.r)
+ }else{
+  // A single-click preview may have replaced the original SVG/polygon.
+  // Locate the double-click in map coordinates, but reject clicks outside a hex.
+  const point=combatSvgPoint(event,event.currentTarget);
+  const cell=combatNearestRuntimeCell(point),g=combatRuntimeGeometry();
+  if(!point||!cell||!g)return;
+  const radius=g.size*.97,dx=Math.abs(point.x-cell.x),dy=Math.abs(point.y-cell.y);
+  if(dy>radius||dx>(dy<=radius/2?Math.sqrt(3)*radius/2:Math.sqrt(3)*(radius-dy)))return;
+  q=cell.q;r=cell.r
+ }
+ if(!Number.isFinite(q)||!Number.isFinite(r))return;
+ combatMovementLastClick=null;
+ if(!combatSetMovementPreview(q,r,{render:false}))return;
+ return commitCombatMovementPlan()
+}
 function combatMapPointerDown(event){
  if(event.button!=null&&event.button!==0&&event.pointerType!=='touch')return;
+ combatMapLastPointerType=event.pointerType||'mouse';
  if(combatMovementDrag)return;
- if(event.target?.closest?.('.combat-token-group'))return;
+ if(event.target?.closest?.('.combat-token-group')){combatMovementLastClick=null;return}
+ if(!event.target?.closest?.('.combat-hex.move-reachable'))combatMovementLastClick=null;
  combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pointerType:event.pointerType||'mouse'});
  const svg=event.currentTarget;
  if(event.pointerType==='touch'){
@@ -4294,6 +4339,7 @@ function combatMapPointerMove(event){
  const dx=event.clientX-pan.lastX,dy=event.clientY-pan.lastY;
  if(!pan.moved&&Math.abs(event.clientX-pan.startX)+Math.abs(event.clientY-pan.startY)>5){
   pan.moved=true;
+  combatMovementLastClick=null;
   // Capture only after a genuine pan starts, so ordinary hex clicks are not retargeted to the SVG.
   try{svg.setPointerCapture?.(event.pointerId)}catch(_error){}
  }
@@ -4419,7 +4465,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapResetView()">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+'</svg>'
 }
 
 function combatRowPortraitUrl(combatant){
