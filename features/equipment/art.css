@@ -32,14 +32,17 @@
  filter:drop-shadow(0 4px 6px rgba(0,0,0,.76));
  pointer-events:none;
 }
-/* Trial on Lyra's oak staff only: more visible wood/iron, while the gold
-   frame stays in place. All other two-handed weapon profiles are unchanged. */
+/* v0.35.57 · Sharper Narsil-style staff preview only.
+   Remove the duplicate screen-blended frame overlay above the staff: the frame
+   is already painted as the face background. This preserves all gold details
+   without washing out the weapon's semi-transparent edges. */
 .gandalf-equip-twohand .gandalf-equip-face[data-twohand-profile="staff"] .gandalf-equip-art{
-  filter:brightness(1.15) contrast(1.16) saturate(1.06)
-    drop-shadow(0 4px 5px rgba(0,0,0,.94));
+  filter:brightness(1.06) contrast(1.28) saturate(1.04)
+    drop-shadow(0 0 1px rgba(14,9,4,.95))
+    drop-shadow(0 2px 3px rgba(0,0,0,.9));
 }
 .gandalf-equip-twohand .gandalf-equip-face[data-twohand-profile="staff"]::after{
-  opacity:.58;
+  opacity:0;
 }
 @media(max-width:620px){
  .item-art-editor-content{gap:9px}
