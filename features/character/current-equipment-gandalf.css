@@ -1,4 +1,4 @@
-/* Gandalf / Aragorn · v0.35.48 · Current equipment, art-driven interface.
+/* Gandalf / Aragorn · v0.35.49 · Current equipment, art-driven interface.
    Images: user-provided hall and magic slot frame. Artwork remains separate from
    interactive HTML overlays, so no baked-in rectangles or click-target offsets. */
 #currentEquipmentModal{
@@ -72,8 +72,10 @@
 .gandalf-equip-character{
   display:block;
   flex:0 0 auto;
-  width:100%;
-  max-width:100%;
+  /* Size by height, not the narrow center column's width. This allows
+     transparent margins in character uploads without shrinking the person. */
+  width:auto;
+  max-width:none;
   height:95%;
   object-fit:contain;
   object-position:center bottom;
