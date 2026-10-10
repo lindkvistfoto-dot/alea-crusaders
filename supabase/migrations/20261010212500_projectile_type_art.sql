@@ -17,7 +17,7 @@ begin
    add constraint rule_projectile_image_path_check
    check (
     image_path is null or (
-     image_path ~ '^projectile/[a-z][a-z0-9_]{1,50}/[0-9a-f-]{36}\\.(webp|png)$'
+     image_path ~ '^projectile/[a-z][a-z0-9_]{1,50}/[0-9a-f-]{36}\.(webp|png)$'
      and split_part(image_path,'/',2)=projectile_key
     )
    );
@@ -32,10 +32,10 @@ for insert to authenticated with check (
  bucket_id='alea-equipment-art'
  and (select private.is_admin())
  and (
-  name ~ '^(weapon|armor|shield)/[0-9a-f-]{36}/[0-9a-f-]{36}\\.(webp|png)$'
-  or name ~ '^armor/(head|arms|torso|legs)/[0-9a-f-]{36}/[0-9a-f-]{36}\\.(webp|png)$'
+  name ~ '^(weapon|armor|shield)/[0-9a-f-]{36}/[0-9a-f-]{36}\.(webp|png)$'
+  or name ~ '^armor/(head|arms|torso|legs)/[0-9a-f-]{36}/[0-9a-f-]{36}\.(webp|png)$'
   or (
-    name ~ '^projectile/[a-z][a-z0-9_]{1,50}/[0-9a-f-]{36}\\.(webp|png)$'
+    name ~ '^projectile/[a-z][a-z0-9_]{1,50}/[0-9a-f-]{36}\.(webp|png)$'
     and exists (
       select 1 from public.rule_projectile_types p
       where p.projectile_key=split_part(name,'/',2)
