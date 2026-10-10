@@ -44,7 +44,7 @@
  }
  function summary(id){
   const list=powersFor(id).filter(row=>row.active);
-  return list.length?list.map(powerName).join(' · '):'Inga konfigurerade egenskaper';
+  return list.length?list.map(powerName).join(' · '):'';
  }
  function render(){
   const list=$('adminMagicPropertiesTable');if(!list)return;
