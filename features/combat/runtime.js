@@ -4956,8 +4956,20 @@ function combatTurnPortraitHtml(combatant){
  if(!combatant)return '';
  const roleClass=combatant.source_type==='character'?'player-row':combatant.source_type==='npc'?'npc-row':'enemy-row';
  const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant.name_snapshot||'?');
- return '<span class="combat-turn-portrait '+roleClass+'">'+
-  (url?'<img src="'+escAttr(url)+'" alt="'+escAttr(combatant.name_snapshot||'Kombatant')+'">':'<b>'+escAttr(initials)+'</b>')+
+ // En enda SVG-form styr både bildbeskärning och den färgade ramen.
+ // Tidigare nästlad CSS-clip-path gav ojämna gröna kanter och skeva hörn.
+ const points='30,4 90,4 116,52 90,100 30,100 4,52';
+ const key=String(combatant.id||combatant.source_id||'active').replace(/[^a-zA-Z0-9_-]/g,'_');
+ const clipId='combatTurnPortraitClip_'+key;
+ return '<span class="combat-turn-portrait '+roleClass+'" role="img" aria-label="Porträtt: '+escAttr(combatant.name_snapshot||'Kombatant')+'">'+
+  '<svg class="combat-turn-portrait-svg" viewBox="0 0 120 104" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+
+   '<defs><clipPath id="'+clipId+'"><polygon points="'+points+'"/></clipPath></defs>'+
+   '<polygon class="combat-turn-portrait-base" points="'+points+'"/>'+
+   (url?'<image class="combat-turn-portrait-image" href="'+escAttr(url)+'" x="0" y="0" width="120" height="104" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')"/>':
+    '<text class="combat-turn-portrait-initials" x="60" y="59" text-anchor="middle">'+escAttr(initials)+'</text>')+
+   '<polygon class="combat-turn-portrait-outline" points="'+points+'"/>'+
+   '<polygon class="combat-turn-portrait-inner-rim" points="32,10 88,10 110,52 88,94 32,94 10,52"/>'+
+  '</svg>'+
  '</span>'
 }
 function combatTurnActionState(combatant){
