@@ -1556,7 +1556,7 @@ function twoHandDisplayProfile(item){
   .filter(Boolean).join(' ').toLocaleLowerCase('sv-SE');
  const profiles={
   standard:{rotate:-17,scale:1.32,x:5,y:19,width:90,height:62},
-  staff:{rotate:-22,scale:1.52,x:5,y:20,width:90,height:60},
+  staff:{rotate:-35,scale:1.58,x:5,y:20,width:90,height:60},
   polearm:{rotate:-18,scale:1.45,x:5,y:19,width:90,height:62},
   sword:{rotate:-15,scale:1.48,x:5,y:19,width:90,height:62},
   bow:{rotate:-8,scale:1.34,x:5,y:20,width:90,height:60},
