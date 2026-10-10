@@ -40,10 +40,13 @@ describe('Gandalf – aktuell utrustning',()=>{
    expect(app).toContain("if(g.hands===2){eq.leftHand={...ref};eq.rightHand={...ref}}");
    expect(css).toContain('.gandalf-equip-twohand');
  });
- it('prepares a projectile placeholder without pretending ammunition is wired already',()=>{
+ it('automatically renders ammo matching equipped weapons and displays remaining stock',()=>{
    expect(app).toContain('gandalf-equip-projectiles');
+   expect(app).toContain('currentEquipmentProjectileEntries(character)');
+   expect(app).toContain('currentEquipProjectileSlotHtml(current)');
    expect(app).toContain('showCurrentEquipmentProjectileInfo');
-   expect(app).toContain('Projektiler kopplas i Frodo-steget');
+   expect(app).not.toContain('Projektiler kopplas i Frodo-steget');
+   expect(css).toContain('.gandalf-ammo-count');
  });
  it('packs four enlarged armor frames with narrow gaps and overlays vertical labels',()=>{
    expect(css).toContain('left:0.3%');
