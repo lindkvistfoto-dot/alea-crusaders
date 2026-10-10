@@ -8,8 +8,8 @@ const styles=readFileSync(new URL('../features/character/figure-images.css',impo
 
 describe('rollfigurens helfigursbilder',()=>{
   it('loads the existing image manager in its own Bilder tab after Utrustning',()=>{
-    expect(page).toContain('features/character/figure-images.css?v=0.35.50');
-    expect(page).toContain('features/character/figure-images.js?v=0.35.50');
+    expect(page).toContain('features/character/figure-images.css?v=0.35.51');
+    expect(page).toContain('features/character/figure-images.js?v=0.35.51');
     expect(app).toContain('window.aleaRenderCharacterFigureGallery?.()');
     expect(page).toMatch(/id="tabEquipment"[^>]*>Utrustning<\/button><button id="tabImages"[^>]*>Bilder<\/button>/);
     expect(page).toContain('id="imagesPanel"');
