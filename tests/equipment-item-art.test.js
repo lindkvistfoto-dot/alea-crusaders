@@ -69,7 +69,7 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
   for(const zone of ['head','arms','torso','legs']){
    expect(form).toContain('itemArtPreview-'+zone);
    expect(form).toContain('itemArtStatus-'+zone);
-   expect(form).toContain("choose(this.files[0],\\'"+zone+"\\')");
+   expect(form).toContain("choose(this.files[0],'"+zone+"')");
   }
   const before=await art.prepareArmor(id,{});
   for(const zone of ['head','arms','torso','legs'])expect(before.paths['image_'+zone+'_path']).toBe(armorPaths['image_'+zone+'_path']);
