@@ -1,4 +1,4 @@
-/* Alea equipment art · v0.35.51
+/* Alea equipment art · v0.35.53
    Shared, admin-managed image assets for the weapon, armor and shield master registers. */
 (function(){
  'use strict';
@@ -147,12 +147,20 @@
   }
  }
  async function prepareArmor(id,ctx){
-  if(draft?.kind!=='armor'||!draft.pieces)throw new Error('Öppna rustningseditorn igen.');
+  // Snapshot all four zones BEFORE the first await. The global editor draft may
+  // be reset by a modal close, navigation, or another editor while uploads run.
+  const editor=draft;
+  if(editor?.kind!=='armor'||!editor.pieces)throw new Error('Öppna rustningseditorn igen.');
   if(!/^[0-9a-f-]{36}$/.test(id))throw new Error('Ogiltigt rustnings-ID.');
+  const selected=ARMOR_ZONES.map(([zone])=>{
+   const piece=editor.pieces[zone];
+   if(!piece)throw new Error('Bildfältet '+zone+' saknas. Öppna rustningen igen.');
+   return {zone,original:piece.original,removed:piece.removed,blob:piece.blob};
+  });
   const paths={},old=[],uploaded=[];
   try{
-   for(const [zone] of ARMOR_ZONES){
-    const part=draft.pieces[zone],key=armorColumn(zone);
+   for(const part of selected){
+    const {zone}=part,key=armorColumn(zone);
     if(part.removed){paths[key]=null;if(part.original)old.push(part.original);continue;}
     if(!part.blob){paths[key]=part.original;continue;}
     if(!ctx?.token||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
