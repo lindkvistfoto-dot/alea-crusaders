@@ -29,7 +29,6 @@
     else nav.appendChild(characters);
   }
   const pages = new Map();
-  let ready = false;
   function visible(id) {
     const el = document.getElementById(id);
     return !!el && !el.classList.contains('hidden');
@@ -55,6 +54,17 @@
       const current = isActive(id) ? 'page' : 'false';
       if (button.getAttribute('aria-current') !== current) button.setAttribute('aria-current', current);
     });
+    // The mobile adventure hub delegates to the original buttons. Its labels
+    // are unchanged, but the three matching pictures use the same frames.
+    const menu = document.getElementById('mobileHubMenu');
+    if (menu) {
+      [['shopNavBtn',0],['innNavBtn',1],['academyNavBtn',2]].forEach(([id,index]) => {
+        const item = menu.querySelector('button[data-mobile-target="'+id+'"]');
+        if (!item) return;
+        item.style.setProperty('--alea-nav-pos',index*20+'%');
+        item.dataset.navActive = String(isActive(id));
+      });
+    }
   }
 
   const observer = new MutationObserver(() => {
