@@ -5994,8 +5994,8 @@ function renderCombat(){
   '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside>'+
  '</div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
- window.aleaRoundGallery?.apply?.();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
+ window.aleaRoundGallery?.apply?.();
 }
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});

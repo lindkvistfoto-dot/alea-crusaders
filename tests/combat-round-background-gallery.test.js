@@ -19,7 +19,7 @@ describe('Shared round background gallery',()=>{
    {id:'d',image_path:'assets/combat/round-hero-battle-pilot.avif',is_active:true,archived_at:'2026-10-12'}
   ];
   const window={};
-  const ctx={window,console,Math:{...Math,random:()=>.999},dbJson:async()=>rows,
+  const ctx={window,console,Math:Object.assign(Object.create(Math),{random:()=>.999}),dbJson:async()=>rows,
    document:{querySelectorAll:()=>[]}};
   runInNewContext(source,ctx);
   expect(await window.aleaRoundGallery.pickRandomForCombat()).toBe('b');
@@ -38,7 +38,7 @@ describe('Shared round background gallery',()=>{
   expect(panel.style.setProperty).toHaveBeenCalledTimes(2);
  });
  it('keeps admin UI, background rendering and CSS hooked to existing app',()=>{
-  const legacy=read('legacy/app.js'),runtime=read('features/combat/runtime.js'),css=read('features/combat/round-theme.css'),html=read('index.html');
+  const legacy=read('legacy/app.js'),runtime=read('features/combat/runtime.js'),css=read('features/combat/round-gallery.css'),html=read('index.html');
   expect(legacy).toContain("roundImages:['Rundbakgrunder'");
   expect(legacy).toContain("activeAdminSection==='roundImages'");
   expect(runtime).toContain("round_background_id:roundBackgroundId");
