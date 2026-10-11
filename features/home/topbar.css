@@ -500,3 +500,28 @@
   .alea-app-header .mobile-hub-menu button[data-mobile-target] > span {display:none}
   .alea-app-header .mobile-hub-menu button[data-mobile-target="journalNavBtn"] > span {display:inline}
 }
+
+/* v0.35.118: one persistent illustrated banner, also above Material overlays.
+   The responsive measured header height reserves the same space on every page. */
+body:has(#legolasPanel:not(.hidden)) .alea-app-header,
+body:has(#legolasViewer:not(.hidden)) .alea-app-header {
+  position:sticky;
+  top:0;
+  z-index:30002!important;
+}
+.legolas-panel:not(.hidden),
+.legolas-viewer:not(.hidden) {
+  top:var(--alea-header-bottom,0px);
+}
+.legolas-viewer:fullscreen {top:0}
+.alea-app-header .alea-toolstrip>.btn:not(.alea-nav-art)[aria-current="page"] {
+  border-color:#e8b970;
+  background:linear-gradient(145deg,#78502d,#49301c);
+  color:#ffe9bc;
+  box-shadow:0 0 14px #e6ae644b,inset 0 1px #f6d8ac33;
+}
+.alea-app-header .mobile-hub-menu button[data-nav-active="true"] {
+  border-color:#dfb36a;
+  background:#59402c;
+  color:#ffe7b6;
+}
