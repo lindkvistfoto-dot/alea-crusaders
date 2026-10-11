@@ -70,3 +70,85 @@
     scroll-behavior: auto;
   }
 }
+
+/* Phase 2: round heading, active portrait and live vitals. */
+.combat-turn-panel .combat-turn-head{
+  min-height:64px;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:auto auto;
+  gap:4px 10px;
+  padding:10px 12px;
+  background:radial-gradient(ellipse at 85% 15%,rgba(81,111,132,.18),transparent 56%),linear-gradient(110deg,#392318,#17110e);
+}
+.combat-turn-panel .combat-turn-head .combat-round{
+  grid-column:1;grid-row:1;
+  color:#f3cb88;font:700 clamp(19px,2.1vw,26px)/1.05 Georgia,serif;
+  text-shadow:0 2px 2px #070504,0 0 16px rgba(228,155,63,.27);
+}
+.combat-turn-panel .combat-turn-action-status{
+  grid-column:1;grid-row:2;justify-self:start;
+  border-radius:7px;padding:5px 9px;
+  font-size:10px;
+}
+.combat-turn-panel .combat-turn-head .combat-status{display:none}
+.combat-turn-panel .combat-turn-undo-btn{grid-column:2;grid-row:1 / 3;align-self:start}
+.combat-turn-panel .combat-turn-actor:not(.empty){
+  display:grid;
+  grid-template-columns:56px minmax(0,1fr);
+  grid-template-areas:"portrait identity" "vitals vitals" "actions actions";
+  gap:8px 10px;
+  padding:10px 11px 12px;
+}
+.combat-turn-panel .combat-turn-portrait{
+  grid-area:portrait;width:56px;height:62px;flex-basis:56px;
+  filter:drop-shadow(0 0 5px rgba(194,151,81,.26));
+}
+.combat-turn-panel .combat-turn-identity{grid-area:identity;min-width:0}
+.combat-turn-panel .combat-turn-identity span{color:#c39a65;letter-spacing:.1em;font-size:9px}
+.combat-turn-panel .combat-turn-identity b{
+  font:700 clamp(17px,1.7vw,22px)/1.1 Georgia,serif;
+  color:#f3d39b;text-shadow:0 1px 3px #000b;
+}
+.combat-turn-panel .combat-turn-identity small{color:#d9c5a9;font-size:11px}
+.combat-turn-panel .combat-turn-vitals{
+  grid-area:vitals;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  background:linear-gradient(180deg,rgba(38,27,20,.94),rgba(20,14,11,.94));
+  border:1px solid rgba(153,105,57,.64);border-radius:8px;
+  overflow:hidden;min-width:0;
+}
+.combat-turn-panel .combat-turn-vitals>div{
+  min-width:0;padding:7px 6px 6px;
+  border-right:1px solid rgba(161,112,65,.38);
+}
+.combat-turn-panel .combat-turn-vitals>div:last-child{border-right:0}
+.combat-turn-panel .combat-turn-vitals span{
+  display:block;font-size:9px;letter-spacing:.055em;
+  color:#c7a780;opacity:1;
+}
+.combat-turn-panel .combat-turn-vitals b{
+  display:block;margin:4px 0 6px;color:#f8e1b8;
+  font:700 clamp(13px,1.4vw,17px)/1.1 Georgia,serif;
+}
+.combat-turn-panel .combat-vital-meter{
+  height:6px;overflow:hidden;border-radius:10px;
+  background:#0e0b0a;border:1px solid rgba(255,255,255,.12);
+}
+.combat-turn-panel .combat-vital-fill{
+  display:block;height:100%;max-width:100%;border-radius:10px;
+  transition:width .25s ease;
+}
+.combat-turn-panel .combat-vital-fill.move{background:linear-gradient(90deg,#89653c,#d1a660)}
+.combat-turn-panel .combat-vital-fill.kp{background:linear-gradient(90deg,#267f27,#75e63c);box-shadow:0 0 5px #5bce36}
+.combat-turn-panel .combat-vital-fill.psy{background:linear-gradient(90deg,#6433a7,#c353f4);box-shadow:0 0 5px #a33ed6}
+.combat-turn-panel .combat-turn-actions{
+  grid-area:actions;justify-content:space-around;min-width:0;flex-wrap:nowrap;
+}
+@media(max-width:460px){
+ .combat-turn-panel .combat-turn-head{min-height:58px}
+ .combat-turn-panel .combat-turn-actor:not(.empty){padding:8px;gap:6px}
+ .combat-turn-panel .combat-turn-vitals>div{padding:6px 4px}
+ .combat-turn-panel .combat-turn-vitals span{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-turn-panel .combat-vital-fill{transition:none}
+}
