@@ -37,15 +37,30 @@ describe('Shared round background gallery',()=>{
   await window.aleaRoundGallery.activate({id:'combat-1',settings:{round_background_id:'not-found'}});
   expect(panel.style.setProperty).toHaveBeenCalledTimes(2);
  });
+ it('uses the active actor and avoids stale image updates on turn change',async()=>{
+  const panel={style:{setProperty:vi.fn(),removeProperty:vi.fn()}};
+  let completedRead;
+  const waiting=new Promise(resolve=>completedRead=resolve);
+  const window={aleaCharacterRoundBackground:{resolveUrl:async()=>waiting}};
+  const ctx={window,console,Math,document:{querySelectorAll:()=>[panel]}};
+  runInNewContext(source,ctx);
+  const battle={id:'combat-1',settings:{}};
+  const first=window.aleaRoundGallery.activate(battle,{id:'actor-a',state:{round_background_source:'character',round_background_path:'round/custom.webp'}});
+  await window.aleaRoundGallery.activate(battle,{id:'actor-b',state:{round_background_source:'library',round_background_path:'assets/combat/round-hero-battle-pilot.avif'}});
+  completedRead('blob:outdated-image');
+  await first;
+  expect(panel.style.setProperty).toHaveBeenLastCalledWith('--alea-round-illustration',expect.stringContaining('round-hero-battle-pilot.avif'));
+  expect(panel.style.setProperty).not.toHaveBeenCalledWith('--alea-round-illustration',expect.stringContaining('outdated-image'));
+ });
  it('keeps admin UI, background rendering and CSS hooked to existing app',()=>{
   const legacy=read('legacy/app.js'),runtime=read('features/combat/runtime.js'),css=read('features/combat/round-gallery.css'),html=read('index.html');
   expect(legacy).toContain("roundImages:['Rundbakgrunder'");
   expect(legacy).toContain("activeAdminSection==='roundImages'");
   expect(runtime).toContain("round_background_id:roundBackgroundId");
-  expect(runtime).toContain('await window.aleaRoundGallery?.activate?.(activeCombat)');
-  expect(runtime).toContain('window.aleaRoundGallery?.apply?.()');
+  expect(runtime).toContain('await window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())');
+  expect(runtime).toContain('void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())');
   expect(css).toContain('var(--alea-round-illustration');
   expect(html).toContain('data-admin-section="roundImages"');
-  expect(html).toContain('features/combat/round-gallery.js?v=0.35.124');
+  expect(html).toContain('features/combat/round-gallery.js?v=0.35.125');
  });
 });
