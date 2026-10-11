@@ -131,7 +131,7 @@
     '<p class="rule-editor-note">Kombinera flera egenskaper i samma artefakt. Varje egenskap har egna inställningar. Besvärjelser länkas direkt till regelregistret.</p>'+
     items.map(power=>{
      const def=getDefinition(power.property_id), spell=spellFor(power.spell_id);
-     const extra=def?.kind==='spell'?'EG '+power.effect_grade+' · '+(spell?.name||'Okänd besvärjelse')+' · '+power.charge_cost+' laddning(ar)':
+     const extra=def?.kind==='spell'?'EG '+power.effect_grade+' ×'+(power.effect_multiplier||1)+' · '+(spell?.name||'Okänd besvärjelse')+' · FV '+(power.cast_mode==='fixed'?(power.fixed_fv??'—'):power.cast_mode==='automatic'?'Automatisk':'Bärare')+' · '+(power.recharge_rule==='next_day'?'Nästa dag':power.recharge_rule==='manual'?'Manuell återhämtning':'Ingen dagspärr'):
       def?.kind==='bonus'?(power.target_attribute||'Bonus')+' '+(power.bonus_value>=0?'+':'')+power.bonus_value:
       (power.details||def?.description||'');
      return '<div class="magic-power-item'+(power.active?'':' inactive')+'"><div><strong>'+esc(def?.name||'Saknar definition')+'</strong>'+
@@ -152,6 +152,8 @@
   // Switching to a passive property suggests a passive activation by default;
   // editing an existing power preserves its explicit activation selection.
   const note=$('mapKindHint');
+  const fvField=$('mapFixedFvField');
+  if(fvField)fvField.hidden=kind!=='spell'||$('mapCastMode')?.value!=='fixed';
   if(note)note.textContent=kind==='spell'?
    'Effektgrad och besvärjelse är registrerade. Detta aktiverar ännu inte stridsmotorns besvärjelsekast.':
    kind==='bonus'?'Bonusfältet är förberett för framtida automatisk FV- eller grundegenskapsberäkning.':
@@ -177,9 +179,13 @@
     '<label data-magic-for="spell">Besvärjelse<select id="mapSpell"><option value="">— Välj besvärjelse —</option>'+
       spellRows.map(spell=>'<option value="'+esc(spell.id)+'"'+(String(spell.id)===String(power?.spell_id)?' selected':'')+'>'+esc(spell.name)+'</option>').join('')+'</select></label>'+
     '<label data-magic-for="spell">Effektgrad (EG)<input id="mapEg" type="number" min="1" max="50" step="1" value="'+esc(power?.effect_grade??1)+'"></label>'+
+    '<label data-magic-for="spell">Multiplikator på besvärjelsens effekt<input id="mapMultiplier" type="number" min="1" max="1000" step="1" value="'+esc(power?.effect_multiplier??1)+'"></label>'+
+    '<label data-magic-for="spell">Använd besvärjelsen med<select id="mapCastMode" onchange="window.aleaMagicProperties?.togglePowerFields()">'+options({fixed:'Föremålets FV',wearer:'Bärarens FV',automatic:'Automatisk aktivering'},power?.cast_mode||'fixed')+'</select></label>'+
+    '<label data-magic-for="spell" id="mapFixedFvField">Föremålets FV<input id="mapFixedFv" type="number" min="1" max="100" step="1" value="'+esc(power?.fixed_fv??5)+'"></label>'+
     '<label data-magic-for="spell">Betalning av PSY<select id="mapPsy">'+options(psySources,power?.psy_source||'artifact')+'</select></label>'+
     '<label data-magic-for="spell special protection status">Laddningar per användning<input id="mapChargeCost" type="number" min="0" max="1000" step="1" value="'+esc(power?.charge_cost??0)+'"></label>'+
     '<label>Användningar per dag<input id="mapUses" type="number" min="0" step="1" value="'+esc(power?.uses_per_day??'')+'" placeholder="Obegränsat"></label>'+
+    '<label>Kan användas igen<select id="mapRecharge">'+options({none:'Utan tidsgräns',next_day:'Efter ny kampanjdag',manual:'När SL återställer'},power?.recharge_rule||'none')+'</select></label>'+
     '<label data-magic-for="bonus protection status">Påverkad egenskap / effekt<input id="mapTargetAttribute" value="'+esc(power?.target_attribute||'')+'" placeholder="Ex. FV Svärd / ABS / Giftmotstånd"></label>'+
     '<label data-magic-for="bonus protection status">Bonus / styrka<input id="mapBonus" type="number" step="1" value="'+esc(power?.bonus_value??0)+'"></label>'+
     '<label>Mål / område<input id="mapTarget" value="'+esc(power?.target_text||'')+'" placeholder="Ex. Bäraren, en fiende, 3 hex"></label>'+
@@ -207,9 +213,17 @@
   const spellId=def.kind==='spell'?$('mapSpell')?.value||null:null;
   if(def.kind==='spell'&&!spellId)return alert('Välj en besvärjelse från det centrala besvärjelseregistret.');
   if(spellId&&!spellFor(spellId))return alert('Besvärjelsen finns inte i registret.');
-  let grade,cost,uses,bonus,sort;
+  let grade,cost,uses,bonus,sort,multiplier=1,castMode='none',fixedFv=null,recharge='none';
   try{
    grade=def.kind==='spell'?positiveInt('mapEg',1,50):1;
+   if(def.kind==='spell'){
+    multiplier=positiveInt('mapMultiplier',1,1000);
+    castMode=$('mapCastMode')?.value||'fixed';
+    if(!['wearer','fixed','automatic'].includes(castMode))throw Error('Välj giltigt FV-läge.');
+    fixedFv=castMode==='fixed'?positiveInt('mapFixedFv',1,100):null;
+   }
+   recharge=$('mapRecharge')?.value||'none';
+   if(!['none','next_day','manual'].includes(recharge))throw Error('Välj giltig återhämtningsregel.');
    cost=['spell','special','protection','status'].includes(def.kind)?positiveInt('mapChargeCost',0,1000):0;
    uses=$('mapUses')?.value===''?null:positiveInt('mapUses',0,100000);
    bonus=['bonus','protection','status'].includes(def.kind)?Number($('mapBonus')?.value||0):0;
@@ -219,6 +233,8 @@
   const payload={
    artifact_id:artifactId,property_id:def.id,spell_id:spellId,
    activation:$('mapActivation')?.value||'action',effect_grade:grade,
+   effect_multiplier:multiplier,cast_mode:castMode,
+   fixed_fv:fixedFv,recharge_rule:recharge,
    psy_source:def.kind==='spell'?$('mapPsy')?.value||'artifact':'none',
    charge_cost:cost,uses_per_day:uses,
    target_attribute:['bonus','protection','status'].includes(def.kind)?$('mapTargetAttribute')?.value.trim()||'':'',
