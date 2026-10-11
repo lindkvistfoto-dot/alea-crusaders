@@ -106,12 +106,23 @@
     '<div><span>CL (1T20)</span><strong>'+(estimate?Math.max(0,Math.min(20,estimate.cl)):'—')+'</strong></div>'+
     '<div><span>Kostnad</span><strong>'+(estimate?estimate.costSm+' SM':'—')+'</strong></div>'+
     '</div>'+
-   (!allowed.allowed?'<p class="academy-warning">Grundegenskapsgränsen är nådd för träning i denna färdighet.</p>':'')+
+   (!allowed.allowed?'<p class="academy-warning">Färdigheten har nått sin högsta tillåtna nivå för träning.</p>':'')+
    (error?'<p class="academy-warning">'+esc(error)+'</p>':'')+
    (!Number.isInteger(day)||day<1?'<p class="academy-warning">Kampanjens dag behöver vara aktiverad av SL.</p>':'')+
    (estimate&&wealth(c)<estimate.costSm*10?'<p class="academy-warning">Inte tillräckligt med silvermynt i den burna börsen.</p>':'')+
    '<button class="btn primary academy-start" '+(!estimate||wealth(c)<estimate.costSm*10||busy?'disabled':'')+
     ' type="button" onclick="window.aleaAcademy.start()">Boka träningsperiod</button></div>';
+ }
+ function renderHistory(){
+  const c=selected(),host=$('academyHistory');if(!host)return;
+  const events=Array.isArray(c?.academyHistory)?c.academyHistory.slice(-8).reverse():[];
+  host.innerHTML=events.length?events.map(row=>{
+   if(row.kind==='purchase')return '<div class="academy-history-row">📜 '+esc(row.skillName)+
+    ': FV '+esc(row.fromFv)+' → '+esc(row.toFv)+' · '+esc(row.spent)+' ERF</div>';
+   return '<div class="academy-history-row">🎓 '+esc(row.skillName)+
+    ': '+esc(row.earned)+' ERF på dag '+esc(row.completedDay)+
+    ' ('+(row.mode==='teacher'?'med lärare':'ensamträning')+')</div>';
+  }).join(''):'<p class="academy-empty">Ingen akademihistorik ännu.</p>'
  }
  function render(){
   const list=eligible(),pick=$('academyCharacter'),c=selected();
@@ -123,7 +134,7 @@
   const active=$('academyFilter');if(active)active.value=filter;
   const bonus=$('academyBonus');if(bonus)bonus.checked=usingBonus;
   const input=$('academySearch');if(input&&input.value!==search)input.value=search;
-  renderSkills();renderTraining();
+  renderSkills();renderTraining();renderHistory();
  }
  async function commit(character,modify){
   if(busy)throw Error('En ändring pågår redan.');
