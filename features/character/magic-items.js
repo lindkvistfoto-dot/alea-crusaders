@@ -39,7 +39,66 @@
    '<label><input type="checkbox" '+(magical(x)?'checked ':'')+
     'onchange="setCharacterItemMagical(\''+kind+'\','+index+',this.checked)"> ✦ Magisk</label>'+
    (magical(x)?'<button type="button" class="smallbtn" onclick="openCharacterItemPowers(\''+kind+'\','+index+')">Egenskaper'+(powers(x).length?' ('+powers(x).length+')':'')+'</button>':'')+
+   ((kind==='weapon'||kind==='shield')?
+    '<span class="character-item-image-preview" title="'+safe(x.imageOverridePath?'Unik bild på föremålet':'Standardbild')+'">'+(imageTag(kind,x)||'◇')+'</span>'+
+    '<button type="button" class="smallbtn" onclick="openCharacterItemImage(&quot;'+kind+'&quot;,'+index+')">🖼 '+(x.imageOverridePath?'Byt bild':'Bild')+'</button>':'')+
    '</div>'
+ }
+
+ function masterImagePath(kind,item){
+  if(kind==='weapon')return typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item)?.image_path:null;
+  if(kind==='shield')return typeof characterShieldRule==='function'?characterShieldRule(item)?.image_path:null;
+  return null;
+ }
+ function imagePath(kind,item){return item?.imageOverridePath||masterImagePath(kind,item)||null}
+ function imageTag(kind,item){
+  const url=window.aleaEquipmentArt?.src(imagePath(kind,item));
+  return url?'<img class="character-gear-image" src="'+safe(url)+'" loading="lazy" alt="">':'';
+ }
+ function imageThumbnail(kind,index){return imageTag(kind,get(kind,index))}
+ let imageSaving=false;
+ function openImage(kind,index){
+  if(!editable()||!['weapon','shield'].includes(kind))return;
+  const item=get(kind,index),art=window.aleaEquipmentArt;
+  if(!item||!art?.startInstance)return;
+  const standardUrl=art.src(masterImagePath(kind,item));
+  const standard=standardUrl?'<img class="character-gear-image" src="'+safe(standardUrl)+'" alt="Registerbild">':
+   '<span class="muted">Ingen standardbild uppladdad</span>';
+  modal('Föremålsbild · '+(item.name||labels[kind]),
+   '<div class="character-item-image-editor">'+
+   '<p>Den unika bilden tillhör bara <strong>'+safe(item.name||labels[kind])+
+   '</strong>, även om föremålet inte är magiskt. Masterbilden påverkas inte.</p>'+
+   '<div class="character-item-image-master"><strong>Standardbild från registret</strong>'+standard+'</div>'+
+   art.startInstance(item)+
+   '<div class="rule-editor-actions">'+
+   '<button type="button" class="btn" onclick="closeSkillInfo()">Avbryt</button>'+
+   '<button type="button" class="btn primary" id="characterItemImageSave" onclick="saveCharacterItemImage(&quot;'+kind+'&quot;,'+index+')">Spara bild</button>'+
+   '</div></div>');
+ }
+ async function saveImage(kind,index){
+  if(imageSaving||!editable()||!['weapon','shield'].includes(kind))return;
+  const item=get(kind,index),art=window.aleaEquipmentArt,userId=supabaseSession?.user?.id;
+  if(!item||!art?.prepareInstance||!userId)return;
+  const charId=current?.id,itemId=item.equipId,assetId=item.imageAssetId||crypto.randomUUID();
+  const ctx={key:SUPABASE_KEY,token:supabaseSession?.access_token,getToken:freshSupabaseAccessToken};
+  const saveButton=$('characterItemImageSave');
+  imageSaving=true;if(saveButton)saveButton.disabled=true;
+  let change=null;
+  try{
+   change=await art.prepareInstance(userId,assetId,ctx);
+   if(current?.id!==charId||get(kind,index)?.equipId!==itemId)
+    throw new Error('Föremålet ändrades under uppladdningen. Öppna bildeditorn igen.');
+   item.imageOverridePath=change.path;
+   if(change.uploaded)item.imageAssetId=assetId;
+   save();refresh(kind);
+   // Never delete an old image before the central character save has completed.
+   art.reset();closeSkillInfo();
+  }catch(error){
+   if(change?.uploaded)await art.removeStored(change.uploaded,ctx).catch(()=>{});
+   alert('Kunde inte spara den unika bilden: '+error.message);
+  }finally{
+   imageSaving=false;if(saveButton)saveButton.disabled=false;
+  }
  }
  function refresh(kind){
   if(kind==='equipment')renderEquipment();
@@ -259,7 +318,7 @@
   if(!await askConfirm('Ta bort magisk egenskap','Ta bort '+powerTitle(power)+' från just detta föremål?','Ta bort',true))return;
   x.magicPowers.splice(powerIndex,1);save();refresh(kind);itemPowers(kind,index)
  }
- window.aleaCharacterItemMagic={magical,badge,control,summary,toggle,open:itemPowers,
+ window.aleaCharacterItemMagic={magical,badge,control,summary,imagePath,imageThumbnail,openImage,saveImage,toggle,open:itemPowers,
   edit:editPower,savePower,deletePower,showFields,powers,availability,registerUse,resetPower};
  window.setCharacterItemMagical=toggle;
  window.openCharacterItemPowers=itemPowers;
@@ -268,4 +327,6 @@
  window.deleteCharacterItemPower=deletePower;
  window.registerCharacterItemPowerUse=registerUse;
  window.resetCharacterItemPower=resetPower;
+ window.openCharacterItemImage=openImage;
+ window.saveCharacterItemImage=saveImage;
 })();
