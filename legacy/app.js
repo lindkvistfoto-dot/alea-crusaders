@@ -2008,6 +2008,7 @@ function characterEquipmentStacks(items){
  return groups
 }
 function renderEquipment(){
+ $('magicCreateBtn')?.classList?.toggle('hidden',!editing||!canEditCharacter(current));
  current.equipment=current.equipment||[];
  current.artifacts=current.artifacts||[];
  current.coins=current.coins||{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}};
