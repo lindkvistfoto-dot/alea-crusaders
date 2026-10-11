@@ -1780,12 +1780,14 @@ function currentEquipSlotHtml(slot){
  const value=item?.name||'',occupied=!!item;
  const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
+ const magicTestBanner=ref?.kind==='weapon'&&magical?
+  '<span class="gandalf-magic-test-banner" aria-hidden="true">✦ MAGISKT VAPEN ✦</span>':'';
  const torchCount=ref?.kind==='equipment'?window.aleaEquipmentCatalog?.torchCount(current,item):null;
  const countBadge=torchCount!==null&&torchCount!==undefined?
   '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+countBadge+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+countBadge+'</span>'+magicTestBanner+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 /* Narsil-style: one square master asset per weapon. Its two-hand placement is
@@ -1819,6 +1821,8 @@ function gandalfTwoHandSlotHtml(item){
  const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const name=escAttr(item.name||'Vapen');
+ const magicTestBanner=magical?
+  '<span class="gandalf-magic-test-banner" aria-hidden="true">✦ MAGISKT VAPEN ✦</span>':'';
  const profile=twoHandDisplayProfile(item);
  const cssVars=[
   '--twohand-rotate:'+profile.rotate+'deg',
@@ -1831,7 +1835,7 @@ function gandalfTwoHandSlotHtml(item){
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped'+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
   '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
-   (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
+   (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+magicTestBanner+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 /* Automatic ammunition in Aktuell utrustning.
@@ -1904,7 +1908,18 @@ function renderCurrentEquipment(){
  const eq=current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left);
  const two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
  const hands=two?gandalfTwoHandSlotHtml(leftItem):currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand');
- el.innerHTML='<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
+ const diagnosticWeapons=two?[['Båda händerna',leftItem]]:
+  ['leftHand','rightHand'].filter(slot=>eq[slot]?.kind==='weapon')
+   .map(slot=>[CURRENT_EQUIP_LABELS[slot],equipItemByRef(current,eq[slot])]).filter(row=>!!row[1]);
+ const diagnosticStatus=diagnosticWeapons.length?diagnosticWeapons.map(([label,item])=>{
+  const isMagic=item.isMagical===true||item.magic?.enabled===true;
+  return '<span class="gandalf-magic-test-status"><b>'+escAttr(label)+' · '+escAttr(item.name||'Vapen')+'</b>'+
+    '<strong class="'+(isMagic?'is-on':'is-off')+'">'+(isMagic?'MAGI PÅ':'MAGI AV')+'</strong></span>';
+ }).join(''):'<span class="gandalf-magic-test-status">Inga vapen utrustade</span>';
+ el.innerHTML='<div class="gandalf-magic-test-strip" data-magic-test-version="0.35.91" role="status" style="display:block;background:#faff00;color:#160019;padding:10px;border:4px solid #f500ff;font:bold 15px system-ui,sans-serif">'+
+  '<strong class="gandalf-magic-test-version">MAGI-TEST v0.35.91</strong>'+
+  '<div class="gandalf-magic-test-statuses">'+diagnosticStatus+'</div></div>'+
+  '<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
   '<div class="gandalf-equip-center" aria-hidden="true">'+currentEquipmentFigureHtml(current)+'</div>'+
   ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
   hands+
