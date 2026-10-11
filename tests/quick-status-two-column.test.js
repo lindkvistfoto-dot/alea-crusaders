@@ -26,6 +26,6 @@ describe('Snabbstatus KP and PSY share one compact row',()=>{
   expect(html).toContain('id="quickProvisions" class="quick-provisions"');
   expect(css).toContain('#view .quick-provisions');
   expect(finalRules).not.toMatch(/(?:height|min-height):\s*(?:9[0-9]|1[0-9][0-9])px/);
-  expect(html).toContain('Alea Crusaders v0.35.100');
+  expect(html).toContain('Alea Crusaders v'+JSON.parse(read('package.json')).version);
  });
 });
