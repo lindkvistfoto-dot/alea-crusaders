@@ -158,46 +158,64 @@
  .character-item-image-editor .item-art-editor-content{min-width:0}
 }
 
-/* v0.35.89 — golden magic aura follows the silhouette of transparent item art.
-   The decorative frames and character portrait remain untouched. */
+/* v0.35.90 — Bold gold glow traces alpha-transparent magical equipment artwork.
+   Neither the decorative frame nor the character portrait is affected. */
 @keyframes aleaMagicalGoldPulse{
   0%,100%{
-    filter:drop-shadow(0 0 2px rgba(255,228,143,.87))
-           drop-shadow(0 0 5px rgba(245,182,58,.65))
-           drop-shadow(0 0 8px rgba(219,139,29,.30));
+    filter:
+      drop-shadow(0 0 4px rgba(255,244,190,.98))
+      drop-shadow(0 0 10px rgba(255,214,110,.95))
+      drop-shadow(0 0 18px rgba(255,179,58,.82))
+      drop-shadow(0 0 28px rgba(232,140,24,.58));
   }
   50%{
-    filter:drop-shadow(0 0 3px rgba(255,242,181,1))
-           drop-shadow(0 0 7px rgba(255,205,83,.86))
-           drop-shadow(0 0 13px rgba(240,156,35,.52));
+    filter:
+      drop-shadow(0 0 6px rgba(255,248,214,1))
+      drop-shadow(0 0 14px rgba(255,224,128,.98))
+      drop-shadow(0 0 24px rgba(255,186,66,.90))
+      drop-shadow(0 0 38px rgba(240,150,28,.72));
   }
 }
 .gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
 .combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
-  animation:aleaMagicalGoldPulse 3.1s ease-in-out infinite;
+  animation:aleaMagicalGoldPulse 2.2s ease-in-out infinite;
   will-change:filter;
 }
-/* No transparent art? Mark the text/empty slot rather than a blank square. */
+/* Without alpha-transparent artwork, emphasize the item name and its slot. */
 .gandalf-equip-slot.magical-no-art .gandalf-equip-value{
-  color:#ffedba;
-  text-shadow:0 0 4px rgba(255,221,126,.96),0 0 12px rgba(255,174,51,.7),0 1px 3px #000;
+  color:#fff1c7;
+  text-shadow:
+    0 0 6px rgba(255,232,151,1),
+    0 0 16px rgba(255,190,74,.95),
+    0 0 28px rgba(240,150,34,.72),
+    0 1px 3px #000;
 }
 .gandalf-equip-slot.magical-no-art .gandalf-equip-face{
-  box-shadow:inset 0 0 9px rgba(248,183,63,.14);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,213,111,.38),
+    inset 0 0 18px rgba(255,185,66,.30),
+    0 0 18px rgba(240,156,35,.16);
 }
 .combat-turn-equip-art.magical-no-art .combat-turn-art-frame{
-  box-shadow:inset 0 0 0 1px rgba(250,196,94,.32),inset 0 0 10px rgba(255,196,67,.20);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,214,116,.42),
+    inset 0 0 16px rgba(255,188,70,.26),
+    0 0 18px rgba(240,156,35,.14);
 }
 .combat-turn-equip-art.magical-no-art .combat-turn-art-empty{
-  color:#f5ce79;
-  text-shadow:0 0 7px rgba(255,204,95,.75);
+  color:#ffe09a;
+  text-shadow:
+    0 0 8px rgba(255,221,120,.92),
+    0 0 18px rgba(255,183,62,.80);
 }
 @media(prefers-reduced-motion:reduce){
   .gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
   .combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
     animation:none;
     will-change:auto;
-    filter:drop-shadow(0 0 3px rgba(255,224,144,.95))
-           drop-shadow(0 0 8px rgba(244,176,58,.62));
+    filter:
+      drop-shadow(0 0 5px rgba(255,240,176,1))
+      drop-shadow(0 0 12px rgba(255,206,92,.92))
+      drop-shadow(0 0 22px rgba(241,160,40,.72));
   }
 }

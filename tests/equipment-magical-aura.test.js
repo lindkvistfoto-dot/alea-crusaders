@@ -75,6 +75,14 @@ describe('golden aura for individually magical equipment',()=>{
   expect(combatMarkup(item(true),true)).toContain('weapon twohand magical');
   expect(combatMarkup(item(false))).not.toContain('weapon magical');
  });
+ it('has a pronounced pulsing golden halo and a reduced-motion alternative',()=>{
+  expect(css).toContain('/* v0.35.90');
+  expect(css).toContain('drop-shadow(0 0 28px rgba(232,140,24,.58))');
+  expect(css).toContain('drop-shadow(0 0 38px rgba(240,150,28,.72))');
+  expect(css).toContain('animation:aleaMagicalGoldPulse 2.2s ease-in-out infinite');
+  expect(css).toContain('drop-shadow(0 0 22px rgba(241,160,40,.72))');
+  expect(css).toContain('.gandalf-equip-slot.magical-no-art .gandalf-equip-value');
+ });
  it('uses alpha-mask shadows rather than brightening equipment frames',()=>{
   expect(css).toContain('@keyframes aleaMagicalGoldPulse');
   expect(css).toContain('drop-shadow(');
