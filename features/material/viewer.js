@@ -86,7 +86,7 @@ export function createLegolas({
   if(state.mounted||!doc().body)return;
   state.mounted=true;
   const nav=doc().createElement('button');
-  nav.id='materialNavBtn';nav.type='button';nav.className='btn legolas-nav';
+  nav.id='materialNavBtn';nav.type='button';nav.className='btn legolas-nav alea-bronze-nav';nav.style.setProperty('--alea-nav-pos','60%');
   nav.title='Materialpanel';nav.setAttribute('aria-label','Öppna materialpanelen');
   nav.innerHTML='<span aria-hidden="true">▧</span><span class="material-nav-label"> Material</span>';nav.addEventListener('click',()=>openPanel());
   const target=el('mapNavBtn')||doc().querySelector('header .barspacer');
