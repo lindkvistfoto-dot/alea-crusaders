@@ -337,3 +337,14 @@
  }
  .gandalf-equip-projectiles .gandalf-equip-label small{font-size:8px}
 }
+
+/* Desktop: scale the entire square equipment scene to the available screen
+   height. Width sets the scene size (1:1), so all armor slots and the feet
+   remain visible even in shorter laptop/browser windows. Leave overflow:auto
+   alone: the equipment picker below the scene must still be scrollable. */
+@media (min-width:761px){
+  #currentEquipmentModal .current-equipment-modal{
+    width:min(1000px,calc(100vw - 32px),calc(100dvh - 140px));
+    box-sizing:border-box;
+  }
+}
