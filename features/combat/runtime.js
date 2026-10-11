@@ -350,7 +350,8 @@ function combatSourceStats(sceneCombatant,sources){
   movement_max:move,movement_remaining:move,smi,sty,sto,attributes:snapshot,attack_profile:attackProfile,
   flying:state.flying===true,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
-  portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null
+  portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
+  combat_icon_path:source?.combat_icon_path||null
  }
 }
 async function combatLoadSceneRuntimeData(scene){
@@ -358,9 +359,9 @@ async function combatLoadSceneRuntimeData(scene){
  const [sceneCombatants,sceneHexes,characters,npcs,monsters]=await Promise.all([
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
-  dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,data'),
-  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,attributes,weapons,shield,armor,spells'),
-  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,attributes,weapons,shield,armor')
+  dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,combat_icon_path,data'),
+  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells'),
+  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor')
  ]);
  return{
   sceneCombatants:Array.isArray(sceneCombatants)?sceneCombatants:[],
@@ -662,7 +663,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:row.start_q==null||row.start_r==null?'removed':'active',action_plan:[],
-   state:{...(row.state||{}),portrait_image_path:stats.portrait_image_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -2592,6 +2593,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
     dbJson('combat_log?combat_id=eq.'+cid+'&select=*&order=id.desc&limit=60')
    ]);
    combatants=Array.isArray(data[0])?data[0]:[];
+   await combatLoadActorImageSources();
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
@@ -2640,6 +2642,7 @@ async function openCombat(){
  $('combatPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  $('combatBody').innerHTML='<div class="combat-empty">Laddar strid…</div>';
  await loadCombatSceneChoices();
+ combatActorImageSources.clear(); // Recheck uploaded pictures when the battle reopens.
  await loadActiveCombat();
  combatStartPlayerSync()
 }
@@ -2753,11 +2756,10 @@ function combatPortraitHexPoints(size){
 }
 function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
  if(!combatant)return '';
- // Rollpersoner, SLP och fiender använder samma hexbricka och sina redan
- // registrerade porträtt. Hämta motståndarnas bild via stridens bildcache.
- const portraitUrl=combatant.source_type==='character'
-  ?combatPlayerPortraitSource(combatant)?.url||''
-  :combatRowPortraitUrl(combatant);
+ // Explicit hex icons outrank regular portraits; otherwise reuse the portrait.
+ const visual=combatMiniatureVisual(combatant);
+ const portraitUrl=visual.url;
+ const fallbackClass=visual.type==='portrait'&&combatant.source_type==='npc'?' portrait-fallback':'';
  const scale=Math.max(.55,g.size/42);
  if(!portraitUrl){
   if(combatant.source_type!=='character')return '';
@@ -2776,7 +2778,7 @@ function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
  const clipId='combatPortraitClip_'+safeId;
  const outer=combatPortraitHexPoints(34),inner=combatPortraitHexPoints(28.7);
  const depthOffset=2.5;
- return '<g class="combat-miniature combat-portrait-hex'+sideClass+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
+ return '<g class="combat-miniature combat-portrait-hex'+sideClass+fallbackClass+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
   '<defs><clipPath id="'+clipId+'"><polygon points="'+inner+'"/></clipPath></defs>'+
   '<g class="combat-portrait-visual" transform="translate(0 -'+depthOffset+')">'+
    '<polygon class="combat-portrait-depth" points="'+outer+'" transform="translate(0 5)"/>'+
@@ -4630,26 +4632,84 @@ function combatNpcPortraitSrc(path){
  }
  return '';
 }
+
+// Existing combat instances can lack actor image paths even after adding a
+// portrait in the SLP register. Cache only the two required public paths.
+const combatActorImageSources=new Map();
+function combatActorImageKey(type,id){return String(type||'')+':'+String(id||'')}
+async function combatLoadActorImageSources(){
+ if(!centralCampaignId)return;
+ await Promise.all(['npc','monster'].map(async type=>{
+  const ids=[...new Set((combatants||[]).filter(row=>row.source_type===type&&row.source_id)
+   .map(row=>String(row.source_id)))].filter(id=>!combatActorImageSources.has(combatActorImageKey(type,id)));
+  if(!ids.length)return;
+  const table=type==='npc'?'campaign_npcs':'campaign_monsters';
+  try{
+   const rows=await dbJson(table+'?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+
+    '&id=in.('+ids.map(encodeURIComponent).join(',')+')&select=id,image_path,combat_icon_path');
+   ids.forEach(id=>combatActorImageSources.set(combatActorImageKey(type,id),{}));
+   (Array.isArray(rows)?rows:[]).forEach(row=>
+    combatActorImageSources.set(combatActorImageKey(type,row.id),row));
+  }catch(error){
+   // Player roles may not read hidden NPC masters. The battle's stored
+   // portrait_image_path/combat_icon_path remains the fallback in that case.
+   console.warn('Kunde inte läsa stridens SLP-bilder från registret',error);
+  }
+ }))
+}
+function combatActorImageRecord(combatant){
+ const type=combatant?.source_type,id=combatant?.source_id;
+ const list=type==='npc'?(typeof campaignNpcs!=='undefined'?campaignNpcs:[]):
+  type==='monster'?(typeof campaignMonsters!=='undefined'?campaignMonsters:[]):[];
+ const live=(list||[]).find(row=>String(row.id)===String(id))||{};
+ const cached=combatActorImageSources.get(combatActorImageKey(type,id))||{};
+ const data=live.data&&typeof live.data==='object'?live.data:live;
+ return {
+  portraitPath:live.image_path||data.image_path||cached.image_path||combatant?.state?.portrait_image_path||'',
+  iconPath:live.combat_icon_path||data.combatIconPath||data.combat_icon_path||
+   cached.combat_icon_path||combatant?.state?.combat_icon_path||'',
+  portraitUrl:data.portrait||data.portrait_url||data.image_url||live.portrait_url||live.image_url||''
+ }
+}
+const combatNpcIconRequests=new Map();
+function combatNpcIconSrc(path){
+ const key=String(path||'').trim();
+ if(!key||typeof combatIconCachedUrl!=='function')return '';
+ const cached=combatIconCachedUrl(key);
+ if(cached)return cached;
+ if(!combatNpcIconRequests.has(key)&&typeof getCombatIconUrl==='function'){
+  const pending=Promise.resolve().then(()=>getCombatIconUrl(key)).then(url=>{
+   if(url&&activeCombat&&typeof renderCombat==='function')renderCombat();
+  }).catch(error=>console.warn('Kunde inte läsa stridens hexikon',error))
+   .finally(()=>combatNpcIconRequests.delete(key));
+  combatNpcIconRequests.set(key,pending);
+ }
+ return '';
+}
+function combatMiniatureVisual(combatant){
+ if(!combatant)return {url:'',type:'none'};
+ if(combatant.source_type==='character'){
+  const portrait=combatPlayerPortraitSource(combatant);
+  const iconPath=portrait?.source?.combatIconPath||portrait?.source?.combat_icon_path||
+   combatant.state?.combat_icon_path||'';
+  if(iconPath)return {url:combatNpcIconSrc(iconPath),type:'icon'};
+  return {url:portrait?.url||'',type:portrait?.url?'portrait':'none'};
+ }
+ const source=combatActorImageRecord(combatant);
+ if(source.iconPath)return {url:combatNpcIconSrc(source.iconPath),type:'icon'};
+ const portrait=combatNpcPortraitSrc(source.portraitPath)||String(source.portraitUrl||'');
+ return {url:portrait,type:portrait?'portrait':'none'}
+}
+
 function combatRowPortraitUrl(combatant){
  if(!combatant)return '';
  if(combatant.source_type==='character'){
   const portrait=combatPlayerPortraitSource(combatant);
   return portrait?.url||'';
  }
- let source=null;
- if(combatant.source_type==='npc'&&typeof campaignNpcs!=='undefined')source=(campaignNpcs||[]).find(row=>String(row.id)===String(combatant.source_id));
- else if(combatant.source_type==='monster'&&typeof campaignMonsters!=='undefined')source=(campaignMonsters||[]).find(row=>String(row.id)===String(combatant.source_id));
- const data=source?.data&&typeof source.data==='object'?source.data:(source||{});
- const imagePath=source?.image_path||data.image_path||combatant.state?.portrait_image_path||'';
- const storedPortrait=combatNpcPortraitSrc(imagePath);
- if(storedPortrait)return storedPortrait;
- const direct=data.portrait||data.portrait_url||data.image_url||source?.portrait_url||source?.image_url||'';
- if(direct)return String(direct);
- const iconPath=source?.combat_icon_path||data.combatIconPath||data.combat_icon_path||'';
- if(iconPath&&typeof combatIconCachedUrl==='function'){
-  try{return combatIconCachedUrl(iconPath)||''}catch(_error){}
- }
- return '';
+ const source=combatActorImageRecord(combatant);
+ return combatNpcPortraitSrc(source.portraitPath)||String(source.portraitUrl||'')||
+  combatNpcIconSrc(source.iconPath)
 }
 function combatRowPortraitHtml(combatant,roleClass){
  const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant?.name_snapshot||'?');
