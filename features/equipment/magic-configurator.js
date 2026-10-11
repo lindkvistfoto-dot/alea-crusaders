@@ -30,9 +30,49 @@
    max_charges:max,charge_cost:price,uses_per_day:uses
   }
  }
+
+ const battery=power=>power?.property_key==='magic_battery';
+ function rollBatteryGrade(power,chosen,random=Math.random){
+  if(power.battery_grade_mode!=='dice'){
+   const grade=whole(chosen,1,50);
+   return {grade,rolls:[],notation:null};
+  }
+  const notation=String(power.battery_grade_dice||'1T3').trim().toUpperCase();
+  const match=/^([1-9][0-9]?)T(3|4|6|8|10|12|20)(?:([+-])([0-9]{1,2}))?$/.exec(notation);
+  if(!match)throw new Error('Ogiltig EG-tärning, exempelvis 1T3 eller 2T6+1.');
+  const count=Number(match[1]),sides=Number(match[2]);
+  const modifier=Number(match[4]||0)*(match[3]==='-'?-1:1);
+  if(count*sides+modifier>50||count+modifier<1)throw new Error('EG-tärningen måste ge ett resultat mellan 1 och 50.');
+  const rolls=[];
+  for(let i=0;i<count;i++){
+   const value=random();
+   if(!Number.isFinite(value)||value<0||value>=1)throw new Error('Tärningsgeneratorn gav ogiltigt värde.');
+   rolls.push(1+Math.floor(value*sides));
+  }
+  return {grade:rolls.reduce((sum,value)=>sum+value,modifier),rolls,notation};
+ }
+ function chargeBattery(power,spell,chosenGrade,fv,day=null,random=Math.random){
+  if(!battery(power))throw new Error('Egenskapen är inte ett magiskt batteri.');
+  if(power.battery_loaded)throw new Error('Batteriet är redan laddat. Förbruka laddningen först.');
+  if(!spell?.id||!spell?.name)throw new Error('Välj en registrerad besvärjelse.');
+  const castingFv=whole(fv,1,100);
+  const result=rollBatteryGrade(power,chosenGrade,random);
+  if(result.grade>castingFv)throw new Error('Effektgraden överstiger besvärjarens FV.');
+  return {...power,battery_loaded:{
+   spell_id:String(spell.id),spell_key:String(spell.spell_key||''),
+   spell_name:String(spell.name),effect_grade:result.grade,
+   fv:castingFv,charged_day:day,grade_roll:result.notation,
+   grade_rolls:result.rolls
+  }};
+ }
  function dayNumber(value){const n=Number(value);return Number.isInteger(n)&&n>=1?n:null}
  function state(config={},campaignDay=null){
   const c=normalize(config),day=dayNumber(campaignDay),usedDay=dayNumber(c.last_used_day);
+  if(battery(c)){
+   const loaded=c.battery_loaded;
+   const valid=!!loaded&&!!loaded.spell_id&&whole(loaded.effect_grade,1,50)>0&&whole(loaded.fv,1,100)>0;
+   return {ready:valid,reason:valid?'':'Batteriet är oladdat',charges:valid?1:0,uses_today:0,day};
+  }
   const usedToday=day!==null&&usedDay===day;
   const previousDay=day!==null&&usedDay!==null&&usedDay<day;
   const usage=usedToday?whole(c.uses_today,0,9999,0):0;
@@ -53,6 +93,7 @@
  function markUsed(config={},campaignDay=null){
   const c=normalize(config),status=state(c,campaignDay);
   if(!status.ready)throw new Error(status.reason);
+  if(battery(c))return {...c,battery_loaded:null,last_used_day:status.day,uses_today:(Number(c.uses_today)||0)+1};
   if(status.day===null)throw new Error('Kampanjdag saknas – kan inte registrera användning');
   return {...c,
    last_used_day:status.day,
@@ -63,6 +104,7 @@
  }
  function reset(config={}){
   const c=normalize(config);
+  if(battery(c))return {...c,battery_loaded:null};
   return {...c,last_used_day:null,uses_today:0,manual_locked:false,
    charges_remaining:c.max_charges===null?null:c.max_charges}
  }
@@ -75,5 +117,5 @@
    result_units:c.effect_multiplier
   }
  }
- root.aleaMagicConfigurator={normalize,state,markUsed,reset,preview,casting,recovery,activation};
+ root.aleaMagicConfigurator={normalize,state,markUsed,reset,preview,casting,recovery,activation,rollBatteryGrade,chargeBattery,battery};
 })(typeof window!=='undefined'?window:globalThis);
