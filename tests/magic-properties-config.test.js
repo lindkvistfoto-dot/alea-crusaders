@@ -34,6 +34,10 @@ function harness(admin=true){
   mapSpell:{value:sid},
   mapActivation:{value:'action'},
   mapEg:{value:'4'},
+  mapMultiplier:{value:'4'},
+  mapCastMode:{value:'fixed'},
+  mapFixedFv:{value:'5'},
+  mapRecharge:{value:'next_day'},
   mapPsy:{value:'wearer'},
   mapChargeCost:{value:'1'},
   mapUses:{value:'2'},
@@ -133,6 +137,9 @@ describe('Magiska egenskaper som återanvändbara förmågor',()=>{
   expect(body.property_id).toBe(did);
   expect(body.spell_id).toBe(sid);
   expect(body.effect_grade).toBe(4);
+  expect(body.effect_multiplier).toBe(4);
+  expect(body.fixed_fv).toBe(5);
+  expect(body.recharge_rule).toBe('next_day');
   expect(body.psy_source).toBe('wearer');
   expect(body.charge_cost).toBe(1);
   expect(body.uses_per_day).toBe(2);
