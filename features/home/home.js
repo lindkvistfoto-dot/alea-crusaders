@@ -27,8 +27,11 @@
   }
   function setNavigation() {
     const home = el('landingHomeNavBtn');
+    const bannerHome = el('aleaBannerHomeLink');
     const characters = el('landingCharactersNavBtn');
-    if (home) home.setAttribute('aria-current', !landing.classList.contains('hidden') ? 'page' : 'false');
+    const landingCurrent = !landing.classList.contains('hidden') ? 'page' : 'false';
+    if (home) home.setAttribute('aria-current', landingCurrent);
+    if (bannerHome) bannerHome.setAttribute('aria-current', landingCurrent);
     if (characters) characters.setAttribute('aria-current', !roster.classList.contains('hidden') ? 'page' : 'false');
   }
   function chooseImage(index) {
