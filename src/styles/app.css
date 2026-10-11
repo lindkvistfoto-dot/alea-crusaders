@@ -2265,9 +2265,13 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-dice-layer.positioned{opacity:1}
 .combat-dice-host{
  position:absolute;
- inset:-20%;
- transform:scale(.72);
- transform-origin:center center;
+ /* Keep the DiceBox canvas and physics world in the exact same coordinate
+    space as the combat board. The old oversized, scaled wrapper could make
+    the 3D presentation look oddly stretched on non-square maps. */
+ inset:0;
+ width:100%;
+ height:100%;
+ box-sizing:border-box;
  overflow:hidden;
  pointer-events:none;
  opacity:1;
