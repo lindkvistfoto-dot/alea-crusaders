@@ -14,23 +14,25 @@ describe('Alea crest in the desktop banner', () => {
     expect(head).toContain('href="#landing"');
     expect(head).toContain('onclick="event.preventDefault();openLanding()"');
     expect(head).toContain('aria-label="Gå till Alea Crusaders framsida"');
-    expect(head).toContain('assets/navigation/home-normal.png');
-    expect(head).toContain('assets/navigation/home-active.png');
+    expect(head).toContain('assets/navigation/home-normal.avif');
+    expect(head).toContain('assets/navigation/home-active.avif');
   });
 
-  test('uses real transparent PNG assets with matching dimensions', () => {
-    for (const name of ['home-normal.png', 'home-active.png']) {
+  test('uses sharp, transparency-capable 512px AVIF assets for both Home states', () => {
+    for (const name of ['home-normal.avif', 'home-active.avif']) {
       const image = readFileSync(new URL('../assets/navigation/' + name, import.meta.url));
-      expect(image.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
-      expect(image.readUInt32BE(16)).toBe(96);
-      expect(image.readUInt32BE(20)).toBe(96);
+      expect(image.toString('ascii',4,12)).toBe('ftypavif');
+      const ispe = image.indexOf(Buffer.from('ispe'));
+      expect(ispe).toBeGreaterThan(0);
+      expect(image.readUInt32BE(ispe+8)).toBe(512);
+      expect(image.readUInt32BE(ispe+12)).toBe(512);
     }
   });
 
   test('shows active image only for landing and preserves mobile header', () => {
     expect(css).toContain('@media (min-width: 1024px)');
-    expect(css).toContain('.alea-app-header .alea-banner-home-link { display: none; }');
-    expect(css).toContain('.alea-banner-home-link[aria-current="page"] .alea-banner-home-icon--active { opacity: 1; }');
+    expect(css).toContain('.alea-app-header .alea-banner-home-link {display:none}');
+    expect(css).toContain('.alea-banner-home-link[aria-current="page"] .alea-banner-home-icon--active {opacity:1}');
     expect(homeJs).toContain("if (bannerHome) bannerHome.setAttribute('aria-current', landingCurrent)");
     expect(homeJs).toContain('window.openLanding = openLanding;');
   });
