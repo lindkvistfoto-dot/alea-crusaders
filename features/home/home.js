@@ -32,7 +32,7 @@
     const landingCurrent = !landing.classList.contains('hidden') ? 'page' : 'false';
     if (home) home.setAttribute('aria-current', landingCurrent);
     if (bannerHome) bannerHome.setAttribute('aria-current', landingCurrent);
-    if (characters) characters.setAttribute('aria-current', !roster.classList.contains('hidden') ? 'page' : 'false');
+    if (characters) characters.setAttribute('aria-current', (!roster.classList.contains('hidden') || !el('view')?.classList.contains('hidden')) ? 'page' : 'false');
   }
   function chooseImage(index) {
     if (!HOME_GALLERY.length) return;
