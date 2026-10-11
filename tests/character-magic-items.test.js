@@ -74,7 +74,8 @@ describe('Unika föremål med magiska egenskaper',()=>{
   t.scope.window.setCharacterItemMagical('equipment',0,true);
   expect(t.current.equipment).toHaveLength(2);
   expect(t.current.equipment[0]).toMatchObject({equipId:'e1',count:1,isMagical:true});
-  expect(t.current.equipment[1]).toMatchObject({count:4,isMagical:undefined});
+  expect(t.current.equipment[1].count).toBe(4);
+  expect(t.current.equipment[1].isMagical).toBeUndefined();
   expect(t.current.equipment[1].equipId).not.toBe('e1');
   expect(t.current.currentEquipment.leftHand.itemId).toBe('w1');
   expect(t.saves).toBe(1);
