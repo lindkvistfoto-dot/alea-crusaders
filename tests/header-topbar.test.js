@@ -10,11 +10,12 @@ describe('Alea unified header',()=>{
    expect(html).toContain('class="alea-clock"');
    expect(html).toContain('class="alea-account"');
    const strip=html.split('<nav class="alea-toolstrip"')[1].split('</nav>')[0];
-   for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','combatNavBtn','mapNavBtn','diceNavBtn']){
+   for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','landingCharactersNavBtn','combatNavBtn','mapNavBtn','diceNavBtn']){
      expect(strip).toContain('id="'+id+'"');
    }
+   // Rollfigurer has a permanent illustrated button in the desktop toolstrip.
    const heading=html.split('<div class="alea-headingbar">')[1];
-   for(const id of ['dayNavBtn','campaignTimeControl','landingHomeNavBtn','landingCharactersNavBtn','appVersion']){
+   for(const id of ['dayNavBtn','campaignTimeControl','landingHomeNavBtn','appVersion']){
      expect(heading).toContain('id="'+id+'"');
    }
  });
