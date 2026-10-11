@@ -97,6 +97,19 @@ describe('Unified navigation and banner self-test',()=>{
   expect(app.hidden('legolasPanel')).toBe(true);
   expect(app.el('aleaBannerHomeLink').attributes['aria-current']).toBe('page');
  });
+ it.each([
+  ['landingHomeNavBtn','landing'],['landingCharactersNavBtn','home'],
+  ['shopNavBtn','shopPage'],['innNavBtn','innPage'],['academyNavBtn','academyPage'],
+  ['combatNavBtn','combatPage'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage'],
+  ['journalNavBtn','journalPage'],['adminNavBtn','admin']
+ ])('selects exactly the %s shortcut when %s is displayed',async(id,page)=>{
+  const app=setup();app.show(page);app.click(id);await Promise.resolve();
+  expect(app.el(id).attributes['aria-current']).toBe('page');
+  for(const other of ['landingHomeNavBtn','landingCharactersNavBtn','shopNavBtn','alchemyNavBtn',
+    'innNavBtn','academyNavBtn','combatNavBtn','mapNavBtn','diceNavBtn','journalNavBtn','adminNavBtn']){
+   if(other!==id)expect(app.el(other).attributes['aria-current']).toBe('false');
+  }
+ });
  it('does not hide the active page when an Academy navigation attempt fails',async()=>{
   const app=setup();app.show('home');app.click('academyNavBtn');await Promise.resolve();
   expect(app.hidden('home')).toBe(false);
