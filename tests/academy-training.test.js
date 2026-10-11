@@ -27,10 +27,11 @@ describe('Akademin — Expert advancement, experience and tuition',()=>{
  });
  it('category B costs ×1 through FV2, ×2 through 4, ×3 for 5 and stops',()=>{
   const r=model(),b={...skill,id:'b',name:'En kategori B-färdighet',expert_category:'B',cost:4};
-  expect(r.quote(hero(1,0),b).required).toBe(4);
-  expect(r.quote(hero(2,0),b).required).toBe(8);
-  expect(r.quote(hero(4,0),b).required).toBe(12);
-  expect(r.quote(hero(5,20),b).required).toBe(null);
+  const trainee=(fv,erf)=>{const c=hero(fv,erf);c.skills[0].skillId='b';c.skills[0].name=b.name;return c};
+  expect(r.quote(trainee(1,0),b).required).toBe(4);
+  expect(r.quote(trainee(2,0),b).required).toBe(8);
+  expect(r.quote(trainee(4,0),b).required).toBe(12);
+  expect(r.quote(trainee(5,20),b).required).toBe(null);
  });
  it('spends named ERF first and only then generic bonus EXP without affecting another skill',()=>{
   const r=model(),c=hero(10,2,4);const out=r.purchase(c,skill);
@@ -72,7 +73,7 @@ describe('Akademin — Expert advancement, experience and tuition',()=>{
   expect(()=>r.teacherQuote(c,skill,{...o,intelligence:12})).toThrow('INT');
   expect(()=>r.teacherQuote(c,skill,{...o,fv:12})).toThrow('FV');
   expect(()=>r.teacherQuote(c,skill,{...o,classmates:10,differentRace:7})).toThrow('större');
-  expect(r.teacherQuote(c,{...skill,expert_category:'B'}, {...o,fv:5}).bonus).toBe(10);
+  expect(r.teacherQuote(hero(3),{...skill,expert_category:'B'}, {...o,fv:5}).bonus).toBe(10);
  });
  it('teacher training stores two rolls and resolves only after elapsed time',()=>{
   const r=model(),c=hero(10),session=r.plan(c,skill,{mode:'teacher',day:30,teacher:{
