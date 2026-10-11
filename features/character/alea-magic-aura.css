@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.93 — Arcane equipment aura.
+/* Alea Crusaders v0.35.94 — Arcane equipment aura.
    A single generic visual treatment for any *equipped instance* marked magical.
    The weapon image is unchanged; the sigil sits behind it, sparks above it.
    Works with uploaded per-instance artwork as well as the master image.
@@ -46,8 +46,8 @@
   width:clamp(5px,1.3vw,9px);
   aspect-ratio:1;
   border-radius:50%;
-  background:radial-gradient(circle,#fffef0 0%,#fff0bd 18%,#efbc5c 42%,rgba(243,172,48,.28) 68%,transparent 76%);
-  box-shadow:0 0 5px 1px rgba(255,230,147,.8),0 0 11px 2px rgba(237,170,64,.42);
+  background:radial-gradient(circle,rgba(255,248,214,.60) 0%,rgba(255,224,163,.48) 18%,rgba(239,188,92,.32) 42%,rgba(243,172,48,.10) 68%,transparent 76%);
+  box-shadow:0 0 4px rgba(255,230,147,.30),0 0 8px rgba(237,170,64,.14);
   opacity:0;
   transform:translate(-50%,-50%) scale(.2);
   animation:aleaMagicalTwinkle var(--spark-speed,5.3s) ease-in-out var(--spark-delay,0s) infinite;
@@ -127,7 +127,7 @@
 @media(max-width:620px){
   .gandalf-equip-slot.magical .alea-magic-sparks { inset:16%; }
   .gandalf-equip-twohand.magical .alea-magic-sparks { inset:13% 7%; }
-  .gandalf-equip-slot.magical .alea-magic-spark {width:5px;box-shadow:0 0 4px rgba(255,230,147,.78),0 0 8px rgba(237,170,64,.35);}
+  .gandalf-equip-slot.magical .alea-magic-spark {width:5px;box-shadow:0 0 3px rgba(255,230,147,.28),0 0 6px rgba(237,170,64,.12);}
   .gandalf-equip-slot.magical .gandalf-equip-face::before { filter:none; }
 }
 @media(prefers-reduced-motion:reduce){
