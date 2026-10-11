@@ -7521,3 +7521,41 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 @media(prefers-reduced-motion:reduce){
  .combat-map-svg .combat-active-turn-aura{animation:none;opacity:1}
 }
+
+
+/* v0.35.97 — Separate food and water counters with matched controls. */
+#equipmentPanel .provisions-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:13px
+}
+#equipmentPanel .provisions-resource{
+ min-width:0;padding:12px;border:1px solid #44644e;border-radius:12px;
+ background:rgba(12,22,17,.48)
+}
+#equipmentPanel .provisions-water{
+ border-color:#355f79;background:linear-gradient(145deg,rgba(15,39,57,.75),rgba(9,27,38,.72))
+}
+#equipmentPanel .provisions-resource-heading{
+ min-height:28px;display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap
+}
+#equipmentPanel .provisions-resource-heading>b{
+ font:700 16px/1.2 Georgia,serif;color:#ffe6b4
+}
+#equipmentPanel .provisions-water .provisions-resource-heading>b{color:#badff6}
+#equipmentPanel .provisions-resource .provisions-counter{margin-top:10px;gap:8px}
+#equipmentPanel .provisions-water .provisions-stepper button{
+ border-color:#537d98;background:#193444;color:#e6f7ff
+}
+#equipmentPanel .provisions-edit-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,210px));gap:12px
+}
+#equipmentPanel .provisions-edit-grid .provisions-set{max-width:none;min-width:0}
+@media(max-width:690px){
+ #equipmentPanel .provisions-grid{grid-template-columns:minmax(0,1fr)}
+ #equipmentPanel .provisions-resource{padding:10px 12px}
+ #equipmentPanel .provisions-resource .provisions-counter{flex-wrap:nowrap}
+ #equipmentPanel .provisions-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:360px){
+ #equipmentPanel .provisions-edit-grid{grid-template-columns:1fr}
+ #equipmentPanel .provisions-resource .provisions-value strong{font-size:30px}
+}
