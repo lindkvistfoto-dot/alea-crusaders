@@ -126,3 +126,67 @@ describe('Legolas Greenleaf — private material panel and zoomable viewer',()=>
   expect(js).not.toContain('campaign_material_presentations?');
  });
 });
+
+describe('Material lifecycle – scroll and repeated routing regression',()=>{
+ it('opens at the top, survives a legacy route hiding its DOM and can reopen repeatedly',async()=>{
+  const nodes=new Map(),scroll={y:1300};
+  const mk=(id='')=>{
+   const cls=new Set(['hidden']);
+   return {id,innerHTML:'',textContent:'',disabled:false,attributes:{},listeners:{},
+    classList:{contains:x=>cls.has(x),add:x=>cls.add(x),remove:x=>cls.delete(x),
+     toggle:(x,v)=>v?cls.add(x):cls.delete(x)},
+    setAttribute(k,v){this.attributes[k]=v},
+    addEventListener(type,fn){this.listeners[type]=fn},
+    focus(options={}){this.focusOptions=options;if(!options.preventScroll)scroll.y=980},
+    insertAdjacentElement(where,node){nodes.set(node.id,node)},
+    querySelectorAll:()=>[],querySelector:()=>null,append(){},replaceChildren(){}};
+  };
+  const ids=['landing','shopPage','landingCharactersNavBtn','legolasSubhead',
+   'legolasClosePanel','legolasCloseViewer','legolasPrevious','legolasNext',
+   'legolasRefresh','legolasCategory','legolasSearch','legolasGrid',
+   'legolasQueueItems','legolasPreviewQueue','legolasClearQueue',
+   'legolasZoomIn','legolasZoomOut','legolasZoomReset','legolasFullscreen',
+   'legolasViewerPrevious','legolasViewerNext','legolasStage','legolasGmQueue',
+   'legolasQueueCount','legolasPageNumber','legolasResults','legolasNotice'];
+  for(const id of ids)nodes.set(id,mk(id));
+  nodes.get('landing').classList.remove('hidden');
+  const body=mk('body'),pages=[nodes.get('landing'),nodes.get('shopPage')];
+  body.append=(...els)=>els.forEach(node=>nodes.set(node.id,node));
+  const main={
+   append(node){pages.push(node);nodes.set(node.id,node)},
+   querySelectorAll:()=>pages
+  };
+  const doc={
+   body,activeElement:nodes.get('landingCharactersNavBtn'),
+   getElementById:id=>nodes.get(id)||null,
+   createElement:()=>mk(),
+   querySelector:q=>q==='main'?main:null,
+   addEventListener(){},fullscreenElement:null
+  };
+  const win={URL:{revokeObjectURL(){}},scrollTo({top}){scroll.y=top}};
+  const api=createLegolas({doc:()=>doc,win:()=>win,getCampaign:()=>campaign,
+   isLoggedIn:()=>true,isGM:()=>true,query:async()=>[],read:async()=>new Blob(['test'])});
+  api.openPanel();
+  expect(scroll.y).toBe(0);
+  expect(nodes.get('landing').classList.contains('hidden')).toBe(true);
+  expect(nodes.get('legolasPanel').classList.contains('hidden')).toBe(false);
+  expect(nodes.get('legolasClosePanel').focusOptions).toMatchObject({preventScroll:true});
+  // Legacy routes used to hide the panel without closing its controller.
+  nodes.get('legolasPanel').classList.add('hidden');
+  nodes.get('shopPage').classList.remove('hidden');
+  scroll.y=900;
+  api.openPanel();
+  expect(scroll.y).toBe(0);
+  expect(api.state.panelOpen).toBe(true);
+  expect(nodes.get('shopPage').classList.contains('hidden')).toBe(true);
+  expect(nodes.get('legolasPanel').classList.contains('hidden')).toBe(false);
+  api.closePanel({restorePage:false,restoreFocus:false});
+  expect(api.state.panelOpen).toBe(false);
+  nodes.get('shopPage').classList.remove('hidden');
+  scroll.y=730;
+  api.openPanel();
+  expect(scroll.y).toBe(0);
+  expect(nodes.get('legolasPanel').classList.contains('hidden')).toBe(false);
+  expect(nodes.get('shopPage').classList.contains('hidden')).toBe(true);
+ });
+});

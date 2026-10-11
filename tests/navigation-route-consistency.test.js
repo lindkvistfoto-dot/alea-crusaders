@@ -181,3 +181,28 @@ describe('Material navigation never blocks other destinations',()=>{
     }
   });
 });
+
+describe('Material repeated visits and route lifecycle',()=>{
+ it('closes Material state even after another page has already hidden its section',async()=>{
+  const source=read('features/home/navigation-icons.js');
+  expect(source).toContain("if(button.id!=='materialNavBtn')");
+  expect(source).toContain('window.legolasClosePanel?.({restorePage:false,restoreFocus:false})');
+  expect(source).not.toContain("if(button.id!=='materialNavBtn'&&(visible('legolasPanel')");
+  const app=setup();
+  app.show('legolasPanel');
+  app.el('legolasPanel').classList.add('hidden'); // Legacy handler ran first
+  app.show('combatPage');app.click('combatNavBtn');await Promise.resolve();
+  expect(app.materialClosed).toBeGreaterThan(0);
+ });
+ it('reopens Material repeatedly after switching across the desktop banner',async()=>{
+  const app=setup();
+  for(const [target,page] of [['shopNavBtn','shopPage'],['combatNavBtn','combatPage'],
+    ['innNavBtn','innPage'],['landingCharactersNavBtn','home'],['aleaBannerHomeLink','landing']]){
+   app.show('legolasPanel');app.click('materialNavBtn');await Promise.resolve();
+   expect(app.hidden('legolasPanel'),target).toBe(false);
+   expect(app.el('materialNavBtn').attributes['aria-current'],target).toBe('page');
+   app.show(page);app.click(target);await Promise.resolve();
+   expect(app.hidden('legolasPanel'),target).toBe(true);
+  }
+ });
+});

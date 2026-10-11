@@ -199,16 +199,26 @@ export function createLegolas({
   mount();
   if(!authorized())return;
   cleanCampaign();
-  if(state.panelOpen){loadPage();return;}
-  state.lastFocus=doc().activeElement;
+  const panel=el('legolasPanel');
   const main=doc().querySelector('main');
-  state.previousPage=Array.from(main?.querySelectorAll(':scope > section[id]')||[])
-   .find(page=>page.id!=='legolasPanel'&&!page.classList.contains('hidden'))?.id||'landing';
+  const pages=Array.from(main?.querySelectorAll(':scope > section[id]')||[]);
+  // Other legacy routes may hide this section directly without calling closePanel().
+  // Never trust panelOpen alone: a hidden section is not an open destination.
+  if(state.panelOpen&&!panel?.classList.contains('hidden')){
+   win().scrollTo?.({top:0,left:0,behavior:'instant'});
+   loadPage();return;
+  }
+  state.lastFocus=doc().activeElement;
+  state.previousPage=pages.find(page=>page.id!=='legolasPanel'&&!page.classList.contains('hidden'))?.id||state.previousPage||'landing';
+  // Hide all other sections BEFORE focusing the newly visible page. Otherwise
+  // focus scrolls past the old (potentially long) page and leaves the view halfway down.
+  for(const page of pages)if(page.id!=='legolasPanel')page.classList.add('hidden');
   state.panelOpen=true;
-  el('legolasPanel').classList.remove('hidden');
+  panel.classList.remove('hidden');
   el('legolasSubhead').textContent=isGM()?'Samla, förhandsvisa och dela kampanjens berättelser':'Upptäck de bilder och dokument som SL har delat';
   updateQueue();syncScroll();
-  el('legolasClosePanel').focus();
+  win().scrollTo?.({top:0,left:0,behavior:'instant'});
+  el('legolasClosePanel').focus({preventScroll:true});
   loadPage();
  }
  function closePanel({restorePage=true,restoreFocus=true}={}){

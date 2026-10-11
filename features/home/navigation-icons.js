@@ -106,12 +106,14 @@
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('button,a');
     if(!button||!header.contains(button)||!Object.hasOwn(routes,button.id))return;
-    if(button.id!=='materialNavBtn'&&(visible('legolasPanel')||visible('legolasViewer')))
+    // Close the Material controller even if a legacy onclick already hid its DOM.
+    // Otherwise panelOpen remains true and the Material button cannot reopen it.
+    if(button.id!=='materialNavBtn')
       window.legolasClosePanel?.({restorePage:false,restoreFocus:false});
     lastNavigation=button.id==='aleaBannerHomeLink'?'landingHomeNavBtn':button.id;
     queueMicrotask(()=>isolatePage(button.id));
     requestAnimationFrame(()=>isolatePage(button.id));
-  });
+  },true);
   // The shared header never moves into a page. Size Material's overlay below
   // its actual responsive bottom edge, including the mobile collapsed state.
   function syncHeaderEdge(){
