@@ -19,12 +19,14 @@ function context(canEdit=true){
  const inputs={
   cmpProperty:{value:'cast_spell'},
   cmpSpell:{value:'spell_eld'},
-  cmpEg:{value:'3'},
-  cmpCastMode:{value:'wearer'},
-  cmpFixedFv:{value:'16'},
+  cmpEg:{value:'1'},
+  cmpCastMode:{value:'fixed'},
+  cmpFixedFv:{value:'5'},
   cmpPsy:{value:'artifact'},
-  cmpSummonCount:{value:'4'},
-  cmpSummonCreature:{value:'Eldsalamander'},
+  cmpMultiplier:{value:'4'},
+  cmpResultLabel:{value:'Eldsalamander'},
+  cmpResultText:{value:'Frammanar en eldsalamander'},
+  cmpRecharge:{value:'next_day'},
   cmpMaxCharges:{value:'4'},
   cmpChargeCost:{value:'1'},
   cmpUses:{value:'1'},
@@ -99,9 +101,11 @@ describe('Unika föremål med magiska egenskaper',()=>{
   expect(power.property_key).toBe('cast_spell');
   expect(power.spell_id).toBe('spell_eld');
   expect(power.spell_key).toBe('frammana-skicka-bort-elementar-eld');
-  expect(power.summon_count).toBe(4);
-  expect(power.summon_creature).toBe('Eldsalamander');
-  expect(power.effect_grade).toBe(3);
+  expect(power.effect_multiplier).toBe(4);
+  expect(power.result_label).toBe('Eldsalamander');
+  expect(power.effect_grade).toBe(1);
+  expect(power.fixed_fv).toBe(5);
+  expect(power.recharge_rule).toBe('next_day');
   expect(power.charge_cost).toBe(1);
   expect(power.uses_per_day).toBe(1);
   expect(t.api.summary(t.current.weapons[0])).toContain('FRAMMANA');
