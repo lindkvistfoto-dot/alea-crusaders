@@ -38,8 +38,8 @@
  const spellFor=id=>(typeof ruleSpells!=='undefined'?ruleSpells:[]).find(row=>String(row.id)===String(id))||null;
  function powerName(power){
   const def=getDefinition(power.property_id);
-  return def?.kind==='spell'
-   ?(def.name+': '+(spellFor(power.spell_id)?.name||'Besvärjelse'))
+  return def?.property_key==='magic_battery'?def.name:
+   def?.kind==='spell'?(def.name+': '+(spellFor(power.spell_id)?.name||'Besvärjelse'))
    :(def?.name||'Okänd egenskap');
  }
  function summary(id){
@@ -131,7 +131,7 @@
     '<p class="rule-editor-note">Kombinera flera egenskaper i samma artefakt. Varje egenskap har egna inställningar. Besvärjelser länkas direkt till regelregistret.</p>'+
     items.map(power=>{
      const def=getDefinition(power.property_id), spell=spellFor(power.spell_id);
-     const extra=def?.kind==='spell'?'EG '+power.effect_grade+' ×'+(power.effect_multiplier||1)+' · '+(spell?.name||'Okänd besvärjelse')+' · FV '+(power.cast_mode==='fixed'?(power.fixed_fv??'—'):power.cast_mode==='automatic'?'Automatisk':'Bärare')+' · '+(power.recharge_rule==='next_day'?'Nästa dag':power.recharge_rule==='manual'?'Manuell återhämtning':'Ingen dagspärr'):
+     const extra=def?.property_key==='magic_battery'?(power.battery_grade_mode==='dice'?'Slumpad EG '+(power.battery_grade_dice||'1T3'):'EG väljs vid laddning')+' · kvick · laddas av besvärjare':def?.kind==='spell'?'EG '+power.effect_grade+' ×'+(power.effect_multiplier||1)+' · '+(spell?.name||'Okänd besvärjelse')+' · FV '+(power.cast_mode==='fixed'?(power.fixed_fv??'—'):power.cast_mode==='automatic'?'Automatisk':'Bärare')+' · '+(power.recharge_rule==='next_day'?'Nästa dag':power.recharge_rule==='manual'?'Manuell återhämtning':'Ingen dagspärr'):
       def?.kind==='bonus'?(power.target_attribute||'Bonus')+' '+(power.bonus_value>=0?'+':'')+power.bonus_value:
       (power.details||def?.description||'');
      return '<div class="magic-power-item'+(power.active?'':' inactive')+'"><div><strong>'+esc(def?.name||'Saknar definition')+'</strong>'+
@@ -144,17 +144,22 @@
     '<button type="button" class="btn primary" onclick="editArtifactPower(\''+esc(artifactId)+'\')">+ Lägg till egenskap</button></div></div>');
  }
  function togglePowerFields(){
-  const prop=getDefinition($('mapProperty')?.value),kind=prop?.kind||'special';
+  const prop=getDefinition($('mapProperty')?.value),kind=prop?.kind||'special',battery=prop?.property_key==='magic_battery';
   $('adminEditorBody')?.querySelectorAll('[data-magic-for]')?.forEach(field=>{
    field.hidden=!field.dataset.magicFor.split(' ').includes(kind);
   });
+  $('adminEditorBody')?.querySelectorAll('[data-battery-only]').forEach(field=>{field.hidden=!battery});
+  for(const id of ['mapSpell','mapEg','mapMultiplier','mapCastMode','mapFixedFv','mapPsy','mapChargeCost','mapUses','mapRecharge']){
+   const field=$(id)?.closest?.('label');if(field&&battery)field.hidden=true;else if(field&&!field.dataset.magicFor)field.hidden=false;
+  }
+  const batteryDice=$('mapBatteryDice');if(batteryDice)batteryDice.hidden=!battery||$('mapBatteryMode')?.value!=='dice';
   const activate=$('mapActivation');
   // Switching to a passive property suggests a passive activation by default;
   // editing an existing power preserves its explicit activation selection.
   const note=$('mapKindHint');
   const fvField=$('mapFixedFvField');
-  if(fvField)fvField.hidden=kind!=='spell'||$('mapCastMode')?.value!=='fixed';
-  if(note)note.textContent=kind==='spell'?
+  if(fvField)fvField.hidden=battery||kind!=='spell'||$('mapCastMode')?.value!=='fixed';
+  if(note)note.textContent=battery?'En besvärjare laddar detta batteri med valfri inlärd besvärjelse. Betald PSY och EG lagras vid laddning; sedan kan föremålet kasta besvärjelsen kvickt utan mer PSY.':kind==='spell'?
    'Effektgrad och besvärjelse är registrerade. Detta aktiverar ännu inte stridsmotorns besvärjelsekast.':
    kind==='bonus'?'Bonusfältet är förberett för framtida automatisk FV- eller grundegenskapsberäkning.':
    'Effekten registreras nu och kan senare kopplas till stridens effektregister.';
@@ -176,6 +181,8 @@
     '<label class="wide">Egenskap från register<select id="mapProperty" onchange="window.aleaMagicProperties?.togglePowerFields()">'+
       allowed.map(def=>'<option value="'+esc(def.id)+'"'+(def.id===activeDef?' selected':'')+'>'+esc(def.name)+' · '+esc(kinds[def.kind])+'</option>').join('')+'</select></label>'+
     '<label>Aktivering<select id="mapActivation">'+options(activations,power?.activation||'action')+'</select></label>'+
+    '<label data-battery-only>Effektgrad vid laddning<select id="mapBatteryMode" onchange="window.aleaMagicProperties?.togglePowerFields()">'+options({chosen:'Besvärjaren väljer EG',dice:'Slumpad EG'},power?.battery_grade_mode||'chosen')+'</select></label>'+
+    '<label data-battery-only id="mapBatteryDice">EG-tärning<input id="mapBatteryNotation" value="'+esc(power?.battery_grade_dice||'1T3')+'" placeholder="1T3"></label>'+
     '<label data-magic-for="spell">Besvärjelse<select id="mapSpell"><option value="">— Välj besvärjelse —</option>'+
       spellRows.map(spell=>'<option value="'+esc(spell.id)+'"'+(String(spell.id)===String(power?.spell_id)?' selected':'')+'>'+esc(spell.name)+'</option>').join('')+'</select></label>'+
     '<label data-magic-for="spell">Effektgrad (EG)<input id="mapEg" type="number" min="1" max="50" step="1" value="'+esc(power?.effect_grade??1)+'"></label>'+
@@ -210,33 +217,47 @@
   if(!art||id&&(!existing||existing.artifact_id!==artifactId))return;
   const def=getDefinition($('mapProperty')?.value);
   if(!def||!def.active&&def.id!==existing?.property_id)return alert('Välj en aktiv magisk egenskap.');
-  const spellId=def.kind==='spell'?$('mapSpell')?.value||null:null;
-  if(def.kind==='spell'&&!spellId)return alert('Välj en besvärjelse från det centrala besvärjelseregistret.');
+  const battery=def.property_key==='magic_battery';
+  const spellId=def.kind==='spell'&&!battery?$('mapSpell')?.value||null:null;
+  if(def.kind==='spell'&&!battery&&!spellId)return alert('Välj en besvärjelse från det centrala besvärjelseregistret.');
   if(spellId&&!spellFor(spellId))return alert('Besvärjelsen finns inte i registret.');
   let grade,cost,uses,bonus,sort,multiplier=1,castMode='none',fixedFv=null,recharge='none';
   try{
-   grade=def.kind==='spell'?positiveInt('mapEg',1,50):1;
-   if(def.kind==='spell'){
+   grade=def.kind==='spell'&&!battery?positiveInt('mapEg',1,50):1;
+   if(def.kind==='spell'&&!battery){
     multiplier=positiveInt('mapMultiplier',1,1000);
     castMode=$('mapCastMode')?.value||'fixed';
     if(!['wearer','fixed','automatic'].includes(castMode))throw Error('Välj giltigt FV-läge.');
     fixedFv=castMode==='fixed'?positiveInt('mapFixedFv',1,100):null;
    }
-   recharge=$('mapRecharge')?.value||'none';
+   recharge=battery?'none':$('mapRecharge')?.value||'none';
    if(!['none','next_day','manual'].includes(recharge))throw Error('Välj giltig återhämtningsregel.');
-   cost=['spell','special','protection','status'].includes(def.kind)?positiveInt('mapChargeCost',0,1000):0;
-   uses=$('mapUses')?.value===''?null:positiveInt('mapUses',0,100000);
+   cost=!battery&&['spell','special','protection','status'].includes(def.kind)?positiveInt('mapChargeCost',0,1000):0;
+   uses=battery?null:$('mapUses')?.value===''?null:positiveInt('mapUses',0,100000);
    bonus=['bonus','protection','status'].includes(def.kind)?Number($('mapBonus')?.value||0):0;
    sort=Number($('mapSort')?.value||0);
    if(!Number.isInteger(bonus)||!Number.isInteger(sort))throw Error('Bonus och ordning måste vara heltal.');
+   if(battery){
+    const mode=$('mapBatteryMode')?.value||'chosen';
+    if(!['chosen','dice'].includes(mode))throw Error('Välj hur effektgraden bestäms.');
+    if(mode==='dice'){
+     const dice=String($('mapBatteryNotation')?.value||'1T3').trim().toUpperCase();
+     const m=/^([1-9][0-9]?)T(3|4|6|8|10|12|20)(?:([+-])([0-9]{1,2}))?$/.exec(dice);
+     if(!m||Number(m[1])*Number(m[2])+(m[3]==='-'?-1:1)*Number(m[4]||0)>50||
+      Number(m[1])+(m[3]==='-'?-1:1)*Number(m[4]||0)<1)
+      throw Error('Ange en giltig EG-tärning, exempelvis 1T3.');
+    }
+   }
   }catch(error){return notify(error)}
   const payload={
    artifact_id:artifactId,property_id:def.id,spell_id:spellId,
-   activation:$('mapActivation')?.value||'action',effect_grade:grade,
+   activation:battery?'action':$('mapActivation')?.value||'action',effect_grade:grade,
    effect_multiplier:multiplier,cast_mode:castMode,
    fixed_fv:fixedFv,recharge_rule:recharge,
-   psy_source:def.kind==='spell'?$('mapPsy')?.value||'artifact':'none',
+   psy_source:def.kind==='spell'&&!battery?$('mapPsy')?.value||'artifact':'none',
    charge_cost:cost,uses_per_day:uses,
+   battery_grade_mode:battery?$('mapBatteryMode')?.value||'chosen':'chosen',
+   battery_grade_dice:battery?$('mapBatteryNotation')?.value.trim().toUpperCase()||'1T3':'1T3',
    target_attribute:['bonus','protection','status'].includes(def.kind)?$('mapTargetAttribute')?.value.trim()||'':'',
    bonus_value:bonus,target_text:$('mapTarget')?.value.trim()||'',
    duration_text:$('mapDuration')?.value.trim()||'',

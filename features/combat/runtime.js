@@ -2035,7 +2035,7 @@ function combatMagicRuleProfile(spell){
 function combatMagicCastingRules(spell,effectGrade){
  const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
  const marker=String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||'');
- const quick=spell?.kvick===true||/(?:^|[\s(,])K(?:[\s,)]|$)/i.test(marker)||/\((?:F\s*,\s*)?K(?:\s*,\s*F)?\)/i.test(String(spell?.name||''));
+ const quick=spell?.item_spell?.battery===true||spell?.kvick===true||/(?:^|[\s(,])K(?:[\s,)]|$)/i.test(marker)||/\((?:F\s*,\s*)?K(?:\s*,\s*F)?\)/i.test(String(spell?.name||''));
  return {effect_grade:eg,psy_cost:eg,cl_modifier:eg===1?0:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
 }
 function combatMagicCastPreflight(combatant,spell,effectGrade){
@@ -2164,6 +2164,13 @@ async function combatRecordItemMagicUse(actor,action){
  const inventory=character[source.group],item=Array.isArray(inventory)?inventory.find(x=>String(x.equipId)===String(source.item_id)):null;
  const power=item?.magicPowers?.find(p=>String(p.id)===String(source.power_id));
  if(!power||(item?.isMagical!==true&&item?.magic?.enabled!==true))throw new Error('Det magiska föremålet eller dess förmåga finns inte längre.');
+ if(source.battery){
+  const loaded=power.battery_loaded;
+  if(power.property_key!=='magic_battery'||!loaded||
+     String(loaded.spell_id)!==String(source.battery_spell_id)||
+     Number(loaded.effect_grade)!==Number(action.source_data.effect_grade))
+   throw new Error('Det magiska batteriets laddning har ändrats. Välj om besvärjelsen.');
+ }
  const day=typeof campaignDayState!=='undefined'?Number(campaignDayState?.day_number)||null:null;
  item.magicPowers[item.magicPowers.indexOf(power)]=model.markUsed(power,day);
  if(typeof save==='function')save();
@@ -2210,7 +2217,7 @@ function combatSpellOptions(combatant){
   spell_source:'item',item_spell:entry,
   attack_magic:entry.rule.attack_magic===true,
   damage_text:entry.rule.damage_text||'',ritual:entry.rule.ritual===true,
-  kvick:entry.rule.kvick===true,range_text:entry.rule.range_text||'',
+  kvick:entry.battery===true||entry.rule.kvick===true,range_text:entry.rule.range_text||'',
   duration_text:entry.rule.duration_text||''
  }));
  return [...learned,...granted]
@@ -2233,7 +2240,7 @@ function combatSpellChooserHtml(combatant,action){
      const reason=source?.cast_mode==='automatic'?'Automatiskt kast ännu inte anslutet':
       source&&!source.fv?'Saknar ett giltigt FV':source?.unavailable_reason||'';
      const hint=source?
-      escAttr(source.item_name)+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
+      escAttr(source.item_name)+(source.battery?' · ⚡ Batteri':'')+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
        ' · FV '+escAttr(source.fv??'—')+(unavailable?' · '+escAttr(reason):''):
       'FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+
       (binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'');
@@ -2244,7 +2251,7 @@ function combatSpellChooserHtml(combatant,action){
   ).join('')+
   '<div class="combat-spell-effect"><span>Effektgrad</span>'+
    (chosen?.item_spell?
-    '<b>'+effect+'</b><small>Fast EG från '+escAttr(chosen.item_spell.item_name)+' · ×'+chosen.item_spell.effect_multiplier+'</small>':
+    '<b>'+effect+'</b><small>'+(chosen.item_spell.battery?'Lagrad EG':'Fast EG')+' från '+escAttr(chosen.item_spell.item_name)+' · ×'+chosen.item_spell.effect_multiplier+'</small>':
     '<button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button>')+
    '</div><small>Välj en besvärjelse. Föremålsbesvärjelser behåller sitt konfigurerade FV och EG.</small></div>'
 }
@@ -2345,7 +2352,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   preflight.valid=preflight.errors.length===0
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
