@@ -7641,3 +7641,46 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  #view .quick-supply{gap:3px;font-size:10px}
  #view .quick-supply>strong{font-size:15px}
 }
+
+
+/* v0.35.100 — KP/PSY side-by-side on every screen, without growing Snabbstatus.
+   Narrow controls preserve both buttons, numeric values and health bars. */
+#view .quick{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;
+ min-width:0;
+}
+#view .quickstat{min-width:0;padding:7px 6px}
+#view .quickstat .quicktop{min-height:18px}
+#view .quickstat .quicktop .label{font-size:12px;white-space:nowrap}
+#view .quickstat .stepper{
+ display:grid;
+ grid-template-columns:30px minmax(0,1fr) 30px;
+ gap:4px;
+ align-items:center;
+ min-width:0;
+ margin-top:4px;
+}
+#view .quickstat .stepper button{
+ display:grid;place-items:center;
+ width:30px;min-width:0;height:34px;
+ padding:0;font-size:19px;line-height:1
+}
+#view .quickstat .statusvalue{min-width:0}
+#view .quickstat .statusvalue .value{
+ margin-bottom:4px;
+ font-size:15px;
+ line-height:1.15;
+ font-variant-numeric:tabular-nums;
+ white-space:nowrap
+}
+#view .quickstat .statusvalue .healthbar{height:6px;max-width:100%}
+@media(max-width:380px){
+ #view .quick{gap:5px}
+ #view .quickstat{padding:6px 4px}
+ #view .quickstat .quicktop .label{font-size:11px}
+ #view .quickstat .stepper{grid-template-columns:27px minmax(0,1fr) 27px;gap:3px}
+ #view .quickstat .stepper button{width:27px;height:32px;font-size:18px}
+ #view .quickstat .statusvalue .value{font-size:12px}
+}
