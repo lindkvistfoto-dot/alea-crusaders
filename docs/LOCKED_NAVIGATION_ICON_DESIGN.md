@@ -25,3 +25,11 @@ Skapa inte alternativa former eller lägg till kompassros. Hem-symbolen är Alea
 - Bilderna ska vara separata från tidsdygnsbannern, så både bildbakgrund och navigeringsikoner kan ersättas oberoende av varandra.
 - Föreslagen konsekvent namngivning: `assets/navigation/<id>-normal.png` och `assets/navigation/<id>-active.png`.
 - När ikonerna är slutgodkända går det att ansluta dem som CSS-/bildlager. Ändra **inte** mobilnavigeringen förrän den separat godkänns.
+
+
+## Installerat v0.35.113
+- Sex nya ikonmotiv i ordning: **Targans Gille** (våg + börs), **Värdshuset** (ölkrus), **Akademin** (bok), **Material** (bildramar), **Rollfigurer** (porträtt), **Strid** (korsade svärd).
+- De åtta levererade motivbilderna för Akademin, Material, Rollfigurer och Strid används parvis som mörkt/lyst läge. Gille och Värdshuset levererades enbart som lysande bilder och fick varsamt nedtonade normalvarianter.
+- För den kompakta toppmenyn används två **optimerade AVIF-sprites med 6 × 48 px** under `assets/navigation/alea-nav-normal.avif` och `assets/navigation/alea-nav-active.avif`. Bildformatet är en implementation för små, snabba knappar; standarden för framtida original/PNG-export kvarstår.
+- Rollfigurers befintliga navigeringsknapp flyttas visuellt till ikonraden, men behåller sitt id och sin funktion. Materialknappen kan skapas senare i sidladdningen och får ändå rätt bild.
+- Aktuell sida får lysande bild automatiskt. På mobil behålls navhubben och mörka/lysande småbilder används även för Gille, Värdshus och Akademin inne i menyn.
