@@ -24,8 +24,16 @@
   const data=skillState(character,rule),cost=integer(rule.cost,0),cat=category(rule);
   const next=data.fv+1,factor=multiplier(next,cat);
   const required=cost>0&&factor?cost*factor:null;
-  const available=data.erf+(useBonus?data.bonus:0);
+  const trainingCredits=Math.min(Math.max(0,integer(character?.academyTrainingCredits?.[rule.id],0)),Math.max(0,data.erf));
+  const attr=baseValue(character,rule);
+  const trainingRestricted=cat!=='B'&&String(rule.type||'').toUpperCase()!=='LÄR'&&
+   Number.isFinite(attr.value)&&next>attr.value;
+  // Trained ERF cannot take a non-learning A skill beyond its base attribute.
+  // Separately earned adventure ERF and bonus points are still spendable.
+  const spendableSkillErf=Math.max(0,data.erf-(trainingRestricted?trainingCredits:0));
+  const available=spendableSkillErf+(useBonus?data.bonus:0);
   return {...data,category:cat,next,baseCost:cost,multiplier:factor,required,available,
+   trainingCredits,trainingRestricted,spendableSkillErf,
    ready:required!==null&&available>=required,missing:required===null?null:Math.max(0,required-available)};
  }
  function purchase(character,rule,useBonus=true){
@@ -35,7 +43,10 @@
   draft.skills=Array.isArray(draft.skills)?draft.skills:[];
   let row=findSkill(draft,rule);
   if(!row){row={skillId:rule.id,name:rule.name,fv:0,erf:q.erf};draft.skills.push(row)}
-  const fromSkill=Math.min(q.erf,q.required),fromBonus=q.required-fromSkill;
+  const fromSkill=Math.min(q.spendableSkillErf,q.required),fromBonus=q.required-fromSkill;
+  const fromTraining=q.trainingRestricted?0:Math.min(q.trainingCredits,fromSkill);
+  draft.academyTrainingCredits=draft.academyTrainingCredits||{};
+  draft.academyTrainingCredits[rule.id]=Math.max(0,q.trainingCredits-fromTraining);
   row.skillId=rule.id;row.name=rule.name;row.fv=q.next;row.erf=q.erf-fromSkill;
   draft.baseChanceSkills=(draft.baseChanceSkills||[]).filter(s=>String(s.skillId)!==String(rule.id));
   draft.live=draft.live||{};
@@ -54,8 +65,9 @@
  }
  function trainingAllowed(character,rule){
   const fv=skillState(character,rule).fv,attr=baseValue(character,rule);
-  const exempt=category(rule)==='B'||String(rule?.type||'').toUpperCase()==='LÄR';
-  return {allowed:exempt||Number.isFinite(attr.value)&&fv<attr.value,exempt,attribute:attr.value};
+  const b=category(rule)==='B',exempt=b||String(rule?.type||'').toUpperCase()==='LÄR';
+  return {allowed:b?fv<5:exempt||Number.isFinite(attr.value)&&fv<attr.value,
+   exempt,attribute:attr.value};
  }
  function teacherQuote(character,rule,opts){
   const categoryValue=category(rule),fv=skillState(character,rule).fv;
@@ -90,7 +102,7 @@
   if(!Number.isInteger(today)||today<1)throw Error('Kampanjens dag måste vara känd för att boka träning.');
   if(character?.academyTraining?.status==='active')throw Error('Rollfiguren har redan pågående träning.');
   const eligible=trainingAllowed(character,rule);
-  if(!eligible.allowed)throw Error('FV har nått grundegenskapens gräns för träning.');
+  if(!eligible.allowed)throw Error('Färdigheten har nått sin gräns för träning.');
   const group=baseValue(character,rule).group;
   if(!Number.isInteger(group)||group<0)throw Error('Grundegenskapens grupp saknas: kan inte göra egenskapsslag.');
   const details=mode==='teacher'?teacherQuote(character,rule,teacher||{}):null;
@@ -122,6 +134,8 @@
    if(!skill){skill={skillId:rule.id,name:rule.name,erf:0};draft.baseChanceSkills.push(skill)}
   }
   skill.erf=Math.max(0,integer(skill.erf,0))+earned;
+  draft.academyTrainingCredits=draft.academyTrainingCredits||{};
+  draft.academyTrainingCredits[rule.id]=Math.max(0,integer(draft.academyTrainingCredits[rule.id],0))+earned;
   draft.academyTraining=null;
   draft.academyHistory=(draft.academyHistory||[]).concat([{
    kind:'training',skillId:rule.id,skillName:rule.name,mode:training.mode,
