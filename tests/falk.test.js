@@ -63,7 +63,7 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
  test('direct spells spend PSY and each target uses its own EG allocation',()=>{
   expect(src).toContain('await combatPayForSpell(actor,result.psy_cost,action)');
   expect(src).toContain('combatMagicDamageFormula(action.source_data,allocation.eg)');
-  expect(src).toContain('psy_cost:combatMagicPsyCost(outcome,eg)')
+  expect(src).toContain('psy_cost:combatSpellActualPsyCost(action,outcome,eg)')
  });
  test('casting remains split across two SR unless tagged as quick',()=>{
   expect(src).toContain('ready_round:currentRound+(castRules.quick?0:1)');
