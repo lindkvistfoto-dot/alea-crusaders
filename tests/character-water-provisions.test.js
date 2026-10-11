@@ -62,7 +62,8 @@ describe('Water provisions per character',()=>{
   const x=fixture(false,true,{provisionsDays:0,waterDays:2,innMealDay:9});
   x.api.renderCharacterProvisions();
   expect(x.el.innerHTML).toContain('Dagens mat betald');
-  expect(x.el.innerHTML).toContain('Vatten: en dag förbrukas vid varje ny kampanjdag');
+  expect(x.el.innerHTML).not.toContain('Vatten: en dag förbrukas vid varje ny kampanjdag');
+  expect(x.el.innerHTML).toContain('provisions-help-corner');
   expect(sql).toContain("c.data->>'innMealDay'");
   expect(sql).toContain("'{waterDays}'");
   expect(sql).toContain("c.data ? 'waterDays'");

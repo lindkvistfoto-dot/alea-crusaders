@@ -46,7 +46,8 @@ describe('Mat och proviant på rollpersonen',()=>{
   x.current.innMealDay=7;
   x.api.renderCharacterProvisions();
   expect(x.el.innerHTML).toContain('Dagens mat betald');
-  expect(x.el.innerHTML).toContain('Ingen proviant dras vid nästa dagbyte');
+  expect(x.el.innerHTML).not.toContain('Ingen proviant dras vid nästa dagbyte');
+  expect(x.el.innerHTML).toContain('provisions-covered');
   expect(x.el.innerHTML).toContain('<strong>5</strong>');
   x.scope.campaignDayState.day_number=8;
   x.api.renderCharacterProvisions();
