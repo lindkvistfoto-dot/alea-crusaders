@@ -60,6 +60,8 @@ describe('Manuellt kast: färdighetsslag, PSY, logg – inga påhittade effekter
    combatExpertRoll:async(label,fv)=>{expect(fv).toBe(13);return {outcome,success,roll:7,confirmation_roll:null}},
    combatMagicPsyCost:(result,eg)=>result==='perfect'?Math.max(1,Math.ceil(eg/2)):success?eg:1,
    combatSpendMagicPsy:async(_actor,cost)=>spent.push(cost),
+   combatSpellActualPsyCost:(_action,outcome,eg)=>outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):success?eg:1,
+   combatPayForSpell:async(_actor,cost)=>spent.push(cost),
    combatAwardSpellErf:async()=>null,
    combatShowOutcomeOverlay:(...args)=>alerts.push(args),
    combatOutcomeLabel:s=>s,
