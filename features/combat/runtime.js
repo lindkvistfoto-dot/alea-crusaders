@@ -5296,6 +5296,11 @@ function combatTurnEquipmentHtml(combatant){
   escAttr(projectileEntries.map(row=>row.name).join(' / ')||'Inga')+'</small></div>';
  return hands+armorHtml+projectileHtml;
 }
+function combatTurnVitalPercent(current,maximum){
+ const value=Number(current),max=Number(maximum);
+ if(!Number.isFinite(value)||!Number.isFinite(max)||max<=0)return 0;
+ return Math.round(Math.min(100,Math.max(0,value/max*100)));
+}
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
  const lastUndo=activeCombat?.settings?.turn_undo_last;
@@ -5329,9 +5334,9 @@ function combatTurnPanelHtml(){
    combatTurnPortraitHtml(actor)+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
-    '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b></div>'+
-    '<div><span>KP</span><b>'+kpCurrent+'/'+kpMax+'</b></div>'+
-    '<div><span>PSY</span><b>'+psyCurrent+'/'+psyMax+'</b></div>'+
+    '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><div class="combat-vital-meter"><i class="combat-vital-fill move" style="width:'+combatTurnVitalPercent(remaining,maximum)+'%"></i></div></div>'+
+    '<div><span>KP</span><b>'+kpCurrent+'/'+kpMax+'</b><div class="combat-vital-meter"><i class="combat-vital-fill kp" style="width:'+combatTurnVitalPercent(kpCurrent,kpMax)+'%"></i></div></div>'+
+    '<div><span>PSY</span><b>'+psyCurrent+'/'+psyMax+'</b><div class="combat-vital-meter"><i class="combat-vital-fill psy" style="width:'+combatTurnVitalPercent(psyCurrent,psyMax)+'%"></i></div></div>'+
    '</div>'+
    '<div class="combat-turn-actions">'+
     '<div class="combat-row-tool combat-turn-action-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(state.key==='move'?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+actor.id+'\')" '+(!canMove?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/movement.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
