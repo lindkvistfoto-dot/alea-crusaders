@@ -4689,11 +4689,13 @@ function combatNpcIconSrc(path){
 function combatMiniatureVisual(combatant){
  if(!combatant)return {url:'',type:'none'};
  if(combatant.source_type==='character'){
-  const portrait=combatPlayerPortraitSource(combatant);
-  const iconPath=portrait?.source?.combatIconPath||portrait?.source?.combat_icon_path||
+  const source=typeof chars!=='undefined'?(chars||[]).find(row=>
+   String(row?._dbId||row?.id||'')===String(combatant.source_id||'')):null;
+  const iconPath=source?.combatIconPath||source?.combat_icon_path||
    combatant.state?.combat_icon_path||'';
   if(iconPath)return {url:combatNpcIconSrc(iconPath),type:'icon'};
-  return {url:portrait?.url||'',type:portrait?.url?'portrait':'none'};
+  const portrait=combatPlayerPortraitSource(combatant)?.url||'';
+  return {url:portrait,type:portrait?'portrait':'none'};
  }
  const source=combatActorImageRecord(combatant);
  if(source.iconPath)return {url:combatNpcIconSrc(source.iconPath),type:'icon'};
