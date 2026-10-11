@@ -322,9 +322,70 @@
   else x.magicPowers.push(created);
   save();refresh(kind);itemPowers(kind,index);
  }
+ function knownBatterySpells(caster){
+  const registry=typeof ruleSpells!=='undefined'?ruleSpells:[];
+  return (Array.isArray(caster?.spells)?caster.spells:[]).map(learned=>{
+   const rule=registry.find(row=>[learned?.rule_id,learned?.spell_id].some(id=>id&&String(id)===String(row.id)))||
+    registry.find(row=>String(row.name||'').localeCompare(String(learned?.name||''),'sv',{sensitivity:'base'})===0);
+   return rule?{rule,fv:Number(learned.fv)}:null;
+  }).filter(row=>row&&Number.isFinite(row.fv)&&row.fv>=1&&row.fv<=100)
+ }
+ function batteryCasters(){
+  const candidates=typeof chars!=='undefined'&&Array.isArray(chars)?chars:[current];
+  return candidates.filter(c=>(activeUser()?.admin===true||typeof canEditCharacter==='function'&&canEditCharacter(c))&&knownBatterySpells(c).length>0)
+ }
+ function chargerById(id){
+  return batteryCasters().find(c=>String(c._dbId||c.id)===String(id))||null
+ }
+ function updateBatteryChargeSpell(){
+  const caster=chargerById($('cmpBatteryCaster')?.value),spells=knownBatterySpells(caster);
+  const select=$('cmpBatterySpell');if(!select)return;
+  select.innerHTML=spells.map(row=>'<option value="'+safe(row.rule.id)+'">'+safe(row.rule.name)+' (FV '+row.fv+')</option>').join('')
+ }
+ function openBatteryCharger(kind,index,powerIndex){
+  if(!editable()||!window.aleaMagicConfigurator)return;
+  const item=get(kind,index),power=powers(item)[powerIndex];
+  if(!magical(item)||!isBattery(power)||power.battery_loaded)return;
+  const casters=batteryCasters(),selected=casters.find(c=>c===current)||casters[0];
+  if(!selected)return alert('Ingen behörig besvärjare med inlärda besvärjelser och FV finns tillgänglig.');
+  modal('Ladda magiskt batteri · '+(item.name||labels[kind]),
+   '<div class="rule-editor-grid character-magic-editor">'+
+   '<p class="wide muted">En besvärjelse lagras åt gången. Besvärjaren betalar PSY nu. Vid aktivering är besvärjelsen kvick, utan extra PSY-kostnad.</p>'+
+   '<label class="wide">Besvärjare<select id="cmpBatteryCaster" onchange="window.aleaCharacterItemMagic?.updateBatteryChargeSpell()">'+
+    casters.map(c=>'<option value="'+safe(c._dbId||c.id)+'"'+(c===selected?' selected':'')+'>'+safe(c.identity?.namn||c.name||c.id)+' · PSY '+safe(c.live?.PSY??'—')+'</option>').join('')+'</select></label>'+
+   '<label class="wide">Besvärjelse<select id="cmpBatterySpell"></select></label>'+
+   (power.battery_grade_mode==='dice'?
+     '<p class="wide">Slumpmässig effektgrad: <b>'+safe(power.battery_grade_dice||'1T3')+'</b>. Slås vid laddning.</p>':
+     '<label>Effektgrad (EG)<input type="number" id="cmpBatteryChosenGrade" min="1" max="50" value="1"></label>')+
+   '<div class="rule-editor-actions wide"><button type="button" class="btn" onclick="openCharacterItemPowers(\''+kind+'\','+index+')">Tillbaka</button>'+
+    '<button type="button" class="btn primary" onclick="chargeCharacterMagicBattery(\''+kind+'\','+index+','+powerIndex+')">⚡ Ladda batteriet</button></div></div>');
+  $('cmpBatteryCaster').value=String(selected._dbId||selected.id);
+  updateBatteryChargeSpell()
+ }
+ function chargeBattery(kind,index,powerIndex){
+  if(!editable()||!window.aleaMagicConfigurator?.chargeBattery)return;
+  const item=get(kind,index),power=powers(item)[powerIndex];
+  if(!magical(item)||!isBattery(power)||power.battery_loaded)return;
+  const caster=chargerById($('cmpBatteryCaster')?.value);
+  const learned=knownBatterySpells(caster).find(row=>String(row.rule.id)===String($('cmpBatterySpell')?.value));
+  if(!caster||!learned)return alert('Välj en behörig besvärjare och en inlärd besvärjelse.');
+  try{
+   const charged=window.aleaMagicConfigurator.chargeBattery(power,learned.rule,$('cmpBatteryChosenGrade')?.value,learned.fv,campaignDay());
+   const eg=charged.battery_loaded.effect_grade,psy=Number(caster.live?.PSY);
+   if(!Number.isInteger(psy)||psy<eg)throw Error('Besvärjaren saknar PSY för EG '+eg+'. Ingen laddning har genomförts.');
+   caster.live.PSY=psy-eg;
+   charged.battery_loaded.caster_name=caster.identity?.namn||caster.name||'Besvärjare';
+   charged.battery_loaded.caster_id=String(caster._dbId||caster.id);
+   item.magicPowers[powerIndex]=charged;
+   save();refresh(kind);itemPowers(kind,index);
+   alert('Batteriet är laddat med '+learned.rule.name+', EG '+eg+
+    (charged.battery_loaded.grade_roll?' ('+charged.battery_loaded.grade_rolls.join('+')+' på '+charged.battery_loaded.grade_roll+')':'')+
+    '. '+eg+' PSY har dragits från '+charged.battery_loaded.caster_name+'.');
+  }catch(error){alert(error.message)}
+ }
  function registerUse(kind,index,powerIndex){
   if(!editable()||!window.aleaMagicConfigurator)return;
-  const x=get(kind,index),p=powers(x)[powerIndex];if(!magical(x)||!p)return;
+  const x=get(kind,index),p=powers(x)[powerIndex];if(!magical(x)||!p||isBattery(p))return;
   try{
    const status=availability(p);
    if(!status.ready)throw new Error(status.reason);
@@ -346,12 +407,14 @@
   x.magicPowers.splice(powerIndex,1);save();refresh(kind);itemPowers(kind,index)
  }
  window.aleaCharacterItemMagic={magical,badge,control,summary,imagePath,imageThumbnail,openImage,saveImage,toggle,open:itemPowers,
-  edit:editPower,savePower,deletePower,showFields,powers,availability,registerUse,resetPower};
+  edit:editPower,savePower,deletePower,showFields,powers,availability,registerUse,resetPower,openBatteryCharger,chargeBattery,updateBatteryChargeSpell};
  window.setCharacterItemMagical=toggle;
  window.openCharacterItemPowers=itemPowers;
  window.editCharacterItemPower=editPower;
  window.saveCharacterItemPower=savePower;
  window.deleteCharacterItemPower=deletePower;
+ window.openCharacterBatteryCharger=openBatteryCharger;
+ window.chargeCharacterMagicBattery=chargeBattery;
  window.registerCharacterItemPowerUse=registerUse;
  window.resetCharacterItemPower=resetPower;
  window.openCharacterItemImage=openImage;
