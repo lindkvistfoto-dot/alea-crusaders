@@ -229,3 +229,48 @@
     border-color:#d8ae73;background:#463220
   }
 }
+
+
+/* v0.35.109: desktop-only illustrated banner.
+   The image contains only the landscape and frame; all navigation elements
+   remain separate, interactive HTML so both icons and future logos can change. */
+@media (min-width: 901px) {
+  .alea-app-header {
+    position: sticky;
+    isolation: isolate;
+    background-color: #140f0d;
+    background-image: url("../../assets/alea-desktop-header.avif");
+    background-position: center center;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    border-bottom: 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .6);
+    padding: 16px clamp(24px, 3vw, 44px);
+  }
+  .alea-app-header > .bar {
+    position: relative;
+    z-index: 1;
+    max-width: none;
+    min-width: 0;
+    padding-inline: clamp(12px, 1.5vw, 26px);
+  }
+  .alea-app-header .alea-toolstrip {
+    position: relative;
+    z-index: 2;
+  }
+  .alea-app-header .alea-headingbar {
+    position: relative;
+    z-index: 1;
+    border-top-color: rgba(222, 165, 93, .4);
+    background: linear-gradient(90deg, rgba(16, 11, 10, .65),
+      rgba(16, 11, 10, .3) 65%, rgba(16, 11, 10, .53));
+    border-radius: 6px;
+    padding: 7px 10px 3px;
+    margin-inline: -10px;
+  }
+  .alea-app-header .alea-heading-left h1,
+  .alea-app-header .alea-headingbar .btn,
+  .alea-app-header .alea-headingbar .pill {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, .9);
+  }
+}
