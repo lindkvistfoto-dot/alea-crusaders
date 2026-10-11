@@ -5091,10 +5091,12 @@ function combatTurnEquipmentHtml(combatant){
  const weaponRule=item=>item?(typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null):null;
  const shieldRule=item=>item?(typeof characterShieldRule==='function'?characterShieldRule(item):
   (typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''))):null;
+ const magicalItem=item=>!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const imageTile=(kind,label,item,path,wide=false,count=null)=>{
   const img=srcImg(path,'combat-turn-art');
+  const magical=magicalItem(item);
   const name=item?.name||'Ingen';
-  return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+'">'+
+  return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+(magical?' magical':'')+(magical&&!img?' magical-no-art':'')+'">'+
    '<span>'+escAttr(label)+'</span>'+
    '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+
     (count===null?'':'<b class="combat-turn-ammo-count" title="'+count+' facklor kvar">'+count+'</b>')+'</div>'+
