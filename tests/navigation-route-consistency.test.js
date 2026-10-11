@@ -173,6 +173,7 @@ describe('Material navigation never blocks other destinations',()=>{
       expect(app.hidden('home'),id).toBe(true);
       expect(app.el('materialNavBtn').attributes['aria-current'],id).toBe('page');
       app.show(destination);
+      if(id==='alchemyNavBtn')app.el('shopPage').classList.add('shop-alchemy');
       app.click(id);await Promise.resolve();
       expect(app.hidden('legolasPanel'),id).toBe(true);
       expect(app.hidden(destination),id).toBe(false);
