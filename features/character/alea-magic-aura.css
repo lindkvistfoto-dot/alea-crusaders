@@ -1,0 +1,96 @@
+/* Alea Crusaders v0.35.92 — Arcane equipment aura.
+   A single generic visual treatment for any *equipped instance* marked magical.
+   The weapon image is unchanged; the sigil sits behind it, sparks above it.
+   Works with uploaded per-instance artwork as well as the master image.
+   The two-hand tall frame uses the same effect without touching its layout. */
+
+.gandalf-equip-slot.magical .gandalf-equip-face {
+  isolation:isolate;
+  /* The transparent decorative frame remains the existing background image. */
+  box-shadow:inset 0 0 22px rgba(235,169,57,.13),0 0 10px rgba(237,159,40,.08);
+}
+
+/* Rotating arcane runes: behind the actual weapon, not baked into its pixels. */
+.gandalf-equip-slot.magical .gandalf-equip-face::before {
+  content:"";
+  position:absolute;
+  z-index:0;
+  pointer-events:none;
+  left:50%;top:49%;
+  width:88%;
+  aspect-ratio:1;
+  background:
+    radial-gradient(circle,rgba(255,188,69,.16) 0,rgba(231,153,43,.07) 45%,transparent 72%),
+    url("./assets/alea-arcane-sigil.svg") center/contain no-repeat;
+  filter:drop-shadow(0 0 4px rgba(253,199,83,.38));
+  opacity:.92;
+  transform:translate(-50%,-50%) rotate(0deg);
+  animation:aleaArcaneOrbit 36s linear infinite;
+}
+
+/* A few glints, deliberately far less busy than the concept illustration. */
+.gandalf-equip-slot.magical .gandalf-equip-face::after {
+  content:"";
+  position:absolute;
+  z-index:3;
+  pointer-events:none;
+  inset:11%;
+  background:
+    radial-gradient(circle at 16% 18%,#fff8d6 0 1px,#f9d174 2px,transparent 4px),
+    radial-gradient(circle at 82% 23%,#fff4c2 0 1px,#f2bd4b 2px,transparent 4px),
+    radial-gradient(circle at 18% 76%,#fff4c2 0 1px,#f4c15c 2px,transparent 4px),
+    radial-gradient(circle at 78% 84%,#fff5c8 0 1px,#efb447 2px,transparent 4px),
+    radial-gradient(circle at 49% 12%,#f8d884 0 1px,transparent 3px);
+  opacity:.55;
+  transform:translateY(0);
+  animation:aleaArcaneGlints 4.5s ease-in-out infinite alternate;
+}
+
+/* Image over rune-ring: alpha-aware glow traces the item, not the gold frame. */
+.gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art {
+  z-index:2;
+}
+.gandalf-equip-slot.magical .gandalf-equip-face > .gandalf-equip-value,
+.gandalf-equip-slot.magical .gandalf-equip-face > .gandalf-equip-stack-count,
+.gandalf-equip-slot.magical .gandalf-equip-face > .gandalf-ammo-count {
+  z-index:4;
+}
+
+/* The two-handed weapon artwork is portrait-oriented; keep the rune ring
+   circular behind its centre and ensure the glints stay inside the frame. */
+.gandalf-equip-twohand.magical .gandalf-equip-face::before {
+  width:108%;
+  top:49%;
+}
+.gandalf-equip-twohand.magical .gandalf-equip-face::after {
+  inset:12% 5%;
+}
+
+/* No-image magical equipment still looks enchanted; icon/text stays readable. */
+.gandalf-equip-slot.magical-no-art .gandalf-equip-face::before { opacity:.62; }
+.gandalf-equip-slot.magical-no-art .gandalf-equip-face::after { opacity:.32; }
+
+@keyframes aleaArcaneOrbit {
+  from { transform:translate(-50%,-50%) rotate(0deg); }
+  to   { transform:translate(-50%,-50%) rotate(360deg); }
+}
+@keyframes aleaArcaneGlints {
+  0%   { opacity:.30;transform:translateY(2%); }
+  48%  { opacity:.68; }
+  100% { opacity:.38;transform:translateY(-2%); }
+}
+
+/* Keep mobile GPU work bounded; this is a compact inventory slot. */
+@media(max-width:620px){
+  .gandalf-equip-slot.magical .gandalf-equip-face::after { inset:17%; }
+  .gandalf-equip-twohand.magical .gandalf-equip-face::after { inset:14% 7%; }
+  .gandalf-equip-slot.magical .gandalf-equip-face::before { filter:none; }
+}
+@media(prefers-reduced-motion:reduce){
+  .gandalf-equip-slot.magical .gandalf-equip-face::before,
+  .gandalf-equip-slot.magical .gandalf-equip-face::after {
+    animation:none;
+  }
+  .gandalf-equip-slot.magical .gandalf-equip-face::before {transform:translate(-50%,-50%) rotate(0);}
+  .gandalf-equip-slot.magical .gandalf-equip-face::after {opacity:.43;transform:none;}
+}
