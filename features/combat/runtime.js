@@ -3150,7 +3150,7 @@ function combatAmmoSummaryHtml(){
   (!ended?'<div class="combat-ammo-finish">'+
    '<label><input id="combatAmmoRecoverAllowed" type="checkbox"> Berättelsen tillåter att projektiler samlas upp</label>'+
    '<label>Chans (%) <input id="combatAmmoRecoverChance" type="number" min="80" max="90" value="85"></label>'+
-   '<small>Avsluta striden med stoppknappen intill rubriken Strid.</small>'+
+   '<small>Avsluta strid & sammanfatta med stoppknappen intill rubriken Strid.</small>'+
    '<small>SL avgör om uppsamling går att göra. Varje använd projektil prövas en gång (85 % som standard). Inget avdrag görs vid omladdning.</small></div>':
    '<p>Striden avslutad. Totalt '+spent+' avfyrade, '+recovered+' återvunna, '+(spent-recovered)+' förlorade.</p>')+
  '</details>'
