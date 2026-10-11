@@ -514,3 +514,36 @@
     height:56px;
   }
 }
+
+/* v0.35.115 — match the Home emblem's visual size in the desktop menu.
+   Previously the bronze destinations were only 62/56 px while Home was
+   displayed at up to 104 px. Keep all six bronze pictograms equally large.
+   Allow intentional line wrapping if the desktop window is too narrow; never
+   shrink the artwork silently or cause horizontal page scrolling. */
+@media (min-width:901px) {
+  .alea-app-header .alea-toolstrip {
+    box-sizing:border-box;
+    min-height:112px;
+    flex-wrap:wrap;
+    align-content:center;
+    justify-content:flex-start;
+    column-gap:clamp(5px,.6vw,10px);
+    row-gap:8px;
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav {
+    box-sizing:border-box!important;
+    flex:0 0 104px!important;
+    width:104px!important;
+    min-width:104px!important;
+    max-width:104px!important;
+    height:104px!important;
+    min-height:104px!important;
+    border-radius:14px!important;
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav::before {
+    width:104px!important;
+    height:104px!important;
+    max-height:none!important;
+    background-size:600% 100%;
+  }
+}
