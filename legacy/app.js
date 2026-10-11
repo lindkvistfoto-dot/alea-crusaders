@@ -2008,34 +2008,31 @@ function renderCharacterProvisions(){
  const one=days===1,empty=days===0,oneWater=water===1,emptyWater=water===0;
  const day=Number(campaignDayState?.day_number);
  const mealCovered=Number.isInteger(day)&&day>0&&Number(current.innMealDay)===day;
- el.innerHTML='<div class="provisions-header"><div><b>🥖 Mat & proviant</b><small>Mat och vatten anges separat i hela dagar per rollperson</small></div></div>'+
-  '<div class="provisions-grid">'+
-   '<section class="provisions-resource provisions-food" aria-label="Matproviant">'+
-    '<div class="provisions-resource-heading"><b>🥖 Mat</b>'+
-     (mealCovered?'<span class="provisions-covered">Dagens mat betald</span>':empty?'<span class="provisions-empty">Slut</span>':'')+'</div>'+
-    '<div class="provisions-counter">'+
-     '<div class="provisions-value" aria-live="polite"><strong>'+days+'</strong><span>'+(one?'dag':'dagar')+'</span></div>'+
-     (editAllowed?'<div class="provisions-stepper" role="group" aria-label="Ändra matproviant">'+
+ const help=typeof window!=='undefined'?window.aleaSectionHelp:null;
+ el.innerHTML='<div class="provisions-help-corner">'+(help?.button?.('provisions')||'')+'</div>'+
+  '<div class="provisions-rows">'+
+   '<div class="provisions-line provisions-food" aria-label="Matproviant">'+
+    '<div class="provisions-line-label"><b>🥖 Mat</b>'+
+      (mealCovered?'<span class="provisions-covered" title="Dagens mat betald" aria-label="Dagens mat betald">✓</span>':
+       empty?'<span class="provisions-empty">Slut</span>':'')+'</div>'+
+    (editing&&editAllowed?
+      '<label class="provisions-inline-edit"><span class="provisions-visually-hidden">Mat i dagar</span><input type="number" inputmode="numeric" min="0" max="999999" step="1" value="'+days+'" onchange="setCharacterProvisions(this.value)" aria-label="Mat och proviant i dagar"></label>':
+      '<div class="provisions-value" aria-live="polite"><strong>'+days+'</strong><span>'+(one?'dag':'dagar')+'</span></div>')+
+    (editAllowed?'<div class="provisions-stepper" role="group" aria-label="Ändra matproviant">'+
       '<button type="button" onclick="stepCharacterProvisions(-1)" aria-label="Minska proviant en dag"'+(empty?' disabled':'')+'>−</button>'+
-      '<button type="button" onclick="stepCharacterProvisions(1)" aria-label="Öka proviant en dag">+</button>'+
-     '</div>':'')+
-    '</div></section>'+
-   '<section class="provisions-resource provisions-water" aria-label="Dricksvatten">'+
-    '<div class="provisions-resource-heading"><b>💧 Vatten</b>'+
+      '<button type="button" onclick="stepCharacterProvisions(1)" aria-label="Öka proviant en dag">+</button></div>':'')+
+   '</div>'+
+   '<div class="provisions-line provisions-water" aria-label="Dricksvatten">'+
+    '<div class="provisions-line-label"><b>💧 Vatten</b>'+
       (emptyWater?'<span class="provisions-empty">Slut</span>':'')+'</div>'+
-    '<div class="provisions-counter">'+
-     '<div class="provisions-value" aria-live="polite"><strong>'+water+'</strong><span>'+(oneWater?'dag':'dagar')+'</span></div>'+
-     (editAllowed?'<div class="provisions-stepper" role="group" aria-label="Ändra vattenförråd">'+
+    (editing&&editAllowed?
+      '<label class="provisions-inline-edit"><span class="provisions-visually-hidden">Vatten i dagar</span><input type="number" inputmode="numeric" min="0" max="999999" step="1" value="'+water+'" onchange="setCharacterWater(this.value)" aria-label="Vatten i dagar"></label>':
+      '<div class="provisions-value" aria-live="polite"><strong>'+water+'</strong><span>'+(oneWater?'dag':'dagar')+'</span></div>')+
+    (editAllowed?'<div class="provisions-stepper" role="group" aria-label="Ändra vattenförråd">'+
       '<button type="button" onclick="stepCharacterWater(-1)" aria-label="Minska vatten en dag"'+(emptyWater?' disabled':'')+'>−</button>'+
-      '<button type="button" onclick="stepCharacterWater(1)" aria-label="Öka vatten en dag">+</button>'+
-     '</div>':'')+
-    '</div></section></div>'+
-  (editing&&editAllowed?'<div class="provisions-edit-grid">'+
-   '<label class="provisions-set">Mat, antal dagar<input type="number" inputmode="numeric" min="0" max="999999" step="1" value="'+days+'" onchange="setCharacterProvisions(this.value)" aria-label="Mat och proviant i dagar"></label>'+
-   '<label class="provisions-set">Vatten, antal dagar<input type="number" inputmode="numeric" min="0" max="999999" step="1" value="'+water+'" onchange="setCharacterWater(this.value)" aria-label="Vatten i dagar"></label>'+
-  '</div>':'')+
-  '<p class="provisions-note">'+(mealCovered?'Måltid köpt på värdshuset under dag '+day+'. Ingen proviant dras vid nästa dagbyte.':'Mat: en dag förbrukas när SL startar en ny dag, utom om en måltid betalats på värdshuset. Reskost ökar antalet matdagar.')+
-   ' Vatten: en dag förbrukas vid varje ny kampanjdag oavsett måltid. Förråden kan aldrig understiga noll.</p>'
+      '<button type="button" onclick="stepCharacterWater(1)" aria-label="Öka vatten en dag">+</button></div>':'')+
+   '</div>'+
+  '</div>'
 }
 function setCharacterProvisions(value){
  if(!current||!canEditCharacter(current))return;

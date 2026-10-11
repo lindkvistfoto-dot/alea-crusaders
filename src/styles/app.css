@@ -7559,3 +7559,57 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  #equipmentPanel .provisions-edit-grid{grid-template-columns:1fr}
  #equipmentPanel .provisions-resource .provisions-value strong{font-size:30px}
 }
+
+/* v0.35.98 — compact, single-row food and water with shared section help. */
+#equipmentPanel .character-provisions{position:relative;padding:13px 14px}
+#equipmentPanel .provisions-help-corner{position:absolute;right:10px;top:9px;display:flex;z-index:1}
+#equipmentPanel .provisions-rows{display:grid;gap:8px;padding-top:34px}
+#equipmentPanel .provisions-line{
+ display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;
+ gap:10px;min-height:62px;padding:9px 11px;min-width:0;
+ border:1px solid #41604a;border-radius:11px;background:rgba(8,22,16,.6)
+}
+#equipmentPanel .provisions-line.provisions-water{
+ border-color:#355f79;background:linear-gradient(110deg,#102938,#0a1d29)
+}
+#equipmentPanel .provisions-line-label{display:flex;align-items:center;flex-wrap:nowrap;gap:7px;min-width:0}
+#equipmentPanel .provisions-line-label>b{font:700 17px/1.2 Georgia,serif;color:#ffe3ac;white-space:nowrap}
+#equipmentPanel .provisions-water .provisions-line-label>b{color:#bbdff5}
+#equipmentPanel .provisions-line .provisions-value{
+ display:flex;align-items:baseline;justify-content:flex-end;white-space:nowrap;gap:5px
+}
+#equipmentPanel .provisions-line .provisions-value strong{font-size:27px}
+#equipmentPanel .provisions-line .provisions-value span{font-size:12px}
+#equipmentPanel .provisions-line .provisions-stepper{display:flex;flex-wrap:nowrap;gap:5px}
+#equipmentPanel .provisions-line .provisions-stepper button{
+ width:36px;min-width:36px;height:36px;border-radius:8px;font-size:22px
+}
+#equipmentPanel .provisions-line .provisions-empty{font-size:10px;padding:3px 5px;white-space:nowrap}
+#equipmentPanel .provisions-line .provisions-covered{
+ min-width:20px;height:20px;padding:1px 4px;justify-content:center;border-radius:50%;font-size:12px
+}
+#equipmentPanel .provisions-inline-edit{display:block;min-width:0}
+#equipmentPanel .provisions-inline-edit input{
+ display:block;width:66px;min-height:36px;box-sizing:border-box;
+ padding:5px 4px;border:1px solid #8f7952;border-radius:7px;
+ background:#15150f;color:#fff;text-align:center;font-size:16px
+}
+#equipmentPanel .provisions-visually-hidden{
+ position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap
+}
+@media(max-width:560px){
+ #equipmentPanel .character-provisions{padding:10px}
+ #equipmentPanel .provisions-line{gap:6px;min-height:55px;padding:7px 8px}
+ #equipmentPanel .provisions-line-label>b{font-size:15px}
+ #equipmentPanel .provisions-line .provisions-value strong{font-size:24px}
+ #equipmentPanel .provisions-line .provisions-value span{font-size:11px}
+ #equipmentPanel .provisions-line .provisions-stepper{gap:4px}
+ #equipmentPanel .provisions-line .provisions-stepper button{width:33px;min-width:33px;height:36px}
+}
+@media(max-width:355px){
+ #equipmentPanel .provisions-line{gap:4px;padding:7px 5px}
+ #equipmentPanel .provisions-line-label>b{font-size:14px}
+ #equipmentPanel .provisions-line .provisions-value strong{font-size:22px}
+ #equipmentPanel .provisions-line .provisions-stepper button{width:30px;min-width:30px}
+ #equipmentPanel .provisions-inline-edit input{width:52px}
+}

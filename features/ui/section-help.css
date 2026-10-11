@@ -1,0 +1,32 @@
+/* v0.35.98 — shared circular section help icon and accessible modal. */
+.alea-section-help-trigger{
+ display:inline-flex;justify-content:center;align-items:center;flex:0 0 auto;
+ width:30px;height:30px;padding:0;border-radius:50%;
+ border:1px solid #b49463;background:#261f15;color:#ffe2a4;
+ font:800 18px/1 Georgia,serif;box-shadow:0 2px 7px #0008;cursor:pointer;touch-action:manipulation
+}
+.alea-section-help-trigger:hover{background:#3d2e1d;border-color:#edcc8d}
+.alea-section-help-trigger:focus-visible,.alea-section-help-close:focus-visible{
+ outline:3px solid #f6d27d;outline-offset:3px
+}
+.alea-section-help-dialog{
+ position:fixed;inset:0;margin:auto;width:min(420px,calc(100vw - 36px));
+ max-width:420px;max-height:min(80dvh,620px);box-sizing:border-box;
+ padding:0;border:1px solid #ac8855;border-radius:15px;
+ background:linear-gradient(155deg,#21251b,#101a16);color:#f2e8d3;
+ box-shadow:0 20px 65px #000c;overflow:auto
+}
+.alea-section-help-dialog::backdrop{background:rgba(0,0,0,.72)}
+.alea-section-help-content{padding:18px 20px 20px}
+.alea-section-help-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.alea-section-help-heading h2{margin:0;color:#ffdfaa;font:700 23px/1.25 Georgia,serif}
+.alea-section-help-close{
+ display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;
+ width:34px;height:34px;border:1px solid #7d6546;border-radius:9px;
+ background:#392c21;color:#f9e1bb;font:700 25px/1 system-ui;cursor:pointer
+}
+.alea-section-help-content p{margin:15px 0 0;color:#d5dfd0;font:400 14px/1.65 system-ui,sans-serif}
+@media(max-width:480px){
+ .alea-section-help-content{padding:15px 16px 19px}
+ .alea-section-help-heading h2{font-size:21px}
+}
