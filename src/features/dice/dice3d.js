@@ -158,7 +158,8 @@ async function ensureCombatDice3D(){
    origin:window.location.origin,
    theme:"default",
    themeColor:"#d8bd82",
-   scale:6.2,
+   // Slightly smaller than the general dice tray: natural proportions over hexes.
+   scale:4.3,
    enableShadows:true,
    shadowTransparency:.72,
    lightIntensity:1.15,
