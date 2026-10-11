@@ -10,7 +10,7 @@ create table if not exists public.rule_combat_round_backgrounds (
  created_at timestamptz not null default now(),
  constraint round_background_image_path_check check (
    image_path='assets/combat/round-hero-battle-pilot.avif'
-   or (image_path ~ '^round/[0-9a-f-]{36}\\.(webp|png|jpg|jpeg)$'
+   or (image_path ~ '^round/[0-9a-f-]{36}\.(webp|png|jpg|jpeg)$'
        and split_part(split_part(image_path,'/',2),'.',1)=id::text)
  )
 );
@@ -34,12 +34,12 @@ on conflict(id) do update set public=false,file_size_limit=excluded.file_size_li
 create policy round_background_storage_read on storage.objects
  for select to authenticated using (
  bucket_id='alea-round-backgrounds'
- and name ~ '^round/[0-9a-f-]{36}\\.(webp|png|jpg|jpeg)$'
+ and name ~ '^round/[0-9a-f-]{36}\.(webp|png|jpg|jpeg)$'
 );
 create policy round_background_storage_admin_upload on storage.objects
  for insert to authenticated with check (
  bucket_id='alea-round-backgrounds'
- and name ~ '^round/[0-9a-f-]{36}\\.(webp|png|jpg|jpeg)$'
+ and name ~ '^round/[0-9a-f-]{36}\.(webp|png|jpg|jpeg)$'
  and (select private.is_admin())
 );
 -- A removed gallery row is archived instead of deleting storage: old encounters
@@ -47,7 +47,7 @@ create policy round_background_storage_admin_upload on storage.objects
 create policy round_background_storage_admin_cleanup on storage.objects
  for delete to authenticated using (
  bucket_id='alea-round-backgrounds'
- and name ~ '^round/[0-9a-f-]{36}\\.(webp|png|jpg|jpeg)$'
+ and name ~ '^round/[0-9a-f-]{36}\.(webp|png|jpg|jpeg)$'
  and (select private.is_admin())
  and not exists(
   select 1 from public.rule_combat_round_backgrounds r
