@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read = path => readFileSync(new URL('../'+path,import.meta.url));
 
-describe('Illustrated bronze navigation v0.35.113',()=>{
+describe('Illustrated bronze navigation v0.35.114',()=>{
   const html=read('index.html').toString('utf8');
   const js=read('features/home/navigation-icons.js').toString('utf8');
   const css=read('features/home/topbar.css').toString('utf8');
@@ -21,7 +21,7 @@ describe('Illustrated bronze navigation v0.35.113',()=>{
   });
 
   it('connects the icon controller without removing existing click handlers',()=>{
-    expect(html).toContain('features/home/navigation-icons.js?v=0.35.113');
+    expect(html).toContain('features/home/navigation-icons.js?v=0.35.114');
     for(const label of ['openShop()','openInn()','openAcademy()','openCombat()','openCharacters()']){
       expect(html).toContain(label);
     }
@@ -32,6 +32,23 @@ describe('Illustrated bronze navigation v0.35.113',()=>{
     expect(js).toContain("['materialNavBtn', 'legolasPanel', 3]");
     expect(js).toContain("['landingCharactersNavBtn', 'home', 4]");
     expect(js).toContain("['combatNavBtn', 'combatPage', 5]");
+  });
+
+  it('draws the six pictures as real desktop menu buttons without waiting for JS',()=>{
+    const expected=[
+      ['shopNavBtn','0%'],['innNavBtn','20%'],['academyNavBtn','40%'],
+      ['landingCharactersNavBtn','80%'],['combatNavBtn','100%']
+    ];
+    for(const [id,position] of expected) {
+      const button=html.match(new RegExp('<button[^>]*id="'+id+'"[^>]*>'))?.[0];
+      expect(button).toContain('alea-bronze-nav');
+      expect(button).toContain('--alea-nav-pos:'+position);
+    }
+    expect(html.indexOf('id="landingCharactersNavBtn"')).toBeLessThan(html.indexOf('id="combatNavBtn"'));
+    expect(read('features/material/viewer.js').toString('utf8'))
+      .toContain("nav.className='btn legolas-nav alea-bronze-nav'");
+    expect(css).toContain('@media (min-width:901px)');
+    expect(css).toContain('width:62px!important');
   });
 
   it('uses dark frames by default and glowing frames only for active destinations',()=>{
