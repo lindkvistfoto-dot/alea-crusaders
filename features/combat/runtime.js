@@ -5110,9 +5110,9 @@ function combatTurnEquipmentHtml(combatant){
   if(kind==='weapon'&&item){
    const rule=weaponRule(item),key=String(item.equipId||item.id||ref.itemId);
    if(!seenKeys.has(key)){shownWeapons.push({item,rule});seenKeys.add(key)}
-   return imageTile('weapon',label,item,rule?.image_path||item.image_path);
+   return imageTile('weapon',label,item,item.imageOverridePath||rule?.image_path||item.image_path);
   }
-  if(kind==='shield'&&item)return imageTile('shield',label,item,shieldRule(item)?.image_path||item.image_path);
+  if(kind==='shield'&&item)return imageTile('shield',label,item,item.imageOverridePath||shieldRule(item)?.image_path||item.image_path);
   if(kind==='equipment'&&item){
    const catalog=window.aleaEquipmentCatalog;
    const count=catalog?.torchCount({equipment},item)??null;
@@ -5126,7 +5126,7 @@ function combatTurnEquipmentHtml(combatant){
   if(item){
    const rule=weaponRule(item);
    shownWeapons.push({item,rule});
-   hands=imageTile('weapon','Båda händerna',item,rule?.image_path||item.image_path,true);
+   hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true);
   }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  // Older NPCs/enemies may have no selected hand slots at all.
@@ -5151,7 +5151,7 @@ function combatTurnEquipmentHtml(combatant){
   if(!key||projectileKeys.has(key))continue;
   projectileKeys.add(key);
   const projectile=typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(key):null;
-  const imagePath=category==='thrown'?(rule?.image_path||item.image_path||
+  const imagePath=category==='thrown'?(item.imageOverridePath||rule?.image_path||item.image_path||
    (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path)):
    (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path);
   const count=typeof combatAmmoStock==='function'?Math.max(0,combatAmmoStock(combatant,key)||0):0;
