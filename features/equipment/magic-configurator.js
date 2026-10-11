@@ -44,6 +44,8 @@
    if(day===null)reason='Kampanjdag saknas – kan inte kontrollera återhämtning';
    else if(usedDay!==null&&day<=usedDay)reason='Tillgänglig efter nästa kampanjdag';
   }
+  if(!reason&&c.recharge_rule==='manual'&&c.manual_locked===true)reason='Måste återställas manuellt';
+  if(!reason&&day===null&&c.uses_per_day!==null)reason='Kampanjdag saknas';
   if(!reason&&c.uses_per_day!==null&&usage>=c.uses_per_day)reason='Dagens användningar förbrukade';
   if(!reason&&charges!==null&&charges<c.charge_cost)reason='Inte tillräckligt med laddningar';
   return {ready:!reason,reason,charges,uses_today:usage,day};
@@ -55,8 +57,14 @@
   return {...c,
    last_used_day:status.day,
    uses_today:status.uses_today+1,
+   manual_locked:c.recharge_rule==='manual',
    charges_remaining:status.charges===null?null:status.charges-c.charge_cost
   }
+ }
+ function reset(config={}){
+  const c=normalize(config);
+  return {...c,last_used_day:null,uses_today:0,manual_locked:false,
+   charges_remaining:c.max_charges===null?null:c.max_charges}
  }
  function preview(config={}){
   const c=normalize(config);
@@ -67,5 +75,5 @@
    result_units:c.effect_multiplier
   }
  }
- root.aleaMagicConfigurator={normalize,state,markUsed,preview,casting,recovery,activation};
+ root.aleaMagicConfigurator={normalize,state,markUsed,reset,preview,casting,recovery,activation};
 })(typeof window!=='undefined'?window:globalThis);
