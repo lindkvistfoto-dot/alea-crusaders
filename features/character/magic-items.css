@@ -85,3 +85,20 @@
  .character-equip-magic{margin-top:2px}
  .character-item-magic-badge{font-size:9px;padding:2px 4px}
 }
+
+/* v0.35.86 – generic magical item creator and recovery states */
+.character-magic-create .wide{grid-column:1/-1}
+.character-magic-create label{min-width:0}
+.character-magic-create select,.character-magic-create input{width:100%;max-width:100%;min-width:0}
+.character-magic-power-status{
+ display:flex;flex-direction:column;gap:4px;min-width:90px;
+ font-size:11px;line-height:1.25;color:#eeddb7;
+}
+.character-magic-power-status .ready{color:#9fe1ae;font-weight:800}
+.character-magic-power-status .not-ready{color:#f1b18f;font-weight:800}
+.character-magic-power-status button{min-height:34px;max-width:100%;white-space:normal}
+#magicCreateBtn{margin:8px 0;border-color:#9c79ae;background:linear-gradient(#443052,#2b2036);color:#f6e5fb}
+@media(max-width:700px){
+ .character-magic-power-status{grid-column:1/-1}
+ .character-magic-power-status button{align-self:start}
+}
