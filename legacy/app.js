@@ -1794,7 +1794,7 @@ function currentEquipSlotHtml(slot){
   '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+currentEquipmentMagicSparkHtml(magical)+magicBadge+countBadge+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+(typeof currentEquipmentMagicSparkHtml==='function'?currentEquipmentMagicSparkHtml(magical):'')+magicBadge+countBadge+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 /* Narsil-style: one square master asset per weapon. Its two-hand placement is
@@ -1841,7 +1841,7 @@ function gandalfTwoHandSlotHtml(item){
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped'+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
   '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
-   (art||'<span class="gandalf-equip-value">'+name+'</span>')+currentEquipmentMagicSparkHtml(magical)+magicBadge+'</span>'+
+   (art||'<span class="gandalf-equip-value">'+name+'</span>')+(typeof currentEquipmentMagicSparkHtml==='function'?currentEquipmentMagicSparkHtml(magical):'')+magicBadge+'</span>'+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 /* Automatic ammunition in Aktuell utrustning.
