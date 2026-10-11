@@ -59,21 +59,25 @@ describe('Mobile adventure shortcut',()=>{
       ['shopNavBtn','Targans Gille'],
       ['alchemyNavBtn','Alkemi'],
       ['innNavBtn','Värdshus'],
+      ['academyNavBtn','Akademin'],
       ['journalNavBtn','Krönika']
     ]){
       expect(strip).toContain('data-mobile-target="'+id+'"');
       expect(strip).toContain(label);
     }
-    for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn']){
+    for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','academyNavBtn']){
       expect(strip).toContain('id="'+id+'"');
     }
     expect(read('features/journal/journal.js')).toContain('id="journalNavBtn"');
     expect(css).toContain('.alea-app-header .alea-toolstrip>#mobileHubNavBtn');
     expect(css).toContain('.alea-app-header .alea-toolstrip>.mobile-hub-menu:not(.hidden)');
-    for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','journalNavBtn']){
+    for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','academyNavBtn','journalNavBtn']){
       expect(css).toContain('#'+id);
     }
     expect(css).toContain('@media(max-width:700px)');
+    expect(strip).toMatch(/id="academyNavBtn"[^>]*onclick="openAcademy\(\)"/);
+    // The mobile hub owns Academy navigation, not a sixth standalone shortcut.
+    expect(css).toMatch(/\.alea-toolstrip>#academyNavBtn,[\s\S]*#journalNavBtn\{display:none!important\}/);
   });
 
   it('opens, routes to original destination and closes after selection',()=>{
