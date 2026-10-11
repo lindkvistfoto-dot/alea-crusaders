@@ -319,6 +319,7 @@ function combatSourceStats(sceneCombatant,sources){
   Array.isArray(source?.armor)?source.armor:(source?.armor&&typeof source.armor==='object'?[source.armor]:[]);
  const attackProfile={
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(source?.weapons)?source.weapons:[]),
+  equipment:Array.isArray(data.equipment)?data.equipment:[],
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
   shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
@@ -2146,27 +2147,68 @@ async function combatSpendMagicPsy(actor,cost){
  if(!Array.isArray(saved)||saved.length!==1)throw new Error('PSY ändrades under kastet. Ladda om.');
  actor.current_psy=Number(saved[0].current_psy)
 }
+function combatItemSpellSources(combatant){
+ if(combatant?.source_type!=='character')return [];
+ const projection=typeof window!=='undefined'?window.aleaItemSpells:null;
+ if(!projection?.list)return [];
+ const profile=combatAttackProfile(combatant);
+ // Read CURRENT owned items if loaded; retain combat snapshot as fallback.
+ const day=typeof campaignDayState!=='undefined'?Number(campaignDayState?.day_number)||null:null;
+ return projection.list(profile,Array.isArray(ruleSpells)?ruleSpells:[],day)
+}
 function combatSpellOptions(combatant){
  const registry=Array.isArray(ruleSpells)?ruleSpells:[];
- // Combatants store their spell snapshot in state.attack_profile (not at top level).
- // Read that snapshot so prepared scenes and resumed battles keep their spell list.
  const spells=Array.isArray(combatant?.state?.attack_profile?.spells)?combatant.state.attack_profile.spells:[];
- return spells.map(spell=>{
+ const learned=spells.map(spell=>{
   const rule=registry.find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||
    String(row.name||'').localeCompare(String(spell?.name||''),'sv',{sensitivity:'base'})===0);
   return rule?{...rule,...spell,rule_id:rule.id,attack_magic:rule.attack_magic===true,
    damage_text:rule.damage_text||'',ritual:rule.ritual===true,kvick:rule.kvick===true,
-   range_text:rule.range_text||'',duration_text:rule.duration_text||''}:null
- }).filter(spell=>spell?.name)
+   range_text:rule.range_text||'',duration_text:rule.duration_text||'',spell_source:'learned'}:null
+ }).filter(spell=>spell?.name);
+ const granted=combatItemSpellSources(combatant).map(entry=>({
+  ...entry.rule,rule_id:entry.rule.id,name:entry.name,
+  fv:entry.cast_mode==='automatic'?100:entry.fv,
+  spell_source:'item',item_spell:entry,
+  attack_magic:entry.rule.attack_magic===true,
+  damage_text:entry.rule.damage_text||'',ritual:entry.rule.ritual===true,
+  kvick:entry.rule.kvick===true,range_text:entry.rule.range_text||'',
+  duration_text:entry.rule.duration_text||''
+ }));
+ return [...learned,...granted]
 }
-function combatSpellKey(spell){return String(spell?.rule_id||spell?.name||'spell')}
+function combatSpellKey(spell){return String(spell?.item_spell?.key||spell?.rule_id||spell?.name||'spell')}
 function combatSpellChooserHtml(combatant,action){
- const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||''),effect=Math.max(1,Number(action?.source_data?.effect_grade)||1);
+ const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
+ const chosen=options.find(spell=>combatSpellKey(spell)===selectedKey);
+ const effect=chosen?.item_spell?.effect_grade||Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><small>Rollfiguren har inga besvärjelser.</small></div>';
- return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span><div class="combat-weapon-choice-grid">'+options.map(spell=>{
-  const key=combatSpellKey(spell),active=selectedKey===key,profile=combatMagicRuleProfile(spell),binding=combatMagicBinding(spell),summon=profile.category==='summon';
-  return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+(binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'')+'</small></button>'
- }).join('')+'</div><div class="combat-spell-effect"><span>Effektgrad</span><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button></div><small>Välj besvärjelse och effektgrad. Tryck sedan ✦ för att slunga den.</small></div>'
+ const groups=[{label:'Inlärda besvärjelser',spells:options.filter(s=>s.spell_source!=='item')},
+  {label:'Besvärjelser från magiska föremål',spells:options.filter(s=>s.spell_source==='item')}];
+ return '<div class="combat-spell-choice"><span>Förbered besvärjelse</span>'+
+  groups.filter(group=>group.spells.length).map(group=>
+   '<div class="combat-spell-source-group"><h4>'+escAttr(group.label)+'</h4><div class="combat-weapon-choice-grid">'+
+    group.spells.map(spell=>{
+     const key=combatSpellKey(spell),active=selectedKey===key,binding=combatMagicBinding(spell);
+     const source=spell.item_spell;
+     const unavailable=source&&(!source.ready||source.cast_mode==='automatic'||!Number.isFinite(Number(source.fv))||Number(source.fv)<1);
+     const reason=source?.cast_mode==='automatic'?'Automatiskt kast ännu inte anslutet':
+      source&&!source.fv?'Saknar ett giltigt FV':source?.unavailable_reason||'';
+     const hint=source?
+      escAttr(source.item_name)+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
+       ' · FV '+escAttr(source.fv??'—')+(unavailable?' · '+escAttr(reason):''):
+      'FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+
+      (binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'');
+     return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" '+
+      (unavailable?'disabled title="'+escAttr(reason)+'" ':'')+
+      'onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>'+hint+'</small></button>'
+    }).join('')+'</div></div>'
+  ).join('')+
+  '<div class="combat-spell-effect"><span>Effektgrad</span>'+
+   (chosen?.item_spell?
+    '<b>'+effect+'</b><small>Fast EG från '+escAttr(chosen.item_spell.item_name)+' · ×'+chosen.item_spell.effect_multiplier+'</small>':
+    '<button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)">−</button><b>'+effect+'</b><button type="button" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)">+</button>')+
+   '</div><small>Välj en besvärjelse. Föremålsbesvärjelser behåller sitt konfigurerade FV och EG.</small></div>'
 }
 async function combatMagicButton(event,combatantId){
  event?.stopPropagation?.();
@@ -2246,13 +2288,23 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
  if(!combatant||!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked||combatActionDefinition(action)?.key!=='spell_cast')return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(spellKey));if(!spell)return;
- const preflight=combatMagicCastPreflight(combatant,spell,Math.max(1,Number(action.source_data?.effect_grade)||1));if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:Math.max(1,Number(action.source_data?.effect_grade)||1),spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+ const item=spell.item_spell||null;
+ if(item&&(!item.ready||item.cast_mode==='automatic'||!(Number(item.fv)>0))){alert(item.unavailable_reason||'Föremålets besvärjelse är inte tillgänglig.');return}
+ const grade=item?.effect_grade||Math.max(1,Number(action.source_data?.effect_grade)||1);
+ const preflight=combatMagicCastPreflight(combatant,spell,grade);
+ if(item&&item.psy_source!=='wearer'){
+  preflight.errors=preflight.errors.filter(error=>error!=='Otillräcklig PSY');
+  preflight.psy_cost=0;
+  preflight.valid=preflight.errors.length===0
+ }
+ if(!preflight.valid){alert(preflight.errors.join(' · '));return}
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
 async function stepCombatSpellEffect(combatantId,delta){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked)return;
+ if(action.source_data?.item_magic)return;
  const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(action.source_data?.spell_key));
  if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
