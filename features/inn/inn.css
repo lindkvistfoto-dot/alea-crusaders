@@ -1,12 +1,4 @@
 /* Värdshus */
-.inn-open #dayNavBtn,
-.inn-open #combatNavBtn,
-.inn-open #mapNavBtn,
-.inn-open #diceNavBtn,
-.inn-open #shopNavBtn,
-.inn-open #innNavBtn{display:none!important}
-
-.shop-open #innNavBtn{display:none!important}
 .inn-nav{white-space:nowrap}
 #innPage{width:100%}
 

@@ -115,3 +115,33 @@ describe('Unified navigation and banner self-test',()=>{
   expect(app.hidden('home')).toBe(false);
  });
 });
+
+
+describe('Desktop navigation stays in fixed positions on every page',()=>{
+  const shopCss=read('features/shop/store.css');
+  const innCss=read('features/inn/inn.css');
+  const academyCss=read('features/academy/academy.css');
+  const allCss=[shopCss,innCss,academyCss].join('\n');
+
+  it('never hides header shortcuts when a shop, inn, or academy becomes active',()=>{
+    // These old page-state selectors made Guild vanish inside Alchemy.
+    // The flex layout then moved Alchemy into Guild's old position.
+    expect(shopCss).not.toMatch(/\.shop-open\s+#(?:shopNavBtn|combatNavBtn|mapNavBtn|diceNavBtn|dayNavBtn)/);
+    expect(innCss).not.toMatch(/\.inn-open\s+#(?:shopNavBtn|innNavBtn|combatNavBtn|mapNavBtn|diceNavBtn|dayNavBtn)/);
+    expect(innCss).not.toMatch(/\.shop-open\s+#innNavBtn/);
+    expect(academyCss).not.toMatch(/\.academy-open\s+\.alea-toolstrip\s+\.academy-nav/);
+    expect(allCss).not.toMatch(/(?:\.shop-open|\.inn-open|\.academy-open)[^{}]*\{[^{}]*display\s*:\s*none\s*!important/i);
+  });
+
+  it('keeps Guild, Alchemy, Inn and Academy as separate permanent icons',()=>{
+    const header=html.split('<nav class="alea-toolstrip"')[1].split('</nav>')[0];
+    for(const id of ['shopNavBtn','alchemyNavBtn','innNavBtn','academyNavBtn']){
+      expect(header).toContain('id="'+id+'"');
+    }
+    const ids=['shopNavBtn','alchemyNavBtn','innNavBtn','academyNavBtn'].map(
+      id=>header.indexOf('id="'+id+'"'));
+    expect(ids.every((offset,i)=>i===0||offset>ids[i-1])).toBe(true);
+    expect(css).toContain('flex:0 0 104px!important');
+    expect(css).toContain('.alea-nav-art[aria-current="page"] > .alea-nav-asset--active');
+  });
+});
