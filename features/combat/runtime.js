@@ -137,7 +137,7 @@ async function combatRollDice(specs,label='Slag'){
 }
 
 let combatGmPlacementId=null;
-let combatSelectedSceneId='',combatSceneBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
+let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 let combatMovementLastClick=null,combatMovementCommitting=false,combatMapLastPointerType='mouse';
@@ -741,6 +741,7 @@ async function combatStartScene(sceneId,{reset=false,prepare=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  const previousCombatId=activeCombat?.id||null;
+ const previousCombatCompleted=activeCombat?.status==='completed';
  let replacementCombatId=null,replacementCommitted=false;
  try{
   const initiativeSnapshot=reset?combatCaptureInitiativeForReset():null;
@@ -749,7 +750,7 @@ async function combatStartScene(sceneId,{reset=false,prepare=false}={}){
   await loadActiveCombat(replacementCombatId);
   if(String(activeCombat?.id||'')!==String(replacementCombatId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
   if(!reset&&!prepare)await combatRollAndApplyInitiative(replacementCombatId);
-  if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId))await combatDeleteRuntime(previousCombatId);
+  if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId)&&!previousCombatCompleted)await combatDeleteRuntime(previousCombatId);
   replacementCommitted=true;
   await loadActiveCombat(replacementCombatId);
  }catch(e){
@@ -2581,6 +2582,10 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    ?'combat_instances?id=eq.'+encodeURIComponent(combatId)+'&campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&limit=1'
    :'combat_instances?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=in.(setup,active,paused)&select=*&order=updated_at.desc&limit=1';
   let rows=await dbJson(instanceQuery);
+  // Completed battles remain archived and the GM can reopen their report.
+  if(!combatId&&(!Array.isArray(rows)||!rows.length)&&combatCanManage()){
+   rows=await dbJson('combat_instances?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=eq.completed&select=*&order=updated_at.desc&limit=1');
+  }
   activeCombat=rows?.[0]||null;
   if(activeCombat){
    const activeSceneId=combatActiveSceneId();
@@ -3145,29 +3150,49 @@ function combatAmmoSummaryHtml(){
   (!ended?'<div class="combat-ammo-finish">'+
    '<label><input id="combatAmmoRecoverAllowed" type="checkbox"> Berättelsen tillåter att projektiler samlas upp</label>'+
    '<label>Chans (%) <input id="combatAmmoRecoverChance" type="number" min="80" max="90" value="85"></label>'+
-   '<button type="button" class="btn primary" onclick="combatFinishAndRecover()">Avsluta strid & sammanfatta</button>'+
+   '<small>Avsluta striden med stoppknappen intill rubriken Strid.</small>'+
    '<small>SL avgör om uppsamling går att göra. Varje använd projektil prövas en gång (85 % som standard). Inget avdrag görs vid omladdning.</small></div>':
    '<p>Striden avslutad. Totalt '+spent+' avfyrade, '+recovered+' återvunna, '+(spent-recovered)+' förlorade.</p>')+
  '</details>'
 }
 async function combatFinishAndRecover(){
- if(!combatCanManage()||!activeCombat||!['active','paused'].includes(activeCombat.status))return;
- const allow=$('combatAmmoRecoverAllowed')?.checked===true,percent=Number($('combatAmmoRecoverChance')?.value||85);
- if(!Number.isInteger(percent)||percent<80||percent>90)return alert('Ange 80–90 % återhämtningschans.');
+ if(!combatCanManage()||!activeCombat||!['active','paused'].includes(activeCombat.status)||combatStopBusy)return;
+ const allow=$('combatAmmoRecoverAllowed')?.checked===true;
+ const percent=Number($('combatAmmoRecoverChance')?.value||85);
+ if(allow&&(!Number.isInteger(percent)||percent<80||percent>90))return alert('Ange 80–90 % återhämtningschans.');
+ const spent=combatAmmoSpends.length;
+ const recoveryHint=spent
+  ?(allow?'Projektiler kan återvinnas med '+percent+' % chans per skott.':'Ingen uppsamling är vald – '+spent+' avfyrade projektiler förloras. Du kan ändra detta under Projektiler i SL-kontrollen före avslut.')
+  :'Inga förbrukade projektiler finns registrerade.';
  const ok=await askConfirm('Avsluta striden',
-  'Striden avslutas. '+(allow?'SL tillåter uppsamling, '+percent+' % chans per projektil.':'Ingen uppsamling: alla använda projektiler förloras.')+
-  ' Detta kan inte göras om.','Avsluta striden');
+  'Striden stoppas och en sparad sammanfattning skapas av samtliga stridsrundor, deltagarnas slutstatus och loggade händelser. '+recoveryHint+
+  ' Striden kan inte återupptas efter avslut.','■ Avsluta strid');
  if(!ok)return;
+ // The existing server RPC finishes the fight and settles projectile recovery atomically.
+ combatStopBusy=true;renderCombat();
  const combatId=activeCombat.id;
+ let finished=false;
  try{
   const result=await dbJson('rpc/combat_finish_and_recover',{method:'POST',body:JSON.stringify({
-   p_combat_id:combatId,p_allow_recovery:allow,p_percent:percent})});
+   p_combat_id:combatId,p_allow_recovery:allow,p_percent:allow?percent:85})});
+  finished=true;
   combatAmmoLastSummary=result;
-  // Refresh the actual character inventory, not just the battle snapshot.
-  for(const actor of combatants.filter(c=>c.source_type==='character'))await combatReloadAmmoCharacter(actor);
+  for(const actor of combatants.filter(c=>c.source_type==='character')){
+   try{await combatReloadAmmoCharacter(actor)}
+   catch(error){console.warn('Kunde inte uppdatera lokala projektiler',error)}
+  }
   await loadActiveCombat(combatId);
+  await window.combatPersistFinishedSummary(combatId,result);
+ }catch(error){
+  console.error('Avsluta strid och sammanfatta',error);
+  if(finished){
+   alert('Striden avslutades, men sammanfattningen kunde inte sparas automatiskt. Öppna den avslutade striden och välj Skapa sammanfattning. '+(error?.message||error));
+   try{await loadActiveCombat(combatId)}catch(_error){}
+  }else alert('Kunde inte avsluta striden: '+(error?.message||error));
+ }finally{
+  combatStopBusy=false;
   renderCombat();
- }catch(error){alert('Kunde inte sammanfatta striden: '+error.message)}
+ }
 }
 function combatAttackWeaponOptions(combatant,mode='auto'){
  const weapons=combatAvailableWeapons(combatant,mode),seen=new Set();
@@ -5918,6 +5943,13 @@ function combatGmToolboxHtml(){
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
+ const stopButton=$('combatStopBtn');
+ if(stopButton){
+  const showStop=combatCanManage()&&!!activeCombat&&['active','paused'].includes(activeCombat.status)&&!combatSceneSelectionIsPreview();
+  stopButton.classList.toggle('hidden',!showStop);
+  stopButton.disabled=combatStopBusy||combatSceneBusy;
+  stopButton.textContent=combatStopBusy?'Avslutar…':'■ Avsluta strid';
+ }
  if(combatSceneSelectionIsPreview()){
   const scene=combatSceneFromId(combatSelectedSceneId);
   if(!combatScenePreviewLoading&&combatScenePreviewSceneId!==String(scene.id))void loadCombatScenePreview(scene);
@@ -5930,6 +5962,11 @@ function renderCombat(){
   renderCombatGmControls();return
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
+ if(activeCombat.status==='completed'){
+  body.innerHTML='<div class="combat-finished-shell"><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+
+   (window.combatCompletedSummaryHtml?.(activeCombat)||'<p>Striden är avslutad.</p>')+'</div>';
+  renderCombatGmControls();return;
+ }
  let displayedCombatants=combatants.filter(c=>c.state?.in_reserve!==true&&c.status!=='removed');
   let participantHtml=displayedCombatants.length?displayedCombatants.map((c,index)=>combatantCard(c,index)).join(''):'<div class="combat-target-body"><div class="combat-target-note">Inga synliga deltagare ännu.</div></div>';
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
