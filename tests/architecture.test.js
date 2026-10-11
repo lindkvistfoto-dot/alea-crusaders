@@ -81,7 +81,7 @@ describe("application architecture smoke checks", () => {
 
   test("failed spells cost one PSY and perfect spells cost half rounded up", () => {
     const combat = read("features/combat/runtime.js");
-    expect(combat).toContain("const cost=combatMagicPsyCost(rolled.outcome,eg);");
+    expect(combat).toContain("const cost=combatSpellActualPsyCost(action,rolled.outcome,eg);");
     expect(combat).toContain("psy_cost:combatMagicPsyCost(outcome,eg)");
   });
 
