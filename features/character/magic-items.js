@@ -10,6 +10,7 @@
  const labels={weapon:'Vapen',armor:'Rustning',shield:'Sköld',equipment:'Utrustning'};
  const standard=[
   {property_key:'cast_spell',name:'Kasta besvärjelse',kind:'spell'},
+   {property_key:'magic_battery',name:'Magiskt batteri',kind:'spell'},
   {property_key:'attribute_bonus',name:'Magisk bonus',kind:'bonus'},
   {property_key:'magic_protection',name:'Magiskt skydd',kind:'protection'},
   {property_key:'status_effect',name:'Magiskt tillstånd',kind:'status'},
@@ -24,7 +25,23 @@
  function magical(x){return x?.isMagical===true||x?.magic?.enabled===true}
  function powers(x){return Array.isArray(x?.magicPowers)?x.magicPowers:[]}
  function spellName(x){return x?.spell_name||'Besvärjelse saknas'}
- function powerTitle(p){return p?.kind==='spell'?spellName(p)+' (EG '+(p.effect_grade||1)+' ×'+(p.effect_multiplier??p.summon_count??1)+')':(p?.property_name||'Magisk egenskap')}
+ function isBattery(p){return p?.property_key==='magic_battery'}
+ function powerTitle(p){
+  if(isBattery(p))return 'Magiskt batteri'+(p.battery_loaded?' · '+p.battery_loaded.spell_name+' (EG '+p.battery_loaded.effect_grade+')':' · oladdat');
+  return p?.kind==='spell'?spellName(p)+' (EG '+(p.effect_grade||1)+' ×'+(p.effect_multiplier??p.summon_count??1)+')':(p?.property_name||'Magisk egenskap')
+ }
+ function powerDescription(power){
+  if(isBattery(power))return power.battery_loaded?
+   'Laddad av '+(power.battery_loaded.caster_name||'besvärjare')+' · FV '+power.battery_loaded.fv+' · EG '+power.battery_loaded.effect_grade+
+    (power.battery_loaded.grade_roll?' ('+power.battery_loaded.grade_roll+': '+power.battery_loaded.grade_rolls.join('+')+')':'')+' · kvick · 1 laddning':
+   'Oladdat · '+(power.battery_grade_mode==='dice'?'Slumpad EG '+(power.battery_grade_dice||'1T3'):'Valfri EG vid laddning')+' · kan kastas som kvick';
+  return power.kind==='spell'?
+   'EG '+(power.effect_grade||1)+' ×'+(power.effect_multiplier??power.summon_count??1)+' · '+
+   (power.cast_mode==='automatic'?'Automatisk':power.cast_mode==='fixed'?'FV '+(power.fixed_fv??5):'Bärarens FV')+' · '+
+   (power.recharge_rule==='next_day'?'Efter ny dag':power.recharge_rule==='manual'?'Återställs av SL':'Ingen dagspärr')+
+   (power.max_charges!=null?' · Laddningar '+(power.charges_remaining??power.max_charges)+'/'+power.max_charges:''):
+   power.details||power.property_name||''
+ }
  function summary(x){
   if(!magical(x))return '';
   return powers(x).length?powers(x).map(powerTitle).join(' · '):'Magiskt föremål';
@@ -155,16 +172,14 @@
     '<p class="muted">Egenskaperna tillhör bara detta exemplar. Besvärjelser kopplas till Experts register. Handlingsaktiverad föremålsmagi kastas i strid via Magi, enligt samma regler för FV, EG, målval och SR som vanlig magi.</p>'+
     (powers(x).length?powers(x).map((power,i)=>'<div class="character-magic-power">'+
       '<div><b>'+safe(powerTitle(power))+'</b><small>'+
-       safe(power.kind==='spell'?
-       'EG '+(power.effect_grade||1)+' ×'+(power.effect_multiplier??power.summon_count??1)+' · '+
-       (power.cast_mode==='automatic'?'Automatisk':power.cast_mode==='fixed'?'FV '+(power.fixed_fv??5):'Bärarens FV')+' · '+(power.recharge_rule==='next_day'?'Efter ny dag':power.recharge_rule==='manual'?'Återställs av SL':'Ingen dagspärr')+
-       (power.max_charges!=null?' · Laddningar '+(power.charges_remaining??power.max_charges)+'/'+power.max_charges:''):
-       (power.details||power.property_name||''))+'</small></div>'+
+       safe(powerDescription(power))+'</small></div>'+
       '<button type="button" class="smallbtn" onclick="editCharacterItemPower(\''+kind+'\','+index+','+i+')">Ändra</button>'+
+      (isBattery(power)&&editable()&&!power.battery_loaded?
+       '<button type="button" class="smallbtn" onclick="openCharacterBatteryCharger(\''+kind+'\','+index+','+i+')">⚡ Ladda</button>':'')+
       (window.aleaMagicConfigurator?
        '<div class="character-magic-power-status"><span class="'+(availability(power).ready?'ready':'not-ready')+'">'+
         safe(availability(power).ready?'Redo':availability(power).reason)+'</span>'+
-        (editable()&&availability(power).ready?
+        (editable()&&!isBattery(power)&&availability(power).ready?
          '<button type="button" class="smallbtn" title="Notera användning – kastar inte besvärjelsen automatiskt" onclick="registerCharacterItemPowerUse(\''+kind+'\','+index+','+i+')">Registrera användning</button>':'')+
         (editable()&&power.recharge_rule==='manual'&&!availability(power).ready?
          '<button type="button" class="smallbtn" onclick="resetCharacterItemPower(\''+kind+'\','+index+','+i+')">Återställ</button>':'')+'</div>':'')+
