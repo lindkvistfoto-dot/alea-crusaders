@@ -7613,3 +7613,31 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  #equipmentPanel .provisions-line .provisions-stepper button{width:30px;min-width:30px}
  #equipmentPanel .provisions-inline-edit input{width:52px}
 }
+
+/* v0.35.99 — Mat och vatten i befintligt snabbstatusutrymme.
+   Ersätter tidigare instruktionstext: ingen ny statusradshöjd läggs till. */
+#view .quick-provisions{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:6px;margin-top:8px;min-width:0
+}
+#view .quick-supply{
+ display:flex;align-items:center;justify-content:center;
+ gap:4px;min-width:0;min-height:30px;box-sizing:border-box;
+ padding:4px 5px;border:1px solid #46634f;border-radius:8px;
+ background:rgba(10,28,19,.7);color:#f0e5cd;white-space:nowrap;
+ font:600 11px/1.1 system-ui,sans-serif
+}
+#view .quick-supply-water{border-color:#426e84;background:#132832}
+#view .quick-supply>b{font-weight:650;overflow:hidden;text-overflow:ellipsis}
+#view .quick-supply>strong{font-size:16px;font-variant-numeric:tabular-nums;color:#ffe0a0}
+#view .quick-supply-water>strong{color:#b4e5ff}
+#view .quick-supply>small{font-size:10px;color:#b7bda8}
+#view .quick-supply.empty{border-color:#995b4b}
+@media(max-width:560px){
+ #view .quick-provisions{margin-top:6px;gap:6px}
+ #view .quick-supply{min-height:29px;padding:3px 4px}
+}
+@media(max-width:355px){
+ #view .quick-supply{gap:3px;font-size:10px}
+ #view .quick-supply>strong{font-size:15px}
+}
