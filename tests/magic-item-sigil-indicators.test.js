@@ -23,8 +23,8 @@ describe('magical item sigil indicators',()=>{
  });
  it('shows dark upper-left sigil coins in normal, two-handed, and combat equipment',()=>{
   expect(character).toContain('const magicBadge=magical?');
-  expect(character).toContain('currentEquipmentMagicSparkHtml(magical)+magicBadge+countBadge');
-  expect(character).toContain('currentEquipmentMagicSparkHtml(magical)+magicBadge');
+  expect(character).toContain("(typeof currentEquipmentMagicSparkHtml==='function'?currentEquipmentMagicSparkHtml(magical):'')+magicBadge+countBadge");
+  expect(character).toContain("(typeof currentEquipmentMagicSparkHtml==='function'?currentEquipmentMagicSparkHtml(magical):'')+magicBadge");
   expect(combat).toContain('const magicBadge=magical?');
   expect(combat).toContain("count+'</b>')+magicBadge+'</div>'");
   expect(css).toContain('.gandalf-equip-face>.alea-magic-item-dot');
