@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read = path => readFileSync(new URL('../'+path,import.meta.url));
 
-describe('Illustrated bronze navigation v0.35.114',()=>{
+describe('Illustrated bronze navigation v0.35.115',()=>{
   const html=read('index.html').toString('utf8');
   const js=read('features/home/navigation-icons.js').toString('utf8');
   const css=read('features/home/topbar.css').toString('utf8');
@@ -21,7 +21,7 @@ describe('Illustrated bronze navigation v0.35.114',()=>{
   });
 
   it('connects the icon controller without removing existing click handlers',()=>{
-    expect(html).toContain('features/home/navigation-icons.js?v=0.35.114');
+    expect(html).toContain('features/home/navigation-icons.js?v=0.35.115');
     for(const label of ['openShop()','openInn()','openAcademy()','openCombat()','openCharacters()']){
       expect(html).toContain(label);
     }
@@ -48,7 +48,11 @@ describe('Illustrated bronze navigation v0.35.114',()=>{
     expect(read('features/material/viewer.js').toString('utf8'))
       .toContain("nav.className='btn legolas-nav alea-bronze-nav'");
     expect(css).toContain('@media (min-width:901px)');
-    expect(css).toContain('width:62px!important');
+    expect(css).toContain('v0.35.115');
+    expect(css).toContain('width:104px!important');
+    expect(css).toContain('height:104px!important');
+    expect(css).toContain('flex-wrap:wrap;');
+    expect(css).toContain('min-height:112px;');
   });
 
   it('uses dark frames by default and glowing frames only for active destinations',()=>{
