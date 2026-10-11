@@ -81,6 +81,35 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   x.common.campaignDayState.day_number=11;
   expect(x.common.options(x.actor).find(s=>s.spell_source==='item').item_spell.ready).toBe(true);
  });
+ it('väljer föremålets fasta EG1, FV5 och egen PSY-källa vid förberedelse i strid',async()=>{
+  const x=fixture(),item=x.common.options(x.actor).find(s=>s.spell_source==='item');
+  const action={id:'action1',status:'planned',source_data:{action_key:'spell_cast',effect_grade:3}};
+  const writes=[];
+  const start=runtime.indexOf('async function chooseCombatPreparedSpell(');
+  const stop=runtime.indexOf('async function stepCombatSpellEffect(',start);
+  if(start<0||stop<start)throw Error('Spell preparation missing');
+  const scope={
+   combatants:[x.actor],combatChosenAction:()=>action,combatCannotAct:()=>false,
+   combatActionDefinition:()=>({key:'spell_cast'}),
+   combatSpellOptions:()=>x.common.options(x.actor),combatSpellKey:x.common.combatSpellKey,
+   combatMagicCastPreflight:(_c,_spell,eg)=>({valid:true,errors:[],rule:{category:'summon'},psy_cost:eg,
+    casting:{effect_grade:eg,quick:false}}),
+   combatMagicBinding:()=>({kind:'manual',supported:true}),
+   activeCombat:{id:'battle'},dbJson:async (path,opts)=>{writes.push(JSON.parse(opts.body));return []},
+   alert:vi.fn(),renderCombat:vi.fn(),console
+  };
+  runInNewContext(runtime.slice(start,stop)+'this.select=chooseCombatPreparedSpell;',scope);
+  await scope.select(x.actor.id,x.common.combatSpellKey(item));
+  expect(writes).toHaveLength(1);
+  const data=writes[0].source_data;
+  expect(data.effect_grade).toBe(1);
+  expect(data.spell_fv).toBe(5);
+  expect(data.psy_cost).toBe(0);
+  expect(data.item_magic).toMatchObject({
+   group:'weapons',item_id:'w1',power_id:'power-1',
+   psy_source:'artifact',effect_multiplier:4
+  });
+ });
  it('lägger inte till besvärjelsen i rollpersonens inlärda lista',()=>{
   const x=fixture(),before=JSON.stringify(x.item.spells);
   x.api.list(x.item,[spell],10);
