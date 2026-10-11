@@ -274,3 +274,58 @@
     text-shadow: 0 2px 8px rgba(0, 0, 0, .9);
   }
 }
+
+/* v0.35.110: align the illustrated desktop header to the combat 1:2:1 grid.
+   Combat: main <=1600px (18px padding), .combatpage <=1550px
+   (8px padding each side). Thus the actual grid max-width is 1534px,
+   and for narrower desktop windows it is viewport width minus 52px.
+   Gaps are 12px; the first grid track and one gap = 25% + 6px. */
+@media (min-width: 1024px) {
+  .alea-app-header {
+    --alea-desktop-grid-width: 1534px;
+    --alea-desktop-grid-gutters: 52px;
+    position: sticky;
+    padding: 16px 0;
+    background-color: #100e0c;
+    background-image: none;
+  }
+
+  /* Separate decoration layer: leave the existing navigation clickable,
+     and keep the left quarter available for a replaceable logo later. */
+  .alea-app-header::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: min(var(--alea-desktop-grid-width), calc(100% - var(--alea-desktop-grid-gutters)));
+    transform: translateX(-50%);
+    background: url("../../assets/alea-desktop-header.avif") center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+
+  .alea-app-header > .bar {
+    width: min(var(--alea-desktop-grid-width), calc(100% - var(--alea-desktop-grid-gutters)));
+    max-width: none;
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+
+  /* First grid column: (width - 2 * 12px) / 4.
+     The next column begins after an additional 12px gap. */
+  .alea-app-header .alea-toolstrip {
+    padding-left: calc(25% + 6px);
+    flex-wrap: nowrap;
+  }
+
+  .alea-app-header .alea-headingbar {
+    margin-inline: 0;
+    padding: 7px 10px 3px calc(25% + 6px);
+    box-sizing: border-box;
+  }
+
+  .alea-app-header .alea-heading-left > h1 {
+    display: none !important;
+  }
+}
