@@ -1991,6 +1991,7 @@ function clearCurrentEquipmentSlot(slot){
  if((slot==='leftHand'||slot==='rightHand')&&ref&&Number(ref.hands)===2&&equipRefEquals(eq.leftHand,eq.rightHand)){eq.leftHand=null;eq.rightHand=null}else eq[slot]=null;
  currentEquipmentPickerSlot=null;save();renderCurrentEquipment()
 }
+/* v0.35.09 — Food & provisions: whole days, saved per rollperson. */
 /* v0.35.97 — Separate food and drinking-water stores, both in whole days.
    Only the campaign-day database trigger consumes stores. No browser-side deduction. */
 function characterProvisionsDays(c=current){
