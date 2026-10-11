@@ -1775,6 +1775,14 @@ function currentEquipmentItemArtPath(ref,item,slot){
  }
  return null;
 }
+/* Decorative, individually animated magic glints. Rendered only on magical
+   equipped instances; separate from the weapon artwork and the rotating sigil. */
+function currentEquipmentMagicSparkHtml(magical){
+ if(!magical)return '';
+ return '<span class="alea-magic-sparks" aria-hidden="true">'+
+  Array.from({length:6},()=>'<span class="alea-magic-spark"></span>').join('')+
+  '</span>';
+}
 function currentEquipSlotHtml(slot){
  const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
@@ -1785,7 +1793,7 @@ function currentEquipSlotHtml(slot){
   '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+countBadge+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+currentEquipmentMagicSparkHtml(magical)+countBadge+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 /* Narsil-style: one square master asset per weapon. Its two-hand placement is
@@ -1831,7 +1839,7 @@ function gandalfTwoHandSlotHtml(item){
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped'+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
   '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
-   (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
+   (art||'<span class="gandalf-equip-value">'+name+'</span>')+currentEquipmentMagicSparkHtml(magical)+'</span>'+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 /* Automatic ammunition in Aktuell utrustning.
