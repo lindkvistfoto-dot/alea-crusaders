@@ -1779,10 +1779,11 @@ function currentEquipSlotHtml(slot){
  const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
  const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
+ const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const torchCount=ref?.kind==='equipment'?window.aleaEquipmentCatalog?.torchCount(current,item):null;
  const countBadge=torchCount!==null&&torchCount!==undefined?
   '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
- return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+'" '+
+ return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
    '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+countBadge+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
@@ -1816,6 +1817,7 @@ function twoHandDisplayProfile(item){
 }
 function gandalfTwoHandSlotHtml(item){
  const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
+ const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const name=escAttr(item.name||'Vapen');
  const profile=twoHandDisplayProfile(item);
  const cssVars=[
@@ -1826,7 +1828,7 @@ function gandalfTwoHandSlotHtml(item){
   '--twohand-width:'+profile.width+'%',
   '--twohand-height:'+profile.height+'%'
  ].join(';');
- return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped" '+
+ return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped'+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
   '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
    (art||'<span class="gandalf-equip-value">'+name+'</span>')+'</span>'+
