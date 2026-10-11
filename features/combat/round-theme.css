@@ -355,3 +355,47 @@
 @media(max-width:600px) {
  .combat-turn-panel { --alea-frame-corner-size:32px; --alea-frame-edge-width:4px; }
 }
+
+/* v0.35.123 — Pilot: continuous battle artwork from the round heading into
+   the active combatant identity. All action controls and frame corners stay
+   above the purely decorative layer, and the image fades before equipment. */
+.combat-turn-panel::after {
+  content:"";
+  position:absolute;
+  top:var(--alea-frame-edge-width);
+  left:var(--alea-frame-edge-width);
+  right:var(--alea-frame-edge-width);
+  height:210px;
+  max-height:calc(100% - 2 * var(--alea-frame-edge-width));
+  border-radius:8px 8px 0 0;
+  pointer-events:none;
+  z-index:0;
+  background-image:
+    linear-gradient(180deg,
+      rgba(19,12,9,.10) 0%,
+      rgba(19,12,9,.20) 27%,
+      rgba(19,12,9,.69) 56%,
+      rgba(19,12,9,.94) 78%,
+      #160f0b 100%),
+    linear-gradient(90deg,
+      rgba(14,9,7,.80) 0%,
+      rgba(14,9,7,.50) 34%,
+      rgba(14,9,7,.06) 70%,
+      transparent 100%),
+    url('../../assets/combat/round-hero-battle-pilot.avif');
+  background-size:100% 100%,100% 100%,cover;
+  background-position:center,center,center 32%;
+  background-repeat:no-repeat;
+}
+.combat-turn-panel .combat-turn-head,
+.combat-turn-panel .combat-turn-actor {
+  background:transparent;
+}
+/* The existing actor information and action menus retain foreground layering.
+   The ornate corners intentionally remain on z-index:3 above the artwork. */
+@media(max-width:460px) {
+  .combat-turn-panel::after {
+    height:188px;
+    background-position:center,center,60% 30%;
+  }
+}
