@@ -1463,8 +1463,37 @@ function renderMagic(){
    ?'<div class="character-spell-name">'+info+warning+'<button type="button" class="spell-master-change" onclick="changeSpellFromRegistry('+i+')" title="Välj i besvärjelseregistret">Byt</button></div><div class="skillnum"><input class="fv-input" type="number" min="0" value="'+escAttr(sp.fv??'')+'" onchange="setSpell('+i+',\'fv\',this.value)"></div><div class="skillnum"><input class="erf-edit-input" type="number" min="0" value="'+escAttr(sp.erf??0)+'" onchange="setSpell('+i+',\'erf\',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSpell('+i+')">×</button></div>'
    :'<div class="character-spell-name">'+info+warning+'</div><div class="skill-roll-col">'+rollBtn+'</div><div class="skillnum">'+(sp.fv===0?0:(sp.fv||'—'))+'</div><div class="skillnum">'+erfDisplay('spells',i,sp.erf)+'</div>'
  }).join('');
+ renderItemSpellTable();
  let schools=current.magicSchools||[];$('schooltable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead skillnum">FV</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+schools.map((x,i)=>editing?'<div><input value="'+escAttr(x.name||'')+'" onchange="setSchool('+i+',\'name\',this.value)"></div><div><input class="fv-input" type="number" value="'+(x.fv??'')+'" onchange="setSchool('+i+',\'fv\',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeSchool('+i+')">×</button></div>':'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+(x.fv===0?0:(x.fv||'—'))+'</div>').join('');
  $('familiarisTable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+current.familiaris.map((x,i)=>editing?'<div><input value="'+escAttr(x.name||'')+'" onchange="setFamiliaris('+i+',this.value)"></div><div class="rowactions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button><button class="deletebtn" onclick="removeFamiliaris('+i+')">×</button></div>':'<div>'+escAttr(x.name||'—')+'</div>').join('')
+}
+/* Item-granted spellcasting stays separate from learned spells and school limits.
+   Both displays use the same projection of the character's UNIQUE inventory. */
+function renderItemSpellTable(){
+ const el=$('itemSpellTable');if(!el)return;
+ const projection=typeof window!=='undefined'?window.aleaItemSpells:null;
+ const list=projection?.list?.(current,ruleSpells,Number(campaignDayState?.day_number)||null)||[];
+ el.innerHTML=list.length?list.map((spell,i)=>
+  '<div class="character-item-spell-row">'+
+   '<div><button type="button" class="character-item-spell-name" onclick="showItemSpellInfo('+i+')">'+escAttr(spell.name)+'</button>'+
+    '<small>✦ '+escAttr(spell.item_name)+' · '+escAttr(spell.group_label)+'</small></div>'+
+   '<div class="character-item-spell-stats"><span>EG <b>'+spell.effect_grade+'</b> ×<b>'+spell.effect_multiplier+'</b></span>'+
+    '<span>FV <b>'+escAttr(spell.cast_mode==='automatic'?'Auto':spell.fv??'—')+'</b></span></div>'+
+   '<div class="character-item-spell-state '+(spell.ready?'ready':'waiting')+'">'+
+    escAttr(spell.ready?'Redo':spell.unavailable_reason||'Inte tillgänglig')+'</div></div>'
+ ).join(''):'<p class="character-item-spell-empty">Inga besvärjelser från magiska föremål.</p>'
+}
+function showItemSpellInfo(i){
+ const spell=(typeof window!=='undefined'?window.aleaItemSpells?.list?.(current,ruleSpells,Number(campaignDayState?.day_number)||null):[])?.[i];
+ if(!spell)return;
+ $('skillModalTitle').textContent=spell.name;
+ $('skillModalBody').innerHTML='<div class="skillmeta"><span>Föremål: <b>'+escAttr(spell.item_name)+'</b></span>'+
+  '<span>EG: '+spell.effect_grade+' ×'+spell.effect_multiplier+'</span>'+
+  '<span>FV: '+escAttr(spell.cast_mode==='automatic'?'Automatisk':spell.fv??'—')+'</span>'+
+  '<span>Återhämtning: '+escAttr(spell.recharge_rule==='next_day'?'Nästa kampanjdag':spell.recharge_rule==='manual'?'Manuell':'Ingen dagsspärr')+'</span></div>'+
+  '<div class="rule-description">'+escAttr(spell.rule?.description||'Besvärjelsen saknar regelbeskrivning.')+'</div>'+
+  '<p class="muted">'+escAttr(spell.ready?'Redo att användas via Magi i strid.':spell.unavailable_reason)+'</p>';
+ $('skillModal').classList.remove('hidden')
 }
 function addFamiliaris(){current.familiaris.push({name:''});renderMagic()}
 function setFamiliaris(i,v){current.familiaris[i].name=v}
