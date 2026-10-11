@@ -84,6 +84,10 @@
    Object.entries(object).map(([key,label])=>
     '<option value="'+safe(key)+'"'+(String(key)===String(selected)?' selected':'')+'>'+safe(label)+'</option>').join('')
  }
+ function campaignDay(){return typeof campaignDayState!=='undefined'?campaignDayState?.day_number:null}
+ function availability(power){
+  return window.aleaMagicConfigurator?.state(power,campaignDay())||{ready:true,reason:'',day:null}
+ }
  function itemPowers(kind,index){
   const x=get(kind,index);if(!x||!magical(x))return;
   modal('Magiska egenskaper · '+(x.name||labels[kind]),
@@ -97,6 +101,13 @@
        (power.max_charges!=null?' · Laddningar '+(power.charges_remaining??power.max_charges)+'/'+power.max_charges:''):
        (power.details||power.property_name||''))+'</small></div>'+
       '<button type="button" class="smallbtn" onclick="editCharacterItemPower(\''+kind+'\','+index+','+i+')">Ändra</button>'+
+      (window.aleaMagicConfigurator?
+       '<div class="character-magic-power-status"><span class="'+(availability(power).ready?'ready':'not-ready')+'">'+
+        safe(availability(power).ready?'Redo':availability(power).reason)+'</span>'+
+        (editable()&&availability(power).ready?
+         '<button type="button" class="smallbtn" title="Notera användning – kastar inte besvärjelsen automatiskt" onclick="registerCharacterItemPowerUse(\''+kind+'\','+index+','+i+')">Registrera användning</button>':'')+
+        (editable()&&power.recharge_rule==='manual'&&!availability(power).ready?
+         '<button type="button" class="smallbtn" onclick="resetCharacterItemPower(\''+kind+'\','+index+','+i+')">Återställ</button>':'')+'</div>':'')+
       '<button type="button" class="deletebtn" onclick="deleteCharacterItemPower(\''+kind+'\','+index+','+i+')">×</button>'+
      '</div>').join(''):'<p class="muted">Inga egenskaper kopplade ännu.</p>')+
     '<div class="rule-editor-actions"><button type="button" class="btn" onclick="closeSkillInfo()">Stäng</button>'+
@@ -225,6 +236,23 @@
   else x.magicPowers.push(created);
   save();refresh(kind);itemPowers(kind,index);
  }
+ function registerUse(kind,index,powerIndex){
+  if(!editable()||!window.aleaMagicConfigurator)return;
+  const x=get(kind,index),p=powers(x)[powerIndex];if(!magical(x)||!p)return;
+  try{
+   const status=availability(p);
+   if(!status.ready)throw new Error(status.reason);
+   x.magicPowers[powerIndex]=window.aleaMagicConfigurator.markUsed(p,campaignDay());
+   save();refresh(kind);itemPowers(kind,index);
+  }catch(error){alert(error.message)}
+ }
+ function resetPower(kind,index,powerIndex){
+  if(!editable()||!window.aleaMagicConfigurator)return;
+  const x=get(kind,index),p=powers(x)[powerIndex];if(!magical(x)||!p)return;
+  if(p.recharge_rule!=='manual')return;
+  x.magicPowers[powerIndex]=window.aleaMagicConfigurator.reset(p);
+  save();refresh(kind);itemPowers(kind,index);
+ }
  async function deletePower(kind,index,powerIndex){
   if(!editable())return;
   const x=get(kind,index),power=powers(x)[powerIndex];if(!power)return;
@@ -232,10 +260,12 @@
   x.magicPowers.splice(powerIndex,1);save();refresh(kind);itemPowers(kind,index)
  }
  window.aleaCharacterItemMagic={magical,badge,control,summary,toggle,open:itemPowers,
-  edit:editPower,savePower,deletePower,showFields,powers};
+  edit:editPower,savePower,deletePower,showFields,powers,availability,registerUse,resetPower};
  window.setCharacterItemMagical=toggle;
  window.openCharacterItemPowers=itemPowers;
  window.editCharacterItemPower=editPower;
  window.saveCharacterItemPower=savePower;
  window.deleteCharacterItemPower=deletePower;
+ window.registerCharacterItemPowerUse=registerUse;
+ window.resetCharacterItemPower=resetPower;
 })();
