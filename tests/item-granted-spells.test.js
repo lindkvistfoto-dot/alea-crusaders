@@ -133,11 +133,11 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   await scope.pay({source_id:'char'},cost,action);
   expect(saved).toBe(1);
   expect(psyPaid).toBe(0);
-  expect(entry.last_used_day).toBe(10);
+  expect(x.item.weapons[0].magicPowers[0].last_used_day).toBe(10);
   await expect(scope.pay({source_id:'char'},cost,action)).rejects.toThrow('nästa kampanjdag');
   scope.campaignDayState.day_number=11;
   await scope.pay({source_id:'char'},cost,action);
-  expect(entry.last_used_day).toBe(11);
+  expect(x.item.weapons[0].magicPowers[0].last_used_day).toBe(11);
   const learned={source_data:{}};
   await scope.pay({source_id:'char'},scope.actual(learned,'success',2),learned);
   expect(psyPaid).toBe(2);
