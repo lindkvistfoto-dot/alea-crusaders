@@ -61,7 +61,8 @@ describe('Akademin — Expert advancement, experience and tuition',()=>{
   expect(r.trainingAllowed(c,skill).allowed).toBe(false);
   expect(()=>r.plan(c,skill,{day:10})).toThrow();
   expect(r.trainingAllowed(c,{...skill,type:'LÄR'}).allowed).toBe(true);
-  expect(r.trainingAllowed(c,{...skill,expert_category:'B'}).allowed).toBe(true);
+  expect(r.trainingAllowed(hero(4),{...skill,expert_category:'B'}).allowed).toBe(true);
+  expect(r.trainingAllowed(hero(5),{...skill,expert_category:'B'}).allowed).toBe(false);
  });
  it('checks teachers’ INT, FV advantage and different-race weighted class capacity',()=>{
   const r=model(),c=hero(10),o={intelligence:15,fv:18,classmates:6,differentRace:0,magician:false,ownDifferentRace:false};
@@ -74,6 +75,22 @@ describe('Akademin — Expert advancement, experience and tuition',()=>{
   expect(()=>r.teacherQuote(c,skill,{...o,fv:12})).toThrow('FV');
   expect(()=>r.teacherQuote(c,skill,{...o,classmates:10,differentRace:7})).toThrow('större');
   expect(r.teacherQuote(hero(3),{...skill,expert_category:'B'}, {...o,fv:5}).bonus).toBe(10);
+ });
+ it('does not let trained ERF raise a non-learning A skill past its attribute cap',()=>{
+  const r=model(),c=hero(14,8,0);
+  c.academyTrainingCredits={sword:8};
+  const blocked=r.quote(c,skill,true);
+  expect(blocked).toMatchObject({next:15,required:6,ready:false,trainingRestricted:true,spendableSkillErf:0});
+  c.skills[0].erf=15; // seven independently earned adventure points
+  const available=r.quote(c,skill,true);
+  expect(available).toMatchObject({ready:true,spendableSkillErf:7});
+  const bought=r.purchase(c,skill,true);
+  expect(bought.character.academyTrainingCredits.sword).toBe(8);
+  expect(bought.character.skills[0].erf).toBe(9);
+  const lower=hero(13,8,0);
+  lower.academyTrainingCredits={sword:8};
+  const after=r.purchase(lower,skill,true);
+  expect(after.character.academyTrainingCredits.sword).toBe(4);
  });
  it('teacher training stores two rolls and resolves only after elapsed time',()=>{
   const r=model(),c=hero(10),session=r.plan(c,skill,{mode:'teacher',day:30,teacher:{
