@@ -18,7 +18,7 @@
   const eg=whole(config.effect_grade,1,50,1);
   const castMode=config.cast_mode||'fixed';
   if(!Object.hasOwn(casting,castMode)&&castMode!=='none')throw new Error('Okänt sätt att kasta');
-  const fv=castMode==='fixed'?whole(config.fixed_fv,1,100,5):null;
+  const fv=castMode==='fixed'&&config.property_key!=='magic_battery'?whole(config.fixed_fv,1,100,5):null;
   const rule=config.recharge_rule||'none';
   if(!Object.hasOwn(recovery,rule))throw new Error('Okänd återhämtningsregel');
   const max=config.max_charges==null||config.max_charges===''?null:whole(config.max_charges,0,9999);
