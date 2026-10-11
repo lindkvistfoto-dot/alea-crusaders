@@ -150,7 +150,7 @@
   });
   $('adminEditorBody')?.querySelectorAll('[data-battery-only]').forEach(field=>{field.hidden=!battery});
   for(const id of ['mapSpell','mapEg','mapMultiplier','mapCastMode','mapFixedFv','mapPsy','mapChargeCost','mapUses','mapRecharge']){
-   const field=$(id)?.closest('label');if(field&&battery)field.hidden=true;
+   const field=battery?$(id)?.closest?.('label'):null;if(field&&battery)field.hidden=true;
   }
   const batteryDice=$('mapBatteryDice');if(batteryDice)batteryDice.hidden=!battery||$('mapBatteryMode')?.value!=='dice';
   const activate=$('mapActivation');
