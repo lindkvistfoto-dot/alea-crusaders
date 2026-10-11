@@ -61,7 +61,7 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
   expect(src).toContain("resistance_target_id!==String(target.id)")
  });
  test('direct spells spend PSY and each target uses its own EG allocation',()=>{
-  expect(src).toContain('await combatSpendMagicPsy(actor,result.psy_cost)');
+  expect(src).toContain('await combatPayForSpell(actor,result.psy_cost,action)');
   expect(src).toContain('combatMagicDamageFormula(action.source_data,allocation.eg)');
   expect(src).toContain('psy_cost:combatMagicPsyCost(outcome,eg)')
  });
