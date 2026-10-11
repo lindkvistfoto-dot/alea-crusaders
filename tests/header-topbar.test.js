@@ -18,6 +18,23 @@ describe('Alea unified header',()=>{
      expect(heading).toContain('id="'+id+'"');
    }
  });
+ test('administrators have a top-row gear and sign out from admin, while players can still sign out',()=>{
+   const strip=html.split('<nav class="alea-toolstrip"')[1].split('</nav>')[0];
+   expect(strip).toContain('id="adminNavBtn"');
+   expect(strip).toContain('onclick="openAdmin()"');
+   expect(strip).toContain('aria-label="Öppna administration"');
+   const adminHead=html.split('<section id="admin"')[1].split('<section id="adminOverview"')[0];
+   expect(adminHead).toContain('id="logoutBtn"');
+   expect(adminHead).toContain('onclick="logoutUser()"');
+   const header=html.split('</header>')[0];
+   expect(header).not.toContain('id="logoutBtn"');
+   expect(header).toContain('id="playerLogoutBtn"');
+   const app=read('legacy/app.js');
+   expect(app).toContain("$('adminNavBtn').classList.toggle('hidden',!u||!u.admin)");
+   expect(app).toContain("$('logoutBtn').classList.toggle('hidden',!u||!u.admin)");
+   expect(app).toContain("$('playerLogoutBtn').classList.toggle('hidden',!u||u.admin)");
+   expect(app).toContain("async function openAdmin(){if(!activeUser()?.admin)return;");
+ });
  test('mobile uses bounded icon grid with no page-level sideways scrolling',()=>{
    expect(css).toContain('grid-template-columns:repeat(4,minmax(0,1fr))');
    expect(css).toContain('.alea-app-header .alea-toolstrip>.btn');
