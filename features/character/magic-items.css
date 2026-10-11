@@ -157,3 +157,47 @@
  .character-item-image-preview{width:36px;height:36px;min-width:36px}
  .character-item-image-editor .item-art-editor-content{min-width:0}
 }
+
+/* v0.35.89 — golden magic aura follows the silhouette of transparent item art.
+   The decorative frames and character portrait remain untouched. */
+@keyframes aleaMagicalGoldPulse{
+  0%,100%{
+    filter:drop-shadow(0 0 2px rgba(255,228,143,.87))
+           drop-shadow(0 0 5px rgba(245,182,58,.65))
+           drop-shadow(0 0 8px rgba(219,139,29,.30));
+  }
+  50%{
+    filter:drop-shadow(0 0 3px rgba(255,242,181,1))
+           drop-shadow(0 0 7px rgba(255,205,83,.86))
+           drop-shadow(0 0 13px rgba(240,156,35,.52));
+  }
+}
+.gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
+.combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
+  animation:aleaMagicalGoldPulse 3.1s ease-in-out infinite;
+  will-change:filter;
+}
+/* No transparent art? Mark the text/empty slot rather than a blank square. */
+.gandalf-equip-slot.magical-no-art .gandalf-equip-value{
+  color:#ffedba;
+  text-shadow:0 0 4px rgba(255,221,126,.96),0 0 12px rgba(255,174,51,.7),0 1px 3px #000;
+}
+.gandalf-equip-slot.magical-no-art .gandalf-equip-face{
+  box-shadow:inset 0 0 9px rgba(248,183,63,.14);
+}
+.combat-turn-equip-art.magical-no-art .combat-turn-art-frame{
+  box-shadow:inset 0 0 0 1px rgba(250,196,94,.32),inset 0 0 10px rgba(255,196,67,.20);
+}
+.combat-turn-equip-art.magical-no-art .combat-turn-art-empty{
+  color:#f5ce79;
+  text-shadow:0 0 7px rgba(255,204,95,.75);
+}
+@media(prefers-reduced-motion:reduce){
+  .gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
+  .combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
+    animation:none;
+    will-change:auto;
+    filter:drop-shadow(0 0 3px rgba(255,224,144,.95))
+           drop-shadow(0 0 8px rgba(244,176,58,.62));
+  }
+}
