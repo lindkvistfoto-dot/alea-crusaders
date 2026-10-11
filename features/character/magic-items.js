@@ -196,7 +196,7 @@
   $('skillModalBody')?.querySelectorAll('[data-character-magic-type]').forEach(node=>{
    node.hidden=!node.dataset.characterMagicType.split(' ').includes(kind);
   });
-  $('skillModalBody')?.querySelectorAll('[data-battery-hide]').forEach(node=>{if(battery)node.hidden=true});
+  $('skillModalBody')?.querySelectorAll('[data-battery-hide]').forEach(node=>{if(battery)node.hidden=true;else if(!node.dataset.characterMagicType)node.hidden=false});
   $('skillModalBody')?.querySelectorAll('[data-battery-only]').forEach(node=>{node.hidden=!battery});
   const diceField=$('cmpBatteryDice');
   if(diceField)diceField.hidden=!battery||$('cmpBatteryMode')?.value!=='dice';
