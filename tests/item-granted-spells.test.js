@@ -63,6 +63,14 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   expect(html).toContain('EG 1 ×4');
   expect(html).toContain('FV 5');
  });
+ it('hämtar bärarens FV för valt Expert-besvärjelseslag',()=>{
+  const x=fixture();
+  x.item.weapons[0].magicPowers[0].cast_mode='wearer';
+  delete x.item.weapons[0].magicPowers[0].fixed_fv;
+  expect(x.common.options(x.actor).find(s=>s.spell_source==='item').fv).toBe(16);
+  x.item.spells=[];
+  expect(x.common.options(x.actor).find(s=>s.spell_source==='item').item_spell.ready).toBe(false);
+ });
  it('tar bort förmågan när föremålets magi tas bort men lämnar inlärd magi',()=>{
   const x=fixture(); x.item.weapons[0].isMagical=false;
   const list=x.common.options(x.actor);
@@ -152,6 +160,7 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   expect(runtime).toContain("if(action.source_data?.item_magic)return;");
   expect(runtime).toContain("psy_source:item.psy_source");
   expect(runtime).toContain("combatRecordItemMagicUse");
-  expect(runtime).toContain('!(data.item_magic&&Number(data.item_magic.effect_multiplier)>1)');
+  expect(runtime).toContain('combatItemMagicAutomatedCount(action)');
+  expect(runtime).toContain('combatElementalSummonDefinition(spellName)){');
  });
 });

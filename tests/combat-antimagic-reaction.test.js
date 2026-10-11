@@ -5,7 +5,9 @@ const source=readFileSync(new URL('../features/combat/runtime.js',import.meta.ur
 const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
 const start=source.indexOf('function combatAntimagicOptions('),end=source.indexOf('async function chooseCombatParry(',start);
 if(start<0||end<start)throw Error('Antimagic helpers missing');
-const code=source.slice(start,end);
+const helperStart=source.indexOf('function combatItemMagicMultiplier(');
+const helperEnd=source.indexOf('async function combatRecordItemMagicUse(',helperStart);
+const code=source.slice(helperStart,helperEnd)+'\n'+source.slice(start,end);
 function harness(known=true,spent=false){
  const caster={id:'caster',name_snapshot:'Eldra',side:'enemies',status:'active',q:0,r:0},
   target={id:'target',name_snapshot:'Nox',side:'heroes',status:'active',q:1,r:0,current_psy:20};

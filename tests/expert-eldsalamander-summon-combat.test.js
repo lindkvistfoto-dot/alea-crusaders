@@ -5,7 +5,8 @@ const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.u
 const migration=readFileSync(new URL('../supabase/migrations/20261008_eldsalamander_summon_unique.sql',import.meta.url),'utf8');
 const start=runtime.indexOf('const ELEMENTAL_SUMMON_TEMPLATES='),end=runtime.indexOf('function combatGmToolboxHtml(',start);
 if(start<0||end<start)throw Error('Missing elemental GM summon controls');
-const section=runtime.slice(start,end);
+const helpers=runtime.slice(runtime.indexOf('function combatItemMagicMultiplier('),runtime.indexOf('async function combatRecordItemMagicUse('));
+const section=helpers+'\n'+runtime.slice(start,end);
 const caster={id:'actor-1',name_snapshot:'Magikern',side:'heroes',q:2,r:3,sort_order:2,status:'active'};
 const successful={id:'spell-1',combatant_id:'actor-1',status:'resolved',round_number:4,
  source_data:{spell_name:'FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F)'},
@@ -15,10 +16,11 @@ const sample={id:'elemental-1',name:'Eldsalamander',active:true,
  weapons:[{name:'Eldberöring',fv:11,damage:'1T6'}]};
 function setup(overrides={}){
  const combatants=[{...caster}],combatActions=[structuredClone(successful)],writes=[],alerts=[];
+ let serial=0;
  const env={combatCanManage:()=>true,activeCombat:{id:'combat-1',round_number:4},
   centralCampaignId:'campaign-1',combatants,combatActions,combatGmPlacementId:null,
   combatGmIsReserve:c=>c.state?.in_reserve===true,escAttr:String,
-  crypto:{randomUUID:()=> 'new-summon-1'},
+  crypto:{randomUUID:()=> 'new-summon-'+(++serial)},
   alert:msg=>alerts.push(msg),confirm:()=>true,
   console,Map,
   combatSourceStats:()=>({current_kp:11,max_kp:11,current_psy:12,max_psy:12,
@@ -78,9 +80,23 @@ describe('Eldsalamander – SL creates creature after Expert summon',()=>{
   await x.api.create('spell-1');
   await x.api.create('spell-1');
   expect(x.writes.filter(w=>w.path.startsWith('combatants?select=id'))).toHaveLength(1);
-  expect(x.api.html()).toContain('Redan skapad');
+  expect(x.api.html()).toContain('Redan skapade');
   expect(migration).toContain('combatants_summon_action_once_idx');
   expect(migration).toContain("source_instance_key like 'summon:%'")
+ });
+ it('creates four separate reserved creatures at EG 1 for an enchanted item with ×4',async()=>{
+  const x=setup();
+  x.combatActions[0].source_data.item_magic={effect_multiplier:4,item_name:'Dödsbringaren'};
+  x.combatActions[0].result.effect_grade=1;
+  await x.api.create('spell-1');
+  const creatures=x.writes.filter(w=>w.path.startsWith('combatants?select=id')).map(w=>w.body);
+  expect(creatures).toHaveLength(4);
+  expect(creatures.map(row=>row.source_instance_key)).toEqual([
+   'summon:spell-1','summon:spell-1:2','summon:spell-1:3','summon:spell-1:4']);
+  expect(creatures.every(row=>row.state.effect_grade===1)).toBe(true);
+  expect(creatures.every(row=>row.state.effect_multiplier===4)).toBe(true);
+  await x.api.create('spell-1');
+  expect(x.writes.filter(w=>w.path.startsWith('combatants?select=id'))).toHaveLength(4);
  });
  it('dismisses only actual summoned Eldsalamanders and removes them from play',async()=>{
   const x=setup();
