@@ -63,8 +63,8 @@ describe('Shared section information component',()=>{
   expect(el.innerHTML).toContain('stepCharacterWater(1)');
   expect(css).toContain('.alea-section-help-dialog::backdrop');
   expect(read('src/styles/app.css')).toContain('grid-template-columns:minmax(0,1fr) auto auto');
-  expect(html).toContain('section-help.js?v=0.35.98');
-  expect(html).toContain('section-help.css?v=0.35.98');
-  expect(html.indexOf('section-help.js?v=0.35.98')).toBeLessThan(html.indexOf('legacy/app.js?v=0.35.98'));
+  expect(html).toContain('section-help.js?v=0.35.99');
+  expect(html).toContain('section-help.css?v=0.35.99');
+  expect(html.indexOf('section-help.js?v=0.35.99')).toBeLessThan(html.indexOf('legacy/app.js?v=0.35.99'));
  });
 });
