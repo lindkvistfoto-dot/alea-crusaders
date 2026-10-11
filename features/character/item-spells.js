@@ -28,6 +28,10 @@
      try{if(provider?.state)availability=provider.state(p,dayNumber)}catch(error){
       availability={ready:false,reason:'Ogiltiga inställningar',day:dayNumber}
      }
+     if(casting==='automatic')availability={...availability,ready:false,
+      reason:'Automatisk aktivering stöds ännu inte i strid'};
+     else if(!(fv>0))availability={...availability,ready:false,
+      reason:'Föremålets besvärjelse saknar ett giltigt FV'};
      const key='item:'+group+':'+str(item.equipId)+':'+str(p.id);
      output.push({
       key,source:'item',group,group_label:groupLabel,item_index:index,
