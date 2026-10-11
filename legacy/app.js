@@ -1717,7 +1717,7 @@ function renderWeapons(){
     '<button class="deletebtn" type="button" onclick="removeWeapon('+i+')" title="Ta bort vapen" aria-label="Ta bort vapen">×</button>'+
    '</div></div>').join(''):
   '<div class="weapon-head"><div>Vapen</div><div class="skillnum">FV</div><div class="skillnum">Skada</div><div class="skillnum">BV</div><div class="skillnum">Vapenl.</div><div class="skillnum">Räckv.</div><div class="skillnum">BEP</div><div class="skillnum">ERF</div></div>'+
-  ws.map((x,i)=>'<div class="weapon-row"><div><span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span>'+(globalThis.aleaCharacterItemMagic?.badge('weapon',i)||'')+'</div>'+
+  ws.map((x,i)=>'<div class="weapon-row"><div>'+(globalThis.aleaCharacterItemMagic?.imageThumbnail('weapon',i)||'')+'<span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span>'+(globalThis.aleaCharacterItemMagic?.badge('weapon',i)||'')+'</div>'+
    weaponLinkedFvHtml(x,i,false)+
    '<div class="skillnum">'+escAttr(x.damage||'—')+'</div><div class="skillnum">'+escAttr(x.bv||'—')+'</div><div class="skillnum">'+escAttr(x.length||'—')+'</div><div class="skillnum">'+escAttr(x.range||'—')+'</div><div class="skillnum">'+escAttr((x.bep??x.weight)===''?'—':(x.bep??x.weight??'—'))+'</div>'+
    weaponLinkedErfHtml(x,i,false)+'</div>').join('');
@@ -1755,7 +1755,7 @@ function renderWeapons(){
     characterEquipmentEditActions('removeShield',i)+'</div>'
   }).join(''):
   '<div class="skillhead">Sköld</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">BEP</div><div class="skillhead skillnum">ERF</div>'+
-  sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b>'+(globalThis.aleaCharacterItemMagic?.badge('shield',i)||'')+'<small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
+  sh.map((x,i)=>'<div class="character-shield-name">'+(globalThis.aleaCharacterItemMagic?.imageThumbnail('shield',i)||'')+'<b>'+escAttr(x.name||'—')+'</b>'+(globalThis.aleaCharacterItemMagic?.badge('shield',i)||'')+'<small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
    '<div class="skillnum">'+escAttr(x.fv??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div><div class="skillnum">'+erfDisplay('shields',i,x.erf)+'</div>').join('')
 }function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){let p=ruleProjectileTypes.find(p=>p.active!==false);if(!p)return alert('Projektilregistret är tomt.');current.projectiles.push({projectileKey:p.projectile_key,name:p.name,count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
 const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Kropp',arms:'Armar',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
@@ -1764,8 +1764,8 @@ function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shi
    Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
 function currentEquipmentItemArtPath(ref,item,slot){
  if(!ref||!item)return null;
- if(ref.kind==='weapon')return ruleWeaponForItem(item)?.image_path||null;
- if(ref.kind==='shield')return characterShieldRule(item)?.image_path||null;
+ if(ref.kind==='weapon')return item.imageOverridePath||ruleWeaponForItem(item)?.image_path||null;
+ if(ref.kind==='shield')return item.imageOverridePath||characterShieldRule(item)?.image_path||null;
  if(ref.kind==='equipment')return window.aleaEquipmentCatalog?.imagePath(item)||null;
  if(ref.kind==='armor'){
   const type=armorTypeById(item.armorTypeId||item.armor_type_id||'')||
@@ -1815,7 +1815,7 @@ function twoHandDisplayProfile(item){
  return {type,...profiles[type]};
 }
 function gandalfTwoHandSlotHtml(item){
- const art=window.aleaEquipmentArt?.imageTag(ruleWeaponForItem(item)?.image_path)||'';
+ const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
  const name=escAttr(item.name||'Vapen');
  const profile=twoHandDisplayProfile(item);
  const cssVars=[
@@ -1849,7 +1849,7 @@ function currentEquipmentProjectileEntries(character){
    canonicalWeaponProjectileKey(category,master?.name||item.name,master?.icon_key||item.icon_key,master?.tags||item.tags);
   const projectile=ruleProjectileFromKey(key);
   if(!key||!projectile)continue;
-  const imagePath=category==='thrown'?(master?.image_path||projectileMasterImagePath(projectile)):
+  const imagePath=category==='thrown'?(item.imageOverridePath||master?.image_path||projectileMasterImagePath(projectile)):
    projectileMasterImagePath(projectile);
   const row=byKey.get(key);
   if(row){row.weapons.push(item.name||master?.name||'Vapen');continue}
