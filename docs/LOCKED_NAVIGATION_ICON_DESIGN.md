@@ -1,6 +1,6 @@
 # Alea Crusaders — LÅST designstandard för navigeringsknappar
 
-Status: **LÅST (2026-10-11)**. Detta är en designstandard för fortsatt ikonproduktion, inte en genomförd ersättning av knappar i appen.
+Status: **LÅST (2026-10-11)**. Hem-ikonparet är implementerat som klickbar länk i desktopbannerns vänstra kolumn från v0.35.111. Övriga navigeringsikoner följer fortfarande designstandarden inför kommande implementering.
 
 ## Förlaga
 De två godkända Hem-ikonerna i ChatGPT-konversationen den 11 oktober 2026 är **stilförlaga**:
@@ -20,7 +20,7 @@ Skapa inte alternativa former eller lägg till kompassros. Hem-symbolen är Alea
 - Undvik detaljförändringar mellan tillstånden: skillnaden ska vara **ljus, färg och glöd**, inte motiv eller position.
 - Symbolerna för övriga destinationer anpassas till samma rundade platta, material, ram, ljussättning och skala. Hem-paret är kalibreringsreferens.
 
-## Implementation när knapparna ska bytas ut
+## Implementation och fortsatt utbyggnad
 - Behåll befintliga navigationselement, klickfunktioner och aria-etiketter.
 - Bilderna ska vara separata från tidsdygnsbannern, så både bildbakgrund och navigeringsikoner kan ersättas oberoende av varandra.
 - Föreslagen konsekvent namngivning: `assets/navigation/<id>-normal.png` och `assets/navigation/<id>-active.png`.
