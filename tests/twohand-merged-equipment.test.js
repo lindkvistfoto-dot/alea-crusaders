@@ -60,7 +60,6 @@ describe('Sammanhängande tvåhandsruta',()=>{
    currentEquipment:{leftHand:{kind:'weapon',itemId:'staff',hands:2},rightHand:{kind:'weapon',itemId:'staff',hands:2}}};
   const el={innerHTML:''},ctx={
    current,currentEquipmentPickerSlot:null,ensureEquipmentState:()=>{},
-   escAttr:x=>String(x),CURRENT_EQUIP_LABELS:{leftHand:'Vänster hand',rightHand:'Höger hand'},
    currentEquipProjectileSlotHtml:()=>'<button class="gandalf-equip-projectiles"/>',
    $:()=>el,equipItemByRef:(_c,ref)=>ref?current.weapons[0]:null,
    equipRefEquals:(a,b)=>!!a&&!!b&&a.kind===b.kind&&a.itemId===b.itemId,

@@ -54,19 +54,6 @@ function combatMarkup(x,twoHands=false,second=null){
 }
 
 describe('golden aura for individually magical equipment',()=>{
- it('marks magical weapons with a bright diagnostic banner even when transparent glow cannot be seen',()=>{
-  expect(slotMarkup(item(true))).toContain('✦ MAGISKT VAPEN ✦');
-  expect(slotMarkup(item(false))).not.toContain('gandalf-magic-test-banner');
-  expect(twoHandMarkup(item(true))).toContain('gandalf-magic-test-banner');
-  expect(twoHandMarkup(item(false))).not.toContain('gandalf-magic-test-banner');
- });
- it('includes visible diagnostic version and explicit state for equipped weapons',()=>{
-  expect(app).toContain('MAGI-TEST v0.35.91');
-  expect(app).toContain('data-magic-test-version="0.35.91"');
-  expect(app).toContain("?'MAGI PÅ':'MAGI AV'");
-  expect(css).toContain('v0.35.91 TEMPORARY MAGIC WEAPON VISUAL DIAGNOSTIC');
-  expect(css).toContain('.gandalf-magic-test-banner');
- });
  it('adds the marker only to magical items in current equipment',()=>{
   expect(slotMarkup(item(true))).toContain('gandalf-equip-leftHand equipped magical');
   expect(slotMarkup(item(false))).not.toContain(' equipped magical');
