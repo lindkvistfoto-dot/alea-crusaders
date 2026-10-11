@@ -3317,6 +3317,12 @@ body:not(.editing) #skilltable .skill-roll-btn{
 .combat-miniature.combat-portrait-hex.npc-mini:not(.selected):not(.attack-target) .combat-portrait-green-ring{
  stroke:#3984c6;
 }
+/* SLP utan separat hexikon: använd vanliga porträttet med en tydlig blå
+   hexram. Turmarkeringen i guld ligger separat utanför porträttet. */
+.combat-miniature.combat-portrait-hex.npc-mini.portrait-fallback:not(.selected):not(.attack-target) .combat-portrait-green-ring{
+ stroke:#58b4f5;
+ filter:drop-shadow(0 0 3px rgba(52,158,239,.55));
+}
 .combat-miniature.combat-portrait-hex.enemy-mini:not(.selected):not(.attack-target) .combat-portrait-green-ring{
  stroke:#c64d45;
 }
