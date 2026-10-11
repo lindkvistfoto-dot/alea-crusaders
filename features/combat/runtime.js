@@ -2189,7 +2189,7 @@ function combatSpellOptions(combatant){
    damage_text:rule.damage_text||'',ritual:rule.ritual===true,kvick:rule.kvick===true,
    range_text:rule.range_text||'',duration_text:rule.duration_text||'',spell_source:'learned'}:null
  }).filter(spell=>spell?.name);
- const granted=combatItemSpellSources(combatant).map(entry=>({
+ const granted=(typeof combatItemSpellSources==='function'?combatItemSpellSources(combatant):[]).map(entry=>({
   ...entry.rule,rule_id:entry.rule.id,name:entry.name,
   fv:entry.cast_mode==='automatic'?100:entry.fv,
   spell_source:'item',item_spell:entry,
