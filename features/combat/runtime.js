@@ -3773,7 +3773,11 @@ async function combatCastManualSpell(actor,action,target=null){
    (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':healing?' · inväntar läkning i resultatkortet':' · SL avgör effekten'):' · ingen automatisk effekt'),
   details:result,player_visible:true
  })});
- if(result.success&&!result.blocked_by_beskyddare&&combatElementalSummonDefinition(spellName)){
+ // One summoned template per action is supported today. Never silently create
+ // only one creature for an artifact explicitly configured with multiplier > 1.
+ if(result.success&&!result.blocked_by_beskyddare&&
+  !(data.item_magic&&Number(data.item_magic.effect_multiplier)>1)&&
+  combatElementalSummonDefinition(spellName)){
   action.status='resolved';action.result=result;
   await combatCreateElementalFromSpell(action.id,{skipReload:true,silent:true});
  }
