@@ -34,7 +34,10 @@ function context(canEdit=true){
   cmpDetails:{value:'Frammanar fyra eldsalamandrar'},
   cmpActivation:{value:'action'},
   cmpTargetAttr:{value:''},
-  currentEquipmentModal:{classList:{contains:()=>true}}
+  currentEquipmentModal:{classList:{contains:()=>true}},
+  skillModalTitle:{textContent:''},
+  skillModalBody:{innerHTML:''},
+  skillModal:{classList:{remove:()=>{}}}
  };
  const scope={
   current,
