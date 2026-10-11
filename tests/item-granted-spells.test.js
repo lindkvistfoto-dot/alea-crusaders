@@ -110,6 +110,38 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
    psy_source:'artifact',effect_multiplier:4
   });
  });
+ it('registrerar föremålets förbrukning utan att dra PSY från bäraren',async()=>{
+  const x=fixture();
+  const t0=runtime.indexOf('function combatSpellActualPsyCost(');
+  const t1=runtime.indexOf('async function combatSpendMagicPsy(',t0);
+  expect(t0).toBeGreaterThan(-1);expect(t1).toBeGreaterThan(t0);
+  const entry=x.item.weapons[0].magicPowers[0];
+  let saved=0,psyPaid=0;
+  const scope={
+   window:x.common.window,
+   chars:[{_dbId:'char',...x.item}],
+   campaignDayState:{day_number:10},
+   save:()=>{saved++},
+   combatMagicPsyCost:(_result,eg)=>eg,
+   combatSpendMagicPsy:async(_actor,cost)=>{psyPaid+=cost}
+  };
+  runInNewContext(runtime.slice(t0,t1)+'this.actual=combatSpellActualPsyCost;this.pay=combatPayForSpell;',scope);
+  const action={source_data:{item_magic:{
+   group:'weapons',item_id:'w1',power_id:'power-1',psy_source:'artifact'}}};
+  const cost=scope.actual(action,'success',1);
+  expect(cost).toBe(0);
+  await scope.pay({source_id:'char'},cost,action);
+  expect(saved).toBe(1);
+  expect(psyPaid).toBe(0);
+  expect(entry.last_used_day).toBe(10);
+  await expect(scope.pay({source_id:'char'},cost,action)).rejects.toThrow('nästa kampanjdag');
+  scope.campaignDayState.day_number=11;
+  await scope.pay({source_id:'char'},cost,action);
+  expect(entry.last_used_day).toBe(11);
+  const learned={source_data:{}};
+  await scope.pay({source_id:'char'},scope.actual(learned,'success',2),learned);
+  expect(psyPaid).toBe(2);
+ });
  it('lägger inte till besvärjelsen i rollpersonens inlärda lista',()=>{
   const x=fixture(),before=JSON.stringify(x.item.spells);
   x.api.list(x.item,[spell],10);
