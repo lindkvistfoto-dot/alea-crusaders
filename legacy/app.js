@@ -1201,6 +1201,7 @@ const ADMIN_SECTION_META={
  spells:['Besvärjelser','Magiskolor och besvärjelser enligt Expert'],
  effects:['Effekter','Tillstånd, skydd och områdeseffekter'],
  sounds:['Ljudregister','Ljud för strid, tärningar och magi'],
+ roundImages:['Rundbakgrunder','Slumpade bilder bakom runderutan'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1252,6 +1253,8 @@ async function openAdminSection(key='overview'){
  }else if(activeAdminSection==='sounds'){
   window.aleaAudio?.mountAdmin?.();
   await window.aleaAudio?.renderAdmin?.()
+ }else if(activeAdminSection==='roundImages'){
+  await window.aleaRoundGallery?.renderAdmin?.()
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()

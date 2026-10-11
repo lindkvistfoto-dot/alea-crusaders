@@ -1,0 +1,19 @@
+/* v0.35.124 — the gallery-selected combat artwork occupies the third layer. */
+.combat-turn-panel::after{
+ background-image:
+  linear-gradient(180deg,rgba(19,12,9,.10) 0%,rgba(19,12,9,.20) 27%,rgba(19,12,9,.69) 56%,rgba(19,12,9,.94) 78%,#160f0b 100%),
+  linear-gradient(90deg,rgba(14,9,7,.80) 0%,rgba(14,9,7,.50) 34%,rgba(14,9,7,.06) 70%,transparent 100%),
+  var(--alea-round-illustration,url('../../assets/combat/round-hero-battle-pilot.avif'));
+}
+.round-gallery-upload{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0}
+.round-gallery-upload label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.round-gallery-upload input{max-width:260px}
+.round-gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.round-gallery-card{border:1px solid #865b33;border-radius:10px;overflow:hidden;background:#201712}
+.round-gallery-card.muted{opacity:.72}
+.round-gallery-preview{aspect-ratio:3/1;background:#120e0c}
+.round-gallery-preview img{display:block;width:100%;height:100%;object-fit:cover}
+.round-gallery-copy{padding:10px;display:grid;gap:4px}
+.round-gallery-copy small{color:#c2a47c}
+.round-gallery-actions{display:flex;gap:6px;flex-wrap:wrap;padding:0 10px 10px}
+#roundGalleryStatus{min-height:1.3em;color:#e6c28f}

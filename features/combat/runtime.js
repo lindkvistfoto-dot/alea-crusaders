@@ -637,12 +637,14 @@ function combatCaptureInitiativeForReset(){
 async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,resetReady=false}={}){
  const runtime=await combatLoadSceneRuntimeData(scene);
  const instanceId=crypto.randomUUID();
+ const roundBackgroundId=await window.aleaRoundGallery?.pickRandomForCombat?.()||null;
  const settings={
   ...(scene.settings&&typeof scene.settings==='object'?scene.settings:{}),
   scene_id:scene.id,
   source:'campaign_combat_scene',
   development_mode:'movement',
   reset_ready_for_play:resetReady===true,
+  round_background_id:roundBackgroundId,
   background_image_path:scene.background_image_path||null,
   background_width:scene.background_width||null,
   background_height:scene.background_height||null
@@ -2611,6 +2613,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
    if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatCloseRowActionMenu();
    await loadCombatRuntimeBackground()
+   await window.aleaRoundGallery?.activate?.(activeCombat)
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
  renderCombat();renderCombatGmControls();return activeCombat
@@ -5991,6 +5994,7 @@ function renderCombat(){
   '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside>'+
  '</div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
+ window.aleaRoundGallery?.apply?.();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
 }
 
