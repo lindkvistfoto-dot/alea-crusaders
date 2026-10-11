@@ -377,3 +377,90 @@
   /* Desktop crest replaces the old textual Home shortcut; phones keep it. */
   .alea-app-header .landing-route-nav #landingHomeNavBtn { display: none; }
 }
+
+/* v0.35.113: Uploaded bronze navigation art. Each AVIF contains six 48px
+   tiles, from left to right: guild, inn, academy, materials, characters, combat.
+   Buttons keep their own click handlers, focus semantics and text alternatives. */
+.alea-app-header .alea-toolstrip > .alea-bronze-nav {
+  position:relative!important;
+  box-sizing:border-box!important;
+  isolation:isolate;
+  border:0!important;
+  padding:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:11px!important;
+  color:transparent!important;
+  font-size:0!important;
+  line-height:0!important;
+  overflow:visible;
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav::before {
+  content:"";
+  position:absolute;
+  display:block;
+  width:min(48px,100%);
+  height:min(48px,100%);
+  max-height:100%;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  background-image:url("../../assets/navigation/alea-nav-normal.avif");
+  background-size:600% 100%;
+  background-position:var(--alea-nav-pos,0%) center;
+  background-repeat:no-repeat;
+  pointer-events:none;
+  transition:filter .16s ease,transform .16s ease;
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav[aria-current="page"]::before {
+  background-image:url("../../assets/navigation/alea-nav-active.avif");
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav:is(:hover,:focus-visible)::before {
+  filter:brightness(1.18);
+  transform:translate(-50%,-50%) scale(1.06);
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav:focus-visible {
+  outline:2px solid #e8bc7e!important;
+  outline-offset:2px!important;
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav .material-nav-label,
+.alea-app-header .alea-toolstrip > .alea-bronze-nav > span {
+  display:none!important;
+}
+.alea-app-header .alea-toolstrip > .alea-bronze-nav[disabled]::before {
+  opacity:.4;
+}
+
+/* Keep the existing six-column mobile grid intact, including the hub.
+   The entries hidden behind the mobile hub also use the same pictograms. */
+.alea-app-header .mobile-hub-menu button[data-mobile-target="shopNavBtn"],
+.alea-app-header .mobile-hub-menu button[data-mobile-target="innNavBtn"],
+.alea-app-header .mobile-hub-menu button[data-mobile-target="academyNavBtn"] {
+  position:relative;
+}
+.alea-app-header .mobile-hub-menu button[data-mobile-target="shopNavBtn"]::before,
+.alea-app-header .mobile-hub-menu button[data-mobile-target="innNavBtn"]::before,
+.alea-app-header .mobile-hub-menu button[data-mobile-target="academyNavBtn"]::before {
+  content:"";
+  display:block;
+  flex:0 0 34px;
+  width:34px;
+  height:34px;
+  background:url("../../assets/navigation/alea-nav-normal.avif") var(--alea-nav-pos,0%) center/600% 100% no-repeat;
+}
+.alea-app-header .mobile-hub-menu button[data-nav-active="true"]::before {
+  background-image:url("../../assets/navigation/alea-nav-active.avif")!important;
+}
+.alea-app-header .mobile-hub-menu button[data-mobile-target="shopNavBtn"] > span,
+.alea-app-header .mobile-hub-menu button[data-mobile-target="innNavBtn"] > span,
+.alea-app-header .mobile-hub-menu button[data-mobile-target="academyNavBtn"] > span {display:none}
+@media(max-width:700px){
+  .alea-app-header .alea-toolstrip > .alea-bronze-nav {
+    min-height:42px;
+    height:42px;
+  }
+  .alea-app-header .alea-toolstrip > .alea-bronze-nav::before {
+    width:min(42px,100%);
+    height:min(42px,100%);
+  }
+}
