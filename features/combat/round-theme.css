@@ -312,3 +312,46 @@
 @media(prefers-reduced-motion:reduce){
  .combat-turn-panel .combat-turn-actions .combat-row-tool-btn{transition:none}
 }
+
+/* Phase 4 – ornamental outer frame. One artwork rotated through four corners.
+   CSS edges grow with the panel while action menus remain interactive. */
+.combat-turn-panel {
+  --alea-frame-corner-size: 48px;
+  --alea-frame-edge-width: 5px;
+  --alea-frame-gold: #d7a45b;
+  --alea-frame-bronze: #69401f;
+  border: 0;
+  border-radius: 11px;
+  padding: var(--alea-frame-edge-width);
+  background:
+    linear-gradient(180deg, #ddad6c 0%, #74411e 25%, #2e1c12 48%, #b47c3d 76%, #e0b274 100%) left / var(--alea-frame-edge-width) 100% no-repeat,
+    linear-gradient(180deg, #ddad6c 0%, #74411e 25%, #2e1c12 48%, #b47c3d 76%, #e0b274 100%) right / var(--alea-frame-edge-width) 100% no-repeat,
+    linear-gradient(90deg, #ddad6c 0%, #74411e 25%, #2e1c12 48%, #b47c3d 76%, #e0b274 100%) top / 100% var(--alea-frame-edge-width) no-repeat,
+    linear-gradient(90deg, #ddad6c 0%, #74411e 25%, #2e1c12 48%, #b47c3d 76%, #e0b274 100%) bottom / 100% var(--alea-frame-edge-width) no-repeat,
+    radial-gradient(ellipse at 75% 0%, rgba(141,86,38,.18), transparent 65%),
+    linear-gradient(160deg,#2c1d13,#1b130e 48%,#120d0a);
+  box-shadow: inset 0 0 0 1px rgba(244,195,111,.35), inset 0 0 22px #0008,0 8px 28px #0005;
+  overflow: visible;
+}
+.combat-turn-panel::before { inset: 7px; border-color: rgba(225,173,95,.15); }
+.combat-turn-panel > .combat-ornate-corners {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.combat-turn-panel .combat-ornate-corner {
+  position: absolute;
+  display: block;
+  width: var(--alea-frame-corner-size);
+  height: var(--alea-frame-corner-size);
+  background: url('../../assets/combat/frames/combat-frame-corner.svg?v=1') center / contain no-repeat;
+  pointer-events: none;
+}
+.combat-turn-panel .combat-ornate-corner.tl {top:0;left:0;transform:translate(-16%,-16%) rotate(0deg)}
+.combat-turn-panel .combat-ornate-corner.tr {top:0;right:0;transform:translate(16%,-16%) rotate(90deg)}
+.combat-turn-panel .combat-ornate-corner.br {bottom:0;right:0;transform:translate(16%,16%) rotate(180deg)}
+.combat-turn-panel .combat-ornate-corner.bl {bottom:0;left:0;transform:translate(-16%,16%) rotate(270deg)}
+@media(max-width:600px) {
+ .combat-turn-panel { --alea-frame-corner-size:32px; --alea-frame-edge-width:4px; }
+}
