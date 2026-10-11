@@ -2036,7 +2036,7 @@ function combatMagicCastingRules(spell,effectGrade){
  const eg=Math.max(1,Math.floor(Number(effectGrade)||1));
  const marker=String(spell?.casting_marker||spell?.casting_time||spell?.type_marker||'');
  const quick=spell?.kvick===true||/(?:^|[\s(,])K(?:[\s,)]|$)/i.test(marker)||/\((?:F\s*,\s*)?K(?:\s*,\s*F)?\)/i.test(String(spell?.name||''));
- return {effect_grade:eg,psy_cost:eg,cl_modifier:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
+ return {effect_grade:eg,psy_cost:eg,cl_modifier:eg===1?0:-2*(eg-1),casting_rounds:1,quick,resolve_round_offset:quick?0:1};
 }
 function combatMagicCastPreflight(combatant,spell,effectGrade){
  const eg=Number(effectGrade),fv=Number(spell?.fv),errors=[];
