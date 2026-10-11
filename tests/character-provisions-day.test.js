@@ -78,7 +78,7 @@ describe('Mat och proviant på rollpersonen',()=>{
   x.api.renderCharacterProvisions();
   expect(x.el.innerHTML).not.toContain('provisions-stepper');
   expect(x.saves).toBe(0);
-  expect(app).toContain('equipment:[],provisionsDays:0,artifacts:[]');
+  expect(app).toContain('equipment:[],provisionsDays:0,waterDays:0,artifacts:[]');
   expect(app).toContain('renderCharacterProvisions();');
   expect(app).toContain('const c=current.coins;');
  });
