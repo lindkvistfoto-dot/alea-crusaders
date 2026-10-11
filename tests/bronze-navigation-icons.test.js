@@ -16,7 +16,7 @@ const destinations=[
   ['combatNavBtn','combat']
 ];
 
-describe('v0.35.116 – sharp 104px navigation icons',()=>{
+describe('v0.35.117 – sharp 104px navigation icons',()=>{
   it('uses separate 512×512 AVIF images for all sixteen home and destination states',()=>{
     for(const name of ['home',...destinations.map(x=>x[1])]){
       for(const state of ['normal','active']){
@@ -78,6 +78,6 @@ describe('v0.35.116 – sharp 104px navigation icons',()=>{
     expect(html).toContain('onclick="openShop()"');
     expect(html).toContain('onclick="openCombat()"');
     expect(html).toContain('onclick="openCharacters()"');
-    expect(html).toContain('features/home/navigation-icons.js?v=0.35.116');
+    expect(html).toContain('features/home/navigation-icons.js?v=0.35.117');
   });
 });
