@@ -106,7 +106,7 @@
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('button,a');
     if(!button||!header.contains(button)||!Object.hasOwn(routes,button.id))return;
-    if(button.id!=='materialNavBtn')window.legolasClosePanel?.();
+    if(button.id!=='materialNavBtn'&&(visible('legolasPanel')||visible('legolasViewer')))window.legolasClosePanel?.();
     lastNavigation=button.id==='aleaBannerHomeLink'?'landingHomeNavBtn':button.id;
     queueMicrotask(()=>isolatePage(button.id));
     requestAnimationFrame(()=>isolatePage(button.id));
