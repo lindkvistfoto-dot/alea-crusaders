@@ -1681,13 +1681,14 @@ function renderWeapons(){
    characterEquipmentEditField('Räckvidd','<input value="'+escAttr(x.range??'')+'" onchange="setWeapon('+i+',\'range\',this.value)" aria-label="Räckvidd">')+
    characterEquipmentEditField('BEP','<input type="number" step="any" inputmode="decimal" value="'+escAttr(x.bep??x.weight??'')+'" onchange="setWeapon('+i+',\'bep\',this.value)" aria-label="BEP">')+
    characterEquipmentEditField('ERF',weaponLinkedErfHtml(x,i,true))+
+   '<div class="character-equip-magic">'+(window.aleaCharacterItemMagic?.control('weapon',i)||'')+'</div>'+
    '<div class="character-equip-actions rowactions">'+
     '<button class="smallbtn" type="button" onclick="openWeaponInstanceEditor(\'character\','+i+')" title="Alla vapendata" aria-label="Alla vapendata">⚙</button>'+
     '<button class="confirmbtn" type="button" onclick="confirmRow(this)" title="Bekräfta rad" aria-label="Spara vapenraden">✓</button>'+
     '<button class="deletebtn" type="button" onclick="removeWeapon('+i+')" title="Ta bort vapen" aria-label="Ta bort vapen">×</button>'+
    '</div></div>').join(''):
   '<div class="weapon-head"><div>Vapen</div><div class="skillnum">FV</div><div class="skillnum">Skada</div><div class="skillnum">BV</div><div class="skillnum">Vapenl.</div><div class="skillnum">Räckv.</div><div class="skillnum">BEP</div><div class="skillnum">ERF</div></div>'+
-  ws.map((x,i)=>'<div class="weapon-row"><div><span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span></div>'+
+  ws.map((x,i)=>'<div class="weapon-row"><div><span class="weapon-link" onclick="showWeaponInfo('+i+')">'+escAttr(x.name||'—')+'</span>'+(window.aleaCharacterItemMagic?.badge('weapon',i)||'')+'</div>'+
    weaponLinkedFvHtml(x,i,false)+
    '<div class="skillnum">'+escAttr(x.damage||'—')+'</div><div class="skillnum">'+escAttr(x.bv||'—')+'</div><div class="skillnum">'+escAttr(x.length||'—')+'</div><div class="skillnum">'+escAttr(x.range||'—')+'</div><div class="skillnum">'+escAttr((x.bep??x.weight)===''?'—':(x.bep??x.weight??'—'))+'</div>'+
    weaponLinkedErfHtml(x,i,false)+'</div>').join('');
@@ -1707,9 +1708,10 @@ function renderWeapons(){
    characterEquipmentEditField('Material',ruleArmorLoaded?armorMaterialSelect(i,x):'<input value="'+escAttr(x.material??'')+'" onchange="setArmor('+i+',\'material\',this.value)">','wide')+
    characterEquipmentEditField('ABS','<input type="number" inputmode="numeric" value="'+escAttr(x.abs??'')+'" onchange="setArmor('+i+',\'abs\',this.value)">')+
    characterEquipmentEditField('BEP','<input type="number" inputmode="decimal" value="'+escAttr(x.bep??'')+'" onchange="setArmor('+i+',\'bep\',this.value)">')+
+   '<div class="character-equip-magic">'+(window.aleaCharacterItemMagic?.control('armor',i)||'')+'</div>'+ 
    characterEquipmentEditActions('removeArmor',i)+'</div>').join(''):
   '<div class="skillhead">Rustning</div><div class="skillhead skillnum">Mtrl</div><div class="skillhead skillnum">ABS</div><div class="skillhead skillnum">BEP</div>'+
-  ar.map(x=>'<div>'+escAttr(x.name||'—')+'</div><div class="skillnum">'+escAttr(x.material||'Standard')+'</div><div class="skillnum">'+escAttr(x.abs??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div>').join('');
+  ar.map((x,i)=>'<div>'+escAttr(x.name||'—')+(window.aleaCharacterItemMagic?.badge('armor',i)||'')+'</div><div class="skillnum">'+escAttr(x.material||'Standard')+'</div><div class="skillnum">'+escAttr(x.abs??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div>').join('');
  let sh=current.shields||[];
  $('shieldtable').innerHTML=editing?
   sh.map((x,i)=>{const rule=characterShieldRule(x);
@@ -1720,10 +1722,11 @@ function renderWeapons(){
     characterEquipmentEditField('BEP','<output>'+escAttr(be??'—')+'</output>')+
     characterEquipmentEditField('FV','<input class="fv-input" type="number" inputmode="numeric" value="'+escAttr(x.fv??'')+'" onchange="setShield('+i+',\'fv\',this.value)">')+
     characterEquipmentEditField('ERF','<input type="number" inputmode="numeric" min="0" value="'+escAttr(x.erf??0)+'" onchange="setShield('+i+',\'erf\',this.value)">')+
+    '<div class="character-equip-magic">'+(window.aleaCharacterItemMagic?.control('shield',i)||'')+'</div>'+ 
     characterEquipmentEditActions('removeShield',i)+'</div>'
   }).join(''):
   '<div class="skillhead">Sköld</div><div class="skillhead skillnum">FV</div><div class="skillhead skillnum">BEP</div><div class="skillhead skillnum">ERF</div>'+
-  sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b><small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
+  sh.map((x,i)=>'<div class="character-shield-name"><b>'+escAttr(x.name||'—')+'</b>'+(window.aleaCharacterItemMagic?.badge('shield',i)||'')+'<small>BV '+escAttr(characterShieldRule(x)?.bv??x.bv??'—')+'</small></div>'+
    '<div class="skillnum">'+escAttr(x.fv??'—')+'</div><div class="skillnum">'+escAttr(x.bep??'—')+'</div><div class="skillnum">'+erfDisplay('shields',i,x.erf)+'</div>').join('')
 }function projectileStepper(i,v){return `<div class="mini-stepper"><button onclick="stepProjectile(${i},-1)">−</button><span class="erfval">${Math.max(0,+v||0)}</span><button onclick="stepProjectile(${i},1)">+</button></div>`}function stepProjectile(i,d){let x=current.projectiles[i];if(!x)return;x.count=Math.max(0,(+x.count||0)+d);save();renderWeapons()}function addProjectile(){let p=ruleProjectileTypes.find(p=>p.active!==false);if(!p)return alert('Projektilregistret är tomt.');current.projectiles.push({projectileKey:p.projectile_key,name:p.name,count:0});save();renderWeapons()}function removeProjectile(i){current.projectiles.splice(i,1);save();renderWeapons()}function setProjectile(i,k,v){current.projectiles[i][k]=v;save()}function addWeapon(){current.weapons.push({equipId:newEquipItemId('weapon'),materialKey:'standard',material:'Standard',weaponTypeId:'',weaponCategory:'melee',name:'',fv:'',damage:'',bv:'',length:'',range:'',bep:'',erf:'',handling:'',strengthGroup:null,weaponType:'',price:'',reloadRounds:''});save();render()}function addArmor(){openArmorPicker()}function removeWeapon(i){let x=current.weapons[i];if(x?.equipId)clearEquippedItemRefs(current,'weapon',x.equipId);current.weapons.splice(i,1);save();renderWeapons()}function removeArmor(i){let x=current.armor[i];if(x?.equipId)clearEquippedItemRefs(current,'armor',x.equipId);current.armor.splice(i,1);save();renderWeapons()}function removeShield(i){let x=current.shields[i];if(x?.equipId)clearEquippedItemRefs(current,'shield',x.equipId);current.shields.splice(i,1);save();renderWeapons()}function setWeapon(i,k,v){let numeric=['fv','erf','bv','length','bep','price','reloadRounds','strengthGroup'].includes(k);current.weapons[i][k]=(numeric&&v!==''?+String(v).replace(',','.'):v);if(k==='bep')current.weapons[i].weight=current.weapons[i].bep;save();if(k==='bep')refreshTotalBep()}function setArmor(i,k,v){current.armor[i][k]=(k==='abs'||k==='bep')?(v===''?'':+v):v;save();if(k==='bep')refreshTotalBep()}function setShield(i,k,v){current.shields[i][k]=((k==='fv'||k==='erf'||k==='bep')&&v!==''?+v:v);save();if(k==='bep')refreshTotalBep()}let currentEquipmentPickerSlot=null;
 const CURRENT_EQUIP_LABELS={head:'Huvud',torso:'Kropp',arms:'Armar',legs:'Ben',leftHand:'Vänster hand',rightHand:'Höger hand'};
@@ -2021,9 +2024,9 @@ function renderEquipment(){
     '<div><input aria-label="Föremålsnamn" value="'+name+'" onchange="setEquipmentStackField('+i+',\'name\',this.value)"></div>'+
     '<div><input class="equipment-stack-quantity" aria-label="Antal '+name+'" type="number" min="1" max="9999" step="1" value="'+amount+'" onchange="setEquipmentStackCount('+i+',this.value)"></div>'+
     '<div><input aria-label="BEP per styck för '+name+'" inputmode="decimal" value="'+escAttr(item.bep??'')+'" onchange="setEquipmentStackField('+i+',\'bep\',this.value)"></div>'+
-    '<div class="rowactions equipment-stack-actions"><button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button>'+
+    '<div class="rowactions equipment-stack-actions">'+(window.aleaCharacterItemMagic?.control('equipment',i)||'')+'<button class="confirmbtn" onclick="confirmRow(this)" title="Bekräfta rad">✓</button>'+
     '<button class="deletebtn" onclick="removeEquipmentStack('+i+')" aria-label="Ta bort '+name+' ('+amount+' st)" title="Ta bort hela raden">×</button></div>'
-    :'<div>'+escAttr(item.name||'—')+'</div><div class="skillnum">'+amount+'</div>'+
+    :'<div>'+escAttr(item.name||'—')+(window.aleaCharacterItemMagic?.badge('equipment',i)||'')+'</div><div class="skillnum">'+amount+'</div>'+
     '<div class="skillnum">'+escAttr(item.bep??'—')+'</div>'
   }).join('');
  $('artifacttable').innerHTML='<div class="skillhead">Namn</div><div class="skillhead editcol '+(editing?'':'hidden')+'"></div>'+
