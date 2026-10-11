@@ -192,14 +192,18 @@
  function showFields(){
   const selected=$('cmpProperty')?.value||'cast_spell';
   const def=registry().find(p=>p.property_key===selected);
-  const kind=def?.kind||'special';
+  const kind=def?.kind||'special',battery=selected==='magic_battery';
   $('skillModalBody')?.querySelectorAll('[data-character-magic-type]').forEach(node=>{
    node.hidden=!node.dataset.characterMagicType.split(' ').includes(kind);
   });
+  $('skillModalBody')?.querySelectorAll('[data-battery-hide]').forEach(node=>{if(battery)node.hidden=true});
+  $('skillModalBody')?.querySelectorAll('[data-battery-only]').forEach(node=>{node.hidden=!battery});
+  const diceField=$('cmpBatteryDice');
+  if(diceField)diceField.hidden=!battery||$('cmpBatteryMode')?.value!=='dice';
   const cast=$('cmpCastMode'),fv=$('cmpFixedFv');
   if(fv)fv.closest('label').hidden=kind!=='spell'||cast?.value!=='fixed';
   const hint=$('cmpHint');
-  if(hint)hint.textContent=kind==='spell'?'Effektgrad och multiplikator är oberoende. EG 1 ×4 betyder fyra upprepningar av grundeffekten – INTE EG 4. Ett kast tar en handling. Icke-kvick magi förbereds en SR, medan kvick magi kan kastas samma SR. Skada och elementarframmanning kan upprepas (max 20); särskilda effekter avgörs av SL.':
+  if(hint)hint.textContent=battery?'Laddaren betalar PSY vid laddning och väljer då besvärjelse. Föremålet kastar sedan besvärjelsen kvickt med laddarens FV, utan ytterligare PSY. Även misslyckade kast förbrukar laddningen.':kind==='spell'?'Effektgrad och multiplikator är oberoende. EG 1 ×4 betyder fyra upprepningar av grundeffekten – INTE EG 4. Ett kast tar en handling. Icke-kvick magi förbereds en SR, medan kvick magi kan kastas samma SR. Skada och elementarframmanning kan upprepas (max 20); särskilda effekter avgörs av SL.':
    'Bonusar, skydd och specialeffekter är beskrivande tills de kopplas till stridssystemets effekter.';
  }
  async function editPower(kind,index,powerIndex=-1){
@@ -218,21 +222,23 @@
     '<label class="wide">Magisk egenskap<select id="cmpProperty" onchange="window.aleaCharacterItemMagic?.showFields()">'+
      properties.map(row=>'<option value="'+safe(row.property_key)+'"'+(row.property_key===choice?' selected':'')+'>'+safe(row.name)+'</option>').join('')+'</select></label>'+
     '<label>Aktivering<select id="cmpActivation">'+options(act,before?.activation||'action')+'</select></label>'+
-    '<label data-character-magic-type="spell" class="wide">Besvärjelse ur Expertregistret<select id="cmpSpell">'+
+    '<label data-character-magic-type="spell" data-battery-hide class="wide">Besvärjelse ur Expertregistret<select id="cmpSpell">'+
      options(Object.fromEntries(spells.map(row=>[row.id,row.name])),before?.spell_id||'','— Välj besvärjelse —')+'</select></label>'+
-    '<label data-character-magic-type="spell">Effektgrad (EG)<input id="cmpEg" type="number" min="1" max="50" value="'+safe(before?.effect_grade??1)+'"></label>'+
-    '<label data-character-magic-type="spell">Effektmultiplikator<input id="cmpMultiplier" type="number" min="1" max="1000" step="1" value="'+safe(before?.effect_multiplier??before?.summon_count??1)+'"></label>'+
-    '<label data-character-magic-type="spell">Sätt att kasta<select id="cmpCastMode" onchange="window.aleaCharacterItemMagic?.showFields()">'+options(rolls,before?.cast_mode||'fixed')+'</select></label>'+
-    '<label data-character-magic-type="spell">Föremålets FV<input id="cmpFixedFv" type="number" min="1" max="100" value="'+safe(before?.fixed_fv??5)+'"></label>'+
-    '<label data-character-magic-type="spell">Betalning av PSY<select id="cmpPsy">'+options(cost,before?.psy_source||'artifact')+'</select></label>'+
-    '<label data-character-magic-type="spell">Resultatenhet (valfritt)<input id="cmpResultLabel" maxlength="120" placeholder="Ex. Eldsalamander" value="'+safe(before?.result_label||before?.summon_creature||'')+'"></label>'+
-    '<label data-character-magic-type="spell">Besvärjelsens resultat<input id="cmpResultText" maxlength="200" placeholder="Ex. frammanar en eldsalamander" value="'+safe(before?.result_text||'')+'"></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Effektgrad (EG)<input id="cmpEg" type="number" min="1" max="50" value="'+safe(before?.effect_grade??1)+'"></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Effektmultiplikator<input id="cmpMultiplier" type="number" min="1" max="1000" step="1" value="'+safe(before?.effect_multiplier??before?.summon_count??1)+'"></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Sätt att kasta<select id="cmpCastMode" onchange="window.aleaCharacterItemMagic?.showFields()">'+options(rolls,before?.cast_mode||'fixed')+'</select></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Föremålets FV<input id="cmpFixedFv" type="number" min="1" max="100" value="'+safe(before?.fixed_fv??5)+'"></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Betalning av PSY<select id="cmpPsy">'+options(cost,before?.psy_source||'artifact')+'</select></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Resultatenhet (valfritt)<input id="cmpResultLabel" maxlength="120" placeholder="Ex. Eldsalamander" value="'+safe(before?.result_label||before?.summon_creature||'')+'"></label>'+
+    '<label data-character-magic-type="spell" data-battery-hide>Besvärjelsens resultat<input id="cmpResultText" maxlength="200" placeholder="Ex. frammanar en eldsalamander" value="'+safe(before?.result_text||'')+'"></label>'+
     '<label data-character-magic-type="bonus protection status">Påverkad egenskap<input id="cmpTargetAttr" value="'+safe(before?.target_attribute||'')+'" placeholder="FV, ABS, motstånd"></label>'+
     '<label data-character-magic-type="bonus protection status">Bonus / styrka<input id="cmpBonus" type="number" step="1" value="'+safe(before?.bonus_value??0)+'"></label>'+
-    '<label data-character-magic-type="spell protection status special">Max laddningar<input id="cmpMaxCharges" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.max_charges??'')+'"></label>'+
-    '<label data-character-magic-type="spell protection status special">Laddningskostnad/användning<input id="cmpChargeCost" type="number" min="0" max="9999" value="'+safe(before?.charge_cost??0)+'"></label>'+
-    '<label>Användningar per dag<input id="cmpUses" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.uses_per_day??'')+'"></label>'+
-    '<label>Kan användas igen<select id="cmpRecharge">'+options(window.aleaMagicConfigurator?.recovery||{none:'Utan tidsgräns',next_day:'Efter ny kampanjdag',manual:'När SL återställer'},before?.recharge_rule||'none')+'</select></label>'+
+    '<label data-character-magic-type="spell protection status special" data-battery-hide>Max laddningar<input id="cmpMaxCharges" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.max_charges??'')+'"></label>'+
+    '<label data-character-magic-type="spell protection status special" data-battery-hide>Laddningskostnad/användning<input id="cmpChargeCost" type="number" min="0" max="9999" value="'+safe(before?.charge_cost??0)+'"></label>'+
+    '<label data-battery-hide>Användningar per dag<input id="cmpUses" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.uses_per_day??'')+'"></label>'+
+    '<label data-battery-hide>Kan användas igen<select id="cmpRecharge">'+options(window.aleaMagicConfigurator?.recovery||{none:'Utan tidsgräns',next_day:'Efter ny kampanjdag',manual:'När SL återställer'},before?.recharge_rule||'none')+'</select></label>'+
+    '<label data-battery-only>Effektgrad vid laddning<select id="cmpBatteryMode" onchange="window.aleaCharacterItemMagic?.showFields()">'+options({chosen:'Besvärjaren väljer EG',dice:'Slumpad EG med tärning'},before?.battery_grade_mode||'chosen')+'</select></label>'+
+    '<label data-battery-only id="cmpBatteryDice">EG-tärning<input id="cmpBatteryNotation" placeholder="1T3" value="'+safe(before?.battery_grade_dice||'1T3')+'"></label>'+
     '<label>Mål / område<input id="cmpTarget" value="'+safe(before?.target_text||'')+'"></label>'+
     '<label>Varaktighet<input id="cmpDuration" value="'+safe(before?.duration_text||'')+'"></label>'+
     '<label class="wide">Beskrivning / särskilda regler<textarea id="cmpDetails" rows="3">'+safe(before?.details||'')+'</textarea></label>'+
@@ -255,15 +261,16 @@
   const definition=registry().find(p=>p.property_key===$('cmpProperty')?.value);
   if(!definition)return alert('Välj en giltig magisk egenskap.');
   const spell=typeof ruleSpells!=='undefined'?ruleSpells.find(sp=>String(sp.id)===String($('cmpSpell')?.value)):null;
-  if(definition.kind==='spell'&&!spell)return alert('Välj en besvärjelse i Expertregistret.');
+  const battery=definition.property_key==='magic_battery';
+  if(definition.kind==='spell'&&!battery&&!spell)return alert('Välj en besvärjelse i Expertregistret.');
   const old=powers(x)[powerIndex];
   let grade=1,maxCharges=null,chargeCost=0,uses=null,multiplier=1,bonus=0,fv=null;
   try{
-   if(definition.kind==='spell'){
+   if(definition.kind==='spell'&&!battery){
     grade=number('Eg',1,50);multiplier=number('Multiplier',1,1000);
     if($('cmpCastMode')?.value==='fixed')fv=number('FixedFv',1,100);
    }
-   if(['spell','protection','status','special'].includes(definition.kind)){
+   if(['spell','protection','status','special'].includes(definition.kind)&&!battery){
     maxCharges=number('MaxCharges',0,9999,true);chargeCost=number('ChargeCost',0,9999);
    }
    uses=number('Uses',0,9999,true);
@@ -278,17 +285,20 @@
    property_key:definition.property_key,
    property_name:definition.name,
    kind:definition.kind,
-   spell_id:definition.kind==='spell'?spell.id:null,
-   spell_key:definition.kind==='spell'?spell.spell_key:null,
-   spell_name:definition.kind==='spell'?spell.name:null,
+   spell_id:definition.kind==='spell'&&!battery?spell.id:null,
+   spell_key:definition.kind==='spell'&&!battery?spell.spell_key:null,
+   spell_name:definition.kind==='spell'&&!battery?spell.name:null,
    effect_grade:grade,
    effect_multiplier:multiplier,
    recharge_rule:$('cmpRecharge')?.value||'none',
-   cast_mode:definition.kind==='spell'?$('cmpCastMode')?.value||'fixed':'none',
+   cast_mode:battery?'fixed':definition.kind==='spell'?$('cmpCastMode')?.value||'fixed':'none',
    fixed_fv:fv,
-   psy_source:definition.kind==='spell'?$('cmpPsy')?.value||'artifact':'none',
-   result_label:definition.kind==='spell'?$('cmpResultLabel')?.value.trim()||'':'',
-   result_text:definition.kind==='spell'?$('cmpResultText')?.value.trim()||'':'',
+   psy_source:definition.kind==='spell'&&!battery?$('cmpPsy')?.value||'artifact':'none',
+   result_label:definition.kind==='spell'&&!battery?$('cmpResultLabel')?.value.trim()||'':'',
+   result_text:definition.kind==='spell'&&!battery?$('cmpResultText')?.value.trim()||'':'',
+   battery_grade_mode:battery?$('cmpBatteryMode')?.value||'chosen':null,
+   battery_grade_dice:battery?$('cmpBatteryNotation')?.value.trim().toUpperCase()||'1T3':null,
+   battery_loaded:battery&&isBattery(old)?old.battery_loaded||null:null,
    last_used_day:old?.last_used_day??null,
    uses_today:old?.uses_today??0,
    max_charges:maxCharges,
@@ -297,12 +307,13 @@
    uses_per_day:uses,
    target_attribute:['bonus','protection','status'].includes(definition.kind)?$('cmpTargetAttr')?.value.trim()||'':'',
    bonus_value:bonus,
-   activation:$('cmpActivation')?.value||'action',
+   activation:battery?'action':$('cmpActivation')?.value||'action',
    target_text:$('cmpTarget')?.value.trim()||'',
    duration_text:$('cmpDuration')?.value.trim()||'',
    details:$('cmpDetails')?.value.trim()||''
   };
   try{
+   if(battery&&created.battery_grade_mode==='dice')window.aleaMagicConfigurator?.rollBatteryGrade(created,null,()=>0);
    if(window.aleaMagicConfigurator)window.aleaMagicConfigurator.normalize(created)
   }catch(error){return alert('Kontrollera magisk egenskap: '+error.message)}
   if(!keyId.test(created.property_key))return alert('Egenskapsnyckeln är ogiltig.');
