@@ -52,7 +52,7 @@ describe('Shared section information component',()=>{
   const scope={current,editing:false,campaignDayState:{day_number:9},
    window:{aleaSectionHelp:widget},canEditCharacter:()=>true,
    $:id=>id==='characterProvisions'?el:null,
-   characterProvisionsDays:()=>6,characterWaterDays:()=>6};
+   characterProvisionsDays:()=>6,characterWaterDays:()=>6,renderQuickProvisions:()=>{}};
   runInNewContext(panel+'this.render=renderCharacterProvisions;',scope);
   scope.render();
   expect(el.innerHTML.match(/class="provisions-line /g)).toHaveLength(2);
