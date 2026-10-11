@@ -19,8 +19,12 @@
       registry.find(r=>str(r.name).localeCompare(str(p.spell_name),'sv',{sensitivity:'base'})===0);
      if(!rule||!rule.id||!item.equipId||!p.id)continue;
      const casting=p.cast_mode||'fixed';
+     const learned=(Array.isArray(character.spells)?character.spells:[]).find(s=>
+      (s.rule_id&&str(s.rule_id)===str(rule.id))||
+      (s.spell_id&&str(s.spell_id)===str(rule.id))||
+      str(s.name).localeCompare(str(rule.name),'sv',{sensitivity:'base'})===0);
      const fv=casting==='fixed'?Number(p.fixed_fv):casting==='automatic'?null:
-      Number(p.wearer_fv??0);
+      Number(learned?.fv??p.wearer_fv??0);
      const eg=Math.max(1,Math.floor(Number(p.effect_grade)||1));
      const multiplier=Math.max(1,Math.floor(Number(p.effect_multiplier??p.summon_count)||1));
      const provider=root.aleaMagicConfigurator;
@@ -29,9 +33,11 @@
       availability={ready:false,reason:'Ogiltiga inställningar',day:dayNumber}
      }
      if(casting==='automatic')availability={...availability,ready:false,
-      reason:'Automatisk aktivering stöds ännu inte i strid'};
+      reason:'Automatisk aktivering utan färdighetsslag kräver separat regel'};
+     else if((p.activation||'action')!=='action')availability={...availability,ready:false,
+      reason:'Passiva och villkorsstyrda krafter kan inte aktiveras som handling'};
      else if(!(fv>0))availability={...availability,ready:false,
-      reason:'Föremålets besvärjelse saknar ett giltigt FV'};
+      reason:casting==='wearer'?'Bäraren saknar giltigt FV i besvärjelsen':'Föremålets besvärjelse saknar ett giltigt FV'};
      const key='item:'+group+':'+str(item.equipId)+':'+str(p.id);
      output.push({
       key,source:'item',group,group_label:groupLabel,item_index:index,

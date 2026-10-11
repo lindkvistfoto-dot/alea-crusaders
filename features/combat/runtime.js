@@ -1112,8 +1112,11 @@ async function combatFinalizeAntimagicSpell(caster,action){
    const original=combatants.find(c=>String(c.id)===String(allocation.target_id));if(!original)throw new Error('Magimålet saknas.');
    const victim=bounce&&String(original.id)===protectedId?caster:original;
    const formula=combatMagicDamageFormula(data,allocation.eg);if(!formula)throw new Error('Skadeformeln saknar regelstöd.');
-   const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null,result.outcome==='perfect');
-   result.target_results.push({target_id:victim.id,original_target_id:original.id,reflected:victim.id!==original.id,effect_grade:allocation.eg,damage})
+   const repetitions=combatItemMagicAutomatedCount(action);
+   for(let index=1;index<=repetitions;index++){
+    const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null,result.outcome==='perfect');
+    result.target_results.push({target_id:victim.id,original_target_id:original.id,reflected:victim.id!==original.id,effect_grade:allocation.eg,repetition:index,effect_multiplier:repetitions,damage});
+   }
   }
   result.damage=result.target_results.find(x=>x.damage)?.damage;result.hit_resolved=true
  }else if(result.antimagic_kind==='status'){
@@ -2139,6 +2142,18 @@ function combatSpellActualPsyCost(action,outcome,eg){
  const source=action?.source_data?.item_magic;
  return source&&source.psy_source!=='wearer'?0:combatMagicPsyCost(outcome,eg)
 }
+/* A multiplier repeats discrete results, not EG, CL, PSY or casting time.
+   Every item activation remains ONE action and ONE casting roll. */
+function combatItemMagicMultiplier(action){
+ const n=Number(action?.source_data?.item_magic?.effect_multiplier??1);
+ if(!Number.isSafeInteger(n)||n<1||n>1000)throw new Error('Ogiltig multiplikator.');
+ return n
+}
+function combatItemMagicAutomatedCount(action){
+ const n=combatItemMagicMultiplier(action);
+ if(n>20)throw new Error('Automatiska upprepningar stöder högst 20 effekter per kast. Ändra multiplikatorn eller låt SL hantera utfallet.');
+ return n
+}
 async function combatRecordItemMagicUse(actor,action){
  const source=action?.source_data?.item_magic;
  if(!source)return;
@@ -2148,7 +2163,7 @@ async function combatRecordItemMagicUse(actor,action){
  if(!character)throw new Error('Rollpersonens föremål måste laddas innan magin kan användas.');
  const inventory=character[source.group],item=Array.isArray(inventory)?inventory.find(x=>String(x.equipId)===String(source.item_id)):null;
  const power=item?.magicPowers?.find(p=>String(p.id)===String(source.power_id));
- if(!power||item?.isMagical!==true)throw new Error('Det magiska föremålet eller dess förmåga finns inte längre.');
+ if(!power||(item?.isMagical!==true&&item?.magic?.enabled!==true))throw new Error('Det magiska föremålet eller dess förmåga finns inte längre.');
  const day=typeof campaignDayState!=='undefined'?Number(campaignDayState?.day_number)||null:null;
  item.magicPowers[item.magicPowers.indexOf(power)]=model.markUsed(power,day);
  if(typeof save==='function')save();
@@ -2251,6 +2266,10 @@ async function combatMagicButton(event,combatantId){
    await loadActiveCombat(null,{preserveSelectedTarget:true});return
   }
   if(data.casting_spell){
+   if(data.item_magic){
+    const source=combatSpellOptions(combatant).find(spell=>spell.spell_source==='item'&&combatSpellKey(spell)===String(data.spell_key));
+    if(!source?.item_spell?.ready){alert(source?.item_spell?.unavailable_reason||'Föremålet kan inte längre aktiveras.');return}
+   }
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
    const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
    if(data.magic_binding?.kind==='manual'||data.magic_binding?.kind==='heal'){
@@ -2315,6 +2334,10 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  const item=spell.item_spell||null;
  if(item&&(!item.ready||item.cast_mode==='automatic'||!(Number(item.fv)>0))){alert(item.unavailable_reason||'Föremålets besvärjelse är inte tillgänglig.');return}
  const grade=item?.effect_grade||Math.max(1,Number(action.source_data?.effect_grade)||1);
+ if(item&&Number(item.effect_multiplier)>20&&
+  (combatMagicBinding(spell).kind==='damage'||combatIsSummoningSpell(spell))){
+  alert('Automatisk multiplikator kan högst vara 20 för skada och frammaning. Justera föremålets egenskap eller hantera effekten med SL.');return
+ }
  const preflight=combatMagicCastPreflight(combatant,spell,grade);
  if(item&&item.psy_source!=='wearer'){
   preflight.errors=preflight.errors.filter(error=>error!=='Otillräcklig PSY');
@@ -2322,7 +2345,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   preflight.valid=preflight.errors.length===0
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
@@ -3776,7 +3799,6 @@ async function combatCastManualSpell(actor,action,target=null){
  // One summoned template per action is supported today. Never silently create
  // only one creature for an artifact explicitly configured with multiplier > 1.
  if(result.success&&!result.blocked_by_beskyddare&&
-  !(data.item_magic&&Number(data.item_magic.effect_multiplier)>1)&&
   combatElementalSummonDefinition(spellName)){
   action.status='resolved';action.result=result;
   await combatCreateElementalFromSpell(action.id,{skipReload:true,silent:true});
@@ -3971,8 +3993,11 @@ async function combatResolveTestFireball(actor,target,action){
    const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
    if(!formula)throw new Error('Skadeformeln är inte verifierad för vald effektgrad.');
    const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic',_spell_damage:true};
-   const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null,outcome==='perfect');
-   result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,damage});
+   const repetitions=combatItemMagicAutomatedCount(action);
+   for(let index=1;index<=repetitions;index++){
+    const damage=await combatResolveDamage(actor,victim,pseudoWeapon,fullDamage,null,outcome==='perfect');
+    result.target_results.push({target_id:victim.id,effect_grade:allocation.eg,repetition:index,effect_multiplier:repetitions,damage});
+   }
   }
   result.damage=result.target_results.find(x=>x.damage)?.damage;
   result.hit_resolved=true
@@ -4893,6 +4918,7 @@ function combatSpellResultHtml(action){
    '<div class="combat-attack-result-rolls"><span>T20 <b>'+escAttr(result.roll??'—')+'</b> mot FV <b>'+escAttr(result.fv??'—')+'</b></span>'+
     (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+escAttr(result.confirmation_roll)+'</b></span>':'')+
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
+    (data.item_magic?'<span>×<b>'+escAttr(data.item_magic.effect_multiplier||1)+'</b> från '+escAttr(data.item_magic.item_name||'föremål')+'</span>':'')+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
    (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA · '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+'</b>'+
@@ -4924,7 +4950,8 @@ function combatMagicFactsHtml(data,action){
   combatMagicFactHtml('FV',data.spell_fv??'—')+
   combatMagicFactHtml('EG',eg)+
   combatMagicFactHtml('CL',cl)+
-  combatMagicFactHtml(action.status==='resolved'?'PSY använd':'PSY',spent??eg)+
+  combatMagicFactHtml(action.status==='resolved'?'PSY använd':'PSY',spent??(data.item_magic&&data.item_magic.psy_source!=='wearer'?0:eg))+
+  (data.item_magic?combatMagicFactHtml('Föremål',data.item_magic.item_name||'Magiskt föremål',true)+combatMagicFactHtml('Upprepningar','×'+(data.item_magic.effect_multiplier||1)):'')+
   (data.range_text?combatMagicFactHtml('Räckvidd',data.range_text,true):'')+
   (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
  '</div>'
@@ -4934,7 +4961,7 @@ function combatMagicHeaderHtml(actor,target,data){
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
  const goal=target?.name_snapshot||(area?(data.area_center?'Område valt':'Välj område'):needsTarget?'Välj mål':'');
  return '<div class="combat-magic-heading">'+
-  '<span class="combat-magic-eyebrow">MAGI · '+escAttr(data.spell_name||'Besvärjelse')+'</span>'+
+  '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span>'+
   '<b class="combat-magic-participants">'+escAttr(actor.name_snapshot)+(goal?' <span class="combat-magic-arrow" aria-hidden="true">→</span> '+escAttr(goal):'')+'</b>'+
  '</div>'
 }
@@ -5719,12 +5746,15 @@ function combatSummonPanelHtml(){
   (candidates.length?candidates.map(action=>{
    const def=combatElementalSummonDefinition(action.source_data?.spell_name||action.result?.spell_name);
    const actor=combatants.find(c=>String(c.id)===String(action.combatant_id));
-   const existing=combatants.find(c=>String(c.source_instance_key)==='summon:'+action.id);
+   const total=combatItemMagicMultiplier(action);
+   const existingCount=combatants.filter(c=>String(c.source_instance_key)==='summon:'+action.id||
+    String(c.source_instance_key||'').startsWith('summon:'+action.id+':')).length;
+   const existing=existingCount>=total;
    return '<div class="combat-gm-placement-row"><span><b>'+escAttr(actor?.name_snapshot||'Magiker')+' → '+escAttr(def.name)+
-    '</b><small>Lyckad frammaning · EG '+escAttr(action.result.effect_grade||1)+' · SR '+escAttr(action.round_number||'?')+'</small></span>'+
+    '</b><small>Lyckad frammaning · EG '+escAttr(action.result.effect_grade||1)+' · '+existingCount+'/'+total+' skapade · SR '+escAttr(action.round_number||'?')+'</small></span>'+
     '<button type="button" class="smallbtn" '+(existing||combatSummonBusy?'disabled':'')+
     ' onclick="combatCreateElementalFromSpell(\''+escAttr(action.id)+'\')">'+
-    (existing?'Redan skapad':'Skapa '+def.name.toLocaleLowerCase('sv-SE'))+'</button></div>'
+    (existing?'Redan skapade':'Skapa '+(total>1?total+' × ':'')+def.name.toLocaleLowerCase('sv-SE'))+'</button></div>'
   }).join(''):'<p class="combat-action-note">Inga lyckade elementarframbesvärjelser under de senast inlästa rundorna.</p>')+
   (spawned.length?'<h4>Frammanade elementarer</h4>'+spawned.map(c=>
    '<div class="combat-gm-placement-row"><span><b>'+escAttr(c.name_snapshot)+'</b><small>Styrs av '+
@@ -5738,9 +5768,10 @@ async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=
  const action=combatSummonActionCandidates().find(row=>String(row.id)===String(actionId));
  const def=combatElementalSummonDefinition(action?.source_data?.spell_name||action?.result?.spell_name);
  if(!action||!def){if(!silent)alert('Saknar giltigt lyckat elementarkast.');return false}
- const sourceKey='summon:'+action.id;
- if(combatants.some(c=>String(c.source_instance_key)===sourceKey)){
-  if(!silent)alert('Denna frambesvärjelse har redan skapat en varelse.');return false
+ const multiplier=combatItemMagicAutomatedCount(action);
+ if(combatants.filter(c=>String(c.source_instance_key)==='summon:'+action.id||
+  String(c.source_instance_key||'').startsWith('summon:'+action.id+':')).length>=multiplier){
+  if(!silent)alert('Frambesvärjelsen har redan skapat alla sina varelser.');return false
  }
  const caster=combatants.find(c=>String(c.id)===String(action.combatant_id));
  if(!caster)return false;
@@ -5753,6 +5784,10 @@ async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=
   const stats=combatSourceStats({source_type:'npc',source_id:template.id,state:{}},{
    npcs:new Map([[template.id,template]]),characters:new Map(),monsters:new Map()});
   if(!Number.isFinite(stats.max_kp)||stats.max_kp<1)throw Error(def.name+' saknar giltiga KP.');
+  let lastId=null,createdCount=0;
+  for(let instanceIndex=1;instanceIndex<=multiplier;instanceIndex++){
+  const sourceKey='summon:'+action.id+(instanceIndex>1?':'+instanceIndex:'');
+  if(combatants.some(c=>String(c.source_instance_key)===sourceKey))continue;
   const nextId=crypto.randomUUID();
   const row={id:nextId,combat_id:activeCombat.id,campaign_id:centralCampaignId,
    source_type:'npc',source_id:template.id,source_instance_key:sourceKey,
@@ -5766,6 +5801,7 @@ async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=
     attributes:stats.attributes,attack_profile:stats.attack_profile,
     summon_template_key:def.key,summon_element:def.element,summoning_action_id:action.id,
     summoner_id:caster.id,summoner_name:caster.name_snapshot,summon_controller:'summoner',
+    summon_instance_index:instanceIndex,effect_multiplier:multiplier,
     effect_grade:Number(action.result.effect_grade)||1,
     summon_duration_note:'SL avgör antal SR enligt Expert-reglerna.'},
    sort_order:Math.max(0,...combatants.map(c=>Number(c.sort_order)||0))+1};
@@ -5779,9 +5815,11 @@ async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=
    details:{action_id:action.id,effect_grade:row.state.effect_grade,element:def.element,
     summoner_id:caster.id,controller_user_id:row.controller_user_id,source_id:template.id,source_key:sourceKey},
    player_visible:true})}).catch(error=>console.warn('Elementar skapad men loggningen misslyckades',error));
-  combatGmPlacementId=nextId;
+  lastId=nextId;createdCount++;
+  }
+  combatGmPlacementId=lastId;
   if(!skipReload){await loadActiveCombat(null,{preserveSelectedTarget:true});renderCombat()}
-  return true
+  return createdCount>0
  }catch(error){
   if(silent)console.warn('Kunde inte automatiskt skapa elementar',error);
   else alert('Kunde inte skapa elementar: '+(error?.message||error));
