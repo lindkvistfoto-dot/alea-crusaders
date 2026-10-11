@@ -21,7 +21,7 @@ function canEditCharacter(c=current){return !!c&&(canManageCharacters()||!!(supa
 function toggleLoginPassword(){let e=$('loginPassword');e.type=e.type==='password'?'text':'password'}
 syncAppVersionDisplay();
 function showLogin(){document.querySelector('header').classList.add('hidden');document.querySelector('main').classList.add('hidden');$('loginScreen').classList.remove('hidden');$('loginSetup').classList.add('hidden');$('loginError').textContent='';setTimeout(()=>$('loginEmail').focus(),0)}
-function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('logoutBtn').classList.toggle('hidden',!u);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
+function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('adminNavBtn').classList.toggle('hidden',!u||!u.admin);$('logoutBtn').classList.toggle('hidden',!u||!u.admin);$('playerLogoutBtn').classList.toggle('hidden',!u||u.admin);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
 /* Navigation must not be reset by asynchronous startup: the user may already
    have opened a character, map, shop or dice view while central data loads. */
 async function enterApp(){
