@@ -9,9 +9,10 @@ describe('Trekolumnig stridsvy med SL-kontroller under kartan',()=>{
   expect(html).not.toContain('id="combatGmControls"');
  });
  test('SL-rutan skapas under kartan vid aktiv strid och före Play i vänteläget',()=>{
-  expect((render.match(/id="combatGmControls"/g)||[])).toHaveLength(2);
+  expect((render.match(/id="combatGmControls"/g)||[])).toHaveLength(3);
   expect(render).toContain('<div class="combat-below-map"><div id="combatGmControls"');
   expect(render).toContain('combat-shell combat-shell-idle');
+  expect(render).toContain('combat-finished-shell');
   expect(render).toContain('renderCombatGmControls();return');
  });
  test('SL stridskontroll och logg visas efter hexkartan i mittenkolumnen',()=>{
