@@ -248,7 +248,7 @@
   }catch(error){notify(error)}
  }
  window.aleaMagicProperties={load,refresh,render,summary,powersFor,definitionFor:getDefinition,
-  togglePowerFields};
+  allDefinitions:()=>[...definitions],togglePowerFields};
  window.editMagicProperty=propertyEditor;
  window.saveMagicProperty=saveProperty;
  window.deleteMagicProperty=removeProperty;
