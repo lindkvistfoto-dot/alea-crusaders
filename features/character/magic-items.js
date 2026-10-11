@@ -24,7 +24,7 @@
  function magical(x){return x?.isMagical===true||x?.magic?.enabled===true}
  function powers(x){return Array.isArray(x?.magicPowers)?x.magicPowers:[]}
  function spellName(x){return x?.spell_name||'Besvärjelse saknas'}
- function powerTitle(p){return p?.kind==='spell'?spellName(p)+' (EG '+(p.effect_grade||1)+')':(p?.property_name||'Magisk egenskap')}
+ function powerTitle(p){return p?.kind==='spell'?spellName(p)+' (EG '+(p.effect_grade||1)+' ×'+(p.effect_multiplier??p.summon_count??1)+')':(p?.property_name||'Magisk egenskap')}
  function summary(x){
   if(!magical(x))return '';
   return powers(x).length?powers(x).map(powerTitle).join(' · '):'Magiskt föremål';
@@ -92,8 +92,8 @@
     (powers(x).length?powers(x).map((power,i)=>'<div class="character-magic-power">'+
       '<div><b>'+safe(powerTitle(power))+'</b><small>'+
        safe(power.kind==='spell'?
-       (power.summon_count?power.summon_count+' × '+(power.summon_creature||'varelse')+' · ':'')+
-       (power.cast_mode==='automatic'?'Automatisk':power.cast_mode==='fixed'?'Föremålets FV':'Bärarens FV')+
+       'EG '+(power.effect_grade||1)+' ×'+(power.effect_multiplier??power.summon_count??1)+' · '+
+       (power.cast_mode==='automatic'?'Automatisk':power.cast_mode==='fixed'?'FV '+(power.fixed_fv??5):'Bärarens FV')+' · '+(power.recharge_rule==='next_day'?'Efter ny dag':power.recharge_rule==='manual'?'Återställs av SL':'Ingen dagspärr')+
        (power.max_charges!=null?' · Laddningar '+(power.charges_remaining??power.max_charges)+'/'+power.max_charges:''):
        (power.details||power.property_name||''))+'</small></div>'+
       '<button type="button" class="smallbtn" onclick="editCharacterItemPower(\''+kind+'\','+index+','+i+')">Ändra</button>'+
@@ -113,7 +113,7 @@
   const cast=$('cmpCastMode'),fv=$('cmpFixedFv');
   if(fv)fv.closest('label').hidden=kind!=='spell'||cast?.value!=='fixed';
   const hint=$('cmpHint');
-  if(hint)hint.textContent=kind==='spell'?'Besvärjelsen sparas på föremålet. Antal frammankallade varelser är separat från EG. Automatisk stridsanvändning är ännu inte kopplad.':
+  if(hint)hint.textContent=kind==='spell'?'Effektgrad och multiplikator är oberoende. EG 1 ×4 betyder fyra upprepningar av grundeffekten – INTE EG 4. Stridsmotorn aktiverar inte förmågan automatiskt ännu.':
    'Bonusar, skydd och specialeffekter är beskrivande tills de kopplas till stridssystemets effekter.';
  }
  async function editPower(kind,index,powerIndex=-1){
@@ -135,16 +135,18 @@
     '<label data-character-magic-type="spell" class="wide">Besvärjelse ur Expertregistret<select id="cmpSpell">'+
      options(Object.fromEntries(spells.map(row=>[row.id,row.name])),before?.spell_id||'','— Välj besvärjelse —')+'</select></label>'+
     '<label data-character-magic-type="spell">Effektgrad (EG)<input id="cmpEg" type="number" min="1" max="50" value="'+safe(before?.effect_grade??1)+'"></label>'+
-    '<label data-character-magic-type="spell">Sätt att kasta<select id="cmpCastMode" onchange="window.aleaCharacterItemMagic?.showFields()">'+options(rolls,before?.cast_mode||'wearer')+'</select></label>'+
-    '<label data-character-magic-type="spell">Föremålets FV<input id="cmpFixedFv" type="number" min="1" max="100" value="'+safe(before?.fixed_fv??15)+'"></label>'+
+    '<label data-character-magic-type="spell">Effektmultiplikator<input id="cmpMultiplier" type="number" min="1" max="1000" step="1" value="'+safe(before?.effect_multiplier??before?.summon_count??1)+'"></label>'+
+    '<label data-character-magic-type="spell">Sätt att kasta<select id="cmpCastMode" onchange="window.aleaCharacterItemMagic?.showFields()">'+options(rolls,before?.cast_mode||'fixed')+'</select></label>'+
+    '<label data-character-magic-type="spell">Föremålets FV<input id="cmpFixedFv" type="number" min="1" max="100" value="'+safe(before?.fixed_fv??5)+'"></label>'+
     '<label data-character-magic-type="spell">Betalning av PSY<select id="cmpPsy">'+options(cost,before?.psy_source||'artifact')+'</select></label>'+
-    '<label data-character-magic-type="spell">Antal frammankallade varelser<input id="cmpSummonCount" type="number" min="0" max="100" value="'+safe(before?.summon_count??0)+'"></label>'+
-    '<label data-character-magic-type="spell">Frammankallad varelse<input id="cmpSummonCreature" maxlength="120" placeholder="Eldsalamander" value="'+safe(before?.summon_creature||'')+'"></label>'+
+    '<label data-character-magic-type="spell">Resultatenhet (valfritt)<input id="cmpResultLabel" maxlength="120" placeholder="Ex. Eldsalamander" value="'+safe(before?.result_label||before?.summon_creature||'')+'"></label>'+
+    '<label data-character-magic-type="spell">Besvärjelsens resultat<input id="cmpResultText" maxlength="200" placeholder="Ex. frammanar en eldsalamander" value="'+safe(before?.result_text||'')+'"></label>'+
     '<label data-character-magic-type="bonus protection status">Påverkad egenskap<input id="cmpTargetAttr" value="'+safe(before?.target_attribute||'')+'" placeholder="FV, ABS, motstånd"></label>'+
     '<label data-character-magic-type="bonus protection status">Bonus / styrka<input id="cmpBonus" type="number" step="1" value="'+safe(before?.bonus_value??0)+'"></label>'+
     '<label data-character-magic-type="spell protection status special">Max laddningar<input id="cmpMaxCharges" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.max_charges??'')+'"></label>'+
     '<label data-character-magic-type="spell protection status special">Laddningskostnad/användning<input id="cmpChargeCost" type="number" min="0" max="9999" value="'+safe(before?.charge_cost??0)+'"></label>'+
     '<label>Användningar per dag<input id="cmpUses" type="number" min="0" max="9999" placeholder="Obegränsat om tomt" value="'+safe(before?.uses_per_day??'')+'"></label>'+
+    '<label>Kan användas igen<select id="cmpRecharge">'+options(window.aleaMagicConfigurator?.recovery||{none:'Utan tidsgräns',next_day:'Efter ny kampanjdag',manual:'När SL återställer'},before?.recharge_rule||'none')+'</select></label>'+
     '<label>Mål / område<input id="cmpTarget" value="'+safe(before?.target_text||'')+'"></label>'+
     '<label>Varaktighet<input id="cmpDuration" value="'+safe(before?.duration_text||'')+'"></label>'+
     '<label class="wide">Beskrivning / särskilda regler<textarea id="cmpDetails" rows="3">'+safe(before?.details||'')+'</textarea></label>'+
@@ -169,16 +171,17 @@
   const spell=typeof ruleSpells!=='undefined'?ruleSpells.find(sp=>String(sp.id)===String($('cmpSpell')?.value)):null;
   if(definition.kind==='spell'&&!spell)return alert('Välj en besvärjelse i Expertregistret.');
   const old=powers(x)[powerIndex];
-  let grade=1,maxCharges=null,chargeCost=0,uses=null,summon=0,bonus=0,fv=null;
+  let grade=1,maxCharges=null,chargeCost=0,uses=null,multiplier=1,bonus=0,fv=null;
   try{
    if(definition.kind==='spell'){
-    grade=number('Eg',1,50);summon=number('SummonCount',0,100);
+    grade=number('Eg',1,50);multiplier=number('Multiplier',1,1000);
     if($('cmpCastMode')?.value==='fixed')fv=number('FixedFv',1,100);
    }
    if(['spell','protection','status','special'].includes(definition.kind)){
     maxCharges=number('MaxCharges',0,9999,true);chargeCost=number('ChargeCost',0,9999);
    }
    uses=number('Uses',0,9999,true);
+   if(!['none','next_day','manual'].includes($('cmpRecharge')?.value||'none'))throw Error('Ogiltig återhämtningsregel.');
    if(['bonus','protection','status'].includes(definition.kind)){
     bonus=Number($('cmpBonus')?.value||0);
     if(!Number.isInteger(bonus)||Math.abs(bonus)>9999)throw Error('Ogiltigt bonusvärde.');
@@ -193,11 +196,15 @@
    spell_key:definition.kind==='spell'?spell.spell_key:null,
    spell_name:definition.kind==='spell'?spell.name:null,
    effect_grade:grade,
-   cast_mode:definition.kind==='spell'?$('cmpCastMode')?.value||'wearer':'none',
+   effect_multiplier:multiplier,
+   recharge_rule:$('cmpRecharge')?.value||'none',
+   cast_mode:definition.kind==='spell'?$('cmpCastMode')?.value||'fixed':'none',
    fixed_fv:fv,
    psy_source:definition.kind==='spell'?$('cmpPsy')?.value||'artifact':'none',
-   summon_count:summon,
-   summon_creature:definition.kind==='spell'?$('cmpSummonCreature')?.value.trim()||'':'',
+   result_label:definition.kind==='spell'?$('cmpResultLabel')?.value.trim()||'':'',
+   result_text:definition.kind==='spell'?$('cmpResultText')?.value.trim()||'':'',
+   last_used_day:old?.last_used_day??null,
+   uses_today:old?.uses_today??0,
    max_charges:maxCharges,
    charges_remaining:maxCharges==null?null:Math.min(maxCharges,Math.max(0,Number(old?.charges_remaining??maxCharges))),
    charge_cost:chargeCost,
@@ -209,6 +216,9 @@
    duration_text:$('cmpDuration')?.value.trim()||'',
    details:$('cmpDetails')?.value.trim()||''
   };
+  try{
+   if(window.aleaMagicConfigurator)window.aleaMagicConfigurator.normalize(created)
+  }catch(error){return alert('Kontrollera magisk egenskap: '+error.message)}
   if(!keyId.test(created.property_key))return alert('Egenskapsnyckeln är ogiltig.');
   if(!Array.isArray(x.magicPowers))x.magicPowers=[];
   if(Number(powerIndex)>=0&&old)x.magicPowers[powerIndex]=created;
