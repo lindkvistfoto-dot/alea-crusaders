@@ -378,6 +378,7 @@
    charged.battery_loaded.caster_id=String(caster._dbId||caster.id);
    item.magicPowers[powerIndex]=charged;
    save();refresh(kind);itemPowers(kind,index);
+   if(typeof renderQuickOnly==='function'&&caster===current)renderQuickOnly();
    alert('Batteriet är laddat med '+learned.rule.name+', EG '+eg+
     (charged.battery_loaded.grade_roll?' ('+charged.battery_loaded.grade_rolls.join('+')+' på '+charged.battery_loaded.grade_roll+')':'')+
     '. '+eg+' PSY har dragits från '+charged.battery_loaded.caster_name+'.');
