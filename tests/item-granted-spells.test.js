@@ -152,5 +152,6 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   expect(runtime).toContain("if(action.source_data?.item_magic)return;");
   expect(runtime).toContain("psy_source:item.psy_source");
   expect(runtime).toContain("combatRecordItemMagicUse");
+  expect(runtime).toContain('!(data.item_magic&&Number(data.item_magic.effect_multiplier)>1)');
  });
 });
