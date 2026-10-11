@@ -88,8 +88,8 @@ export function createLegolas({
   const nav=doc().createElement('button');
   nav.id='materialNavBtn';nav.type='button';nav.className='btn legolas-nav alea-nav-art';nav.setAttribute('aria-current','false');
   nav.title='Materialpanel';nav.setAttribute('aria-label','Öppna materialpanelen');
-  nav.innerHTML='<img class="alea-nav-asset alea-nav-asset--normal" src="./assets/navigation/material-normal.avif" alt="" aria-hidden="true" width="512" height="512" decoding="async">'+
-   '<img class="alea-nav-asset alea-nav-asset--active" src="./assets/navigation/material-active.avif" alt="" aria-hidden="true" width="512" height="512" decoding="async">';nav.addEventListener('click',()=>openPanel());
+  nav.innerHTML='<img class="alea-nav-asset alea-nav-asset--normal" src="./assets/navigation/material-normal.avif" alt="" aria-hidden="true" width="104" height="104" decoding="async">'+
+   '<img class="alea-nav-asset alea-nav-asset--active" src="./assets/navigation/material-active.avif" alt="" aria-hidden="true" width="104" height="104" decoding="async">';nav.addEventListener('click',()=>openPanel());
   const target=el('landingCharactersNavBtn')||el('combatNavBtn')||el('mapNavBtn')||doc().querySelector('header .barspacer');
   if(target)target.insertAdjacentElement('beforebegin',nav);
   const panel=doc().createElement('section');panel.id='legolasPanel';panel.className='legolas-panel hidden';
