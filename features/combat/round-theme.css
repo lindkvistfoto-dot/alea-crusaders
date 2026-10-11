@@ -263,3 +263,52 @@
 @media(prefers-reduced-motion:reduce){
   .combat-turn-panel .combat-turn-actions .combat-row-tool-btn{transition:none}
 }
+
+
+/* Phase 3 imagery (v0.35.122)
+   Five actions × 2 states in a single transparent AVIF sprite.
+   Frame columns: move, attack, magic, action, end.
+   Row 1: normal; row 2: selected/hover. The original buttons and event handlers
+   remain unchanged, including disabled states and popover menus. */
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn{
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background-color:transparent!important;
+  background-image:url("../../assets/combat-actions/round-step3-sprite.avif")!important;
+  background-repeat:no-repeat!important;
+  background-size:500% 200%!important;
+  box-shadow:none!important;
+  overflow:visible;
+  transition:filter .15s ease;
+}
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn::before{display:none!important}
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn > .combat-row-tool-icon,
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn > .combat-magic-glyph{
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+.combat-turn-panel .combat-turn-actions .combat-row-move{background-position:0% 0%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-attack{background-position:25% 0%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-magic{background-position:50% 0%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-action{background-position:75% 0%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-end{background-position:100% 0%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-move:is(.active,.chosen,:hover:not(:disabled),:focus-visible){background-position:0% 100%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-attack:is(.active,.chosen,:hover:not(:disabled),:focus-visible){background-position:25% 100%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-magic:is(.active,.chosen,:hover:not(:disabled),:focus-visible){background-position:50% 100%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-action:is(.active,.chosen,:hover:not(:disabled),:focus-visible){background-position:75% 100%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-end:is(.active,.chosen,:hover:not(:disabled),:focus-visible){background-position:100% 100%!important}
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn:focus-visible{
+  outline:2px solid #fce2a0;
+  outline-offset:2px;
+}
+.combat-turn-panel .combat-turn-actions .combat-row-tool-btn:disabled{
+  opacity:.45;
+  filter:grayscale(.3);
+}
+.combat-turn-panel .combat-turn-actions .combat-turn-action-tool:has(.combat-row-tool-btn:hover:not(:disabled))::after{
+  color:#ffdf9a;
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-turn-panel .combat-turn-actions .combat-row-tool-btn{transition:none}
+}
