@@ -5095,11 +5095,12 @@ function combatTurnEquipmentHtml(combatant){
  const imageTile=(kind,label,item,path,wide=false,count=null)=>{
   const img=srcImg(path,'combat-turn-art');
   const magical=magicalItem(item);
+  const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
   const name=item?.name||'Ingen';
   return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+(magical?' magical':'')+(magical&&!img?' magical-no-art':'')+'">'+
    '<span>'+escAttr(label)+'</span>'+
    '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+
-    (count===null?'':'<b class="combat-turn-ammo-count" title="'+count+' facklor kvar">'+count+'</b>')+'</div>'+
+    (count===null?'':'<b class="combat-turn-ammo-count" title="'+count+' facklor kvar">'+count+'</b>')+magicBadge+'</div>'+
    '<small title="'+escAttr(name)+'">'+escAttr(name)+'</small></div>';
  };
  const left=eq.leftHand,right=eq.rightHand;

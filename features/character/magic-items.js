@@ -31,11 +31,12 @@
  }
  function badge(kind,index){
   const x=get(kind,index);if(!magical(x))return '';
-  return '<span class="character-item-magic-badge" title="'+safe(summary(x))+'">✦ '+safe(powers(x).length?summary(x):'Magisk')+'</span>'
+  return '<span class="character-item-magic-badge" role="img" aria-label="Magiskt föremål: '+safe(summary(x))+'" title="'+safe(summary(x))+'">'+
+   '<img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>';
  }
  function control(kind,index){
   const x=get(kind,index);if(!x)return '';
-  return '<div class="character-item-magic-control">'+
+  return '<div class="character-item-magic-control">'+(magical(x)?badge(kind,index):'')+
    '<label><input type="checkbox" '+(magical(x)?'checked ':'')+
     'onchange="setCharacterItemMagical(\''+kind+'\','+index+',this.checked)"> ✦ Magisk</label>'+
    (magical(x)?'<button type="button" class="smallbtn" onclick="openCharacterItemPowers(\''+kind+'\','+index+')">Egenskaper'+(powers(x).length?' ('+powers(x).length+')':'')+'</button>':'')+

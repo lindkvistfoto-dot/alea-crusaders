@@ -1788,12 +1788,13 @@ function currentEquipSlotHtml(slot){
  const value=item?.name||'',occupied=!!item;
  const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
+ const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
  const torchCount=ref?.kind==='equipment'?window.aleaEquipmentCatalog?.torchCount(current,item):null;
  const countBadge=torchCount!==null&&torchCount!==undefined?
   '<span class="gandalf-equip-stack-count" title="'+torchCount+' facklor kvar">'+torchCount+'</span>':'';
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-'+slot+(occupied?' equipped':' empty')+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
    'onclick="openCurrentEquipmentPicker(\''+slot+'\')" aria-label="'+escAttr(label)+(occupied?', '+escAttr(value):', tom, välj utrustning')+'">'+
-   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+currentEquipmentMagicSparkHtml(magical)+countBadge+'</span>'+
+   '<span class="gandalf-equip-face">'+art+(occupied&&!art?'<span class="gandalf-equip-value">'+escAttr(value)+'</span>':'')+currentEquipmentMagicSparkHtml(magical)+magicBadge+countBadge+'</span>'+
    '<span class="gandalf-equip-label">'+escAttr(label)+'</span></button>';
 }
 /* Narsil-style: one square master asset per weapon. Its two-hand placement is
@@ -1826,6 +1827,7 @@ function twoHandDisplayProfile(item){
 function gandalfTwoHandSlotHtml(item){
  const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
+ const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
  const name=escAttr(item.name||'Vapen');
  const profile=twoHandDisplayProfile(item);
  const cssVars=[
@@ -1839,7 +1841,7 @@ function gandalfTwoHandSlotHtml(item){
  return '<button type="button" class="gandalf-equip-slot gandalf-equip-twohand equipped'+(magical?' magical':'')+(magical&&!art?' magical-no-art':'')+'" '+
   'onclick="openCurrentEquipmentPicker(\'leftHand\')" aria-label="Tvåhandsvapen: '+name+', upptar båda händerna. Klicka för att byta eller ta bort.">'+
   '<span class="gandalf-equip-face" data-twohand-profile="'+profile.type+'" style="'+cssVars+'">'+
-   (art||'<span class="gandalf-equip-value">'+name+'</span>')+currentEquipmentMagicSparkHtml(magical)+'</span>'+
+   (art||'<span class="gandalf-equip-value">'+name+'</span>')+currentEquipmentMagicSparkHtml(magical)+magicBadge+'</span>'+
   '<span class="gandalf-equip-label"><b>'+name+'</b><small>Båda händerna</small></span></button>'
 }
 /* Automatic ammunition in Aktuell utrustning.
