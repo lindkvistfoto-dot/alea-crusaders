@@ -351,7 +351,8 @@ function combatSourceStats(sceneCombatant,sources){
   flying:state.flying===true,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
   portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
-  combat_icon_path:source?.combat_icon_path||null
+  combat_icon_path:source?.combat_icon_path||null,
+  round_background_path:sceneCombatant.source_type==='character'?(source?.round_background_path||null):null
  }
 }
 async function combatLoadSceneRuntimeData(scene){
@@ -359,7 +360,7 @@ async function combatLoadSceneRuntimeData(scene){
  const [sceneCombatants,sceneHexes,characters,npcs,monsters]=await Promise.all([
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
-  dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,combat_icon_path,data'),
+  dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,combat_icon_path,round_background_path,data'),
   dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells'),
   dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor')
  ]);
@@ -637,7 +638,8 @@ function combatCaptureInitiativeForReset(){
 async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,resetReady=false}={}){
  const runtime=await combatLoadSceneRuntimeData(scene);
  const instanceId=crypto.randomUUID();
- const roundBackgroundId=await window.aleaRoundGallery?.pickRandomForCombat?.()||null;
+ const roundPool=await window.aleaRoundGallery?.getActivePool?.()||[];
+ const roundBackgroundId=roundPool.length?roundPool[Math.floor(Math.random()*roundPool.length)].id:null;
  const settings={
   ...(scene.settings&&typeof scene.settings==='object'?scene.settings:{}),
   scene_id:scene.id,
@@ -657,6 +659,10 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
   const sourceType=['character','npc','monster'].includes(row.source_type)?row.source_type:null;
   if(!sourceType||!row.source_id)return null;
   const id=crypto.randomUUID();
+  const customPath=sourceType==='character'?stats.round_background_path:null;
+  const randomArt=customPath?null:(roundPool.length?roundPool[Math.floor(Math.random()*roundPool.length)]:null);
+  const roundArtSource=customPath?'character':'library';
+  const roundArtPath=customPath||(randomArt?.image_path||'assets/combat/round-hero-battle-pilot.avif');
   return{
    id,combat_id:instanceId,campaign_id:centralCampaignId,source_type:sourceType,source_id:row.source_id,
    source_instance_key:sourceType+':'+row.source_id+':'+Math.max(1,Number(row.instance_no)||1),
@@ -665,7 +671,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:row.start_q==null||row.start_r==null?'removed':'active',action_plan:[],
-   state:{...(row.state||{}),portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null,portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -2613,7 +2619,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
    if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatCloseRowActionMenu();
    await loadCombatRuntimeBackground()
-   await window.aleaRoundGallery?.activate?.(activeCombat)
+   await window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())
   }
  }catch(e){console.error('Kunde inte läsa strid',e);activeCombat=null}
  renderCombat();renderCombatGmControls();return activeCombat
@@ -5995,7 +6001,7 @@ function renderCombat(){
  '</div>'+combatantDetailsPopupHtml();
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
- window.aleaRoundGallery?.apply?.();
+ void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
 }
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});

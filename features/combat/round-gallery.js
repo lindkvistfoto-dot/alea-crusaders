@@ -7,7 +7,7 @@
  const BUILTIN='assets/combat/round-hero-battle-pilot.avif';
  const SAFE=/^round\/[0-9a-f-]{36}\.(?:webp|png|jpg|jpeg)$/;
  const MAX_SOURCE=12*1024*1024;
- let rows=null,chosenUrl='',chosenCombatId='',request=0,adminBusy=false,adminRender=0;
+ let rows=null,chosenUrl='',chosenCombatId='',chosenKey='',request=0,adminBusy=false,adminRender=0;
  const cachedUrls=new Map();
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const canManage=()=>{try{return Boolean(activeUser()?.admin)}catch(_){return false}};
@@ -20,11 +20,13 @@
   rows=(Array.isArray(data)?data:[]).filter(r=>validPath(r.image_path));
   return rows;
  }
+ async function getActivePool(){
+  try{return (await list(true)).filter(r=>r.is_active&&!r.archived_at)}
+  catch(e){console.warn('Bakgrundsregistret kunde inte laddas; använder pilotbild.',e);return []}
+ }
  async function pickRandomForCombat(){
-  try{
-   const pool=(await list(true)).filter(r=>r.is_active&&!r.archived_at);
-   return pool.length?pool[Math.floor(Math.random()*pool.length)].id:null;
-  }catch(e){console.warn('Bakgrundsregistret kunde inte laddas; använder pilotbild.',e);return null}
+  const pool=await getActivePool();
+  return pool.length?pool[Math.floor(Math.random()*pool.length)].id:null;
  }
  async function resolveUrl(path){
   if(!validPath(path))return '';
@@ -44,25 +46,43 @@
    else el.style.removeProperty('--alea-round-illustration');
   });
  }
- async function activate(combat){
+ async function activate(combat,actor=null){
+  if(!combat?.id){
+   ++request;chosenCombatId='';chosenKey='';chosenUrl='';apply();return
+  }
+  const state=actor?.state&&typeof actor.state==='object'?actor.state:{};
+  const source=state.round_background_source==='character'?'character':'library';
+  const actorPath=String(state.round_background_path||'');
+  const actorLibraryId=String(state.round_background_id||'');
+  const settingsId=String(combat.settings?.round_background_id||'');
+  const key=[combat.id,actor?.id||'',source,actorPath,actorLibraryId,settingsId].join('|');
+  if(key===chosenKey){apply();return}
   const token=++request;
-  if(!combat?.id){chosenCombatId='';chosenUrl='';apply();return}
-  const combatId=String(combat.id);
-  chosenCombatId=combatId;
-  // One selection for the whole encounter: all clients use the persisted ID.
+  chosenKey=key;chosenCombatId=String(combat.id);
+  chosenUrl='';apply();  // No flash of previous actor on a new turn.
   let path=BUILTIN;
-  const selectedId=String(combat.settings?.round_background_id||'');
   try{
-   if(selectedId){
-    const match=(await list()).find(r=>String(r.id)===selectedId);
-    if(match)path=match.image_path;
+   if(actorPath && ((source==='character') ||
+      (source==='library'&&validPath(actorPath)))){
+     path=actorPath;
+   }else{
+     const id=actorLibraryId||settingsId;
+     if(id){
+      const match=(await list()).find(row=>String(row.id)===id);
+      if(match)path=match.image_path;
+     }
    }
-   const url=await resolveUrl(path);
-   if(token!==request||chosenCombatId!==combatId)return;
-   chosenUrl=url||'';
+   let url='';
+   if(source==='character'&&actorPath&&path===actorPath){
+     url=await window.aleaCharacterRoundBackground?.resolveUrl?.(path)||'';
+   }else{
+     url=await resolveUrl(path);
+   }
+   if(token!==request||chosenKey!==key)return;
+   chosenUrl=url||'./'+BUILTIN;
   }catch(e){
    console.warn('Rundbilden kunde inte hämtas; använder pilotbild.',e);
-   if(token!==request||chosenCombatId!==combatId)return;
+   if(token!==request||chosenKey!==key)return;
    chosenUrl='./'+BUILTIN;
   }
   apply();
@@ -165,5 +185,5 @@
    }
   }catch(e){host.textContent='Kunde inte hämta bakgrundsbilder: '+(e.message||e)}
  }
- window.aleaRoundGallery={list,pickRandomForCombat,activate,apply,upload,toggle,rename,archive,renderAdmin};
+ window.aleaRoundGallery={list,getActivePool,pickRandomForCombat,activate,apply,upload,toggle,rename,archive,renderAdmin};
 })();
