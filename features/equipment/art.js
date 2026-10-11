@@ -5,7 +5,7 @@
  const BUCKET='alea-equipment-art';
  const MAX_UPLOAD=12*1024*1024,MAX_STORED=3*1024*1024;
  const TYPES=new Set(['weapon','armor','shield','projectile','equipment']);
- const VALID_PATH=/^(?:(?:weapon|armor|shield|equipment)\/[0-9a-f-]{36}|armor\/(?:head|arms|torso|legs)\/[0-9a-f-]{36}|projectile\/[a-z][a-z0-9_]{1,50})\/[0-9a-f-]{36}\.(?:webp|png)$/;
+ const VALID_PATH=/^(?:(?:weapon|armor|shield|equipment)\/[0-9a-f-]{36}|armor\/(?:head|arms|torso|legs)\/[0-9a-f-]{36}|projectile\/[a-z][a-z0-9_]{1,50}|item\/[0-9a-f-]{36}\/[0-9a-f-]{36})\/[0-9a-f-]{36}\.(?:webp|png)$/;
  const ARMOR_ZONES=Object.freeze([['head','Huvud'],['arms','Armar'],['torso','Torso'],['legs','Ben']]);
  const armorColumn=z=>'image_'+z+'_path';
  function armorImagePathForSlot(rule,slot){
@@ -195,6 +195,35 @@
   }
   return {paths,old,uploaded};
  }
+
+ /* A unique character-owned image is independent of any weapon or shield
+    master. The uploader UUID in the Storage path is enforced by RLS. */
+ function startInstance(item){
+  const markup=start('equipment',{image_path:item?.imageOverridePath||null});
+  if(!draft)return '';
+  draft.kind='instance';
+  return markup.replace('Inventariebild</strong>',
+    'Bild på just detta föremål</strong>')
+   .replace('Vapen, sköldar, projektiler och bärbar utrustning kan ha en gemensam bild. PNG eller WebP med transparens rekommenderas.',
+    'Den här bilden överrider registerbilden enbart på detta exemplar. PNG eller WebP med transparens rekommenderas.')
+   .replace('Bild normaliseras till max 900 px och sparas centralt, inte i rollfiguren.',
+    'Bilden lagras i bildarkivet. Endast sökvägen sparas på rollfigurens föremål.');
+ }
+ async function prepareInstance(userId,assetId,ctx){
+  const editor=draft;
+  if(editor?.kind!=='instance')throw new Error('Öppna bildeditorn igen.');
+  const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if(!uuid.test(userId)||!uuid.test(assetId))throw new Error('Ogiltigt bild- eller användar-ID.');
+  const original=editor.original;
+  if(editor.removed)return {path:null,old:original,uploaded:null};
+  if(!editor.blob)return {path:original,old:null,uploaded:null};
+  if(!baseUrl||!ctx?.key||(!ctx?.token&&typeof ctx?.getToken!=='function'))
+   throw new Error('Inloggning saknas.');
+  const extension=editor.blob.type==='image/webp'?'webp':'png';
+  const path='item/'+userId+'/'+assetId+'/'+crypto.randomUUID()+'.'+extension;
+  await uploadPiece(editor.blob,path,ctx);
+  return {path,old:original,uploaded:path};
+ }
  function thumbnail(path,fallback,caption=''){
   const url=src(path);
   return url?'<span class="admin-weapon-icon item-art-thumb" title="Inventariebild"><img src="'+escapeHtml(url)+'" alt="'+escapeHtml(caption)+'" loading="lazy"><small>Bild</small></span>':fallback;
@@ -203,5 +232,5 @@
   const url=src(path);
   return url?'<img class="gandalf-equip-art" src="'+escapeHtml(url)+'" alt="" loading="lazy">':'';
  }
- window.aleaEquipmentArt={configure,src,start,startArmor,choose,remove,reset,prepare,prepareArmor,removeStored,thumbnail,imageTag,armorImagePathForSlot,ARMOR_ZONES};
+ window.aleaEquipmentArt={configure,src,start,startArmor,startInstance,choose,remove,reset,prepare,prepareArmor,prepareInstance,removeStored,thumbnail,imageTag,armorImagePathForSlot,ARMOR_ZONES};
 })();
