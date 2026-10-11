@@ -176,10 +176,24 @@
       drop-shadow(0 0 38px rgba(240,150,28,.72));
   }
 }
-.gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
-.combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
+.gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art{
   animation:aleaMagicalGoldPulse 2.2s ease-in-out infinite;
   will-change:filter;
+}
+/* v0.35.104 — Combat equipment has a small dark art tile. The old multi-layer
+   38px aura amplified semi-transparent haze in uploaded images until it looked
+   like an opaque gold rectangle. Keep the stronger aura in Aktuell utrustning,
+   but render combat artwork on a clear tile with only a narrow alpha glow. */
+.combat-turn-equip-art.magical:not(.magical-no-art) > .combat-turn-art-frame{
+  background:none;
+  box-shadow:none;
+}
+.combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
+  animation:none;
+  will-change:auto;
+  filter:
+    drop-shadow(0 2px 3px rgba(0,0,0,.72))
+    drop-shadow(0 0 3px rgba(242,187,78,.32));
 }
 /* Without alpha-transparent artwork, emphasize the item name and its slot. */
 .gandalf-equip-slot.magical-no-art .gandalf-equip-value{
@@ -209,8 +223,7 @@
     0 0 18px rgba(255,183,62,.80);
 }
 @media(prefers-reduced-motion:reduce){
-  .gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art,
-  .combat-turn-equip-art.magical .combat-turn-art-frame > img.combat-turn-art{
+  .gandalf-equip-slot.magical .gandalf-equip-face > img.gandalf-equip-art{
     animation:none;
     will-change:auto;
     filter:
