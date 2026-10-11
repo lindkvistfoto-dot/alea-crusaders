@@ -198,6 +198,7 @@
   .alea-app-header .alea-toolstrip>#shopNavBtn,
   .alea-app-header .alea-toolstrip>#alchemyNavBtn,
   .alea-app-header .alea-toolstrip>#innNavBtn,
+  .alea-app-header .alea-toolstrip>#academyNavBtn,
   .alea-app-header .alea-toolstrip>#journalNavBtn{display:none!important}
   .alea-app-header .alea-toolstrip>#mobileHubNavBtn{display:inline-flex!important}
   .alea-app-header .alea-toolstrip>#mobileHubNavBtn[aria-expanded="true"]{
