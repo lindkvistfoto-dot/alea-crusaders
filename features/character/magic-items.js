@@ -201,7 +201,7 @@
   const diceField=$('cmpBatteryDice');
   if(diceField)diceField.hidden=!battery||$('cmpBatteryMode')?.value!=='dice';
   const cast=$('cmpCastMode'),fv=$('cmpFixedFv');
-  if(fv)fv.closest('label').hidden=kind!=='spell'||cast?.value!=='fixed';
+  if(fv)fv.closest('label').hidden=battery||kind!=='spell'||cast?.value!=='fixed';
   const hint=$('cmpHint');
   if(hint)hint.textContent=battery?'Laddaren betalar PSY vid laddning och väljer då besvärjelse. Föremålet kastar sedan besvärjelsen kvickt med laddarens FV, utan ytterligare PSY. Även misslyckade kast förbrukar laddningen.':kind==='spell'?'Effektgrad och multiplikator är oberoende. EG 1 ×4 betyder fyra upprepningar av grundeffekten – INTE EG 4. Ett kast tar en handling. Icke-kvick magi förbereds en SR, medan kvick magi kan kastas samma SR. Skada och elementarframmanning kan upprepas (max 20); särskilda effekter avgörs av SL.':
    'Bonusar, skydd och specialeffekter är beskrivande tills de kopplas till stridssystemets effekter.';
