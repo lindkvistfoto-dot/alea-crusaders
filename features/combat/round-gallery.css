@@ -17,3 +17,12 @@
 .round-gallery-copy small{color:#c2a47c}
 .round-gallery-actions{display:flex;gap:6px;flex-wrap:wrap;padding:0 10px 10px}
 #roundGalleryStatus{min-height:1.3em;color:#e6c28f}
+
+/* v0.35.126 — preserve the artwork's right-hand subject in narrow round panels.
+   With center cover cropping, the hero at the far right may disappear entirely. */
+.combat-turn-panel::after {
+  background-position:center,center,right 25%;
+}
+@media(max-width:460px) {
+  .combat-turn-panel::after { background-position:center,center,right 20%; }
+}
