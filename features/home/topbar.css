@@ -329,3 +329,51 @@
     display: none !important;
   }
 }
+
+/* v0.35.111: Alea crest is the clickable home link in the reserved left
+   quarter of the desktop banner. Mobile header stays unchanged. */
+.alea-app-header .alea-banner-home-link { display: none; }
+@media (min-width: 1024px) {
+  .alea-app-header .alea-banner-home-link {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    z-index: 4;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(25% - 6px);
+    min-height: 88px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .alea-app-header .alea-banner-home-link:focus-visible {
+    outline: 2px solid #f4c77d;
+    outline-offset: -6px;
+  }
+  .alea-app-header .alea-banner-home-icon {
+    position: absolute;
+    display: block;
+    box-sizing: border-box;
+    width: min(104px, calc(100% - 16px));
+    max-height: calc(100% - 8px);
+    height: auto;
+    object-fit: contain;
+    transition: opacity .18s ease, transform .18s ease;
+    pointer-events: none;
+  }
+  .alea-app-header .alea-banner-home-icon--normal { opacity: 1; }
+  .alea-app-header .alea-banner-home-icon--active { opacity: 0; }
+  .alea-app-header .alea-banner-home-link[aria-current="page"] .alea-banner-home-icon--normal { opacity: 0; }
+  .alea-app-header .alea-banner-home-link[aria-current="page"] .alea-banner-home-icon--active { opacity: 1; }
+  .alea-app-header .alea-banner-home-link:hover .alea-banner-home-icon,
+  .alea-app-header .alea-banner-home-link:focus-visible .alea-banner-home-icon {
+    transform: scale(1.045);
+  }
+  /* Desktop crest replaces the old textual Home shortcut; phones keep it. */
+  .alea-app-header .landing-route-nav #landingHomeNavBtn { display: none; }
+}
