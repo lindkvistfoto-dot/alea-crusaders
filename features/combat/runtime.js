@@ -2086,6 +2086,7 @@ function combatSpellErfTarget(actor,action){
  return {item_key:String(item?.id||item?.name||''),item};
 }
 async function combatAwardSpellErf(actor,action,outcome){
+ if(action?.source_data?.item_magic)return null;
  if(actor?.source_type!=='character'||!combatOutcomeEarnsErf(outcome)||!actor.source_id)return null;
  const {item_key:itemKey,item}=combatSpellErfTarget(actor,action);
  if(!itemKey)return null;
@@ -2133,6 +2134,28 @@ function combatSpellDurationRounds(action){
 function combatMagicPsyCost(outcome,eg){
  return !['success','special','perfect'].includes(outcome)?1:
   outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg
+}
+function combatSpellActualPsyCost(action,outcome,eg){
+ const source=action?.source_data?.item_magic;
+ return source&&source.psy_source!=='wearer'?0:combatMagicPsyCost(outcome,eg)
+}
+async function combatRecordItemMagicUse(actor,action){
+ const source=action?.source_data?.item_magic;
+ if(!source)return;
+ const model=typeof window!=='undefined'?window.aleaMagicConfigurator:null;
+ if(!model?.markUsed)throw new Error('Föremålsmagins regelmodell saknas.');
+ const character=typeof chars!=='undefined'?(chars||[]).find(c=>String(c._dbId||c.id)===String(actor.source_id)):null;
+ if(!character)throw new Error('Rollpersonens föremål måste laddas innan magin kan användas.');
+ const inventory=character[source.group],item=Array.isArray(inventory)?inventory.find(x=>String(x.equipId)===String(source.item_id)):null;
+ const power=item?.magicPowers?.find(p=>String(p.id)===String(source.power_id));
+ if(!power||item?.isMagical!==true)throw new Error('Det magiska föremålet eller dess förmåga finns inte längre.');
+ const day=typeof campaignDayState!=='undefined'?Number(campaignDayState?.day_number)||null:null;
+ item.magicPowers[item.magicPowers.indexOf(power)]=model.markUsed(power,day);
+ if(typeof save==='function')save();
+}
+async function combatPayForSpell(actor,cost,action){
+ if(action?.source_data?.item_magic)await combatRecordItemMagicUse(actor,action);
+ if(cost>0)await combatSpendMagicPsy(actor,cost)
 }
 async function combatSpendMagicPsy(actor,cost){
  if(actor.current_psy==null)return;
@@ -2217,7 +2240,8 @@ async function combatMagicButton(event,combatantId){
  const action=combatChosenAction(combatant),data=action?.source_data||{};
  if(combatActionDefinition(action)?.key==='spell_cast'&&action?.status==='planned'&&data.spell_prepared){
   const known=combatSpellOptions(combatant).some(spell=>combatSpellKey(spell)===String(data.spell_key)||
-   String(spell.name).localeCompare(String(data.spell_name||''),'sv',{sensitivity:'base'})===0);
+   (!data.item_magic&&spell.spell_source!=='item'&&
+    String(spell.name).localeCompare(String(data.spell_name||''),'sv',{sensitivity:'base'})===0));
   if(!known){
    const cleared={...data,spell_prepared:false,casting_spell:false,spell_locked:false,spell_name:null,spell_key:null};
    await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
@@ -3722,8 +3746,8 @@ async function combatCastManualSpell(actor,action,target=null){
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot,fv);
- const cost=combatMagicPsyCost(rolled.outcome,eg);
- await combatSpendMagicPsy(actor,cost);
+ const cost=combatSpellActualPsyCost(action,rolled.outcome,eg);
+ await combatPayForSpell(actor,cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,
   confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,
@@ -3823,9 +3847,9 @@ async function combatCastStatusSpell(actor,target,action){
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
- const cost=combatMagicPsyCost(rolled.outcome,eg);
+ const cost=combatSpellActualPsyCost(action,rolled.outcome,eg);
  const round=Number(activeCombat.round_number)||1;
- await combatSpendMagicPsy(actor,cost);
+ await combatPayForSpell(actor,cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
@@ -3868,8 +3892,8 @@ async function combatCastAreaSpell(actor,action){
  if(!effect)throw new Error('Områdeseffekten finns inte i registret.');
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
- const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatMagicPsyCost(rolled.outcome,eg);
- await combatSpendMagicPsy(actor,cost);
+ const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatSpellActualPsyCost(action,rolled.outcome,eg);
+ await combatPayForSpell(actor,cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const round=Number(activeCombat.round_number)||1,result={success:rolled.success,
   outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
@@ -3912,10 +3936,10 @@ async function combatResolveTestFireball(actor,target,action){
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
- const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatMagicPsyCost(outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
+ const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatSpellActualPsyCost(action,outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
  combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(spellName,outcome);
- await combatSpendMagicPsy(actor,result.psy_cost);
+ await combatPayForSpell(actor,result.psy_cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  if(erf)result.erf=erf;
  if(success){
