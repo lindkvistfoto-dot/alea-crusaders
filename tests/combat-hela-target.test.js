@@ -62,7 +62,7 @@ describe('HELA får måltavla i striden',()=>{
   const ctx=script('async function combatCastManualSpell(actor,action,target=null){','async function combatCastStatusSpell',{
    combatCannotAct:()=>false,combatSpellEffectTargets:targets(),combatElementalSummonDefinition:()=>null,
    combatExpertRoll:async()=>{rolls++;return {outcome:'success',success:true,roll:8,fv:15}},
-   combatMagicPsyCost:()=>1,combatSpendMagicPsy:async()=>{},combatAwardSpellErf:async()=>null,
+   combatMagicPsyCost:()=>1,combatSpellActualPsyCost:()=>1,combatPayForSpell:async()=>{},combatSpendMagicPsy:async()=>{},combatAwardSpellErf:async()=>null,
    combatResolveBeskyddarePassage:async()=>({blocked:false,checks:[]}),combatShowOutcomeOverlay:()=>{},
    activeCombat:{round_number:2,id:'battle1'},centralCampaignId:'camp1',
    dbJson:async(url,opts)=>{writes.push({url,body:JSON.parse(opts.body)});return []},
