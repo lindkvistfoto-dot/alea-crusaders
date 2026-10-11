@@ -93,7 +93,7 @@
   // This also closes stale journal and shop sections left by older page callbacks.
   function isolatePage(buttonId){
     const pageId=routes[buttonId];
-    if(!pageId||buttonId==='materialNavBtn'||!visible(pageId)){refresh();return}
+    if(!pageId||!visible(pageId)){refresh();return}
     if(buttonId!=='journalNavBtn')window.aleaJournalClose?.(false);
     for(const section of main.querySelectorAll(':scope > section[id]')){
       if(section.id!==pageId)section.classList.add('hidden');
@@ -106,7 +106,8 @@
   document.addEventListener('click',event=>{
     const button=event.target.closest?.('button,a');
     if(!button||!header.contains(button)||!Object.hasOwn(routes,button.id))return;
-    if(button.id!=='materialNavBtn'&&(visible('legolasPanel')||visible('legolasViewer')))window.legolasClosePanel?.();
+    if(button.id!=='materialNavBtn'&&(visible('legolasPanel')||visible('legolasViewer')))
+      window.legolasClosePanel?.({restorePage:false,restoreFocus:false});
     lastNavigation=button.id==='aleaBannerHomeLink'?'landingHomeNavBtn':button.id;
     queueMicrotask(()=>isolatePage(button.id));
     requestAnimationFrame(()=>isolatePage(button.id));

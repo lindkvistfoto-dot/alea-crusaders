@@ -44,7 +44,7 @@ export function createLegolas({
   thumbUrls:new Map(),url:null,panelOpen:false,viewerOpen:false,scale:1,tx:0,ty:0,
   pointers:new Map(),pinchDistance:0,pinchScale:1,dragX:0,dragY:0,
   loading:false,searchTimer:null,lastFocus:null,viewerLastFocus:null,
-  mounted:false
+  mounted:false,previousPage:'landing'
  };
  const el=id=>doc().getElementById(id);
  const safe=legolasEscape;
@@ -93,7 +93,8 @@ export function createLegolas({
   const target=el('landingCharactersNavBtn')||el('combatNavBtn')||el('mapNavBtn')||doc().querySelector('header .barspacer');
   if(target)target.insertAdjacentElement('beforebegin',nav);
   const panel=doc().createElement('section');panel.id='legolasPanel';panel.className='legolas-panel hidden';
-  panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','legolasTitle');
+  // The archive is a regular page, not a modal covering the shared header.
+  panel.setAttribute('role','region');panel.setAttribute('aria-labelledby','legolasTitle');
   panel.innerHTML='<div class="legolas-panel-inner">'+
    '<header class="legolas-heading"><div class="legolas-heading-copy"><span class="legolas-eyebrow">ALEA CRUSADERS · KAMPANJARKIV</span><h2 id="legolasTitle">Material & bilder</h2><p id="legolasSubhead">Kampanjens bilder och dokument</p></div>'+
    '<button type="button" class="legolas-close" id="legolasClosePanel" aria-label="Stäng materialpanelen">✕</button></header>'+
@@ -123,7 +124,9 @@ export function createLegolas({
     '<div id="legolasMedia" class="legolas-media"><p>Hämtar material…</p></div></div>'+
    '<footer class="legolas-viewer-footer"><button type="button" id="legolasViewerPrevious">← Föregående</button>'+
     '<span id="legolasViewerDescription"></span><button type="button" id="legolasViewerNext">Nästa →</button></footer>';
-  doc().body.append(panel,viewer);
+  const main=doc().querySelector('main')||doc().body;
+  main.append(panel);
+  doc().body.append(viewer);
   el('legolasClosePanel').addEventListener('click',closePanel);
   el('legolasCloseViewer').addEventListener('click',closeViewer);
   el('legolasPrevious').addEventListener('click',()=>turnPage(-1));
@@ -162,11 +165,11 @@ export function createLegolas({
    new MutationObserver(()=>{if(!login.classList.contains('hidden'))reset();})
     .observe(login,{attributes:true,attributeFilter:['class']});
   }
-  panel.addEventListener('click',event=>{if(event.target===panel)closePanel();});
   viewer.addEventListener('click',event=>{if(event.target===viewer)closeViewer();});
  }
  function syncScroll(){
-  doc().body.classList.toggle('legolas-open',state.panelOpen||state.viewerOpen);
+  // The library scrolls like any page. Lock scrolling only for image previews.
+  doc().body.classList.toggle('legolas-open',state.viewerOpen);
  }
  function updateQueue(){
   const wrapper=el('legolasGmQueue');if(!wrapper)return;
@@ -198,6 +201,9 @@ export function createLegolas({
   cleanCampaign();
   if(state.panelOpen){loadPage();return;}
   state.lastFocus=doc().activeElement;
+  const main=doc().querySelector('main');
+  state.previousPage=Array.from(main?.querySelectorAll(':scope > section[id]')||[])
+   .find(page=>page.id!=='legolasPanel'&&!page.classList.contains('hidden'))?.id||'landing';
   state.panelOpen=true;
   el('legolasPanel').classList.remove('hidden');
   el('legolasSubhead').textContent=isGM()?'Samla, förhandsvisa och dela kampanjens berättelser':'Upptäck de bilder och dokument som SL har delat';
@@ -205,13 +211,21 @@ export function createLegolas({
   el('legolasClosePanel').focus();
   loadPage();
  }
- function closePanel(){
+ function closePanel({restorePage=true,restoreFocus=true}={}){
+  const wasOpen=state.panelOpen;
   state.panelOpen=false;state.loadSeq++;
   if(state.searchTimer)clearTimeout(state.searchTimer);
-  state.searchTimer=null;releaseThumbs();closeViewer();
+  state.searchTimer=null;releaseThumbs();closeViewer({restoreFocus:false});
   el('legolasPanel')?.classList.add('hidden');
   syncScroll();
-  state.lastFocus?.focus?.();
+  // X and Escape return to the previous page. Navigation explicitly opts out.
+  if(wasOpen&&restorePage){
+   const main=doc().querySelector('main');
+   const hasVisible=Array.from(main?.querySelectorAll(':scope > section[id]')||[])
+    .some(page=>page.id!=='legolasPanel'&&!page.classList.contains('hidden'));
+   if(!hasVisible)el(state.previousPage)?.classList.remove('hidden');
+  }
+  if(restoreFocus)state.lastFocus?.focus?.();
  }
  function reset(){
   closePanel();
@@ -376,12 +390,12 @@ export function createLegolas({
   if(index<0||index>=state.previewRows.length)return;
   state.index=index;void renderViewer();
  }
- function closeViewer(){
+ function closeViewer({restoreFocus=true}={}){
   if(!state.viewerOpen){releaseViewer();return;}
   state.viewerOpen=false;releaseViewer();
   const viewer=el('legolasViewer');viewer?.classList.add('hidden');
   if(doc().fullscreenElement===viewer)void doc().exitFullscreen?.().catch?.(()=>{});
-  syncScroll();state.viewerLastFocus?.focus?.();
+  syncScroll();if(restoreFocus)state.viewerLastFocus?.focus?.();
  }
  function toggleFullscreen(){
   const viewer=el('legolasViewer');if(!viewer||!state.viewerOpen)return;

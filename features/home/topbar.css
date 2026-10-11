@@ -509,7 +509,6 @@ body:has(#legolasViewer:not(.hidden)) .alea-app-header {
   top:0;
   z-index:30002!important;
 }
-.legolas-panel:not(.hidden),
 .legolas-viewer:not(.hidden) {
   top:var(--alea-header-bottom,0px);
 }

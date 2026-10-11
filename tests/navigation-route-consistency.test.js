@@ -36,7 +36,7 @@ function setup(){
  [...pageIds,...navIds,'mobileHubMenu','body'].forEach(el);
  const header={classList:{contains:()=>false},contains:x=>x.inHeader,
   getBoundingClientRect:()=>({bottom:148})};
- const main={querySelectorAll:()=>pageIds.filter(x=>!x.startsWith('legolas')).map(el)};
+ const main={querySelectorAll:()=>pageIds.filter(x=>x!=='legolasViewer').map(el)};
  const style={setProperty:(k,v)=>style[k]=v};
  const document={body:el('body'),documentElement:{style},hidden:false,
   querySelector:s=>({'.alea-app-header':header,'.alea-app-header .alea-toolstrip':{},'main':main})[s]||null,
@@ -143,5 +143,40 @@ describe('Desktop navigation stays in fixed positions on every page',()=>{
     expect(ids.every((offset,i)=>i===0||offset>ids[i-1])).toBe(true);
     expect(css).toContain('flex:0 0 104px!important');
     expect(css).toContain('.alea-nav-art[aria-current="page"] > .alea-nav-asset--active');
+  });
+});
+
+describe('Material navigation never blocks other destinations',()=>{
+  const viewerSource=read('features/material/viewer.js');
+  const viewerCss=read('features/material/viewer.css');
+  it('mounts Bilddelning inside main and keeps only the image preview modal',()=>{
+    expect(viewerSource).toContain("panel.setAttribute('role','region')");
+    expect(viewerSource).toContain('main.append(panel)');
+    expect(viewerSource).toContain('doc().body.append(viewer)');
+    expect(viewerSource).not.toContain('doc().body.append(panel,viewer)');
+    expect(viewerSource).toContain("doc().body.classList.toggle('legolas-open',state.viewerOpen)");
+    expect(viewerCss).toContain('main > .legolas-panel{position:relative');
+    expect(viewerCss).not.toContain('.legolas-panel,.legolas-viewer{position:fixed');
+    expect(css).toContain('.legolas-viewer:not(.hidden) {');
+    expect(css).not.toContain('.legolas-panel:not(.hidden),');
+  });
+  it('enters Material as the only main page and exits via every banner destination',async()=>{
+    for(const [id,destination] of [
+      ['shopNavBtn','shopPage'],['alchemyNavBtn','shopPage'],['innNavBtn','innPage'],
+      ['academyNavBtn','academyPage'],['combatNavBtn','combatPage'],
+      ['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],
+      ['diceNavBtn','dicePage'],['aleaBannerHomeLink','landing']
+    ]){
+      const app=setup();
+      app.show('home');app.show('legolasPanel');app.click('materialNavBtn');
+      await Promise.resolve();
+      expect(app.hidden('home'),id).toBe(true);
+      expect(app.el('materialNavBtn').attributes['aria-current'],id).toBe('page');
+      app.show(destination);
+      app.click(id);await Promise.resolve();
+      expect(app.hidden('legolasPanel'),id).toBe(true);
+      expect(app.hidden(destination),id).toBe(false);
+      expect(app.el(id==='aleaBannerHomeLink'?'landingHomeNavBtn':id).attributes['aria-current'],id).toBe('page');
+    }
   });
 });
