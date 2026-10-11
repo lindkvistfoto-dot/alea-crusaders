@@ -464,3 +464,53 @@
     height:min(42px,100%);
   }
 }
+
+/* v0.35.114 — Desktop navigation uses the actual illustrated bronze buttons.
+   These elements have their visual classes and sprite coordinates in the HTML,
+   so the computer menu shows them immediately, even before JS initializes.
+   The six high-fantasy icons are now visually dominant; mobile sizing remains
+   controlled by the existing compact navigation styles. */
+@media (min-width:901px) {
+  .alea-app-header .alea-toolstrip {
+    align-items:center;
+    gap:clamp(5px,.7vw,11px);
+    min-height:68px;
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav {
+    flex:0 0 62px!important;
+    width:62px!important;
+    max-width:62px!important;
+    min-height:62px!important;
+    height:62px!important;
+    border-radius:14px!important;
+    overflow:visible!important;
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav::before {
+    width:62px;
+    height:62px;
+    max-height:none;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav[aria-current="page"]::before {
+    filter:drop-shadow(0 0 7px rgba(255,185,72,.45));
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav:where(:hover,:focus-visible)::before {
+    filter:brightness(1.15) drop-shadow(0 0 5px rgba(255,202,110,.4));
+  }
+  .alea-app-header .alea-toolstrip > .btn:not(.alea-bronze-nav) {
+    flex:0 0 48px;
+  }
+}
+@media (min-width:901px) and (max-width:1100px) {
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav {
+    flex-basis:56px!important;
+    width:56px!important;
+    max-width:56px!important;
+    height:56px!important;
+    min-height:56px!important;
+  }
+  .alea-app-header .alea-toolstrip > .btn.alea-bronze-nav::before {
+    width:56px;
+    height:56px;
+  }
+}
