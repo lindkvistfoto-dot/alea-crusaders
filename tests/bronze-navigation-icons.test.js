@@ -13,11 +13,12 @@ const destinations=[
   ['academyNavBtn','academy'],
   ['materialNavBtn','material'],
   ['landingCharactersNavBtn','characters'],
-  ['combatNavBtn','combat']
+  ['combatNavBtn','combat'],
+  ['mapNavBtn','map']
 ];
 
 describe('v0.35.121 – sharp 104px navigation icons',()=>{
-  it('uses separate 512×512 AVIF images for all sixteen home and destination states',()=>{
+  it('uses separate 512×512 AVIF images for all eighteen home and destination states',()=>{
     for(const name of ['home',...destinations.map(x=>x[1])]){
       for(const state of ['normal','active']){
         const file=read('assets/navigation/'+name+'-'+state+'.avif');

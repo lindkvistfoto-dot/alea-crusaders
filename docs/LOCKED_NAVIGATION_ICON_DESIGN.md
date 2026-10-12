@@ -33,3 +33,7 @@ Skapa inte alternativa former eller lägg till kompassros. Hem-symbolen är Alea
 - För den kompakta toppmenyn används två **optimerade AVIF-sprites med 6 × 48 px** under `assets/navigation/alea-nav-normal.avif` och `assets/navigation/alea-nav-active.avif`. Bildformatet är en implementation för små, snabba knappar; standarden för framtida original/PNG-export kvarstår.
 - Rollfigurers befintliga navigeringsknapp flyttas visuellt till ikonraden, men behåller sitt id och sin funktion. Materialknappen kan skapas senare i sidladdningen och får ändå rätt bild.
 - Aktuell sida får lysande bild automatiskt. På mobil behålls navhubben och mörka/lysande småbilder används även för Gille, Värdshus och Akademin inne i menyn.
+
+## Kartor / Platser (2026-10-12)
+- `mapNavBtn` använder nu levererat ikonpar: `map-normal.avif` (mörk) och `map-active.avif` (gyllene sken), 512×512 med transparens.
+- Oförändrad `openMap()`-navigering och samma `aria-current="page"`-regel samt 104px-storlek som andra knappar.

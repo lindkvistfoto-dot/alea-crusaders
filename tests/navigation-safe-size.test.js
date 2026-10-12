@@ -8,14 +8,14 @@ const material = read('features/material/viewer.js');
 describe('Desktop navigation image sizing regression – v0.35.117', () => {
   const buttonIds = [
     'shopNavBtn','alchemyNavBtn','innNavBtn','academyNavBtn',
-    'landingCharactersNavBtn','combatNavBtn'
+    'landingCharactersNavBtn','combatNavBtn','mapNavBtn'
   ];
   it('never exposes natural 512px intrinsic dimensions in header image tags', () => {
     const header = html.split('<header class="alea-app-header">')[1].split('</nav>')[0];
-    expect((header.match(/class="alea-nav-asset alea-nav-asset--normal"/g) || []).length).toBe(6);
-    expect((header.match(/class="alea-nav-asset alea-nav-asset--active"/g) || []).length).toBe(6);
+    expect((header.match(/class="alea-nav-asset alea-nav-asset--normal"/g) || []).length).toBe(7);
+    expect((header.match(/class="alea-nav-asset alea-nav-asset--active"/g) || []).length).toBe(7);
     const imgs = [...header.matchAll(/<img[^>]*>/g)].map(match => match[0]);
-    expect(imgs.length).toBe(14);
+    expect(imgs.length).toBe(16);
     for (const image of imgs) {
       expect(image).toContain('width="104" height="104"');
       expect(image).not.toContain('width="512"');
