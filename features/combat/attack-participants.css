@@ -187,3 +187,20 @@
     grid-template-columns:minmax(0,1fr) 38px;
   }
 }
+
+/* Warfire backdrop for the live attack panel.
+   Original artwork is kept separate from UI controls and portrait cards.
+   Install at /assets/combat/attack-panel-warfire.png. */
+#combatPage .combat-shell-live .combat-mini-attack{
+  background-color:#21140e;
+  background-image:
+    linear-gradient(180deg,rgba(15,9,7,.78),rgba(18,10,7,.74) 46%,rgba(14,8,6,.80)),
+    url("/assets/combat/attack-panel-warfire.png");
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center 58%;
+  color:#f2dfc6;
+}
+#combatPage .combat-shell-live .combat-mini-attack.reaction{
+  border-color:#b47c4b;
+}
