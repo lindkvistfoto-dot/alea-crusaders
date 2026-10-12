@@ -37,7 +37,7 @@ describe('Besvärjelser utan automatisk effekt i strid',()=>{
   expect(context.magicBinding({name:'GASMOLN (F)',damage_text:'Gift (special)'}).kind).toBe('manual');
  });
  test('SL-val visas utan falskt påstående om att magin saknas',()=>{
-  const choose=section('function combatSpellChooserHtml(', 'async function combatMagicButton(');
+  const choose=section('function combatSpellArtPath(', 'async function combatMagicButton(');
   const ui={combatSpellOptions:()=>[{rule_id:'test',name:'FINNA VATTEN',fv:15}],
    combatSpellKey:s=>s.rule_id,combatMagicRuleProfile:()=>({category:'none'}),
    combatMagicBinding:context.magicBinding,escAttr:s=>String(s)};
