@@ -47,5 +47,8 @@ describe('Character-specific round artwork',()=>{
   expect(gallery).toContain("window.aleaCharacterRoundBackground?.resolveUrl?.(path)");
   expect(gallery).toContain('const token=++request');
   expect(gallery).toContain("chosenUrl='./'+BUILTIN");
+  expect(gallery).toContain("--alea-attack-illustration");
+  const attackCss=read('features/combat/attack-participants.css');
+  expect(attackCss).toContain('var(--alea-attack-illustration');
  });
 });
