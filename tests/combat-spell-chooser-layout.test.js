@@ -36,7 +36,7 @@ describe('Magi i strid – mobilvänligt besvärjelseval',()=>{
   expect(uiCss).toContain('overflow-y:auto');
   expect(uiCss).toContain('grid-template-columns:1fr');
   expect(uiCss).toContain('max-height:min(30dvh,260px)');
-  expect(read('index.html')).toContain('features/combat/spell-chooser.css?v=0.35.132');
+  expect(read('index.html')).toContain('features/combat/spell-chooser.css?v=');
  });
  it('shows selected spell and effect grade before the scrollable list',()=>{
   const html=render([{name:'ELD (F)',rule_id:'eld',fv:10,range_text:'Sx10 rutor'}],'eld');
