@@ -1201,8 +1201,7 @@ const ADMIN_SECTION_META={
  spells:['Besvärjelser','Magiskolor och besvärjelser enligt Expert'],
  effects:['Effekter','Tillstånd, skydd och områdeseffekter'],
  sounds:['Ljudregister','Ljud för strid, tärningar och magi'],
- roundImages:['Rundbakgrunder','Slumpade bilder bakom runderutan'],
- hitFigures:['Träffområdesbilder','Åtta träffområdesbilder per ras och kön'],
+ specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1230,7 +1229,30 @@ function renderAdminOverviewCounts(){
  set('adminCountUsers',adminData.users.length)
 }
 let adminSelectedSiteId=null;
+let activeSpecialImageTab='roundImages';
+async function selectSpecialImageTab(key='roundImages'){
+ if(!['roundImages','hitFigures'].includes(key))return;
+ activeSpecialImageTab=key;
+ const section=$('adminSpecialImages');
+ if(!section)return;
+ section.querySelectorAll('[data-special-image-switch]').forEach(button=>{
+  const active=button.dataset.specialImageSwitch===key;
+  button.classList.toggle('active',active);
+  button.setAttribute('aria-selected',String(active));
+  button.tabIndex=active?0:-1;
+ });
+ section.querySelectorAll('[data-special-image-tab]').forEach(panel=>{
+  const active=panel.dataset.specialImageTab===key;
+  panel.hidden=!active;
+  panel.classList.toggle('hidden',!active);
+ });
+ if(key==='roundImages')await window.aleaRoundGallery?.renderAdmin?.();
+ else await window.aleaHitFigures?.renderAdmin?.();
+}
 async function openAdminSection(key='overview'){
+ if(key==='roundImages'||key==='hitFigures'){
+  activeSpecialImageTab=key;key='specialImages';
+ }
  activeAdminSection=ADMIN_SECTION_META[key]?key:'overview';
  if(activeAdminSection!=='places')adminSelectedSiteId=null;
  let overview=$('adminOverview'),details=document.querySelectorAll('#admin .admin-detail'),isOverview=activeAdminSection==='overview';
@@ -1254,10 +1276,8 @@ async function openAdminSection(key='overview'){
  }else if(activeAdminSection==='sounds'){
   window.aleaAudio?.mountAdmin?.();
   await window.aleaAudio?.renderAdmin?.()
- }else if(activeAdminSection==='hitFigures'){
-  await window.aleaHitFigures?.renderAdmin?.()
- }else if(activeAdminSection==='roundImages'){
-  await window.aleaRoundGallery?.renderAdmin?.()
+ }else if(activeAdminSection==='specialImages'){
+  await selectSpecialImageTab(activeSpecialImageTab)
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
