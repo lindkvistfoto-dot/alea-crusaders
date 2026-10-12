@@ -1,0 +1,159 @@
+/* v0.35.133 – illustrated attacker / defender cards.
+   CSS borders, bronze corner accents and portraits re-create the approved
+   Alea look without placing UI text in a baked background bitmap. */
+.combat-mini-attack .combat-mini-duel{
+  grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);
+  gap:5px;
+  align-items:stretch;
+}
+.combat-mini-attack .combat-mini-side.combat-duelist-card,
+.combat-shell-live .combat-mini-side.combat-duelist-card{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  grid-template-columns:clamp(46px,4.8vw,62px) minmax(0,1fr);
+  gap:9px;
+  align-items:center;
+  min-width:0;
+  min-height:83px;
+  box-sizing:border-box;
+  padding:6px 9px 6px 6px;
+  border:1px solid #a77b45;
+  border-radius:10px;
+  background:
+    radial-gradient(ellipse at 8% 10%,rgba(162,102,45,.13),transparent 58%),
+    linear-gradient(115deg,rgba(16,12,10,.96),rgba(33,23,17,.97));
+  box-shadow:
+    inset 0 1px 0 rgba(255,231,180,.25),
+    inset 0 -1px 0 rgba(93,52,23,.55),
+    0 3px 8px rgba(0,0,0,.44);
+}
+.combat-mini-attack .combat-duelist-card::before,
+.combat-mini-attack .combat-duelist-card::after{
+  position:absolute;
+  content:"";
+  width:11px;
+  height:11px;
+  pointer-events:none;
+  z-index:1;
+  opacity:.9;
+  background:
+    linear-gradient(135deg,transparent 42%,#bd8f4f 43% 53%,transparent 54%),
+    linear-gradient(45deg,transparent 42%,#76512d 43% 53%,transparent 54%);
+}
+.combat-mini-attack .combat-duelist-card::before{top:-4px;left:-4px}
+.combat-mini-attack .combat-duelist-card::after{bottom:-4px;right:-4px;transform:rotate(180deg)}
+.combat-mini-attack .combat-duelist-portrait{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:100%;
+  min-width:0;
+  aspect-ratio:4/5;
+  max-height:82px;
+  align-self:center;
+  box-sizing:border-box;
+  overflow:hidden;
+  border:1px solid #ca9653;
+  border-radius:7px 7px 9px 9px;
+  background:
+    radial-gradient(ellipse at 50% 22%,#654027 0%,#241711 75%);
+  box-shadow:
+    0 0 0 2px #2d1b10,
+    0 0 0 3px rgba(207,159,92,.65),
+    1px 3px 7px rgba(0,0,0,.5);
+}
+.combat-mini-attack .combat-duelist-portrait::before{
+  position:absolute;
+  content:"";
+  inset:2px;
+  border:1px solid rgba(250,214,149,.35);
+  border-radius:5px;
+  pointer-events:none;
+  z-index:2;
+}
+.combat-mini-attack .combat-duelist-portrait img{
+  display:block;
+  width:100%;
+  height:100%;
+  aspect-ratio:4/5;
+  object-fit:cover;
+  object-position:center 29%;
+  filter:contrast(1.055) saturate(.95);
+}
+.combat-mini-attack .combat-duelist-portrait img[hidden]{display:none}
+.combat-mini-attack .combat-duelist-portrait .combat-duelist-initials{
+  font:700 19px Georgia,serif;
+  letter-spacing:0;
+  color:#f0d7aa;
+}
+.combat-mini-attack .combat-duelist-portrait .combat-duelist-initials[hidden]{display:none}
+.combat-mini-attack .combat-duelist-copy{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+  overflow:hidden;
+}
+.combat-mini-attack .combat-duelist-copy .combat-duelist-role{
+  flex:none;
+  color:#dbaf73;
+  font:800 10px/1.15 Georgia,serif;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+}
+.combat-mini-attack .combat-duelist-copy .combat-duelist-name{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  font:700 15px/1.12 Georgia,serif;
+  color:#f7ead2;
+  text-shadow:0 2px 3px rgba(0,0,0,.5);
+}
+.combat-mini-attack .combat-duelist-copy .combat-duelist-meta{
+  display:block;
+  color:#d0b79a;
+  font:400 10px/1.35 system-ui,sans-serif;
+  overflow:visible;
+  text-overflow:clip;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.combat-mini-attack .combat-mini-arrow{
+  font:700 24px/1 Georgia,serif;
+  color:#e3b164;
+  text-shadow:0 0 8px rgba(206,140,58,.25);
+}
+@media(max-width:1023px){
+  .combat-shell-live .combat-mini-attack .combat-mini-duel{
+    grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr);
+    gap:5px;
+  }
+  .combat-shell-live .combat-mini-side.combat-duelist-card{
+    grid-template-columns:clamp(38px,11vw,58px) minmax(0,1fr);
+    min-height:74px;
+    gap:6px;
+    padding:6px 5px 6px 6px;
+  }
+  .combat-shell-live .combat-duelist-copy .combat-duelist-name{font-size:clamp(11px,2.7vw,15px)}
+  .combat-shell-live .combat-duelist-copy .combat-duelist-role{font-size:9px}
+  .combat-shell-live .combat-duelist-copy .combat-duelist-meta{font-size:9px}
+  .combat-shell-live .combat-mini-arrow{font-size:18px}
+}
+@media(max-width:390px){
+  .combat-shell-live .combat-mini-attack .combat-mini-duel{gap:3px;grid-template-columns:minmax(0,1fr) 13px minmax(0,1fr)}
+  .combat-shell-live .combat-mini-side.combat-duelist-card{
+    grid-template-columns:38px minmax(0,1fr);
+    gap:5px;
+    padding:5px 3px 5px 4px;
+  }
+  .combat-shell-live .combat-duelist-copy .combat-duelist-role{font-size:8px}
+  .combat-shell-live .combat-duelist-copy .combat-duelist-name{font-size:11px}
+  .combat-shell-live .combat-duelist-copy .combat-duelist-meta{font-size:8px}
+}
