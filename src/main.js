@@ -1,4 +1,4 @@
-import "./features/dice/dice3d.js?v=0.35.107";
+import "./features/dice/dice3d.js?v=0.35.149";
 // Material panel is a separate HTML module entry: it must still start
 // if external dice rendering or other main-app dependencies fail.
 
