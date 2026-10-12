@@ -1,0 +1,21 @@
+/* Alea Crusaders v0.35.142 – illustrated attack-panel background.
+   Only the attack panel changes: magic, round equipment, portraits and combat
+   mechanics keep their existing design and behavior. No new stacking layers
+   are placed above interactive content. */
+#combatPage .combat-mini-attack {
+  background-color: #21160f;
+  background-image:
+    linear-gradient(180deg,
+      rgba(17, 10, 7, .74) 0%,
+      rgba(15, 9, 7, .72) 45%,
+      rgba(15, 8, 6, .78) 100%),
+    url("../../assets/combat/backgrounds/attack-panel-warfire.webp");
+  background-size: 100% 100%, cover;
+  background-position: center, center 58%;
+  background-repeat: no-repeat;
+}
+@media (max-width: 520px) {
+  #combatPage .combat-mini-attack {
+    background-position: center, center 64%;
+  }
+}
