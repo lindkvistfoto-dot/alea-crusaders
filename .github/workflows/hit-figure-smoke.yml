@@ -1,0 +1,26 @@
+name: Hit figure smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'features/combat/hit-figures.js'
+      - 'features/combat/hit-figures.css'
+      - 'features/combat/runtime.js'
+      - 'src/main.js'
+      - 'legacy/app.js'
+      - 'tests/combat-hit-figure-packs.test.js'
+      - 'index.html'
+      - '.github/workflows/hit-figure-smoke.yml'
+  workflow_dispatch:
+jobs:
+  hit-figure-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run tests/combat-hit-figure-packs.test.js
+      - run: npm run build
