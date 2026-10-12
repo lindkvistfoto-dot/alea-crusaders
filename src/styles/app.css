@@ -7694,3 +7694,47 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
  #view .quickstat .stepper button{width:27px;height:32px;font-size:18px}
  #view .quickstat .statusvalue .value{font-size:12px}
 }
+
+/* v0.35.129 — illustrated combat hit-location packs. New art and the legacy
+   anatomical figure occupy exactly the same 2:3 frame and camera transform. */
+.combat-hit-image-switch{
+ position:relative;
+ width:116px;
+ aspect-ratio:2/3;
+ overflow:hidden;
+ isolation:isolate;
+}
+.combat-hit-image-switch > .combat-hit-model-stage{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+}
+.combat-hit-art-image{
+ position:absolute;
+ inset:0;
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ object-position:center;
+ display:block;
+ pointer-events:none;
+ opacity:0;
+ z-index:2;
+ transform-origin:0 0;
+ transform:translate(var(--hit-tx),var(--hit-ty)) scale(var(--hit-scale));
+ filter:drop-shadow(0 1px 2px rgba(0,0,0,.16));
+}
+.combat-hit-art-loaded > .combat-hit-art-image{
+ opacity:1;
+ animation:combatHitCameraReveal 1.28s cubic-bezier(.22,.78,.22,1) both;
+}
+.combat-hit-art-loaded > .combat-hit-model-stage{
+ visibility:hidden;
+}
+@media(max-width:520px){
+ .combat-hit-image-switch{width:92px}
+}
+@media(prefers-reduced-motion:reduce){
+ .combat-hit-art-loaded > .combat-hit-art-image{animation:none}
+}
