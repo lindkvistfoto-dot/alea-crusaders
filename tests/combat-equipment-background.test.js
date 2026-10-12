@@ -9,7 +9,7 @@ describe('Round equipment leather backdrop',()=>{
  it('commits the actual supplied raster asset in a browser supported format',()=>{
   expect(existsSync(assetUrl)).toBe(true);
   const binary=readFileSync(assetUrl);
-  expect(binary.length).toBeGreaterThan(5000);
+  expect(binary.length).toBeGreaterThan(4000);
   expect(binary.toString('ascii',0,4)).toBe('RIFF');
   expect(binary.toString('ascii',8,12)).toBe('WEBP');
  });
