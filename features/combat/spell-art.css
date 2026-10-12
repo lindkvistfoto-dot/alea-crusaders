@@ -123,3 +123,16 @@
  #combatPage .combat-mini-magic .combat-spell-effect-surface{padding:12px 29% 12px 11px}
  #combatPage .combat-mini-magic .combat-spell-effect-artwork{width:min(54%,210px)}
 }
+
+/* The same square master icon is visible in the character's spell list. */
+#spelltable .character-spell-icon{
+ display:inline-block;position:relative;flex:0 0 32px;
+ width:32px;height:32px;box-sizing:border-box;
+ overflow:hidden;border:1px solid #a87b45;border-radius:6px;
+ background:linear-gradient(120deg,#3a2519,#130c08);
+}
+#spelltable .character-spell-icon img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ pointer-events:none;object-fit:fill;
+}
+#spelltable .character-spell-icon img[hidden]{display:none!important}
