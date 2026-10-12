@@ -997,16 +997,18 @@ function combatIsActiveTurn(combatant){
 function combatChosenAction(combatant){
  if(!combatant||!activeCombat)return null;
  const round=Number(activeCombat.round_number)||1;
- return (combatActions||[]).find(action=>
+ // An unfinished cast survives the SR transition and must take precedence
+ // over a fresh action row in the new SR. Targets are chosen only at cast time.
+ const prepared=(combatActions||[]).filter(action=>
+  String(action.combatant_id)===String(combatant.id)&&
+  Number(action.round_number)<=round&&
+  action.slot_key==='primary'&&action.status==='planned'&&
+  action.source_data?.casting_spell===true
+ ).sort((a,b)=>Number(b.round_number)-Number(a.round_number))[0];
+ return prepared||(combatActions||[]).find(action=>
   String(action.combatant_id)===String(combatant.id)&&
   Number(action.round_number)===round&&
-  action.slot_key==='primary'&&
-  action.status!=='cancelled'
- )||(combatActions||[]).find(action=>
-  String(action.combatant_id)===String(combatant.id)&&
-  Number(action.round_number)<round&&
-  action.slot_key==='primary'&&action.status==='planned'&&
-  action.source_data?.casting_spell===true&&Number(action.source_data?.ready_round)<=round
+  action.slot_key==='primary'&&action.status!=='cancelled'
  )||null
 }
 function combatActionDefinition(action){
@@ -3771,6 +3773,8 @@ function combatHealingTarget(actor,action,targetId){
 }
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
+ if((Number(activeCombat?.round_number)||1)<(Number(action.source_data.ready_round)||1))
+  return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Mål väljs först i kast-SR '+escAttr(action.source_data.ready_round)+'.</small></div>';
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
   const alone=!targets.some(row=>String(row.id)!==String(actor.id));
