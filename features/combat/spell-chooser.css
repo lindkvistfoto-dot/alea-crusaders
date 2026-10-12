@@ -1,0 +1,222 @@
+/* Alea v0.35.132 — in-flow spell selection for mobile and desktop.
+   Avoid absolute dropdowns over equipment and the hex map. */
+.combat-shell-live .combat-turn-magic-host{
+ box-sizing:border-box;
+ display:block;
+ position:relative;
+ min-width:0;
+ width:100%;
+ padding:8px 10px 12px;
+ border-top:1px solid rgba(175,137,82,.4);
+ background:rgba(10,8,6,.18);
+}
+.combat-shell-live .combat-turn-magic-host > .combat-row-magic-menu{
+ position:static;
+ inset:auto;
+ z-index:auto;
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ min-width:0;
+ max-width:none;
+ padding:12px;
+ margin:0;
+ transform:none;
+ border:1px solid #82623e;
+ border-radius:10px;
+ background:linear-gradient(155deg,#2a2119,#17120e);
+ color:#f3dfbb;
+ box-shadow:none;
+}
+.combat-shell-live .combat-turn-magic-host > .combat-row-magic-menu::before{display:none}
+.combat-turn-magic-host .combat-spell-panel-top{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:12px;
+ padding-bottom:9px;
+ border-bottom:1px solid rgba(200,157,95,.4);
+}
+.combat-turn-magic-host .combat-spell-panel-top h3{
+ margin:0;
+ color:#f5daaa;
+ font:800 clamp(13px,3.6vw,16px)/1.3 Georgia,serif;
+}
+.combat-turn-magic-host .combat-spell-panel-top button{
+ display:grid;
+ place-items:center;
+ flex:0 0 34px;
+ height:34px;
+ border:1px solid #7c613c;
+ border-radius:7px;
+ background:#312318;
+ color:#f3dfbb;
+ cursor:pointer;
+ font-size:16px;
+}
+.combat-turn-magic-host .combat-spell-choice{
+ display:grid;
+ gap:9px;
+ padding-top:12px;
+ min-width:0;
+}
+.combat-turn-magic-host .combat-spell-choice-head{
+ display:flex;
+ align-items:baseline;
+ justify-content:space-between;
+ gap:8px;
+}
+.combat-turn-magic-host .combat-spell-choice-head strong{font-size:13px;color:#f2dcaf}
+.combat-turn-magic-host .combat-spell-choice-head span{
+ white-space:nowrap;
+ font-size:11px;
+ color:#c3a37b;
+}
+.combat-turn-magic-host .combat-spell-empty{
+ margin:0;
+ font-size:12px;
+ color:#d6c3a5;
+ line-height:1.35;
+}
+.combat-turn-magic-host .combat-spell-selected{
+ display:flex;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:6px 10px;
+ border:1px solid #8b713f;
+ border-radius:8px;
+ padding:9px 10px;
+ background:#3d2d1d;
+}
+.combat-turn-magic-host .combat-spell-selected span{
+ color:#d4b680;
+ font-size:10px;
+ font-weight:800;
+ letter-spacing:.06em;
+}
+.combat-turn-magic-host .combat-spell-selected strong{
+ color:#ffecbf;
+ font-size:14px;
+ overflow-wrap:anywhere;
+}
+.combat-turn-magic-host .combat-spell-effect{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ flex-wrap:wrap;
+ padding:8px 10px;
+ border:1px solid rgba(188,147,92,.45);
+ border-radius:8px;
+ background:rgba(255,225,180,.05);
+}
+.combat-turn-magic-host .combat-spell-effect>span{
+ font-size:12px;
+ font-weight:800;
+ color:#e4cb9d;
+ margin-right:auto;
+}
+.combat-turn-magic-host .combat-spell-effect>b{
+ min-width:22px;
+ text-align:center;
+ color:#ffe4aa;
+ font:800 17px/1.2 system-ui,sans-serif;
+}
+.combat-turn-magic-host .combat-spell-effect>small{
+ flex:1 1 100%;
+ color:#d3bb93;
+ font-size:11px;
+}
+.combat-turn-magic-host .combat-spell-effect button{
+ display:grid;
+ place-items:center;
+ min-width:38px;
+ min-height:38px;
+ border:1px solid #927348;
+ border-radius:7px;
+ background:#3b2a1b;
+ color:#ffe5b2;
+ font-size:20px;
+ font-weight:800;
+ cursor:pointer;
+}
+.combat-turn-magic-host .combat-spell-effect button:disabled{opacity:.42;cursor:default}
+.combat-turn-magic-host .combat-spell-catalog{
+ display:grid;
+ gap:10px;
+ max-height:min(34vh,315px);
+ max-height:min(34dvh,315px);
+ min-height:0;
+ overflow-y:auto;
+ overflow-x:hidden;
+ overscroll-behavior:contain;
+ padding:3px 6px 3px 2px;
+ scrollbar-color:#856745 #201810;
+}
+.combat-turn-magic-host .combat-spell-source-group{min-width:0}
+.combat-turn-magic-host .combat-spell-source-group h4{
+ position:sticky;
+ top:0;
+ z-index:1;
+ margin:0 0 7px;
+ padding:5px 2px;
+ background:#201912;
+ color:#e2c694;
+ font-size:12px;
+}
+.combat-turn-magic-host .combat-spell-source-group .combat-weapon-choice-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;
+ max-height:none;
+ overflow:visible;
+ padding:0;
+}
+.combat-turn-magic-host .combat-row-action-menu .combat-weapon-choice-btn,
+.combat-turn-magic-host .combat-weapon-choice-btn{
+ min-width:0;
+ min-height:55px;
+ box-sizing:border-box;
+ background:#30251c;
+ border:1px solid #765a3d;
+ border-radius:8px;
+ color:#f8e6c7;
+ padding:9px 10px;
+ gap:4px;
+ text-align:left;
+}
+.combat-turn-magic-host .combat-weapon-choice-btn b{
+ font-size:13px;
+ line-height:1.3;
+ overflow-wrap:anywhere;
+}
+.combat-shell-live .combat-turn-magic-host .combat-weapon-choice-btn small{
+ color:#d9c0a0;
+ opacity:1;
+ font-size:11px;
+ font-weight:500;
+ line-height:1.4;
+ overflow-wrap:anywhere;
+}
+.combat-shell-live .combat-turn-magic-host .combat-weapon-choice-btn.active{
+ background:#4d371c;
+ color:#fff0c8;
+ border-color:#e4b55d;
+ outline:1px solid rgba(239,193,99,.8);
+ box-shadow:inset 0 0 12px rgba(209,145,49,.16);
+}
+.combat-turn-magic-host .combat-weapon-choice-btn:disabled{opacity:.4;cursor:not-allowed}
+.combat-turn-magic-host .combat-spell-footnote{
+ color:#c8b393;
+ font-size:11px;
+ line-height:1.4;
+}
+.combat-turn-magic-host button:focus-visible{
+ outline:2px solid #f6cc6f;
+ outline-offset:2px;
+}
+@media(max-width:600px){
+ .combat-shell-live .combat-turn-magic-host{padding:7px 7px 10px}
+ .combat-shell-live .combat-turn-magic-host > .combat-row-magic-menu{padding:10px 8px}
+ .combat-turn-magic-host .combat-spell-source-group .combat-weapon-choice-grid{grid-template-columns:1fr}
+ .combat-turn-magic-host .combat-spell-catalog{max-height:min(30dvh,260px)}
+}
