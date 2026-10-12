@@ -338,6 +338,11 @@ function combatSourceStats(sceneCombatant,sources){
  let move=combatNumber(combatStateValue(state,'movement_max','movement','move'),
   combatNumber(derived['Förflyttning'],combatNumber(attributes.FORFLYTTNING,combatNumber(attributes.SMI,10))));
  const propertyNames={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
+ const identity=data.identity&&typeof data.identity==='object'?data.identity:{};
+ const raceName=String(combatStateValue(state,'figure_race','race_name','race')||
+  source?.race||identity.ras||'Människa').trim()||'Människa';
+ const genderName=String(combatStateValue(state,'gender','sex','kon')||
+  source?.gender||identity.kon||'Man').trim()||'Man';
  const snapshot={};
  for(const [abbr,name] of Object.entries(propertyNames)){
   const sourceValue=base[name]?.v??base[abbr]?.v??base[name]??base[abbr]??attributes[abbr]??state?.attributes?.[abbr];
@@ -348,7 +353,7 @@ function combatSourceStats(sceneCombatant,sources){
  return{
   current_kp:currentKp,max_kp:maxKp,current_psy:currentPsy,max_psy:maxPsy,
   movement_max:move,movement_remaining:move,smi,sty,sto,attributes:snapshot,attack_profile:attackProfile,
-  flying:state.flying===true,
+  flying:state.flying===true,race_name:raceName,gender:genderName,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
   portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
   combat_icon_path:source?.combat_icon_path||null,
@@ -361,8 +366,8 @@ async function combatLoadSceneRuntimeData(scene){
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
   dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,combat_icon_path,round_background_path,data'),
-  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells'),
-  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor')
+  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells,race,gender'),
+  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,race,gender')
  ]);
  return{
   sceneCombatants:Array.isArray(sceneCombatants)?sceneCombatants:[],
@@ -373,6 +378,32 @@ async function combatLoadSceneRuntimeData(scene){
    monsters:new Map((monsters||[]).map(row=>[row.id,row]))
   }
  }
+}
+/* Enrich older saved combats in memory without rewriting persisted actions. */
+async function combatHydrateFigureIdentity(){
+ if(!combatCanManage()||!combatants.some(c=>!c.state?.race_name))return;
+ try{
+  const cid=encodeURIComponent(centralCampaignId);
+  const [players,npcs,monsters]=await Promise.all([
+   dbJson('characters?campaign_id=eq.'+cid+'&select=id,data'),
+   dbJson('campaign_npcs?campaign_id=eq.'+cid+'&select=id,race,gender'),
+   dbJson('campaign_monsters?campaign_id=eq.'+cid+'&select=id,race,gender')
+  ]);
+  const lookups={
+   character:new Map((players||[]).map(x=>[String(x.id),x])),
+   npc:new Map((npcs||[]).map(x=>[String(x.id),x])),
+   monster:new Map((monsters||[]).map(x=>[String(x.id),x]))
+  };
+  for(const c of combatants){
+   if(c.state?.race_name)continue;
+   const source=lookups[c.source_type]?.get(String(c.source_id));
+   if(!source)continue;
+   const identity=source.data?.identity||{};
+   c.state={...(c.state||{}),
+    race_name:String(source.race||identity.ras||'Människa'),
+    gender:String(source.gender||identity.kon||'Man')};
+  }
+ }catch(error){console.warn('Ras/kön kunde inte läsas från äldre strid.',error)}
 }
 async function combatDeleteRuntime(combatId){
  if(!combatId)return;
@@ -671,7 +702,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:row.start_q==null||row.start_r==null?'removed':'active',action_plan:[],
-   state:{...(row.state||{}),round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null,portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),race_name:stats.race_name,gender:stats.gender,round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null,portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
@@ -1558,12 +1589,14 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
  if(!resolved)return null;
  // Illustration is visual only; combat dice, hit table and armor are unchanged.
  const declaredAnatomy=String(target?.state?.anatomy_profile||target?.state?.hit_location_profile||'').trim();
+ const figureRace=String(target?.state?.race_name||target?.state?.race||'Människa');
+ const figureGender=String(target?.state?.gender||target?.state?.sex||'Man');
  const figureProfile=String(
   target?.state?.hit_figure_profile||
   target?.state?.hit_illustration_profile||
   (declaredAnatomy&&declaredAnatomy!=='humanoid'?declaredAnatomy:'humanoid_male')
  ).trim()||'humanoid_male';
- return{profile,figure_profile:figureProfile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
+ return{profile,figure_profile:figureProfile,race:figureRace,gender:figureGender,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
 }
 let combatHitMaskSeq=0;
 const COMBAT_HIT_CAMERA={
@@ -2614,6 +2647,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    ]);
    combatants=Array.isArray(data[0])?data[0]:[];
    await combatLoadActorImageSources();
+   await combatHydrateFigureIdentity();
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
@@ -5914,7 +5948,7 @@ async function combatCreateElementalFromSpell(actionId,{skipReload=false,silent=
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,
    status:'removed',action_plan:[],
-   state:{in_reserve:true,smi:stats.smi,sty:stats.sty,sto:stats.sto,
+   state:{in_reserve:true,smi:stats.smi,sty:stats.sty,sto:stats.sto,race_name:stats.race_name,gender:stats.gender,
     attributes:stats.attributes,attack_profile:stats.attack_profile,
     summon_template_key:def.key,summon_element:def.element,summoning_action_id:action.id,
     summoner_id:caster.id,summoner_name:caster.name_snapshot,summon_controller:'summoner',
@@ -6010,6 +6044,7 @@ function renderCombat(){
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
  void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
+ void window.aleaHitFigures?.hydrate?.(body);
 }
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
