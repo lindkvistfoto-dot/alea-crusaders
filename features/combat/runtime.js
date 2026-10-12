@@ -5361,8 +5361,13 @@ function combatTurnEquipmentHtml(combatant){
  }
  const total=projectileEntries.map(row=>row.count).join(' / ');
  const description=projectileEntries.map(row=>row.name+': '+row.count+' kvar').join('; ');
- const ammoImages=projectileEntries.map(row=>srcImg(row.imagePath,'combat-turn-art')||
-  '<b class="combat-turn-ammo-placeholder">'+escAttr(row.name)+'</b>').join('');
+ // Each projectile image gets an independent clipping viewport, so a
+ // second ammo type remains separate when magnifying the upper-right detail.
+ const ammoImages=projectileEntries.map(row=>
+  '<span class="combat-turn-projectile-crop">'+
+   (srcImg(row.imagePath,'combat-turn-art')||
+    '<b class="combat-turn-ammo-placeholder">'+escAttr(row.name)+'</b>')+
+  '</span>').join('');
  const projectileHtml='<div class="combat-turn-equip combat-turn-equip-art projectile'+
   (projectileEntries.length>1?' dual':'')+'"><span>Projektiler</span>'+
   '<div class="combat-turn-art-frame">'+(projectileEntries.length?
