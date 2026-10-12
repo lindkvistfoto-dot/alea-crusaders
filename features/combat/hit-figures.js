@@ -248,7 +248,7 @@
    '</select></label></div>'+
    '<p class="hit-figure-note">'+note+'</p>'+
    '<label class="smallbtn hit-figure-bulk">Ladda upp flera bilder samtidigt (neutral.webp, head.webp osv.)'+
-   '<input type="file" multiple accept="image/png,image/jpeg,image/webp" onchange="aleaHitFigures.uploadBatch(this.files);this.value=\\'\\'"></label>'+
+   '<input type="file" multiple accept="image/png,image/jpeg,image/webp" onchange="aleaHitFigures.uploadBatch(this.files);this.value=\'\'"></label>'+
    '<div class="hit-figure-grid">'+PARTS.map(([part,label])=>{
     const row=byPart.get(part);
     return '<article class="hit-figure-tile"><div class="hit-figure-preview">'+
