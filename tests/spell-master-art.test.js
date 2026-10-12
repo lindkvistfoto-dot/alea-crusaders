@@ -184,8 +184,7 @@ describe('Två separata kvadratiska besvärjelsebilder',()=>{
    querySelector:selector=>selector==='img'?img:null,
    getBoundingClientRect:view.getBoundingClientRect
   };
-  ctx.window.aleaSpellArt.hydrateCombat({querySelectorAll:()=>[effect]});
-  await Promise.resolve();await Promise.resolve();await Promise.resolve();
+  await ctx.window.aleaSpellArt.hydrateCombat({querySelectorAll:()=>[effect]});
   expect(img.hidden).toBe(false);
   expect(img.style.width).toBe('300px');
   expect(img.style.left).toBe('-75px');
