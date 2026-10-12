@@ -203,3 +203,200 @@
 #combatPage .combat-shell-live .combat-mini-attack.reaction{
   border-color:#b47c4b;
 }
+
+
+/* v0.35.143 – shared magic duel composition.
+   Uses the same portrait, frame and outcome vocabulary as regular attacks.
+   The right-hand illustration is a CSS slot: no new bitmap is required. */
+#combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic {
+  min-width:0;
+  overflow:hidden;
+  position:relative;
+  isolation:isolate;
+  background-image:
+    radial-gradient(ellipse at 90% 86%,rgba(146,66,20,.22),transparent 60%),
+    linear-gradient(160deg,#2b1d17 0%,#18110f 58%,#130d0b 100%);
+  border:1px solid #997343;
+  border-radius:13px;
+  box-shadow:inset 0 0 0 1px rgba(237,191,119,.1),0 5px 20px rgba(0,0,0,.32);
+}
+#combatPage .combat-mini-magic .combat-magic-heading{
+  margin:0 0 9px;
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  min-width:0;
+}
+#combatPage .combat-mini-magic .combat-magic-eyebrow{
+  flex:1 1 auto;
+  min-width:0;
+  overflow-wrap:anywhere;
+  font:800 clamp(13px,1.3vw,16px)/1.3 Georgia,serif;
+  letter-spacing:.055em;
+  color:#f0cd91;
+}
+#combatPage .combat-mini-magic .combat-magic-duel{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);
+  gap:5px;
+  align-items:stretch;
+}
+#combatPage .combat-mini-magic .combat-magic-duel .combat-duelist-card{
+  min-width:0;
+  min-height:88px;
+  background:linear-gradient(125deg,rgba(19,14,12,.94),rgba(37,25,20,.96));
+}
+#combatPage .combat-mini-magic .combat-magic-duel .combat-duelist-role{color:#dbb57c}
+#combatPage .combat-mini-magic .combat-magic-target-glyph{
+  color:#dcb46d;
+  font:700 30px/1 Georgia,serif;
+  text-shadow:0 0 12px #d6934780;
+}
+#combatPage .combat-mini-magic .magic-empty-target .combat-duelist-name{
+  font-size:clamp(12px,1.2vw,15px);
+}
+#combatPage .combat-mini-magic.resolved .combat-spell-result{
+  position:relative;
+  display:block;
+  margin-top:11px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid #a57a44;
+  border-radius:11px;
+  background:linear-gradient(135deg,#261a15,#120d0b);
+  color:#f3e6d1;
+  box-shadow:inset 0 1px 0 rgba(245,205,140,.16),0 3px 12px #0005;
+}
+#combatPage .combat-mini-magic .combat-spell-result .combat-attack-result-main{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+#combatPage .combat-mini-magic .combat-spell-outcome-banner{
+  order:0;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:4px 12px;
+  justify-content:flex-start;
+  padding:10px 13px;
+  border-bottom:1px solid rgba(189,147,87,.36);
+  background:rgba(15,12,10,.76);
+}
+#combatPage .combat-mini-magic .combat-spell-outcome-banner>span{
+  font:800 10px/1.2 system-ui,sans-serif;
+  letter-spacing:.065em;
+  text-transform:uppercase;
+  color:#c8a87c;
+}
+#combatPage .combat-mini-magic .combat-spell-outcome-banner>b,
+#combatPage .combat-mini-magic .combat-spell-result:is(.success,.special,.perfect,.fail,.fumble) .combat-spell-outcome-banner>b{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#91eacb;
+  font:800 clamp(18px,2.1vw,26px)/1.12 Georgia,serif;
+  text-shadow:0 0 11px #44b39440;
+}
+#combatPage .combat-mini-magic .combat-spell-result:is(.fail,.fumble) .combat-spell-outcome-banner>b{color:#f0a198;text-shadow:none}
+#combatPage .combat-mini-magic .combat-spell-result.special .combat-spell-outcome-banner>b{color:#9eddf0}
+#combatPage .combat-mini-magic .combat-spell-result.perfect .combat-spell-outcome-banner>b{color:#f7db80}
+#combatPage .combat-mini-magic .combat-spell-outcome-banner .combat-result-icon{font-size:1.25em}
+#combatPage .combat-mini-magic .combat-spell-effect-surface{
+  position:relative;
+  order:1;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  min-height:106px;
+  padding:13px 43% 12px 13px;
+  background-image:
+    linear-gradient(90deg,rgba(18,12,10,.98) 0%,rgba(18,12,10,.9) 43%,rgba(18,12,10,.25) 100%),
+    var(--alea-spell-effect-art,radial-gradient(ellipse at 88% 87%,rgba(220,100,26,.5),rgba(76,36,23,.5) 45%,transparent 80%));
+  background-repeat:no-repeat;
+  background-position:center,right bottom;
+  background-size:cover;
+}
+#combatPage .combat-mini-magic .combat-spell-effect-label{
+  position:relative;
+  font:800 13px/1.2 Georgia,serif;
+  letter-spacing:.05em;
+  color:#edc17c;
+}
+#combatPage .combat-mini-magic .combat-spell-effect-label span{color:#f7cd87}
+#combatPage .combat-mini-magic .combat-spell-outcome-note{
+  position:relative;
+  margin:0;
+  padding:0;
+  border:0;
+  background:none;
+  border-radius:0;
+  color:#f1e2cc;
+  font:550 12px/1.45 system-ui,sans-serif;
+}
+#combatPage .combat-mini-magic .combat-spell-effect-surface :is(.combat-spell-rule-note,.combat-spell-heal-result,.combat-damage-result,.combat-erf-result){
+  position:relative;
+  max-width:100%;
+}
+#combatPage .combat-mini-magic .combat-spell-rule-note{
+  margin-top:3px;
+  padding:6px 8px;
+  background:rgba(19,13,10,.62);
+  border-color:rgba(189,142,83,.33);
+  color:#dac7a9;
+}
+#combatPage .combat-mini-magic .combat-spell-result .combat-attack-result-rolls{
+  order:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 10px;
+  margin:0;
+  padding:7px 12px;
+  border-top:1px solid rgba(189,147,87,.26);
+  background:#1a1410;
+  color:#c3ad8d;
+  font:600 10px/1.4 system-ui,sans-serif;
+}
+#combatPage .combat-mini-magic .combat-spell-result .combat-attack-result-rolls b{color:#f1dfc1}
+#combatPage .combat-mini-magic .combat-magic-detail-values{
+  margin-top:8px;
+  padding:0 2px;
+  color:#cbb18b;
+}
+#combatPage .combat-mini-magic .combat-magic-detail-values summary{
+  padding:5px 3px;
+  font:650 10px/1.3 system-ui,sans-serif;
+  cursor:pointer;
+}
+#combatPage .combat-mini-magic .combat-magic-detail-values .combat-magic-facts{
+  margin:5px 0 0;
+}
+#combatPage .combat-mini-magic .combat-magic-detail-values .combat-magic-fact{
+  padding:5px 6px;
+  background:rgba(22,16,13,.88);
+}
+#combatPage .combat-mini-magic.planning .combat-magic-status{
+  margin-top:10px;
+  border-color:rgba(195,151,94,.4);
+  background:rgba(219,174,108,.055);
+}
+@media(max-width:1023px){
+ #combatPage .combat-mini-magic .combat-magic-duel{grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr)}
+}
+@media(max-width:540px){
+ #combatPage .combat-mini-magic .combat-spell-effect-surface{
+   min-height:100px;
+   padding:11px 34% 12px 10px;
+ }
+ #combatPage .combat-mini-magic .combat-spell-outcome-banner{
+   padding:9px 10px;
+ }
+ #combatPage .combat-mini-magic .combat-spell-outcome-banner>b{font-size:18px}
+}
+@media(max-width:390px){
+ #combatPage .combat-mini-magic .combat-magic-duel{grid-template-columns:minmax(0,1fr) 13px minmax(0,1fr);gap:3px}
+ #combatPage .combat-mini-magic .combat-magic-duel .combat-duelist-card{gap:4px;min-height:78px}
+ #combatPage .combat-mini-magic .combat-spell-effect-surface{padding-right:15%;background-position:center,right bottom}
+}
