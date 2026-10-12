@@ -185,3 +185,49 @@ main:has(> #landing:not(.hidden)){max-width:1540px;padding:clamp(10px,1.8vw,28px
   #landing .landing-start-buttons .btn{padding:8px 10px;font-size:12px}
   #landing .landing-gallery-controls{left:14px;bottom:10px;max-width:calc(100% - 28px)}
 }
+
+
+/* v0.35.148 — personal combat round art on character roster cards.
+   Artwork is decorative and never replaces the character's portrait. */
+#home .charcard.has-round-bg{
+  isolation:isolate;
+}
+#home .charcard > .charcard-round-bg{
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  object-fit:cover;
+  object-position:66% center;
+  opacity:.7;
+  z-index:0;
+  pointer-events:none;
+}
+#home .charcard.has-round-bg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:linear-gradient(90deg,
+    rgba(23,15,12,.88) 0%,
+    rgba(23,15,12,.78) 38%,
+    rgba(23,15,12,.53) 68%,
+    rgba(23,15,12,.66) 100%);
+}
+#home .charcard.has-round-bg > :is(.charportrait,.charinfo,.char-delete){
+  position:relative;
+  z-index:2;
+}
+#home .charcard.has-round-bg > .char-delete{
+  position:absolute;
+}
+@media(max-width:600px){
+  #home .charcard.has-round-bg::before{
+    background:linear-gradient(90deg,
+      rgba(23,15,12,.9),rgba(23,15,12,.75) 58%,rgba(23,15,12,.63));
+  }
+}
