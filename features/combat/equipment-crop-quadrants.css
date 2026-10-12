@@ -1,0 +1,32 @@
+/* v0.35.139: per-master crop quadrant, combat round only. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor),
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop {
+ --crop-t:0;--crop-b:auto;--crop-l:auto;--crop-r:0;--crop-origin:top right;--crop-pos:top right;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor)[data-combat-crop="top-left"],
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop[data-combat-crop="top-left"]{
+ --crop-t:0;--crop-b:auto;--crop-l:0;--crop-r:auto;--crop-origin:top left;--crop-pos:top left;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor)[data-combat-crop="bottom-left"],
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop[data-combat-crop="bottom-left"]{
+ --crop-t:auto;--crop-b:0;--crop-l:0;--crop-r:auto;--crop-origin:bottom left;--crop-pos:bottom left;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor)[data-combat-crop="bottom-right"],
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop[data-combat-crop="bottom-right"]{
+ --crop-t:auto;--crop-b:0;--crop-l:auto;--crop-r:0;--crop-origin:bottom right;--crop-pos:bottom right;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor) > .combat-turn-art-frame > img.combat-turn-art,
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop > img.combat-turn-art{
+ top:var(--crop-t);bottom:var(--crop-b);left:var(--crop-l);right:var(--crop-r);
+ transform-origin:var(--crop-origin);object-position:var(--crop-pos);
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.weapon,.shield,.armor)[data-combat-crop="full"] > .combat-turn-art-frame > img.combat-turn-art,
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile .combat-turn-projectile-crop[data-combat-crop="full"] > img.combat-turn-art{
+ position:static;inset:auto;width:100%;height:100%;max-width:92px;max-height:65px;
+ transform:none;object-fit:contain;object-position:center;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon.twohand[data-combat-crop="full"] > .combat-turn-art-frame > img.combat-turn-art{
+ width:min(75%,145px);height:100px;max-width:none;max-height:none;
+ transform:rotate(45deg) scale(1.12);transform-origin:center;
+}
+.combat-crop-field small{display:block;font-size:11px;margin-top:4px;color:#bca17e;line-height:1.35}
