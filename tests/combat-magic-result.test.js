@@ -221,6 +221,40 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   action.status='resolved';action.source_data.casting_spell=true;
   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'"');
  });
+ test('förberedd äldre ELD får bakgrund från master trots att stridshandlingen saknar bildfält',()=>{
+  const id='11111111-1111-4111-8111-111111111111';
+  const icon='spell/'+id+'/22222222-2222-4222-8222-222222222222.webp';
+  const effect='spell/'+id+'/33333333-3333-4333-8333-333333333333.webp';
+  const {context,action}=fixture({ruleSpells:[{
+   id,spell_key:'eld',name:'ELD (F)',
+   icon_path:icon,icon_focus_x:40,icon_focus_y:60,icon_zoom:125,
+   effect_image_path:effect,effect_focus_x:65,effect_focus_y:80,effect_zoom:170
+  }]});
+  action.status='planned';
+  action.source_data.spell_name='ELD (F)';
+  action.source_data.spell_id=id;
+  action.source_data.spell_key=id;
+  action.source_data.casting_spell=true;
+  const html=context.spellPanel();
+  expect(html).toContain('combat-mini-magic planning has-spell-backdrop');
+  expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
+  // A result can still display artwork when a battle was prepared before
+  // the artwork feature existed; normal modern snapshots remain immutable.
+  action.status='resolved';
+  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'"');
+  action.source_data.spell_icon_path=icon;
+  action.source_data.spell_icon_focus_x=12;
+  action.source_data.spell_icon_focus_y=34;
+  action.source_data.spell_icon_zoom=140;
+  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="12" data-focus-y="34" data-zoom="140"');
+ });
+ test('historisk besvärjelse kan matchas på namn när master-ID saknas',()=>{
+  const id='11111111-1111-4111-8111-111111111111';
+  const icon='spell/'+id+'/22222222-2222-4222-8222-222222222222.webp';
+  const {context,action}=fixture({ruleSpells:[{id,name:'ELD (F)',spell_key:'eld',icon_path:icon,icon_focus_x:90,icon_focus_y:10,icon_zoom:150}]});
+  action.source_data.spell_name='eld (f)';
+  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="90" data-focus-y="10" data-zoom="150"');
+ });
  test('gamla stridshändelser fungerar med historisk bild och utan bild',()=>{
   const {context,action}=fixture();
   const old='spell/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
