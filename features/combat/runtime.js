@@ -2801,8 +2801,9 @@ function selectCombatTarget(id){
  if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(actor&&(def?.type==='attack'||action?.source_data?.test_fireball===true||
-  (action?.source_data?.casting_spell===true&&['status','heal'].includes(action.source_data?.magic_binding?.kind)))&&action?.status==='planned'){
-  if(id&&String(id)===String(actor.id)&&(def?.type==='attack'||action?.source_data?.test_fireball===true)){
+  (action?.source_data?.casting_spell===true&&['damage','status','heal'].includes(action.source_data?.magic_binding?.kind)))&&action?.status==='planned'){
+  if(id&&String(id)===String(actor.id)&&(def?.type==='attack'||action?.source_data?.test_fireball===true||
+   (action?.source_data?.casting_spell===true&&action.source_data.magic_binding?.kind==='damage'))){
    combatSelectedTargetId=null;
    renderCombat();
    return
@@ -5252,7 +5253,10 @@ function combatSpellCastPanelHtml(){
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
    ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
- const target=combatants.find(row=>String(row.id)===targetId)||null;
+ const selectedTarget=combatants.find(row=>String(row.id)===targetId)||null;
+ // A damage spell cannot target its caster: the default active-combatant
+ // selection must not be treated as a valid target.
+ const target=kind==='damage'&&String(selectedTarget?.id||'')===String(actor.id)?null:selectedTarget;
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
  let label='Vald besvärjelse',detail='',state='selected',instruction='';
  if(resolved){
