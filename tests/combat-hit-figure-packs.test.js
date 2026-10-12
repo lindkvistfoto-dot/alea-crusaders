@@ -75,10 +75,10 @@ describe('Shared race/gender hit-location image packs',()=>{
  it('has admin routing, persistent RLS table, and eight upload slots',()=>{
   const html=load('index.html'),legacy=load('legacy/app.js'),code=load('features/combat/hit-figures.js');
   const sql=load('supabase/migrations/20261012130000_hit_figure_race_gender_registry.sql');
-  expect(html).toContain('openAdminSection(\'hitFigures\')');
+  expect(html).toContain('openAdminSection(\'specialImages\')');
   expect(html).toContain('id="adminHitFigures"');
   expect(html).toContain('features/combat/hit-figures.js');
-  expect(legacy).toContain("activeAdminSection==='hitFigures'");
+  expect(legacy).toContain("activeAdminSection==='specialImages'");
   expect(code).toContain("'neutral','Neutral figur'");
   expect(code).toContain("rule_hit_figure_images?on_conflict=race_id,gender,body_part");
   expect(sql).toContain('private.is_admin()');
