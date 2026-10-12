@@ -1556,7 +1556,13 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
  if(!Number.isInteger(roll))throw new Error('Träffområdesslaget gav inget giltigt resultat.');
  const resolved=combatHitLocationRule(profile,tableKey,roll);
  if(!resolved)return null;
- return{profile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
+ // Illustration is visual only; combat dice, hit table and armor are unchanged.
+ const figureProfile=String(
+  target?.state?.hit_figure_profile||
+  target?.state?.hit_illustration_profile||
+  'humanoid_male'
+ ).trim()||'humanoid_male';
+ return{profile,figure_profile:figureProfile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
 }
 let combatHitMaskSeq=0;
 const COMBAT_HIT_CAMERA={
