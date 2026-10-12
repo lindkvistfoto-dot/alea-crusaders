@@ -287,6 +287,9 @@ function renderCombatGmControls(){
    '<button type="button" class="btn" onclick="combatShowGmToolbox()" '+(!activeCombat||previewing?'disabled':'')+'>SL-kontroll</button>'+
    '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat||previewing?'disabled':'')+'>↻ Reset</button>'+
+  (activeCombat&&['active','paused'].includes(activeCombat.status)&&!previewing?
+    '<button id="combatStopBtn" type="button" class="btn combat-stop-btn" title="Avsluta striden och skapa en sammanfattning" onclick="combatFinishAndRecover()" '+(combatStopBusy||combatSceneBusy?'disabled':'')+'>'+
+    (combatStopBusy?'Avslutar…':'■ Avsluta strid')+'</button>':'')+
   (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
 }
 function combatNumber(value,fallback=null){
@@ -3210,7 +3213,7 @@ function combatAmmoSummaryHtml(){
   (!ended?'<div class="combat-ammo-finish">'+
    '<label><input id="combatAmmoRecoverAllowed" type="checkbox"> Berättelsen tillåter att projektiler samlas upp</label>'+
    '<label>Chans (%) <input id="combatAmmoRecoverChance" type="number" min="80" max="90" value="85"></label>'+
-   '<small>Avsluta strid & sammanfatta med stoppknappen intill rubriken Strid.</small>'+
+   '<small>Avsluta striden med stoppknappen vid SL-kontrollerna bredvid Play och Reset.</small>'+
    '<small>SL avgör om uppsamling går att göra. Varje använd projektil prövas en gång (85 % som standard). Inget avdrag görs vid omladdning.</small></div>':
    '<p>Striden avslutad. Totalt '+spent+' avfyrade, '+recovered+' återvunna, '+(spent-recovered)+' förlorade.</p>')+
  '</details>'
@@ -6027,13 +6030,6 @@ function combatGmToolboxHtml(){
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
  const magicScrollTop=body.querySelector('.combat-spell-catalog')?.scrollTop||0;
- const stopButton=$('combatStopBtn');
- if(stopButton){
-  const showStop=combatCanManage()&&!!activeCombat&&['active','paused'].includes(activeCombat.status)&&!combatSceneSelectionIsPreview();
-  stopButton.classList.toggle('hidden',!showStop);
-  stopButton.disabled=combatStopBusy||combatSceneBusy;
-  stopButton.textContent=combatStopBusy?'Avslutar…':'■ Avsluta strid';
- }
  if(combatSceneSelectionIsPreview()){
   const scene=combatSceneFromId(combatSelectedSceneId);
   if(!combatScenePreviewLoading&&combatScenePreviewSceneId!==String(scene.id))void loadCombatScenePreview(scene);
