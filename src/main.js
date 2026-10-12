@@ -56,56 +56,24 @@ function combatLegacyHitLocationFigureHtml(hitLocation){
 
 
 
-/* v0.35.129 — optional, interchangeable illustrated hit-location packs.
- * Image files carry the golden highlight; dice, armor, and damage stay in
- * the combat engine. Packs are selected from the DEFENDER, not the attacker.
- * The old anatomical figure remains visible if the new image fails to load.
+/* v0.35.130 – selection by defender's race/gender.
+ * The matching complete 8-image set is looked up by aleaHitFigures.hydrate()
+ * after the attack panel is inserted. Anatomical art remains behind as fallback.
  */
-const ALEA_HIT_FIGURE_PARTS=Object.freeze([
-  'neutral','head','chest','abdomen',
-  'left_arm','right_arm','left_leg','right_leg'
-]);
-const ALEA_HIT_FIGURE_IMAGES=Object.freeze(Object.fromEntries(
-  ALEA_HIT_FIGURE_PARTS.map(part=>[part,part+'.webp'])
-));
-window.ALEA_HIT_FIGURE_PACKS={
-  ...(window.ALEA_HIT_FIGURE_PACKS||{}),
-  humanoid_male:{
-    label:'Humanoid – man',
-    base:'./assets/hit-figures/humanoid-male/',
-    images:{...ALEA_HIT_FIGURE_IMAGES}
-  }
-};
-window.aleaRegisterHitFigurePack=function(profile,pack){
-  const key=String(profile||'').trim();
-  if(!/^[a-z0-9_-]+$/i.test(key)||!pack||typeof pack!=='object')return false;
-  if(typeof pack.base!=='string'||!pack.images||typeof pack.images!=='object')return false;
-  if(!ALEA_HIT_FIGURE_PARTS.every(part=>typeof pack.images[part]==='string'))return false;
-  window.ALEA_HIT_FIGURE_PACKS[key]={
-    label:String(pack.label||key),
-    base:pack.base,
-    images:{...pack.images}
-  };
-  return true;
-};
 window.combatHitLocationFigureHtml=function(hitLocation){
-  const legacy=combatLegacyHitLocationFigureHtml(hitLocation);
-  const part=String(hitLocation?.key||'');
-  const profile=String(hitLocation?.figure_profile||'humanoid_male');
-  const pack=window.ALEA_HIT_FIGURE_PACKS?.[profile];
-  const file=pack?.images?.[part];
-  if(!ALEA_HIT_FIGURE_PARTS.includes(part)||!pack||!file)return legacy;
-  const camera=TRANSPARENT_HIT_CAMERA[part]||{scale:1,tx:0,ty:0};
-  const cameraStyle='--hit-scale:'+camera.scale+';--hit-tx:'+camera.tx+'%;--hit-ty:'+camera.ty+'%';
-  const path=String(pack.base||'')+String(file);
-  return '<div class="combat-hit-image-switch" style="'+cameraStyle+'">'+legacy+
-    '<img class="combat-hit-art-image" src="'+transparentHitEscAttr(path)+
-    '" alt="" aria-hidden="true" decoding="async"'+
-    ' onload="this.parentElement.classList.add(\'combat-hit-art-loaded\')"'+
-    ' onerror="this.parentElement.classList.add(\'combat-hit-art-failed\')"'+
-    '></div>';
+ const legacy=combatLegacyHitLocationFigureHtml(hitLocation);
+ const part=String(hitLocation?.key||'');
+ if(!['head','chest','abdomen','left_arm','right_arm','left_leg','right_leg'].includes(part))return legacy;
+ const camera=TRANSPARENT_HIT_CAMERA[part]||{scale:1,tx:0,ty:0};
+ const cameraStyle='--hit-scale:'+camera.scale+';--hit-tx:'+camera.tx+'%;--hit-ty:'+camera.ty+'%';
+ const race=String(hitLocation?.race||'Människa');
+ const gender=String(hitLocation?.gender||'Man');
+ return '<div class="combat-hit-image-switch" style="'+cameraStyle+'">'+legacy+
+  '<img class="combat-hit-art-image" data-hit-part="'+transparentHitEscAttr(part)+
+  '" data-hit-race="'+transparentHitEscAttr(race)+
+  '" data-hit-gender="'+transparentHitEscAttr(gender)+
+  '" alt="" aria-hidden="true" decoding="async"></div>';
 };
-
 
 /* v0.33.65 — image-only hit location camera */
 window.combatHitLocationResultHtml=function(){
