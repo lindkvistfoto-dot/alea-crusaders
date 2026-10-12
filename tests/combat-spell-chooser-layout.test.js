@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js');
 const uiCss=read('features/combat/spell-chooser.css');
-const chooserSource=runtime.slice(runtime.indexOf('function combatSpellChooserHtml('),runtime.indexOf('async function combatMagicButton('));
+const chooserSource=runtime.slice(runtime.indexOf('function combatSpellArtPath('),runtime.indexOf('async function combatMagicButton('));
 function render(options,spell_key){
  const scope={
   combatSpellOptions:()=>options,
