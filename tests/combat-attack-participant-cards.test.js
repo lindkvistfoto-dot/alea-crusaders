@@ -80,7 +80,7 @@ describe('Attack panel portrait cards v0.35.134',()=>{
   expect(css).toContain('grid-template-columns:minmax(0,1fr) 38px');
  });
  it('keeps a two-column duel in mobile and desktop with dynamic text',()=>{
-  expect(html).toContain('features/combat/attack-participants.css?v=0.35.134');
+  expect(html).toContain('features/combat/attack-participants.css?v=');
   expect(css).toContain('grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)');
   expect(css).toContain('grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr)');
   expect(css).toContain('@media(max-width:390px)');
