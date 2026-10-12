@@ -19,7 +19,7 @@ function participant(row,role='ATTACKERAR',details='Dödsbringaren'){
  runInNewContext(section+'\nthis.participant=combatMiniParticipantHtml;',context);
  return context.participant(role,row,details);
 }
-describe('Attack panel portrait cards v0.35.133',()=>{
+describe('Attack panel portrait cards v0.35.134',()=>{
  it('shows real attacker image with matching name, HP and weapon',()=>{
   const card=participant({name_snapshot:'Astrid Eldhjärta',current_kp:10,max_kp:18,portrait:'https://example.test/astrid.png'});
   expect(card).toContain('combat-duelist-card');
@@ -28,6 +28,7 @@ describe('Attack panel portrait cards v0.35.133',()=>{
   expect(card).toContain('ATTACKERAR');
   expect(card).toContain('Astrid Eldhjärta');
   expect(card).toContain('KP 10 / 18 · Dödsbringaren');
+  expect(card).toContain('combat-duelist-card attacker');
  });
  it('uses defender portrait and keeps downed HP at zero',()=>{
   const card=participant({name_snapshot:"Kva'argh",current_kp:0,max_kp:11,portrait:'blob:portrait'},'FÖRSVARAR','Valt mål');
@@ -35,6 +36,7 @@ describe('Attack panel portrait cards v0.35.133',()=>{
   expect(card).toContain('src="blob:portrait"');
   expect(card).toContain("Kva'argh");
   expect(card).toContain('KP 0 / 11 · Valt mål');
+  expect(card).toContain('combat-duelist-card defender');
  });
  it('uses initials if image is absent or cannot load',()=>{
   const noPortrait=participant({name_snapshot:'Rolf Sköld',current_kp:8,max_kp:8,portrait:''});
@@ -58,8 +60,27 @@ describe('Attack panel portrait cards v0.35.133',()=>{
   expect(panel).toContain('combatAttackResultHtml(attack)');
   expect(panel).toContain('combatAttackResultHtml(action)');
  });
+ it('removes the duplicated attacker-to-defender heading but retains compact ANFALL',()=>{
+  const panel=rt.slice(rt.indexOf('function combatAttackPanelHtml('),rt.indexOf('function combatTurnPortraitHtml('));
+  expect(panel).toContain('<div class="combat-mini-title"><span>ANFALL</span></div>');
+  expect(panel).not.toContain("escAttr(actor.name_snapshot)+(target?' → '");
+  expect(panel).toContain("combatMiniParticipantHtml('ATTACKERAR',actor");
+  expect(panel).toContain("combatMiniParticipantHtml('FÖRSVARAR',target");
+ });
+ it('mirrors defender portrait to the far right and right aligns its text at all widths',()=>{
+  expect(css).toContain('.combat-mini-side.combat-duelist-card.defender');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) clamp(46px,4.8vw,62px)');
+  expect(css).toContain('.combat-duelist-card.defender .combat-duelist-portrait');
+  expect(css).toContain('grid-column:2');
+  expect(css).toContain('.combat-duelist-card.defender .combat-duelist-copy');
+  expect(css).toContain('grid-column:1');
+  expect(css).toContain('text-align:right');
+  expect(css).toContain('align-items:flex-end');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) clamp(38px,11vw,58px)');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) 38px');
+ });
  it('keeps a two-column duel in mobile and desktop with dynamic text',()=>{
-  expect(html).toContain('features/combat/attack-participants.css?v=0.35.133');
+  expect(html).toContain('features/combat/attack-participants.css?v=0.35.134');
   expect(css).toContain('grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr)');
   expect(css).toContain('grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr)');
   expect(css).toContain('@media(max-width:390px)');
