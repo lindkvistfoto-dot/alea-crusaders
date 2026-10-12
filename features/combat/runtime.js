@@ -1557,10 +1557,11 @@ async function combatResolveHitLocation(actor,target,attackMode='melee',defenseM
  const resolved=combatHitLocationRule(profile,tableKey,roll);
  if(!resolved)return null;
  // Illustration is visual only; combat dice, hit table and armor are unchanged.
+ const declaredAnatomy=String(target?.state?.anatomy_profile||target?.state?.hit_location_profile||'').trim();
  const figureProfile=String(
   target?.state?.hit_figure_profile||
   target?.state?.hit_illustration_profile||
-  'humanoid_male'
+  (declaredAnatomy&&declaredAnatomy!=='humanoid'?declaredAnatomy:'humanoid_male')
  ).trim()||'humanoid_male';
  return{profile,figure_profile:figureProfile,table:tableKey,table_label:table.label,die:'1T'+table.die,roll,key:resolved.row.key,label:resolved.row.label,defense_mode:defenseMode}
 }
