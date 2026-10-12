@@ -2277,7 +2277,7 @@ function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
  const chosen=options.find(spell=>combatSpellKey(spell)===selectedKey);
  const effect=chosen?.item_spell?.effect_grade||Math.max(1,Number(action?.source_data?.effect_grade)||1);
- if(!options.length)return '<div class="combat-spell-choice"><p class="combat-spell-empty">Rollfiguren har inga tillgängliga besvärjelser.</p></div>';
+ if(!options.length)return '<div class="combat-spell-choice"><p class="combat-spell-empty">Rollfiguren har inga besvärjelser.</p></div>';
  const groups=[{label:'Inlärda besvärjelser',spells:options.filter(s=>s.spell_source!=='item')},
   {label:'Besvärjelser från magiska föremål',spells:options.filter(s=>s.spell_source==='item')}];
  return '<div class="combat-spell-choice">'+
