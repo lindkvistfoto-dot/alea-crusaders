@@ -65,6 +65,6 @@ describe('Magi i strid – mobilvänligt besvärjelseval',()=>{
   expect(runtime).toContain('combatMagicCastPreflight(combatant,spell,grade)');
   expect(runtime).toContain('const currentRound=Number(activeCombat?.round_number)||1;');
   expect(runtime).toContain('ready_round:currentRound+(castRules.quick?0:1)');
-  expect(runtime).toContain('combatPreserveSpellScroll()');
+  expect(runtime).toContain("body.querySelector('.combat-spell-catalog')?.scrollTop||0");
  });
 });
