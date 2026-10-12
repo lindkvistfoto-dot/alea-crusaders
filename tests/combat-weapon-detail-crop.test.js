@@ -24,14 +24,32 @@ describe('Runda: weapon detail crop only',()=>{
   expect(css).toContain('height:175%');
   expect(css).toContain('transform:rotate(45deg)');
  });
- it('does not apply crop to shield, armor, ammo, other items or character sheet',()=>{
+ it('also crops shield and armor art without touching other equipment views',()=>{
   const selectors=css.match(/#[^{]+\{/g)||[];
-  expect(selectors.length).toBeGreaterThanOrEqual(3);
-  expect(selectors.every(s=>s.includes('#combatPage')&&s.includes('.combat-turn-stats')&&s.includes('.weapon'))).toBe(true);
+  expect(selectors.length).toBeGreaterThanOrEqual(8);
+  expect(selectors.every(selector=>selector.includes('#combatPage')&&selector.includes('.combat-turn-stats'))).toBe(true);
+  expect(css).toContain('.combat-turn-equip-art:is(.shield,.armor)');
+  expect(css).toContain('width:210%');
+  expect(css).toContain('height:210%');
   expect(runtime).toContain("imageTile('weapon',label,item");
   expect(runtime).toContain("imageTile('shield',label,item");
   expect(runtime).toContain("imageTile('armor','Rustning',worn");
-  expect(runtime).toContain("combat-turn-equip-art projectile");
+  expect(runtime).toContain("imageTile('carryable',label,item");
+  expect(css).not.toContain('.combat-detail-equipment');
+ });
+ it('independently crops projectile pictures and preserves ammo counts',()=>{
+  expect(runtime).toContain("'<span class=\"combat-turn-projectile-crop\">'+");
+  expect(runtime).toContain("srcImg(row.imagePath,'combat-turn-art')");
+  expect(runtime).toContain("combat-turn-ammo-placeholder");
+  expect(runtime).toContain("combat-turn-ammo-count");
+  expect(runtime).toContain("projectileEntries.length>1?' dual'");
+  expect(css).toContain('.combat-turn-ammo-images > .combat-turn-projectile-crop');
+  expect(css).toContain('flex:1 1 0');
+  expect(css).toContain('overflow:hidden');
+  expect(css).toContain('.combat-turn-projectile-crop > img.combat-turn-art');
+  expect(css).toContain('object-position:top right');
+  expect(css).toContain('width:210%');
+  expect(css).toContain('height:210%');
  });
  it('loads after standard equipment styling but does not mutate combat logic',()=>{
   const backdrop='features/combat/equipment-background.css?v=';
