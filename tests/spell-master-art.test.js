@@ -49,7 +49,7 @@ describe('Expert spell master image register',()=>{
  it('renders upload/remove and two interactive crop coordinates in an existing spell',()=>{
   const {ctx,row}=setup();
   const markup=ctx.window.aleaSpellArt.editorHtml(row);
-  expect(markup).toContain('Ladda upp');
+  expect(markup).toContain('Byt bild');
   expect(markup).toContain('Ta bort bild');
   expect(markup).toContain('spellArtFocusX');
   expect(markup).toContain('spellArtFocusY');
