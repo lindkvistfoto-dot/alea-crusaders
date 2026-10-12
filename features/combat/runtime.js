@@ -5045,7 +5045,7 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
- return '<div class="combat-mini-side combat-duelist-card'+(combatant?.status==='dead'?' is-defeated':'')+'">'+
+ return '<div class="combat-mini-side combat-duelist-card '+(label==='FÖRSVARAR'?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
   '<div class="combat-duelist-portrait" aria-hidden="true">'+portraitHtml+'</div>'+
   '<div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">'+escAttr(label)+'</span>'+
@@ -5226,7 +5226,7 @@ function combatAttackPanelHtml(){
  }
  const targetInfo=target&&selectedWeapon?combatAttackTargetInfo(actor,target,selectedWeapon,mode):null;
  return '<section class="combat-mini-attack '+(action.status==='resolved'?'resolved':'planning')+'">'+
-  '<div class="combat-mini-title"><span>ANFALL</span><b>'+escAttr(actor.name_snapshot)+(target?' → '+escAttr(target.name_snapshot):' · välj mål')+'</b></div>'+
+  '<div class="combat-mini-title"><span>ANFALL</span></div>'+
   '<div class="combat-mini-duel">'+
    combatMiniParticipantHtml('ATTACKERAR',actor,selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen')+
    '<div class="combat-mini-arrow">→</div>'+
