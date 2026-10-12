@@ -111,6 +111,7 @@
  }
  function selectedRows(){return (rows||[]).filter(r=>r.race_id===selection.race&&r.gender===selection.gender)}
  function chooseSelection(race,gender){
+  if(saving)return;
   if(race)selection.race=String(race);
   if(gender)selection.gender=normalizeGender(gender);
   void renderAdmin();
@@ -162,10 +163,38 @@
    await renderAdmin();
    await hydrate(document);
    notice('✓ Bilden är sparad för '+savedSelection.race+' / '+(savedSelection.gender==='female'?'kvinna':'man')+'.');
+   return true;
   }catch(e){
    if(uploaded)await cleanup(path);
    notice('Uppladdningen misslyckades: '+(e.message||e),true);
+   return false;
   }finally{saving=false}
+ }
+ /* Imports up to eight named files at once; also supports single-slot upload.
+  * Naming convention: neutral.webp, head.png, chest.webp, etc. */
+ async function uploadBatch(listOfFiles){
+  if(!canManage()||saving)return;
+  const files=Array.from(listOfFiles||[]);
+  const parts=new Map();
+  for(const file of files){
+   const name=String(file.name||'').replace(/\.(png|jpe?g|webp)$/i,'')
+    .trim().toLowerCase().replace(/[\s-]+/g,'_');
+   if(!REQUIRED.includes(name)){
+    notice('Filnamnet '+file.name+' motsvarar inget träffområde. Använd exempelvis head.webp eller ladda upp filen på respektive bildplats.',true);
+    return;
+   }
+   if(parts.has(name)){notice('Du har valt flera bilder för '+name+'.',true);return}
+   parts.set(name,file);
+  }
+  if(!parts.size)return;
+  let ok=0;
+  for(const [part,file] of parts){
+   if(await upload(part,file)===true)ok++;
+   else break;
+  }
+  notice(ok===parts.size
+   ?'✓ '+ok+' bild(er) har laddats upp till vald ras och kön.'
+   :ok+' av '+parts.size+' bilder sparades. Kontrollera felet och försök igen.',ok!==parts.size);
  }
  async function cleanup(path){
   if(!SAFE_PATH.test(String(path||'')))return;
@@ -218,6 +247,8 @@
    '<option value="female"'+(selection.gender==='female'?' selected':'')+'>Kvinna</option>'+
    '</select></label></div>'+
    '<p class="hit-figure-note">'+note+'</p>'+
+   '<label class="smallbtn hit-figure-bulk">Ladda upp flera bilder samtidigt (neutral.webp, head.webp osv.)'+
+   '<input type="file" multiple accept="image/png,image/jpeg,image/webp" onchange="aleaHitFigures.uploadBatch(this.files);this.value=\\'\\'"></label>'+
    '<div class="hit-figure-grid">'+PARTS.map(([part,label])=>{
     const row=byPart.get(part);
     return '<article class="hit-figure-tile"><div class="hit-figure-preview">'+
@@ -239,6 +270,6 @@
  }
  window.aleaHitFigures=Object.freeze({
   parts:PARTS,normalizeRace,normalizeGender,candidateKeys,choosePack,
-  list,hydrate,renderAdmin,chooseSelection,upload,remove
+  list,hydrate,renderAdmin,chooseSelection,upload,uploadBatch,remove
  });
 })();
