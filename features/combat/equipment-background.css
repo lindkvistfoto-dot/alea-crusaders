@@ -1,0 +1,43 @@
+/* v0.35.136 — user's supplied bronze/leather banner, shared across equipment slots.
+   Restrict to the round panel, not character-sheet equipment or attack results. */
+#combatPage .combat-turn-panel > .combat-turn-stats {
+  position:relative;
+  isolation:isolate;
+  box-sizing:border-box;
+  padding:7px 11px 8px;
+  border-top:0;
+  border-radius:0 0 7px 7px;
+  background-color:#1d110d;
+  background-image:url("../../assets/combat/round-equipment-leather.webp");
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  /* The original gilded outline is painted in the uploaded asset. */
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art {
+  position:relative;
+  z-index:1;
+  background:transparent;
+  border-right:1px solid rgba(198,153,94,.20);
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:last-child {
+  border-right:0;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art > span {
+  color:#e7caa0;
+  text-shadow:0 1px 3px #090604;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art > small {
+  color:#e7d2b1;
+  text-shadow:0 1px 3px #090604;
+}
+@media(max-width:760px){
+  #combatPage .combat-turn-panel > .combat-turn-stats{
+    padding:6px 9px 7px;
+  }
+}
+@media(max-width:420px){
+  #combatPage .combat-turn-panel > .combat-turn-stats{
+    padding:5px 8px 6px;
+  }
+}
