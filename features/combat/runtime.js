@@ -2287,6 +2287,46 @@ function combatSpellArtNumber(value,fallback,min=0,max=100){
  const n=Number(value??fallback);
  return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):fallback
 }
+function combatSpellArtworkForAction(action){
+ const data=action?.source_data||{};
+ // An existing action snapshot always wins: swapping artwork in the master
+ // must not change an image already saved with the cast.
+ const snapshot=[
+  ['effect',data.spell_effect_image_path,data.spell_effect_focus_x,data.spell_effect_focus_y,data.spell_effect_zoom],
+  ['icon',data.spell_icon_path,data.spell_icon_focus_x,data.spell_icon_focus_y,data.spell_icon_zoom],
+  ['legacy',data.spell_image_path,data.spell_image_focus_x,data.spell_image_focus_y,100]
+ ].find(entry=>combatSpellArtPath(entry[1]));
+ if(snapshot)return {
+  path:combatSpellArtPath(snapshot[1]),
+  x:combatSpellArtNumber(snapshot[2],50),
+  y:combatSpellArtNumber(snapshot[3],50),
+  zoom:combatSpellArtNumber(snapshot[4],100,100,300)
+ };
+ // Battles prepared before spell artwork was implemented do not have any
+ // snapshot fields. Resolve by the stable master ID (then spell key/name)
+ // without changing their target, PSY cost, casting state or other rules.
+ const registry=typeof ruleSpells!=='undefined'&&Array.isArray(ruleSpells)?ruleSpells:[];
+ const id=String(data.spell_id||'');
+ const key=String(data.spell_key||'');
+ const name=String(data.spell_name||'');
+ const master=registry.find(row=>id&&String(row.id)===id)||
+  registry.find(row=>key&&(String(row.id)===key||String(row.spell_key)===key))||
+  registry.find(row=>name&&String(row.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);
+ if(!master)return {path:'',x:50,y:50,zoom:100};
+ const images=[
+  [master.effect_image_path,master.effect_focus_x,master.effect_focus_y,master.effect_zoom],
+  [master.icon_path,master.icon_focus_x,master.icon_focus_y,master.icon_zoom],
+  // Compatibility with a master that still uses only the original image_path.
+  [master.image_path,master.image_focus_x,master.image_focus_y,100]
+ ];
+ const selected=images.find(entry=>combatSpellArtPath(entry[0]));
+ return selected?{
+  path:combatSpellArtPath(selected[0]),
+  x:combatSpellArtNumber(selected[1],50),
+  y:combatSpellArtNumber(selected[2],50),
+  zoom:combatSpellArtNumber(selected[3],100,100,300)
+ }:{path:'',x:50,y:50,zoom:100}
+}
 function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
  const chosen=options.find(spell=>combatSpellKey(spell)===selectedKey);
@@ -5207,21 +5247,10 @@ function combatSpellCastPanelHtml(){
  if(!actor)return '';
  const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
- // The chosen spell's immutable artwork becomes the entire magic-panel backdrop.
- // Effect illustration takes priority; icon and legacy image are fallbacks.
- const effectArt=combatSpellArtPath(data.spell_effect_image_path);
- const iconArt=combatSpellArtPath(data.spell_icon_path);
- const legacyArt=combatSpellArtPath(data.spell_image_path);
- const backdropArt=effectArt||iconArt||legacyArt;
- const backdropFromEffect=!!effectArt;
- const backdropX=combatSpellArtNumber(backdropFromEffect?data.spell_effect_focus_x:
-   iconArt?data.spell_icon_focus_x:data.spell_image_focus_x,50);
- const backdropY=combatSpellArtNumber(backdropFromEffect?data.spell_effect_focus_y:
-   iconArt?data.spell_icon_focus_y:data.spell_image_focus_y,50);
- const backdropZoom=combatSpellArtNumber(backdropFromEffect?data.spell_effect_zoom:
-   iconArt?data.spell_icon_zoom:100,100,100,300);
+ // Use snapshotted artwork, or recover the master image for older prepared casts.
+ const backdrop=combatSpellArtworkForAction(action),backdropArt=backdrop.path;
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
-   ' data-focus-x="'+backdropX+'" data-focus-y="'+backdropY+'" data-zoom="'+backdropZoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
+   ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
  const target=combatants.find(row=>String(row.id)===targetId)||null;
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
