@@ -38,7 +38,7 @@ describe('Runda: weapon detail crop only',()=>{
   expect(css).not.toContain('.combat-detail-equipment');
  });
  it('independently crops projectile pictures and preserves ammo counts',()=>{
-  expect(runtime).toContain("'<span class=\"combat-turn-projectile-crop\">'+");
+  expect(runtime).toContain('combat-turn-projectile-crop" data-combat-crop=');
   expect(runtime).toContain("srcImg(row.imagePath,'combat-turn-art')");
   expect(runtime).toContain("combat-turn-ammo-placeholder");
   expect(runtime).toContain("combat-turn-ammo-count");
