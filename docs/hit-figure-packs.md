@@ -1,60 +1,68 @@
-# Bildserier för träffområden (v0.35.129)
+# Träffområdesbilder – ras × kön (v0.35.130)
 
-Attackrutans träffkamera kan visa en bildserie i stället för den gamla
-anatomiska SVG-markeringen. **Själva träffslagstabellen (1T8/1T10),
-rustningsberäkningen och skadesystemet ändras inte.**
+## Administration
+Öppna **Administration → Träffområdesbilder**. Välj en ras från appens befintliga
+rasregister och därefter **Man** eller **Kvinna**. En bildserie består av åtta
+transparanta illustrationer med samma proportioner och placerad figur:
 
-## Installerad bildserie
-
-Standardprofil: `humanoid_male` med filerna under
-`assets/hit-figures/humanoid-male/`.
-
-| Resultatnyckel | Fil |
+| Filnamn | Träffområde |
 | --- | --- |
-| Ingen markering | `neutral.webp` |
-| `head` | `head.webp` |
-| `chest` | `chest.webp` |
-| `abdomen` | `abdomen.webp` |
-| `left_arm` | `left_arm.webp` |
-| `right_arm` | `right_arm.webp` |
-| `left_leg` | `left_leg.webp` |
-| `right_leg` | `right_leg.webp` |
+| neutral.webp | Ingen markering |
+| head.webp | Huvud/hals |
+| chest.webp | Bröstkorg/axlar |
+| abdomen.webp | Mage/skrev/bäcken |
+| left_arm.webp | Figurens vänstra arm |
+| right_arm.webp | Figurens högra arm |
+| left_leg.webp | Figurens vänstra ben |
+| right_leg.webp | Figurens högra ben |
 
-Alla bilder ska ha samma proportioner och identisk placering av figuren.
-Den första bildserien levereras som 512×768 WebP med alfa (transparent
-bakgrund). Ingen mask/overlay behöver ritas i appen: varje markerad
-bild innehåller redan sin gyllene markering.
+Du kan ladda upp varje bild separat eller välja flera filer med dessa filnamn
+samtidigt. PNG/JPEG/WebP godtas vid import och sparas som WebP med bibehållen
+alfakanal. Bildförhållandet måste vara 2:3 (t.ex. 1024 × 1536).
+Max 12 MB per original och 4 MB efter optimering.
 
-**Om en fil inte finns eller inte kan läsas visas automatiskt den gamla
-anatomiska illustrationen.** Det gör det säkert att lägga till filerna
-efter kodändringen.
+En bildserie blir **aktiv först när samtliga åtta bilder finns registrerade**.
+Administrationen visar antal klara platser (0–8) per ras/kön.
 
-## Nya figurtyper – framtida tillägg
+## Automatisk bildserie i attackrutan
 
-Exempelvis kan `humanoid_female` eller `skeleton` registreras via:
+När träffområdets tärning är färdig visar attackrutan motsvarande markerade
+illustration. Det är **försvararens** ras och kön som används. Raskoden normaliseras
+mot Expert-registret (t.ex. Dvärg → dvarg, Människa → manniska).
 
-```js
-window.aleaRegisterHitFigurePack('skeleton', {
-  label: 'Skelett',
-  base: './assets/hit-figures/skeleton/',
-  images: {
-    neutral: 'neutral.webp',
-    head: 'head.webp',
-    chest: 'chest.webp',
-    abdomen: 'abdomen.webp',
-    left_arm: 'left_arm.webp',
-    right_arm: 'right_arm.webp',
-    left_leg: 'left_leg.webp',
-    right_leg: 'right_leg.webp'
-  }
-});
-```
+Reservordning för träffad **kvinna av rasen dvärg**:
 
-Träffresultatet bär med sig försvararens
-`state.hit_figure_profile` (alternativt `state.hit_illustration_profile`),
-standard `humanoid_male`. Dessa väljer vilken illustration som visas,
-utan att byta träfftabell. En separat UI-väljare och bildadministration
-kan tillkomma senare. För andra anatomier behövs även egna träfftabeller.
+1. Dvärg/kvinna
+2. Dvärg/man
+3. Människa/kvinna
+4. Människa/man
+5. Tidigare anatomisk standardbild om ingen komplett serie finns
 
-`window.combatHitLocationFigureHtml(hitLocation)` används av attackrutans
-befintliga renderingsfunktion. Det finns ingen manuell klickyta.
+För okänt eller ej angivet kön används **man**. För okänd eller ej registrerad
+ras används människa. Man byter aldrig träffområdestabell eller skaderegler:
+det är en **ren presentationsfunktion**.
+
+Vid ny strid sparas ras/kön på kombatantens state och kopieras till resultatet
+från träffområdesslaget. Äldre pågående strider kompletteras tillfälligt från
+underliggande rollperson/SLP/monster när SL öppnar dem.
+
+## Lagring och behörighet
+
+Registrering: `public.rule_hit_figure_images` med unik nyckel
+`(race_id, gender, body_part)`.
+
+Bildfiler: privat Supabase Storage bucket `alea-hit-figures`.
+
+- Endast systemadministratörer får ladda upp, byta ut och radera.
+- Inloggade spelare får läsa bildserierna så de kan se stridsresultat.
+- Bildfilerna är aldrig publika webbadresser; klienten använder autentiserad
+  nedladdning och tillfälliga Blob-URL:er.
+- Bilbo/Gimli och befintligt kampanjmaterial påverkas inte.
+- Vid fel eller saknad bild visas den tidigare anatomiska träffmarkeringen.
+
+## Kod
+- `features/combat/hit-figures.js`: administration, valalgoritm och bildhämtning.
+- `features/combat/hit-figures.css`: responsiv bildadministration.
+- `features/combat/runtime.js`: sparar försvararens ras och kön.
+- `src/main.js`: bildbehållare och anatomisk fallback.
+- `tests/combat-hit-figure-packs.test.js`: prioritering och integrationskontroll.
