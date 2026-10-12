@@ -148,7 +148,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const {context,action}=fixture();
   action.result.outcome='perfect';action.result.psy_cost=1;
   expect(context.spellPanel()).toContain('combat-spell-result perfect');
-  expect(context.spellPanel()).toContain('Perfekt');
+  expect(context.spellPanel()).toContain('PERFEKT SLAG');
   expect(context.spellPanel()).toContain('PSY använd</span><b>1</b>');
   action.result.outcome='fail';
   expect(context.spellPanel()).toContain('combat-spell-result fail');
