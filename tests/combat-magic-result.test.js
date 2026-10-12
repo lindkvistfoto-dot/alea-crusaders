@@ -189,6 +189,47 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(result).toContain('data-zoom="160"');
   expect(result).not.toContain(icon);
  });
+ test('helmagirutan använder vald effektbild före ikonen och behåller beskärningen',()=>{
+  const {context,action}=fixture();
+  const prefix='spell/11111111-1111-4111-8111-111111111111/';
+  const icon=prefix+'22222222-2222-4222-8222-222222222222.webp';
+  const effect=prefix+'33333333-3333-4333-8333-333333333333.webp';
+  Object.assign(action.source_data,{
+   spell_icon_path:icon,spell_icon_focus_x:20,spell_icon_focus_y:30,spell_icon_zoom:130,
+   spell_effect_image_path:effect,spell_effect_focus_x:75,spell_effect_focus_y:60,spell_effect_zoom:170
+  });
+  const html=context.spellPanel();
+  expect(html).toContain('combat-mini-magic resolved has-spell-backdrop');
+  expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="75" data-focus-y="60" data-zoom="170"');
+  expect(html.indexOf('combat-magic-backdrop')).toBeLessThan(html.indexOf('combat-magic-heading'));
+  expect(html).toContain('MAGIKER');
+  expect(html).toContain('MÅL');
+  expect(html).toContain('combat-spell-result');
+ });
+ test('utan effektbild fyller ikonen magirutan både vid förberedelse och efter kast',()=>{
+  const {context,action}=fixture();
+  const icon='spell/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  Object.assign(action.source_data,{
+   spell_icon_path:icon,spell_effect_image_path:null,
+   spell_icon_focus_x:85,spell_icon_focus_y:15,spell_icon_zoom:145
+  });
+  action.status='planned';action.source_data.casting_spell=false;
+  const pending=context.spellPanel();
+  expect(pending).toContain('combat-mini-magic planning has-spell-backdrop');
+  expect(pending).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="85" data-focus-y="15" data-zoom="145"');
+  expect(pending).toContain('Tryck ✦ för att förbereda');
+  action.status='resolved';action.source_data.casting_spell=true;
+  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'"');
+ });
+ test('gamla stridshändelser fungerar med historisk bild och utan bild',()=>{
+  const {context,action}=fixture();
+  const old='spell/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
+  action.source_data.spell_image_path=old;
+  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+old+'"');
+  action.source_data.spell_image_path='https://example.com/evil.png';
+  expect(context.spellPanel()).not.toContain('class="combat-magic-backdrop"');
+  expect(context.spellPanel()).not.toContain('has-spell-backdrop');
+ });
  test('områdesmagi och magi utan individuellt mål använder platshållarkort',()=>{
   const {context,action}=fixture();
   action.status='planned';
