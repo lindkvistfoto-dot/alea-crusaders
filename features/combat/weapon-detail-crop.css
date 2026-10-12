@@ -33,12 +33,16 @@
    source quadrant), then rotate the detail clockwise into horizontal pose. */
 #combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon.twohand[data-combat-crop="top-right"]
 > .combat-turn-art-frame > img.combat-turn-art{
-  top:0;
+  /* Source art is square: never scale it into a wide, shallow 2:1
+     rectangle with object-fit:contain. That collapses the staff to a line. */
+  top:50%;
   right:0;
   bottom:auto;
   left:auto;
   width:200%;
-  height:200%;
+  height:auto;
+  aspect-ratio:1 / 1;
+  object-fit:contain;
   object-position:top right;
   transform:rotate(45deg);
   transform-origin:top right;
