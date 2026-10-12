@@ -28,21 +28,23 @@ describe('Shared round background gallery',()=>{
  it('uses saved combat selection and builtin fallback without rerandomizing',async()=>{
   const window={};
   const panel={style:{setProperty:vi.fn(),removeProperty:vi.fn()}};
+  const attackPanel={style:{setProperty:vi.fn(),removeProperty:vi.fn()}};
   const ctx={window,console,Math,dbJson:async()=>[
     {id:'a',image_path:'assets/combat/round-hero-battle-pilot.avif',is_active:true,archived_at:null}],
-   document:{querySelectorAll:()=>[panel]}};
+   document:{querySelectorAll:selector=>selector==='.combat-turn-panel'?[panel]:[attackPanel]}};
   runInNewContext(source,ctx);
   await window.aleaRoundGallery.activate({id:'combat-1',settings:{round_background_id:'a'}});
   expect(panel.style.setProperty).toHaveBeenCalledWith('--alea-round-illustration',expect.stringContaining('round-hero-battle-pilot.avif'));
   await window.aleaRoundGallery.activate({id:'combat-1',settings:{round_background_id:'not-found'}});
   expect(panel.style.setProperty).toHaveBeenCalledTimes(2);
+  expect(attackPanel.style.setProperty).toHaveBeenCalledWith('--alea-attack-illustration',expect.stringContaining('round-hero-battle-pilot.avif'));
  });
  it('uses the active actor and avoids stale image updates on turn change',async()=>{
   const panel={style:{setProperty:vi.fn(),removeProperty:vi.fn()}};
   let completedRead;
   const waiting=new Promise(resolve=>completedRead=resolve);
   const window={aleaCharacterRoundBackground:{resolveUrl:async()=>waiting}};
-  const ctx={window,console,Math,document:{querySelectorAll:()=>[panel]}};
+  const ctx={window,console,Math,document:{querySelectorAll:selector=>selector==='.combat-turn-panel'?[panel]:[]}};
   runInNewContext(source,ctx);
   const battle={id:'combat-1',settings:{}};
   const first=window.aleaRoundGallery.activate(battle,{id:'actor-a',state:{round_background_source:'character',round_background_path:'round/custom.webp'}});
