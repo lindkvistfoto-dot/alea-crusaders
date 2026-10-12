@@ -54,13 +54,13 @@ describe('Shared round background gallery',()=>{
  });
  it('keeps admin UI, background rendering and CSS hooked to existing app',()=>{
   const legacy=read('legacy/app.js'),runtime=read('features/combat/runtime.js'),css=read('features/combat/round-gallery.css'),html=read('index.html');
-  expect(legacy).toContain("roundImages:['Rundbakgrunder'");
-  expect(legacy).toContain("activeAdminSection==='roundImages'");
+  expect(legacy).toContain("specialImages:['Specialbilder'");
+  expect(legacy).toContain("activeAdminSection==='specialImages'");
   expect(runtime).toContain("round_background_id:roundBackgroundId");
   expect(runtime).toContain('await window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())');
   expect(runtime).toContain('void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())');
   expect(css).toContain('var(--alea-round-illustration');
-  expect(html).toContain('data-admin-section="roundImages"');
-  expect(html).toContain('features/combat/round-gallery.js?v=0.35.128');
+  expect(html).toContain('data-admin-section="specialImages"');
+  expect(html).toContain('features/combat/round-gallery.js?v=0.35.131');
  });
 });
