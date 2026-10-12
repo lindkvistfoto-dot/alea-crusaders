@@ -106,7 +106,8 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
    activeCombat:{id:'battle'},dbJson:async (path,opts)=>{writes.push(JSON.parse(opts.body));return []},
    alert:vi.fn(),renderCombat:vi.fn(),console
   };
-  runInNewContext(runtime.slice(start,stop)+'this.select=chooseCombatPreparedSpell;',scope);
+  const artHelpers=runtime.slice(runtime.indexOf('function combatSpellArtPath('),runtime.indexOf('function combatSpellChooserHtml('));
+  runInNewContext(artHelpers+runtime.slice(start,stop)+'this.select=chooseCombatPreparedSpell;',scope);
   await scope.select(x.actor.id,x.common.combatSpellKey(item));
   expect(writes).toHaveLength(1);
   const data=writes[0].source_data;
