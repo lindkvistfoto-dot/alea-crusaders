@@ -41,6 +41,12 @@
   return url;
  }
  function apply(){
+  // Keep the attack panel artwork synchronized with the current combatant's
+  // personal background (or the stable library fallback for this encounter).
+  document.querySelectorAll('#combatPage .combat-shell-live .combat-mini-attack').forEach(el=>{
+   if(chosenUrl)el.style.setProperty('--alea-attack-illustration','url('+JSON.stringify(chosenUrl)+')');
+   else el.style.removeProperty('--alea-attack-illustration');
+  });
   document.querySelectorAll('.combat-turn-panel').forEach(el=>{
    if(chosenUrl)el.style.setProperty('--alea-round-illustration','url('+JSON.stringify(chosenUrl)+')');
    else el.style.removeProperty('--alea-round-illustration');
