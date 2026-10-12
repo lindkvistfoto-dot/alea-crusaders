@@ -136,3 +136,58 @@
  pointer-events:none;object-fit:fill;
 }
 #spelltable .character-spell-icon img[hidden]{display:none!important}
+
+
+/* Full magic-panel artwork: selected spell effect -> icon -> legacy picture.
+   The image uses the existing secure blob resolver and saved crop values.
+   Text, card chrome, and controls always paint ABOVE the artwork. */
+#combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.has-spell-backdrop{
+ position:relative;
+ isolation:isolate;
+ overflow:hidden;
+}
+#combatPage .combat-mini-magic > .combat-magic-backdrop{
+ position:absolute;
+ z-index:0;
+ inset:0;
+ overflow:hidden;
+ pointer-events:none;
+ background:linear-gradient(125deg,#21150f,#130d09);
+}
+#combatPage .combat-mini-magic > .combat-magic-backdrop img{
+ position:absolute;
+ display:block;
+ max-width:none!important;
+ max-height:none!important;
+ pointer-events:none;
+ object-fit:fill;
+ opacity:.72;
+ filter:brightness(.84) saturate(.94);
+}
+#combatPage .combat-mini-magic > .combat-magic-backdrop img[hidden]{
+ display:none!important;
+}
+#combatPage .combat-mini-magic > .combat-magic-backdrop::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ background:
+  linear-gradient(90deg,rgba(19,12,10,.74) 0%,rgba(18,12,10,.46) 62%,rgba(18,12,10,.32) 100%),
+  linear-gradient(180deg,rgba(11,8,7,.71) 0%,rgba(12,8,7,.27) 42%,rgba(12,8,7,.8) 100%);
+}
+#combatPage .combat-mini-magic.has-spell-backdrop > :not(.combat-magic-backdrop){
+ position:relative;
+ z-index:1;
+}
+#combatPage .combat-mini-magic.has-spell-backdrop .combat-spell-effect-surface{
+ background:rgba(16,11,9,.44);
+}
+#combatPage .combat-mini-magic.has-spell-backdrop .combat-spell-result{
+ background:rgba(20,13,10,.78);
+}
+@media(prefers-reduced-transparency:reduce){
+ #combatPage .combat-mini-magic > .combat-magic-backdrop::after{
+  background:rgba(13,9,7,.85);
+ }
+}
