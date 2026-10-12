@@ -5369,7 +5369,7 @@ function combatTurnEquipmentHtml(combatant){
    // Two-handed staffs show their lower-right (fourth) source quadrant by
    // default. An explicit master/item crop choice still takes precedence.
    const isStaff=/\bstav\b|staff/i.test(String(item.name||rule?.name||''));
-   const staffCrop=isStaff&&!rule?.combat_crop_quadrant&&!item.combat_crop_quadrant?'bottom-right':cropValue(rule,item);
+   const staffCrop=isStaff?(item.combat_crop_quadrant||'bottom-right'):cropValue(rule,item);
    hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true,null,staffCrop);
   }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
