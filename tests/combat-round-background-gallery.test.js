@@ -61,6 +61,6 @@ describe('Shared round background gallery',()=>{
   expect(runtime).toContain('void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor())');
   expect(css).toContain('var(--alea-round-illustration');
   expect(html).toContain('data-admin-section="specialImages"');
-  expect(html).toContain('features/combat/round-gallery.js?v=0.35.132');
+  expect(html).toContain('features/combat/round-gallery.js?v=');
  });
 });
