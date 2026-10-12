@@ -1,0 +1,28 @@
+/* Alea Crusaders v0.35.130 – combat hit-figure catalogue */
+.hit-figure-toolbar{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 14px}
+.hit-figure-toolbar label{display:grid;gap:5px;color:#d9bf90;font-weight:700;font-size:13px}
+.hit-figure-toolbar select{min-width:180px;max-width:100%;padding:10px;border-radius:9px;border:1px solid #947651;background:#241b14;color:#f1dfbe}
+.hit-figure-note{color:#c9ae87;font-size:13px;margin:10px 0 16px}
+.hit-figure-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.hit-figure-tile{border:1px solid rgba(183,143,88,.45);border-radius:12px;background:linear-gradient(160deg,#2b2118,#1a1511);padding:10px;display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0}
+.hit-figure-tile strong{color:#f1dbb0;font-size:13px;min-height:2em;text-align:center}
+.hit-figure-preview{height:192px;max-width:100%;display:grid;place-items:center;border:1px solid rgba(187,144,82,.22);border-radius:8px;background:radial-gradient(circle,#443322,#16110d);overflow:hidden}
+.hit-figure-preview img{display:block;max-width:100%;height:100%;object-fit:contain}
+.hit-figure-preview span{color:#a58a67;font-size:12px}
+.hit-figure-file{display:flex!important;justify-content:center;align-items:center;cursor:pointer;position:relative;min-height:36px}
+.hit-figure-file input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;max-width:100%}
+.hit-figure-remove{color:#f5baa8!important;min-height:34px}
+.hit-figure-series{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.hit-figure-series-status{border:1px solid rgba(173,137,86,.4);background:#241b15;border-radius:9px;padding:9px 12px;display:flex;flex-direction:column;gap:3px}
+.hit-figure-series-status b{color:#efd6ac;font-size:12px}
+.hit-figure-series-status span{color:#a9cba7;font-size:11px}
+#hitFigureStatus{min-height:20px;color:#b9d5ac;font-size:13px}
+#hitFigureStatus.is-error{color:#f3a99a}
+.combat-hit-art-image{mix-blend-mode:normal!important}
+@media(max-width:520px){
+ .hit-figure-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .hit-figure-tile{padding:8px}
+ .hit-figure-preview{height:160px}
+ .hit-figure-toolbar label{flex:1 1 140px}
+ .hit-figure-toolbar select{min-width:0;width:100%}
+}
