@@ -7,6 +7,8 @@ on:
       - 'features/combat/hit-figures.css'
       - 'features/combat/runtime.js'
       - 'features/combat/spell-chooser.css'
+      - 'features/combat/attack-participants.css'
+      - 'tests/combat-attack-participant-cards.test.js'
       - 'tests/combat-spell-chooser-layout.test.js'
       - 'src/main.js'
       - 'legacy/app.js'
@@ -27,5 +29,5 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx vitest run tests/combat-hit-figure-packs.test.js tests/combat-round-background-gallery.test.js tests/special-images-admin.test.js tests/combat-spell-chooser-layout.test.js tests/combat-magic-contrast.test.js tests/combat-manual-magic.test.js tests/item-granted-spells.test.js
+      - run: npx vitest run tests/combat-attack-participant-cards.test.js tests/combat-hit-figure-packs.test.js tests/combat-round-background-gallery.test.js tests/special-images-admin.test.js tests/combat-spell-chooser-layout.test.js tests/combat-magic-contrast.test.js tests/combat-manual-magic.test.js tests/item-granted-spells.test.js
       - run: npm run build
