@@ -7,6 +7,7 @@ const begin=runtime.indexOf('function combatLatestResolvedSpellAction(){');
 const finish=runtime.indexOf('function combatAttackPanelHtml(){',begin);
 if(begin<0||finish<begin)throw Error('Besvärjelsens resultatpanel saknas');
 const panelCode=runtime.slice(begin,finish);
+const participants=runtime.slice(runtime.indexOf('function combatMiniParticipantHtml('),runtime.indexOf('// Spell feedback is presentation-only'));
 
 function fixture(overrides={}){
  const mage={id:'mage1',name_snapshot:'Eldra',current_psy:8};
@@ -27,10 +28,12 @@ function fixture(overrides={}){
   combatOutcomeMeta:o=>({label:{fail:'MISSLYCKAT SLAG',success:'LYCKAT SLAG',
    special:'SÄRSKILT SLAG',perfect:'PERFEKT SLAG',fumble:'FUMMELSLAG'}[o],icon:'✦'}),
   combatDamageResultHtml:d=>d?'<div class="damage">Skada tilldelad</div>':'',
+  combatRowPortraitUrl:c=>c?.portrait||'',
+  combatTokenInitials:name=>String(name).split(' ').map(part=>part[0]).join(''),
   escAttr:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
  };
  Object.assign(context,overrides);
- runInNewContext(panelCode+
+ runInNewContext(participants+panelCode+
   'this.spellResult=combatSpellResultHtml;this.spellPanel=combatSpellCastPanelHtml;',context);
  return {context,mage,newActor,action};
 }
@@ -118,7 +121,11 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   context.combatSelectedTargetId='fighter';
   const ready=context.spellPanel();
   expect(ready).toContain('Klar att kasta');
-  expect(ready).toContain('Eldra <span class="combat-magic-arrow" aria-hidden="true">→</span> Krigaren');
+  expect(ready).toContain('combat-magic-duel');
+  expect(ready).toContain('>MAGIKER</span>');
+  expect(ready).toContain('>MÅL</span>');
+  expect(ready).toContain('Krigaren');
+  expect(ready).toContain('combat-mini-arrow combat-magic-arrow');
   expect(ready).toContain('Målet är valt. Tryck ✦ igen');
   expect(ready).not.toContain('combat-spell-result');
  });
@@ -140,11 +147,44 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
  test('efter slaget visas resultatstatus och faktisk förbrukad PSY',()=>{
   const {context,action}=fixture();
   action.result.outcome='perfect';action.result.psy_cost=1;
-  expect(context.spellPanel()).toContain('data-state="perfect"');
+  expect(context.spellPanel()).toContain('combat-spell-result perfect');
   expect(context.spellPanel()).toContain('Perfekt');
   expect(context.spellPanel()).toContain('PSY använd</span><b>1</b>');
   action.result.outcome='fail';
-  expect(context.spellPanel()).toContain('data-state="fail"');
+  expect(context.spellPanel()).toContain('combat-spell-result fail');
+ });
+ test('magirutan visar samma porträttkort som attack och resultat före sekundära värden',()=>{
+  const {context,mage,newActor,action}=fixture();
+  mage.portrait='https://example.test/mage.png';
+  newActor.portrait='https://example.test/target.png';
+  action.target_combatant_id='fighter';
+  const html=context.spellPanel();
+  expect(html).toContain('combat-duelist-card attacker');
+  expect(html).toContain('combat-duelist-card defender');
+  expect(html).toContain('src="https://example.test/mage.png"');
+  expect(html).toContain('src="https://example.test/target.png"');
+  expect(html).toContain('>MAGIKER</span>');
+  expect(html).toContain('>MÅL</span>');
+  expect(html.indexOf('combat-magic-duel')).toBeLessThan(html.indexOf('combat-spell-result'));
+  expect(html.indexOf('combat-spell-result')).toBeLessThan(html.indexOf('combat-magic-detail-values'));
+  expect(html).toContain('combat-spell-outcome-banner');
+  expect(html).toContain('combat-spell-effect-surface');
+  expect(html).toContain('EFFEKT');
+ });
+ test('områdesmagi och magi utan individuellt mål använder platshållarkort',()=>{
+  const {context,action}=fixture();
+  action.status='planned';
+  action.source_data.magic_binding.kind='area';
+  action.source_data.casting_spell=true;
+  action.source_data.area_center={q:1,r:2};
+  const html=context.spellPanel();
+  expect(html).toContain('Område valt');
+  expect(html).toContain('magic-empty-target');
+  expect(html).toContain('Markera centrum på kartan');
+  action.source_data.magic_binding.kind='manual';
+  const manual=context.spellPanel();
+  expect(manual).toContain('Inget särskilt mål');
+  expect(manual).not.toContain('KP — ·');
  });
  test('spelarnamn och besvärjelser escapes i det nya kortet',()=>{
   const {context,action,newActor}=fixture();
