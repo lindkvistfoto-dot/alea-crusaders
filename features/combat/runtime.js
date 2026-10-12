@@ -5207,6 +5207,21 @@ function combatSpellCastPanelHtml(){
  if(!actor)return '';
  const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
+ // The chosen spell's immutable artwork becomes the entire magic-panel backdrop.
+ // Effect illustration takes priority; icon and legacy image are fallbacks.
+ const effectArt=combatSpellArtPath(data.spell_effect_image_path);
+ const iconArt=combatSpellArtPath(data.spell_icon_path);
+ const legacyArt=combatSpellArtPath(data.spell_image_path);
+ const backdropArt=effectArt||iconArt||legacyArt;
+ const backdropFromEffect=!!effectArt;
+ const backdropX=combatSpellArtNumber(backdropFromEffect?data.spell_effect_focus_x:
+   iconArt?data.spell_icon_focus_x:data.spell_image_focus_x,50);
+ const backdropY=combatSpellArtNumber(backdropFromEffect?data.spell_effect_focus_y:
+   iconArt?data.spell_icon_focus_y:data.spell_image_focus_y,50);
+ const backdropZoom=combatSpellArtNumber(backdropFromEffect?data.spell_effect_zoom:
+   iconArt?data.spell_icon_zoom:100,100,100,300);
+ const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
+   ' data-focus-x="'+backdropX+'" data-focus-y="'+backdropY+'" data-zoom="'+backdropZoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
  const target=combatants.find(row=>String(row.id)===targetId)||null;
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
@@ -5239,6 +5254,7 @@ function combatSpellCastPanelHtml(){
    'Målet är valt. Tryck ✦ igen för att kasta.';
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
+  backdropHtml+
   combatMagicHeaderHtml(actor,target,data)+
   (resolved?
    combatSpellResultHtml(action)+
