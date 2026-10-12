@@ -172,6 +172,23 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('combat-spell-effect-surface');
   expect(html).toContain('EFFEKT');
  });
+ test('kvadratisk effektbild använder egen fil och eget utsnitt, aldrig ikonen',()=>{
+  const {context,action}=fixture();
+  const prefix='spell/11111111-1111-4111-8111-111111111111/';
+  const icon=prefix+'22222222-2222-4222-8222-222222222222.webp';
+  const effect=prefix+'33333333-3333-4333-8333-333333333333.webp';
+  Object.assign(action.source_data,{
+   spell_icon_path:icon,spell_effect_image_path:effect,
+   spell_effect_focus_x:78,spell_effect_focus_y:64,spell_effect_zoom:160
+  });
+  const result=context.spellPanel();
+  expect(result).toContain('combat-spell-effect-artwork');
+  expect(result).toContain('data-spell-art-path="'+effect+'"');
+  expect(result).toContain('data-focus-x="78"');
+  expect(result).toContain('data-focus-y="64"');
+  expect(result).toContain('data-zoom="160"');
+  expect(result).not.toContain(icon);
+ });
  test('områdesmagi och magi utan individuellt mål använder platshållarkort',()=>{
   const {context,action}=fixture();
   action.status='planned';
