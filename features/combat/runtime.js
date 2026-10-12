@@ -5048,7 +5048,7 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
- return '<div class="combat-mini-side combat-duelist-card '+(label==='FÖRSVARAR'?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
+ return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
   '<div class="combat-duelist-portrait" aria-hidden="true">'+portraitHtml+'</div>'+
   '<div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">'+escAttr(label)+'</span>'+
@@ -5086,12 +5086,13 @@ function combatSpellResultHtml(action){
  const info=String(data.magic_rule?.effect_per_eg||data.spell_description||'').trim();
  return '<div class="combat-attack-result combat-spell-result '+escAttr(result.outcome)+'">'+
   '<div class="combat-attack-result-main">'+
-   '<div class="combat-attack-result-heading"><span>Besvärjelseslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
+   '<div class="combat-attack-result-heading combat-spell-outcome-banner"><span>Besvärjelseslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
    '<div class="combat-attack-result-rolls"><span>T20 <b>'+escAttr(result.roll??'—')+'</b> mot FV <b>'+escAttr(result.fv??'—')+'</b></span>'+
     (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+escAttr(result.confirmation_roll)+'</b></span>':'')+
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
     (data.item_magic?'<span>×<b>'+escAttr(data.item_magic.effect_multiplier||1)+'</b> från '+escAttr(data.item_magic.item_name||'föremål')+'</span>':'')+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
+   '<div class="combat-spell-effect-surface"><div class="combat-spell-effect-label"><span aria-hidden="true">✦</span> EFFEKT</div>'+ 
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
    (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA · '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+'</b>'+
     (result.healing_applied?'<div class="combat-heal-total">+'+escAttr(result.healing_restored??0)+' KP återställda</div>'+
@@ -5108,6 +5109,7 @@ function combatSpellResultHtml(action){
    (result.target_results?.length
     ?result.target_results.map(entry=>combatDamageResultHtml(entry.damage)).join('')
     :combatDamageResultHtml(result.damage))+
+   '</div>'+
   '</div></div>'
 }
 // Compact facts: keep FV, EG, CL, PSY and optional rule ranges readable on mobile.
@@ -5131,11 +5133,24 @@ function combatMagicFactsHtml(data,action){
 function combatMagicHeaderHtml(actor,target,data){
  const kind=data.magic_binding?.kind||'manual';
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
- const goal=target?.name_snapshot||(area?(data.area_center?'Område valt':'Välj område'):needsTarget?'Välj mål':'');
- return '<div class="combat-magic-heading">'+
-  '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span>'+
-  '<b class="combat-magic-participants">'+escAttr(actor.name_snapshot)+(goal?' <span class="combat-magic-arrow" aria-hidden="true">→</span> '+escAttr(goal):'')+'</b>'+
- '</div>'
+ const placeholder=area?(data.area_center?'Område valt':'Välj område'):
+   needsTarget?'Välj mål':kind==='manual'?'Inget särskilt mål':'Själv / omgivning';
+ const description=area?'Områdesbesvärjelse':kind==='heal'?'Läkning':
+   kind==='status'?'Magisk effekt':kind==='damage'?'Besvärjelsens mål':'';
+ const targetCard=target?combatMiniParticipantHtml('MÅL',target,description):
+  '<div class="combat-mini-side combat-duelist-card defender magic-empty-target">'+
+    '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>'+
+    '<div class="combat-duelist-copy"><span class="combat-duelist-role">MÅL</span>'+
+      '<b class="combat-duelist-name">'+escAttr(placeholder)+'</b>'+
+      '<small class="combat-duelist-meta">'+escAttr(area?'Markera centrum på kartan':needsTarget?'Välj kombattant':'Inget individuellt mål')+'</small>'+
+    '</div></div>';
+ return '<div class="combat-mini-title combat-magic-heading">'+
+  '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span></div>'+
+  '<div class="combat-mini-duel combat-magic-duel">'+
+   combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
+   '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
+   targetCard+
+  '</div>'
 }
 function combatMagicStatusHtml(label,detail,state){
  return '<div class="combat-magic-status" data-state="'+escAttr(state)+'" role="status" aria-live="polite">'+
@@ -5183,10 +5198,13 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
   combatMagicHeaderHtml(actor,target,data)+
-  combatMagicStatusHtml(label,detail,state)+
-  combatMagicFactsHtml(data,action)+
-  (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
-  (resolved?combatSpellResultHtml(action):'')+
+  (resolved?
+   combatSpellResultHtml(action)+
+   '<details class="combat-magic-detail-values"><summary>Slagvärden och besvärjelsedata</summary>'+
+    combatMagicFactsHtml(data,action)+'</details>':
+   combatMagicStatusHtml(label,detail,state)+
+   combatMagicFactsHtml(data,action)+
+   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
  '</section>'
 }
 function combatAttackPanelHtml(){
