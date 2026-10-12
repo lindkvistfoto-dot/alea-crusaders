@@ -2304,7 +2304,7 @@ function combatSpellChooserHtml(combatant,action){
      const unavailable=source&&(!source.ready||source.cast_mode==='automatic'||!Number.isFinite(Number(source.fv))||Number(source.fv)<1);
      const reason=source?.cast_mode==='automatic'?'Automatiskt kast ännu inte anslutet':
       source&&!source.fv?'Saknar ett giltigt FV':source?.unavailable_reason||'';
-     const artPath=/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(spell.image_path||''))?spell.image_path:'';
+     const artPath=/^spell\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/.test(String(spell.image_path||''))?spell.image_path:'';
      const artHtml=artPath?'<img class="combat-spell-thumb" data-spell-art-path="'+escAttr(artPath)+'" alt="" hidden>':'';
      const hint=source?
       escAttr(source.item_name)+(source.battery?' · ⚡ Batteri':'')+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
@@ -2416,7 +2416,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',
-  spell_image_path:/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(spell.image_path||''))?spell.image_path:null,
+  spell_image_path:/^spell\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/.test(String(spell.image_path||''))?spell.image_path:null,
   spell_image_focus_x:Math.min(100,Math.max(0,Number(spell.image_focus_x??80)||0)),
   spell_image_focus_y:Math.min(100,Math.max(0,Number(spell.image_focus_y??78)||0)),
   damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
@@ -5080,7 +5080,7 @@ function combatLatestResolvedSpellAction(){
 function combatSpellResultHtml(action){
  if(!action?.result?.outcome)return '';
  const result=action.result,data=action.source_data||{},meta=combatOutcomeMeta(result.outcome);
- const artPath=/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(data.spell_image_path||''))?data.spell_image_path:'';
+ const artPath=/^spell\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/.test(String(data.spell_image_path||''))?data.spell_image_path:'';
  const artX=Math.min(100,Math.max(0,Number(data.spell_image_focus_x??80)||0));
  const artY=Math.min(100,Math.max(0,Number(data.spell_image_focus_y??78)||0));
  const success=result.success===true,kind=data.magic_binding?.kind||'manual';
