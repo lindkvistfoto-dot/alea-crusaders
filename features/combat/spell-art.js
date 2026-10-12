@@ -259,7 +259,7 @@
  }
  async function hydrateCombat(root){
   if(!root?.querySelectorAll)return;
-  root.querySelectorAll('[data-spell-art-path]').forEach(async el=>{
+  await Promise.all(Array.from(root.querySelectorAll('[data-spell-art-path]')).map(async el=>{
    const path=el.getAttribute('data-spell-art-path');
    if(!validPath(path))return;
    const img=el.tagName==='IMG'?el:el.querySelector('img');
@@ -274,7 +274,7 @@
     img.src=url;img.hidden=false;
     if(img.complete&&img.naturalWidth)positionImage(img,view,v);
    }catch(error){console.warn('Besvärjelsebilden kunde inte läsas',error)}
-  });
+  }));
  }
  function refreshVisibleCrops(){
   for(const kind of Object.keys(TYPES))previewFocus(kind);
