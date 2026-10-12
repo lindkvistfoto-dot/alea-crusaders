@@ -157,3 +157,33 @@
   .combat-shell-live .combat-duelist-copy .combat-duelist-name{font-size:11px}
   .combat-shell-live .combat-duelist-copy .combat-duelist-meta{font-size:8px}
 }
+
+/* v0.35.134: mirror only the defender, keeping names and HP right aligned.
+   The attacker retains its existing left portrait / left-aligned text. */
+.combat-mini-attack .combat-mini-side.combat-duelist-card.defender,
+.combat-shell-live .combat-mini-side.combat-duelist-card.defender{
+  grid-template-columns:minmax(0,1fr) clamp(46px,4.8vw,62px);
+}
+.combat-mini-attack .combat-duelist-card.defender .combat-duelist-portrait{
+  grid-column:2;
+  grid-row:1;
+}
+.combat-mini-attack .combat-duelist-card.defender .combat-duelist-copy{
+  grid-column:1;
+  grid-row:1;
+  text-align:right;
+  align-items:flex-end;
+}
+.combat-mini-attack .combat-mini-title:has(>span:only-child){
+  margin-bottom:7px;
+}
+@media(max-width:1023px){
+  .combat-shell-live .combat-mini-side.combat-duelist-card.defender{
+    grid-template-columns:minmax(0,1fr) clamp(38px,11vw,58px);
+  }
+}
+@media(max-width:390px){
+  .combat-shell-live .combat-mini-side.combat-duelist-card.defender{
+    grid-template-columns:minmax(0,1fr) 38px;
+  }
+}
