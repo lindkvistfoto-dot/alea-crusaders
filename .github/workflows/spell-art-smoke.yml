@@ -1,0 +1,30 @@
+name: Spell artwork smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'features/combat/spell-art.js'
+      - 'features/combat/spell-art.css'
+      - 'features/combat/runtime.js'
+      - 'legacy/app.js'
+      - 'tests/spell-master-art.test.js'
+      - 'tests/combat-magic-result.test.js'
+      - 'tests/combat-spell-chooser-layout.test.js'
+      - 'tests/combat-manual-magic.test.js'
+      - 'tests/item-granted-spells.test.js'
+      - 'tests/character-spell-master.test.js'
+      - 'supabase/migrations/20261013012000_spell_dual_art_square_crop.sql'
+      - '.github/workflows/spell-art-smoke.yml'
+  workflow_dispatch:
+jobs:
+  spell-art-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run tests/spell-master-art.test.js tests/combat-magic-result.test.js tests/combat-spell-chooser-layout.test.js tests/combat-manual-magic.test.js tests/item-granted-spells.test.js tests/character-spell-master.test.js
+      - run: npm run build
