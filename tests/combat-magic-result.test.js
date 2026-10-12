@@ -8,6 +8,7 @@ const finish=runtime.indexOf('function combatAttackPanelHtml(){',begin);
 if(begin<0||finish<begin)throw Error('Besvärjelsens resultatpanel saknas');
 const panelCode=runtime.slice(begin,finish);
 const participants=runtime.slice(runtime.indexOf('function combatMiniParticipantHtml('),runtime.indexOf('// Spell feedback is presentation-only'));
+const artHelpers=runtime.slice(runtime.indexOf('function combatSpellArtPath('),runtime.indexOf('function combatSpellChooserHtml('));
 
 function fixture(overrides={}){
  const mage={id:'mage1',name_snapshot:'Eldra',current_psy:8};
@@ -33,7 +34,7 @@ function fixture(overrides={}){
   escAttr:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
  };
  Object.assign(context,overrides);
- runInNewContext(participants+panelCode+
+ runInNewContext(artHelpers+participants+panelCode+
   'this.spellResult=combatSpellResultHtml;this.spellPanel=combatSpellCastPanelHtml;',context);
  return {context,mage,newActor,action};
 }
