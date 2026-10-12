@@ -2408,7 +2408,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
- action.source_data=sourceData;combatPreserveSpellScroll()
+ action.source_data=sourceData;renderCombat()
 }
 async function stepCombatSpellEffect(combatantId,delta){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked)return;
@@ -2418,7 +2418,7 @@ async function stepCombatSpellEffect(combatantId,delta){
  if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
  const sourceData={...(action.source_data||{}),effect_grade:effect,magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,psy_cost:effect};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
- action.source_data=sourceData;combatPreserveSpellScroll()
+ action.source_data=sourceData;renderCombat()
 }
 function combatRowMagicMenuHtml(combatant){
  if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='magic')return '';
@@ -2430,14 +2430,6 @@ function combatRowMagicMenuHtml(combatant){
 function combatCloseMagicChooser(){
  combatCloseRowActionMenu();
  renderCombat();
-}
-function combatPreserveSpellScroll(){
- const scroll=$('combatBody')?.querySelector('.combat-spell-catalog')?.scrollTop||0;
- renderCombat();
- requestAnimationFrame(()=>{
-  const list=$('combatBody')?.querySelector('.combat-spell-catalog');
-  if(list)list.scrollTop=scroll;
- });
 }
 function combatActionChooserHtml(combatant){
  if(!combatant)return '';
@@ -6019,6 +6011,7 @@ function combatGmToolboxHtml(){
 }
 function renderCombat(){
  let body=$('combatBody'),sub=$('combatSubtitle');if(!body)return;
+ const magicScrollTop=body.querySelector('.combat-spell-catalog')?.scrollTop||0;
  const stopButton=$('combatStopBtn');
  if(stopButton){
   const showStop=combatCanManage()&&!!activeCombat&&['active','paused'].includes(activeCombat.status)&&!combatSceneSelectionIsPreview();
@@ -6060,6 +6053,10 @@ function renderCombat(){
   '</div>'+
   '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div></aside>'+
  '</div>'+combatantDetailsPopupHtml();
+ if(magicScrollTop){
+  const nextSpellList=body.querySelector('.combat-spell-catalog');
+  if(nextSpellList)nextSpellList.scrollTop=magicScrollTop;
+ }
  renderCombatGmControls();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
  void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
