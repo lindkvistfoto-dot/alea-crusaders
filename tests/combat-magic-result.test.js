@@ -255,6 +255,21 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   action.source_data.spell_name='eld (f)';
   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="90" data-focus-y="10" data-zoom="150"');
  });
+ test('Eld visar inte magikern som sitt eget mål vid återupptagen strid',()=>{
+  const {context,action}=fixture();
+  action.status='planned';
+  action.source_data.casting_spell=true;
+  action.source_data.spell_name='ELD (F)';
+  action.source_data.magic_binding.kind='damage';
+  action.source_data.ready_round=3;
+  context.combatSelectedTargetId='mage1'; // The loaded battle initially selects the active actor.
+  const html=context.spellPanel();
+  expect(html).toContain('Välj mål');
+  expect(html).not.toContain('Klar att kasta');
+  expect(html).toContain('magic-empty-target');
+  context.combatSelectedTargetId='fighter';
+  expect(context.spellPanel()).toContain('Klar att kasta');
+ });
  test('gamla stridshändelser fungerar med historisk bild och utan bild',()=>{
   const {context,action}=fixture();
   const old='spell/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
