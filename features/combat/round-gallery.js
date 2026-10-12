@@ -8,7 +8,7 @@
  const SAFE=/^round\/[0-9a-f-]{36}\.(?:webp|png|jpg|jpeg)$/;
  const MAX_SOURCE=12*1024*1024;
  let rows=null,chosenUrl='',chosenCombatId='',chosenKey='',request=0,adminBusy=false,adminRender=0;
- const cachedUrls=new Map();
+ const cachedUrls=new Map(),failedImageUrls=new Set();
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const canManage=()=>{try{return Boolean(activeUser()?.admin)}catch(_){return false}};
  const status=message=>{const el=document.getElementById('roundGalleryStatus');if(el)el.textContent=message||''};
@@ -44,7 +44,23 @@
   document.querySelectorAll('.combat-turn-panel').forEach(el=>{
    if(chosenUrl)el.style.setProperty('--alea-round-illustration','url('+JSON.stringify(chosenUrl)+')');
    else el.style.removeProperty('--alea-round-illustration');
+   const image=el.querySelector?.('.combat-round-artwork-image');
+   if(!image)return;
+   const fallback='./'+BUILTIN;
+   let url=chosenUrl||fallback;
+   if(failedImageUrls.has(url))url=fallback;
+   if(failedImageUrls.has(url)){image.hidden=true;return}
+   image.hidden=false;
+   if(image.getAttribute('src')!==url)image.setAttribute('src',url);
   });
+ }
+ function fallbackImage(image){
+  if(!image||!image.isConnected)return;
+  const failed=image.getAttribute('src')||'';
+  if(failed)failedImageUrls.add(failed);
+  const builtin='./'+BUILTIN;
+  if(failed!==builtin&&!failedImageUrls.has(builtin))image.setAttribute('src',builtin);
+  else image.hidden=true;
  }
  async function activate(combat,actor=null){
   if(!combat?.id){
@@ -185,5 +201,5 @@
    }
   }catch(e){host.textContent='Kunde inte hämta bakgrundsbilder: '+(e.message||e)}
  }
- window.aleaRoundGallery={list,getActivePool,pickRandomForCombat,activate,apply,upload,toggle,rename,archive,renderAdmin};
+ window.aleaRoundGallery={list,getActivePool,pickRandomForCombat,activate,apply,fallbackImage,upload,toggle,rename,archive,renderAdmin};
 })();

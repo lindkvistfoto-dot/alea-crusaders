@@ -5311,6 +5311,7 @@ function combatTurnVitalPercent(current,maximum){
  return Math.round(Math.min(100,Math.max(0,value/max*100)));
 }
 const combatOrnateFrameCorners = '<span class="combat-ornate-corners" aria-hidden="true"><i class="combat-ornate-corner tl"></i><i class="combat-ornate-corner tr"></i><i class="combat-ornate-corner br"></i><i class="combat-ornate-corner bl"></i></span>';
+const combatRoundArtLayer='<span class="combat-round-artwork" aria-hidden="true"><img class="combat-round-artwork-image" src="./assets/combat/round-hero-battle-pilot.avif" alt="" loading="eager" decoding="async" onerror="window.aleaRoundGallery?.fallbackImage?.(this)"></span>';
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
  const lastUndo=activeCombat?.settings?.turn_undo_last;
@@ -5324,7 +5325,7 @@ function combatTurnPanelHtml(){
   undoButton+
  '</div>';
  if(!actor){
-  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+head+
+  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
    '<div class="combat-turn-actor empty"><span>Inväntar aktiv kombatant…</span></div>'+
   '</div>'
  }
@@ -5339,7 +5340,7 @@ function combatTurnPanelHtml(){
  const maximum=combatMovementMaximum(actor),remaining=combatMovementBudget(actor),spent=Math.max(0,maximum-remaining);
  const kpCurrent=actor.current_kp==null?'—':actor.current_kp,kpMax=actor.max_kp==null?'—':actor.max_kp;
  const psyCurrent=actor.current_psy==null?'—':actor.current_psy,psyMax=actor.max_psy==null?'—':actor.max_psy;
- return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+head+
+ return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
   '<div class="combat-turn-actor">'+
    combatTurnPortraitHtml(actor)+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+

@@ -10,7 +10,7 @@ const schema=read('supabase/migrations/20261012013000_character_round_background
 describe('Character-specific round artwork',()=>{
  it('gives each editable character a personal upload/preview/removal panel',()=>{
   expect(html).toContain('id="characterRoundGallery"');
-  expect(html).toContain('features/character/round-background.js?v=0.35.126');
+  expect(html).toContain('features/character/round-background.js?v=0.35.127');
   expect(legacy).toContain('window.aleaCharacterRoundBackground?.render?.()');
   for(const s of ['Ladda upp bild','Byt bild','Ta bort bild','adminbiblioteket'])expect(source).toContain(s);
   expect(source).toContain('canEditCharacter(character)');
