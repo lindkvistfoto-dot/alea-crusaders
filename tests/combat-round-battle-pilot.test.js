@@ -29,7 +29,7 @@ describe('Pilot: fantasy battle image behind the round panel',()=>{
    expect(css).toContain('.combat-turn-panel > .combat-ornate-corners {');
    expect(css).toContain('z-index: 3;');
    expect(runtime).toContain('function combatTurnPanelHtml(){');
-   expect(runtime).toContain('combatOrnateFrameCorners+head+');
+   expect(runtime).toContain('combatOrnateFrameCorners+combatRoundArtLayer+head+');
    expect(runtime).toContain('onclick="combatAttackButton');
  });
 });
