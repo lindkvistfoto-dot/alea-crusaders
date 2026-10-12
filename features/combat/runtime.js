@@ -5253,7 +5253,7 @@ function combatSpellCastPanelHtml(){
    kind==='area'?'Tryck ✦ för att kasta på det valda området.':
    'Målet är valt. Tryck ✦ igen för att kasta.';
  }
- return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
+ return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
   combatMagicHeaderHtml(actor,target,data)+
   (resolved?
