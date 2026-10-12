@@ -39,6 +39,16 @@
   transform-origin:top right;
 }
 
+/* Fourth-quadrant details (notably staff ends) must remain in their
+   source orientation. The 45deg two-hand pose otherwise clips the corner. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon.twohand[data-combat-crop="bottom-right"]
+> .combat-turn-art-frame > img.combat-turn-art{
+  width:210%;
+  height:210%;
+  transform:none;
+  transform-origin:bottom right;
+}
+
 /* Never enlarge the magical sigil; it is an independent overlay. */
 #combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
 > .combat-turn-art-frame > .alea-magic-item-dot{
