@@ -8,6 +8,9 @@ on:
       - 'features/combat/runtime.js'
       - 'src/main.js'
       - 'legacy/app.js'
+      - 'features/combat/special-images.css'
+      - 'tests/special-images-admin.test.js'
+      - 'tests/combat-round-background-gallery.test.js'
       - 'tests/combat-hit-figure-packs.test.js'
       - 'index.html'
       - '.github/workflows/hit-figure-smoke.yml'
@@ -22,5 +25,5 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npx vitest run tests/combat-hit-figure-packs.test.js
+      - run: npx vitest run tests/combat-hit-figure-packs.test.js tests/combat-round-background-gallery.test.js tests/special-images-admin.test.js
       - run: npm run build
