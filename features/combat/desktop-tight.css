@@ -1,0 +1,80 @@
+/* v0.35.135 — compact desktop combat dashboard.
+   No duplicate combat title row: the app banner is the heading.
+   Keep active round + current attack visible without clipping content. */
+@media (min-width:1024px){
+  main:has(> #combatPage:not(.hidden)){
+    padding-top:0;
+  }
+  #combatPage .combatpage{
+    padding-top:0;
+    margin-top:0;
+  }
+  #combatPage #combatBody{
+    margin-top:0;
+    padding-top:0;
+  }
+  #combatPage .combat-shell.combat-shell-live{
+    margin-top:0;
+    column-gap:10px;
+    row-gap:8px;
+    align-items:start;
+  }
+  #combatPage .combat-shell-live .combat-left-column{
+    gap:6px;
+  }
+  #combatPage .combat-shell-live .combat-left-column > .combat-mini-attack{
+    padding:7px 8px;
+    margin:0;
+  }
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-head{
+    padding:5px 8px 4px;
+    row-gap:3px;
+  }
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-actor{
+    padding:4px 7px 4px;
+    gap:5px 7px;
+  }
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-stats > div{
+    padding:4px 2px 5px;
+  }
+  #combatPage .combat-shell-live .combat-mini-title{
+    margin-bottom:5px;
+  }
+  #combatPage .combat-shell-live .combat-mini-duel{
+    gap:4px;
+  }
+  #combatPage .combat-shell-live .combat-mini-attack .combat-attack-result{
+    margin-top:7px;
+  }
+  #combatPage .combat-shell-live .combat-left-column > .combat-mini-attack,
+  #combatPage .combat-shell-live .combat-turn-panel{
+    max-height:none;
+    overflow:visible;
+  }
+}
+/* Compact short laptop screens further, without hiding any action or result. */
+@media (min-width:1024px) and (max-height:830px){
+  #combatPage .combat-shell-live .combat-left-column{gap:4px}
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-actor{gap:3px 6px;padding:3px 6px}
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-head{padding:4px 6px 3px}
+  #combatPage .combat-shell-live .combat-turn-actions .combat-row-tool-btn{height:34px}
+  #combatPage .combat-shell-live .combat-left-column .combat-turn-stats>div{padding:3px 2px 4px}
+  #combatPage .combat-shell-live .combat-left-column > .combat-mini-attack{padding:6px}
+}
+/* End combat is a deliberate, GM-only action beside Play / Reset.
+   Never let it look like the harmless 'end turn' icon. */
+#combatPage .combat-gm-controls .combat-stop-btn{
+  border:1px solid #a05a48;
+  background:linear-gradient(#633024,#401b18);
+  color:#ffe2d1;
+  font-weight:800;
+  white-space:normal;
+}
+#combatPage .combat-gm-controls .combat-stop-btn:hover:not(:disabled){
+  background:linear-gradient(#793a2b,#55211b);
+  border-color:#d07c63;
+}
+#combatPage .combat-gm-controls .combat-stop-btn:disabled{
+  opacity:.55;
+  cursor:wait;
+}
