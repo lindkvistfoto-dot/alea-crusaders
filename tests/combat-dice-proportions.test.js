@@ -25,9 +25,10 @@ describe('Combat DiceBox presentation',()=>{
   expect(block).toContain('return b.roll(notation,{newStartPoint:true})');
  });
  it('refreshes affected module and CSS cache paths without altering the dice tray',()=>{
-  expect(main).toContain('features/dice/dice3d.js?v=0.35.107');
-  expect(html).toContain('src/styles/app.css?v=0.35.108');
-  expect(html).toContain('src/main.js?v=0.35.107');
+  const version=JSON.parse(source('package.json')).version;
+  expect(main).toContain('features/dice/dice3d.js?v='+version);
+  expect(html).toContain('src/styles/app.css?v='+version);
+  expect(html).toContain('src/main.js?v='+version);
   expect(dice3d).toContain('scale:7.2,');
   expect(dice3d).toContain('scale:5.6,');
  });
