@@ -1,6 +1,5 @@
-/* v0.35.137 — experiment: show the blade/head detail from the top-right
-   quarter of Narsil weapon artwork in the Runda equipment row only.
-   Other inventory views, shields, armor and projectiles remain unchanged. */
+/* v0.35.138 — top-right artwork details for weapons, shields, armor and
+   projectiles in the Runda equipment row only. Other views remain unchanged. */
 #combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
 > .combat-turn-art-frame{
   position:relative;
@@ -44,5 +43,76 @@
 #combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
 > .combat-turn-art-frame > .alea-magic-item-dot{
   position:absolute;
+  z-index:3;
+}
+
+/* Same upper-right 2.1× crop for shields and chest armor as for weapons.
+   The leather background, labels and magical badge remain unchanged. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.shield,.armor)
+> .combat-turn-art-frame{
+  position:relative;
+  overflow:hidden;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.shield,.armor)
+> .combat-turn-art-frame > img.combat-turn-art{
+  position:absolute;
+  top:0;
+  right:0;
+  width:210%;
+  height:210%;
+  max-width:none;
+  max-height:none;
+  min-width:0;
+  min-height:0;
+  display:block;
+  object-fit:contain;
+  object-position:top right;
+  transform:none;
+  transform-origin:top right;
+  pointer-events:none;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art:is(.shield,.armor)
+> .combat-turn-art-frame > .alea-magic-item-dot{
+  position:absolute;
+  z-index:3;
+}
+/* Give each ammo type a viewport so its enlargement never overlaps another. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile
+ .combat-turn-ammo-images > .combat-turn-projectile-crop{
+  display:grid;
+  place-items:center;
+  position:relative;
+  flex:1 1 0;
+  min-width:0;
+  height:100%;
+  overflow:hidden;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile
+ .combat-turn-projectile-crop > img.combat-turn-art{
+  position:absolute;
+  top:0;
+  right:0;
+  display:block;
+  width:210%;
+  height:210%;
+  min-width:0;
+  min-height:0;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  object-position:top right;
+  transform:none;
+  transform-origin:top right;
+  pointer-events:none;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile
+ .combat-turn-projectile-crop > .combat-turn-ammo-placeholder{
+  position:relative;
+  z-index:1;
+}
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.projectile
+> .combat-turn-art-frame > .combat-turn-ammo-count{
   z-index:3;
 }
