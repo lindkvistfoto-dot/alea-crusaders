@@ -21,7 +21,7 @@
  const canManage=()=>{try{return !!activeUser()?.admin}catch(_){return false}};
  function artFor(row,kind){
   const type=TYPES[kind]||TYPES.effect;
-  const path=row?.[type.path]||(row?.image_path||'');
+  const path=row?.[type.path]!==undefined?row[type.path]:(row?.image_path||'');
   const legacy=validPath(path)&&path===row?.image_path;
   return {
    path:validPath(path)?path:'',
