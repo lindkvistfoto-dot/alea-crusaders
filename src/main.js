@@ -25,7 +25,7 @@ function transparentHitEscAttr(value){
  * exact SVG body outline so the pale rectangle becomes transparent and the
  * combat HUD background shows directly around the body silhouette.
  */
-window.combatHitLocationFigureHtml=function(hitLocation){
+function combatLegacyHitLocationFigureHtml(hitLocation){
   const active=String(hitLocation?.key||"");
   const model=window.ALEA_HIT_BODY_MODEL?.src||"";
   const data=window.ALEA_HIT_BODY_ZONES||null;
@@ -52,6 +52,58 @@ window.combatHitLocationFigureHtml=function(hitLocation){
       '</svg>'+
     '</div>'+
   '</div>';
+};
+
+
+
+/* v0.35.129 — optional, interchangeable illustrated hit-location packs.
+ * Image files carry the golden highlight; dice, armor, and damage stay in
+ * the combat engine. Packs are selected from the DEFENDER, not the attacker.
+ * The old anatomical figure remains visible if the new image fails to load.
+ */
+const ALEA_HIT_FIGURE_PARTS=Object.freeze([
+  'neutral','head','chest','abdomen',
+  'left_arm','right_arm','left_leg','right_leg'
+]);
+const ALEA_HIT_FIGURE_IMAGES=Object.freeze(Object.fromEntries(
+  ALEA_HIT_FIGURE_PARTS.map(part=>[part,part+'.webp'])
+));
+window.ALEA_HIT_FIGURE_PACKS={
+  ...(window.ALEA_HIT_FIGURE_PACKS||{}),
+  humanoid_male:{
+    label:'Humanoid – man',
+    base:'./assets/hit-figures/humanoid-male/',
+    images:{...ALEA_HIT_FIGURE_IMAGES}
+  }
+};
+window.aleaRegisterHitFigurePack=function(profile,pack){
+  const key=String(profile||'').trim();
+  if(!/^[a-z0-9_-]+$/i.test(key)||!pack||typeof pack!=='object')return false;
+  if(typeof pack.base!=='string'||!pack.images||typeof pack.images!=='object')return false;
+  if(!ALEA_HIT_FIGURE_PARTS.every(part=>typeof pack.images[part]==='string'))return false;
+  window.ALEA_HIT_FIGURE_PACKS[key]={
+    label:String(pack.label||key),
+    base:pack.base,
+    images:{...pack.images}
+  };
+  return true;
+};
+window.combatHitLocationFigureHtml=function(hitLocation){
+  const legacy=combatLegacyHitLocationFigureHtml(hitLocation);
+  const part=String(hitLocation?.key||'');
+  const profile=String(hitLocation?.figure_profile||'humanoid_male');
+  const pack=window.ALEA_HIT_FIGURE_PACKS?.[profile];
+  const file=pack?.images?.[part];
+  if(!ALEA_HIT_FIGURE_PARTS.includes(part)||!pack||!file)return legacy;
+  const camera=TRANSPARENT_HIT_CAMERA[part]||{scale:1,tx:0,ty:0};
+  const cameraStyle='--hit-scale:'+camera.scale+';--hit-tx:'+camera.tx+'%;--hit-ty:'+camera.ty+'%';
+  const path=String(pack.base||'')+String(file);
+  return '<div class="combat-hit-image-switch" style="'+cameraStyle+'">'+legacy+
+    '<img class="combat-hit-art-image" src="'+transparentHitEscAttr(path)+
+    '" alt="" aria-hidden="true" decoding="async"'+
+    ' onload="this.parentElement.classList.add(\'combat-hit-art-loaded\')"'+
+    ' onerror="this.parentElement.classList.add(\'combat-hit-art-failed\')"'+
+    '></div>';
 };
 
 
