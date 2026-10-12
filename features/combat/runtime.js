@@ -5034,10 +5034,25 @@ function combatAttackPanelWeaponHtml(actor,action,target){
   }).join('')+
  '</div></div>'
 }
+/* Shared illustrated participant card for pending parries and resolved/planned attacks.
+ * Uses existing portrait registry; no combat state or attack calculations change. */
 function combatMiniParticipantHtml(label,combatant,itemText=''){
  const kp=(combatant?.current_kp==null?'—':combatant.current_kp)+(combatant?.max_kp==null?'':' / '+combatant.max_kp);
- return '<div class="combat-mini-side"><span>'+label+'</span><b>'+(combatant?.status==='dead'?'☠ ':'')+escAttr(combatant?.name_snapshot||'—')+'</b>'+
-  '<small>KP '+kp+(itemText?' · '+escAttr(itemText):'')+'</small></div>'
+ const name=String(combatant?.name_snapshot||'—');
+ const portrait=combatant?combatRowPortraitUrl(combatant):'';
+ const initials=typeof combatTokenInitials==='function'?combatTokenInitials(name):name.slice(0,2);
+ const portraitHtml=portrait?
+  '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
+  '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
+  '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
+ return '<div class="combat-mini-side combat-duelist-card'+(combatant?.status==='dead'?' is-defeated':'')+'">'+
+  '<div class="combat-duelist-portrait" aria-hidden="true">'+portraitHtml+'</div>'+
+  '<div class="combat-duelist-copy">'+
+   '<span class="combat-duelist-role">'+escAttr(label)+'</span>'+
+   '<b class="combat-duelist-name" title="'+escAttr(name)+'">'+
+     (combatant?.status==='dead'?'☠ ':'')+escAttr(name)+'</b>'+
+   '<small class="combat-duelist-meta">KP '+escAttr(kp)+(itemText?' · '+escAttr(itemText):'')+'</small>'+
+  '</div></div>'
 }
 // Spell feedback is presentation-only: Expert casting, PSY and effects are resolved elsewhere.
 function combatLatestResolvedSpellAction(){
