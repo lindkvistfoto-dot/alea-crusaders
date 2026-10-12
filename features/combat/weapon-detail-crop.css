@@ -1,0 +1,48 @@
+/* v0.35.137 — experiment: show the blade/head detail from the top-right
+   quarter of Narsil weapon artwork in the Runda equipment row only.
+   Other inventory views, shields, armor and projectiles remain unchanged. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
+> .combat-turn-art-frame{
+  position:relative;
+  overflow:hidden;
+}
+
+/* Art has a transparent square canvas; placing a 2x image at the frame's
+   top-right corner crops it to roughly the upper-right source quadrant. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
+> .combat-turn-art-frame > img.combat-turn-art{
+  position:absolute;
+  inset:auto 0 auto auto;
+  top:0;
+  right:0;
+  width:210%;
+  height:210%;
+  max-width:none;
+  max-height:none;
+  min-width:0;
+  min-height:0;
+  display:block;
+  object-fit:contain;
+  object-position:top right;
+  transform:none;
+  transform-origin:top right;
+  pointer-events:none;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.8));
+}
+
+/* A merged two-handed weapon spans two slots; keep its existing 45-degree
+   presentation but use a gentler crop so the head remains recognizable. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon.twohand
+> .combat-turn-art-frame > img.combat-turn-art{
+  width:175%;
+  height:175%;
+  transform:rotate(45deg);
+  transform-origin:top right;
+}
+
+/* Never enlarge the magical sigil; it is an independent overlay. */
+#combatPage .combat-turn-panel > .combat-turn-stats > .combat-turn-equip-art.weapon
+> .combat-turn-art-frame > .alea-magic-item-dot{
+  position:absolute;
+  z-index:3;
+}
