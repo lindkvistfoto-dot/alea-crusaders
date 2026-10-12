@@ -1,123 +1,125 @@
-/* v0.35.144 – shared master spell art and inline cropped previews. */
+/* Alea Crusaders – two independent square spell art crops.
+   The very same image positioning function drives editor, spell chooser and battle. */
 .spell-art-editor{
- grid-column:1 / -1;
- margin:10px 0 2px;
- padding:13px;
- min-width:0;
- border:1px solid #9b7443;
- border-radius:11px;
- background:linear-gradient(125deg,#21180f,#110f0d);
+ margin:12px 0 2px;padding:14px;min-width:0;
+ border:1px solid #9b7443;border-radius:11px;
+ background:linear-gradient(135deg,#231a14,#120e0b);
  color:#f2dfbe;
 }
-.spell-art-editor h3{
- margin:0 0 5px;
- font:700 16px/1.35 Georgia,serif;
- color:#eeca91;
+.spell-art-editor>h3{margin:0 0 5px;color:#f2cf95;font:700 18px/1.35 Georgia,serif}
+.spell-art-editor>p{margin:0 0 14px;color:#d7bb96;font-size:12px;line-height:1.45}
+.spell-art-pane{
+ padding:13px 0 15px;margin:0 0 14px;
+ border-top:1px solid rgba(194,146,77,.5);
 }
-.spell-art-editor p{margin:4px 0 11px;font-size:12px;line-height:1.5}
+.spell-art-pane:last-child{margin-bottom:0;padding-bottom:5px}
+.spell-art-pane h4{margin:0;color:#efc88a;font:700 15px/1.3 Georgia,serif}
+.spell-art-pane>p:not(.spell-art-status){margin:4px 0 12px;color:#cfb38d;font-size:12px;line-height:1.45}
 .spell-art-editor-layout{
- display:grid;
- grid-template-columns:minmax(190px,1.1fr) minmax(190px,1fr);
- gap:14px;
- align-items:start;
+ display:grid;grid-template-columns:minmax(180px,290px) minmax(190px,1fr);
+ align-items:start;gap:15px;min-width:0;
 }
-.spell-art-preview{
- position:relative;
- display:grid;
- place-items:center;
- aspect-ratio:1.85 / 1;
- min-height:145px;
- max-height:250px;
- overflow:hidden;
- border:1px solid #ae7e41;
- border-radius:9px;
- background:radial-gradient(ellipse at 80% 80%,#75401f,#231610 50%,#120c09);
+.spell-art-preview-column{display:grid;justify-items:start;gap:7px;min-width:0}
+.spell-art-viewport{
+ position:relative;isolation:isolate;display:block;overflow:hidden;
+ box-sizing:border-box;width:min(100%,290px);aspect-ratio:1/1;
+ border:2px solid #bb884e;border-radius:11px;
+ background:radial-gradient(circle at 70% 75%,#6f3920,#231611 55%,#100c0a);
+ cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+ outline-offset:3px;
 }
-.spell-art-preview img{
- display:block;
- width:100%;
- height:100%;
- object-fit:cover;
+.spell-art-viewport.is-dragging{cursor:grabbing;border-color:#f2ce8d}
+.spell-art-viewport img,
+.combat-spell-thumb img,
+.combat-spell-effect-artwork img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ object-fit:fill;user-select:none;-webkit-user-drag:none;
+ pointer-events:none;
 }
-.spell-art-preview img[hidden]{display:none!important}
-.spell-art-preview span{
- display:block;
- padding:14px;
- text-align:center;
- color:#c4a271;
- font:700 13px Georgia,serif;
+.spell-art-viewport img[hidden],
+.combat-spell-thumb img[hidden],
+.combat-spell-effect-artwork img[hidden]{display:none!important}
+.spell-art-viewport .spell-art-empty{
+ display:grid;place-items:center;position:absolute;inset:0;
+ color:#d6b481;font:700 13px Georgia,serif;
+ text-align:center;padding:12px;
 }
-.spell-art-edit-controls{
- display:flex;
- flex-direction:column;
- align-items:flex-start;
- gap:9px;
- min-width:0;
+.spell-art-viewport::after{
+ content:"";position:absolute;inset:0;pointer-events:none;
+ border:1px solid rgba(245,207,138,.52);border-radius:9px;
+ box-shadow:inset 0 0 24px rgba(17,12,9,.25);
 }
-.spell-art-edit-controls label:not(.spell-art-upload){
- display:grid;
- grid-template-columns:minmax(0,1fr) auto;
- align-items:center;
- gap:4px 10px;
- width:100%;
- font-size:12px;
- color:#edce9a;
+.spell-art-help{color:#cab391;font-size:11px;line-height:1.4}
+.spell-art-edit-controls{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.spell-art-edit-controls>label:not(.spell-art-upload){
+ display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;
+ width:100%;color:#e7c798;font-size:12px;font-weight:700;
 }
+.spell-art-edit-controls output{color:#f4d9a8;font-size:11px}
 .spell-art-edit-controls input[type=range]{
- grid-column:1/-1;
- display:block;
- width:100%;
- padding:0;
- cursor:pointer;
- accent-color:#dcaa62;
+ display:block;width:100%;grid-column:1 / -1;
+ min-height:26px;padding:0;cursor:pointer;accent-color:#e3b36c;
 }
-.spell-art-edit-controls output{
- color:#f9ddaa;
- font:700 11px system-ui,sans-serif;
-}
-.spell-art-edit-controls small{font-size:11px;line-height:1.4;color:#c6ae8b}
-.spell-art-upload{position:relative;cursor:pointer}
+.spell-art-edit-controls .smallbtn{min-height:32px;cursor:pointer}
+.spell-art-control-actions{display:flex;flex-wrap:wrap;gap:7px}
+.spell-art-edit-controls>small{font-size:11px;color:#cbb08b;line-height:1.4}
+.spell-art-upload{position:relative;display:inline-flex;align-items:center;cursor:pointer}
 .spell-art-upload input[type=file]{
- position:absolute;
- width:1px;height:1px;
- overflow:hidden;opacity:0;
+ position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;
  clip-path:inset(50%);
 }
-#spellArtStatus{min-height:1.4em;margin:3px 0 0;color:#e7c48b;font-size:12px}
-#combatPage .combat-mini-magic .combat-spell-effect-surface{
- background-position:center,
-  var(--alea-spell-effect-focus-x,80%) var(--alea-spell-effect-focus-y,78%);
+.spell-art-status{min-height:17px;margin:9px 0 0!important;color:#f0c98b;font-size:12px}
+.spell-art-viewport:focus-visible,
+.spell-art-upload:focus-within{
+ outline:2px solid #f6d491;outline-offset:3px;
 }
-/* The effect's painted subject stays behind readable text, but the image is
-   allowed to dominate the lower-right portion of the card. */
+
+/* Spell chooser: square icon, clipping and drag-crop math match admin. */
+#combatPage .combat-turn-magic-host .combat-weapon-choice-btn.combat-spell-with-thumb{
+ display:grid;grid-template-columns:42px minmax(0,1fr);
+ align-items:center;gap:3px 9px;
+}
 #combatPage .combat-turn-magic-host .combat-spell-thumb{
- display:block;
- flex:0 0 39px;
- width:39px;
- height:39px;
- align-self:center;
- border:1px solid rgba(221,166,94,.8);
- border-radius:6px;
- object-fit:cover;
- background:#20140e;
+ grid-column:1;grid-row:1 / span 2;
+ position:relative;display:block;overflow:hidden;
+ width:42px;height:42px;box-sizing:border-box;min-width:42px;
+ border:1px solid rgba(222,176,109,.86);border-radius:7px;
+ background:#1c110c;
 }
-#combatPage .combat-turn-magic-host .combat-spell-thumb[hidden]{display:none!important}
-#combatPage .combat-turn-magic-host .combat-weapon-choice-btn:has(.combat-spell-thumb){
- display:grid;
- grid-template-columns:39px minmax(0,1fr);
- align-items:center;
- gap:2px 8px;
+#combatPage .combat-turn-magic-host .combat-spell-with-thumb b,
+#combatPage .combat-turn-magic-host .combat-spell-with-thumb small{
+ grid-column:2;min-width:0;
 }
-#combatPage .combat-turn-magic-host .combat-weapon-choice-btn .combat-spell-thumb{
- grid-column:1;
- grid-row:1/3;
+#combatPage .combat-turn-magic-host .combat-spell-with-thumb b{grid-row:1}
+#combatPage .combat-turn-magic-host .combat-spell-with-thumb small{grid-row:2}
+
+/* Cast-result art: a dedicated SQUARE on the lower right, not a wide image.
+   Dark left gradient is in front of art; outcome/effect text remains legible. */
+#combatPage .combat-mini-magic .combat-spell-effect-surface{
+ isolation:isolate;min-height:156px;
+ padding:14px 40% 14px 13px;
+ background:radial-gradient(ellipse at 84% 86%,rgba(153,72,26,.28),transparent 66%),#1b120e;
 }
-#combatPage .combat-turn-magic-host .combat-weapon-choice-btn:has(.combat-spell-thumb) b,
-#combatPage .combat-turn-magic-host .combat-weapon-choice-btn:has(.combat-spell-thumb) small{
- grid-column:2;
- min-width:0;
+#combatPage .combat-mini-magic .combat-spell-effect-artwork{
+ position:absolute;z-index:0;right:0;bottom:0;
+ width:min(48%,218px);aspect-ratio:1/1;
+ display:block;overflow:hidden;pointer-events:none;
+ background:#22150e;
 }
-@media(max-width:620px){
- .spell-art-editor-layout{grid-template-columns:1fr}
- .spell-art-preview{min-height:120px}
+#combatPage .combat-mini-magic .combat-spell-effect-surface::before{
+ content:"";position:absolute;z-index:1;inset:0;pointer-events:none;
+ background:linear-gradient(90deg,
+   rgba(18,12,10,.97) 0%,rgba(18,12,10,.9) 42%,
+   rgba(18,12,10,.40) 71%,rgba(18,12,10,.08) 100%);
+}
+#combatPage .combat-mini-magic .combat-spell-effect-label,
+#combatPage .combat-mini-magic .combat-spell-outcome-note,
+#combatPage .combat-mini-magic .combat-spell-effect-surface :is(.combat-spell-rule-note,.combat-spell-heal-result,.combat-damage-result,.combat-erf-result){
+ position:relative;z-index:2;
+}
+@media(max-width:660px){
+ .spell-art-editor-layout{grid-template-columns:minmax(0,1fr);gap:12px}
+ .spell-art-viewport{width:min(100%,320px)}
+ #combatPage .combat-mini-magic .combat-spell-effect-surface{padding:12px 29% 12px 11px}
+ #combatPage .combat-mini-magic .combat-spell-effect-artwork{width:min(54%,210px)}
 }
