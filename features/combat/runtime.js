@@ -5291,12 +5291,16 @@ function combatTurnEquipmentHtml(combatant){
  const shieldRule=item=>item?(typeof characterShieldRule==='function'?characterShieldRule(item):
   (typeof ruleShields!=='undefined'?ruleShields:[]).find(r=>String(r.id)===String(item.shieldTypeId||item.shield_id||''))):null;
  const magicalItem=item=>!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
- const imageTile=(kind,label,item,path,wide=false,count=null)=>{
+ const cropValue=(master,item)=>{
+  const quadrant=master?.combat_crop_quadrant||item?.combat_crop_quadrant||'top-right';
+  return ['top-right','top-left','bottom-right','bottom-left','full'].includes(quadrant)?quadrant:'top-right';
+ };
+ const imageTile=(kind,label,item,path,wide=false,count=null,crop='top-right')=>{
   const img=srcImg(path,'combat-turn-art');
   const magical=magicalItem(item);
   const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
   const name=item?.name||'Ingen';
-  return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+(magical?' magical':'')+(magical&&!img?' magical-no-art':'')+'">'+
+  return '<div class="combat-turn-equip combat-turn-equip-art '+kind+(wide?' twohand':'')+(magical?' magical':'')+(magical&&!img?' magical-no-art':'')+'" data-combat-crop="'+crop+'">'+
    '<span>'+escAttr(label)+'</span>'+
    '<div class="combat-turn-art-frame">'+(img||'<b class="combat-turn-art-empty">—</b>')+
     (count===null?'':'<b class="combat-turn-ammo-count" title="'+count+' facklor kvar">'+count+'</b>')+magicBadge+'</div>'+
@@ -5312,9 +5316,9 @@ function combatTurnEquipmentHtml(combatant){
   if(kind==='weapon'&&item){
    const rule=weaponRule(item),key=String(item.equipId||item.id||ref.itemId);
    if(!seenKeys.has(key)){shownWeapons.push({item,rule});seenKeys.add(key)}
-   return imageTile('weapon',label,item,item.imageOverridePath||rule?.image_path||item.image_path);
+   return imageTile('weapon',label,item,item.imageOverridePath||rule?.image_path||item.image_path,false,null,cropValue(rule,item));
   }
-  if(kind==='shield'&&item)return imageTile('shield',label,item,item.imageOverridePath||shieldRule(item)?.image_path||item.image_path);
+  if(kind==='shield'&&item){const rule=shieldRule(item);return imageTile('shield',label,item,item.imageOverridePath||rule?.image_path||item.image_path,false,null,cropValue(rule,item));}
   if(kind==='equipment'&&item){
    const catalog=window.aleaEquipmentCatalog;
    const count=catalog?.torchCount({equipment},item)??null;
@@ -5328,7 +5332,7 @@ function combatTurnEquipmentHtml(combatant){
   if(item){
    const rule=weaponRule(item);
    shownWeapons.push({item,rule});
-   hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true);
+   hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true,null,cropValue(rule,item));
   }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  // Older NPCs/enemies may have no selected hand slots at all.
@@ -5342,7 +5346,7 @@ function combatTurnEquipmentHtml(combatant){
   (worn.armorTypeKey&&r.type_key===worn.armorTypeKey)||
   String(r.name||'').localeCompare(String(worn.name||''),'sv',{sensitivity:'base'})===0):null;
  const armorArt=armorRule?.image_torso_path||armorRule?.image_path||worn?.image_torso_path||worn?.image_path;
- const armorHtml=imageTile('armor','Rustning',worn,armorArt);
+ const armorHtml=imageTile('armor','Rustning',worn,armorArt,false,null,cropValue(armorRule,worn));
  const projectileEntries=[],projectileKeys=new Set();
  for(const {item,rule} of shownWeapons){
   const category=rule?.category||item.weaponCategory||item.category;
@@ -5357,14 +5361,14 @@ function combatTurnEquipmentHtml(combatant){
    (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path)):
    (typeof projectileMasterImagePath==='function'?projectileMasterImagePath(projectile):projectile?.image_path);
   const count=typeof combatAmmoStock==='function'?Math.max(0,combatAmmoStock(combatant,key)||0):0;
-  projectileEntries.push({name:projectile?.name||key,count,imagePath});
+  projectileEntries.push({name:projectile?.name||key,count,imagePath,crop:cropValue(category==='thrown'?rule:projectile,item)});
  }
  const total=projectileEntries.map(row=>row.count).join(' / ');
  const description=projectileEntries.map(row=>row.name+': '+row.count+' kvar').join('; ');
  // Each projectile image gets an independent clipping viewport, so a
  // second ammo type remains separate when magnifying the upper-right detail.
  const ammoImages=projectileEntries.map(row=>
-  '<span class="combat-turn-projectile-crop">'+
+  '<span class="combat-turn-projectile-crop" data-combat-crop="'+row.crop+'">'+
    (srcImg(row.imagePath,'combat-turn-art')||
     '<b class="combat-turn-ammo-placeholder">'+escAttr(row.name)+'</b>')+
   '</span>').join('');
