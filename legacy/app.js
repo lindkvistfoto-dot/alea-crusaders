@@ -396,6 +396,18 @@ function projectileImageHtml(key,name){
  const url=window.aleaEquipmentArt?.src(path);
  return url?'<img class="projectile-inventory-art" src="'+escAttr(url)+'" alt="'+escAttr(name||'Projektil')+'" loading="lazy">':'';
 }
+/* Per-master crop focus for the small combat-round thumbnails. */
+function combatCropQuadrant(value){
+ return ['top-right','top-left','bottom-right','bottom-left','full'].includes(value)?value:'top-right';
+}
+function combatCropQuadrantEditor(id,record){
+ const selected=combatCropQuadrant(record?.combat_crop_quadrant);
+ const labels=[['top-right','Övre höger'],['top-left','Övre vänster'],['bottom-right','Nedre höger'],['bottom-left','Nedre vänster'],['full','Visa hela bilden']];
+ return '<label class="wide combat-crop-field">Utsnitt i stridens rundruta'+
+  '<select id="'+escAttr(id)+'" aria-label="Välj kvadrant för bilden i rundrutan">'+
+  labels.map(([v,title])=>'<option value="'+v+'"'+(v===selected?' selected':'')+'>'+title+'</option>').join('')+
+  '</select><small>Gäller bara stridsvyn, inte masterbilden.</small></label>';
+}
 function renderAdminProjectiles(){
  const el=$('adminProjectileTable'),st=$('adminProjectileStatus');
  if(!el)return;
@@ -415,6 +427,7 @@ function editRuleProjectile(key){
   '<label class="wide">Namn<input id="rpName" value="'+escAttr(p.name)+'"></label>'+
   '<label>Återhämtning (%)<input id="rpRecovery" type="number" min="80" max="90" value="'+p.recovery_percent+'"></label>'+
   '<label class="wide">Beskrivning<input id="rpDesc" value="'+escAttr(p.description||'')+'"></label>'+
+  combatCropQuadrantEditor('rpCombatCrop',p)+
   (projectileThrownWeapon(key)
    ?'<section class="item-art-editor wide" aria-label="Gemensam kastvapenbild"><div class="item-art-heading"><strong>Bild från kastvapnet</strong><span>Den här projektilen använder alltid samma bild som vapnet. Ändra bilden i Admin → Vapen.</span></div><div class="projectile-linked-weapon">'+(window.aleaEquipmentArt?.thumbnail(projectileMasterImagePath(p),'<span class="projectile-art-missing">◇</span>',p.name)||'')+'<strong>'+escAttr(projectileThrownWeapon(key)?.name||p.name)+'</strong></div></section>'
    :(window.aleaEquipmentArt?.start('projectile',p)||''))+
@@ -438,6 +451,7 @@ async function saveRuleProjectile(key){
   await dbJson('rule_projectile_types?projectile_key=eq.'+encodeURIComponent(key),{
    method:'PATCH',body:JSON.stringify({
     name,recovery_percent:rate,description:$('rpDesc')?.value.trim()||'',
+    combat_crop_quadrant:combatCropQuadrant($('rpCombatCrop')?.value),
     ...(!borrowed?{image_path:artChange.path}:{})
    })
   });
@@ -812,6 +826,7 @@ function editRuleWeapon(id=''){
    '<label>Sorteringsordning<input id="rwSort" type="number" step="10" value="'+escAttr(r?.sort_order??((ruleWeapons.length+1)*10))+'"></label>'+
    '<label class="wide">Taggar<input id="rwTags" value="'+escAttr(tags)+'" placeholder="kommaseparerade, t.ex. klinga, militär"></label>'+
    '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+ 
+   combatCropQuadrantEditor('rwCombatCrop',r)+
    '<label class="wide admincheck"><input id="rwMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk vapentyp (gäller själva registerposten)</label>'+
   (window.aleaEquipmentArt?.start('weapon',r)||'')+
   '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
@@ -853,6 +868,7 @@ async function saveRuleWeapon(id=''){
    range_text:$('rwRange')?.value.trim()||'',
    reload_rounds:ruleWeaponNumberValue('rwReload',{nullable:true,integer:true}),
    notes:$('rwNotes')?.value.trim()||'',
+   combat_crop_quadrant:combatCropQuadrant($('rwCombatCrop')?.value),
    is_magical:!!$('rwMagical')?.checked,
    sort_order:Number($('rwSort')?.value||0),
    tags:($('rwTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
@@ -968,6 +984,7 @@ function editRuleArmor(id=''){
    '<label class="wide admincheck"><input id="raCanonical" type="checkbox" '+(asBool(r?.canonical_expert)?'checked':'')+'> Kanonisk Expert-rustning</label>'+ 
    '<label class="wide admincheck"><input id="raMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk rustningstyp (gäller själva registerposten)</label>'+
    '<label class="wide">Beskrivning<textarea id="raDescription">'+escAttr(r?.description||'')+'</textarea></label>'+
+   combatCropQuadrantEditor('raCombatCrop',r)+
   (window.aleaEquipmentArt?.start('armor',r)||'')+
   '</div><div class="rule-editor-note">Expert anger viktkod A–K; BEP-värdet används tills den STO-beroende vikttabellen kopplas direkt till rollfiguren.</div>'+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleArmor(\''+id+'\')">Spara</button></div>';
@@ -998,6 +1015,7 @@ async function saveRuleArmor(id=''){
    canonical_expert:!!$('raCanonical')?.checked,
    is_magical:!!$('raMagical')?.checked,
    description:$('raDescription')?.value.trim()||'',
+   combat_crop_quadrant:combatCropQuadrant($('raCombatCrop')?.value),
    sort_order:Number($('raSort')?.value||0),
    updated_at:new Date().toISOString()
   };
@@ -1072,6 +1090,7 @@ function editRuleShield(id=''){
    '<label class="wide admincheck"><input id="rsParryThrown" type="checkbox" '+(r?.can_parry_thrown!==false?'checked':'')+'> Kan parera kastvapen om sköldbäraren ser kastet</label>'+ 
    '<label class="wide admincheck"><input id="rsMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk sköldtyp (gäller själva registerposten)</label>'+
    '<label class="wide">Noteringar<textarea id="rsNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+
+   combatCropQuadrantEditor('rsCombatCrop',r)+
   (window.aleaEquipmentArt?.start('shield',r)||'')+
   '</div><div class="rule-editor-note">Expert E55 reglerar passivt skydd och projektiler. Sköldarnas grundvärden för BEP, pris och tålighet kommer från Aleas befintliga grundregelsregister (1988). BV är initialt samma som registrerat tålighetsvärde och kan justeras separat från ABS.</div>'+
   '<div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleShield(\''+id+'\')">Spara</button></div>';
@@ -1107,6 +1126,7 @@ async function saveRuleShield(id=''){
    destruction_chance_per_excess:risk/100,
    source_label:$('rsSource')?.value.trim()||'Expert E55',
    notes:$('rsNotes')?.value.trim()||'',
+   combat_crop_quadrant:combatCropQuadrant($('rsCombatCrop')?.value),
    sort_order:Number($('rsSort')?.value||0),
    updated_at:new Date().toISOString()
   };
