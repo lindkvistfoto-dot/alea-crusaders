@@ -66,6 +66,34 @@ describe('Expert spell master image register',()=>{
   expect(row.image_focus_x).toBe(95);
   expect(row.image_focus_y).toBe(20);
  });
+ it('uploads a new WebP to immutable storage and patches only the spell master',async()=>{
+  const {ctx,row,dbJson,storage}=setup();
+  const host={innerHTML:''};
+  ctx.document.getElementById=id=>id==='spellArtEditor'?host:({spellArtFocusX:{value:'67'},spellArtFocusY:{value:'89'},spellArtStatus:{textContent:''}}[id]||null);
+  ctx.document.createElement=()=>({
+   getContext:()=>({drawImage:vi.fn()}),
+   toBlob:callback=>callback({type:'image/webp',size:2048})
+  });
+  ctx.Image=class{
+   naturalWidth=640;naturalHeight=640;
+   set src(value){Promise.resolve().then(()=>this.onload?.())}
+  };
+  ctx.crypto={randomUUID:()=>IMAGE};
+  const file={size:2048,type:'image/png'};
+  const input={value:'filename.png',files:[file]};
+  await ctx.window.aleaSpellArt.upload({target:input},SPELL);
+  expect(input.value).toBe('');
+  const request=storage.mock.calls[0];
+  expect(request[0]).toContain('object/alea-spell-art/spell/');
+  expect(request[1].method).toBe('POST');
+  expect(request[1].headers['x-upsert']).toBe('false');
+  const patch=JSON.parse(dbJson.mock.calls[0][1].body);
+  expect(patch.image_path).toBe(PATH);
+  expect(patch.image_focus_x).toBe(67);
+  expect(patch.image_focus_y).toBe(89);
+  expect(row.image_path).toBe(PATH);
+  expect(host.innerHTML).toContain('Ta bort bild');
+ });
  it('reuses private blob URLs and sets combat effect background on matching element',async()=>{
   const {ctx,storage,style}=setup();
   expect(await ctx.window.aleaSpellArt.resolveUrl(PATH)).toBe('blob:spell-art');
