@@ -2262,7 +2262,9 @@ function combatSpellOptions(combatant){
  const learned=spells.map(spell=>{
   const rule=registry.find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||
    String(row.name||'').localeCompare(String(spell?.name||''),'sv',{sensitivity:'base'})===0);
-  return rule?{...rule,...spell,rule_id:rule.id,attack_magic:rule.attack_magic===true,
+  return rule?{...rule,...spell,rule_id:rule.id,
+   image_path:rule.image_path||null,image_focus_x:rule.image_focus_x??80,image_focus_y:rule.image_focus_y??78,
+   attack_magic:rule.attack_magic===true,
    damage_text:rule.damage_text||'',ritual:rule.ritual===true,kvick:rule.kvick===true,
    range_text:rule.range_text||'',duration_text:rule.duration_text||'',spell_source:'learned'}:null
  }).filter(spell=>spell?.name);
@@ -2302,6 +2304,8 @@ function combatSpellChooserHtml(combatant,action){
      const unavailable=source&&(!source.ready||source.cast_mode==='automatic'||!Number.isFinite(Number(source.fv))||Number(source.fv)<1);
      const reason=source?.cast_mode==='automatic'?'Automatiskt kast ännu inte anslutet':
       source&&!source.fv?'Saknar ett giltigt FV':source?.unavailable_reason||'';
+     const artPath=/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(spell.image_path||''))?spell.image_path:'';
+     const artHtml=artPath?'<img class="combat-spell-thumb" data-spell-art-path="'+escAttr(artPath)+'" alt="" hidden>':'';
      const hint=source?
       escAttr(source.item_name)+(source.battery?' · ⚡ Batteri':'')+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
        ' · FV '+escAttr(source.fv??'—')+(unavailable?' · '+escAttr(reason):''):
@@ -2309,7 +2313,7 @@ function combatSpellChooserHtml(combatant,action){
       (binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'');
      return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+'" '+
       (unavailable?'disabled title="'+escAttr(reason)+'" ':'')+
-      'aria-pressed="'+(active?'true':'false')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')"><b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>'+hint+'</small></button>'
+      'aria-pressed="'+(active?'true':'false')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')">'+artHtml+'<b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>'+hint+'</small></button>'
     }).join('')+'</div></div>'
   ).join('')+'</div>'+
   '<small class="combat-spell-footnote">Föremålsbesvärjelser använder sina egna FV- och EG-värden.</small></div>'
@@ -2411,7 +2415,11 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   preflight.valid=preflight.errors.length===0
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
- const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+ const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',
+  spell_image_path:/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(spell.image_path||''))?spell.image_path:null,
+  spell_image_focus_x:Math.min(100,Math.max(0,Number(spell.image_focus_x??80)||0)),
+  spell_image_focus_y:Math.min(100,Math.max(0,Number(spell.image_focus_y??78)||0)),
+  damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
@@ -5072,6 +5080,9 @@ function combatLatestResolvedSpellAction(){
 function combatSpellResultHtml(action){
  if(!action?.result?.outcome)return '';
  const result=action.result,data=action.source_data||{},meta=combatOutcomeMeta(result.outcome);
+ const artPath=/^spell\\/[0-9a-f-]{36}\\/[0-9a-f-]{36}\\.webp$/.test(String(data.spell_image_path||''))?data.spell_image_path:'';
+ const artX=Math.min(100,Math.max(0,Number(data.spell_image_focus_x??80)||0));
+ const artY=Math.min(100,Math.max(0,Number(data.spell_image_focus_y??78)||0));
  const success=result.success===true,kind=data.magic_binding?.kind||'manual';
  let note;
  if(result.awaiting_antimagic)note='Kastet lyckades. Målet kan fortfarande reagera med Antimagi.';
@@ -5096,7 +5107,8 @@ function combatSpellResultHtml(action){
     '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
     (data.item_magic?'<span>×<b>'+escAttr(data.item_magic.effect_multiplier||1)+'</b> från '+escAttr(data.item_magic.item_name||'föremål')+'</span>':'')+
     '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
-   '<div class="combat-spell-effect-surface"><div class="combat-spell-effect-label"><span aria-hidden="true">✦</span> EFFEKT</div>'+ 
+   '<div class="combat-spell-effect-surface"'+(artPath?' data-spell-art-path="'+escAttr(artPath)+'"':'')+
+     ' style="--alea-spell-effect-focus-x:'+artX+'%;--alea-spell-effect-focus-y:'+artY+'%;"><div class="combat-spell-effect-label"><span aria-hidden="true">✦</span> EFFEKT</div>'+ 
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
    (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA · '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'—')+'</b>'+
     (result.healing_applied?'<div class="combat-heal-total">+'+escAttr(result.healing_restored??0)+' KP återställda</div>'+
@@ -6103,6 +6115,7 @@ function renderCombat(){
  requestAnimationFrame(()=>requestAnimationFrame(()=>{combatMapApplyView();combatPositionDiceLayer();combatAnimateCommittedMovement()}))
  void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
  void window.aleaHitFigures?.hydrate?.(body);
+ void window.aleaSpellArt?.hydrateCombat?.(body);
 }
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
