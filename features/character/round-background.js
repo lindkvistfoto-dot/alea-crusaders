@@ -79,6 +79,17 @@
    return blob;
   }finally{URL.revokeObjectURL(url)}
  }
+ // Live combatants are synchronized in the database by the character art
+ // trigger. Refresh this browser's cached combatants after upload/removal too.
+ async function refreshLiveCombat(character){
+  try{
+   if(typeof activeCombat==='undefined'||!activeCombat?.id||
+      typeof combatants==='undefined'||!Array.isArray(combatants)||
+      !combatants.some(row=>row.source_type==='character'&&String(row.source_id)===String(character?._dbId))||
+      typeof loadActiveCombat!=='function')return;
+   await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+  }catch(error){console.warn('Stridsvyn uppdateras vid nästa omladdning.',error)}
+ }
  async function upload(character,file){
   if(!canEdit(character)||busy)return;
   busy=true;status('Laddar upp rundbakgrund…');
@@ -97,6 +108,7 @@
     body:JSON.stringify({round_background_path:path})
    });
    character.roundBackgroundPath=path;
+   await refreshLiveCombat(character);
    if(current===character){render();status('✓ Personlig rundbakgrund sparad.')}
    if(typeof showBackupToast==='function')showBackupToast('✓ Rundbakgrund sparad');
   }catch(e){
@@ -107,13 +119,14 @@
  }
  async function remove(character){
   if(!canEdit(character)||busy||!getPath(character))return;
-  if(!confirm('Ta bort personlig rundbakgrund? Då används en slumpad bild från adminbiblioteket i nya strider.'))return;
+  if(!confirm('Ta bort personlig rundbakgrund? Då används en slumpad bild från adminbiblioteket, även i pågående strider.'))return;
   busy=true;status('Tar bort kopplingen…');
   try{
    await dbJson('characters?id=eq.'+encodeURIComponent(character._dbId)+'&campaign_id=eq.'+encodeURIComponent(centralCampaignId),{
     method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({round_background_path:null})
    });
    character.roundBackgroundPath='';
+   await refreshLiveCombat(character);
    if(current===character){render();status('✓ Ingen personlig bild. Adminbiblioteket används.')}
   }catch(e){status('Kunde inte ta bort bilden: '+(e.message||e))}
   finally{busy=false}
