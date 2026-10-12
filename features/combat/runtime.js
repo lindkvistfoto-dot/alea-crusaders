@@ -5392,11 +5392,9 @@ function combatTurnEquipmentHtml(combatant){
   if(item){
    const rule=weaponRule(item);
    shownWeapons.push({item,rule});
-   // Two-handed staffs show their lower-right (fourth) source quadrant by
-   // default. An explicit master/item crop choice still takes precedence.
-   const isStaff=/\bstav\b|staff/i.test(String(item.name||rule?.name||''));
-   const staffCrop=isStaff?(item.combat_crop_quadrant||'bottom-right'):cropValue(rule,item);
-   hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true,null,staffCrop);
+   // The upper-right source quadrant contains the weapon head in Narsil art.
+   // Crop it consistently before the two-handed 45-degree presentation.
+   hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true,null,'top-right');
   }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
  // Older NPCs/enemies may have no selected hand slots at all.
