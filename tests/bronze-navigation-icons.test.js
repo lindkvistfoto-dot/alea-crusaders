@@ -6,6 +6,7 @@ const html=read('index.html').toString('utf8');
 const css=read('features/home/topbar.css').toString('utf8');
 const controller=read('features/home/navigation-icons.js').toString('utf8');
 const material=read('features/material/viewer.js').toString('utf8');
+const journal=read('features/journal/journal.js').toString('utf8');
 const destinations=[
   ['shopNavBtn','guild'],
   ['alchemyNavBtn','alkemi'],
@@ -14,11 +15,14 @@ const destinations=[
   ['materialNavBtn','material'],
   ['landingCharactersNavBtn','characters'],
   ['combatNavBtn','combat'],
-  ['mapNavBtn','map']
+  ['mapNavBtn','map'],
+  ['diceNavBtn','dice'],
+  ['adminNavBtn','settings'],
+  ['journalNavBtn','journal']
 ];
 
 describe('v0.35.121 – sharp 104px navigation icons',()=>{
-  it('uses separate 512×512 AVIF images for all eighteen home and destination states',()=>{
+  it('uses separate 512×512 AVIF images for all twenty-four home and destination states',()=>{
     for(const name of ['home',...destinations.map(x=>x[1])]){
       for(const state of ['normal','active']){
         const file=read('assets/navigation/'+name+'-'+state+'.avif');
@@ -33,7 +37,7 @@ describe('v0.35.121 – sharp 104px navigation icons',()=>{
 
   it('loads the real image pair into every navigation button, including dynamic Material',()=>{
     for(const [id,name] of destinations){
-      const parent=(id==='materialNavBtn'?material:html);
+      const parent=(id==='materialNavBtn'?material:id==='journalNavBtn'?journal:html);
       expect(parent).toContain(id);
       expect(parent).toContain('navigation/'+name+'-normal.avif');
       expect(parent).toContain('navigation/'+name+'-active.avif');
@@ -79,6 +83,6 @@ describe('v0.35.121 – sharp 104px navigation icons',()=>{
     expect(html).toContain('onclick="openShop()"');
     expect(html).toContain('onclick="openCombat()"');
     expect(html).toContain('onclick="openCharacters()"');
-    expect(html).toContain('features/home/navigation-icons.js?v=0.35.121');
+    expect(html).toContain('features/home/navigation-icons.js?v=0.35.141');
   });
 });

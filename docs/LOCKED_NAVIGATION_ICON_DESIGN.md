@@ -37,3 +37,8 @@ Skapa inte alternativa former eller lägg till kompassros. Hem-symbolen är Alea
 ## Kartor / Platser (2026-10-12)
 - `mapNavBtn` använder nu levererat ikonpar: `map-normal.avif` (mörk) och `map-active.avif` (gyllene sken), 512×512 med transparens.
 - Oförändrad `openMap()`-navigering och samma `aria-current="page"`-regel samt 104px-storlek som andra knappar.
+
+## Tärning, Administration och Kampanjjournal (v0.35.141)
+- Navigeringens befintliga `diceNavBtn`, `adminNavBtn` och dynamiska `journalNavBtn` använder separata originalbaserade transparenta 512×512 AVIF-bildpar, med mörk brons och aktivt gyllene sken.
+- Ingen ny knapprutt: tärningen använder `openDice()`, administration `openAdmin()`, och journalen samma `jOpen`-lyssnare. `aria-current="page"` växlar bild som övriga navigeringsikoner.
+- Admin-knappen behåller `hidden`-behörighetsstyrning; mobilens journalistikon i äventyrshubben får samma brons/guldmotiv utan extra rad i mobilhuvudet.

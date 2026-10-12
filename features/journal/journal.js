@@ -94,7 +94,7 @@ async function jNote(){
 function jMount(){
  const main=document.querySelector('main'),nav=jGet('diceNavBtn');
  if(!main||!nav)return;
- nav.insertAdjacentHTML('beforebegin','<button id="journalNavBtn" class="btn" type="button" title="Kampanjjournal" aria-label="Öppna kampanjjournalen"><span aria-hidden="true">📜</span></button>');
+ nav.insertAdjacentHTML('beforebegin','<button id="journalNavBtn" class="btn journal-nav alea-nav-art" type="button" aria-current="false" title="Kampanjjournal" aria-label="Öppna kampanjjournalen"><img class="alea-nav-asset alea-nav-asset--normal" src="./assets/navigation/journal-normal.avif" alt="" aria-hidden="true" width="104" height="104" decoding="async"><img class="alea-nav-asset alea-nav-asset--active" src="./assets/navigation/journal-active.avif" alt="" aria-hidden="true" width="104" height="104" decoding="async"></button>');
  main.insertAdjacentHTML('beforeend',
  '<section id="journalPage" class="journal-page hidden"><div class="journal-page-head"><div><h2>📜 Kampanjjournal</h2><p>Alla sparade händelser från kampanjen.</p></div><button id="journalBack" class="btn" type="button">← Tillbaka</button></div>'+
  '<div class="journal-toolbar"><input id="journalSearch" type="search" placeholder="Sök i journalen…" aria-label="Sök i journalen"><select id="journalType" aria-label="Filtrera"><option value="">Alla händelser</option><option value="skill">Färdighet</option><option value="spell">Besvärjelse</option><option value="dice">Tärningsslag</option><option value="combat">Strid</option><option value="day">Dagskifte</option><option value="note">Anteckning</option></select><span id="journalConnection">Ansluter…</span></div>'+

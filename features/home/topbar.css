@@ -29,7 +29,6 @@
   outline:2px solid #f0c88b;outline-offset:2px;
 }
 .alea-app-header .alea-toolstrip #materialNavBtn .material-nav-label{display:none!important}
-.alea-app-header .alea-toolstrip #journalNavBtn span{font-size:23px;line-height:1}
 .alea-app-header .alea-headingbar{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
   gap:10px 18px;min-width:0;padding-top:10px;
@@ -496,9 +495,13 @@
   .alea-app-header .mobile-hub-menu button[data-mobile-target="academyNavBtn"][data-nav-active="true"]::before {
     background-image:url("../../assets/navigation/academy-active.avif");
   }
-  .alea-app-header .mobile-hub-menu button[data-mobile-target="journalNavBtn"]::before {display:none}
+  .alea-app-header .mobile-hub-menu button[data-mobile-target="journalNavBtn"]::before {
+    background-image:url("../../assets/navigation/journal-normal.avif");
+  }
+  .alea-app-header .mobile-hub-menu button[data-mobile-target="journalNavBtn"][data-nav-active="true"]::before {
+    background-image:url("../../assets/navigation/journal-active.avif");
+  }
   .alea-app-header .mobile-hub-menu button[data-mobile-target] > span {display:none}
-  .alea-app-header .mobile-hub-menu button[data-mobile-target="journalNavBtn"] > span {display:inline}
 }
 
 /* v0.35.118: one persistent illustrated banner, also above Material overlays.
