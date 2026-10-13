@@ -60,6 +60,38 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(html).not.toContain('combat-defense-drawer-hint');
   expect(html).toContain('Ta smällen');
  });
+ it('uses the painted fantasy frames without visible weapon headers',()=>{
+  const solo=harness().drawer(sample());
+  expect(solo).not.toContain('<strong>Vapen</strong>');
+  expect(solo).toContain('<small>Bastardsvärd</small>');
+  expect(solo).toContain('Vapenparering');
+  const dual=sample();
+  dual.options=[
+   {key:'weapon:left',kind:'weapon',name:'Kortsvärd',fv:12,item:{equipId:'left'}},
+   {key:'weapon:right',kind:'weapon',name:'Dolk',fv:9,item:{equipId:'right'}}
+  ];
+  const html=harness(dual,{
+   combatAttackProfile:()=>({currentEquipment:{leftHand:{kind:'weapon',itemId:'left'},rightHand:{kind:'weapon',itemId:'right'}}})
+  }).drawer(dual);
+  expect(html).toContain('combat-defense-multi');
+  expect(html).not.toContain('combat-defense-multi-title');
+  expect(html).toContain('Kortsvärd');
+  expect(html).toContain('Dolk');
+  expect((html.match(/combat-defense-weapon-option"/g)||[])).toHaveLength(2);
+ });
+ it('enlarges the weapon artwork outside the painted frame while preserving independent crop and click targets',()=>{
+  expect(css).toContain('v0.35.165 – defense artwork owns its gilded frame');
+  expect(css).toContain('border:0!important;');
+  expect(css).toContain('overflow:visible;');
+  expect(css).toContain('width:162%;');
+  expect(css).toContain('width:194%;');
+  expect(css).toContain('width:230%;');
+  expect(css).toContain('overflow:hidden;');
+  expect(css).toContain('pointer-events:none;');
+  expect(css).toContain('.combat-defense-weapon-option:focus-visible');
+  expect(css).toContain('background-image:linear-gradient(to bottom');
+  expect(css).toContain('url("./assets/defense-bg-weapon.webp")');
+ });
  it('keeps unavailable shield or weapon slots visible and disabled',()=>{
   const withoutShield=sample();
   withoutShield.options=withoutShield.options.filter(o=>o.kind==='weapon');
