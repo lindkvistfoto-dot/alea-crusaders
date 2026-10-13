@@ -20,22 +20,24 @@ function participant(row,role='ATTACKERAR',details='Dödsbringaren'){
  return context.participant(role,row,details);
 }
 describe('Attack panel portrait cards v0.35.134',()=>{
- it('shows real attacker image with matching name, HP and weapon',()=>{
+ it('shows a real attacker image with name and no KP row',()=>{
   const card=participant({name_snapshot:'Astrid Eldhjärta',current_kp:10,max_kp:18,portrait:'https://example.test/astrid.png'});
   expect(card).toContain('combat-duelist-card');
   expect(card).toContain('combat-duelist-portrait');
   expect(card).toContain('src="https://example.test/astrid.png"');
   expect(card).toContain('ATTACKERAR');
   expect(card).toContain('Astrid Eldhjärta');
-  expect(card).toContain('KP 10 / 18 · Dödsbringaren');
+  expect(card).not.toContain('KP 10 / 18');
+  expect(card).toContain('title="Astrid Eldhjärta · Dödsbringaren"');
   expect(card).toContain('combat-duelist-card attacker');
  });
- it('uses defender portrait and keeps downed HP at zero',()=>{
+ it('uses defender portrait and omits downed KP beneath it',()=>{
   const card=participant({name_snapshot:"Kva'argh",current_kp:0,max_kp:11,portrait:'blob:portrait'},'FÖRSVARAR','Valt mål');
   expect(card).toContain('FÖRSVARAR');
   expect(card).toContain('src="blob:portrait"');
   expect(card).toContain("Kva'argh");
-  expect(card).toContain('KP 0 / 11 · Valt mål');
+  expect(card).not.toContain('KP 0 / 11');
+  expect(card).toContain('title="Kva\'argh · Valt mål"');
   expect(card).toContain('combat-duelist-card defender');
  });
  it('uses initials if image is absent or cannot load',()=>{
@@ -60,9 +62,10 @@ describe('Attack panel portrait cards v0.35.134',()=>{
   expect(panel).toContain('combatAttackResultHtml(attack)');
   expect(panel).toContain('combatAttackResultHtml(action)');
  });
- it('removes the duplicated attacker-to-defender heading but retains compact ANFALL',()=>{
+ it('removes the redundant ANFALL heading entirely',()=>{
   const panel=rt.slice(rt.indexOf('function combatAttackPanelHtml('),rt.indexOf('function combatTurnPortraitHtml('));
-  expect(panel).toContain('<div class="combat-mini-title"><span>ANFALL</span></div>');
+  expect(panel).not.toContain('<div class="combat-mini-title"><span>ANFALL</span></div>');
+  expect(panel).toContain('combat-confirm-attack');
   expect(panel).not.toContain("escAttr(actor.name_snapshot)+(target?' → '");
   expect(panel).toContain("combatMiniParticipantHtml('ATTACKERAR',actor");
   expect(panel).toContain("combatMiniParticipantHtml('FÖRSVARAR',target");
