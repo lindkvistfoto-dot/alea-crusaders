@@ -248,7 +248,7 @@
  display:none!important;
 }
 #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-duelist-name{
- white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip;
+ white-space:nowrap;text-wrap:nowrap;overflow:hidden;text-overflow:ellipsis;
  font-size:clamp(10px,1vw,13px);line-height:1.12;
 }
 @media(max-width:760px){
