@@ -1097,3 +1097,34 @@
  #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option .combat-defense-choice-fv{font-size:9px}
  #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{font-size:11px}
 }
+
+/* v0.35.159 — personal equipment art over three image-backed defense choices.
+   Paths are relative to this CSS file, including when served via GitHub Pages. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice{
+ position:relative;
+ isolation:isolate;
+ background-size:cover;
+ background-position:center center;
+ background-repeat:no-repeat;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.shield{
+ background-image:linear-gradient(to bottom,rgba(15,10,7,.06),rgba(15,10,7,.2) 42%,rgba(9,7,6,.84)),url("./assets/defense-bg-shield.webp");
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon{
+ background-image:linear-gradient(to bottom,rgba(15,10,7,.06),rgba(15,10,7,.2) 42%,rgba(9,7,6,.84)),url("./assets/defense-bg-weapon.webp");
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit{
+ background-image:linear-gradient(to bottom,rgba(15,10,7,.06),rgba(15,10,7,.2) 42%,rgba(9,7,6,.84)),url("./assets/defense-bg-hit.webp");
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice > *{
+ position:relative;
+ z-index:1;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text small,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-fv{
+ text-shadow:0 2px 5px rgba(0,0,0,.96),0 0 6px rgba(0,0,0,.78);
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice:disabled{
+ filter:grayscale(.7) brightness(.72);
+}
