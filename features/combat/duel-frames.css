@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.176: transparent PNG frame assets and shared three-part duel. */
+/* Alea Crusaders v0.35.177: transparent PNG frame assets and shared three-part duel. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
  display:grid;grid-template-columns:minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr);
  gap:clamp(1px,.35vw,5px);align-items:stretch;min-width:0;isolation:isolate;
@@ -136,7 +136,7 @@
  #combatPage .combat-illustrated-duel .combat-duelist-name,
  #combatPage .combat-illustrated-duel .combat-duel-center-name{
   font-size:clamp(9px,2.35vw,11px);line-height:1.18;
-  overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance;
+  overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:nowrap;
   text-shadow:0 1px 4px rgba(0,0,0,.95);
  }
  #combatPage .combat-illustrated-duel .combat-duelist-meta{
@@ -156,4 +156,76 @@
 @media(max-width:390px){
  #combatPage .combat-illustrated-duel .combat-duelist-role,
  #combatPage .combat-illustrated-duel .combat-duel-center-role{font-size:7px;letter-spacing:0;white-space:nowrap}
+}
+
+
+/* v0.35.177 — never break names, KP, or BESVÄRJELSE on desktop or phone.
+   Keep the font sized for narrow duel columns, with ellipsis only as a last
+   resort for unusually long user-entered SLP names. */
+#combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+:is(.combat-duelist-role,.combat-duel-center-role,.combat-duelist-name,
+    .combat-duel-center-name,.combat-duelist-meta){
+ display:block;
+ width:100%;max-width:100%;min-width:0;
+ margin-left:0;margin-right:0;
+ white-space:nowrap;
+ text-wrap:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ overflow-wrap:normal;
+ word-break:normal;
+ hyphens:none;
+ box-sizing:border-box;
+ text-align:center;
+ letter-spacing:0;
+}
+#combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+:is(.combat-duelist-role,.combat-duel-center-role){
+ font-size:clamp(8px,.75vw,11px);
+ line-height:1.2;
+}
+#combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+:is(.combat-duelist-name,.combat-duel-center-name){
+ font-size:clamp(10px,1vw,14px);
+ line-height:1.2;
+}
+#combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+.combat-duelist-meta{
+ font-size:clamp(8px,.75vw,11px);
+ line-height:1.2;
+}
+/* The large spell backdrop is already the one atmospheric illustration.
+   Suppress the SECOND fireball in the result, without hiding the central
+   spell tile or suppressing result text, damage and healing controls. */
+#combatPage .combat-shell-live .combat-mini-magic.has-spell-backdrop .combat-spell-result{
+ background:#1b1410;
+ background-image:none;
+}
+#combatPage .combat-shell-live .combat-mini-magic.has-spell-backdrop .combat-spell-effect-surface{
+ background:linear-gradient(135deg,#211812,#15100d);
+ background-image:linear-gradient(135deg,#211812,#15100d);
+ padding:13px;
+}
+#combatPage .combat-shell-live .combat-mini-magic.has-spell-backdrop .combat-spell-effect-artwork{
+ display:none;
+}
+#combatPage .combat-shell-live .combat-mini-magic.has-spell-backdrop .combat-spell-effect-surface::before{
+ content:none;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+ :is(.combat-duelist-role,.combat-duel-center-role){
+  font-size:clamp(7px,1.8vw,9px);
+ }
+ #combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+ :is(.combat-duelist-name,.combat-duel-center-name){
+  font-size:clamp(8px,2.15vw,10px);
+ }
+ #combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel
+ .combat-duelist-meta{
+  font-size:clamp(7px,1.95vw,9px);
+ }
+ #combatPage .combat-shell-live .combat-mini-magic.has-spell-backdrop .combat-spell-effect-surface{
+  padding:11px;
+ }
 }
