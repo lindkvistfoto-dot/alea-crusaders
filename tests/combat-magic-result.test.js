@@ -130,7 +130,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
  test('vald, manuell och områdesbesvärjelse visar korrekt nästa steg',()=>{
   const {context,action}=fixture();
   action.status='planned';action.source_data.casting_spell=false;
-  expect(context.spellPanel()).toContain('Vald besvärjelse');
+  expect(context.spellPanel()).toContain('Förbered besvärjelse');
   expect(context.spellPanel()).toContain('Tryck ✦ för att förbereda');
   action.source_data.casting_spell=true;
   action.source_data.ready_round=3;
