@@ -67,16 +67,20 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   if(outcome==='perfect')expect(html).not.toContain('Kontrollslag');
   expect(html).not.toContain('Skada tilldelad');
  });
- test('resultat visas även när stridsrundan går vidare, men aldrig ovanpå en ny attack',()=>{
-  const {context,newActor,action}=fixture();
+ test('magislaget syns för sin magiker men följer inte med till nästa kombatant',()=>{
+  const {context,mage,newActor,action}=fixture();
+  expect(context.spellPanel()).toContain('LYCKAT SLAG');
+  // Even in a later SR, an unrelated combatant must never inherit the old spell.
   context.combatActiveActor=()=>newActor;
   context.combatChosenAction=()=>null;
-  context.activeCombat.round_number=4; // Normal spell from prior SR.
+  context.activeCombat.round_number=4;
+  expect(context.spellPanel()).toBe('');
+  context.combatChosenAction=()=>({combatant_id:newActor.id,action_type:'attack',status:'planned',source_data:{action_key:'attack'}});
+  expect(context.spellPanel()).toBe('');
+  // When showing the caster's own selected spell action it remains accessible.
+  context.combatActiveActor=()=>mage;
+  context.combatChosenAction=()=>action;
   expect(context.spellPanel()).toContain('LYCKAT SLAG');
-  context.combatChosenAction=()=>({action_type:'attack',status:'planned',source_data:{action_key:'attack'}});
-  expect(context.spellPanel()).toBe('');
-  action.round_number=2;
-  expect(context.spellPanel()).toBe('');
  });
  test('slagen återger tydligt effekter och motstånd utan att ändra mekaniken',()=>{
   const {context,action}=fixture();
