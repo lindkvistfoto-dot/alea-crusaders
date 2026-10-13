@@ -199,7 +199,9 @@ describe('Två separata kvadratiska besvärjelsebilder',()=>{
   expect(runtime).toContain('spell_image_path:');
   expect(runtime).toContain('data.spell_effect_image_path');
   expect(runtime).toContain('combat-spell-effect-artwork');
-  expect(runtime).toContain('combat-spell-thumb');
+  // The compact native dropdown no longer renders thumbnails; artwork snapshots remain.
+  expect(runtime).not.toContain('combat-spell-thumb');
+  expect(runtime).toContain('combat-spell-choice--compact');
   expect(runtime).toContain('aleaSpellArt?.hydrateCombat?.(body)');
   expect(css).toContain('.combat-spell-effect-artwork');
  });
