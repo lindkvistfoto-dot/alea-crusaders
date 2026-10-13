@@ -191,3 +191,37 @@
   background:rgba(13,9,7,.85);
  }
 }
+
+/* Third spell image: transparent cutout preview, with its own gold frame. */
+.spell-art-cutout-preview{
+ position:relative;isolation:isolate;width:min(100%,290px);height:290px;
+ box-sizing:border-box;border:1px dashed rgba(203,159,91,.75);
+ border-radius:11px;background:radial-gradient(ellipse at 50% 70%,#493023,#170f0d 72%);
+ cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.spell-art-cutout-preview.is-dragging{cursor:grabbing;border-color:#f2ce8d}
+.spell-art-cutout-preview:focus-visible{outline:2px solid #f6d491;outline-offset:3px}
+.spell-art-cutout-frame{
+ position:absolute;left:12%;bottom:17px;width:76%;aspect-ratio:4/3;
+ background:radial-gradient(ellipse at center,#422719aa,#120d09dd);
+}
+.spell-art-cutout-frame::after{
+ content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+ background:url("../../assets/combat/frames/duel-focus-frame.png") center/100% 100% no-repeat;
+}
+.spell-art-cutout-frame::before{
+ content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+ background:url("../../assets/combat/frames/duel-focus-frame.png") center/100% 100% no-repeat;
+ clip-path:inset(89% 0 0 0);
+}
+.spell-art-cutout-layer{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible;clip-path:inset(-150% -100% 8% -100%)}
+.spell-art-cutout-layer img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ object-fit:contain;pointer-events:none;filter:drop-shadow(1px 4px 6px #000b);
+}
+.spell-art-cutout-layer img[hidden]{display:none!important}
+.spell-art-cutout-preview>.spell-art-empty{
+ position:absolute;inset:0;display:grid;place-items:center;
+ color:#dbc298;font:700 13px Georgia,serif;text-align:center;
+}
+@media(max-width:660px){.spell-art-cutout-preview{width:min(100%,320px);height:300px}}

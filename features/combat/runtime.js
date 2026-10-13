@@ -2352,6 +2352,7 @@ function combatSpellOptions(combatant){
    image_path:rule.image_path||null,image_focus_x:rule.image_focus_x??80,image_focus_y:rule.image_focus_y??78,
    icon_path:rule.icon_path??null,icon_focus_x:rule.icon_focus_x??50,icon_focus_y:rule.icon_focus_y??50,icon_zoom:rule.icon_zoom??120,
    effect_image_path:rule.effect_image_path??null,effect_focus_x:rule.effect_focus_x??50,effect_focus_y:rule.effect_focus_y??50,effect_zoom:rule.effect_zoom??120,
+   cutout_path:rule.cutout_path??null,cutout_x:rule.cutout_x??50,cutout_y:rule.cutout_y??90,cutout_scale:rule.cutout_scale??160,
    attack_magic:rule.attack_magic===true,
    damage_text:rule.damage_text||'',ritual:rule.ritual===true,kvick:rule.kvick===true,
    range_text:rule.range_text||'',duration_text:rule.duration_text||'',spell_source:'learned'}:null
@@ -2412,6 +2413,15 @@ function combatSpellArtworkForAction(action){
   y:combatSpellArtNumber(selected[2],50),
   zoom:combatSpellArtNumber(selected[3],100,100,300)
  }:{path:'',x:50,y:50,zoom:100}
+}
+function combatSpellCutoutForAction(action){
+ const data=action?.source_data||{};
+ // A cutout is NEVER inferred from the square spell art.
+ const path=combatSpellArtPath(data.spell_cutout_path);
+ if(!path)return null;
+ return {cutout:true,path,x:combatSpellArtNumber(data.spell_cutout_x,50),
+  y:combatSpellArtNumber(data.spell_cutout_y,90),
+  zoom:combatSpellArtNumber(data.spell_cutout_scale,160,50,250)};
 }
 function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
@@ -2560,6 +2570,11 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   spell_effect_focus_x:combatSpellArtNumber(spell.effect_focus_x??spell.image_focus_x,50),
   spell_effect_focus_y:combatSpellArtNumber(spell.effect_focus_y??spell.image_focus_y,50),
   spell_effect_zoom:combatSpellArtNumber(spell.effect_zoom,120,100,300),
+  // Save the optional third image with the individual cast.
+  spell_cutout_path:combatSpellArtPath(spell.cutout_path)||null,
+  spell_cutout_x:combatSpellArtNumber(spell.cutout_x,50),
+  spell_cutout_y:combatSpellArtNumber(spell.cutout_y,90),
+  spell_cutout_scale:combatSpellArtNumber(spell.cutout_scale,160,50,250),
   // Old action readers still understand these legacy fields.
   spell_image_path:combatSpellArtPath(spell.effect_image_path!==undefined?spell.effect_image_path:spell.image_path)||null,
   spell_image_focus_x:combatSpellArtNumber(spell.effect_focus_x??spell.image_focus_x,50),
@@ -5358,11 +5373,16 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
  const spell=kind==='spell',label=spell?'BESVÄRJELSE':'VAPEN';
  const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
  let art='',crop='';
+ const spellCutout=spell&&item?.cutout===true;
  if(spell){
   const path=typeof combatSpellArtPath==='function'?combatSpellArtPath(item?.path):'';
-  if(path)art='<span class="combat-duel-spell-art" data-spell-art-path="'+escAttr(path)+
-   '" data-focus-x="'+escAttr(item?.x??50)+'" data-focus-y="'+escAttr(item?.y??50)+
-   '" data-zoom="'+escAttr(item?.zoom??100)+'"><img alt="" hidden></span>';
+  if(path)art=spellCutout?
+   '<span class="combat-duel-spell-cutout" data-spell-cutout-path="'+escAttr(path)+
+    '" data-offset-x="'+escAttr(item?.x??50)+'" data-offset-y="'+escAttr(item?.y??90)+
+    '" data-scale="'+escAttr(item?.zoom??160)+'"><img alt="" hidden></span>':
+   '<span class="combat-duel-spell-art" data-spell-art-path="'+escAttr(path)+
+    '" data-focus-x="'+escAttr(item?.x??50)+'" data-focus-y="'+escAttr(item?.y??50)+
+    '" data-zoom="'+escAttr(item?.zoom??100)+'"><img alt="" hidden></span>';
  }else{
   const master=item&&typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null;
   const path=item?.imageOverridePath||master?.image_path||item?.image_path||'';
@@ -5381,6 +5401,7 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
   '" aria-label="Byt vapen till '+escAttr(other?.name||'andra handen')+'"':
   ' role="group" aria-label="'+escAttr(label+': '+title)+'"';
  return '<'+tag+' class="combat-duel-center '+(spell?'is-spell':'is-weapon')+
+  (spellCutout&&art?' has-spell-cutout':'')+
   (switchable?' combat-weapon-switch':'')+'"'+attrs+'>'+
   (spell?'<span class="combat-duel-center-role">'+label+'</span>':'')+
   '<span class="combat-duel-center-viewport"'+crop+'>'+
@@ -5474,7 +5495,7 @@ function combatMagicFactsHtml(data,action){
   (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
  '</div>'
 }
-function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=null,preparing=false){
+function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=null,preparing=false,cutout=null){
  const kind=data.magic_binding?.kind||'manual';
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
  const placeholder=area?(data.area_center?'Område valt':'Välj område'):
@@ -5513,7 +5534,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
   '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel">'+
    combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
-    combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',artwork)+
+    combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork)+
     '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
     
    targetCard+
@@ -5615,6 +5636,7 @@ function combatSpellCastPanelHtml(){
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
  // Use snapshotted artwork, or recover the master image for older prepared casts.
  const backdrop=combatSpellArtworkForAction(action),backdropArt=backdrop.path;
+ const cutout=combatSpellCutoutForAction(action);
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
    ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
@@ -5669,7 +5691,7 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
-  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing)+
+  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing,cutout)+
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
    combatSpellResultHtml(action):

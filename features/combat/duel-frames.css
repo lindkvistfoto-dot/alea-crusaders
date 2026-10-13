@@ -358,3 +358,36 @@
   transition:none;
  }
 }
+
+/* v0.35.190 – only an explicitly uploaded transparent cutout emerges above
+   the center gold frame. This does not change icon or background crops. */
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout{
+ overflow:visible;padding-top:clamp(11px,1.2vw,17px);
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout .combat-duel-center-viewport{
+ overflow:visible;isolation:isolate;
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout .combat-duel-center-viewport::after{z-index:1}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout .combat-duel-center-viewport::before{
+ content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
+ background:url("../../assets/combat/frames/duel-focus-frame.png") center/100% 100% no-repeat;
+ clip-path:inset(89% 0 0 0);
+}
+#combatPage .combat-illustrated-duel .combat-duel-spell-cutout{
+ position:absolute;inset:0;z-index:4;overflow:visible;pointer-events:none;
+ clip-path:inset(-150% -100% 8% -100%);
+}
+#combatPage .combat-illustrated-duel .combat-duel-spell-cutout img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ object-fit:contain;pointer-events:none;
+ filter:drop-shadow(1px 5px 5px #000d) drop-shadow(0 0 8px rgba(227,168,87,.35));
+}
+#combatPage .combat-illustrated-duel .combat-duel-spell-cutout img[hidden]{display:none!important}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout .combat-duel-center-name{
+ z-index:6;pointer-events:none;
+}
+@media(max-width:760px){
+ #combatPage .combat-illustrated-duel .combat-duel-center.is-spell.has-spell-cutout{
+  padding-top:clamp(8px,2vw,13px);
+ }
+}
