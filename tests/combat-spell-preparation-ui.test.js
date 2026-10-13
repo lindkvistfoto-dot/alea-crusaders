@@ -51,7 +51,7 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   expect(html).toContain('combat-magic-preparation');
   expect(html).toContain('>FÖRBERED</span>');
   expect(html).toContain('>Besvärjelse</b>');
-  expect(html).toContain('ELD · EG 2');
+  expect(html).not.toContain('KP ');
   expect(html).not.toContain('data-unit="MÅL"');
   expect(html).not.toContain('>MÅL<');
  });
