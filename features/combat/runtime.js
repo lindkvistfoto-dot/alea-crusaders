@@ -5382,26 +5382,56 @@ function combatDefenseReactionHtml(pending){
     const actionLabel=(shield?'Parera med sköld':'Parera med vapen')+' · '+option.name;
     return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+(shield?'shield':'weapon')+'"'+
      ' aria-label="'+safe(actionLabel)+' FV '+safe(option.fv)+'"'+
-     ' onclick="chooseCombatParry('+defenderArg+','+attackArg+','+argument(option.key)+')">'+
+     ' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+defenderArg+','+attackArg+','+argument(option.key)+')">'+
      '<span aria-hidden="true">'+(shield?'🛡':'⚔')+'</span>'+
      '<span class="combat-defense-choice-text"><strong>'+safe(shield?'Sköldparering':'Vapenparering')+'</strong><small>'+safe(option.name)+'</small></span>'+
      '<span class="combat-defense-choice-fv">FV '+safe(option.fv)+'</span>'+
      '</button>'
    }).join('')+
    '<button type="button" class="btn combat-take-hit-btn combat-defense-decline"'+
-    ' onclick="declineCombatParry('+defenderArg+','+attackArg+')">Ta träffen <span aria-hidden="true">→</span></button>'+
+    ' onclick="combatSubmitDefenseChoice(this,&#39;take-hit&#39;,'+defenderArg+','+attackArg+')">Ta smällen <span aria-hidden="true">→</span></button>'+
   '</div>'+
   '<p class="combat-defense-drawer-hint">Parering använder försvararens återstående handling i denna SR.</p>'+
  '</aside>'
 }
-/* Mobile remains on the existing inline presentation for this iteration. */
-function combatDefenseMobileHtml(pending){
- const defender=pending.defender,attack=pending.attack;
- return '<div class="combat-mini-parry combat-defense-mobile"><span>'+
-  escAttr(defender.name_snapshot)+' har en handling kvar. Välj parering eller ta träffen.</span><div>'+
-  pending.options.map(option=>'<button type="button" class="btn combat-parry-btn" onclick="chooseCombatParry('+escAttr(JSON.stringify(String(defender.id)))+','+escAttr(JSON.stringify(String(attack.id)))+','+escAttr(JSON.stringify(String(option.key)))+')">Parera · '+escAttr(option.name)+'</button>').join('')+
-  '<button type="button" class="btn combat-take-hit-btn" onclick="declineCombatParry('+escAttr(JSON.stringify(String(defender.id)))+','+escAttr(JSON.stringify(String(attack.id)))+')">Ta träffen</button>'+
- '</div></div>'
+/* v0.35.156 – reactions retract before resolving, on mobile and desktop.
+ * Existing dice/defense functions remain the sole rules authority. */
+let combatDefenseChoiceBusy=false;
+function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKey=''){
+ const pending=combatPendingParryOpportunity();
+ if(combatDefenseChoiceBusy||!combatCanManage()||!pending||
+    String(pending.defender.id)!==String(defenderId)||
+    String(pending.attack.id)!==String(attackActionId)||
+    (kind!=='parry'&&kind!=='take-hit')||
+    (kind==='parry'&&!pending.options.some(option=>String(option.key)===String(parryKey))))return;
+ combatDefenseChoiceBusy=true;
+ const drawer=button?.closest?.('.combat-defense-drawer')||null;
+ if(drawer){
+  drawer.classList.add('is-retracting');
+  drawer.setAttribute('aria-busy','true');
+  drawer.querySelectorAll('button').forEach(choice=>{choice.disabled=true});
+ }
+ const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ // Allow the panel to slide out of the map before dice and state updates begin.
+ const delay=reduced?0:240;
+ setTimeout(async()=>{
+  try{
+   if(kind==='parry')await chooseCombatParry(defenderId,attackActionId,parryKey);
+   else await declineCombatParry(defenderId,attackActionId);
+  }catch(error){
+   console.error('Kunde inte genomföra försvarsreaktionen',error);
+   alert('Försvarsreaktionen misslyckades: '+(error?.message||error));
+  }finally{
+   combatDefenseChoiceBusy=false;
+   // If the underlying roll failed the reaction remains pending; restore
+   // this drawer so the GM can choose again without a forced page refresh.
+   if(drawer?.isConnected){
+    drawer.classList.remove('is-retracting');
+    drawer.removeAttribute('aria-busy');
+    drawer.querySelectorAll('button').forEach(choice=>{choice.disabled=false});
+   }
+  }
+ },delay);
 }
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
@@ -5420,7 +5450,6 @@ function combatAttackPanelHtml(){
    '</div>'+
    combatAttackResultHtml(attack)+
    combatDefenseReactionHtml(pending)+
-   combatDefenseMobileHtml(pending)+
   '</section>'
  }
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
