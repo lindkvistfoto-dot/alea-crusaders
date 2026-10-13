@@ -10,6 +10,7 @@ function render(options,spell_key=''){
  const scope={
   combatSpellOptions:()=>options,
   combatSpellKey:x=>x.item_spell?.key||x.rule_id,
+  combatMagicBinding:()=>({kind:'damage',supported:true}),
   escAttr:x=>String(x??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
  };
  runInNewContext(chooserSource+'\nthis.show=combatSpellChooserHtml;',scope);
@@ -78,7 +79,7 @@ describe('Magi i strid – kompakt besvärjelseval',()=>{
  });
  it('mixes magic items into alphabetic order but keeps item-specific rules and disabled states',()=>{
   const item={name:'Eld',rule_id:'eld',spell_source:'item',fv:12,
-   item_spell:{key:'item-eld',item_name:'Flammande stav',ready:true,effect_grade:3,effect_multiplier:2,battery:false}};
+   item_spell:{key:'item-eld',item_name:'Flammande stav',ready:true,fv:12,effect_grade:3,effect_multiplier:2,battery:false}};
   const blocked={name:'Blixt',rule_id:'blixt',spell_source:'item',fv:12,
    item_spell:{key:'item-blixt',item_name:'Tom stav',ready:false,effect_grade:1,effect_multiplier:1}};
   const html=render([{name:'Frost',rule_id:'frost',fv:11},item,blocked],'item-eld');
