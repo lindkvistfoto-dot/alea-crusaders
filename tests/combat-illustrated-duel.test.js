@@ -89,7 +89,8 @@ describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
   expect(doubleArrow).toContain('viewBox="0 0 120 128"');
   expect(doubleArrow).toContain('data:image/png;base64,iVBORw0KGgo');
   expect(css).toContain('button.combat-portrait-target-button');
-  expect(page).toContain('duel-frames.css?v=0.35.177');
+  const version=JSON.parse(read('package.json')).version;
+  expect(page).toContain('duel-frames.css?v='+version);
   for(const name of ['duel-portrait-frame.png','duel-focus-frame.png','duel-chevron.png']){
    const bytes=readFileSync(new URL('../assets/combat/frames/'+name,import.meta.url));
    expect(bytes.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
