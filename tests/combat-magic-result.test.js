@@ -226,7 +226,9 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="75" data-focus-y="60" data-zoom="170"');
   expect(html.indexOf('combat-magic-backdrop')).toBeLessThan(html.indexOf('combat-magic-heading'));
   expect(html).toContain('MAGIKER');
-  expect(html).toContain('MÅL');
+  // A non-targeted/manual spell keeps the framed effect icon, not a false MÅL.
+  expect(html).toContain('EFFEKT');
+  expect(html).not.toContain('>MÅL</span>');
   expect(html).toContain('combat-spell-result');
  });
  test('utan effektbild fyller ikonen magirutan både vid förberedelse och efter kast',()=>{
