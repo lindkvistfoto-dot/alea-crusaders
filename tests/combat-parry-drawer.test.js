@@ -41,7 +41,7 @@ describe('Desktop defense reaction slides out from the attack panel',()=>{
   const html=harness().drawer(sample());
   expect(html).toContain('combat-defense-drawer');
   expect(html).toContain('FÖRSVARSREAKTION');
-  expect(html).toContain("Kva'argh");
+  expect(html).toContain('Kva&#39;argh');
   expect(html).toContain('Sköldparering');
   expect(html).toContain('Vapenparering');
   expect(html).toContain('FV 13');
