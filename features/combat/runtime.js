@@ -4,7 +4,7 @@ function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiende
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
-let combatMobileTargetPickerOpen=false,combatMobileLastOutcome=null;
+let combatMobileTargetPickerOpen=false,combatMobileMagicTargetPickerOpen=false,combatMobileLastOutcome=null;
 function combatPositionDiceLayer(){
  const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
  if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
@@ -3777,8 +3777,7 @@ function combatSpellRangeHexes(actor,action){
  if(scaled)return eg*Number(scaled[1]);
  return Math.max(1,combatWeaponRangeHexes({range:text||'30 m'},actor)||20)
 }
-function combatFireballTargets(){
- const actor=combatActiveActor(),action=combatChosenAction(actor);
+function combatFireballTargets(actor=combatActiveActor(),action=combatChosenAction(actor)){
  if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||action?.source_data?.magic_binding?.kind!=='damage')return new Map();
  const out=new Map(),range=combatSpellRangeHexes(actor,action);
  for(const target of combatants){
@@ -4328,7 +4327,7 @@ function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||combatCannotAct(actor))return new Map();
  if(action?.source_data?.casting_spell===true&&['status','heal'].includes(action.source_data.magic_binding?.kind))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
- if(action?.source_data?.casting_spell===true&&action?.source_data?.magic_binding?.kind==='damage')return combatFireballTargets();
+ if(action?.source_data?.casting_spell===true&&action?.source_data?.magic_binding?.kind==='damage')return combatFireballTargets(actor,action);
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
  const selected=combatActionWeapon(actor,action,mode);
@@ -5292,10 +5291,11 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
- const picker=targetPicker&&label==='FÖRSVARAR'&&!!window.matchMedia?.('(max-width:760px)')?.matches,tag=picker?'button':'div';
- const attrs=picker?' type="button" onclick="combatTogglePortraitTargetPicker()" aria-label="'+
-  escAttr((combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
-  '" aria-expanded="'+(combatMobileTargetPickerOpen?'true':'false')+'" aria-controls="combatPortraitTargetMenu"':' aria-hidden="true"';
+ const picker=targetPicker&&['FÖRSVARAR','MÅL'].includes(label)&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const magic=label==='MÅL',tag=picker?'button':'div';
+ const attrs=picker?' type="button" onclick="'+(magic?'combatToggleMagicTargetPicker()':'combatTogglePortraitTargetPicker()')+'" aria-label="'+
+  escAttr(magic?(combatant?'Byt magimål från '+name:'Välj magimål'):(combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
+  '" aria-expanded="'+((magic?combatMobileMagicTargetPickerOpen:combatMobileTargetPickerOpen)?'true':'false')+'" aria-controls="'+(magic?'combatMagicTargetMenu':'combatPortraitTargetMenu')+'"':' aria-hidden="true"';
  return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
   '<'+tag+' class="combat-duelist-portrait'+(picker?' combat-portrait-target-button':'')+'"'+attrs+'>'+portraitHtml+
   (picker?'<span class="combat-portrait-pick-label">'+(combatant?'Byt mål':'Välj mål')+'</span>':'')+
@@ -5398,19 +5398,23 @@ function combatMagicFactsHtml(data,action){
   (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
  '</div>'
 }
-function combatMagicHeaderHtml(actor,target,data){
+function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false){
  const kind=data.magic_binding?.kind||'manual';
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
  const placeholder=area?(data.area_center?'Område valt':'Välj område'):
    needsTarget?'Välj mål':kind==='manual'?'Inget särskilt mål':'Själv / omgivning';
  const description=area?'Områdesbesvärjelse':kind==='heal'?'Läkning':
    kind==='status'?'Magisk effekt':kind==='damage'?'Besvärjelsens mål':'';
- const targetCard=target?combatMiniParticipantHtml('MÅL',target,description):
+ const mobileChoice=canChooseTarget&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const emptyPortrait=mobileChoice?
+  '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+(combatMobileMagicTargetPickerOpen?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
+  '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>';
+ const targetCard=target?combatMiniParticipantHtml('MÅL',target,description,canChooseTarget):
   '<div class="combat-mini-side combat-duelist-card defender magic-empty-target">'+
-    '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>'+
+    emptyPortrait+
     '<div class="combat-duelist-copy"><span class="combat-duelist-role">MÅL</span>'+
       '<b class="combat-duelist-name">'+escAttr(placeholder)+'</b>'+
-      '<small class="combat-duelist-meta">'+escAttr(area?'Markera centrum på kartan':needsTarget?'Välj kombattant':'Inget individuellt mål')+'</small>'+
+      '<small class="combat-duelist-meta">'+escAttr(area?'Markera centrum på kartan':needsTarget?(mobileChoice?'Tryck på porträttet för att välja mål':'Välj kombattant'):'Inget individuellt mål')+'</small>'+
     '</div></div>';
  return '<div class="combat-mini-title combat-magic-heading">'+
   '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span></div>'+
@@ -5420,26 +5424,63 @@ function combatMagicHeaderHtml(actor,target,data){
    targetCard+
   '</div>'
 }
+function combatMagicTargetIsReady(actor,action){
+ const data=action?.source_data||{};
+ return !!actor&&action?.status==='planned'&&data.casting_spell===true&&
+  ['damage','status','heal'].includes(data.magic_binding?.kind)&&
+  (Number(activeCombat?.round_number)||1)>=(Number(data.ready_round)||1)&&
+  combatIsActiveTurn(actor)&&!combatCannotAct(actor)
+}
+function combatMagicTargetCandidates(actor,action){
+ const kind=action?.source_data?.magic_binding?.kind;
+ if(!combatMagicTargetIsReady(actor,action))return new Map();
+ if(kind==='damage')return combatFireballTargets(actor,action);
+ return new Map(combatSpellEffectTargets(actor,action).map(target=>[
+  String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}
+ ]))
+}
+function combatToggleMagicTargetPicker(){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);
+ if(!combatMagicTargetIsReady(actor,action))return;
+ combatMobileMagicTargetPickerOpen=!combatMobileMagicTargetPickerOpen;
+ renderCombat()
+}
+function combatChooseMagicTarget(id){
+ const actor=combatActiveActor(),action=combatChosenAction(actor);
+ if(!combatMagicTargetCandidates(actor,action).has(String(id)))return;
+ combatMobileMagicTargetPickerOpen=false;
+ combatSelectedTargetId=String(id);
+ combatCloseRowActionMenu();
+ renderCombat()
+}
 function combatMagicTargetPickerHtml(actor,action){
  const data=action?.source_data||{},kind=data.magic_binding?.kind;
- if(!actor||action.status!=='planned'||data.casting_spell!==true||
-  !['damage','status','heal'].includes(kind)||
-  (Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1))return '';
- const targetIds=typeof combatCurrentAttackTargets==='function'?
-  [...combatCurrentAttackTargets().keys()]:[];
+ if(!actor||action?.status!=='planned'||data.casting_spell!==true||
+  !['damage','status','heal'].includes(kind))return '';
+ const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
+ if(currentRound<readyRound)
+  return '<div class="combat-magic-target-wait" role="status">Förbereder '+escAttr(data.spell_name||'besvärjelsen')+
+   ' · mål väljs i SR '+readyRound+'. Avsluta först denna SR.</div>';
+ if(!combatIsActiveTurn(actor))
+  return '<div class="combat-magic-target-wait" role="status">Mål väljs när '+escAttr(actor.name_snapshot)+' står på tur i SR '+currentRound+'.</div>';
+ const candidates=combatMagicTargetCandidates(actor,action);
  const selected=String(combatSelectedTargetId||'');
- const buttons=targetIds.map(id=>{
+ const buttons=[...candidates.keys()].map(id=>{
   const target=combatants.find(row=>String(row.id)===id);
   if(!target)return '';
   const active=selected===id;
   return '<button type="button" class="combat-magic-target-option'+(active?' selected':'')+
-   '" aria-pressed="'+active+'" onclick="selectCombatTarget(\''+escAttr(id)+'\')">'+
+   '" aria-pressed="'+active+'" onclick="combatChooseMagicTarget(\''+escAttr(id)+'\')">'+
     escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
  }).join('');
- return '<div class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
-  '<strong>Mål i kast-SR</strong>'+
+ const mobile=!!window.matchMedia?.('(max-width:760px)')?.matches;
+ if(mobile&&!combatMobileMagicTargetPickerOpen&&buttons)
+  return '<div class="combat-magic-target-collapsed" role="status">'+
+    (selected&&candidates.has(selected)?'Målet är valt. Tryck på porträttet för att byta mål.':'Tryck på målporträttet ovan för att välja mål.')+'</div>';
+ return '<div id="combatMagicTargetMenu" class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
+  '<strong>Mål i kast-SR '+currentRound+'</strong>'+
   (buttons?'<div class="combat-magic-target-options">'+buttons+'</div>':
-    '<small>Inga giltiga mål inom räckvidd och fri sikt.</small>')+
+    '<small>Inga giltiga mål inom räckvidd och fri sikt. Kontrollera avstånd, terräng och målets status.</small>')+
   '</div>'
 }
 function combatMagicStatusHtml(label,detail,state){
@@ -5496,7 +5537,7 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
-  combatMagicHeaderHtml(actor,target,data)+
+  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action))+
   combatMagicTargetPickerHtml(actor,action)+
   (resolved?
    combatSpellResultHtml(action)+
