@@ -1544,3 +1544,64 @@
   min-height:44px;
  }
 }
+
+/* v0.35.180 — one compact action panel directly below Runda. */
+#combatPage .combat-shell-live .combat-left-column > #combatActionPanel{display:contents}
+#combatPage .combat-shell-live .combat-action-confirm{
+ display:flex;align-items:center;justify-content:flex-end;gap:7px;
+ margin-top:6px;min-width:0;
+}
+#combatPage .combat-shell-live .combat-action-confirm .btn{
+ min-height:35px;max-width:100%;padding:6px 12px;white-space:nowrap;
+ border:1px solid #be9054;border-radius:7px;color:#ffe7bd;
+ background:linear-gradient(155deg,#6b4828,#3b2719);font-weight:750;
+ cursor:pointer;
+}
+#combatPage .combat-shell-live .combat-action-confirm .btn:disabled{
+ opacity:.48;cursor:not-allowed;filter:saturate(.5);
+}
+#combatPage .combat-shell-live .combat-action-confirm .combat-action-cancel{
+ border-color:#6e604d;background:rgba(35,26,21,.9);color:#cdbb9e;
+}
+#combatPage .combat-shell-live .combat-action-placeholder{
+ min-width:0;display:flex;flex-direction:column;gap:5px;
+ padding:9px 11px;border:1px solid #987249;border-radius:11px;
+ background:linear-gradient(140deg,#251b16,#15100e);
+}
+#combatPage .combat-shell-live .combat-action-placeholder-label{
+ display:flex;align-items:center;gap:9px;color:#f0cc92;
+ font:700 14px/1.25 Georgia,serif;
+}
+#combatPage .combat-shell-live .combat-action-placeholder-label>span{
+ font:700 20px/1 Georgia,serif;color:#dfb36e;
+}
+#combatPage .combat-shell-live .combat-action-placeholder-copy{
+ margin:0;font:500 11px/1.4 system-ui,sans-serif;color:#dbcaaf;
+}
+#combatPage .combat-shell-live .combat-magic-select-panel .combat-spell-choice{
+ margin:2px 0 0;
+}
+#combatPage .combat-shell-live .combat-mini-attack .combat-mini-instruction{
+ margin:5px 0 0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-extra{
+ margin-top:5px;padding:0 5px;border:0;color:#d8b788;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-extra summary{
+ cursor:pointer;width:max-content;max-width:100%;
+ font:650 11px/1.35 system-ui,sans-serif;color:#dfbc82;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-extra[open]{
+ border-top:1px solid rgba(197,152,88,.28);padding-top:6px;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-extra .combat-spell-choice{
+ margin-top:6px;
+}
+#combatPage .combat-shell-live .combat-mini-attack .combat-illustrated-duel .combat-duelist-meta{
+ display:none!important;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-action-confirm .btn{min-height:39px;font-size:12px}
+ #combatPage .combat-shell-live .combat-action-placeholder{padding:7px 9px}
+ #combatPage .combat-shell-live .combat-mini-attack .combat-mini-instruction{font-size:10px}
+}
