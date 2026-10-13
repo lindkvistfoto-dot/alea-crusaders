@@ -1605,3 +1605,16 @@
  #combatPage .combat-shell-live .combat-action-placeholder{padding:7px 9px}
  #combatPage .combat-shell-live .combat-mini-attack .combat-mini-instruction{font-size:10px}
 }
+
+
+/* v0.35.182: the action panel is nested in #combatActionPanel.
+   Both wrapper columns use display:contents at tablet/phone widths, so the
+   actual action card needs an explicit flex order after Runda. */
+@media(max-width:1023px){
+ #combatPage .combat-shell-live .combat-left-column > #combatActionPanel > *{
+  order:2;width:100%;min-width:0;
+ }
+ #combatPage .combat-shell-live .combat-left-column > .combat-turn-panel{
+  order:1;width:100%;
+ }
+}
