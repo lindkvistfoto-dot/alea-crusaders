@@ -59,7 +59,7 @@ describe('Justera utsnittet i Runda',()=>{
   expect(css).toContain('object-position:var(--alea-round-focus-x,100%) var(--alea-round-focus-y,24%)');
   expect(css).toContain('object-position:var(--alea-round-focus-x,75%) var(--alea-round-focus-y,18%)');
   expect(css).toContain('touch-action:none');
-  expect(css).toContain('aspect-ratio');
+  expect(gallery).toContain('aspect-ratio:');
  });
  it('kan dras, sparas, återställas och avbrytas utan att ändra bildfilen',()=>{
   expect(gallery).toContain("stage.addEventListener('pointermove'");
