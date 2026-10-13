@@ -5325,6 +5325,32 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
    '<small class="combat-duelist-meta">KP '+escAttr(kp)+(itemText?' · '+escAttr(itemText):'')+'</small>'+
   '</div></div>'
 }
+
+/* v0.35.172 · illustrated middle tile; no change to combat logic. */
+function combatDuelCenterHtml(kind,name,item=null){
+ const spell=kind==='spell',label=spell?'BESVÄRJELSE':'VAPEN';
+ const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
+ let art='',crop='';
+ if(spell){
+  const path=typeof combatSpellArtPath==='function'?combatSpellArtPath(item?.path):'';
+  if(path)art='<span class="combat-duel-spell-art" data-spell-art-path="'+escAttr(path)+
+   '" data-focus-x="'+escAttr(item?.x??50)+'" data-focus-y="'+escAttr(item?.y??50)+
+   '" data-zoom="'+escAttr(item?.zoom??100)+'"><img alt="" hidden></span>';
+ }else{
+  const master=item&&typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null;
+  const path=item?.imageOverridePath||master?.image_path||item?.image_path||'';
+  const url=path&&typeof window!=='undefined'?window.aleaEquipmentArt?.src(path)||'':'';
+  const saved=master?.combat_crop_quadrant||item?.combat_crop_quadrant||'top-right';
+  crop=' data-combat-crop="'+(['top-right','top-left','bottom-right','bottom-left','full'].includes(saved)?saved:'top-right')+'"';
+  if(url)art='<span class="combat-duel-weapon-art"><img src="'+escAttr(url)+'" alt="" loading="lazy" decoding="async"></span>';
+ }
+ return '<div class="combat-duel-center '+(spell?'is-spell':'is-weapon')+
+  '" role="group" aria-label="'+escAttr(label+': '+title)+'">'+
+  '<span class="combat-duel-center-role">'+label+'</span>'+
+  '<span class="combat-duel-center-viewport"'+crop+'>'+
+   (art||'<span class="combat-duel-center-empty" aria-hidden="true">'+(spell?'✦':'⚔')+'</span>')+
+  '</span><b class="combat-duel-center-name" title="'+escAttr(title)+'">'+escAttr(title)+'</b></div>';
+}
 // Spell feedback is presentation-only: Expert casting, PSY and effects are resolved elsewhere.
 function combatLatestResolvedSpellAction(){
  const round=Number(activeCombat?.round_number)||1;
@@ -5411,7 +5437,7 @@ function combatMagicFactsHtml(data,action){
   (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
  '</div>'
 }
-function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false){
+function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=null){
  const kind=data.magic_binding?.kind||'manual';
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
  const placeholder=area?(data.area_center?'Område valt':'Välj område'):
@@ -5431,9 +5457,12 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false){
     '</div></div>';
  return '<div class="combat-mini-title combat-magic-heading">'+
   '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span></div>'+
-  '<div class="combat-mini-duel combat-magic-duel">'+
+  '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel">'+
    combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
+    combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',artwork)+
+    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
+    
    targetCard+
   '</div>'
 }
@@ -5550,7 +5579,7 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
-  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action))+
+  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop)+
   combatMagicTargetPickerHtml(actor,action)+
   (resolved?
    combatSpellResultHtml(action):
@@ -5745,9 +5774,11 @@ function combatAttackPanelHtml(){
   const optionText=pending.options.map(option=>option.name).join(' / ');
   return '<section class="combat-mini-attack reaction combat-defense-attack">'+
    '<div class="combat-mini-title"><span>ANFALL</span><b>Lyckat närstridsanfall</b></div>'+
-   '<div class="combat-mini-duel">'+
-    combatMiniParticipantHtml('ATTACKERAR',pending.attacker,attackWeapon)+
+   '<div class="combat-mini-duel combat-illustrated-duel">'+
+    combatMiniParticipantHtml('ATTACKERAR',pending.attacker,'')+
     '<div class="combat-mini-arrow">→</div>'+
+    combatDuelCenterHtml('weapon',attackWeapon,typeof combatActionWeapon==='function'?combatActionWeapon(pending.attacker,attack,'auto'):null)+
+    '<div class="combat-mini-arrow" aria-hidden="true">→</div>'+
     combatMiniParticipantHtml('FÖRSVARAR',pending.defender,optionText)+
    '</div>'+
    combatAttackResultHtml(attack)+
@@ -5773,9 +5804,11 @@ function combatAttackPanelHtml(){
  const targetInfo=target&&selectedWeapon?combatAttackTargetInfo(actor,target,selectedWeapon,mode):null;
  return '<section class="combat-mini-attack '+(action.status==='resolved'?'resolved':'planning')+'">'+
   '<div class="combat-mini-title"><span>ANFALL</span></div>'+
-  '<div class="combat-mini-duel">'+
-   combatMiniParticipantHtml('ATTACKERAR',actor,selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen')+
+  '<div class="combat-mini-duel combat-illustrated-duel">'+
+   combatMiniParticipantHtml('ATTACKERAR',actor,'')+
    '<div class="combat-mini-arrow">→</div>'+
+   combatDuelCenterHtml('weapon',selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen',selectedWeapon)+
+   '<div class="combat-mini-arrow" aria-hidden="true">→</div>'+
    combatMiniParticipantHtml('FÖRSVARAR',target,target?(targetInfo?(targetInfo.mode==='melee'?'Närstrid':'Avstånd')+' · '+targetInfo.distance+' hex':'Valt mål'):'—',action.status==='planned')+
   '</div>'+
   (action.status==='planned'?combatPortraitTargetPickerHtml(targets,target):'')+
