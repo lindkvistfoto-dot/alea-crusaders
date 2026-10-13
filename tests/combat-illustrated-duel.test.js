@@ -4,7 +4,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js');
 const css=read('features/combat/duel-frames.css');
 const page=read('index.html');
-describe('v0.35.176 · shared illustrated attack and spell frames',()=>{
+describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
  it('uses one middle tile in all combat branches without replacing target interactions',()=>{
   const area=runtime.slice(runtime.indexOf('function combatMagicHeaderHtml('),runtime.indexOf('function combatTurnPortraitHtml('));
   expect(area).toContain("combatDuelCenterHtml('spell'");
@@ -43,10 +43,31 @@ describe('v0.35.176 · shared illustrated attack and spell frames',()=>{
   expect(css).toContain('font-size:clamp(7px,1.85vw,9px)');
   expect(css).toContain('white-space:nowrap;overflow-wrap:normal;word-break:normal');
   expect(css).toContain('font-size:clamp(9px,2.35vw,11px)');
-  expect(css).toContain('overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance');
+  expect(css).not.toContain('text-wrap:balance');
   expect(css).toContain('font-size:clamp(8px,2.05vw,10px)');
   expect(css).toContain('text-shadow:0 1px 4px #000');
   expect(runtime).toContain("label=spell?'BESVÄRJELSE':'VAPEN'");
+ });
+ it('does not wrap headings, full names or KP on any combat viewport',()=>{
+  expect(css).toContain('white-space:nowrap;');
+  expect(css).toContain('text-wrap:nowrap;');
+  expect(css).toContain('text-overflow:ellipsis;');
+  expect(css).toContain('overflow-wrap:normal;');
+  expect(css).toContain('font-size:clamp(8px,.75vw,11px)');
+  expect(css).toContain('font-size:clamp(10px,1vw,14px)');
+  expect(css).toContain('font-size:clamp(8px,2.15vw,10px)');
+  expect(css).toContain('font-size:clamp(7px,1.95vw,9px)');
+  expect(css).not.toContain('text-wrap:balance');
+  expect(css).toContain('.combat-duelist-meta');
+ });
+ it('prevents a second fiery cast image only when the main spell backdrop exists',()=>{
+  expect(css).toContain('.combat-mini-magic.has-spell-backdrop .combat-spell-effect-artwork');
+  expect(css).toContain('display:none;');
+  expect(css).toContain('.combat-mini-magic.has-spell-backdrop .combat-spell-effect-surface');
+  expect(css).toContain('background-image:linear-gradient(135deg,#211812,#15100d);');
+  expect(css).toContain('.combat-mini-magic.has-spell-backdrop .combat-spell-result');
+  expect(css).toContain('.combat-duel-spell-art');
+  expect(runtime).toContain('combatSpellResultHtml(action)');
  });
  it('left aligns the spell outcome without redundant roll label and clips the magic art',()=>{
   const fn=runtime.slice(runtime.indexOf('function combatSpellResultHtml('),runtime.indexOf('function combatMagicFactHtml('));
@@ -68,7 +89,7 @@ describe('v0.35.176 · shared illustrated attack and spell frames',()=>{
   expect(doubleArrow).toContain('viewBox="0 0 120 128"');
   expect(doubleArrow).toContain('data:image/png;base64,iVBORw0KGgo');
   expect(css).toContain('button.combat-portrait-target-button');
-  expect(page).toContain('duel-frames.css?v=0.35.176');
+  expect(page).toContain('duel-frames.css?v=0.35.177');
   for(const name of ['duel-portrait-frame.png','duel-focus-frame.png','duel-chevron.png']){
    const bytes=readFileSync(new URL('../assets/combat/frames/'+name,import.meta.url));
    expect(bytes.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
