@@ -300,6 +300,46 @@ function combatStateValue(state,...keys){
  for(const key of keys){if(state&&state[key]!=null&&state[key]!=='')return state[key]}
  return null
 }
+// Authoritative handed equipment for NPCs, enemies and monsters.
+// Historic records with no hand choices receive a right-hand weapon default.
+function combatNpcNormalizeProfile(profile){
+ const raw=profile||{};
+ const weapons=(Array.isArray(raw.weapons)?raw.weapons:[]).map((item,i)=>({
+  ...item,equipId:item.equipId||('npc-weapon-'+i)
+ }));
+ const shields=(Array.isArray(raw.shields)?raw.shields:[])
+  .filter(item=>item&&String(item.name||'').trim())
+  .map((item,i)=>({...item,equipId:item.equipId||('npc-shield-'+i)}));
+ const previous=raw.currentEquipment;
+ if(previous&&(Object.hasOwn(previous,'leftHand')||Object.hasOwn(previous,'rightHand'))){
+  return {...raw,weapons,shields};
+ }
+ const refs={leftHand:null,rightHand:null};
+ const hasAssignment=weapons.some(w=>w.hand!==undefined&&w.hand!=='')||
+  shields.some(s=>s.hand!==undefined&&s.hand!=='');
+ const assigned=weapons.map(w=>w.hand||'none');
+ let shieldHand=shields[0]?.hand||'none';
+ if(!hasAssignment){
+  if(weapons.length){
+   assigned[0]=String(weapons[0].handling||'').toUpperCase()==='2H'?'both':'right';
+   if(assigned[0]!=='both'){
+    if(shields.length)shieldHand='left';
+    else if(weapons.length>1)assigned[1]='left';
+   }
+  }else if(shields.length)shieldHand='left';
+ }
+ const put=(slot,kind,item,hands=1)=>{
+  if(!refs[slot])refs[slot]={kind,itemId:item.equipId,hands};
+ };
+ weapons.forEach((item,i)=>{
+  const hand=String(item.handling||'').toUpperCase()==='2H'&&assigned[i]!=='none'?'both':assigned[i];
+  if(hand==='both'){
+   if(!refs.leftHand&&!refs.rightHand){put('leftHand','weapon',item,2);put('rightHand','weapon',item,2)}
+  }else if(hand==='right'||hand==='left')put(hand+'Hand','weapon',item,1);
+ });
+ if(shields[0]&&(shieldHand==='left'||shieldHand==='right'))put(shieldHand+'Hand','shield',shields[0]);
+ return {...raw,weapons,shields,currentEquipment:refs};
+}
 function combatSourceStats(sceneCombatant,sources){
  const state=sceneCombatant?.state&&typeof sceneCombatant.state==='object'?sceneCombatant.state:{};
  const source=sceneCombatant.source_type==='character'?sources.characters.get(sceneCombatant.source_id):
@@ -326,6 +366,7 @@ function combatSourceStats(sceneCombatant,sources){
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
   shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
+  ambidextrous:attributes.ambidextrous===true||data.ambidextrous===true,
   spells:(Array.isArray(data.spells)?data.spells:(Array.isArray(source?.spells)?source.spells:[])).map(spell=>{
    const rule=(Array.isArray(ruleSpells)?ruleSpells:[]).find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||(row.name||'').localeCompare(spell?.name||'','sv',{sensitivity:'base'})===0);
    return {...spell,rule_id:rule?.id||null,attack_magic:rule?.attack_magic===true,damage_text:rule?.damage_text||'',range_text:rule?.range_text||'',school_id:rule?.school_id||null}
@@ -355,7 +396,8 @@ function combatSourceStats(sceneCombatant,sources){
  snapshot.STY=sty;snapshot.STO=sto;snapshot.SMI=smi;
  return{
   current_kp:currentKp,max_kp:maxKp,current_psy:currentPsy,max_psy:maxPsy,
-  movement_max:move,movement_remaining:move,smi,sty,sto,attributes:snapshot,attack_profile:attackProfile,
+  movement_max:move,movement_remaining:move,smi,sty,sto,attributes:{...snapshot,ambidextrous:attributes.ambidextrous===true},
+  attack_profile:sceneCombatant.source_type==='character'?attackProfile:combatNpcNormalizeProfile(attackProfile),
   flying:state.flying===true,race_name:raceName,gender:genderName,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
   portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
@@ -3178,8 +3220,9 @@ function combatAttackProfile(combatant){
  const stored=combatant?.state?.attack_profile&&typeof combatant.state.attack_profile==='object'?combatant.state.attack_profile:{};
  // For NPCs and monsters this combat instance's snapshot, not the source register, is authoritative.
  if(['npc','monster'].includes(combatant?.source_type)&&combatant?.state?.attack_profile){
-  return {...stored,weapons:Array.isArray(stored.weapons)?stored.weapons:[],shields:stored.shields||[],
-   armor:stored.armor||[],projectiles:stored.projectiles||[],
+  const npcProfile=typeof combatNpcNormalizeProfile==='function'?combatNpcNormalizeProfile(stored):stored;
+  return {...npcProfile,weapons:Array.isArray(npcProfile.weapons)?npcProfile.weapons:[],shields:npcProfile.shields||[],
+   armor:npcProfile.armor||[],projectiles:npcProfile.projectiles||[],
    sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),combatNumber(stored.sty,10)),
    sto:combatNumber(combatEffectiveAttribute(combatant,'STO'),combatNumber(stored.sto,10)),
    smi:combatNumber(combatEffectiveAttribute(combatant,'SMI'),combatNumber(stored.smi,10))}
@@ -3227,10 +3270,10 @@ function combatWeaponCategory(weapon){
 function combatAvailableWeapons(combatant,mode='auto'){
  const profile=combatAttackProfile(combatant),weapons=Array.isArray(profile.weapons)?profile.weapons:[];
  let available=weapons;
- if(combatant?.source_type==='character'&&profile.currentEquipment){
+ if(profile.currentEquipment){
   const refs=[profile.currentEquipment.leftHand,profile.currentEquipment.rightHand].filter(ref=>ref?.kind==='weapon'&&ref.itemId);
   const ids=new Set(refs.map(ref=>String(ref.itemId)));
-  available=weapons.filter(weapon=>ids.has(String(weapon.equipId)))
+  available=weapons.filter(weapon=>ids.has(String(weapon.equipId||weapon.id)))
  }
  const disabled=new Set([
   ...(Array.isArray(combatant?.state?.broken_weapon_keys)?combatant.state.broken_weapon_keys:[]),
@@ -3368,12 +3411,12 @@ function combatParryOptions(combatant){
  };
  const shields=Array.isArray(profile.shields)?profile.shields:[];
  let shieldIds=null;
- if(combatant?.source_type==='character'&&profile.currentEquipment){
+ if(profile.currentEquipment){
   shieldIds=new Set([profile.currentEquipment.leftHand,profile.currentEquipment.rightHand]
    .filter(ref=>ref?.kind==='shield'&&ref.itemId).map(ref=>String(ref.itemId)))
  }
  shields.forEach(shield=>{
-  if(shieldIds&&(!shield.equipId||!shieldIds.has(String(shield.equipId))))return;
+  if(shieldIds&&!shieldIds.has(String(shield.equipId||shield.id)))return;
   add({
    kind:'shield',
    key:'shield:'+(shield.equipId||shield.id||shield.name||'shield'),
