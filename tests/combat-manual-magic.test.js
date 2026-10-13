@@ -73,7 +73,7 @@ describe('Manuellt kast: färdighetsslag, PSY, logg – inga påhittade effekter
  }
  test('lyckat kast avslutar handlingen med kostnad EG och SL-anteckning',async()=>{
   const {writes,spent,alerts}=await simulate('success',true);
-  expect(spent).toEqual([2]);expect(alerts).toHaveLength(1);
+  expect(spent).toEqual([2]);expect(alerts).toHaveLength(0); // Magi visar resultatet i magirutan, inte i popup.
   expect(writes).toHaveLength(2);
   expect(writes[0]).toMatchObject({method:'PATCH',body:{status:'resolved',result:{
    success:true,manual_effect:true,effect_applied:false,gm_resolution_required:true,
