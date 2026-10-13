@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.186: fine-tune elevated, right-shifted weapon artwork. */
+/* Alea Crusaders v0.35.187: position weapon visibly higher/right, mask blade at gold edge. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
  display:grid;grid-template-columns:minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr);
  gap:clamp(1px,.35vw,5px);align-items:stretch;min-width:0;isolation:isolate;
@@ -283,14 +283,14 @@
  clip-path:inset(89% 0 0 0);
 }
 /* The selected master-register quadrant stays in a square, undistorted crop.
-   Lift and right-shift the sword, while clipping it precisely at the frame's
-   lower edge, giving the impression of rising out of the gold frame. */
+   Place the entire crop visibly higher/right. The weapon must be hidden at
+   the gold frame bottom without leaving a rectangular art strip beneath it. */
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
  position:absolute;z-index:4;inset:auto;
- top:-41%;left:56%;width:125%;height:auto;aspect-ratio:1 / 1;
+ top:-51%;left:63%;width:125%;height:auto;aspect-ratio:1 / 1;
  transform:translateX(-50%);display:block;overflow:hidden;pointer-events:none;
- /* 125% square is 166.67% of the 4:3 frame height: -41 + 166.67 * .846 = 100%. */
- clip-path:inset(0 0 15.4% 0);background:transparent;
+ /* Keep the lower edge of the weapon art behind the inset gold border. */
+ clip-path:inset(0 0 14% 0);background:transparent;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art img{
  position:absolute;display:block;
@@ -345,9 +345,9 @@
   padding-top:clamp(8px,2vw,13px);
  }
  #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
-  top:-40%;left:57%;width:120%;height:auto;
-  /* Mobile artwork is 160% of frame height: -40 + 160 * .875 = 100%. */
-  clip-path:inset(0 0 12.5% 0);
+  top:-50%;left:65%;width:120%;height:auto;
+  /* More apparent offset; blade disappears on the lower gold edge. */
+  clip-path:inset(0 0 11% 0);
  }
  #combatPage .combat-illustrated-duel .combat-weapon-switch-mark{
   width:19px;height:19px;right:-2px;bottom:-2px;font-size:16px;

@@ -85,7 +85,7 @@ describe('Huvudhand och stort attackvapen',()=>{
  it('håller magirubrik och magirutans ordinarie geometri orörda',()=>{
   expect(center({spell:true,switchable:false})).toContain('>BESVÄRJELSE</span>');
   expect(css).toContain('.combat-duel-center.is-weapon .combat-duel-weapon-art');
-  expect(css).toContain('top:-41%;left:56%;width:125%');
+  expect(css).toContain('top:-51%;left:63%;width:125%');
   expect(css).toContain('width:200%!important;height:200%!important');
   expect(css).toContain('overflow:visible');
  });
@@ -103,14 +103,14 @@ describe('Huvudhand och stort attackvapen',()=>{
   }
   expect(css).toContain('aspect-ratio:1 / 1');
   expect(css).toContain('overflow:hidden;pointer-events:none');
-  expect(css).toContain('clip-path:inset(0 0 15.4% 0)');
-  expect(css).toContain('clip-path:inset(0 0 12.5% 0)');
+  expect(css).toContain('clip-path:inset(0 0 14% 0)');
+  expect(css).toContain('clip-path:inset(0 0 11% 0)');
   expect(css).toContain('.combat-duel-center.is-weapon .combat-duel-center-viewport::before');
   expect(css).toContain('clip-path:inset(89% 0 0 0)');
   for(const quadrant of ['top-left','bottom-right','bottom-left','full']){
    expect(css).toContain('[data-combat-crop="'+quadrant+'"] .combat-duel-weapon-art img');
   }
-  expect(css).toContain('top:-40%;left:57%;width:120%;height:auto');
+  expect(css).toContain('top:-50%;left:65%;width:120%;height:auto');
  });
 
 });
