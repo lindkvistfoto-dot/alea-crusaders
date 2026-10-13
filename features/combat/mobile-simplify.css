@@ -33,6 +33,18 @@
  #combatPage .combat-portrait-target-option>small{color:#d7bf9b}
 }
 @media (max-width:760px){
+  /* Square physics/rendering surface; mobile panels may be much taller than wide. */
+  #combatPage .combat-dice-layer .combat-dice-host{
+    inset:auto;
+    top:50%;
+    left:50%;
+    width:var(--combat-dice-side,100%);
+    height:var(--combat-dice-side,100%);
+    transform:translate(-50%,-50%);
+  }
+  #combatPage .combat-dice-layer .combat-dice-host canvas{
+    object-fit:contain;
+  }
   #combatPage .combat-mini-attack button.combat-portrait-target-button{
     appearance:none;
     display:grid;
