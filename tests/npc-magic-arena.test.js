@@ -48,7 +48,9 @@ describe('SLP magier i den pågående stridsvyn',()=>{
   expect(options).toHaveLength(91);
   expect(options.every(spell=>spell.fv===15&&spell.school_fv===15)).toBe(true);
   const html=ui.spellChooser(battleCombatant,null);
-  expect((html.match(/combat-weapon-choice-btn/g)||[])).toHaveLength(91);
+  expect((html.match(/<option value="rule-/g)||[])).toHaveLength(91);
+  expect(html).toContain('<select aria-label="Välj besvärjelse"');
+  expect(html).not.toContain('combat-weapon-choice-btn');
   expect(html).toContain('ELD (F)');
   expect(html).not.toContain('Rollfiguren har inga besvärjelser.');
  });
