@@ -57,13 +57,15 @@ describe('Eld — SR1 preparation and SR2 targeting',()=>{
   const t=scenario(1);
   expect(t.scope.api.ready(t.caster,t.action)).toBe(false);
   expect(t.scope.api.candidates(t.caster,t.action).size).toBe(0);
-  expect(t.scope.api.html(t.caster,t.action)).toContain('mål väljs i SR 2');
+  expect(t.scope.api.html(t.caster,t.action)).toBe('');
  });
  it('offers a valid same-side NPC target on the caster\'s SR2 turn',()=>{
   const t=scenario(2);
   expect(t.scope.api.ready(t.caster,t.action)).toBe(true);
   expect(t.scope.api.targets(t.caster,t.action).has('nox')).toBe(true);
   expect(t.scope.api.candidates(t.caster,t.action).has('nox')).toBe(true);
+  expect(t.scope.api.html(t.caster,t.action)).toContain('Tryck på målporträttet');
+  t.scope.combatMobileMagicTargetPickerOpen=true;
   expect(t.scope.api.html(t.caster,t.action)).toContain('Nox');
  });
  it('selects and retains a valid spell target through the portrait picker',()=>{
