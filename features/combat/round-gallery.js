@@ -8,6 +8,7 @@
  const SAFE=/^round\/[0-9a-f-]{36}\.(?:webp|png|jpg|jpeg)$/;
  const MAX_SOURCE=12*1024*1024;
  let rows=null,chosenUrl='',chosenCombatId='',chosenKey='',request=0,adminBusy=false,adminRender=0;
+ let chosenFocus=null,focusEditor=null;
  const cachedUrls=new Map(),failedImageUrls=new Set();
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const canManage=()=>{try{return Boolean(activeUser()?.admin)}catch(_){return false}};
@@ -40,6 +41,156 @@
   cachedUrls.set(path,url);
   return url;
  }
+
+ // Existing pictures are never edited. Store only a 0–100% viewport focus.
+ const percent=n=>Math.min(100,Math.max(0,Math.round(Number(n)||0)));
+ const readFocus=value=>value&&typeof value==='object'&&
+  Number.isFinite(Number(value.x))&&Number.isFinite(Number(value.y))?
+  {x:percent(value.x),y:percent(value.y)}:null;
+ const defaultFocus=()=>typeof window!=='undefined'&&window.matchMedia?.('(max-width:600px)')?.matches?
+  {x:75,y:18}:{x:100,y:24};
+ const characterFor=actor=>actor?.source_type==='character'&&typeof chars!=='undefined'?
+  (chars||[]).find(c=>String(c._dbId||'')===String(actor.source_id||'')):null;
+ const focusFor=actor=>{
+  const ch=characterFor(actor);
+  // Updated character settings take effect even in previously created combats.
+  return readFocus(ch?.roundBackgroundFocus)||readFocus(actor?.state?.round_background_focus);
+ };
+ function writeFocusPreview(focus){
+  chosenFocus=readFocus(focus);
+  apply();
+  if(!focusEditor)return;
+  const stage=focusEditor.querySelector('.alea-round-focus-stage img');
+  const x=focusEditor.querySelector('[data-round-focus-x]');
+  const y=focusEditor.querySelector('[data-round-focus-y]');
+  const values=chosenFocus||defaultFocus();
+  if(stage)stage.style.objectPosition=values.x+'% '+values.y+'%';
+  if(x)x.value=String(values.x);
+  if(y)y.value=String(values.y);
+ }
+ function closeFocusEditor(cancel=true){
+  if(!focusEditor)return;
+  if(cancel)chosenFocus=readFocus(focusEditor._originalFocus);
+  const modal=focusEditor;focusEditor=null;modal.remove();
+  apply();
+ }
+ async function saveFocusEditor(){
+  const modal=focusEditor;
+  if(!modal)return;
+  const actor=typeof combatActiveActor==='function'?combatActiveActor():null;
+  if(!actor||String(actor.id)!==String(modal._actorId)){
+   closeFocusEditor();return;
+  }
+  const character=characterFor(actor);
+  const editCharacter=!!character&&typeof canEditCharacter==='function'&&canEditCharacter(character);
+  const gm=typeof combatCanManage==='function'&&combatCanManage();
+  if(!editCharacter&&!gm){closeFocusEditor();return}
+  const focus=readFocus(chosenFocus);
+  const buttons=modal.querySelectorAll('button'),status=modal.querySelector('.alea-round-focus-status');
+  buttons.forEach(button=>button.disabled=true);
+  if(status)status.textContent='Sparar bildplacering…';
+  const before=readFocus(character?.roundBackgroundFocus);
+  try{
+   if(editCharacter){
+    if(focus)character.roundBackgroundFocus=focus;
+    else delete character.roundBackgroundFocus;
+    if(typeof save==='function')save();
+    if(typeof syncCharacterToCentral==='function')await syncCharacterToCentral(character);
+   }
+   // Snapshot for live combatants and non-character NPCs. No schema changes.
+   if(gm){
+    const updated={...(actor.state||{})};
+    if(focus)updated.round_background_focus=focus;
+    else delete updated.round_background_focus;
+    await dbJson('combatants?id=eq.'+encodeURIComponent(actor.id)+
+     '&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+      method:'PATCH',headers:{Prefer:'return=minimal'},
+      body:JSON.stringify({state:updated,updated_at:new Date().toISOString()})
+     });
+    actor.state=updated;
+   }
+   // An owner may adjust their character even when only the GM can modify combatants.
+   chosenFocus=focus;
+   closeFocusEditor(false);
+  }catch(error){
+   console.error('Kunde inte spara rundbildens placering',error);
+   if(editCharacter){
+    if(before)character.roundBackgroundFocus=before;
+    else delete character.roundBackgroundFocus;
+   }
+   if(status)status.textContent='Kunde inte spara: '+(error?.message||error);
+   buttons.forEach(button=>button.disabled=false);
+  }
+ }
+ function openFocusEditor(){
+  const actor=typeof combatActiveActor==='function'?combatActiveActor():null;
+  const ch=characterFor(actor);
+  const mayEdit=!!ch&&typeof canEditCharacter==='function'&&canEditCharacter(ch);
+  const gm=typeof combatCanManage==='function'&&combatCanManage();
+  if(!actor||(!mayEdit&&!gm))return;
+  if(focusEditor){closeFocusEditor();return}
+  const photo=document.querySelector('#combatPage .combat-turn-panel .combat-round-artwork-image');
+  const rectangle=photo?.getBoundingClientRect?.();
+  const ratio=rectangle?.width&&rectangle?.height?Math.max(.75,Math.min(4,rectangle.width/rectangle.height)):2.5;
+  const modal=document.createElement('div');
+  modal.className='alea-round-focus-scrim';
+  modal.setAttribute('role','presentation');
+  modal._actorId=String(actor.id);
+  modal._originalFocus=readFocus(chosenFocus);
+  modal.innerHTML='<section class="alea-round-focus-dialog" role="dialog" aria-modal="true" aria-label="Justera rundbakgrund">'+
+   '<h3>Justera rundbakgrund</h3>'+
+   '<p>Dra bilden med fingret eller musen. Endast placeringen ändras – originalbilden behålls.</p>'+
+   '<div class="alea-round-focus-stage" style="aspect-ratio:'+ratio+'" aria-label="Dra bilden för att välja utsnitt">'+
+    '<img src="'+esc(chosenUrl||'./'+BUILTIN)+'" alt="Förhandsvisning av rundbakgrunden" draggable="false"></div>'+
+   '<div class="alea-round-focus-controls">'+
+    '<label>Sidled<input data-round-focus-x type="range" min="0" max="100" step="1" aria-label="Flytta bilden i sidled"></label>'+
+    '<label>Höjdled<input data-round-focus-y type="range" min="0" max="100" step="1" aria-label="Flytta bilden i höjdled"></label>'+
+   '</div>'+
+   '<div class="alea-round-focus-buttons">'+
+    '<button type="button" data-round-focus-reset>Återställ</button>'+
+    '<button type="button" data-round-focus-cancel>Avbryt</button>'+
+    '<button type="button" class="primary" data-round-focus-save>Spara placering</button>'+
+   '</div><div class="alea-round-focus-status" role="status" aria-live="polite"></div>'+
+   '</section>';
+  document.body.appendChild(modal);
+  focusEditor=modal;
+  writeFocusPreview(modal._originalFocus);
+  const stage=modal.querySelector('.alea-round-focus-stage');
+  const image=stage.querySelector('img');
+  image.onerror=()=>{image.src='./'+BUILTIN;image.onerror=null};
+  const horizontal=modal.querySelector('[data-round-focus-x]');
+  const vertical=modal.querySelector('[data-round-focus-y]');
+  for(const slider of [horizontal,vertical])slider.addEventListener('input',()=>{
+   writeFocusPreview({x:Number(horizontal.value),y:Number(vertical.value)})
+  });
+  let moving=null;
+  stage.addEventListener('pointerdown',event=>{
+   if(event.button!==0&&event.pointerType==='mouse')return;
+   const start=chosenFocus||defaultFocus();
+   moving={id:event.pointerId,x:event.clientX,y:event.clientY,focus:start};
+   stage.setPointerCapture?.(event.pointerId);
+   event.preventDefault();
+  });
+  stage.addEventListener('pointermove',event=>{
+   if(!moving||moving.id!==event.pointerId)return;
+   const rect=stage.getBoundingClientRect();
+   if(!rect.width||!rect.height)return;
+   writeFocusPreview({
+    x:percent(moving.focus.x-(event.clientX-moving.x)*100/rect.width),
+    y:percent(moving.focus.y-(event.clientY-moving.y)*100/rect.height)
+   });
+  });
+  const finishMove=event=>{if(moving?.id===event.pointerId)moving=null};
+  stage.addEventListener('pointerup',finishMove);
+  stage.addEventListener('pointercancel',finishMove);
+  modal.querySelector('[data-round-focus-reset]').addEventListener('click',()=>writeFocusPreview(null));
+  modal.querySelector('[data-round-focus-cancel]').addEventListener('click',()=>closeFocusEditor());
+  modal.querySelector('[data-round-focus-save]').addEventListener('click',()=>void saveFocusEditor());
+  modal.addEventListener('click',event=>{if(event.target===modal)closeFocusEditor()});
+  modal.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();closeFocusEditor()}});
+  modal.querySelector('[data-round-focus-save]').focus();
+ }
+
  function apply(){
   // Keep the attack panel artwork synchronized with the current combatant's
   // personal background (or the stable library fallback for this encounter).
@@ -50,6 +201,13 @@
   document.querySelectorAll('.combat-turn-panel').forEach(el=>{
    if(chosenUrl)el.style.setProperty('--alea-round-illustration','url('+JSON.stringify(chosenUrl)+')');
    else el.style.removeProperty('--alea-round-illustration');
+   if(chosenFocus){
+    el.style.setProperty('--alea-round-focus-x',chosenFocus.x+'%');
+    el.style.setProperty('--alea-round-focus-y',chosenFocus.y+'%');
+   }else{
+    el.style.removeProperty('--alea-round-focus-x');
+    el.style.removeProperty('--alea-round-focus-y');
+   }
    const image=el.querySelector?.('.combat-round-artwork-image');
    if(!image)return;
    const fallback='./'+BUILTIN;
@@ -70,18 +228,21 @@
  }
  async function activate(combat,actor=null){
   if(!combat?.id){
-   ++request;chosenCombatId='';chosenKey='';chosenUrl='';apply();return
+   ++request;chosenCombatId='';chosenKey='';chosenUrl='';chosenFocus=null;closeFocusEditor(false);apply();return
   }
   const state=actor?.state&&typeof actor.state==='object'?actor.state:{};
   const source=state.round_background_source==='character'?'character':'library';
   const actorPath=String(state.round_background_path||'');
   const actorLibraryId=String(state.round_background_id||'');
   const settingsId=String(combat.settings?.round_background_id||'');
-  const key=[combat.id,actor?.id||'',source,actorPath,actorLibraryId,settingsId].join('|');
+  const focus=focusFor(actor);
+  const key=[combat.id,actor?.id||'',source,actorPath,actorLibraryId,settingsId,
+   focus?.x??'default',focus?.y??'default'].join('|');
   if(key===chosenKey){apply();return}
+  if(focusEditor&&String(actor?.id||'')!==String(focusEditor._actorId))closeFocusEditor(false);
   const token=++request;
   chosenKey=key;chosenCombatId=String(combat.id);
-  chosenUrl='';apply();  // No flash of previous actor on a new turn.
+  chosenFocus=focus;chosenUrl='';apply();  // No flash of previous actor on a new turn.
   let path=BUILTIN;
   try{
    if(actorPath && ((source==='character') ||
@@ -207,5 +368,5 @@
    }
   }catch(e){host.textContent='Kunde inte hämta bakgrundsbilder: '+(e.message||e)}
  }
- window.aleaRoundGallery={list,getActivePool,pickRandomForCombat,activate,apply,fallbackImage,upload,toggle,rename,archive,renderAdmin};
+ window.aleaRoundGallery={list,getActivePool,pickRandomForCombat,activate,apply,fallbackImage,upload,toggle,rename,archive,renderAdmin,openFocusEditor,closeFocusEditor};
 })();
