@@ -2486,15 +2486,34 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
 }
+let combatSpellEffectUpdating=false;
 async function stepCombatSpellEffect(combatantId,delta){
- const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);if(!action||combatCannotAct(combatant)||action.status!=='planned'||action.source_data?.spell_locked)return;
- if(action.source_data?.item_magic)return;
- const effect=Math.max(1,(Number(action.source_data?.effect_grade)||1)+Number(delta||0));
+ const combatant=combatants.find(row=>String(row.id)===String(combatantId)),action=combatChosenAction(combatant);
+ if(!combatant||!action||action.status!=='planned'||!action.source_data?.spell_prepared||
+  action.source_data?.item_magic||combatCannotAct(combatant)||!combatCanManage()||
+  !combatIsActiveTurn(combatant)||combatSpellEffectUpdating)return;
+ const previous=Math.max(1,Number(action.source_data.effect_grade)||1);
+ const effect=Math.max(1,previous+Number(delta||0));
+ if(effect===previous)return;
  const spell=combatSpellOptions(combatant).find(row=>combatSpellKey(row)===String(action.source_data?.spell_key));
- if(spell){const check=combatMagicCastPreflight(combatant,spell,effect);if(!check.valid){alert(check.errors.join(' · '));return}}
- const sourceData={...(action.source_data||{}),effect_grade:effect,magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,psy_cost:effect};
- await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
- action.source_data=sourceData;renderCombat()
+ const check=spell?combatMagicCastPreflight(combatant,spell,effect):null;
+ if(check&&!check.valid){alert(check.errors.join(' · '));return}
+ // EG is adjustable until the actual casting roll. This never moves the
+ // already established ready_round; only the cost/CL and target allocations change.
+ const sourceData={...action.source_data,effect_grade:effect,
+  magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,
+  psy_cost:check?.psy_cost??effect,target_allocations:[]};
+ combatSpellEffectUpdating=true;
+ try{
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+  });
+  action.source_data=sourceData;renderCombat();
+ }catch(error){
+  console.error('Kunde inte ändra effektgrad',error);
+  alert('Effektgraden kunde inte sparas: '+(error?.message||error))
+ }finally{combatSpellEffectUpdating=false}
 }
 function combatRowMagicMenuHtml(combatant){
  if(!combatant||String(combatActionMenuId||'')!==String(combatant.id)||combatActionMenuKind!=='magic')return '';
@@ -3670,7 +3689,10 @@ function combatFireballTargets(){
  if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||action?.source_data?.magic_binding?.kind!=='damage')return new Map();
  const out=new Map(),range=combatSpellRangeHexes(actor,action);
  for(const target of combatants){
-  if(!combatCanTargetHostile(actor,target))continue;
+  // A targeted damage spell can hit any other visible living combatant, not
+  // only opposing sides. The caster is never an eligible damage target.
+  if(String(target.id)===String(actor.id)||['dead','removed'].includes(target.status)||
+    (target.visible_to_players===false&&!combatCanManage()))continue;
   const distance=combatFootprintDistance(actor,target);
   if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
  }
@@ -4207,7 +4229,7 @@ async function rollCombatTestFireball(actorId,targetId){
 function combatCurrentAttackTargets(){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||combatCannotAct(actor))return new Map();
- if(action?.source_data?.casting_spell===true&&(combatSupportedStatusSpell(action)||action.source_data.magic_binding?.kind==='heal'))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
+ if(action?.source_data?.casting_spell===true&&['status','heal'].includes(action.source_data.magic_binding?.kind))return new Map(combatSpellEffectTargets(actor,action).map(target=>[String(target.id),{mode:'magic',distance:combatAxialDistance(actor,target)}]));
  if(action?.source_data?.casting_spell===true&&action?.source_data?.magic_binding?.kind==='damage')return combatFireballTargets();
  if(!actor||def?.type!=='attack'||action?.status!=='planned')return new Map();
  const mode=def.mode||action?.source_data?.mode||'auto';
@@ -5203,9 +5225,19 @@ function combatMagicFactsHtml(data,action){
  const eg=Math.max(1,Number(data.effect_grade)||1),fv=Number(data.spell_fv);
  const cl=Number.isFinite(fv)&&fv>0?Math.max(1,fv-2*(eg-1)):'—';
  const spent=action.status==='resolved'?action.result?.psy_cost:null;
+ const actor=combatants.find(row=>String(row.id)===String(action.combatant_id));
+ const canEdit=action.status==='planned'&&data.spell_prepared&&!data.item_magic&&
+  !!actor&&combatCanManage()&&combatIsActiveTurn(actor);
+ const egValue=canEdit?
+  '<div class="combat-magic-fact combat-magic-eg-control"><span>EG · Effektgrad</span>'+
+   '<div class="combat-magic-eg-actions">'+
+    '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\\''+escAttr(actor.id)+'\\',-1)"'+(eg===1?' disabled':'')+'>−</button>'+
+    '<b aria-live="polite">'+escAttr(eg)+'</b>'+
+    '<button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\\''+escAttr(actor.id)+'\\',1)">+</button>'+
+   '</div></div>':combatMagicFactHtml('EG',eg);
  return '<div class="combat-magic-facts" aria-label="Besvärjelsens värden">'+
   combatMagicFactHtml('FV',data.spell_fv??'—')+
-  combatMagicFactHtml('EG',eg)+
+  egValue+
   combatMagicFactHtml('CL',cl)+
   combatMagicFactHtml(action.status==='resolved'?'PSY använd':'PSY',spent??(data.item_magic&&data.item_magic.psy_source!=='wearer'?0:eg))+
   (data.item_magic?combatMagicFactHtml('Föremål',data.item_magic.item_name||'Magiskt föremål',true)+combatMagicFactHtml('Upprepningar','×'+(data.item_magic.effect_multiplier||1)):'')+
@@ -5235,6 +5267,27 @@ function combatMagicHeaderHtml(actor,target,data){
    targetCard+
   '</div>'
 }
+function combatMagicTargetPickerHtml(actor,action){
+ const data=action?.source_data||{},kind=data.magic_binding?.kind;
+ if(!actor||action.status!=='planned'||data.casting_spell!==true||
+  !['damage','status','heal'].includes(kind)||
+  (Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1))return '';
+ const targetIds=[...combatCurrentAttackTargets().keys()];
+ const selected=String(combatSelectedTargetId||'');
+ const buttons=targetIds.map(id=>{
+  const target=combatants.find(row=>String(row.id)===id);
+  if(!target)return '';
+  const active=selected===id;
+  return '<button type="button" class="combat-magic-target-option'+(active?' selected':'')+
+   '" aria-pressed="'+active+'" onclick="selectCombatTarget(\\''+escAttr(id)+'\\')">'+
+    escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
+ }).join('');
+ return '<div class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
+  '<strong>Mål i kast-SR</strong>'+
+  (buttons?'<div class="combat-magic-target-options">'+buttons+'</div>':
+    '<small>Inga giltiga mål inom räckvidd och fri sikt.</small>')+
+  '</div>'
+}
 function combatMagicStatusHtml(label,detail,state){
  return '<div class="combat-magic-status" data-state="'+escAttr(state)+'" role="status" aria-live="polite">'+
   '<strong>'+escAttr(label)+'</strong>'+(detail?'<span>'+escAttr(detail)+'</span>':'')+'</div>'
@@ -5252,12 +5305,13 @@ function combatSpellCastPanelHtml(){
  const backdrop=combatSpellArtworkForAction(action),backdropArt=backdrop.path;
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
    ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
- const targetId=resolved?String(action.target_combatant_id||''):String(combatSelectedTargetId||'');
+ const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
+ const targetId=resolved?String(action.target_combatant_id||''):
+  casting&&currentRound>=readyRound?String(combatSelectedTargetId||''):'';
  const selectedTarget=combatants.find(row=>String(row.id)===targetId)||null;
  // A damage spell cannot target its caster: the default active-combatant
  // selection must not be treated as a valid target.
  const target=kind==='damage'&&String(selectedTarget?.id||'')===String(actor.id)?null:selectedTarget;
- const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
  let label='Vald besvärjelse',detail='',state='selected',instruction='';
  if(resolved){
   const outcomes={success:'Lyckat',special:'Särskilt',perfect:'Perfekt',fail:'Misslyckat',fumble:'Fummel'};
@@ -5289,6 +5343,7 @@ function combatSpellCastPanelHtml(){
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
   combatMagicHeaderHtml(actor,target,data)+
+  combatMagicTargetPickerHtml(actor,action)+
   (resolved?
    combatSpellResultHtml(action)+
    '<details class="combat-magic-detail-values"><summary>Slagvärden och besvärjelsedata</summary>'+
