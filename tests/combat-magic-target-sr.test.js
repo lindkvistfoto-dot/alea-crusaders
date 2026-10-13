@@ -20,6 +20,6 @@ describe('Magimål först i kast-SR',()=>{
   const ctx={activeCombat:{round_number:1},escAttr:String};
   runInNewContext(section('function combatMagicTargetChooserHtml(', 'async function combatSetMagicResistance(')+'this.chooser=combatMagicTargetChooserHtml;',ctx);
   const html=ctx.chooser({id:'lyra'},{source_data:{casting_spell:true,ready_round:2,magic_binding:{kind:'damage'}}});
-  expect(html).toContain('Mål väljs först i kast-SR 2');
+  expect(html).toContain('Klar att kasta i SR 2');
  });
 });
