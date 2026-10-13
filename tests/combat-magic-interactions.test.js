@@ -44,7 +44,7 @@ describe('Klickbara magikontroller i strid',()=>{
   const ctx=load('function combatMagicTargetPickerHtml(', 'function combatMagicStatusHtml(',{
    activeCombat:{round_number:1},combatants:[caster,ally,enemy],
    combatCurrentAttackTargets:()=>new Map([['astrid',{}],['orc',{}]]),
-   combatSelectedTargetId:null,escAttr:String
+   combatSelectedTargetId:null,combatMobileMagicTargetPickerOpen:true,escAttr:String
   },'combatMagicTargetPickerHtml');
   expect(ctx.exposed(caster,prepared)).toBe('');
   ctx.activeCombat.round_number=2;
