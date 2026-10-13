@@ -5636,7 +5636,7 @@ function combatSpellCastPanelHtml(){
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
  // Use snapshotted artwork, or recover the master image for older prepared casts.
  const backdrop=combatSpellArtworkForAction(action),backdropArt=backdrop.path;
- const cutout=combatSpellCutoutForAction(action);
+ const cutout=typeof combatSpellCutoutForAction==='function'?combatSpellCutoutForAction(action):null;
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
    ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
