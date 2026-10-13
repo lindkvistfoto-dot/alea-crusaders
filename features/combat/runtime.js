@@ -5,6 +5,10 @@ function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'P
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
 let combatMobileTargetPickerOpen=false,combatMobileMagicTargetPickerOpen=false;
+// The mobile DiceBox render surface must be square, even when the panel/map isn't.
+function combatDiceStageSide(rect){
+ return Math.floor(Math.max(0,Math.min(Number(rect?.width)||0,Number(rect?.height)||0)))
+}
 function combatPositionDiceLayer(){
  const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
  if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
@@ -32,6 +36,9 @@ function combatPositionDiceLayer(){
  if(rect.width<80||rect.height<80)return false;
  layer.style.left=rect.left+'px';layer.style.top=rect.top+'px';
  layer.style.width=rect.width+'px';layer.style.height=rect.height+'px';
+ // Prevent distorted 3D projection on a tall mobile combat panel.
+ if(mobile)layer.style.setProperty('--combat-dice-side',combatDiceStageSide(rect)+'px');
+ else layer.style.removeProperty('--combat-dice-side');
  layer.classList.toggle('mobile-combat-dice',overPanels);
  layer.classList.add('positioned');
  window.alea3dCombatPrepare?.();
@@ -6799,6 +6806,7 @@ function renderCombat(){
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
+window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
 window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
 
 /* v0.33.82 — never allow the active combatant to be an attack target */
