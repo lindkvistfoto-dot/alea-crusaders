@@ -49,7 +49,8 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
  it('visar en förberedelseruta i stället för mål under SR1',()=>{
   const html=header(foe,true);
   expect(html).toContain('combat-magic-preparation');
-  expect(html).toContain('Förbered besvärjelse');
+  expect(html).toContain('>FÖRBERED</span>');
+  expect(html).toContain('>Besvärjelse</b>');
   expect(html).toContain('ELD · EG 2');
   expect(html).not.toContain('data-unit="MÅL"');
   expect(html).not.toContain('>MÅL<');
