@@ -4,7 +4,7 @@ function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiende
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
-let combatMobileTargetPickerOpen=false,combatMobileMagicTargetPickerOpen=false,combatMobileLastOutcome=null;
+let combatMobileTargetPickerOpen=false,combatMobileMagicTargetPickerOpen=false;
 function combatPositionDiceLayer(){
  const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
  if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
@@ -1381,8 +1381,8 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
     (rolled.success?' · attacken stoppas':' · pareringen misslyckas'+(attackResult.hit_location?' · träff '+attackResult.hit_location.label:'')),
    details:parryResult,player_visible:true
   })});
-  combatShowOutcomeOverlay(rolled.outcome,'Parering · '+option.name+' · T20 '+rolled.roll+' mot FV '+option.fv);
-  if(attackResult.damage)combatShowMobileDamageOutcome(attackResult.damage,attackResult.hit_location);
+  // Parry and resulting damage already appear in the attack panel.
+  combatHideMagicResultPopup();
   (typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.success?'melee.parry':'melee.hit');
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.success?'melee.parry':'melee.hit');
   await loadActiveCombat()
@@ -1411,6 +1411,7 @@ async function declineCombatParry(defenderId,attackActionId){
    method:'PATCH',headers:{'Prefer':'return=minimal'},
    body:JSON.stringify({result:attackResult,updated_at:new Date().toISOString()})
   });
+  combatHideMagicResultPopup();
   (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.hit');
   await loadActiveCombat()
@@ -1610,7 +1611,6 @@ function combatOutcomeLabel(outcome){return combatOutcomeMeta(outcome).label}
 function combatShowOutcomeOverlay(outcome,context=''){
  const host=$('combatDiceReadout');if(!host)return;
  const meta=combatOutcomeMeta(outcome);
- combatMobileLastOutcome={outcome,context};
  host.classList.remove('success','fail','special','perfect','fumble','outcome-show','mobile-damage-detail');
  host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span><div class="combat-outcome-copy"><b>'+escAttr(meta.label)+'</b>'+(context?'<span>'+escAttr(context)+'</span>':'')+'</div>';
  host.classList.add('show','outcome-show',meta.cls)
@@ -1619,24 +1619,6 @@ function combatShowOutcomeOverlay(outcome,context=''){
 function combatHideMagicResultPopup(){
  const host=$('combatDiceReadout');
  if(host)host.classList.remove('show','outcome-show','mobile-damage-detail','success','fail','special','perfect','fumble');
- combatMobileLastOutcome=null
-}
-function combatShowMobileDamageOutcome(damage,hitLocation=null){
- if(!damage||!window.matchMedia?.('(max-width:760px)')?.matches)return;
- const host=$('combatDiceReadout');if(!host)return;
- const last=combatMobileLastOutcome||{},meta=combatOutcomeMeta(last.outcome||'success');
- const weapon=Number(damage.weapon_damage_value)||0,bonus=Number(damage.damage_bonus_value)||0;
- const armor=Number(damage.armor_absorption)||0,ward=Number(damage.effect_protection)||0,net=Number(damage.net_damage)||0;
- const position=hitLocation?.label||damage.hit_location?.label||'';
- host.classList.remove('fail','special','perfect','fumble');
- host.classList.add('show','outcome-show','mobile-damage-detail',meta.cls);
- host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span>'+
-  '<div class="combat-outcome-copy"><b>'+escAttr(meta.label)+(position?' · '+escAttr(position):'')+'</b>'+
-   (last.context?'<span>'+escAttr(last.context)+'</span>':'')+
-   '<span>Skada '+weapon+' + SB '+bonus+' − ABS '+armor+(ward?' − skydd '+ward:'')+' = '+net+'</span>'+
-   '<span>KP '+escAttr(damage.kp_before??'—')+' → '+escAttr(damage.kp_after??'—')+
-    (damage.defeated?' · NEDKÄMPAD':'')+'</span></div>'+
-  '<strong>−'+net+' KP</strong>'
 }
 const COMBAT_HIT_LOCATION_TABLES={
  humanoid:{
@@ -2003,9 +1985,8 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
   combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+rolled.roll+' mot FV '+fv);
   await new Promise(resolve=>setTimeout(resolve,700));
   result.fumble=await combatResolveFumbleChain(actor,action,attackMode,weapon)
- }else{
-  combatShowOutcomeOverlay(outcome,(weapon?.name||'Vapen')+' · T20 '+rolled.roll+' mot FV '+fv)
  }
+ // The attack card is authoritative; avoid a second floating result on normal rolls.
  if(success){
   if(attackMode==='melee'&&combatCanParryAttack(target)){
    result.awaiting_parry=true;
@@ -2039,6 +2020,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    (result.awaiting_parry?' · inväntar parering':''),
   details:result,player_visible:true
  })});
+ if(outcome!=='fumble')combatHideMagicResultPopup();
  return result
 }
 async function rollCombatAttack(actorId,targetId){
@@ -3646,11 +3628,8 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
    ' ('+weaponValue+(weapon?._spell_damage?'':' + '+bonusValue)+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
- if(weapon?._spell_damage){
-  if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup()
- }else if(typeof combatShowMobileDamageOutcome==='function'){
-  combatShowMobileDamageOutcome(result,hitLocation)
- }
+ // Result details live in the attack/magic panel; the floating dice readout is transient.
+ combatHideMagicResultPopup();
  return result
 }
 function combatDamageResultHtml(damage,spellDamage=false){

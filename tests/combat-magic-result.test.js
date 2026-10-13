@@ -213,8 +213,18 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const spells=runtime.slice(runtime.indexOf('async function combatCastManualSpell('),runtime.indexOf('function combatLatestResolvedSpellAction()'));
   expect(spells).not.toContain("combatShowOutcomeOverlay(rolled.outcome,spellName+");
   const damage=runtime.slice(runtime.indexOf('async function combatResolveDamage('),runtime.indexOf('function combatParryResultHtml('));
-  expect(damage).toContain("if(weapon?._spell_damage){");
-  expect(damage).toContain("}else if(typeof combatShowMobileDamageOutcome==='function'){");
+  expect(damage).toContain('combatHideMagicResultPopup();');
+  expect(damage).not.toContain('combatShowMobileDamageOutcome');
+ });
+ test('vanliga attacker och pareringar visar inte dubbla flytande resultatrutor',()=>{
+  const attack=runtime.slice(runtime.indexOf('async function combatResolveAttackAction('),runtime.indexOf('async function rollCombatAttack('));
+  const parry=runtime.slice(runtime.indexOf('async function chooseCombatParry('),runtime.indexOf('function combatReactionPromptHtml()'));
+  expect(attack).not.toContain('combatShowOutcomeOverlay(outcome,');
+  expect(attack).toContain("if(outcome!=='fumble')combatHideMagicResultPopup();");
+  expect(parry).not.toContain('combatShowMobileDamageOutcome');
+  expect(parry).toContain('combatHideMagicResultPopup();');
+  expect(runtime).not.toContain('function combatShowMobileDamageOutcome(');
+  expect(runtime).toContain('combatDamageResultHtml(result.damage)');
  });
  test('helmagirutan använder vald effektbild före ikonen och behåller beskärningen',()=>{
   const {context,action}=fixture();
