@@ -209,7 +209,8 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const spells=runtime.slice(runtime.indexOf('async function combatCastManualSpell('),runtime.indexOf('function combatLatestResolvedSpellAction()'));
   expect(spells).not.toContain("combatShowOutcomeOverlay(rolled.outcome,spellName+");
   const damage=runtime.slice(runtime.indexOf('async function combatResolveDamage('),runtime.indexOf('function combatParryResultHtml('));
-  expect(damage).toContain("if(weapon?._spell_damage)if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup()");
+  expect(damage).toContain("if(weapon?._spell_damage){");
+  expect(damage).toContain("}else if(typeof combatShowMobileDamageOutcome==='function'){");
  });
  test('helmagirutan använder vald effektbild före ikonen och behåller beskärningen',()=>{
   const {context,action}=fixture();
