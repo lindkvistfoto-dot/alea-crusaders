@@ -1,7 +1,7 @@
-/* Alea Crusaders v0.35.173: transparent PNG frame assets and shared three-part duel. */
+/* Alea Crusaders v0.35.174: transparent PNG frame assets and shared three-part duel. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
- display:grid;grid-template-columns:minmax(0,1fr) clamp(32px,4vw,58px) minmax(0,1.12fr) clamp(32px,4vw,58px) minmax(0,1fr);
- gap:clamp(2px,.35vw,7px);align-items:stretch;min-width:0;isolation:isolate;
+ display:grid;grid-template-columns:minmax(0,1fr) clamp(22px,2.8vw,42px) minmax(0,1fr) clamp(22px,2.8vw,42px) minmax(0,1fr);
+ gap:clamp(1px,.35vw,5px);align-items:stretch;min-width:0;isolation:isolate;
 }
 #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card,
 #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card.defender{
@@ -21,7 +21,7 @@
 }
 #combatPage .combat-illustrated-duel .combat-duelist-portrait{
  order:1;position:relative;align-self:center;display:grid;place-items:center;
- width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:4/3;
+ width:100%;height:auto;flex:0 0 auto;min-width:0;min-height:0;max-width:100%;max-height:none;aspect-ratio:4/3;
  overflow:hidden;border:0;border-radius:11px;background:#1b120e;box-shadow:none;isolation:isolate;
 }
 #combatPage .combat-illustrated-duel .combat-duelist-portrait::before{
@@ -44,13 +44,14 @@
  overflow-wrap:anywhere;white-space:normal;
 }
 #combatPage .combat-illustrated-duel .combat-mini-arrow{
- align-self:center;display:block;width:100%;height:auto;aspect-ratio:1;
+ align-self:center;justify-self:center;display:block;
+ width:clamp(44px,5vw,80px);max-width:none;height:auto;aspect-ratio:120/128;
  color:transparent;font-size:0;text-shadow:none;pointer-events:none;
- position:relative;z-index:4;transform:scale(1.18);
- background:url("../../assets/combat/frames/duel-chevron.png") center/contain no-repeat;
+ position:relative;z-index:4;transform:translateY(-16px);
+ background:url("../../assets/combat/frames/duel-double-chevron.svg") center/contain no-repeat;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center{
- display:flex;flex-direction:column;align-items:stretch;position:relative;min-width:0;
+ display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;position:relative;min-width:0;
  box-sizing:border-box;padding:0;border:0;border-radius:0;
  background:transparent;box-shadow:none;text-align:center;
 }
@@ -59,7 +60,7 @@
  letter-spacing:.025em;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center-viewport{
- position:relative;display:block;flex:none;width:100%;aspect-ratio:4/3;
+ position:relative;display:block;flex:0 0 auto;width:100%;min-width:0;max-width:100%;height:auto;aspect-ratio:4/3;
  isolation:isolate;overflow:visible;background:radial-gradient(ellipse at center,#422719aa,#120d09dd);
 }
 #combatPage .combat-illustrated-duel .combat-duel-center-viewport::after{
@@ -67,7 +68,7 @@
  background:url("../../assets/combat/frames/duel-focus-frame.png") center/100% 100% no-repeat;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center-name{
- z-index:4;position:relative;width:100%;margin-top:6px;color:#f6e4c8;
+ z-index:4;position:relative;width:100%;margin-top:5px;color:#f6e4c8;
  font:700 clamp(10px,1vw,15px)/1.15 Georgia,serif;overflow-wrap:anywhere;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center-empty{
@@ -75,7 +76,7 @@
  font-size:clamp(26px,4.5vw,55px);color:#d0a469;
 }
 #combatPage .combat-illustrated-duel .combat-duel-spell-art{
- position:absolute;inset:clamp(5px,1vw,12px);z-index:1;overflow:hidden;
+ position:absolute;inset:clamp(4px,.65vw,8px);z-index:1;overflow:hidden;
  border-radius:7px;background:transparent;
 }
 #combatPage .combat-illustrated-duel .combat-duel-spell-art img{
@@ -110,7 +111,10 @@
 }
 @media(max-width:760px){
  #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
-  grid-template-columns:minmax(0,1fr) 22px minmax(0,1.12fr) 22px minmax(0,1fr);gap:2px;
+  grid-template-columns:minmax(0,1fr) clamp(20px,6vw,28px) minmax(0,1fr) clamp(20px,6vw,28px) minmax(0,1fr);gap:1px;
+ }
+ #combatPage .combat-illustrated-duel .combat-mini-arrow{
+  width:clamp(35px,9vw,48px);transform:translateY(-13px);
  }
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card,
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card.defender,
@@ -122,6 +126,13 @@
  #combatPage .combat-illustrated-duel .combat-duelist-meta{font-size:clamp(8px,2.4vw,11px)}
  #combatPage .combat-mini-magic .combat-illustrated-duel .combat-duelist-card{min-height:0}
  #combatPage .combat-mini-attack .combat-illustrated-duel button.combat-portrait-target-button{position:relative;width:100%;min-width:0}
+}
+/* Consistent image geometry on narrow displays; never stretch the portrait itself. */
+#combatPage .combat-illustrated-duel .combat-duelist-portrait img{
+ object-fit:cover;object-position:center 27%;
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell .combat-duel-spell-art{
+ inset:clamp(4px,.65vw,8px);
 }
 @media(max-width:390px){
  #combatPage .combat-illustrated-duel .combat-duelist-role,
