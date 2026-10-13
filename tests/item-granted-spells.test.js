@@ -35,15 +35,16 @@ function fixture(){
  runInNewContext(runtime.slice(start,end)+'\nthis.options=combatSpellOptions;this.render=combatSpellChooserHtml;',common);
  return {actor,item,common,api:ctx.window.aleaItemSpells,config:ctx.window.aleaMagicConfigurator}
 }
-describe('Besvärjelser från magiska föremål visas separat',()=>{
- it('visar egen rubrik på rollpersonens Magi och i strid',()=>{
+describe('Besvärjelser från magiska föremål i gemensam alfabetisk väljare',()=>{
+ it('visar egen rubrik på rollpersonens Magi och tydligt föremål i stridens dropdown',()=>{
   expect(page).toContain('id="itemSpellTable"');
   expect(page).toContain('Besvärjelser från magiska föremål');
   expect(page).toContain('features/character/item-spells.js?v=');
   expect(characterApp).toContain('renderItemSpellTable();');
   expect(characterApp).toContain('function showItemSpellInfo(i)');
-  expect(runtime).toContain("label:'Inlärda besvärjelser'");
-  expect(runtime).toContain("label:'Besvärjelser från magiska föremål'");
+  expect(runtime).toContain('combat-spell-choice--compact');
+  expect(runtime).toContain('selectCombatPreparedSpell(');
+  expect(runtime).toContain('(föremål)');
  });
  it('håller Dödsbringarens FV5 EG1 ×4 separat från inlärd FV16 och maxantal',()=>{
   const x=fixture();
@@ -56,12 +57,11 @@ describe('Besvärjelser från magiska föremål visas separat',()=>{
   expect(item.item_spell.effect_grade).toBe(1);
   expect(item.item_spell.effect_multiplier).toBe(4);
   expect(x.common.combatSpellKey(item)).toContain('item:weapons:w1:power-1');
-  const html=x.common.render(x.actor,{source_data:{}});
-  expect(html).toContain('Inlärda besvärjelser');
-  expect(html).toContain('Besvärjelser från magiska föremål');
-  expect(html).toContain('Dödsbringaren');
-  expect(html).toContain('EG 1 ×4');
-  expect(html).toContain('FV 5');
+  const html=x.common.render(x.actor,{source_data:{spell_key:x.common.combatSpellKey(item)}});
+  expect(html).toContain('aria-label="Välj besvärjelse"');
+  expect(html).toContain('Dödsbringaren (föremål)');
+  expect(html).toContain('Föremål: Dödsbringaren · FV 5 · Fast EG 1 ×4');
+  expect(html).toContain('<option value="fire-spell">');
  });
  it('hämtar bärarens FV för valt Expert-besvärjelseslag',()=>{
   const x=fixture();
