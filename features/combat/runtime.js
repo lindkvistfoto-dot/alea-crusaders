@@ -6081,7 +6081,11 @@ function combatEffectiveSide(combatant,visited=new Set()){
 }
 function combatCanTargetHostile(actor,target){
  if(!actor||!target||String(actor.id)===String(target.id)||target.visible_to_players===false||['dead','removed'].includes(target.status))return false;
- if(combatEffectiveSide(actor)===combatEffectiveSide(target))return false;
+ // NPCs, including summoned elemental NPCs, can deliberately attack other
+ // NPCs, enemies, monsters or heroes even when they share a nominal side.
+ // A side is used for initiative/team display, not an NPC attack immunity.
+ // Preserve existing same-side attack restrictions for player/monster actors.
+ if(actor.source_type!=='npc'&&combatEffectiveSide(actor)===combatEffectiveSide(target))return false;
  return !combatMentalEffects(actor,['fear','panic']).some(({effect})=>String(effect.source_combatant_id)===String(target.id))
 }
 function combatMentalMovementAllowed(combatant,from,to){
