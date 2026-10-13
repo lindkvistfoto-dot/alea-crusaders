@@ -4,6 +4,7 @@ import {runInNewContext} from 'node:vm';
 
 const rt=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../features/combat/duel-frames.css',import.meta.url),'utf8');
+const layoutCss=readFileSync(new URL('../features/combat/attack-participants.css',import.meta.url),'utf8');
 const start=rt.indexOf('function combatPrimaryHandWeapon(');
 const end=rt.indexOf('function combatMeleeReachHexesForWeapon(',start);
 if(start<0||end<start)throw Error('Primary hand combat helpers missing');
@@ -33,7 +34,7 @@ function setup({ambidextrous=true,mainHand='right',sourceData={}}={}){
  return {ctx,action,calls,profile}
 }
 const escapeHtml=v=>String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function center({switchable=true,spell=false}={}){
+function center({switchable=true,spell=false,quadrant='top-right'}={}){
  const begin=rt.indexOf('function combatDuelCenterHtml(');
  const finish=rt.indexOf('// Spell feedback is presentation-only',begin);
  const src=rt.slice(begin,finish);
@@ -46,7 +47,7 @@ function center({switchable=true,spell=false}={}){
   combatWeaponKey:weapon=>weapon?.equipId||''
  };
  runInNewContext(src+'\nthis.center=combatDuelCenterHtml;',ctx);
- return ctx.center(spell?'spell':'weapon',spell?'Eld':'Kastspjut',spell?null:right,actor,action)
+ return ctx.center(spell?'spell':'weapon',spell?'Eld':'Kastspjut',spell?null:{...right,combat_crop_quadrant:quadrant},actor,action)
 }
 describe('Huvudhand och stort attackvapen',()=>{
  it('väljer utrustad huvudhand som standard även med två vapen',()=>{
@@ -84,7 +85,28 @@ describe('Huvudhand och stort attackvapen',()=>{
  it('håller magirubrik och magirutans ordinarie geometri orörda',()=>{
   expect(center({spell:true,switchable:false})).toContain('>BESVÄRJELSE</span>');
   expect(css).toContain('.combat-duel-center.is-weapon .combat-duel-weapon-art');
-  expect(css).toContain('inset:-42%');
+  expect(css).toContain('width:156%');
+  expect(css).toContain('width:200%!important;height:200%!important');
   expect(css).toContain('overflow:visible');
  });
+ it('mobilens extra action-wrapper sorteras efter Runda',()=>{
+  expect(rt).toContain("combatTurnPanelHtml()+'<div id=\"combatActionPanel\">'+combatAttackPanelHtml()");
+  expect(layoutCss).toContain('.combat-left-column > #combatActionPanel > *');
+  expect(layoutCss).toContain('order:2;width:100%;min-width:0');
+  expect(layoutCss).toContain('.combat-left-column > .combat-turn-panel');
+  expect(layoutCss).toContain('order:1;width:100%');
+  expect(layoutCss).toContain('@media(max-width:1023px)');
+ });
+ it('visar vald registerkvadrant som stor beskuren vapenbild, inte helbild',()=>{
+  for(const quadrant of ['top-right','top-left','bottom-left','bottom-right','full']){
+   expect(center({quadrant})).toContain('data-combat-crop="'+quadrant+'"');
+  }
+  expect(css).toContain('aspect-ratio:1 / 1');
+  expect(css).toContain('overflow:hidden;pointer-events:none');
+  for(const quadrant of ['top-left','bottom-right','bottom-left','full']){
+   expect(css).toContain('[data-combat-crop="'+quadrant+'"] .combat-duel-weapon-art img');
+  }
+  expect(css).toContain('width:150%;height:auto');
+ });
+
 });
