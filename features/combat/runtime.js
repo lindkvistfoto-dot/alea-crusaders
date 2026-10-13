@@ -5543,6 +5543,27 @@ function combatMagicStatusHtml(label,detail,state){
  return '<div class="combat-magic-status" data-state="'+escAttr(state)+'" role="status" aria-live="polite">'+
   '<strong>'+escAttr(label)+'</strong>'+(detail?'<span>'+escAttr(detail)+'</span>':'')+'</div>'
 }
+/* Casting/confirmation keeps the existing round-button mechanics, including
+   PSY spending, ammunition-like effect allocations, and status resistance. */
+function combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound){
+ if(action?.status!=='planned'||!combatIsActiveTurn(actor))return '';
+ const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
+ const waiting=casting&&currentRound<readyRound;
+ const selected=String(combatSelectedTargetId||'');
+ const candidates=casting&&!waiting?combatMagicTargetCandidates(actor,action):new Map();
+ const validTarget=candidates.has(selected);
+ const healing=kind==='heal'&&casting&&!waiting&&
+  !!combatHealingTarget(actor,action,selected);
+ const area=kind==='area'&&!!data.area_center&&
+  (!data.magic_binding?.cube||data.beskyddare_ritual_confirmed===true);
+ const ready=!waiting&&(!casting||kind==='manual'||area||healing||
+  (['damage','status'].includes(kind)&&validTarget));
+ const caption=!casting?(data.magic_casting?.quick?'Starta kvick besvärjelse':'Förbered besvärjelse'):
+  waiting?'Klar i SR '+readyRound:'✦ Bekräfta kast';
+ return '<div class="combat-action-confirm">'+
+  '<button type="button" class="btn combat-confirm-magic" onclick="combatMagicButton(event,\''+escAttr(actor.id)+'\')"'+
+   (!ready?' disabled':'')+'>'+escAttr(caption)+'</button></div>';
+}
 function combatSpellCastPanelHtml(){
  const activeActor=combatActiveActor(),chosen=combatChosenAction(activeActor);
  // Keep the last finished cast visible, but never cover another action.
@@ -5604,7 +5625,11 @@ function combatSpellCastPanelHtml(){
   (resolved?
    combatSpellResultHtml(action):
    combatMagicStatusHtml(label,detail,state)+
-   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
+   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
+   (casting&&currentRound>=readyRound?
+    '<details class="combat-magic-extra"><summary>Fler magival</summary>'+
+      combatMagicTargetChooserHtml(actor,action)+'</details>':'')+
+   combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound))+
  '</section>'
 }
 /* Compact reaction renderer: exactly three slots on all screens.
@@ -5786,6 +5811,13 @@ function combatPortraitTargetPickerHtml(targets,target){
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
+ const activeActor=combatActiveActor(),selectedAction=combatChosenAction(activeActor);
+ if(activeActor&&combatActionDefinition(selectedAction)?.key==='spell_cast'&&
+    selectedAction?.status==='planned'&&!selectedAction.source_data?.spell_prepared){
+  return '<section class="combat-mini-attack combat-action-placeholder combat-magic-select-panel" aria-label="Magi">'+
+   '<div class="combat-action-placeholder-label"><span aria-hidden="true">✦</span><b>Välj besvärjelse</b></div>'+
+   combatSpellChooserHtml(activeActor,selectedAction)+'</section>';
+ }
  const pending=combatPendingParryOpportunity();
  if(pending){
   const attack=pending.attack,result=attack.result||{};
