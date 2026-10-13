@@ -1,16 +1,36 @@
 /* v0.35.166 — touch-first attack targeting and local dice on phones.
    The desktop dashboard, shared rules and map targeting remain unchanged. */
+/* All viewports can choose a defender directly in the attack frame.
+   Old mobile-only strike UI is replaced with a shared compact button. */
 @media (min-width:761px){
-  #combatPage .combat-portrait-pick-label,
-  #combatPage .combat-portrait-target-picker,
-  #combatPage .combat-mobile-attack-execute{display:none!important}
-  #combatPage .combat-mini-attack .combat-portrait-target-button{
-    appearance:none;
-    font:inherit;
-    padding:0;
-    margin:0;
-    pointer-events:none;
-  }
+ #combatPage .combat-mobile-attack-execute{display:none!important}
+ #combatPage .combat-mini-attack button.combat-portrait-target-button{
+  appearance:none;display:grid;place-items:center;padding:0;margin:0;
+  font:inherit;color:inherit;cursor:pointer;pointer-events:auto;
+ }
+ #combatPage .combat-mini-attack button.combat-portrait-target-button:focus-visible{
+  outline:2px solid #e8ba70;outline-offset:3px;
+ }
+ #combatPage .combat-mini-attack .combat-portrait-pick-label{
+  position:absolute;z-index:5;bottom:1px;left:0;width:100%;
+  padding:4px 2px 5px;background:linear-gradient(0deg,#130d0bf5,#25160dcc);
+  font:800 10px/1 system-ui,sans-serif;color:#ffe0a0;text-align:center;
+  text-transform:uppercase;pointer-events:none;
+ }
+ #combatPage .combat-mini-attack .combat-portrait-target-picker{
+  position:relative;z-index:6;margin:6px 0;padding:8px;
+  border:1px solid #a97c49;border-radius:8px;
+  background:linear-gradient(#312116,#1a120e);
+ }
+ #combatPage .combat-portrait-target-picker>strong{display:block;margin-bottom:6px;color:#efd6ad}
+ #combatPage .combat-portrait-target-options{display:flex;flex-wrap:wrap;gap:5px;max-height:185px;overflow:auto}
+ #combatPage .combat-portrait-target-option{
+  display:inline-flex;align-items:center;gap:8px;padding:5px 9px;
+  border:1px solid #86633c;border-radius:6px;
+  background:#322218;color:#f2dec0;cursor:pointer;
+ }
+ #combatPage .combat-portrait-target-option.selected{border-color:#ecc57f;background:#614126}
+ #combatPage .combat-portrait-target-option>small{color:#d7bf9b}
 }
 @media (max-width:760px){
   #combatPage .combat-mini-attack button.combat-portrait-target-button{
