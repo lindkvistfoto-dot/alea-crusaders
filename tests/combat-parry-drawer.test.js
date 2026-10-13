@@ -8,6 +8,7 @@ const begin=runtime.indexOf('function combatDefenseReactionHtml('),
  end=runtime.indexOf('function combatTurnPortraitHtml(',begin);
 if(begin<0||end<=begin)throw Error('Combat defense reaction helpers missing');
 const code=runtime.slice(begin,end);
+const centerTile=runtime.slice(runtime.indexOf('function combatDuelCenterHtml('),runtime.indexOf('// Spell feedback is presentation-only'));
 const escAttr=value=>String(value??'').replace(/[&<>"']/g,c=>({
  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
 })[c]);
@@ -32,7 +33,7 @@ function harness(opportunity=null,extra={}){
   combatActiveActor:()=>null,combatChosenAction:()=>null,combatActionDefinition:()=>null,
   ...extra
  };
- runInNewContext(code+'\nthis.exports={drawer:combatDefenseReactionHtml,panel:combatAttackPanelHtml,choose:combatSubmitDefenseChoice};',env);
+ runInNewContext(centerTile+code+'\nthis.exports={drawer:combatDefenseReactionHtml,panel:combatAttackPanelHtml,choose:combatSubmitDefenseChoice};',env);
  return env.exports;
 }
 describe('Responsive parry reaction outside the attack panel',()=>{
