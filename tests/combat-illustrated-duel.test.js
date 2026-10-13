@@ -4,7 +4,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js');
 const css=read('features/combat/duel-frames.css');
 const page=read('index.html');
-describe('v0.35.175 · shared illustrated attack and spell frames',()=>{
+describe('v0.35.176 · shared illustrated attack and spell frames',()=>{
  it('uses one middle tile in all combat branches without replacing target interactions',()=>{
   const area=runtime.slice(runtime.indexOf('function combatMagicHeaderHtml('),runtime.indexOf('function combatTurnPortraitHtml('));
   expect(area).toContain("combatDuelCenterHtml('spell'");
@@ -39,6 +39,15 @@ describe('v0.35.175 · shared illustrated attack and spell frames',()=>{
   expect(runtime).toContain('combatToggleMagicTargetPicker()');
   expect(runtime).toContain('combatTogglePortraitTargetPicker()');
  });
+ it('keeps narrow mobile headings on one line and names legible',()=>{
+  expect(css).toContain('font-size:clamp(7px,1.85vw,9px)');
+  expect(css).toContain('white-space:nowrap;overflow-wrap:normal;word-break:normal');
+  expect(css).toContain('font-size:clamp(9px,2.35vw,11px)');
+  expect(css).toContain('overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance');
+  expect(css).toContain('font-size:clamp(8px,2.05vw,10px)');
+  expect(css).toContain('text-shadow:0 1px 4px #000');
+  expect(runtime).toContain("label=spell?'BESVÄRJELSE':'VAPEN'");
+ });
  it('left aligns the spell outcome without redundant roll label and clips the magic art',()=>{
   const fn=runtime.slice(runtime.indexOf('function combatSpellResultHtml('),runtime.indexOf('function combatMagicFactHtml('));
   expect(fn).not.toContain('Besvärjelseslag');
@@ -59,7 +68,7 @@ describe('v0.35.175 · shared illustrated attack and spell frames',()=>{
   expect(doubleArrow).toContain('viewBox="0 0 120 128"');
   expect(doubleArrow).toContain('data:image/png;base64,iVBORw0KGgo');
   expect(css).toContain('button.combat-portrait-target-button');
-  expect(page).toContain('duel-frames.css?v=0.35.175');
+  expect(page).toContain('duel-frames.css?v=0.35.176');
   for(const name of ['duel-portrait-frame.png','duel-focus-frame.png','duel-chevron.png']){
    const bytes=readFileSync(new URL('../assets/combat/frames/'+name,import.meta.url));
    expect(bytes.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
