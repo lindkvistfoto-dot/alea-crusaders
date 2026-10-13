@@ -3979,7 +3979,7 @@ function combatHealingTarget(actor,action,targetId){
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  if((Number((typeof activeCombat!=='undefined'?activeCombat:null)?.round_number)||Number(action.source_data.ready_round)||1)<(Number(action.source_data.ready_round)||1))
-  return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Mål väljs först i kast-SR '+escAttr(action.source_data.ready_round)+'.</small></div>';
+  return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Klar att kasta i SR '+'</small></div>';
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
   const alone=!targets.some(row=>String(row.id)!==String(actor.id));
@@ -5438,21 +5438,38 @@ function combatMagicFactsHtml(data,action){
   (data.duration_text?combatMagicFactHtml('Varaktighet',data.duration_text,true):'')+
  '</div>'
 }
-function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=null){
+function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=null,preparing=false){
  const kind=data.magic_binding?.kind||'manual';
  const area=kind==='area',needsTarget=['damage','status','heal'].includes(kind);
  const placeholder=area?(data.area_center?'Område valt':'Välj område'):
    needsTarget?'Välj mål':kind==='manual'?'Inget särskilt mål':'Själv / omgivning';
  const description=area?'Områdesbesvärjelse':kind==='heal'?'Läkning':
    kind==='status'?'Magisk effekt':kind==='damage'?'Besvärjelsens mål':'';
- const mobileChoice=canChooseTarget&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const mobileChoice=!preparing&&canChooseTarget&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ // A normal spell has no target in preparation SR, even when another
+ // combatant is selected elsewhere on the map.
+ const iconPath=combatSpellArtPath(data.spell_icon_path)||combatSpellArtPath(artwork?.path);
+ const iconX=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_focus_x:artwork?.x,50);
+ const iconY=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_focus_y:artwork?.y,50);
+ const iconZoom=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_zoom:artwork?.zoom,100,100,300);
+ const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
+  '<div class="combat-duelist-portrait combat-preparation-portrait" aria-hidden="true">'+
+   (iconPath?'<span class="combat-preparation-art" data-spell-art-path="'+escAttr(iconPath)+'"'+
+    ' data-focus-x="'+iconX+'" data-focus-y="'+iconY+'" data-zoom="'+iconZoom+'"><img alt="" hidden></span>':
+    '<span class="combat-magic-target-glyph" aria-hidden="true">✦</span>')+
+  '</div><div class="combat-duelist-copy">'+
+   '<span class="combat-duelist-role">FÖRBEREDELSE</span>'+
+   '<b class="combat-duelist-name">Förbered besvärjelse</b>'+
+   '<small class="combat-duelist-meta">'+escAttr(data.spell_name||'Besvärjelse')+' · EG '+escAttr(data.effect_grade||1)+'</small>'+
+  '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+(combatMobileMagicTargetPickerOpen?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
   '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>';
- const targetCard=target?combatMiniParticipantHtml('MÅL',target,description,canChooseTarget):
+ const targetCard=preparing?preparationCard:needsTarget&&target?
+  combatMiniParticipantHtml('MÅL',target,description,canChooseTarget):
   '<div class="combat-mini-side combat-duelist-card defender magic-empty-target">'+
     emptyPortrait+
-    '<div class="combat-duelist-copy"><span class="combat-duelist-role">MÅL</span>'+
+    '<div class="combat-duelist-copy"><span class="combat-duelist-role">'+escAttr(area?'OMRÅDE':needsTarget?'MÅL':'EFFEKT')+'</span>'+
       '<b class="combat-duelist-name">'+escAttr(placeholder)+'</b>'+
       '<small class="combat-duelist-meta">'+escAttr(area?'Markera centrum på kartan':needsTarget?(mobileChoice?'Tryck på porträttet för att välja mål':'Välj kombattant'):'Inget individuellt mål')+'</small>'+
     '</div></div>';
@@ -5501,9 +5518,8 @@ function combatMagicTargetPickerHtml(actor,action){
  if(!actor||action?.status!=='planned'||data.casting_spell!==true||
   !['damage','status','heal'].includes(kind))return '';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
- if(currentRound<readyRound)
-  return '<div class="combat-magic-target-wait" role="status">Förbereder '+escAttr(data.spell_name||'besvärjelsen')+
-   ' · mål väljs i SR '+readyRound+'. Avsluta först denna SR.</div>';
+ // During preparation, keep the entire target picker hidden.
+ if(currentRound<readyRound)return '';
  if(!combatIsActiveTurn(actor))
   return '<div class="combat-magic-target-wait" role="status">Mål väljs när '+escAttr(actor.name_snapshot)+' står på tur i SR '+currentRound+'.</div>';
  const candidates=combatMagicTargetCandidates(actor,action);
@@ -5544,6 +5560,9 @@ function combatSpellCastPanelHtml(){
  const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
    ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
+ const isQuick=data.magic_casting?.quick===true;
+ const preparing=!resolved&&action.status==='planned'&&!isQuick&&
+  (!casting||currentRound<readyRound);
  const targetId=resolved?String(action.target_combatant_id||''):
   casting&&currentRound>=readyRound?String(combatSelectedTargetId||''):'';
  const selectedTarget=combatants.find(row=>String(row.id)===targetId)||null;
@@ -5558,10 +5577,13 @@ function combatSpellCastPanelHtml(){
  }else if(action.status==='resolving'||action.status==='pending'){
   label='Kastas';detail=action.result?.awaiting_antimagic?'Väntar på Antimagi':'Väntar på resultat';state='resolving';
  }else if(!casting){
-  detail=data.magic_casting?.quick?'Kvick besvärjelse':'Effekt efter förberedelse';
-  instruction='Tryck ✦ för att förbereda besvärjelsen.';
+  label=isQuick?'Kvick besvärjelse':'Förbered besvärjelse';
+  detail=isQuick?'Kastas direkt i SR '+currentRound:'Klar att förbereda för SR '+(currentRound+1);
+  state=isQuick?'selected':'preparing';
+  instruction=isQuick?'Tryck ✦ för att påbörja kastet direkt i SR '+currentRound+'.':
+   'Tryck ✦ för att förbereda besvärjelsen.';
  }else if(currentRound<readyRound){
-  label='Förbereder';detail='Klar i SR '+readyRound;state='preparing';
+  label='Förbereder besvärjelse';detail='Klar i SR '+readyRound;state='preparing';
   instruction='Vänta till SR '+readyRound+' innan du kastar.';
  }else if(kind==='area'&&data.magic_binding?.cube&&!data.beskyddare_ritual_confirmed){
   label='Väntar på SL';detail='Ritualen måste bekräftas';state='preparing';
@@ -5580,8 +5602,8 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
-  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop)+
-  combatMagicTargetPickerHtml(actor,action)+
+  combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing)+
+  (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
    combatSpellResultHtml(action):
    combatMagicStatusHtml(label,detail,state)+
