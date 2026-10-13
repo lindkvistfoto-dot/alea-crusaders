@@ -40,6 +40,7 @@ function render(round,{quick=false,casting=true}={}){
    '<div data-phase="'+(preparing?'preparation':'casting')+'" data-target="'+(target?.id||'none')+'"></div>',
   combatMagicTargetPickerHtml:()=>'<div data-target-picker></div>',
   combatMagicStatusHtml:label=>'<span>'+label+'</span>',
+  combatMagicConfirmHtml:()=>'<button data-magic-confirm></button>',
   combatSpellResultHtml:()=>'',combatLatestResolvedSpellAction:()=>null,escAttr:esc
  };
  runInNewContext(panel+'\nthis.renderSpell=combatSpellCastPanelHtml;',ctx);
