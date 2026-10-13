@@ -5313,7 +5313,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
  const magic=label==='MÅL',tag=picker?'button':'div';
  const attrs=picker?' type="button" onclick="'+(magic?'combatToggleMagicTargetPicker()':'combatTogglePortraitTargetPicker()')+'" aria-label="'+
   escAttr(magic?(combatant?'Byt magimål från '+name:'Välj magimål'):(combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
-  '" aria-expanded="'+((magic?combatMobileMagicTargetPickerOpen:combatMobileTargetPickerOpen)?'true':'false')+'" aria-controls="'+(magic?'combatMagicTargetMenu':'combatPortraitTargetMenu')+'"':' aria-hidden="true"';
+  '" aria-expanded="'+(((magic?(typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen):(typeof combatMobileTargetPickerOpen!=='undefined'&&combatMobileTargetPickerOpen)))?'true':'false')+'" aria-controls="'+(magic?'combatMagicTargetMenu':'combatPortraitTargetMenu')+'"':' aria-hidden="true"';
  return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
   '<'+tag+' class="combat-duelist-portrait'+(picker?' combat-portrait-target-button':'')+'"'+attrs+'>'+portraitHtml+
   (picker?'<span class="combat-portrait-pick-label">'+(combatant?'Byt mål':'Välj mål')+'</span>':'')+
