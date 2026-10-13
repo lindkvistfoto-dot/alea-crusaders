@@ -78,3 +78,10 @@
   opacity:.55;
   cursor:wait;
 }
+
+/* Panel host is semantically addressable but must not alter left-column height. */
+@media(min-width:1024px){
+ #combatPage .combat-shell-live .combat-left-column > #combatActionPanel > .combat-mini-attack{
+  padding:7px 8px;margin:0;max-height:none;overflow:visible;
+ }
+}
