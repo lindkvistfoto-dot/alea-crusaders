@@ -5324,11 +5324,15 @@ function combatAttackPanelWeaponHtml(actor,action,target){
  const selected=combatActionWeapon(actor,action,mode);
  let options=combatAttackWeaponOptions(actor,mode);
  if(target)options=options.filter(weapon=>combatAttackTargetInfo(actor,target,weapon,mode));
+ if(combatAmbidextrousDuelWeapons(actor,action,mode).length===2&&selected){
+  return '<div class="combat-mini-weapons single combat-weapon-inline-info"><small>'+
+   escAttr(combatWeaponAttackHint(selected,actor))+'</small></div>'
+ }
  if(!options.length)return '<div class="combat-mini-weapons empty">Inget aktuellt vapen når valt mål.</div>';
  if(options.length===1&&selected&&combatWeaponKey(selected)===combatWeaponKey(options[0])){
-  return '<div class="combat-mini-weapons single"><span>Vapen</span><b>'+escAttr(selected.name||'Vapen')+'</b><small>'+escAttr(combatWeaponAttackHint(selected,actor))+'</small></div>'
+  return '<div class="combat-mini-weapons single"><b>'+escAttr(selected.name||'Vapen')+'</b><small>'+escAttr(combatWeaponAttackHint(selected,actor))+'</small></div>'
  }
- return '<div class="combat-mini-weapons"><span>Vapen</span><div>'+
+ return '<div class="combat-mini-weapons"><div>'+
   options.map(weapon=>{
    const active=selected&&combatWeaponKey(selected)===combatWeaponKey(weapon);
    return '<button type="button" class="combat-mini-weapon'+(active?' active':'')+'" onclick="chooseCombatAttackWeapon(\''+actor.id+'\',\''+escAttr(combatWeaponKey(weapon))+'\')">'+
