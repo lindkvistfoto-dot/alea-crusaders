@@ -7,23 +7,10 @@ const runtime=read('features/combat/runtime.js'),css=read('features/combat/attac
 const begin=runtime.indexOf('function combatDefenseReactionHtml('),
  end=runtime.indexOf('function combatTurnPortraitHtml(',begin);
 if(begin<0||end<=begin)throw Error('Combat defense reaction helpers missing');
-
+const code=runtime.slice(begin,end);
 const escAttr=value=>String(value??'').replace(/[&<>"']/g,c=>({
  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
 })[c]);
-
-function harness(opportunity=null){
- const context={
-  escAttr,
-  combatAntimagicPromptHtml:()=>'',combatSpellCastPanelHtml:()=>'',combatPendingParryOpportunity:()=>opportunity,
-  combatAttackResultHtml:action=>'<div class="combat-attack-result">'+escAttr(action.id)+'</div>',
-  combatMiniParticipantHtml:(role,person)=>'<div>'+role+' '+escAttr(person.name_snapshot)+'</div>',
-  combatActiveActor:()=>null,combatChosenAction:()=>null,combatActionDefinition:()=>null
- };
- runInNewContext(runtime.slice(begin,end)+
-  '\nthis.exports={drawer:combatDefenseReactionHtml,mobile:combatDefenseMobileHtml,panel:combatAttackPanelHtml};',context);
- return context.exports;
-}
 
 function sample(){
  return {
@@ -36,8 +23,20 @@ function sample(){
   ]
  }
 }
-describe('Desktop defense reaction slides out from the attack panel',()=>{
- it('renders shield and weapon defenses as separate, executable choices',()=>{
+function harness(opportunity=null,extra={}){
+ const env={
+  escAttr,console,
+  combatAntimagicPromptHtml:()=>'',combatSpellCastPanelHtml:()=>'',combatPendingParryOpportunity:()=>opportunity,
+  combatAttackResultHtml:action=>'<div class="combat-attack-result">'+escAttr(action.id)+'</div>',
+  combatMiniParticipantHtml:(role,person)=>'<div>'+role+' '+escAttr(person.name_snapshot)+'</div>',
+  combatActiveActor:()=>null,combatChosenAction:()=>null,combatActionDefinition:()=>null,
+  ...extra
+ };
+ runInNewContext(code+'\nthis.exports={drawer:combatDefenseReactionHtml,panel:combatAttackPanelHtml,choose:combatSubmitDefenseChoice};',env);
+ return env.exports;
+}
+describe('Responsive parry reaction outside the attack panel',()=>{
+ it('shows shield and weapon defenses as distinct clickable options',()=>{
   const html=harness().drawer(sample());
   expect(html).toContain('combat-defense-drawer');
   expect(html).toContain('FÖRSVARSREAKTION');
@@ -46,32 +45,78 @@ describe('Desktop defense reaction slides out from the attack panel',()=>{
   expect(html).toContain('Vapenparering');
   expect(html).toContain('FV 13');
   expect(html).toContain('FV 15');
-  expect(html).toContain('chooseCombatParry(&quot;def-1&quot;,&quot;attack-42&quot;,&quot;shield:medium&quot;)');
-  expect(html).toContain('chooseCombatParry(&quot;def-1&quot;,&quot;attack-42&quot;,&quot;weapon:blade&quot;)');
-  expect(html).toContain('declineCombatParry(&quot;def-1&quot;,&quot;attack-42&quot;)');
+  expect(html).toContain('combatSubmitDefenseChoice(this,&#39;parry&#39;,&quot;def-1&quot;,&quot;attack-42&quot;,&quot;shield:medium&quot;)');
+  expect(html).toContain('combatSubmitDefenseChoice(this,&#39;parry&#39;,&quot;def-1&quot;,&quot;attack-42&quot;,&quot;weapon:blade&quot;)');
+  expect(html).toContain('combatSubmitDefenseChoice(this,&#39;take-hit&#39;,&quot;def-1&quot;,&quot;attack-42&quot;)');
+  expect(html).toContain('Ta smällen');
  });
- it('escapes option text and ids inside the generated controls',()=>{
+ it('escapes untrusted names and attribute arguments',()=>{
   const opportunity=sample();
   opportunity.options[0].name='<img src=x onerror=alert(1)>';
   const html=harness().drawer(opportunity);
   expect(html).toContain('&lt;img');
   expect(html).not.toContain('<img src=x');
  });
- it('keeps existing mobile inline controls but uses the drawer on desktop',()=>{
-  const source=harness(sample()).panel();
-  expect(source).toContain('combat-defense-attack');
-  expect(source).toContain('combat-defense-drawer');
-  expect(source).toContain('combat-defense-mobile');
-  expect(source).toContain('combat-attack-result');
-  expect(source).toContain('combat-mini-duel');
-  expect(css).toContain('@media (min-width:1024px)');
-  expect(css).toContain('.combat-defense-attack > .combat-defense-mobile');
-  expect(css).toContain('display:none;');
+ it('uses one popout for desktop and mobile, below attack results on mobile',()=>{
+  const html=harness(sample()).panel();
+  expect(html).toContain('combat-defense-attack');
+  expect(html).toContain('combat-defense-drawer');
+  expect(html).not.toContain('combat-defense-mobile');
+  expect(html.indexOf('combat-attack-result')).toBeLessThan(html.indexOf('combat-defense-drawer'));
+  expect(html).toContain('combat-mini-duel');
   expect(css).toContain('left:calc(100% + 12px)');
   expect(css).toContain('animation:aleaDefenseDrawerEnter');
-  expect(css).toContain('z-index:40');
+  expect(css).toContain('@media (max-width:1023px)');
+  expect(css).toContain('top:calc(100% - 1px)');
+  expect(css).toContain('animation:aleaDefenseMobileDrop');
+  expect(css).toContain('animation:aleaDefenseMobileRetract');
+  expect(css).toContain('z-index:50');
  });
- it('does not render defense popup for an attack without an eligible reaction',()=>{
+ it('locks the panel during its return animation, then invokes shield parry once',async()=>{
+  const opportunity=sample(),ticks=[],resolved=[],changes=[];
+  const choices=[{disabled:false},{disabled:false}];
+  const drawer={
+   isConnected:true,
+   classList:{add:v=>changes.push('add:'+v),remove:v=>changes.push('remove:'+v)},
+   setAttribute:(k,v)=>changes.push(k+':'+v),
+   removeAttribute:k=>changes.push('remove:'+k),
+   querySelectorAll:()=>choices
+  };
+  const api=harness(opportunity,{
+   combatCanManage:()=>true,
+   chooseCombatParry:async(...args)=>resolved.push(args),
+   declineCombatParry:async()=>{},
+   setTimeout:(cb,ms)=>ticks.push({cb,ms}),
+   window:{matchMedia:()=>({matches:false})}
+  });
+  const button={closest:()=>drawer};
+  api.choose(button,'parry','def-1','attack-42','shield:medium');
+  expect(changes).toContain('add:is-retracting');
+  expect(choices.every(b=>b.disabled)).toBe(true);
+  expect(ticks[0].ms).toBe(240);
+  expect(resolved).toHaveLength(0);
+  api.choose(button,'parry','def-1','attack-42','shield:medium');
+  expect(ticks).toHaveLength(1);
+  await ticks[0].cb();
+  expect(resolved).toEqual([['def-1','attack-42','shield:medium']]);
+  expect(choices.every(b=>!b.disabled)).toBe(true);
+  expect(changes).toContain('remove:is-retracting');
+ });
+ it('retracts after choosing to take the hit, without delaying reduced-motion mode',async()=>{
+  const opportunity=sample(),ticks=[],resolved=[];
+  const api=harness(opportunity,{
+   combatCanManage:()=>true,
+   chooseCombatParry:async()=>{throw Error('Unexpected parry')},
+   declineCombatParry:async(...args)=>resolved.push(args),
+   setTimeout:(cb,ms)=>ticks.push({cb,ms}),
+   window:{matchMedia:()=>({matches:true})}
+  });
+  api.choose(null,'take-hit','def-1','attack-42');
+  expect(ticks[0].ms).toBe(0);
+  await ticks[0].cb();
+  expect(resolved).toEqual([['def-1','attack-42']]);
+ });
+ it('offers no drawer if no legal reaction is pending and preserves Expert rules',()=>{
   expect(harness(null).panel()).toBe('');
   expect(runtime).toContain('if(!combatCanParryAttack(defender))return null;');
   expect(runtime).toContain('combatHasUnusedAction(defender)');
