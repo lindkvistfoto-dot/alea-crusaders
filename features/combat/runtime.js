@@ -5458,14 +5458,14 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
     ' data-focus-x="'+iconX+'" data-focus-y="'+iconY+'" data-zoom="'+iconZoom+'"><img alt="" hidden></span>':
     '<span class="combat-magic-target-glyph" aria-hidden="true">✦</span>')+
   '</div><div class="combat-duelist-copy">'+
-   '<span class="combat-duelist-role">FÖRBEREDELSE</span>'+
-   '<b class="combat-duelist-name">Förbered besvärjelse</b>'+
+   '<span class="combat-duelist-role">FÖRBERED</span>'+
+   '<b class="combat-duelist-name">Besvärjelse</b>'+
    '<small class="combat-duelist-meta">'+escAttr(data.spell_name||'Besvärjelse')+' · EG '+escAttr(data.effect_grade||1)+'</small>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+(combatMobileMagicTargetPickerOpen?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
   '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>';
- const targetCard=preparing?preparationCard:needsTarget&&target?
+ const targetCard=preparing?preparationCard:!area&&target?
   combatMiniParticipantHtml('MÅL',target,description,canChooseTarget):
   '<div class="combat-mini-side combat-duelist-card defender magic-empty-target">'+
     emptyPortrait+
