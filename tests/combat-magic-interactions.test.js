@@ -62,7 +62,9 @@ describe('Klickbara magikontroller i strid',()=>{
    combatants:[caster,ally,enemy,{id:'dead',status:'dead',visible_to_players:true}],
    combatActiveActor:()=>caster,combatChosenAction:()=>a,
    combatSpellRangeHexes:()=>10,combatFootprintDistance:()=>2,
-   combatHasLineOfSight:()=>true,combatCanManage:()=>true
+   combatHasLineOfSight:()=>true,combatCanManage:()=>true,
+   combatEffectiveSide:row=>row.id==='lyra'||row.id==='astrid'?'heroes':'enemies',
+   combatCanTargetHostile:()=>true
   },'combatFireballTargets');
   expect([...ctx.exposed().keys()]).toEqual(['astrid','orc']);
  });
