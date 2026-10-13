@@ -18,7 +18,7 @@ function combatPositionDiceLayer(){
   const vh=window.innerHeight||document.documentElement.clientHeight;
   const vw=window.innerWidth||document.documentElement.clientWidth;
   // The dice float over visible Runda/Anfall, never force a trip to the map.
-  if(a.bottom>60&&b.top<vh-30){
+  if((a.bottom>60&&a.top<vh-30)||(b.bottom>60&&b.top<vh-30)){
    const top=Math.max(64,Math.min(a.top,b.top));
    const bottom=Math.min(vh-10,Math.max(a.bottom,b.bottom));
    const left=Math.max(8,Math.min(a.left,b.left));
