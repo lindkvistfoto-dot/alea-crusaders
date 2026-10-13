@@ -5,9 +5,11 @@ const css=readFileSync(new URL('../features/combat/attack-participants.css',impo
 const base=readFileSync(new URL('../src/styles/app.css',import.meta.url),'utf8');
 const assets=['shield','weapon','hit'];
 describe('Illustrated defense backgrounds',()=>{
- it('regression: app base CSS uses important button backgrounds',()=>{
-  expect(base).toMatch(/\\.combat-parry-btn\\s*\\{[^}]*background:[^;]+!important/s);
-  expect(base).toMatch(/\\.combat-take-hit-btn\\s*\\{[^}]*background:[^;]+!important/s);
+ it('regression: global styles force green and white button backgrounds',()=>{
+  expect(base).toContain('.combat-parry-btn{');
+  expect(base).toContain('background:#315d3f!important');
+  expect(base).toContain('.combat-take-hit-btn{');
+  expect(base).toContain('background:#fffaf1!important');
  });
  it('draws foreground-safe artwork in a separate pseudo layer',()=>{
   expect(css).toContain('combat-defense-choice.shield::before');
