@@ -5593,7 +5593,8 @@ function combatSpellCastPanelHtml(){
    (data.resistance_target_id!==String(target.id)||
     !['resisted','affected'].includes(data.resistance_decision)))||
   (kind==='area'&&data.magic_binding?.cube&&data.beskyddare_ritual_confirmed!==true)||
-  (combatActionMenuKind==='magic'&&String(combatActionMenuId||'')===String(actor.id)));
+  (typeof combatActionMenuKind!=='undefined'&&combatActionMenuKind==='magic'&&
+   typeof combatActionMenuId!=='undefined'&&String(combatActionMenuId||'')===String(actor.id)));
  let label='Vald besvärjelse',detail='',state='selected',instruction='';
  if(resolved){
   const outcomes={success:'Lyckat',special:'Särskilt',perfect:'Perfekt',fail:'Misslyckat',fumble:'Fummel'};
