@@ -39,7 +39,7 @@ describe('Responsive parry reaction outside the attack panel',()=>{
  it('shows shield and weapon defenses as distinct clickable options',()=>{
   const html=harness().drawer(sample());
   expect(html).toContain('combat-defense-drawer');
-  expect(html).toContain('FÖRSVARSREAKTION');
+  expect(html).toContain('FÖRSVAR');
   expect(html).toContain('Kva&#39;argh');
   expect(html).toContain('Sköldparering');
   expect(html).toContain('Vapenparering');
@@ -49,6 +49,42 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(html).toContain('combatSubmitDefenseChoice(this,&#39;parry&#39;,&quot;def-1&quot;,&quot;attack-42&quot;,&quot;weapon:blade&quot;)');
   expect(html).toContain('combatSubmitDefenseChoice(this,&#39;take-hit&#39;,&quot;def-1&quot;,&quot;attack-42&quot;)');
   expect(html).toContain('Ta smällen');
+ });
+ it('always shows exactly three illustration-ready slots, with no explanatory paragraphs',()=>{
+  const html=harness().drawer(sample());
+  expect((html.match(/<button /g)||[])).toHaveLength(3);
+  expect(html).toContain('data-defense-art="shield"');
+  expect(html).toContain('data-defense-art="weapon"');
+  expect(html).toContain('data-defense-art="take-hit"');
+  expect(html).not.toContain('combat-defense-drawer-copy');
+  expect(html).not.toContain('combat-defense-drawer-hint');
+  expect(html).toContain('Ta smällen');
+ });
+ it('keeps unavailable shield or weapon slots visible and disabled',()=>{
+  const withoutShield=sample();
+  withoutShield.options=withoutShield.options.filter(o=>o.kind==='weapon');
+  let html=harness().drawer(withoutShield);
+  expect(html).toContain('Ingen sköld');
+  expect(html).toContain('class="btn combat-parry-btn combat-defense-choice shield is-disabled"');
+  expect(html).toContain('disabled aria-disabled="true"');
+  expect(html).toContain('&quot;weapon:blade&quot;');
+  const withoutWeapon=sample();
+  withoutWeapon.options=withoutWeapon.options.filter(o=>o.kind==='shield');
+  html=harness().drawer(withoutWeapon);
+  expect(html).toContain('Inget parervapen');
+  expect(html).toContain('class="btn combat-parry-btn combat-defense-choice weapon is-disabled"');
+  const noEquipment=sample();noEquipment.options=[];
+  html=harness().drawer(noEquipment);
+  expect((html.match(/disabled aria-disabled="true"/g)||[])).toHaveLength(2);
+  expect(html).toContain('combatSubmitDefenseChoice(this,&#39;take-hit&#39;');
+ });
+ it('chooses the best legal FV in each slot when multiple items are available',()=>{
+  const opportunity=sample();
+  opportunity.options.push({key:'shield:strong',kind:'shield',name:'Tornsköld',fv:18});
+  const html=harness().drawer(opportunity);
+  expect(html).toContain('FV 18');
+  expect(html).toContain('&quot;shield:strong&quot;');
+  expect(html).not.toContain('&quot;shield:medium&quot;');
  });
  it('escapes untrusted names and attribute arguments',()=>{
   const opportunity=sample();
@@ -71,6 +107,8 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(css).toContain('animation:aleaDefenseMobileDrop');
   expect(css).toContain('animation:aleaDefenseMobileRetract');
   expect(css).toContain('z-index:50');
+  expect(css).toContain('grid-template-columns:repeat(3,minmax(0,1fr))');
+  expect(css).toContain('height:84px');
  });
  it('locks the panel during its return animation, then invokes shield parry once',async()=>{
   const opportunity=sample(),ticks=[],resolved=[],changes=[];
@@ -101,6 +139,26 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(resolved).toEqual([['def-1','attack-42','shield:medium']]);
   expect(choices.every(b=>!b.disabled)).toBe(true);
   expect(changes).toContain('remove:is-retracting');
+ });
+ it('restores disabled slots after the reaction resolves',async()=>{
+  const opportunity=sample(),ticks=[];
+  const choices=[{disabled:true},{disabled:false},{disabled:false}];
+  const drawer={
+   isConnected:true,
+   classList:{add:()=>{},remove:()=>{}},
+   setAttribute:()=>{},removeAttribute:()=>{},
+   querySelectorAll:()=>choices
+  };
+  const api=harness(opportunity,{
+   combatCanManage:()=>true,
+   chooseCombatParry:async()=>{},
+   setTimeout:cb=>ticks.push(cb),
+   window:{matchMedia:()=>({matches:true})}
+  });
+  api.choose({closest:()=>drawer},'parry','def-1','attack-42','weapon:blade');
+  expect(choices.every(c=>c.disabled)).toBe(true);
+  await ticks[0]();
+  expect(choices.map(c=>c.disabled)).toEqual([true,false,false]);
  });
  it('retracts after choosing to take the hit, without delaying reduced-motion mode',async()=>{
   const opportunity=sample(),ticks=[],resolved=[];
