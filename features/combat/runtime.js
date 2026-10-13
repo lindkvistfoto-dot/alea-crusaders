@@ -3979,7 +3979,7 @@ function combatHealingTarget(actor,action,targetId){
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  if((Number((typeof activeCombat!=='undefined'?activeCombat:null)?.round_number)||Number(action.source_data.ready_round)||1)<(Number(action.source_data.ready_round)||1))
-  return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Klar att kasta i SR '+'</small></div>';
+  return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Klar att kasta i SR '+escAttr(action.source_data.ready_round)+'.</small></div>';
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
   const alone=!targets.some(row=>String(row.id)!==String(actor.id));
