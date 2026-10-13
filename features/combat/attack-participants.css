@@ -1128,3 +1128,37 @@
 #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice:disabled{
  filter:grayscale(.7) brightness(.72);
 }
+
+/* v0.35.160 — "Ta smällen": the transparent knight sits on top of the
+   battlefield background. Neither the reaction rules nor card size change. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:1;
+ pointer-events:none;
+ background-image:url("./assets/defense-knight.avif");
+ background-repeat:no-repeat;
+ background-position:center 28%;
+ background-size:auto 116%;
+ filter:drop-shadow(0 2px 5px rgba(0,0,0,.55));
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit > *{
+ position:relative;
+ z-index:2;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit > .combat-defense-choice-art[data-defense-art="take-hit"]{
+ visibility:hidden;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit .combat-defense-choice-text{
+ align-self:end;
+ background:linear-gradient(to bottom,transparent,rgba(8,6,5,.7) 38%,rgba(8,6,5,.82));
+ border-radius:4px;
+ padding:2px 0;
+}
+@media(max-width:1023px){
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit::after{
+  background-position:center 23%;
+  background-size:auto 110%;
+ }
+}
