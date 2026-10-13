@@ -229,3 +229,30 @@
   padding:11px;
  }
 }
+
+
+/* Non-quick spell, SR1: a framed spell icon replaces the target portrait.
+   Keep the same three-column gold-frame composition as SR2 and attacks. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-portrait{
+ background:radial-gradient(ellipse at 50% 50%,rgba(117,74,43,.65),rgba(24,14,13,.98) 76%);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-preparation-art{
+ position:absolute;inset:10% 9%;z-index:1;overflow:hidden;
+ border-radius:5px;isolation:isolate;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-preparation-art img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ object-fit:fill;pointer-events:none;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-preparation-art img[hidden]{
+ display:none!important;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-duelist-name{
+ white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip;
+ font-size:clamp(10px,1vw,13px);line-height:1.12;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-duelist-name{
+  font-size:clamp(8px,2vw,10px);line-height:1.1;
+ }
+}
