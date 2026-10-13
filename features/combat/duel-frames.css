@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.175: transparent PNG frame assets and shared three-part duel. */
+/* Alea Crusaders v0.35.176: transparent PNG frame assets and shared three-part duel. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
  display:grid;grid-template-columns:minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr);
  gap:clamp(1px,.35vw,5px);align-items:stretch;min-width:0;isolation:isolate;
@@ -125,11 +125,24 @@
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card,
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card.defender,
  #combatPage .combat-illustrated-duel .combat-duel-center{padding:0;border:0;border-radius:0}
+ /* Keep MAGIKER, BESVÄRJELSE and MÅL on single lines in narrow columns. */
  #combatPage .combat-illustrated-duel .combat-duelist-role,
- #combatPage .combat-illustrated-duel .combat-duel-center-role{font-size:8px;padding-bottom:3px}
+ #combatPage .combat-illustrated-duel .combat-duel-center-role{
+  font-size:clamp(7px,1.85vw,9px);line-height:1.15;letter-spacing:0;
+  white-space:nowrap;overflow-wrap:normal;word-break:normal;
+  padding-top:3px;padding-bottom:4px;
+ }
+ /* Names wrap at word boundaries only; lighter text improves mobile contrast. */
  #combatPage .combat-illustrated-duel .combat-duelist-name,
- #combatPage .combat-illustrated-duel .combat-duel-center-name{font-size:clamp(9px,2.8vw,13px)}
- #combatPage .combat-illustrated-duel .combat-duelist-meta{font-size:clamp(8px,2.4vw,11px)}
+ #combatPage .combat-illustrated-duel .combat-duel-center-name{
+  font-size:clamp(9px,2.35vw,11px);line-height:1.18;
+  overflow-wrap:normal;word-break:normal;hyphens:none;text-wrap:balance;
+  text-shadow:0 1px 4px rgba(0,0,0,.95);
+ }
+ #combatPage .combat-illustrated-duel .combat-duelist-meta{
+  font-size:clamp(8px,2.05vw,10px);line-height:1.2;
+  text-shadow:0 1px 4px #000,0 0 6px rgba(0,0,0,.85);
+ }
  #combatPage .combat-mini-magic .combat-illustrated-duel .combat-duelist-card{min-height:0}
  #combatPage .combat-mini-attack .combat-illustrated-duel button.combat-portrait-target-button{position:relative;width:100%;min-width:0}
 }
@@ -142,5 +155,5 @@
 }
 @media(max-width:390px){
  #combatPage .combat-illustrated-duel .combat-duelist-role,
- #combatPage .combat-illustrated-duel .combat-duel-center-role{font-size:7px}
+ #combatPage .combat-illustrated-duel .combat-duel-center-role{font-size:7px;letter-spacing:0;white-space:nowrap}
 }
