@@ -5231,9 +5231,9 @@ function combatMagicFactsHtml(data,action){
  const egValue=canEdit?
   '<div class="combat-magic-fact combat-magic-eg-control"><span>EG · Effektgrad</span>'+
    '<div class="combat-magic-eg-actions">'+
-    '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\\''+escAttr(actor.id)+'\\',-1)"'+(eg===1?' disabled':'')+'>−</button>'+
+    '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\''+escAttr(actor.id)+'\',-1)"'+(eg===1?' disabled':'')+'>−</button>'+
     '<b aria-live="polite">'+escAttr(eg)+'</b>'+
-    '<button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\\''+escAttr(actor.id)+'\\',1)">+</button>'+
+    '<button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\''+escAttr(actor.id)+'\',1)">+</button>'+
    '</div></div>':combatMagicFactHtml('EG',eg);
  return '<div class="combat-magic-facts" aria-label="Besvärjelsens värden">'+
   combatMagicFactHtml('FV',data.spell_fv??'—')+
@@ -5279,7 +5279,7 @@ function combatMagicTargetPickerHtml(actor,action){
   if(!target)return '';
   const active=selected===id;
   return '<button type="button" class="combat-magic-target-option'+(active?' selected':'')+
-   '" aria-pressed="'+active+'" onclick="selectCombatTarget(\\''+escAttr(id)+'\\')">'+
+   '" aria-pressed="'+active+'" onclick="selectCombatTarget(\''+escAttr(id)+'\')">'+
     escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
  }).join('');
  return '<div class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
