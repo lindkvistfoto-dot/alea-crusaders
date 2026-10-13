@@ -2492,6 +2492,7 @@ async function stepCombatSpellEffect(combatantId,delta){
  if(!combatant||!action||action.status!=='planned'||!action.source_data?.spell_prepared||
   action.source_data?.item_magic||combatCannotAct(combatant)||!combatCanManage()||
   !combatIsActiveTurn(combatant)||combatSpellEffectUpdating)return;
+ if(action.source_data?.item_magic)return;
  const previous=Math.max(1,Number(action.source_data.effect_grade)||1);
  const effect=Math.max(1,previous+Number(delta||0));
  if(effect===previous)return;
@@ -3693,6 +3694,11 @@ function combatFireballTargets(){
   // only opposing sides. The caster is never an eligible damage target.
   if(String(target.id)===String(actor.id)||['dead','removed'].includes(target.status)||
     (target.visible_to_players===false&&!combatCanManage()))continue;
+  if(combatEffectiveSide(actor)!==combatEffectiveSide(target)){
+   // Keep fear/panic targeting restrictions for opponents. Friendly fire is
+   // still a valid explicit spell target under the same range/LOS rules.
+   if(!combatCanTargetHostile(actor,target))continue;
+  }
   const distance=combatFootprintDistance(actor,target);
   if(distance>=1&&distance<=range&&combatHasLineOfSight(actor,target))out.set(String(target.id),{distance,maxRange:range,mode:'ranged'})
  }
@@ -3867,7 +3873,7 @@ function combatHealingTarget(actor,action,targetId){
 }
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
- if((Number(activeCombat?.round_number)||1)<(Number(action.source_data.ready_round)||1))
+ if((Number((typeof activeCombat!=='undefined'?activeCombat:null)?.round_number)||Number(action.source_data.ready_round)||1)<(Number(action.source_data.ready_round)||1))
   return '<div class="combat-spell-choice"><b>Förbereder besvärjelse</b><small>Mål väljs först i kast-SR '+escAttr(action.source_data.ready_round)+'.</small></div>';
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
@@ -5227,7 +5233,8 @@ function combatMagicFactsHtml(data,action){
  const spent=action.status==='resolved'?action.result?.psy_cost:null;
  const actor=combatants.find(row=>String(row.id)===String(action.combatant_id));
  const canEdit=action.status==='planned'&&data.spell_prepared&&!data.item_magic&&
-  !!actor&&combatCanManage()&&combatIsActiveTurn(actor);
+  !!actor&&typeof combatCanManage==='function'&&combatCanManage()&&
+  typeof combatIsActiveTurn==='function'&&combatIsActiveTurn(actor);
  const egValue=canEdit?
   '<div class="combat-magic-fact combat-magic-eg-control"><span>EG · Effektgrad</span>'+
    '<div class="combat-magic-eg-actions">'+
@@ -5272,7 +5279,8 @@ function combatMagicTargetPickerHtml(actor,action){
  if(!actor||action.status!=='planned'||data.casting_spell!==true||
   !['damage','status','heal'].includes(kind)||
   (Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1))return '';
- const targetIds=[...combatCurrentAttackTargets().keys()];
+ const targetIds=typeof combatCurrentAttackTargets==='function'?
+  [...combatCurrentAttackTargets().keys()]:[];
  const selected=String(combatSelectedTargetId||'');
  const buttons=targetIds.map(id=>{
   const target=combatants.find(row=>String(row.id)===id);
