@@ -5361,6 +5361,39 @@ function combatSpellCastPanelHtml(){
    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
  '</section>'
 }
+/* One reaction renderer for desktop fly-out and the existing mobile flow.
+ * All rules and dice remain in chooseCombatParry / declineCombatParry. */
+function combatDefenseReactionHtml(pending){
+ const {attack,defender,attacker,options}=pending;
+ const safe=value=>escAttr(value);
+ const argument=value=>safe(JSON.stringify(String(value)));
+ const defenderArg=argument(defender.id),attackArg=argument(attack.id);
+ return '<aside class="combat-mini-parry combat-defense-drawer" role="group" aria-label="Försvarsreaktion för '+safe(defender.name_snapshot)+'">'+
+  '<div class="combat-defense-drawer-head">'+
+   '<span class="combat-defense-drawer-emblem" aria-hidden="true">🛡</span>'+
+   '<div><small>FÖRSVARSREAKTION</small><strong>'+safe(defender.name_snapshot)+'</strong></div>'+
+   '<span class="combat-defense-drawer-alert">VÄNTAR</span>'+
+  '</div>'+
+  '<p class="combat-defense-drawer-copy">'+safe(attacker.name_snapshot)+' har träffat. '+safe(defender.name_snapshot)+
+   ' har en handling kvar och kan försöka parera innan skadan avgörs.</p>'+
+  '<div class="combat-defense-drawer-actions" role="group" aria-label="Välj parering">'+
+   options.map(option=>{
+    const shield=option.kind==='shield';
+    const actionLabel=(shield?'Parera med sköld':'Parera med vapen')+' · '+option.name;
+    return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+(shield?'shield':'weapon')+'"'+
+     ' aria-label="'+safe(actionLabel)+' FV '+safe(option.fv)+'"'+
+     ' onclick="chooseCombatParry('+defenderArg+','+attackArg+','+argument(option.key)+')">'+
+     '<span aria-hidden="true">'+(shield?'🛡':'⚔')+'</span>'+
+     '<span class="combat-defense-choice-text"><strong>'+safe(shield?'Sköldparering':'Vapenparering')+'</strong><small>'+safe(option.name)+'</small></span>'+
+     '<span class="combat-defense-choice-fv">FV '+safe(option.fv)+'</span>'+
+     '</button>'
+   }).join('')+
+   '<button type="button" class="btn combat-take-hit-btn combat-defense-decline"'+
+    ' onclick="declineCombatParry('+defenderArg+','+attackArg+')">Ta träffen <span aria-hidden="true">→</span></button>'+
+  '</div>'+
+  '<p class="combat-defense-drawer-hint">Parering använder försvararens återstående handling i denna SR.</p>'+
+ '</aside>'
+}
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
@@ -5369,18 +5402,15 @@ function combatAttackPanelHtml(){
   const attack=pending.attack,result=attack.result||{};
   const attackWeapon=result.weapon_name||attack.source_data?.weapon_name||'Vapen';
   const optionText=pending.options.map(option=>option.name).join(' / ');
-  return '<section class="combat-mini-attack reaction">'+
-   '<div class="combat-mini-title"><span>ANFALL</span><b>Lyckat närstridsanfall · parering möjlig</b></div>'+
+  return '<section class="combat-mini-attack reaction combat-defense-attack">'+
+   '<div class="combat-mini-title"><span>ANFALL</span><b>Lyckat närstridsanfall</b></div>'+
    '<div class="combat-mini-duel">'+
     combatMiniParticipantHtml('ATTACKERAR',pending.attacker,attackWeapon)+
     '<div class="combat-mini-arrow">→</div>'+
     combatMiniParticipantHtml('FÖRSVARAR',pending.defender,optionText)+
    '</div>'+
    combatAttackResultHtml(attack)+
-   '<div class="combat-mini-parry"><span>'+escAttr(pending.defender.name_snapshot)+' har en handling kvar. Välj parering eller ta träffen.</span><div>'+
-    pending.options.map(option=>'<button type="button" class="btn combat-parry-btn" onclick="chooseCombatParry(\''+pending.defender.id+'\',\''+attack.id+'\',\''+escAttr(option.key)+'\')">Parera · '+escAttr(option.name)+'</button>').join('')+
-    '<button type="button" class="btn combat-take-hit-btn" onclick="declineCombatParry(\''+pending.defender.id+'\',\''+attack.id+'\')">Ta träffen</button>'+
-   '</div></div>'+
+   combatDefenseReactionHtml(pending)+
   '</section>'
  }
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
