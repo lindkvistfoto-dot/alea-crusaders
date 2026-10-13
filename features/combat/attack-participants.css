@@ -490,3 +490,203 @@
     -webkit-backdrop-filter:none;
   }
 }
+
+
+/* v0.35.155 – desktop shield/weapon parry slides out from the attack card,
+   over the left portion of the hex map. Keep the existing mobile bar intact. */
+#combatPage .combat-mini-attack .combat-defense-drawer{
+  display:none;
+}
+@media (min-width:1024px){
+ #combatPage .combat-shell-live .combat-left-column:has(.combat-defense-drawer){
+   position:relative;
+   z-index:35;
+   overflow:visible;
+ }
+ #combatPage .combat-shell-live .combat-defense-attack{
+   position:relative;
+   overflow:visible;
+ }
+ #combatPage .combat-shell-live .combat-defense-attack > .combat-defense-mobile{
+   display:none;
+ }
+ #combatPage .combat-shell-live .combat-defense-attack > .combat-defense-drawer{
+   position:absolute;
+   z-index:40;
+   top:clamp(25px,11%,65px);
+   left:calc(100% + 12px);
+   box-sizing:border-box;
+   display:flex;
+   flex-direction:column;
+   align-items:stretch;
+   gap:12px;
+   width:clamp(290px,31vw,455px);
+   max-height:min(75vh,670px);
+   overflow-y:auto;
+   overflow-x:visible;
+   margin:0;
+   padding:15px;
+   border:2px solid #c09353;
+   border-radius:13px;
+   background:
+     radial-gradient(ellipse at 96% 4%,rgba(184,121,57,.15),transparent 54%),
+     linear-gradient(145deg,rgba(49,31,21,.98),rgba(21,15,13,.985) 68%);
+   color:#eedbc0;
+   box-shadow:
+     inset 0 0 0 1px rgba(242,203,141,.16),
+     inset 0 1px 0 rgba(255,226,175,.22),
+     0 17px 32px rgba(0,0,0,.64),
+     0 0 26px rgba(176,119,57,.17);
+   animation:aleaDefenseDrawerEnter 290ms cubic-bezier(.19,.78,.31,1) both;
+ }
+ #combatPage .combat-shell-live .combat-defense-drawer::before{
+   content:"";
+   position:absolute;
+   top:29px;
+   right:100%;
+   border-top:13px solid transparent;
+   border-bottom:13px solid transparent;
+   border-right:13px solid #c09353;
+   filter:drop-shadow(-2px 2px 2px rgba(0,0,0,.25));
+ }
+ #combatPage .combat-shell-live .combat-defense-drawer .combat-defense-drawer-head{
+   display:grid;
+   grid-template-columns:36px minmax(0,1fr) auto;
+   align-items:center;
+   justify-content:stretch;
+   flex-wrap:nowrap;
+   gap:10px;
+   padding:0 0 11px;
+   border-bottom:1px solid rgba(197,148,82,.43);
+ }
+ #combatPage .combat-defense-drawer-emblem{
+   display:grid;
+   place-items:center;
+   width:36px;
+   height:40px;
+   border:1px solid rgba(213,165,88,.65);
+   border-radius:8px;
+   background:linear-gradient(135deg,#6a4426,#2c2017);
+   font-size:24px;
+ }
+ #combatPage .combat-defense-drawer-head > div{
+   display:flex;
+   flex-direction:column;
+   align-items:flex-start;
+   min-width:0;
+   gap:4px;
+ }
+ #combatPage .combat-defense-drawer-head small{
+   font:800 10px/1.15 system-ui,sans-serif;
+   letter-spacing:.11em;
+   color:#e3b777;
+ }
+ #combatPage .combat-defense-drawer-head strong{
+   color:#fff0cd;
+   font:700 21px/1.15 Georgia,serif;
+   overflow-wrap:anywhere;
+ }
+ #combatPage .combat-defense-drawer-alert{
+   color:#ffdb95;
+   background:rgba(138,82,34,.22);
+   border:1px solid rgba(214,158,84,.55);
+   border-radius:999px;
+   padding:5px 7px;
+   font:800 9px system-ui,sans-serif;
+   letter-spacing:.075em;
+ }
+ #combatPage .combat-defense-drawer-copy{
+   margin:0;
+   font:500 13px/1.5 system-ui,sans-serif;
+   color:#e6cfad;
+ }
+ #combatPage .combat-shell-live .combat-defense-drawer > .combat-defense-drawer-actions{
+   display:grid;
+   grid-template-columns:minmax(0,1fr);
+   align-items:stretch;
+   justify-content:stretch;
+   gap:8px;
+   width:100%;
+ }
+ #combatPage .combat-defense-drawer .combat-defense-choice{
+   display:grid;
+   grid-template-columns:27px minmax(0,1fr) auto;
+   align-items:center;
+   gap:10px;
+   width:100%;
+   min-height:58px;
+   padding:8px 10px;
+   text-align:left;
+   border:1px solid rgba(190,145,86,.7);
+   border-radius:9px;
+   background:linear-gradient(140deg,#61412b,#37271d);
+   color:#f8e6c7;
+   cursor:pointer;
+   font-size:20px;
+   white-space:normal;
+ }
+ #combatPage .combat-defense-drawer .combat-defense-choice.shield{
+   border-color:#ab9b70;
+   background:linear-gradient(130deg,#4a4431,#30291f);
+ }
+ #combatPage .combat-defense-drawer .combat-defense-choice:hover,
+ #combatPage .combat-defense-drawer .combat-defense-choice:focus-visible{
+   border-color:#f7c778;
+   background:linear-gradient(140deg,#795037,#423024);
+   outline:2px solid rgba(255,226,172,.4);
+   outline-offset:1px;
+ }
+ #combatPage .combat-defense-choice-text{
+   display:flex;flex-direction:column;gap:4px;min-width:0;
+ }
+ #combatPage .combat-defense-choice-text strong{
+   font:800 13px/1.15 system-ui,sans-serif;
+   color:#ffebc4;
+ }
+ #combatPage .combat-defense-choice-text small{
+   font:500 12px/1.25 system-ui,sans-serif;
+   color:#d9c19d;
+   overflow-wrap:anywhere;
+ }
+ #combatPage .combat-defense-choice-fv{
+   font:800 13px/1.2 system-ui,sans-serif;
+   color:#f5cf93;
+   white-space:nowrap;
+ }
+ #combatPage .combat-defense-drawer .combat-defense-decline{
+   display:flex;
+   align-items:center;
+   justify-content:space-between;
+   width:100%;
+   min-height:43px;
+   padding:9px 12px;
+   border:1px solid rgba(184,101,91,.7);
+   border-radius:8px;
+   background:rgba(92,39,35,.62);
+   color:#ffd1c1;
+   font:800 12px system-ui,sans-serif;
+   cursor:pointer;
+ }
+ #combatPage .combat-defense-drawer .combat-defense-decline:hover,
+ #combatPage .combat-defense-drawer .combat-defense-decline:focus-visible{
+   border-color:#ffa89e;
+   background:#69332f;
+   outline:2px solid rgba(255,164,148,.35);
+   outline-offset:1px;
+ }
+ #combatPage .combat-defense-drawer-hint{
+   margin:0;
+   padding-top:2px;
+   color:#bba789;
+   font:500 11px/1.4 system-ui,sans-serif;
+ }
+ @keyframes aleaDefenseDrawerEnter{
+   from{opacity:0;transform:translateX(-28px) scale(.975)}
+   to{opacity:1;transform:translateX(0) scale(1)}
+ }
+}
+@media (min-width:1024px) and (prefers-reduced-motion:reduce){
+ #combatPage .combat-shell-live .combat-defense-attack > .combat-defense-drawer{
+   animation:none;
+ }
+}
