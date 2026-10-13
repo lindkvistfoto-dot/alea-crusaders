@@ -397,7 +397,7 @@ function combatSourceStats(sceneCombatant,sources){
  return{
   current_kp:currentKp,max_kp:maxKp,current_psy:currentPsy,max_psy:maxPsy,
   movement_max:move,movement_remaining:move,smi,sty,sto,attributes:{...snapshot,ambidextrous:attributes.ambidextrous===true},
-  attack_profile:sceneCombatant.source_type==='character'?attackProfile:combatNpcNormalizeProfile(attackProfile),
+  attack_profile:sceneCombatant.source_type==='character'||typeof combatNpcNormalizeProfile!=='function'?attackProfile:combatNpcNormalizeProfile(attackProfile),
   flying:state.flying===true,race_name:raceName,gender:genderName,
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
   portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
