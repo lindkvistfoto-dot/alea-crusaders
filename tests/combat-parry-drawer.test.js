@@ -86,6 +86,36 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(html).toContain('&quot;shield:strong&quot;');
   expect(html).not.toContain('&quot;shield:medium&quot;');
  });
+ it('offers each equipped weapon with its own Runda artwork, crop, FV and key',()=>{
+  const opportunity=sample();
+  opportunity.options=[
+   {key:'weapon:left',kind:'weapon',name:'Kortsvärd',fv:12,item:{equipId:'left',imageOverridePath:'unique/sword.png'}},
+   {key:'weapon:right',kind:'weapon',name:'Dolk',fv:9,item:{equipId:'right',image_path:'dagger.png'}}
+  ];
+  const html=harness(opportunity,{
+   window:{aleaEquipmentArt:{src:p=>'/art/'+p}},
+   combatAttackProfile:()=>({currentEquipment:{leftHand:{kind:'weapon',itemId:'left'},rightHand:{kind:'weapon',itemId:'right'}}}),
+   ruleWeaponForItem:i=>({image_path:'master/sword.png',combat_crop_quadrant:i.equipId==='left'?'bottom-left':'top-right'})
+  }).drawer(opportunity);
+  expect(html).toContain('combat-defense-multi');
+  expect(html).toContain('data-combat-crop="bottom-left"');
+  expect(html).toContain('/art/unique/sword.png');
+  expect(html).toContain('/art/master/sword.png');
+  expect(html).toContain('&quot;weapon:left&quot;');
+  expect(html).toContain('&quot;weapon:right&quot;');
+  expect((html.match(/combat-defense-weapon-option"/g)||[])).toHaveLength(2);
+ });
+ it('does not duplicate a two-handed weapon',()=>{
+  const pending=sample();
+  pending.options=[{key:'weapon:staff',kind:'weapon',name:'Stav',fv:10,item:{equipId:'staff',image_path:'staff.png'}}];
+  const html=harness(pending,{
+   window:{aleaEquipmentArt:{src:path=>'/art/'+path}},
+   combatAttackProfile:()=>({currentEquipment:{leftHand:{kind:'weapon',itemId:'staff',hands:2},rightHand:{kind:'weapon',itemId:'staff',hands:2}}}),
+   ruleWeaponForItem:()=>({combat_crop_quadrant:'top-right'})
+  }).drawer(pending);
+  expect(html).not.toContain('combat-defense-multi');
+  expect(html).toContain('combat-defense-item-art twohand');
+ });
  it('escapes untrusted names and attribute arguments',()=>{
   const opportunity=sample();
   opportunity.options[0].name='<img src=x onerror=alert(1)>';

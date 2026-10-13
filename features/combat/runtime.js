@@ -5369,23 +5369,70 @@ function combatDefenseReactionHtml(pending){
  const safe=value=>escAttr(value);
  const argument=value=>safe(JSON.stringify(String(value)));
  const defenderArg=argument(defender.id),attackArg=argument(attack.id);
+ const profile=typeof combatAttackProfile==='function'?combatAttackProfile(defender):{};
+ const current=profile?.currentEquipment||{};
+ const legal=kind=>options.filter(option=>option?.kind===kind&&Number(option.fv)>0);
+ const best=kind=>legal(kind).sort((a,b)=>Number(b.fv)-Number(a.fv))[0]||null;
+ // Mirrors the Runda equipment artwork: personal override, master and crop.
+ const equipmentArt=(option,kind)=>{
+  const item=option?.item||null;
+  const master=item?(kind==='shield'
+   ?(typeof characterShieldRule==='function'?characterShieldRule(item):null)
+   :(typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null)):null;
+  const quadrant=master?.combat_crop_quadrant||item?.combat_crop_quadrant||'top-right';
+  const crop=['top-left','top-right','bottom-left','bottom-right','full'].includes(quadrant)?quadrant:'top-right';
+  const path=item?.imageOverridePath||master?.image_path||item?.image_path||'';
+  const url=path&&typeof window!=='undefined'?window.aleaEquipmentArt?.src(path)||'':'';
+  const magical=!!item&&(typeof window!=='undefined'
+   ?(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true))
+   :(item.isMagical===true||item.magic?.enabled===true));
+  const ref=current.leftHand?.kind==='weapon'?current.leftHand:null;
+  const other=current.rightHand?.kind==='weapon'?current.rightHand:null;
+  const both=kind==='weapon'&&ref?.itemId&&String(ref.itemId)===String(other?.itemId)&&
+   (Number(ref.hands)===2||Number(other.hands)===2);
+  const fallback=kind==='shield'?'🛡':'⚔';
+  const symbol=url?'<img class="combat-defense-art-img" src="'+safe(url)+'" alt="" loading="lazy">':
+   '<span class="combat-defense-art-fallback" aria-hidden="true">'+fallback+'</span>';
+  return '<span class="combat-defense-choice-art combat-defense-item-art'+(both?' twohand':'')+
+   (magical?' magical':'')+'" data-defense-art="'+kind+'" data-combat-crop="'+crop+'" aria-hidden="true">'+
+    symbol+(magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt=""></span>':'')+
+   '</span>'
+ };
+ const chooseAttr=option=>option?' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+
+  defenderArg+','+attackArg+','+argument(option.key)+')"':' disabled aria-disabled="true"';
  const defenseChoice=(kind)=>{
-  const isShield=kind==='shield',label=isShield?'Sköld':'Vapen';
-  const candidates=options.filter(option=>option.kind===kind);
-  const option=candidates.sort((a,b)=>(Number(b.fv)||0)-(Number(a.fv)||0))[0]||null;
+  const isShield=kind==='shield',label=isShield?'Sköld':'Vapen',option=best(kind);
   const description=option?.name||(isShield?'Ingen sköld':'Inget parervapen');
   const detail=option?'FV '+safe(option.fv):'—';
   const accessible=(isShield?'Sköldparering':'Vapenparering')+' · '+description+
    (option?' · FV '+option.fv:' · Ej tillgänglig');
   return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+kind+
    (option?'':' is-disabled')+'" title="'+safe(accessible)+'" aria-label="'+safe(accessible)+'"'+
-   (option?' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+
-     defenderArg+','+attackArg+','+argument(option.key)+')"':' disabled aria-disabled="true"')+'>'+
-   '<span class="combat-defense-choice-art" data-defense-art="'+kind+'" aria-hidden="true">'+(isShield?'🛡':'⚔')+'</span>'+
+   chooseAttr(option)+'>'+
+   equipmentArt(option,kind)+
    '<span class="combat-defense-choice-text"><strong>'+label+'</strong><small>'+safe(description)+'</small></span>'+
    '<span class="combat-defense-choice-fv">'+detail+'</span>'+
    '</button>';
  };
+ // Two separate equipped, legal weapons are two independently selectable
+ // details within the same visual middle card. A two-handed weapon is one.
+ const handIds=[current.leftHand,current.rightHand]
+  .filter(ref=>ref?.kind==='weapon'&&ref.itemId).map(ref=>String(ref.itemId));
+ const dual=handIds.length===2&&handIds[0]!==handIds[1]
+  ?handIds.map(id=>legal('weapon').find(option=>
+     String(option.item?.equipId||option.item?.id||'')===id)).filter(Boolean)
+  :[];
+ const weaponChoice=dual.length===2?'<div class="combat-defense-choice weapon combat-defense-multi" role="group" aria-label="Vapenparering · välj hand">'+
+  '<strong class="combat-defense-multi-title">Vapen</strong>'+
+  '<div class="combat-defense-weapon-options">'+dual.map(option=>{
+   const label=option.name||'Vapen',accessible='Parera med '+label+' · FV '+option.fv;
+   return '<button type="button" class="combat-defense-weapon-option" title="'+safe(accessible)+
+    '" aria-label="'+safe(accessible)+'"'+chooseAttr(option)+'>'+
+     equipmentArt(option,'weapon')+
+     '<span class="combat-defense-weapon-label">'+safe(label)+'</span>'+
+     '<span class="combat-defense-choice-fv">FV '+safe(option.fv)+'</span>'+
+    '</button>'
+  }).join('')+'</div></div>':defenseChoice('weapon');
  return '<aside class="combat-mini-parry combat-defense-drawer combat-defense-compact" role="group" aria-label="Försvarsreaktion för '+safe(defender.name_snapshot)+'">'+
   '<div class="combat-defense-drawer-head">'+
    '<span class="combat-defense-drawer-emblem" aria-hidden="true">🛡</span>'+
@@ -5393,7 +5440,7 @@ function combatDefenseReactionHtml(pending){
    '<span class="combat-defense-drawer-alert">VÄLJ</span>'+
   '</div>'+
   '<div class="combat-defense-drawer-actions" role="group" aria-label="Välj försvar">'+
-   defenseChoice('shield')+defenseChoice('weapon')+
+   defenseChoice('shield')+weaponChoice+
    '<button type="button" class="btn combat-take-hit-btn combat-defense-choice combat-defense-decline take-hit"'+
     ' title="Ta smällen utan parering" aria-label="Ta smällen utan parering"'+
     ' onclick="combatSubmitDefenseChoice(this,&#39;take-hit&#39;,'+defenderArg+','+attackArg+')">'+

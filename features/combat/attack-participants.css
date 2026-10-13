@@ -994,3 +994,106 @@
  #combatPage .combat-shell-live .combat-defense-compact > .combat-defense-drawer-actions{gap:4px}
  #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{font-size:10px}
 }
+
+/* v0.35.158: visual equipment quadrants in compact parry choices. */
+#combatPage .combat-shell-live .combat-defense-compact > .combat-defense-drawer-actions{
+ grid-template-columns:repeat(3,minmax(0,1fr));gap:7px
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice{
+ display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:60px minmax(0,1fr) 17px;
+ justify-items:center;align-items:center;align-content:center;
+ min-width:0;min-height:137px;height:137px;gap:3px;padding:7px 5px;text-align:center;overflow:hidden;
+ background:radial-gradient(ellipse at 65% 0%,rgba(167,106,48,.17),transparent 65%),linear-gradient(155deg,#493122,#221914);
+ box-shadow:inset 0 0 0 1px rgba(241,195,124,.12)
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon{
+ background:radial-gradient(ellipse at 60% 15%,rgba(78,115,71,.24),transparent 70%),linear-gradient(155deg,#263a2b,#1b201a)
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit{
+ background:radial-gradient(ellipse at 45% 0%,rgba(185,75,26,.25),transparent 66%),linear-gradient(145deg,#49271e,#221713)
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text{
+ align-items:center;min-width:0;width:100%;text-align:center;gap:1px
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{font:700 16px/1.1 Georgia,serif}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text small{
+ max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-art.combat-defense-item-art{
+ display:block;position:relative;overflow:hidden;isolation:isolate;
+ width:min(100%,110px);height:60px;
+ --crop-top:0;--crop-bottom:auto;--crop-left:auto;--crop-right:0;
+ --crop-pos:top right;--crop-origin:top right;
+ background:radial-gradient(ellipse,rgba(195,144,73,.14),transparent 70%)
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art[data-combat-crop="top-left"]{
+ --crop-top:0;--crop-bottom:auto;--crop-left:0;--crop-right:auto;--crop-pos:top left;--crop-origin:top left
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art[data-combat-crop="bottom-left"]{
+ --crop-top:auto;--crop-bottom:0;--crop-left:0;--crop-right:auto;--crop-pos:bottom left;--crop-origin:bottom left
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art[data-combat-crop="bottom-right"]{
+ --crop-top:auto;--crop-bottom:0;--crop-left:auto;--crop-right:0;--crop-pos:bottom right;--crop-origin:bottom right
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art > .combat-defense-art-img{
+ display:block;position:absolute;top:var(--crop-top);bottom:var(--crop-bottom);left:var(--crop-left);right:var(--crop-right);
+ width:210%;height:210%;max-width:none;max-height:none;min-width:0;min-height:0;object-fit:contain;object-position:var(--crop-pos);
+ transform-origin:var(--crop-origin);pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8))
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art[data-combat-crop="full"] > .combat-defense-art-img{
+ position:static;inset:auto;width:100%;height:100%;object-fit:contain;object-position:center;transform:none
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art.twohand[data-combat-crop="top-right"] > .combat-defense-art-img{
+ top:50%;right:0;bottom:auto;left:auto;width:200%;height:auto;aspect-ratio:1;
+ object-fit:contain;object-position:top right;transform:rotate(45deg);transform-origin:top right
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art > .alea-magic-item-dot{
+ position:absolute;z-index:3;top:2px;right:2px;pointer-events:none;transform:scale(.6);transform-origin:top right
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-item-art .combat-defense-art-fallback{
+ display:grid;place-items:center;width:100%;height:100%;font-size:29px
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-multi{
+ grid-template-rows:19px minmax(0,1fr);gap:2px;padding:6px 4px;cursor:default
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-multi-title{
+ color:#ffebc4;font:700 15px/1 Georgia,serif;text-align:center
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-options{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;min-width:0;width:100%;height:100%
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ min-width:0;min-height:0;gap:2px;padding:2px;border:1px solid rgba(199,155,90,.38);border-radius:5px;
+ color:#ffe5bd;background:rgba(18,24,17,.5);cursor:pointer
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option:hover,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option:focus-visible{
+ border-color:#f5c77f;background:rgba(110,86,43,.5);outline:1px solid #e5b66c
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option .combat-defense-item-art{
+ width:100%;height:50px
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-label{
+ width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font:600 10px/1.15 system-ui,sans-serif
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option .combat-defense-choice-fv{font-size:11px}
+@media(max-width:1023px){
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice,
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-decline.combat-defense-choice{
+  grid-template-rows:34px minmax(0,1fr) 12px;min-height:91px;height:91px;gap:2px;padding:5px 3px
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-art.combat-defense-item-art{
+  width:min(100%,65px);height:34px
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-multi{
+  grid-template-rows:12px minmax(0,1fr);gap:1px;padding:3px 2px
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-multi-title{font-size:11px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-options{gap:2px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option{padding:1px;gap:1px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option .combat-defense-item-art{height:36px;width:100%}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-label{font-size:8px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-weapon-option .combat-defense-choice-fv{font-size:9px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{font-size:11px}
+}
