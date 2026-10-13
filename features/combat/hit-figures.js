@@ -40,6 +40,55 @@
    unique.add(rr+'|'+gg);
   return [...unique];
  }
+ /* Determine the subject's actual transparent bounds. Uploaded figures use
+  * a 2:3 transparent canvas, so centering the canvas cuts into the body
+  * while sometimes leaving a transparent gap on its right. */
+ function hitFigureVisibleBounds(img){
+  const nativeWidth=Number(img?.naturalWidth)||0,nativeHeight=Number(img?.naturalHeight)||0;
+  if(!nativeWidth||!nativeHeight)return null;
+  try{
+   const canvas=document.createElement('canvas');
+   canvas.width=128;
+   canvas.height=Math.max(1,Math.round(128*nativeHeight/nativeWidth));
+   const ctx=canvas.getContext('2d',{willReadFrequently:true});
+   if(!ctx)return null;
+   ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+   let minX=canvas.width,maxX=-1;
+   for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
+    if(pixels[(y*canvas.width+x)*4+3]<32)continue;
+    if(x<minX)minX=x;
+    if(x>maxX)maxX=x;
+   }
+   return maxX>=minX?{left:minX/canvas.width,right:(maxX+1)/canvas.width}:null;
+  }catch(error){
+   console.warn('Träffbilden kunde inte analyseras; använder tidigare beskärning.',error);
+   return null;
+  }
+ }
+ function hitFigureLeftAnchoredCamera(bounds,baseScale){
+  const left=Number(bounds?.left),right=Number(bounds?.right);
+  if(!Number.isFinite(left)||!Number.isFinite(right)||left<0||right>1||right<=left)return null;
+  const originalScale=Math.max(1,Number(baseScale)||1);
+  // 0.7 % of the viewport protects the left edge; right may be cropped.
+  // Ensure the silhouette extends past the right edge instead of stopping
+  // before the bronze/green panel border.
+  const leftMargin=.007,rightOverscan=.01;
+  const scale=Math.max(originalScale,(1+rightOverscan-leftMargin)/(right-left));
+  const translateX=(leftMargin-left*scale)*100;
+  return{scale,translateX};
+ }
+ function hitFigureFrameLoadedImage(img){
+  const bounds=hitFigureVisibleBounds(img);
+  const base=Number(img.parentElement?.style.getPropertyValue('--hit-scale'))||1;
+  const frame=hitFigureLeftAnchoredCamera(bounds,base);
+  if(!frame)return;
+  // Only replace the transparent illustration's horizontal crop.
+  // The legacy SVG fallback and the selected body's vertical zoom remain
+  // unchanged, so the hit-location highlight retains its normal alignment.
+  img.style.setProperty('--hit-scale',String(Number(frame.scale.toFixed(4))));
+  img.style.setProperty('--hit-tx',frame.translateX.toFixed(3)+'%');
+ }
  async function list(force=false){
   if(rows&&!force)return rows;
   if(loadPending&&!force)return loadPending;
@@ -101,8 +150,9 @@
    blobUrl(requested).then(url=>{
     if(!img.isConnected||img.dataset.hitRequested!==requested)return;
     img.onload=()=>{
-     if(img.isConnected&&img.dataset.hitRequested===requested)
-      img.parentElement?.classList.add('combat-hit-art-loaded');
+     if(!img.isConnected||img.dataset.hitRequested!==requested)return;
+     hitFigureFrameLoadedImage(img);
+     img.parentElement?.classList.add('combat-hit-art-loaded');
     };
     img.onerror=()=>img.parentElement?.classList.add('combat-hit-art-failed');
     img.src=url;
