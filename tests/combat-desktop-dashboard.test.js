@@ -73,7 +73,7 @@ describe('Desktop combat compact dashboard and GM stop action',()=>{
   expect(compact).toContain('gap:6px');
   expect(compact).toContain('max-height:none');
   expect(compact).toContain('overflow:visible');
-  expect(runtime).toContain("combatTurnPanelHtml()+combatAttackPanelHtml()");
+  expect(runtime).toContain('combatTurnPanelHtml()+\'<div id="combatActionPanel">\'+combatAttackPanelHtml()');
   expect(runtime).toContain('combatGmToolboxHtml()');
  });
 });
