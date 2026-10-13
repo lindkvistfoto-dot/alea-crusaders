@@ -6087,6 +6087,17 @@ body:not(.editing) #skilltable .skill-roll-btn{
  line-height:1.35;
 }
 
+/* v0.35.170 — spell damage uses Skada − Rustning = Totalt, with no SB column.
+   Flex also accommodates an optional magical protection column without blank grid cells. */
+.combat-mini-magic .combat-damage-grid{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:5px;
+}
+.combat-mini-magic .combat-damage-col{flex:1 1 0;min-width:0}
+.combat-mini-magic .combat-damage-op{flex:0 0 auto}
+
 /* v0.34.75 — SL quick-edit sheet inside combatant details popup */
 .combat-npc-editor{margin:0 0 14px;padding:13px;border:1px solid #9c805a;background:#2d2620;border-radius:11px}
 .combat-npc-editor h3{margin:0 0 7px;color:#f3d29a}
