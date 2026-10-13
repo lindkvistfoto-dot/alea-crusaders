@@ -220,3 +220,92 @@
  .combat-turn-magic-host .combat-spell-source-group .combat-weapon-choice-grid{grid-template-columns:1fr}
  .combat-turn-magic-host .combat-spell-catalog{max-height:min(30dvh,260px)}
 }
+
+/* v0.35.178 — compact single-line alphabetical spell dropdown.
+   The platform select scrolls naturally even with all 91 test spells. */
+.combat-turn-magic-host .combat-spell-choice--compact{
+ gap:7px;
+ padding-top:9px;
+}
+.combat-turn-magic-host .combat-spell-picker{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ min-width:0;
+ color:#e8d0a4;
+ font-size:12px;
+ font-weight:800;
+}
+.combat-turn-magic-host .combat-spell-picker>span:first-child{
+ flex:0 0 75px;
+}
+.combat-turn-magic-host .combat-spell-select-frame{
+ position:relative;
+ display:block;
+ flex:1 1 auto;
+ min-width:0;
+}
+.combat-turn-magic-host .combat-spell-select-frame select{
+ display:block;
+ box-sizing:border-box;
+ width:100%;
+ min-width:0;
+ height:40px;
+ min-height:40px;
+ padding:0 30px 0 12px;
+ border:1px solid #ae8350;
+ border-radius:7px;
+ background:#332619;
+ color:#ffebbf;
+ box-shadow:inset 0 1px 0 rgba(255,223,166,.12);
+ font:700 13px/1.2 system-ui,sans-serif;
+ appearance:none;
+ -webkit-appearance:none;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ cursor:pointer;
+}
+.combat-turn-magic-host .combat-spell-select-frame select:focus-visible{
+ outline:2px solid #f6cc6f;
+ outline-offset:2px;
+}
+.combat-turn-magic-host .combat-spell-select-frame option{
+ background:#292018;
+ color:#f8dfb8;
+ font-weight:500;
+}
+.combat-turn-magic-host .combat-spell-chevron{
+ position:absolute;
+ right:11px;
+ top:50%;
+ transform:translateY(-55%);
+ pointer-events:none;
+ color:#efbe75;
+ font-size:23px;
+ line-height:1;
+}
+.combat-turn-magic-host .combat-spell-current-info{
+ min-width:0;
+ margin:-2px 0 0 85px;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#c9ac81;
+ font-size:11px;
+ line-height:1.35;
+}
+.combat-turn-magic-host .combat-spell-choice--compact .combat-spell-effect{
+ min-height:40px;
+ padding:5px 9px;
+ gap:8px;
+ flex-wrap:nowrap;
+}
+.combat-turn-magic-host .combat-spell-choice--compact .combat-spell-effect button{
+ min-width:34px;
+ min-height:34px;
+}
+@media(max-width:600px){
+ .combat-turn-magic-host .combat-spell-picker{gap:7px}
+ .combat-turn-magic-host .combat-spell-picker>span:first-child{flex-basis:70px}
+ .combat-turn-magic-host .combat-spell-current-info{margin-left:77px}
+}
