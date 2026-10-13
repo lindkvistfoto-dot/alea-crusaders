@@ -5361,37 +5361,47 @@ function combatSpellCastPanelHtml(){
    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
  '</section>'
 }
-/* One reaction renderer for desktop fly-out and the existing mobile flow.
- * All rules and dice remain in chooseCombatParry / declineCombatParry. */
+/* Compact reaction renderer: exactly three slots on all screens.
+ * Each equipment category uses its strongest legal Expert FV option.
+ * The rules still run exclusively through chooseCombatParry/declineCombatParry. */
 function combatDefenseReactionHtml(pending){
- const {attack,defender,attacker,options}=pending;
+ const {attack,defender,options=[]}=pending;
  const safe=value=>escAttr(value);
  const argument=value=>safe(JSON.stringify(String(value)));
  const defenderArg=argument(defender.id),attackArg=argument(attack.id);
- return '<aside class="combat-mini-parry combat-defense-drawer" role="group" aria-label="Försvarsreaktion för '+safe(defender.name_snapshot)+'">'+
+ const defenseChoice=(kind)=>{
+  const isShield=kind==='shield',label=isShield?'Sköld':'Vapen';
+  const candidates=options.filter(option=>option.kind===kind);
+  const option=candidates.sort((a,b)=>(Number(b.fv)||0)-(Number(a.fv)||0))[0]||null;
+  const description=option?.name||(isShield?'Ingen sköld':'Inget parervapen');
+  const detail=option?'FV '+safe(option.fv):'—';
+  const accessible=(isShield?'Sköldparering':'Vapenparering')+' · '+description+
+   (option?' · FV '+option.fv:' · Ej tillgänglig');
+  return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+kind+
+   (option?'':' is-disabled')+'" title="'+safe(accessible)+'" aria-label="'+safe(accessible)+'"'+
+   (option?' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+
+     defenderArg+','+attackArg+','+argument(option.key)+')"':' disabled aria-disabled="true"')+'>'+
+   '<span class="combat-defense-choice-art" data-defense-art="'+kind+'" aria-hidden="true">'+(isShield?'🛡':'⚔')+'</span>'+
+   '<span class="combat-defense-choice-text"><strong>'+label+'</strong><small>'+safe(description)+'</small></span>'+
+   '<span class="combat-defense-choice-fv">'+detail+'</span>'+
+   '</button>';
+ };
+ return '<aside class="combat-mini-parry combat-defense-drawer combat-defense-compact" role="group" aria-label="Försvarsreaktion för '+safe(defender.name_snapshot)+'">'+
   '<div class="combat-defense-drawer-head">'+
    '<span class="combat-defense-drawer-emblem" aria-hidden="true">🛡</span>'+
-   '<div><small>FÖRSVARSREAKTION</small><strong>'+safe(defender.name_snapshot)+'</strong></div>'+
-   '<span class="combat-defense-drawer-alert">VÄNTAR</span>'+
+   '<div><small>FÖRSVAR</small><strong>'+safe(defender.name_snapshot)+'</strong></div>'+
+   '<span class="combat-defense-drawer-alert">VÄLJ</span>'+
   '</div>'+
-  '<p class="combat-defense-drawer-copy">'+safe(attacker.name_snapshot)+' har träffat. '+safe(defender.name_snapshot)+
-   ' har en handling kvar och kan försöka parera innan skadan avgörs.</p>'+
-  '<div class="combat-defense-drawer-actions" role="group" aria-label="Välj parering">'+
-   options.map(option=>{
-    const shield=option.kind==='shield';
-    const actionLabel=(shield?'Parera med sköld':'Parera med vapen')+' · '+option.name;
-    return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+(shield?'shield':'weapon')+'"'+
-     ' aria-label="'+safe(actionLabel)+' FV '+safe(option.fv)+'"'+
-     ' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+defenderArg+','+attackArg+','+argument(option.key)+')">'+
-     '<span aria-hidden="true">'+(shield?'🛡':'⚔')+'</span>'+
-     '<span class="combat-defense-choice-text"><strong>'+safe(shield?'Sköldparering':'Vapenparering')+'</strong><small>'+safe(option.name)+'</small></span>'+
-     '<span class="combat-defense-choice-fv">FV '+safe(option.fv)+'</span>'+
-     '</button>'
-   }).join('')+
-   '<button type="button" class="btn combat-take-hit-btn combat-defense-decline"'+
-    ' onclick="combatSubmitDefenseChoice(this,&#39;take-hit&#39;,'+defenderArg+','+attackArg+')">Ta smällen <span aria-hidden="true">→</span></button>'+
+  '<div class="combat-defense-drawer-actions" role="group" aria-label="Välj försvar">'+
+   defenseChoice('shield')+defenseChoice('weapon')+
+   '<button type="button" class="btn combat-take-hit-btn combat-defense-choice combat-defense-decline take-hit"'+
+    ' title="Ta smällen utan parering" aria-label="Ta smällen utan parering"'+
+    ' onclick="combatSubmitDefenseChoice(this,&#39;take-hit&#39;,'+defenderArg+','+attackArg+')">'+
+    '<span class="combat-defense-choice-art" data-defense-art="take-hit" aria-hidden="true">💥</span>'+
+    '<span class="combat-defense-choice-text"><strong>Ta smällen</strong><small>Ingen parering</small></span>'+
+    '<span class="combat-defense-choice-fv" aria-hidden="true">→</span>'+
+   '</button>'+
   '</div>'+
-  '<p class="combat-defense-drawer-hint">Parering använder försvararens återstående handling i denna SR.</p>'+
  '</aside>'
 }
 /* v0.35.156 – reactions retract before resolving, on mobile and desktop.
@@ -5406,10 +5416,15 @@ function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKe
     (kind==='parry'&&!pending.options.some(option=>String(option.key)===String(parryKey))))return;
  combatDefenseChoiceBusy=true;
  const drawer=button?.closest?.('.combat-defense-drawer')||null;
+ // Retain the original disabled equipment slots if the roll fails.
+ const originalDisabled=new Map();
  if(drawer){
   drawer.classList.add('is-retracting');
   drawer.setAttribute('aria-busy','true');
-  drawer.querySelectorAll('button').forEach(choice=>{choice.disabled=true});
+  drawer.querySelectorAll('button').forEach(choice=>{
+   originalDisabled.set(choice,choice.disabled);
+   choice.disabled=true
+  });
  }
  const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  // Allow the panel to slide out of the map before dice and state updates begin.
@@ -5428,7 +5443,7 @@ function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKe
    if(drawer?.isConnected){
     drawer.classList.remove('is-retracting');
     drawer.removeAttribute('aria-busy');
-    drawer.querySelectorAll('button').forEach(choice=>{choice.disabled=false});
+    drawer.querySelectorAll('button').forEach(choice=>{choice.disabled=originalDisabled.get(choice)===true});
    }
   }
  },delay);
