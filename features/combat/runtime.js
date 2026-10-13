@@ -2428,44 +2428,38 @@ function combatSpellChooserHtml(combatant,action){
  const chosen=options.find(spell=>combatSpellKey(spell)===selectedKey);
  const effect=chosen?.item_spell?.effect_grade||Math.max(1,Number(action?.source_data?.effect_grade)||1);
  if(!options.length)return '<div class="combat-spell-choice"><p class="combat-spell-empty">Rollfiguren har inga besvärjelser.</p></div>';
- const groups=[{label:'Inlärda besvärjelser',spells:options.filter(s=>s.spell_source!=='item')},
-  {label:'Besvärjelser från magiska föremål',spells:options.filter(s=>s.spell_source==='item')}];
- return '<div class="combat-spell-choice">'+
-  '<div class="combat-spell-choice-head"><strong>Välj besvärjelse</strong><span>'+options.length+' tillgängliga</span></div>'+
-  (chosen?'<div class="combat-spell-selected"><span>VALD BESVÄRJELSE</span><strong>'+escAttr(chosen.name||'Besvärjelse')+'</strong></div>':'<p class="combat-spell-empty">Välj en besvärjelse från listan nedan.</p>')+
-  '<div class="combat-spell-effect"><span>Effektgrad</span>'+
-   (chosen?.item_spell?
-    '<b>'+effect+'</b><small>'+(chosen.item_spell.battery?'Lagrad EG':'Fast EG')+' från '+escAttr(chosen.item_spell.item_name)+' · ×'+chosen.item_spell.effect_multiplier+'</small>':
-    '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)"'+(!chosen?' disabled':'')+'>−</button><b>'+effect+'</b><button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)"'+(!chosen?' disabled':'')+'>+</button>')+
-   '</div>'+
-  '<div class="combat-spell-catalog">'+
-  groups.filter(group=>group.spells.length).map(group=>
-   '<div class="combat-spell-source-group"><h4>'+escAttr(group.label)+'</h4><div class="combat-weapon-choice-grid">'+
-    group.spells.map(spell=>{
-     const key=combatSpellKey(spell),active=selectedKey===key,binding=combatMagicBinding(spell);
+ // One compact alphabetic list for both learned spells and enchanted items.
+ // Item spells have unique keys and their own EG/FV and remain distinguishable.
+ const sorted=[...options].sort((a,b)=>
+  String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
+  combatSpellKey(a).localeCompare(combatSpellKey(b),'sv',{sensitivity:'base'}));
+ const detail=chosen?.item_spell?
+  'Föremål: '+escAttr(chosen.item_spell.item_name||'Magiskt föremål')+
+   ' · FV '+escAttr(chosen.fv??'—')+
+   ' · '+(chosen.item_spell.battery?'Lagrad EG ':'Fast EG ')+escAttr(effect)+
+   ' ×'+escAttr(chosen.item_spell.effect_multiplier??1):
+  chosen?'FV '+escAttr(chosen.fv??'—')+
+   (chosen.range_text?' · '+escAttr(chosen.range_text):''):'';
+ return '<div class="combat-spell-choice combat-spell-choice--compact">'+
+  '<label class="combat-spell-picker"><span>Besvärjelse</span>'+
+   '<span class="combat-spell-select-frame"><select aria-label="Välj besvärjelse" '+
+    'onchange="selectCombatPreparedSpell(\''+escAttr(combatant.id)+'\',this.value)">'+
+    '<option value=""'+(!chosen?' selected':'')+' disabled>Välj besvärjelse…</option>'+
+    sorted.map(spell=>{
      const source=spell.item_spell;
      const unavailable=source&&(!source.ready||source.cast_mode==='automatic'||!Number.isFinite(Number(source.fv))||Number(source.fv)<1);
-     const reason=source?.cast_mode==='automatic'?'Automatiskt kast ännu inte anslutet':
-      source&&!source.fv?'Saknar ett giltigt FV':source?.unavailable_reason||'';
-     // Independent square icon: an explicitly cleared icon must stay empty.
-     const iconPath=spell.icon_path!==undefined?spell.icon_path:spell.image_path;
-     const artPath=combatSpellArtPath(iconPath);
-     const artHtml=artPath?
-      '<span class="combat-spell-thumb" data-spell-art-path="'+escAttr(artPath)+'"'+
-      ' data-focus-x="'+combatSpellArtNumber(spell.icon_focus_x??spell.image_focus_x,50)+'"'+
-      ' data-focus-y="'+combatSpellArtNumber(spell.icon_focus_y??spell.image_focus_y,50)+'"'+
-      ' data-zoom="'+combatSpellArtNumber(spell.icon_zoom,120,100,300)+'" aria-hidden="true"><img alt="" hidden></span>':'';
-     const hint=source?
-      escAttr(source.item_name)+(source.battery?' · ⚡ Batteri':'')+' · EG '+source.effect_grade+' ×'+source.effect_multiplier+
-       ' · FV '+escAttr(source.fv??'—')+(unavailable?' · '+escAttr(reason):''):
-      'FV '+escAttr(spell.fv??'—')+(spell.range_text?' · '+escAttr(spell.range_text):'')+
-      (binding.kind==='manual'?' · '+escAttr(binding.reason):!binding.supported?' · '+escAttr(binding.reason):'');
-     return '<button type="button" class="combat-weapon-choice-btn'+(active?' active':'')+(artPath?' combat-spell-with-thumb':'')+'" '+
-      (unavailable?'disabled title="'+escAttr(reason)+'" ':'')+
-      'aria-pressed="'+(active?'true':'false')+'" onclick="chooseCombatPreparedSpell(\''+combatant.id+'\',\''+escAttr(key)+'\')">'+artHtml+'<b>'+escAttr(spell.name||'Besvärjelse')+'</b><small>'+hint+'</small></button>'
-    }).join('')+'</div></div>'
-  ).join('')+'</div>'+
-  '<small class="combat-spell-footnote">Föremålsbesvärjelser använder sina egna FV- och EG-värden.</small></div>'
+     const label=String(spell.name||'Besvärjelse')+
+      (source?' · '+String(source.item_name||'Magiskt föremål')+' (föremål)':'');
+     return '<option value="'+escAttr(combatSpellKey(spell))+'"'+
+      (combatSpellKey(spell)===selectedKey?' selected':'')+
+      (unavailable?' disabled':'')+'>'+escAttr(label)+'</option>'
+    }).join('')+'</select><span class="combat-spell-chevron" aria-hidden="true">⌄</span></span></label>'+
+  (chosen?'<div class="combat-spell-current-info" title="'+escAttr(detail)+'">'+detail+'</div>':'')+
+  '<div class="combat-spell-effect"><span>Effektgrad</span>'+
+   (chosen?.item_spell?
+    '<b>'+effect+'</b>':
+    '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\''+combatant.id+'\',-1)"'+(!chosen?' disabled':'')+'>−</button><b>'+effect+'</b><button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\''+combatant.id+'\',1)"'+(!chosen?' disabled':'')+'>+</button>')+
+   '</div></div>'
 }
 async function combatMagicButton(event,combatantId){
  event?.stopPropagation?.();
@@ -2581,6 +2575,11 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;renderCombat()
+}
+async function selectCombatPreparedSpell(combatantId,spellKey){
+ try{await chooseCombatPreparedSpell(combatantId,spellKey)}
+ catch(error){console.error('Kunde inte välja besvärjelse',error);alert('Kunde inte välja besvärjelse: '+(error?.message||error))}
+ finally{renderCombat()}
 }
 let combatSpellEffectUpdating=false;
 async function stepCombatSpellEffect(combatantId,delta){
