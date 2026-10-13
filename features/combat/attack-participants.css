@@ -1499,3 +1499,48 @@
   font-size:9px;
  }
 }
+
+/* v0.35.169 — spell targeting is explicit at each casting SR.
+   SR1 is a preparation-only step; in SR2 the target portrait opens the
+   same filtered target list as the hex map and turn-order controls. */
+#combatPage .combat-mini-magic .combat-magic-target-wait,
+#combatPage .combat-mini-magic .combat-magic-target-collapsed{
+ position:relative;
+ z-index:2;
+ margin-top:9px;
+ padding:9px 11px;
+ border:1px solid rgba(206,162,100,.48);
+ border-radius:8px;
+ background:rgba(27,19,14,.86);
+ color:#efd5b0;
+ font:600 12px/1.4 system-ui,sans-serif;
+}
+#combatPage .combat-mini-magic .combat-magic-target-wait{
+ border-style:dashed;
+ color:#e1c6a1;
+}
+@media(max-width:760px){
+ #combatPage .combat-mini-magic button.combat-portrait-target-button{
+  position:relative;
+  z-index:4;
+  display:grid;
+  place-items:center;
+  padding:0;
+  margin:0;
+  appearance:none;
+  font:inherit;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+ }
+ #combatPage .combat-mini-magic button.combat-portrait-target-button:focus-visible{
+  outline:3px solid #f1c77a;
+  outline-offset:3px;
+ }
+ #combatPage .combat-mini-magic .combat-magic-target-options{
+  grid-template-columns:minmax(0,1fr);
+ }
+ #combatPage .combat-mini-magic .combat-magic-target-option{
+  min-height:44px;
+ }
+}
