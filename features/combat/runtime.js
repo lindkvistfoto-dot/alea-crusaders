@@ -3644,8 +3644,11 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
    ' ('+weaponValue+(weapon?._spell_damage?'':' + '+bonusValue)+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
- if(weapon?._spell_damage)if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup();
- else if(typeof combatShowMobileDamageOutcome==='function')combatShowMobileDamageOutcome(result,hitLocation);
+ if(weapon?._spell_damage){
+  if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup()
+ }else if(typeof combatShowMobileDamageOutcome==='function'){
+  combatShowMobileDamageOutcome(result,hitLocation)
+ }
  return result
 }
 function combatDamageResultHtml(damage,spellDamage=false){
