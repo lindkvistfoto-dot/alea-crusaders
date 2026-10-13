@@ -44,7 +44,9 @@ describe('Klickbara magikontroller i strid',()=>{
   const ctx=load('function combatMagicTargetPickerHtml(', 'function combatMagicStatusHtml(',{
    activeCombat:{round_number:1},combatants:[caster,ally,enemy],
    combatCurrentAttackTargets:()=>new Map([['astrid',{}],['orc',{}]]),
-   combatSelectedTargetId:null,combatMobileMagicTargetPickerOpen:true,escAttr:String
+   combatSelectedTargetId:null,combatMobileMagicTargetPickerOpen:true,escAttr:String,
+   combatIsActiveTurn:()=>true,
+   combatMagicTargetCandidates:()=>new Map([['astrid',{}],['orc',{}]])
   },'combatMagicTargetPickerHtml');
   expect(ctx.exposed(caster,prepared)).toBe('');
   ctx.activeCombat.round_number=2;
@@ -52,7 +54,7 @@ describe('Klickbara magikontroller i strid',()=>{
   expect(html).toContain('Välj mål för besvärjelse');
   expect(html).toContain('Orch');
   expect(html).toContain('Astrid');
-  expect(html).toContain('selectCombatTarget');
+  expect(html).toContain('combatChooseMagicTarget');
   ctx.combatSelectedTargetId='orc';
   expect(ctx.exposed(caster,prepared)).toContain('aria-pressed="true"');
  });
