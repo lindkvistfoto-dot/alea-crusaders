@@ -5615,12 +5615,15 @@ function combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound){
    (!ready?' disabled':'')+'>'+escAttr(caption)+'</button></div>';
 }
 function combatSpellCastPanelHtml(){
- const activeActor=combatActiveActor(),chosen=combatChosenAction(activeActor);
- // Keep the last finished cast visible, but never cover another action.
- const action=chosen||combatLatestResolvedSpellAction();
- if(combatActionDefinition(action)?.key!=='spell_cast'||!action?.source_data?.spell_prepared)return '';
- const actor=combatants.find(row=>String(row.id)===String(action.combatant_id))||activeActor;
+ const actor=combatActiveActor();
  if(!actor)return '';
+ // A spell panel belongs only to the active combatant's own selected action.
+ // Never reuse another caster's last result when a new turn has no action.
+ // combatChosenAction already retains this actor's unfinished spell across SR.
+ const action=combatChosenAction(actor);
+ if(!action||String(action.combatant_id)!==String(actor.id)||
+    combatActionDefinition(action)?.key!=='spell_cast'||
+    !action.source_data?.spell_prepared)return '';
  const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
  // Use snapshotted artwork, or recover the master image for older prepared casts.
