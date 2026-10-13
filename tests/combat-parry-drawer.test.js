@@ -63,7 +63,7 @@ describe('Desktop defense reaction slides out from the attack panel',()=>{
   expect(source).toContain('combat-defense-drawer');
   expect(source).toContain('combat-defense-mobile');
   expect(source).toContain('combat-attack-result');
-  expect(source).toContain('combat-duel');
+  expect(source).toContain('combat-mini-duel');
   expect(css).toContain('@media (min-width:1024px)');
   expect(css).toContain('.combat-defense-attack > .combat-defense-mobile');
   expect(css).toContain('display:none;');
