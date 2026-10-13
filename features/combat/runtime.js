@@ -5525,7 +5525,8 @@ function combatDefenseReactionHtml(pending){
    (option?'':' is-disabled')+'" title="'+safe(accessible)+'" aria-label="'+safe(accessible)+'"'+
    chooseAttr(option)+'>'+
    equipmentArt(option,kind,displayItem)+
-   '<span class="combat-defense-choice-text"><strong>'+label+'</strong><small>'+safe(description)+'</small></span>'+
+   '<span class="combat-defense-choice-text">'+(isShield?'<strong>'+label+'</strong>':'')+
+     '<small>'+safe(description)+'</small></span>'+
    '<span class="combat-defense-choice-fv">'+detail+'</span>'+
    '</button>';
  };
@@ -5533,7 +5534,6 @@ function combatDefenseReactionHtml(pending){
  // A two-handed weapon occupies both slots but appears only once.
  const dual=heldWeapons.length===2?heldWeapons:[];
  const weaponChoice=dual.length===2?'<div class="combat-defense-choice weapon combat-defense-multi" role="group" aria-label="Vapenparering · välj hand">'+
-  '<strong class="combat-defense-multi-title">Vapen</strong>'+
   '<div class="combat-defense-weapon-options">'+dual.map(({item,option})=>{
    const label=item?.name||option?.name||'Okänt vapen';
    const accessible='Vapen · '+label+(option?' · Parera med FV '+option.fv:' · Ej parerbart');
