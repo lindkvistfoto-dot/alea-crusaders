@@ -2433,13 +2433,15 @@ function combatSpellChooserHtml(combatant,action){
  const sorted=[...options].sort((a,b)=>
   String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
   combatSpellKey(a).localeCompare(combatSpellKey(b),'sv',{sensitivity:'base'}));
+ const binding=chosen&&!chosen.item_spell?combatMagicBinding(chosen):null;
  const detail=chosen?.item_spell?
   'Föremål: '+escAttr(chosen.item_spell.item_name||'Magiskt föremål')+
    ' · FV '+escAttr(chosen.fv??'—')+
    ' · '+(chosen.item_spell.battery?'Lagrad EG ':'Fast EG ')+escAttr(effect)+
    ' ×'+escAttr(chosen.item_spell.effect_multiplier??1):
   chosen?'FV '+escAttr(chosen.fv??'—')+
-   (chosen.range_text?' · '+escAttr(chosen.range_text):''):'';
+   (chosen.range_text?' · '+escAttr(chosen.range_text):'')+
+   (binding?.kind==='manual'?' · '+escAttr(binding.reason||'SL avgör effekten'):''):'';
  return '<div class="combat-spell-choice combat-spell-choice--compact">'+
   '<label class="combat-spell-picker"><span>Besvärjelse</span>'+
    '<span class="combat-spell-select-frame"><select aria-label="Välj besvärjelse" '+
