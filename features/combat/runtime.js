@@ -3695,6 +3695,43 @@ function combatParryResultHtml(result){
  '</div>'
 }
 
+/* Attack displays the equipped primary hand (right unless explicitly left).
+   An ambidextrous combatant can swap between two equipped weapons in this tile. */
+function combatPrimaryHandWeapon(combatant,mode='auto'){
+ const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
+ const preferred=String(eq.mainHand||eq.primaryHand||eq.dominantHand||
+  profile.mainHand||profile.primaryHand||profile.dominantHand||profile.dominant_hand||'right').toLowerCase();
+ const main=/^(left|vänster)/.test(preferred)?'leftHand':'rightHand';
+ const options=combatAttackWeaponOptions(combatant,mode);
+ const equipped=slot=>{
+  const ref=eq[slot];
+  return ref?.kind==='weapon'&&ref.itemId?
+   options.find(weapon=>String(weapon.equipId||weapon.id||combatWeaponKey(weapon))===String(ref.itemId))||null:null
+ };
+ return equipped(main)||equipped(main==='rightHand'?'leftHand':'rightHand')||null
+}
+function combatAmbidextrousDuelWeapons(combatant,action,mode='auto'){
+ if(!combatant||action?.status!=='planned')return [];
+ const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
+ if(profile.ambidextrous!==true&&combatant?.state?.attributes?.ambidextrous!==true)return [];
+ const options=combatAttackWeaponOptions(combatant,mode);
+ const hands=['rightHand','leftHand'].map(slot=>{
+  const ref=eq[slot];return ref?.kind==='weapon'&&ref.itemId?
+   options.find(weapon=>String(weapon.equipId||weapon.id||combatWeaponKey(weapon))===String(ref.itemId))||null:null
+ });
+ return hands.every(Boolean)&&combatWeaponKey(hands[0])!==combatWeaponKey(hands[1])?hands:[]
+}
+async function combatCycleDuelWeapon(combatantId){
+ const actor=combatants.find(row=>String(row.id)===String(combatantId));
+ const action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(def?.type!=='attack'||!combatCanChoosePrimaryAction(actor))return;
+ const mode=def.mode||action?.source_data?.mode||'auto';
+ const hands=combatAmbidextrousDuelWeapons(actor,action,mode);
+ if(hands.length!==2)return;
+ const current=combatActionWeapon(actor,action,mode);
+ const next=hands.find(item=>combatWeaponKey(item)!==combatWeaponKey(current))||hands[0];
+ await chooseCombatAttackWeapon(combatantId,combatWeaponKey(next))
+}
 function combatActionWeapon(combatant,action,mode='auto'){
  const selectedKey=String(action?.source_data?.weapon_key||action?.result?.weapon_key||'');
  if(selectedKey==='unarmed')return {name:'Obeväpnad',_unarmed:true};
@@ -3704,7 +3741,7 @@ function combatActionWeapon(combatant,action,mode='auto'){
  }
  const options=combatAttackWeaponOptions(combatant,mode);
  if(!options.length)return mode==='ranged'?null:{name:'Obeväpnad',_unarmed:true};
- return options.length===1?options[0]:null
+ return combatPrimaryHandWeapon(combatant,mode)||(options.length===1?options[0]:null)
 }
 function combatMeleeReachHexesForWeapon(weapon){
  const length=combatNumber(weapon?.weapon_length??weapon?.length,null);
@@ -5326,7 +5363,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
 }
 
 /* v0.35.173 · illustrated middle tile; no change to combat logic. */
-function combatDuelCenterHtml(kind,name,item=null){
+function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
  const spell=kind==='spell',label=spell?'BESVÄRJELSE':'VAPEN';
  const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
  let art='',crop='';
@@ -5343,12 +5380,22 @@ function combatDuelCenterHtml(kind,name,item=null){
   crop=' data-combat-crop="'+(['top-right','top-left','bottom-right','bottom-left','full'].includes(saved)?saved:'top-right')+'"';
   if(url)art='<span class="combat-duel-weapon-art"><img src="'+escAttr(url)+'" alt="" loading="lazy" decoding="async"></span>';
  }
- return '<div class="combat-duel-center '+(spell?'is-spell':'is-weapon')+
-  '" role="group" aria-label="'+escAttr(label+': '+title)+'">'+
-  '<span class="combat-duel-center-role">'+label+'</span>'+
+ const mode=action?combatActionDefinition(action)?.mode||action?.source_data?.mode||'auto':'auto';
+ const hands=!spell&&actor?combatAmbidextrousDuelWeapons(actor,action,mode):[];
+ const switchable=hands.length===2;
+ const other=switchable?hands.find(weapon=>combatWeaponKey(weapon)!==combatWeaponKey(item)):null;
+ const tag=switchable?'button':'div';
+ const attrs=switchable?' type="button" onclick="combatCycleDuelWeapon('+escAttr(JSON.stringify(String(actor.id)))+
+  ')" title="Byt till '+escAttr(other?.name||'vapnet i andra handen')+
+  '" aria-label="Byt vapen till '+escAttr(other?.name||'andra handen')+'"':
+  ' role="group" aria-label="'+escAttr(label+': '+title)+'"';
+ return '<'+tag+' class="combat-duel-center '+(spell?'is-spell':'is-weapon')+
+  (switchable?' combat-weapon-switch':'')+'"'+attrs+'>'+
+  (spell?'<span class="combat-duel-center-role">'+label+'</span>':'')+
   '<span class="combat-duel-center-viewport"'+crop+'>'+
    (art||'<span class="combat-duel-center-empty" aria-hidden="true">'+(spell?'✦':'⚔')+'</span>')+
-  '</span><b class="combat-duel-center-name" title="'+escAttr(title)+'">'+escAttr(title)+'</b></div>';
+   (switchable?'<span class="combat-weapon-switch-mark" aria-hidden="true">⇄</span>':'')+
+  '</span><b class="combat-duel-center-name" title="'+escAttr(title)+'">'+escAttr(title)+'</b></'+tag+'>';
 }
 // Spell feedback is presentation-only: Expert casting, PSY and effects are resolved elsewhere.
 function combatLatestResolvedSpellAction(){
@@ -5896,7 +5943,7 @@ function combatAttackPanelHtml(){
   '<div class="combat-mini-duel combat-illustrated-duel">'+
    combatMiniParticipantHtml('ATTACKERAR',actor,'')+
    '<div class="combat-mini-arrow">→</div>'+
-   combatDuelCenterHtml('weapon',selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen',selectedWeapon)+
+   combatDuelCenterHtml('weapon',selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen',selectedWeapon,actor,action)+
    '<div class="combat-mini-arrow" aria-hidden="true">→</div>'+
    combatMiniParticipantHtml('FÖRSVARAR',target,target?(targetInfo?(targetInfo.mode==='melee'?'Närstrid':'Avstånd')+' · '+targetInfo.distance+' hex':'Valt mål'):'—',action.status==='planned')+
   '</div>'+
