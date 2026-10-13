@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.185: transparent PNG frames, shared duel and emerging weapon artwork. */
+/* Alea Crusaders v0.35.186: fine-tune elevated, right-shifted weapon artwork. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
  display:grid;grid-template-columns:minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr) clamp(16px,2vw,26px) minmax(0,1fr);
  gap:clamp(1px,.35vw,5px);align-items:stretch;min-width:0;isolation:isolate;
@@ -283,14 +283,14 @@
  clip-path:inset(89% 0 0 0);
 }
 /* The selected master-register quadrant stays in a square, undistorted crop.
-   The sword begins 35% above the frame and disappears exactly at its bottom
-   border, giving the impression of rising out of the gold frame. */
+   Lift and right-shift the sword, while clipping it precisely at the frame's
+   lower edge, giving the impression of rising out of the gold frame. */
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
  position:absolute;z-index:4;inset:auto;
- top:-35%;left:50%;width:125%;height:auto;aspect-ratio:1 / 1;
+ top:-41%;left:56%;width:125%;height:auto;aspect-ratio:1 / 1;
  transform:translateX(-50%);display:block;overflow:hidden;pointer-events:none;
- /* The cut is at the lower gold border: (1.35 / (1.25 * 4/3)) = 81%. */
- clip-path:inset(0 0 19% 0);background:transparent;
+ /* 125% square is 166.67% of the 4:3 frame height: -41 + 166.67 * .846 = 100%. */
+ clip-path:inset(0 0 15.4% 0);background:transparent;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art img{
  position:absolute;display:block;
@@ -345,9 +345,9 @@
   padding-top:clamp(8px,2vw,13px);
  }
  #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
-  top:-35%;left:50%;width:120%;height:auto;
-  /* Mobile artwork is 1.6 viewport-heights tall, so hide its bottom 15.625%. */
-  clip-path:inset(0 0 15.625% 0);
+  top:-40%;left:57%;width:120%;height:auto;
+  /* Mobile artwork is 160% of frame height: -40 + 160 * .875 = 100%. */
+  clip-path:inset(0 0 12.5% 0);
  }
  #combatPage .combat-illustrated-duel .combat-weapon-switch-mark{
   width:19px;height:19px;right:-2px;bottom:-2px;font-size:16px;
