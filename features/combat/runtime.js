@@ -5373,9 +5373,23 @@ function combatDefenseReactionHtml(pending){
  const current=profile?.currentEquipment||{};
  const legal=kind=>options.filter(option=>option?.kind===kind&&Number(option.fv)>0);
  const best=kind=>legal(kind).sort((a,b)=>Number(b.fv)-Number(a.fv))[0]||null;
+ // The displayed weapons must be the defender's held equipment, even when
+ // a thrown weapon cannot legally parry. The legal options ONLY control rolls.
+ const equippedWeapons=Array.isArray(profile.weapons)?profile.weapons:[];
+ const heldIds=[current.leftHand,current.rightHand]
+  .filter(ref=>ref?.kind==='weapon'&&ref.itemId)
+  .map(ref=>String(ref.itemId))
+  .filter((id,index,ids)=>ids.indexOf(id)===index);
+ const heldWeapons=heldIds.map(id=>{
+  const option=legal('weapon').find(entry=>
+   String(entry.item?.equipId||entry.item?.id||'')===id)||null;
+  const item=equippedWeapons.find(entry=>String(entry.equipId||entry.id||'')===id)||
+   option?.item||null;
+  return {id,item,option};
+ });
  // Mirrors the Runda equipment artwork: personal override, master and crop.
- const equipmentArt=(option,kind)=>{
-  const item=option?.item||null;
+ const equipmentArt=(option,kind,displayItem=undefined)=>{
+  const item=displayItem===undefined?(option?.item||null):displayItem;
   const master=item?(kind==='shield'
    ?(typeof characterShieldRule==='function'?characterShieldRule(item):null)
    :(typeof ruleWeaponForItem==='function'?ruleWeaponForItem(item):null)):null;
@@ -5401,36 +5415,35 @@ function combatDefenseReactionHtml(pending){
  const chooseAttr=option=>option?' onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,'+
   defenderArg+','+attackArg+','+argument(option.key)+')"':' disabled aria-disabled="true"';
  const defenseChoice=(kind)=>{
-  const isShield=kind==='shield',label=isShield?'Sköld':'Vapen',option=best(kind);
-  const description=option?.name||(isShield?'Ingen sköld':'Inget parervapen');
+  const isShield=kind==='shield',label=isShield?'Sköld':'Vapen';
+  const held=!isShield&&heldWeapons.length?heldWeapons[0]:null;
+  const option=held?held.option:best(kind);
+  const displayItem=held?held.item:option?.item||null;
+  const description=displayItem?.name||option?.name||(isShield?'Ingen sköld':'Inget parervapen');
   const detail=option?'FV '+safe(option.fv):'—';
   const accessible=(isShield?'Sköldparering':'Vapenparering')+' · '+description+
    (option?' · FV '+option.fv:' · Ej tillgänglig');
   return '<button type="button" class="btn combat-parry-btn combat-defense-choice '+kind+
    (option?'':' is-disabled')+'" title="'+safe(accessible)+'" aria-label="'+safe(accessible)+'"'+
    chooseAttr(option)+'>'+
-   equipmentArt(option,kind)+
+   equipmentArt(option,kind,displayItem)+
    '<span class="combat-defense-choice-text"><strong>'+label+'</strong><small>'+safe(description)+'</small></span>'+
    '<span class="combat-defense-choice-fv">'+detail+'</span>'+
    '</button>';
  };
- // Two separate equipped, legal weapons are two independently selectable
- // details within the same visual middle card. A two-handed weapon is one.
- const handIds=[current.leftHand,current.rightHand]
-  .filter(ref=>ref?.kind==='weapon'&&ref.itemId).map(ref=>String(ref.itemId));
- const dual=handIds.length===2&&handIds[0]!==handIds[1]
-  ?handIds.map(id=>legal('weapon').find(option=>
-     String(option.item?.equipId||option.item?.id||'')===id)).filter(Boolean)
-  :[];
+ // Both hands always display their own item, even if only one can parry.
+ // A two-handed weapon occupies both slots but appears only once.
+ const dual=heldWeapons.length===2?heldWeapons:[];
  const weaponChoice=dual.length===2?'<div class="combat-defense-choice weapon combat-defense-multi" role="group" aria-label="Vapenparering · välj hand">'+
   '<strong class="combat-defense-multi-title">Vapen</strong>'+
-  '<div class="combat-defense-weapon-options">'+dual.map(option=>{
-   const label=option.name||'Vapen',accessible='Parera med '+label+' · FV '+option.fv;
-   return '<button type="button" class="combat-defense-weapon-option" title="'+safe(accessible)+
+  '<div class="combat-defense-weapon-options">'+dual.map(({item,option})=>{
+   const label=item?.name||option?.name||'Okänt vapen';
+   const accessible='Vapen · '+label+(option?' · Parera med FV '+option.fv:' · Ej parerbart');
+   return '<button type="button" class="combat-defense-weapon-option'+(option?'':' is-disabled')+'" title="'+safe(accessible)+
     '" aria-label="'+safe(accessible)+'"'+chooseAttr(option)+'>'+
-     equipmentArt(option,'weapon')+
+     equipmentArt(option,'weapon',item)+
      '<span class="combat-defense-weapon-label">'+safe(label)+'</span>'+
-     '<span class="combat-defense-choice-fv">FV '+safe(option.fv)+'</span>'+
+     '<span class="combat-defense-choice-fv">'+(option?'FV '+safe(option.fv):'—')+'</span>'+
     '</button>'
   }).join('')+'</div></div>':defenseChoice('weapon');
  return '<aside class="combat-mini-parry combat-defense-drawer combat-defense-compact" role="group" aria-label="Försvarsreaktion för '+safe(defender.name_snapshot)+'">'+
