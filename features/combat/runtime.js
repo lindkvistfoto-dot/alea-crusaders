@@ -1297,7 +1297,7 @@ async function combatResolveAntimagic(actionId,mageId=null,targetId=null,eg=1){
    const erf=await combatAwardSpellErf(mage,{source_data:{spell_name:spell.name,spell_id:spell.rule_id}},rolled.outcome);if(erf)antimagic.erf=erf;
    await dbJson('combat_actions?id=eq.'+encodeURIComponent(reactionId),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result:antimagic,updated_at:new Date().toISOString()})});
    await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'reaction',actor_id:mage.id,target_id:caster.id,event_type:'antimagic',message:mage.name_snapshot+' kastar Antimagi · '+combatOutcomeLabel(rolled.outcome)+(resistance?(resistance.penetrates?' · magin går igenom':' · magin studsar tillbaka'):''),details:antimagic,player_visible:true})});
-   combatShowOutcomeOverlay(rolled.outcome,'Antimagi · T20 '+rolled.roll+' mot FV '+fv);
+   combatHideMagicResultPopup();
    (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult('Antimagi',rolled.outcome)
   }
   action.result={...snapshot,antimagic,awaiting_antimagic:false};
@@ -1613,6 +1613,12 @@ function combatShowOutcomeOverlay(outcome,context=''){
  host.classList.remove('success','fail','special','perfect','fumble','outcome-show','mobile-damage-detail');
  host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span><div class="combat-outcome-copy"><b>'+escAttr(meta.label)+'</b>'+(context?'<span>'+escAttr(context)+'</span>':'')+'</div>';
  host.classList.add('show','outcome-show',meta.cls)
+}
+// Spell results are presented in the magic panel, never in the floating dice readout.
+function combatHideMagicResultPopup(){
+ const host=$('combatDiceReadout');
+ if(host)host.classList.remove('show','outcome-show','mobile-damage-detail','success','fail','special','perfect','fumble');
+ combatMobileLastOutcome=null
 }
 function combatShowMobileDamageOutcome(damage,hitLocation=null){
  if(!damage||!window.matchMedia?.('(max-width:760px)')?.matches)return;
@@ -3614,6 +3620,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  }
  target.current_kp=Number(saved[0].current_kp);target.status=saved[0].status;
  const result={
+  spell_damage:weapon?._spell_damage===true,
   weapon_formula:weaponSpec.formula,
   weapon_damage_value:weaponValue,
   damage_bonus:bonusSpec.formula||'Ingen',
@@ -3634,14 +3641,16 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
   phase:'damage',actor_id:actor.id,target_id:target.id,event_type:defeated?'defeated':'damage',
   message:actor.name_snapshot+' träffar '+(hitLocation?.label||'målet')+' och gör '+net+' KP skada på '+target.name_snapshot+
-   ' ('+weaponValue+' + '+bonusValue+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
+   ' ('+weaponValue+(weapon?._spell_damage?'':' + '+bonusValue)+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
- combatShowMobileDamageOutcome(result,hitLocation);
+ if(weapon?._spell_damage)combatHideMagicResultPopup();
+ else combatShowMobileDamageOutcome(result,hitLocation);
  return result
 }
-function combatDamageResultHtml(damage){
+function combatDamageResultHtml(damage,spellDamage=false){
  if(!damage)return '';
+ spellDamage=spellDamage||damage.spell_damage===true;
  const weaponFormula=String(damage.weapon_formula||'—');
  const bonusRaw=String(damage.damage_bonus||'').trim();
  const bonusFormula=!bonusRaw||bonusRaw.toLowerCase()==='ingen'?'—':bonusRaw;
@@ -3661,8 +3670,8 @@ function combatDamageResultHtml(damage){
  return '<div class="combat-damage-result'+(damage.defeated?' defeated':'')+'">'+
   '<div class="combat-damage-grid">'+
    '<div class="combat-damage-col"><span>Skada</span><b>'+weaponValue+'</b><small>'+escAttr(weaponFormula)+'</small></div>'+
-   '<i class="combat-damage-op">+</i>'+
-   '<div class="combat-damage-col"><span>SB</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>'+
+   (spellDamage?'':'<i class="combat-damage-op">+</i>'+
+    '<div class="combat-damage-col"><span>SB</span><b>'+bonusValue+'</b><small>'+escAttr(bonusFormula)+'</small></div>')+
    '<i class="combat-damage-op">−</i>'+
    '<div class="combat-damage-col"><span>Rustning</span><b>'+armor+'</b><small>'+escAttr(armorText)+'</small></div>'+
    (ward?'<i class="combat-damage-op">−</i><div class="combat-damage-col"><span>Skydd</span><b>'+ward+'</b><small>'+escAttr((damage.protection_names||[]).join(', ')||'Effekt')+'</small></div>':'')+
@@ -4077,7 +4086,7 @@ async function combatCastManualSpell(actor,action,target=null){
   result.barrier=await combatResolveBeskyddarePassage(actor,target,eg);
   if(result.barrier.blocked){result.blocked_by_beskyddare=true;result.gm_resolution_required=false;result.healing_pending=false}
  }
- combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ combatHideMagicResultPopup();
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(spellName,rolled.outcome);
  const round=Number(activeCombat.round_number)||1;
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',
@@ -4177,7 +4186,7 @@ async function combatCastStatusSpell(actor,target,action){
   result.barrier=await combatResolveBeskyddarePassage(actor,target,eg);
   if(result.barrier.blocked)result.blocked_by_beskyddare=true
  }
- combatShowOutcomeOverlay(rolled.outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ combatHideMagicResultPopup();
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(spellName,rolled.outcome);
  if(rolled.success&&!resisted&&!result.blocked_by_beskyddare&&await combatDeferForAntimagic(actor,action,result,[target.id],'status')){
   await loadActiveCombat(null,{preserveSelectedTarget:true});return
@@ -4218,7 +4227,7 @@ async function combatCastAreaSpell(actor,action){
   outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
   effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,area_center:center,area_radius:radius};
  if(erf)result.erf=erf;
- combatShowOutcomeOverlay(rolled.outcome,data.spell_name+' · T20 '+rolled.roll+' mot FV '+fv);
+ combatHideMagicResultPopup();
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(data.spell_name,rolled.outcome);
  if(rolled.success){
   result.barrier=await combatResolveBeskyddarePassage(actor,center,eg);
@@ -4256,7 +4265,7 @@ async function combatResolveTestFireball(actor,target,action){
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:combatSpellActualPsyCost(action,outcome,eg),spell_name:spellName,attack_mode:'ranged',full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',rule_engine:'expert_skill',hit_resolved:!success};
- combatShowOutcomeOverlay(outcome,spellName+' · T20 '+rolled.roll+' mot FV '+fv);
+ combatHideMagicResultPopup();
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(spellName,outcome);
  await combatPayForSpell(actor,result.psy_cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
@@ -5347,11 +5356,6 @@ function combatSpellResultHtml(action){
  return '<div class="combat-attack-result combat-spell-result '+escAttr(result.outcome)+'">'+
   '<div class="combat-attack-result-main">'+
    '<div class="combat-attack-result-heading combat-spell-outcome-banner"><span>Besvärjelseslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
-   '<div class="combat-attack-result-rolls"><span>T20 <b>'+escAttr(result.roll??'—')+'</b> mot FV <b>'+escAttr(result.fv??'—')+'</b></span>'+
-    (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+escAttr(result.confirmation_roll)+'</b></span>':'')+
-    '<span>EG <b>'+escAttr(result.effect_grade??data.effect_grade??'—')+'</b></span>'+
-    (data.item_magic?'<span>×<b>'+escAttr(data.item_magic.effect_multiplier||1)+'</b> från '+escAttr(data.item_magic.item_name||'föremål')+'</span>':'')+
-    '<span>PSY −<b>'+escAttr(result.psy_cost??'—')+'</b></span></div>'+
    '<div class="combat-spell-effect-surface">'+
     (artPath?'<div class="combat-spell-effect-artwork" data-spell-art-path="'+escAttr(artPath)+'"'+
       ' data-focus-x="'+artX+'" data-focus-y="'+artY+'" data-zoom="'+artZoom+'" aria-hidden="true"><img alt="" hidden></div>':'')+
@@ -5370,8 +5374,8 @@ function combatSpellResultHtml(action){
    (info?'<div class="combat-spell-rule-note"><b>Om besvärjelsen</b> '+escAttr(info.slice(0,240))+(info.length>240?'…':'')+'</div>':'')+
    (result.erf&&result.erf.awarded>0?'<div class="combat-erf-result gained"><b>+'+escAttr(result.erf.awarded)+' ERF</b></div>':'')+
    (result.target_results?.length
-    ?result.target_results.map(entry=>combatDamageResultHtml(entry.damage)).join('')
-    :combatDamageResultHtml(result.damage))+
+    ?result.target_results.map(entry=>combatDamageResultHtml(entry.damage,true)).join('')
+    :combatDamageResultHtml(result.damage,true))+
    '</div>'+
   '</div></div>'
 }
@@ -5546,11 +5550,8 @@ function combatSpellCastPanelHtml(){
   combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action))+
   combatMagicTargetPickerHtml(actor,action)+
   (resolved?
-   combatSpellResultHtml(action)+
-   '<details class="combat-magic-detail-values"><summary>Slagvärden och besvärjelsedata</summary>'+
-    combatMagicFactsHtml(data,action)+'</details>':
+   combatSpellResultHtml(action):
    combatMagicStatusHtml(label,detail,state)+
-   combatMagicFactsHtml(data,action)+
    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
  '</section>'
 }
