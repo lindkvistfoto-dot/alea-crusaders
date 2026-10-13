@@ -5302,7 +5302,6 @@ function combatAttackPanelWeaponHtml(actor,action,target){
 /* Shared illustrated participant card for pending parries and resolved/planned attacks.
  * Uses existing portrait registry; no combat state or attack calculations change. */
 function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=false){
- const kp=(combatant?.current_kp==null?'—':combatant.current_kp)+(combatant?.max_kp==null?'':' / '+combatant.max_kp);
  const name=String(combatant?.name_snapshot||'—');
  const portrait=combatant?combatRowPortraitUrl(combatant):'';
  const initials=typeof combatTokenInitials==='function'?combatTokenInitials(name):name.slice(0,2);
@@ -5310,7 +5309,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
- const picker=targetPicker&&['FÖRSVARAR','MÅL'].includes(label)&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const picker=targetPicker&&['FÖRSVARAR','MÅL'].includes(label);
  const magic=label==='MÅL',tag=picker?'button':'div';
  const attrs=picker?' type="button" onclick="'+(magic?'combatToggleMagicTargetPicker()':'combatTogglePortraitTargetPicker()')+'" aria-label="'+
   escAttr(magic?(combatant?'Byt magimål från '+name:'Välj magimål'):(combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
@@ -5321,9 +5320,8 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
   '</'+tag+'>'+
   '<div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">'+escAttr(label)+'</span>'+
-   '<b class="combat-duelist-name" title="'+escAttr(name)+'">'+
+   '<b class="combat-duelist-name" title="'+escAttr(name+(itemText?' · '+itemText:''))+'">'+
      (combatant?.status==='dead'?'☠ ':'')+escAttr(name)+'</b>'+
-   '<small class="combat-duelist-meta">KP '+escAttr(kp)+(itemText?' · '+escAttr(itemText):'')+'</small>'+
   '</div></div>'
 }
 
@@ -5445,7 +5443,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
    needsTarget?'Välj mål':kind==='manual'?'Inget särskilt mål':'Själv / omgivning';
  const description=area?'Områdesbesvärjelse':kind==='heal'?'Läkning':
    kind==='status'?'Magisk effekt':kind==='damage'?'Besvärjelsens mål':'';
- const mobileChoice=!preparing&&canChooseTarget&&!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const mobileChoice=!preparing&&canChooseTarget;
  // A normal spell has no target in preparation SR, even when another
  // combatant is selected elsewhere on the map.
  const iconPath=combatSpellArtPath(data.spell_icon_path)||combatSpellArtPath(artwork?.path);
@@ -5532,8 +5530,7 @@ function combatMagicTargetPickerHtml(actor,action){
    '" aria-pressed="'+active+'" onclick="combatChooseMagicTarget(\''+escAttr(id)+'\')">'+
     escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
  }).join('');
- const mobile=!!window.matchMedia?.('(max-width:760px)')?.matches;
- if(mobile&&!combatMobileMagicTargetPickerOpen&&buttons)
+ if(!combatMobileMagicTargetPickerOpen&&buttons)
   return '<div class="combat-magic-target-collapsed" role="status">'+
     (selected&&candidates.has(selected)?'Målet är valt. Tryck på porträttet för att byta mål.':'Tryck på målporträttet ovan för att välja mål.')+'</div>';
  return '<div id="combatMagicTargetMenu" class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
@@ -5758,7 +5755,6 @@ function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKe
  },delay);
 }
 function combatTogglePortraitTargetPicker(){
- if(!window.matchMedia?.('(max-width:760px)')?.matches)return;
  const actor=combatActiveActor(),action=combatChosenAction(actor);
  if(combatActionDefinition(action)?.type!=='attack'||action?.status!=='planned')return;
  combatMobileTargetPickerOpen=!combatMobileTargetPickerOpen;
@@ -5796,7 +5792,7 @@ function combatAttackPanelHtml(){
   const attackWeapon=result.weapon_name||attack.source_data?.weapon_name||'Vapen';
   const optionText=pending.options.map(option=>option.name).join(' / ');
   return '<section class="combat-mini-attack reaction combat-defense-attack">'+
-   '<div class="combat-mini-title"><span>ANFALL</span><b>Lyckat närstridsanfall</b></div>'+
+   '<div class="combat-mini-title"><b>Lyckat närstridsanfall</b></div>'+
    '<div class="combat-mini-duel combat-illustrated-duel">'+
     combatMiniParticipantHtml('ATTACKERAR',pending.attacker,'')+
     '<div class="combat-mini-arrow">→</div>'+
@@ -5818,15 +5814,15 @@ function combatAttackPanelHtml(){
  const mode=def.mode||action?.source_data?.mode||'auto',selectedWeapon=combatActionWeapon(actor,action,mode);
  let instruction='';
  if(action.status==='planned'){
-  if(!target)instruction=targets.size+' giltiga mål är markerade. Klicka på mål på kartan eller i turordningen. Tryck Attack igen för att avbryta.';
-  else if(!selectedWeapon){
-   const valid=combatAttackWeaponOptions(actor,mode).filter(weapon=>combatAttackTargetInfo(actor,target,weapon,mode));
-   instruction=valid.length>1?'Välj vilket vapen som används mot målet.':'Tryck på attackknappen igen för att slå attacken.'
-  }else instruction='Målet är valt. Klicka på målet igen för att avmarkera, eller tryck Attack igen för att slå.'
+  if(!target)instruction='Välj mål via porträttet eller kartan.';
+  else if(!selectedWeapon)instruction='Välj vapen för attacken.';
  }
  const targetInfo=target&&selectedWeapon?combatAttackTargetInfo(actor,target,selectedWeapon,mode):null;
+ const availableWeapons=target?combatAttackWeaponOptions(actor,mode).filter(weapon=>
+  combatAttackTargetInfo(actor,target,weapon,mode)):[];
+ const canConfirm=action.status==='planned'&&!!target&&
+  (!!targetInfo||(!selectedWeapon&&availableWeapons.length===1));
  return '<section class="combat-mini-attack '+(action.status==='resolved'?'resolved':'planning')+'">'+
-  '<div class="combat-mini-title"><span>ANFALL</span></div>'+
   '<div class="combat-mini-duel combat-illustrated-duel">'+
    combatMiniParticipantHtml('ATTACKERAR',actor,'')+
    '<div class="combat-mini-arrow">→</div>'+
@@ -5836,8 +5832,10 @@ function combatAttackPanelHtml(){
   '</div>'+
   (action.status==='planned'?combatPortraitTargetPickerHtml(targets,target):'')+
   (action.status==='planned'?combatAttackPanelWeaponHtml(actor,action,target):'')+
-  (action.status==='planned'&&target?'<div class="combat-mobile-attack-execute">'+combatAttackExecutionHtml(target)+'</div>':'')+
   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
+  (action.status==='planned'?'<div class="combat-action-confirm">'+
+   '<button type="button" class="btn combat-confirm-attack" onclick="combatAttackButton(event,\''+escAttr(actor.id)+'\')"'+
+   (!canConfirm?' disabled':'')+'>⚔ Bekräfta attack</button></div>':'')+
   (action.status==='resolved'?combatAttackResultHtml(action):'')+
  '</section>'
 }
