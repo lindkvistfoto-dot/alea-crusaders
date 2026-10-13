@@ -459,9 +459,9 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("function npcShieldOptions");
     expect(legacy).toContain("— Ingen sköld —");
     expect(legacy).toContain("adminNpcDraft.skills.push({skill_id:'',name:'',fv:10})");
-    expect(legacy).toContain("adminNpcDraft.weapons.push({weapon_id:'',name:'',fv:10");
+    expect(legacy).toContain("adminNpcDraft.weapons.push({equipId:crypto.randomUUID(),weapon_id:'',name:'',fv:10");
     expect(legacy).toContain("fv:fv==null?10:fv");
-    expect(legacy).toContain("Nya FV börjar alltid på 10.");
+    expect(legacy).toContain("Välj utrustning och vilken hand som håller den.");
   });
 
 
@@ -613,7 +613,7 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("target.iconKey=rule.icon_key||'generic'");
     expect(legacy).toContain("function setCharacterWeaponMaster");
     expect(legacy).toContain("copyRuleWeaponToInstance(w,rule)");
-    expect(legacy).toContain("if(rule)copyRuleWeaponToInstance(r,rule)");
+    expect(legacy).toContain("if(rule){copyRuleWeaponToInstance(r,rule)");
     expect(legacy).toContain("function openWeaponInstanceEditor");
     expect(legacy).toContain("function saveWeaponInstanceEditor");
     expect(legacy).toContain("weapon_id:r.weapon_id||r.weaponTypeId||''");
