@@ -219,7 +219,9 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
  test('vanliga attacker och pareringar visar inte dubbla flytande resultatrutor',()=>{
   const attack=runtime.slice(runtime.indexOf('async function combatResolveAttackAction('),runtime.indexOf('async function rollCombatAttack('));
   const parry=runtime.slice(runtime.indexOf('async function chooseCombatParry('),runtime.indexOf('function combatReactionPromptHtml()'));
-  expect(attack).not.toContain('combatShowOutcomeOverlay(outcome,');
+  // Fummel får fortfarande visa sin särskilda överläggsruta, men inte vanliga slag.
+  expect((attack.match(/combatShowOutcomeOverlay\(outcome,/g)||[])).toHaveLength(1);
+  expect(attack).toMatch(/if\(outcome==='fumble'\)\{\s*combatShowOutcomeOverlay\(outcome,/);
   expect(attack).toContain("if(outcome!=='fumble')combatHideMagicResultPopup();");
   expect(parry).not.toContain('combatShowMobileDamageOutcome');
   expect(parry).toContain('combatHideMagicResultPopup();');
