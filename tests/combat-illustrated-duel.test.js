@@ -4,7 +4,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js');
 const css=read('features/combat/duel-frames.css');
 const page=read('index.html');
-describe('v0.35.172 · shared illustrated attack and spell frames',()=>{
+describe('v0.35.173 · shared illustrated attack and spell frames',()=>{
  it('uses one middle tile in all combat branches without replacing target interactions',()=>{
   const area=runtime.slice(runtime.indexOf('function combatMagicHeaderHtml('),runtime.indexOf('function combatTurnPortraitHtml('));
   expect(area).toContain("combatDuelCenterHtml('spell'");
@@ -15,6 +15,24 @@ describe('v0.35.172 · shared illustrated attack and spell frames',()=>{
   expect(area).toContain("combatAttackResultHtml(attack)");
   expect(area).toContain("combatSpellResultHtml(action)");
  });
+ it('keeps gold PNG frames without extra outer tiles and enlarges arrows',()=>{
+  expect(css).toContain('padding:0;border:0;');
+  expect(css).toContain('background:transparent;box-shadow:none;text-align:center;');
+  expect(css).toContain('clamp(32px,4vw,58px)');
+  expect(css).toContain('grid-template-columns:minmax(0,1fr) 22px');
+  expect(css).toContain('duel-portrait-frame.png');
+  expect(css).toContain('duel-focus-frame.png');
+ });
+ it('left aligns the spell outcome without redundant roll label and clips the magic art',()=>{
+  const fn=runtime.slice(runtime.indexOf('function combatSpellResultHtml('),runtime.indexOf('function combatMagicFactHtml('));
+  expect(fn).not.toContain('Besvärjelseslag');
+  expect(fn).toContain('combat-spell-outcome-banner"><b>');
+  expect(css).toContain('text-align:left;justify-content:flex-start;');
+  expect(css).toContain('.combat-duel-center.is-spell .combat-duel-center-viewport');
+  expect(css).toContain('overflow:hidden;border-radius:10px;');
+  expect(css).toContain('inset:clamp(5px,1vw,12px)');
+  expect(css).toContain('object-fit:fill;pointer-events:none;');
+ });
  it('uses real image assets and existing artwork resolvers',()=>{
   expect(runtime).toContain('window.aleaEquipmentArt?.src(path)');
   expect(runtime).toContain('data-spell-art-path');
@@ -22,7 +40,7 @@ describe('v0.35.172 · shared illustrated attack and spell frames',()=>{
   expect(css).toContain('duel-focus-frame.png');
   expect(css).toContain('duel-chevron.png');
   expect(css).toContain('button.combat-portrait-target-button');
-  expect(page).toContain('duel-frames.css?v=0.35.172');
+  expect(page).toContain('duel-frames.css?v=0.35.173');
   for(const name of ['duel-portrait-frame.png','duel-focus-frame.png','duel-chevron.png']){
    const bytes=readFileSync(new URL('../assets/combat/frames/'+name,import.meta.url));
    expect(bytes.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
