@@ -1,14 +1,14 @@
-/* Alea Crusaders v0.35.172: transparent PNG frame assets and shared three-part duel. */
+/* Alea Crusaders v0.35.173: transparent PNG frame assets and shared three-part duel. */
 #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
- display:grid;grid-template-columns:minmax(0,1fr) clamp(12px,2vw,22px) minmax(0,1.12fr) clamp(12px,2vw,22px) minmax(0,1fr);
- gap:clamp(2px,.5vw,8px);align-items:stretch;min-width:0;isolation:isolate;
+ display:grid;grid-template-columns:minmax(0,1fr) clamp(32px,4vw,58px) minmax(0,1.12fr) clamp(32px,4vw,58px) minmax(0,1fr);
+ gap:clamp(2px,.35vw,7px);align-items:stretch;min-width:0;isolation:isolate;
 }
 #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card,
 #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card.defender{
  display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;
- gap:0;min-width:0;min-height:0;padding:5px 5px 8px;border:1px solid #a47b4977;
- border-radius:9px;box-sizing:border-box;
- background:linear-gradient(145deg,#15100cdd,#1f140fdd);box-shadow:none;text-align:center;
+ gap:0;min-width:0;min-height:0;padding:0;border:0;
+ border-radius:0;box-sizing:border-box;
+ background:transparent;box-shadow:none;text-align:center;
 }
 #combatPage .combat-illustrated-duel .combat-duelist-card::before,
 #combatPage .combat-illustrated-duel .combat-duelist-card::after{display:none}
@@ -46,12 +46,13 @@
 #combatPage .combat-illustrated-duel .combat-mini-arrow{
  align-self:center;display:block;width:100%;height:auto;aspect-ratio:1;
  color:transparent;font-size:0;text-shadow:none;pointer-events:none;
+ position:relative;z-index:4;transform:scale(1.18);
  background:url("../../assets/combat/frames/duel-chevron.png") center/contain no-repeat;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center{
  display:flex;flex-direction:column;align-items:stretch;position:relative;min-width:0;
- box-sizing:border-box;padding:5px 5px 8px;border:1px solid #ad875477;border-radius:9px;
- background:linear-gradient(145deg,#150e0bdd,#21130edd);text-align:center;
+ box-sizing:border-box;padding:0;border:0;border-radius:0;
+ background:transparent;box-shadow:none;text-align:center;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center-role{
  padding:3px 0 5px;color:#efd5aa;font:700 clamp(8px,.95vw,12px)/1.12 Georgia,serif;
@@ -74,7 +75,8 @@
  font-size:clamp(26px,4.5vw,55px);color:#d0a469;
 }
 #combatPage .combat-illustrated-duel .combat-duel-spell-art{
- position:absolute;inset:1px;z-index:1;overflow:hidden;border-radius:10px;background:#26140a88;
+ position:absolute;inset:clamp(5px,1vw,12px);z-index:1;overflow:hidden;
+ border-radius:7px;background:transparent;
 }
 #combatPage .combat-illustrated-duel .combat-duel-spell-art img{
  position:absolute;display:block;max-width:none!important;max-height:none!important;
@@ -95,13 +97,24 @@
 #combatPage .combat-illustrated-duel [data-combat-crop="full"] .combat-duel-weapon-art img{
  inset:0;width:100%;height:100%;object-fit:contain;
 }
+/* Keep the saved, pixel-accurate crop within the gold spell frame. */
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell .combat-duel-center-viewport{
+ overflow:hidden;border-radius:10px;
+}
+/* The cast result is the first and only item in its banner. */
+#combatPage .combat-mini-magic .combat-spell-outcome-banner{
+ text-align:left;justify-content:flex-start;
+}
+#combatPage .combat-mini-magic .combat-spell-outcome-banner>b{
+ margin:0;text-align:left;justify-content:flex-start;
+}
 @media(max-width:760px){
  #combatPage .combat-shell-live .combat-mini-attack .combat-mini-duel.combat-illustrated-duel{
-  grid-template-columns:minmax(0,1fr) 11px minmax(0,1.12fr) 11px minmax(0,1fr);gap:2px;
+  grid-template-columns:minmax(0,1fr) 22px minmax(0,1.12fr) 22px minmax(0,1fr);gap:2px;
  }
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card,
  #combatPage .combat-illustrated-duel .combat-mini-side.combat-duelist-card.defender,
- #combatPage .combat-illustrated-duel .combat-duel-center{padding:3px 2px 6px;border-radius:7px}
+ #combatPage .combat-illustrated-duel .combat-duel-center{padding:0;border:0;border-radius:0}
  #combatPage .combat-illustrated-duel .combat-duelist-role,
  #combatPage .combat-illustrated-duel .combat-duel-center-role{font-size:8px;padding-bottom:3px}
  #combatPage .combat-illustrated-duel .combat-duelist-name,
