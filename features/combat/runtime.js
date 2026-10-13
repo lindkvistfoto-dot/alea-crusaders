@@ -5292,7 +5292,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
- const picker=targetPicker&&label==='FÖRSVARAR',tag=picker?'button':'div';
+ const picker=targetPicker&&label==='FÖRSVARAR'&&!!window.matchMedia?.('(max-width:760px)')?.matches,tag=picker?'button':'div';
  const attrs=picker?' type="button" onclick="combatTogglePortraitTargetPicker()" aria-label="'+
   escAttr((combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
   '" aria-expanded="'+(combatMobileTargetPickerOpen?'true':'false')+'" aria-controls="combatPortraitTargetMenu"':' aria-hidden="true"';
