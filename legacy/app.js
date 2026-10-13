@@ -2523,7 +2523,17 @@ function beginAdminNpcDraft(x,id,actorLabel='SLP',storageKind='npc'){
  let skills=Array.isArray(x?.skills)?JSON.parse(JSON.stringify(x.skills)):[],weapons=Array.isArray(x?.weapons)?JSON.parse(JSON.stringify(x.weapons)):[],shield=x?.shield&&typeof x.shield==='object'&&!Array.isArray(x.shield)?JSON.parse(JSON.stringify(x.shield)):{};
  let spells=Array.isArray(x?.spells)?JSON.parse(JSON.stringify(x.spells)):[];
  skills=skills.map(r=>({...r,fv:npcNum(r?.fv)??10}));
- weapons=weapons.map(r=>({...r,fv:npcNum(r?.fv)??10}));
+ weapons=weapons.map((r,i)=>({...r,equipId:r.equipId||('npc-weapon-'+i),hand:r.hand||'',fv:npcNum(r?.fv)??10}));
+ // Pre-existing profiles had only a weapon inventory, not hand assignments.
+ if(!weapons.some(w=>w.hand)&&!shield.hand){
+  const first=weapons.find(w=>w.name||w.weapon_id||w.weaponTypeId);
+  if(first){
+   first.hand=String(first.handling||'').toUpperCase()==='2H'?'both':'right';
+   if(first.hand!=='both'&&shield.name)shield.hand='left';
+   else if(first.hand!=='both'){const second=weapons.find(w=>w!==first&&(w.name||w.weapon_id||w.weaponTypeId));if(second)second.hand='left'}
+  }else if(shield.name)shield.hand='left';
+ }
+ shield.equipId=shield.equipId||'npc-shield';
  if(shield?.name&&npcNum(shield.fv)==null)shield.fv=10;
  adminNpcDraft={
   id:id||'',attributes:normalizeNpcAttributes(x?.attributes),
@@ -2605,11 +2615,11 @@ function npcShieldOptions(selectedName){
 function setAdminNpcShieldChoice(value){
  if(!adminNpcDraft)return;let sh=adminNpcDraft.shield||{};
  if(value==='__custom__'){sh._custom=true}else{sh._custom=false;sh.name=value||''}
- if(value&&npcNum(sh.fv)==null)sh.fv=10;adminNpcDraft.shield=sh;
+ if(value&&npcNum(sh.fv)==null)sh.fv=10;if(!value)sh.hand='none';adminNpcDraft.shield=sh;
  let wrap=$('npcShieldCustomWrap'),custom=$('npcShieldCustomName'),fv=$('npcShieldFv');
  if(wrap)wrap.classList.toggle('hidden',value!=='__custom__');
  if(custom&&value!=='__custom__')custom.value=sh.name||'';
- if(fv)fv.value=value?(sh.fv??10):''
+ if(fv)fv.value=value?(sh.fv??10):'';const picker=$('npcShieldHand');if(picker)picker.value=sh.hand||'none'
 }
 function setAdminNpcShieldName(value){if(adminNpcDraft){adminNpcDraft.shield=adminNpcDraft.shield||{};adminNpcDraft.shield.name=String(value||'');adminNpcDraft.shield._custom=true}}
 function npcArmorOptions(selected){
@@ -2628,6 +2638,7 @@ function collectAdminNpcAttributes(){
  let movement=document.getElementById('npcMovementOverride')?.value?.trim();
  if(special){let kp=Number(special);if(!Number.isSafeInteger(kp)||kp<1||kp>9999)throw Error('Särskilda KP ska vara 1–9999.');out.KP=kp}
  if(movement){let move=Number(movement);if(!Number.isSafeInteger(move)||move<0||move>999)throw Error('Särskild förflyttning ska vara 0–999.');out.FORFLYTTNING=move}
+ out.ambidextrous=$('npcAmbidextrous')?.checked===true;
  return out
 }
 function updateNpcKpPreview(){let el=$('npcKpPreview');if(el)el.textContent=npcCalculatedKp(collectAdminNpcAttributes())??'—'}
@@ -2697,17 +2708,42 @@ function sanitizeNpcSpells(list){
   erf:Math.max(0,npcNum(s.erf)??0)
  }))
 }
+function npcHandSelect(hand,index){
+ return '<select aria-label="Utrustad hand" title="Placering i strid" onchange="setAdminNpcWeaponHand('+index+',this.value)">'+
+  [['none','Ej utrustat'],['right','Höger hand'],['left','Vänster hand'],['both','Två händer']].map(([v,label])=>'<option value="'+v+'"'+((hand||'none')===v?' selected':'')+'>'+label+'</option>').join('')+'</select>'
+}
+function setAdminNpcWeaponHand(index,hand){
+ if(!adminNpcDraft?.weapons?.[index]||!['none','left','right','both'].includes(hand))return;
+ const weapon=adminNpcDraft.weapons[index];
+ if(String(weapon.handling||'').toUpperCase()==='2H'&&hand!=='none')hand='both';
+ weapon.hand=hand;
+ if(hand==='both'){
+  adminNpcDraft.weapons.forEach((w,i)=>{if(i!==index)w.hand='none'});
+  if(adminNpcDraft.shield)adminNpcDraft.shield.hand='none';
+ }else if(hand!=='none'){
+  adminNpcDraft.weapons.forEach((w,i)=>{if(i!==index&&(w.hand===hand||w.hand==='both'))w.hand='none'});
+  if(adminNpcDraft.shield?.hand===hand)adminNpcDraft.shield.hand='none';
+ }
+ renderAdminNpcWeapons();const picker=$('npcShieldHand');if(picker)picker.value=adminNpcDraft.shield?.hand||'none';
+}
+function setAdminNpcShieldHand(hand){
+ if(!adminNpcDraft||!['none','left','right'].includes(hand))return;
+ const sh=adminNpcDraft.shield||(adminNpcDraft.shield={});
+ sh.hand=sh.name?hand:'none';
+ if(sh.hand!=='none')adminNpcDraft.weapons.forEach(w=>{if(w.hand===sh.hand||w.hand==='both')w.hand='none'});
+ renderAdminNpcWeapons()
+}
 function renderAdminNpcWeapons(){
  let el=$('npcWeaponsList');if(!el||!adminNpcDraft)return;
- el.innerHTML=adminNpcDraft.weapons.length?adminNpcDraft.weapons.map((r,i)=>{let custom=npcWeaponChoice(r)==='__custom__';return '<div class="slp-list-row slp-weapon-row"><select aria-label="Vapen" onchange="setAdminNpcWeaponChoice('+i+',this.value)">'+npcWeaponOptions(r)+'</select><input class="slp-weapon-name '+(custom?'':'preset')+'" placeholder="'+(custom?'Eget vapennamn':'Vapennamn')+'" value="'+escAttr(r.name||'')+'" oninput="setAdminNpcWeapon('+i+',\'name\',this.value)"><input type="number" min="0" max="99" placeholder="FV" value="'+escAttr(r.fv??10)+'" oninput="setAdminNpcWeapon('+i+',\'fv\',this.value)"><input placeholder="Skada" value="'+escAttr(r.damage||'')+'" oninput="setAdminNpcWeapon('+i+',\'damage\',this.value)"><div class="slp-weapon-actions"><button class="smallbtn" type="button" onclick="openWeaponInstanceEditor(\'npc\','+i+')" title="Alla vapendata">⚙</button><button class="deletebtn" type="button" onclick="removeAdminNpcWeapon('+i+')" title="Ta bort">×</button></div></div>'}).join(''):'<div class="slp-list-empty">Inga vapen tillagda.</div>'
+ el.innerHTML=adminNpcDraft.weapons.length?adminNpcDraft.weapons.map((r,i)=>{let custom=npcWeaponChoice(r)==='__custom__';return '<div class="slp-list-row slp-weapon-row"><select aria-label="Vapen" onchange="setAdminNpcWeaponChoice('+i+',this.value)">'+npcWeaponOptions(r)+'</select><input class="slp-weapon-name '+(custom?'':'preset')+'" placeholder="'+(custom?'Eget vapennamn':'Vapennamn')+'" value="'+escAttr(r.name||'')+'" oninput="setAdminNpcWeapon('+i+',\'name\',this.value)"><input type="number" min="0" max="99" placeholder="FV" value="'+escAttr(r.fv??10)+'" oninput="setAdminNpcWeapon('+i+',\'fv\',this.value)"><input placeholder="Skada" value="'+escAttr(r.damage||'')+'" oninput="setAdminNpcWeapon('+i+',\'damage\',this.value)">'+npcHandSelect(r.hand,i)+'<div class="slp-weapon-actions"><button class="smallbtn" type="button" onclick="openWeaponInstanceEditor(\'npc\','+i+')" title="Alla vapendata">⚙</button><button class="deletebtn" type="button" onclick="removeAdminNpcWeapon('+i+')" title="Ta bort">×</button></div></div>'}).join(''):'<div class="slp-list-empty">Inga vapen tillagda.</div>'
 }
-function addAdminNpcWeapon(){if(!adminNpcDraft)return;adminNpcDraft.weapons.push({weapon_id:'',name:'',fv:10,damage:'',_custom:false});renderAdminNpcWeapons()}
+function addAdminNpcWeapon(){if(!adminNpcDraft)return;adminNpcDraft.weapons.push({equipId:crypto.randomUUID(),weapon_id:'',name:'',fv:10,damage:'',hand:'none',_custom:false});renderAdminNpcWeapons()}
 function removeAdminNpcWeapon(i){if(!adminNpcDraft)return;adminNpcDraft.weapons.splice(i,1);renderAdminNpcWeapons()}
 function setAdminNpcWeaponChoice(i,value){
  let r=adminNpcDraft?.weapons?.[i];if(!r)return;
  if(value.startsWith('rule:')){
   let id=value.slice(5),rule=ruleWeapons.find(x=>x.id===id);r.weapon_id=id;r.weaponTypeId=id;r._custom=false;
-  if(rule)copyRuleWeaponToInstance(r,rule)
+  if(rule){copyRuleWeaponToInstance(r,rule);if(String(r.handling||'').toUpperCase()==='2H'&&r.hand!=='none')setAdminNpcWeaponHand(i,'both')}
  }else if(value.startsWith('name:')){
   let name=value.slice(5),preset=npcKnownWeaponPresets().find(p=>p.name.localeCompare(name,'sv',{sensitivity:'base'})===0);
   r.weapon_id='';r._custom=false;r.name=preset?.name||name;if(preset?.damage)r.damage=preset.damage
@@ -2731,12 +2767,12 @@ function setAdminNpcArmorType(value){
 }
 function collectAdminNpcShield(){
  let choice=$('npcShieldChoice')?.value||'',name=choice==='__custom__'?($('npcShieldCustomName')?.value.trim()||''):choice;
- if(!name)return{name:'',fv:null,bv:null};
- let fv=npcNum($('npcShieldFv')?.value);return{name,fv:fv==null?10:fv,bv:npcNum($('npcShieldBv')?.value)}
+ if(!name)return{name:'',fv:null,bv:null,hand:'none',equipId:'npc-shield'};
+ let fv=npcNum($('npcShieldFv')?.value);return{name,fv:fv==null?10:fv,bv:npcNum($('npcShieldBv')?.value),hand:['left','right'].includes($('npcShieldHand')?.value)?$('npcShieldHand').value:'none',equipId:adminNpcDraft?.shield?.equipId||'npc-shield'}
 }
 function collectAdminNpcArmor(){return{armor_type_id:$('npcArmorType')?.value||'',name:$('npcArmorName')?.value.trim()||'',absorption:npcNum($('npcArmorAbs')?.value)}}
 function sanitizeNpcSkills(list){return(list||[]).filter(r=>r.skill_id||r.name).map(r=>({skill_id:r.skill_id||'',name:(ruleSkills.find(x=>x.id===r.skill_id)?.name||r.name||''),fv:npcNum(r.fv)}))}
-function sanitizeNpcWeapons(list){return(list||[]).filter(r=>r.weapon_id||r.weaponTypeId||String(r.name||'').trim()).map(r=>({weapon_id:r.weapon_id||r.weaponTypeId||'',weaponTypeId:r.weaponTypeId||r.weapon_id||'',weaponCategory:r.weaponCategory||'melee',name:String(r.name||'').trim(),fv:npcNum(r.fv),damage:String(r.damage||'').trim(),handling:r.handling||'',strengthGroup:npcNum(r.strengthGroup),length:npcNum(r.length),bep:npcNum(r.bep??r.weight),weight:npcNum(r.bep??r.weight),bv:npcNum(r.bv),weaponType:r.weaponType||'',price:npcNum(r.price),range:r.range||'',reloadRounds:npcNum(r.reloadRounds),tags:Array.isArray(r.tags)?r.tags:[],masterNotes:r.masterNotes||''}))}
+function sanitizeNpcWeapons(list){return(list||[]).filter(r=>r.weapon_id||r.weaponTypeId||String(r.name||'').trim()).map(r=>({weapon_id:r.weapon_id||r.weaponTypeId||'',weaponTypeId:r.weaponTypeId||r.weapon_id||'',weaponCategory:r.weaponCategory||'melee',name:String(r.name||'').trim(),equipId:r.equipId||crypto.randomUUID(),hand:['left','right','both'].includes(r.hand)?r.hand:'none',fv:npcNum(r.fv),damage:String(r.damage||'').trim(),handling:r.handling||'',strengthGroup:npcNum(r.strengthGroup),length:npcNum(r.length),bep:npcNum(r.bep??r.weight),weight:npcNum(r.bep??r.weight),bv:npcNum(r.bv),weaponType:r.weaponType||'',price:npcNum(r.price),range:r.range||'',reloadRounds:npcNum(r.reloadRounds),tags:Array.isArray(r.tags)?r.tags:[],masterNotes:r.masterNotes||''}))}
 function npcAdminSummary(x){
  let kp=npcCalculatedKp(x?.attributes),skills=Array.isArray(x?.skills)?x.skills.length:0,weapons=Array.isArray(x?.weapons)?x.weapons.length:0,spells=Array.isArray(x?.spells)?x.spells.length:0;
  return [x?.race||'',x?.profession||'',kp!=null?'KP '+kp:'',skills?skills+' färd.':'',weapons?weapons+' vapen':'',spells?spells+' besv.':''].filter(Boolean).join(' · ')||'Ingen stridsdata'
@@ -2755,7 +2791,7 @@ function adminNpcEditorHtml(x,id,opts={}){
   '<div class="adminform-section"><div class="admin-subsection-head slp-attribute-head"><div><h3>Grundegenskaper</h3><p class="muted" style="margin:3px 0 0">De sju grundegenskaperna för '+actorLabel.toLowerCase()+'.</p></div><div class="slp-attribute-actions"><button id="npcRaceRandomBtn" class="smallbtn" type="button" onclick="applyNpcRaceAttributes(\'random\')">🎲 Slumpa enligt ras</button><button id="npcRaceTypicalBtn" class="smallbtn" type="button" onclick="applyNpcRaceAttributes(\'typical\')">Använd typvärden</button></div></div>'+adminNpcAttributesHtml()+'</div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Färdigheter</h3><p class="muted" style="margin:3px 0 0">Lägg in de färdigheter som är relevanta.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcSkill()">+ Färdighet</button></div><div id="npcSkillsList" class="slp-list"></div></div>'+
   (isNpc?'<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Besvärjelser</h3><p class="muted" style="margin:3px 0 0">Besvärjelser sparas på SLP och används i strid.</p></div><button class="smallbtn" type="button" onclick="addAllAdminNpcSpells()">Lär alla (FV 15)</button></div><details><summary id="npcSpellSummary">Visa besvärjelser</summary><div id="npcSpellsList" class="slp-list"></div></details></div>':'')+
-  '<div class="adminform-section slp-equipment-section"><div class="admin-subsection-head"><div><h3>Vapen och sköld</h3><p class="muted" style="margin:3px 0 0">Välj vapen och sköld i dropdown. Nya FV börjar alltid på 10.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcWeapon()">+ Vapen</button></div><div id="npcWeaponsList" class="slp-list"></div><div class="slp-equipment-grid slp-shield-grid"><label>Sköld<select id="npcShieldChoice" onchange="setAdminNpcShieldChoice(this.value)">'+npcShieldOptions(sh.name||'')+'</select></label><label id="npcShieldCustomWrap" class="'+(customShield?'':'hidden')+'">Eget namn<input id="npcShieldCustomName" value="'+escAttr(sh.name||'')+'" placeholder="Sköldens namn" oninput="setAdminNpcShieldName(this.value)"></label><label>FV<input id="npcShieldFv" type="number" min="0" max="99" value="'+escAttr(sh.name?(sh.fv??10):'')+'"></label><label>BV<input id="npcShieldBv" type="number" min="0" value="'+escAttr(sh.bv??'')+'"></label></div></div>'+
+  '<div class="adminform-section slp-equipment-section"><div class="admin-subsection-head"><div><h3>Vapen och sköld</h3><p class="muted" style="margin:3px 0 0">Välj utrustning och vilken hand som håller den. Tvåhandsvapen upptar båda händerna.</p></div><button class="smallbtn" type="button" onclick="addAdminNpcWeapon()">+ Vapen</button></div><div id="npcWeaponsList" class="slp-list"></div><label class="admincheck"><input id="npcAmbidextrous" type="checkbox" '+(adminNpcDraft?.attributes?.ambidextrous===true?'checked':'')+'> Ambidextriös (tvåhänt) – båda vapen kan användas självständigt, ett per handling</label><div class="slp-equipment-grid slp-shield-grid"><label>Sköld<select id="npcShieldChoice" onchange="setAdminNpcShieldChoice(this.value)">'+npcShieldOptions(sh.name||'')+'</select></label><label id="npcShieldCustomWrap" class="'+(customShield?'':'hidden')+'">Eget namn<input id="npcShieldCustomName" value="'+escAttr(sh.name||'')+'" placeholder="Sköldens namn" oninput="setAdminNpcShieldName(this.value)"></label><label>Sköld i hand<select id="npcShieldHand" onchange="setAdminNpcShieldHand(this.value)">'+[['none','Ej utrustad'],['left','Vänster hand'],['right','Höger hand']].map(([v,label])=>'<option value="'+v+'"'+((sh.hand||'none')===v?' selected':'')+'>'+label+'</option>').join('')+'</select></label><label>FV<input id="npcShieldFv" type="number" min="0" max="99" value="'+escAttr(sh.name?(sh.fv??10):'')+'"></label><label>BV<input id="npcShieldBv" type="number" min="0" value="'+escAttr(sh.bv??'')+'"></label></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Rustning</h3></div></div><div class="slp-equipment-grid"><label>Rustningstyp<select id="npcArmorType" onchange="setAdminNpcArmorType(this.value)">'+npcArmorOptions(a.armor_type_id||'')+'</select></label><label>Namn<input id="npcArmorName" value="'+escAttr(a.name||'')+'" placeholder="Egen rustning"></label><label>ABS<input id="npcArmorAbs" type="number" min="0" value="'+escAttr(a.absorption??'')+'"></label></div></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Beskrivning</h3></div></div><label>Beskrivning<textarea id="cnDesc" rows="5">'+escAttr(x?.description||'')+'</textarea></label><label>SL-noteringar<textarea id="cnNotes" rows="3">'+escAttr(x?.gm_notes||'')+'</textarea></label></div>'+
   '<div class="adminform-section"><div class="admin-subsection-head"><div><h3>Stridsikon</h3><p class="muted" style="margin:3px 0 0">Den lilla hexikonen som används på stridskartan.</p></div></div>'+adminCombatIconPickerHtml(isNpc?'npc':actorKind)+'</div>'+
