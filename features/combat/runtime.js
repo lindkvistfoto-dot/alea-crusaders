@@ -5808,16 +5808,39 @@ function combatPortraitTargetPickerHtml(targets,target){
    '<small>Inga giltiga mål inom räckvidd och sikt.</small>')+
  '</div>'
 }
+function combatMovementPanelHtml(){
+ const actor=combatMovementPlanningActor(),plan=combatMovementPlan;
+ if(!actor||!plan)return '';
+ const cost=Math.max(0,Number(plan.cost)||0),remaining=combatMovementAllowance(actor);
+ const destination=cost>0?'Hex '+plan.q+', '+plan.r+' · '+cost+' steg':'Välj destination på kartan';
+ return '<section class="combat-mini-attack combat-action-placeholder combat-movement-panel" aria-label="Förflyttning">'+
+  '<div class="combat-action-placeholder-label"><span aria-hidden="true">➜</span><b>Förflyttning</b></div>'+
+  '<p class="combat-action-placeholder-copy">'+escAttr(destination)+' · kvar '+escAttr(remaining)+'</p>'+
+  '<div class="combat-action-confirm">'+
+   '<button type="button" class="btn combat-confirm-movement" onclick="combatMovementButton(event,\''+escAttr(actor.id)+'\')"'+
+   (!cost?' disabled':'')+'>Bekräfta förflyttning</button>'+
+   '<button type="button" class="btn combat-action-cancel" onclick="combatCancelMovementPanel()">Avbryt</button>'+
+  '</div></section>';
+}
+function combatCancelMovementPanel(){
+ combatMovementPlan=null;combatMovementLastClick=null;renderCombat();
+}
+function combatOtherPanelHtml(){
+ const actor=combatActiveActor(),chosen=combatChosenAction(actor),def=combatActionDefinition(chosen);
+ const open=!!actor&&((String(combatActionMenuId||'')===String(actor.id)&&combatActionMenuKind==='other')||def?.key==='other');
+ if(!open||combatIsMovementPlanning(actor))return '';
+ const selected=def?.key==='other'&&chosen?.status==='planned';
+ return '<section class="combat-mini-attack combat-action-placeholder combat-other-panel" aria-label="Annan handling">'+
+  '<div class="combat-action-placeholder-label"><span aria-hidden="true">⚙</span><b>Annan handling</b></div>'+
+  '<p class="combat-action-placeholder-copy">'+
+    (selected?'Annan handling vald för denna SR.':'Välj annan handling för denna SR.')+
+    ' Fler val och detaljer kommer senare.</p>'+
+  (!selected?'<div class="combat-action-confirm"><button type="button" class="btn" onclick="chooseCombatPrimaryAction(\''+escAttr(actor.id)+'\',\'other\')">Välj annan handling</button></div>':'')+
+ '</section>';
+}
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
- const activeActor=combatActiveActor(),selectedAction=combatChosenAction(activeActor);
- if(activeActor&&combatActionDefinition(selectedAction)?.key==='spell_cast'&&
-    selectedAction?.status==='planned'&&!selectedAction.source_data?.spell_prepared){
-  return '<section class="combat-mini-attack combat-action-placeholder combat-magic-select-panel" aria-label="Magi">'+
-   '<div class="combat-action-placeholder-label"><span aria-hidden="true">✦</span><b>Välj besvärjelse</b></div>'+
-   combatSpellChooserHtml(activeActor,selectedAction)+'</section>';
- }
  const pending=combatPendingParryOpportunity();
  if(pending){
   const attack=pending.attack,result=attack.result||{};
@@ -5836,7 +5859,14 @@ function combatAttackPanelHtml(){
    combatDefenseReactionHtml(pending)+
   '</section>'
  }
+ const movement=combatMovementPanelHtml();if(movement)return movement;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
+ if(actor&&def?.key==='spell_cast'&&action?.status==='planned'&&!action.source_data?.spell_prepared){
+  return '<section class="combat-mini-attack combat-action-placeholder combat-magic-select-panel" aria-label="Magi">'+
+   '<div class="combat-action-placeholder-label"><span aria-hidden="true">✦</span><b>Välj besvärjelse</b></div>'+
+   combatSpellChooserHtml(actor,action)+'</section>';
+ }
+ const other=combatOtherPanelHtml();if(other)return other;
  if(!actor||def?.type!=='attack')return '';
  const targets=combatCurrentAttackTargets();
  const resolvedTargetId=action.status==='resolved'&&action.target_combatant_id?String(action.target_combatant_id):'';
@@ -6063,12 +6093,11 @@ function combatTurnPanelHtml(){
    '<div class="combat-turn-actions">'+
     '<div class="combat-row-tool combat-turn-action-tool move-tool"><button type="button" class="combat-row-tool-btn combat-row-move'+(state.key==='move'?' active':'')+'" title="'+moveTitle+'" aria-label="'+moveTitle+'" onclick="combatMovementButton(event,\''+actor.id+'\')" '+(!canMove?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/movement.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
     '<div class="combat-row-tool combat-turn-action-tool attack-tool"><button type="button" class="combat-row-tool-btn combat-row-attack'+(state.key==='attack'?' active':'')+(attackChosen?' chosen':'')+'" title="Attack" aria-label="Attack" onclick="combatAttackButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/attack.svg?v=0.33.79" alt="" aria-hidden="true"></button>'+combatRowAttackMenuHtml(actor)+'</div>'+
-    '<div class="combat-row-tool combat-turn-action-tool magic-tool"><button type="button" class="combat-row-tool-btn combat-row-magic'+(state.key==='spell'?' active':'')+(magicChosen?' chosen':'')+'" title="'+(combatChosenAction(actor)?.source_data?.spell_prepared?'Slunga besvärjelse':'Förbered besvärjelse')+'" aria-label="Magi" aria-controls="combatTurnMagicPanel" aria-expanded="'+(magicOpen?'true':'false')+'" onclick="combatMagicButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-magic-glyph" aria-hidden="true">✦</span></button></div>'+
-    '<div class="combat-row-tool combat-turn-action-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(state.key==='other'||otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra handlingar" aria-label="Andra handlingar" aria-haspopup="menu" aria-expanded="'+(otherOpen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/other-actions.svg?v=0.33.79" alt="" aria-hidden="true"></button>'+combatRowActionMenuHtml(actor)+'</div>'+
+    '<div class="combat-row-tool combat-turn-action-tool magic-tool"><button type="button" class="combat-row-tool-btn combat-row-magic'+(state.key==='spell'?' active':'')+(magicChosen?' chosen':'')+'" title="'+(combatChosenAction(actor)?.source_data?.spell_prepared?'Slunga besvärjelse':'Förbered besvärjelse')+'" aria-label="Magi" aria-controls="combatActionPanel" aria-expanded="'+(magicChosen?'true':'false')+'" onclick="combatMagicButton(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><span class="combat-magic-glyph" aria-hidden="true">✦</span></button></div>'+
+    '<div class="combat-row-tool combat-turn-action-tool action-tool"><button type="button" class="combat-row-tool-btn combat-row-action'+(state.key==='other'||otherOpen?' active':'')+(otherChosen?' chosen':'')+'" title="Andra handlingar" aria-label="Andra handlingar" aria-controls="combatActionPanel" aria-expanded="'+(otherOpen||otherChosen?'true':'false')+'" onclick="toggleCombatOtherActionsMenu(event,\''+actor.id+'\')" '+(!canAction?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/other-actions.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
     '<div class="combat-row-tool combat-turn-action-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+actor.id+'\')" '+(!canEnd?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/end-round.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
    '</div>'+
   '</div>'+
-  (magicOpen?'<div id="combatTurnMagicPanel" class="combat-turn-magic-host">'+combatRowMagicMenuHtml(actor)+'</div>':'')+
   '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+
  '</div>'
 }
@@ -6698,7 +6727,7 @@ function renderCombat(){
  let logHtml=combatLogRows.length?combatLogRows.map(x=>'<div class="combat-log-row"><span class="combat-log-phase">'+escAttr(combatPhaseLabel(x.phase))+'</span>'+escAttr(x.message)+'</div>').join(''):'<div class="combat-log-row">Ingen stridshändelse loggad ännu.</div>';
  if(combatantDetailCombatantId&&!combatants.some(c=>String(c.id)===String(combatantDetailCombatantId)))combatantDetailCombatantId=null;
  body.innerHTML='<div class="combat-shell combat-shell-live">'+
-  '<div class="combat-left-column">'+combatTurnPanelHtml()+combatAttackPanelHtml()+'</div>'+
+  '<div class="combat-left-column">'+combatTurnPanelHtml()+'<div id="combatActionPanel">'+combatAttackPanelHtml()+'</div></div>'+
   '<div class="combat-center-column">'+
    '<div class="combat-board-wrap">'+combatGmPlacementHintHtml()+
     '<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+combatMapPresetsHtml()+'</div>'+combatMapFooterHtml()+
