@@ -11,7 +11,7 @@ function combatPositionDiceLayer(){
  let rect=board.getBoundingClientRect();
  const mobile=!!window.matchMedia?.('(max-width:760px)')?.matches;
  const round=document.querySelector('#combatPage .combat-shell-live .combat-turn-panel');
- const attack=document.querySelector('#combatPage .combat-shell-live .combat-left-column > .combat-mini-attack');
+ const attack=document.querySelector('#combatPage .combat-shell-live .combat-left-column #combatActionPanel > .combat-mini-attack');
  let overPanels=false;
  if(mobile&&round&&attack){
   const a=round.getBoundingClientRect(),b=attack.getBoundingClientRect();
@@ -5458,7 +5458,6 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
   '</div><div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">FÖRBERED</span>'+
    '<b class="combat-duelist-name">Besvärjelse</b>'+
-   '<small class="combat-duelist-meta">'+escAttr(data.spell_name||'Besvärjelse')+' · EG '+escAttr(data.effect_grade||1)+'</small>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
@@ -5530,7 +5529,7 @@ function combatMagicTargetPickerHtml(actor,action){
    '" aria-pressed="'+active+'" onclick="combatChooseMagicTarget(\''+escAttr(id)+'\')">'+
     escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
  }).join('');
- if(!combatMobileMagicTargetPickerOpen&&buttons)
+ if(!(typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)&&buttons)
   return '<div class="combat-magic-target-collapsed" role="status">'+
     (selected&&candidates.has(selected)?'Målet är valt. Tryck på porträttet för att byta mål.':'Tryck på målporträttet ovan för att välja mål.')+'</div>';
  return '<div id="combatMagicTargetMenu" class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
