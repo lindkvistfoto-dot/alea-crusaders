@@ -25,6 +25,10 @@ function fixture(overrides={}){
   activeCombat:{round_number:3},combatants:[mage,newActor],combatActions:[action],
   combatSelectedTargetId:null,
   combatActiveActor:()=>mage,combatChosenAction:()=>action,
+  combatIsActiveTurn:()=>true,combatCannotAct:()=>false,
+  combatFireballTargets:()=>new Map([['fighter',{mode:'magic',distance:1}]]),
+  combatSpellEffectTargets:()=>[newActor],combatAxialDistance:()=>1,
+  window:{matchMedia:()=>({matches:false})},
   combatActionDefinition:a=>a?.source_data?.action_key==='spell_cast'?{key:'spell_cast'}:{key:'attack'},
   combatOutcomeMeta:o=>({label:{fail:'MISSLYCKAT SLAG',success:'LYCKAT SLAG',
    special:'SÄRSKILT SLAG',perfect:'PERFEKT SLAG',fumble:'FUMMELSLAG'}[o],icon:'✦'}),
@@ -205,7 +209,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const spells=runtime.slice(runtime.indexOf('async function combatCastManualSpell('),runtime.indexOf('function combatLatestResolvedSpellAction()'));
   expect(spells).not.toContain("combatShowOutcomeOverlay(rolled.outcome,spellName+");
   const damage=runtime.slice(runtime.indexOf('async function combatResolveDamage('),runtime.indexOf('function combatParryResultHtml('));
-  expect(damage).toContain('if(weapon?._spell_damage)combatHideMagicResultPopup()');
+  expect(damage).toContain("if(weapon?._spell_damage)if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup()");
  });
  test('helmagirutan använder vald effektbild före ikonen och behåller beskärningen',()=>{
   const {context,action}=fixture();
