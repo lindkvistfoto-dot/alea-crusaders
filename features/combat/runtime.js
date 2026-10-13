@@ -5586,6 +5586,14 @@ function combatSpellCastPanelHtml(){
  // A damage spell cannot target its caster: the default active-combatant
  // selection must not be treated as a valid target.
  const target=kind==='damage'&&String(selectedTarget?.id||'')===String(actor.id)?null:selectedTarget;
+ // Keep secondary rule controls closed by default, but reveal them when
+ // resistance or a ritual is the necessary next step of confirmation.
+ const autoOpenExtras=casting&&currentRound>=readyRound&&(
+  (kind==='status'&&data.magic_binding?.requires_resistance&&!!target&&
+   (data.resistance_target_id!==String(target.id)||
+    !['resisted','affected'].includes(data.resistance_decision)))||
+  (kind==='area'&&data.magic_binding?.cube&&data.beskyddare_ritual_confirmed!==true)||
+  (combatActionMenuKind==='magic'&&String(combatActionMenuId||'')===String(actor.id)));
  let label='Vald besvärjelse',detail='',state='selected',instruction='';
  if(resolved){
   const outcomes={success:'Lyckat',special:'Särskilt',perfect:'Perfekt',fail:'Misslyckat',fumble:'Fummel'};
@@ -5626,7 +5634,7 @@ function combatSpellCastPanelHtml(){
    combatMagicStatusHtml(label,detail,state)+
    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
    (casting&&currentRound>=readyRound?
-    '<details class="combat-magic-extra"><summary>Fler magival</summary>'+
+    '<details class="combat-magic-extra"'+(autoOpenExtras?' open':'')+'><summary>Fler magival</summary>'+
       (typeof combatMagicTargetChooserHtml==='function'?combatMagicTargetChooserHtml(actor,action):'')+'</details>':'')+
    combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound))+
  '</section>'
