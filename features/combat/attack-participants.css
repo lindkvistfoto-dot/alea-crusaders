@@ -858,3 +858,139 @@
   animation:none;
  }
 }
+
+/* v0.35.157 — compact three-choice defense, with illustration-ready art slots.
+ * Mobile: single short row below attack, overlaying the map without reflow. */
+#combatPage .combat-shell-live .combat-defense-drawer .combat-defense-choice:disabled{
+ opacity:.43;
+ filter:grayscale(.8);
+ cursor:not-allowed;
+ pointer-events:none;
+}
+#combatPage .combat-defense-choice-art{
+ display:grid;
+ place-items:center;
+ flex:none;
+ width:27px;
+ height:28px;
+ font-size:22px;
+ line-height:1;
+ /* future icon files can be added with background-image per data-defense-art */
+ background-position:center;
+ background-size:contain;
+ background-repeat:no-repeat;
+}
+#combatPage .combat-shell-live .combat-defense-drawer .combat-defense-decline.combat-defense-choice{
+ display:grid;
+ grid-template-columns:27px minmax(0,1fr) auto;
+ gap:10px;
+ align-items:center;
+ text-align:left;
+ min-height:58px;
+ padding:8px 10px;
+ color:#ffd1c1;
+}
+@media (max-width:1023px){
+ #combatPage .combat-shell-live .combat-defense-attack > .combat-defense-drawer.combat-defense-compact{
+  gap:7px;
+  padding:7px 8px 9px;
+  max-height:none;
+  overflow:visible;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-head{
+  display:grid;
+  grid-template-columns:22px minmax(0,1fr) auto;
+  gap:7px;
+  padding-bottom:6px;
+  min-height:24px;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-emblem{
+  width:22px;
+  height:22px;
+  border-radius:5px;
+  font-size:14px;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-head > div{
+  display:flex;
+  flex-direction:row;
+  align-items:baseline;
+  gap:6px;
+  overflow:hidden;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-head small{
+  font-size:9px;
+  white-space:nowrap;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-head strong{
+  font-size:14px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-alert{
+  padding:3px 6px;
+  font-size:9px;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact > .combat-defense-drawer-actions{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice,
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-decline.combat-defense-choice{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:25px minmax(0,1fr) 12px;
+  justify-items:center;
+  align-items:center;
+  align-content:center;
+  min-width:0;
+  width:100%;
+  height:84px;
+  min-height:84px;
+  gap:2px;
+  padding:5px 3px;
+  overflow:hidden;
+  border-radius:8px;
+  text-align:center;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-art{
+  width:27px;
+  height:25px;
+  font-size:23px;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1px;
+  min-width:0;
+  width:100%;
+  text-align:center;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{
+  width:100%;
+  font-size:11px;
+  line-height:1.15;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text small{
+  width:100%;
+  font-size:9px;
+  line-height:1.15;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+ }
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-fv{
+  font-size:10px;
+  line-height:1;
+ }
+}
+@media (max-width:359px){
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-drawer-head strong{font-size:12px}
+ #combatPage .combat-shell-live .combat-defense-compact > .combat-defense-drawer-actions{gap:4px}
+ #combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice-text strong{font-size:10px}
+}
