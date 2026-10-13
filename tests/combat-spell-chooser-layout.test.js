@@ -22,17 +22,18 @@ function optionLabels(html){
 }
 
 describe('Magi i strid – kompakt besvärjelseval',()=>{
- it('is placed in the round panel flow and never floats over the map',()=>{
+ it('opens its own panel below Runda without expanding the round panel',()=>{
   const start=runtime.indexOf('function combatTurnPanelHtml(');
   const end=runtime.indexOf('// KROKODIL: strongest matching ward',start);
-  expect(start).toBeGreaterThan(0);
   const block=runtime.slice(start,end);
-  expect(block).toContain('class="combat-turn-magic-host"');
-  expect(block).toContain("combatRowMagicMenuHtml(actor)+'</div>':'')+");
-  expect(block.indexOf('combat-turn-magic-host')).toBeGreaterThan(block.indexOf("'<div class=\"combat-turn-actions\">'"));
-  expect(block.indexOf('combat-turn-magic-host')).toBeLessThan(block.indexOf("'<div class=\"combat-turn-stats\">'"));
-  expect(uiCss).toContain('position:static');
-  expect(uiCss).toContain('transform:none');
+  const actionPanel=runtime.slice(runtime.indexOf('function combatAttackPanelHtml('),
+    runtime.indexOf('function combatTurnPortraitHtml('));
+  expect(start).toBeGreaterThan(0);
+  expect(block).not.toContain('combat-turn-magic-host');
+  expect(block).toContain('aria-controls="combatActionPanel"');
+  expect(actionPanel).toContain('combat-magic-select-panel');
+  expect(actionPanel).toContain('combatSpellChooserHtml(actor,action)');
+  expect(read('features/combat/attack-participants.css')).toContain('.combat-magic-select-panel');
   expect(read('index.html')).toContain('features/combat/spell-chooser.css?v=');
  });
  it('renders one alphabetically sorted single-row dropdown, not a grid of cards',()=>{
