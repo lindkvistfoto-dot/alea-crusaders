@@ -171,6 +171,8 @@ async function ensureCombatDice3D(){
   await instance.init();
   combatBox=instance;
   combatBox.show();
+  // Let responsive layout settle before sizing the 3D world.
+  await nextFrame();
   combatBox.resizeWorld?.();
   await nextFrame();
   return combatBox;
@@ -193,6 +195,8 @@ window.alea3dCombatRoll=async(notation)=>{
  host.classList.remove("unavailable");
  const b=await ensureCombatDice3D();
  b.show();
+ // Layout first, renderer/physics resize second, animation last.
+ await nextFrame();
  b.resizeWorld?.();
  await nextFrame();
  return b.roll(notation,{newStartPoint:true})
