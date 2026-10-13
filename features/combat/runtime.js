@@ -5016,7 +5016,11 @@ function combatNpcEditWeaponRow(w={},index=-1){
   input('damage','Skada (1T6)',w.damage||'')+
   '<label><span>Typ</span><select data-w="category">'+
   [['melee','Närstrid'],['projectile','Projektil'],['thrown','Kastvapen']].map(([key,label])=>'<option value="'+key+'"'+(category===key?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
-  input('range','Räckvidd',w.range||'')+'</div></div>'
+  input('range','Räckvidd',w.range||'')+
+  '<label><span>Utrustad hand</span><select data-w="hand">'+
+  [['none','Ej utrustat'],['right','Höger hand'],['left','Vänster hand'],['both','Två händer']].map(([value,label])=>
+   '<option value="'+value+'"'+((w.hand||'none')===value?' selected':'')+'>'+label+'</option>').join('')+
+  '</select></label></div></div>'
 }
 function combatNpcQuickEditorHtml(c){
  if(!combatNpcEditAllowed(c))return '';
@@ -5037,6 +5041,17 @@ function combatNpcQuickEditorHtml(c){
    ['STY','FYS','STO','SMI','INT','PSY','KAR'].map(k=>field('attr_'+k,k,combatBaseAttribute(c,k)??attrs[k]??10,1,100)).join('')+
   '</div><h4>Vapen och FV</h4><div id="combatNpcEditWeapons">'+weapons.map((w,i)=>combatNpcEditWeaponRow(w,i)).join('')+'</div>'+
   '<button type="button" class="combat-npc-edit-add" onclick="combatNpcEditAddWeapon()">+ Lägg till vapen</button>'+
+  '<h4>Sköld och handutrustning</h4>'+
+  '<div class="combat-npc-edit-fields">'+
+   '<label><span>Sköld</span><input name="shield_name" maxlength="100" value="'+escAttr(profile.shields?.[0]?.name||'')+'"></label>'+
+   '<label><span>Sköld FV</span><input type="number" name="shield_fv" min="0" max="100" value="'+escAttr(profile.shields?.[0]?.fv??10)+'"></label>'+
+   '<label><span>Sköld BV</span><input type="number" name="shield_bv" min="0" max="999" value="'+escAttr(profile.shields?.[0]?.bv??0)+'"></label>'+
+   '<label><span>Sköld i hand</span><select name="shield_hand">'+
+    [['none','Ej utrustad'],['left','Vänster hand'],['right','Höger hand']].map(([key,label])=>
+     '<option value="'+key+'"'+((profile.shields?.[0]?.hand||'none')===key?' selected':'')+'>'+label+'</option>').join('')+
+   '</select></label>'+
+  '</div>'+
+  '<label class="combat-npc-edit-ambi"><input name="ambidextrous" type="checkbox" '+(profile.ambidextrous===true?'checked':'')+'> Ambidextriös: båda händerna kan använda sina vapen oberoende, en handling per SR</label>'+
   '<div class="combat-npc-edit-footer"><span id="combatNpcEditStatus" role="status" aria-live="polite">Initiativ räknas inte om.</span><button type="submit" class="combat-npc-edit-save">Spara i striden</button></div>'+
   '</form></section>'
 }
@@ -5075,12 +5090,44 @@ function combatNpcEditParse(form,c){
   if(!/^\d+$/.test(fv)||Number(fv)>100)throw Error('Ogiltigt FV för '+weaponName+'.');
   if(damage&&!combatParseDamageFormula(damage))throw Error('Ogiltig skadeformel för '+weaponName+'.');
   if(!['melee','projectile','thrown'].includes(category))throw Error('Ogiltig vapentyp.');
+  const hand=val('hand')||base?.hand||'none';
+  if(!['none','left','right','both'].includes(hand))throw Error('Ogiltig hand för '+weaponName+'.');
+  if(String(base?.handling||'').toUpperCase()==='2H'&&hand!=='none'&&hand!=='both')
+   throw Error(weaponName+' kräver båda händerna.');
   return {...(base||{}),equipId:base?.equipId||crypto.randomUUID(),name:weaponName,fv:Number(fv),
-   damage,category,weaponCategory:category,range:val('range')}
+   damage,category,weaponCategory:category,range:val('range'),hand}
  });
+ const oldShield=profile.shields?.[0]||null;
+ const fieldValue=key=>form.elements.namedItem(key)?.value;
+ const shieldName=String(fieldValue('shield_name')??oldShield?.name??'').trim();
+ if(shieldName.length>100)throw Error('Sköldnamnet är för långt.');
+ const shieldHand=String(fieldValue('shield_hand')??oldShield?.hand??'none');
+ if(!['none','right','left'].includes(shieldHand))throw Error('Ogiltig sköldhand.');
+ const shieldFv=Number(fieldValue('shield_fv')??oldShield?.fv??10);
+ const shieldBv=Number(fieldValue('shield_bv')??oldShield?.bv??0);
+ if(shieldName&&(!Number.isInteger(shieldFv)||shieldFv<0||shieldFv>100||
+   !Number.isInteger(shieldBv)||shieldBv<0||shieldBv>999))throw Error('Ogiltigt FV eller BV för sköld.');
+ const shields=shieldName?[{...(oldShield||{}),equipId:oldShield?.equipId||'npc-shield-0',
+  name:shieldName,fv:shieldFv,bv:shieldBv,hand:shieldHand}]:[];
+ const occupied=new Set();
+ weapons.forEach(weapon=>{
+  const h=weapon.hand;
+  if(h==='none')return;
+  const slots=h==='both'?['left','right']:[h];
+  for(const slot of slots){if(occupied.has(slot))throw Error('Två föremål kan inte använda '+(slot==='left'?'vänster':'höger')+' hand.');occupied.add(slot)}
+ });
+ if(shields.length&&shieldHand!=='none'){
+  if(occupied.has(shieldHand))throw Error('Sköld och vapen kan inte använda samma hand.');
+  occupied.add(shieldHand)
+ }
+ const checked=form.elements.namedItem('ambidextrous');
+ const ambidextrous=checked?.checked===undefined?profile.ambidextrous===true:checked.checked===true;
+ attributes.ambidextrous=ambidextrous;
+ const updatedProfile={...profile,weapons,shields,ambidextrous,currentEquipment:null,
+  sty:attributes.STY,sto:attributes.STO,smi:attributes.SMI,
+  damage_bonus:attributes.STY!==combatBaseAttribute(c,'STY')||attributes.STO!==combatBaseAttribute(c,'STO')?null:profile.damage_bonus};
  const state={...(c.state||{}),attributes,sty:attributes.STY,sto:attributes.STO,smi:attributes.SMI,
-  attack_profile:{...profile,weapons,sty:attributes.STY,sto:attributes.STO,smi:attributes.SMI,
-   damage_bonus:attributes.STY!==combatBaseAttribute(c,'STY')||attributes.STO!==combatBaseAttribute(c,'STO')?null:profile.damage_bonus}};
+  attack_profile:typeof combatNpcNormalizeProfile==='function'?combatNpcNormalizeProfile(updatedProfile):updatedProfile};
  const status=c.status==='removed'?'removed':current_kp===0?'dead':c.status==='dead'?'active':c.status;
  return {name_snapshot:name,max_kp,current_kp,max_psy,current_psy,movement_max,movement_remaining,state,status}
 }
@@ -5148,6 +5195,7 @@ function combatantDetailsPopupHtml(){
     '<section class="combat-detail-section"><h3>Utrustning</h3>'+
       '<div class="combat-detail-equipment">'+combatTurnEquipmentHtml(c)+'</div>'+
       '<p><strong>Vapen:</strong> '+itemList(profile.weapons)+'</p>'+
+      (['npc','monster'].includes(c.source_type)?'<p><strong>Ambidextri:</strong> '+(profile.ambidextrous?'Ja – självständiga vapen':'Nej')+'</p>':'')+
       (profile.spells?.length?'<p><strong>Besvärjelser:</strong> '+itemList(profile.spells)+'</p>':'')+
     '</section>'+
    '</div>'+
