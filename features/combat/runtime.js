@@ -5326,7 +5326,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
   '</div></div>'
 }
 
-/* v0.35.172 · illustrated middle tile; no change to combat logic. */
+/* v0.35.173 · illustrated middle tile; no change to combat logic. */
 function combatDuelCenterHtml(kind,name,item=null){
  const spell=kind==='spell',label=spell?'BESVÄRJELSE':'VAPEN';
  const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
@@ -5384,7 +5384,7 @@ function combatSpellResultHtml(action){
  const info=String(data.magic_rule?.effect_per_eg||data.spell_description||'').trim();
  return '<div class="combat-attack-result combat-spell-result '+escAttr(result.outcome)+'">'+
   '<div class="combat-attack-result-main">'+
-   '<div class="combat-attack-result-heading combat-spell-outcome-banner"><span>Besvärjelseslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
+   '<div class="combat-attack-result-heading combat-spell-outcome-banner"><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
    '<div class="combat-spell-effect-surface">'+
     (artPath?'<div class="combat-spell-effect-artwork" data-spell-art-path="'+escAttr(artPath)+'"'+
       ' data-focus-x="'+artX+'" data-focus-y="'+artY+'" data-zoom="'+artZoom+'" aria-hidden="true"><img alt="" hidden></div>':'')+
