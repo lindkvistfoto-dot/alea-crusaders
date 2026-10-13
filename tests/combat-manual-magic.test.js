@@ -42,7 +42,7 @@ describe('Besvärjelser utan automatisk effekt i strid',()=>{
    combatSpellKey:s=>s.rule_id,combatMagicRuleProfile:()=>({category:'none'}),
    combatMagicBinding:context.magicBinding,escAttr:s=>String(s)};
   runInNewContext(choose+'this.render=combatSpellChooserHtml;',ui);
-  const html=ui.render({id:'a'},{source_data:{effect_grade:1}});
+  const html=ui.render({id:'a'},{source_data:{effect_grade:1,spell_key:'test'}});
   expect(html).toContain('SL avgör effekten');
   expect(html).toContain('FINNA VATTEN');
   expect(html).not.toContain('Saknar verifierad effektkoppling');
