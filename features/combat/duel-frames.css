@@ -275,14 +275,39 @@
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-center-viewport::after{
  z-index:1;
 }
+/* The selected master-register quadrant fills an oversized SQUARE crop
+   window that is allowed to extend beyond the ornamental 4:3 frame.
+   A square window keeps square source artwork undistorted. */
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
- position:absolute;z-index:4;inset:-42%;display:block;overflow:visible;pointer-events:none;
+ position:absolute;z-index:4;inset:auto;
+ top:50%;left:50%;width:156%;height:auto;aspect-ratio:1 / 1;
+ transform:translate(-50%,-50%);display:block;overflow:hidden;pointer-events:none;
+ background:transparent;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art img{
- display:block;top:0!important;left:0!important;right:auto!important;bottom:auto!important;
- width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
- object-fit:contain;transform:none;
+ position:absolute;display:block;
+ top:0!important;left:auto!important;right:0!important;bottom:auto!important;
+ width:200%!important;height:200%!important;max-width:none!important;max-height:none!important;
+ object-fit:contain;object-position:center;transform:none;
  filter:drop-shadow(1px 4px 5px rgba(0,0,0,.88)) drop-shadow(0 0 7px rgba(205,156,84,.23));
+}
+/* Keep the saved quadrant from the weapon master; default is top-right. */
+#combatPage .combat-illustrated-duel .combat-duel-center.is-weapon
+ [data-combat-crop="top-left"] .combat-duel-weapon-art img{
+ top:0!important;left:0!important;right:auto!important;bottom:auto!important;
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-weapon
+ [data-combat-crop="bottom-right"] .combat-duel-weapon-art img{
+ top:auto!important;left:auto!important;right:0!important;bottom:0!important;
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-weapon
+ [data-combat-crop="bottom-left"] .combat-duel-weapon-art img{
+ top:auto!important;left:0!important;right:auto!important;bottom:0!important;
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-weapon
+ [data-combat-crop="full"] .combat-duel-weapon-art img{
+ top:0!important;left:0!important;right:auto!important;bottom:auto!important;
+ width:100%!important;height:100%!important;
 }
 #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-center-name{
  z-index:5;pointer-events:none;
@@ -312,7 +337,7 @@
   padding-top:clamp(8px,2vw,13px);
  }
  #combatPage .combat-illustrated-duel .combat-duel-center.is-weapon .combat-duel-weapon-art{
-  inset:-31%;
+  top:50%;left:50%;width:150%;height:auto;
  }
  #combatPage .combat-illustrated-duel .combat-weapon-switch-mark{
   width:19px;height:19px;right:-2px;bottom:-2px;font-size:16px;
