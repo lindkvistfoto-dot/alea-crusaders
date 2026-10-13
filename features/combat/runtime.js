@@ -5394,6 +5394,15 @@ function combatDefenseReactionHtml(pending){
   '<p class="combat-defense-drawer-hint">Parering använder försvararens återstående handling i denna SR.</p>'+
  '</aside>'
 }
+/* Mobile remains on the existing inline presentation for this iteration. */
+function combatDefenseMobileHtml(pending){
+ const defender=pending.defender,attack=pending.attack;
+ return '<div class="combat-mini-parry combat-defense-mobile"><span>'+
+  escAttr(defender.name_snapshot)+' har en handling kvar. Välj parering eller ta träffen.</span><div>'+
+  pending.options.map(option=>'<button type="button" class="btn combat-parry-btn" onclick="chooseCombatParry('+escAttr(JSON.stringify(String(defender.id)))+','+escAttr(JSON.stringify(String(attack.id)))+','+escAttr(JSON.stringify(String(option.key)))+')">Parera · '+escAttr(option.name)+'</button>').join('')+
+  '<button type="button" class="btn combat-take-hit-btn" onclick="declineCombatParry('+escAttr(JSON.stringify(String(defender.id)))+','+escAttr(JSON.stringify(String(attack.id)))+')">Ta träffen</button>'+
+ '</div></div>'
+}
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
@@ -5411,6 +5420,7 @@ function combatAttackPanelHtml(){
    '</div>'+
    combatAttackResultHtml(attack)+
    combatDefenseReactionHtml(pending)+
+   combatDefenseMobileHtml(pending)+
   '</section>'
  }
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
