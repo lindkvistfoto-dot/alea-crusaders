@@ -2925,6 +2925,7 @@ function selectCombatTarget(id){
     renderCombat();
     return
    }
+   if(action?.source_data?.casting_spell===true)combatMobileMagicTargetPickerOpen=false;
    if(String(combatSelectedTargetId||'')===String(id)){
     combatSelectedTargetId=null;
     renderCombat();
@@ -5011,6 +5012,11 @@ function combatantCard(c,index=0){
  const rank=combatNumber(c.state?.initiative_rank,null),total=combatNumber(c.state?.initiative_total,null),die=combatNumber(c.state?.initiative_roll,null),smi=combatNumber(c.state?.smi,null);
  const order=rank!=null?rank:index+1;
  const roleLabel=c.source_type==='character'?'Spelare':c.source_type==='npc'?'SLP':c.source_type==='monster'?'Monster':'Fiende';
+ const plannedSpell=combatChosenAction(c),spellData=plannedSpell?.source_data;
+ const spellNote=plannedSpell?.status==='planned'&&spellData?.casting_spell===true?
+  (Number(activeCombat?.round_number)<Number(spellData.ready_round)?
+   'Förbereder '+(spellData.spell_name||'magi')+' · mål i SR '+spellData.ready_round:
+   (spellData.spell_name||'Magi')+' klar · mål väljs på egen tur'):'';
  const mental=combatMentalStatusLabel(c);
  const planning=combatIsMovementPlanning(c);
  const effectCount=combatActiveEffects.filter(e=>String(e.combatant_id)===String(c.id)&&combatEffectIsActive(e)).length;
@@ -5019,7 +5025,7 @@ function combatantCard(c,index=0){
   combatRowPortraitHtml(c,roleClass)+
   '<div class="combatant-card-copy">'+
    '<div class="name"><span class="combatant-name-text">'+(defeated?'💀 ':'')+escAttr(c.name_snapshot)+'</span>'+(turn?'<span class="combat-turn-now-label">PÅ TUR</span>':'')+'</div>'+
-   '<div class="meta">'+roleLabel+(c.state?.summoner_id?' · Styrs av '+escAttr(combatSummonerName(c)):'')+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
+   '<div class="meta">'+roleLabel+(spellNote?' · '+escAttr(spellNote):'')+(c.state?.summoner_id?' · Styrs av '+escAttr(combatSummonerName(c)):'')+' · Förfl. '+remaining+'/'+maximum+(combatIsFlying(c)?' · Flyger':'')+(mental?' · '+escAttr(mental):'')+(effectCount?' · '+effectCount+' effekter':'')+(defeated?' · Nedkämpad':'')+'</div>'+
    '<div class="combat-row-inline-vitals"><span>KP <b>'+kp+'</b></span><i></i><span>PSY <b>'+psy+'</b></span></div>'+
   '</div>'+
   '<div class="combat-row-init"><b>'+(total!=null?total:'—')+'</b>'+(smi!=null&&die!=null?'<small>SMI '+smi+' + '+die+'</small>':'<small>Initiativ</small>')+'</div>'+
