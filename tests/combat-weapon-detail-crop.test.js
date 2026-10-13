@@ -20,8 +20,10 @@ describe('Runda: weapon detail crop only',()=>{
  });
  it('keeps two-hand zoom less aggressive while preserving existing rotation',()=>{
   expect(css).toContain('.combat-turn-equip-art.weapon.twohand');
-  expect(css).toContain('width:175%');
-  expect(css).toContain('height:175%');
+  // Existing two-hand crop uses a square source at 200% before rotation.
+  expect(css).toContain('width:200%');
+  expect(css).toContain('height:auto');
+  expect(css).toContain('aspect-ratio:1 / 1');
   expect(css).toContain('transform:rotate(45deg)');
  });
  it('also crops shield and armor art without touching other equipment views',()=>{
