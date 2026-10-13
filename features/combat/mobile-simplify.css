@@ -1,0 +1,152 @@
+/* v0.35.166 — touch-first attack targeting and local dice on phones.
+   The desktop dashboard, shared rules and map targeting remain unchanged. */
+@media (min-width:761px){
+  #combatPage .combat-portrait-pick-label,
+  #combatPage .combat-portrait-target-picker,
+  #combatPage .combat-mobile-attack-execute{display:none!important}
+  #combatPage .combat-mini-attack .combat-portrait-target-button{
+    appearance:none;
+    font:inherit;
+    padding:0;
+    margin:0;
+    pointer-events:none;
+  }
+}
+@media (max-width:760px){
+  #combatPage .combat-mini-attack button.combat-portrait-target-button{
+    appearance:none;
+    display:grid;
+    place-items:center;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+    color:inherit;
+    font:inherit;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #combatPage .combat-mini-attack button.combat-portrait-target-button:focus-visible{
+    outline:3px solid #f3cb7f;
+    outline-offset:4px;
+  }
+  #combatPage .combat-mini-attack .combat-portrait-pick-label{
+    position:absolute;
+    z-index:4;
+    bottom:0;
+    left:0;
+    width:100%;
+    padding:3px 1px 4px;
+    background:linear-gradient(0deg,#130d0bf2,#25160dce);
+    color:#ffdfa1;
+    font:800 9px/1.05 system-ui,sans-serif;
+    text-transform:uppercase;
+    text-align:center;
+    letter-spacing:.015em;
+    pointer-events:none;
+    text-shadow:0 1px 3px #000;
+  }
+  #combatPage .combat-mini-attack .combat-portrait-target-picker{
+    position:relative;
+    z-index:6;
+    margin:9px 0;
+    padding:10px;
+    border:1px solid #c89c5f;
+    border-radius:10px;
+    background:linear-gradient(165deg,#352417,#180f0b);
+    box-shadow:0 6px 22px #0009, inset 0 1px 0 #ffe3a31c;
+  }
+  #combatPage .combat-portrait-target-picker>strong{
+    display:block;
+    margin-bottom:7px;
+    font:800 13px/1.2 Georgia,serif;
+    color:#f4d5a5;
+  }
+  #combatPage .combat-portrait-target-picker>small{color:#e7cba7}
+  #combatPage .combat-portrait-target-options{
+    display:grid;
+    gap:6px;
+    max-height:min(40dvh,280px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  #combatPage .combat-portrait-target-option{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:9px;
+    width:100%;
+    min-height:44px;
+    padding:9px 11px;
+    border:1px solid #8e6a42;
+    border-radius:8px;
+    background:linear-gradient(#453020,#26190f);
+    color:#f5dfbb;
+    text-align:left;
+    font:700 13px/1.25 system-ui,sans-serif;
+    touch-action:manipulation;
+  }
+  #combatPage .combat-portrait-target-option>small{
+    color:#d4b68e;
+    font:600 11px/1.2 system-ui,sans-serif;
+    white-space:nowrap;
+  }
+  #combatPage .combat-portrait-target-option.selected{
+    border-color:#ecc57f;
+    background:linear-gradient(#6b4828,#302013);
+  }
+  #combatPage .combat-mobile-attack-execute{margin-top:9px}
+  #combatPage .combat-mobile-attack-execute .combat-attack-execute{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-between;
+    gap:8px;
+    padding:9px;
+    border-radius:9px;
+    border:1px solid #ad814c;
+    background:#1c130dde;
+  }
+  #combatPage .combat-mobile-attack-execute .combat-attack-execute>div{min-width:0;flex:1 1 120px}
+  #combatPage .combat-mobile-attack-execute .combat-attack-execute .combat-attack-roll-btn{
+    flex:1 0 auto;
+    min-height:44px;
+    border-color:#c89a54;
+    background:linear-gradient(#785029,#513319);
+    font-weight:800;
+    color:#fff3dc;
+  }
+  #combatPage .combat-dice-layer.mobile-combat-dice{
+    z-index:1250;
+  }
+  #combatPage .combat-dice-layer.mobile-combat-dice .combat-dice-readout{
+    bottom:10px;
+    width:min(95%,470px);
+    max-width:calc(100% - 14px);
+    padding:10px 11px;
+    gap:7px;
+    border-radius:14px;
+    white-space:normal;
+    background:rgba(25,17,13,.96);
+    box-shadow:0 7px 24px rgba(0,0,0,.65);
+  }
+  #combatPage .combat-dice-layer.mobile-combat-dice .combat-outcome-copy{
+    flex:1 1 170px;
+    min-width:0;
+    max-width:100%;
+  }
+  #combatPage .combat-dice-layer.mobile-combat-dice .combat-outcome-copy span{
+    max-width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    text-overflow:clip;
+  }
+  #combatPage .combat-dice-layer.mobile-combat-dice .combat-dice-readout.mobile-damage-detail strong{
+    font:800 17px/1.2 Georgia,serif;
+    color:#ffe0a2;
+    white-space:nowrap;
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  #combatPage .combat-dice-layer.mobile-combat-dice .combat-dice-readout{
+    transition:none;
+  }
+}
