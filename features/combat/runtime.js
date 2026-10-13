@@ -5461,7 +5461,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
    '<small class="combat-duelist-meta">'+escAttr(data.spell_name||'Besvärjelse')+' · EG '+escAttr(data.effect_grade||1)+'</small>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
-  '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+(combatMobileMagicTargetPickerOpen?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
+  '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
   '<div class="combat-duelist-portrait" aria-hidden="true"><span class="combat-magic-target-glyph">✧</span></div>';
  const targetCard=preparing?preparationCard:!area&&target?
   combatMiniParticipantHtml('MÅL',target,description,canChooseTarget):
@@ -5553,7 +5553,7 @@ function combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound){
  const candidates=casting&&!waiting?combatMagicTargetCandidates(actor,action):new Map();
  const validTarget=candidates.has(selected);
  const healing=kind==='heal'&&casting&&!waiting&&
-  !!combatHealingTarget(actor,action,selected);
+  typeof combatHealingTarget==='function'&&!!combatHealingTarget(actor,action,selected);
  const area=kind==='area'&&!!data.area_center&&
   (!data.magic_binding?.cube||data.beskyddare_ritual_confirmed===true);
  const ready=!waiting&&(!casting||kind==='manual'||area||healing||
@@ -5628,7 +5628,7 @@ function combatSpellCastPanelHtml(){
    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
    (casting&&currentRound>=readyRound?
     '<details class="combat-magic-extra"><summary>Fler magival</summary>'+
-      combatMagicTargetChooserHtml(actor,action)+'</details>':'')+
+      (typeof combatMagicTargetChooserHtml==='function'?combatMagicTargetChooserHtml(actor,action):'')+'</details>':'')+
    combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound))+
  '</section>'
 }
