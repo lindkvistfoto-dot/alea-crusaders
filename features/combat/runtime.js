@@ -424,7 +424,8 @@ function combatSourceStats(sceneCombatant,sources){
   controller_user_id:sceneCombatant.source_type==='character'?(source?.owner_id||null):null,
   portrait_image_path:['npc','monster'].includes(sceneCombatant.source_type)?(source?.image_path||null):null,
   combat_icon_path:source?.combat_icon_path||null,
-  round_background_path:sceneCombatant.source_type==='character'?(source?.round_background_path||null):null
+  round_background_path:sceneCombatant.source_type==='character'?(source?.round_background_path||null):null,
+  round_background_focus:sceneCombatant.source_type==='character'?(data.roundBackgroundFocus||null):null
  }
 }
 async function combatLoadSceneRuntimeData(scene){
@@ -769,7 +770,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    flying:stats.flying,visible_to_players:row.visible_to_players!==false,
    current_kp:stats.current_kp,max_kp:stats.max_kp,current_psy:stats.current_psy,max_psy:stats.max_psy,
    movement_max:stats.movement_max,movement_remaining:stats.movement_remaining,status:row.start_q==null||row.start_r==null?'removed':'active',action_plan:[],
-   state:{...(row.state||{}),race_name:stats.race_name,gender:stats.gender,round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null,portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
+   state:{...(row.state||{}),race_name:stats.race_name,gender:stats.gender,round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null,round_background_focus:stats.round_background_focus||null,portrait_image_path:stats.portrait_image_path,combat_icon_path:stats.combat_icon_path,footprint:{shape:combatFootprintShape({name:row.name,state:row.state}),facing:combatFootprintFacing({state:row.state})},in_reserve:row.start_q==null||row.start_r==null,smi:stats.smi,sty:stats.sty,attributes:stats.attributes,attack_profile:stats.attack_profile,scene_combatant_id:row.id,scene_start_q:row.start_q,scene_start_r:row.start_r},
    sort_order:Number(row.sort_order)||index
   }
  }).filter(Boolean);
