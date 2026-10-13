@@ -52,18 +52,15 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const html=context.spellPanel();
   expect(html).toContain('FINNA VATTEN');
   expect(html).toContain(label);
-  expect(html).toContain('T20 <b>8</b> mot FV <b>13</b>');
-  expect(html).toContain('EG <b>2</b>');
-  expect(html).toContain('PSY −<b>'+psy+'</b>');
+  expect(html).not.toContain('combat-attack-result-rolls');
+  expect(html).not.toContain('mot FV');
+  expect(html).not.toContain('combat-magic-facts');
   expect(html).toContain('Visar var vatten finns.');
-  expect(html).toContain('Räckvidd</span><b>Beröring</b>');
-  expect(html).toContain('Varaktighet</span><b>1 timme</b>');
-  expect(html).toContain('PSY använd</span><b>'+psy+'</b>');
-  expect(html).toContain('combat-magic-facts');
+  expect(html).not.toContain('combat-magic-detail-values');
   expect(html).not.toContain('combat-magic-prepared');
   if(success)expect(html).toContain('SL avgör effekten');
   else expect(html).toContain('Ingen magisk effekt tilldelas');
-  if(outcome==='perfect')expect(html).toContain('Kontrollslag <b>2</b>');
+  if(outcome==='perfect')expect(html).not.toContain('Kontrollslag');
   expect(html).not.toContain('Skada tilldelad');
  });
  test('resultat visas även när stridsrundan går vidare, men aldrig ovanpå en ny attack',()=>{
@@ -96,7 +93,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('&lt;script&gt;');
  });
 
- test('mobilkortet visar kastare, status och separat FV/EG/CL/PSY',()=>{
+ test('mobilkortet visar kastare och status utan FV/EG/CL/PSY-rutor',()=>{
   const {context,action}=fixture();
   action.status='planned';action.source_data.casting_spell=true;
   action.source_data.magic_binding.kind='damage';
@@ -110,12 +107,8 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(waiting).toContain('MAGI · ELD (F)');
   expect(waiting).toContain('Förbereder');
   expect(waiting).toContain('Klar i SR 4');
-  expect(waiting).toContain('FV</span><b>15</b>');
-  expect(waiting).toContain('EG</span><b>1</b>');
-  expect(waiting).toContain('CL</span><b>15</b>');
-  expect(waiting).toContain('PSY</span><b>1</b>');
-  expect(waiting).toContain('Räckvidd</span><b>Sx10 rutor</b>');
-  expect(waiting).toContain('Varaktighet</span><b>Sx1 minut</b>');
+  expect(waiting).not.toContain('combat-magic-facts');
+  expect(waiting).not.toContain('combat-magic-detail-values');
   expect(waiting).not.toContain('Målet är valt');
   context.activeCombat.round_number=4;
   expect(context.spellPanel()).toContain('Välj ett mål på kartan');
@@ -145,16 +138,17 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   action.source_data.magic_binding.cube=true;
   expect(context.spellPanel()).toContain('Väntar på SL');
  });
- test('efter slaget visas resultatstatus och faktisk förbrukad PSY',()=>{
+ test('efter slaget visas resultatstatus utan detaljrutor',()=>{
   const {context,action}=fixture();
   action.result.outcome='perfect';action.result.psy_cost=1;
   expect(context.spellPanel()).toContain('combat-spell-result perfect');
   expect(context.spellPanel()).toContain('PERFEKT SLAG');
-  expect(context.spellPanel()).toContain('PSY använd</span><b>1</b>');
+  expect(context.spellPanel()).not.toContain('PSY använd');
+  expect(context.spellPanel()).not.toContain('combat-magic-detail-values');
   action.result.outcome='fail';
   expect(context.spellPanel()).toContain('combat-spell-result fail');
  });
- test('magirutan visar samma porträttkort som attack och resultat före sekundära värden',()=>{
+ test('magirutan visar samma porträttkort som attack och ett kompakt resultat',()=>{
   const {context,mage,newActor,action}=fixture();
   mage.portrait='https://example.test/mage.png';
   newActor.portrait='https://example.test/target.png';
@@ -167,7 +161,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('>MAGIKER</span>');
   expect(html).toContain('>MÅL</span>');
   expect(html.indexOf('combat-magic-duel')).toBeLessThan(html.indexOf('combat-spell-result'));
-  expect(html.indexOf('combat-spell-result')).toBeLessThan(html.indexOf('combat-magic-detail-values'));
+  expect(html).not.toContain('combat-magic-detail-values');
   expect(html).toContain('combat-spell-outcome-banner');
   expect(html).toContain('combat-spell-effect-surface');
   expect(html).toContain('EFFEKT');
@@ -188,6 +182,30 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(result).toContain('data-focus-y="64"');
   expect(result).toContain('data-zoom="160"');
   expect(result).not.toContain(icon);
+ });
+ test('magisk skada visar skada minus rustning utan SB, vanlig attack påverkas inte',()=>{
+  const begin=runtime.indexOf('function combatDamageResultHtml(');
+  const end=runtime.indexOf('function combatParryResultHtml(',begin);
+  const context={escAttr:String,combatParseDamageFormula:()=>null};
+  runInNewContext(runtime.slice(begin,end)+';this.damageHtml=combatDamageResultHtml;',context);
+  const damage={
+   weapon_formula:'1T6',weapon_damage_value:4,damage_bonus:'Ingen',damage_bonus_value:0,
+   armor_absorption:1,net_damage:3,kp_before:18,kp_after:15
+  };
+  const magic=context.damageHtml(damage,true);
+  expect(magic).toContain('>Skada</span>');
+  expect(magic).toContain('>Rustning</span>');
+  expect(magic).toContain('>Totalt</span>');
+  expect(magic).not.toContain('>SB</span>');
+  expect(magic).not.toContain('combat-damage-op">+</i>');
+  const physical=context.damageHtml(damage);
+  expect(physical).toContain('>SB</span>');
+ });
+ test('besvärjelser visar inte längre den separata resultatpopupen',()=>{
+  const spells=runtime.slice(runtime.indexOf('async function combatCastManualSpell('),runtime.indexOf('function combatLatestResolvedSpellAction()'));
+  expect(spells).not.toContain("combatShowOutcomeOverlay(rolled.outcome,spellName+");
+  const damage=runtime.slice(runtime.indexOf('async function combatResolveDamage('),runtime.indexOf('function combatParryResultHtml('));
+  expect(damage).toContain('if(weapon?._spell_damage)combatHideMagicResultPopup()');
  });
  test('helmagirutan använder vald effektbild före ikonen och behåller beskärningen',()=>{
   const {context,action}=fixture();
