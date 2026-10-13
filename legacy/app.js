@@ -2606,6 +2606,7 @@ function npcKnownShieldNames(){
  (chars||[]).forEach(c=>(c.shields||[]).forEach(s=>add(s?.name)));
  (campaignNpcs||[]).forEach(n=>add(n?.shield?.name));
  (campaignMonsters||[]).forEach(n=>add(n?.shield?.name));
+ (ruleShields||[]).forEach(r=>add(r?.name));
  return [...names.values()].sort((a,b)=>a.localeCompare(b,'sv'))
 }
 function npcShieldOptions(selectedName){
@@ -2615,11 +2616,14 @@ function npcShieldOptions(selectedName){
 function setAdminNpcShieldChoice(value){
  if(!adminNpcDraft)return;let sh=adminNpcDraft.shield||{};
  if(value==='__custom__'){sh._custom=true}else{sh._custom=false;sh.name=value||''}
+ const rule=ruleShields.find(r=>String(r.name||'').localeCompare(String(sh.name||''),'sv',{sensitivity:'base'})===0);
+ if(rule){sh.shieldTypeId=rule.id;sh.shield_id=rule.id;sh.bv=npcNum(rule.bv);sh.bep=npcNum(rule.bep)}
+ else {sh.shieldTypeId='';sh.shield_id=''}
  if(value&&npcNum(sh.fv)==null)sh.fv=10;if(!value)sh.hand='none';adminNpcDraft.shield=sh;
  let wrap=$('npcShieldCustomWrap'),custom=$('npcShieldCustomName'),fv=$('npcShieldFv');
  if(wrap)wrap.classList.toggle('hidden',value!=='__custom__');
  if(custom&&value!=='__custom__')custom.value=sh.name||'';
- if(fv)fv.value=value?(sh.fv??10):'';const picker=$('npcShieldHand');if(picker)picker.value=sh.hand||'none'
+ if(fv)fv.value=value?(sh.fv??10):'';const bv=$('npcShieldBv');if(bv)bv.value=sh.bv??'';const picker=$('npcShieldHand');if(picker)picker.value=sh.hand||'none'
 }
 function setAdminNpcShieldName(value){if(adminNpcDraft){adminNpcDraft.shield=adminNpcDraft.shield||{};adminNpcDraft.shield.name=String(value||'');adminNpcDraft.shield._custom=true}}
 function npcArmorOptions(selected){
@@ -2768,7 +2772,7 @@ function setAdminNpcArmorType(value){
 function collectAdminNpcShield(){
  let choice=$('npcShieldChoice')?.value||'',name=choice==='__custom__'?($('npcShieldCustomName')?.value.trim()||''):choice;
  if(!name)return{name:'',fv:null,bv:null,hand:'none',equipId:'npc-shield'};
- let fv=npcNum($('npcShieldFv')?.value);return{name,fv:fv==null?10:fv,bv:npcNum($('npcShieldBv')?.value),hand:['left','right'].includes($('npcShieldHand')?.value)?$('npcShieldHand').value:'none',equipId:adminNpcDraft?.shield?.equipId||'npc-shield'}
+ let fv=npcNum($('npcShieldFv')?.value);const rule=ruleShields.find(r=>String(r.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);return{name,shieldTypeId:rule?.id||'',shield_id:rule?.id||'',fv:fv==null?10:fv,bv:npcNum($('npcShieldBv')?.value),hand:['left','right'].includes($('npcShieldHand')?.value)?$('npcShieldHand').value:'none',equipId:adminNpcDraft?.shield?.equipId||'npc-shield'}
 }
 function collectAdminNpcArmor(){return{armor_type_id:$('npcArmorType')?.value||'',name:$('npcArmorName')?.value.trim()||'',absorption:npcNum($('npcArmorAbs')?.value)}}
 function sanitizeNpcSkills(list){return(list||[]).filter(r=>r.skill_id||r.name).map(r=>({skill_id:r.skill_id||'',name:(ruleSkills.find(x=>x.id===r.skill_id)?.name||r.name||''),fv:npcNum(r.fv)}))}
