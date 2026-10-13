@@ -4,13 +4,35 @@ function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiende
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
+let combatMobileTargetPickerOpen=false,combatMobileLastOutcome=null;
 function combatPositionDiceLayer(){
  const layer=$('combatDiceLayer'),board=document.querySelector('#combatPage .combat-board');
  if(!layer||!board||$('combatPage')?.classList.contains('hidden'))return false;
- const rect=board.getBoundingClientRect();
+ let rect=board.getBoundingClientRect();
+ const mobile=!!window.matchMedia?.('(max-width:760px)')?.matches;
+ const round=document.querySelector('#combatPage .combat-shell-live .combat-turn-panel');
+ const attack=document.querySelector('#combatPage .combat-shell-live .combat-left-column > .combat-mini-attack');
+ let overPanels=false;
+ if(mobile&&round&&attack){
+  const a=round.getBoundingClientRect(),b=attack.getBoundingClientRect();
+  const vh=window.innerHeight||document.documentElement.clientHeight;
+  const vw=window.innerWidth||document.documentElement.clientWidth;
+  // The dice float over visible Runda/Anfall, never force a trip to the map.
+  if(a.bottom>60&&b.top<vh-30){
+   const top=Math.max(64,Math.min(a.top,b.top));
+   const bottom=Math.min(vh-10,Math.max(a.bottom,b.bottom));
+   const left=Math.max(8,Math.min(a.left,b.left));
+   const right=Math.min(vw-8,Math.max(a.right,b.right));
+   if(right-left>80&&bottom-top>140){
+    rect={left,top,width:right-left,height:bottom-top};
+    overPanels=true
+   }
+  }
+ }
  if(rect.width<80||rect.height<80)return false;
  layer.style.left=rect.left+'px';layer.style.top=rect.top+'px';
  layer.style.width=rect.width+'px';layer.style.height=rect.height+'px';
+ layer.classList.toggle('mobile-combat-dice',overPanels);
  layer.classList.add('positioned');
  window.alea3dCombatPrepare?.();
  return true
@@ -1359,6 +1381,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
    details:parryResult,player_visible:true
   })});
   combatShowOutcomeOverlay(rolled.outcome,'Parering · '+option.name+' · T20 '+rolled.roll+' mot FV '+option.fv);
+  if(attackResult.damage)combatShowMobileDamageOutcome(attackResult.damage,attackResult.hit_location);
   (typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.success?'melee.parry':'melee.hit');
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.success?'melee.parry':'melee.hit');
   await loadActiveCombat()
@@ -1586,9 +1609,27 @@ function combatOutcomeLabel(outcome){return combatOutcomeMeta(outcome).label}
 function combatShowOutcomeOverlay(outcome,context=''){
  const host=$('combatDiceReadout');if(!host)return;
  const meta=combatOutcomeMeta(outcome);
- host.classList.remove('success','fail','special','perfect','fumble','outcome-show');
+ combatMobileLastOutcome={outcome,context};
+ host.classList.remove('success','fail','special','perfect','fumble','outcome-show','mobile-damage-detail');
  host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span><div class="combat-outcome-copy"><b>'+escAttr(meta.label)+'</b>'+(context?'<span>'+escAttr(context)+'</span>':'')+'</div>';
  host.classList.add('show','outcome-show',meta.cls)
+}
+function combatShowMobileDamageOutcome(damage,hitLocation=null){
+ if(!damage||!window.matchMedia?.('(max-width:760px)')?.matches)return;
+ const host=$('combatDiceReadout');if(!host)return;
+ const last=combatMobileLastOutcome||{},meta=combatOutcomeMeta(last.outcome||'success');
+ const weapon=Number(damage.weapon_damage_value)||0,bonus=Number(damage.damage_bonus_value)||0;
+ const armor=Number(damage.armor_absorption)||0,ward=Number(damage.effect_protection)||0,net=Number(damage.net_damage)||0;
+ const position=hitLocation?.label||damage.hit_location?.label||'';
+ host.classList.remove('fail','special','perfect','fumble');
+ host.classList.add('show','outcome-show','mobile-damage-detail',meta.cls);
+ host.innerHTML='<span class="combat-outcome-icon" aria-hidden="true">'+meta.icon+'</span>'+
+  '<div class="combat-outcome-copy"><b>'+escAttr(meta.label)+(position?' · '+escAttr(position):'')+'</b>'+
+   (last.context?'<span>'+escAttr(last.context)+'</span>':'')+
+   '<span>Skada '+weapon+' + SB '+bonus+' − ABS '+armor+(ward?' − skydd '+ward:'')+' = '+net+'</span>'+
+   '<span>KP '+escAttr(damage.kp_before??'—')+' → '+escAttr(damage.kp_after??'—')+
+    (damage.defeated?' · NEDKÄMPAD':'')+'</span></div>'+
+  '<strong>−'+net+' KP</strong>'
 }
 const COMBAT_HIT_LOCATION_TABLES={
  humanoid:{
@@ -3595,6 +3636,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
    ' ('+weaponValue+' + '+bonusValue+' − ABS '+effectiveArmor+(ignoreArmor===true?' [ingen rustning]':'')+' − Skydd '+ward.points+' = '+net+') · KP '+before+' → '+after+(defeated?' · NEDKÄMPAD':''),
   details:result,player_visible:true
  })});
+ combatShowMobileDamageOutcome(result,hitLocation);
  return result
 }
 function combatDamageResultHtml(damage){
@@ -5241,7 +5283,7 @@ function combatAttackPanelWeaponHtml(actor,action,target){
 }
 /* Shared illustrated participant card for pending parries and resolved/planned attacks.
  * Uses existing portrait registry; no combat state or attack calculations change. */
-function combatMiniParticipantHtml(label,combatant,itemText=''){
+function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=false){
  const kp=(combatant?.current_kp==null?'—':combatant.current_kp)+(combatant?.max_kp==null?'':' / '+combatant.max_kp);
  const name=String(combatant?.name_snapshot||'—');
  const portrait=combatant?combatRowPortraitUrl(combatant):'';
@@ -5250,8 +5292,14 @@ function combatMiniParticipantHtml(label,combatant,itemText=''){
   '<img src="'+escAttr(portrait)+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false">'+
   '<span class="combat-duelist-initials" hidden>'+escAttr(initials)+'</span>':
   '<span class="combat-duelist-initials">'+escAttr(initials)+'</span>';
+ const picker=targetPicker&&label==='FÖRSVARAR',tag=picker?'button':'div';
+ const attrs=picker?' type="button" onclick="combatTogglePortraitTargetPicker()" aria-label="'+
+  escAttr((combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
+  '" aria-expanded="'+(combatMobileTargetPickerOpen?'true':'false')+'" aria-controls="combatPortraitTargetMenu"':' aria-hidden="true"';
  return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
-  '<div class="combat-duelist-portrait" aria-hidden="true">'+portraitHtml+'</div>'+
+  '<'+tag+' class="combat-duelist-portrait'+(picker?' combat-portrait-target-button':'')+'"'+attrs+'>'+portraitHtml+
+  (picker?'<span class="combat-portrait-pick-label">'+(combatant?'Byt mål':'Välj mål')+'</span>':'')+
+  '</'+tag+'>'+
   '<div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">'+escAttr(label)+'</span>'+
    '<b class="combat-duelist-name" title="'+escAttr(name)+'">'+
@@ -5606,6 +5654,36 @@ function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKe
   }
  },delay);
 }
+function combatTogglePortraitTargetPicker(){
+ if(!window.matchMedia?.('(max-width:760px)')?.matches)return;
+ const actor=combatActiveActor(),action=combatChosenAction(actor);
+ if(combatActionDefinition(action)?.type!=='attack'||action?.status!=='planned')return;
+ combatMobileTargetPickerOpen=!combatMobileTargetPickerOpen;
+ renderCombat()
+}
+function combatChoosePortraitTarget(id){
+ if(!combatCurrentAttackTargets().has(String(id)))return;
+ combatMobileTargetPickerOpen=false;
+ if(String(combatSelectedTargetId||'')===String(id)){renderCombat();return}
+ selectCombatTarget(id)
+}
+function combatPortraitTargetPickerHtml(targets,target){
+ if(!combatMobileTargetPickerOpen)return '';
+ const choices=[...targets.entries()].map(([id,info])=>{
+  const row=combatants.find(c=>String(c.id)===String(id));
+  if(!row)return '';
+  const chosen=String(target?.id||'')===String(id);
+  return '<button type="button" class="combat-portrait-target-option'+(chosen?' selected':'')+
+   '" aria-pressed="'+chosen+'" onclick="combatChoosePortraitTarget(\''+escAttr(id)+'\')">'+
+   '<span>'+escAttr(row.name_snapshot||'Kombattant')+'</span>'+
+   '<small>'+escAttr(info?.distance??'—')+' hex'+(chosen?' · VALD':'')+'</small></button>'
+ }).join('');
+ return '<div id="combatPortraitTargetMenu" class="combat-portrait-target-picker" role="group" aria-label="Välj mål till attacken">'+
+  '<strong>Välj försvarare</strong>'+
+  (choices?'<div class="combat-portrait-target-options">'+choices+'</div>':
+   '<small>Inga giltiga mål inom räckvidd och sikt.</small>')+
+ '</div>'
+}
 function combatAttackPanelHtml(){
  const antimagic=combatAntimagicPromptHtml();if(antimagic)return antimagic;
  const magic=combatSpellCastPanelHtml();if(magic)return magic;
@@ -5647,9 +5725,11 @@ function combatAttackPanelHtml(){
   '<div class="combat-mini-duel">'+
    combatMiniParticipantHtml('ATTACKERAR',actor,selectedWeapon?.name||action.source_data?.weapon_name||'Välj vapen')+
    '<div class="combat-mini-arrow">→</div>'+
-   combatMiniParticipantHtml('FÖRSVARAR',target,target?(targetInfo?(targetInfo.mode==='melee'?'Närstrid':'Avstånd')+' · '+targetInfo.distance+' hex':'Valt mål'):'—')+
+   combatMiniParticipantHtml('FÖRSVARAR',target,target?(targetInfo?(targetInfo.mode==='melee'?'Närstrid':'Avstånd')+' · '+targetInfo.distance+' hex':'Valt mål'):'—',action.status==='planned')+
   '</div>'+
+  (action.status==='planned'?combatPortraitTargetPickerHtml(targets,target):'')+
   (action.status==='planned'?combatAttackPanelWeaponHtml(actor,action,target):'')+
+  (action.status==='planned'&&target?'<div class="combat-mobile-attack-execute">'+combatAttackExecutionHtml(target)+'</div>':'')+
   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
   (action.status==='resolved'?combatAttackResultHtml(action):'')+
  '</section>'
