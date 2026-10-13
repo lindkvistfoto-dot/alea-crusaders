@@ -400,3 +400,53 @@
  #combatPage .combat-mini-magic .combat-magic-duel .combat-duelist-card{gap:4px;min-height:78px}
  #combatPage .combat-mini-magic .combat-spell-effect-surface{padding-right:15%;background-position:center,right bottom}
 }
+
+/* Active spell controls: targets and EG must be actionable in the main
+   magic panel, independently of the popover/turn-action toolbar. */
+#combatPage .combat-mini-magic .combat-magic-target-picker{
+ position:relative;z-index:2;display:grid;gap:7px;margin-top:10px;
+ padding:9px;border:1px solid rgba(213,166,98,.55);border-radius:8px;
+ background:rgba(22,14,10,.76);
+}
+#combatPage .combat-mini-magic .combat-magic-target-picker>strong{
+ color:#f3d5a2;font:700 12px/1.3 Georgia,serif;
+}
+#combatPage .combat-mini-magic .combat-magic-target-picker>small{
+ color:#e4c6a0;font-size:12px;
+}
+#combatPage .combat-mini-magic .combat-magic-target-options{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;
+}
+#combatPage .combat-mini-magic .combat-magic-target-option{
+ appearance:none;min-width:0;min-height:38px;padding:7px 9px;text-align:left;
+ border:1px solid #967044;border-radius:7px;cursor:pointer;
+ background:#38271a;color:#f4dfbb;font:700 12px/1.3 system-ui,sans-serif;
+ overflow-wrap:anywhere;touch-action:manipulation;
+}
+#combatPage .combat-mini-magic .combat-magic-target-option.selected{
+ border-color:#f6cf7f;background:#694822;color:#fff1cd;
+ box-shadow:inset 0 0 0 1px #d5a45f;
+}
+#combatPage .combat-mini-magic .combat-magic-eg-control{grid-column:span 2}
+#combatPage .combat-mini-magic .combat-magic-eg-actions{
+ display:flex;align-items:center;gap:6px;min-width:0;
+}
+#combatPage .combat-mini-magic .combat-magic-eg-actions b{
+ flex:1;text-align:center;min-width:1ch;color:#ffe7ad;
+}
+#combatPage .combat-mini-magic .combat-magic-eg-actions button{
+ appearance:none;flex:0 0 36px;width:36px;height:36px;
+ border:1px solid #c49a56;border-radius:7px;background:#52361d;
+ color:#ffe1a7;font:800 23px/1 system-ui,sans-serif;
+ cursor:pointer;touch-action:manipulation;
+}
+#combatPage .combat-mini-magic .combat-magic-eg-actions button:disabled{
+ opacity:.42;cursor:not-allowed;
+}
+#combatPage .combat-mini-magic .combat-magic-target-option:focus-visible,
+#combatPage .combat-mini-magic .combat-magic-eg-actions button:focus-visible{
+ outline:2px solid #ffe6a3;outline-offset:2px;
+}
+@media(max-width:420px){
+ #combatPage .combat-mini-magic .combat-magic-target-options{grid-template-columns:1fr}
+}
