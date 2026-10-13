@@ -6117,6 +6117,11 @@ const combatOrnateFrameCorners = '<span class="combat-ornate-corners" aria-hidde
 const combatRoundArtLayer='<span class="combat-round-artwork" aria-hidden="true"><img class="combat-round-artwork-image" src="./assets/combat/round-hero-battle-pilot.avif" alt="" loading="eager" decoding="async" onerror="window.aleaRoundGallery?.fallbackImage?.(this)"></span>';
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
+ const roundCharacter=actor?.source_type==='character'&&typeof chars!=='undefined'?
+  (chars||[]).find(c=>String(c._dbId||'')===String(actor.source_id||'')):null;
+ const canAdjustRound=!!actor&&(canManage||(!!roundCharacter&&typeof canEditCharacter==='function'&&canEditCharacter(roundCharacter)));
+ const roundAdjustButton=canAdjustRound?
+  '<button type="button" class="combat-round-adjust-button" aria-label="Justera rundbakgrund" title="Flytta rundbakgrund" onclick="window.aleaRoundGallery?.openFocusEditor?.()">⌖</button>':'';
  const lastUndo=activeCombat?.settings?.turn_undo_last;
  const undoButton=canManage
   ?'<button type="button" class="combat-turn-undo-btn" title="Ångra senaste drag" aria-label="Ångra senaste drag" onclick="window.undoLastCombatTurn?.(event)" '+(!lastUndo?'disabled':'')+'>↶</button>'
@@ -6125,7 +6130,7 @@ function combatTurnPanelHtml(){
   '<span class="combat-round">Runda '+activeCombat.round_number+'</span>'+
   '<span class="combat-turn-action-status '+state.key+'">Handling: '+escAttr(state.label)+'</span>'+
   '<span class="combat-status">'+escAttr(combatStatusLabel(activeCombat.status))+' · Sparad strid'+(canManage?' · SL-läge':'')+'</span>'+
-  undoButton+
+  undoButton+roundAdjustButton+
  '</div>';
  if(!actor){
   return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
