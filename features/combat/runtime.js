@@ -2074,7 +2074,14 @@ async function chooseCombatAttackWeapon(combatantId,weaponKey){
  }
 }
 function combatWeaponAttackHint(weapon,combatant){
- const category=combatWeaponCategory(weapon),fv=combatAttackFv(weapon,combatant),fvText=fv==null?'FV — · ':'FV '+fv+' · ';
+ const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
+ const key=String(combatWeaponKey(weapon));
+ const right=eq.rightHand?.kind==='weapon'&&String(eq.rightHand.itemId)===key;
+ const left=eq.leftHand?.kind==='weapon'&&String(eq.leftHand.itemId)===key;
+ const hand=right&&left?'Båda händerna':right?'Höger hand':left?'Vänster hand':'';
+ const freeHand=profile.ambidextrous===true&&hand&&(left!==right)?' · Ambidextri':'';
+ const category=combatWeaponCategory(weapon),fv=combatAttackFv(weapon,combatant);
+ const fvText=(hand?hand+' · ':'')+(fv==null?'FV — · ':'FV '+fv+' · ')+freeHand;
  if(category==='thrown')return fvText+'Närkontakt = närstrid · annars avstånd '+combatWeaponRangeHexes(weapon,combatant)+' hex'+(combatAmmoHint(combatant,weapon)?' · '+combatAmmoHint(combatant,weapon):'');
  if(category==='projectile')return fvText+'Avstånd · '+combatWeaponRangeHexes(weapon,combatant)+' hex'+(combatAmmoHint(combatant,weapon)?' · '+combatAmmoHint(combatant,weapon):'');
  return fvText+'Närstrid · '+combatMeleeReachHexesForWeapon(weapon)+' hex'
