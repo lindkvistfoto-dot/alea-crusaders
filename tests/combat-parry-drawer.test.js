@@ -105,6 +105,57 @@ describe('Responsive parry reaction outside the attack panel',()=>{
   expect(html).toContain('&quot;weapon:right&quot;');
   expect((html.match(/combat-defense-weapon-option"/g)||[])).toHaveLength(2);
  });
+ it('shows Evalins equipped kastspjut, not a generic weapon, even when it cannot parry',()=>{
+  const pending=sample();
+  pending.defender.name_snapshot='Evalin';
+  pending.options=[{key:'shield:medium',kind:'shield',name:'Medelstor sköld',fv:13}];
+  const html=harness(pending,{
+   window:{aleaEquipmentArt:{src:path=>'/art/'+path}},
+   combatAttackProfile:()=>({
+    currentEquipment:{rightHand:{kind:'weapon',itemId:'evalin-spear'}},
+    weapons:[{equipId:'evalin-spear',name:'Kastspjut',weaponCategory:'thrown',imageOverridePath:'evalin/kastspjut.png'}]
+   }),
+   ruleWeaponForItem:()=>({image_path:'master/kastspjut.png',combat_crop_quadrant:'bottom-right'})
+  }).drawer(pending);
+  expect(html).toContain('Kastspjut');
+  expect(html).toContain('/art/evalin/kastspjut.png');
+  expect(html).toContain('data-combat-crop="bottom-right"');
+  expect(html).toContain('class="btn combat-parry-btn combat-defense-choice weapon is-disabled"');
+  expect(html).not.toContain('Inget parervapen');
+  expect(html).not.toContain('onclick="combatSubmitDefenseChoice(this,&#39;parry&#39;,&quot;def-1&quot;,&quot;attack-42&quot;,&quot;weapon:evalin-spear&quot;)"');
+ });
+ it('prefers the held weapon over a higher-FV weapon that is not equipped',()=>{
+  const pending=sample();
+  pending.options=[
+   {key:'weapon:sword',kind:'weapon',name:'Svärd',fv:18,item:{equipId:'sword',image_path:'sword.png'}},
+   {key:'weapon:spear',kind:'weapon',name:'Kastspjut',fv:9,item:{equipId:'spear',image_path:'spear.png'}}
+  ];
+  const html=harness(pending,{
+   window:{aleaEquipmentArt:{src:path=>'/art/'+path}},
+   combatAttackProfile:()=>({currentEquipment:{leftHand:{kind:'weapon',itemId:'spear'}},weapons:[{equipId:'spear',name:'Kastspjut',image_path:'spear.png'}]})
+  }).drawer(pending);
+  expect(html).toContain('Kastspjut');
+  expect(html).toContain('FV 9');
+  expect(html).toContain('/art/spear.png');
+  expect(html).not.toContain('FV 18');
+  expect(html).toContain('&quot;weapon:spear&quot;');
+  expect(html).not.toContain('&quot;weapon:sword&quot;');
+ });
+ it('shows both held weapons but disables parry on the unavailable one',()=>{
+  const pending=sample();
+  pending.options=[{key:'weapon:dagger',kind:'weapon',name:'Dolk',fv:14,item:{equipId:'dagger',image_path:'dagger.png'}}];
+  const html=harness(pending,{
+   window:{aleaEquipmentArt:{src:path=>'/art/'+path}},
+   combatAttackProfile:()=>({currentEquipment:{leftHand:{kind:'weapon',itemId:'spear'},rightHand:{kind:'weapon',itemId:'dagger'}},
+    weapons:[{equipId:'spear',name:'Kastspjut',weaponCategory:'thrown',image_path:'spear.png'},{equipId:'dagger',name:'Dolk',image_path:'dagger.png'}]})
+  }).drawer(pending);
+  expect(html).toContain('combat-defense-multi');
+  expect(html).toContain('/art/spear.png');
+  expect(html).toContain('/art/dagger.png');
+  expect(html).toContain('combat-defense-weapon-option is-disabled');
+  expect(html).toContain('&quot;weapon:dagger&quot;');
+  expect((html.match(/combat-defense-weapon-option"/g)||[])).toHaveLength(1);
+ });
  it('does not duplicate a two-handed weapon',()=>{
   const pending=sample();
   pending.options=[{key:'weapon:staff',kind:'weapon',name:'Stav',fv:10,item:{equipId:'staff',image_path:'staff.png'}}];
