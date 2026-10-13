@@ -1162,3 +1162,53 @@
   background-size:auto 110%;
  }
 }
+
+/* v0.35.161 — defense artwork layer.
+   app.css sets .combat-parry-btn and .combat-take-hit-btn backgrounds with
+   !important; a normal background-image on the button is therefore hidden.
+   A dedicated ::before layer cannot be replaced by those button shorthands. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.shield,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit{
+ position:relative;
+ isolation:isolate;
+ background-color:#120e0b!important;
+ background-image:none!important;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.shield::before,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon::before,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ z-index:0;
+ display:block;
+ pointer-events:none;
+ background-repeat:no-repeat;
+ background-size:cover;
+ background-position:center;
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.shield::before{
+ background-image:linear-gradient(to bottom,rgba(10,8,6,.02),rgba(8,6,5,.14) 48%,rgba(8,6,5,.78)),url("./assets/defense-bg-shield.webp");
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon::before{
+ background-image:linear-gradient(to bottom,rgba(10,8,6,.02),rgba(8,6,5,.14) 48%,rgba(8,6,5,.78)),url("./assets/defense-bg-weapon.webp");
+}
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit::before{
+ background-image:linear-gradient(to bottom,rgba(10,8,6,.02),rgba(8,6,5,.12) 45%,rgba(8,6,5,.75)),url("./assets/defense-bg-hit.webp");
+}
+/* Keep all labels and equipped shields/weapons clearly in front. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice > *{
+ position:relative;
+ z-index:2;
+}
+/* Knight layer from v0.35.160 sits between the battlefield and labels. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit::after{
+ z-index:1;
+}
+/* The colored default button styles must not bleed through on hover/focus. */
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.shield:hover,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.weapon:hover,
+#combatPage .combat-shell-live .combat-defense-compact .combat-defense-choice.take-hit:hover{
+ background-color:#120e0b!important;
+}
