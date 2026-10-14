@@ -295,11 +295,24 @@ function combatBindSpellCarousel(root){
  function finish(event){
   if(!drag||drag.id!==event.pointerId)return;
   const last=drag;drag=null;
-  if(!last.moved)return; // a tap must still select the clicked spell
+  if(!last.moved){
+   // Tapping the spinning belt stops it without leaving a half-centered icon.
+   if(Math.abs(position-Math.round(position))>.001)settle();
+   return;
+  }
   suppressClickUntil=time()+460;
   event.preventDefault();event.stopPropagation();
   try{if(viewport.hasPointerCapture(event.pointerId))viewport.releasePointerCapture(event.pointerId)}catch(_){}
-  const age=time()-last.lastMoveAt;
+  // Include the final finger travel between the last move event and release.
+  const now=time(),tail=event.clientX-last.previousX;
+  if(Math.abs(tail)>.5){
+   const dt=clamp(now-last.lastAt,1,65);
+   position-=tail/pitch;
+   last.velocity=last.velocity*.35+clamp(-tail/pitch/dt,-.035,.035)*.65;
+   last.lastMoveAt=now;
+   sync();
+  }
+  const age=now-last.lastMoveAt;
   coast(last.velocity*(age>85?.12:1));
  }
  function onCancel(event){
