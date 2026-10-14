@@ -215,6 +215,10 @@
  function updateRow(id,patch){
   const row=getRow(id);if(row)Object.assign(row,patch);
   if(typeof renderAdminSpells==='function')renderAdminSpells();
+  // An admin edit must also update a battle already open in this tab.
+  const combatPage=document.getElementById('combatPage');
+  if(combatPage&&!combatPage.classList.contains('hidden')&&
+     typeof renderCombat==='function')renderCombat();
  }
  function refreshEditor(id){
   const row=getRow(id),host=document.getElementById('spellArtEditor');

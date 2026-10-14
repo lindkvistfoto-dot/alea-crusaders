@@ -234,7 +234,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(frameCss).toContain('.combat-duel-center.is-spell.has-spell-cutout');
   // Fireball: tail behind top/left frame, head visible beyond bottom/right.
   expect(runtime).toContain("is-eld-projectile");
-  expect(runtime).toContain('master?.cutout_x??data.spell_cutout_x');
+  expect(runtime).toContain('master?master.cutout_x:data.spell_cutout_x');
   expect(frameCss).toContain('.is-eld-projectile .combat-duel-spell-cutout');
   expect(frameCss).toContain('clip-path:inset(0 -110% -100% 0)');
   expect(frameCss).toContain('transform:translateY(22%)');
@@ -247,6 +247,39 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(runtime).toContain('combat-spell-choice--compact');
   expect(runtime).toContain('aleaSpellArt?.hydrateCombat?.(body)');
   expect(css).toContain('.combat-spell-effect-artwork');
+ });
+ it('uses the CURRENT spell-master cutout, even for a previously prepared cast',()=>{
+  const source=runtime.slice(runtime.indexOf('function combatSpellMasterForAction(action){'),
+   runtime.indexOf('/* Keep a combat view already open on another device in sync with admin.'));
+  const row={id:SPELL,spell_key:'eld',name:'ELD (F)',cutout_path:PATH,
+   cutout_x:68,cutout_y:100,cutout_scale:145,effect_image_path:NEXT,
+   effect_focus_x:50,effect_focus_y:50,effect_zoom:120};
+  const ctx={ruleSpells:[row]};
+  runInNewContext(source,ctx);
+  const action={source_data:{spell_id:SPELL,spell_key:SPELL,spell_name:'ELD (F)',
+   spell_cutout_path:NEXT,spell_cutout_x:50,spell_cutout_y:90,
+   spell_cutout_scale:160,spell_effect_image_path:PATH}};
+  // The action's spell_key is a UUID, NOT the 'eld' key in the master.
+  expect(ctx.combatSpellCutoutForAction(action).path).toBe(PATH);
+  expect(ctx.combatSpellCutoutForAction(action).x).toBe(68);
+  expect(ctx.combatSpellCutoutForAction(action).y).toBe(100);
+  expect(ctx.combatSpellArtworkForAction(action).path).toBe(NEXT);
+  // A replacement must appear without choosing the spell again.
+  row.cutout_path=NEXT;row.cutout_x=20;row.cutout_scale=200;
+  expect(ctx.combatSpellCutoutForAction(action).path).toBe(NEXT);
+  expect(ctx.combatSpellCutoutForAction(action).x).toBe(20);
+  expect(ctx.combatSpellCutoutForAction(action).zoom).toBe(200);
+  // Removing the image in admin must clear the old action snapshot.
+  row.cutout_path=null;
+  expect(ctx.combatSpellCutoutForAction(action)).toBeNull();
+  // Other spell art is independent: removing the effect should prefer icon.
+  row.effect_image_path=null;row.icon_path=PATH;
+  expect(ctx.combatSpellArtworkForAction(action).path).toBe(PATH);
+  row.icon_path=null;
+  expect(ctx.combatSpellArtworkForAction(action).path).toBe('');
+  // During initial loading (no registry) old snapshots can still show.
+  ctx.ruleSpells.length=0;
+  expect(ctx.combatSpellCutoutForAction(action).path).toBe(NEXT);
  });
  it('wires all three editors into the existing Expert spell master',()=>{
   expect(admin).toContain('id="spellArtEditor"');

@@ -2374,59 +2374,83 @@ function combatSpellArtNumber(value,fallback,min=0,max=100){
  const n=Number(value??fallback);
  return Number.isFinite(n)?Math.max(min,Math.min(max,Math.round(n))):fallback
 }
-function combatSpellArtworkForAction(action){
+/* Battle visuals follow the live Expert spell master. Snapshot art is a
+   fallback only when the master registry has not loaded yet. This lets an
+   existing prepared spell reflect admin edits, including a removed image. */
+function combatSpellMasterForAction(action){
  const data=action?.source_data||{};
- // An existing action snapshot always wins: swapping artwork in the master
- // must not change an image already saved with the cast.
- const snapshot=[
-  ['effect',data.spell_effect_image_path,data.spell_effect_focus_x,data.spell_effect_focus_y,data.spell_effect_zoom],
-  ['icon',data.spell_icon_path,data.spell_icon_focus_x,data.spell_icon_focus_y,data.spell_icon_zoom],
-  ['legacy',data.spell_image_path,data.spell_image_focus_x,data.spell_image_focus_y,100]
- ].find(entry=>combatSpellArtPath(entry[1]));
- if(snapshot)return {
-  path:combatSpellArtPath(snapshot[1]),
-  x:combatSpellArtNumber(snapshot[2],50),
-  y:combatSpellArtNumber(snapshot[3],50),
-  zoom:combatSpellArtNumber(snapshot[4],100,100,300)
- };
- // Battles prepared before spell artwork was implemented do not have any
- // snapshot fields. Resolve by the stable master ID (then spell key/name)
- // without changing their target, PSY cost, casting state or other rules.
  const registry=typeof ruleSpells!=='undefined'&&Array.isArray(ruleSpells)?ruleSpells:[];
  const id=String(data.spell_id||'');
  const key=String(data.spell_key||'');
  const name=String(data.spell_name||'');
- const master=registry.find(row=>id&&String(row.id)===id)||
+ return registry.find(row=>id&&String(row.id)===id)||
   registry.find(row=>key&&(String(row.id)===key||String(row.spell_key)===key))||
-  registry.find(row=>name&&String(row.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0);
- if(!master)return {path:'',x:50,y:50,zoom:100};
- const images=[
+  registry.find(row=>name&&String(row.name||'').localeCompare(name,'sv',{sensitivity:'base'})===0)||null;
+}
+function combatSpellArtworkForAction(action){
+ const data=action?.source_data||{};
+ const master=combatSpellMasterForAction(action);
+ const sources=master?[
   [master.effect_image_path,master.effect_focus_x,master.effect_focus_y,master.effect_zoom],
   [master.icon_path,master.icon_focus_x,master.icon_focus_y,master.icon_zoom],
-  // Compatibility with a master that still uses only the original image_path.
   [master.image_path,master.image_focus_x,master.image_focus_y,100]
+ ]:[
+  [data.spell_effect_image_path,data.spell_effect_focus_x,data.spell_effect_focus_y,data.spell_effect_zoom],
+  [data.spell_icon_path,data.spell_icon_focus_x,data.spell_icon_focus_y,data.spell_icon_zoom],
+  [data.spell_image_path,data.spell_image_focus_x,data.spell_image_focus_y,100]
  ];
- const selected=images.find(entry=>combatSpellArtPath(entry[0]));
- return selected?{
-  path:combatSpellArtPath(selected[0]),
-  x:combatSpellArtNumber(selected[1],50),
-  y:combatSpellArtNumber(selected[2],50),
-  zoom:combatSpellArtNumber(selected[3],100,100,300)
- }:{path:'',x:50,y:50,zoom:100}
+ const selected=sources.find(entry=>combatSpellArtPath(entry[0]));
+ return selected?{path:combatSpellArtPath(selected[0]),
+  x:combatSpellArtNumber(selected[1],50),y:combatSpellArtNumber(selected[2],50),
+  zoom:combatSpellArtNumber(selected[3],100,100,300)}:
+  {path:'',x:50,y:50,zoom:100};
 }
 function combatSpellCutoutForAction(action){
  const data=action?.source_data||{};
- // A cutout is NEVER inferred from the square spell art.
- const path=combatSpellArtPath(data.spell_cutout_path);
+ const master=combatSpellMasterForAction(action);
+ // A loaded master is authoritative even when its cutout was DELETED.
+ // spell_key on an action may be a rule UUID instead of master.spell_key.
+ const path=combatSpellArtPath(master?master.cutout_path:data.spell_cutout_path);
  if(!path)return null;
- // Live master placement takes precedence over an older action snapshot,
- // provided the selected cutout is still the same asset.
- const key=String(data.spell_key||'').toLowerCase();
- const master=key&&typeof ruleSpells!=='undefined'?(ruleSpells||[]).find(row=>
-  String(row.spell_key||'').toLowerCase()===key && combatSpellArtPath(row.cutout_path)===path):null;
- return {cutout:true,path,x:combatSpellArtNumber(master?.cutout_x??data.spell_cutout_x,50),
-  y:combatSpellArtNumber(master?.cutout_y??data.spell_cutout_y,90),
-  zoom:combatSpellArtNumber(master?.cutout_scale??data.spell_cutout_scale,160,50,250)};
+ return {cutout:true,path,
+  x:combatSpellArtNumber(master?master.cutout_x:data.spell_cutout_x,50),
+  y:combatSpellArtNumber(master?master.cutout_y:data.spell_cutout_y,90),
+  zoom:combatSpellArtNumber(master?master.cutout_scale:data.spell_cutout_scale,160,50,250)};
+}
+
+/* Keep a combat view already open on another device in sync with admin.
+   Only the active spell's artwork fields are fetched, at most every 12 s.
+   Never mutate immutable combat action / casting rule snapshots. */
+let combatSpellArtSyncBusy=false,combatSpellArtSyncAt=0,combatSpellArtSyncId='';
+async function combatSyncActiveSpellArtwork(force=false){
+ if(!activeCombat||typeof dbJson!=='function'||
+    typeof document!=='undefined'&&(document.hidden||
+      document.getElementById('combatPage')?.classList.contains('hidden')))return;
+ const actor=combatActiveActor();
+ const action=actor?combatChosenAction(actor):null;
+ if(!action||combatActionDefinition(action)?.key!=='spell_cast'||
+    !action.source_data?.spell_prepared)return;
+ const master=combatSpellMasterForAction(action);
+ if(!master?.id)return;
+ const id=String(master.id),now=Date.now();
+ if(combatSpellArtSyncBusy||(!force&&combatSpellArtSyncId===id&&now-combatSpellArtSyncAt<12000))return;
+ combatSpellArtSyncBusy=true;combatSpellArtSyncAt=now;combatSpellArtSyncId=id;
+ try{
+  const fields=['cutout_path','cutout_x','cutout_y','cutout_scale',
+   'icon_path','icon_focus_x','icon_focus_y','icon_zoom',
+   'effect_image_path','effect_focus_x','effect_focus_y','effect_zoom',
+   'image_path','image_focus_x','image_focus_y'];
+  const rows=await dbJson('rule_spells?id=eq.'+encodeURIComponent(id)+
+   '&select=id,'+fields.join(',')+'&limit=1');
+  const next=Array.isArray(rows)?rows[0]:null;
+  const current=combatSpellMasterForAction(action);
+  if(!next||String(current?.id||'')!==id)return;
+  if(fields.some(field=>current[field]!==next[field])){
+   for(const field of fields)current[field]=next[field];
+   if(combatChosenAction(combatActiveActor())===action)renderCombat();
+  }
+ }catch(error){console.warn('Kunde inte synka besvärjelsebilder',error)}
+ finally{combatSpellArtSyncBusy=false}
 }
 function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
@@ -2566,7 +2590,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',
-  // Immutable snapshots: art and crop are independent of later master edits.
+  // Art snapshots remain as a fallback; the live spell master controls UI.
   spell_icon_path:combatSpellArtPath(spell.icon_path!==undefined?spell.icon_path:spell.image_path)||null,
   spell_icon_focus_x:combatSpellArtNumber(spell.icon_focus_x??spell.image_focus_x,50),
   spell_icon_focus_y:combatSpellArtNumber(spell.icon_focus_y??spell.image_focus_y,50),
@@ -6831,7 +6855,14 @@ function renderCombat(){
  void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
  void window.aleaHitFigures?.hydrate?.(body);
  void window.aleaSpellArt?.hydrateCombat?.(body);
+ void combatSyncActiveSpellArtwork();
 }
+
+/* Update the artwork while a player remains on the battle screen. */
+if(typeof window!=='undefined'&&typeof window.setInterval==='function')
+ window.setInterval(()=>{void combatSyncActiveSpellArtwork()},12000);
+if(typeof window!=='undefined'&&typeof window.addEventListener==='function')
+ window.addEventListener('focus',()=>{void combatSyncActiveSpellArtwork(true)});
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
