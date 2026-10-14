@@ -5627,9 +5627,10 @@ function combatMagicTargetPickerHtml(actor,action){
    '" aria-pressed="'+active+'" onclick="combatChooseMagicTarget(\''+escAttr(id)+'\')">'+
     escAttr(target.name_snapshot||'Kombattant')+(active?' ✓':'')+'</button>'
  }).join('');
+ // The clickable target portrait opens the picker. Do not repeat the
+ // selected-target notice in a separate row beneath the three magic frames.
  if(!(typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)&&buttons)
-  return '<div class="combat-magic-target-collapsed" role="status">'+
-    (selected&&candidates.has(selected)?'Målet är valt. Tryck på porträttet för att byta mål.':'Tryck på målporträttet ovan för att välja mål.')+'</div>';
+  return '';
  return '<div id="combatMagicTargetMenu" class="combat-magic-target-picker" role="group" aria-label="Välj mål för besvärjelse">'+
   '<strong>Mål i kast-SR '+currentRound+'</strong>'+
   (buttons?'<div class="combat-magic-target-options">'+buttons+'</div>':
@@ -5734,14 +5735,14 @@ function combatSpellCastPanelHtml(){
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
    combatSpellResultHtml(action):
-   // During preparation the SR is in the hourglass heading and the
-   // confirm button is the only remaining control. Casting retains guidance.
-   (preparing?'':combatMagicStatusHtml(label,detail,state)+
-    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
-   (casting&&currentRound>=readyRound?
-    '<details class="combat-magic-extra"'+(autoOpenExtras?' open':'')+'><summary>Fler magival</summary>'+
+   // Keep just the cast button below the gold-framed pictures. Optional
+   // rule controls remain on the same compact footer row until opened.
+   '<div class="combat-magic-footer">'+
+    (casting&&currentRound>=readyRound?
+     '<details class="combat-magic-extra"'+(autoOpenExtras?' open':'')+'><summary>Fler magival</summary>'+
       (typeof combatMagicTargetChooserHtml==='function'?combatMagicTargetChooserHtml(actor,action):'')+'</details>':'')+
-   combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound))+
+    combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound)+
+   '</div>')+
  '</section>'
 }
 /* Compact reaction renderer: exactly three slots on all screens.
