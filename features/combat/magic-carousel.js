@@ -154,15 +154,19 @@ function combatSpellCarouselHtml(actor,action){
  return '<div class="combat-magic-carousel cryptex-prototype" data-actor-id="'+escAttr(actorId)+
   '" data-start="'+(middleStart+focus)+'" data-count="'+items.length+'" aria-label="Besvärjelsekarusell">'+
   '<div class="combat-magic-carousel-banner">'+
-   '<button type="button" class="combat-magic-carousel-arrow" aria-label="Föregående" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)">❮</button>'+
    '<div class="combat-cryptex-stage">'+
     '<div class="combat-magic-carousel-viewport">'+
      '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
     '</div>'+
-    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.205" alt="" aria-hidden="true" draggable="false"'+
+    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.206" alt="" aria-hidden="true" draggable="false"'+
       ' onerror="this.onerror=null;this.src=\'./features/combat/arcane-cryptex-housing.svg\'">'+
+    '<button type="button" class="combat-cryptex-end-button combat-cryptex-end-button--prev"'+
+     ' aria-label="Föregående besvärjelse" title="Föregående besvärjelse"'+
+     ' onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)"></button>'+
+    '<button type="button" class="combat-cryptex-end-button combat-cryptex-end-button--next"'+
+     ' aria-label="Nästa besvärjelse" title="Nästa besvärjelse"'+
+     ' onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)"></button>'+
    '</div>'+
-   '<button type="button" class="combat-magic-carousel-arrow" aria-label="Nästa" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)">❯</button>'+
   '</div>'+
   '<div class="combat-magic-carousel-tools">'+
    (total>COMBAT_MAGIC_CAROUSEL_MAX?
