@@ -4,6 +4,7 @@
 const COMBAT_MAGIC_CAROUSEL_MAX=12;
 const combatMagicCarouselOffsets=new Map();
 const combatMagicCarouselOrders=new Map();
+const combatMagicCarouselSelectedKeys=new Map();
 let combatMagicCancelBusy=false;
 
 function combatMagicCarouselIdentity(actor){
@@ -82,10 +83,12 @@ function combatSpellCarouselHtml(actor,action){
  if(!items.length)return '<p class="combat-spell-empty">Inga tillgängliga besvärjelser.</p>';
  const actorId=String(actor.id),chosen=String(action?.source_data?.spell_key||'');
  const key=String(activeCombat?.id||'')+':'+actorId;
- if(!combatMagicCarouselOffsets.has(key)){
+ // When the caster picks a new spell, scroll it into the highlighted
+ // center slot. Mere arrow/swipe navigation must NOT change the choice.
+ if(!combatMagicCarouselOffsets.has(key)||combatMagicCarouselSelectedKeys.get(key)!==chosen){
   const ix=items.findIndex(spell=>combatSpellKey(spell)===chosen);
-  // Position 2 is the focus tile. The visible sequence wraps endlessly.
   combatMagicCarouselOffsets.set(key,ix<0?0:ix);
+  combatMagicCarouselSelectedKeys.set(key,chosen);
  }
  const focus=((Number(combatMagicCarouselOffsets.get(key))||0)%items.length+items.length)%items.length;
  const tiles=Array.from({length:5},(_,i)=>{
