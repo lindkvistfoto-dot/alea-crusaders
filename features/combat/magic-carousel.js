@@ -49,7 +49,10 @@ function combatMagicCarouselItems(actor,action){
   const counts=combatMagicCarouselUsage(actor).counts;
   order=[...all].sort((a,b)=>{
    const count=row=>Number(counts[String(row.name||'').trim().toLocaleLowerCase('sv-SE')])||0;
-   return count(b)-count(a)||String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
+   // During the prototype, show the two available real icons first when
+   // usage counts are tied. Actual cast frequency always outranks artwork.
+   const art=row=>combatSpellArtPath(row.icon_path||row.image_path)?1:0;
+   return count(b)-count(a)||art(b)-art(a)||String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
     combatSpellKey(a).localeCompare(combatSpellKey(b),'sv',{sensitivity:'base'})
   }).map(combatSpellKey);
   combatMagicCarouselOrders.set(battleKey,order); // frozen throughout battle
@@ -113,9 +116,18 @@ function combatSpellCarouselHtml(actor,action){
    '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Svep mellan besvärjelser">'+tiles+'</div>'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Nästa" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)">❯</button>'+
   '</div>'+
-  (total>COMBAT_MAGIC_CAROUSEL_MAX?
-   '<details class="combat-magic-carousel-all"><summary>⌕ Alla besvärjelser ('+total+')</summary>'+
-    combatSpellChooserHtml(actor,action)+'</details>':'')+
+  '<div class="combat-magic-carousel-tools">'+
+   (total>COMBAT_MAGIC_CAROUSEL_MAX?
+    '<details class="combat-magic-carousel-all"><summary>⌕ Alla besvärjelser ('+total+')</summary>'+
+      combatSpellChooserHtml(actor,action)+'</details>':'')+
+   (action?.source_data?.spell_prepared&&!action.source_data?.item_magic?
+    '<div class="combat-magic-carousel-eg" role="group" aria-label="Effektgrad">'+
+     '<button type="button" aria-label="Minska effektgrad" onclick="stepCombatSpellEffect(\''+escAttr(actorId)+'\',-1)"'+
+      (Number(action.source_data.effect_grade)<=1?' disabled':'')+'>−</button>'+
+     '<strong>EG '+Math.max(1,Number(action.source_data.effect_grade)||1)+'</strong>'+
+     '<button type="button" aria-label="Öka effektgrad" onclick="stepCombatSpellEffect(\''+escAttr(actorId)+'\',1)">+</button>'+
+    '</div>':'')+
+  '</div>'+
  '</div>';
 }
 function combatShiftSpellCarousel(actorId,direction){
