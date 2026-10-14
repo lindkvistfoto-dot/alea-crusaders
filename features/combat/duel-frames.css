@@ -701,3 +701,37 @@
   width:24px;height:24px;left:-7%;bottom:-13%;
  }
 }
+
+/* v0.35.198 – spell casting: the gold-framed portraits remain the focus.
+   No duplicate target notice, status strip or instructions below them.
+   Keep casting and context-dependent advanced settings reachable without
+   adding a second/third footer row to normal mobile combat. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer{
+ display:flex;flex-flow:row wrap;justify-content:flex-end;align-items:center;
+ column-gap:10px;row-gap:2px;min-width:0;
+ margin-top:clamp(2px,.55vw,6px);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer>.combat-action-confirm{
+ order:1;flex:0 0 auto;margin:0 0 0 auto;padding:0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer>.combat-magic-extra{
+ order:0;flex:0 1 auto;min-width:0;
+ margin:0 auto 0 0;padding:0;border:0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer>.combat-magic-extra[open]{
+ order:2;flex:1 1 100%;width:100%;margin-top:5px;padding:5px 0 0;
+}
+#combatPage .combat-shell-live .combat-mini-magic.planning{
+ padding-bottom:8px;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer{
+  column-gap:6px;margin-top:3px;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer>.combat-action-confirm .btn{
+  min-height:39px;padding:6px 11px;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic.planning{
+  padding-bottom:7px;
+ }
+}
