@@ -5536,18 +5536,27 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  const mobileChoice=!preparing&&canChooseTarget;
  // A normal spell has no target in preparation SR, even when another
  // combatant is selected elsewhere on the map.
- const iconPath=combatSpellArtPath(data.spell_icon_path)||combatSpellArtPath(artwork?.path);
- const iconX=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_focus_x:artwork?.x,50);
- const iconY=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_focus_y:artwork?.y,50);
- const iconZoom=combatSpellArtNumber(data.spell_icon_path?data.spell_icon_zoom:artwork?.zoom,100,100,300);
+ const currentSr=typeof activeCombat!=='undefined'?(Number(activeCombat?.round_number)||1):1;
+ const savedReadySr=Number(data.ready_round);
+ // Until preparation starts no ready_round is fixed. Afterwards keep the
+ // saved ready round rather than shifting the timer on every render.
+ const firstCastSr=data.casting_spell===true&&Number.isInteger(savedReadySr)&&savedReadySr>0
+  ?savedReadySr:currentSr+1;
+ const suffix=[1,2].includes(firstCastSr%10)&&![11,12].includes(firstCastSr%100)?'a':'e';
+ const firstCastLabel=firstCastSr+':'+suffix+' SR';
+ const eg=Math.max(1,Math.round(Number(data.effect_grade)||1));
+ const rawName=String(data.spell_name||'Besvärjelse').replace(/\s*\([^)]{1,12}\)\s*$/,'').trim();
+ const shortName=rawName==='ELD'?'Eld':rawName;
  const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
-  '<div class="combat-duelist-portrait combat-preparation-portrait" aria-hidden="true">'+
-   (iconPath?'<span class="combat-preparation-art" data-spell-art-path="'+escAttr(iconPath)+'"'+
-    ' data-focus-x="'+iconX+'" data-focus-y="'+iconY+'" data-zoom="'+iconZoom+'"><img alt="" hidden></span>':
-    '<span class="combat-magic-target-glyph" aria-hidden="true">✦</span>')+
+  '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Första möjliga kast: '+escAttr(firstCastLabel)+'">'+
+   '<span class="combat-preparation-round" aria-hidden="true">'+escAttr(firstCastLabel)+'</span>'+
   '</div><div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role">FÖRBERED</span>'+
-   '<b class="combat-duelist-name">Besvärjelse</b>'+
+   '<b class="combat-duelist-name combat-preparation-caption">'+
+    '<span>Förbereder</span>'+
+    '<span class="combat-preparation-spell">'+escAttr(shortName)+
+     ' <span class="combat-preparation-eg" aria-label="'+eg+' effektgrader"><strong>'+eg+'</strong><small>EG</small></span></span>'+
+   '</b>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':

@@ -51,10 +51,20 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   const html=header(foe,true);
   expect(html).toContain('combat-magic-preparation');
   expect(html).toContain('>FÖRBERED</span>');
-  expect(html).toContain('>Besvärjelse</b>');
+  expect(html).toContain('<span>Förbereder</span>');
+  expect(html).toContain('combat-preparation-spell');
+  expect(html).toContain('>2</strong><small>EG</small>');
+  expect(html).toContain('>2:a SR</span>');
+  expect(html).not.toContain('combat-preparation-art');
   expect(html).not.toContain('KP ');
   expect(html).not.toContain('data-unit="MÅL"');
   expect(html).not.toContain('>MÅL<');
+ });
+ it('visar kommande rundas nummer i ramen och EG som en cirkel',()=>{
+  const html=header(null,true);
+  expect(html).toContain('>2:a SR</span>');
+  expect(html).toContain('aria-label="2 effektgrader"');
+  expect(html).toContain('combat-preparation-caption');
  });
  it('visar riktigt mål i SR2',()=>{
   const html=header(foe,false);

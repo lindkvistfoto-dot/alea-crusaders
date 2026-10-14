@@ -79,6 +79,17 @@ describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
   expect(css).toContain('inset:clamp(4px,.65vw,8px)');
   expect(css).toContain('object-fit:fill;pointer-events:none;');
  });
+ it('aligns magic frames without opaque CSS backplates and shows the ready-SR',()=>{
+  expect(css).toContain('.combat-duel-center.is-spell.has-spell-cutout');
+  expect(css).toContain('padding-top:0;');
+  expect(css).toContain('.combat-magic-preparation .combat-preparation-portrait');
+  expect(css).toContain('background:transparent;');
+  expect(css).toContain('.combat-preparation-round');
+  expect(css).toContain('.combat-preparation-eg');
+  expect(runtime).toContain('const firstCastSr=');
+  expect(runtime).toContain('const firstCastLabel=');
+  expect(runtime).toContain('combat-preparation-caption');
+ });
  it('uses real image assets and existing artwork resolvers',()=>{
   expect(runtime).toContain('window.aleaEquipmentArt?.src(path)');
   expect(runtime).toContain('data-spell-art-path');
