@@ -213,9 +213,7 @@
   overflow:hidden;
   position:relative;
   isolation:isolate;
-  background-image:
-    radial-gradient(ellipse at 90% 86%,rgba(146,66,20,.22),transparent 60%),
-    linear-gradient(160deg,#2b1d17 0%,#18110f 58%,#130d0b 100%);
+  /* Inherit the same illustrated, combatant-aware backdrop as Attack. */
   border:1px solid #997343;
   border-radius:13px;
   box-shadow:inset 0 0 0 1px rgba(237,191,119,.1),0 5px 20px rgba(0,0,0,.32);
