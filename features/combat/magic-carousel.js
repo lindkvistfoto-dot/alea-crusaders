@@ -5,6 +5,7 @@ const COMBAT_MAGIC_CAROUSEL_MAX=12;
 const combatMagicCarouselOffsets=new Map();
 const combatMagicCarouselOrders=new Map();
 const combatMagicCarouselSelectedKeys=new Map();
+let combatMagicCarouselMotion=null;
 let combatMagicCancelBusy=false;
 
 function combatMagicCarouselIdentity(actor){
@@ -106,9 +107,14 @@ function combatSpellCarouselHtml(actor,action){
   combatMagicCarouselSelectedKeys.set(key,chosen);
  }
  const focus=((Number(combatMagicCarouselOffsets.get(key))||0)%items.length+items.length)%items.length;
- const tiles=Array.from({length:5},(_,i)=>{
-  const spell=items[((focus+i-2)%items.length+items.length)%items.length];
-  const spellKey=combatSpellKey(spell),active=chosen===spellKey;
+ // Three or more complete cycles allow a physically continuous strip. The
+ // current center sits in the middle copy; the animation quietly rebases
+ // by one complete cycle when the user spins past its boundary.
+ const repeats=Math.max(3,Math.ceil(11/items.length)|1);
+ const cycles=repeats%2===0?repeats+1:repeats;
+ const middleStart=Math.floor(cycles/2)*items.length;
+ const tiles=Array.from({length:items.length*cycles},(_,i)=>{
+  const spell=items[i%items.length],spellKey=combatSpellKey(spell),active=chosen===spellKey;
   const path=combatSpellArtPath(spell.icon_path||spell.image_path);
   const disabled=spell.item_spell&&(!spell.item_spell.ready||spell.item_spell.cast_mode==='automatic'||!(Number(spell.fv)>0));
   const art=path?'<span class="combat-carousel-spell-art" data-spell-art-path="'+escAttr(path)+
@@ -116,16 +122,20 @@ function combatSpellCarouselHtml(actor,action){
    '" data-focus-y="'+combatSpellArtNumber(spell.icon_focus_y??spell.image_focus_y,50)+
    '" data-zoom="'+combatSpellArtNumber(spell.icon_zoom,120,100,300)+'"><img alt="" hidden></span>':
    '<span class="combat-carousel-spell-glyph" aria-hidden="true">'+combatMagicCarouselGlyph(spell.name)+'</span>';
-  return '<button type="button" class="combat-carousel-spell-tile'+(i===2?' center':'')+
-   (active?' selected':'')+'" data-index="'+i+'" aria-pressed="'+active+'" '+
-   'aria-label="Välj '+escAttr(spell.name)+'" title="'+escAttr(spell.name)+'"'+(disabled?' disabled':'')+
+  return '<button type="button" class="combat-carousel-spell-tile'+
+   (i===middleStart+focus?' center':'')+(active?' selected':'')+
+   '" data-spell-index="'+(i%items.length)+'" tabindex="-1" aria-hidden="true"'+
+   ' title="'+escAttr(spell.name)+'"'+(disabled?' disabled':'')+
    ' onclick="selectCombatPreparedSpell(\''+escAttr(actorId)+'\',\''+escAttr(spellKey)+'\')">'+
    art+'<span class="combat-carousel-spell-label">'+escAttr(spell.name)+'</span></button>';
  }).join('');
- return '<div class="combat-magic-carousel" data-actor-id="'+escAttr(actorId)+'" aria-label="Besvärjelsekarusell">'+
+ return '<div class="combat-magic-carousel" data-actor-id="'+escAttr(actorId)+
+  '" data-start="'+(middleStart+focus)+'" data-count="'+items.length+'" aria-label="Besvärjelsekarusell">'+
   '<div class="combat-magic-carousel-banner">'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Föregående" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)">❮</button>'+
-   '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Svep mellan besvärjelser">'+tiles+'</div>'+
+   '<div class="combat-magic-carousel-viewport">'+
+    '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
+   '</div>'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Nästa" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)">❯</button>'+
   '</div>'+
   '<div class="combat-magic-carousel-tools">'+
@@ -142,7 +152,15 @@ function combatSpellCarouselHtml(actor,action){
   '</div>'+
  '</div>';
 }
+/* Smooth, continuous carousel motion: 1:1 finger tracking, velocity-driven
+ * coasting with exponential friction, then an eased snap to the closest
+ * center. The DOM never re-renders while the wheel is moving. */
 function combatShiftSpellCarousel(actorId,direction){
+ const motion=combatMagicCarouselMotion;
+ if(motion?.actorId===String(actorId)&&motion.root.isConnected){
+  motion.nudge(Math.sign(direction)||1);
+  return;
+ }
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
  if(!actor||action?.source_data?.casting_spell)return;
  const {items}=combatMagicCarouselItems(actor,action);
@@ -153,36 +171,186 @@ function combatShiftSpellCarousel(actorId,direction){
  renderCombat();
 }
 function combatBindSpellCarousel(root){
- const track=root?.querySelector('.combat-magic-carousel-track');
- const container=track?.closest('.combat-magic-carousel');
- if(!track||!container)return;
- const actorId=container.dataset.actorId;
- let drag=null,suppressClick=false;
- track.addEventListener('pointerdown',event=>{
+ combatMagicCarouselMotion?.destroy?.();
+ combatMagicCarouselMotion=null;
+ const viewport=root?.querySelector('.combat-magic-carousel-viewport');
+ const track=viewport?.querySelector('.combat-magic-carousel-track');
+ const container=viewport?.closest('.combat-magic-carousel');
+ if(!viewport||!track||!container)return;
+ const actorId=String(container.dataset.actorId);
+ const count=Number(container.dataset.count)||1;
+ const base=Math.floor(track.children.length/count/2)*count;
+ const key=String(activeCombat?.id||'')+':'+actorId;
+ const reduce=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const positionStart=Number(container.dataset.start)||base;
+ let position=positionStart,pitch=1,tileWidth=1,lastCenter=null,raf=0,drag=null;
+ let vx=0,lastFrame=0,snap=null,suppressClickUntil=0,wheelEndTimer=null;
+ const mod=(num,n)=>((num%n)+n)%n;
+ const clamp=(num,a,b)=>Math.max(a,Math.min(b,num));
+ const time=()=>performance.now();
+ const live=()=>viewport.isConnected;
+ const stop=()=>{
+  if(raf)cancelAnimationFrame(raf);
+  raf=0;lastFrame=0;snap=null;vx=0;
+ };
+ function normalize(){
+  // Every tile has identical copies. Swapping the index by a full cycle
+  // keeps the same pixels at the same screen position without a visible jump.
+  const low=base-.45,high=base+count-.45;
+  while(position<low)position+=count;
+  while(position>=high)position-=count;
+ }
+ function sync(){
+  if(!live())return;
+  normalize();
+  const offset=(viewport.clientWidth-tileWidth)/2-position*pitch;
+  track.style.transform='translate3d('+offset.toFixed(2)+'px,0,0)';
+  const center=clamp(Math.round(position),0,track.children.length-1);
+  if(center!==lastCenter){
+   if(lastCenter!==null)track.children[lastCenter]?.classList.remove('center');
+   track.children[center]?.classList.add('center');
+   lastCenter=center;
+  }
+  const shown=track.children[center]?.querySelector('.combat-carousel-spell-label')?.textContent||'';
+  track.setAttribute('aria-label','Besvärjelse i mitten: '+shown+'. Piltangenter bläddrar, Enter väljer.');
+  combatMagicCarouselOffsets.set(key,mod(Math.round(position),count));
+ }
+ function measure(){
+  if(!live())return;
+  const isMobile=typeof matchMedia==='function'?matchMedia('(max-width:760px)').matches:window.innerWidth<=760;
+  const visible=isMobile?3:5,gap=isMobile?6:9;
+  tileWidth=Math.max(42,(viewport.clientWidth-gap*(visible-1)-8)/visible);
+  pitch=tileWidth+gap;
+  track.style.setProperty('--combat-carousel-tile-width',tileWidth+'px');
+  track.style.setProperty('--combat-carousel-gap',gap+'px');
+  sync();
+ }
+ function settle(){
+  if(reduce){
+   stop();position=Math.round(position);sync();return;
+  }
+  snap={from:position,to:Math.round(position),started:time(),duration:230};
+  vx=0;lastFrame=0;
+  if(!raf)raf=requestAnimationFrame(tick);
+ }
+ function tick(stamp){
+  raf=0;
+  if(!live())return;
+  const dt=lastFrame?clamp(stamp-lastFrame,1,50):16;
+  lastFrame=stamp;
+  if(snap){
+   const t=clamp((stamp-snap.started)/snap.duration,0,1);
+   const ease=1-Math.pow(1-t,3);
+   position=snap.from+(snap.to-snap.from)*ease;
+   sync();
+   if(t>=1){position=Math.round(position);snap=null;sync();lastFrame=0;return}
+  }else{
+   position+=vx*dt;
+   vx*=Math.exp(-dt/420);
+   sync();
+   if(Math.abs(vx)<.00035){settle();return}
+  }
+  raf=requestAnimationFrame(tick);
+ }
+ function coast(v){
+  stop();
+  if(reduce||Math.abs(v)<.00065){settle();return}
+  vx=clamp(v,-.024,.024);
+  raf=requestAnimationFrame(tick);
+ }
+ function nudge(direction){
+  if(drag)return;
+  stop();
+  const from=position,to=Math.round(position)+direction;
+  if(reduce){position=to;sync();return}
+  snap={from,to,started:time(),duration:300};
+  raf=requestAnimationFrame(tick);
+ }
+ function onDown(event){
   if(event.pointerType==='mouse'&&event.button!==0)return;
-  drag={id:event.pointerId,x:event.clientX,y:event.clientY};
- });
- track.addEventListener('pointerup',event=>{
+  if(wheelEndTimer){clearTimeout(wheelEndTimer);wheelEndTimer=null}
+  stop();
+  const now=time();
+  drag={id:event.pointerId,startX:event.clientX,startY:event.clientY,
+   previousX:event.clientX,lastAt:now,lastMoveAt:now,velocity:0,moved:false};
+ }
+ function onMove(event){
   if(!drag||drag.id!==event.pointerId)return;
-  const dx=event.clientX-drag.x,dy=event.clientY-drag.y;drag=null;
-  if(Math.abs(dx)<26||Math.abs(dx)<Math.abs(dy)*1.2)return;
-  suppressClick=true;event.preventDefault();event.stopPropagation();
-  combatShiftSpellCarousel(actorId,-Math.sign(dx)*Math.max(1,Math.min(4,Math.round(Math.abs(dx)/68))));
- },true);
- track.addEventListener('click',event=>{
-  if(!suppressClick)return;
-  event.preventDefault();event.stopImmediatePropagation();suppressClick=false;
- },true);
- track.addEventListener('pointercancel',()=>{drag=null});
- track.addEventListener('keydown',event=>{
-  if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
-  event.preventDefault();combatShiftSpellCarousel(actorId,event.key==='ArrowRight'?1:-1);
- });
- track.addEventListener('wheel',event=>{
-  if(Math.abs(event.deltaX)<Math.abs(event.deltaY)&&!event.shiftKey)return;
+  const dx=event.clientX-drag.startX,dy=event.clientY-drag.startY;
+  if(!drag.moved){
+   if(Math.abs(dx)<5)return;
+   if(Math.abs(dx)<Math.abs(dy)*1.15)return;
+   drag.moved=true;
+   try{viewport.setPointerCapture(event.pointerId)}catch(_){}
+  }
   event.preventDefault();
-  combatShiftSpellCarousel(actorId,Math.sign(event.deltaX||event.deltaY)||1);
- },{passive:false});
+  const now=time(),dt=clamp(now-drag.lastAt,1,65);
+  const deltaX=event.clientX-drag.previousX;
+  position-=deltaX/pitch;
+  const instant=clamp(-deltaX/pitch/dt,-.035,.035);
+  drag.velocity=drag.velocity*.35+instant*.65;
+  drag.previousX=event.clientX;drag.lastAt=now;drag.lastMoveAt=now;
+  sync();
+ }
+ function finish(event){
+  if(!drag||drag.id!==event.pointerId)return;
+  const last=drag;drag=null;
+  if(!last.moved)return; // a tap must still select the clicked spell
+  suppressClickUntil=time()+460;
+  event.preventDefault();event.stopPropagation();
+  try{if(viewport.hasPointerCapture(event.pointerId))viewport.releasePointerCapture(event.pointerId)}catch(_){}
+  const age=time()-last.lastMoveAt;
+  coast(last.velocity*(age>85?.12:1));
+ }
+ function onCancel(event){
+  if(!drag||drag.id!==event.pointerId)return;
+  const moved=drag.moved;drag=null;
+  if(moved){suppressClickUntil=time()+400;settle()}
+ }
+ function onClick(event){
+  if(time()>suppressClickUntil)return;
+  event.preventDefault();event.stopImmediatePropagation();
+ }
+ function onWheel(event){
+  const x=event.deltaX||(event.shiftKey?event.deltaY:0);
+  if(!x)return;
+  event.preventDefault();
+  stop();
+  position+=x/pitch;sync();
+  if(wheelEndTimer)clearTimeout(wheelEndTimer);
+  wheelEndTimer=setTimeout(()=>{wheelEndTimer=null;settle()},110);
+ }
+ function onKey(event){
+  if(event.key==='ArrowLeft'||event.key==='ArrowRight'){
+   event.preventDefault();
+   nudge(event.key==='ArrowRight'?1:-1);
+  }else if(event.key==='Enter'||event.key===' '){
+   event.preventDefault();
+   track.children[clamp(Math.round(position),0,track.children.length-1)]?.click();
+  }
+ }
+ const resize=()=>measure();
+ viewport.addEventListener('pointerdown',onDown);
+ viewport.addEventListener('pointermove',onMove);
+ viewport.addEventListener('pointerup',finish);
+ viewport.addEventListener('pointercancel',onCancel);
+ viewport.addEventListener('click',onClick,true);
+ viewport.addEventListener('wheel',onWheel,{passive:false});
+ track.addEventListener('keydown',onKey);
+ window.addEventListener('resize',resize,{passive:true});
+ measure();
+ combatMagicCarouselMotion={actorId,root:container,nudge,destroy(){
+  stop();
+  if(wheelEndTimer)clearTimeout(wheelEndTimer);
+  window.removeEventListener('resize',resize);
+  viewport.removeEventListener('pointerdown',onDown);
+  viewport.removeEventListener('pointermove',onMove);
+  viewport.removeEventListener('pointerup',finish);
+  viewport.removeEventListener('pointercancel',onCancel);
+  viewport.removeEventListener('click',onClick,true);
+  viewport.removeEventListener('wheel',onWheel);
+  track.removeEventListener('keydown',onKey);
+ }};
 }
 async function combatCancelPreparedSpell(actorId){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
