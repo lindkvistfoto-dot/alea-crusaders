@@ -1,0 +1,85 @@
+/* Alea Crusaders – Arcane Gold Cryptex MVP. Three-window bronze housing
+   over the pre-existing infinite touch carousel; no casting-rule changes. */
+#combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
+ padding:3px 2px 5px;
+ background:linear-gradient(165deg,#26160f 0%,#110c09 68%,#2b1a10 100%);
+ border-color:#977047;box-shadow:inset 0 1px 0 #dcae694a,0 4px 13px #0008;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-banner{
+ grid-template-columns:clamp(22px,5vw,38px) minmax(0,1fr) clamp(22px,5vw,38px);
+ gap:0;align-items:center;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-stage{
+ position:relative;isolation:isolate;min-width:0;width:100%;
+ aspect-ratio:2006/784;
+ background:radial-gradient(ellipse at 50% 50%,#573421 0%,#1a110d 70%,#130c09);
+ border-radius:13px;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-viewport{
+ position:absolute;inset:0;display:flex;align-items:center;
+ width:100%;height:100%;padding:0;overflow:hidden;
+ background:linear-gradient(180deg,#20140e,#3d2618 42%,#1a100b 95%);
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-housing{
+ position:absolute;z-index:4;inset:0;width:100%;height:100%;
+ object-fit:fill;pointer-events:none;user-select:none;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track{
+ position:relative;z-index:1;padding:0;margin:0;
+ transform-style:preserve-3d;backface-visibility:hidden;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile{
+ background:radial-gradient(ellipse at 50% 33%,#644127,#1c130e 75%);
+ box-shadow:inset 0 1px 13px #000b;
+ border:0;border-radius:7px;
+ transform-origin:50% 50%;transition:none!important;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-tile::after{
+ background:none;box-shadow:none;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
+ filter:brightness(1.13);
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-label{
+ bottom:3%;font-size:clamp(7px,1.1vw,13px);
+ background:linear-gradient(90deg,transparent,#140b08eb 11% 89%,transparent);
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-marks{
+ top:1%;right:1%;gap:1px;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-mark{
+ width:clamp(12px,1.7vw,19px);height:clamp(12px,1.7vw,19px);
+ font-size:clamp(8px,1.08vw,12px);
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-arrow{
+ position:relative;z-index:6;
+ min-height:38px;height:clamp(38px,6vw,58px);
+ color:#ffe1a3;font-size:clamp(17px,2vw,28px);
+ border:1px solid #b8894c;border-radius:50%;
+ background:radial-gradient(circle at 30% 20%,#654124,#27180f 75%);
+ box-shadow:0 2px 8px #000c,inset 0 0 0 2px #2b190d;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-tools{
+ border-top:1px solid rgba(196,148,75,.35);
+ padding-top:5px;margin-top:1px;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
+  padding:4px 2px;margin-bottom:5px;
+ }
+ #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-banner{
+  grid-template-columns:22px minmax(0,1fr) 22px;
+ }
+ #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-arrow{
+  min-height:30px;height:30px;min-width:22px;padding:0;font-size:16px;
+ }
+ #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-label{
+  font-size:clamp(6px,1.95vw,9px);
+ }
+ #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-mark{
+  width:clamp(10px,3vw,15px);height:clamp(10px,3vw,15px);font-size:9px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track{will-change:auto}
+}
