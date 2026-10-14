@@ -46,6 +46,15 @@ function combatMagicCarouselItems(actor,action){
  const all=combatSpellOptions(actor),battleKey=String(activeCombat?.id||'')+':'+combatMagicCarouselIdentity(actor);
  let order=combatMagicCarouselOrders.get(battleKey);
  if(!order){
+  // Freeze the order for the full battle, including after a page reload.
+  // It is safe if browser storage is unavailable: use this session's cache.
+  const orderStorageKey='alea.magic.order:'+battleKey;
+  try{
+   const saved=JSON.parse(localStorage.getItem(orderStorageKey)||'null');
+   if(Array.isArray(saved)&&saved.length)order=saved;
+  }catch(_){}
+ }
+ if(!order){
   const counts=combatMagicCarouselUsage(actor).counts;
   order=[...all].sort((a,b)=>{
    const count=row=>Number(counts[String(row.name||'').trim().toLocaleLowerCase('sv-SE')])||0;
@@ -55,8 +64,9 @@ function combatMagicCarouselItems(actor,action){
    return count(b)-count(a)||art(b)-art(a)||String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
     combatSpellKey(a).localeCompare(combatSpellKey(b),'sv',{sensitivity:'base'})
   }).map(combatSpellKey);
-  combatMagicCarouselOrders.set(battleKey,order); // frozen throughout battle
+  try{localStorage.setItem('alea.magic.order:'+battleKey,JSON.stringify(order))}catch(_){}
  }
+ combatMagicCarouselOrders.set(battleKey,order); // frozen throughout battle
  const byKey=new Map(all.map(spell=>[combatSpellKey(spell),spell]));
  const items=order.map(key=>byKey.get(key)).filter(Boolean).slice(0,COMBAT_MAGIC_CAROUSEL_MAX);
  const selected=byKey.get(String(action?.source_data?.spell_key||''));
