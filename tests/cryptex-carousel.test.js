@@ -5,47 +5,55 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const carousel=read('features/combat/magic-carousel.js');
 const css=read('features/combat/arcane-cryptex.css');
 const mask=read('features/combat/arcane-cryptex-windows-mask.svg');
-const svg=read('features/combat/arcane-cryptex-housing.svg');
+const png=readFileSync(new URL('../features/combat/arcane-cryptex-housing.png',import.meta.url));
 const html=read('index.html');
 
-describe('Arcane Gold cryptex carousel',()=>{
- it('retains three real transparent mechanical windows',()=>{
-  expect(svg).toContain('<mask id="holes">');
-  for(const x of [362,791,1400]){
-   expect(svg).toContain('x="'+x+'"');
-   expect(mask).toContain('x="'+x+'"');
-  }
-  expect((mask.match(/<rect /g)||[])).toHaveLength(3);
-  expect(css).toContain('aspect-ratio:2006/784');
+describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
+ it('ships a transparent PNG in the approved 1536x1024 aspect',()=>{
+  expect([...png.subarray(0,8)]).toEqual([137,80,78,71,13,10,26,10]);
+  expect(png.readUInt32BE(16)).toBe(1536);
+  expect(png.readUInt32BE(20)).toBe(1024);
+  expect(png[25]).toBe(6); // RGBA colour type
+  expect(css).toContain('aspect-ratio:1536/1024');
   expect(css).toContain('arcane-cryptex-windows-mask.svg');
+  for(const x of [241,582,1097])expect(mask).toContain('x="'+x+'"');
+  expect((mask.match(/<rect /g)||[])).toHaveLength(3);
  });
- it('uses only the built-in endcaps for backward/forward navigation',()=>{
+ it('uses built-in bronze arrows below the side windows, without visible extra controls',()=>{
   expect(carousel).toContain('combat-cryptex-end-button--prev');
   expect(carousel).toContain('combat-cryptex-end-button--next');
   expect(carousel).toContain('aria-label="Föregående besvärjelse"');
   expect(carousel).toContain('aria-label="Nästa besvärjelse"');
   expect(carousel).not.toContain('combat-magic-carousel-arrow');
-  expect(css).toContain('background:transparent;box-shadow:none;color:transparent;');
-  expect(css).toContain('border:0;border-radius:0;');
+  expect(css).toContain('top:61%;width:9.5%;height:18%');
+  expect(css).toContain('background:transparent;box-shadow:none;color:transparent');
  });
- it('keeps selection, keyboard operation, inertial dragging and spell badges',()=>{
+ it('fills the middle square and shrinks neighbours to match smaller openings',()=>{
+  expect(carousel).toContain('viewport.clientWidth*.232');
+  expect(carousel).toContain('viewport.clientWidth*.279');
+  expect(carousel).toContain('const scale=1-displacement*.37');
+  expect(css).toContain('max-height:none;min-height:0;aspect-ratio:1/1');
+  expect(css).toContain('width:100%;min-width:0;aspect-ratio:1536/1024');
+ });
+ it('keeps selection, live nameplate, keyboard operation and inertia',()=>{
+  expect(carousel).toContain('combat-cryptex-nameplate');
+  expect(carousel).toContain('nameplate.textContent=shown');
   expect(carousel).toContain('combatShiftSpellCarousel');
   expect(carousel).toContain('requestAnimationFrame(tick)');
   expect(carousel).toContain('pointerdown');
   expect(carousel).toContain('ArrowRight');
   expect(carousel).toContain('selectCombatPreparedSpell(');
   expect(carousel).toContain('combat-carousel-spell-marks');
-  expect(carousel).toContain('combatMagicCarouselOffsets.set(key');
  });
- it('keeps the housing non-interactive, with separate accessible endcap buttons',()=>{
+ it('renders the housing above the moving strip and keeps touch targets accessible',()=>{
   expect(carousel).toContain('combat-cryptex-housing');
   expect(css).toContain('object-fit:fill;pointer-events:none');
   expect(carousel).toContain('event.stopImmediatePropagation()');
   expect(css).toContain(':focus-visible');
  });
- it('keeps PNG with an SVG fallback and cache-busted styles',()=>{
-  expect(carousel).toContain('arcane-cryptex-housing.png?v=0.35.206');
-  expect(carousel).toContain('arcane-cryptex-housing.svg');
-  expect(html).toContain('arcane-cryptex.css?v=0.35.206');
+ it('cache-busts the new image, mask and CSS',()=>{
+  expect(carousel).toContain('arcane-cryptex-housing.png?v=0.35.207');
+  expect(html).toContain('arcane-cryptex.css?v=0.35.207');
+  expect(css).toContain('arcane-cryptex-windows-mask.svg?v=0.35.207');
  });
 });

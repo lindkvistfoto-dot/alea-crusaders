@@ -1,30 +1,31 @@
-/* Arcane Gold Cryptex v0.35.206: only the bronze housing is framed.
-   Endcaps themselves are the arrow hit targets; preserve the working belt. */
+/* Arcane Gold Cryptex v0.35.207 – approved square-window lion housing.
+   The transparent artwork dominates preparation, with integrated bronze
+   arrow hit areas and a live spell-name plate. Mechanical inertia is unchanged. */
 #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
  position:relative;min-width:0;width:100%;
  margin:0 0 4px;padding:0;border:0;border-radius:0;
  background:none;box-shadow:none;overflow:visible;
 }
-/* Let the artwork use the panel instead of wasting its width on inset padding. */
+/* Spend width on the artefact, not an additional decorative panel. */
 #combatPage .combat-shell-live .combat-magic-select-panel:has(.cryptex-prototype){
- padding-left:1px;padding-right:1px;
+ padding-left:0;padding-right:0;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-banner{
  display:block;min-width:0;width:100%;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-stage{
  position:relative;isolation:isolate;display:block;
- width:100%;min-width:0;aspect-ratio:2006/784;
+ width:100%;min-width:0;aspect-ratio:1536/1024;
  margin:0;padding:0;border:0;border-radius:0;
  background:none;box-shadow:none;overflow:visible;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-viewport{
  position:absolute;inset:0;display:flex;align-items:center;
  width:100%;height:100%;padding:0;overflow:hidden;background:transparent;
- /* Mask the scrolling strip to the artwork's three real openings.
-    Outside those openings, the surrounding panel shows through. */
- -webkit-mask-image:url("./arcane-cryptex-windows-mask.svg");
- mask-image:url("./arcane-cryptex-windows-mask.svg");
+ touch-action:pan-y;
+ /* Only the three square cutouts show the moving belt. */
+ -webkit-mask-image:url("./arcane-cryptex-windows-mask.svg?v=0.35.207");
+ mask-image:url("./arcane-cryptex-windows-mask.svg?v=0.35.207");
  -webkit-mask-size:100% 100%;mask-size:100% 100%;
  -webkit-mask-position:center;mask-position:center;
  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
@@ -35,60 +36,75 @@
  width:100%;height:100%;object-fit:fill;pointer-events:none;user-select:none;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track{
- position:relative;z-index:1;padding:0;margin:0;
+ position:relative;top:-3.1%;z-index:1;padding:0;margin:0;
  transform-style:preserve-3d;backface-visibility:hidden;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile{
+ width:var(--combat-carousel-tile-width,80px);
+ height:var(--combat-carousel-tile-width,80px);
+ max-height:none;min-height:0;aspect-ratio:1/1;
  background:radial-gradient(ellipse at 50% 33%,#644127,#1c130e 75%);
  box-shadow:inset 0 1px 13px #000b;
- border:0;border-radius:7px;
+ border:0;border-radius:8px;
  transform-origin:50% 50%;transition:none!important;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-tile::after{
  background:none;box-shadow:none;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
- filter:brightness(1.13);
+ filter:brightness(1.08);
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-art{
+ inset:0;overflow:hidden;border-radius:7px;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-label{
- bottom:3%;font-size:clamp(7px,1.1vw,13px);
- background:linear-gradient(90deg,transparent,#140b08eb 11% 89%,transparent);
+ /* The label lives on the built-in bronze nameplate; keep it in DOM for accessibility. */
+ visibility:hidden;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-marks{
- top:1%;right:1%;gap:1px;
+ top:2%;right:2%;gap:2px;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-mark{
- width:clamp(12px,1.7vw,19px);height:clamp(12px,1.7vw,19px);
- font-size:clamp(8px,1.08vw,12px);
+ width:clamp(12px,1.6vw,20px);height:clamp(12px,1.6vw,20px);
+ font-size:clamp(8px,1vw,12px);
 }
-/* Invisible, generous click/touch targets directly over the two built-in endcaps.
-   There are no extra arrows, circles, borders or visible controls. */
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate{
+ position:absolute;z-index:5;left:34.6%;top:72.1%;width:30.8%;height:7.7%;
+ display:flex;align-items:center;justify-content:center;
+ box-sizing:border-box;padding:0 4px;overflow:hidden;
+ color:#f6d69b;text-shadow:0 1px 3px #000,0 0 9px #120b06;
+ font:700 clamp(10px,1.4vw,18px)/1.1 Georgia,serif;
+ white-space:nowrap;text-overflow:ellipsis;pointer-events:none;
+}
+/* Transparent click targets directly over the existing bronze arrows
+   BELOW each side window – no extra rendered controls. */
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button{
- position:absolute;z-index:6;top:19%;width:15%;height:62%;min-width:0;min-height:0;
- display:block;padding:0;margin:0;border:0;border-radius:34%;
+ position:absolute;z-index:6;top:61%;width:9.5%;height:18%;
+ min-width:35px;min-height:35px;max-height:none;
+ display:block;padding:0;margin:0;border:0;border-radius:38%;
  background:transparent;box-shadow:none;color:transparent;
  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 }
-#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button--prev{left:1.5%}
-#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button--next{right:1.5%}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button--prev{left:17.25%}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button--next{right:17.25%}
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button:hover{
- background:radial-gradient(ellipse,rgba(245,183,97,.12),transparent 74%);
+ background:radial-gradient(ellipse,rgba(245,183,97,.14),transparent 73%);
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button:active{
- background:radial-gradient(ellipse,rgba(245,183,97,.21),transparent 74%);
+ background:radial-gradient(ellipse,rgba(245,183,97,.22),transparent 73%);
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button:focus-visible{
- outline:2px solid #f2c579;outline-offset:-5px;
+ outline:2px solid #f2c579;outline-offset:-4px;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-tools{
- border-top:0;padding:2px 5px 0;margin-top:0;
+ border-top:0;padding:1px 5px 0;margin-top:0;
 }
 @media(max-width:760px){
  #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
-  padding:0;margin-bottom:4px;
+  width:100%;padding:0;margin-bottom:3px;
  }
- #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-label{
-  font-size:clamp(6px,1.95vw,9px);
+ #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate{
+  font-size:clamp(9px,2.5vw,12px);
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-mark{
   width:clamp(10px,3vw,15px);height:clamp(10px,3vw,15px);font-size:9px;

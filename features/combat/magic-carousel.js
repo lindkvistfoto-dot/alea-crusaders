@@ -158,8 +158,8 @@ function combatSpellCarouselHtml(actor,action){
     '<div class="combat-magic-carousel-viewport">'+
      '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
     '</div>'+
-    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.206" alt="" aria-hidden="true" draggable="false"'+
-      ' onerror="this.onerror=null;this.src=\'./features/combat/arcane-cryptex-housing.svg\'">'+
+    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.207" alt="" aria-hidden="true" draggable="false">'+
+    '<span class="combat-cryptex-nameplate" aria-live="polite">'+escAttr(combatMagicCarouselTags(items[focus]).name)+'</span>'+ 
     '<button type="button" class="combat-cryptex-end-button combat-cryptex-end-button--prev"'+
      ' aria-label="Föregående besvärjelse" title="Föregående besvärjelse"'+
      ' onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)"></button>'+
@@ -207,6 +207,7 @@ function combatBindSpellCarousel(root){
  const track=viewport?.querySelector('.combat-magic-carousel-track');
  const container=viewport?.closest('.combat-magic-carousel');
  if(!viewport||!track||!container)return;
+ const nameplate=container.querySelector('.combat-cryptex-nameplate');
  const actorId=String(container.dataset.actorId);
  const count=Number(container.dataset.count)||1;
  const base=Math.floor(track.children.length/count/2)*count;
@@ -250,13 +251,17 @@ function combatBindSpellCarousel(root){
      if(tile.style.opacity)tile.style.opacity='';
      continue;
     }
-    const angle=clamp(-distance*36,-76,76);
-    const scale=1-Math.min(1,Math.abs(distance))*.13;
-    tile.style.transform='perspective(480px) rotateY('+angle.toFixed(1)+'deg) scale('+scale.toFixed(3)+')';
+    // The current tile fills the big square; neighbours shrink into the two smaller squares.
+    const displacement=Math.min(1,Math.abs(distance));
+    const angle=clamp(-distance*18,-48,48);
+    const scale=1-displacement*.37;
+    const sideRise=-viewport.clientHeight*.01*displacement;
+    tile.style.transform='translateY('+sideRise.toFixed(2)+'px) perspective(700px) rotateY('+angle.toFixed(1)+'deg) scale('+scale.toFixed(3)+')';
     tile.style.opacity=String(1-Math.min(1,Math.abs(distance))*.20);
    }
   }
   const shown=track.children[center]?.querySelector('.combat-carousel-spell-label')?.textContent||'';
+  if(nameplate&&nameplate.textContent!==shown)nameplate.textContent=shown;
   track.setAttribute('aria-label','Besvärjelse i mitten: '+shown+'. Piltangenter bläddrar, Enter väljer.');
   combatMagicCarouselOffsets.set(key,mod(Math.round(position),count));
  }
@@ -265,10 +270,11 @@ function combatBindSpellCarousel(root){
   const isMobile=typeof matchMedia==='function'?matchMedia('(max-width:760px)').matches:window.innerWidth<=760;
   const cryptex=container.classList.contains('cryptex-prototype');
   const visible=isMobile?3:5,gap=isMobile?6:9;
-  // Window centers in approved housing: 24.1%, 50%, 75.9%.
-  tileWidth=cryptex?Math.max(24,viewport.clientWidth*.213):
+  // Squared Arcane Gold v2 openings: centres at 22.1%, 50%, 77.9%.
+  // Middle tile is full size; side tiles are scaled down by sync() to fit their windows.
+  tileWidth=cryptex?Math.max(48,viewport.clientWidth*.232):
    Math.max(42,(viewport.clientWidth-gap*(visible-1)-8)/visible);
-  pitch=cryptex?viewport.clientWidth*.258:tileWidth+gap;
+  pitch=cryptex?viewport.clientWidth*.279:tileWidth+gap;
   const finalGap=cryptex?Math.max(0,pitch-tileWidth):gap;
   track.style.setProperty('--combat-carousel-tile-width',tileWidth+'px');
   track.style.setProperty('--combat-carousel-gap',finalGap+'px');
