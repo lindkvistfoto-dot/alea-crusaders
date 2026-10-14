@@ -50,12 +50,13 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
  it('visar en förberedelseruta i stället för mål under SR1',()=>{
   const html=header(foe,true);
   expect(html).toContain('combat-magic-preparation');
-  expect(html).toContain('>FÖRBERED <small>· 2:a SR</small></span>');
+  expect(html).toContain('>Förbered</b>');
+  expect(html).not.toContain('<small>· 2:a SR</small>');
   expect(html).not.toContain('<span>Förbereder</span>');
-  expect(html).toContain('combat-magic-spell-heading');
+  expect(html).toContain('combat-spell-eg-corner');
   expect(html).toContain('>2</strong><small>EG</small>');
   expect(html).toContain('combat-magic-duel combat-illustrated-duel is-preparing');
-  expect(html).toContain('FÖRBERED <small>· 2:a SR</small>');
+  expect(html).toContain('Första möjliga kast: 2:a SR');
   expect(html).toContain('preparation-hourglass-1sr.webp');
   expect(html).not.toContain('combat-preparation-round');
   expect(html).not.toContain('combat-preparation-art');
@@ -65,19 +66,21 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
  });
  it('visar kommande rundas nummer i ramen och EG som en cirkel',()=>{
   const html=header(null,true);
-  expect(html).toContain('FÖRBERED <small>· 2:a SR</small>');
+  expect(html).toContain('Första möjliga kast: 2:a SR');
   expect(html).toContain('preparation-hourglass-1sr.webp');
   expect(html).not.toContain('combat-preparation-round');
   expect(html).toContain('aria-label="2 effektgrader"');
-  expect(html).toContain('combat-magic-spell-heading');
+  expect(html).toContain('combat-spell-eg-corner');
  });
  it('låter adminbilden vara kvar och placerar dynamisk besvärjelse, EG och SR över ramen',()=>{
   const html=header(null,true,'damage',{spell_name:'ELD (F)',effect_grade:5,ready_round:7});
-  expect(html).toContain('FÖRBERED <small>· 7:e SR</small>');
-  expect(html).toContain('combat-magic-spell-heading');
-  expect(html).toContain('<span class="combat-magic-spell-heading-name">Eld</span>');
+  expect(html).toContain('Första möjliga kast: 7:e SR');
+  expect(html).not.toContain('<small>· 7:e SR</small>');
+  expect(html).toContain('combat-spell-eg-corner');
+  expect(html).toContain('>Eld</b>');
   expect(html).toContain('>5</strong><small>EG</small>');
-  expect(html).not.toContain('combat-preparation-caption');
+  expect(html).toContain('combat-preparation-caption');
+  expect(html).toContain('data-unit=""');
   expect(html).not.toContain('>BESVÄRJELSE</span>');
   expect(html).toContain('combat-duel-center is-spell');
  });
@@ -89,6 +92,20 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   const casting=render(2);
   expect(casting).toContain('data-magic-confirm');
   expect(casting).toContain('data-target-picker');
+ });
+ it('placerar EG över den andra ramens nedre vänstra hörn, Eld under och Förbered under timglaset',()=>{
+  const html=header(null,true,'damage',{spell_name:'ELD (F)',effect_grade:3,ready_round:4});
+  const viewport=html.indexOf('combat-duel-center-viewport');
+  const badge=html.indexOf('combat-spell-eg-corner');
+  const frameEnd=html.indexOf('</span><b class="combat-duel-center-name"');
+  expect(viewport).toBeGreaterThan(-1);
+  expect(badge).toBeGreaterThan(viewport);
+  expect(badge).toBeLessThan(frameEnd);
+  expect(html).toContain('>3</strong><small>EG</small>');
+  expect(html).toContain('>Eld</b>');
+  expect(html).toContain('>Förbered</b>');
+  expect(html).not.toContain('>MAGIKER</span>');
+  expect(html).not.toContain('>FÖRBERED <small>');
  });
  it('visar riktigt mål i SR2',()=>{
   const html=header(foe,false);

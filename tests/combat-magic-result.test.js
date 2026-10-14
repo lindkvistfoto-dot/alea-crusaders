@@ -124,7 +124,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const ready=context.spellPanel();
   expect(ready).toContain('Klar att kasta');
   expect(ready).toContain('combat-magic-duel');
-  expect(ready).toContain('>MAGIKER</span>');
+  expect(ready).not.toContain('>MAGIKER</span>');
   expect(ready).toContain('>MÅL</span>');
   expect(ready).toContain('Krigaren');
   expect(ready).toContain('combat-mini-arrow combat-magic-arrow');
@@ -166,7 +166,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('combat-duelist-card defender');
   expect(html).toContain('src="https://example.test/mage.png"');
   expect(html).toContain('src="https://example.test/target.png"');
-  expect(html).toContain('>MAGIKER</span>');
+  expect(html).not.toContain('>MAGIKER</span>');
   expect(html).toContain('>MÅL</span>');
   expect(html.indexOf('combat-magic-duel')).toBeLessThan(html.indexOf('combat-spell-result'));
   expect(html).not.toContain('combat-magic-detail-values');
@@ -241,7 +241,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('combat-mini-magic resolved has-spell-backdrop');
   expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="75" data-focus-y="60" data-zoom="170"');
   expect(html.indexOf('combat-magic-backdrop')).toBeLessThan(html.indexOf('combat-magic-heading'));
-  expect(html).toContain('MAGIKER');
+  expect(html).not.toContain('>MAGIKER</span>');
   // A non-targeted/manual spell keeps the framed effect icon, not a false MÅL.
   expect(html).toContain('EFFEKT');
   expect(html).not.toContain('>MÅL</span>');

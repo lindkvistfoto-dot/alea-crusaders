@@ -5434,16 +5434,12 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null,spellHe
   (spellCutout&&art?' has-spell-cutout':'')+
   (eldProjectile&&art?' is-eld-projectile':'')+
   (switchable?' combat-weapon-switch':'')+'"'+attrs+'>'+
-  (spell?(spellHeading?
-    '<span class="combat-duel-center-role combat-magic-spell-heading" aria-label="Besvärjelse och effektgrad">'+
-      '<span class="combat-magic-spell-heading-name">'+escAttr(spellHeading.name)+'</span>'+
-      '<span class="combat-preparation-eg" aria-label="'+escAttr(spellHeading.eg)+' effektgrader"><strong>'+escAttr(spellHeading.eg)+'</strong><small>EG</small></span>'+
-    '</span>':
-    '<span class="combat-duel-center-role">'+label+'</span>'):'')+
+  (spell&&!spellHeading?'<span class="combat-duel-center-role">'+label+'</span>':'')+
   '<span class="combat-duel-center-viewport"'+crop+'>'+
    (art||'<span class="combat-duel-center-empty" aria-hidden="true">'+(spell?'✦':'⚔')+'</span>')+
    (switchable?'<span class="combat-weapon-switch-mark" aria-hidden="true">⇄</span>':'')+
-  '</span><b class="combat-duel-center-name" title="'+escAttr(title)+'">'+escAttr(title)+'</b></'+tag+'>';
+   (spellHeading?'<span class="combat-preparation-eg combat-spell-eg-corner" aria-label="'+escAttr(spellHeading.eg)+' effektgrader"><strong>'+escAttr(spellHeading.eg)+'</strong><small>EG</small></span>':'')+
+  '</span><b class="combat-duel-center-name" title="'+escAttr(title)+'">'+escAttr(spellHeading?.name||title)+'</b></'+tag+'>';
 }
 // Spell feedback is presentation-only: Expert casting, PSY and effects are resolved elsewhere.
 function combatLatestResolvedSpellAction(){
@@ -5559,7 +5555,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
     '<img src="./assets/combat/frames/preparation-hourglass-1sr.webp" width="300" height="400" alt="" decoding="async">'+
    '</span>'+
   '</div><div class="combat-duelist-copy">'+
-   '<span class="combat-duelist-role combat-preparation-role">FÖRBERED <small>· '+escAttr(firstCastLabel)+'</small></span>'+
+   '<b class="combat-duelist-name combat-preparation-caption">Förbered</b>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
@@ -5575,7 +5571,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  return '<div class="combat-mini-title combat-magic-heading">'+
   '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span></div>'+
   '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel'+(preparing?' is-preparing':'')+'">'+
-   combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
+   combatMiniParticipantHtml('',actor,data.item_magic?.item_name||'')+
    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
     combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork,null,null,spellHeading)+
     '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+

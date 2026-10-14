@@ -640,3 +640,64 @@
   top:-13%;width:96%;
  }
 }
+
+/* v0.35.197 – tighten the three preparation frames and simplify captions.
+   Labels now belong BELOW the picture; EG overlaps the lower-left gold
+   corner of the SECOND picture. No changes to casting mechanics or EG. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-heading{
+ margin-bottom:clamp(3px,.4vw,6px);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-mini-side.attacker .combat-duelist-role{
+ display:none!important;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ :is(.combat-duelist-portrait,.combat-duel-center-viewport){
+ margin-top:clamp(3px,.4vw,6px);
+}
+/* Keep the frame top lines aligned with the portrait and preparation tile. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-duel-center.is-spell .combat-duel-center-viewport{
+ overflow:visible;isolation:isolate;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-duel-center.is-spell .combat-duel-center-name{
+ display:block!important;
+ margin-top:5px;
+ color:#f8e9d0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-duel-center.is-spell .combat-spell-eg-corner{
+ position:absolute;z-index:9;
+ left:-7%;bottom:-13%;
+ width:clamp(24px,2.5vw,36px);height:clamp(24px,2.5vw,36px);
+ min-width:24px;pointer-events:none;
+ filter:drop-shadow(1px 4px 6px rgba(0,0,0,.85));
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation
+ .combat-preparation-caption{
+ display:block;order:2;width:100%;
+ margin-top:5px;padding:0;
+ white-space:nowrap;text-align:center;
+ color:#f8e9d0;font:700 clamp(10px,1.15vw,16px)/1.16 Georgia,serif;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-magic-preparation{padding-bottom:0}
+/* Horizontal framing is untouched. Center the tall 1 SR hourglass along the
+   same vertical axis as the square gold frame; equal overlap above/below. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation
+ .combat-preparation-hourglass{
+ top:50%;left:50%;width:88%;height:auto;aspect-ratio:3/4;
+ transform:translate(-50%,-50%);
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+  :is(.combat-duelist-portrait,.combat-duel-center-viewport){margin-top:4px}
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation
+  .combat-preparation-hourglass{
+  top:50%;width:88%;transform:translate(-50%,-50%);
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-duel-center.is-spell
+  .combat-spell-eg-corner{
+  width:24px;height:24px;left:-7%;bottom:-13%;
+ }
+}
