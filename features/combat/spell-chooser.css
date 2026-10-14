@@ -523,3 +523,38 @@
 @media(prefers-reduced-motion:reduce){
  #combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile{transition:none!important}
 }
+
+/* v0.35.201 – small Expert F/K/R markers in the top-right corner of each
+   spell icon. They sit OVER the icon art but inside the ornate gold frame.
+   Their colors distinguish types without increasing the carousel height. */
+#combatPage .combat-shell-live .combat-carousel-spell-marks{
+ position:absolute;z-index:8;top:7%;right:6%;
+ display:flex;align-items:center;justify-content:flex-end;gap:2px;
+ max-width:90%;height:auto;pointer-events:none;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-mark{
+ display:grid;place-items:center;flex:none;
+ width:clamp(15px,1.7vw,20px);height:clamp(15px,1.7vw,20px);
+ box-sizing:border-box;border-radius:50%;
+ border:1px solid rgba(250,207,129,.95);
+ background:radial-gradient(circle at 30% 25%,#6b4a2c,#25160e 78%);
+ color:#fff0c7;
+ box-shadow:0 1px 4px #000d,inset 0 0 0 1px rgba(0,0,0,.62);
+ text-shadow:0 1px 2px #000;
+ font:900 clamp(10px,1.05vw,12px)/1 Georgia,serif;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-mark.quick{
+ border-color:#b2d9d8;background:radial-gradient(circle at 30% 25%,#4f807e,#193938 78%);
+ color:#e8ffff;box-shadow:0 1px 4px #000d,0 0 4px #94d7d04b;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-mark.ritual{
+ border-color:#c5b0e8;background:radial-gradient(circle at 30% 25%,#74578b,#34243e 78%);
+ color:#f4e9ff;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-carousel-spell-marks{top:7%;right:7%;gap:2px}
+ #combatPage .combat-shell-live .combat-carousel-spell-mark{
+  width:clamp(15px,3.9vw,19px);height:clamp(15px,3.9vw,19px);
+  font-size:clamp(10px,2.65vw,12px);
+ }
+}
