@@ -305,14 +305,15 @@ function combatBindSpellCarousel(root){
   try{if(viewport.hasPointerCapture(event.pointerId))viewport.releasePointerCapture(event.pointerId)}catch(_){}
   // Include the final finger travel between the last move event and release.
   const now=time(),tail=event.clientX-last.previousX;
+  const age=now-last.lastMoveAt;
   if(Math.abs(tail)>.5){
-   const dt=clamp(now-last.lastAt,1,65);
    position-=tail/pitch;
-   last.velocity=last.velocity*.35+clamp(-tail/pitch/dt,-.035,.035)*.65;
-   last.lastMoveAt=now;
+   if(age<90){
+    const dt=clamp(now-last.lastAt,1,65);
+    last.velocity=last.velocity*.35+clamp(-tail/pitch/dt,-.035,.035)*.65;
+   }
    sync();
   }
-  const age=now-last.lastMoveAt;
   coast(last.velocity*(age>85?.12:1));
  }
  function onCancel(event){
