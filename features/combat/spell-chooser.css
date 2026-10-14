@@ -448,3 +448,28 @@
 @media(prefers-reduced-motion:reduce){
  #combatPage .combat-shell-live .combat-carousel-spell-tile{transition:none}
 }
+
+/* Carousel footer: compact EG +/- beside optional full test register. */
+#combatPage .combat-shell-live .combat-magic-carousel-tools{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+ gap:2px 8px;padding:3px 5px 0;min-width:0;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-tools .combat-magic-carousel-all{
+ flex:0 1 auto;margin:0;min-width:0;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-tools .combat-magic-carousel-all[open]{
+ flex:1 1 100%;order:2;width:100%;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-eg{
+ display:flex;align-items:center;justify-content:center;gap:6px;
+ margin-left:auto;color:#f7d998;white-space:nowrap;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-eg button{
+ display:grid;place-items:center;width:28px;height:28px;padding:0;
+ border:1px solid #aa804e;border-radius:6px;
+ background:#372417;color:#ffe1a8;cursor:pointer;font:800 19px/1 Georgia,serif;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-eg button:disabled{opacity:.35;cursor:not-allowed}
+#combatPage .combat-shell-live .combat-magic-carousel-eg strong{
+ font:700 12px Georgia,serif;
+}
