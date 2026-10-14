@@ -309,3 +309,142 @@
  .combat-turn-magic-host .combat-spell-picker>span:first-child{flex-basis:70px}
  .combat-turn-magic-host .combat-spell-current-info{margin-left:77px}
 }
+
+
+/* v0.35.199 – magic carousel prototype. Antique-gold frames, compact banner.
+   5 visible on desktop; 3 on mobile, with a genuine wrap-around scroll. */
+#combatPage .combat-shell-live .combat-magic-carousel{
+ position:relative;z-index:3;min-width:0;margin:0 0 8px;
+ border:1px solid rgba(181,135,70,.66);border-radius:10px;
+ padding:7px 5px 5px;
+ background:radial-gradient(ellipse at 50% 10%,rgba(132,71,26,.28),transparent 68%),
+  linear-gradient(135deg,rgba(15,10,8,.96),rgba(40,24,16,.94));
+ box-shadow:inset 0 0 16px #0008,0 1px 7px #0007;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-banner{
+ display:grid;grid-template-columns:25px minmax(0,1fr) 25px;
+ gap:3px;align-items:center;min-width:0;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-arrow{
+ border:0;background:transparent;color:#e9bd71;cursor:pointer;
+ display:grid;place-items:center;min-height:54px;min-width:23px;padding:0;
+ font:900 20px/1 Georgia,serif;text-shadow:0 0 8px #dd943b77;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track{
+ display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:clamp(4px,.7vw,10px);align-items:center;min-width:0;
+ padding:3px 3px;touch-action:pan-y;user-select:none;-webkit-user-select:none;
+ outline-offset:2px;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile{
+ position:relative;isolation:isolate;display:grid;place-items:center;
+ align-content:center;min-width:0;box-sizing:border-box;
+ aspect-ratio:1/1;max-height:110px;min-height:54px;
+ padding:4px;border:0;border-radius:5px;overflow:visible;
+ background:radial-gradient(circle at 50% 42%,#593322,#130e0b 73%);
+ box-shadow:inset 0 0 13px #0009;
+ color:#f8e5bf;cursor:pointer;
+ transition:filter .16s ease,transform .16s ease;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile::after{
+ content:"";position:absolute;z-index:5;inset:-1px;pointer-events:none;
+ background:url("../../assets/combat/frames/duel-focus-frame.png") center /100% 100% no-repeat;
+ filter:drop-shadow(0 1px 2px #000a);
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile.center{
+ transform:scale(1.1);z-index:2;filter:brightness(1.15);
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile.selected{
+ filter:brightness(1.3) drop-shadow(0 0 7px #f0ac45a9);
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile:focus-visible{
+ outline:2px solid #ffe0a1;outline-offset:3px;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-tile:disabled{opacity:.4;cursor:not-allowed}
+#combatPage .combat-shell-live .combat-carousel-spell-tile .combat-carousel-spell-art{
+ position:absolute;inset:7%;display:block;overflow:hidden;pointer-events:none;z-index:1;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-art img{
+ position:absolute;display:block;max-width:none!important;max-height:none!important;
+ object-fit:fill;pointer-events:none;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-art img[hidden]{display:none!important}
+#combatPage .combat-shell-live .combat-carousel-spell-glyph{
+ position:relative;z-index:1;font-size:clamp(24px,3vw,40px);
+ line-height:1;text-shadow:0 2px 7px #000;
+}
+#combatPage .combat-shell-live .combat-carousel-spell-label{
+ position:absolute;z-index:6;left:6%;right:6%;bottom:5%;
+ padding:2px 1px;border-radius:3px;
+ background:linear-gradient(90deg,transparent,#140d0be8 15% 85%,transparent);
+ color:#ffe7ba;text-align:center;font:700 clamp(7px,.85vw,11px)/1.2 Georgia,serif;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ pointer-events:none;text-shadow:0 1px 3px #000;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all{
+ margin:4px 4px 0;color:#dbb988;font:650 11px/1.25 system-ui,sans-serif;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all summary{
+ width:max-content;max-width:100%;cursor:pointer;padding:3px 4px;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all[open]{
+ border-top:1px solid #9a714766;padding-top:5px;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-choice{
+ padding:5px 4px 7px;display:grid;gap:8px;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-picker{
+ display:grid;grid-template-columns:auto minmax(0,1fr);
+ align-items:center;gap:8px;color:#ead4ac;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-select-frame{position:relative;min-width:0}
+#combatPage .combat-shell-live .combat-magic-carousel-all select{
+ display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+ border:1px solid #a9804e;border-radius:6px;min-height:39px;
+ padding:7px 25px 7px 8px;background:#281b13;color:#f5dcad;font:600 12px system-ui,sans-serif;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-chevron{
+ position:absolute;right:8px;top:50%;transform:translateY(-50%);pointer-events:none;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-current-info{font-size:10px;color:#ddc298}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-effect{
+ display:flex;align-items:center;gap:10px;justify-content:center;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-all .combat-spell-effect button{min-width:33px;min-height:33px}
+#combatPage .combat-shell-live .combat-magic-select-panel{
+ padding:8px 9px 7px;min-width:0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-footer .combat-action-confirm{
+ display:flex;gap:6px;width:100%;margin-top:2px;min-width:0;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-action-confirm .combat-cancel-spell{
+ background:linear-gradient(150deg,#5b291f,#351a18);border-color:#ad6a54;color:#f6d5c8;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-magic-carousel{
+  padding:5px 3px 4px;margin-bottom:6px;
+ }
+ #combatPage .combat-shell-live .combat-magic-carousel-banner{
+  grid-template-columns:20px minmax(0,1fr) 20px;gap:1px;
+ }
+ #combatPage .combat-shell-live .combat-magic-carousel-track{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:4px;
+ }
+ #combatPage .combat-shell-live .combat-carousel-spell-tile[data-index="0"],
+ #combatPage .combat-shell-live .combat-carousel-spell-tile[data-index="4"]{display:none}
+ #combatPage .combat-shell-live .combat-carousel-spell-tile{max-height:96px}
+ #combatPage .combat-shell-live .combat-carousel-spell-tile.center{transform:scale(1.07)}
+ #combatPage .combat-shell-live .combat-carousel-spell-glyph{font-size:clamp(25px,7vw,37px)}
+ #combatPage .combat-shell-live .combat-carousel-spell-label{font-size:clamp(8px,2.2vw,10px)}
+ #combatPage .combat-shell-live .combat-mini-magic .combat-action-confirm:has(.combat-cancel-spell){
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;width:100%;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-action-confirm .combat-cancel-spell,
+ #combatPage .combat-shell-live .combat-mini-magic .combat-action-confirm:has(.combat-cancel-spell) .combat-confirm-magic{
+  min-width:0;width:100%;white-space:normal;font-size:clamp(10px,2.7vw,12px);
+  line-height:1.15;padding:7px 4px;min-height:43px;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #combatPage .combat-shell-live .combat-carousel-spell-tile{transition:none}
+}
