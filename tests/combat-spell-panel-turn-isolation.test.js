@@ -59,7 +59,8 @@ describe('Magirutan följer aktiv kombatant',()=>{
   const result=view(lyra,active);
   expect(result.html).toContain('combat-mini-magic');
   expect(result.html).toContain('Lyra Gråväv');
-  expect(result.html).toContain('Förbered besvärjelse');
+  // Preparation no longer duplicates the action caption in a separate row.
+  expect(result.html).toContain('<button>Förbered</button>');
   expect(result.legacyFallbackCalls).toBe(0);
  });
  it('visar det avslutade magislaget på magikerns tur men inte nästa',()=>{
