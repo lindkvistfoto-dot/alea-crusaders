@@ -151,12 +151,16 @@ function combatSpellCarouselHtml(actor,action){
    art+(marks?'<span class="combat-carousel-spell-marks" aria-hidden="true">'+marks+'</span>':'')+
    '<span class="combat-carousel-spell-label">'+escAttr(classification.name)+'</span></button>';
  }).join('');
- return '<div class="combat-magic-carousel" data-actor-id="'+escAttr(actorId)+
+ return '<div class="combat-magic-carousel cryptex-prototype" data-actor-id="'+escAttr(actorId)+
   '" data-start="'+(middleStart+focus)+'" data-count="'+items.length+'" aria-label="Besvärjelsekarusell">'+
   '<div class="combat-magic-carousel-banner">'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Föregående" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)">❮</button>'+
-   '<div class="combat-magic-carousel-viewport">'+
-    '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
+   '<div class="combat-cryptex-stage">'+
+    '<div class="combat-magic-carousel-viewport">'+
+     '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
+    '</div>'+
+    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png" alt="" aria-hidden="true" draggable="false"'+
+      ' onerror="this.onerror=null;this.src=\'./features/combat/arcane-cryptex-housing.svg\'">'+
    '</div>'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Nästa" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)">❯</button>'+
   '</div>'+
@@ -233,6 +237,21 @@ function combatBindSpellCarousel(root){
    track.children[center]?.classList.add('center');
    lastCenter=center;
   }
+  // Perspective follows the continuous fractional position; fixed bronze frame stays still.
+  if(container.classList.contains('cryptex-prototype')){
+   for(let i=0;i<track.children.length;i++){
+    const tile=track.children[i],distance=i-position;
+    if(Math.abs(distance)>2.2){
+     if(tile.style.transform)tile.style.transform='';
+     if(tile.style.opacity)tile.style.opacity='';
+     continue;
+    }
+    const angle=clamp(-distance*36,-76,76);
+    const scale=1-Math.min(1,Math.abs(distance))*.13;
+    tile.style.transform='perspective(480px) rotateY('+angle.toFixed(1)+'deg) scale('+scale.toFixed(3)+')';
+    tile.style.opacity=String(1-Math.min(1,Math.abs(distance))*.20);
+   }
+  }
   const shown=track.children[center]?.querySelector('.combat-carousel-spell-label')?.textContent||'';
   track.setAttribute('aria-label','Besvärjelse i mitten: '+shown+'. Piltangenter bläddrar, Enter väljer.');
   combatMagicCarouselOffsets.set(key,mod(Math.round(position),count));
@@ -240,11 +259,15 @@ function combatBindSpellCarousel(root){
  function measure(){
   if(!live())return;
   const isMobile=typeof matchMedia==='function'?matchMedia('(max-width:760px)').matches:window.innerWidth<=760;
+  const cryptex=container.classList.contains('cryptex-prototype');
   const visible=isMobile?3:5,gap=isMobile?6:9;
-  tileWidth=Math.max(42,(viewport.clientWidth-gap*(visible-1)-8)/visible);
-  pitch=tileWidth+gap;
+  // Window centers in approved housing: 24.1%, 50%, 75.9%.
+  tileWidth=cryptex?Math.max(24,viewport.clientWidth*.213):
+   Math.max(42,(viewport.clientWidth-gap*(visible-1)-8)/visible);
+  pitch=cryptex?viewport.clientWidth*.258:tileWidth+gap;
+  const finalGap=cryptex?Math.max(0,pitch-tileWidth):gap;
   track.style.setProperty('--combat-carousel-tile-width',tileWidth+'px');
-  track.style.setProperty('--combat-carousel-gap',gap+'px');
+  track.style.setProperty('--combat-carousel-gap',finalGap+'px');
   sync();
  }
  function settle(){
@@ -344,8 +367,18 @@ function combatBindSpellCarousel(root){
   if(moved){suppressClickUntil=time()+400;settle()}
  }
  function onClick(event){
-  if(time()>suppressClickUntil)return;
-  event.preventDefault();event.stopImmediatePropagation();
+  if(time()<=suppressClickUntil){
+   event.preventDefault();event.stopImmediatePropagation();return;
+  }
+  if(container.classList.contains('cryptex-prototype')&&
+     event.target.closest('.combat-carousel-spell-tile')){
+   const rect=viewport.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width,
+    y=(event.clientY-rect.top)/rect.height;
+   const inWindow=(x>=.18&&x<=.30)||(x>=.394&&x<=.606)||(x>=.70&&x<=.82);
+   if(!inWindow||y<.25||y>.75){
+    event.preventDefault();event.stopImmediatePropagation();
+   }
+  }
  }
  function onWheel(event){
   const x=event.deltaX||(event.shiftKey?event.deltaY:0);
