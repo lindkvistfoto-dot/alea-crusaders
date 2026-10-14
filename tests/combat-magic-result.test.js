@@ -280,14 +280,15 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(html).toContain('combat-mini-magic planning has-spell-backdrop');
   expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
   // A result can still display artwork when a battle was prepared before
-  // the artwork feature existed; normal modern snapshots remain immutable.
+  // the artwork feature existed; the current master now controls UI visuals.
   action.status='resolved';
   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'"');
   action.source_data.spell_icon_path=icon;
   action.source_data.spell_icon_focus_x=12;
   action.source_data.spell_icon_focus_y=34;
   action.source_data.spell_icon_zoom=140;
-  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="12" data-focus-y="34" data-zoom="140"');
+  // A stale saved icon cannot override the currently configured master effect.
+   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
  });
  test('historisk besvärjelse kan matchas på namn när master-ID saknas',()=>{
   const id='11111111-1111-4111-8111-111111111111';
