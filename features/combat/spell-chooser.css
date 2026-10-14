@@ -473,3 +473,53 @@
 #combatPage .combat-shell-live .combat-magic-carousel-eg strong{
  font:700 12px Georgia,serif;
 }
+
+/* v0.35.200 – a genuinely continuous, low-friction carousel.
+   The viewport clips a long, repeated belt of gold-framed icons while
+   transform: translate3d is updated directly during drag and coasting. */
+#combatPage .combat-shell-live .combat-magic-carousel-viewport{
+ position:relative;min-width:0;width:100%;overflow:hidden;
+ box-sizing:border-box;padding:9px 4px;
+ touch-action:pan-y;overscroll-behavior-x:contain;
+ -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track{
+ display:flex;grid-template-columns:none;align-items:center;justify-content:flex-start;
+ flex-wrap:nowrap;gap:var(--combat-carousel-gap,9px);
+ width:max-content;min-width:0;padding:0;margin:0;
+ transform:translate3d(0,0,0);
+ transition:none!important;will-change:transform;
+ touch-action:pan-y;outline-offset:-2px;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile{
+ display:grid!important;position:relative;
+ flex:0 0 var(--combat-carousel-tile-width,80px);
+ width:var(--combat-carousel-tile-width,80px);
+ min-width:var(--combat-carousel-tile-width,80px);
+ height:var(--combat-carousel-tile-width,80px);
+ min-height:0;max-height:none;
+ box-sizing:border-box;aspect-ratio:1/1;
+ cursor:pointer;
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
+ z-index:2;transform:scale(1.085);
+ filter:brightness(1.17);
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile.center.selected{
+ filter:brightness(1.25) drop-shadow(0 0 7px rgba(239,169,73,.8));
+}
+#combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile.selected:not(.center){
+ filter:brightness(1.13) drop-shadow(0 0 4px rgba(233,167,82,.42));
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-magic-carousel-viewport{padding:8px 4px}
+ #combatPage .combat-shell-live .combat-magic-carousel-track{
+  gap:var(--combat-carousel-gap,6px);grid-template-columns:none;
+ }
+ #combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile{
+  display:grid!important;max-height:none;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ #combatPage .combat-shell-live .combat-magic-carousel-track>.combat-carousel-spell-tile{transition:none!important}
+}
