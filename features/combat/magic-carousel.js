@@ -80,6 +80,23 @@ function combatMagicCarouselItems(actor,action){
  }
  return {items,total:all.length}
 }
+/* Expert spell tags live in the master name, or in dedicated rule flags.
+ * Only trailing single-letter classifications are removed from tile captions;
+ * parenthetical names such as FATA MORGANA (STOR ILLUSION) are preserved. */
+function combatMagicCarouselTags(spell){
+ const name=String(spell?.name||'');
+ const suffix=/\s*\(([FKR](?:\s*,\s*[FKR])*)\)\s*$/i.exec(name);
+ const letters=new Set(suffix?suffix[1].toUpperCase().split(/\s*,\s*/):[]);
+ if(spell?.kvick===true)letters.add('K');
+ if(spell?.ritual===true)letters.add('R');
+ return {
+  name:suffix?name.slice(0,suffix.index).trim():name,
+  marks:['F','K','R'].filter(letter=>letters.has(letter)).map(code=>({
+   code,label:{F:'Fysisk',K:'Kvick',R:'Ritual'}[code],
+   css:{F:'physical',K:'quick',R:'ritual'}[code]
+  }))
+ };
+}
 function combatMagicCarouselGlyph(value){
  const name=String(value||'').toLocaleLowerCase('sv-SE');
  if(/eld|brand|flam|salamander/.test(name))return '🔥';
@@ -115,6 +132,10 @@ function combatSpellCarouselHtml(actor,action){
  const middleStart=Math.floor(cycles/2)*items.length;
  const tiles=Array.from({length:items.length*cycles},(_,i)=>{
   const spell=items[i%items.length],spellKey=combatSpellKey(spell),active=chosen===spellKey;
+  const classification=combatMagicCarouselTags(spell);
+  const marks=classification.marks.map(tag=>'<span class="combat-carousel-spell-mark '+tag.css+
+   '" aria-hidden="true">'+tag.code+'</span>').join('');
+  const hint=classification.marks.map(tag=>tag.label).join(', ');
   const path=combatSpellArtPath(spell.icon_path||spell.image_path);
   const disabled=spell.item_spell&&(!spell.item_spell.ready||spell.item_spell.cast_mode==='automatic'||!(Number(spell.fv)>0));
   const art=path?'<span class="combat-carousel-spell-art" data-spell-art-path="'+escAttr(path)+
@@ -125,9 +146,10 @@ function combatSpellCarouselHtml(actor,action){
   return '<button type="button" class="combat-carousel-spell-tile'+
    (i===middleStart+focus?' center':'')+(active?' selected':'')+
    '" data-spell-index="'+(i%items.length)+'" tabindex="-1" aria-hidden="true"'+
-   ' title="'+escAttr(spell.name)+'"'+(disabled?' disabled':'')+
+   ' title="'+escAttr(spell.name+(hint?' · '+hint:''))+'"'+(disabled?' disabled':'')+
    ' onclick="selectCombatPreparedSpell(\''+escAttr(actorId)+'\',\''+escAttr(spellKey)+'\')">'+
-   art+'<span class="combat-carousel-spell-label">'+escAttr(spell.name)+'</span></button>';
+   art+(marks?'<span class="combat-carousel-spell-marks" aria-hidden="true">'+marks+'</span>':'')+
+   '<span class="combat-carousel-spell-label">'+escAttr(classification.name)+'</span></button>';
  }).join('');
  return '<div class="combat-magic-carousel" data-actor-id="'+escAttr(actorId)+
   '" data-start="'+(middleStart+focus)+'" data-count="'+items.length+'" aria-label="Besvärjelsekarusell">'+
