@@ -5678,10 +5678,9 @@ function combatSpellCastPanelHtml(){
  const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
  // Use snapshotted artwork, or recover the master image for older prepared casts.
- const backdrop=combatSpellArtworkForAction(action),backdropArt=backdrop.path;
+ // Keep the spell artwork for the center frame, never as a full-panel background.
+ const backdrop=combatSpellArtworkForAction(action);
  const cutout=typeof combatSpellCutoutForAction==='function'?combatSpellCutoutForAction(action):null;
- const backdropHtml=backdropArt?'<div class="combat-magic-backdrop" data-spell-art-path="'+escAttr(backdropArt)+'"'+
-   ' data-focus-x="'+backdrop.x+'" data-focus-y="'+backdrop.y+'" data-zoom="'+backdrop.zoom+'" aria-hidden="true"><img alt="" hidden></div>':'';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
  const isQuick=data.magic_casting?.quick===true;
  const preparing=!resolved&&action.status==='planned'&&!isQuick&&
@@ -5732,8 +5731,7 @@ function combatSpellCastPanelHtml(){
    kind==='area'?'Tryck ✦ för att kasta på det valda området.':
    'Målet är valt. Tryck ✦ igen för att kasta.';
  }
- return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
-  backdropHtml+
+ return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
   (!casting&&!resolved?combatSpellCarouselHtml(actor,action):'')+
   combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing,cutout)+
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
