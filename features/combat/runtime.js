@@ -5548,10 +5548,12 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  const rawName=String(data.spell_name||'Besvärjelse').replace(/\s*\([^)]{1,12}\)\s*$/,'').trim();
  const shortName=rawName==='ELD'?'Eld':rawName;
  const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
-  '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Första möjliga kast: '+escAttr(firstCastLabel)+'">'+
-   '<span class="combat-preparation-round" aria-hidden="true">'+escAttr(firstCastLabel)+'</span>'+
+  '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Timglas: 1 SR förberedelse. Första möjliga kast: '+escAttr(firstCastLabel)+'">'+
+   '<span class="combat-preparation-hourglass" aria-hidden="true">'+
+    '<img src="./assets/combat/frames/preparation-hourglass-1sr.webp" width="300" height="400" alt="" decoding="async">'+
+   '</span>'+
   '</div><div class="combat-duelist-copy">'+
-   '<span class="combat-duelist-role">FÖRBERED</span>'+
+   '<span class="combat-duelist-role combat-preparation-role">FÖRBERED <small>· '+escAttr(firstCastLabel)+'</small></span>'+
    '<b class="combat-duelist-name combat-preparation-caption">'+
     '<span>Förbereder</span>'+
     '<span class="combat-preparation-spell">'+escAttr(shortName)+

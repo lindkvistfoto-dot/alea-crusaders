@@ -468,3 +468,42 @@
  #combatPage .combat-shell-live .combat-mini-magic .combat-preparation-eg strong{font-size:11px}
  #combatPage .combat-shell-live .combat-mini-magic .combat-preparation-eg small{font-size:6px}
 }
+
+/* v0.35.194: transparent bronze hourglass emerges above the third frame.
+   Keep the top of all three frame PNGs level; only the cutout protrudes. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-portrait{
+ position:relative;isolation:isolate;overflow:visible;clip-path:none;
+ background:transparent;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass{
+ position:absolute;z-index:5;pointer-events:none;
+ display:block;left:50%;top:-22%;width:68%;aspect-ratio:3/4;
+ transform:translateX(-50%);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass img{
+ position:static;display:block;
+ width:100%;height:100%;max-width:none;max-height:none;
+ object-fit:contain;object-position:center center;
+ filter:drop-shadow(0 4px 7px rgba(0,0,0,.78)) drop-shadow(0 0 7px rgba(234,144,60,.28));
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-portrait::after{
+ content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+ background:url("../../assets/combat/frames/duel-portrait-frame.png") center/100% 100% no-repeat;
+ clip-path:inset(94% 0 0 0);
+}
+/* The SR value is actual first casting SR, independent of the
+   1 SR duration permanently engraved on the hourglass. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-role{
+ position:relative;z-index:8;white-space:nowrap;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-role small{
+ font:700 .9em/1.1 Georgia,serif;color:#f2d8ae;
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass{
+  width:68%;top:-22%;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-role small{
+  font-size:.85em;
+ }
+}

@@ -90,6 +90,16 @@ describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
   expect(runtime).toContain('const firstCastLabel=');
   expect(runtime).toContain('combat-preparation-caption');
  });
+ it('uses the transparent 1 SR hourglass and keeps its gold frame aligned',()=>{
+  expect(runtime).toContain('preparation-hourglass-1sr.webp');
+  expect(css).toContain('.combat-preparation-hourglass');
+  expect(css).toContain('top:-22%;width:68%;');
+  expect(css).toContain('clip-path:none;');
+  expect(css).toContain('.combat-preparation-portrait::after');
+  const bytes=readFileSync(new URL('../assets/combat/frames/preparation-hourglass-1sr.webp',import.meta.url));
+  expect(bytes.subarray(0,4).toString()).toBe('RIFF');
+  expect(bytes.subarray(8,12).toString()).toBe('WEBP');
+ });
  it('uses real image assets and existing artwork resolvers',()=>{
   expect(runtime).toContain('window.aleaEquipmentArt?.src(path)');
   expect(runtime).toContain('data-spell-art-path');
