@@ -2887,6 +2887,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    await combatHydrateFigureIdentity();
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
+   combatMagicCarouselRecordCasts();
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    await combatLoadEffects();
    await combatLoadAmmoSpends();
@@ -5548,7 +5549,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  const eg=Math.max(1,Math.round(Number(data.effect_grade)||1));
  const rawName=String(data.spell_name||'Besvärjelse').replace(/\s*\([^)]{1,12}\)\s*$/,'').trim();
  const shortName=rawName==='ELD'?'Eld':rawName;
- const spellHeading=preparing?{name:shortName,eg}:null;
+ const spellHeading=preparing&&data.spell_prepared?{name:shortName,eg}:null;
  const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
   '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Timglas: 1 SR förberedelse. Första möjliga kast: '+escAttr(firstCastLabel)+'">'+
    '<span class="combat-preparation-hourglass" aria-hidden="true">'+
@@ -5660,7 +5661,9 @@ function combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound){
   waiting?'Klar i SR '+readyRound:'✦ Bekräfta kast';
  return '<div class="combat-action-confirm">'+
   '<button type="button" class="btn combat-confirm-magic" onclick="combatMagicButton(event,\''+escAttr(actor.id)+'\')"'+
-   (!ready?' disabled':'')+'>'+escAttr(caption)+'</button></div>';
+   (!ready?' disabled':'')+'>'+escAttr(caption)+'</button>'+
+  (casting?'<button type="button" class="btn combat-action-cancel combat-cancel-spell" onclick="combatCancelPreparedSpell(\''+escAttr(actor.id)+'\')">Avbryt besvärjelse</button>':'')+
+  '</div>';
 }
 function combatSpellCastPanelHtml(){
  const actor=combatActiveActor();
@@ -5731,6 +5734,7 @@ function combatSpellCastPanelHtml(){
  }
  return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+(backdropArt?' has-spell-backdrop':'')+'">'+
   backdropHtml+
+  (!casting&&!resolved?combatSpellCarouselHtml(actor,action):'')+
   combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing,cutout)+
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
@@ -5975,9 +5979,10 @@ function combatAttackPanelHtml(){
  const movement=combatMovementPanelHtml();if(movement)return movement;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(actor&&def?.key==='spell_cast'&&action?.status==='planned'&&!action.source_data?.spell_prepared){
-  return '<section class="combat-mini-attack combat-action-placeholder combat-magic-select-panel" aria-label="Magi">'+
-   '<div class="combat-action-placeholder-label"><span aria-hidden="true">✦</span><b>Välj besvärjelse</b></div>'+
-   combatSpellChooserHtml(actor,action)+'</section>';
+  return '<section class="combat-mini-attack combat-mini-magic combat-magic-select-panel planning" aria-label="Välj besvärjelse">'+
+   combatSpellCarouselHtml(actor,action)+
+   combatMagicHeaderHtml(actor,null,{spell_name:'Välj besvärjelse',spell_prepared:false},false,null,true,null)+
+   '<div class="combat-magic-footer"><div class="combat-action-confirm"><button class="btn combat-confirm-magic" type="button" disabled>Förbered besvärjelse</button></div></div></section>';
  }
  const other=combatOtherPanelHtml();if(other)return other;
  if(!actor||def?.type!=='attack')return '';
@@ -6866,6 +6871,7 @@ function renderCombat(){
  void window.aleaRoundGallery?.activate?.(activeCombat,combatActiveActor());
  void window.aleaHitFigures?.hydrate?.(body);
  void window.aleaSpellArt?.hydrateCombat?.(body);
+ combatBindSpellCarousel(body);
  void combatSyncActiveSpellArtwork();
 }
 
