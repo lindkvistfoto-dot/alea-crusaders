@@ -225,3 +225,14 @@
  color:#dbc298;font:700 13px Georgia,serif;text-align:center;
 }
 @media(max-width:660px){.spell-art-cutout-preview{width:min(100%,320px);height:300px}}
+
+/* Match the Eld (F) combat cutout in the master editor preview. */
+.spell-art-pane[data-kind="cutout"][data-spell-id="d441b542-f8ce-47d8-ac85-5129fee115bc"] .spell-art-cutout-layer{
+ clip-path:inset(0 -110% -100% 0);
+}
+.spell-art-pane[data-kind="cutout"][data-spell-id="d441b542-f8ce-47d8-ac85-5129fee115bc"] .spell-art-cutout-layer img{
+ transform:translateY(22%);
+}
+.spell-art-pane[data-kind="cutout"][data-spell-id="d441b542-f8ce-47d8-ac85-5129fee115bc"] .spell-art-cutout-frame::before{
+ clip-path:polygon(0 0,100% 0,100% 11%,11% 11%,11% 100%,0 100%);
+}

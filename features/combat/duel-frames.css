@@ -391,3 +391,16 @@
   padding-top:clamp(8px,2vw,13px);
  }
 }
+
+/* v0.35.191 – Eld (F): the tail enters behind the upper-left gold rim,
+   while the fireball breaks out over the lower-right corner. */
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.is-eld-projectile .combat-duel-spell-cutout{
+ clip-path:inset(0 -110% -100% 0);
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.is-eld-projectile .combat-duel-spell-cutout img{
+ transform:translateY(22%);
+}
+#combatPage .combat-illustrated-duel .combat-duel-center.is-spell.is-eld-projectile .combat-duel-center-viewport::before{
+ /* Only the top and left parts of the golden border cover the entering tail. */
+ clip-path:polygon(0 0,100% 0,100% 11%,11% 11%,11% 100%,0 100%);
+}

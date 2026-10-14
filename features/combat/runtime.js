@@ -2419,9 +2419,14 @@ function combatSpellCutoutForAction(action){
  // A cutout is NEVER inferred from the square spell art.
  const path=combatSpellArtPath(data.spell_cutout_path);
  if(!path)return null;
- return {cutout:true,path,x:combatSpellArtNumber(data.spell_cutout_x,50),
-  y:combatSpellArtNumber(data.spell_cutout_y,90),
-  zoom:combatSpellArtNumber(data.spell_cutout_scale,160,50,250)};
+ // Live master placement takes precedence over an older action snapshot,
+ // provided the selected cutout is still the same asset.
+ const key=String(data.spell_key||'').toLowerCase();
+ const master=key&&typeof ruleSpells!=='undefined'?(ruleSpells||[]).find(row=>
+  String(row.spell_key||'').toLowerCase()===key && combatSpellArtPath(row.cutout_path)===path):null;
+ return {cutout:true,path,x:combatSpellArtNumber(master?.cutout_x??data.spell_cutout_x,50),
+  y:combatSpellArtNumber(master?.cutout_y??data.spell_cutout_y,90),
+  zoom:combatSpellArtNumber(master?.cutout_scale??data.spell_cutout_scale,160,50,250)};
 }
 function combatSpellChooserHtml(combatant,action){
  const options=combatSpellOptions(combatant),selectedKey=String(action?.source_data?.spell_key||'');
@@ -5374,6 +5379,7 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
  const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
  let art='',crop='';
  const spellCutout=spell&&item?.cutout===true;
+ const eldProjectile=spellCutout&&String(title).trim().toLocaleUpperCase('sv-SE')==='ELD (F)';
  if(spell){
   const path=typeof combatSpellArtPath==='function'?combatSpellArtPath(item?.path):'';
   if(path)art=spellCutout?
@@ -5402,6 +5408,7 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
   ' role="group" aria-label="'+escAttr(label+': '+title)+'"';
  return '<'+tag+' class="combat-duel-center '+(spell?'is-spell':'is-weapon')+
   (spellCutout&&art?' has-spell-cutout':'')+
+  (eldProjectile&&art?' is-eld-projectile':'')+
   (switchable?' combat-weapon-switch':'')+'"'+attrs+'>'+
   (spell?'<span class="combat-duel-center-role">'+label+'</span>':'')+
   '<span class="combat-duel-center-viewport"'+crop+'>'+

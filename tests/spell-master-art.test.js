@@ -232,6 +232,12 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(runtime).toContain("combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork)");
   expect(runtime).toContain('combat-duel-spell-cutout');
   expect(frameCss).toContain('.combat-duel-center.is-spell.has-spell-cutout');
+  // Fireball: tail behind top/left frame, head visible beyond bottom/right.
+  expect(runtime).toContain("is-eld-projectile");
+  expect(runtime).toContain('master?.cutout_x??data.spell_cutout_x');
+  expect(frameCss).toContain('.is-eld-projectile .combat-duel-spell-cutout');
+  expect(frameCss).toContain('clip-path:inset(0 -110% -100% 0)');
+  expect(frameCss).toContain('transform:translateY(22%)');
   expect(css).toContain('.spell-art-cutout-preview');
   expect(runtime).toContain('spell_image_path:');
   expect(runtime).toContain('data.spell_effect_image_path');
