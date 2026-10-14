@@ -249,7 +249,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(css).toContain('.combat-spell-effect-artwork');
  });
  it('uses the CURRENT spell-master cutout, even for a previously prepared cast',()=>{
-  const source=runtime.slice(runtime.indexOf('function combatSpellMasterForAction(action){'),
+  const source=runtime.slice(runtime.indexOf('function combatSpellArtPath(path){'),
    runtime.indexOf('/* Keep a combat view already open on another device in sync with admin.'));
   const row={id:SPELL,spell_key:'eld',name:'ELD (F)',cutout_path:PATH,
    cutout_x:68,cutout_y:100,cutout_scale:145,effect_image_path:NEXT,
