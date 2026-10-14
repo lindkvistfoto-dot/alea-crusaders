@@ -113,8 +113,8 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   action.source_data.ready_round=4;
   const waiting=context.spellPanel();
   expect(waiting).toContain('MAGI · ELD (F)');
-  expect(waiting).toContain('Förbereder');
-  expect(waiting).toContain('Klar i SR 4');
+  expect(waiting).toContain('combat-magic-preparation');
+  expect(waiting).toContain('4:e SR');
   expect(waiting).not.toContain('combat-magic-facts');
   expect(waiting).not.toContain('combat-magic-detail-values');
   expect(waiting).not.toContain('Målet är valt');
@@ -135,7 +135,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const {context,action}=fixture();
   action.status='planned';action.source_data.casting_spell=false;
   expect(context.spellPanel()).toContain('Förbered besvärjelse');
-  expect(context.spellPanel()).toContain('Tryck ✦ för att förbereda');
+  expect(context.spellPanel()).not.toContain('combat-mini-instruction');
   action.source_data.casting_spell=true;
   action.source_data.ready_round=3;
   expect(context.spellPanel()).toContain('SL avgör effekten efter slaget');
@@ -258,7 +258,7 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   const pending=context.spellPanel();
   expect(pending).toContain('combat-mini-magic planning has-spell-backdrop');
   expect(pending).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="85" data-focus-y="15" data-zoom="145"');
-  expect(pending).toContain('Tryck ✦ för att förbereda');
+  expect(pending).not.toContain('combat-mini-instruction');
   action.status='resolved';action.source_data.casting_spell=true;
   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'"');
  });

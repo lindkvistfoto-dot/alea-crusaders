@@ -88,7 +88,14 @@ describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
   expect(css).toContain('.combat-preparation-eg');
   expect(runtime).toContain('const firstCastSr=');
   expect(runtime).toContain('const firstCastLabel=');
-  expect(runtime).toContain('combat-preparation-caption');
+  expect(runtime).toContain('combat-preparation-topline');
+  expect(runtime).toContain("preparing?' is-preparing':'')");
+  expect(css).toContain('clip-path:inset(12% -115% -110% 11%)');
+  expect(css).toContain('margin-top:clamp(42px,4vw,56px)');
+  expect(css).toContain('width:96%;height:auto;aspect-ratio:3/4');
+  expect(css).toContain('drop-shadow(0 10px 12px rgba(0,0,0,.92))');
+  expect(css).toContain('background:radial-gradient(ellipse at 50% 48%,rgba(46,27,20,.95)');
+  expect(runtime).toContain("(preparing?'':combatMagicStatusHtml(");
  });
  it('uses the transparent 1 SR hourglass and keeps its gold frame aligned',()=>{
   expect(runtime).toContain('preparation-hourglass-1sr.webp');

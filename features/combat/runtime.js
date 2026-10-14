@@ -5554,11 +5554,10 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
    '</span>'+
   '</div><div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role combat-preparation-role">FÖRBERED <small>· '+escAttr(firstCastLabel)+'</small></span>'+
-   '<b class="combat-duelist-name combat-preparation-caption">'+
-    '<span>Förbereder</span>'+
+   '<span class="combat-preparation-topline">'+
     '<span class="combat-preparation-spell">'+escAttr(shortName)+
      ' <span class="combat-preparation-eg" aria-label="'+eg+' effektgrader"><strong>'+eg+'</strong><small>EG</small></span></span>'+
-   '</b>'+
+   '</span>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
@@ -5573,7 +5572,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
     '</div></div>';
  return '<div class="combat-mini-title combat-magic-heading">'+
   '<span class="combat-magic-eyebrow">MAGI'+(data.item_magic?' · FÖREMÅL':'')+' · '+escAttr(data.spell_name||'Besvärjelse')+'</span></div>'+
-  '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel">'+
+  '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel'+(preparing?' is-preparing':'')+'">'+
    combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
     combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork)+
@@ -5737,8 +5736,10 @@ function combatSpellCastPanelHtml(){
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
    combatSpellResultHtml(action):
-   combatMagicStatusHtml(label,detail,state)+
-   (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':'')+
+   // During preparation the SR is in the hourglass heading and the
+   // confirm button is the only remaining control. Casting retains guidance.
+   (preparing?'':combatMagicStatusHtml(label,detail,state)+
+    (instruction?'<div class="combat-mini-instruction">'+escAttr(instruction)+'</div>':''))+
    (casting&&currentRound>=readyRound?
     '<details class="combat-magic-extra"'+(autoOpenExtras?' open':'')+'><summary>Fler magival</summary>'+
       (typeof combatMagicTargetChooserHtml==='function'?combatMagicTargetChooserHtml(actor,action):'')+'</details>':'')+

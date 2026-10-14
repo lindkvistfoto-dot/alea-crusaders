@@ -17,7 +17,7 @@ const spellData={
  magic_casting:{quick:false},magic_binding:{kind:'damage'},ready_round:2
 };
 const esc=x=>String(x);
-function header(target=null,preparing=true,kind='damage'){
+function header(target=null,preparing=true,kind='damage',overrides={}){
  const ctx={
   window:{matchMedia:()=>({matches:false})},escAttr:esc,
   combatSpellArtPath:path=>path||'',
@@ -26,7 +26,7 @@ function header(target=null,preparing=true,kind='damage'){
   combatDuelCenterHtml:()=>'<div data-spell-center></div>'
  };
  runInNewContext(htmlHeader+'\nthis.header=combatMagicHeaderHtml;',ctx);
- return ctx.header(actor,target,{...spellData,magic_binding:{kind}},false,null,preparing);
+ return ctx.header(actor,target,{...spellData,...overrides,magic_binding:{kind}},false,null,preparing);
 }
 function render(round,{quick=false,casting=true}={}){
  const data={...spellData,casting_spell:casting,magic_casting:{quick},ready_round:quick?1:2};
@@ -51,9 +51,10 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   const html=header(foe,true);
   expect(html).toContain('combat-magic-preparation');
   expect(html).toContain('>FÖRBERED <small>· 2:a SR</small></span>');
-  expect(html).toContain('<span>Förbereder</span>');
+  expect(html).not.toContain('<span>Förbereder</span>');
   expect(html).toContain('combat-preparation-spell');
   expect(html).toContain('>2</strong><small>EG</small>');
+  expect(html).toContain('combat-magic-duel combat-illustrated-duel is-preparing');
   expect(html).toContain('FÖRBERED <small>· 2:a SR</small>');
   expect(html).toContain('preparation-hourglass-1sr.webp');
   expect(html).not.toContain('combat-preparation-round');
@@ -68,7 +69,24 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   expect(html).toContain('preparation-hourglass-1sr.webp');
   expect(html).not.toContain('combat-preparation-round');
   expect(html).toContain('aria-label="2 effektgrader"');
-  expect(html).toContain('combat-preparation-caption');
+  expect(html).toContain('combat-preparation-topline');
+ });
+ it('låter adminbilden vara kvar och placerar dynamisk besvärjelse, EG och SR över ramen',()=>{
+  const html=header(null,true,'damage',{spell_name:'ELD (F)',effect_grade:5,ready_round:7});
+  expect(html).toContain('FÖRBERED <small>· 7:e SR</small>');
+  expect(html).toContain('combat-preparation-topline');
+  expect(html).toContain('>Eld <span class="combat-preparation-eg"');
+  expect(html).toContain('>5</strong><small>EG</small>');
+  expect(html).not.toContain('combat-preparation-caption');
+ });
+ it('döljer dubbla status- och instruktionsrader i förberedelseläget, inte kastläget',()=>{
+  const preparation=render(1);
+  expect(preparation).not.toContain('combat-magic-status');
+  expect(preparation).not.toContain('combat-mini-instruction');
+  expect(preparation).toContain('data-magic-confirm');
+  const casting=render(2);
+  expect(casting).toContain('data-magic-confirm');
+  expect(casting).toContain('data-target-picker');
  });
  it('visar riktigt mål i SR2',()=>{
   const html=header(foe,false);
