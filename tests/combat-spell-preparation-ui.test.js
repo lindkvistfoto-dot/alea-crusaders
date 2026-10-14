@@ -9,6 +9,7 @@ function section(start,end){
  return runtime.slice(a,b);
 }
 const htmlHeader=section('function combatMagicHeaderHtml(','function combatMagicTargetIsReady(');
+const centerSource=section('function combatDuelCenterHtml(','// Spell feedback is presentation-only');
 const panel=section('function combatSpellCastPanelHtml(){','/* Compact reaction renderer');
 const actor={id:'lyra',name_snapshot:'Lyra Gråväv'};
 const foe={id:'enemy',name_snapshot:'Skelett'};
@@ -22,10 +23,9 @@ function header(target=null,preparing=true,kind='damage',overrides={}){
   window:{matchMedia:()=>({matches:false})},escAttr:esc,
   combatSpellArtPath:path=>path||'',
   combatSpellArtNumber:(n,fallback)=>n??fallback,
-  combatMiniParticipantHtml:(label,unit)=>'<div data-unit="'+label+'">'+unit.name_snapshot+'</div>',
-  combatDuelCenterHtml:()=>'<div data-spell-center></div>'
+  combatMiniParticipantHtml:(label,unit)=>'<div data-unit="'+label+'">'+unit.name_snapshot+'</div>'
  };
- runInNewContext(htmlHeader+'\nthis.header=combatMagicHeaderHtml;',ctx);
+ runInNewContext(centerSource+'\n'+htmlHeader+'\nthis.header=combatMagicHeaderHtml;',ctx);
  return ctx.header(actor,target,{...spellData,...overrides,magic_binding:{kind}},false,null,preparing);
 }
 function render(round,{quick=false,casting=true}={}){
@@ -52,7 +52,7 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   expect(html).toContain('combat-magic-preparation');
   expect(html).toContain('>FÖRBERED <small>· 2:a SR</small></span>');
   expect(html).not.toContain('<span>Förbereder</span>');
-  expect(html).toContain('combat-preparation-spell');
+  expect(html).toContain('combat-magic-spell-heading');
   expect(html).toContain('>2</strong><small>EG</small>');
   expect(html).toContain('combat-magic-duel combat-illustrated-duel is-preparing');
   expect(html).toContain('FÖRBERED <small>· 2:a SR</small>');
@@ -69,15 +69,17 @@ describe('Besvärjelser: mål först i kast-SR',()=>{
   expect(html).toContain('preparation-hourglass-1sr.webp');
   expect(html).not.toContain('combat-preparation-round');
   expect(html).toContain('aria-label="2 effektgrader"');
-  expect(html).toContain('combat-preparation-topline');
+  expect(html).toContain('combat-magic-spell-heading');
  });
  it('låter adminbilden vara kvar och placerar dynamisk besvärjelse, EG och SR över ramen',()=>{
   const html=header(null,true,'damage',{spell_name:'ELD (F)',effect_grade:5,ready_round:7});
   expect(html).toContain('FÖRBERED <small>· 7:e SR</small>');
-  expect(html).toContain('combat-preparation-topline');
-  expect(html).toContain('>Eld <span class="combat-preparation-eg"');
+  expect(html).toContain('combat-magic-spell-heading');
+  expect(html).toContain('<span class="combat-magic-spell-heading-name">Eld</span>');
   expect(html).toContain('>5</strong><small>EG</small>');
   expect(html).not.toContain('combat-preparation-caption');
+  expect(html).not.toContain('>BESVÄRJELSE</span>');
+  expect(html).toContain('combat-duel-center is-spell');
  });
  it('döljer dubbla status- och instruktionsrader i förberedelseläget, inte kastläget',()=>{
   const preparation=render(1);

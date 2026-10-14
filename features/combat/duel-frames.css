@@ -564,3 +564,79 @@
  background:radial-gradient(ellipse at 50% 48%,rgba(46,27,20,.96) 0%,rgba(22,14,12,.97) 68%,rgba(9,7,6,.99) 100%);
  box-shadow:inset 0 0 24px rgba(0,0,0,.86),0 7px 17px rgba(0,0,0,.6);
 }
+
+/* v0.35.196 – compact spell preparation: spell name + EG belong over
+   the SECOND (spell) frame, not over the third (preparation) frame. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ :is(.combat-duelist-role,.combat-duel-center-role){
+ display:flex;align-items:center;justify-content:center;
+ height:clamp(32px,2.9vw,38px);min-height:0;box-sizing:border-box;
+ padding:2px 0;margin:0;
+ line-height:1.15;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ :is(.combat-duelist-portrait,.combat-duel-center-viewport){
+ margin-top:clamp(16px,1.65vw,22px);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-magic-preparation{
+ padding-bottom:clamp(34px,3.5vw,58px);
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+ .combat-duel-center.is-spell .combat-duel-center-name{
+ display:none!important;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-duel-center-role.combat-magic-spell-heading{
+ display:flex;gap:clamp(3px,.5vw,7px);min-width:0;
+ white-space:nowrap;overflow:visible;
+ color:#f6deb7;text-shadow:0 1px 5px #000;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-spell-heading-name{
+ display:block;min-width:0;max-width:calc(100% - 28px);
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-spell-heading .combat-preparation-eg{
+ width:clamp(24px,2.5vw,33px);height:clamp(24px,2.5vw,33px);
+ min-width:24px;flex:0 0 auto;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-role{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:0;white-space:normal;text-align:center;
+}
+/* Only the inset receives the darkening. Do NOT put an opaque rounded
+   slab or outer box-shadow over the transparent gold corners. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-illustrated-duel
+ .combat-magic-preparation.combat-mini-side .combat-preparation-portrait.combat-duelist-portrait{
+ background:radial-gradient(ellipse at 50% 46%,rgba(56,34,25,.99) 0%,
+  rgba(24,15,13,.99) 65%,rgba(12,8,7,.97) 100%) center center / 82% 80% no-repeat;
+ box-shadow:none;
+}
+/* Continue to let the hourglass crown and engraved 1 SR plinth break out
+   across the top/bottom gold edges, with a soft contact shadow. */
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass{
+ top:-13%;width:96%;
+}
+#combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass img{
+ filter:drop-shadow(0 9px 10px rgba(0,0,0,.87))
+   drop-shadow(2px 5px 6px rgba(0,0,0,.67))
+   drop-shadow(0 0 7px rgba(220,136,54,.2));
+}
+@media(max-width:760px){
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+  :is(.combat-duelist-role,.combat-duel-center-role){
+  height:32px;line-height:1.12;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-duel.is-preparing
+  :is(.combat-duelist-portrait,.combat-duel-center-viewport){
+  margin-top:16px;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-spell-heading-name{
+  max-width:calc(100% - 24px);
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-spell-heading .combat-preparation-eg{
+  width:24px;height:24px;min-width:24px;
+ }
+ #combatPage .combat-shell-live .combat-mini-magic .combat-magic-preparation .combat-preparation-hourglass{
+  top:-13%;width:96%;
+ }
+}

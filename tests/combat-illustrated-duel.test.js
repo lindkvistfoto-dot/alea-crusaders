@@ -88,10 +88,15 @@ describe('v0.35.177 · shared illustrated attack and spell frames',()=>{
   expect(css).toContain('.combat-preparation-eg');
   expect(runtime).toContain('const firstCastSr=');
   expect(runtime).toContain('const firstCastLabel=');
-  expect(runtime).toContain('combat-preparation-topline');
+  expect(runtime).toContain('combat-magic-spell-heading');
   expect(runtime).toContain("preparing?' is-preparing':'')");
   expect(css).toContain('clip-path:inset(12% -115% -110% 11%)');
-  expect(css).toContain('margin-top:clamp(42px,4vw,56px)');
+  expect(css).toContain('margin-top:clamp(16px,1.65vw,22px)');
+  expect(css).toContain('background:radial-gradient(ellipse at 50% 46%');
+  expect(css).toContain('center center / 82% 80% no-repeat');
+  expect(css).toContain('margin-top:16px;');
+  expect(css).toContain('.combat-magic-spell-heading-name');
+  expect(css).toContain('.combat-duel-center.is-spell .combat-duel-center-name');
   expect(css).toContain('width:96%;height:auto;aspect-ratio:3/4');
   expect(css).toContain('drop-shadow(0 10px 12px rgba(0,0,0,.92))');
   expect(css).toContain('background:radial-gradient(ellipse at 50% 48%,rgba(46,27,20,.95)');

@@ -5398,7 +5398,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
 }
 
 /* v0.35.173 · illustrated middle tile; no change to combat logic. */
-function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
+function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null,spellHeading=null){
  const spell=kind==='spell',label=spell?'BESVÄRJELSE':'VAPEN';
  const title=String(name||(spell?'Besvärjelse':'Välj vapen'));
  let art='',crop='';
@@ -5434,7 +5434,12 @@ function combatDuelCenterHtml(kind,name,item=null,actor=null,action=null){
   (spellCutout&&art?' has-spell-cutout':'')+
   (eldProjectile&&art?' is-eld-projectile':'')+
   (switchable?' combat-weapon-switch':'')+'"'+attrs+'>'+
-  (spell?'<span class="combat-duel-center-role">'+label+'</span>':'')+
+  (spell?(spellHeading?
+    '<span class="combat-duel-center-role combat-magic-spell-heading" aria-label="Besvärjelse och effektgrad">'+
+      '<span class="combat-magic-spell-heading-name">'+escAttr(spellHeading.name)+'</span>'+
+      '<span class="combat-preparation-eg" aria-label="'+escAttr(spellHeading.eg)+' effektgrader"><strong>'+escAttr(spellHeading.eg)+'</strong><small>EG</small></span>'+
+    '</span>':
+    '<span class="combat-duel-center-role">'+label+'</span>'):'')+
   '<span class="combat-duel-center-viewport"'+crop+'>'+
    (art||'<span class="combat-duel-center-empty" aria-hidden="true">'+(spell?'✦':'⚔')+'</span>')+
    (switchable?'<span class="combat-weapon-switch-mark" aria-hidden="true">⇄</span>':'')+
@@ -5547,6 +5552,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  const eg=Math.max(1,Math.round(Number(data.effect_grade)||1));
  const rawName=String(data.spell_name||'Besvärjelse').replace(/\s*\([^)]{1,12}\)\s*$/,'').trim();
  const shortName=rawName==='ELD'?'Eld':rawName;
+ const spellHeading=preparing?{name:shortName,eg}:null;
  const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
   '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Timglas: 1 SR förberedelse. Första möjliga kast: '+escAttr(firstCastLabel)+'">'+
    '<span class="combat-preparation-hourglass" aria-hidden="true">'+
@@ -5554,10 +5560,6 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
    '</span>'+
   '</div><div class="combat-duelist-copy">'+
    '<span class="combat-duelist-role combat-preparation-role">FÖRBERED <small>· '+escAttr(firstCastLabel)+'</small></span>'+
-   '<span class="combat-preparation-topline">'+
-    '<span class="combat-preparation-spell">'+escAttr(shortName)+
-     ' <span class="combat-preparation-eg" aria-label="'+eg+' effektgrader"><strong>'+eg+'</strong><small>EG</small></span></span>'+
-   '</span>'+
   '</div></div>';
  const emptyPortrait=mobileChoice?
   '<button type="button" class="combat-duelist-portrait combat-portrait-target-button" onclick="combatToggleMagicTargetPicker()" aria-expanded="'+((typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen)?'true':'false')+'" aria-controls="combatMagicTargetMenu" aria-label="Välj besvärjelsens mål"><span class="combat-magic-target-glyph">✧</span><span class="combat-portrait-pick-label">Välj mål</span></button>':
@@ -5575,7 +5577,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
   '<div class="combat-mini-duel combat-magic-duel combat-illustrated-duel'+(preparing?' is-preparing':'')+'">'+
    combatMiniParticipantHtml('MAGIKER',actor,data.item_magic?.item_name||'')+
    '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
-    combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork)+
+    combatDuelCenterHtml('spell',data.spell_name||'Besvärjelse',cutout||artwork,null,null,spellHeading)+
     '<div class="combat-mini-arrow combat-magic-arrow" aria-hidden="true">→</div>'+
     
    targetCard+
