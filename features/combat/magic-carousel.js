@@ -159,7 +159,7 @@ function combatSpellCarouselHtml(actor,action){
     '<div class="combat-magic-carousel-viewport">'+
      '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
     '</div>'+
-    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.204" alt="" aria-hidden="true" draggable="false"'+
+    '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.205" alt="" aria-hidden="true" draggable="false"'+
       ' onerror="this.onerror=null;this.src=\'./features/combat/arcane-cryptex-housing.svg\'">'+
    '</div>'+
    '<button type="button" class="combat-magic-carousel-arrow" aria-label="Nästa" onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',1)">❯</button>'+
