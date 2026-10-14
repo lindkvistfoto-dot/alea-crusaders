@@ -60,7 +60,7 @@ function combatMagicCarouselItems(actor,action){
    const count=row=>Number(counts[String(row.name||'').trim().toLocaleLowerCase('sv-SE')])||0;
    // During the prototype, show the two available real icons first when
    // usage counts are tied. Actual cast frequency always outranks artwork.
-   const art=row=>combatSpellArtPath(row.icon_path||row.image_path)?1:0;
+   const art=row=>combatSpellArtPath(row.icon_path)?2:combatSpellArtPath(row.image_path)?1:0;
    return count(b)-count(a)||art(b)-art(a)||String(a.name||'').localeCompare(String(b.name||''),'sv',{sensitivity:'base'})||
     combatSpellKey(a).localeCompare(combatSpellKey(b),'sv',{sensitivity:'base'})
   }).map(combatSpellKey);
@@ -68,7 +68,9 @@ function combatMagicCarouselItems(actor,action){
  }
  combatMagicCarouselOrders.set(battleKey,order); // frozen throughout battle
  const byKey=new Map(all.map(spell=>[combatSpellKey(spell),spell]));
- const items=order.map(key=>byKey.get(key)).filter(Boolean).slice(0,COMBAT_MAGIC_CAROUSEL_MAX);
+ // A spell introduced during an ongoing combat must remain reachable.
+ const missing=all.filter(spell=>!order.includes(combatSpellKey(spell)));
+ const items=[...order.map(key=>byKey.get(key)).filter(Boolean),...missing].slice(0,COMBAT_MAGIC_CAROUSEL_MAX);
  const selected=byKey.get(String(action?.source_data?.spell_key||''));
  // A spell picked through "Alla" always appears in the visible carousel.
  if(selected&&!items.some(spell=>combatSpellKey(spell)===combatSpellKey(selected))){
