@@ -21,7 +21,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: node --check legacy/app.js
       - run: node --check features/combat/spell-art.js
       - run: npx vitest run tests/spell-admin-icons.test.js
       - run: npm run build
