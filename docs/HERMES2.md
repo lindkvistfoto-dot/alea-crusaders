@@ -31,7 +31,7 @@ Administratören lämnar en bild och väljer objekt. HERMES gör kontrollerad la
 7. Jobbet får `active` först därefter. Administrationspanelen måste även lyckas ladda `img` för att ange att bilden visas.
 
 ### Status
-`staged` → `awaiting_archive` (om GitHub-hemligheten saknas), `archived` → `verified` → `active`. Fel blir `failed` och kan återupptas med `POST { "action":"retry","job_id":"..." }`; senast fungerande ikon fortsätter användas.
+`staged` → `awaiting_archive` (om GitHub-hemligheten saknas), `archived` → `verified` → `active`. Fel blir `failed` och kan återupptas med `POST { "action":"retry","job_id":"..." }`; senast fungerande ikon fortsätter användas. Aktiva jobb kan återställas med `POST { "action":"rollback","job_id":"..." }`. Den tidigare ikonsökvägen återställs atomärt med konfliktkontroll, jobbet får status `rolled_back` och originalfilerna behålls.
 
 ## Engångskonfiguration för automatisk GitHub-arkivering
 I Supabase-projektets **Edge Functions secrets** måste hemligheten `HERMES_GITHUB_TOKEN` innehålla en GitHub-token med **Contents: Read and write** endast för `lindkvistfoto-dot/alea-crusaders`. Skicka aldrig token i chatt, klientkod eller GitHub-commit. Den här konfigurationen gör att adminuppladdningen kan arkivera originalet utan chattens GitHub-verktyg.
