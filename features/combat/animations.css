@@ -1,0 +1,19 @@
+/* HERMES · administration and noninteractive combat animation layer */
+.hermes-combat-vfx{pointer-events:none!important;user-select:none;filter:contrast(1.15);will-change:transform,opacity}
+.hermes-animation-intro{margin:0 0 14px;color:var(--muted,#b4a693)}
+.hermes-animation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:14px}
+.hermes-animation-card{background:linear-gradient(145deg,rgba(71,55,38,.45),rgba(24,23,26,.93));border:1px solid rgba(194,153,85,.4);border-radius:12px;padding:14px;min-width:0}
+.hermes-animation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:13px}
+.hermes-animation-head strong{display:block;font-size:1.04rem;color:#edd2a4}
+.hermes-animation-head small{display:block;opacity:.7;margin-top:4px}
+.hermes-animation-state{font-size:.72rem;white-space:nowrap;color:#d6b778}
+.hermes-animation-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.hermes-animation-controls label{display:flex;flex-direction:column;gap:3px;font-size:.75rem;color:#bcb0a0}
+.hermes-animation-controls input,.hermes-animation-controls select{width:100%;min-width:0;background:#17191b;color:#faf2de;border:1px solid #655641;border-radius:6px;padding:7px}
+.hermes-animation-controls label:last-child{grid-column:1/-1}
+.hermes-animation-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:13px}
+.hermes-animation-toggle{display:flex;align-items:center;gap:5px;margin-right:auto;font-size:.85rem}
+.hermes-animation-upload{cursor:pointer}
+.hermes-animation-file{display:block;overflow-wrap:anywhere;margin-top:10px;opacity:.7}
+#hermesAnimationStatus{min-height:1.2em}
+@media(max-width:450px){.hermes-animation-grid{grid-template-columns:minmax(0,1fr)}}
