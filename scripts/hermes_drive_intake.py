@@ -52,7 +52,7 @@ def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int
 
 def find_drive_file_by_name(file_name: str) -> str:
     """Resolve a unique file solely within the authorized HERMES Inbox."""
-    if not re.fullmatch(r"[A-Za-z0-9._-]{1,160}\\.png", file_name):
+    if not isinstance(file_name, str) or not file_name.endswith(".png") or not re.fullmatch(r"[A-Za-z0-9._-]{1,160}", file_name):
         raise ValueError("INVALID_DRIVE_FILE_NAME")
     query = "'" + FOLDER + "' in parents and name = '" + file_name + "' and trashed = false"
     url = "https://www.googleapis.com/drive/v3/files?" + urllib.parse.urlencode({
