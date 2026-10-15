@@ -144,10 +144,8 @@ async function loadRuleMagicRegistry(force=false){
  try{return await withRuleRegistryLoad('spells',async()=>{let rows=await Promise.all([dbJson('rule_magic_schools?select=*&order=sort_order.asc,name.asc'),dbJson('rule_spells?select=*&order=sort_order.asc,name.asc')]);ruleMagicSchools=rows[0]||[];ruleSpells=rows[1]||[];ruleMagicSchoolsLoaded=true;ruleSpellsLoaded=true;linkCharacterSpellsToRegistry();if(current&&activeTab==='magic')renderMagic();return ruleSpells})}catch(e){ruleMagicSchools=[];ruleSpells=[];ruleMagicSchoolsLoaded=false;ruleSpellsLoaded=false;return []}
 }
 function magicSchoolOptions(selected=''){return '<option value="">— Välj magiskola —</option>'+ruleMagicSchools.map(s=>'<option value="'+escAttr(s.id)+'" '+(String(s.id)===String(selected)?'selected':'')+'>'+escAttr(s.name)+'</option>').join('')}
-function isRetiredSpellName(name){
- const text=String(name||'').trim().toLocaleUpperCase('sv-SE');
- return text==='ÖKA'||text==='MINSKA'
-}
+// ÖKA/MINSKA are canonical Expert spells again: never silently purge from characters.
+function isRetiredSpellName(_name){return false}
 function spellKeyFromName(name){return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,64)||uid('spell')}
 async function loadRuleProfessions(force=false){
  if(ruleProfessionsLoaded&&!force)return ruleProfessions;
