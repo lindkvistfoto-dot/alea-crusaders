@@ -315,8 +315,63 @@
    }catch(error){console.warn('Besvärjelsebilden kunde inte läsas',error)}
   }));
  }
+
+ function adminIconHtml(row){
+  const art=artFor(row,'icon'),linked=!!art.path;
+  const id=String(row?.id||''),name=String(row?.name||'besvärjelse');
+  const label=(linked?'Ändra ikon för ':'Lägg till ikon för ')+name;
+  const attr=linked?' data-spell-icon-path="'+esc(art.path)+'" data-spell-icon-x="'+art.x+'" data-spell-icon-y="'+art.y+'" data-spell-icon-zoom="'+art.zoom+'"':'';
+  return '<div class="spell-master-icon-cell"><button class="spell-master-icon-thumb '+(linked?'has-icon':'is-empty')+'" type="button" title="'+esc(label)+'" aria-label="'+esc(label)+'" onclick="editRuleSpell(\''+esc(id)+'\')"'+attr+'>'+
+   '<img alt="" loading="lazy" decoding="async" hidden><span class="spell-master-icon-symbol" aria-hidden="true">'+(row?.icon_path&&!linked?'!':'✧')+'</span></button></div>';
+ }
+ let adminIconObserver=null;
+ function hydrateAdminList(root){
+  adminIconObserver?.disconnect();
+  adminIconObserver=null;
+  if(!root?.querySelectorAll)return;
+  const items=Array.from(root.querySelectorAll('[data-spell-icon-path]'));
+  const failed=button=>{
+   if(!button.isConnected)return;
+   const img=button.querySelector('img');
+   if(img)img.hidden=true;
+   const symbol=button.querySelector('.spell-master-icon-symbol');
+   if(symbol){symbol.textContent='!';symbol.hidden=false}
+   button.classList.add('icon-failed');
+   button.title='Ikon finns i registret men kunde inte visas';
+  };
+  const load=async button=>{
+   const path=button.dataset.spellIconPath;
+   if(!validPath(path)||button.dataset.spellIconLoading)return;
+   const img=button.querySelector('img');if(!img)return;
+   button.dataset.spellIconLoading='true';
+   try{
+    const url=await resolveUrl(path);
+    if(!button.isConnected||button.dataset.spellIconPath!==path||!url)return;
+    img.onload=()=>{
+     if(!button.isConnected)return;
+     positionImage(img,button,{x:button.dataset.spellIconX,y:button.dataset.spellIconY,zoom:button.dataset.spellIconZoom});
+     img.hidden=false;button.classList.add('icon-ready');
+     const symbol=button.querySelector('.spell-master-icon-symbol');
+     if(symbol)symbol.hidden=true;
+    };
+    img.onerror=()=>failed(button);
+    img.src=url;
+    if(img.complete&&img.naturalWidth)img.onload();
+   }catch(error){failed(button)}
+  };
+  if(typeof IntersectionObserver==='function'){
+   adminIconObserver=new IntersectionObserver((entries,observer)=>{
+    for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);void load(entry.target)}
+   },{rootMargin:'160px'});
+   items.forEach(item=>adminIconObserver.observe(item));
+  }else items.forEach(item=>void load(item));
+ }
  function refreshVisibleCrops(){
   for(const kind of Object.keys(TYPES))previewFocus(kind);
+  document.querySelectorAll('#adminSpellTable .spell-master-icon-thumb.icon-ready').forEach(button=>{
+   const img=button.querySelector('img');
+   if(img?.naturalWidth)positionImage(img,button,{x:button.dataset.spellIconX,y:button.dataset.spellIconY,zoom:button.dataset.spellIconZoom});
+  });
   document.querySelectorAll('[data-spell-art-path],[data-spell-cutout-path]').forEach(el=>{
    const img=el.tagName==='IMG'?el:el.querySelector('img');
    if(!img||img.hidden)return;
@@ -330,5 +385,5 @@
   });
  }
  if(typeof window.addEventListener==='function')window.addEventListener('resize',refreshVisibleCrops,{passive:true});
- window.aleaSpellArt={validPath,resolveUrl,artFor,editorHtml,hydrateEditor,previewFocus,resetFocus,saveFocus,upload,remove,hydrateCombat,positionImage,positionCutout};
+ window.aleaSpellArt={validPath,resolveUrl,artFor,editorHtml,hydrateEditor,hydrateAdminList,adminIconHtml,previewFocus,resetFocus,saveFocus,upload,remove,hydrateCombat,positionImage,positionCutout};
 })();
