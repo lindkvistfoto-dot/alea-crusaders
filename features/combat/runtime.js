@@ -1230,6 +1230,7 @@ async function combatFinalizeAntimagicSpell(caster,action){
    const original=combatants.find(c=>String(c.id)===String(allocation.target_id));if(!original)throw new Error('Magimålet saknas.');
    const victim=bounce&&String(original.id)===protectedId?caster:original;
    const formula=combatMagicDamageFormula(data,allocation.eg);if(!formula)throw new Error('Skadeformeln saknar regelstöd.');
+   combatPlaySpellAnimation(caster,victim,action);
    const repetitions=combatItemMagicAutomatedCount(action);
    for(let index=1;index<=repetitions;index++){
     const damage=await combatResolveDamage(caster,victim,{name:data.spell_name,damage:formula,damage_kind:/^ELD/i.test(data.spell_name)?'fire':'magic',_spell_damage:true},result.full_damage===true,null,result.outcome==='perfect');
@@ -4348,6 +4349,17 @@ async function combatCastAreaSpell(actor,action){
  })});
  await loadActiveCombat(null,{preserveSelectedTarget:true})
 }
+function combatPlaySpellAnimation(caster,victim,action){
+ // HERMES is visual only. Never block rolls, antimagic, spell cost or damage.
+ try{
+  const data=action?.source_data||{},name=String(data.spell_name||'').toLocaleUpperCase('sv-SE');
+  const key=String(data.spell_key||'');
+  const registry=typeof ruleSpells!=='undefined'&&Array.isArray(ruleSpells)?ruleSpells:[];
+  const spell=registry.find(x=>(key&&x.spell_key===key)||String(x.name||'').toLocaleUpperCase('sv-SE')===name);
+  if(!spell?.projectile_animation_key&&!spell?.impact_animation_key)return;
+  void window.aleaAnimations?.playSequence?.({projectileKey:spell.projectile_animation_key,impactKey:spell.impact_animation_key,from:caster,to:victim});
+ }catch(error){console.warn('HERMES: besvärjelseanimation kunde inte spelas',error)}
+}
 async function combatResolveTestFireball(actor,target,action){
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
  const spellName=action.source_data?.spell_name||'Eld',eg=Math.max(1,Number(action.source_data?.effect_grade)||1),fv=Math.max(1,(Number(action.source_data?.spell_fv)||10)-2*(eg-1)),rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
@@ -4382,6 +4394,7 @@ async function combatResolveTestFireball(actor,target,action){
    if(!victim)throw new Error('Målet saknas vid kastet.');
    const formula=combatMagicDamageFormula(action.source_data,allocation.eg);
    if(!formula)throw new Error('Skadeformeln är inte verifierad för vald effektgrad.');
+   combatPlaySpellAnimation(actor,victim,action);
    const pseudoWeapon={name:spellName,damage:formula,damage_kind:/^ELD/i.test(spellName)?'fire':'magic',_spell_damage:true};
    const repetitions=combatItemMagicAutomatedCount(action);
    for(let index=1;index<=repetitions;index++){
