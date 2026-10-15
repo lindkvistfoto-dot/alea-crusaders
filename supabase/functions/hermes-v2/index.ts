@@ -55,6 +55,16 @@ async function archive(kind:string,key:string,sha256:string,bytes:Uint8Array){
  if(!GH_TOKEN)throw Error("GITHUB_TOKEN_NOT_CONFIGURED");
  const path="assets/hermes/originals/"+kind+"/"+key+"/"+sha256+".png";
  const expected=await gitObjectSha(bytes);
+ // If this exact immutable original is already on main, a retry is a read-only success.
+ const current=await github("GET","/contents/"+path+"?ref=main").catch(e=>{
+  if(cleanError(e).startsWith("GITHUB_404_"))return null;
+  throw e;
+ });
+ if(current){
+  if(current.sha!==expected)throw Error("ARCHIVE_PATH_HASH_CONFLICT");
+  const head=await github("GET","/git/ref/heads/main");
+  return {path,blobSha:expected,commitSha:head.object.sha};
+ }
  const blob=await github("POST","/git/blobs",{content:b64(bytes),encoding:"base64"});
  if(blob.sha!==expected)throw Error("GITHUB_BLOB_HASH_MISMATCH");
  for(let attempt=0;attempt<4;attempt++){
