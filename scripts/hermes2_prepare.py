@@ -90,8 +90,17 @@ def prepare(source: Path, output_root: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("/tmp/hermes21-output"))
+    parser.add_argument("--source", type=Path, action="append", help="specific immutable original to process (repeatable)")
     args = parser.parse_args()
-    originals = sorted(ROOT.glob("*/*/*.png"))
+    if args.source:
+        originals = sorted({p.resolve() for p in args.source})
+        for path in originals:
+            try:
+                path.relative_to(ROOT.resolve())
+            except ValueError as error:
+                raise SystemExit(f"Path outside HERMES originals: {path}") from error
+    else:
+        originals = sorted(ROOT.glob("*/*/*.png"))
     if not originals:
         raise SystemExit("No immutable HERMES original PNGs found")
     result = [prepare(path, args.output) for path in originals]
