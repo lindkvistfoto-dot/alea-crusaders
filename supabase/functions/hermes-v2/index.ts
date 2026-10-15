@@ -15,8 +15,11 @@ const cleanError = (e:unknown) => e instanceof Error ? e.message : String(e);
 const fail = (status:number,code:string,message:string) => json({error:code,message},status);
 const validKey = (x:string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(x);
 const bytesToHex = (arr:Uint8Array) => [...arr].map(x=>x.toString(16).padStart(2,"0")).join("");
-const hash = async (algorithm:"SHA-1"|"SHA-256",input:Uint8Array) =>
-  bytesToHex(new Uint8Array(await crypto.subtle.digest(algorithm,input)));
+const hash = async (algorithm:"SHA-1"|"SHA-256",input:Uint8Array) => {
+ const buffer=new ArrayBuffer(input.byteLength);
+ new Uint8Array(buffer).set(input);
+ return bytesToHex(new Uint8Array(await crypto.subtle.digest(algorithm,buffer)));
+};
 const u32 = (b:Uint8Array,o:number) => ((b[o]*16777216)+(b[o+1]<<16)+(b[o+2]<<8)+b[o+3])>>>0;
 function pngInfo(b:Uint8Array){
  const sig=[137,80,78,71,13,10,26,10];
