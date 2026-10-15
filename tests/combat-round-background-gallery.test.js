@@ -54,6 +54,18 @@ describe('Shared round background gallery',()=>{
   expect(panel.style.setProperty).toHaveBeenLastCalledWith('--alea-round-illustration',expect.stringContaining('round-hero-battle-pilot.avif'));
   expect(panel.style.setProperty).not.toHaveBeenCalledWith('--alea-round-illustration',expect.stringContaining('outdated-image'));
  });
+ it('recognizes committed silver elf artwork as a selectable round background',async()=>{
+  const path='assets/combat/round/silveralv-strid-i-luften.webp';
+  const panel={style:{setProperty:vi.fn(),removeProperty:vi.fn()}};
+  const window={};
+  const ctx={window,console,Math,dbJson:async()=>[
+   {id:'silver',image_path:path,is_active:true,archived_at:null}],
+   document:{querySelectorAll:selector=>selector==='.combat-turn-panel'?[panel]:[]}};
+  runInNewContext(source,ctx);
+  expect((await window.aleaRoundGallery.getActivePool()).map(row=>row.image_path)).toEqual([path]);
+  await window.aleaRoundGallery.activate({id:'combat-2',settings:{round_background_id:'silver'}});
+  expect(panel.style.setProperty).toHaveBeenCalledWith('--alea-round-illustration',expect.stringContaining(path));
+ });
  it('keeps admin UI, background rendering and CSS hooked to existing app',()=>{
   const legacy=read('legacy/app.js'),runtime=read('features/combat/runtime.js'),css=read('features/combat/round-gallery.css'),html=read('index.html');
   expect(legacy).toContain("specialImages:['Specialbilder'");

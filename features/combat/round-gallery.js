@@ -5,6 +5,7 @@
  'use strict';
  const BUCKET='alea-round-backgrounds';
  const BUILTIN='assets/combat/round-hero-battle-pilot.avif';
+ const STATIC=/^assets\/combat\/round\/[a-z0-9-]+\.webp$/;
  const SAFE=/^round\/[0-9a-f-]{36}\.(?:webp|png|jpg|jpeg)$/;
  const MAX_SOURCE=12*1024*1024;
  let rows=null,chosenUrl='',chosenCombatId='',chosenKey='',request=0,adminBusy=false,adminRender=0;
@@ -14,7 +15,7 @@
  const canManage=()=>{try{return Boolean(activeUser()?.admin)}catch(_){return false}};
  const status=message=>{const el=document.getElementById('roundGalleryStatus');if(el)el.textContent=message||''};
  const pathPart=s=>String(s).split('/').map(encodeURIComponent).join('/');
- const validPath=p=>p===BUILTIN||SAFE.test(String(p||''));
+ const validPath=p=>p===BUILTIN||STATIC.test(String(p||''))||SAFE.test(String(p||''));
  async function list(force=false){
   if(rows&&!force)return rows;
   const data=await dbJson('rule_combat_round_backgrounds?select=id,title,image_path,is_active,archived_at,created_at&order=created_at.asc');
@@ -31,7 +32,7 @@
  }
  async function resolveUrl(path){
   if(!validPath(path))return '';
-  if(path===BUILTIN)return './'+BUILTIN;
+  if(path===BUILTIN||STATIC.test(path))return './'+path;
   if(cachedUrls.has(path))return cachedUrls.get(path);
   const res=await mapStorageFetch('object/'+BUCKET+'/'+pathPart(path),{method:'GET'});
   if(!res.ok)throw Error('Kunde inte läsa rundbild ('+res.status+').');
