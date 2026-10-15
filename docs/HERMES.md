@@ -1,10 +1,45 @@
 # Protokoll HERMES
 **Alea Crusaders – gemensam standard för bildproduktion, överföring och publicering**
 
-**Version:** 2.2 (operativ definition) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
+**Version:** 2.3 (aktiv push-baserad intagskedja) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
 **Namn:** HERMES – gudarnas budbärare. Bilden ska nå rätt plats i appen med kvalitet, säkerhet och spårbarhet intakt.
 
-## HERMES 2.2 – gällande operativ huvudprincip (2026-10-15)
+## HERMES 2.3 – aktiv överlämning Drive → GitHub Actions (2026-10-15)
+
+**Standard för godkänd, publik bild av typ `spell` eller `symbol`:**
+1. ChatGPT/Work lägger den riktiga PNG-filen i [HERMES TEMP INBOX](https://drive.google.com/drive/folders/1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp) och läser filens **faktiska Drive-ID**.
+2. Direkt efter bekräftad uppladdning skapar ChatGPT en **ny, unik** UTF-8-JSON-fil som commit i `hermes/queue/<job-id>.json` på `main`. Detta är en **aktiv push-trigger**; ingen polling, timer eller automatisk Drive-mappbevakare används.
+3. `hermes-drive-intake.yml` startar på `push` av exakt denna köfil. Dess GitHub OIDC-identitet byts mot kortlivat Google Drive-readonly-token genom Workload Identity Federation (`alea-hermes`, pool `github`, provider `alea-hermes`).
+4. `scripts/hermes_drive_intake.py` läser bara filen från den angivna HERMES-mappen, verifierar MIME, originalbytes, kvadratisk RGBA-PNG med alfa, SHA-256 och godkänd måltyp/nyckel.
+5. För `mode=publish` lagrar GitHub Actions verifierade originalbytes som en innehållsadresserad PNG under `assets/hermes/originals/<kind>/<target_key>/<sha256>.png` via Git Data API. Existerande exakt lika original återanvänds; vid konflikt stoppas jobbet. Repo är publikt – godkänn endast publika bilder.
+6. Intaget skickar **uttrycklig** `workflow_dispatch` med exakt `source_path` till `.github/workflows/hermes21-intake.yml`. Vanlig `push` från `GITHUB_TOKEN` skulle inte automatiskt starta nästa Actions-körning; dispatch löser detta.
+7. Befintlig HERMES 2.1 verifierar PNG/WebP, lagrar och läser tillbaka Supabase Storage och aktiverar **endast** avsett `icon_path` när alla kontroller klarat grinden. Status `ACTIVE` är ett separat slutbevis, inte synonymt med lyckad intags-Action.
+
+**Köfil:**
+```json
+{
+  "schema": 1,
+  "kind": "symbol",
+  "target_key": "stopp",
+  "drive_file_id": "<verifierat Google Drive file ID>",
+  "mode": "publish"
+}
+```
+
+- `mode=verify`: hämtar och kvalitetssäkrar utan att skriva till GitHub-original eller Supabase.
+- `mode=publish`: commit/återanvänd original + explicit starta HERMES 2.1.
+- Kön accepteras enbart via nya/ändrade JSON-filer på `main` eller explicit manuell dispatch. Filen är en instruktion, aldrig PNG/Base64 eller hemliga credentials. Ge varje startorder ett nytt unikt filnamn.
+- **Inga nyckelfiler:** servicekonto `hermes-transfer@alea-hermes.iam.gserviceaccount.com`, mappläsning i Drive och OIDC-anslutning kontrollerad i GitHub Actions.
+- Filen stannar i Drive tills publiceringskedjan är verifierad; ingen automatisk radering.
+- **Bevisat:** `STOPP` genom aktiv kö-commit `a0d8574b` (verify) och `1807cb99` (publish); `HERMES_PUBLISH_DISPATCHED` gick vidare till HERMES 2.1 som verifierade PNG → 167144 bytes WebP och rapporterade `ALREADY_ACTIVE`. Detta bevisar start, Drive-nedladdning, återanvändning av redan befintligt original och explicit handoff utan ändring av aktiv ikon. **Skrivning av en helt ny GitHub-originalblob via Actions återstår att verifiera med en ny godkänd bild.**
+
+### Begränsning
+
+Drive lagrar inte automatiskt någon GitHub-startorder. Det är den aktiva handlingen efter att ChatGPT/Work laddat upp filen som skapar JSON-committen. Om startordern uteblir startar ingen Action. `spell` och `symbol` stöds; inga övriga medietyper ska publiceras med denna profil.
+
+---
+
+## HERMES 2.2 – tidigare binära överföringsvägen (fallback, 2026-10-15)
 
 **Definition:** HERMES är Alea Crusaders verifierbara intags-, filtransport-, optimerings- och publiceringsprotokoll. AI skapar eller väljer godkända original; HERMES ser till att rätt fil blir lagrad, kontrollerad och aktiverad i rätt databaspost. Direkta experiment med chatbilagors interna bytes är **inte längre standardvägen**.
 
