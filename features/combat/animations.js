@@ -80,7 +80,7 @@
   if(!opts.preview&&now-(lastPlayed.get(eventKey)||0)<250)return false;
   lastPlayed.set(eventKey,now);
   if(playing.size>=3){const first=playing.values().next().value;first?.cleanup?.();}
-  const pos=opts.preview?{
+  const pos=opts.from?targetPosition(opts.from):opts.preview?{
    x:innerWidth/2,y:innerHeight/2
   }:targetPosition(opts.target);
   const width=Math.min(innerWidth*.88,Math.min(innerWidth*.6,480)*row.scale);
@@ -102,13 +102,29 @@
    if(timeout)clearTimeout(timeout);
    video.pause();video.removeAttribute('src');video.load();video.remove();
    playing.delete(job);
+   if(typeof opts.onComplete==='function')opts.onComplete();
   }};
   video.addEventListener('ended',job.cleanup,{once:true});
   video.addEventListener('error',job.cleanup,{once:true});
   playing.add(job);document.body.appendChild(video);
   timeout=setTimeout(job.cleanup,14000);
+  if(opts.from&&opts.to){
+   const end=targetPosition(opts.to),dx=end.x-pos.x,dy=end.y-pos.y;
+   const duration=clamp(opts.durationMs,200,2500,Math.max(350,Math.min(1500,Math.hypot(dx,dy)*2.5)));
+   const movement=video.animate([{transform:'translate(-50%,-50%) translate(0px,0px)'},{transform:'translate(-50%,-50%) translate('+dx+'px,'+dy+'px)'}],{duration,easing:'linear',fill:'forwards'});
+   movement.addEventListener('finish',job.cleanup,{once:true});
+   video.addEventListener('error',()=>movement.cancel(),{once:true});
+  }
   video.play().catch(error=>{console.warn('HERMES: videouppspelning stoppades',error);job.cleanup()});
   return true;
+ }
+ // A caller supplies actor and target; missing media must never block combat rules.
+ function playSequence({projectileKey,impactKey,from,to,durationMs}={}){
+  return new Promise(resolve=>{
+   if(!from||!to){if(impactKey)play(impactKey,{target:to||from});resolve(false);return}
+   const finish=()=>{if(impactKey)play(impactKey,{target:to});resolve(true)};
+   if(!projectileKey||!play(projectileKey,{from,to,durationMs,onComplete:finish})){finish()}
+  });
  }
  function field(card,name){return card.querySelector('[data-vfx-field="'+name+'"]')}
  function draft(key){
@@ -241,5 +257,5 @@
    finally{button.disabled=false}
   });
  }
- window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl,optionsHtml};
+ window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl,optionsHtml,playSequence};
 })();
