@@ -18,7 +18,8 @@ describe('ARCANE GOLD free-floating cryptex on mobile',()=>{
  it('lifts the REAL sibling over round equipment, not the display:contents host',()=>{
   const shell=mobile.match(/\.combat-magic-float-shell\s*\{([^}]*)\}/)?.[1]||'';
   expect(shell).toContain('z-index:40');
-  expect(shell).toContain('margin-top:-112px');
+  expect(shell).toContain('margin-top:-46px');
+  expect(shell).not.toContain('margin-top:-112px');
   expect(mobile).toMatch(/\.combat-turn-panel\s*\{[^}]*z-index:1/s);
   expect(mobile).not.toContain('#combatActionPanel:has(.cryptex-prototype)');
  });
@@ -38,6 +39,6 @@ describe('ARCANE GOLD free-floating cryptex on mobile',()=>{
   expect(base).toContain('combat-cryptex-end-button--prev');
   expect(base).toContain('combat-cryptex-end-button--next');
   expect(mobile).toContain('width:min(calc(100% + 56px),calc(100vw - 8px))');
-  expect(read('index.html')).toContain('arcane-cryptex.css?v=0.35.214');
+  expect(read('index.html')).toContain('arcane-cryptex.css?v=0.35.215');
  });
 });

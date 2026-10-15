@@ -128,9 +128,10 @@
   z-index:40;
   isolation:isolate;
   overflow:visible;
-  /* The top gold crown must break into the equipment's lower rim.
-     Position the whole FLOAT, not just its image or an imaginary card. */
-  margin-top:-112px;
+  /* The crown only touches the equipment's bottom gold edge. Keep the
+     equipment inventory and its hit targets fully readable/tappable.
+     A -112px offset covered most of the equipment area on phones. */
+  margin-top:-46px;
  }
  /* Remove the entire second framed card during spell preparation.
     The bronze cryptex itself is the only decorative frame at the top. */
