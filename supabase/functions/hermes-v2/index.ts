@@ -176,32 +176,10 @@ async function rollbackJob(job:Record<string,any>){
  await event(id,"rolled_back","Restored prior icon path; immutable media retained.");
  return {ok:true,job_id:id,status:"rolled_back",icon_path:job.previous_icon_path};
 }
-Deno.serve(async req=>{
- if(req.method==="OPTIONS")return new Response(null,{status:204,headers});
- if(req.method!=="POST")return fail(405,"METHOD_NOT_ALLOWED","Only POST is enabled.");
- const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
- if(!jwt)return fail(401,"UNAUTHORIZED","Missing access token.");
- const client=createClient(URL_BASE,ANON_KEY,{auth:{persistSession:false}});
- const {data:{user},error:authError}=await client.auth.getUser(jwt);
- if(authError||!user)return fail(401,"UNAUTHORIZED","Session is invalid.");
- const {data:profile,error:profileError}=await db.from("profiles").select("is_admin").eq("id",user.id).single();
- if(profileError||!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Only Alea admins can upload art.");
- try{
-  const type=req.headers.get("content-type")||"";
-  if(type.includes("application/json")){
-   const body=await req.json();
-   if(!["retry","rollback"].includes(body.action)||typeof body.job_id!=="string")return fail(400,"BAD_ACTION","Expected retry/rollback and job_id.");
-   const {data:job,error}=await db.from("hermes_jobs").select("*").eq("id",body.job_id).single();
-   if(error||!job)return fail(404,"NOT_FOUND","Job not found.");
-   return json(body.action==="rollback"?await rollbackJob(job):await processJob(job));
-  }
-  if(!type.includes("multipart/form-data"))return fail(415,"INVALID_REQUEST","Expected multipart/form-data.");
-  const form=await req.formData();
-  const source=form.get("source"),app=form.get("app"),kind=String(form.get("kind")||""),key=String(form.get("key")||"");
-  if(!(source instanceof File)||!(app instanceof File)||!["spell","symbol"].includes(kind)||!validKey(key))return fail(400,"INVALID_INPUT","Select a valid target and attach source PNG plus optimized WebP.");
-  if(source.size<100||source.size>8388608||app.size<100||app.size>500000)return fail(413,"SIZE_LIMIT","PNG max 8 MiB; WebP max 500 kB.");
-  const src=new Uint8Array(await source.arrayBuffer()),out=new Uint8Array(await app.arrayBuffer());
-  pngInfo(src);webpInfo(out);
+async function stageMedia(kind:string,key:string,src:Uint8Array,out:Uint8Array,userId:string){
+ if(!["spell","symbol"].includes(kind)||!validKey(key))return fail(400,"INVALID_TARGET","Unsupported target.");
+ if(src.length<100||src.length>8388608||out.length<100||out.length>500000)return fail(413,"SIZE_LIMIT","Media exceeds limits.");
+ pngInfo(src);webpInfo(out);
   const table=kind==="symbol"?"rule_magic_symbols":"rule_spells";
   const field=kind==="symbol"?"symbol_key":"spell_key";
   const {data:target,error:targetError}=await db.from(table).select("id,icon_path").eq(field,key).maybeSingle();
@@ -219,11 +197,69 @@ Deno.serve(async req=>{
   const {data:job,error:insertError}=await db.from("hermes_jobs").insert({
    kind,target_key:key,source_sha256:sourceSha,app_sha256:appSha,source_path:sourcePath,app_path:appPath,
    source_bytes:src.length,app_bytes:out.length,status:"staged",attempts:0,
-   previous_icon_path:target.icon_path,created_by:user.id
+   previous_icon_path:target.icon_path,created_by:userId
   }).select("*").single();
   if(insertError||!job)throw Error("JOB_CREATE_"+cleanError(insertError));
   await event(job.id,"staged","Verified source and public WebP stored with SHA-256 readback.");
   return json(await processJob(job));
+}
+async function importOsakerhet(userId:string){
+ // Immutable source and deterministic app artifact committed before HERMES 2.0.
+ // Restricted to the exact existing Osäkerhet artwork; not an arbitrary URL fetch.
+ const prefix="https://raw.githubusercontent.com/"+GH_REPO+"/";
+ const uri=[
+  prefix+"29933a44ce91c26e16c5621691fb88f098775f28/assets/spells/arcane-ivory/osakerhet.png",
+  prefix+"a35f636da2c6ea7a521e4c1d12255ffa066d4da8/assets/spells/arcane-ivory/osakerhet.webp"
+ ];
+ const results=await Promise.all(uri.map(u=>fetch(u,{headers:{"accept":"application/octet-stream"},signal:AbortSignal.timeout(25000)})));
+ for(const result of results)if(!result.ok)throw Error("PILOT_SOURCE_DOWNLOAD_FAILED_"+result.status);
+ const [src,out]=await Promise.all(results.map(async r=>new Uint8Array(await r.arrayBuffer())));
+ const sourceSha=await hash("SHA-256",src);
+ if(sourceSha!=="321f72bf5aba7a810ee3573c7d863a7a7f18655092aa46457eb11ce7af7c8e24")throw Error("PILOT_PNG_CHECKSUM_MISMATCH");
+ const sourceGitSha=await gitObjectSha(src);
+ if(sourceGitSha!=="94ba4ab58d3fb0b07d224f9e7c804ad327ee9cf1")throw Error("PILOT_GIT_SHA_MISMATCH");
+ if(src.length!==2730159||out.length!==170424)throw Error("PILOT_FILE_SIZE_MISMATCH");
+ return await stageMedia("symbol","osakerhet",src,out,userId);
+}
+Deno.serve(async req=>{
+ if(req.method==="OPTIONS")return new Response(null,{status:204,headers});
+ if(req.method!=="POST")return fail(405,"METHOD_NOT_ALLOWED","Only POST is enabled.");
+ const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
+ if(!jwt)return fail(401,"UNAUTHORIZED","Missing access token.");
+ const client=createClient(URL_BASE,ANON_KEY,{auth:{persistSession:false}});
+ const {data:{user},error:authError}=await client.auth.getUser(jwt);
+ if(authError||!user)return fail(401,"UNAUTHORIZED","Session is invalid.");
+ const {data:profile,error:profileError}=await db.from("profiles").select("is_admin").eq("id",user.id).single();
+ if(profileError||!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Only Alea admins can upload art.");
+ try{
+  const type=req.headers.get("content-type")||"";
+  if(type.includes("application/json")){
+   const body=await req.json();
+   if(body.action==="diagnostics"){
+    const [sourceBucket,publicBucket,githubRepo]=await Promise.all([
+     db.storage.getBucket(SOURCE),
+     db.storage.getBucket(PUBLIC),
+     github("GET","").then(()=>true).catch(()=>false)
+    ]);
+    return json({ok:true,version:2,admin:true,source_bucket:!sourceBucket.error,
+     public_bucket:!publicBucket.error,github_readable:githubRepo,
+     github_write_configured:!!GH_TOKEN,
+     legacy_osakerhet_can_archive_without_token:true});
+   }
+   if(body.action==="import_osakerhet")return await importOsakerhet(user.id);
+   if(!["retry","rollback"].includes(body.action)||typeof body.job_id!=="string")return fail(400,"BAD_ACTION","Expected diagnostics, import_osakerhet, retry or rollback and job_id.");
+   const {data:job,error}=await db.from("hermes_jobs").select("*").eq("id",body.job_id).single();
+   if(error||!job)return fail(404,"NOT_FOUND","Job not found.");
+   return json(body.action==="rollback"?await rollbackJob(job):await processJob(job));
+  }
+  if(!type.includes("multipart/form-data"))return fail(415,"INVALID_REQUEST","Expected multipart/form-data.");
+  const form=await req.formData();
+  const source=form.get("source"),app=form.get("app"),kind=String(form.get("kind")||""),key=String(form.get("key")||"");
+  if(!(source instanceof File)||!(app instanceof File)||!["spell","symbol"].includes(kind)||!validKey(key))return fail(400,"INVALID_INPUT","Select a valid target and attach source PNG plus optimized WebP.");
+  if(source.size<100||source.size>8388608||app.size<100||app.size>500000)return fail(413,"SIZE_LIMIT","PNG max 8 MiB; WebP max 500 kB.");
+  const src=new Uint8Array(await source.arrayBuffer()),out=new Uint8Array(await app.arrayBuffer());
+  pngInfo(src);webpInfo(out);
+  return await stageMedia(kind,key,src,out,user.id);
  }catch(e){
   const message=cleanError(e);
   return fail(400,"HERMES_UPLOAD_FAILED",message.slice(0,350));
