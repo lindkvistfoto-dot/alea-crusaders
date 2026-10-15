@@ -4,3 +4,6 @@ dist/
 .vitest/
 coverage/
 .DS_Store
+
+# Never commit short-lived Google authentication credentials
+gha-creds-*.json
