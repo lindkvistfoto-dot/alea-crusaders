@@ -25,6 +25,11 @@
    blend_mode:['screen','lighten','normal'].includes(row?.blend_mode)?row.blend_mode:'screen'
   };
  }
+ function optionsHtml(selected=''){
+  const current=String(selected||'');
+  const choices=[...rows.values()].filter(row=>row.category==='magic'||row.category==='ranged');
+  return '<option value="">— Ingen animation —</option>'+choices.map(row=>'<option value="'+esc(row.event_key)+'"'+(row.event_key===current?' selected':'')+'>'+esc(row.label)+' ('+esc(row.event_key)+')</option>').join('');
+ }
  function mediaUrl(path){
   if(!validPath(path))return '';
   return SUPABASE_URL+'/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/');
@@ -232,5 +237,5 @@
    finally{input.disabled=false}
   });
  }
- window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl};
+ window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl,optionsHtml};
 })();
