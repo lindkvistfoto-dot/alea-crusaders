@@ -104,3 +104,20 @@ Animationer är dekorativa och får inte styra spelregler eller blockera tärnin
 **Verifierade appfiler:** `vaderforutsagelse.webp` 184 780 B, `forandra.webp` 178 422 B, `vindkontroll.webp` 195 934 B. Samtliga 640×640, kvalitet 90, alfa bevarad, original oförändrade. De tre motsvarande `rule_spells`-raderna fick rätt `icon_path` och `icon_zoom=100` för att visa hela den låsta ramen. Totala antalet besvärjelser med kopplad ikon ökade från 8 till 11.
 
 **Begränsning:** verktygstransporten bygger på att originalet faktiskt finns åtkomligt i Google Drive. Ett lokalt chattuppladdat objekt utan Drive-kopia kan ännu inte antas kunna skickas binärt via den här vägen.
+
+## 11. ChatGPT Library → Google Drive → GitHub (verifierad binär överföring)
+
+**Verifierad 2026-10-15:** Det går att skicka en bild som redan finns i ChatGPT Library till Aleas Google Drive och därifrån till en äkta GitHub-blob **utan användarens manuella nedladdning/uppladdning**.
+
+**Kedja för AI-skapade bilder:**
+
+1. Leta upp rätt bild med `files__list({surface:"library", ...})` eller `files__search(...)`. Använd det faktiska `file_id`; identifiera först motivet, filens namn och eventuell låst referens. Arbeta aldrig från antagen sökväg.
+2. Med `files__manage_library({operations:[{operation:"upload",source_file_ref:{file_id:"<verifierat id>"},destination_path:"/Google Drive/Alea Crusaders transfer/<korrekt namn>.png",overwrite:false}]})`: kopiera filen direkt från ChatGPT Library till anslutet Drive. Befintlig målmapp måste finnas. **Ingen manuell mellanlandning på användarens enhet.**
+3. Läs resultatets Google Drive-fil-ID, hämta original med `mcp__Google_Drive__fetch({url:"https://drive.google.com/file/d/<Drive ID>/view",download_raw_file:true,include_base64:true})` via `functions.exec`. Verifiera att Base64-strängen börjar med PNG-signaturen, att MIME-typen är `image/png`, och att filstorlek är rimlig.
+4. I samma `functions.exec`-körning, skicka den oförändrade `b64_string` direkt till `mcp__GitHub__create_blob({repository_full_name:"lindkvistfoto-dot/alea-crusaders",content:b64_string,encoding:"base64"})`. **Skriv aldrig ut binärbytes/Base64 till chatten.**
+5. Bygg `create_tree` med `{path,mode:"100644",type:"blob",sha:<blob SHA>}` ovanpå aktuell `main`-tree, skapa commit med aktuell head som förälder och publicera med `update_ref` utan force och med `expected_sha`. Vid parallell uppdatering: läs aktuell head och skapa om commit, skriv inte över andra ändringar. För ett rent test kan ett commit göras **utan ref-uppdatering**, så att `main` inte ändras.
+6. Läs tillbaka `fetch_file({path,ref:<commit SHA>,encoding:"base64"})` och jämför `sha` med `create_blob`-resultatet. Därefter gäller HERMES-stegen för WebP-konvertering, Actions, Pages och databaspekare. **Databasfältet ändras aldrig före verifierad publicering.**
+
+**Utfört pilotbevis 2026-10-15:** Library-bilden `Hela – smaragdgröna helande löv.png` laddades till `Alea Crusaders transfer/hermes-chatgpt-bridge-hela-pilot.png`, hämtades därifrån som 2 862 513 PNG-byte och transporterades till GitHub. Git blob-SHA `3eb72f59006ce23402333a32324136c55c9dbf5a` överensstämde exakt med `fetch_file` i test-commit `6ec9d9957e5f503c26a38f9379c51dc8821704a5`. Ingen branch ref ändrades och inget speldatafält uppdaterades under testet.
+
+**Viktig avgränsning:** Detta är bevisad transport när bilden redan är tillgänglig i ChatGPT Library. Om en viss bild inte går att identifiera i Library måste den först göras åtkomlig. Pilotens fil är ett transporttest, **inte ett godkännande av bildens motiv eller en publicerad Alea-ikon**.
