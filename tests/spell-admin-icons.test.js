@@ -16,6 +16,8 @@ describe('Spell admin master icon previews',()=>{
   const linked={id:key,name:'Finna vatten',icon_path:iconPath,icon_focus_x:73,icon_focus_y:29,icon_zoom:155};
   const html=api.adminIconHtml(linked);
   expect(html).toContain('data-spell-icon-path="'+iconPath+'"');
+  expect(html).toContain('loading="eager"');
+  expect(html).not.toContain('loading="lazy"');
   expect(html).toContain('data-spell-icon-x="73"');
   expect(html).toContain('data-spell-icon-y="29"');
   expect(html).toContain('data-spell-icon-zoom="155"');
@@ -76,6 +78,41 @@ describe('Spell admin master icon previews',()=>{
   expect(storage.symbol.hidden).toBe(true);
   expect(repo.ready).toHaveBeenCalledWith('icon-ready');
   expect(storage.ready).toHaveBeenCalledWith('icon-ready');
+ });
+ it('loads initially hidden browser-lazy images on a fresh page, without saving a crop',async()=>{
+  const make=(path)=>{
+   const img={naturalWidth:0,naturalHeight:0,complete:false,hidden:true,style:{},loading:'lazy',onload:null,
+    set src(url){
+     this._src=url;
+     // Simulate browsers deferring hidden loading=lazy images indefinitely.
+     if(this.loading==='eager'){
+      this.naturalWidth=640;this.naturalHeight=640;this.complete=true;this.onload?.();
+     }
+    },
+    get src(){return this._src}
+   };
+   const symbol={hidden:false};
+   const thumb={dataset:{spellIconPath:path,spellIconX:'50',spellIconY:'50',spellIconZoom:'120'},
+    isConnected:true,classList:{add:vi.fn()},
+    getBoundingClientRect:()=>({width:48,height:48}),
+    querySelector:q=>q==='img'?img:q==='.spell-master-icon-symbol'?symbol:null};
+   return {img,symbol,thumb};
+  };
+  const repo=make(iconPath);
+  const storage=make('spell/78c31001-110d-4876-99c2-98281885e8a0/16e618dc-8645-427a-bce9-238397110634.webp');
+  const mapStorageFetch=vi.fn(async()=>({ok:true,blob:async()=>({size:256,type:'image/webp'})}));
+  const {api}=setup({mapStorageFetch,URL:{createObjectURL:()=> 'blob:first-page-load'}});
+  api.hydrateAdminList({querySelectorAll:()=>[repo.thumb,storage.thumb]});
+  for(let i=0;i<12;i++)await Promise.resolve();
+  expect(repo.img.loading).toBe('eager');
+  expect(storage.img.loading).toBe('eager');
+  expect(repo.img.src).toBe('./'+iconPath);
+  expect(storage.img.src).toBe('blob:first-page-load');
+  expect(repo.img.hidden).toBe(false);
+  expect(storage.img.hidden).toBe(false);
+  expect(repo.symbol.hidden).toBe(true);
+  expect(storage.symbol.hidden).toBe(true);
+  expect(mapStorageFetch).toHaveBeenCalledTimes(1);
  });
  it('prepares the icon crop while the admin tab is hidden on mobile',async()=>{
   const img={naturalWidth:640,naturalHeight:640,complete:true,style:{},hidden:true};

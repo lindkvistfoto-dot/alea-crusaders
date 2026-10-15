@@ -322,7 +322,7 @@
   const label=(linked?'Ändra ikon för ':'Lägg till ikon för ')+name;
   const attr=linked?' data-spell-icon-path="'+esc(art.path)+'" data-spell-icon-x="'+art.x+'" data-spell-icon-y="'+art.y+'" data-spell-icon-zoom="'+art.zoom+'"':'';
   return '<div class="spell-master-icon-cell"><button class="spell-master-icon-thumb '+(linked?'has-icon':'is-empty')+'" type="button" title="'+esc(label)+'" aria-label="'+esc(label)+'" onclick="editRuleSpell(\''+esc(id)+'\')"'+attr+'>'+
-   '<img alt="" loading="lazy" decoding="async" hidden><span class="spell-master-icon-symbol" aria-hidden="true">'+(row?.icon_path&&!linked?'!':'✧')+'</span></button></div>';
+   '<img alt="" loading="eager" decoding="async" hidden><span class="spell-master-icon-symbol" aria-hidden="true">'+(row?.icon_path&&!linked?'!':'✧')+'</span></button></div>';
  }
  function hydrateAdminList(root){
   if(!root?.querySelectorAll)return;
@@ -362,6 +362,9 @@
      if(symbol)symbol.hidden=true;
     };
     img.onerror=()=>failed(button);
+    // Hidden lazy-loaded images never fetch on some mobile browsers: the
+    // placeholder waits for onload while the browser waits for visibility.
+    img.loading='eager';
     img.src=url;
     if(img.complete&&img.naturalWidth)img.onload();
    }catch(error){failed(button)}
