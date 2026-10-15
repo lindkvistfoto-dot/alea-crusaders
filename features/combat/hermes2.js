@@ -73,7 +73,7 @@
   if(!r.ok)throw Error(data.message||data.error||'HERMES API '+r.status);
   return data;
  }
- function label(s){return ({active:'Aktiv och verifierad',awaiting_archive:'Väntar på GitHub',failed:'Misslyckad',archived:'Arkiverad',verified:'Verifierad',staged:'Mottagen'})[s]||s}
+ function label(s){return ({active:'Aktiv och verifierad',awaiting_archive:'Väntar på GitHub',failed:'Misslyckad',rolled_back:'Återställd',archived:'Arkiverad',verified:'Verifierad',staged:'Mottagen'})[s]||s}
  async function jobs(){
   if(!requireAdmin())return;
   try{
@@ -87,7 +87,17 @@
     const type=document.createElement('span');type.textContent=item.kind==='symbol'?'Symbol':'Besvärjelse';
     const state=document.createElement('span');state.className='status';state.textContent=label(item.status);
     line.append(name,type,state);
-    if(item.status!=='active'){
+    if(item.status==='active'){
+     const restore=document.createElement('button');restore.type='button';restore.className='smallbtn';restore.textContent='Återställ föregående ikon';
+     restore.onclick=async()=>{
+      if(!window.confirm('Återställ tidigare ikon för '+item.target_key+'? Originalfilerna behålls.'))return;
+      restore.disabled=true;out('Återställer tidigare ikon …');
+      try{const res=await request({action:'rollback',job_id:item.id});out(res.ok?'Tidigare ikon återställd.':'Återställning stoppades: '+res.error,!res.ok);await jobs();if(res.ok)window.aleaMagicSymbolsAdmin?.refresh?.()}
+      catch(e){out(e.message,true)}finally{restore.disabled=false}
+     };
+     line.appendChild(restore);
+    }
+    if(item.status!=='active'&&item.status!=='rolled_back'){
      const retry=document.createElement('button');retry.type='button';retry.className='smallbtn';retry.textContent='Försök igen';
      retry.onclick=async()=>{retry.disabled=true;out('Återupptar '+item.target_key+' …');
       try{const res=await request({action:'retry',job_id:item.id});out(res.ok?'Verifierat och aktiverat: '+item.target_key:'Väntar: '+(res.error||res.status),!res.ok);await jobs();if(res.ok)window.aleaMagicSymbolsAdmin?.refresh?.()}
