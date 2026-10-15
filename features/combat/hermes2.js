@@ -126,9 +126,12 @@
   diag.textContent='Kontrollerar HERMES-tjänsten …';
   try{
    const check=await request({action:'diagnostics'});
-   const ok=check.source_bucket&&check.public_bucket&&check.github_readable;
-   diag.textContent=(ok?'Lagring och GitHub-läsning fungerar. ':'Kontrollera serveranslutningen. ')+
-    (check.github_write_configured?'GitHub-skrivbehörighet är konfigurerad.':'GitHub-skrivtoken saknas eller är inte konfigurerad. Osäkerhet-piloten kan använda redan arkiverat original.');
+   const basic=check.source_bucket&&check.public_bucket&&check.github_readable;
+   const registry=check.symbol_lookup_ok&&check.job_queue_read_ok;
+   diag.textContent=(basic?'Lagring och GitHub-läsning fungerar. ':'Kontrollera lagring och GitHub. ')+
+    (registry?'Osäkerhet och HERMES-jobbregistret är läsbara. ':'Databasåtkomst misslyckades'+(check.symbol_lookup_error?' ('+check.symbol_lookup_error+')':'')+'. ')+
+    (check.github_write_configured?'GitHub-skrivbehörighet konfigurerad.':'Ingen GitHub-skrivtoken. Befintligt arkiverat original kan användas för Osäkerhet.');
+   if(!basic||!registry)diag.style.color='#f4ac97';else diag.style.color='';
   }catch(e){diag.textContent='Anslutningskontroll misslyckades: '+e.message}
  }
  $('hermes2Diagnostics').addEventListener('click',diagnostic);
