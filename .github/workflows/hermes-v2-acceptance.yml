@@ -35,6 +35,11 @@ jobs:
         run: |
           test -s dist/features/combat/hermes2.js
           grep -q 'features/combat/hermes2.js' dist/index.html
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate HERMES Edge Function TypeScript
+        run: deno check --node-modules-dir=auto supabase/functions/hermes-v2/index.ts
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
