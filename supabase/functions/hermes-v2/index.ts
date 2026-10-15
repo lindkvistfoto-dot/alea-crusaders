@@ -136,7 +136,8 @@ async function processJob(job:Record<string,any>){
   const table=job.kind==="symbol"?"rule_magic_symbols":"rule_spells";
   const field=job.kind==="symbol"?"symbol_key":"spell_key";
   const {data:target,error:lookupError}=await db.from(table).select("id,icon_path").eq(field,job.target_key).maybeSingle();
-  if(lookupError||!target)throw Error("TARGET_NOT_FOUND");
+  if(lookupError)throw Error("TARGET_LOOKUP_FAILED_"+(lookupError.code||"UNKNOWN"));
+  if(!target)throw Error("TARGET_NOT_FOUND");
   if(target.icon_path!==job.previous_icon_path&&target.icon_path!==job.app_path)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
   if(target.icon_path!==job.app_path){
    let q=db.from(table).update({icon_path:job.app_path}).eq("id",target.id);
@@ -186,7 +187,11 @@ async function stageMedia(kind:string,key:string,src:Uint8Array,out:Uint8Array,u
   const table=kind==="symbol"?"rule_magic_symbols":"rule_spells";
   const field=kind==="symbol"?"symbol_key":"spell_key";
   const {data:target,error:targetError}=await db.from(table).select("id,icon_path").eq(field,key).maybeSingle();
-  if(targetError||!target)return fail(404,"TARGET_NOT_FOUND","Target key does not exist in Alea.");
+  if(targetError){
+   console.error("HERMES_TARGET_LOOKUP_ERROR",table,targetError.code||"UNKNOWN");
+   return fail(503,"TARGET_LOOKUP_FAILED","HERMES could not read the master registry ("+(targetError.code||"DATABASE_ERROR")+").");
+  }
+  if(!target)return fail(404,"TARGET_NOT_FOUND","No matching target key exists in Alea.");
   const sourceSha=await hash("SHA-256",src),appSha=await hash("SHA-256",out);
   const sourcePath=kind+"/"+key+"/"+sourceSha+".png";
   const appPath="hermes/"+kind+"/"+key+"/"+appSha+".webp";
@@ -250,13 +255,18 @@ Deno.serve(async req=>{
   if(type.includes("application/json")){
    const body=await req.json();
    if(body.action==="diagnostics"){
-    const [sourceBucket,publicBucket,githubRepo]=await Promise.all([
+    const [sourceBucket,publicBucket,githubRepo,registry,queue]=await Promise.all([
      db.storage.getBucket(SOURCE),
      db.storage.getBucket(PUBLIC),
-     github("GET","").then(()=>true).catch(()=>false)
+     github("GET","").then(()=>true).catch(()=>false),
+     db.from("rule_magic_symbols").select("id").eq("symbol_key","osakerhet").maybeSingle(),
+     db.from("hermes_jobs").select("id").limit(1)
     ]);
     return json({ok:true,version:2,admin:true,source_bucket:!sourceBucket.error,
      public_bucket:!publicBucket.error,github_readable:githubRepo,
+     symbol_lookup_ok:!registry.error&&!!registry.data,
+     symbol_lookup_error:registry.error?.code||null,
+     job_queue_read_ok:!queue.error,job_queue_error:queue.error?.code||null,
      github_write_configured:!!GH_TOKEN,
      legacy_osakerhet_can_archive_without_token:true});
    }
