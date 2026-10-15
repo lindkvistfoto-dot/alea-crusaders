@@ -104,6 +104,7 @@ async function processJob(job:Record<string,any>){
  const id=job.id as string;
  try{
   if(job.status==="active")return {ok:true,job_id:id,status:"active",icon_path:job.app_path};
+  if(job.status==="rolled_back")return {ok:false,job_id:id,status:"rolled_back",error:"JOB_ROLLED_BACK"};
   await patchJob(id,{attempts:job.attempts+1,status:"staged",error_code:null,error_message:null});
   const {data:source,error:readError}=await db.storage.from(SOURCE).download(job.source_path);
   if(readError||!source)throw Error("SOURCE_MISSING");
@@ -144,6 +145,27 @@ async function processJob(job:Record<string,any>){
   return {ok:false,job_id:id,status:pending?"awaiting_archive":"failed",error:msg};
  }
 }
+async function rollbackJob(job:Record<string,any>){
+ const id=job.id as string;
+ if(job.status==="rolled_back")return {ok:true,job_id:id,status:"rolled_back"};
+ if(job.status!=="active")return {ok:false,job_id:id,error:"ONLY_ACTIVE_JOBS_CAN_ROLL_BACK"};
+ const table=job.kind==="symbol"?"rule_magic_symbols":"rule_spells";
+ const field=job.kind==="symbol"?"symbol_key":"spell_key";
+ const {data:target,error}=await db.from(table).select("id,icon_path").eq(field,job.target_key).single();
+ if(error||!target)return {ok:false,job_id:id,error:"TARGET_NOT_FOUND"};
+ if(target.icon_path!==job.app_path && target.icon_path!==job.previous_icon_path)
+  return {ok:false,job_id:id,error:"ICON_CHANGED_SINCE_ACTIVATION"};
+ if(target.icon_path===job.app_path){
+  const {data:updated,error:writeError}=await db.from(table)
+   .update({icon_path:job.previous_icon_path}).eq("id",target.id).eq("icon_path",job.app_path).select("id,icon_path");
+  if(writeError||updated?.length!==1)return {ok:false,job_id:id,error:"ROLLBACK_CONFLICT"};
+ }
+ const {data:confirmed,error:readError}=await db.from(table).select("icon_path").eq("id",target.id).single();
+ if(readError||confirmed.icon_path!==job.previous_icon_path)return {ok:false,job_id:id,error:"ROLLBACK_READBACK_FAILED"};
+ await patchJob(id,{status:"rolled_back",activated_at:null});
+ await event(id,"rolled_back","Restored prior icon path; immutable media retained.");
+ return {ok:true,job_id:id,status:"rolled_back",icon_path:job.previous_icon_path};
+}
 Deno.serve(async req=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers});
  if(req.method!=="POST")return fail(405,"METHOD_NOT_ALLOWED","Only POST is enabled.");
@@ -158,10 +180,10 @@ Deno.serve(async req=>{
   const type=req.headers.get("content-type")||"";
   if(type.includes("application/json")){
    const body=await req.json();
-   if(body.action!=="retry"||typeof body.job_id!=="string")return fail(400,"BAD_ACTION","Expected retry and job_id.");
+   if(!["retry","rollback"].includes(body.action)||typeof body.job_id!=="string")return fail(400,"BAD_ACTION","Expected retry/rollback and job_id.");
    const {data:job,error}=await db.from("hermes_jobs").select("*").eq("id",body.job_id).single();
    if(error||!job)return fail(404,"NOT_FOUND","Job not found.");
-   return json(await processJob(job));
+   return json(body.action==="rollback"?await rollbackJob(job):await processJob(job));
   }
   if(!type.includes("multipart/form-data"))return fail(415,"INVALID_REQUEST","Expected multipart/form-data.");
   const form=await req.formData();
