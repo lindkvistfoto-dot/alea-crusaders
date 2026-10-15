@@ -17,8 +17,8 @@ describe('HERMES 2.0 release safety contracts',()=>{
  });
  it('uses private original and public immutable WebP buckets with admin RLS',()=>{
   const migration=read('supabase/migrations/20261015170000_hermes_v2_job_queue_and_storage.sql');
-  expect(migration).toContain("'alea-hermes-source',false");
-  expect(migration).toContain("'alea-hermes-public',true");
+  expect(migration).toContain("'alea-hermes-source','alea-hermes-source',false");
+  expect(migration).toContain("'alea-hermes-public','alea-hermes-public',true");
   expect(migration).toContain('private.is_admin()');
   expect(migration).toContain('unique(kind,target_key,source_sha256)');
  });
