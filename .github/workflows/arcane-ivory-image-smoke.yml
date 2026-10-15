@@ -6,7 +6,8 @@ on:
       - 'features/combat/spell-art.js'
       - 'features/combat/runtime.js'
       - 'vite.config.js'
-      - 'assets/spells/arcane-ivory/**'
+      - 'assets/spells/arcane-ivory/*.webp'
+      - 'assets/spells/arcane-ivory/manifest.json'
       - 'tests/spell-master-art.test.js'
       - '.github/workflows/arcane-ivory-image-smoke.yml'
   workflow_dispatch:
@@ -22,16 +23,20 @@ jobs:
       - run: npm ci
       - run: npx vitest run tests/spell-master-art.test.js
       - run: npm run build
-      - name: Verify shipped PNG with alpha support
+      - name: Verify app ships optimized WebP, not the full master PNG
         run: |
           node --input-type=module -e '
-          import {readFileSync} from "node:fs";
+          import {readFileSync,existsSync} from "node:fs";
           import {strict as assert} from "node:assert";
-          const file="dist/assets/spells/arcane-ivory/finna-vatten.png";
-          const data=readFileSync(file);
-          assert(data.subarray(0,8).equals(Buffer.from("89504e470d0a1a0a","hex")),"not a PNG");
-          const width=data.readUInt32BE(16),height=data.readUInt32BE(20),colorType=data[25];
-          assert(width===height&&width>=128,"square icon required");
-          assert([4,6].includes(colorType)||data.includes(Buffer.from("tRNS")),"transparency information required");
-          console.log(file,width,height,"PNG color type",colorType);
+          const directory="dist/assets/spells/arcane-ivory/";
+          const manifest=JSON.parse(readFileSync(directory+"manifest.json","utf8"));
+          assert(manifest.icons.length>0);
+          for(const icon of manifest.icons){
+            const data=readFileSync(directory+icon.app);
+            assert(data.subarray(0,4).toString()==="RIFF","not a WebP RIFF");
+            assert(data.subarray(8,12).toString()==="WEBP","not a WebP");
+            assert(data.length<=500000,"app asset too large");
+            assert(!existsSync(directory+icon.source),"original PNG must not ship in dist");
+            console.log(icon.spell_key, data.length, "bytes");
+          }
           '
