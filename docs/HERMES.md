@@ -1,8 +1,43 @@
 # Protokoll HERMES
 **Alea Crusaders – gemensam standard för bildproduktion, överföring och publicering**
 
-**Version:** 1.0 · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
+**Version:** 2.2 (operativ definition) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
 **Namn:** HERMES – gudarnas budbärare. Bilden ska nå rätt plats i appen med kvalitet, säkerhet och spårbarhet intakt.
+
+## HERMES 2.2 – gällande operativ huvudprincip (2026-10-15)
+
+**Definition:** HERMES är Alea Crusaders verifierbara intags-, filtransport-, optimerings- och publiceringsprotokoll. AI skapar eller väljer godkända original; HERMES ser till att rätt fil blir lagrad, kontrollerad och aktiverad i rätt databaspost. Direkta experiment med chatbilagors interna bytes är **inte längre standardvägen**.
+
+**Standardflöde (för publika, godkända bilder):**
+
+```text
+ChatGPT/Work eller användare
+  -> Alea Crusaders – HERMES 2.1 – TEMP INBOX (Google Drive)
+  -> Drive-hämtning och validerad GitHub Git Data API-överföring
+  -> assets/hermes/originals/<kind>/<target_key>/<source_sha256>.png (main)
+  -> GitHub Actions: .github/workflows/hermes21-intake.yml
+  -> scripts/hermes2_prepare.py: validerad PNG -> WebP + manifest
+  -> scripts/hermes2_publish.ts: GitHub-verifiering, immutable Storage,
+     SHA-256-återläsning, publik URL-verifiering, jämför-och-sätt-aktivering
+  -> Supabase Storage + exakt ett avsett databasfält
+  -> kontroll och statusrapport
+```
+
+- **En enda tillfällig inkorg:** [Alea Crusaders – HERMES 2.1 – TEMP INBOX](https://drive.google.com/drive/folders/1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp). Kontrollera Drive-fil-ID, MIME, faktiska bytes, rätt mål och SHA före överföring. Kopior i Drive är mellanlager, inte originalarkiv. Radera inte inkorgen automatiskt förrän slutverifiering och eventuell felsökning är avslutade.
+- **Filen passerar GitHub som faktisk binär blob:** anslutet Drive-verktyg hämtar Base64 och skickar i samma säkra verktygskörning till GitHub `create_blob(encoding="base64")`; därefter `create_tree`, `create_commit`, `update_ref`. Kontrollera blob-SHA och GitHub-sökväg; skriv aldrig ut Base64 i chatten.
+- **GitHub-commit utlöser publicering:** godkända inkommande PNG-filer på `main` triggar HERMES 2.1 GitHub Action. Alla transformations-, Storage-, återläsnings- och databassteg ska utföras av Action-pipelinen, inte improviseras separat av chatten. Repetitioner ska vara idempotenta.
+- **Rätt nyckel per mål:** `kind=spell` kräver befintlig `rule_spells.spell_key` och uppdaterar bara `rule_spells.icon_path`. `kind=symbol` kräver `rule_magic_symbols.symbol_key` och uppdaterar bara `rule_magic_symbols.icon_path`. Fel mål eller saknad post är ett blockerande fel, aldrig en anledning att gissa.
+- **Krav för aktivering:** komplett, korrekt PNG; verklig RGBA-alfa och lämpliga dimensioner; bevarad transparens i WebP; exakt GitHub-källkontroll; lyckad uppladdning till både `alea-hermes-source` och `alea-hermes-public`; verifierade SHA-256 vid Storage-download och publik URL; samt bekräftad databasåterläsning. Ingen aktivering innan samtliga grindar passerat.
+- **Säkerhet:** publikt GitHub-repo får bara innehålla godkända publika bildoriginal. Använd aldrig flödet för privata bilder. Supabase-nyckeln finns endast som GitHub Actions secret `HERMES_SUPABASE_SERVICE_ROLE_KEY` och får aldrig exponeras i chatten, Drive, logs eller repo.
+- **Status är saklig:** `ACTIVE` först när `hermes_jobs.status=active`, loggen innehåller `HERMES_ACTIVE`, rätt `icon_path` är läst tillbaka och lagringsfilerna verifierats. Annars `PENDING`, `FAILED` eller `NEEDS_REVIEW`; grönt CI utan publicering räcker inte.
+- **Avgränsning:** det finns **ingen verifierad automatisk Drive-mappövervakning** som på egen hand skapar GitHub-commits. Drive -> GitHub sker tills vidare via explicit initierat anslutet verktygsflöde. Vidare automationsarbete kan införa en separat intagstjänst med egna rättigheter, deduplicering och felkö, utan att röra den bevisade GitHub -> Supabase-pipelinen.
+- **Aktivt stöd:** HERMES 2.1-publiceraren stöder i dag `spell` och `symbol` som transparenta, kvadratiska PNG-original med WebP 640×640 (högst 500 kB). Porträtt, vapen, bakgrunder, videor och privata bilder har andra krav och ingår först efter separata profiler/implementationer. Befintlig ARCANE IVORY v1.0 GitHub Pages-pipeline finns kvar för bakåtkompatibilitet tills migrering beslutats.
+
+**Godkänt genomförandetest:** STOPP (`symbol/stopp`), GitHub Actions-körning [38788702369, försök 2](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/38788702369), 2026-10-15. PNG 2 678 163 byte -> WebP 167 144 byte. `origin=github_actions`, `hermes_jobs.status=active`, `rule_magic_symbols.icon_path` matchade den verifierade publicerade filen. Drive -> GitHub är även dokumenterat testad tidigare i §10–11; detta STOPP-acceptanstest verifierade **GitHub -> Supabase -> aktivering**.
+
+**Princip för alla nya uppdrag:** "Använd HERMES" betyder använd denna standardkedja och redovisa varje verkligt uppnått steg; hoppa aldrig tyst över en blockerad länk.
+
+---
 
 ## 1. Omfattning och grundregler
 
@@ -17,9 +52,9 @@
 2. **SKAPA:** ta fram originalbilden enligt visuell standard. Inga exporter eller omritningar ska förändra en godkänd originalbild.
 3. **BEVARA:** lagra oförändrat original i dess etablerade mastermapp. Anteckna varifrån originalet kommer och vilka rättigheter som gäller. Skyddad eller privat bild ska inte placeras publikt.
 4. **OPTIMERA:** generera separat appversion enligt en explicit profil; behåll bildens proportioner, detaljer och nödvändig transparens. Ingen nedskalning direkt av originalfilen.
-5. **TRANSPORTERA:** överför äkta bytes med GitHubs Git Data API: `create_blob` med Base64, `create_tree`, `create_commit`, `update_ref`. Kontrollera blob-SHA, branchens förväntade SHA och återläs filen. `create_file` för UTF-8-text och `git push` är **inte** binäröverföringsvägen i chatten.
+5. **TRANSPORTERA:** den primära vägen är HERMES Drive-inkorg -> hämtning som binär Base64 via anslutna verktyg -> GitHub Git Data API: `create_blob`, `create_tree`, `create_commit`, `update_ref`. Kontrollera blob-SHA, aktuell `main`, förväntad commit och återläsning. `create_file` för UTF-8-text och `git push` är **inte** den rekommenderade binäröverföringsvägen i chatten.
 6. **VERIFIERA:** kontrollera verkligt filformat, dimensioner, alfakanal, filstorlek, kontrollsumma, byggets inkludering och att distributionsfilen går att nå efter publicering.
-7. **AKTIVERA:** först därefter sätts rätt databasfält/bildreferens till den **optimerade** filen. Bekräfta genom att läsa tillbaka den ändrade posten. Ändra inga andra fält.
+7. **AKTIVERA:** den bevisade GitHub Action-pipelinen publicerar först och ändrar därefter endast rätt databasfält till den **optimerade** filen, genom jämför-och-sätt, och läser tillbaka posten. Aktivera inte manuellt parallellt medan Action körs. Ändra inga andra fält.
 8. **RAPPORTERA:** ange originalets och appfilens sökvägar, storlekar, commit, testresultat, faktisk DB-koppling, eventuella blockerare och enkel återställningsväg.
 
 **Ingen grön status utan faktisk återläsning och ett relevant funktionstest.** Om binära bildbytes inte är åtkomliga i en viss miljö rapporteras det som blockerare; varken en placeholder eller en textfil får utges för att vara en riktig PNG.
