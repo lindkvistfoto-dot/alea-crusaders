@@ -76,5 +76,6 @@ describe('Shared round background gallery',()=>{
   expect(css).toContain('var(--alea-round-illustration');
   expect(html).toContain('data-admin-section="specialImages"');
   expect(html).toContain('features/combat/round-gallery.js?v=');
+  expect(read('vite.config.js')).toContain('alea-copy-committed-round-art');
  });
 });
