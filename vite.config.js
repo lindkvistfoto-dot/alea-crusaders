@@ -27,7 +27,7 @@ export default defineConfig({
         const to = resolve("dist/assets/spells/arcane-ivory");
         await mkdir(to, { recursive: true });
         for (const file of await readdir(from)) {
-          if (/^[a-z0-9-]+\\.webp$/.test(file) || file === "manifest.json") {
+          if (/^[a-z0-9-]+\.webp$/.test(file) || file === "manifest.json") {
             await copyFile(resolve(from, file), resolve(to, file));
           }
         }
