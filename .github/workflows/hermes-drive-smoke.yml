@@ -41,7 +41,7 @@ jobs:
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           HERMES_FOLDER_ID: 1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp
-          HERMES_TEST_FILE_ID: ${{ inputs.drive_file_id }}
+          HERMES_TEST_FILE_ID: ${{ github.event_name == 'push' && '1I6Wx2kTtVqN2l76cjwqvdOmN3_iLDY6C' || inputs.drive_file_id }}
         run: |
           python - <<'PY'
           import hashlib
