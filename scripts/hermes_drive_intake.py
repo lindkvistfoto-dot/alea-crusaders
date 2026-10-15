@@ -50,6 +50,25 @@ def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int
         raise RuntimeError(f"HTTP_{err.code} {method} {urllib.parse.urlsplit(url).path}") from None
 
 
+def find_drive_file_by_name(file_name: str) -> str:
+    """Resolve a unique file solely within the authorized HERMES Inbox."""
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,160}\\.png", file_name):
+        raise ValueError("INVALID_DRIVE_FILE_NAME")
+    query = "'" + FOLDER + "' in parents and name = '" + file_name + "' and trashed = false"
+    url = "https://www.googleapis.com/drive/v3/files?" + urllib.parse.urlencode({
+        "q": query,
+        "fields": "nextPageToken,files(id,name,mimeType,parents,size)",
+        "pageSize": 100,
+    })
+    _, response = api(url, os.environ["GOOGLE_ACCESS_TOKEN"])
+    payload = json.loads(response)
+    matches = [item for item in payload.get("files", []) if item.get("name") == file_name
+               and item.get("mimeType") == "image/png" and FOLDER in item.get("parents", [])]
+    if payload.get("nextPageToken") or len(matches) != 1:
+        raise ValueError("DRIVE_FILENAME_MUST_MATCH_EXACTLY_ONE_PNG")
+    return matches[0]["id"]
+
+
 def google_file(file_id: str) -> bytes:
     token = os.environ["GOOGLE_ACCESS_TOKEN"]
     base = "https://www.googleapis.com/drive/v3/files/" + file_id
@@ -147,18 +166,28 @@ def run(request_path: str) -> None:
     if not request_file.is_relative_to((root / "hermes" / "queue").resolve()) or not request_file.is_file():
         raise ValueError("QUEUE_FILE_NOT_FOUND")
     request = json.loads(request_file.read_text(encoding="utf-8"))
-    if not isinstance(request, dict) or set(request) != {"schema", "kind", "target_key", "drive_file_id", "mode"}:
+    common_keys = {"schema", "kind", "target_key", "mode"}
+    if not isinstance(request, dict) or not (
+        set(request) == common_keys | {"drive_file_id"} or
+        set(request) == common_keys | {"drive_file_name"}
+    ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
     if request["schema"] != 1 or request["kind"] not in ("spell", "symbol"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")
-    if not isinstance(request["drive_file_id"], str) or not FILE_ID_PATTERN.fullmatch(request["drive_file_id"]):
-        raise ValueError("INVALID_DRIVE_FILE_ID")
+    if "drive_file_id" in request:
+        if not isinstance(request["drive_file_id"], str) or not FILE_ID_PATTERN.fullmatch(request["drive_file_id"]):
+            raise ValueError("INVALID_DRIVE_FILE_ID")
+        file_id = request["drive_file_id"]
+    else:
+        if not isinstance(request["drive_file_name"], str):
+            raise ValueError("INVALID_DRIVE_FILE_NAME")
+        file_id = find_drive_file_by_name(request["drive_file_name"])
     if request["mode"] not in ("verify", "publish"):
         raise ValueError("INVALID_MODE")
     print("QUEUE_ACCEPTED", request_path, request["mode"], request["kind"], request["target_key"])
-    data = google_file(request["drive_file_id"])
+    data = google_file(file_id)
     digest = validate_png(data)
     path = (
         "assets/hermes/originals/" + request["kind"] + "/" + request["target_key"]
