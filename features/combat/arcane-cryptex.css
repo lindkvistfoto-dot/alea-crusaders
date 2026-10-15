@@ -100,8 +100,24 @@
  border-top:0;padding:1px 5px 0;margin-top:0;
 }
 @media(max-width:760px){
+ /* The spell housing reaches almost edge-to-edge on phones, while its crown
+    gently overlaps the bottom of the carried-equipment artwork above it.
+    The whole stage is resized, not the individual masks or click targets. */
+ #combatPage .combat-shell-live #combatActionPanel:has(.cryptex-prototype){
+  position:relative;z-index:8;overflow:visible;
+ }
+ #combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.combat-magic-select-panel:has(.cryptex-prototype){
+  overflow:visible;
+ }
  #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
-  width:100%;padding:0;margin-bottom:3px;
+  width:min(calc(100% + 56px),calc(100vw - 8px));
+  max-width:none;
+  left:50%;
+  transform:translateX(-50%);
+  padding:0;
+  margin-top:-42px;
+  margin-bottom:3px;
+  z-index:3;
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate{
   font-size:clamp(9px,2.5vw,12px);
