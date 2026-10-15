@@ -26,6 +26,17 @@
       "alpha_preserved": true
     },
     {
+      "spell_key": "forandra",
+      "source": "forandra.png",
+      "app": "forandra.webp",
+      "size": 640,
+      "source_bytes": 2977507,
+      "app_bytes": 178422,
+      "quality": 90,
+      "source_sha256": "eb0cfbbdbe14902382e20632f8223603121f5d7eadd8d024ce670c50f10722eb",
+      "alpha_preserved": true
+    },
+    {
       "spell_key": "vaderforutsagelse",
       "source": "vaderforutsagelse.png",
       "app": "vaderforutsagelse.webp",
@@ -34,6 +45,17 @@
       "app_bytes": 184780,
       "quality": 90,
       "source_sha256": "a08d39f8bebe36aa305197fac168c2161953f287432c1bf1eb359519bbb9e176",
+      "alpha_preserved": true
+    },
+    {
+      "spell_key": "vindkontroll",
+      "source": "vindkontroll.png",
+      "app": "vindkontroll.webp",
+      "size": 640,
+      "source_bytes": 3101322,
+      "app_bytes": 195934,
+      "quality": 90,
+      "source_sha256": "77ecf70c45a7fc948926a95c3dec92a138915f573b93713e9731d41af9009088",
       "alpha_preserved": true
     }
   ]
