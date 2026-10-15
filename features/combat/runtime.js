@@ -2383,7 +2383,7 @@ function combatSpellOptions(combatant){
 function combatSpellKey(spell){return String(spell?.item_spell?.key||spell?.rule_id||spell?.name||'spell')}
 function combatSpellArtPath(path){
  const value=String(path||'');
- return /^(?:spell\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp|assets\/spells\/arcane-ivory\/[a-z0-9-]+\.(?:png|webp))$/.test(value)?value:'';
+ return /^(?:spell\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp|assets\/spells\/arcane-ivory\/[a-z0-9-]+\.(?:png|webp)|hermes\/spell\/[a-z0-9-]+\/[a-f0-9]{64}\.webp)$/.test(value)?value:'';
 }
 function combatSpellArtNumber(value,fallback,min=0,max=100){
  const n=Number(value??fallback);
