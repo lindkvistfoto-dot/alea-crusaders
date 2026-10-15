@@ -24,6 +24,17 @@
       "quality": 90,
       "source_sha256": "e20c68fece983e6242918d659fc44db5058e9eec6c311fe05b3633c8be1b3e04",
       "alpha_preserved": true
+    },
+    {
+      "spell_key": "vaderforutsagelse",
+      "source": "vaderforutsagelse.png",
+      "app": "vaderforutsagelse.webp",
+      "size": 640,
+      "source_bytes": 2978601,
+      "app_bytes": 184780,
+      "quality": 90,
+      "source_sha256": "a08d39f8bebe36aa305197fac168c2161953f287432c1bf1eb359519bbb9e176",
+      "alpha_preserved": true
     }
   ]
 }
