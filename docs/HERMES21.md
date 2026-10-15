@@ -22,7 +22,7 @@
 6. Read current branch head and base tree from GitHub Git API. Use `create_tree` with existing base tree, `create_commit`, `update_ref` without force. Archive under an immutable SHA-256 path. Never replace an existing unrelated blob and never force-push.
 7. Recheck final committed GitHub blob SHA (not text decode); do not report success if commit update fails.
 8. GitHub Actions `.github/workflows/hermes21-intake.yml` invokes `scripts/hermes2_prepare.py`. This validates original source SHA-256, produces optimized alpha-preserving WebP and attaches 7-day short-lived artifact. It is intentionally a preparation stage and is not allowed to mark Supabase entries active on its own.
-9. Secure Supabase publishing is a separate unfinished milestone: immutable original+WebP Storage uploads, readback checksum, database compare-and-set, job logs, rollback. Retain the Drive file until confirmed successful, then delete after safety delay.
+9. Supabase publisher is implemented in `scripts/hermes2_publish.ts` and attached to `.github/workflows/hermes21-intake.yml`; it remains inactive until the private GitHub Actions secret `HERMES_SUPABASE_SERVICE_ROLE_KEY` is configured. Once present, the runner verifies the GitHub blob, uploads immutable original and WebP, reads both Storage objects and the public URL back, then performs compare-and-set on the correct database icon path and writes job events. Preserve Drive until the real `active` state is confirmed.
 10. Never mix a successful GitHub binary transfer with "active in Alea" claims. Report each boundary separately.
 
 ## Milestone gate
@@ -30,10 +30,16 @@
 - [x] Download Drive → compare exact original SHA-256.
 - [x] Drive Base64 → GitHub blob with independent Git SHA-1 matching.
 - [x] Immutable original committed to GitHub main.
-- [ ] GitHub Actions preparation job completes green and produces artifact.
-- [ ] Trusted automated runner securely stages WebP to Supabase Storage.
+- [x] GitHub Actions preparation job completes green and produces artifact: `38787603059`.
+- [x] Trusted Actions publisher implemented and Deno typechecked (run `38788237637`).
+- [ ] Private GitHub Actions secret configured (`HERMES_SUPABASE_SERVICE_ROLE_KEY`) and publisher run verified against Supabase Storage.
 - [ ] Database target `rule_magic_symbols.symbol_key=stopp` activated after readback, with the earlier icon preserved on failure.
 - [ ] Three distinct chat attachments in a row with no manual steps.
 
 ## Security
 This profile is exclusively for approved public game assets. Never send private files through GitHub public repositories. Do not expose storage/admin/GitHub tokens to chat, public GitHub commits or a Drive file shared publicly. The TEMP INBOX remains private. Prefer fine-grained delegated auth or short-lived OIDC when automating publication.
+
+## Required one-time secret configuration (not a chat paste)
+Open the repository's GitHub **Settings → Secrets and variables → Actions → New repository secret**. Name it `HERMES_SUPABASE_SERVICE_ROLE_KEY`, and set its value to a backend-only Supabase service-role/secret API key with the necessary Storage and database privileges for Alea. Keep this credential out of the repository, chat and Drive. The workflow validates the target repository and `refs/heads/main` before publishing.
+
+Once the secret is added, re-run the latest **HERMES 2.1 – Verify and optimize incoming art** workflow. It will reuse the immutable original from GitHub, regenerate the same 640×640 WebP, verify source and delivery checksums, create/advance a `hermes_jobs` entry and activate `rule_magic_symbols.symbol_key=stopp` only after successful readbacks. A missing secret produces a warning and no Supabase changes. Do not delete the temporary Drive original before `status=active` is independently checked.
