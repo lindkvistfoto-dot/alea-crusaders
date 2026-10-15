@@ -1,0 +1,44 @@
+name: HERMES 2.1 – Verify and optimize incoming art
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/hermes/originals/**/*.png'
+      - 'scripts/hermes2_prepare.py'
+      - '.github/workflows/hermes21-intake.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hermes21-intake-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install image codec
+        run: python -m pip install Pillow==12.3.0
+      - name: Verify source and create content-addressed WebP
+        run: python scripts/hermes2_prepare.py --output "$RUNNER_TEMP/hermes21-output"
+      - name: Archive the optimized asset for the HERMES publisher
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes21-verified-images
+          path: ${{ runner.temp }}/hermes21-output/
+          retention-days: 7
+          if-no-files-found: error
+      - name: HERMES publisher handoff
+        run: |
+          echo "Images verified and optimized."
+          echo "Supabase activation is intentionally separate until a secure automated publisher is configured."
+          echo "Do not report icons active on the basis of this job alone."
