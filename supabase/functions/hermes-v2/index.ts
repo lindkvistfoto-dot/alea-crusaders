@@ -232,8 +232,19 @@ Deno.serve(async req=>{
  const client=createClient(URL_BASE,ANON_KEY,{auth:{persistSession:false}});
  const {data:{user},error:authError}=await client.auth.getUser(jwt);
  if(authError||!user)return fail(401,"UNAUTHORIZED","Session is invalid.");
- const {data:profile,error:profileError}=await db.from("profiles").select("is_admin").eq("id",user.id).single();
- if(profileError||!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Only Alea admins can upload art.");
+ // Authorize with the *same JWT* used in Alea, never with the service-role client's own session.
+ // This matches the established profiles_select RLS: the signed-in user may read their own row.
+ // A service-role misconfiguration must not incorrectly strip an authenticated user's admin role.
+ const actor=createClient(URL_BASE,ANON_KEY,{
+  global:{headers:{Authorization:"Bearer "+jwt}},
+  auth:{persistSession:false}
+ });
+ const {data:profile,error:profileError}=await actor.from("profiles").select("id,is_admin").eq("id",user.id).maybeSingle();
+ if(profileError){
+  console.error("HERMES_AUTH_PROFILE_READ_FAILED",profileError.code||"UNKNOWN",profileError.message.slice(0,120));
+  return fail(503,"ADMIN_LOOKUP_FAILED","Cannot verify administrator rights; please retry.");
+ }
+ if(!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Only Alea admins can upload art.");
  try{
   const type=req.headers.get("content-type")||"";
   if(type.includes("application/json")){
