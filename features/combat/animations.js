@@ -9,12 +9,13 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[ch]));
  const clamp=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback;
  const validPath=value=>PATH.test(String(value||''));
+ const TYPES={projectile:'Projektil',effect:'Effekt',attack:'Attack',area:'Område',system:'System',other:'Övriga'};
  const rows=new Map(),playing=new Set();
  let loaded=false,loading=null,mounted=false,lastPlayed=new Map();
  function normalize(row){
   return {
    event_key:String(row?.event_key||''),
-   label:String(row?.label||''),category:String(row?.category||'combat'),
+   label:String(row?.label||''),category:String(row?.category||'combat'),animation_type:TYPES[row?.animation_type]?row.animation_type:'other',
    enabled:row?.enabled!==false,
    asset_path:validPath(row?.asset_path)?row.asset_path:null,
    speed:clamp(row?.speed,.25,4,1),
@@ -27,7 +28,7 @@
  }
  function optionsHtml(selected=''){
   const current=String(selected||'');
-  const choices=[...rows.values()].filter(row=>row.category==='magic'||row.category==='ranged');
+  const choices=[...rows.values()].filter(row=>['projectile','effect','area','other'].includes(row.animation_type)||row.category==='magic');
   return '<option value="">— Ingen animation —</option>'+choices.map(row=>'<option value="'+esc(row.event_key)+'"'+(row.event_key===current?' selected':'')+'>'+esc(row.label)+' ('+esc(row.event_key)+')</option>').join('');
  }
  function mediaUrl(path){
@@ -118,7 +119,7 @@
    speed:field(card,'speed')?.value,scale:field(card,'scale')?.value,
    opacity:field(card,'opacity')?.value,offset_x:field(card,'offset_x')?.value,
    offset_y:field(card,'offset_y')?.value,blend_mode:field(card,'blend_mode')?.value,
-   enabled:!!field(card,'enabled')?.checked
+   animation_type:field(card,'animation_type')?.value,enabled:!!field(card,'enabled')?.checked
   });
  }
  function status(message){
@@ -128,37 +129,39 @@
  function render(){
   const container=document.getElementById('adminAnimationRows');if(!container)return;
   if(!loaded){container.textContent='Animationsregistret kunde inte hämtas.';return}
-  const category={melee:'Närstrid',ranged:'Avstånd',defense:'Försvar',magic:'Magi',combat:'Strid',system:'System'};
-  container.innerHTML=[...rows.values()].map(row=>{
-   const ok=!!row.asset_path,url=mediaUrl(row.asset_path);
-   return '<article class="hermes-animation-card" data-animation-key="'+esc(row.event_key)+'">'+
-    '<div class="hermes-animation-head"><div><strong>'+esc(row.label)+'</strong><small>'+esc(category[row.category]||row.category)+' · '+esc(row.event_key)+'</small></div>'+
-    '<span class="hermes-animation-state">'+(ok?'Video ansluten':'Ingen video')+'</span></div>'+
-    '<div class="hermes-animation-controls">'+
-     '<label>Hastighet <input data-vfx-field="speed" type="number" min="0.25" max="4" step="0.25" value="'+row.speed+'"></label>'+
-     '<label>Storlek <input data-vfx-field="scale" type="number" min="0.25" max="3" step="0.1" value="'+row.scale+'"></label>'+
-     '<label>Opacitet <input data-vfx-field="opacity" type="number" min="0.1" max="1" step="0.1" value="'+row.opacity+'"></label>'+
-     '<label>Horisontell förskjutning <input data-vfx-field="offset_x" type="number" min="-400" max="400" step="10" value="'+row.offset_x+'"></label>'+
-     '<label>Vertikal förskjutning <input data-vfx-field="offset_y" type="number" min="-400" max="400" step="10" value="'+row.offset_y+'"></label>'+
-     '<label>Bakgrund <select data-vfx-field="blend_mode">'+
-      [['screen','Screen – svart försvinner'],['lighten','Lighten'],['normal','Normal – äkta alfa']].map(([v,l])=>'<option value="'+v+'"'+(row.blend_mode===v?' selected':'')+'>'+l+'</option>').join('')+
-     '</select></label></div>'+
-    '<div class="hermes-animation-actions">'+
-     '<label class="hermes-animation-toggle"><input type="checkbox" data-vfx-field="enabled"'+(row.enabled?' checked':'')+'> Aktiv</label>'+
-     '<label class="smallbtn hermes-animation-upload">↑ Välj video<input type="file" data-hermes-upload accept="video/mp4,video/webm,.mp4,.webm" hidden></label>'+
-     '<button type="button" class="smallbtn" data-hermes-action="save">Spara</button>'+
-     '<button type="button" class="smallbtn" data-hermes-action="preview"'+(ok?'':' disabled')+'>▶ Testa</button>'+
-     '<button type="button" class="smallbtn" data-hermes-action="remove"'+(ok?'':' disabled')+'>Koppla bort</button>'+
-    '</div>'+ (url?'<small class="muted hermes-animation-file">'+esc(row.asset_path)+'</small>':'')+
-   '</article>'
-  }).join('');
+  const current=container.querySelector('[data-vfx-filter]')?.value||'all';
+  const openKey=container.querySelector('[data-vfx-editor]')?.dataset.animationKey||'';
+  const options=[['all','Alla kategorier'],...Object.entries(TYPES)];
+  const list=[...rows.values()].sort((a,b)=>a.animation_type.localeCompare(b.animation_type)||a.label.localeCompare(b.label,'sv'));
+  const visible=list.filter(x=>current==='all'||x.animation_type===current);
+  container.innerHTML='<div class="hermes-v2-toolbar"><label>Kategori <select data-vfx-filter>'+options.map(([v,l])=>'<option value="'+v+'"'+(v===current?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label><span class="muted">'+visible.length+' av '+list.length+' animationer</span></div>'+
+   '<div class="hermes-v2-scroll"><table class="hermes-v2-table"><thead><tr><th>Animation</th><th>Kategori</th><th>Video</th><th></th></tr></thead><tbody>'+visible.map(row=>'<tr data-vfx-open="'+esc(row.event_key)+'" tabindex="0" role="button" aria-label="Redigera '+esc(row.label)+'"><td><strong>'+esc(row.label)+'</strong><small>'+esc(row.event_key)+'</small></td><td>'+esc(TYPES[row.animation_type])+'</td><td>'+(row.asset_path?'✓ Ansluten':'—')+'</td><td>Redigera ›</td></tr>').join('')+'</tbody></table></div>'+
+   (openKey&&visible.some(x=>x.event_key===openKey)?editorHtml(rows.get(openKey)):'');
+ }
+ function editorHtml(row){
+  const ok=!!row.asset_path,url=mediaUrl(row.asset_path);
+  return '<article class="hermes-v2-editor hermes-animation-card" data-vfx-editor data-animation-key="'+esc(row.event_key)+'">'+
+   '<div class="hermes-animation-head"><div><strong>'+esc(row.label)+'</strong><small>'+esc(row.event_key)+'</small></div><button class="smallbtn" type="button" data-hermes-action="close">Stäng ✕</button></div>'+
+   '<div class="hermes-animation-controls">'+
+   '<label>Kategori <select data-vfx-field="animation_type">'+Object.entries(TYPES).map(([v,l])=>'<option value="'+v+'"'+(v===row.animation_type?' selected':'')+'>'+l+'</option>').join('')+'</select></label>'+
+   '<label>Hastighet <input data-vfx-field="speed" type="number" min="0.25" max="4" step="0.25" value="'+row.speed+'"></label>'+
+   '<label>Storlek <input data-vfx-field="scale" type="number" min="0.25" max="3" step="0.1" value="'+row.scale+'"></label>'+
+   '<label>Opacitet <input data-vfx-field="opacity" type="number" min="0.1" max="1" step="0.1" value="'+row.opacity+'"></label>'+
+   '<label>Horisontell förskjutning <input data-vfx-field="offset_x" type="number" min="-400" max="400" step="10" value="'+row.offset_x+'"></label>'+
+   '<label>Vertikal förskjutning <input data-vfx-field="offset_y" type="number" min="-400" max="400" step="10" value="'+row.offset_y+'"></label>'+
+   '<label>Bakgrund <select data-vfx-field="blend_mode">'+[['screen','Screen – svart försvinner'],['lighten','Lighten'],['normal','Normal – äkta alfa']].map(([v,l])=>'<option value="'+v+'"'+(row.blend_mode===v?' selected':'')+'>'+l+'</option>').join('')+'</select></label></div>'+
+   '<div class="hermes-animation-actions"><label class="hermes-animation-toggle"><input type="checkbox" data-vfx-field="enabled"'+(row.enabled?' checked':'')+'> Aktiv</label>'+
+   '<label class="smallbtn hermes-animation-upload">↑ Välj video<input type="file" data-hermes-upload accept="video/mp4,video/webm,.mp4,.webm" hidden></label>'+
+   '<button type="button" class="smallbtn" data-hermes-action="save">Spara</button><button type="button" class="smallbtn" data-hermes-action="preview"'+(ok?'':' disabled')+'>▶ Testa</button>'+
+   '<button type="button" class="smallbtn" data-hermes-action="remove"'+(ok?'':' disabled')+'>Koppla bort</button></div>'+
+   (url?'<small class="muted hermes-animation-file">'+esc(row.asset_path)+'</small>':'')+'</article>';
  }
  async function save(key,values){
   if(!activeUser()?.admin)throw Error('Endast administratörer kan ändra animationer.');
   if(!rows.has(key))throw Error('Okänd animationshändelse.');
   const payload={speed:values.speed,scale:values.scale,opacity:values.opacity,
    offset_x:values.offset_x,offset_y:values.offset_y,blend_mode:values.blend_mode,
-   enabled:values.enabled,updated_at:new Date().toISOString()};
+   enabled:values.enabled,animation_type:values.animation_type,updated_at:new Date().toISOString()};
   await dbJson('combat_animation_cues?event_key=eq.'+encodeURIComponent(key),{
    method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});
   rows.set(key,normalize({...rows.get(key),...payload}));
@@ -207,34 +210,35 @@
   await refresh(true);render();
  }
  function mountAdmin(){
-  const container=document.getElementById('adminAnimationRows');
-  if(!container||mounted)return;
+  const container=document.getElementById('adminAnimationRows');if(!container||mounted)return;
   mounted=true;
-  container.addEventListener('click',async event=>{
-   const button=event.target.closest('[data-hermes-action]');
-   if(!button)return;
-   const card=button.closest('[data-animation-key]'),key=card?.dataset.animationKey;
-   if(!key||!rows.has(key))return;
-   const action=button.dataset.hermesAction;
-   const values=draft(key);if(!values)return;
-   if(action==='preview'){if(!values.enabled)status('Aktivera animationen för att provspela.');else if(!play(key,{preview:true,config:values}))status('Ingen spelbar video.');return}
-   button.disabled=true;
-   try{
-    if(action==='remove')await remove(key);
-    else if(action==='save')await save(key,values);
-    status(action==='remove'?'Videokopplingen borttagen (originalfilen bevaras).':'Inställningar sparade: '+key);
-    render();
-   }catch(error){console.error('HERMES admin',error);status(error.message||String(error))}
-   finally{button.disabled=false}
-  });
   container.addEventListener('change',async event=>{
+   if(event.target.matches('[data-vfx-filter]')){render();return}
    const input=event.target.closest('[data-hermes-upload]');
    if(!input||!input.files?.[0])return;
    const key=input.closest('[data-animation-key]')?.dataset.animationKey;
    status('Överför video för '+key+'…');input.disabled=true;
-   try{await upload(key,input.files[0]);status('Video uppladdad och verifierad för '+key);render()}
+   try{await upload(key,input.files[0]);status('Video uppladdad och verifierad för '+key);render();container.querySelector('[data-vfx-open="'+key+'"]')?.click()}
    catch(error){console.error('HERMES video upload',error);status(error.message||String(error))}
    finally{input.disabled=false}
+  });
+  container.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-vfx-open]')){event.preventDefault();event.target.click()}});
+  container.addEventListener('click',async event=>{
+   const opener=event.target.closest('[data-vfx-open]');
+   if(opener){const key=opener.dataset.vfxOpen;container.querySelector('[data-vfx-editor]')?.remove();container.insertAdjacentHTML('beforeend',editorHtml(rows.get(key)));return}
+   const button=event.target.closest('[data-hermes-action]');if(!button)return;
+   const key=button.closest('[data-animation-key]')?.dataset.animationKey,action=button.dataset.hermesAction;
+   if(action==='close'){container.querySelector('[data-vfx-editor]')?.remove();return}
+   if(!key||!rows.has(key))return;
+   const values=draft(key);if(!values)return;
+   if(action==='preview'){if(!values.enabled)status('Aktivera animationen för att provspela.');else if(!play(key,{preview:true,config:values}))status('Ingen spelbar video.');return}
+   button.disabled=true;
+   try{
+    if(action==='remove')await remove(key);else if(action==='save')await save(key,values);
+    status(action==='remove'?'Videokopplingen borttagen (originalfilen bevaras).':'Inställningar sparade: '+key);
+    render();container.querySelector('[data-vfx-open="'+key+'"]')?.click();
+   }catch(error){console.error('HERMES admin',error);status(error.message||String(error))}
+   finally{button.disabled=false}
   });
  }
  window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl,optionsHtml};
