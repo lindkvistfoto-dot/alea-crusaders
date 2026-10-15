@@ -5746,8 +5746,13 @@ function combatSpellCastPanelHtml(){
    kind==='area'?'Tryck ✦ för att kasta på det valda området.':
    'Målet är valt. Tryck ✦ igen för att kasta.';
  }
- return '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
-  (!casting&&!resolved?combatSpellCarouselHtml(actor,action):'')+
+ const carousel=(!casting&&!resolved)?combatSpellCarouselHtml(actor,action):'';
+ // HERMES: in preparation mode the bronze cryptex has its own real DOM layer
+ // BEFORE the spell card. This is necessary because #combatActionPanel uses
+ // display:contents on mobile, so z-index on that wrapper cannot work.
+ return (carousel?'<div class="combat-magic-float-shell combat-mini-magic" data-cryptex-layer="floating">':'')+
+  carousel+
+  '<section class="combat-mini-attack combat-mini-magic '+(resolved?'resolved':'planning')+'">'+
   combatMagicHeaderHtml(actor,target,data,combatMagicTargetIsReady(actor,action),backdrop,preparing,cutout)+
   (preparing?'':combatMagicTargetPickerHtml(actor,action))+
   (resolved?
@@ -5760,7 +5765,7 @@ function combatSpellCastPanelHtml(){
       (typeof combatMagicTargetChooserHtml==='function'?combatMagicTargetChooserHtml(actor,action):'')+'</details>':'')+
     combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound)+
    '</div>')+
- '</section>'
+ '</section>'+(carousel?'</div>':'')
 }
 /* Compact reaction renderer: exactly three slots on all screens.
  * Each equipment category uses its strongest legal Expert FV option.
@@ -5992,10 +5997,11 @@ function combatAttackPanelHtml(){
  const movement=combatMovementPanelHtml();if(movement)return movement;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(actor&&def?.key==='spell_cast'&&action?.status==='planned'&&!action.source_data?.spell_prepared){
-  return '<section class="combat-mini-attack combat-mini-magic combat-magic-select-panel planning" aria-label="Välj besvärjelse">'+
+  return '<div class="combat-magic-float-shell combat-mini-magic" data-cryptex-layer="floating">'+
    combatSpellCarouselHtml(actor,action)+
+   '<section class="combat-mini-attack combat-mini-magic combat-magic-select-panel planning" aria-label="Välj besvärjelse">'+
    combatMagicHeaderHtml(actor,null,{spell_name:'Välj besvärjelse',spell_prepared:false},false,null,true,null)+
-   '<div class="combat-magic-footer"><div class="combat-action-confirm"><button class="btn combat-confirm-magic" type="button" disabled>Förbered besvärjelse</button></div></div></section>';
+   '<div class="combat-magic-footer"><div class="combat-action-confirm"><button class="btn combat-confirm-magic" type="button" disabled>Förbered besvärjelse</button></div></div></section></div>';
  }
  const other=combatOtherPanelHtml();if(other)return other;
  if(!actor||def?.type!=='attack')return '';

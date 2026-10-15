@@ -6,9 +6,26 @@
  margin:0 0 4px;padding:0;border:0;border-radius:0;
  background:none;box-shadow:none;overflow:visible;
 }
-/* Spend width on the artefact, not an additional decorative panel. */
-#combatPage .combat-shell-live .combat-magic-select-panel:has(.cryptex-prototype){
- padding-left:0;padding-right:0;
+/* The cryptex is a sibling of its spell-card content, not a child of a
+   framed .combat-mini-attack. This shared host is a genuine stacking
+   context even on phones, where #combatActionPanel has display:contents. */
+#combatPage .combat-shell-live .combat-magic-float-shell{
+ position:relative;
+ display:flex;
+ flex-direction:column;
+ align-items:stretch;
+ gap:0;
+ min-width:0;
+ width:100%;
+ overflow:visible;
+ isolation:auto;
+}
+#combatPage .combat-shell-live .combat-magic-float-shell>.combat-mini-attack{
+ min-width:0;
+ overflow:visible;
+}
+#combatPage .combat-shell-live .combat-magic-float-shell>.combat-magic-carousel.cryptex-prototype{
+ flex:0 0 auto;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-banner{
  display:block;min-width:0;width:100%;
@@ -100,68 +117,55 @@
  border-top:0;padding:1px 5px 0;margin-top:0;
 }
 @media(max-width:760px){
- /* The action host is a sibling of the round/equipment panel on mobile.
-    Raise the HOST, not only its child IMG, so its bronze ornament can
-    overlap even the earlier panel's ornate corners and equipment border. */
+ /* An independent float-shell is a real flex sibling of the equipment panel.
+    All layering belongs here, not on display:contents #combatActionPanel. */
  #combatPage .combat-shell-live .combat-turn-panel{
   position:relative;
   z-index:1;
  }
- #combatPage .combat-shell-live #combatActionPanel:has(.cryptex-prototype){
+ #combatPage .combat-shell-live .combat-magic-float-shell{
   position:relative;
-  z-index:30;
-  overflow:visible!important;
-  clip-path:none!important;
+  z-index:40;
+  isolation:isolate;
+  overflow:visible;
+  /* The top gold crown must break into the equipment's lower rim.
+     Position the whole FLOAT, not just its image or an imaginary card. */
+  margin-top:-112px;
  }
- /* Only this preparatory magic card escapes the usual attack-card clipping.
-    The INNER belt viewport must remain masked to the three windows. */
- #combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.combat-magic-select-panel:has(.cryptex-prototype){
+ /* Remove the entire second framed card during spell preparation.
+    The bronze cryptex itself is the only decorative frame at the top. */
+ #combatPage .combat-shell-live .combat-magic-float-shell>.combat-mini-attack.combat-mini-magic{
   position:relative;
-  z-index:2;
-  /* Shift the clipping boundary together with the housing itself.
-     Pulling only the child upward previously left the upper crown cut
-     flush at the old card edge despite high z-indices. */
-  margin-top:-68px;
-  overflow:visible!important;
-  clip-path:none!important;
-  -webkit-clip-path:none!important;
+  z-index:1;
+  margin:0;
+  padding:2px 8px 9px;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  outline:0;
+  background:transparent!important;
   isolation:auto;
-  background:none!important;
-  border-color:transparent;
-  box-shadow:none;
+  overflow:visible!important;
+  clip-path:none!important;
  }
- /* Restore the bronze magic-card surface to its OLD location, behind the
-    cryptex. This prevents a translated opaque rectangle from painting over
-    the equipment labels and keeps the user-facing border below the crown. */
- #combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.combat-magic-select-panel:has(.cryptex-prototype)::before{
-  content:"";
-  position:absolute;
-  top:68px;right:0;bottom:0;left:0;
-  z-index:-1;
-  pointer-events:none;
-  border:1px solid #997343;
-  border-radius:13px;
-  background-color:#21140e;
-  background-image:linear-gradient(180deg,rgba(15,9,7,.78),rgba(18,10,7,.74) 46%,rgba(14,8,6,.80)),
-    var(--alea-attack-illustration,url("/assets/combat/round-hero-battle-pilot.avif"));
-  background-position:center 58%;
-  background-size:cover;
-  background-repeat:no-repeat;
-  box-shadow:inset 0 0 0 1px rgba(237,191,119,.1),0 5px 20px rgba(0,0,0,.32);
+ #combatPage .combat-shell-live .combat-magic-float-shell>.combat-mini-attack::before{
+  content:none!important;
+  display:none!important;
  }
- #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
+ #combatPage .combat-shell-live .combat-magic-float-shell>.combat-magic-carousel.cryptex-prototype{
+  position:relative;
+  z-index:5;
+  flex:0 0 auto;
   width:min(calc(100% + 56px),calc(100vw - 8px));
   max-width:none;
   left:50%;
   transform:translateX(-50%);
   padding:0;
-  margin-top:0;
-  margin-bottom:3px;
-  z-index:5;
+  margin:0 0 1px;
+  overflow:visible;
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-stage{
   overflow:visible;
-  z-index:6;
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-housing{
   z-index:7;
