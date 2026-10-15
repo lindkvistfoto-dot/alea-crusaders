@@ -118,10 +118,36 @@
  #combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.combat-magic-select-panel:has(.cryptex-prototype){
   position:relative;
   z-index:2;
+  /* Shift the clipping boundary together with the housing itself.
+     Pulling only the child upward previously left the upper crown cut
+     flush at the old card edge despite high z-indices. */
+  margin-top:-68px;
   overflow:visible!important;
   clip-path:none!important;
   -webkit-clip-path:none!important;
   isolation:auto;
+  background:none!important;
+  border-color:transparent;
+  box-shadow:none;
+ }
+ /* Restore the bronze magic-card surface to its OLD location, behind the
+    cryptex. This prevents a translated opaque rectangle from painting over
+    the equipment labels and keeps the user-facing border below the crown. */
+ #combatPage .combat-shell-live .combat-mini-attack.combat-mini-magic.combat-magic-select-panel:has(.cryptex-prototype)::before{
+  content:"";
+  position:absolute;
+  top:68px;right:0;bottom:0;left:0;
+  z-index:-1;
+  pointer-events:none;
+  border:1px solid #997343;
+  border-radius:13px;
+  background-color:#21140e;
+  background-image:linear-gradient(180deg,rgba(15,9,7,.78),rgba(18,10,7,.74) 46%,rgba(14,8,6,.80)),
+    var(--alea-attack-illustration,url("/assets/combat/round-hero-battle-pilot.avif"));
+  background-position:center 58%;
+  background-size:cover;
+  background-repeat:no-repeat;
+  box-shadow:inset 0 0 0 1px rgba(237,191,119,.1),0 5px 20px rgba(0,0,0,.32);
  }
  #combatPage .combat-shell-live .combat-magic-carousel.cryptex-prototype{
   width:min(calc(100% + 56px),calc(100vw - 8px));
@@ -129,7 +155,7 @@
   left:50%;
   transform:translateX(-50%);
   padding:0;
-  margin-top:-68px;
+  margin-top:0;
   margin-bottom:3px;
   z-index:5;
  }
