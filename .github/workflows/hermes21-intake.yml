@@ -8,6 +8,11 @@ on:
       - 'scripts/hermes2_prepare.py'
       - '.github/workflows/hermes21-intake.yml'
   workflow_dispatch:
+    inputs:
+      source_path:
+        description: 'Exact immutable PNG source path to process (one item)'
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -31,8 +36,16 @@ jobs:
         run: python -m pip install Pillow==12.3.0
       - name: Verify source and create content-addressed WebP
         shell: bash
+        env:
+          HERMES_SOURCE_PATH: ${{ inputs.source_path }}
         run: |
           args=()
+          if [ -n "$HERMES_SOURCE_PATH" ]; then
+            if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/(spell|symbol)/[a-z0-9]+(-[a-z0-9]+)*/[a-f0-9]{64}\.png$ ]] || [ ! -f "$HERMES_SOURCE_PATH" ]; then
+              echo "::error::Invalid or missing HERMES source_path"; exit 1
+            fi
+            args+=(--source "$HERMES_SOURCE_PATH")
+          fi
           if [ "${{ github.event_name }}" = "push" ]; then
             before="${{ github.event.before }}"
             if git cat-file -e "${before}^{commit}" 2>/dev/null; then
