@@ -87,3 +87,20 @@ Administrationen har en egen vy **Animationer · HERMES**, med ett register i `p
 Fält per händelse: `asset_path`, `enabled`, `speed`, `scale`, `opacity`, `offset_x`, `offset_y`, `blend_mode` (Screen, Lighten, Normal). `melee.attack` har **2,5×** som startvärde. Animationerna för attack, träff, miss, parering, fummel och avståndsattack är kopplade till stridens relevanta händelser. Magihändelser finns i registret för kommande integration.
 
 Animationer är dekorativa och får inte styra spelregler eller blockera tärningsslag. Befintliga SVG-effekter är fallback; reducerad-rörelse-inställning respekteras. Bortkoppling raderar inte den ursprungliga videofilen.
+
+
+## 10. Bevisad binär transport från uppladdade bilder via Google Drive
+
+**Verifierad 2026-10-15 för tre ARCANE IVORY-ikoner:** `vaderforutsagelse`, `forandra`, `vindkontroll`. Från användarens redan befintliga originalfiler i Drive-mappen `ARCANE_IVORY_TRANSFER_TMP` gick originalens samtliga byte hela vägen till GitHub, utan terminalens `git push` eller manuell uppladdning i Alea.
+
+1. Identifiera och verifiera Drive-originalet mot användarens bilaga: rätt besvärjelsenyckel, filstorlek, PNG-signal och SHA-256/SHA-1 Git blob. **Lita inte enbart på liknande filnamn eller motiv.**
+2. I **samma anslutna verktygskörning**: hämta Google Drive-originalet med `fetch(download_raw_file=true, include_base64=true)`. Skicka svarets `b64_string` direkt till GitHub `create_blob(content=b64_string,encoding='base64')`. Skriv aldrig ut den stora Base64-strängen i chatten, lägg den inte i källkoden och kopiera inte manuellt via mellanled.
+3. Jämför GitHubs blob-SHA med SHA-1 beräknad över den **exakta originalfilens** Git blob-format. Vid avvikelse: stoppa före commit och databas.
+4. Använd `create_tree`, `create_commit` och `update_ref` med aktuell `main`-förälder för `assets/spells/arcane-ivory/<spell_key>.png`. Publika spelikoner får ligga i denna publika masterkatalog; använd **inte** detta flöde för privata bilder.
+5. Befintlig GitHub Action `ARCANE IVORY optimize and publish` kör Pillow-konvertering och alfaverifiering, publicerar 640×640 WebP och uppdaterar manifest med källfilens SHA-256. Kontrollera att genererad WebP-SHA och bytes faktiskt finns i GitHub samt att Pages-bygget lyckas.
+6. Uppdatera **endast** rätt `public.rule_spells.icon_path` för de verifierade besvärjelserna (samt `icon_focus_*` och `icon_zoom` om full ram kräver det). Läs tillbaka minst antal ändrade rader och exakta paths. Ändra inga övriga besvärjelsefält.
+7. Visuell kontroll på riktig mobil återstår även efter grön automation; rapportera den ärligt.
+
+**Verifierade appfiler:** `vaderforutsagelse.webp` 184 780 B, `forandra.webp` 178 422 B, `vindkontroll.webp` 195 934 B. Samtliga 640×640, kvalitet 90, alfa bevarad, original oförändrade. De tre motsvarande `rule_spells`-raderna fick rätt `icon_path` och `icon_zoom=100` för att visa hela den låsta ramen. Totala antalet besvärjelser med kopplad ikon ökade från 8 till 11.
+
+**Begränsning:** verktygstransporten bygger på att originalet faktiskt finns åtkomligt i Google Drive. Ett lokalt chattuppladdat objekt utan Drive-kopia kan ännu inte antas kunna skickas binärt via den här vägen.
