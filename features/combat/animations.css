@@ -17,3 +17,19 @@
 .hermes-animation-file{display:block;overflow-wrap:anywhere;margin-top:10px;opacity:.7}
 #hermesAnimationStatus{min-height:1.2em}
 @media(max-width:450px){.hermes-animation-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* HERMES V2 compact registry; editor expands only on selection. */
+#adminAnimationRows.hermes-animation-grid{display:block;min-width:0}
+.hermes-v2-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:8px 0 14px;flex-wrap:wrap}
+.hermes-v2-toolbar label{display:flex;gap:10px;align-items:center;font-size:.85rem}
+.hermes-v2-toolbar select{padding:7px 10px;border-radius:7px;background:#17191b;color:#f9ecd0;border:1px solid #655641}
+.hermes-v2-scroll{overflow-x:auto;max-width:100%}
+.hermes-v2-table{width:100%;border-collapse:collapse;text-align:left;font-size:.85rem}
+.hermes-v2-table th{color:#d6bc8d;border-bottom:1px solid #66513b;padding:10px}
+.hermes-v2-table td{border-bottom:1px solid rgba(194,153,85,.16);padding:10px}
+.hermes-v2-table tbody tr{cursor:pointer}
+.hermes-v2-table tbody tr:hover,.hermes-v2-table tbody tr:focus-visible{background:rgba(194,153,85,.14);outline:1px solid rgba(194,153,85,.35)}
+.hermes-v2-table td small{display:block;opacity:.65;font-size:.72rem;margin-top:2px}
+.hermes-v2-table td:last-child{white-space:nowrap;color:#e7c58c}
+.hermes-v2-editor{margin-top:16px}
+@media(max-width:520px){.hermes-v2-table td,.hermes-v2-table th{padding:8px 5px;font-size:.75rem}.hermes-animation-controls{grid-template-columns:1fr}}
