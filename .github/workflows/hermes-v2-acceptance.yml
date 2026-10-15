@@ -1,0 +1,62 @@
+name: HERMES 2.0 acceptance gates
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/hermes-v2/**'
+      - 'supabase/migrations/*hermes_v2*'
+      - 'features/combat/hermes2.js'
+      - 'features/combat/admin-symbols.js'
+      - 'features/combat/spell-art.js'
+      - 'features/combat/runtime.js'
+      - 'index.html'
+      - 'tests/hermes-v2-gates.test.mjs'
+      - '.github/workflows/hermes-v2-acceptance.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: HERMES isolated compatibility tests
+        run: npx vitest run tests/hermes-v2-gates.test.mjs
+      - name: Build the production site
+        run: npm run build
+      - name: Confirm HERMES console is in production output
+        run: |
+          test -s dist/features/combat/hermes2.js
+          grep -q 'features/combat/hermes2.js' dist/index.html
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify locked Osäkerhet original and optimized image
+        run: |
+          python -m pip install Pillow==12.3.0
+          python scripts/optimize_arcane_ivory.py --check
+          python - <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          from PIL import Image
+          root=Path('assets/spells/arcane-ivory')
+          source=root/'osakerhet.png'
+          delivery=root/'osakerhet.webp'
+          assert sha256(source.read_bytes()).hexdigest()=='321f72bf5aba7a810ee3573c7d863a7a7f18655092aa46457eb11ce7af7c8e24'
+          assert source.stat().st_size==2730159
+          assert delivery.stat().st_size==170424
+          with Image.open(source) as im:
+           assert im.size==(1254,1254)
+           assert im.getchannel('A').getextrema()[0]<255
+          with Image.open(delivery) as im:
+           assert im.size==(640,640)
+           assert im.getchannel('A').getextrema()[0]<255
+          print('Verified exact archived Osäkerhet PNG and 640px WebP, including alpha')
+          PY
