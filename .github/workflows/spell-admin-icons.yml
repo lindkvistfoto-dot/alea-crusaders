@@ -1,0 +1,27 @@
+name: Spell Admin Icon Previews
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'legacy/app.js'
+      - 'features/combat/spell-art.js'
+      - 'features/combat/spell-art.css'
+      - 'src/styles/app.css'
+      - 'index.html'
+      - 'tests/spell-admin-icons.test.js'
+      - '.github/workflows/spell-admin-icons.yml'
+  workflow_dispatch:
+jobs:
+  spell-admin-icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --check legacy/app.js
+      - run: node --check features/combat/spell-art.js
+      - run: npx vitest run tests/spell-admin-icons.test.js
+      - run: npm run build
