@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "edge": 640,
+  "max_bytes": 500000,
+  "icons": [
+    {
+      "spell_key": "eld",
+      "source": "eld.png",
+      "app": "eld.webp",
+      "size": 640,
+      "source_bytes": 3006212,
+      "app_bytes": 148028,
+      "quality": 90,
+      "source_sha256": "31a50f438ab16d23c4ec915525c2588c743126747fa6d0f3e3882fe00b32880c",
+      "alpha_preserved": true
+    },
+    {
+      "spell_key": "finna-vatten",
+      "source": "finna-vatten.png",
+      "app": "finna-vatten.webp",
+      "size": 640,
+      "source_bytes": 2866051,
+      "app_bytes": 173442,
+      "quality": 90,
+      "source_sha256": "e20c68fece983e6242918d659fc44db5058e9eec6c311fe05b3633c8be1b3e04",
+      "alpha_preserved": true
+    }
+  ]
+}
