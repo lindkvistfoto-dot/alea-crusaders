@@ -4355,7 +4355,8 @@ function combatPlaySpellAnimation(caster,victim,action){
   const data=action?.source_data||{},name=String(data.spell_name||'').toLocaleUpperCase('sv-SE');
   const key=String(data.spell_key||'');
   const registry=typeof ruleSpells!=='undefined'&&Array.isArray(ruleSpells)?ruleSpells:[];
-  const spell=registry.find(x=>(key&&x.spell_key===key)||String(x.name||'').toLocaleUpperCase('sv-SE')===name);
+  const base=value=>String(value||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
+  const spell=registry.find(x=>(key&&x.spell_key===key)||base(x.name)===base(name));
   if(!spell?.projectile_animation_key&&!spell?.impact_animation_key)return;
   void window.aleaAnimations?.playSequence?.({projectileKey:spell.projectile_animation_key,impactKey:spell.impact_animation_key,from:caster,to:victim});
  }catch(error){console.warn('HERMES: besvärjelseanimation kunde inte spelas',error)}
