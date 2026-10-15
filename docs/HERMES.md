@@ -80,3 +80,10 @@ För nya projektuppgifter skrivs vilken HERMES-profil som är aktiv, vilken som 
 - **Ej utfört:** omstrukturering av äldre bildbibliotek; generella bildprofiler och konverterare för övriga kategorier; generell lazy-loading i alla äldre vyer; retroaktiv metadata för alla filer.
 
 Se även [ARCANE IVORY-pipelinen](design/arcane-ivory-image-pipeline.md).
+## 9. HERMES VFX – animationshändelser
+
+Administrationen har en egen vy **Animationer · HERMES**, med ett register i `public.combat_animation_cues`. Till varje händelse kopplas en valfri MP4/WebM på max 12 MB i Supabase Storage-bucket `alea-combat-animations` (publika videos; admin krävs för uppladdning eller byte). Vid uppladdning verifieras hämtning och videoformat före koppling.
+
+Fält per händelse: `asset_path`, `enabled`, `speed`, `scale`, `opacity`, `offset_x`, `offset_y`, `blend_mode` (Screen, Lighten, Normal). `melee.attack` har **2,5×** som startvärde. Animationerna för attack, träff, miss, parering, fummel och avståndsattack är kopplade till stridens relevanta händelser. Magihändelser finns i registret för kommande integration.
+
+Animationer är dekorativa och får inte styra spelregler eller blockera tärningsslag. Befintliga SVG-effekter är fallback; reducerad-rörelse-inställning respekteras. Bortkoppling raderar inte den ursprungliga videofilen.

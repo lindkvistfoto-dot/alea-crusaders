@@ -1,0 +1,29 @@
+name: HERMES combat animations
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'features/combat/animations.js'
+      - 'features/combat/animations.css'
+      - 'features/combat/runtime.js'
+      - 'legacy/app.js'
+      - 'tests/hermes-combat-animations.test.js'
+      - '.github/workflows/hermes-combat-animations.yml'
+  workflow_dispatch:
+jobs:
+  visual-fx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --check features/combat/animations.js
+      - run: node --check features/combat/runtime.js
+      - run: npx vitest run tests/hermes-combat-animations.test.js
+      - run: npm run build
+      - name: Confirm video engine shipped
+        run: test -s dist/features/combat/animations.js

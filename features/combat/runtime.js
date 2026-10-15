@@ -1391,6 +1391,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
   // Parry and resulting damage already appear in the attack panel.
   combatHideMagicResultPopup();
   (typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.success?'melee.parry':'melee.hit');
+  window.aleaAnimations?.play(rolled.success?'melee.parry':'melee.hit',{target:defender});
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.success?'melee.parry':'melee.hit');
   await loadActiveCombat()
  }catch(error){
@@ -1420,6 +1421,7 @@ async function declineCombatParry(defenderId,attackActionId){
   });
   combatHideMagicResultPopup();
   (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
+  window.aleaAnimations?.play('melee.hit',{target:opportunity.defender});
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.hit');
   await loadActiveCombat()
  }catch(error){
@@ -1970,13 +1972,21 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
  const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null;
+ // Visual-only HERMES cue: never await it and never alter dice or damage.
+ if(attackMode==='melee')window.aleaAnimations?.play('melee.attack',{target});
+ else if(attackMode==='ranged')window.aleaAnimations?.play('ranged.attack',{target});
  if(attackMode==='melee')(typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.swing');
  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.swing');
  let rolled;
  try{rolled=await combatExpertRoll(label,fv)}
  catch(error){meleeFx?.stop();throw error}
  meleeFx?.finish(rolled.outcome);
- if(attackMode==='melee'&&!rolled.success){(typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss'); (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');}
+ if(attackMode==='melee'&&!rolled.success){
+  window.aleaAnimations?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss',{target});
+  (typeof window!=='undefined'?window.aleaAudio:null)?.play(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');
+  (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');
+ }
+ if(attackMode==='melee'&&rolled.outcome==='perfect')window.aleaAnimations?.play('melee.perfect',{target});
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
@@ -2004,6 +2014,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
    result.hit_location=await combatResolveHitLocation(actor,target,attackMode,defenseMode);
    result.damage=await combatResolveDamage(actor,target,weapon,fullDamage,result.hit_location,outcome==='perfect');
    result.hit_resolved=true;
+   window.aleaAnimations?.play(attackMode==='melee'?'melee.hit':'ranged.hit',{target});
    if(attackMode==='melee'){
     (typeof window!=='undefined'?window.aleaAudio:null)?.play('melee.hit');
     (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.('melee.hit')
@@ -2938,6 +2949,7 @@ async function openCombat(){
  $('combatPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  $('combatBody').innerHTML='<div class="combat-empty">Laddar strid…</div>';
  await loadCombatSceneChoices();
+ await window.aleaAnimations?.refresh?.(true);
  combatActorImageSources.clear(); // Recheck uploaded pictures when the battle reopens.
  await loadActiveCombat();
  combatStartPlayerSync()
