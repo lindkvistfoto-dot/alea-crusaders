@@ -1,0 +1,27 @@
+{
+  "protocol": "HERMES",
+  "version": "1.0",
+  "policy": "forward-only",
+  "profiles": {
+    "arcane-ivory-spell-icon": {
+      "status": "active",
+      "purpose": "spell-selector-and-cryptex",
+      "master_dir": "assets/spells/arcane-ivory",
+      "manifest": "assets/spells/arcane-ivory/manifest.json",
+      "source_format": "png",
+      "delivery_format": "webp",
+      "aspect_ratio": "1:1",
+      "delivery_width": 640,
+      "delivery_height": 640,
+      "max_bytes": 500000,
+      "transparency": "required-preserved",
+      "database_table": "public.rule_spells",
+      "database_column": "icon_path",
+      "pipeline": "scripts/optimize_arcane_ivory.py",
+      "verification": [
+        "scripts/hermes-verify.mjs",
+        "scripts/optimize_arcane_ivory.py --check"
+      ]
+    }
+  }
+}

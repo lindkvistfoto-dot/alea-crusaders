@@ -1,5 +1,7 @@
 # ARCANE IVORY – bildkedja (låst teknisk standard)
 
+> Denna specifika bildkedja omfattas av [Protokoll HERMES v1.0](../HERMES.md). HERMES gäller nya/ändrade bilder och kräver ingen retroaktiv migrering.
+
 1. **Original**: `assets/spells/arcane-ivory/<spell_key>.png`, kvadratisk RGBA-PNG med verklig transparens utanför ramen. Krackelerat elfenben inuti ramen bevaras. Original-PNG ändras aldrig av konverteringen.
 2. **Appfil**: `assets/spells/arcane-ivory/<spell_key>.webp`, 640 × 640 pixlar, WebP med identiskt alfakanalvärde för varje pixel efter nedskalning. Hög kvalitet 90/87/84/80/76, först som är högst 500 000 byte väljs.
 3. **Manifest**: `assets/spells/arcane-ivory/manifest.json` med filnamn, bytes, vald kvalitet och kontrollsumma för original.

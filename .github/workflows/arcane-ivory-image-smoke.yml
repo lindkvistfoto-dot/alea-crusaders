@@ -9,6 +9,9 @@ on:
       - 'assets/spells/arcane-ivory/*.webp'
       - 'assets/spells/arcane-ivory/manifest.json'
       - 'tests/spell-master-art.test.js'
+      - 'scripts/hermes-verify.mjs'
+      - 'config/hermes-profiles.json'
+      - 'docs/HERMES.md'
       - '.github/workflows/arcane-ivory-image-smoke.yml'
   workflow_dispatch:
 jobs:
@@ -22,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx vitest run tests/spell-master-art.test.js
+      - name: Validate HERMES image contract
+        run: node scripts/hermes-verify.mjs
       - run: npm run build
       - name: Verify app ships optimized WebP, not the full master PNG
         run: |
