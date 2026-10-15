@@ -1,0 +1,95 @@
+# HERMES Drive access smoke test. No storage, app files or database rows are changed.
+# Configure repository Actions variables:
+#   HERMES_GCP_WIF_PROVIDER = projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/alea-hermes
+#   HERMES_GCP_SERVICE_ACCOUNT = hermes-transfer@PROJECT_ID.iam.gserviceaccount.com
+name: HERMES Drive – connection test
+
+on:
+  workflow_dispatch:
+    inputs:
+      drive_file_id:
+        description: 'Optional PNG file ID from HERMES Inbox (leave empty to test folder access only)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke:
+    name: Verify Google Drive read access (no publication)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required Google identity settings
+        env:
+          PROVIDER: ${{ vars.HERMES_GCP_WIF_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.HERMES_GCP_SERVICE_ACCOUNT }}
+        shell: bash
+        run: |
+          if [ -z "$PROVIDER" ] || [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error::Set Actions variables HERMES_GCP_WIF_PROVIDER and HERMES_GCP_SERVICE_ACCOUNT first."
+            exit 1
+          fi
+      - id: auth
+        name: Obtain short-lived Google Drive access token
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.HERMES_GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.HERMES_GCP_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+
+      - name: Verify HERMES Inbox and optional PNG bytes
+        shell: bash
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          HERMES_FOLDER_ID: 1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp
+          HERMES_TEST_FILE_ID: ${{ inputs.drive_file_id }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import struct
+          import urllib.parse
+          import urllib.request
+
+          token = os.environ["GOOGLE_ACCESS_TOKEN"]
+          folder_id = os.environ["HERMES_FOLDER_ID"]
+          file_id = os.environ.get("HERMES_TEST_FILE_ID", "").strip()
+          root = "https://www.googleapis.com/drive/v3/files"
+
+          def get(path, **params):
+              query = urllib.parse.urlencode(params)
+              url = root + path + ("?" + query if query else "")
+              request = urllib.request.Request(url, headers={
+                  "Authorization": "Bearer " + token,
+              })
+              with urllib.request.urlopen(request, timeout=40) as response:
+                  return response.read()
+
+          folder = json.loads(get("/" + urllib.parse.quote(folder_id), fields="id,mimeType"))
+          assert folder["id"] == folder_id and folder["mimeType"] == "application/vnd.google-apps.folder", "Not the expected HERMES folder"
+          print("HERMES_FOLDER_ACCESS_OK")
+          if not file_id:
+              result = json.loads(get("", q="'" + folder_id + "' in parents and trashed = false",
+                  fields="nextPageToken,files(id)", pageSize=20))
+              print("HERMES_INBOX_LIST_OK", len(result.get("files", [])), "files in first page (not an entire folder total)")
+          else:
+              meta = json.loads(get("/" + urllib.parse.quote(file_id), fields="id,mimeType,parents,size"))
+              assert folder_id in meta.get("parents", []), "Test file is not directly inside HERMES Inbox"
+              assert meta["mimeType"] == "image/png", "Expected PNG (image/png)"
+              max_bytes = 8_388_608
+              data = get("/" + urllib.parse.quote(file_id), alt="media")
+              assert 100 <= len(data) <= max_bytes, "Test PNG size outside allowed range"
+              assert data[:8] == b"\x89PNG\r\n\x1a\n" and data[12:16] == b"IHDR", "Invalid PNG signature"
+              w, h, depth, colortype = struct.unpack(">IIBB", data[16:26])
+              assert w == h and 640 <= w <= 4096 and colortype == 6, "Expected 640–4096 square RGBA PNG"
+              print("HERMES_PNG_DOWNLOAD_OK", len(data), "bytes", w, "x", h, "sha256", hashlib.sha256(data).hexdigest())
+          PY
+      - name: Result
+        run: echo "### HERMES Drive read-access smoke test passed. No files were published." >> "$GITHUB_STEP_SUMMARY"
