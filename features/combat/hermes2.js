@@ -10,7 +10,7 @@
  document.head.appendChild(style);
  const host=document.createElement('section');
  host.className='hermes2-panel';host.setAttribute('aria-label','HERMES 2.0 filöverföring');
- host.innerHTML='<h3>HERMES 2.0 · Bildöverföring</h3><p class="muted">Pilot för ARCANE IVORY. Original-PNG bevaras; en ny ikon aktiveras först efter verifierad GitHub-arkivering, filhämtning och databaskoppling.</p><form id="hermes2Form" class="hermes2-controls"><label>Register<select id="hermes2Kind"><option value="symbol">Magiska symboler</option><option value="spell">Besvärjelser</option></select></label><label>Objekt<select id="hermes2Target" required></select></label><label>PNG-original<input id="hermes2File" type="file" accept="image/png,.png" required></label><button id="hermes2Submit" class="smallbtn" type="submit">Överför via HERMES</button></form><p class="hermes2-status" role="status" aria-live="polite" id="hermes2Status"></p><div id="hermes2Jobs"></div>';
+ host.innerHTML='<h3>HERMES 2.0 · Bildöverföring</h3><p class="muted">Pilot för ARCANE IVORY. Original-PNG bevaras; en ny ikon aktiveras först efter verifierad GitHub-arkivering, filhämtning och databaskoppling.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button id="hermes2Pilot" class="smallbtn" type="button">Kör Osäkerhet-pilot utan uppladdning</button><button id="hermes2Diagnostics" class="smallbtn" type="button">Kontrollera anslutning</button></div><p class="muted" id="hermes2Connectivity">Anslutning ännu inte testad.</p><form id="hermes2Form" class="hermes2-controls"><label>Register<select id="hermes2Kind"><option value="symbol">Magiska symboler</option><option value="spell">Besvärjelser</option></select></label><label>Objekt<select id="hermes2Target" required></select></label><label>PNG-original<input id="hermes2File" type="file" accept="image/png,.png" required></label><button id="hermes2Submit" class="smallbtn" type="submit">Överför via HERMES</button></form><p class="hermes2-status" role="status" aria-live="polite" id="hermes2Status"></p><div id="hermes2Jobs"></div>';
  const symbolTable=document.getElementById('adminMagicSymbolTable');
  const parent=symbolTable?.closest('.admin-subsection')||section;
  parent.parentNode.insertBefore(host,parent);
@@ -118,9 +118,34 @@
     dbJson('rule_spells?select=spell_key,name&order=name.asc')
    ]);
    options={symbol:symbols.map(x=>({key:x.symbol_key,name:x.name})),spell:spells.map(x=>({key:x.spell_key,name:x.name}))};
-   targets();loaded=true;await jobs();
+   targets();loaded=true;await jobs();await diagnostic();
   }catch(e){out('Kunde inte läsa masterregistren: '+e.message,true)}
  }
+ async function diagnostic(){
+  const diag=$('hermes2Connectivity');
+  diag.textContent='Kontrollerar HERMES-tjänsten …';
+  try{
+   const check=await request({action:'diagnostics'});
+   const ok=check.source_bucket&&check.public_bucket&&check.github_readable;
+   diag.textContent=(ok?'Lagring och GitHub-läsning fungerar. ':'Kontrollera serveranslutningen. ')+
+    (check.github_write_configured?'GitHub-skrivbehörighet är konfigurerad.':'GitHub-skrivtoken saknas eller är inte konfigurerad. Osäkerhet-piloten kan använda redan arkiverat original.');
+  }catch(e){diag.textContent='Anslutningskontroll misslyckades: '+e.message}
+ }
+ $('hermes2Diagnostics').addEventListener('click',diagnostic);
+ $('hermes2Pilot').addEventListener('click',async()=>{
+  const button=$('hermes2Pilot');if(submitting||!requireAdmin())return;
+  submitting=true;button.disabled=true;btn.disabled=true;
+  try{
+   out('Hämtar Osäkerhet från fastlåsta GitHub-versioner och verifierar PNG/WebP …');
+   const result=await request({action:'import_osakerhet'});
+   if(result.ok){
+    out('Osäkerhet är verifierad och aktiverad med HERMES 2.0. Original, publik WebP och databasen har kontrollerats.');
+    window.aleaMagicSymbolsAdmin?.refresh?.();
+   } else out('Osäkerhet är ännu inte aktiverad: '+(result.error||result.status)+'. Tidigare ikon är kvar.',true);
+   await jobs();
+  }catch(e){out('Pilot misslyckades utan att ändra den gamla ikonen: '+e.message,true)}
+  finally{submitting=false;button.disabled=false;btn.disabled=false}
+ });
  $('hermes2Kind').addEventListener('change',targets);
  $('hermes2Form').addEventListener('submit',async ev=>{
   ev.preventDefault();if(submitting||!requireAdmin())return;
