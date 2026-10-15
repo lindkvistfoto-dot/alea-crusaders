@@ -2214,6 +2214,7 @@ function combatMagicBinding(spell){
  if(name==='BESKYDDARE')return {kind:'area',code:'area_beskyddare',supported:true,ritual:true,cube:true,requires_resistance:false};
  if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
   return {kind:'manual',supported:true,ritual:true,reason:'Ritual · SL avgör tid och effekt'};
+ if(name==='ÖKA'||name==='MINSKA')return {kind:'status',code:name==='ÖKA'?'spell_oka':'spell_minska',supported:true,requires_resistance:name==='MINSKA',attribute_spell:true};
  if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
  if(name==='DIMMA')return {kind:'area',code:'area_fog',supported:true,requires_resistance:false};
  if(['ELD','BLIXT','ENERGISTRÅLE','FROST'].includes(name)&&
@@ -2561,6 +2562,7 @@ async function combatMagicButton(event,combatantId){
    if(statusSpell){
     const target=combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId);
     if(!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    if(data.magic_binding?.attribute_spell&&!COMBAT_ATTRIBUTE_SPELL_ATTRIBUTES.includes(String(data.effect_attribute||''))){alert('Välj först grundegenskap.');combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     if(data.magic_binding?.requires_resistance&&(data.resistance_target_id!==targetId||!['resisted','affected'].includes(data.resistance_decision))){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
@@ -4061,6 +4063,19 @@ function combatHealingTarget(actor,action,targetId){
  if(!others.length)return available.find(row=>String(row.id)===String(actor.id))||null;
  return available.find(row=>String(row.id)===String(targetId||''))||null
 }
+async function combatChooseSpellAttribute(actorId,attribute){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ if(!actor||action?.status!=='planned'||action.source_data?.magic_binding?.attribute_spell!==true||
+  !COMBAT_ATTRIBUTE_SPELL_ATTRIBUTES.includes(attribute))return;
+ const sourceData={...action.source_data,effect_attribute:attribute};
+ try{
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},
+   body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+  });
+  action.source_data=sourceData;renderCombat()
+ }catch(error){alert('Kunde inte välja egenskap: '+error.message)}
+}
 function combatMagicTargetChooserHtml(actor,action){
  if(!action?.source_data?.casting_spell)return '';
  if((Number((typeof activeCombat!=='undefined'?activeCombat:null)?.round_number)||Number(action.source_data.ready_round)||1)<(Number(action.source_data.ready_round)||1))
@@ -4114,7 +4129,13 @@ function combatMagicTargetChooserHtml(actor,action){
  }
  if(statusSpell){
   const candidates=combatSpellEffectTargets(actor,action);
-  return '<div class="combat-spell-choice">'+durationHtml+'<b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
+  const attributeSpell=action.source_data.magic_binding?.attribute_spell===true;
+  const selectedAttribute=String(action.source_data.effect_attribute||'');
+  const attributeHtml=attributeSpell?
+   '<label class="combat-spell-effect"><span>Grundegenskap</span><select aria-label="Välj grundegenskap" onchange="combatChooseSpellAttribute(&quot;'+actor.id+'&quot;,this.value)"><option value="">Välj egenskap…</option>'+
+   COMBAT_ATTRIBUTE_SPELL_ATTRIBUTES.map(attribute=>'<option value="'+attribute+'"'+(selectedAttribute===attribute?' selected':'')+'>'+attribute+'</option>').join('')+'</select></label>'+
+   '<small>1 poäng per EG · '+(statusSpell==='MINSKA'?'lägst 1 · ':'')+'varaktighet '+(Math.max(1,Number(action.source_data.effect_grade)||1)*15)+' sekunder (S/4 minuter).</small>':durationHtml;
+  return '<div class="combat-spell-choice">'+attributeHtml+'<b>'+escAttr(statusSpell)+' · välj mål</b><small>Välj målet på kartan eller i listan. Tryck sedan ✦ igen för att kasta.</small>'+
    candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+
    (action.source_data.magic_binding?.requires_resistance&&candidates.some(c=>String(c.id)===String(combatSelectedTargetId))?
     '<div class="combat-spell-effect"><span>SL avgör målets motstånd (regeldetaljer saknas)</span>'+
@@ -4261,6 +4282,10 @@ async function combatCastStatusSpell(actor,target,action){
  const code=action.source_data.magic_binding.code;
  const effect=combatEffectRegistry.find(row=>row.code===code&&row.active);
  if(!effect)throw new Error('Besvärjelsens effekt saknas i effektregistret.');
+ const attributeSpell=action.source_data.magic_binding.attribute_spell===true;
+ const attribute=String(action.source_data.effect_attribute||'');
+ if(attributeSpell&&(!COMBAT_ATTRIBUTE_SPELL_ATTRIBUTES.includes(attribute)||!Number.isFinite(combatBaseAttribute(target,attribute))))
+  throw new Error('Välj en giltig grundegenskap som finns registrerad på målet.');
  const fv=Math.max(1,(Number(action.source_data.spell_fv)||10)-2*(eg-1));
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
  const rolled=await combatExpertRoll(spellName+' · '+actor.name_snapshot+' → '+target.name_snapshot,fv);
@@ -4282,14 +4307,19 @@ async function combatCastStatusSpell(actor,target,action){
  }
  if(rolled.success&&!resisted&&!result.blocked_by_beskyddare){
   const duration=effect.default_duration_rounds;
-  const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active');
+  const existing=combatActiveEffects.find(e=>e.combatant_id===target.id&&e.effect_id===effect.id&&e.status==='active'&&
+   (!attributeSpell||e.parameters?.attribute===attribute));
   const custom=combatSpellDurationRounds(action);
-  const spellExpiry=Number.isSafeInteger(custom)&&custom>0?{expires_round:round+custom-1,expires_at:null}:
+  // Magiboken s. 9: S/4 minuter = EG × 15 sekunder; real-time expiration.
+  const spellExpiry=attributeSpell?{expires_round:null,expires_at:new Date(Date.now()+eg*15000).toISOString()}:
+   Number.isSafeInteger(custom)&&custom>0?{expires_round:round+custom-1,expires_at:null}:
    duration==null?combatEffectExpiry(effect,round,eg):{expires_round:round+Math.max(1,Number(duration))-1,expires_at:null};
-  const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',parameters:{},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
+  const body={strength:eg,applied_round:round,...spellExpiry,expiration_condition:effect.expiration_condition||'duration',
+   parameters:attributeSpell?{attribute,points_per_eg:1}:{},source_combatant_id:actor.id,source_action_id:action.id,updated_at:new Date().toISOString()};
   if(existing)await dbJson('combatant_effects?id=eq.'+encodeURIComponent(existing.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)});
   else await dbJson('combatant_effects',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({...body,combat_id:activeCombat.id,campaign_id:centralCampaignId,combatant_id:target.id,effect_id:effect.id})});
-  result.effect_applied=true
+  result.effect_applied=true;
+  if(attributeSpell){result.effect_attribute=attribute;result.attribute_delta=(spellName==='MINSKA'?-eg:eg);result.duration_seconds=eg*15}
  }
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',target_combatant_id:target.id,result,updated_at:new Date().toISOString()})});
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',actor_id:actor.id,target_id:target.id,event_type:'spell_effect',message:actor.name_snapshot+' kastar '+spellName+' på '+target.name_snapshot+' · '+combatOutcomeLabel(rolled.outcome),details:result,player_visible:true})});
@@ -6429,6 +6459,8 @@ function combatMentalStatusLabel(combatant){
  }).join(' · ')
 }
 const COMBAT_EFFECT_ATTRIBUTES=['STY','FYS','STO','SMI','INT','PSY','KAR'];
+// Magiboken s. 9 excludes INT and PSY from ÖKA/MINSKA.
+const COMBAT_ATTRIBUTE_SPELL_ATTRIBUTES=['STY','FYS','STO','SMI','KAR'];
 // BJÖRN: interpret per-effect restrictions separately, never infer attack immunity.
 function combatRestrictionFlags(combatant,round=Number(activeCombat?.round_number)||1){
  const flags={actions:false,movement:false,reactions:false};
@@ -6463,14 +6495,17 @@ function combatMustSkipTurn(combatant,round=Number(activeCombat?.round_number)||
 }
 function combatEffectAttributeDelta(combatant,attribute){
  if(!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return 0;
- return combatActiveEffects.filter(e=>String(e.combatant_id)===String(combatant?.id)&&combatEffectIsActive(e)).reduce((sum,e)=>{
+ const delta=combatActiveEffects.filter(e=>String(e.combatant_id)===String(combatant?.id)&&combatEffectIsActive(e)).reduce((sum,e)=>{
   const def=combatEffectDefinition(e),p=e.parameters||{};
   if(!def?.active||def.modifiers?.type!=='attribute_delta'||p.attribute!==attribute)return sum;
   const strength=Number(e.strength),perGrade=Number(p.points_per_eg),direction=Number(def.modifiers.direction);
   // Never infer an Expert scaling rule when a magnitude is not configured.
   if(!Number.isFinite(strength)||strength<1||!Number.isFinite(perGrade)||perGrade<1||![-1,1].includes(direction))return sum;
   return sum+direction*strength*perGrade
- },0)
+ },0);
+ const base=combatBaseAttribute(combatant,attribute);
+ // Never lower a basic attribute below one, even with concurrent effects.
+ return Number.isFinite(base)?Math.max(1-base,delta):delta
 }
 function combatBaseAttribute(combatant,attribute){
  if(!combatant||!COMBAT_EFFECT_ATTRIBUTES.includes(attribute))return null;
