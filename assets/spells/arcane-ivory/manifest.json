@@ -37,6 +37,17 @@
       "alpha_preserved": true
     },
     {
+      "spell_key": "osakerhet",
+      "source": "osakerhet.png",
+      "app": "osakerhet.webp",
+      "size": 640,
+      "source_bytes": 2730159,
+      "app_bytes": 170424,
+      "quality": 90,
+      "source_sha256": "321f72bf5aba7a810ee3573c7d863a7a7f18655092aa46457eb11ce7af7c8e24",
+      "alpha_preserved": true
+    },
+    {
       "spell_key": "vaderforutsagelse",
       "source": "vaderforutsagelse.png",
       "app": "vaderforutsagelse.webp",
