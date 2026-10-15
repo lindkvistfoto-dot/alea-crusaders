@@ -63,9 +63,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::warning::HERMES 2.1 is prepared but NOT active: add repository secret HERMES_SUPABASE_SERVICE_ROLE_KEY for automatic Supabase publication."
-            echo "### HERMES: prepared, awaiting Supabase credential" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "::error::HERMES publication blocked: missing repository secret HERMES_SUPABASE_SERVICE_ROLE_KEY."
+            echo "### HERMES FAILED: Supabase credential missing, no publication or activation" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
           deno run -A --node-modules-dir=auto scripts/hermes2_publish.ts "$RUNNER_TEMP/hermes21-output/manifest.json" "$RUNNER_TEMP/hermes21-output"
           echo "### HERMES: image verified and activated in Supabase" >> "$GITHUB_STEP_SUMMARY"
