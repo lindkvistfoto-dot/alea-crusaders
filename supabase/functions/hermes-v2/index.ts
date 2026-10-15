@@ -45,16 +45,26 @@ async function gitObjectSha(data:Uint8Array){
 }
 async function github(method:string,path:string,payload?:unknown){
  const r=await fetch("https://api.github.com/repos/"+GH_REPO+path,{
- method,headers:{"Authorization":"Bearer "+GH_TOKEN,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},
+ method,headers:{...(GH_TOKEN?{"Authorization":"Bearer "+GH_TOKEN}:{}),"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},
  ...(payload===undefined?{}:{body:JSON.stringify(payload)})});
  const body=await r.json().catch(()=>({}));
  if(!r.ok)throw Error("GITHUB_"+r.status+"_"+String(body.message||"request_failed").slice(0,100));
  return body;
 }
 async function archive(kind:string,key:string,sha256:string,bytes:Uint8Array){
- if(!GH_TOKEN)throw Error("GITHUB_TOKEN_NOT_CONFIGURED");
  const path="assets/hermes/originals/"+kind+"/"+key+"/"+sha256+".png";
  const expected=await gitObjectSha(bytes);
+ // A source already archived on GitHub main is sufficient evidence even without a GitHub write token.
+ // GitHub itself publishes the SHA-1 git blob digest, compared here to the exact bytes.
+ const legacyPath="assets/spells/arcane-ivory/"+key+".png";
+ const archivedLegacy=await github("GET","/contents/"+legacyPath+"?ref=main").catch(e=>{
+  if(cleanError(e).startsWith("GITHUB_404_"))return null;throw e;
+ });
+ if(archivedLegacy?.sha===expected){
+  const head=await github("GET","/git/ref/heads/main");
+  return {path:legacyPath,blobSha:expected,commitSha:head.object.sha};
+ }
+ if(!GH_TOKEN)throw Error("GITHUB_TOKEN_NOT_CONFIGURED");
  // If this exact immutable original is already on main, a retry is a read-only success.
  const current=await github("GET","/contents/"+path+"?ref=main").catch(e=>{
   if(cleanError(e).startsWith("GITHUB_404_"))return null;
