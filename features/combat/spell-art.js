@@ -18,7 +18,8 @@
  const focus=(value,fallback=50)=>Number.isFinite(Number(value))?Math.max(0,Math.min(100,Math.round(Number(value)))):fallback;
  const zoom=(value,fallback=120)=>Number.isFinite(Number(value))?Math.max(100,Math.min(300,Math.round(Number(value)))):fallback;
  const cutoutScale=(value,fallback=160)=>Number.isFinite(Number(value))?Math.max(50,Math.min(250,Math.round(Number(value)))):fallback;
- const validPath=path=>PATH.test(String(path||''));
+ const REPO_ICON=/^assets\/spells\/arcane-ivory\/[a-z0-9-]+\.(?:png|webp)$/;
+ const validPath=path=>PATH.test(String(path||''))||REPO_ICON.test(String(path||''));
  const getRow=id=>typeof ruleSpells!=='undefined'?(ruleSpells||[]).find(r=>String(r.id)===String(id)):null;
  const canManage=()=>{try{return !!activeUser()?.admin}catch(_){return false}};
  function artFor(row,kind){
@@ -41,6 +42,7 @@
  function validKind(kind){return Object.prototype.hasOwnProperty.call(TYPES,kind)?kind:'effect'}
  function resolveUrl(path){
   if(!validPath(path))return Promise.resolve('');
+  if(REPO_ICON.test(String(path||'')))return Promise.resolve('./'+path);
   if(cache.has(path))return cache.get(path);
   const pending=(async()=>{
    const response=await mapStorageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});

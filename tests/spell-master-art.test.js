@@ -106,7 +106,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(cutoutMigration).toContain('cutout_y between 0 and 100');
   expect(cutoutMigration).not.toContain('set cutout_path =');
  });
- it('accepts only private immutable WebP paths',()=>{
+ it('accepts private immutable WebP paths and rejects unsafe URLs',()=>{
   const {ctx}=fixture();
   expect(ctx.window.aleaSpellArt.validPath(PATH)).toBe(true);
   for(const bad of ['https://example.com/pic.webp','../secret',
@@ -287,5 +287,20 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(admin).toContain('window.aleaSpellArt?.hydrateEditor');
   expect(html).toContain('features/combat/spell-art.js?v=');
   expect(html).toContain('features/combat/spell-art.css?v=');
+ });
+});
+
+
+describe('ARCANE IVORY repository assets',()=>{
+ it('accepts only scoped repository image paths and resolves same-origin static files',async()=>{
+  const {ctx}=fixture();
+  const icon='assets/spells/arcane-ivory/finna-vatten.png';
+  expect(ctx.window.aleaSpellArt.validPath(icon)).toBe(true);
+  expect(ctx.window.aleaSpellArt.validPath('assets/spells/arcane-ivory/finna-vatten.webp')).toBe(true);
+  expect(ctx.window.aleaSpellArt.validPath('assets/spells/arcane-ivory/../secret.png')).toBe(false);
+  expect(ctx.window.aleaSpellArt.validPath('https://example.com/icon.png')).toBe(false);
+  expect(await ctx.window.aleaSpellArt.resolveUrl(icon)).toBe('./'+icon);
+  expect(read('vite.config.js')).toContain('alea-copy-arcane-ivory');
+  expect(runtime).toContain('assets\\/spells\\/arcane-ivory\\/');
  });
 });

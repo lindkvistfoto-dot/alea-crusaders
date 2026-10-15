@@ -19,6 +19,7 @@ export default defineConfig({
     copyStaticTree("alea-copy-legacy", "legacy", "legacy"),
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-dice-assets", "alea-dicebox-assets-v1.1.4", "alea-dicebox-assets-v1.1.4"),
+    copyStaticTree("alea-copy-arcane-ivory", "assets/spells/arcane-ivory", "assets/spells/arcane-ivory"),
   ],
   build: {
     outDir: "dist",
