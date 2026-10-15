@@ -1,0 +1,37 @@
+name: ARCANE IVORY image pipeline
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'features/combat/spell-art.js'
+      - 'features/combat/runtime.js'
+      - 'vite.config.js'
+      - 'assets/spells/arcane-ivory/**'
+      - 'tests/spell-master-art.test.js'
+      - '.github/workflows/arcane-ivory-image-smoke.yml'
+  workflow_dispatch:
+jobs:
+  image-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run tests/spell-master-art.test.js
+      - run: npm run build
+      - name: Verify shipped PNG with alpha support
+        run: |
+          node --input-type=module -e '
+          import {readFileSync} from "node:fs";
+          import {strict as assert} from "node:assert";
+          const file="dist/assets/spells/arcane-ivory/finna-vatten.png";
+          const data=readFileSync(file);
+          assert(data.subarray(0,8).equals(Buffer.from("89504e470d0a1a0a","hex")),"not a PNG");
+          const width=data.readUInt32BE(16),height=data.readUInt32BE(20),colorType=data[25];
+          assert(width===height&&width>=128,"square icon required");
+          assert([4,6].includes(colorType)||data.includes(Buffer.from("tRNS")),"transparency information required");
+          console.log(file,width,height,"PNG color type",colorType);
+          '
