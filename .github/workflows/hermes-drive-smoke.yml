@@ -4,6 +4,10 @@
 name: HERMES Drive – connection test
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-drive-smoke.yml'
   workflow_dispatch:
     inputs:
       drive_file_id:
