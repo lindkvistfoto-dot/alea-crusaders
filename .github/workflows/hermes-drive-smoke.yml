@@ -1,7 +1,6 @@
 # HERMES Drive access smoke test. No storage, app files or database rows are changed.
-# Configure repository Actions variables:
-#   HERMES_GCP_WIF_PROVIDER = projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/alea-hermes
-#   HERMES_GCP_SERVICE_ACCOUNT = hermes-transfer@PROJECT_ID.iam.gserviceaccount.com
+# Google project: alea-hermes (project number 303776456341).
+# Expected WIF pool=github, provider=alea-hermes, service account=hermes-transfer.
 name: HERMES Drive – connection test
 
 on:
@@ -23,22 +22,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Check required Google identity settings
-        env:
-          PROVIDER: ${{ vars.HERMES_GCP_WIF_PROVIDER }}
-          SERVICE_ACCOUNT: ${{ vars.HERMES_GCP_SERVICE_ACCOUNT }}
-        shell: bash
-        run: |
-          if [ -z "$PROVIDER" ] || [ -z "$SERVICE_ACCOUNT" ]; then
-            echo "::error::Set Actions variables HERMES_GCP_WIF_PROVIDER and HERMES_GCP_SERVICE_ACCOUNT first."
-            exit 1
-          fi
       - id: auth
         name: Obtain short-lived Google Drive access token
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ vars.HERMES_GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.HERMES_GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/drive.readonly
           create_credentials_file: false
