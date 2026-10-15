@@ -27,6 +27,14 @@ describe('HERMES 2.0 release safety contracts',()=>{
   expect(ui).not.toMatch(/HERMES_GITHUB_TOKEN|SUPABASE_SERVICE_ROLE_KEY|ghp_/);
   expect(ui).toContain('freshSupabaseAccessToken');
  });
+ it('authorizes a verified user against their own profile with the caller JWT',()=>{
+  const edge=read('supabase/functions/hermes-v2/index.ts');
+  expect(edge).toContain('const {data:{user},error:authError}=await client.auth.getUser(jwt)');
+  expect(edge).toContain('global:{headers:{Authorization:"Bearer "+jwt}}');
+  expect(edge).toContain('.eq("id",user.id).maybeSingle()');
+  expect(edge).toContain('if(!profile?.is_admin)return fail(403,"ADMIN_REQUIRED"');
+  expect(edge).toContain('ADMIN_LOOKUP_FAILED');
+ });
  it('only activates after bytes, archive, delivery, and target readback',()=>{
   const edge=read('supabase/functions/hermes-v2/index.ts');
   const checks=['pngInfo(src)','webpInfo(out)','await store(SOURCE','await store(PUBLIC','await archive(','await checkReadback(PUBLIC','await fetch(publicUrl','DATABASE_READBACK_MISMATCH'];
