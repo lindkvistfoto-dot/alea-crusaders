@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: hermes21-intake-${{ github.ref }}
+  group: hermes21-intake-${{ github.ref }}-${{ inputs.source_path || github.sha }}
   cancel-in-progress: false
 
 jobs:
