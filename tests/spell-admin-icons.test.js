@@ -49,31 +49,48 @@ describe('Spell admin master icon previews',()=>{
   expect((html.innerHTML.match(/spell-master-icon-cell/g)||[])).toHaveLength(2);
   expect(hydrated).toHaveBeenCalledWith(html);
  });
- it('loads only visible icons and uses the same crop geometry as game previews',async()=>{
-  let callback,observer;
-  class FakeObserver{
-   constructor(cb){callback=cb;this.observed=[];this.unobserve=vi.fn();this.disconnect=vi.fn();observer=this}
-   observe(el){this.observed.push(el)}
-  }
+ it('loads both repository and Storage icons without any IntersectionObserver event',async()=>{
+  class BrokenObserver{constructor(){throw Error('IntersectionObserver must not be needed')}}
+  const makeThumb=(path,x='73',y='29',z='155')=>{
+   const img={naturalWidth:640,naturalHeight:640,complete:true,style:{},hidden:true};
+   const symbol={hidden:false},ready=vi.fn();
+   const thumb={dataset:{spellIconPath:path,spellIconX:x,spellIconY:y,spellIconZoom:z},
+    isConnected:true,classList:{add:ready},
+    getBoundingClientRect:()=>({width:48,height:48}),
+    querySelector:q=>q==='img'?img:q==='.spell-master-icon-symbol'?symbol:null};
+   return {img,symbol,ready,thumb};
+  };
+  const repo=makeThumb(iconPath),storage=makeThumb('spell/78c31001-110d-4876-99c2-98281885e8a0/16e618dc-8645-427a-bce9-238397110634.webp');
+  const mapStorageFetch=vi.fn(async()=>({ok:true,blob:async()=>({size:128,type:'image/webp'})}));
+  const {api}=setup({IntersectionObserver:BrokenObserver,mapStorageFetch,URL:{createObjectURL:()=> 'blob:loaded-icon'}});
+  api.hydrateAdminList({querySelectorAll:()=>[repo.thumb,storage.thumb]});
+  for(let i=0;i<10;i++)await Promise.resolve();
+  expect(repo.img.src).toBe('./'+iconPath);
+  expect(storage.img.src).toBe('blob:loaded-icon');
+  expect(mapStorageFetch).toHaveBeenCalledTimes(1);
+  expect(repo.img.hidden).toBe(false);
+  expect(storage.img.hidden).toBe(false);
+  expect(Number.parseFloat(repo.img.style.width)).toBeCloseTo(74.4,2);
+  expect(repo.img.style.left).toMatch(/^-/);
+  expect(repo.symbol.hidden).toBe(true);
+  expect(storage.symbol.hidden).toBe(true);
+  expect(repo.ready).toHaveBeenCalledWith('icon-ready');
+  expect(storage.ready).toHaveBeenCalledWith('icon-ready');
+ });
+ it('prepares the icon crop while the admin tab is hidden on mobile',async()=>{
   const img={naturalWidth:640,naturalHeight:640,complete:true,style:{},hidden:true};
   const symbol={hidden:false};
-  const ready=vi.fn();
-  const thumb={dataset:{spellIconPath:iconPath,spellIconX:'73',spellIconY:'29',spellIconZoom:'155'},
-   isConnected:true,classList:{add:ready},getBoundingClientRect:()=>({width:48,height:48}),
+  const thumb={dataset:{spellIconPath:iconPath,spellIconX:'50',spellIconY:'50',spellIconZoom:'155'},
+   isConnected:true,classList:{add:vi.fn()},
+   getBoundingClientRect:()=>({width:0,height:0}),
    querySelector:q=>q==='img'?img:q==='.spell-master-icon-symbol'?symbol:null};
-  const root={querySelectorAll:()=>[thumb]};
-  const {api}=setup({IntersectionObserver:FakeObserver});
-  api.hydrateAdminList(root);
-  expect(observer.observed).toEqual([thumb]);
-  expect(img.src).toBeUndefined();
-  callback([{isIntersecting:true,target:thumb}],observer);
-  await Promise.resolve();await Promise.resolve();await Promise.resolve();
+  const {api,ctx}=setup();
+  ctx.window.matchMedia=()=>({matches:true});
+  api.hydrateAdminList({querySelectorAll:()=>[thumb]});
+  for(let i=0;i<5;i++)await Promise.resolve();
   expect(img.src).toBe('./'+iconPath);
-  expect(img.hidden).toBe(false);
-  expect(Number.parseFloat(img.style.width)).toBeCloseTo(74.4,2);
-  expect(img.style.left).toMatch(/^-/);
+  expect(Number.parseFloat(img.style.width)).toBeCloseTo(65.1,2);
   expect(symbol.hidden).toBe(true);
-  expect(ready).toHaveBeenCalledWith('icon-ready');
  });
  it('fits the new icon column on desktop/mobile without breaking table columns',()=>{
   const css=read('src/styles/app.css'),artCss=read('features/combat/spell-art.css');

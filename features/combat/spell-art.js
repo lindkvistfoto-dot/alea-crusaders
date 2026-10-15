@@ -324,10 +324,7 @@
   return '<div class="spell-master-icon-cell"><button class="spell-master-icon-thumb '+(linked?'has-icon':'is-empty')+'" type="button" title="'+esc(label)+'" aria-label="'+esc(label)+'" onclick="editRuleSpell(\''+esc(id)+'\')"'+attr+'>'+
    '<img alt="" loading="lazy" decoding="async" hidden><span class="spell-master-icon-symbol" aria-hidden="true">'+(row?.icon_path&&!linked?'!':'✧')+'</span></button></div>';
  }
- let adminIconObserver=null;
  function hydrateAdminList(root){
-  adminIconObserver?.disconnect();
-  adminIconObserver=null;
   if(!root?.querySelectorAll)return;
   const items=Array.from(root.querySelectorAll('[data-spell-icon-path]'));
   const failed=button=>{
@@ -339,6 +336,16 @@
    button.classList.add('icon-failed');
    button.title='Ikon finns i registret men kunde inte visas';
   };
+  const positionAdminIcon=(img,button)=>{
+   const rect=button.getBoundingClientRect();
+   const size=window.matchMedia?.('(max-width:700px)')?.matches?42:48;
+   const view=rect.width>0&&rect.height>0?button:{
+    getBoundingClientRect:()=>({width:size,height:size})
+   };
+   return positionImage(img,view,{
+    x:button.dataset.spellIconX,y:button.dataset.spellIconY,zoom:button.dataset.spellIconZoom
+   });
+  };
   const load=async button=>{
    const path=button.dataset.spellIconPath;
    if(!validPath(path)||button.dataset.spellIconLoading)return;
@@ -349,7 +356,7 @@
     if(!button.isConnected||button.dataset.spellIconPath!==path||!url)return;
     img.onload=()=>{
      if(!button.isConnected)return;
-     positionImage(img,button,{x:button.dataset.spellIconX,y:button.dataset.spellIconY,zoom:button.dataset.spellIconZoom});
+     positionAdminIcon(img,button);
      img.hidden=false;button.classList.add('icon-ready');
      const symbol=button.querySelector('.spell-master-icon-symbol');
      if(symbol)symbol.hidden=true;
@@ -358,13 +365,20 @@
     img.src=url;
     if(img.complete&&img.naturalWidth)img.onload();
    }catch(error){failed(button)}
+   finally{delete button.dataset.spellIconLoading}
   };
-  if(typeof IntersectionObserver==='function'){
-   adminIconObserver=new IntersectionObserver((entries,observer)=>{
-    for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);void load(entry.target)}
-   },{rootMargin:'160px'});
-   items.forEach(item=>adminIconObserver.observe(item));
-  }else items.forEach(item=>void load(item));
+  // A hidden or nested-scroll admin table can miss IntersectionObserver events,
+  // leaving a valid image on its placeholder until "Spara utsnitt" rerenders it.
+  // Eagerly queue only assigned icons; bound fetch concurrency and reuse the URL cache.
+  let next=0;
+  for(let worker=0;worker<Math.min(4,items.length);worker++){
+   void (async()=>{
+    while(next<items.length){
+     const button=items[next++];
+     if(button.isConnected!==false)await load(button);
+    }
+   })();
+  }
  }
  function refreshVisibleCrops(){
   for(const kind of Object.keys(TYPES))previewFocus(kind);
