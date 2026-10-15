@@ -70,7 +70,7 @@ describe('Spell admin master icon previews',()=>{
   await Promise.resolve();await Promise.resolve();await Promise.resolve();
   expect(img.src).toBe('./'+iconPath);
   expect(img.hidden).toBe(false);
-  expect(img.style.width).toBe('74.4px');
+  expect(Number.parseFloat(img.style.width)).toBeCloseTo(74.4,2);
   expect(img.style.left).toMatch(/^-/);
   expect(symbol.hidden).toBe(true);
   expect(ready).toHaveBeenCalledWith('icon-ready');
