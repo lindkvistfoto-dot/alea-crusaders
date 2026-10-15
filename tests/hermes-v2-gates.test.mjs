@@ -27,6 +27,17 @@ describe('HERMES 2.0 release safety contracts',()=>{
   expect(ui).not.toMatch(/HERMES_GITHUB_TOKEN|SUPABASE_SERVICE_ROLE_KEY|ghp_/);
   expect(ui).toContain('freshSupabaseAccessToken');
  });
+ it('preserves minimum server privileges and accepts HERMES icon paths in SQL schema',()=>{
+  const grants=read('supabase/migrations/20261015180000_hermes_v2_server_permissions.sql');
+  const paths=read('supabase/migrations/20261015180500_hermes_v2_spell_icon_constraint.sql');
+  expect(grants).toContain('GRANT SELECT, UPDATE ON TABLE public.rule_magic_symbols TO service_role');
+  expect(grants).toContain('GRANT SELECT, INSERT, UPDATE ON TABLE public.hermes_jobs TO service_role');
+  expect(grants).not.toContain('TO authenticated');
+  expect(grants).not.toContain('TO anon');
+  expect(paths).toContain('rule_spells_dual_art_paths');
+  expect(paths).toContain('hermes/spell/');
+  expect(paths).toContain('effect_image_path IS NULL');
+ });
  it('authorizes a verified user against their own profile with the caller JWT',()=>{
   const edge=read('supabase/functions/hermes-v2/index.ts');
   expect(edge).toContain('const {data:{user},error:authError}=await client.auth.getUser(jwt)');
