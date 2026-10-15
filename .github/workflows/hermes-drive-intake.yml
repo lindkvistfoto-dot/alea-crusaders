@@ -1,0 +1,75 @@
+name: HERMES – Drive push intake
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hermes/queue/*.json'
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: 'Committed hermes/queue/*.json to process'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: hermes-drive-queue
+  cancel-in-progress: false
+
+jobs:
+  intake:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned image verifier
+        run: python -m pip install Pillow==12.3.0
+
+      - id: google
+        name: Authenticate as read-only HERMES Drive service account
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+
+      - name: Consume exactly the queue JSONs committed in this push
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          HERMES_BEFORE: ${{ github.event.before }}
+          HERMES_REQUEST_PATH: ${{ inputs.request_path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          requests=()
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            if ! git cat-file -e "${HERMES_BEFORE}^{commit}" 2>/dev/null; then
+              echo "::error::Push predecessor unavailable; fail closed instead of reading entire queue"; exit 1
+            fi
+            mapfile -t requests < <(git diff --name-only --diff-filter=AM "$HERMES_BEFORE" "$GITHUB_SHA" -- hermes/queue/)
+          else
+            requests+=("$HERMES_REQUEST_PATH")
+          fi
+          if [ "${#requests[@]}" -eq 0 ]; then
+            echo "::error::No new HERMES queue JSON found"; exit 1
+          fi
+          for request in "${requests[@]}"; do
+            if [[ ! "$request" =~ ^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$ ]]; then
+              echo "::error::Invalid HERMES request path"; exit 1
+            fi
+            python scripts/hermes_drive_intake.py "$request"
+          done
