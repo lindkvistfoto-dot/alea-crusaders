@@ -22,13 +22,28 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install image codec
         run: python -m pip install Pillow==12.3.0
       - name: Verify source and create content-addressed WebP
-        run: python scripts/hermes2_prepare.py --output "$RUNNER_TEMP/hermes21-output"
+        shell: bash
+        run: |
+          args=()
+          if [ "${{ github.event_name }}" = "push" ]; then
+            before="${{ github.event.before }}"
+            if git cat-file -e "${before}^{commit}" 2>/dev/null; then
+              while IFS= read -r file; do
+                if [[ "$file" == assets/hermes/originals/*/*/*.png ]] && [ -f "$file" ]; then
+                  args+=(--source "$file")
+                fi
+              done < <(git diff --name-only --diff-filter=ACM "$before" "$GITHUB_SHA" -- assets/hermes/originals/)
+            fi
+          fi
+          python scripts/hermes2_prepare.py --output "$RUNNER_TEMP/hermes21-output" "${args[@]}"
       - name: Archive the optimized asset for the HERMES publisher
         uses: actions/upload-artifact@v4
         with:
