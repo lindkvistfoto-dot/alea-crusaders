@@ -2,6 +2,9 @@
 const cols='id,campaign_id,title,description,category,asset_kind,storage_bucket,storage_path,thumbnail_path,mime_type,created_at';
 const encode=encodeURIComponent;
 const safe=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function arcaneGalleryImageIds(events){
+ return [...new Set((Array.isArray(events)?events:[]).map(x=>x?.material_id).filter(x=>typeof x==='string'&&/^[a-f0-9-]{36}$/i.test(x)))].reverse();
+}
 export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM,doc=()=>document,win=()=>window}){
  const root=doc().createElement('section');
  root.id='arcaneGallery';root.className='arcane-gallery hidden';
@@ -69,14 +72,14 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
     if(!valid(n,c))return;if(!Array.isArray(chunk))throw Error('Historiken är inte tillgänglig');
     hist.push(...chunk);if(chunk.length<100)break;offset+=100;
    }
-   const ids=[...new Set(hist.map(x=>x.material_id).filter(x=>/^[a-f0-9-]{36}$/i.test(x)))],materials=[];
+   const ids=arcaneGalleryImageIds(hist),materials=[];
    for(let i=0;i<ids.length;i+=40){
     const found=await request('campaign_materials?campaign_id=eq.'+encode(c)+'&id=in.('+ids.slice(i,i+40).map(encode).join(',')+')&archived_at=is.null&select='+cols);
     if(!valid(n,c))return;if(Array.isArray(found))materials.push(...found);
    }
    if(!valid(n,c))return;
    const lookup=new Map(materials.filter(x=>x.campaign_id===c&&x.asset_kind==='image').map(x=>[x.id,x]));
-   state.rows=ids.reverse().map(id=>lookup.get(id)).filter(Boolean);
+   state.rows=ids.map(id=>lookup.get(id)).filter(Boolean);
    const next=state.live&&lookup.has(state.live)?state.live:state.rows.at(-1)?.id;
    const previous=state.selected;render();
    if(next&&(next!==previous||!$('arcaneGalleryImage').src))void select(next);
