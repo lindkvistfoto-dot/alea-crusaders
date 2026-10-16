@@ -5,6 +5,10 @@ on:
       - sisyphus/arcane-gallery-shared-mechanics-20261016
     paths:
       - 'tests/fixtures/arcane-gallery-visual.html'
+      - 'features/material/arcane-gallery-kit.css'
+      - 'features/material/arcane-morph-markup.js'
+      - 'features/material/arcane-gallery-aspect.js'
+      - 'tests/arcane-morph-art-assets.test.js'
       - '.github/workflows/arcane-gallery-visual.yml'
   workflow_dispatch:
 
