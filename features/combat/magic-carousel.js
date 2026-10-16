@@ -131,6 +131,7 @@ function combatSpellCarouselHtml(actor,action){
  const cycles=repeats%2===0?repeats+1:repeats;
  const middleStart=Math.floor(cycles/2)*items.length;
  const nameOnPlaque=combatMagicCarouselTags(items[focus]).name;
+ const linkOverlays=Array.from({length:4},()=>'<span class="combat-cryptex-link"></span>').join('');
  const tiles=Array.from({length:items.length*cycles},(_,i)=>{
   const spell=items[i%items.length],spellKey=combatSpellKey(spell),active=chosen===spellKey;
   const classification=combatMagicCarouselTags(spell);
@@ -160,6 +161,7 @@ function combatSpellCarouselHtml(actor,action){
      '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
     '</div>'+
     '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.207" alt="" aria-hidden="true" draggable="false">'+
+    '<div class="combat-cryptex-link-layer" aria-hidden="true">'+linkOverlays+'</div>'+
     '<span class="combat-cryptex-nameplate" aria-live="polite" title="'+escAttr(nameOnPlaque)+'">'+
      '<span class="combat-cryptex-nameplate-text">'+escAttr(nameOnPlaque)+'</span></span>'+ 
     '<button type="button" class="combat-cryptex-end-button combat-cryptex-end-button--prev"'+
@@ -209,6 +211,7 @@ function combatBindSpellCarousel(root){
  const track=viewport?.querySelector('.combat-magic-carousel-track');
  const container=viewport?.closest('.combat-magic-carousel');
  if(!viewport||!track||!container)return;
+ const linkLayer=container.querySelector('.combat-cryptex-link-layer');
  const nameplate=container.querySelector('.combat-cryptex-nameplate');
  let nameplateText=nameplate?.querySelector('.combat-cryptex-nameplate-text');
  const actorId=String(container.dataset.actorId);
@@ -251,6 +254,26 @@ function combatBindSpellCarousel(root){
   while(position<low)position+=count;
   while(position>=high)position-=count;
  }
+ function updateLinks(){
+  if(!linkLayer)return;
+  const box=linkLayer.getBoundingClientRect(),pivot=Math.round(position);
+  for(let j=0;j<linkLayer.children.length;j++){
+   const link=linkLayer.children[j];
+   const from=track.children[pivot+j-2],to=track.children[pivot+j-1];
+   if(!from||!to){link.style.display='none';continue}
+   const leftRect=from.getBoundingClientRect(),rightRect=to.getBoundingClientRect();
+   const leftEdge=leftRect.right,rightEdge=rightRect.left,gapWidth=rightEdge-leftEdge;
+   if(gapWidth<=2||rightEdge<=box.left||leftEdge>=box.right){
+    link.style.display='none';continue;
+   }
+   // Use the visually transformed 3D edges; preserve the PNG aspect ratio.
+   const cy=(leftRect.top+leftRect.bottom+rightRect.top+rightRect.bottom)/4;
+   link.style.left=(leftEdge-box.left).toFixed(2)+'px';
+   link.style.width=gapWidth.toFixed(2)+'px';
+   link.style.top=(cy-box.top).toFixed(2)+'px';
+   link.style.display='block';
+  }
+ }
  function sync(){
   if(!live())return;
   normalize();
@@ -280,6 +303,7 @@ function combatBindSpellCarousel(root){
     tile.style.opacity=String(1-Math.min(1,Math.abs(distance))*.20);
    }
   }
+  updateLinks();
   const shown=track.children[center]?.querySelector('.combat-carousel-spell-label')?.textContent||'';
   if(nameplateText&&nameplateText.textContent!==shown){
    // Replace the inner span so every newly focused spell starts at its first letter.

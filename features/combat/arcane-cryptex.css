@@ -59,9 +59,13 @@
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track{
  position:relative;top:-3.1%;z-index:1;padding:0;margin:0;
+ /* Match JS tile pitch and keep all copies in one continuous row. */
+ display:flex;flex-wrap:nowrap;align-items:center;
+ width:max-content;gap:var(--combat-carousel-gap,0px);
  transform-style:preserve-3d;backface-visibility:hidden;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile{
+ flex:0 0 var(--combat-carousel-tile-width,80px);
  width:var(--combat-carousel-tile-width,80px);
  height:var(--combat-carousel-tile-width,80px);
  max-height:none;min-height:0;aspect-ratio:1/1;
@@ -70,14 +74,17 @@
  border:0;border-radius:8px;overflow:visible;
  transform-origin:50% 50%;transition:none!important;
 }
-/* One tall 3:2 bronze connector per icon gap, replacing the former twin links.
-   It moves with the spell tile; the three-window mask, housing and inertia stay put. */
-#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::before{
- content:"";position:absolute;inset:auto;z-index:0;pointer-events:none;
- left:110%;top:50%;width:90%;height:60%;
- transform:translate(-50%,-50%);
+/* Position complete 3:2 links BETWEEN the rendered icon edges.
+   Separate overlay is deliberately outside the masked tablet viewport,
+   so that the metal emblem can actually be seen between the windows. */
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link-layer{
+ position:absolute;inset:0;z-index:7;overflow:hidden;pointer-events:none;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link{
+ position:absolute;display:none;transform:translateY(-50%);
+ height:auto;aspect-ratio:3/2;
  background:url("./arcane-mechanism-link.webp?v=0.35.224") center/100% 100% no-repeat;
- box-shadow:none;filter:none;border:0;border-radius:0;
+ box-shadow:none;filter:none;border:0;border-radius:0;pointer-events:none;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
  filter:brightness(1.08);
