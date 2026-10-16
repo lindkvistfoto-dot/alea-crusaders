@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame,resetArcaneFrame,arcaneKitFrameHeight} from '../features/material/arcane-gallery-aspect.js';
+import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,arcaneExtensionProgress,sizeArcaneFrame,resetArcaneFrame,arcaneKitFrameHeight} from '../features/material/arcane-gallery-aspect.js';
 describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  const w=390,vh=820;
  it('height increases from panorama through square to vertical portrait',()=>{
@@ -32,6 +32,14 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   expect(arcaneGearRotation(0,w)).toBe(0);
   expect(arcaneGearRotation(10_000,w)).toBe(540);
  });
+ it('synchronizes genuine piston artwork with the gears and clamps extension',()=>{
+  expect(arcaneExtensionProgress(0,390)).toBe(0);
+  expect(arcaneExtensionProgress(10_000,390)).toBe(1);
+  const closed=arcaneExtensionProgress(arcaneKitFrameHeight(390,1920,1080,820),390);
+  const extended=arcaneExtensionProgress(arcaneKitFrameHeight(390,1080,1920,820),390);
+  expect(extended).toBeGreaterThan(closed);
+  expect(arcaneGearRotation(673,390)).toBe(Math.round(arcaneExtensionProgress(673,390)*540));
+ });
  it('can reset geometry when the campaign or private preview is cleared',()=>{
   const deleted=[],classes=[];
   const machine={style:{removeProperty:key=>deleted.push(key)}};
@@ -39,7 +47,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
    querySelector:key=>key==='.arcane-gallery-machine'?machine:null,
    classList:{remove:cls=>classes.push(cls)}
   });
-  expect(deleted).toEqual(['--arcane-frame-height','--arcane-gear-angle']);
+  expect(deleted).toEqual(['--arcane-frame-height','--arcane-gear-angle','--arcane-extension']);
   expect(classes).toEqual(['arcane-gallery-fluid']);
   expect(()=>resetArcaneFrame(null)).not.toThrow();
  });
@@ -74,7 +82,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   };
   const actual=sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},vh);
   expect(actual).toBe(731);
-  expect(writes).toEqual([['--arcane-frame-height','731px'],['--arcane-gear-angle',arcaneGearRotation(731,w)+'deg']]);
+  expect(writes).toEqual([['--arcane-frame-height','731px'],['--arcane-gear-angle',arcaneGearRotation(731,w)+'deg'],['--arcane-extension',arcaneExtensionProgress(731,w).toFixed(3)]]);
   expect(classes).toEqual(['arcane-gallery-fluid']);
  });
 });
