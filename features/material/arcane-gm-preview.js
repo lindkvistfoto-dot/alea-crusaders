@@ -2,6 +2,7 @@
  * This component NEVER writes presentations. Only Frodo's explicit RPC does.
  * All media are read through Legolas' authenticated, campaign-scoped Storage.
  */
+import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
 const buckets=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -32,7 +33,7 @@ export function createArcaneGmPreview({
   '<div id="arcaneGmPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Förhandsvisa vald bild i helskärm">'+
   '<img id="arcaneGmImage" class="hidden" alt=""><span id="arcaneGmEmpty">Välj en bild i arkivet nedan…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGmStrip" class="arcane-gallery-strip" aria-label="Privata bilder i spelarvisningskön"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.238" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true"></div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan förberedda bilder">'+
   '<button type="button" id="arcaneGmPrev" aria-label="Föregående förberedd bild">‹</button>'+
   '<p id="arcaneGmStatus" class="arcane-gallery-status" role="status" aria-live="polite">Inget material är valt</p>'+
@@ -47,7 +48,7 @@ export function createArcaneGmPreview({
   state.mainSeq++;
   if(state.mainUrl)win().URL.revokeObjectURL(state.mainUrl);
   state.mainUrl='';state.loadingId='';
-  const img=$('arcaneGmImage');if(img){img.classList.add('hidden');img.removeAttribute('src');}
+  const img=$('arcaneGmImage');if(img){img.onload=null;img.classList.add('hidden');img.removeAttribute('src');}
  }
  function releaseThumbs(){
   state.thumbSeq++;state.observer?.disconnect();state.observer=null;
@@ -56,7 +57,7 @@ export function createArcaneGmPreview({
  }
  function clear(){
   releaseMain();releaseThumbs();state.scope='';state.rows=[];state.selected='';
-  state.live='';state.signature='';state.queue.clear();root.classList.add('hidden');
+  state.live='';state.signature='';state.queue.clear();root.classList.remove('arcane-gallery-fluid');root.classList.add('hidden');
   const strip=$('arcaneGmStrip');if(strip){strip.replaceChildren();strip.dataset.signature='';}
  }
  function current(id){return state.rows.find(r=>r.id===id);}
@@ -126,7 +127,13 @@ export function createArcaneGmPreview({
    const blob=await legolas.readMedia(row,false);
    if(seq!==state.mainSeq||scope!==state.scope||!authorized()||state.selected!==id)return;
    state.mainUrl=win().URL.createObjectURL(blob);state.loadingId='';
-   const img=$('arcaneGmImage');img.src=state.mainUrl;img.alt=row.title||'Förhandsvisning';img.classList.remove('hidden');
+   const img=$('arcaneGmImage');
+   img.onload=()=>{
+    if(seq===state.mainSeq&&scope===state.scope&&authorized()&&state.selected===id)
+     sizeArcaneFrame(root,img,win().innerHeight);
+   };
+   img.src=state.mainUrl;img.alt=row.title||'Förhandsvisning';img.classList.remove('hidden');
+   if(img.complete&&img.naturalWidth)img.onload();
    $('arcaneGmEmpty').classList.add('hidden');
   }catch(_){
    if(seq===state.mainSeq&&scope===state.scope&&authorized()){
@@ -164,6 +171,11 @@ export function createArcaneGmPreview({
   else legolas.previewMaterial(current(state.selected));
  }
  function mount(){
+  win().addEventListener?.('resize',()=>{
+   const img=$('arcaneGmImage');
+   if(authorized()&&state.mainUrl&&img)
+    sizeArcaneFrame(root,img,win().innerHeight);
+  });
   $('arcaneGmClose').addEventListener('click',onClose);
   $('arcaneGmPicture').addEventListener('click',openFull);
   $('arcaneGmPicture').addEventListener('keydown',e=>{

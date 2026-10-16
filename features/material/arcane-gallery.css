@@ -29,3 +29,35 @@
 @keyframes arcane-gallery-appear{from{opacity:.3}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.arcane-gallery-picture img{animation:none}}
 @media(max-width:720px){#legolasPanel .arcane-gallery{width:calc(100% + 18px);margin-left:-9px;margin-right:-9px}.arcane-gallery-tile{padding:1px}}
+
+
+/* v0.35.239: content-driven springless, smooth bronze frame.
+   The image's true proportions determine the height; it is never stretched. */
+#legolasPanel .arcane-gallery-fluid{
+ container-type:inline-size;
+}
+#legolasPanel .arcane-gallery-fluid .arcane-gallery-machine{
+ aspect-ratio:auto;
+ height:var(--arcane-frame-height,66.6667cqw);
+ transition:height 460ms cubic-bezier(.22,1,.36,1);
+}
+#legolasPanel .arcane-gallery-fluid .arcane-gallery-overlay{display:none!important}
+#legolasPanel .arcane-gallery-fluid .arcane-gallery-machine::after{
+ content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+ border-style:solid;border-width:1px 0;
+ border-image-source:url("./arcane-gallery-overlay.webp?v=0.35.239");
+ border-image-slice:230 0 215 0 fill;
+ border-image-width:19.965cqw 0 18.663cqw 0;
+ border-image-repeat:stretch;
+}
+#legolasPanel .arcane-gallery-fluid .arcane-gallery-picture{
+ left:12.6%;top:6.73cqw;width:74.8%;
+ height:calc(80.495% - 17.86cqw);
+}
+#legolasPanel .arcane-gallery-fluid .arcane-gallery-belt{
+ left:16.6%;top:calc(100% - 15.94cqw);
+ width:66.7%;height:8.8cqw;
+}
+@media(prefers-reduced-motion:reduce){
+ #legolasPanel .arcane-gallery-fluid .arcane-gallery-machine{transition:none}
+}

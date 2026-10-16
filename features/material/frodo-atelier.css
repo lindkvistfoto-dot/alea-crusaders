@@ -382,3 +382,19 @@
   margin:4px 8px 8px;
  }
 }
+
+
+/* v0.35.239: the selected image ratio overrides the empty-state full-height
+   viewer. Sizing is calculated from the transparent picture aperture in JS. */
+@media(max-width:720px){
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery.arcane-gallery-fluid .arcane-gallery-machine{
+  height:var(--arcane-frame-height)!important;
+  min-height:0!important;max-height:none!important;
+  transition:height 460ms cubic-bezier(.22,1,.36,1);
+ }
+ @media(prefers-reduced-motion:reduce){
+  #legolasPanel.legolas-atelier-gm .arcane-gm-gallery.arcane-gallery-fluid .arcane-gallery-machine{
+   transition:none;
+  }
+ }
+}

@@ -1,4 +1,5 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
+import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
 const cols='id,campaign_id,title,description,category,asset_kind,storage_bucket,storage_path,thumbnail_path,mime_type,created_at';
 const encode=encodeURIComponent;
 const safe=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,7 +20,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   '<div class="arcane-gallery-machine"><div id="arcaneGalleryPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Öppna bild i stor vy">'+
   '<img id="arcaneGalleryImage" class="hidden" alt=""><span id="arcaneGalleryEmpty">Väntar på bilder från spelledaren…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGalleryStrip" class="arcane-gallery-strip" aria-label="Bläddra bland bilder"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.238" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true"></div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan delade bilder">'+
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>'+
@@ -32,11 +33,11 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(state.original)win().URL.revokeObjectURL(state.original);
   state.original='';
   const img=$('arcaneGalleryImage');
-  if(img){img.removeAttribute('src');img.classList.add('hidden');}
+  if(img){img.onload=null;img.removeAttribute('src');img.classList.add('hidden');}
  }
  function release(){releaseMain();state.thumbGeneration++;state.loadingThumbs.clear();
   for(const u of state.thumbs.values())win().URL.revokeObjectURL(u);state.thumbs.clear();state.observer?.disconnect();state.observer=null;}
- function clear(){state.seq++;release();state.campaign='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';root.classList.add('hidden');
+ function clear(){state.seq++;release();state.campaign='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';root.classList.remove('arcane-gallery-fluid');root.classList.add('hidden');
   const strip=$('arcaneGalleryStrip');if(strip){strip.replaceChildren();strip.dataset.ids='';}}
  const valid=(n,c)=>n===state.seq&&scope()===c&&allowed();
  async function thumb(row,c){
@@ -100,7 +101,13 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   $('arcaneGalleryEmpty').classList.remove('hidden');
   try{const blob=await legolas.readMedia(row,false);
    if(n!==state.media||c!==scope()||state.selected!==id||!allowed())return;
-   state.original=win().URL.createObjectURL(blob);img.src=state.original;img.alt=row.title;img.classList.remove('hidden');
+   state.original=win().URL.createObjectURL(blob);
+   img.onload=()=>{
+    if(n===state.media&&c===scope()&&state.selected===id&&allowed())
+     sizeArcaneFrame(root,img,win().innerHeight);
+   };
+   img.src=state.original;img.alt=row.title;img.classList.remove('hidden');
+   if(img.complete&&img.naturalWidth)img.onload();
    $('arcaneGalleryEmpty').classList.add('hidden');
   }catch(_){if(n===state.media&&allowed()&&c===scope()){
    $('arcaneGalleryEmpty').textContent='Bilden kunde inte läsas.';
@@ -154,6 +161,11 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   void select(next.id);return true;
  }
  function mount(){
+  win().addEventListener?.('resize',()=>{
+   const img=$('arcaneGalleryImage');
+   if(allowed()&&state.original&&img)
+    sizeArcaneFrame(root,img,win().innerHeight);
+  });
   root.querySelector('#arcaneGalleryPicture').addEventListener('click',openFull);
   root.querySelector('#arcaneGalleryPicture').addEventListener('keydown',e=>{
    if(e.key==='Enter'||e.key===' '){e.preventDefault();openFull();}
