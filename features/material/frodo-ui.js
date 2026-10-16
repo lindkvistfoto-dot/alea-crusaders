@@ -1,6 +1,7 @@
 /* Frodo v0.34.85 — explicit show-now control for Legolas and Bilbo. */
 import {createFrodo} from './presentation.js?v=0.34.85';
 import {createLivePreview} from './live-preview.js?v=0.35.21';
+import {createArcaneGallery} from './arcane-gallery.js?v=0.35.233';
 // Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountFrodo({
@@ -9,6 +10,7 @@ export function mountFrodo({
  doc=()=>document,win=()=>window
 }){
  const el=id=>doc().getElementById(id);
+ const gallery=createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM,doc,win});
  const scope=()=>String(getCampaign()||'');
  const authenticated=()=>Boolean(isLoggedIn()&&scope());
  let liveId=null,initialized=false,queuedStatus='',queuedError=false;
@@ -118,7 +120,7 @@ export function mountFrodo({
   onPresentation:row=>{
    if(isGM())return;
    liveId=row.id;
-   legolas.previewMaterial(row);
+   legolas.openPanel();
    if(legolas.state.panelOpen)void legolas.loadPage();
   },
   onCleared:()=>{
@@ -166,6 +168,7 @@ export function mountFrodo({
   el('frodoPlayerActions').classList.toggle('hidden',gm);
   const notice=el('frodoNotice');
   if(notice){notice.textContent=queuedStatus;notice.classList.toggle('is-error',queuedError);}
+  gallery.sync(state.row,state.revision);
   const rows=selection(),idx=rows.findIndex(x=>x.id===state.materialId);
   renderQueue(rows,gm);
   for(const [id,disabled] of [
@@ -246,6 +249,7 @@ export function mountFrodo({
     '<button type="button" id="frodoRefresh">↻ Uppdatera</button></div>'+
    '<p id="frodoNotice" aria-live="polite" role="status"></p>';
   target.insertAdjacentElement('beforebegin',panel);
+  el('frodoPlayerActions').insertAdjacentElement('beforebegin',gallery.mount());
   const help=el('legolasGmQueue')?.querySelector('p');
   if(help)help.textContent='Välj bilder med + Välj. Visa första valda ovan delar bara den aktuella bilden med deltagarna.';
   el('frodoCloseMobile').addEventListener('click',()=>el('legolasClosePanel')?.click());
@@ -268,7 +272,7 @@ export function mountFrodo({
   el('frodoNext').addEventListener('click',()=>step(1));
   el('frodoStop').addEventListener('click',()=>frodo.stop());
   el('frodoOpenCurrent').addEventListener('click',()=>{
-   if(!isGM()&&frodo.state.row)legolas.previewMaterial(frodo.state.row);
+   if(!isGM()&&frodo.state.row)el('arcaneGallery')?.scrollIntoView({behavior:'smooth',block:'center'});
   });
   el('frodoRefresh').addEventListener('click',()=>refresh());
   el('materialNavBtn')?.addEventListener('click',()=>{void refresh();});
@@ -284,7 +288,7 @@ export function mountFrodo({
   const login=el('loginScreen');
   if(login&&typeof MutationObserver!=='undefined'){
    new MutationObserver(()=>{
-    if(!login.classList.contains('hidden')){frodo.reset();preview.clear();clearQueueImages();queueSignature='';stagedId='';liveId=null;queuedStatus='';}
+    if(!login.classList.contains('hidden')){gallery.clear();frodo.reset();preview.clear();clearQueueImages();queueSignature='';stagedId='';liveId=null;queuedStatus='';}
     else if(canWatch())void frodo.refresh({autoOpen:true,silent:true});
    }).observe(login,{attributes:true,attributeFilter:['class']});
   }
