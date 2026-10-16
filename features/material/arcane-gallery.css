@@ -1,0 +1,24 @@
+/* Arcane Gallery: actual transparent HERMES art, not a CSS redraw. */
+#legolasPanel .arcane-gallery{width:min(100%,1150px);margin:12px auto 16px;color:#e7ce9d}
+#legolasPanel .arcane-gallery.hidden{display:none!important}
+.arcane-gallery-heading{display:flex!important;justify-content:space-between;align-items:center;gap:10px;padding:0 6%!important;background:none!important;box-shadow:none!important}
+.arcane-gallery-heading strong{font:700 clamp(12px,2vw,18px) Georgia,serif;letter-spacing:.13em}
+.arcane-gallery-heading span,.arcane-gallery-status{font:12px system-ui,sans-serif;color:#d2bb92}
+.arcane-gallery-machine{position:relative;width:100%;aspect-ratio:3/2;isolation:isolate}
+.arcane-gallery-picture{position:absolute;left:12.6%;top:10.1%;width:74.8%;height:53.7%;z-index:1;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse,#26211d,#080a09);cursor:zoom-in}
+.arcane-gallery-picture:focus-visible{outline:3px solid #ffe1a3;outline-offset:-3px}
+.arcane-gallery-picture img{width:100%;height:100%;object-fit:contain;animation:arcane-gallery-appear .24s ease}
+.arcane-gallery-picture .hidden{display:none!important}
+#arcaneGalleryEmpty{max-width:80%;text-align:center;color:#d9c69e;font:clamp(10px,1.5vw,16px) Georgia,serif}
+.arcane-gallery-overlay{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.arcane-gallery-belt{position:absolute;left:17.8%;top:76.1%;width:64.6%;height:13.2%;z-index:2;overflow:hidden;background:#100e0b}
+.arcane-gallery-strip{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x proximity;overscroll-behavior-x:contain;touch-action:pan-x;cursor:grab}
+.arcane-gallery-strip::-webkit-scrollbar{display:none}
+.arcane-gallery-tile{position:relative;flex:0 0 20%;height:100%;padding:3px;min-width:0;overflow:hidden;border:0;background:linear-gradient(120deg,#322619,#0e0d0c);color:#d5ad70;cursor:pointer;scroll-snap-align:center}
+.arcane-gallery-tile img{width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none}
+.arcane-gallery-tile.is-active:after{content:"";position:absolute;inset:3px;border:2px solid #ffe2a4;box-shadow:inset 0 0 10px #ffce62,0 0 7px #ffd27b;pointer-events:none}
+.arcane-gallery-tile:focus-visible{outline:3px solid #fadd98;outline-offset:-3px}
+.arcane-gallery-status{text-align:center;margin:0;min-height:17px}
+@keyframes arcane-gallery-appear{from{opacity:.3}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.arcane-gallery-picture img{animation:none}}
+@media(max-width:720px){#legolasPanel .arcane-gallery{width:calc(100% + 18px);margin-left:-9px;margin-right:-9px}.arcane-gallery-tile{padding:1px}}
