@@ -78,7 +78,7 @@
    Separate overlay is deliberately outside the masked tablet viewport,
    so that the metal emblem can actually be seen between the windows. */
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link-layer{
- position:absolute;inset:0;z-index:7;overflow:hidden;pointer-events:none;
+ position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link{
  position:absolute;display:none;transform:translateY(-50%);
