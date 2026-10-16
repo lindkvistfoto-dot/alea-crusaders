@@ -36,14 +36,18 @@ export function resetArcaneFrame(root){
  const machine=root?.querySelector?.('.arcane-gallery-machine');
  machine?.style?.removeProperty?.('--arcane-frame-height');
  machine?.style?.removeProperty?.('--arcane-gear-angle');
+ machine?.style?.removeProperty?.('--arcane-extension');
  root?.classList?.remove?.('arcane-gallery-fluid');
+}
+/** Position of the rigid-art actuator between retracted and extended states. */
+export function arcaneExtensionProgress(frameHeight,frameWidth){
+ const h=Number(frameHeight),w=Number(frameWidth);
+ if(!Number.isFinite(h)||!Number.isFinite(w)||h<=0||w<=0)return 0;
+ return Math.max(0,Math.min(1,(h/w-.72)/(1.95-.72)));
 }
 /** Rotation is derived from extension, never a timer: gears and frame stop together. */
 export function arcaneGearRotation(frameHeight,frameWidth){
- const h=Number(frameHeight),w=Number(frameWidth);
- if(!Number.isFinite(h)||!Number.isFinite(w)||h<=0||w<=0)return 0;
- const p=Math.max(0,Math.min(1,(h/w-.72)/(1.95-.72)));
- return Math.round(p*540);
+ return Math.round(arcaneExtensionProgress(frameHeight,frameWidth)*540);
 }
 export function sizeArcaneFrame(root,media,viewportHeight=0){
  const dimensions=arcaneMediaDimensions(media);
@@ -54,6 +58,7 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
  machine.style.setProperty('--arcane-gear-angle',arcaneGearRotation(target,width)+'deg');
+ machine.style.setProperty('--arcane-extension',arcaneExtensionProgress(target,width).toFixed(3));
  root.classList.add('arcane-gallery-fluid');
  return target;
 }
