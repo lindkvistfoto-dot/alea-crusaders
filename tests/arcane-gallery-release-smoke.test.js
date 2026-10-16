@@ -74,7 +74,7 @@ describe('Arcane Gallery release smoke',()=>{
   await Promise.resolve();
   expect(h.gallery.state.rows.map(x=>x.id)).toEqual([row.id]);
   expect(h.requests.every(p=>p.includes('campaign_id=eq.'+campaign))).toBe(true);
-  expect(h.requests.every(p=>p.startsWith('campaign_material_'))).toBe(true);
+  expect(h.requests.every(p=>p.startsWith('campaign_materials?')||p.startsWith('campaign_material_presentation_history?'))).toBe(true);
   expect(h.reads.every(r=>r.id===row.id)).toBe(true);
  });
  it('never loads private history for a GM or unauthenticated user',()=>{
