@@ -108,6 +108,13 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
             if target_key == "arcane-mechanism-link":
                 if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
                     raise ValueError("UI_LINK_REQUIRES_TRUE_ALPHA")
+            elif target_key == "arcane-gallery-overlay":
+                # The approved overlay can arrive as an RGBA PNG with genuine
+                # transparency. The immutable original stays untouched.
+                if image.mode not in ("RGB", "RGBA") or (
+                    image.mode == "RGBA" and image.getchannel("A").getextrema()[1] == 0
+                ):
+                    raise ValueError("UI_GALLERY_SOURCE_INVALID")
             elif image.mode not in ("RGB", "RGBA") or (
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
