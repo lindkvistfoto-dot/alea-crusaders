@@ -134,6 +134,9 @@ export function mountFrodo({
   if(!card)return;
   const state=frodo.state,gm=Boolean(isGM()),row=state.row;
   card.classList.toggle('frodo-is-gm',gm);
+  const heading=el('frodoPanelTitle'),subtitle=el('frodoPanelSubtitle');
+  if(heading)heading.textContent=gm?'Presentationsateljén':'Aktuell visning';
+  if(subtitle)subtitle.textContent=gm?'Spelledarens kontrollpanel':'Delad av spelledaren';
   card.classList.toggle('frodo-is-active',Boolean(state.materialId));
   const current=el('frodoCurrent');
   if(current)current.textContent=!state.loaded?'Hämtar aktuell visning…':
@@ -209,7 +212,8 @@ export function mountFrodo({
   panel.innerHTML=
    '<div class="frodo-panel-heading"><div class="frodo-heading-copy">'+
     '<span class="frodo-eyebrow">ALEA CRUSADERS · BILDPRESENTATION</span>'+
-    '<strong>Presentationsateljén</strong><small>Spelledarens kontrollpanel</small></div>'+
+    '<strong id="frodoPanelTitle">Presentationsateljén</strong>'+ 
+    '<small id="frodoPanelSubtitle">Spelledarens kontrollpanel</small></div>'+
     '<span class="frodo-live-chip" id="frodoLiveStatus">☾ Viloläge</span>'+
     '<span id="frodoCurrent" role="status" aria-live="polite">Hämtar aktuell visning…</span></div>'+
    '<div id="frodoGmPreview" class="frodo-gm-preview hidden" aria-label="Bild som visas för spelarna">'+
