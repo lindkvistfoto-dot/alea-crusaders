@@ -50,12 +50,18 @@ jobs:
           GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           HERMES3_REQUEST: ${{ inputs.request_path }}
         run: python scripts/hermes3_drive_verify.py "$HERMES3_REQUEST" "$RUNNER_TEMP/hermes3-verified"
-      - name: Store seven-day verified source for staging review
+      - name: Prepare lossless WebP sprites / reviewable staging assets
+        env:
+          HERMES3_REQUEST: ${{ inputs.request_path }}
+        run: python -m scripts.hermes3_stage "$HERMES3_REQUEST" "$RUNNER_TEMP/hermes3-verified" "$RUNNER_TEMP/hermes3-staging"
+      - name: Store verified original and staging previews for seven days
         uses: actions/upload-artifact@v4
         with:
           name: hermes3-verified-${{ github.run_id }}
-          path: ${{ runner.temp }}/hermes3-verified/
+          path: |
+            ${{ runner.temp }}/hermes3-verified/
+            ${{ runner.temp }}/hermes3-staging/
           retention-days: 7
           if-no-files-found: error
       - name: Receipt (no release)
-        run: echo '### HERMES 3 — source verified. No staging promotion, production deployment or Supabase update.' >> "$GITHUB_STEP_SUMMARY"
+        run: echo '### HERMES 3 — original verified and review sprites staged. No production deployment or Supabase update.' >> "$GITHUB_STEP_SUMMARY"
