@@ -41,6 +41,7 @@ export function validateHermes3Files(root,args){
  const files=args.length===1&&args[0]==='--all'
  ?fs.readdirSync(path.join(root,'hermes3/requests')).filter(f=>f.endsWith('.json')).map(f=>'hermes3/requests/'+f)
  :args;
+ if(!files.length&&args.length===1&&args[0]==='--all')return [];
  if(!files.length)fail('MISSING_FILES');
  return files.map(name=>{
   const full=fileInRequests(root,name);
@@ -51,6 +52,7 @@ export function validateHermes3Files(root,args){
 if(process.argv[1]&&fileURLToPath(import.meta.url)===path.resolve(process.argv[1])){
  try{
   const rows=validateHermes3Files(process.cwd(),process.argv.slice(2));
+  if(!rows.length)console.log('HERMES3_NO_ACTIVE_REQUESTS');
   rows.forEach(row=>console.log('HERMES3_POLICY_OK',row.name,row.profile,row.sha256));
  }catch(error){console.error(error.message);process.exitCode=1;}
 }
