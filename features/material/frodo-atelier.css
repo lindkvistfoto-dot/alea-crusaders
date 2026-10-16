@@ -1,0 +1,196 @@
+/* Alea Crusaders · Presentationsateljén
+   Mobile-first skin for the existing Frodo GM workflow.
+   Real images remain private, and only explicit server RPC actions publish them. */
+#legolasPanel .frodo-panel .frodo-live-chip{
+ display:none;align-items:center;white-space:nowrap;gap:7px;
+ border:1px solid #98784a;border-radius:999px;padding:8px 12px;
+ color:#e9d1a5;background:#12221d;font:700 12px Georgia,serif;
+}
+#legolasPanel .frodo-panel .frodo-live-chip.is-live{
+ border-color:#b86d51;background:#4d231b;color:#fff0d9;
+ box-shadow:0 0 15px #f2753633;
+}
+#legolasPanel .frodo-panel .frodo-heading-copy small{display:none}
+#legolasPanel .frodo-panel .frodo-queue-view{
+ margin:14px 0 0;border:1px solid #8b724b88;border-radius:12px;
+ padding:12px;background:linear-gradient(150deg,#142019,#181a15);
+}
+#legolasPanel .frodo-panel .frodo-queue-view.hidden{display:none!important}
+#legolasPanel .frodo-panel .frodo-queue-heading{
+ display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+ margin-bottom:11px;color:#f1d6a7;
+}
+#legolasPanel .frodo-panel .frodo-queue-heading strong{font:700 16px Georgia,serif}
+#legolasPanel .frodo-panel .frodo-queue-heading>span{font:600 11px system-ui,sans-serif;color:#bbaa8e}
+#legolasPanel .frodo-panel .frodo-queue-strip{
+ display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;
+ scroll-snap-type:x proximity;scrollbar-color:#7e6342 transparent;padding:3px 2px 9px;
+}
+#legolasPanel .frodo-panel .frodo-queue-strip button{
+ cursor:pointer;scroll-snap-align:start;flex:0 0 110px;min-width:0;
+ padding:0;color:#f6dfb8;border:1px solid #84643b;
+ border-radius:9px;overflow:hidden;background:#17211b;
+ box-shadow:0 4px 12px #0005;font:600 12px/1.25 system-ui,sans-serif;
+}
+#legolasPanel .frodo-panel .frodo-queue-strip button:focus-visible{
+ outline:3px solid #f9d791;outline-offset:2px;
+}
+#legolasPanel .frodo-panel .frodo-queue-add{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+ min-height:104px;border-style:dashed!important;background:#272014!important;
+}
+#legolasPanel .frodo-panel .frodo-queue-add>span{font:300 34px/1 Georgia,serif;color:#d7b577}
+#legolasPanel .frodo-panel .frodo-queue-add small{font-size:11px;line-height:1.3}
+#legolasPanel .frodo-panel .frodo-queue-tile{position:relative;display:block;text-align:left}
+#legolasPanel .frodo-panel .frodo-queue-tile.is-selected{
+ border-color:#f1c982;box-shadow:0 0 0 2px #e4b765,0 0 12px #e9b45f70;
+}
+#legolasPanel .frodo-panel .frodo-queue-art{
+ height:76px;display:grid;place-items:center;overflow:hidden;
+ background:radial-gradient(circle at 50% 40%,#36463b,#0e1814 78%);
+ color:#a99167;font-size:25px;
+}
+#legolasPanel .frodo-panel .frodo-queue-art img{display:block;width:100%;height:100%;object-fit:cover}
+#legolasPanel .frodo-panel .frodo-queue-title{
+ display:block;min-height:28px;padding:5px 6px;
+ white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:10px;
+}
+#legolasPanel .frodo-panel .frodo-queue-number{
+ position:absolute;top:4px;left:4px;padding:1px 5px;border-radius:4px;
+ font:700 10px system-ui,sans-serif;color:#f8deb2;background:#121714e8;
+}
+#legolasPanel .frodo-panel .frodo-queue-overflow{
+ align-self:center;flex:0 0 auto;color:#dfc39a;font-size:12px;
+}
+#legolasPanel .frodo-panel .frodo-queue-hint{
+ margin:7px 2px 0;color:#c4b195;font:12px/1.5 system-ui,sans-serif;
+}
+#legolasPanel .frodo-panel .frodo-scene-strip,
+#legolasPanel .frodo-panel .frodo-sound-note{display:none}
+@media(max-width:720px){
+ #legolasPanel .frodo-panel{
+  --frodo-gold:#d1a769;--frodo-ivory:#f8e4bd;
+  margin:0 0 16px;padding:14px 12px 12px;
+  border:1px solid #b18c53;border-radius:14px;
+  color:var(--frodo-ivory);
+  background:radial-gradient(ellipse at 60% 0,#3c49344d,transparent 58%),
+   linear-gradient(160deg,#11221b,#101813 67%,#10130f);
+  box-shadow:inset 0 1px #e4ba6e3d,0 12px 26px #0007;
+ }
+ #legolasPanel .frodo-panel.frodo-is-active{
+  background:radial-gradient(ellipse at 70% 0,#37604566,transparent 52%),linear-gradient(150deg,#11251d,#101a15);
+  border-color:#c4a66c;
+ }
+ #legolasPanel .frodo-panel .frodo-panel-heading{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;
+  gap:8px;margin:0 0 12px;
+ }
+ #legolasPanel .frodo-panel .frodo-heading-copy{min-width:0}
+ #legolasPanel .frodo-panel .frodo-eyebrow{font:700 9px/1.5 system-ui,sans-serif;letter-spacing:.16em;color:#bb9c6a}
+ #legolasPanel .frodo-panel .frodo-heading-copy strong{
+  margin:4px 0 2px;font:700 clamp(21px,6vw,30px)/1.1 Georgia,serif;
+  color:#f7dca9;overflow-wrap:break-word;
+ }
+ #legolasPanel .frodo-panel .frodo-heading-copy small{
+  display:block;color:#c3b092;font:12px/1.35 Georgia,serif;
+ }
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-live-chip{display:inline-flex}
+ #legolasPanel .frodo-panel.frodo-is-gm #frodoCurrent{
+  position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+ }
+ #legolasPanel .frodo-panel .frodo-gm-preview{
+  margin:0;padding:9px;border:1px solid #aa814d;border-radius:12px;
+  background:linear-gradient(#12201b,#0e1813);
+  box-shadow:inset 0 0 0 1px #0008,0 5px 18px #0005;
+ }
+ #legolasPanel .frodo-panel .frodo-gm-preview-top{margin:0 1px 9px;gap:6px}
+ #legolasPanel .frodo-panel .frodo-gm-preview-top span{color:#e8cd99;letter-spacing:.1em;font-size:10px}
+ #legolasPanel .frodo-panel .frodo-gm-preview-top button{
+  border-radius:7px;min-height:34px;padding:6px 9px;
+  border-color:#8e714d;background:#342c20;color:#f1d5aa;font-size:11px;
+ }
+ #legolasPanel .frodo-panel .frodo-gm-preview-stage{
+  position:relative;isolation:isolate;aspect-ratio:16/9;min-height:0;max-height:none;
+  border:1px solid #66523c;border-radius:8px;overflow:hidden;
+  background:radial-gradient(circle at 50% 40%,#25362d 0,#111f19 45%,#060e0d 100%);
+ }
+ #legolasPanel .frodo-panel .frodo-gm-preview-stage:before{
+  content:"✧";position:absolute;z-index:-1;left:50%;top:39%;
+  transform:translate(-50%,-50%);font:68px/1 Georgia,serif;color:#9b80543b;
+  text-shadow:0 0 18px #aa8a4133;pointer-events:none;
+ }
+ #legolasPanel .frodo-panel .frodo-gm-preview-stage:has(#frodoGmImage:not(.hidden)):before{display:none}
+ #legolasPanel .frodo-panel #frodoGmImage{
+  display:block;width:100%;height:100%;max-height:none;object-fit:contain;
+ }
+ #legolasPanel .frodo-panel #frodoGmPreviewStatus{
+  color:#eed9b3;font:600 14px/1.5 Georgia,serif;text-shadow:0 1px 6px #000;
+  margin:0;padding:22px;text-align:center;
+ }
+ #legolasPanel .frodo-panel #frodoGmPreviewCaption{display:none}
+ #legolasPanel .frodo-panel .frodo-scene-strip{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  margin:10px 1px 1px;padding:9px 10px;border:1px solid #91744b80;
+  border-radius:7px;background:linear-gradient(100deg,#26352a,#171e19);
+ }
+ #legolasPanel .frodo-panel .frodo-scene-strip small{
+  display:block;margin-bottom:3px;color:#c5a878;font:700 9px/1.3 system-ui,sans-serif;letter-spacing:.12em;
+ }
+ #legolasPanel .frodo-panel .frodo-scene-strip strong{
+  display:block;font:700 14px/1.35 Georgia,serif;color:#f5dfb7;
+ }
+ #legolasPanel .frodo-panel .frodo-scene-strip>span:last-child{color:#cda771;font-size:13px}
+ #legolasPanel .frodo-panel .frodo-queue-view{
+  margin:13px 0 0;padding:11px 9px 8px;
+  border-color:#ab87526b;background:linear-gradient(150deg,#1c281e,#121a16);
+ }
+ #legolasPanel .frodo-panel .frodo-queue-heading strong{font:700 17px Georgia,serif;color:#edcf95}
+ #legolasPanel .frodo-panel .frodo-queue-hint{font-size:11px;margin-top:3px}
+ #legolasPanel .frodo-panel #frodoGmActions{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0 0;
+ }
+ #legolasPanel .frodo-panel #frodoGmActions.hidden{display:none!important}
+ #legolasPanel .frodo-panel #frodoGmActions button{
+  margin:0;min-width:0;min-height:47px;padding:8px 5px;border-radius:8px;
+  color:#efd5a9;border:1px solid #97764b;
+  background:linear-gradient(#362c22,#211c17);
+  font:700 clamp(11px,3vw,13px)/1.3 Georgia,serif;
+ }
+ #legolasPanel .frodo-panel #frodoGmActions #frodoShowQueue{
+  grid-column:1/-1;min-height:54px;
+  background:linear-gradient(#315946,#173b2d);
+  border:1px solid #c0a66a;color:#ffedc8;
+  box-shadow:inset 0 1px #f4dba544,0 2px 8px #0006;
+  font:700 20px Georgia,serif;
+ }
+ #legolasPanel .frodo-panel #frodoGmActions #frodoStop{
+  border-color:#a4745f;background:linear-gradient(#633b31,#39231e);color:#ffd8c5;
+ }
+ #legolasPanel .frodo-panel #frodoGmActions button:disabled{opacity:.42;cursor:default}
+ #legolasPanel .frodo-panel #frodoGmActions button:focus-visible,
+ #legolasPanel .frodo-panel .frodo-queue-tile:focus-visible{outline:2px solid #f4d99f;outline-offset:2px}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-sound-note{
+  display:block;margin-top:13px;border:1px solid #886f4b;border-radius:9px;
+  background:#15201a;color:#ecd4aa;
+ }
+ #legolasPanel .frodo-panel .frodo-sound-note summary{
+  cursor:pointer;padding:13px 12px;list-style:none;
+  font:700 14px Georgia,serif;
+ }
+ #legolasPanel .frodo-panel .frodo-sound-note summary::-webkit-details-marker{display:none}
+ #legolasPanel .frodo-panel .frodo-sound-note summary span{float:right}
+ #legolasPanel .frodo-panel .frodo-sound-note p{
+  margin:0;padding:0 13px 13px;font:12px/1.5 system-ui,sans-serif;color:#c4b298;
+ }
+ #legolasPanel .frodo-panel #frodoNotice{min-height:0;margin:8px 2px 0}
+}
+@media(max-width:390px){
+ #legolasPanel .frodo-panel{padding:12px 8px}
+ #legolasPanel .frodo-panel .frodo-heading-copy strong{font-size:21px}
+ #legolasPanel .frodo-panel .frodo-live-chip{padding:7px 8px;font-size:11px}
+ #legolasPanel .frodo-panel #frodoGmActions button{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ #legolasPanel .frodo-panel .frodo-queue-strip{scroll-behavior:auto}
+}
