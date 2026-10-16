@@ -194,3 +194,46 @@
 @media(prefers-reduced-motion:reduce){
  #legolasPanel .frodo-panel .frodo-queue-strip{scroll-behavior:auto}
 }
+
+/* v0.35.232 – mobile GM: the archive's introductory hero duplicated the
+   Presentationsateljén heading and pushed the live preview below the fold.
+   Keep it unchanged on desktop and for players, and retain close navigation. */
+#legolasPanel .frodo-close-mobile{display:none}
+@media(max-width:720px){
+ #legolasPanel.legolas-atelier-gm > .legolas-panel-inner > .legolas-heading{
+  display:none!important;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-panel{
+  margin-top:0;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-panel-heading{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr);
+  gap:7px;margin:0 0 12px;padding:0 43px 0 0;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-heading-copy{
+  grid-column:1;min-width:0;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-eyebrow{display:none}
+ #legolasPanel.legolas-atelier-gm #frodoPanelTitle{
+  display:block;margin:0 0 4px;color:#f7dca9;
+  font:700 clamp(19px,5.2vw,25px)/1.16 Georgia,serif;
+  overflow-wrap:normal;word-break:normal;hyphens:none;
+ }
+ #legolasPanel.legolas-atelier-gm #frodoPanelSubtitle{
+  display:block;font:12px/1.35 Georgia,serif;color:#c9b599;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-live-chip{
+  grid-column:1;justify-self:start;
+  padding:5px 10px;min-height:26px;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-close-mobile{
+  position:absolute;top:0;right:0;display:grid;place-items:center;
+  box-sizing:border-box;width:37px;height:37px;min-height:37px;
+  padding:0;border:1px solid #b79865;border-radius:9px;
+  background:#222d25;color:#f9deb2;font:600 22px/1 Georgia,serif;
+  cursor:pointer;touch-action:manipulation;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-close-mobile:focus-visible{
+  outline:2px solid #f2d29d;outline-offset:3px;
+ }
+}
