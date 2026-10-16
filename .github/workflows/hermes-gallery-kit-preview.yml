@@ -4,12 +4,12 @@ on:
     branches:
       - sisyphus/arcane-gallery-shared-mechanics-20261016
     paths:
-      - 'hermes/gallery-queue/arcane-gallery-kit-v01.json'
+      - 'scripts/hermes_gallery_kit.py'
+      - 'assets/hermes/originals/ui/arcane-gallery-kit/*.zip'
   workflow_dispatch:
 
 permissions:
   contents: write
-  id-token: write
 
 concurrency:
   group: hermes-gallery-kit-preview-v01
@@ -27,17 +27,7 @@ jobs:
           python-version: '3.12'
       - name: Install pinned image verifier
         run: python -m pip install Pillow==12.3.0
-      - id: google
-        name: Authenticate HERMES read-only Drive service account
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
-          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
-          create_credentials_file: false
       - name: Verify immutable original and publish 29 lossless sprites to preview branch
         env:
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/hermes_gallery_kit.py
