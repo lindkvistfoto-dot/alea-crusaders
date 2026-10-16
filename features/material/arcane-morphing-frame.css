@@ -1,0 +1,100 @@
+/* Arcane Morphing Frame · animated mechanical layers.
+ * Constant-width art stays rigid; only straight piston shafts elongate.
+ * All parts are decorative: private image and input handling remain untouched.
+ */
+#legolasPanel .arcane-gallery{container-type:inline-size}
+#legolasPanel .arcane-gallery .arcane-gallery-machine{
+ --arcane-gear-angle:0deg;
+}
+.arcane-gallery-morph{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:visible}
+.arcane-gallery-gear{
+ position:absolute;top:.35cqw;width:12.3cqw;aspect-ratio:1;border-radius:50%;
+ background:radial-gradient(circle at 36% 31%,#f8d281 0,#9b6331 35%,#26170e 71%,#b77b3d 85%,#41230d 94%);
+ border:clamp(1px,.33cqw,5px) solid #b78342;
+ box-shadow:0 0 .7cqw #ffbc5080,inset 0 0 .8cqw #000,0 .4cqw 1cqw #0009;
+ display:grid;place-items:center;isolation:isolate;
+}
+.arcane-gallery-gear--left{left:.18cqw}
+.arcane-gallery-gear--right{right:.18cqw}
+.arcane-gallery-gear-rotor{
+ position:absolute;inset:4%;background:url('./arcane-morph-gear.svg') center/contain no-repeat;
+ transform:rotate(var(--arcane-gear-angle));transition:transform 460ms cubic-bezier(.22,1,.36,1);
+ will-change:transform;
+}
+.arcane-gallery-gear--right .arcane-gallery-gear-rotor{transform:rotate(calc(var(--arcane-gear-angle) * -1))}
+.arcane-gallery-gear-core{
+ width:28%;aspect-ratio:1;position:relative;border-radius:50%;z-index:1;
+ background:radial-gradient(circle at 38% 30%,#fff8b5,#ffd56e 21%,#d86a12 57%,#65280d 80%,#190d0a);
+ box-shadow:0 0 .8cqw #ffb948,0 0 1.7cqw #f4982866,inset 0 0 .35cqw #fff5cc;
+ border:1px solid #e8b661;
+}
+.arcane-gallery-gear--right .arcane-gallery-gear-core{
+ background:radial-gradient(circle at 38% 30%,#e3ffff,#57f1e8 21%,#058e9c 58%,#153358 80%,#071725);
+ box-shadow:0 0 .8cqw #48ffe4,0 0 1.7cqw #28cbd866,inset 0 0 .35cqw #e7ffff;
+}
+.arcane-gallery-gear-core::after{
+ content:"";position:absolute;inset:17%;background:linear-gradient(140deg,#fff9caa0,#fff0 55%),linear-gradient(35deg,#ffea9d00,#ffdf81a8);
+ clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+}
+.arcane-gallery-gear--right .arcane-gallery-gear-core::after{background:linear-gradient(140deg,#e9ffffb0,#fff0 55%),linear-gradient(35deg,#19f7e800,#9fffffd0)}
+.arcane-gallery-piston{
+ position:absolute;top:11cqw;bottom:15.9cqw;width:5.1cqw;
+ filter:drop-shadow(0 0 .4cqw #d88c3550);
+}
+.arcane-gallery-piston--left{left:4.2cqw}
+.arcane-gallery-piston--right{right:4.2cqw;filter:drop-shadow(0 0 .4cqw #35e8d250)}
+.arcane-gallery-piston-guide{
+ position:absolute;top:0;bottom:0;left:13%;width:74%;
+ border-left:clamp(1px,.19cqw,3px) solid #e6b76b;border-right:clamp(1px,.19cqw,3px) solid #6f421f;
+ border-radius:5px;
+ background:linear-gradient(90deg,#42250f 0%,#bc8844 12%,#3a2518 23%,#f0d08b 46%,#5b3619 59%,#c28b49 82%,#24140a 100%);
+ box-shadow:inset .2cqw 0 .38cqw #0009,inset -.2cqw 0 .38cqw #0009;
+}
+.arcane-gallery-piston-rod{
+ position:absolute;top:4cqw;bottom:4cqw;left:41%;width:19%;
+ background:linear-gradient(90deg,#332b24,#d7d6c2 25%,#fff8d3 52%,#5d5649 85%,#22170c);
+ box-shadow:0 0 .22cqw #0008;
+}
+.arcane-gallery-piston-sleeve{
+ position:absolute;top:50%;left:-10%;width:120%;height:12.8cqw;transform:translateY(-50%);
+ border-radius:1.4cqw;overflow:hidden;
+ background:linear-gradient(90deg,#22150c,#bd7e32 9%,#ffe1a2 21%,#5e3819 34%,#9d6330 49%,#3a2417 69%,#f0bd6b 85%,#26150b);
+ border:.23cqw solid #b88a4b;
+ box-shadow:inset 0 0 .7cqw #251107,0 0 .4cqw #090706;
+}
+.arcane-gallery-piston-sleeve::before{
+ content:"";position:absolute;inset:16% 25%;border-radius:.8cqw;
+ background:linear-gradient(180deg,#0e241d,#bb853a 30%,#ffad32 55%,#51310e 90%);
+ box-shadow:0 0 .65cqw #ffad3266,inset 0 0 .4cqw #000;
+ border:.14cqw solid #c79442;
+}
+.arcane-gallery-piston--right .arcane-gallery-piston-sleeve::before{
+ background:linear-gradient(180deg,#102a2e,#3790a1 30%,#4afff1 55%,#143d44 90%);
+ box-shadow:0 0 .65cqw #34ffee66,inset 0 0 .4cqw #000;
+}
+.arcane-gallery-piston-sleeve::after{
+ content:"";position:absolute;left:50%;top:50%;width:2.5cqw;height:3.9cqw;transform:translate(-50%,-50%);
+ background:linear-gradient(135deg,#fff4b3,#b86a14 45%,#fae49d 75%,#6a3517);
+ clip-path:polygon(50% 0,95% 50%,50% 100%,5% 50%);
+ filter:drop-shadow(0 0 .3cqw #ffce7b);
+}
+.arcane-gallery-piston--right .arcane-gallery-piston-sleeve::after{
+ background:linear-gradient(135deg,#e6ffff,#008c92 45%,#70ffef 75%,#15465d);
+}
+.arcane-gallery-piston-collar{
+ position:absolute;left:-8%;width:116%;height:3.1cqw;border-radius:.6cqw;
+ background:linear-gradient(90deg,#28170b,#a66a2d 11%,#ffe2a1 33%,#452a14 66%,#d09b50 86%,#24180e);
+ border:.2cqw solid #674021;box-shadow:inset 0 0 .3cqw #0009,0 .2cqw .25cqw #0009;
+}
+.arcane-gallery-piston-collar--top{top:0}
+.arcane-gallery-piston-collar--bottom{bottom:0}
+.arcane-gallery-piston-collar::after{
+ content:"";position:absolute;inset:27% 25%;border-top:.12cqw solid #ffe5a7;border-bottom:.12cqw solid #5b3115;
+}
+@media(max-width:480px){
+ .arcane-gallery-gear{width:12cqw;top:.45cqw}
+ .arcane-gallery-piston{width:4.9cqw}
+}
+@media(prefers-reduced-motion:reduce){
+ .arcane-gallery-gear-rotor{transition:none;will-change:auto}
+}
