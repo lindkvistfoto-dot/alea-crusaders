@@ -70,19 +70,15 @@
  border:0;border-radius:8px;overflow:visible;
  transform-origin:50% 50%;transition:none!important;
 }
-/* Double Crusader link: two 3:1 bronze connectors ride each icon tile.
-   Their ends overlap neighbouring ivory plates while the three-window mask
-   and original cryptex housing remain unchanged. No added track children. */
-#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::before,
-#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::after{
+/* One tall 3:2 bronze connector per icon gap, replacing the former twin links.
+   It moves with the spell tile; the three-window mask, housing and inertia stay put. */
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::before{
  content:"";position:absolute;inset:auto;z-index:0;pointer-events:none;
- left:110%;width:90%;height:30%;
+ left:110%;top:50%;width:90%;height:60%;
  transform:translate(-50%,-50%);
- background:url("./arcane-mechanism-link.webp?v=0.35.223") center/100% 100% no-repeat;
+ background:url("./arcane-mechanism-link.webp?v=0.35.224") center/100% 100% no-repeat;
  box-shadow:none;filter:none;border:0;border-radius:0;
 }
-#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::before{top:29%}
-#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile::after{top:71%}
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
  filter:brightness(1.08);
 }
