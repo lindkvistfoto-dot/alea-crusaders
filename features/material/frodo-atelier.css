@@ -237,3 +237,56 @@
   outline:2px solid #f2d29d;outline-offset:3px;
  }
 }
+
+
+/* Arcane Gallery v0.35.237 – one bronze viewer for the GM as well as players.
+   Retain the legacy preview nodes for compatibility; never display both. */
+#legolasPanel .frodo-panel.frodo-is-gm .frodo-gm-preview{display:none!important}
+#legolasPanel .frodo-panel .arcane-gm-gallery{
+ display:none;width:100%;max-width:none;margin:4px auto 7px;
+ padding:0;background:none;border:0;box-shadow:none;
+}
+#legolasPanel .frodo-panel.frodo-is-gm .arcane-gm-gallery:not(.hidden){display:block}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-heading{
+ padding:0 2%!important;margin:0 0 2px;min-height:20px;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-heading strong{
+ color:#f6dba5;font:700 clamp(11px,2.6vw,16px) Georgia,serif;letter-spacing:.13em;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-heading span{
+ color:#ccb68f;font-size:11px;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-picture{
+ background:radial-gradient(ellipse at 50% 43%,#28372c,#101c17 70%,#080e0b 100%);
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-picture:focus-visible,
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-tile:focus-visible{
+ outline:2px solid #ffe0a4;outline-offset:-2px;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gm-vacant{
+ cursor:default;background:radial-gradient(ellipse,#342c21,#110f0c 75%);
+ border-left:1px solid #91704a33;opacity:.87;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-controls{
+ margin:-2px auto 1px;max-width:none;
+}
+#legolasPanel .frodo-panel .arcane-gm-gallery .arcane-gallery-status{
+ font-size:11px;color:#ebd1a3;line-height:1.35;
+}
+#legolasPanel.legolas-atelier-gm #legolasGmQueue{display:none!important}
+@media(max-width:720px){
+ #legolasPanel .frodo-panel .arcane-gm-gallery{margin:1px 0 0;width:100%}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-strip .frodo-queue-tile,
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-strip .frodo-queue-overflow{display:none}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-add{
+  flex:1 1 100%;min-height:47px;max-width:none;
+  padding:4px 12px;flex-direction:row;gap:8px;
+  border-style:solid!important;background:#27251c!important;
+ }
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-add>span{font-size:27px}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-add small{font-size:12px}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-add small br{display:none}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-heading{margin-bottom:5px}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-hint{margin-top:3px}
+ #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-view{margin-top:7px}
+}
