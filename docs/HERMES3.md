@@ -42,6 +42,10 @@ Nuvarande identitet:
 - `.github/workflows/hermes3-staging.yml`: PR-tester och `dist/` som tidsbegränsad Actions-artifact; inget OIDC, ingen Pages-deploy.
 - `tests/hermes3-policy.test.js`: säkerhets- och kontrakttester.
 
+För ZIP-buntar får PNG-bilder och ett JSON-manifest granskas tillsammans med passiva README-/HTML-dokument. README och HTML **tolkas aldrig som kod och distribueras inte som appresurser** av verifieraren. En framtida release får bara välja explicit godkända bildsprites, aldrig extrahera körbar demo-HTML direkt till webbplatsen.
+
+En konkret **verifiera-endast** begäran för redan publicerat ARCANE MORPHING FRAME-original ligger i `hermes3/requests/arcane-gallery-kit-v01.json`; den startar inget jobb automatiskt.
+
 **Detta är en grundkedja, inte en aktiverad generell publicerare.** Profilerna har status `verify` och tillåter *inte* automatisk DB-aktivering, deploy eller promotion. Videotranscodning och privat material är uttryckligen blockerade tills separata kontroller finns. Inga befintliga HERMES 2.x-flöden ersätts av denna PR.
 
 ## 4. Normal arbetsordning efter godkänd utrullning
