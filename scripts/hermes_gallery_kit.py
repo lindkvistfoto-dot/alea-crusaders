@@ -18,7 +18,6 @@ from PIL import Image
 
 REPO = "lindkvistfoto-dot/alea-crusaders"
 BRANCH = "sisyphus/arcane-gallery-shared-mechanics-20261016"
-FOLDER = "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
 TARGET = "arcane-gallery-kit"
 DEST = "features/material/arcane-morphing-assets/v01"
 EXPECTED = set("""
@@ -70,17 +69,16 @@ def main():
     expected_sha = job["sha256"]
     if not isinstance(expected_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha):
         raise ValueError("INVALID_ZIP_SHA")
-    google_token = os.environ["GOOGLE_ACCESS_TOKEN"]
-    url = "https://www.googleapis.com/drive/v3/files/" + file_id
-    meta = json.loads(http(url + "?fields=id,name,mimeType,size,parents,trashed", google_token))
-    if meta.get("trashed") or FOLDER not in meta.get("parents", []) or (
-        meta.get("mimeType") not in ("application/zip", "application/x-zip-compressed")
-    ) or meta.get("name") != "ARCANE_MORPHING_FRAME_v01_source.zip":
-        raise ValueError("UNAUTHORIZED_DRIVE_ZIP")
-    if not 10000 <= int(meta.get("size", 0)) <= 8_388_608:
-        raise ValueError("INVALID_ARCHIVE_SIZE")
-    archive = http(url + "?alt=media", google_token, limit=8_388_608)
-    if len(archive) != int(meta["size"]) or digest(archive) != expected_sha:
+    # Original downloaded from the authorized Drive folder via HERMES 2.2,
+    # then uploaded as a binary Git blob and checked against local git hash.
+    # The sprite importer never needs Google credentials on a preview branch.
+    immutable = f"assets/hermes/originals/ui/{TARGET}/{expected_sha}.zip"
+    from pathlib import Path
+    archive_path = Path(immutable)
+    if not archive_path.is_file():
+        raise ValueError("IMMUTABLE_GITHUB_SOURCE_NOT_FOUND")
+    archive = archive_path.read_bytes()
+    if not 10000 <= len(archive) <= 8_388_608 or digest(archive) != expected_sha:
         raise ValueError("SOURCE_HASH_MISMATCH")
     print("HERMES_GALLERY_SOURCE_VERIFIED", expected_sha, len(archive))
     source = io.BytesIO(archive)
