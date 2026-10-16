@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-mechanism-chamber",
+  "source_path": "assets/hermes/originals/ui/arcane-mechanism-chamber/2b611e315e74060afb47788a38fecfd765cdd98cbe70276a7b6a73ae42f49ce3.png",
+  "source_sha256": "2b611e315e74060afb47788a38fecfd765cdd98cbe70276a7b6a73ae42f49ce3",
+  "source_bytes": 2246745,
+  "app_path": "features/combat/arcane-mechanism-chamber.webp",
+  "app_sha256": "a9be2de1ae1ea2fbf846555e15c27e0e3683b47ec16f8644b8ab926c44bc31aa",
+  "app_bytes": 22972,
+  "width": 768,
+  "height": 256,
+  "alpha_preserved": false,
+  "supabase_activation": false
+}
