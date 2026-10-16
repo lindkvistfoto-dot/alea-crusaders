@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-mechanism-link",
+  "source_path": "assets/hermes/originals/ui/arcane-mechanism-link/cef4bb0745bbdec993f994927a68f5b29647876d81f68cf5fd96dd4dc52df203.png",
+  "source_sha256": "cef4bb0745bbdec993f994927a68f5b29647876d81f68cf5fd96dd4dc52df203",
+  "source_bytes": 1858980,
+  "app_path": "features/combat/arcane-mechanism-link.webp",
+  "app_sha256": "b34af5bd980e0cea6d6d7a0badf07eb1ade664a9ed8304bd4fbc9b4f86e62681",
+  "app_bytes": 59860,
+  "width": 768,
+  "height": 256,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
