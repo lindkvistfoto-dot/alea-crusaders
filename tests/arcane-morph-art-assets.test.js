@@ -37,11 +37,16 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   const gm=read('features/material/arcane-gm-preview.js').toString();
   for(const file of ['upper_frame','lower_frame','gear_west','gear_east',
    'piston_closed_a','piston_extended_a','piston_closed_b','piston_extended_b',
-   'side_left_top','side_left_middle','side_left_bottom','side_right_top',
-   'side_right_middle','side_right_bottom']){
+   'side_left_top','side_left_inner','side_left_bottom','side_right_top',
+   'side_right_inner','side_right_bottom']){
    expect(markup+css).toContain(file+'.webp');
   }
-  expect(css).toContain('background-repeat:repeat-y');
+  expect(css).not.toContain('background-repeat:repeat-y');
+  expect(css).toContain('.arcane-kit-side-sleeve');
+  expect(css).toContain('overflow:hidden');
+  expect(markup.match(/arcane-kit-side-sleeve/g)).toHaveLength(2);
+  expect(markup).not.toContain('side_left_middle.webp');
+  expect(markup).not.toContain('side_right_middle.webp');
   expect(css).toContain('arcane-kit-actuator--closed');
   expect(css).toContain('arcane-kit-actuator--extended');
   expect(css).toContain('var(--arcane-extension,0)');
