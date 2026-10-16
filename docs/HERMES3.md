@@ -1,6 +1,6 @@
 # HERMES 3.0 · Permanent tillitsmodell och kontrollerad bildkedja
 
-**Status:** införandeförslag och fungerande verifieringsgrund på separat PR-gren. **Inte produktionsaktiverad.**
+**Status:** införandeförslag med läsande verifiering, artefaktbaserad WebP-staging och isolerade tester på PR-gren. **HERMES 3.0 är inte produktionsaktiverad.**
 **Datum:** 2026-10-17 · **Repo:** `lindkvistfoto-dot/alea-crusaders`
 
 ## 1. Fastställd orsak och låst säkerhetsgräns
@@ -38,9 +38,11 @@ Nuvarande identitet:
 - `config/hermes3-profiles.json`: deklarerade medieprofiler och explicita avvisningar.
 - `scripts/hermes3_policy.mjs`: strict schema, public approval, profil, MIME, SHA-256, Drive-ID och mål, avvisar okända fält.
 - `scripts/hermes3_drive_verify.py`: läser enbart från HERMES Inbox, verifierar source SHA/dimensioner/alfa/ZIP och skriver *lokalt verifieringskvitto*, ingen DB eller commit.
+- `scripts/hermes3_stage.py`: genererar endast innehållsadresserade WebP-filer och `staging-manifest.json` från verifierad originalfil + kontrollsummekvitto. Behåller alfakanalen, ignorerar ZIP-dokumentation och skriver bara till tillfälliga artefaktkataloger.
+- `scripts/hermes3_archive_smoke.py`: kör ett rent offlineacceptanstest mot det redan offentligt arkiverade ARCANE MORPHING FRAME v0.1-originalet och kontrollerar samtliga **29 sprites** utan att påstå att ett nytt Google Drive-anrop gjorts.
 - `.github/workflows/hermes3-trusted-verify.yml`: manuell `main`-baserad OIDC med `contents: read`, `id-token: write`; inte triggad av pull request eller push.
 - `.github/workflows/hermes3-staging.yml`: PR-tester och `dist/` som tidsbegränsad Actions-artifact; inget OIDC, ingen Pages-deploy.
-- `tests/hermes3-policy.test.js`: säkerhets- och kontrakttester.
+- `tests/hermes3-policy.test.js` samt `tests/test_hermes3_*.py`: säkerhets-, format-, ZIP- och WebP-regressionstester.
 
 För ZIP-buntar får PNG-bilder och ett JSON-manifest granskas tillsammans med passiva README-/HTML-dokument. README och HTML **tolkas aldrig som kod och distribueras inte som appresurser** av verifieraren. En framtida release får bara välja explicit godkända bildsprites, aldrig extrahera körbar demo-HTML direkt till webbplatsen.
 
@@ -82,7 +84,7 @@ Exempel på requeststruktur (ersätt platshållare med verifierade värden):
 
 ## 5. Säkerhetskrav före verklig produktionspromotion
 
-1. **Skydda `main` med GitHub Ruleset/Branch protection:** krävd PR, mänskligt godkännande, blockera direktpush och force-push, begränsa bypass. Vid inventering rapporterade GitHub `protected=false`; connectorn kunde inte läsa branch-protection API (403). Detta är ännu **inte åtgärdat**.
+1. **GitHub `main` är nu delvis skyddad** med det aktiva rulesetet `ALEA – MAIN PROTECTION` (ID `25281343`): `deletion` och `non_fast_forward` gäller `refs/heads/main`, utan bypass. Bekräftat via GitHub ruleset-API 2026-10-17. **Krävd PR och kontrollerade statuschecks saknas fortfarande.** Dessa kan inte slås på förrän HERMES 2.x:s automatiska skrivningar till `main` har migrerats säkert.
 2. **Separata behörigheter för publicering:** inför GitHub Environment för produktion med required reviewers och deployment branch restrictions; förvara publiceringshemligheter där, inte i PR-jobb. Verifiera att villkoren verkligen finns innan aktivering.
 3. **Rätta befintlig CI-baslinje:** `main` hade 48 fel i 27 testfiler redan innan HERMES 3. Då dessa ännu inte är reparerade får en grön isolerad svit inte kallas fullständigt grön.
 4. **Separera privat från publikt:** privata kampanjbilder och porträtt får inte laddas till publik GitHub eller till publikt Actions-artifact. För dessa krävs autentiserad Supabase Storage + RLS och ett separat, aldrig offentligt, leveransprotokoll.
@@ -103,7 +105,11 @@ Kör isolerat:
 ```bash
 node scripts/hermes3_policy.mjs --all
 npx vitest run tests/hermes3-policy.test.js
+python -m unittest discover -s tests -p 'test_hermes3_*.py' -v
+python -m scripts.hermes3_archive_smoke /tmp/hermes3-arcane-preview
 npm run build
 ```
+
+Efter huvudgrenens godkända integrering kan den läsande verifieringen köras med `workflow_dispatch` på `main`. Utdata innehåller då både *verified-source* och färdiga WebP-filer med `staging-manifest.json` under sju dagar. **Ingen av dessa filer publiceras direkt till Pages eller Supabase.**
 
 En misslyckad verifiering lämnar allt i produktion orört. HERMES 3 har ingen automatisk fallback till osäkra behörigheter. Radera aldrig gamla original på grund av ett misslyckat jobb; rätta requesten via ny PR och kör explicit igen efter granskning.
