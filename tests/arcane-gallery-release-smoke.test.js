@@ -66,6 +66,15 @@ describe('Arcane Gallery release smoke',()=>{
   expect(code).toContain('campaign_material_presentation_history?');
   expect(css).toContain('flex:0 0 20%');
   expect(css).toContain('touch-action:pan-x');
+  const morph=read('features/material/arcane-morphing-frame.css').toString();
+  const gear=read('features/material/arcane-morph-gear.svg').toString();
+  expect(code).toContain('arcane-gallery-gear--left');
+  expect(code).toContain('arcane-gallery-piston--right');
+  expect(css).toContain('arcane-morphing-frame.css');
+  expect(morph).toContain('prefers-reduced-motion:reduce');
+  expect(morph).toContain('transition:transform 460ms');
+  expect(morph).toContain('arcane-gallery-piston-collar--bottom');
+  expect(gear).toContain('<svg');
  });
  it('only reads RLS-visible image records within active campaign',async()=>{
   const h=harness({history:[{revision:2,material_id:row.id},
