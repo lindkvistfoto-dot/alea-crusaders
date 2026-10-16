@@ -5,12 +5,12 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "assets/hermes/originals/ui"
-KEYS = {"arcane-mechanism-link", "arcane-mechanism-chamber"}
-PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber)/([a-f0-9]{64})\.png$")
+KEYS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay"}
+PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay)/([a-f0-9]{64})\.png$")
 LINK_SIZES = {(3, 2): (768, 512), (4, 3): (768, 576), (3, 4): (576, 768)}
 CHAMBER_SIZE = (768, 256)
 LIMIT = 300000
@@ -34,6 +34,7 @@ def prepare(source_name: str) -> tuple[str, str]:
         if original.format != "PNG" or not (640 <= original.width <= 4096 and (
             (key == "arcane-mechanism-link" and link_size is not None)
             or (key == "arcane-mechanism-chamber" and original.width == original.height * 3)
+            or (key == "arcane-gallery-overlay" and original.size == (1536, 1024))
         )):
             raise ValueError("HERMES_UI_BAD_PNG")
         size = link_size if key == "arcane-mechanism-link" else CHAMBER_SIZE
@@ -44,12 +45,46 @@ def prepare(source_name: str) -> tuple[str, str]:
             required_alpha = image.getchannel("A").tobytes()
         else:
             if original.mode not in ("RGB", "RGBA") or (original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255)):
-                raise ValueError("HERMES_UI_CHAMBER_OPAQUE_REQUIRED")
-            image = original.convert("RGB").resize(size, Image.Resampling.LANCZOS)
-            image = ImageEnhance.Brightness(image).enhance(0.80)
-            required_alpha = None
-    app_path = ROOT / "features/combat" / (key + ".webp")
-    image.save(app_path, "WEBP", quality=86 if required_alpha else 82, method=6, exact=True)
+                raise ValueError("HERMES_UI_OPAQUE_REQUIRED")
+            if key == "arcane-gallery-overlay":
+                # Preserve the locked source pixel-for-pixel; only the DELIVERY
+                # layer gets an actual transparent outside, picture and slots.
+                canvas = original.convert("RGBA")
+                alpha = Image.new("L", original.size, 0)
+                painter = ImageDraw.Draw(alpha)
+                painter.polygon([
+                    (766, 2), (795, 40), (1389, 45), (1402, 52),
+                    (1405, 652), (1396, 701), (1423, 712), (1451, 765),
+                    (1470, 821), (1482, 843), (1470, 864), (1456, 929),
+                    (1447, 969), (1400, 992), (1333, 989), (1307, 982),
+                    (792, 990), (768, 1015), (740, 990), (233, 991),
+                    (191, 981), (134, 991), (80, 968), (63, 947),
+                    (51, 865), (41, 850), (53, 829), (60, 769),
+                    (87, 714), (143, 694), (139, 650), (136, 57),
+                    (144, 47), (736, 46)
+                ], fill=255)
+                painter.polygon([
+                    (193, 103), (1342, 103), (1342, 636),
+                    (1326, 653), (210, 653), (192, 637)
+                ], fill=0)
+                for rectangle in [
+                    (276, 779, 438, 912), (460, 779, 644, 913),
+                    (662, 779, 858, 913), (876, 779, 1072, 913),
+                    (1091, 779, 1263, 912)
+                ]:
+                    painter.rounded_rectangle(rectangle, radius=10, fill=0)
+                canvas.putalpha(alpha.filter(ImageFilter.GaussianBlur(1.1)))
+                size = (1152, 768)
+                image = canvas.resize(size, Image.Resampling.LANCZOS)
+                required_alpha = image.getchannel("A").tobytes()
+                if image.getchannel("A").getextrema() != (0, 255):
+                    raise ValueError("HERMES_GALLERY_ALPHA_REQUIRED")
+            else:
+                image = original.convert("RGB").resize(size, Image.Resampling.LANCZOS)
+                image = ImageEnhance.Brightness(image).enhance(0.80)
+                required_alpha = None
+    app_path = ROOT / ("features/material" if key == "arcane-gallery-overlay" else "features/combat") / (key + ".webp")
+    image.save(app_path, "WEBP", quality=80 if key == "arcane-gallery-overlay" else (86 if required_alpha else 82), method=6, exact=True)
     app = app_path.read_bytes()
     if not 100 <= len(app) <= LIMIT:
         raise ValueError("HERMES_UI_WEBP_SIZE_INVALID")

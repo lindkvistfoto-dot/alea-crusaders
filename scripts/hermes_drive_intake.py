@@ -27,7 +27,7 @@ FILE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 KEY_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 QUEUE_PATTERN = re.compile(r"^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$")
 MAX_BYTES = 8_388_608
-UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber"}
+UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay"}
 
 
 def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int, bytes]:
@@ -102,6 +102,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                     or image.width * 4 == 3 * image.height
                 ))
                 or (target_key == "arcane-mechanism-chamber" and image.width == 3 * image.height)
+                or (target_key == "arcane-gallery-overlay" and (image.width, image.height) == (1536, 1024))
             )):
                 raise ValueError("BAD_UI_PNG")
             if target_key == "arcane-mechanism-link":
@@ -110,7 +111,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
             elif image.mode not in ("RGB", "RGBA") or (
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
-                raise ValueError("UI_CHAMBER_MUST_BE_OPAQUE")
+                raise ValueError("UI_OPAQUE_SOURCE_REQUIRED")
         else:
             if image.mode != "RGBA":
                 raise ValueError("NOT_RGBA_PNG")

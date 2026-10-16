@@ -201,3 +201,7 @@ Animationer är dekorativa och får inte styra spelregler eller blockera tärnin
 **Utfört pilotbevis 2026-10-15:** Library-bilden `Hela – smaragdgröna helande löv.png` laddades till `Alea Crusaders transfer/hermes-chatgpt-bridge-hela-pilot.png`, hämtades därifrån som 2 862 513 PNG-byte och transporterades till GitHub. Git blob-SHA `3eb72f59006ce23402333a32324136c55c9dbf5a` överensstämde exakt med `fetch_file` i test-commit `6ec9d9957e5f503c26a38f9379c51dc8821704a5`. Ingen branch ref ändrades och inget speldatafält uppdaterades under testet.
 
 **Viktig avgränsning:** Detta är bevisad transport när bilden redan är tillgänglig i ChatGPT Library. Om en viss bild inte går att identifiera i Library måste den först göras åtkomlig. Pilotens fil är ett transporttest, **inte ett godkännande av bildens motiv eller en publicerad Alea-ikon**.
+
+## HERMES UI – Arcane Gallery (2026-10-16)
+
+`kind=ui`, `target_key=arcane-gallery-overlay`: 1536×1024 PNG i Drive-originalet; HERMES omvandlar **endast appfilen** till 1152×768 transparent WebP genom en verifierbar geometrisk alfamask. Transparenta områden: utanför apparaten, hela bildfönstret och fem miniatyrfönster. Källbilden är oförändrad, ingen privat kampanjbild distribueras som publik UI-resurs. Appens bildmaterial hämtas separat under Supabase Storage-RLS.

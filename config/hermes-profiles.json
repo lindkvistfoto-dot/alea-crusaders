@@ -54,6 +54,22 @@
       "pipeline": "scripts/hermes_ui_prepare.py",
       "database_table": null,
       "database_column": null
+    },
+    "arcane-gallery-overlay": {
+      "status": "active",
+      "purpose": "campaign-private-material-viewer-public-overlay-only",
+      "source_format": "png",
+      "aspect_ratio": "3:2",
+      "source_dir": "assets/hermes/originals/ui/arcane-gallery-overlay",
+      "delivery_path": "features/material/arcane-gallery-overlay.webp",
+      "delivery_format": "webp",
+      "delivery_width": 1152,
+      "delivery_height": 768,
+      "max_bytes": 300000,
+      "transparency": "generated-alpha-mask-for-outer-background-picture-and-five-slots",
+      "pipeline": "scripts/hermes_ui_prepare.py",
+      "database_table": null,
+      "database_column": null
     }
   }
 }
