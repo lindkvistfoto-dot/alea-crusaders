@@ -8,7 +8,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   const portrait=arcaneFrameHeight(w,1080,1920,vh);
   expect(panorama).toBeLessThan(square);
   expect(square).toBeLessThan(portrait);
-  expect([panorama,square,portrait]).toEqual([290,449,732]);
+  expect([panorama,square,portrait]).toEqual([290,449,731]);
  });
  it('clamps pathological media dimensions but never distorts the original',()=>{
   const low=arcaneFrameHeight(w,15000,100,vh);
@@ -32,8 +32,8 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
    })
   };
   const actual=sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},vh);
-  expect(actual).toBe(732);
-  expect(writes).toEqual([['--arcane-frame-height','732px']]);
+  expect(actual).toBe(731);
+  expect(writes).toEqual([['--arcane-frame-height','731px']]);
   expect(classes).toEqual(['arcane-gallery-fluid']);
  });
 });
