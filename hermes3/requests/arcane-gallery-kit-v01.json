@@ -1,0 +1,18 @@
+{
+  "schema": 3,
+  "job_id": "arcane-gallery-kit-v01",
+  "profile": "ui-sprite-package",
+  "source": {
+    "provider": "google-drive",
+    "file_id": "1nuNe0qhqFpER0FOB0qQt2Dn4U-KAJ-7W",
+    "sha256": "4878fe146bcaaf301e535b34fc9402ecaa5eff33e9caa0adfb2910984c314178",
+    "mime_type": "application/zip",
+    "visibility": "public",
+    "public_release_approved": true
+  },
+  "target": {
+    "category": "ui-components",
+    "key": "arcane-gallery"
+  },
+  "intent": "verify-only"
+}

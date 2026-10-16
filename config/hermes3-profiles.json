@@ -1,0 +1,83 @@
+{
+  "schema": 3,
+  "status": "design-preview-no-auto-activation",
+  "policy": {
+    "repository_visibility": "public",
+    "production_auth_ref": "refs/heads/main",
+    "google_provider": "projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes",
+    "inbox_folder": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+    "max_request_bytes": 8388608
+  },
+  "profiles": {
+    "ui-transparent": {
+      "stage": "verify",
+      "media": "static-ui",
+      "mimes": [
+        "image/png"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "required",
+      "extension": "png"
+    },
+    "ui-opaque": {
+      "stage": "verify",
+      "media": "static-ui",
+      "mimes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "forbidden",
+      "extension": "png-or-jpeg"
+    },
+    "ui-sprite-package": {
+      "stage": "verify",
+      "media": "ui-components",
+      "mimes": [
+        "application/zip",
+        "application/x-zip-compressed"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "per-component",
+      "extension": "zip"
+    },
+    "spell-icon-public": {
+      "stage": "verify",
+      "media": "spell-icon",
+      "mimes": [
+        "image/png"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "required",
+      "extension": "png"
+    },
+    "portrait-public": {
+      "stage": "verify",
+      "media": "public-portrait",
+      "mimes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "optional",
+      "extension": "png-or-jpeg"
+    },
+    "scene-public": {
+      "stage": "verify",
+      "media": "public-scene",
+      "mimes": [
+        "image/png",
+        "image/jpeg"
+      ],
+      "max_bytes": 8388608,
+      "alpha": "optional",
+      "extension": "png-or-jpeg"
+    }
+  },
+  "blocked": [
+    "private-campaign-material",
+    "private-portrait",
+    "video",
+    "arbitrary-sql-activation"
+  ]
+}
