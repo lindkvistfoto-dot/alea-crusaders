@@ -27,6 +27,7 @@ FILE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 KEY_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 QUEUE_PATTERN = re.compile(r"^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$")
 MAX_BYTES = 8_388_608
+UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber"}
 
 
 def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int, bytes]:
@@ -87,18 +88,31 @@ def google_file(file_id: str) -> bytes:
     return data
 
 
-def validate_png(data: bytes) -> str:
+def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
     if not data.startswith(b"\x89PNG\r\n\x1a\n"):
         raise ValueError("BAD_PNG_SIGNATURE")
     with Image.open(io.BytesIO(data)) as image:
         image.load()
-        if image.format != "PNG" or image.mode != "RGBA":
-            raise ValueError("NOT_RGBA_PNG")
-        if not (image.width == image.height and 640 <= image.width <= 4096):
-            raise ValueError("BAD_PNG_DIMENSIONS")
-        alpha_min, alpha_max = image.getchannel("A").getextrema()
-        if alpha_min == 255 or alpha_max == 0:
-            raise ValueError("INVALID_ALPHA")
+        if image.format != "PNG":
+            raise ValueError("BAD_PNG_FORMAT")
+        if kind == "ui":
+            if target_key not in UI_TARGETS or not (640 <= image.width <= 4096 and image.width == 3 * image.height):
+                raise ValueError("BAD_UI_PNG")
+            if target_key == "arcane-mechanism-link":
+                if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
+                    raise ValueError("UI_LINK_REQUIRES_TRUE_ALPHA")
+            elif image.mode not in ("RGB", "RGBA") or (
+                image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
+            ):
+                raise ValueError("UI_CHAMBER_MUST_BE_OPAQUE")
+        else:
+            if image.mode != "RGBA":
+                raise ValueError("NOT_RGBA_PNG")
+            if not (image.width == image.height and 640 <= image.width <= 4096):
+                raise ValueError("BAD_PNG_DIMENSIONS")
+            alpha_min, alpha_max = image.getchannel("A").getextrema()
+            if alpha_min == 255 or alpha_max == 0:
+                raise ValueError("INVALID_ALPHA")
         print("PNG_OK", f"{image.width}x{image.height}", "bytes", len(data))
     return hashlib.sha256(data).hexdigest()
 
@@ -172,10 +186,12 @@ def run(request_path: str) -> None:
         set(request) == common_keys | {"drive_file_name"}
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")
+    if request["kind"] == "ui" and request["target_key"] not in UI_TARGETS:
+        raise ValueError("INVALID_UI_TARGET")
     if "drive_file_id" in request:
         if not isinstance(request["drive_file_id"], str) or not FILE_ID_PATTERN.fullmatch(request["drive_file_id"]):
             raise ValueError("INVALID_DRIVE_FILE_ID")
@@ -188,7 +204,7 @@ def run(request_path: str) -> None:
         raise ValueError("INVALID_MODE")
     print("QUEUE_ACCEPTED", request_path, request["mode"], request["kind"], request["target_key"])
     data = google_file(file_id)
-    digest = validate_png(data)
+    digest = validate_png(data, request["kind"], request["target_key"])
     path = (
         "assets/hermes/originals/" + request["kind"] + "/" + request["target_key"]
         + "/" + digest + ".png"
@@ -202,9 +218,10 @@ def run(request_path: str) -> None:
     upload_if_missing(path, data)
     # GitHub's GITHUB_TOKEN commit does NOT cause ordinary push workflows.
     # Explicit workflow_dispatch with GITHUB_TOKEN DOES trigger a second workflow.
-    github_json("/actions/workflows/hermes21-intake.yml/dispatches", method="POST",
+    workflow = "hermes-ui-intake.yml" if request["kind"] == "ui" else "hermes21-intake.yml"
+    github_json("/actions/workflows/" + workflow + "/dispatches", method="POST",
                 payload={"ref": "main", "inputs": {"source_path": path}})
-    print("HERMES_PUBLISH_DISPATCHED", path, "workflow", "hermes21-intake.yml")
+    print("HERMES_PUBLISH_DISPATCHED", path, "workflow", workflow)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as output:
             output.write(

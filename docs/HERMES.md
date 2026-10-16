@@ -4,6 +4,14 @@
 **Version:** 2.3 (aktiv push-baserad intagskedja) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
 **Namn:** HERMES – gudarnas budbärare. Bilden ska nå rätt plats i appen med kvalitet, säkerhet och spårbarhet intakt.
 
+## HERMES UI – kryptexgrafik (2026-10-16)
+
+HERMES stöder nu även `kind=ui` för `arcane-mechanism-link` och `arcane-mechanism-chamber`. De följer samma aktiva push-kedja med HERMES Drive Inbox, OIDC-autentisering, Drive-original, SHA-256 och GitHub-original. För denna profil krävs 3:1-PNG med RGBA-transparens för länken och ogenomskinlig RGB/RGBA för bakgrunden. UI-intaget startar `.github/workflows/hermes-ui-intake.yml` i stället för besvärjelsepubliceraren.
+
+Den särskilda UI-publiceraren verifierar källhash, producerar 768×256 WebP, verifierar transparens och publicerar till `features/combat/arcane-mechanism-{link,chamber}.webp` samt tillhörande manifest. GitHub Pages uppdateras via explicit build-anrop. **Inga Supabase-databasfält aktiveras för dessa publika statiska UI-resurser.** De statiska resurserna följer med Vite-byggets befintliga `features/`-kopiering. Bildkällorna är publika, privata filer får inte läggas i detta flöde.
+
+---
+
 ## HERMES 2.3 – aktiv överlämning Drive → GitHub Actions (2026-10-15)
 
 **Standard för godkänd, publik bild av typ `spell` eller `symbol`:**

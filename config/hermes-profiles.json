@@ -22,6 +22,38 @@
         "scripts/hermes-verify.mjs",
         "scripts/optimize_arcane_ivory.py --check"
       ]
+    },
+    "arcane-mechanism-ui-link": {
+      "status": "active",
+      "purpose": "cryptex-carousel-moving-connector",
+      "source_format": "png",
+      "aspect_ratio": "3:1",
+      "transparency": "required",
+      "source_dir": "assets/hermes/originals/ui/arcane-mechanism-link",
+      "delivery_path": "features/combat/arcane-mechanism-link.webp",
+      "delivery_format": "webp",
+      "delivery_width": 768,
+      "delivery_height": 256,
+      "max_bytes": 300000,
+      "pipeline": "scripts/hermes_ui_prepare.py",
+      "database_table": null,
+      "database_column": null
+    },
+    "arcane-mechanism-ui-chamber": {
+      "status": "active",
+      "purpose": "cryptex-carousel-stationary-inner-chamber",
+      "source_format": "png",
+      "aspect_ratio": "3:1",
+      "transparency": "forbidden",
+      "source_dir": "assets/hermes/originals/ui/arcane-mechanism-chamber",
+      "delivery_path": "features/combat/arcane-mechanism-chamber.webp",
+      "delivery_format": "webp",
+      "delivery_width": 768,
+      "delivery_height": 256,
+      "max_bytes": 300000,
+      "pipeline": "scripts/hermes_ui_prepare.py",
+      "database_table": null,
+      "database_column": null
     }
   }
 }
