@@ -29,7 +29,9 @@ jobs:
         with:
           node-version: '24'
       - name: Validate reviewed public-media job policy
-        run: node scripts/hermes3_policy.mjs "${{ inputs.request_path }}"
+        env:
+          HERMES3_REQUEST: ${{ inputs.request_path }}
+        run: node scripts/hermes3_policy.mjs "$HERMES3_REQUEST"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
