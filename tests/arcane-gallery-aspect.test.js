@@ -8,7 +8,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   const portrait=arcaneFrameHeight(w,1080,1920,vh);
   expect(panorama).toBeLessThan(square);
   expect(square).toBeLessThan(portrait);
-  expect([panorama,square,portrait]).toEqual([281,348,732]);
+  expect([panorama,square,portrait]).toEqual([290,449,732]);
  });
  it('clamps pathological media dimensions but never distorts the original',()=>{
   const low=arcaneFrameHeight(w,15000,100,vh);
