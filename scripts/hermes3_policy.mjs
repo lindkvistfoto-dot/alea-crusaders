@@ -12,19 +12,19 @@ const fail=(reason)=>{throw new Error('HERMES3_POLICY_'+reason)};
 export function validateHermes3Job(job, registry){
  if(!registry||registry.schema!==3||!sameKeys(job,['schema','job_id','profile','source','target','intent']))
   fail('SCHEMA');
- if(job.schema!==3||job.intent!=='verify-only'||!ident.test(job.job_id||'')||job.job_id.length>90)
+ if(job.schema!==3||job.intent!=='verify-only'||typeof job.job_id!=='string'||!ident.test(job.job_id)||job.job_id.length>90||typeof job.profile!=='string')
   fail('INTENT_OR_ID');
  const profile=registry.profiles?.[job.profile];
  if(!profile||profile.stage!=='verify')fail('PROFILE_NOT_ENABLED');
  const src=job.source;
  if(!sameKeys(src,['provider','file_id','sha256','mime_type','visibility','public_release_approved']))
   fail('SOURCE_FIELDS');
- if(src.provider!=='google-drive'||!driveId.test(src.file_id||'')||!sha.test(src.sha256||'')
-  ||!profile.mimes.includes(src.mime_type)||src.visibility!=='public'
+ if(src.provider!=='google-drive'||typeof src.file_id!=='string'||!driveId.test(src.file_id)||typeof src.sha256!=='string'||!sha.test(src.sha256)
+  ||typeof src.mime_type!=='string'||!profile.mimes.includes(src.mime_type)||src.visibility!=='public'
   ||src.public_release_approved!==true)fail('UNTRUSTED_SOURCE');
  const target=job.target;
  if(!sameKeys(target,['category','key'])||target.category!==profile.media||
-  !ident.test(target.key||'')||target.key.length>100)fail('TARGET');
+  typeof target.key!=='string'||!ident.test(target.key)||target.key.length>100)fail('TARGET');
  return {job_id:job.job_id,profile:job.profile,sha256:src.sha256,
   media:profile.media,bytes_limit:profile.max_bytes,visibility:src.visibility};
 }
