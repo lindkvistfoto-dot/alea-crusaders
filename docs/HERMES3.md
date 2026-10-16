@@ -40,6 +40,7 @@ Nuvarande identitet:
 - `scripts/hermes3_drive_verify.py`: läser enbart från HERMES Inbox, verifierar source SHA/dimensioner/alfa/ZIP och skriver *lokalt verifieringskvitto*, ingen DB eller commit.
 - `scripts/hermes3_stage.py`: genererar endast innehållsadresserade WebP-filer och `staging-manifest.json` från verifierad originalfil + kontrollsummekvitto. Behåller alfakanalen, ignorerar ZIP-dokumentation och skriver bara till tillfälliga artefaktkataloger.
 - `scripts/hermes3_archive_smoke.py`: kör ett rent offlineacceptanstest mot det redan offentligt arkiverade ARCANE MORPHING FRAME v0.1-originalet och kontrollerar samtliga **29 sprites** utan att påstå att ett nytt Google Drive-anrop gjorts.
+- `scripts/hermes3_review.py`: kontrollerar stagingmanifest och SHA-256 för samtliga WebP-filer, skapar en visuell kontaktkarta och ett explicit **BLOCKED** releaseförslag (`release-candidate-BLOCKED.json`). Dessa är granskningsunderlag, inte produktionsgodkännande.
 - `.github/workflows/hermes3-trusted-verify.yml`: manuell `main`-baserad OIDC med `contents: read`, `id-token: write`; inte triggad av pull request eller push.
 - `.github/workflows/hermes3-staging.yml`: PR-tester och `dist/` som tidsbegränsad Actions-artifact; inget OIDC, ingen Pages-deploy.
 - `tests/hermes3-policy.test.js` samt `tests/test_hermes3_*.py`: säkerhets-, format-, ZIP- och WebP-regressionstester.
@@ -107,9 +108,10 @@ node scripts/hermes3_policy.mjs --all
 npx vitest run tests/hermes3-policy.test.js
 python -m unittest discover -s tests -p 'test_hermes3_*.py' -v
 python -m scripts.hermes3_archive_smoke /tmp/hermes3-arcane-preview
+python -m scripts.hermes3_review /tmp/hermes3-arcane-preview /tmp/hermes3-review
 npm run build
 ```
 
-Efter huvudgrenens godkända integrering kan den läsande verifieringen köras med `workflow_dispatch` på `main`. Utdata innehåller då både *verified-source* och färdiga WebP-filer med `staging-manifest.json` under sju dagar. **Ingen av dessa filer publiceras direkt till Pages eller Supabase.**
+Efter huvudgrenens godkända integrering kan den läsande verifieringen köras med `workflow_dispatch` på `main`. Utdata innehåller då både *verified-source*, färdiga WebP-filer med `staging-manifest.json`, ett granskningsblad `review-contact-sheet.png` och ett spärrat releasekvitto. Alla är tidsbegränsade granskningsartefakter under sju dagar. **Ingen av dessa filer publiceras direkt till Pages eller Supabase.**
 
 En misslyckad verifiering lämnar allt i produktion orört. HERMES 3 har ingen automatisk fallback till osäkra behörigheter. Radera aldrig gamla original på grund av ett misslyckat jobb; rätta requesten via ny PR och kör explicit igen efter granskning.
