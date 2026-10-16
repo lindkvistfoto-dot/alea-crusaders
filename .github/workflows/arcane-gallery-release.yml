@@ -1,0 +1,35 @@
+name: Arcane Gallery release verification
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/arcane-gallery-release.yml'
+      - 'features/material/arcane-gallery*'
+      - 'features/material/frodo-ui.js'
+      - 'tests/arcane-gallery*.test.js'
+      - 'scripts/hermes_drive_intake.py'
+      - 'scripts/hermes_ui_prepare.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arcane-gallery-release
+  cancel-in-progress: true
+
+jobs:
+  gallery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Gallery privacy and asset integrity
+        run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-release-smoke.test.js
+      - name: Build static app
+        run: npm run build
