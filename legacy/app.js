@@ -43,7 +43,7 @@ async function enterApp(){
   renderCards();
   refreshAuthUI();
   // Restore navigation after authenticated app data is loaded.
-  await window.aleaRefreshLocation?.restore?.();
+  if(typeof window!=='undefined')await window.aleaRefreshLocation?.restore?.();
  }
 }
 /* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */
