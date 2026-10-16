@@ -1,0 +1,44 @@
+name: HERMES 3 – isolated staging checks
+
+on:
+  pull_request:
+    paths:
+      - 'hermes3/**'
+      - 'config/hermes3-profiles.json'
+      - 'scripts/hermes3_*'
+      - 'tests/hermes3-*'
+      - '.github/workflows/hermes3-*'
+      - 'docs/HERMES3.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    name: Validate public-media contract and build without credentials
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Check queued staging metadata (no Google access)
+        run: node scripts/hermes3_policy.mjs --all
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Security and protocol regression tests
+        run: npx vitest run tests/hermes3-policy.test.js
+      - name: Create staging build without deployment
+        run: npm run build
+      - name: Upload staging build as non-deployed review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes3-staging-${{ github.run_id }}
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
