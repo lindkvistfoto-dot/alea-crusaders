@@ -1,7 +1,8 @@
 /* Frodo v0.34.85 — explicit show-now control for Legolas and Bilbo. */
 import {createFrodo} from './presentation.js?v=0.34.85';
 import {createLivePreview} from './live-preview.js?v=0.35.21';
-import {createArcaneGallery} from './arcane-gallery.js?v=0.35.236';
+import {createArcaneGallery} from './arcane-gallery.js?v=0.35.237';
+import {createArcaneGmPreview} from './arcane-gm-preview.js?v=0.35.237';
 // Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountFrodo({
@@ -16,6 +17,16 @@ export function mountFrodo({
  let liveId=null,initialized=false,queuedStatus='',queuedError=false;
  let stagedId='',queueSignature='',queueGeneration=0;
  const queueUrls=new Map();
+ // The same approved bronze gallery is the GM's *private staging* display.
+ // Selecting an image here never invokes the Frodo publication RPC.
+ const gmGallery=createArcaneGmPreview({
+  legolas,getCampaign,isLoggedIn,isGM,doc,win,
+  onPick:id=>{
+   if(selection().some(row=>row.id===id)){
+    stagedId=id;render();
+   }
+  }
+ });
  const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({
   '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
  })[char]);
@@ -175,6 +186,7 @@ export function mountFrodo({
   gallery.sync(state.row,state.revision);
   const rows=selection(),idx=rows.findIndex(x=>x.id===state.materialId);
   renderQueue(rows,gm);
+  gmGallery.sync(rows,stagedId,activeRow?.asset_kind==='image'?activeRow:null);
   for(const [id,disabled] of [
    ['frodoShowQueue',!gm||!rows.length||state.busy],
    ['frodoPrev',!gm||state.busy||idx<=0],
@@ -253,6 +265,7 @@ export function mountFrodo({
     '<button type="button" id="frodoRefresh">↻ Uppdatera</button></div>'+
    '<p id="frodoNotice" aria-live="polite" role="status"></p>';
   target.insertAdjacentElement('beforebegin',panel);
+  el('frodoGmPreview').insertAdjacentElement('beforebegin',gmGallery.mount());
   el('frodoPlayerActions').insertAdjacentElement('beforebegin',gallery.mount());
   const help=el('legolasGmQueue')?.querySelector('p');
   if(help)help.textContent='Välj bilder med + Välj. Visa första valda ovan delar bara den aktuella bilden med deltagarna.';
@@ -292,7 +305,7 @@ export function mountFrodo({
   const login=el('loginScreen');
   if(login&&typeof MutationObserver!=='undefined'){
    new MutationObserver(()=>{
-    if(!login.classList.contains('hidden')){gallery.clear();frodo.reset();preview.clear();clearQueueImages();queueSignature='';stagedId='';liveId=null;queuedStatus='';}
+    if(!login.classList.contains('hidden')){gallery.clear();gmGallery.clear();frodo.reset();preview.clear();clearQueueImages();queueSignature='';stagedId='';liveId=null;queuedStatus='';}
     else if(canWatch())void frodo.refresh({autoOpen:true,silent:true});
    }).observe(login,{attributes:true,attributeFilter:['class']});
   }
