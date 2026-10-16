@@ -54,6 +54,8 @@ jobs:
         env:
           HERMES3_REQUEST: ${{ inputs.request_path }}
         run: python -m scripts.hermes3_stage "$HERMES3_REQUEST" "$RUNNER_TEMP/hermes3-verified" "$RUNNER_TEMP/hermes3-staging"
+      - name: Generate review sheet and BLOCKED release candidate (no promotion)
+        run: python -m scripts.hermes3_review "$RUNNER_TEMP/hermes3-staging" "$RUNNER_TEMP/hermes3-review"
       - name: Store verified original and staging previews for seven days
         uses: actions/upload-artifact@v4
         with:
@@ -61,6 +63,7 @@ jobs:
           path: |
             ${{ runner.temp }}/hermes3-verified/
             ${{ runner.temp }}/hermes3-staging/
+            ${{ runner.temp }}/hermes3-review/
           retention-days: 7
           if-no-files-found: error
       - name: Receipt (no release)
