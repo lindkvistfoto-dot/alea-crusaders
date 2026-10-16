@@ -6,6 +6,8 @@ on:
       - '.github/workflows/arcane-gallery-release.yml'
       - 'features/material/arcane-gallery*'
       - 'features/material/frodo-ui.js'
+      - 'features/material/viewer.js'
+      - 'tests/material-legolas-viewer.test.js'
       - 'tests/arcane-gallery*.test.js'
       - 'scripts/hermes_drive_intake.py'
       - 'scripts/hermes_ui_prepare.py'
@@ -30,6 +32,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Gallery privacy and asset integrity
-        run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-release-smoke.test.js
+        run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-release-smoke.test.js tests/material-legolas-viewer.test.js
       - name: Build static app
         run: npm run build
