@@ -2,7 +2,8 @@
  * This component NEVER writes presentations. Only Frodo's explicit RPC does.
  * All media are read through Legolas' authenticated, campaign-scoped Storage.
  */
-import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
+import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
+import {arcaneMorphMarkup} from './arcane-morph-markup.js';
 const buckets=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -33,7 +34,8 @@ export function createArcaneGmPreview({
   '<div id="arcaneGmPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Förhandsvisa vald bild i helskärm">'+
   '<img id="arcaneGmImage" class="hidden" alt=""><span id="arcaneGmEmpty">Välj en bild i arkivet nedan…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGmStrip" class="arcane-gallery-strip" aria-label="Privata bilder i spelarvisningskön"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true">'+
+  arcaneMorphMarkup()+'</div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan förberedda bilder">'+
   '<button type="button" id="arcaneGmPrev" aria-label="Föregående förberedd bild">‹</button>'+
   '<p id="arcaneGmStatus" class="arcane-gallery-status" role="status" aria-live="polite">Inget material är valt</p>'+
@@ -57,7 +59,7 @@ export function createArcaneGmPreview({
  }
  function clear(){
   releaseMain();releaseThumbs();state.scope='';state.rows=[];state.selected='';
-  state.live='';state.signature='';state.queue.clear();root.classList.remove('arcane-gallery-fluid');root.classList.add('hidden');
+  state.live='';state.signature='';state.queue.clear();resetArcaneFrame(root);root.classList.add('hidden');
   const strip=$('arcaneGmStrip');if(strip){strip.replaceChildren();strip.dataset.signature='';}
  }
  function current(id){return state.rows.find(r=>r.id===id);}
