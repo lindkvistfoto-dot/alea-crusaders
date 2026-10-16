@@ -28,6 +28,15 @@ export function legolasClampScale(scale){return Math.max(1,Math.min(6,Number.isF
 export function legolasPanLimit(viewport,fitSize,scale){
  return Math.max(0,(Math.max(0,Number(fitSize)||0)*legolasClampScale(scale)-Math.max(0,Number(viewport)||0))/2);
 }
+// Only campaign-scoped private pictures may join a full-screen sequence.
+export function legolasPrivateImageSequence(rows,scope){
+ if(!/^[a-f0-9-]{36}$/i.test(String(scope||'')))return [];
+ return (Array.isArray(rows)?rows:[]).filter(row=>{
+  const path=row?.storage_path;
+  return row?.campaign_id===scope&&row.asset_kind==='image'&&LEGOLAS_BUCKETS.has(row.storage_bucket)&&
+   typeof path==='string'&&path.startsWith(scope+'/')&&!path.includes('..')&&!path.includes('//');
+ });
+}
 export function createLegolas({
  doc=()=>document,
  win=()=>window,
@@ -325,6 +334,14 @@ export function createLegolas({
   cleanCampaign();
   state.previewRows=[row];state.index=0;showViewer();
  }
+ function previewSequence(rows,id){
+  if(!authorized())return;
+  cleanCampaign();
+  const permitted=legolasPrivateImageSequence(rows,campaign());
+  const index=permitted.findIndex(row=>row.id===id);
+  if(index<0)return;
+  state.previewRows=permitted;state.index=index;showViewer();
+ }
  function openViewer(id){
   const row=state.rows.find(row=>row.id===id);
   if(!row||row.campaign_id!==campaign())return;
@@ -453,5 +470,5 @@ export function createLegolas({
  }
  function getStagedIds(){return isGM()&&authorized()?[...state.selection.keys()]:[];}
  return {state,mount,openPanel,closePanel,reset,loadPage,openViewer,closeViewer,
-  openQueue,previewMaterial,toggleSelection,getStagedIds,zoom,stepViewer,readMedia};
+  openQueue,previewMaterial,previewSequence,toggleSelection,getStagedIds,zoom,stepViewer,readMedia};
 }
