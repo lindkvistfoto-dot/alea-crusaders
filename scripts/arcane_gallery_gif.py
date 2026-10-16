@@ -19,6 +19,12 @@ images[0].save(target,save_all=True,append_images=images[1:],
               duration=90,loop=0,disposal=2,optimize=True)
 with Image.open(target) as check:
     count=getattr(check,"n_frames",0)
-    if count<30 or check.size!=(400,750):
-        raise ValueError(f"bad animation: {count} frames, size {check.size}")
-print("ARCANE_ANIMATION_GIF_READY",target,count,target.stat().st_size)
+    total_ms=0
+    for index in range(count):
+        check.seek(index)
+        total_ms+=int(check.info.get("duration",0))
+    # Pillow merges repeated frames when optimization is enabled; this is
+    # expected and retains their combined display duration in the GIF.
+    if count<18 or check.size!=(400,750) or total_ms<3500:
+        raise ValueError(f"bad animation: {count} frames, {total_ms} ms, size {check.size}")
+print("ARCANE_ANIMATION_GIF_READY",target,count,total_ms,target.stat().st_size)
