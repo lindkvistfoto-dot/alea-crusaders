@@ -56,6 +56,22 @@ describe('Presentationsateljén — GM mobile structure',()=>{
   expect(css).toContain('@media(max-width:720px)');
   expect(css).toContain('hyphens:none');
  });
+ it('uses full-height bronze frame on GM mobile with an accessible overlay close action',()=>{
+  const css=read('features/material/frodo-atelier.css');
+  const gm=read('features/material/arcane-gm-preview.js');
+  const ui=read('features/material/frodo-ui.js');
+  expect(css).toContain('body:has(#legolasPanel.legolas-atelier-gm:not(.hidden)) > .alea-app-header');
+  expect(css).toContain('.arcane-gm-gallery .arcane-gallery-machine');
+  expect(css).toContain('height:calc(100dvh - 58px - env(safe-area-inset-bottom))');
+  expect(css).toContain('border-image-slice:230 0 215 0 fill');
+  expect(css).toContain('border-image-width:19.965cqw 0 18.663cqw 0');
+  expect(css).toContain('.arcane-gm-gallery .arcane-gallery-picture');
+  expect(css).toContain('.arcane-gm-gallery .arcane-gallery-belt');
+  expect(css).toContain('.frodo-panel-heading,');
+  expect(css).toContain('.arcane-gm-gallery .arcane-gallery-heading');
+  expect(gm).toContain('id="arcaneGmClose"');
+  expect(ui).toContain("onClose:()=>el('legolasClosePanel')?.click()");
+ });
  it('mobile preview never crops original player image and is keyboard accessible',()=>{
   const css=read('features/material/frodo-atelier.css');
   expect(css).toContain('@media(max-width:720px)');

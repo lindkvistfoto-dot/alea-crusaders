@@ -290,3 +290,95 @@
  #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-hint{margin-top:3px}
  #legolasPanel .frodo-panel.frodo-is-gm .frodo-queue-view{margin-top:7px}
 }
+
+
+/* Sisyphus · Arcane Gallery mobile focus v0.35.238.
+   Only the GM's OPEN material route is full-bleed. Every other Alea page,
+   the player gallery and the desktop atelier keep their normal navigation. */
+@media (max-width:720px){
+ body:has(#legolasPanel.legolas-atelier-gm:not(.hidden)) > .alea-app-header{
+  display:none!important;
+ }
+ main > #legolasPanel.legolas-atelier-gm{
+  margin:0!important;padding:0!important;width:100%!important;
+  min-height:100dvh;background:#0d1511!important;
+ }
+ #legolasPanel.legolas-atelier-gm .legolas-panel-inner{
+  width:100%!important;max-width:none!important;min-height:100dvh!important;
+  margin:0!important;padding:0!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;background:#101911!important;
+ }
+ #legolasPanel.legolas-atelier-gm > .legolas-panel-inner > .legolas-heading,
+ #legolasPanel.legolas-atelier-gm .frodo-panel-heading,
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-heading{
+  display:none!important;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-panel.frodo-is-gm{
+  margin:0!important;padding:0 0 max(12px,env(safe-area-inset-bottom))!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:linear-gradient(#0d1511,#19241b)!important;
+ }
+ /* Keep the five miniature apertures and every bronze ornament undistorted:
+    the top/bottom of the approved asset retain their original scaling while
+    only the plain central rails stretch vertically (9-slice border-image). */
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery{
+  display:block!important;position:relative!important;
+  width:100%!important;max-width:100%!important;min-width:0;
+  margin:0!important;padding:0!important;border:0!important;
+  container-type:inline-size;isolation:isolate;overflow:visible;
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery.hidden{display:none!important}
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-machine{
+  width:100%;aspect-ratio:auto!important;
+  height:calc(100dvh - 58px - env(safe-area-inset-bottom));
+  min-height:max(360px,118cqw);
+  max-height:980px;
+  overflow:hidden;
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-overlay{
+  display:none!important;
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-machine::after{
+  content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  border-style:solid;border-width:1px 0;
+  border-image-source:url("./arcane-gallery-overlay.webp?v=0.35.238");
+  border-image-slice:230 0 215 0 fill;
+  border-image-width:19.965cqw 0 18.663cqw 0;
+  border-image-repeat:stretch;
+ }
+ /* Translate the transparent picture aperture through the same 9-slice
+    geometry. The horizontal dimensions never change. */
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-picture{
+  left:12.6%;top:6.73cqw;width:74.8%;
+  height:calc(80.495% - 17.86cqw);
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-belt{
+  left:16.6%;width:66.7%;
+  top:calc(100% - 15.94cqw);height:8.8cqw;
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-gallery .arcane-gallery-controls{
+  margin:0 auto!important;padding:0 8px!important;
+  min-height:48px;max-width:100%;
+  background:#101911;
+ }
+ /* Exiting the full-frame view stays available; no title/header is needed. */
+ #legolasPanel.legolas-atelier-gm .arcane-gm-close{
+  display:grid;position:absolute;top:6px;right:6px;z-index:8;
+  place-items:center;width:44px;height:44px;min-height:44px;
+  padding:0;border:1px solid #d4af76;border-radius:50%;
+  color:#fbe9c6;background:#211d18e8;box-shadow:0 3px 14px #000b;
+  font:700 25px/1 Georgia,serif;cursor:pointer;touch-action:manipulation;
+ }
+ #legolasPanel.legolas-atelier-gm .arcane-gm-close:focus-visible{
+  outline:3px solid #ffe0a4;outline-offset:2px;
+ }
+ #legolasPanel.legolas-atelier-gm .frodo-queue-view{
+  margin:0 6px 8px!important;padding:8px!important;
+ }
+ #legolasPanel.legolas-atelier-gm #frodoGmActions{
+  margin:8px 6px 0!important;
+ }
+ #legolasPanel.legolas-atelier-gm #frodoNotice{
+  margin:4px 8px 8px;
+ }
+}

@@ -35,6 +35,8 @@ describe('Arcane Gallery — GM private staging',()=>{
   expect(source).toContain('legolas.readMedia(row,false)');
   expect(source).toContain('win().URL.revokeObjectURL');
   expect(source).toContain('arcane-gallery-overlay.webp');
+  expect(source).toContain('arcaneGmClose');
+  expect(source).toContain("addEventListener('click',onClose)");
   expect(source).not.toContain('frodo_set_presentation');
   expect(source).not.toContain('/object/public/');
   expect(ui).toContain('gmGallery.sync(rows,stagedId,activeRow');

@@ -21,7 +21,7 @@ export function arcaneGmPreviewRows(staged,live,campaign){
 }
 
 export function createArcaneGmPreview({
- legolas,getCampaign,isLoggedIn,isGM,onPick=()=>{},
+ legolas,getCampaign,isLoggedIn,isGM,onPick=()=>{},onClose=()=>{},
  doc=()=>document,win=()=>window
 }){
  const root=doc().createElement('section');
@@ -32,11 +32,12 @@ export function createArcaneGmPreview({
   '<div id="arcaneGmPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Förhandsvisa vald bild i helskärm">'+
   '<img id="arcaneGmImage" class="hidden" alt=""><span id="arcaneGmEmpty">Välj en bild i arkivet nedan…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGmStrip" class="arcane-gallery-strip" aria-label="Privata bilder i spelarvisningskön"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.237" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.238" alt="" aria-hidden="true"></div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan förberedda bilder">'+
   '<button type="button" id="arcaneGmPrev" aria-label="Föregående förberedd bild">‹</button>'+
   '<p id="arcaneGmStatus" class="arcane-gallery-status" role="status" aria-live="polite">Inget material är valt</p>'+
-  '<button type="button" id="arcaneGmNext" aria-label="Nästa förberedd bild">›</button></nav>';
+  '<button type="button" id="arcaneGmNext" aria-label="Nästa förberedd bild">›</button></nav>'+
+  '<button type="button" id="arcaneGmClose" class="arcane-gm-close" aria-label="Stäng bildvisningen" title="Stäng bildvisningen">×</button>';
  const $=id=>root.querySelector('#'+id);
  const state={scope:'',rows:[],queue:new Set(),selected:'',live:'',
   signature:'',mainUrl:'',loadingId:'',mainSeq:0,thumbSeq:0,
@@ -163,6 +164,7 @@ export function createArcaneGmPreview({
   else legolas.previewMaterial(current(state.selected));
  }
  function mount(){
+  $('arcaneGmClose').addEventListener('click',onClose);
   $('arcaneGmPicture').addEventListener('click',openFull);
   $('arcaneGmPicture').addEventListener('keydown',e=>{
    if(e.key==='Enter'||e.key===' '){e.preventDefault();openFull();}

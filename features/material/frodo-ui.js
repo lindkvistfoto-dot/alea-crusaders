@@ -1,8 +1,8 @@
 /* Frodo v0.34.85 — explicit show-now control for Legolas and Bilbo. */
 import {createFrodo} from './presentation.js?v=0.34.85';
 import {createLivePreview} from './live-preview.js?v=0.35.21';
-import {createArcaneGallery} from './arcane-gallery.js?v=0.35.237';
-import {createArcaneGmPreview} from './arcane-gm-preview.js?v=0.35.237';
+import {createArcaneGallery} from './arcane-gallery.js?v=0.35.238';
+import {createArcaneGmPreview} from './arcane-gm-preview.js?v=0.35.238';
 // Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountFrodo({
@@ -21,6 +21,7 @@ export function mountFrodo({
  // Selecting an image here never invokes the Frodo publication RPC.
  const gmGallery=createArcaneGmPreview({
   legolas,getCampaign,isLoggedIn,isGM,doc,win,
+  onClose:()=>el('legolasClosePanel')?.click(),
   onPick:id=>{
    if(selection().some(row=>row.id===id)){
     stagedId=id;render();
