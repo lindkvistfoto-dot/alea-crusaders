@@ -44,6 +44,15 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_hermes3_*.py' -v
       - name: Security and protocol regression tests
         run: npx vitest run tests/hermes3-policy.test.js
+      - name: Verify and convert the 29 authentic Arcane sprites (offline fixture)
+        run: python3 -m scripts.hermes3_archive_smoke "$RUNNER_TEMP/hermes3-arcane-preview"
+      - name: Archive 29 review sprites without publication
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes3-arcane-sprite-preview-${{ github.run_id }}
+          path: ${{ runner.temp }}/hermes3-arcane-preview/
+          retention-days: 7
+          if-no-files-found: error
       - name: Create staging build without deployment
         run: npm run build
       - name: Upload staging build as non-deployed review artifact
