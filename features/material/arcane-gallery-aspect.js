@@ -21,6 +21,13 @@ export function arcaneFrameHeight(frameWidth,mediaWidth,mediaHeight,viewportHeig
  const max=Math.max(width*1.9,visibleHeight*1.22);
  return Math.round(Math.max(min,Math.min(raw,max)));
 }
+/** Forget the last campaign's geometry before reusing a private viewer. */
+export function resetArcaneFrame(root){
+ const machine=root?.querySelector?.('.arcane-gallery-machine');
+ machine?.style?.removeProperty?.('--arcane-frame-height');
+ machine?.style?.removeProperty?.('--arcane-gear-angle');
+ root?.classList?.remove?.('arcane-gallery-fluid');
+}
 /** Rotation is derived from extension, never a timer: gears and frame stop together. */
 export function arcaneGearRotation(frameHeight,frameWidth){
  const h=Number(frameHeight),w=Number(frameWidth);
