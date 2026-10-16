@@ -1,0 +1,33 @@
+name: Arcane Gallery PR verification
+on:
+  pull_request:
+    paths:
+      - 'features/material/arcane-gallery*'
+      - 'features/material/arcane-morph*'
+      - 'features/material/frodo-ui.js'
+      - 'features/material/library.js'
+      - 'index.html'
+      - 'tests/arcane-gallery*.test.js'
+      - 'tests/material-atelier-mobile.test.js'
+      - 'tests/material-polish.test.js'
+      - '.github/workflows/arcane-gallery-pr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gallery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Gallery and integration regression tests
+        run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-aspect.test.js tests/arcane-gallery-release-smoke.test.js tests/arcane-gm-preview.test.js tests/material-legolas-viewer.test.js tests/material-atelier-mobile.test.js tests/material-polish.test.js tests/material-frodo-presentation.test.js
+      - name: Production build
+        run: npm run build
