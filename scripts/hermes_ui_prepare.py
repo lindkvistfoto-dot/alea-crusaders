@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "assets/hermes/originals/ui"
 KEYS = {"arcane-mechanism-link", "arcane-mechanism-chamber"}
 PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber)/([a-f0-9]{64})\.png$")
-LINK_SIZES = {(3, 2): (768, 512), (4, 3): (768, 576)}
+LINK_SIZES = {(3, 2): (768, 512), (4, 3): (768, 576), (3, 4): (576, 768)}
 CHAMBER_SIZE = (768, 256)
 LIMIT = 300000
 

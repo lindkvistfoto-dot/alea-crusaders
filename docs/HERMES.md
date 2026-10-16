@@ -6,9 +6,9 @@
 
 ## HERMES UI – kryptexgrafik (2026-10-16)
 
-HERMES stöder nu även `kind=ui` för `arcane-mechanism-link` och `arcane-mechanism-chamber`. De följer samma aktiva push-kedja med HERMES Drive Inbox, OIDC-autentisering, Drive-original, SHA-256 och GitHub-original. Länken accepterar nu 3:2- eller 4:3-PNG med RGBA-transparens. Den senaste emblemvarianten är 4:3. Kammarbakgrunden behåller 3:1 och ogenomskinlig RGB/RGBA. UI-intaget startar `.github/workflows/hermes-ui-intake.yml` i stället för besvärjelsepubliceraren.
+HERMES stöder nu även `kind=ui` för `arcane-mechanism-link` och `arcane-mechanism-chamber`. De följer samma aktiva push-kedja med HERMES Drive Inbox, OIDC-autentisering, Drive-original, SHA-256 och GitHub-original. Länken accepterar 3:2-, 4:3- eller 3:4-PNG med RGBA-transparens. Den senaste stora vertikala emblemvarianten är 3:4. Kammarbakgrunden behåller 3:1 och ogenomskinlig RGB/RGBA. UI-intaget startar `.github/workflows/hermes-ui-intake.yml` i stället för besvärjelsepubliceraren.
 
-Den särskilda UI-publiceraren verifierar källhash, producerar 768×512 WebP för 3:2-länken eller 768×576 för 4:3-länken (768×256 för kammaren), verifierar transparens och publicerar till `features/combat/arcane-mechanism-{link,chamber}.webp` samt tillhörande manifest. GitHub Pages uppdateras via explicit build-anrop. **Inga Supabase-databasfält aktiveras för dessa publika statiska UI-resurser.** De statiska resurserna följer med Vite-byggets befintliga `features/`-kopiering. Bildkällorna är publika, privata filer får inte läggas i detta flöde.
+Den särskilda UI-publiceraren verifierar källhash, producerar 768×512 WebP för 3:2-länken, 768×576 för 4:3-länken eller 576×768 för 3:4-länken (768×256 för kammaren), verifierar transparens och publicerar till `features/combat/arcane-mechanism-{link,chamber}.webp` samt tillhörande manifest. GitHub Pages uppdateras via explicit build-anrop. **Inga Supabase-databasfält aktiveras för dessa publika statiska UI-resurser.** De statiska resurserna följer med Vite-byggets befintliga `features/`-kopiering. Bildkällorna är publika, privata filer får inte läggas i detta flöde.
 
 ---
 

@@ -74,7 +74,7 @@
  border:0;border-radius:8px;overflow:visible;
  transform-origin:50% 50%;transition:none!important;
 }
-/* Position complete 4:3 links BETWEEN the rendered icon edges.
+/* Position complete 3:4 links BETWEEN the rendered icon edges.
    Separate overlay is deliberately outside the masked tablet viewport,
    so that the metal emblem can actually be seen between the windows. */
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link-layer{
@@ -82,8 +82,8 @@
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-link{
  position:absolute;display:none;transform:translateY(-50%);
- height:auto;aspect-ratio:4/3;
- background:url("./arcane-mechanism-link.webp?v=0.35.226") center/100% 100% no-repeat;
+ height:auto;aspect-ratio:3/4;
+ background:url("./arcane-mechanism-link.webp?v=0.35.227") center/100% 100% no-repeat;
  box-shadow:none;filter:none;border:0;border-radius:0;pointer-events:none;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
