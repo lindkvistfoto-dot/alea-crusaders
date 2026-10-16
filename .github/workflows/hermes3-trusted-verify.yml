@@ -1,0 +1,59 @@
+name: HERMES 3 – trusted Drive verification (no publication)
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: 'Reviewed hermes3/requests/<job-id>.json on main'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: hermes3-verify-${{ inputs.request_path }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate reviewed public-media job policy
+        run: node scripts/hermes3_policy.mjs "${{ inputs.request_path }}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned image verifier
+        run: python -m pip install Pillow==12.3.0
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+      - name: Read, hash and decode only the approved public source
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          HERMES3_REQUEST: ${{ inputs.request_path }}
+        run: python scripts/hermes3_drive_verify.py "$HERMES3_REQUEST" "$RUNNER_TEMP/hermes3-verified"
+      - name: Store seven-day verified source for staging review
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes3-verified-${{ github.run_id }}
+          path: ${{ runner.temp }}/hermes3-verified/
+          retention-days: 7
+          if-no-files-found: error
+      - name: Receipt (no release)
+        run: echo '### HERMES 3 — source verified. No staging promotion, production deployment or Supabase update.' >> "$GITHUB_STEP_SUMMARY"
