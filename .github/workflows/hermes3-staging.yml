@@ -31,8 +31,16 @@ jobs:
         run: node scripts/hermes3_policy.mjs --all
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+      - name: Setup Python 3.12 for offline media verification
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned image decoder
+        run: python -m pip install Pillow==12.3.0
       - name: Python intake verifier syntax
         run: python3 -m py_compile scripts/hermes3_drive_verify.py
+      - name: Offline HERMES media and ZIP safety tests
+        run: python3 -m unittest discover -s tests -p 'test_hermes3_drive_verify.py' -v
       - name: Security and protocol regression tests
         run: npx vitest run tests/hermes3-policy.test.js
       - name: Create staging build without deployment
