@@ -173,6 +173,8 @@
   overflow:visible;
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate{
+  /* Keep names ABOVE the mobile housing (z-index:7), not hidden behind the bronze plaque. */
+  z-index:8;
   font-size:clamp(9px,2.5vw,12px);
  }
  #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-mark{

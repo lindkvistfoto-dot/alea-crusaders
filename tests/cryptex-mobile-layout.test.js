@@ -39,6 +39,14 @@ describe('ARCANE GOLD free-floating cryptex on mobile',()=>{
   expect(base).toContain('combat-cryptex-end-button--prev');
   expect(base).toContain('combat-cryptex-end-button--next');
   expect(mobile).toContain('width:min(calc(100% + 56px),calc(100vw - 8px))');
-  expect(read('index.html')).toContain('arcane-cryptex.css?v=0.35.215');
+  expect(read('index.html')).toContain('arcane-cryptex.css?v=0.35.219');
  });
+ it('keeps the live spell name above the decorative housing on mobile',()=>{
+  const housing=mobile.match(/\\.combat-cryptex-housing\\s*\\{([^}]*)\\}/)?.[1]||'';
+  const label=mobile.match(/\\.combat-cryptex-nameplate\\s*\\{([^}]*)\\}/)?.[1]||'';
+  const zIndex=rule=>Number(rule.match(/z-index:\\s*(\\d+)/)?.[1]||0);
+  expect(zIndex(housing)).toBeGreaterThan(0);
+  expect(zIndex(label)).toBeGreaterThan(zIndex(housing));
+ });
+
 });
