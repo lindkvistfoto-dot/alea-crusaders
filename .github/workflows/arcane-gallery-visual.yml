@@ -1,0 +1,84 @@
+name: Arcane Gallery visual acceptance previews
+on:
+  push:
+    branches:
+      - sisyphus/arcane-gallery-shared-mechanics-20261016
+    paths:
+      - 'tests/fixtures/arcane-gallery-visual.html'
+      - 'tests/fixtures/arcane-gallery-animation.html'
+      - 'scripts/arcane_gallery_record.cjs'
+      - 'scripts/arcane_gallery_gif.py'
+      - 'features/material/arcane-gallery-kit.css'
+      - 'features/material/arcane-morph-markup.js'
+      - 'features/material/arcane-gallery-aspect.js'
+      - 'tests/arcane-morph-art-assets.test.js'
+      - '.github/workflows/arcane-gallery-visual.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  visual:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/sisyphus/arcane-gallery-shared-mechanics-20261016'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Render the actual 29-part mechanical gallery at four aspect ratios
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/arcane-vite.log 2>&1 &
+          ready=0
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/arcane-gallery-visual.html >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then cat /tmp/arcane-vite.log; exit 1; fi
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          mkdir -p tests/visual-regressions
+          "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --disable-background-networking --hide-scrollbars --force-device-scale-factor=1 \
+            --window-size=1760,1040 --virtual-time-budget=3000 \
+            --screenshot=tests/visual-regressions/arcane-morph-desktop.png \
+            'http://127.0.0.1:4173/tests/fixtures/arcane-gallery-visual.html'
+          "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --disable-background-networking --hide-scrollbars --force-device-scale-factor=1 \
+            --window-size=420,900 --virtual-time-budget=3000 \
+            --screenshot=tests/visual-regressions/arcane-morph-mobile.png \
+            'http://127.0.0.1:4173/tests/fixtures/arcane-gallery-visual.html'
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+          for image in sorted(Path('tests/visual-regressions').glob('*.png')):
+              data=image.read_bytes()
+              assert data[:8]==b'\x89PNG\r\n\x1a\n' and len(data)>10000, image
+              w,h=struct.unpack('>II',data[16:24])
+              assert w>=400 and h>=800, (image,w,h)
+              print('ARCANE_VISUAL_CAPTURE_OK',image,w,h,len(data))
+          PY
+          python -m pip install --disable-pip-version-check Pillow==12.3.0
+          node scripts/arcane_gallery_record.cjs
+          python scripts/arcane_gallery_gif.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arcane-morph-preview
+          path: |
+            tests/visual-regressions/arcane-morph-*.png
+            tests/visual-regressions/arcane-morph-animation.gif
+          if-no-files-found: error
+      - name: Keep sanitized screenshots on preview branch for design review
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual-regressions/arcane-morph-desktop.png tests/visual-regressions/arcane-morph-mobile.png tests/visual-regressions/arcane-morph-animation.gif
+          if ! git diff --cached --quiet; then
+            git commit -m "test(gallery): capture static views and Chrome motion preview"
+            git push origin HEAD:sisyphus/arcane-gallery-shared-mechanics-20261016
+          fi

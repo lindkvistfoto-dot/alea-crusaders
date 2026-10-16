@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Alea Arcane Morphing Frame – Visual Acceptance Fixture</title>
+  <link rel="stylesheet" href="/features/material/arcane-gallery.css?v=0.35.239">
+  <style>
+    html,body{margin:0;min-height:100%;background:#0b1017;color:#e8d4aa;font:14px Georgia,serif}
+    body{padding:18px;box-sizing:border-box}
+    h1{margin:0 0 8px;text-align:center;font-size:20px;letter-spacing:.15em}
+    .description{text-align:center;color:#ae9974;margin:0 0 18px;font:12px system-ui,sans-serif}
+    .preview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+    .preview-card{min-width:0;padding:9px 4px 15px;background:#101b26;border:1px solid #4d3c27;border-radius:8px}
+    .preview-card h2{margin:6px 0 2px;text-align:center;font:700 13px Georgia,serif;letter-spacing:.15em}
+    #legolasPanel .arcane-gallery{width:100%;margin:0 auto}
+    #legolasPanel .arcane-gallery-machine{margin:auto}
+    #legolasPanel .arcane-gallery-picture img{object-fit:contain}
+    #legolasPanel .arcane-gallery-belt{display:flex;align-items:center;justify-content:center;color:#ae9b77;font:10px Georgia,serif}
+    .preview-note{text-align:center;color:#a18b66;font:11px system-ui,sans-serif;line-height:1.4}
+    @media(max-width:650px){
+      body{padding:10px}
+      .preview-grid{display:block}
+      .preview-card{margin:auto;max-width:390px}
+      .preview-card:not(:last-child){display:none}
+      h1{font-size:16px}
+    }
+  </style>
+</head>
+<body id="legolasPanel">
+  <h1>ARCANE MORPHING FRAME</h1>
+  <p class="description">SISYPHUS · HERMES v0.1 · offentlig testgrafik, inga privata kampanjbilder</p>
+  <main class="preview-grid" id="previews"></main>
+  <script type="module">
+    import {arcaneMorphMarkup} from '/features/material/arcane-morph-markup.js';
+    import {sizeArcaneFrame} from '/features/material/arcane-gallery-aspect.js';
+    const formats=[['16:9',1600,900],['4:3',1200,900],['1:1',1000,1000],['9:16',900,1600]];
+    const holder=document.getElementById('previews');
+    for(const [label,width,height] of formats){
+      const card=document.createElement('article');
+      card.className='preview-card';
+      card.innerHTML='<h2>'+label+'</h2><section class="arcane-gallery arcane-gallery-kit">'+
+        '<div class="arcane-gallery-machine">'+
+        '<div class="arcane-gallery-picture"><img alt="Testmotiv"></div>'+
+        '<div class="arcane-gallery-belt">ALEA CRUSADERS · ARCANE GALLERY</div>'+
+        arcaneMorphMarkup()+'</div></section>'+
+        '<p class="preview-note">Frilagda, separata delar · korrekt bildformat</p>';
+      holder.append(card);
+      const image=card.querySelector('.arcane-gallery-picture img');
+      const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">'+
+        '<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#172d42"/><stop offset=".7" stop-color="#29404e"/><stop offset="1" stop-color="#111923"/></linearGradient></defs>'+
+        '<rect width="100%" height="100%" fill="url(#sky)"/>'+
+        '<circle cx="'+(width*.7)+'" cy="'+(height*.28)+'" r="'+(Math.min(width,height)*.09)+'" fill="#9ed7e6" opacity=".8"/>'+
+        '<path d="M0 '+(height*.8)+' L'+(width*.25)+' '+(height*.45)+' L'+(width*.47)+' '+(height*.73)+' L'+(width*.67)+' '+(height*.36)+' L'+width+' '+(height*.76)+' V'+height+' H0Z" fill="#101923"/>'+
+        '<text x="50%" y="90%" fill="#d7bf83" font-family="Georgia" font-size="'+(Math.min(width,height)*.055)+'" text-anchor="middle">ARCANE TEST MEDIA</text>'+
+        '</svg>';
+      image.onload=()=>sizeArcaneFrame(card.querySelector('.arcane-gallery'),image,innerHeight);
+      image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARCANE MORPHING FRAME · Animation Preview</title>
+<link rel="stylesheet" href="/features/material/arcane-gallery.css?v=0.35.239">
+<style>
+html,body{margin:0;min-height:100%;background:#09111c;color:#e9c997;font-family:Georgia,serif}
+body{padding:18px 12px 28px;box-sizing:border-box}
+h1{text-align:center;font-size:20px;letter-spacing:.16em;margin:6px 0}
+.subtitle{text-align:center;font:12px system-ui,sans-serif;color:#b5a078;margin:0 0 12px}
+.preview{max-width:420px;margin:0 auto}
+.preview .arcane-gallery{margin:auto!important;width:100%!important;max-width:420px}
+.preview .arcane-gallery-machine{margin:auto}
+.preview .arcane-gallery-belt{display:flex;align-items:center;justify-content:center;color:#c5aa73;font-size:11px;letter-spacing:.1em}
+.preview .arcane-gallery-picture img{display:block;width:100%;height:100%;object-fit:contain}
+.status{text-align:center;color:#d3b781;font:700 16px Georgia,serif;letter-spacing:.18em;margin:8px 0 10px}
+.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.actions button{border:1px solid #987847;background:#251c19;color:#edd09a;font:13px Georgia,serif;padding:8px 14px;border-radius:5px;cursor:pointer}
+.actions button:focus-visible{outline:2px solid #f9e0aa}
+</style>
+</head>
+<body id="legolasPanel">
+<h1>ARCANE MORPHING FRAME</h1>
+<p class="subtitle">SISYPHUS · Genuine 29-piece HERMES art · Motion preview</p>
+<main class="preview">
+<p class="status" id="arcaneFormat">16:9</p>
+<section class="arcane-gallery arcane-gallery-kit" id="arcanePreview">
+  <div class="arcane-gallery-machine">
+    <div class="arcane-gallery-picture"><img id="arcaneTestImage" alt="Public synthetic fantasy landscape"></div>
+    <div class="arcane-gallery-belt">ALEA CRUSADERS · ARCANE GALLERY</div>
+  </div>
+</section>
+<div class="actions" aria-label="Change preview format">
+  <button type="button" data-format="0">16:9</button>
+  <button type="button" data-format="1">4:3</button>
+  <button type="button" data-format="2">1:1</button>
+  <button type="button" data-format="3">9:16</button>
+</div>
+</main>
+<script type="module">
+import {arcaneMorphMarkup} from '/features/material/arcane-morph-markup.js';
+import {sizeArcaneFrame} from '/features/material/arcane-gallery-aspect.js';
+const root=document.getElementById('arcanePreview');
+root.querySelector('.arcane-gallery-machine').insertAdjacentHTML('beforeend',arcaneMorphMarkup());
+const image=document.getElementById('arcaneTestImage');
+const formats=[['16:9',1600,900],['4:3',1200,900],['1:1',1000,1000],['9:16',900,1600]];
+let version=0;
+function publicTestImage(w,h){
+const r=Math.min(w,h),mountain=Math.round(h*.62),font=Math.round(r*.048);
+const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#132238"/><stop offset=".6" stop-color="#314b5b"/><stop offset="1" stop-color="#172534"/></linearGradient></defs><rect width="'+w+'" height="'+h+'" fill="url(#sky)"/><circle cx="'+Math.round(w*.72)+'" cy="'+Math.round(h*.24)+'" r="'+Math.round(r*.085)+'" fill="#9ec9db" opacity=".85"/><path d="M0 '+Math.round(h*.81)+' L'+Math.round(w*.18)+' '+Math.round(h*.48)+' L'+Math.round(w*.38)+' '+Math.round(h*.78)+' L'+Math.round(w*.65)+' '+Math.round(h*.38)+' L'+w+' '+Math.round(h*.84)+' V'+h+' H0Z" fill="#101c2a"/><text x="50%" y="91%" text-anchor="middle" font-family="Georgia" font-size="'+font+'" fill="#e5d1aa">ARCANE TEST IMAGE</text></svg>';
+return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+window.arcanePreviewSetFormat=async function(index){
+ const my=++version;
+ const [label,w,h]=formats[((index%formats.length)+formats.length)%formats.length];
+ image.src=publicTestImage(w,h);
+ await image.decode();
+ if(my!==version)return;
+ document.getElementById('arcaneFormat').textContent=label;
+ sizeArcaneFrame(root,image,window.innerHeight);
+ return label;
+};
+document.querySelectorAll('[data-format]').forEach(button=>button.addEventListener('click',()=>{
+ void window.arcanePreviewSetFormat(Number(button.dataset.format));
+}));
+window.addEventListener('resize',()=>{if(image.naturalWidth)sizeArcaneFrame(root,image,innerHeight)});
+void window.arcanePreviewSetFormat(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+/* ARCANE MORPHING FRAME · HERMES artwork v0.1 (preview branch).
+ * The art is split into rigid rails, repeating side sections, pistons and separate gears.
+ * No portrait, gem or ornament is stretched in the vertical direction.
+ * All image URLs are public repo assets; private campaign media remains on authenticated blob URLs.
+ */
+#legolasPanel .arcane-gallery-kit{container-type:inline-size}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-machine{isolation:isolate}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-machine::after{content:none!important;display:none!important}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-overlay{display:none!important}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-picture,
+#legolasPanel .arcane-gallery-kit.arcane-gallery-fluid .arcane-gallery-picture{
+ left:11%!important;top:13cqw!important;width:78%!important;
+ height:calc(100% - 34cqw)!important;
+ border:1px solid #82663f;border-radius:2px;
+ background:radial-gradient(ellipse at 50% 35%,#203240 0%,#101a25 65%,#0a0d10 100%);
+ box-shadow:inset 0 0 3.5cqw #000c;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-belt,
+#legolasPanel .arcane-gallery-kit.arcane-gallery-fluid .arcane-gallery-belt{
+ left:16.6%!important;top:calc(100% - 20.2cqw)!important;
+ width:66.7%!important;height:6.4cqw!important;
+ z-index:2;background:#0a121b;
+ border:1px solid #775c35;
+ box-shadow:inset 0 0 .7cqw #000;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-morph{z-index:4}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-morph > .arcane-gallery-gear,
+#legolasPanel .arcane-gallery-kit .arcane-gallery-morph > .arcane-gallery-piston{display:none!important}
+.arcane-kit-art{position:absolute;inset:0;pointer-events:none;isolation:isolate}
+.arcane-kit-art img{display:block;max-width:none;user-select:none;-webkit-user-drag:none}
+.arcane-kit-top,.arcane-kit-bottom{position:absolute;left:0;width:100%;height:auto;pointer-events:none}
+.arcane-kit-top{top:0;z-index:6}
+.arcane-kit-bottom{bottom:0;z-index:6}
+.arcane-kit-side{position:absolute;top:11cqw;bottom:10.5cqw;width:8.1%;z-index:4;
+ display:flex;flex-direction:column;align-items:stretch;pointer-events:none}
+.arcane-kit-side--left{left:3.7%}
+.arcane-kit-side--right{right:3.7%}
+.arcane-kit-side > img{width:100%;height:auto;flex:none}
+/* A telescoping cylinder needs one continuous rod and one moving sleeve.
+ * Never tile a decorative side sprite: repetition creates a false stack of
+ * disconnected brass collars when the frame grows tall. */
+.arcane-kit-side-repeat{
+ position:relative;display:block;min-height:0;flex:1;overflow:hidden;
+ border-inline:1px solid #6a4b2d;
+ background:linear-gradient(90deg,#12110f 0%,#684721 7%,#1b2226 18%,
+   #415b65 28%,#9eaba8 42%,#e1dccc 48%,#798f8c 57%,#2c3b40 74%,
+   #91612f 92%,#17100e 100%);
+ box-shadow:inset 0 0 .35cqw #0009,0 0 .2cqw #0009;
+}
+.arcane-kit-side-sleeve{
+ position:absolute;left:0;bottom:0;width:100%;height:auto;
+ display:block;max-width:none;filter:drop-shadow(0 -.15cqw .2cqw #0009);
+ /* Its intrinsic aspect is preserved at every frame height. */
+}
+.arcane-kit-piston{position:absolute;top:14cqw;bottom:12cqw;width:2.7%;z-index:3}
+.arcane-kit-piston--left{left:11%}
+.arcane-kit-piston--right{right:11%}
+.arcane-kit-rod{position:absolute;inset:0 27%;
+ border-left:1px solid #d8c3a0;border-right:1px solid #493624;
+ background:linear-gradient(90deg,#2a3035,#8faaa9 24%,#f3e8c7 47%,#617a81 72%,#56402b);
+ box-shadow:0 0 .6cqw #317a96aa}
+/* The authentic HERMES piston is a rigid illustration, never height-stretched.
+ * Chrome rods behind it provide the variable length; the source images crossfade
+ * between their engraved closed and extended assemblies during the frame morph. */
+.arcane-kit-actuator{
+ position:absolute;bottom:0;left:-40%;width:180%;height:auto;max-width:none;
+ pointer-events:none;filter:drop-shadow(0 .22cqw .25cqw #000b);
+ transition:opacity 460ms cubic-bezier(.22,1,.36,1);
+}
+.arcane-kit-actuator--closed{opacity:calc(1 - var(--arcane-extension,0))}
+.arcane-kit-actuator--extended{opacity:var(--arcane-extension,0)}
+.arcane-kit-socket{position:absolute;width:190%;height:auto;left:-45%}
+.arcane-kit-socket--top{top:0}
+.arcane-kit-socket--bottom{bottom:0;transform:rotate(180deg)}
+.arcane-kit-wheel{position:absolute;top:.85cqw;width:13.4%;height:auto;z-index:8;
+ filter:drop-shadow(0 .35cqw .4cqw #000a);
+ transition:transform 460ms cubic-bezier(.22,1,.36,1);will-change:transform}
+.arcane-kit-wheel--left{left:2.9%;transform:rotate(var(--arcane-gear-angle,0deg))}
+.arcane-kit-wheel--right{right:2.9%;transform:rotate(calc(var(--arcane-gear-angle,0deg) * -1))}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-tile{border:0}
+@media(max-width:480px){
+ .arcane-kit-side{width:8.5%}
+ .arcane-kit-wheel{width:13.1%}
+}
+@media(prefers-reduced-motion:reduce){
+ .arcane-kit-wheel{transition:none;will-change:auto}
+ .arcane-kit-actuator{transition:none}
+}
