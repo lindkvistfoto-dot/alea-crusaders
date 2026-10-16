@@ -39,13 +39,13 @@ export function createArcaneGmPreview({
   '<button type="button" id="arcaneGmNext" aria-label="Nästa förberedd bild">›</button></nav>';
  const $=id=>root.querySelector('#'+id);
  const state={scope:'',rows:[],queue:new Set(),selected:'',live:'',
-  signature:'',mainUrl:'',mainSeq:0,thumbSeq:0,
+  signature:'',mainUrl:'',loadingId:'',mainSeq:0,thumbSeq:0,
   thumbs:new Map(),loadingThumbs:new Set(),observer:null};
  const authorized=()=>Boolean(isLoggedIn()&&isGM()&&uuid.test(String(getCampaign()||'')));
  function releaseMain(){
   state.mainSeq++;
   if(state.mainUrl)win().URL.revokeObjectURL(state.mainUrl);
-  state.mainUrl='';
+  state.mainUrl='';state.loadingId='';
   const img=$('arcaneGmImage');if(img){img.classList.add('hidden');img.removeAttribute('src');}
  }
  function releaseThumbs(){
@@ -116,7 +116,7 @@ export function createArcaneGmPreview({
   const row=current(id);
   if(!authorized()||!row)return;
   state.selected=id;
-  releaseMain();
+  releaseMain();state.loadingId=id;
   $('arcaneGmEmpty').textContent='Framkallar bilden…';
   render();
   if(interactive&&state.queue.has(id))onPick(id);
@@ -124,11 +124,12 @@ export function createArcaneGmPreview({
   try{
    const blob=await legolas.readMedia(row,false);
    if(seq!==state.mainSeq||scope!==state.scope||!authorized()||state.selected!==id)return;
-   state.mainUrl=win().URL.createObjectURL(blob);
+   state.mainUrl=win().URL.createObjectURL(blob);state.loadingId='';
    const img=$('arcaneGmImage');img.src=state.mainUrl;img.alt=row.title||'Förhandsvisning';img.classList.remove('hidden');
    $('arcaneGmEmpty').classList.add('hidden');
   }catch(_){
    if(seq===state.mainSeq&&scope===state.scope&&authorized()){
+    state.loadingId='';
     $('arcaneGmEmpty').textContent='Bilden kunde inte läsas.';
     $('arcaneGmEmpty').classList.remove('hidden');
    }
@@ -147,7 +148,7 @@ export function createArcaneGmPreview({
   if(!selected&&state.selected&&rows.some(r=>r.id===state.selected))selected=state.selected;
   if(!selected)selected=rows.find(r=>state.queue.has(r.id))?.id||rows[0]?.id||'';
   if(!selected){state.selected='';releaseMain();$('arcaneGmEmpty').textContent='Välj en bild i arkivet nedan…';render();return;}
-  if(selected!==state.selected||!state.mainUrl||changed)void select(selected);
+  if(selected!==state.selected||changed||(!state.mainUrl&&state.loadingId!==selected))void select(selected);
   else render();
  }
  function step(delta){
