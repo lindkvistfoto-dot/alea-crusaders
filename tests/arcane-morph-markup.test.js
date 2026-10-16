@@ -8,7 +8,7 @@ describe('ARCANE MORPHING FRAME shared mechanisms',()=>{
   expect((markup.match(/arcane-gallery-gear--(left|right)/g)||[])).toHaveLength(2);
   expect((markup.match(/arcane-gallery-piston--(left|right)/g)||[])).toHaveLength(2);
   expect((markup.match(/arcane-gallery-piston-collar--bottom/g)||[])).toHaveLength(2);
-  expect((markup.match(/<div\\b/g)||[]).length).toBe((markup.match(/<\\/div>/g)||[]).length);
+  expect((markup.match(/<div\b/g)||[]).length).toBe((markup.match(/<\/div>/g)||[]).length);
   expect(markup).toContain('aria-hidden="true"');
  });
  it('reuses identical decorative mechanics for player and GM without sharing image data',()=>{
