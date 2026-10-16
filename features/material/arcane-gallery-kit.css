@@ -36,12 +36,22 @@
 .arcane-kit-side--left{left:3.7%}
 .arcane-kit-side--right{right:3.7%}
 .arcane-kit-side > img{width:100%;height:auto;flex:none}
-.arcane-kit-side-repeat{display:block;min-height:0;flex:1;
- background-repeat:repeat-y;background-size:100% auto;background-position:center}
-.arcane-kit-side--left .arcane-kit-side-repeat{
- background-image:url('./arcane-morphing-assets/v01/side_left_middle.webp')}
-.arcane-kit-side--right .arcane-kit-side-repeat{
- background-image:url('./arcane-morphing-assets/v01/side_right_middle.webp')}
+/* A telescoping cylinder needs one continuous rod and one moving sleeve.
+ * Never tile a decorative side sprite: repetition creates a false stack of
+ * disconnected brass collars when the frame grows tall. */
+.arcane-kit-side-repeat{
+ position:relative;display:block;min-height:0;flex:1;overflow:hidden;
+ border-inline:1px solid #6a4b2d;
+ background:linear-gradient(90deg,#12110f 0%,#684721 7%,#1b2226 18%,
+   #415b65 28%,#9eaba8 42%,#e1dccc 48%,#798f8c 57%,#2c3b40 74%,
+   #91612f 92%,#17100e 100%);
+ box-shadow:inset 0 0 .35cqw #0009,0 0 .2cqw #0009;
+}
+.arcane-kit-side-sleeve{
+ position:absolute;left:0;bottom:0;width:100%;height:auto;
+ display:block;max-width:none;filter:drop-shadow(0 -.15cqw .2cqw #0009);
+ /* Its intrinsic aspect is preserved at every frame height. */
+}
 .arcane-kit-piston{position:absolute;top:14cqw;bottom:12cqw;width:2.7%;z-index:3}
 .arcane-kit-piston--left{left:11%}
 .arcane-kit-piston--right{right:11%}
