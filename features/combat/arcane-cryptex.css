@@ -93,6 +93,20 @@
  font:700 clamp(10px,1.4vw,18px)/1.1 Georgia,serif;
  white-space:nowrap;text-overflow:ellipsis;pointer-events:none;
 }
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate-text{
+ display:inline-block;flex:0 0 auto;white-space:nowrap;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate.is-scrolling{
+ justify-content:flex-start;
+}
+#combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate.is-scrolling .combat-cryptex-nameplate-text{
+ animation:combat-cryptex-name-scroll var(--cryptex-scroll-duration,8s) ease-in-out infinite;
+}
+@keyframes combat-cryptex-name-scroll{
+ 0%,16%{transform:translateX(0)}
+ 47%,70%{transform:translateX(calc(-1 * var(--cryptex-scroll-distance,0px)))}
+ 100%{transform:translateX(0)}
+}
 /* Transparent click targets directly over the existing bronze arrows
    BELOW each side window – no extra rendered controls. */
 #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-end-button{
@@ -183,4 +197,7 @@
 }
 @media(prefers-reduced-motion:reduce){
  #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track{will-change:auto}
+ #combatPage .combat-shell-live .cryptex-prototype .combat-cryptex-nameplate.is-scrolling .combat-cryptex-nameplate-text{
+  animation:none;transform:none;
+ }
 }

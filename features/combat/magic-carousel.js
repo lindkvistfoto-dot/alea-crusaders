@@ -130,6 +130,7 @@ function combatSpellCarouselHtml(actor,action){
  const repeats=Math.max(3,Math.ceil(11/items.length)|1);
  const cycles=repeats%2===0?repeats+1:repeats;
  const middleStart=Math.floor(cycles/2)*items.length;
+ const nameOnPlaque=combatMagicCarouselTags(items[focus]).name;
  const tiles=Array.from({length:items.length*cycles},(_,i)=>{
   const spell=items[i%items.length],spellKey=combatSpellKey(spell),active=chosen===spellKey;
   const classification=combatMagicCarouselTags(spell);
@@ -159,7 +160,8 @@ function combatSpellCarouselHtml(actor,action){
      '<div class="combat-magic-carousel-track" role="group" tabindex="0" aria-label="Dra för att snurra besvärjelser, använd piltangenter och Enter">'+tiles+'</div>'+
     '</div>'+
     '<img class="combat-cryptex-housing" src="./features/combat/arcane-cryptex-housing.png?v=0.35.207" alt="" aria-hidden="true" draggable="false">'+
-    '<span class="combat-cryptex-nameplate" aria-live="polite">'+escAttr(combatMagicCarouselTags(items[focus]).name)+'</span>'+ 
+    '<span class="combat-cryptex-nameplate" aria-live="polite" title="'+escAttr(nameOnPlaque)+'">'+
+     '<span class="combat-cryptex-nameplate-text">'+escAttr(nameOnPlaque)+'</span></span>'+ 
     '<button type="button" class="combat-cryptex-end-button combat-cryptex-end-button--prev"'+
      ' aria-label="Föregående besvärjelse" title="Föregående besvärjelse"'+
      ' onclick="combatShiftSpellCarousel(\''+escAttr(actorId)+'\',-1)"></button>'+
@@ -208,6 +210,7 @@ function combatBindSpellCarousel(root){
  const container=viewport?.closest('.combat-magic-carousel');
  if(!viewport||!track||!container)return;
  const nameplate=container.querySelector('.combat-cryptex-nameplate');
+ let nameplateText=nameplate?.querySelector('.combat-cryptex-nameplate-text');
  const actorId=String(container.dataset.actorId);
  const count=Number(container.dataset.count)||1;
  const base=Math.floor(track.children.length/count/2)*count;
@@ -224,6 +227,23 @@ function combatBindSpellCarousel(root){
   if(raf)cancelAnimationFrame(raf);
   raf=0;lastFrame=0;snap=null;vx=0;
  };
+ // Measure the *rendered* name rather than guessing by character count.
+ // Short names stay centered; long names travel just far enough to show the ending.
+ function measureNameplate(){
+  if(!nameplate||!nameplateText)return;
+  const style=getComputedStyle(nameplate);
+  const available=nameplate.clientWidth-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0);
+  const overflow=nameplateText.scrollWidth-available;
+  const scrolling=available>0&&overflow>2;
+  nameplate.classList.toggle('is-scrolling',scrolling);
+  if(scrolling){
+   nameplate.style.setProperty('--cryptex-scroll-distance',Math.ceil(overflow+2)+'px');
+   nameplate.style.setProperty('--cryptex-scroll-duration',Math.max(7,Math.min(18,6+overflow/22)).toFixed(1)+'s');
+  }else{
+   nameplate.style.removeProperty('--cryptex-scroll-distance');
+   nameplate.style.removeProperty('--cryptex-scroll-duration');
+  }
+ }
  function normalize(){
   // Every tile has identical copies. Swapping the index by a full cycle
   // keeps the same pixels at the same screen position without a visible jump.
@@ -261,7 +281,15 @@ function combatBindSpellCarousel(root){
    }
   }
   const shown=track.children[center]?.querySelector('.combat-carousel-spell-label')?.textContent||'';
-  if(nameplate&&nameplate.textContent!==shown)nameplate.textContent=shown;
+  if(nameplateText&&nameplateText.textContent!==shown){
+   // Replace the inner span so every newly focused spell starts at its first letter.
+   const next=nameplateText.cloneNode(false);
+   next.textContent=shown;
+   nameplateText.replaceWith(next);
+   nameplateText=next;
+   nameplate.title=shown;
+   measureNameplate();
+  }
   track.setAttribute('aria-label','Besvärjelse i mitten: '+shown+'. Piltangenter bläddrar, Enter väljer.');
   combatMagicCarouselOffsets.set(key,mod(Math.round(position),count));
  }
@@ -279,6 +307,7 @@ function combatBindSpellCarousel(root){
   track.style.setProperty('--combat-carousel-tile-width',tileWidth+'px');
   track.style.setProperty('--combat-carousel-gap',finalGap+'px');
   sync();
+  measureNameplate(); // Also adapt on window resize and orientation change.
  }
  function settle(){
   if(reduce){

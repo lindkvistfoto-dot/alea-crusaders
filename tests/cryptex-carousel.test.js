@@ -37,7 +37,7 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
  });
  it('keeps selection, live nameplate, keyboard operation and inertia',()=>{
   expect(carousel).toContain('combat-cryptex-nameplate');
-  expect(carousel).toContain('nameplate.textContent=shown');
+  expect(carousel).toContain('nameplateText.textContent!==shown');
   expect(carousel).toContain('combatShiftSpellCarousel');
   expect(carousel).toContain('requestAnimationFrame(tick)');
   expect(carousel).toContain('pointerdown');
@@ -51,9 +51,23 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
   expect(carousel).toContain('event.stopImmediatePropagation()');
   expect(css).toContain(':focus-visible');
  });
+ it('scrolls only overflowing spell names within the plaque and restarts on spell change',()=>{
+  expect(carousel).toContain('combat-cryptex-nameplate-text');
+  expect(carousel).toContain('const overflow=nameplateText.scrollWidth-available');
+  expect(carousel).toContain('const scrolling=available>0&&overflow>2');
+  expect(carousel).toContain('nameplate.classList.toggle(\'is-scrolling\',scrolling)');
+  expect(carousel).toContain('nameplateText.replaceWith(next)');
+  expect(carousel).toContain('measureNameplate(); // Also adapt on window resize');
+  expect(css).toContain('justify-content:flex-start');
+  expect(css).toContain('@keyframes combat-cryptex-name-scroll');
+  expect(css).toContain('var(--cryptex-scroll-distance,0px)');
+  expect(css).toContain('@media(prefers-reduced-motion:reduce)');
+  expect(css).toContain('animation:none;transform:none;');
+ });
  it('cache-busts the new image, mask and CSS',()=>{
   expect(carousel).toContain('arcane-cryptex-housing.png?v=0.35.207');
-  expect(html).toContain('arcane-cryptex.css?v=0.35.219');
+  expect(html).toContain('arcane-cryptex.css?v=0.35.220');
+  expect(html).toContain('magic-carousel.js?v=0.35.220');
   expect(css).toContain('arcane-cryptex-windows-mask.svg?v=0.35.207');
  });
 });
