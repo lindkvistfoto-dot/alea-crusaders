@@ -16,7 +16,7 @@ export function arcaneGalleryChooseSelection(rows,selected,live,previousLive){
 }
 export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM,doc=()=>document,win=()=>window}){
  const root=doc().createElement('section');
- root.id='arcaneGallery';root.className='arcane-gallery hidden';
+ root.id='arcaneGallery';root.className='arcane-gallery arcane-gallery-kit hidden';
  root.innerHTML='<header class="arcane-gallery-heading"><strong>ARCANE GALLERY</strong><span id="arcaneGalleryCount"></span></header>'+
   '<div class="arcane-gallery-machine"><div id="arcaneGalleryPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Öppna bild i stor vy">'+
   '<img id="arcaneGalleryImage" class="hidden" alt=""><span id="arcaneGalleryEmpty">Väntar på bilder från spelledaren…</span></div>'+
