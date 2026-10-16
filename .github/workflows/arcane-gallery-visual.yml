@@ -5,6 +5,9 @@ on:
       - sisyphus/arcane-gallery-shared-mechanics-20261016
     paths:
       - 'tests/fixtures/arcane-gallery-visual.html'
+      - 'tests/fixtures/arcane-gallery-animation.html'
+      - 'scripts/arcane_gallery_record.cjs'
+      - 'scripts/arcane_gallery_gif.py'
       - 'features/material/arcane-gallery-kit.css'
       - 'features/material/arcane-morph-markup.js'
       - 'features/material/arcane-gallery-aspect.js'
@@ -60,17 +63,22 @@ jobs:
               assert w>=400 and h>=800, (image,w,h)
               print('ARCANE_VISUAL_CAPTURE_OK',image,w,h,len(data))
           PY
+          python -m pip install --disable-pip-version-check Pillow==12.3.0
+          node scripts/arcane_gallery_record.cjs
+          python scripts/arcane_gallery_gif.py
       - uses: actions/upload-artifact@v4
         with:
           name: arcane-morph-preview
-          path: tests/visual-regressions/arcane-morph-*.png
+          path: |
+            tests/visual-regressions/arcane-morph-*.png
+            tests/visual-regressions/arcane-morph-animation.gif
           if-no-files-found: error
       - name: Keep sanitized screenshots on preview branch for design review
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests/visual-regressions/arcane-morph-desktop.png tests/visual-regressions/arcane-morph-mobile.png
+          git add tests/visual-regressions/arcane-morph-desktop.png tests/visual-regressions/arcane-morph-mobile.png tests/visual-regressions/arcane-morph-animation.gif
           if ! git diff --cached --quiet; then
-            git commit -m "test(gallery): capture four-ratio desktop and mobile frame previews"
+            git commit -m "test(gallery): capture static views and Chrome motion preview"
             git push origin HEAD:sisyphus/arcane-gallery-shared-mechanics-20261016
           fi
