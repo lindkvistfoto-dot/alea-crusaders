@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-gallery-kit",
+  "preview_only": true,
+  "supabase_activation": false,
+  "original_path": "assets/hermes/originals/ui/arcane-gallery-kit/4878fe146bcaaf301e535b34fc9402ecaa5eff33e9caa0adfb2910984c314178.zip",
+  "original_sha256": "4878fe146bcaaf301e535b34fc9402ecaa5eff33e9caa0adfb2910984c314178",
+  "sprites": {
+    "blue_gem_left": {
+      "path": "features/material/arcane-morphing-assets/v01/blue_gem_left.webp",
+      "source_sha256": "2092270c1f05bded8fb5662d2851022f53f845d9b9e5ad5c90971ad0b2d7b887",
+      "app_sha256": "f80a3aa2f65119b8630c5c1f1845bba77906e684933fe4b51c95764582f52b1c",
+      "width": 107,
+      "height": 101,
+      "alpha_preserved": true
+    },
+    "blue_gem_right": {
+      "path": "features/material/arcane-morphing-assets/v01/blue_gem_right.webp",
+      "source_sha256": "b6f9a5f44c89843662d9f8b516094b5cb36e9f5a55e41d2b54250fab029339da",
+      "app_sha256": "84427339004cf8f01b2ec7731abf96eb8d8ccfa33f22ea328222c314194ff217",
+      "width": 103,
+      "height": 110,
+      "alpha_preserved": true
+    },
+    "center_blue_gem": {
+      "path": "features/material/arcane-morphing-assets/v01/center_blue_gem.webp",
+      "source_sha256": "518e864af15fcedcfa8ca191676a28e7631b63c659954803b34d5b42e2b36b29",
+      "app_sha256": "7453ddf76a4922a3a23fb6696c44753701f8b3ccfaa6fa705dfd2b116689ba3b",
+      "width": 90,
+      "height": 96,
+      "alpha_preserved": true
+    },
+    "gear_east": {
+      "path": "features/material/arcane-morphing-assets/v01/gear_east.webp",
+      "source_sha256": "c14a4a80a59b91c3ec01ee195b9aec2b8e73d84aa5aed6dabdf66007d5668ed6",
+      "app_sha256": "414e55e83e5aff274e924e4b036ccdcc1fb7db7aaa50ca755f27c720e3f55ba9",
+      "width": 166,
+      "height": 156,
+      "alpha_preserved": true
+    },
+    "gear_west": {
+      "path": "features/material/arcane-morphing-assets/v01/gear_west.webp",
+      "source_sha256": "7bf0d1376885f3da57ed2d203634fb5271ddc5e10bb6c67ce9d4c742a7f59117",
+      "app_sha256": "fa2c2b4e17cf699c030e7d36c46767ce8c639bf9e03e3bf6996363520396bc1f",
+      "width": 148,
+      "height": 154,
+      "alpha_preserved": true
+    },
+    "large_blue_crystal": {
+      "path": "features/material/arcane-morphing-assets/v01/large_blue_crystal.webp",
+      "source_sha256": "cc6d799b0a900041b179b4b875310a7ad339d207c530855ffc8d0a5f871014b1",
+      "app_sha256": "b09e38edfe28d9cf8bc5dbc828c7bd1ac7e68cf04f29af34b3630b365fdfeadc",
+      "width": 185,
+      "height": 207,
+      "alpha_preserved": true
+    },
+    "lower_frame": {
+      "path": "features/material/arcane-morphing-assets/v01/lower_frame.webp",
+      "source_sha256": "facd1d5a72b61db42b2699685a14436c14daf956e5315c8669a818655defba34",
+      "app_sha256": "8f6fcc7e44d604e93b20278c22582d5cad312665ec042729765feb1fc47bdba8",
+      "width": 1485,
+      "height": 196,
+      "alpha_preserved": true
+    },
+    "piston_closed_a": {
+      "path": "features/material/arcane-morphing-assets/v01/piston_closed_a.webp",
+      "source_sha256": "691e8235a311b938ff71cc144ec812280fba7033f484281ffd656718822e0df5",
+      "app_sha256": "46dc69bf8e8d24a404509a8c59d00f5de79a3af8387ba69b2a822e5be9bf151d",
+      "width": 68,
+      "height": 397,
+      "alpha_preserved": true
+    },
+    "piston_closed_b": {
+      "path": "features/material/arcane-morphing-assets/v01/piston_closed_b.webp",
+      "source_sha256": "9a5b8a5e06f1e755ebd4abd81e0a5cd0063b96485978d9de80895c92ff8b86fe",
+      "app_sha256": "568c0cc5e4fbbdaad1b74ac770b7c9f8dd254a71cc80d97b659de712e0b0be47",
+      "width": 66,
+      "height": 354,
+      "alpha_preserved": true
+    },
+    "piston_extended_a": {
+      "path": "features/material/arcane-morphing-assets/v01/piston_extended_a.webp",
+      "source_sha256": "c3fb6f2659411de4172808b34665aae681bc3fcb9dfc20b3c3cb0a724491b159",
+      "app_sha256": "537e69a97bdcfcf99532e9fec5a5fe07f9c151ff05e742883851fadf089413b4",
+      "width": 69,
+      "height": 424,
+      "alpha_preserved": true
+    },
+    "piston_extended_b": {
+      "path": "features/material/arcane-morphing-assets/v01/piston_extended_b.webp",
+      "source_sha256": "2e0513f24c974c4bd173de7c7eba14de45d50620ba884022c31b25f4634575c1",
+      "app_sha256": "df9231cb10576d7fb8fdbf960c364498034082df0334800e39f68d52a4978037",
+      "width": 69,
+      "height": 412,
+      "alpha_preserved": true
+    },
+    "rune_bar_lower": {
+      "path": "features/material/arcane-morphing-assets/v01/rune_bar_lower.webp",
+      "source_sha256": "fd1e6dfdcc11495a0c1dd37058484655a2e66445ed790cb71b862c1038438c39",
+      "app_sha256": "69ff6997e13fed244e97630bbfb9f97807c66d904cbdbab951b676156e77be63",
+      "width": 278,
+      "height": 62,
+      "alpha_preserved": true
+    },
+    "rune_bar_upper": {
+      "path": "features/material/arcane-morphing-assets/v01/rune_bar_upper.webp",
+      "source_sha256": "b1c0232f91c537e59fcba58b32cf9937853705ab4638ede15f92792fbb129159",
+      "app_sha256": "02d59538aeed011c918c8da3c80e28f5e88dcea2215bdf1d534db534a32a83da",
+      "width": 301,
+      "height": 52,
+      "alpha_preserved": true
+    },
+    "rune_tablet_vertical": {
+      "path": "features/material/arcane-morphing-assets/v01/rune_tablet_vertical.webp",
+      "source_sha256": "3ac94261b0a018c9410ea0fbd487a3a67697d40f87eacd3f6480d987bcb93ad2",
+      "app_sha256": "98aaa0450c7255bdaf68ece1b05ac50c0f9659d153db7c2cb00b087e1e20f1a3",
+      "width": 78,
+      "height": 322,
+      "alpha_preserved": true
+    },
+    "side_center_a": {
+      "path": "features/material/arcane-morphing-assets/v01/side_center_a.webp",
+      "source_sha256": "b651ef1e384e04a522529fb12ec0f7df54f7ab6b3040dd20837e88250f36f83a",
+      "app_sha256": "0116605bf75c5221fc73617e70ff142898dcce275946d9e0226d610c53aec866",
+      "width": 86,
+      "height": 447,
+      "alpha_preserved": true
+    },
+    "side_center_b": {
+      "path": "features/material/arcane-morphing-assets/v01/side_center_b.webp",
+      "source_sha256": "dcae1eb34a0a168f76181edfe1d8b4d85d0a3974efcf27a29ffae47ef360cf41",
+      "app_sha256": "c580a0c5c2d1bdeadaf1f2cfd337d331ce995982925dd9604376f01a3cfcca1f",
+      "width": 109,
+      "height": 446,
+      "alpha_preserved": true
+    },
+    "side_center_c": {
+      "path": "features/material/arcane-morphing-assets/v01/side_center_c.webp",
+      "source_sha256": "04bb026fe6926df54d01980700e29ef0a050d0a5045f1df2f96ccb1bd346de6c",
+      "app_sha256": "8609f144eff74a2dcc499268f11f8ea404cc463e797e5b98598347f7f60ddfe6",
+      "width": 91,
+      "height": 448,
+      "alpha_preserved": true
+    },
+    "side_left_bottom": {
+      "path": "features/material/arcane-morphing-assets/v01/side_left_bottom.webp",
+      "source_sha256": "78bbf4dbb47d15355a0a0a9873865bb70aca01b6bab8830d406f71ef50351174",
+      "app_sha256": "0dce9db3dbaa179ec733fc1405f9a9bf26d68d7885bd4b2032da1300414f98f3",
+      "width": 109,
+      "height": 120,
+      "alpha_preserved": true
+    },
+    "side_left_inner": {
+      "path": "features/material/arcane-morphing-assets/v01/side_left_inner.webp",
+      "source_sha256": "4c2f5ebf43396fe1a904a9a0de4bd6bb52e3356d748de8fc553da41429e4acf8",
+      "app_sha256": "f38044f07a2847192b6d88ed941c8215e65a0c7f83606a5996ded1920a9e02e8",
+      "width": 82,
+      "height": 434,
+      "alpha_preserved": true
+    },
+    "side_left_middle": {
+      "path": "features/material/arcane-morphing-assets/v01/side_left_middle.webp",
+      "source_sha256": "72bcfb85663dc906477978d0461ac5a5ea6bd1aaa5693542555e94dd8e13ddf6",
+      "app_sha256": "0691220a89e54b5ddc34f5ffe0effa9c951b5b95e61bd9546bd7366663a84cee",
+      "width": 109,
+      "height": 98,
+      "alpha_preserved": true
+    },
+    "side_left_outer": {
+      "path": "features/material/arcane-morphing-assets/v01/side_left_outer.webp",
+      "source_sha256": "4b41794295dc45b9c87b1eea820d96ee360468e538302bbfd1706e77223427f4",
+      "app_sha256": "f0af50ae7f64d587b0faaa4cc04b4c3c22cfb02afdc7134ce2bfd02697816e41",
+      "width": 89,
+      "height": 447,
+      "alpha_preserved": true
+    },
+    "side_left_top": {
+      "path": "features/material/arcane-morphing-assets/v01/side_left_top.webp",
+      "source_sha256": "1280543fa9da3eefdf769a48d287bf2dcb0bedeefcb71cb72c40bd33d8c3cea1",
+      "app_sha256": "f898a268f14a7bd5583028b285389bab7b53955cedc4b2c55bdb5bb7a5bd780c",
+      "width": 109,
+      "height": 120,
+      "alpha_preserved": true
+    },
+    "side_right_bottom": {
+      "path": "features/material/arcane-morphing-assets/v01/side_right_bottom.webp",
+      "source_sha256": "a4c667b83164d15f19af2b6689d9e6524cdda02e5cd0b97b390a9e8fcd604c50",
+      "app_sha256": "fd03b6cb5bf8cb161937517ab37651c8bde13e1e174e7c4ff610444ca1ddb050",
+      "width": 91,
+      "height": 121,
+      "alpha_preserved": true
+    },
+    "side_right_inner": {
+      "path": "features/material/arcane-morphing-assets/v01/side_right_inner.webp",
+      "source_sha256": "42dc05fc084ceecb0281fb9e40234419880af8afefc15cd679acb40601f87536",
+      "app_sha256": "223d879aeadd3a769c6e28066b18d014b967ff21e1cd1cd10c7b2e1d08f35870",
+      "width": 95,
+      "height": 442,
+      "alpha_preserved": true
+    },
+    "side_right_middle": {
+      "path": "features/material/arcane-morphing-assets/v01/side_right_middle.webp",
+      "source_sha256": "aca1a5013bc035800d69b4b0f6daa73b55d902ee76494034d83c63aa641a4ac4",
+      "app_sha256": "dab0979b8547ad358aa945815e39adfb7ec4a01ed11d6cc25ea85cc067aa139b",
+      "width": 91,
+      "height": 99,
+      "alpha_preserved": true
+    },
+    "side_right_outer": {
+      "path": "features/material/arcane-morphing-assets/v01/side_right_outer.webp",
+      "source_sha256": "bcac12765180e26a6f9a6a1a7459a798b782026248ae32beb2764aab20bf11d9",
+      "app_sha256": "fbbe3f508cd585f39f69a4c330a8521006cf6a0efd00a96cb8ad837f12253a01",
+      "width": 78,
+      "height": 450,
+      "alpha_preserved": true
+    },
+    "side_right_top": {
+      "path": "features/material/arcane-morphing-assets/v01/side_right_top.webp",
+      "source_sha256": "9fb7ca98020bf01c131622c338f424552f1b93e1b12333d157597d4d11088cba",
+      "app_sha256": "f2de83b2b103b5879787667724660b269b649303d4b307272270d37788cd2f6d",
+      "width": 91,
+      "height": 121,
+      "alpha_preserved": true
+    },
+    "small_blue_crystal": {
+      "path": "features/material/arcane-morphing-assets/v01/small_blue_crystal.webp",
+      "source_sha256": "3cdd996de995344cd7d6d6db5b3c286f6f027034afa5dfc99d69631b85d22a15",
+      "app_sha256": "701a5af2a3d147e5fca8b93eb35ca4236b8c450de9dd474b4ab3b3a5b654352d",
+      "width": 77,
+      "height": 137,
+      "alpha_preserved": true
+    },
+    "upper_frame": {
+      "path": "features/material/arcane-morphing-assets/v01/upper_frame.webp",
+      "source_sha256": "ab79bfb066a56ffe636a972ae610feaad6eb036cb68517b54b22a2dd593c24ad",
+      "app_sha256": "fb5aa2bde41309c09ca94709558d94ac0570e6e6aad6aff1c0718547d9e18814",
+      "width": 1099,
+      "height": 207,
+      "alpha_preserved": true
+    }
+  }
+}
