@@ -43,7 +43,8 @@ def render_webp(data: bytes, mime: str, *, limit: int = MAX_FRAME):
         image.save(stream, format="WEBP", lossless=alpha is not None,
                    quality=100 if alpha is not None else 87, method=6, exact=True)
         result = stream.getvalue()
-        check(100 <= len(result) <= MAX_DELIVERY, "STAGE_OUTPUT_TOO_LARGE")
+        check(30 <= len(result) <= MAX_DELIVERY and result[:4] == b"RIFF" and result[8:12] == b"WEBP",
+              "STAGE_OUTPUT_TOO_LARGE")
         with Image.open(io.BytesIO(result)) as verified:
             verified.load()
             check(verified.format == "WEBP" and verified.size == image.size,
