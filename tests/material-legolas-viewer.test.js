@@ -1,7 +1,7 @@
 import {describe,it,expect,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {LEGOLAS_PAGE_SIZE,LEGOLAS_BUCKETS,legolasQuery,legolasEscape,
- legolasClampScale,legolasPanLimit,createLegolas} from '../features/material/viewer.js';
+ legolasClampScale,legolasPanLimit,legolasPrivateImageSequence,createLegolas} from '../features/material/viewer.js';
 
 const campaign='846e8089-24da-4825-af34-32903117152a';
 const otherCampaign='cc6b82ea-040e-4b15-9a84-f38311199999';
@@ -124,6 +124,18 @@ describe('Legolas Greenleaf — private material panel and zoomable viewer',()=>
   expect(css).toContain('@media(max-width:720px)');
   expect(js).not.toContain('campaign_material_shares?');
   expect(js).not.toContain('campaign_material_presentations?');
+ });
+});
+
+describe('Arcane Gallery protected full-screen sequence',()=>{
+ it('passes only valid private pictures from the active campaign',()=>{
+  const correct={...image};
+  const foreign={...image,id:'123e4567-e89b-42d3-a456-426614174004',campaign_id:otherCampaign};
+  const traversed={...image,id:'123e4567-e89b-42d3-a456-426614174005',storage_path:campaign+'/../secret.png'};
+  const publicRow={...image,id:'123e4567-e89b-42d3-a456-426614174006',storage_bucket:'public'};
+  expect(legolasPrivateImageSequence([correct,docRow,foreign,traversed,publicRow],campaign))
+   .toEqual([correct]);
+  expect(legolasPrivateImageSequence([correct],otherCampaign)).toEqual([]);
  });
 });
 
