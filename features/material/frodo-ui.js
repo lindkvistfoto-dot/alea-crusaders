@@ -187,7 +187,7 @@ export function mountFrodo({
   const rows=selection(),idx=rows.findIndex(x=>x.id===frodo.state.materialId);
   const next=idx+delta;
   if(idx<0||next<0||next>=rows.length)return;
-  await showQueue(next);
+  await showRow(rows[next]);
  }
  async function refresh(silent=false){
   const result=await frodo.refresh({silent,autoOpen:false});
