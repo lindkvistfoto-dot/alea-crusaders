@@ -12,7 +12,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   '<div class="arcane-gallery-machine"><div id="arcaneGalleryPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Öppna bild i stor vy">'+
   '<img id="arcaneGalleryImage" class="hidden" alt=""><span id="arcaneGalleryEmpty">Väntar på bilder från spelledaren…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGalleryStrip" class="arcane-gallery-strip" aria-label="Bläddra bland bilder"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.233" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.234" alt="" aria-hidden="true"></div>'+
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>';
  const $=id=>doc().getElementById(id), state={campaign:'',revision:-1,live:'',rows:[],selected:'',seq:0,media:0,original:'',thumbs:new Map(),observer:null};
  const scope=()=>String(getCampaign()||'');
