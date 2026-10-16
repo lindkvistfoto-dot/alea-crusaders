@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from PIL import Image, ImageEnhance, ImageDraw, ImageFilter
+from PIL import Image, ImageEnhance, ImageDraw, ImageFilter, ImageChops
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "assets/hermes/originals/ui"
@@ -44,7 +44,11 @@ def prepare(source_name: str) -> tuple[str, str]:
             image = original.resize(size, Image.Resampling.LANCZOS)
             required_alpha = image.getchannel("A").tobytes()
         else:
-            if original.mode not in ("RGB", "RGBA") or (original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255)):
+            if original.mode not in ("RGB", "RGBA"):
+                raise ValueError("HERMES_UI_BAD_COLOR_MODE")
+            if key == "arcane-gallery-overlay" and original.mode == "RGBA" and original.getchannel("A").getextrema()[1] == 0:
+                raise ValueError("HERMES_UI_EMPTY_SOURCE")
+            if key == "arcane-mechanism-chamber" and original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255):
                 raise ValueError("HERMES_UI_OPAQUE_REQUIRED")
             if key == "arcane-gallery-overlay":
                 # Preserve the locked source pixel-for-pixel; only the DELIVERY
@@ -73,7 +77,10 @@ def prepare(source_name: str) -> tuple[str, str]:
                     (1091, 779, 1263, 912)
                 ]:
                     painter.rounded_rectangle(rectangle, radius=10, fill=0)
-                canvas.putalpha(alpha.filter(ImageFilter.GaussianBlur(1.1)))
+                # Intersect the cut-out geometry with any pre-existing PNG alpha.
+                # Never paint over transparency supplied by the artist.
+                alpha = ImageChops.multiply(canvas.getchannel("A"), alpha.filter(ImageFilter.GaussianBlur(1.1)))
+                canvas.putalpha(alpha)
                 size = (1152, 768)
                 image = canvas.resize(size, Image.Resampling.LANCZOS)
                 required_alpha = image.getchannel("A").tobytes()
