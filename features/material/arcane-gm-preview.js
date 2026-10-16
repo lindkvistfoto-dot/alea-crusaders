@@ -27,7 +27,7 @@ export function createArcaneGmPreview({
  doc=()=>document,win=()=>window
 }){
  const root=doc().createElement('section');
- root.id='arcaneGmGallery';root.className='arcane-gallery arcane-gm-gallery hidden';
+ root.id='arcaneGmGallery';root.className='arcane-gallery arcane-gallery-kit arcane-gm-gallery hidden';
  root.setAttribute('aria-label','Arcane Gallery – privat förhandsvisning för spelledaren');
  root.innerHTML='<header class="arcane-gallery-heading"><strong>ARCANE GALLERY</strong><span id="arcaneGmCount"></span></header>'+
   '<div class="arcane-gallery-machine">'+
