@@ -97,7 +97,9 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
             raise ValueError("BAD_PNG_FORMAT")
         if kind == "ui":
             if target_key not in UI_TARGETS or not (640 <= image.width <= 4096 and (
-                (target_key == "arcane-mechanism-link" and image.width * 2 == 3 * image.height)
+                (target_key == "arcane-mechanism-link" and (
+                    image.width * 2 == 3 * image.height or image.width * 3 == 4 * image.height
+                ))
                 or (target_key == "arcane-mechanism-chamber" and image.width == 3 * image.height)
             )):
                 raise ValueError("BAD_UI_PNG")

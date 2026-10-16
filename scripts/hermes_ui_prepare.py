@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "assets/hermes/originals/ui"
 KEYS = {"arcane-mechanism-link", "arcane-mechanism-chamber"}
 PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber)/([a-f0-9]{64})\.png$")
-LINK_SIZE = (768, 512)
+LINK_SIZES = {(3, 2): (768, 512), (4, 3): (768, 576)}
 CHAMBER_SIZE = (768, 256)
 LIMIT = 300000
 
@@ -27,14 +27,16 @@ def prepare(source_name: str) -> tuple[str, str]:
     digest = hashlib.sha256(raw).hexdigest()
     if digest != claimed_sha or not 100 <= len(raw) <= 8388608:
         raise ValueError("HERMES_UI_SOURCE_INTEGRITY_FAILURE")
-    size = LINK_SIZE if key == "arcane-mechanism-link" else CHAMBER_SIZE
     with Image.open(source) as original:
         original.load()
+        link_size = next((pixels for (w, h), pixels in LINK_SIZES.items()
+                         if original.width * h == original.height * w), None)
         if original.format != "PNG" or not (640 <= original.width <= 4096 and (
-            (key == "arcane-mechanism-link" and original.width * 2 == original.height * 3)
+            (key == "arcane-mechanism-link" and link_size is not None)
             or (key == "arcane-mechanism-chamber" and original.width == original.height * 3)
         )):
             raise ValueError("HERMES_UI_BAD_PNG")
+        size = link_size if key == "arcane-mechanism-link" else CHAMBER_SIZE
         if key == "arcane-mechanism-link":
             if original.mode != "RGBA" or original.getchannel("A").getextrema() != (0, 255):
                 raise ValueError("HERMES_UI_LINK_ALPHA_INVALID")
