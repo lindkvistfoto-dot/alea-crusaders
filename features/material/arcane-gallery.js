@@ -94,7 +94,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  }
  async function select(id){
   if(!allowed())return;const row=state.rows.find(r=>r.id===id&&r.campaign_id===scope());if(!row)return;
-  state.selected=id;render();const img=$('arcaneGalleryImage');const n=++state.media,c=state.campaign;
+  state.selected=id;render();const img=$('arcaneGalleryImage'),c=state.campaign;
   releaseMain();const n=state.media;
   $('arcaneGalleryEmpty').textContent='Framkallar bilden…';
   $('arcaneGalleryEmpty').classList.remove('hidden');
