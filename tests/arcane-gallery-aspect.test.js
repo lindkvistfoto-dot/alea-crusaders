@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame,resetArcaneFrame} from '../features/material/arcane-gallery-aspect.js';
+import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame,resetArcaneFrame,arcaneKitFrameHeight} from '../features/material/arcane-gallery-aspect.js';
 describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  const w=390,vh=820;
  it('height increases from panorama through square to vertical portrait',()=>{
@@ -48,6 +48,21 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   const heights=formats.map(([w,h])=>arcaneFrameHeight(390,w,h,820));
   expect(heights).toEqual([...heights].sort((a,b)=>a-b));
   expect(new Set(heights).size).toBe(4);
+ });
+ it('sizes the new rigid-kit opening exactly for four source aspect ratios',()=>{
+  const formats=[[16,9],[4,3],[1,1],[9,16]];
+  const heights=formats.map(([w,h])=>arcaneKitFrameHeight(390,w,h,820));
+  expect(heights).toEqual([304,361,437,674]);
+  expect(arcaneKitFrameHeight(390,0,10)).toBeNull();
+  expect(arcaneKitFrameHeight(-1,1,1)).toBeNull();
+  const calls=[];
+  const root={
+   classList:{contains:s=>s==='arcane-gallery-kit',add:s=>calls.push(s)},
+   querySelector:()=>({getBoundingClientRect:()=>({width:390}),
+    style:{setProperty:(key,value)=>calls.push([key,value])}})
+  };
+  expect(sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},820)).toBe(674);
+  expect(calls).toContainEqual(['--arcane-frame-height','674px']);
  });
  it('sets only the local media frame height; does not affect other Alea views',()=>{
   const writes=[],classes=[],root={
