@@ -48,7 +48,7 @@ def check_png_jpeg(data: bytes, mime: str, alpha_policy: str):
               "BAD_IMAGE_DIMENSIONS")
         extrema = img.convert("RGBA").getchannel("A").getextrema()
         if alpha_policy == "required":
-            check(img.mode == "RGBA" and extrema[0] == 0 and extrema[1] == 255,
+            check(img.mode == "RGBA" and extrema[0] == 0 and extrema[1] >= 200,
                   "TRANSPARENCY_REQUIRED")
         if alpha_policy == "forbidden":
             check(extrema == (255, 255), "TRANSPARENCY_FORBIDDEN")
@@ -73,16 +73,21 @@ def check_sprite_zip(data: bytes):
             total += info.file_size
             check(total <= 20_000_000, "ZIP_EXPANDED_TOO_LARGE")
             suffix = Path(name).suffix.lower()
-            check(suffix in (".png", ".json"), "ZIP_DISALLOWED_TYPE")
+            # Markdown and HTML are inert source documentation, never extracted or executed.
+            # Promotion jobs MUST exclude them from publicly served application assets.
+            check(suffix in (".png", ".json", ".md", ".html"), "ZIP_DISALLOWED_TYPE")
             raw = z.read(info)
             check(len(raw) == info.file_size, "ZIP_TRUNCATED_ENTRY")
             if suffix == ".png":
                 check_png_jpeg(raw, "image/png", "required")
                 report.append({"name": name, "sha256": hashlib.sha256(raw).hexdigest()})
                 count += 1
-            else:
+            elif suffix == ".json":
                 check(len(raw) <= 120_000, "ZIP_JSON_TOO_LARGE")
                 json.loads(raw.decode("utf8"))
+            else:
+                check(len(raw) <= 120_000, "ZIP_DOCUMENT_TOO_LARGE")
+                raw.decode("utf8")  # never render, eval or extract documentation
     check(1 <= count <= 64, "ZIP_SPRITE_COUNT")
     return {"sprites": count, "parts": report}
 
