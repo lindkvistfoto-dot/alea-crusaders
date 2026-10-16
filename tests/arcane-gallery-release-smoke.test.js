@@ -58,6 +58,8 @@ describe('Arcane Gallery release smoke',()=>{
   const html=read('index.html').toString();
   expect(frodo).toContain('gallery.mount()');
   expect(frodo).toContain('gallery.sync(state.row,state.revision)');
+  expect(frodo).toContain('if(changedPicture&&legolas.state.viewerOpen)');
+  expect(frodo).toContain('legolas.closeViewer({restoreFocus:false})');
   expect(html).toContain('features/material/arcane-gallery.css');
   expect(code).toContain('arcane-gallery-overlay.webp');
   expect(code).toContain('legolas.readMedia(row,false)');
