@@ -77,6 +77,19 @@ describe('Arcane Gallery release smoke',()=>{
   expect(h.requests.every(p=>p.startsWith('campaign_materials?')||p.startsWith('campaign_material_presentation_history?'))).toBe(true);
   expect(h.reads.every(r=>r.id===row.id)).toBe(true);
  });
+ it('wipes a revoked or archived image instead of displaying the last cached private blob',async()=>{
+  const history=[{revision:1,material_id:row.id}],materials=[row];
+  const h=harness({history,materials});
+  h.gallery.sync(row,1);
+  await h.gallery.refresh();await Promise.resolve();
+  expect(h.gallery.state.selected).toBe(row.id);
+  history.splice(0);materials.splice(0);
+  await h.gallery.refresh();
+  expect(h.gallery.state.rows).toEqual([]);
+  expect(h.gallery.state.selected).toBe('');
+  expect(h.gallery.state.original).toBe('');
+  expect(h.nodes.arcaneGalleryImage.classList.contains('hidden')).toBe(true);
+ });
  it('never loads private history for a GM or unauthenticated user',()=>{
   const h=harness({logged:false});
   h.gallery.sync(row,1);
