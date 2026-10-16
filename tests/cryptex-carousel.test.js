@@ -36,7 +36,7 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
   expect(css).toContain('width:100%;min-width:0;aspect-ratio:1536/1024');
  });
  it('maximizes spell art in the masked cryptex windows without changing the source assets',()=>{
-  const base=css.match(/\.cryptex-prototype \.combat-magic-carousel-track>\.combat-carousel-spell-tile\\{([^}]*)\\}/)?.[1]||'';
+  const base=css.split('.cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile{')[1]?.split('}')[0]||'';
   expect(base).toContain('background:transparent');
   expect(base).toContain('box-shadow:none');
   expect(base).toContain('overflow:visible');
