@@ -7,6 +7,7 @@ on:
       - 'config/hermes3-profiles.json'
       - 'scripts/hermes3_*'
       - 'tests/hermes3-*'
+      - 'tests/test_hermes3_*'
       - '.github/workflows/hermes3-*'
       - 'docs/HERMES3.md'
   workflow_dispatch:
@@ -38,9 +39,9 @@ jobs:
       - name: Install pinned image decoder
         run: python -m pip install Pillow==12.3.0
       - name: Python intake verifier syntax
-        run: python3 -m py_compile scripts/hermes3_drive_verify.py
+        run: python3 -m py_compile scripts/hermes3_drive_verify.py scripts/hermes3_stage.py
       - name: Offline HERMES media and ZIP safety tests
-        run: python3 -m unittest discover -s tests -p 'test_hermes3_drive_verify.py' -v
+        run: python3 -m unittest discover -s tests -p 'test_hermes3_*.py' -v
       - name: Security and protocol regression tests
         run: npx vitest run tests/hermes3-policy.test.js
       - name: Create staging build without deployment
