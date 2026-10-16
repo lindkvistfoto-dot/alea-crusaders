@@ -48,9 +48,13 @@
   if(!state)return;
   try{sessionStorage.setItem(KEY,JSON.stringify(state))}catch(_){}
  }
+ function reveal(){
+  document.documentElement?.classList?.remove('alea-route-restoring');
+ }
  function clear(){
   pending=null;armed=false;started=false;characterId='';characterTab='grund';
   try{sessionStorage.removeItem(KEY)}catch(_){}
+  reveal();
  }
  function characterOpened(id){
   characterId=typeof id==='string'?id:'';
@@ -77,15 +81,15 @@
  window.addEventListener('pagehide',save);
  document.addEventListener('click',()=>{if(armed)requestAnimationFrame(save)},true);
  async function restore(){
-  if(started)return;
+  if(started){reveal();return;}
   started=true;
-  if(!authorized())return;
+  if(!authorized()){reveal();return;}
   const state=pending;
   pending=null;
   const current=activePage();
   // Navigation performed while Supabase loaded must take precedence.
   if(!state||!['landing','home',''].includes(current)){
-   armed=true;save();return;
+   armed=true;save();reveal();return;
   }
   try{
    if(state.page==='view'){
@@ -121,8 +125,9 @@
    console.warn('Alea: kunde inte återställa tidigare sida',err);
   }finally{
    armed=true;
-   requestAnimationFrame(save);
+   // Reveal only after the saved scroll position and restored route settle.
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{save();reveal();}));
   }
  }
- window.aleaRefreshLocation={restore,save,clear,characterOpened,tabChanged};
+ window.aleaRefreshLocation={restore,save,clear,reveal,characterOpened,tabChanged};
 })();
