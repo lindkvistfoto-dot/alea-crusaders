@@ -24,16 +24,28 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   const strip=$('arcaneGalleryStrip');if(strip){strip.replaceChildren();strip.dataset.ids='';}}
  const valid=(n,c)=>n===state.seq&&scope()===c&&allowed();
  async function thumb(row,n,c){
-  if(state.thumbs.has(row.id)||!valid(n,c))return;
-  try{const blob=await legolas.readMedia(row,true);if(!valid(n,c))return;
-   const button=$('arcaneGalleryStrip')?.querySelector('[data-gallery-id="'+row.id+'"]');if(!button)return;
-   const url=win().URL.createObjectURL(blob);state.thumbs.set(row.id,url);
+  if(!valid(n,c))return;
+  try{
+   // Recreate the element when the strip is rebuilt without redownloading
+   // the same private thumbnail. Gallery history changes often during play.
+   let url=state.thumbs.get(row.id);
+   if(!url){
+    const blob=await legolas.readMedia(row,true);
+    if(!valid(n,c))return;
+    url=win().URL.createObjectURL(blob);state.thumbs.set(row.id,url);
+   }
+   const button=$('arcaneGalleryStrip')?.querySelector('[data-gallery-id="'+row.id+'"]');
+   if(!button)return;
    const img=doc().createElement('img');img.src=url;img.alt='';img.loading='lazy';button.replaceChildren(img);
   }catch(_){/* RLS must remain authoritative. */}
  }
  function render(){
   root.classList.toggle('hidden',!allowed());if(!allowed())return;
   const strip=$('arcaneGalleryStrip'),rows=state.rows,ids=rows.map(r=>r.id).join('|');
+  const visible=new Set(rows.map(r=>r.id));
+  for(const [id,url] of state.thumbs){if(!visible.has(id)){
+   win().URL.revokeObjectURL(url);state.thumbs.delete(id);
+  }}
   $('arcaneGalleryCount').textContent=rows.length+' '+(rows.length===1?'delad bild':'delade bilder');
   $('arcaneGalleryEmpty').classList.toggle('hidden',!!state.selected);
   if(!strip)return;
@@ -50,7 +62,11 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   strip.querySelectorAll('[data-gallery-id]').forEach(t=>{
    const active=t.dataset.galleryId===state.selected;t.classList.toggle('is-active',active);t.setAttribute('aria-pressed',String(active));
   });
-  strip.querySelector('[data-gallery-id="'+state.selected+'"]')?.scrollIntoView?.({block:'nearest',inline:'nearest'});
+  const activeTile=strip.querySelector('[data-gallery-id="'+state.selected+'"]');
+  if(activeTile&&strip.scrollTo&&Number.isFinite(activeTile.offsetLeft)){
+   const left=Math.max(0,activeTile.offsetLeft-(strip.clientWidth-activeTile.clientWidth)/2);
+   strip.scrollTo({left,behavior:'instant'}); // Horizontal only: never jump the page.
+  }
   const row=rows.find(x=>x.id===state.selected);
   $('arcaneGalleryStatus').textContent=row?row.title+' · '+(rows.indexOf(row)+1)+' / '+rows.length:'Inga bilder har delats ännu.';
  }
@@ -100,6 +116,14 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   strip.addEventListener('pointermove',e=>{if(drag){const d=e.clientX-drag.x;if(Math.abs(d)>5){strip.scrollLeft=drag.left-d;moved=true;}}});
   ['pointerup','pointercancel','pointerleave'].forEach(e=>strip.addEventListener(e,()=>drag=null));
   strip.addEventListener('click',e=>{if(moved){moved=false;return;}const b=e.target.closest('[data-gallery-id]');if(b)void select(b.dataset.galleryId);});
+  strip.addEventListener('keydown',e=>{
+   if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+   const index=state.rows.findIndex(row=>row.id===state.selected);
+   const next=state.rows[index+(e.key==='ArrowRight'?1:-1)];
+   if(!next)return;
+   e.preventDefault();void select(next.id);
+   strip.querySelector('[data-gallery-id="'+next.id+'"]')?.focus?.({preventScroll:true});
+  });
   return root;
  }
  return {mount,sync,refresh,clear,state,root};
