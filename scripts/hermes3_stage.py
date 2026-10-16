@@ -36,7 +36,9 @@ def render_webp(data: bytes, mime: str, *, limit: int = MAX_FRAME):
         check(image.width * image.height <= 32_000_000, "STAGE_PIXEL_LIMIT")
         if max(image.size) > limit:
             image.thumbnail((limit, limit), Image.Resampling.LANCZOS)
-        image = image.convert("RGBA" if "A" in image.getbands() else "RGB")
+        # Indexed PNGs may carry tRNS transparency without an A band.
+        has_alpha = "A" in image.getbands() or "transparency" in image.info
+        image = image.convert("RGBA" if has_alpha else "RGB")
         alpha = image.getchannel("A").tobytes() if image.mode == "RGBA" else None
         stream = io.BytesIO()
         # Preserve actual alpha and image detail in standalone clockwork components.
