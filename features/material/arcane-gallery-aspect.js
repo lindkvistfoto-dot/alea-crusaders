@@ -21,6 +21,16 @@ export function arcaneFrameHeight(frameWidth,mediaWidth,mediaHeight,viewportHeig
  const max=Math.max(width*1.9,visibleHeight*1.22);
  return Math.round(Math.max(min,Math.min(raw,max)));
 }
+/** HERMES kit geometry: image opening 78% wide, fixed rigid top and bottom. */
+export function arcaneKitFrameHeight(frameWidth,mediaWidth,mediaHeight,viewportHeight=0){
+ const width=Number(frameWidth),w=Number(mediaWidth),h=Number(mediaHeight);
+ if(![width,w,h].every(x=>Number.isFinite(x)&&x>0))return null;
+ const ratio=Math.max(.35,Math.min(4,w/h));
+ const contentHeight=width*.78/ratio;
+ const desired=contentHeight+width*.34; // 13cqw top + 21cqw bottom
+ const limit=Math.max(width*2.2,Math.max(0,Number(viewportHeight)||0)*1.22);
+ return Math.round(Math.max(width*.65,Math.min(desired,limit)));
+}
 /** Forget the last campaign's geometry before reusing a private viewer. */
 export function resetArcaneFrame(root){
  const machine=root?.querySelector?.('.arcane-gallery-machine');
@@ -39,7 +49,8 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  const dimensions=arcaneMediaDimensions(media);
  const machine=root?.querySelector?.('.arcane-gallery-machine');
  const width=Number(machine?.getBoundingClientRect?.().width||machine?.clientWidth||0);
- const target=dimensions&&arcaneFrameHeight(width,dimensions.width,dimensions.height,viewportHeight);
+ const fit=root?.classList?.contains?.('arcane-gallery-kit')?arcaneKitFrameHeight:arcaneFrameHeight;
+ const target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
  machine.style.setProperty('--arcane-gear-angle',arcaneGearRotation(target,width)+'deg');
