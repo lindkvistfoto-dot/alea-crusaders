@@ -41,6 +41,21 @@ describe('Presentationsateljén — GM mobile structure',()=>{
   expect(ui).toContain('clearQueueImages();queueSignature=');
   expect(ui).not.toContain('/storage/v1/object/public/');
  });
+
+ it('removes only the redundant GM mobile archive hero and preserves a real close action',()=>{
+  const ui=read('features/material/frodo-ui.js');
+  const css=read('features/material/frodo-atelier.css');
+  const viewer=read('features/material/viewer.js');
+  expect(ui).toContain("el('legolasPanel')?.classList.toggle('legolas-atelier-gm',gm)");
+  expect(ui).toContain('id="frodoCloseMobile"');
+  expect(ui).toContain("el('frodoCloseMobile').addEventListener('click',()=>el('legolasClosePanel')?.click())");
+  expect(viewer).toContain("el('legolasClosePanel').addEventListener('click',closePanel)");
+  expect(css).toContain('#legolasPanel.legolas-atelier-gm > .legolas-panel-inner > .legolas-heading');
+  expect(css).toContain('display:none!important;');
+  expect(css).toContain('.frodo-close-mobile:focus-visible');
+  expect(css).toContain('@media(max-width:720px)');
+  expect(css).toContain('hyphens:none');
+ });
  it('mobile preview never crops original player image and is keyboard accessible',()=>{
   const css=read('features/material/frodo-atelier.css');
   expect(css).toContain('@media(max-width:720px)');
