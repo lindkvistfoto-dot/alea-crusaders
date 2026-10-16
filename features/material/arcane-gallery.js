@@ -1,5 +1,5 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
-import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
+import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.240';
 const cols='id,campaign_id,title,description,category,asset_kind,storage_bucket,storage_path,thumbnail_path,mime_type,created_at';
 const encode=encodeURIComponent;
 const safe=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
