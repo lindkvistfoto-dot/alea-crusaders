@@ -1,5 +1,5 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
-import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
+import {sizeArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=1';
 const cols='id,campaign_id,title,description,category,asset_kind,storage_bucket,storage_path,thumbnail_path,mime_type,created_at';
 const encode=encodeURIComponent;
 const safe=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,7 +20,12 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   '<div class="arcane-gallery-machine"><div id="arcaneGalleryPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Öppna bild i stor vy">'+
   '<img id="arcaneGalleryImage" class="hidden" alt=""><span id="arcaneGalleryEmpty">Väntar på bilder från spelledaren…</span></div>'+
   '<div class="arcane-gallery-belt"><div id="arcaneGalleryStrip" class="arcane-gallery-strip" aria-label="Bläddra bland bilder"></div></div>'+
-  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true"></div>'+
+  '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true">'+
+  '<div class="arcane-gallery-morph" aria-hidden="true">'+
+  '<div class="arcane-gallery-gear arcane-gallery-gear--left"><span class="arcane-gallery-gear-rotor"></span><span class="arcane-gallery-gear-core"></span></div>'+
+  '<div class="arcane-gallery-gear arcane-gallery-gear--right"><span class="arcane-gallery-gear-rotor"></span><span class="arcane-gallery-gear-core"></span></div>'+
+  '<div class="arcane-gallery-piston arcane-gallery-piston--left"><span class="arcane-gallery-piston-guide"></span><span class="arcane-gallery-piston-rod"></span><span class="arcane-gallery-piston-sleeve"></span><span class="arcane-gallery-piston-collar arcane-gallery-piston-collar--top"></span><span class="arcane-gallery-piston-collar arcane-gallery-piston-collar--bottom"></span></div>'+
+  '<div class="arcane-gallery-piston arcane-gallery-piston--right"><span class="arcane-gallery-piston-guide"></span><span class="arcane-gallery-piston-rod"></span><span class="arcane-gallery-piston-sleeve"></span><span class="arcane-gallery-piston-collar arcane-gallery-piston-collar--top"></span><span class="arcane-gallery-piston-collar arcane-gallery-piston-collar--bottom"></span></div></div></div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan delade bilder">'+
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>'+

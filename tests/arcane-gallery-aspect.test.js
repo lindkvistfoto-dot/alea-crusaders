@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {arcaneFrameHeight,arcaneMediaDimensions,sizeArcaneFrame} from '../features/material/arcane-gallery-aspect.js';
+import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame} from '../features/material/arcane-gallery-aspect.js';
 describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  const w=390,vh=820;
  it('height increases from panorama through square to vertical portrait',()=>{
@@ -23,6 +23,15 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   expect(arcaneMediaDimensions({videoWidth:1920,videoHeight:1080})).toEqual({width:1920,height:1080});
   expect(arcaneMediaDimensions({naturalWidth:0,naturalHeight:0})).toBeNull();
  });
+ it('synchronizes gear rotation monotonically with the telescopic extension',()=>{
+  const wide=arcaneGearRotation(arcaneFrameHeight(w,1920,1080,vh),w);
+  const square=arcaneGearRotation(arcaneFrameHeight(w,1024,1024,vh),w);
+  const portrait=arcaneGearRotation(arcaneFrameHeight(w,1080,1920,vh),w);
+  expect(wide).toBeLessThan(square);
+  expect(square).toBeLessThan(portrait);
+  expect(arcaneGearRotation(0,w)).toBe(0);
+  expect(arcaneGearRotation(10_000,w)).toBe(540);
+ });
  it('sets only the local media frame height; does not affect other Alea views',()=>{
   const writes=[],classes=[],root={
    classList:{add:v=>classes.push(v)},
@@ -33,7 +42,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   };
   const actual=sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},vh);
   expect(actual).toBe(731);
-  expect(writes).toEqual([['--arcane-frame-height','731px']]);
+  expect(writes).toEqual([['--arcane-frame-height','731px'],['--arcane-gear-angle',arcaneGearRotation(731,w)+'deg']]);
   expect(classes).toEqual(['arcane-gallery-fluid']);
  });
 });

@@ -21,6 +21,13 @@ export function arcaneFrameHeight(frameWidth,mediaWidth,mediaHeight,viewportHeig
  const max=Math.max(width*1.9,visibleHeight*1.22);
  return Math.round(Math.max(min,Math.min(raw,max)));
 }
+/** Rotation is derived from extension, never a timer: gears and frame stop together. */
+export function arcaneGearRotation(frameHeight,frameWidth){
+ const h=Number(frameHeight),w=Number(frameWidth);
+ if(!Number.isFinite(h)||!Number.isFinite(w)||h<=0||w<=0)return 0;
+ const p=Math.max(0,Math.min(1,(h/w-.72)/(1.95-.72)));
+ return Math.round(p*540);
+}
 export function sizeArcaneFrame(root,media,viewportHeight=0){
  const dimensions=arcaneMediaDimensions(media);
  const machine=root?.querySelector?.('.arcane-gallery-machine');
@@ -28,6 +35,7 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  const target=dimensions&&arcaneFrameHeight(width,dimensions.width,dimensions.height,viewportHeight);
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
+ machine.style.setProperty('--arcane-gear-angle',arcaneGearRotation(target,width)+'deg');
  root.classList.add('arcane-gallery-fluid');
  return target;
 }
