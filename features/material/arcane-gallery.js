@@ -142,7 +142,10 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   const live=row?.campaign_id===c&&row.asset_kind==='image'?row.id:'';
   if(state.revision!==revision||state.live!==live){state.revision=revision;state.live=live;void refresh();}
  }
- function openFull(){const row=state.rows.find(r=>r.id===state.selected);if(row&&allowed())legolas.previewMaterial(row);}
+ function openFull(){const row=state.rows.find(r=>r.id===state.selected);if(!row||!allowed())return;
+  if(typeof legolas.previewSequence==='function')legolas.previewSequence(state.rows,row.id);
+  else legolas.previewMaterial(row);
+ }
  function step(delta){
   if(!allowed())return false;
   const index=state.rows.findIndex(row=>row.id===state.selected);
