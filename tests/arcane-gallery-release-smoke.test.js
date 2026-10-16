@@ -68,8 +68,12 @@ describe('Arcane Gallery release smoke',()=>{
   expect(css).toContain('touch-action:pan-x');
   const morph=read('features/material/arcane-morphing-frame.css').toString();
   const gear=read('features/material/arcane-morph-gear.svg').toString();
-  expect(code).toContain('arcane-gallery-gear--left');
-  expect(code).toContain('arcane-gallery-piston--right');
+  const morphMarkup=read('features/material/arcane-morph-markup.js').toString();
+  const gmPreview=read('features/material/arcane-gm-preview.js').toString();
+  expect(code).toContain('arcaneMorphMarkup()');
+  expect(gmPreview).toContain('arcaneMorphMarkup()');
+  expect(morphMarkup).toContain('arcane-gallery-gear--left');
+  expect(morphMarkup).toContain('arcane-gallery-piston--right');
   expect(css).toContain('arcane-morphing-frame.css');
   expect(morph).toContain('prefers-reduced-motion:reduce');
   expect(morph).toContain('transition:transform 460ms');
