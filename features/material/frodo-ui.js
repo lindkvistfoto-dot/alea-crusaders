@@ -134,6 +134,8 @@ export function mountFrodo({
   if(!card)return;
   const state=frodo.state,gm=Boolean(isGM()),row=state.row;
   card.classList.toggle('frodo-is-gm',gm);
+  // Only the GM's small-screen atelier suppresses the redundant archive hero.
+  el('legolasPanel')?.classList.toggle('legolas-atelier-gm',gm);
   const heading=el('frodoPanelTitle'),subtitle=el('frodoPanelSubtitle');
   if(heading)heading.textContent=gm?'Presentationsateljén':'Aktuell visning';
   if(subtitle)subtitle.textContent=gm?'Spelledarens kontrollpanel':'Delad av spelledaren';
@@ -214,7 +216,9 @@ export function mountFrodo({
     '<span class="frodo-eyebrow">ALEA CRUSADERS · BILDPRESENTATION</span>'+
     '<strong id="frodoPanelTitle">Presentationsateljén</strong>'+ 
     '<small id="frodoPanelSubtitle">Spelledarens kontrollpanel</small></div>'+
-    '<span class="frodo-live-chip" id="frodoLiveStatus">☾ Viloläge</span>'+
+    '<span class="frodo-live-chip" id="frodoLiveStatus">☾ Viloläge</span>'+ 
+    '<button type="button" id="frodoCloseMobile" class="frodo-close-mobile" '+
+    'aria-label="Stäng materialpanelen" title="Tillbaka">✕</button>'+
     '<span id="frodoCurrent" role="status" aria-live="polite">Hämtar aktuell visning…</span></div>'+
    '<div id="frodoGmPreview" class="frodo-gm-preview hidden" aria-label="Bild som visas för spelarna">'+
     '<div class="frodo-gm-preview-top"><span>▣ SPELARNAS SKÄRM</span>'+
@@ -244,6 +248,7 @@ export function mountFrodo({
   target.insertAdjacentElement('beforebegin',panel);
   const help=el('legolasGmQueue')?.querySelector('p');
   if(help)help.textContent='Välj bilder med + Välj. Visa första valda ovan delar bara den aktuella bilden med deltagarna.';
+  el('frodoCloseMobile').addEventListener('click',()=>el('legolasClosePanel')?.click());
   el('frodoGmOpenLarge').addEventListener('click',()=>{
    const row=frodo.state.row;
    if(isGM()&&authenticated()&&frodo.state.loaded&&row&&
