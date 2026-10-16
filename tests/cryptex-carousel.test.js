@@ -35,6 +35,15 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
   expect(css).toContain('max-height:none;min-height:0;aspect-ratio:1/1');
   expect(css).toContain('width:100%;min-width:0;aspect-ratio:1536/1024');
  });
+ it('maximizes spell art in the masked cryptex windows without changing the source assets',()=>{
+  const base=css.match(/\.cryptex-prototype \.combat-magic-carousel-track>\.combat-carousel-spell-tile\\{([^}]*)\\}/)?.[1]||'';
+  expect(base).toContain('background:transparent');
+  expect(base).toContain('box-shadow:none');
+  expect(base).toContain('overflow:visible');
+  expect(css).toContain('.combat-carousel-spell-art{\n inset:-2px;overflow:hidden;border-radius:6px;');
+  expect(css).toContain('.combat-carousel-spell-tile.center .combat-carousel-spell-art{\n inset:-3px;border-radius:5px;');
+  expect(css).toContain('arcane-cryptex-windows-mask.svg');
+ });
  it('keeps selection, live nameplate, keyboard operation and inertia',()=>{
   expect(carousel).toContain('combat-cryptex-nameplate');
   expect(carousel).toContain('nameplateText.textContent!==shown');
@@ -66,7 +75,7 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
  });
  it('cache-busts the new image, mask and CSS',()=>{
   expect(carousel).toContain('arcane-cryptex-housing.png?v=0.35.207');
-  expect(html).toContain('arcane-cryptex.css?v=0.35.220');
+  expect(html).toContain('arcane-cryptex.css?v=0.35.221');
   expect(html).toContain('magic-carousel.js?v=0.35.220');
   expect(css).toContain('arcane-cryptex-windows-mask.svg?v=0.35.207');
  });

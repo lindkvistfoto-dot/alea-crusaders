@@ -60,9 +60,9 @@
  width:var(--combat-carousel-tile-width,80px);
  height:var(--combat-carousel-tile-width,80px);
  max-height:none;min-height:0;aspect-ratio:1/1;
- background:radial-gradient(ellipse at 50% 33%,#644127,#1c130e 75%);
- box-shadow:inset 0 1px 13px #000b;
- border:0;border-radius:8px;
+ background:transparent;
+ box-shadow:none;
+ border:0;border-radius:8px;overflow:visible;
  transform-origin:50% 50%;transition:none!important;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-tile::after{
@@ -71,8 +71,14 @@
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center{
  filter:brightness(1.08);
 }
+/* Reclaim the dark perimeter without modifying the source spell PNGs.
+   Artwork is still clipped by the locked three-window housing mask. */
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-art{
- inset:0;overflow:hidden;border-radius:7px;
+ inset:-2px;overflow:hidden;border-radius:6px;
+}
+/* The focused tile benefits most from filling the larger centre window. */
+#combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-track>.combat-carousel-spell-tile.center .combat-carousel-spell-art{
+ inset:-3px;border-radius:5px;
 }
 #combatPage .combat-shell-live .cryptex-prototype .combat-carousel-spell-label{
  /* The label lives on the built-in bronze nameplate; keep it in DOM for accessibility. */
