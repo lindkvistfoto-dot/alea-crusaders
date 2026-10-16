@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame} from '../features/material/arcane-gallery-aspect.js';
+import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,sizeArcaneFrame,resetArcaneFrame} from '../features/material/arcane-gallery-aspect.js';
 describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  const w=390,vh=820;
  it('height increases from panorama through square to vertical portrait',()=>{
@@ -31,6 +31,23 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
   expect(square).toBeLessThan(portrait);
   expect(arcaneGearRotation(0,w)).toBe(0);
   expect(arcaneGearRotation(10_000,w)).toBe(540);
+ });
+ it('can reset geometry when the campaign or private preview is cleared',()=>{
+  const deleted=[],classes=[];
+  const machine={style:{removeProperty:key=>deleted.push(key)}};
+  resetArcaneFrame({
+   querySelector:key=>key==='.arcane-gallery-machine'?machine:null,
+   classList:{remove:cls=>classes.push(cls)}
+  });
+  expect(deleted).toEqual(['--arcane-frame-height','--arcane-gear-angle']);
+  expect(classes).toEqual(['arcane-gallery-fluid']);
+  expect(()=>resetArcaneFrame(null)).not.toThrow();
+ });
+ it('supports common 16:9, 4:3, 1:1, and 9:16 artwork',()=>{
+  const formats=[[16,9],[4,3],[1,1],[9,16]];
+  const heights=formats.map(([w,h])=>arcaneFrameHeight(390,w,h,820));
+  expect(heights).toEqual([...heights].sort((a,b)=>a-b));
+  expect(new Set(heights).size).toBe(4);
  });
  it('sets only the local media frame height; does not affect other Alea views',()=>{
   const writes=[],classes=[],root={
