@@ -49,6 +49,16 @@
  border-left:1px solid #d8c3a0;border-right:1px solid #493624;
  background:linear-gradient(90deg,#2a3035,#8faaa9 24%,#f3e8c7 47%,#617a81 72%,#56402b);
  box-shadow:0 0 .6cqw #317a96aa}
+/* The authentic HERMES piston is a rigid illustration, never height-stretched.
+ * Chrome rods behind it provide the variable length; the source images crossfade
+ * between their engraved closed and extended assemblies during the frame morph. */
+.arcane-kit-actuator{
+ position:absolute;bottom:0;left:-40%;width:180%;height:auto;max-width:none;
+ pointer-events:none;filter:drop-shadow(0 .22cqw .25cqw #000b);
+ transition:opacity 460ms cubic-bezier(.22,1,.36,1);
+}
+.arcane-kit-actuator--closed{opacity:calc(1 - var(--arcane-extension,0))}
+.arcane-kit-actuator--extended{opacity:var(--arcane-extension,0)}
 .arcane-kit-socket{position:absolute;width:190%;height:auto;left:-45%}
 .arcane-kit-socket--top{top:0}
 .arcane-kit-socket--bottom{bottom:0;transform:rotate(180deg)}
@@ -64,4 +74,5 @@
 }
 @media(prefers-reduced-motion:reduce){
  .arcane-kit-wheel{transition:none;will-change:auto}
+ .arcane-kit-actuator{transition:none}
 }
