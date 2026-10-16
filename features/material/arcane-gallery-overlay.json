@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-gallery-overlay",
+  "source_path": "assets/hermes/originals/ui/arcane-gallery-overlay/180de8fde27bd0070903692ebb78ce813a03de9d49bc36ee65f6a462d9c45868.png",
+  "source_sha256": "180de8fde27bd0070903692ebb78ce813a03de9d49bc36ee65f6a462d9c45868",
+  "source_bytes": 1709878,
+  "app_path": "features/material/arcane-gallery-overlay.webp",
+  "app_sha256": "a56709bd59bd78508ff4609523deb8194fa8936e9b20ae5e2c96b828a75b92e0",
+  "app_bytes": 88898,
+  "width": 1152,
+  "height": 768,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
