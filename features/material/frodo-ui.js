@@ -119,7 +119,11 @@ export function mountFrodo({
   getCampaign:scope,isAuthenticated:authenticated,isGM,request,
   onPresentation:row=>{
    if(isGM())return;
+   const changedPicture=liveId!==row.id;
    liveId=row.id;
+   // A fullscreen preview must not conceal a newly presented GM picture.
+   if(changedPicture&&legolas.state.viewerOpen)
+    legolas.closeViewer({restoreFocus:false});
    legolas.openPanel();
    if(legolas.state.panelOpen)void legolas.loadPage();
   },
