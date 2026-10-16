@@ -18,7 +18,9 @@ function setup(saved=null){
   alchemyNavBtn:'shopPage',innNavBtn:'innPage',academyNavBtn:'academyPage',
   combatNavBtn:'combatPage',mapNavBtn:'mapPage',diceNavBtn:'dicePage',
   journalNavBtn:'journalPage',materialNavBtn:'legolasPanel'};
+ const rootClasses=new Set(['alea-route-restoring']);
  const document={
+  documentElement:{classList:{remove:name=>rootClasses.delete(name),contains:name=>rootClasses.has(name)}},
   querySelector:q=>q==='main'?main:null,querySelectorAll:()=>[],
   addEventListener:()=>{},
   getElementById:id=>id==='loginScreen'?login:clickMap[id]?{
@@ -29,7 +31,7 @@ function setup(saved=null){
  const window={scrollY:0,scrollTo:()=>{},addEventListener:()=>{}};
  runInNewContext(code,{document,sessionStorage,window,MutationObserver:undefined,
   requestAnimationFrame:f=>{f();return 1},console:{warn:()=>{}}});
- return {location:window.aleaRefreshLocation,values,open,nodes,window};
+ return {location:window.aleaRefreshLocation,values,open,nodes,window,rootClasses};
 }
 describe('Refresh stays on the same Alea page',()=>{
  it('keeps saved combat route through startup landing',async()=>{
@@ -37,6 +39,7 @@ describe('Refresh stays on the same Alea page',()=>{
   expect(app.values.get('alea-refresh-location-v1')).toContain('combatPage');
   await app.location.restore();
   expect(app.nodes.get('combatPage').classList.contains('hidden')).toBe(false);
+  expect(app.rootClasses.has('alea-route-restoring')).toBe(false);
  });
  it('restores alchemy rather than general shop',async()=>{
   const app=setup({v:1,page:'shopPage',alchemy:true});app.open('landing');
@@ -57,12 +60,15 @@ describe('Refresh stays on the same Alea page',()=>{
  it('clears saved location when the user logs out',()=>{
   const app=setup({v:1,page:'admin'});app.location.clear();
   expect(app.values.has('alea-refresh-location-v1')).toBe(false);
+  expect(app.rootClasses.has('alea-route-restoring')).toBe(false);
  });
  it('hooks into authenticated startup without simulating game actions',()=>{
   const legacy=read('legacy/app.js');
   expect(legacy).toContain('await window.aleaRefreshLocation?.restore?.()');
   expect(legacy).toContain('window.aleaRefreshLocation?.clear?.()');
-  expect(read('index.html')).toContain('refresh-location.js?v=0.35.228');
+  expect(read('index.html')).toContain('refresh-location.js?v=0.35.230');
+  expect(read('index.html')).toContain('html.alea-route-restoring body > main');
+  expect(legacy).toContain('window.aleaRefreshLocation?.reveal?.()');
   expect(code).not.toContain('rollDice(');
   expect(code).not.toContain('combatCast');
  });
