@@ -43,6 +43,74 @@
      '<p class="skill-art-status" role="status" aria-live="polite">'+(path?'Sparad bild finns.':'Välj en kvadratisk bild, högst 16 MB.')+'</p></section>';
    }).join('')+'</div></section>';
  }
+
+ // Compact icon previews in the master-skill table. Never display illustrations here.
+ // The bucket is private, so previews must be fetched with the signed-in user's storage client.
+ const listUrls=new Map();
+ let listToken=0,listObserver=null;
+ function listIconHtml(row){
+  const id=String(row?.id||''),name=String(row?.name||'Färdighet');
+  const path=validPath(row?.icon_path,id,'icon')?String(row.icon_path):'';
+  return '<span class="skill-art-row-thumb" data-skill-id="'+escape(id)+'" data-icon-path="'+escape(path)+'"'+
+   ' role="img" aria-label="'+escape(path?'Ikon för '+name:'Ingen ikon uppladdad för '+name)+'"'+
+   ' title="'+escape(path?'Ikon för '+name:'Ingen ikon uppladdad')+'">'+
+   '<span class="skill-art-row-fallback" aria-hidden="true">✦</span></span>';
+ }
+ function releaseList(){
+  listToken++;
+  if(listObserver){listObserver.disconnect();listObserver=null}
+  for(const url of listUrls.values())URL.revokeObjectURL(url);
+  listUrls.clear();
+ }
+ function hydrateList(){
+  releaseList();
+  const root=document.getElementById('adminSkillTable');
+  if(!root)return;
+  const token=listToken,loading=new Set();
+  const nodes=Array.from(root.querySelectorAll('.skill-art-row-thumb[data-icon-path]')).filter(el=>
+   validPath(el.dataset.iconPath,el.dataset.skillId,'icon'));
+  async function loadThumb(el){
+   if(loading.has(el))return;
+   loading.add(el);
+   const path=el.dataset.iconPath,id=el.dataset.skillId;
+   let url='';
+   try{
+    const response=await mapStorageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});
+    if(!response.ok)throw Error('Kunde inte hämta ikon ('+response.status+').');
+    const blob=await response.blob();
+    if(!blob.size||!['image/png','image/webp'].includes(blob.type))throw Error('Ogiltigt ikonformat.');
+    url=URL.createObjectURL(blob);
+    if(token!==listToken||document.getElementById('adminSkillTable')!==root||!root.contains(el)||
+       el.dataset.skillId!==id||el.dataset.iconPath!==path){
+     URL.revokeObjectURL(url);return;
+    }
+    const previous=listUrls.get(el);if(previous)URL.revokeObjectURL(previous);
+    listUrls.set(el,url);
+    const img=document.createElement('img');
+    img.alt='';img.decoding='async';img.src=url;
+    el.replaceChildren(img);
+    el.classList.add('skill-art-row-loaded');
+   }catch(error){
+    if(url)URL.revokeObjectURL(url);
+    if(token===listToken&&root.contains(el)){
+     el.classList.add('skill-art-row-error');
+     el.title='Ikonen kunde inte laddas';
+    }
+   }finally{loading.delete(el)}
+  }
+  if(typeof IntersectionObserver==='function'){
+   listObserver=new IntersectionObserver(entries=>{
+    for(const entry of entries){
+     if(!entry.isIntersecting)continue;
+     listObserver?.unobserve(entry.target);
+     void loadThumb(entry.target);
+    }
+   },{rootMargin:'180px 100px'});
+   nodes.forEach(el=>listObserver.observe(el));
+  }else{
+   nodes.forEach(el=>{void loadThumb(el)});
+  }
+ }
  function slot(kind){
   return document.querySelector('#adminEditor .skill-art-slot[data-kind="'+kind+'"]');
  }
@@ -163,5 +231,5 @@
   }catch(error){status(kind,'Kunde inte ta bort bildkopplingen: '+(error.message||error))}
   finally{pending.delete(key);busy(kind,false);const pane=slot(kind);if(pane){const remove=pane.querySelector('button');if(remove)remove.disabled=!validPath(getRow(id)?.[TYPES[kind].column],id,kind)}}
  }
- window.aleaSkillArt={editorHtml:html,hydrate,closeEditor,upload,remove,validPath};
+ window.aleaSkillArt={editorHtml:html,hydrate,closeEditor,upload,remove,validPath,listIconHtml,hydrateList,releaseList};
 })();
