@@ -3693,14 +3693,14 @@ async function deleteCampaignLocation(id){
  if(!await askConfirm('Ta bort plats',`Vill du ta bort ${l.location_key}. ${l.name}? Platsen kan bara tas bort om ingen polygon eller annan koppling använder den.`,'Ta bort',true))return;
  try{await dbJson('campaign_locations?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadCampaignPlaceData();renderAdminMaps()}catch(e){alert('Kunde inte ta bort platsen: '+e.message)}
 }
-let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='',mapAreaSelectedId=null,mapAreaNodeDrag=null;
-function closeMapAreaEditor(){if(mapAreaNodeDrag)return;mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;$('mapAreaEditor').classList.add('hidden')}
+let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='',mapAreaSelectedId=null,mapAreaNodeDrag=null,mapAreaHoleCandidates=[];
+function closeMapAreaEditor(){if(mapAreaNodeDrag)return;mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;mapAreaHoleCandidates=[];$('mapAreaEditor').classList.add('hidden')}
 async function openMapAreaEditor(mapId){
  let map=campaignMaps.find(m=>m.id===mapId);if(!map)return;
  try{
   mapAreaEditMap=map;mapAreaDraft=[];mapAreaDrawing=false;
   let [url,areas]=await Promise.all([getMapImageUrl(map),loadCampaignMapAreas(map.id)]);
-  mapAreaEditAreas=areas;
+  mapAreaEditAreas=areas;mapAreaHoleCandidates=[];
   $('mapAreaEditorTitle').textContent='Kartområden · '+map.name;
   $('mapAreaImage').src=url;$('mapAreaImage').alt=map.name;
   $('mapAreaSvg').setAttribute('viewBox',`0 0 ${map.width} ${map.height}`);
@@ -3742,7 +3742,9 @@ function renderMapAreaEditor(){
  let vertexRadius=6*(mapAreaEditMap.width/Math.max(1,svg.getBoundingClientRect().width));
  let nodes=!mapAreaDrawing?mapAreaEditAreas.flatMap(a=>areaShapePoints(a).map((p,i)=>({p,i,id:a.id}))).map(n=>{let shared=mapAreaEditAreas.reduce((count,a)=>count+Number(areaShapePoints(a).some(p=>Math.hypot(p[0]-n.p[0],p[1]-n.p[1])<.01)),0)>1;return`<circle class="map-editor-vertex ${shared?'shared':''}" cx="${n.p[0]}" cy="${n.p[1]}" r="${vertexRadius}" vector-effect="non-scaling-stroke" onpointerdown="mapAreaNodeStart(event,'${n.id}',${n.i})"><title>Dra hörnpunkt${shared?' (delad)':''}</title></circle>`}).join(''):'';
  let draft=mapAreaDraft.length?`<polygon class="map-editor-draft ${overlap?'overlap':''}" points="${mapAreaDraft.map(p=>p.join(',')).join(' ')}"></polygon>${mapAreaDraft.map(p=>`<circle class="map-editor-point" cx="${p[0]}" cy="${p[1]}" r="5"></circle>`).join('')}`:'';
- svg.innerHTML=existing+draft+nodes;
+ let gaps=mapAreaHoleCandidates.map((h,i)=>`<polygon class="map-editor-hole" points="${h.points.map(p=>p.join(',')).join(' ')}" onclick="fillMapAreaHole(event,${i})"><title>Fyll tomrum ${i+1} (${Math.round(h.area)} kvadratenheter)</title></polygon>`).join('');
+ svg.innerHTML=existing+draft+gaps+nodes;
+ let fillBtn=$('mapAreaFillBtn');if(fillBtn){fillBtn.disabled=mapAreaDrawing||!!mapAreaNodeDrag;fillBtn.textContent=mapAreaHoleCandidates.length?'Fyll tomrum ('+mapAreaHoleCandidates.length+')':'Fyll tomrum'}
  let locMap=new Map(campaignLocations.map(l=>[l.id,l]));
  $('mapAreaList').innerHTML=mapAreaEditAreas.length?mapAreaEditAreas.map((a,i)=>{let l=locMap.get(a.location_id);let options='<option value="">Ingen plats</option>'+campaignLocations.map(x=>`<option value="${x.id}" ${a.location_id===x.id?'selected':''}>${escAttr(sitePath(x.site_id)+' › '+x.location_key+'. '+x.name)}</option>`).join('');let pills=mapStatusPillsHtml(a);return`<div class="map-area-list-row"><div><b>Polygon ${i+1}</b><div class="muted">${l?'Kopplad':'Ej kopplad'}</div></div><select onchange="assignMapAreaLocation('${a.id}',this.value)" aria-label="Koppla polygon ${i+1} till plats">${options}</select><div class="map-status-pills">${pills}</div><button class="deletebtn" onclick="deleteMapArea('${a.id}')">×</button></div>`}).join(''):'<div class="map-area-empty">Inga polygoner definierade ännu.</div>';
  $('mapAreaUndoBtn').disabled=!mapAreaDrawing||!mapAreaDraft.length;$('mapAreaSaveBtn').disabled=!mapAreaDrawing||mapAreaDraft.length<3||overlap;
@@ -3817,6 +3819,31 @@ async function mapAreaNodeEnd(){
  }
  mapAreaNodeDrag=null;renderMapAreaEditor();
 }
+async function showMapAreaHoles(){
+ if(!mapAreaEditMap||mapAreaDrawing||mapAreaNodeDrag)return;
+ try{
+  const {findHoles}=await import('./features/map/polygon-topology.js');
+  mapAreaHoleCandidates=findHoles(mapAreaEditAreas.map(areaShapePoints));
+  renderMapAreaEditor();
+  showBackupToast(mapAreaHoleCandidates.length?'Välj ett markerat tomrum för att fylla det':'Inga slutna tomrum hittades');
+ }catch(e){alert('Kunde inte analysera tomrum: '+e.message)}
+}
+async function fillMapAreaHole(e,index){
+ e.stopPropagation();if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
+ const hole=mapAreaHoleCandidates[index];if(!hole)return;
+ try{
+  const {mergeHole,area}=await import('./features/map/polygon-topology.js');
+  const candidates=mapAreaEditAreas.map(a=>({a,points:areaShapePoints(a)})).map(c=>({...c,merged:mergeHole(c.points,hole.points)})).filter(c=>c.merged);
+  if(!candidates.length){alert('Tomrummet delar ingen sammanhängande kant med en polygon som kan utökas.');return}
+  let choice=candidates.find(c=>c.a.id===mapAreaSelectedId)||candidates.sort((x,y)=>Math.abs(area(y.points))-Math.abs(area(x.points)))[0];
+  if(!await askConfirm('Fyll tomrum',`Lägg till tomrummet i polygonen "${choice.a.name||'Utan namn'}"? Yta: ${Math.round(hole.area)}. Övriga polygoner ska inte ändras.`,'Fyll'))return;
+  if(mapAreaEditAreas.some(a=>a.id!==choice.a.id&&polygonsOverlap(choice.merged,areaShapePoints(a)))){alert('Fyllning stoppades: geometrin skulle överlappa ett befintligt område.');return}
+  await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(choice.a.id),{method:'PATCH',body:JSON.stringify({shape_type:'polygon',shape_data:{points:choice.merged}})});
+  mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);mapAreaHoleCandidates=[];
+  if(activeCampaignMap?.id===mapAreaEditMap.id)setCampaignMapData(activeCampaignMap,mapAreaEditAreas);
+  renderMapAreaEditor();showBackupToast('✓ Tomrum fyllt');
+ }catch(err){alert('Kunde inte fylla tomrummet: '+err.message)}
+}
 function mapZoneClick(e,id){
  e.stopPropagation();
  if(!canManageCampaignMaps()||mapDidDrag)return;
@@ -3839,7 +3866,7 @@ async function setMapLocationStatus(locationId,status){
   closeMapStatusMenu();renderMapPanel();if(mapAreaEditMap)renderMapAreaEditor();if(mapSelectedAreaId)openMapLocationInfoByArea(mapSelectedAreaId,true);showBackupToast('✓ '+statusLabel(status));
  }catch(e){alert('Kunde inte ändra platsstatus: '+e.message)}
 }
-function startMapAreaDraw(){if(!mapAreaEditMap)return;mapAreaDraft=[];mapAreaLastSnap='';mapAreaDrawing=true;renderMapAreaEditor()}
+function startMapAreaDraw(){if(!mapAreaEditMap)return;mapAreaHoleCandidates=[];mapAreaDraft=[];mapAreaLastSnap='';mapAreaDrawing=true;renderMapAreaEditor()}
 function cancelMapAreaDraw(){mapAreaDraft=[];mapAreaLastSnap='';mapAreaDrawing=false;renderMapAreaEditor()}
 function undoMapAreaPoint(){if(!mapAreaDrawing||!mapAreaDraft.length)return;mapAreaDraft.pop();mapAreaLastSnap='';renderMapAreaEditor()}
 function nearestPointOnSegment(p,a,b){
@@ -3867,7 +3894,7 @@ async function saveMapAreaPolygon(){
  let location_id=$('mapAreaLocation').value||null;
  try{
   await dbJson('campaign_map_areas',{method:'POST',body:JSON.stringify({campaign_id:centralCampaignId,map_id:mapAreaEditMap.id,location_id,shape_type:'polygon',shape_data:{points:mapAreaDraft},sort_order:mapAreaEditAreas.length})});
-  mapAreaDraft=[];mapAreaDrawing=false;mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);renderMapAreaEditor();
+  mapAreaDraft=[];mapAreaDrawing=false;mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);mapAreaHoleCandidates=[];renderMapAreaEditor();
   if(activeCampaignMap?.id===mapAreaEditMap.id)setCampaignMapData(activeCampaignMap,mapAreaEditAreas);
   showBackupToast('✓ Polygon sparad');
  }catch(e){alert('Kunde inte spara polygonen: '+e.message)}
