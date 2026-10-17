@@ -46,7 +46,7 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   expect(css).toContain('.arcane-kit-side-repeat::before');
   expect(css).toContain('width:30%');
   expect(css).toContain('background:linear-gradient(90deg,');
-  expect(css).toContain('height:calc(100% - 25cqw)!important');
+  expect(css).toContain('height:calc(100% - 17cqw)!important');
   expect(css).toContain('.arcane-gallery-belt{display:none!important}');
   // Separate V01 trough must come AFTER the machine and show private tiles.
   const machineEnd=player.indexOf("arcaneMorphMarkup()+'</div>'");

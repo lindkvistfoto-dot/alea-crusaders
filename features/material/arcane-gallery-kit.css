@@ -7,9 +7,9 @@
 #legolasPanel .arcane-gallery-kit .arcane-gallery-machine{isolation:isolate}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-machine::after{content:none!important;display:none!important}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-overlay{display:none!important}
-#legolasPanel .arcane-gallery-kit /* The rigid bronze rails now overlap the unchanged 4:3 GOOSE door plates,
+/* The rigid bronze rails overlap the unchanged 4:3 GOOSE door plates,
  * without scaling the artwork or the central seal. */
-.arcane-gallery-picture,
+#legolasPanel .arcane-gallery-kit .arcane-gallery-picture,
 #legolasPanel .arcane-gallery-kit.arcane-gallery-fluid .arcane-gallery-picture{
  left:11%!important;top:9cqw!important;width:78%!important;
  height:calc(100% - 17cqw)!important;
