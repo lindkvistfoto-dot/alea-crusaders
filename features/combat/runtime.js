@@ -5138,6 +5138,11 @@ function combatRowPortraitUrl(combatant){
  return combatNpcPortraitSrc(source.portraitPath)||String(source.portraitUrl||'')||
   combatNpcIconSrc(source.iconPath)
 }
+// Read-only full portrait resolver for Arcane Gallery.
+window.aleaCombatGalleryPortrait=function(id){
+ const actor=combatants.find(row=>String(row.id)===String(id));
+ return actor?{title:String(actor.name_snapshot||'Kombatant'),src:combatRowPortraitUrl(actor)}:null;
+};
 function combatRowPortraitHtml(combatant,roleClass){
  const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant?.name_snapshot||'?');
  return '<span class="combat-row-portrait '+roleClass+'">'+
@@ -5446,7 +5451,7 @@ function combatMiniParticipantHtml(label,combatant,itemText='',targetPicker=fals
  const attrs=picker?' type="button" onclick="'+(magic?'combatToggleMagicTargetPicker()':'combatTogglePortraitTargetPicker()')+'" aria-label="'+
   escAttr(magic?(combatant?'Byt magimål från '+name:'Välj magimål'):(combatant?'Byt mål från '+name:'Välj mål')+' i attackrutan')+
   '" aria-expanded="'+(((magic?(typeof combatMobileMagicTargetPickerOpen!=='undefined'&&combatMobileMagicTargetPickerOpen):(typeof combatMobileTargetPickerOpen!=='undefined'&&combatMobileTargetPickerOpen)))?'true':'false')+'" aria-controls="'+(magic?'combatMagicTargetMenu':'combatPortraitTargetMenu')+'"':' aria-hidden="true"';
- return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'">'+
+ return '<div class="combat-mini-side combat-duelist-card '+(['FÖRSVARAR','MÅL'].includes(label)?'defender':'attacker')+(combatant?.status==='dead'?' is-defeated':'')+'" data-gallery-combatant-id="'+escAttr(combatant?.id||'')+'">'+
   '<'+tag+' class="combat-duelist-portrait'+(picker?' combat-portrait-target-button':'')+'"'+attrs+'>'+portraitHtml+
   (picker?'<span class="combat-portrait-pick-label">'+(combatant?'Byt mål':'Välj mål')+'</span>':'')+
   '</'+tag+'>'+
