@@ -62,9 +62,9 @@
 #arcaneGallery .goose-player-lamp.is-lit::after{
  background:#b1eeff;box-shadow:0 0 7px #5fcfff;
 }
-#arcaneGallery .goose-player-lamp--north{right:0;top:19.5%;transform:translate(50%,-50%)}
+#arcaneGallery .goose-player-lamp--north{right:3%;top:19.5%;transform:translate(50%,-50%)}
 #arcaneGallery .goose-player-lamp--east{left:34.6%;top:50%;transform:translate(-50%,-50%)}
-#arcaneGallery .goose-player-lamp--south{left:0;top:80.5%;transform:translate(-50%,-50%)}
+#arcaneGallery .goose-player-lamp--south{left:3%;top:80.5%;transform:translate(-50%,-50%)}
 #arcaneGallery .goose-player-lamp--west{right:34.6%;top:50%;transform:translate(50%,-50%)}
 #arcaneGallery .goose-player-shutter--open .goose-player-door{visibility:hidden}
 @media(prefers-reduced-motion:reduce){
