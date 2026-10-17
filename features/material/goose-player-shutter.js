@@ -7,7 +7,8 @@ const settings = Object.freeze({ unlock: 190, retreat: 330, open: 610, close: 60
 export function gooseFourByThreeRatio(){ return '4 / 3'; }
 export function gooseAssetManifestValid(assets) {
  return Boolean(assets && ['left','right','seal'].every(k => typeof assets[k] === 'string' &&
-   (assets[k].startsWith('./features/material/') || assets[k].startsWith('/features/material/'))));
+   (assets[k].startsWith('./features/material/') || assets[k].startsWith('/features/material/')) &&
+   !assets[k].includes('..') && /\.webp(?:\?[^#]*)?$/.test(assets[k])));
 }
 export function createGoosePlayerShutter({
  host, assets, doc=()=>document, win=()=>window, isPlayer=()=>false
@@ -29,8 +30,7 @@ export function createGoosePlayerShutter({
  seal.querySelector('img').src=assets.seal;
  let phase='closed',epoch=0,active=new Set(),disposed=false;
  const reduced=()=>win().matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
- const delay=ms=>new Promise(resolve=>win().setTimeout(resolve,ms));
- function cancel(){
+  function cancel(){
   epoch++;
   for(const animation of active)animation.cancel();
   active.clear();
@@ -96,6 +96,7 @@ export function createGoosePlayerShutter({
   if(disposed||!isPlayer()||phase!=='open')return false;
   cancel();const token=epoch;
   phase='closing';
+  scene.classList.remove('goose-player-shutter--open');
   // The parent reverts the framed picture to 4:3 before the shutters move.
   await prepareFourByThree();
   if(token!==epoch||disposed)return false;
