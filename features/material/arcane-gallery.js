@@ -1,6 +1,6 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
 import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=3';
-import {arcaneMorphMarkup} from './arcane-morph-markup.js';
+import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03';
 import {createGoosePlayerShutter} from './goose-player-shutter.js?v=10';
 const gooseAssets=Object.freeze({
  left:'./features/material/goose04/left.webp',
