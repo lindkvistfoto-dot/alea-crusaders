@@ -62,9 +62,13 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   expect(markup.match(/arcane-kit-side-upper/g)).toHaveLength(2);
   expect(css).toContain('.arcane-kit-side-upper');
   expect(css).toContain('position:absolute;left:0;top:0;width:100%;height:auto');
-  expect(css).not.toContain('#929e9e 48%');
-  expect(css).toContain('#465357 48%');
-  expect(css).not.toContain('#9eaba8 42%');
+  const sideTrack=css.slice(css.indexOf('.arcane-kit-side-repeat{'),
+   css.indexOf('.arcane-kit-piston{'));
+  // Only the variable side track must lose the broad chrome gradient;
+  // the narrow, separate mechanical piston is intentionally unchanged.
+  expect(sideTrack).not.toContain('#929e9e 48%');
+  expect(sideTrack).toContain('#465357 48%');
+  expect(sideTrack).not.toContain('#9eaba8 42%');
   const index=read('index.html').toString();
   expect(index).toContain('telescope=03');
   expect(mainCss).toContain('arcane-gallery-kit.css?v=0.35.239&kit=4');
