@@ -27,7 +27,7 @@ export function arcaneKitFrameHeight(frameWidth,mediaWidth,mediaHeight,viewportH
  if(![width,w,h].every(x=>Number.isFinite(x)&&x>0))return null;
  const ratio=Math.max(.35,Math.min(4,w/h));
  const contentHeight=width*.78/ratio;
- const desired=contentHeight+width*.34; // 13cqw top + 21cqw bottom
+ const desired=contentHeight+width*.25; // 13cqw upper socket + 12cqw lower rail; carousel detached
  const limit=Math.max(width*2.2,Math.max(0,Number(viewportHeight)||0)*1.22);
  return Math.round(Math.max(width*.65,Math.min(desired,limit)));
 }
