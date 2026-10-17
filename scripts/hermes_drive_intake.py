@@ -48,7 +48,7 @@ def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int
     req = urllib.request.Request(url, headers=headers, data=body, method=method)
     try:
         with urllib.request.urlopen(req, timeout=80) as result:
-            return result.status, result.read(MAX_BYTES * 2 if "googleapis.com" in url else 1024 * 1024)
+            return result.status, result.read(MAX_BYTES * 2)  # GitHub Contents base64 JSON can exceed 1 MiB for valid PNG originals
     except urllib.error.HTTPError as err:
         # Do not include request headers or access tokens in logs.
         raise RuntimeError(f"HTTP_{err.code} {method} {urllib.parse.urlsplit(url).path}") from None
