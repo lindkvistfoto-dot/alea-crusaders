@@ -1,5 +1,5 @@
-@import url("./goose-arcane-mechanics.css?v=09");
-/* GOOSE 07 · Four authentic sapphires are the locking indicators.
+@import url("./goose-arcane-mechanics.css?v=10");
+/* GOOSE 10 · Sapphire-blue lighting on the four original stones.
  * Original HERMES metalwork and stones remain visible at rest.
  */
 #arcaneGallery .arcane-gallery-picture{isolation:isolate}
@@ -52,8 +52,8 @@
  transition:opacity 160ms ease-out,filter 160ms ease-out;
  will-change:opacity;
  background:radial-gradient(ellipse at 45% 36%,
-  rgba(225,252,255,.92) 0%,rgba(120,229,255,.76) 27%,
-  rgba(35,148,255,.52) 55%,rgba(35,148,255,0) 85%);
+  rgba(102,174,255,.72) 0%,rgba(33,119,253,.82) 27%,
+  rgba(16,68,216,.52) 55%,rgba(16,68,216,0) 85%);
 }
 #arcaneGallery .goose-player-sapphire--north,
 #arcaneGallery .goose-player-sapphire--south{
@@ -79,22 +79,22 @@
 #arcaneGallery .goose-player-sapphire--west{left:55.2%}
 #arcaneGallery .goose-player-sapphire--east{left:45.1%}
 #arcaneGallery .goose-player-sapphire.is-lit{
- opacity:.88;filter:drop-shadow(0 0 7px #46c5ff);
+ opacity:.80;filter:drop-shadow(0 0 7px #275deb);
 }
 #arcaneGallery .goose-player-sapphire.is-pulsing{
- animation:goose-sapphire-ignite 240ms ease-out both;
+ animation:goose-sapphire-ignite 350ms ease-out both;
 }
 #arcaneGallery .goose-player-shutter--charged .goose-player-sapphire.is-lit{
- animation:goose-sapphire-charge 310ms ease-in-out both;
+ animation:goose-sapphire-charge 420ms ease-in-out both;
 }
 @keyframes goose-sapphire-ignite{
- 0%{opacity:.38;filter:brightness(1)}
- 48%{opacity:1;filter:brightness(1.9) drop-shadow(0 0 12px #b3f6ff)}
- 100%{opacity:.88;filter:brightness(1) drop-shadow(0 0 7px #46c5ff)}
+ 0%{opacity:.32;filter:brightness(.85) saturate(1.4)}
+ 48%{opacity:.90;filter:brightness(1.22) saturate(1.7) drop-shadow(0 0 10px #286be9)}
+ 100%{opacity:.80;filter:brightness(1) saturate(1.35) drop-shadow(0 0 7px #275deb)}
 }
 @keyframes goose-sapphire-charge{
- 0%,100%{opacity:.88;filter:brightness(1) drop-shadow(0 0 7px #46c5ff)}
- 55%{opacity:1;filter:brightness(1.65) drop-shadow(0 0 14px #a5efff)}
+ 0%,100%{opacity:.80;filter:brightness(1) saturate(1.35) drop-shadow(0 0 7px #275deb)}
+ 55%{opacity:.93;filter:brightness(1.25) saturate(1.6) drop-shadow(0 0 12px #2c6cef)}
 }
 #arcaneGallery .goose-player-shutter--open .goose-player-door{visibility:hidden}
 @media(prefers-reduced-motion:reduce){
