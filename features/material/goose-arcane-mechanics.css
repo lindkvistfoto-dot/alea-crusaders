@@ -1,101 +1,58 @@
-/* GOOSE 09 - timed left/right energy, sword-safe clockwork and paired bolt rods.
- * All measurements are percentages of the approved HERMES half-plate and seal.
- * Static engraved channels remain almost invisible until the sapphires charge.
+/* GOOSE 09 – faithful metalwork.
+ * Blue energy is extracted pixel-for-pixel from the APPROVED HERMES doors.
+ * No SVG scribbles, decorative balls, new gears or CSS-drawn piston faces.
  */
-#arcaneGallery .goose-player-energy{
- position:absolute;inset:0;width:100%;height:100%;z-index:1;
- pointer-events:none;overflow:visible;
+#arcaneGallery .goose-player-blue-ink{
+ position:absolute;inset:0;width:100%;height:100%;
+ z-index:1;pointer-events:none;display:block;
+ opacity:0;mix-blend-mode:screen;
+ clip-path:circle(0% at 50% 50%);
+ filter:drop-shadow(0 0 2px #61c8ff);
 }
-#arcaneGallery .goose-player-energy-engraving{
- fill:none;stroke:#142d34;stroke-opacity:.64;stroke-width:.6;
- stroke-linecap:round;stroke-linejoin:round;
+#arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
+#arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
+ animation:goose09-blue-ink-reveal 770ms cubic-bezier(.14,.34,.18,1) both;
 }
-#arcaneGallery .goose-player-energy-flow{
- fill:none;stroke:#50c3f5;stroke-width:.76;stroke-linecap:round;
- stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;
- opacity:0;filter:drop-shadow(0 0 2px #71d9ff);
+@keyframes goose09-blue-ink-reveal{
+ 0%{clip-path:circle(0% at 50% 50%);opacity:0}
+ 6%{opacity:.96}
+ 100%{clip-path:circle(108% at 50% 50%);opacity:.94}
 }
-/* Channel timing belongs to the ratchet that fires it, never the global open state.
-   Left pulse only at first click; right pulse only at third click. */
-#arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow,
-#arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow{
- animation:goose09-energy-fill 680ms cubic-bezier(.22,.65,.25,1) both;
+/* The upper/lower lock sprites are precisely clipped duplicates of the
+ * original door image. Their patina, lighting and proportions are therefore
+ * identical to surrounding metal, even during the 1.2% bolt motion. */
+#arcaneGallery .goose-player-piston-source{
+ position:absolute;inset:0;z-index:2;pointer-events:none;
+ display:block;transform:translateX(0);
+ transition:transform 420ms cubic-bezier(.2,.5,.25,1);
 }
-#arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow--lower,
-#arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow--lower{
- animation-delay:90ms;
+#arcaneGallery .goose-player-piston-source img{
+ position:absolute;inset:0;display:block;
+ width:100%;height:100%;object-fit:fill;
 }
-@keyframes goose09-energy-fill{
- 0%{stroke-dashoffset:100;opacity:0}
- 75%{opacity:1}
- 100%{stroke-dashoffset:0;opacity:.94}
+#arcaneGallery .goose-player-door--left .goose-player-piston-source--north{
+ clip-path:inset(13.2% 21% 78% 50%);
 }
-#arcaneGallery .goose-player-piston{
- position:absolute;z-index:2;width:14%;height:3.4%;pointer-events:none;
- filter:drop-shadow(0 1px 2px #000b);
+#arcaneGallery .goose-player-door--left .goose-player-piston-source--south{
+ clip-path:inset(78% 21% 13.2% 50%);
 }
-#arcaneGallery .goose-player-piston--north{top:12.2%}
-#arcaneGallery .goose-player-piston--south{top:84.9%}
-#arcaneGallery .goose-player-door--left .goose-player-piston{right:3.4%}
-#arcaneGallery .goose-player-door--right .goose-player-piston{left:3.4%}
-#arcaneGallery .goose-player-piston-housing{
- position:absolute;inset:0;border-radius:3px;
- border:1px solid #765831;
- background:linear-gradient(180deg,#271c11,#aa824a 30%,#3d2917 67%,#20150d);
- box-shadow:inset 0 0 3px #090604,0 1px 2px #0008;
+#arcaneGallery .goose-player-door--right .goose-player-piston-source--north{
+ clip-path:inset(13.2% 50% 78% 21%);
 }
-#arcaneGallery .goose-player-piston-bolt{
- position:absolute;top:25%;left:16%;height:49%;width:69%;
- border-radius:2px;border:1px solid #d0aa67;
- background:linear-gradient(180deg,#d6b574,#624421 42%,#edcd8a 75%,#43301a);
- box-shadow:0 0 2px #0a0908;
- transition:transform 360ms cubic-bezier(.18,.65,.25,1);
+#arcaneGallery .goose-player-door--right .goose-player-piston-source--south{
+ clip-path:inset(78% 50% 13.2% 21%);
 }
-#arcaneGallery .goose-player-door--left .goose-player-piston-bolt{
- transform:translateX(18%);
+#arcaneGallery .goose-player-shutter--unlatched-left .goose-player-door--left .goose-player-piston-source{
+ transform:translateX(-1.2%);
 }
-#arcaneGallery .goose-player-door--right .goose-player-piston-bolt{
- transform:translateX(-18%);
+#arcaneGallery .goose-player-shutter--unlatched-right .goose-player-door--right .goose-player-piston-source{
+ transform:translateX(1.2%);
 }
-#arcaneGallery .goose-player-shutter--unlatched-left .goose-player-door--left .goose-player-piston-bolt{
- transform:translateX(-25%);
-}
-#arcaneGallery .goose-player-shutter--unlatched-right .goose-player-door--right .goose-player-piston-bolt{
- transform:translateX(25%);
-}
-#arcaneGallery .goose-player-gear-train{
- position:absolute;left:40.5%;top:60.2%;width:19%;height:12.5%;
- display:block;pointer-events:none;opacity:.89;
- filter:drop-shadow(0 1px 2px #000c);
-}
-#arcaneGallery .goose-player-seal-half{overflow:hidden}
-/* Clipped twin copies of the gear train travel with the two seal halves.
-   The full rotor swaps to its pixel-matched halves without vanishing gears. */
-#arcaneGallery .goose-player-seal-half .goose-player-gear-train{top:60.2%;width:38%;height:12.5%}
-#arcaneGallery .goose-player-seal-half--left .goose-player-gear-train{left:81%}
-#arcaneGallery .goose-player-seal-half--right .goose-player-gear-train{left:-19%}
-#arcaneGallery .goose-player-gear-train svg{display:block;width:100%;height:100%;overflow:visible}
-#arcaneGallery .goose-player-gear{
- transform-box:fill-box;transform-origin:center center;
-}
-#arcaneGallery .goose-player-shutter--energizing .goose-player-gear--drive{
- animation:goose08-drive 680ms cubic-bezier(.32,.02,.44,1) both;
-}
-#arcaneGallery .goose-player-shutter--energizing .goose-player-gear--idler{
- animation:goose08-idler 680ms cubic-bezier(.32,.02,.44,1) both;
-}
-@keyframes goose08-drive{from{transform:rotate(0deg)}to{transform:rotate(180deg)}}
-@keyframes goose08-idler{from{transform:rotate(0deg)}to{transform:rotate(-240deg)}}
 @media(prefers-reduced-motion:reduce){
- #arcaneGallery .goose-player-energy-flow{animation:none!important}
- #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow,
- #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow{
-  stroke-dashoffset:0;opacity:.75
+ #arcaneGallery .goose-player-blue-ink{animation:none!important}
+ #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
+ #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
+  clip-path:circle(108% at 50% 50%);opacity:.94
  }
- #arcaneGallery .goose-player-piston-bolt{transition:none!important}
- #arcaneGallery .goose-player-gear{animation:none!important}
+ #arcaneGallery .goose-player-piston-source{transition:none!important}
 }
-
-/* GOOSE09: no fake brass hub/circle may be rendered over the sword. */
-#arcaneGallery .goose-player-seal .goose-player-gear-train,
-#arcaneGallery .goose-player-seal-half .goose-player-gear-train{display:none!important}
