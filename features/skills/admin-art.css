@@ -1,0 +1,21 @@
+/* Alea Crusaders — skill artwork upload panes. Admin-only; no player view changes. */
+.skill-art-editor{grid-column:1/-1;border:1px solid rgba(169,126,61,.58);border-radius:12px;padding:16px;background:linear-gradient(150deg,#241b14,#16120f);color:#f4e8d3}
+.skill-art-editor h3{font:700 18px Georgia,serif;color:#f2d79e;margin:0 0 7px}
+.skill-art-editor .skill-art-intro{font-size:13px;line-height:1.5;color:#d4bd99;margin:0 0 14px}
+.skill-art-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.skill-art-slot{min-width:0;padding:12px;border:1px solid #775833;border-radius:10px;background:#17120e}
+.skill-art-slot h4{font-size:13px;letter-spacing:.06em;color:#f3d89e;margin:0 0 10px}
+.skill-art-preview{width:100%;aspect-ratio:1/1;max-height:260px;display:grid;place-items:center;border:1px solid #765e3a;border-radius:9px;overflow:hidden;background:#241e18}
+.skill-art-preview-icon{background-color:#b6b6b6;background-image:linear-gradient(45deg,#dfdfdf 25%,transparent 25%),linear-gradient(-45deg,#dfdfdf 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#dfdfdf 75%),linear-gradient(-45deg,transparent 75%,#dfdfdf 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+.skill-art-preview img{width:100%;height:100%;object-fit:contain;display:block}
+.skill-art-preview-illustration img{object-fit:cover}
+.skill-art-placeholder{text-align:center;color:#775d42;font-size:13px;padding:12px;background:rgba(255,247,224,.82);border-radius:6px;max-width:80%}
+.skill-art-help{font-size:12px;color:#cdb999;line-height:1.45;min-height:48px;margin:10px 0 8px}
+.skill-art-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.skill-art-controls .smallbtn{font-size:12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:9px 11px;border:1px solid #9d7940;border-radius:8px;color:#f4e7cf;background:#33291c}
+.skill-art-controls .smallbtn:disabled{opacity:.45;cursor:not-allowed}
+.skill-art-upload{position:relative;overflow:hidden}
+.skill-art-upload input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.skill-art-status{font-size:12px;color:#e2c78f;line-height:1.45;min-height:34px;margin:9px 0 0}
+.adminskilltable .skill-art-indicator{display:block;font-size:11px;line-height:1.3;margin-top:5px;color:#c9ab75;font-weight:500}
+@media(max-width:700px){.skill-art-editor{padding:10px}.skill-art-grid{grid-template-columns:1fr}.skill-art-preview{max-height:300px}.skill-art-help{min-height:0}}
