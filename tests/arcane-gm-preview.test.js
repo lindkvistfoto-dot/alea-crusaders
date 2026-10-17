@@ -39,15 +39,18 @@ describe('Arcane Gallery — GM private staging',()=>{
   expect(source).toContain("addEventListener('click',onClose)");
   expect(source).not.toContain('frodo_set_presentation');
   expect(source).not.toContain('/object/public/');
-  expect(ui).toContain('gmGallery.sync(rows,stagedId,activeRow');
-  expect(ui).toContain('gmGallery.mount()');
-  expect(ui).toContain('stagedId=id;render();');
+  // Legacy GM preview module remains harmless but is no longer mounted.
+  expect(ui).toContain('gallery.sync(state.row,state.revision)');
+  expect(ui).not.toContain('gmGallery.mount()');
+  expect(ui).toContain('id="frodoGmAdmin"');
+  expect(ui).toContain('stagedId=tile.dataset.frodoId;render();');
   expect(ui).toContain('const result=await frodo.show(row);');
  });
  it('hides the obsolete giant GM player-screen panel, keeps a compact add-to-queue action',()=>{
   const css=read('features/material/frodo-atelier.css');
   expect(css).toContain('.frodo-panel.frodo-is-gm .frodo-gm-preview{display:none!important}');
-  expect(css).toContain('.arcane-gm-gallery:not(.hidden)');
+  expect(css).toContain('.frodo-gm-admin.hidden');
+  expect(css).toContain('#legolasPanel.legolas-atelier-gm .frodo-panel #arcaneGallery');
   expect(css).toContain('.frodo-queue-add');
   expect(css).toContain('@media(max-width:720px)');
  });

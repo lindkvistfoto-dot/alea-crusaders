@@ -15,7 +15,6 @@ body{margin:0;background:#101720;color:#e7ce9d;font:14px system-ui}
 <div id="legolasPanel"><div id="playerTarget"></div><div id="gmTarget"></div><pre id="result">Running smoke…</pre></div>
 <script type="module">
 import {createArcaneGallery} from '/features/material/arcane-gallery.js';
-import {createArcaneGmPreview} from '/features/material/arcane-gm-preview.js';
 const campaign='846e8089-24da-4825-af34-32903117152a';
 const shapes=[[1600,900],[1200,900],[1000,1000],[900,1600]];
 const rows=shapes.map(([w,h],i)=>({
@@ -26,7 +25,7 @@ const rows=shapes.map(([w,h],i)=>({
 }));
 const history=rows.slice().reverse().map((row,i)=>({revision:4-i,material_id:row.id}));
 const auth={logged:true,gm:false};
-const revoked=[],reads=[],requests=[],writes=[],browserErrors=[];
+const revoked=[],reads=[],requests=[],browserErrors=[];
 window.addEventListener('unhandledrejection',e=>browserErrors.push('promise: '+String(e.reason?.stack||e.reason)));
 window.addEventListener('error',e=>browserErrors.push('error: '+String(e.error?.stack||e.message)));
 const originalRevoke=URL.revokeObjectURL.bind(URL);
@@ -56,10 +55,6 @@ const request=async path=>{
 const gallery=createArcaneGallery({legolas,request,getCampaign:()=>campaign,
  isLoggedIn:()=>auth.logged,isGM:()=>auth.gm});
 document.querySelector('#playerTarget').append(gallery.mount());
-const gm=createArcaneGmPreview({legolas,getCampaign:()=>campaign,
- isLoggedIn:()=>auth.logged,isGM:()=>auth.gm,
- onPick:id=>writes.push(id)});
-document.querySelector('#gmTarget').append(gm.mount());
 const height=node=>parseInt(node.querySelector('.arcane-gallery-machine').style.getPropertyValue('--arcane-frame-height'),10);
 const imageReady=(node,id)=>node.querySelector('#'+id)?.naturalWidth>0
   &&node.querySelector('#'+id)?.complete;
@@ -71,7 +66,7 @@ async function run(){
   &&height(gallery.root)>0,'player ceremonial opening and first ratio');
  const playerHeights=[height(gallery.root)];
  assert(!gallery.root.classList.contains('hidden'),'player gallery hidden');
- assert(gm.root.classList.contains('hidden'),'GM private preview visible to player');
+ assert(document.querySelectorAll('.arcane-gallery').length===1,'duplicate gallery component mounted');
  assert(gallery.root.querySelectorAll('.arcane-kit-wheel').length===2,'player gears missing');
  for(let i=1;i<4;i++){
   assert(gallery.step(1),'player carousel step failed at '+i);
@@ -84,31 +79,32 @@ async function run(){
  assert(requests.every(x=>x.startsWith('campaign_materials?')||x.startsWith('campaign_material_presentation_history?')),'unexpected private API');
  const privateImageUrl=gallery.state.original;
  assert(privateImageUrl.startsWith('blob:'),'player did not use private blob URL');
- auth.gm=true;gallery.sync(null,5);gm.sync(rows,rows[0].id,rows[0]);
- await until(()=>gm.state.selected===rows[0].id && imageReady(gm.root,'arcaneGmImage')
-  &&height(gm.root)>0,'GM opening');
- assert(gallery.root.classList.contains('hidden'),'player gallery leaked to GM');
- assert(!gm.root.classList.contains('hidden'),'GM gallery not visible');
- assert(revoked.includes(privateImageUrl),'player blob not revoked on role change');
- assert(gm.root.querySelectorAll('.arcane-kit-wheel').length===2,'GM gears missing');
- const gmHeights=[height(gm.root)];
+ auth.gm=true;gallery.sync(rows[0],5);
+ await until(()=>gallery.state.role==='gm'
+  &&gallery.state.selected===rows[0].id && imageReady(gallery.root,'arcaneGalleryImage')
+  &&gallery.root.querySelector('.goose-player-shutter--open')
+  &&height(gallery.root)>0,'GM mirrored GOOSE opening');
+ assert(!gallery.root.classList.contains('hidden'),'shared gallery must remain visible to GM');
+ assert(document.querySelectorAll('.arcane-gallery').length===1,'GM created a duplicate gallery');
+ assert(revoked.includes(privateImageUrl),'role switch must revoke previous blob');
+ assert(gallery.root.querySelectorAll('.arcane-kit-wheel').length===2,'GM shared gears missing');
+ const gmHeights=[height(gallery.root)];
  for(let i=1;i<4;i++){
-  gm.step(1);
-  await until(()=>gm.state.selected===rows[i].id
-    &&gm.root.querySelector('#arcaneGmImage').naturalWidth===rows[i].width
-    &&height(gm.root)>gmHeights[i-1],'GM ratio '+i);
-  gmHeights.push(height(gm.root));
+  assert(gallery.step(1),'GM local gallery navigation failed');
+  await until(()=>gallery.state.selected===rows[i].id
+    &&gallery.root.querySelector('#arcaneGalleryImage').naturalWidth===rows[i].width
+    &&height(gallery.root)>gmHeights[i-1],'GM shared ratio '+i);
+  gmHeights.push(height(gallery.root));
  }
- assert(writes.every(id=>rows.some(r=>r.id===id)),'invalid queued row selected');
- const lastGMUrl=gm.state.mainUrl;
- auth.logged=false;gm.sync([],null,null);gallery.sync(null,6);
- assert(gm.root.classList.contains('hidden'),'GM gallery visible after logout');
- assert(gm.state.rows.length===0 && gallery.state.rows.length===0,'private rows survive logout');
+ const lastGMUrl=gallery.state.original;
+ assert(!requests.some(path=>path.startsWith('rpc/')),'GM viewer published from local browse');
+ auth.logged=false;gallery.sync(null,6);
+ assert(gallery.root.classList.contains('hidden'),'shared gallery visible after logout');
+ assert(gallery.state.rows.length===0,'private rows survive logout');
  assert(revoked.includes(lastGMUrl),'GM blob not revoked on logout');
- assert(!gm.root.querySelector('#arcaneGmImage').hasAttribute('src'),'GM image not cleared on logout');
- assert(!gallery.root.querySelector('#arcaneGalleryImage').hasAttribute('src'),'player image not cleared on role change');
+ assert(!gallery.root.querySelector('#arcaneGalleryImage').hasAttribute('src'),'shared image not cleared after logout');
  return {playerHeights,gmHeights,reads:reads.length,revoked:revoked.length,
-  roles:['player','GM','signed-out'],assets:'public synthetic SVG only'};
+  roles:['player','GM','signed-out'],viewers:1,assets:'public synthetic SVG only'};
 }
 run().then(result=>{
  document.documentElement.dataset.smoke='passed';

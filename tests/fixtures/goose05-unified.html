@@ -1,0 +1,77 @@
+<!doctype html><html lang="sv"><head>
+<meta charset="utf-8"><base href="/"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOOSE 05 – real shared presentation panel in GM role</title>
+<link rel="stylesheet" href="/features/material/viewer.css">
+<link rel="stylesheet" href="/features/material/frodo-ui.css">
+<link rel="stylesheet" href="/features/material/arcane-gallery.css">
+<link rel="stylesheet" href="/features/material/frodo-atelier.css">
+<style>
+html,body{background:#0e1713;color:#ead3a8;margin:0}
+#legolasPanel{max-width:820px;margin:0 auto}
+#legolasPanel .legolas-panel-inner{width:100%;max-width:820px;margin:0 auto;background:#0f1a14;padding:0}
+#legolasPanel .legolas-gm-footer{padding:16px;color:#afa383;font:12px system-ui,sans-serif}
+.hidden{display:none!important}
+</style></head><body>
+<main><section id="legolasPanel" class="legolas-panel"><div class="legolas-panel-inner">
+<div id="legolasGmQueue"><p>Förbered och välj bilder i arkivet</p></div>
+<div class="legolas-gm-footer">GOOSE 05 · Synthetic GM-view acceptance · No real campaign data</div>
+</div></section></main>
+<button id="legolasClosePanel" class="hidden" type="button">Stäng</button>
+<input id="legolasSearch" class="hidden" type="search">
+<script type="module">
+import {mountFrodo} from '/features/material/frodo-ui.js';
+const campaign='846e8089-24da-4825-af34-32903117152a';
+const rows=[0,1].map(i=>({
+ id:'123e4567-e89b-42d3-a456-42661417400'+(i+1),campaign_id:campaign,
+ title:i?'Väntande bild – endast SL':'Skelettbyns kyrka – LIVE',
+ asset_kind:'image',category:'location',storage_bucket:'campaign-materials',
+ storage_path:campaign+'/goose05/'+i+'.svg',width:i?900:1200,height:i?1600:900
+}));
+const history=[{revision:1,material_id:rows[0].id}];
+const calls=[],reads=[];
+let role='gm';
+function publicImage(row){
+ const w=row.width,h=row.height;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'+
+ '<defs><linearGradient id="sky" x2="0.2" y2="1"><stop stop-color="#142836"/><stop offset="1" stop-color="#53666d"/></linearGradient></defs>'+
+ '<rect width="100%" height="100%" fill="url(#sky)"/>'+
+ '<circle cx="'+Math.floor(w*.75)+'" cy="'+Math.floor(h*.26)+'" r="'+Math.floor(w*.065)+'" fill="#e5e6d0"/>'+
+ '<path d="M0 '+Math.floor(h*.84)+' L'+Math.floor(w*.23)+' '+Math.floor(h*.33)+' L'+Math.floor(w*.46)+' '+Math.floor(h*.8)+' L'+Math.floor(w*.67)+' '+Math.floor(h*.45)+' L'+w+' '+Math.floor(h*.9)+' V'+h+' H0" fill="#17262b"/>'+
+ '<text x="50%" y="92%" fill="#ead6b1" font-family="Georgia" font-size="'+Math.floor(w*.043)+'" text-anchor="middle">'+row.title+'</text></svg>';
+ return new Blob([svg],{type:'image/svg+xml'});
+}
+const legolas={
+ state:{selection:new Map(rows.map(row=>[row.id,row])),panelOpen:true,viewerOpen:false},
+ readMedia:async (row,thumb)=>{reads.push({id:row.id,thumb});return publicImage(row)},
+ previewMaterial(){},previewSequence(){},
+ openPanel(){},closeViewer(){},loadPage(){},reset(){}
+};
+const request=async(path,options)=>{
+ calls.push({path,options});
+ if(path.startsWith('campaign_material_presentations?'))return [
+  {campaign_id:campaign,material_id:rows[0].id,revision:1}];
+ if(path.startsWith('campaign_material_presentation_history?'))return history;
+ if(path.startsWith('campaign_materials?'))return path.includes('id=eq.')?[rows[0]]:rows;
+ if(path.startsWith('rpc/'))throw Error('Unexpected publish during GOOSE05 visual smoke');
+ return [];
+};
+const ui=mountFrodo({legolas,getCampaign:()=>campaign,isLoggedIn:()=>true,
+ isGM:()=>role==='gm',request,isRealtimeConnected:()=>true});
+ui.mount();void ui.refresh();
+window.goose05={
+ calls,rows,reads,ui,
+ get status(){const root=document.querySelector('#arcaneGallery');
+ return {
+  galleryCount:document.querySelectorAll('#arcaneGallery').length,
+  obsoleteCount:document.querySelectorAll('#arcaneGmGallery').length,
+  galleryVisible:!!root&&!root.classList.contains('hidden'),
+  gateOpen:!!root?.querySelector('.goose-player-shutter--open'),
+  adminVisible:!!document.querySelector('#frodoGmAdmin')&&!document.querySelector('#frodoGmAdmin').classList.contains('hidden'),
+  frameHeight:Math.round(root?.querySelector('.arcane-gallery-machine')?.getBoundingClientRect().height||0),
+  selected:ui.frodo.state.materialId,
+  loaded:ui.frodo.state.loaded,
+  publishedCalls:calls.filter(x=>x.path.startsWith('rpc/')).length,
+  queueTiles:document.querySelectorAll('.frodo-gm-admin [data-frodo-id]').length
+ }}
+};
+</script></body></html>

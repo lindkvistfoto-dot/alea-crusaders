@@ -33,9 +33,10 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>'+
   '<button type="button" id="arcaneGalleryNext" class="arcane-gallery-next" aria-label="Nästa bild">›</button></nav>';
- const $=id=>doc().getElementById(id), state={campaign:'',revision:-1,live:'',displayedLive:'',rows:[],selected:'',seq:0,media:0,original:'',thumbs:new Map(),loadingThumbs:new Set(),thumbGeneration:0,observer:null};
+ const $=id=>doc().getElementById(id), state={campaign:'',role:'',revision:-1,live:'',displayedLive:'',rows:[],selected:'',seq:0,media:0,original:'',thumbs:new Map(),loadingThumbs:new Set(),thumbGeneration:0,observer:null};
  const scope=()=>String(getCampaign()||'');
- const allowed=()=>isLoggedIn()&&!isGM()&&/^[a-f0-9-]{36}$/i.test(scope());
+ // GOOSE 05: one published-gallery renderer for authenticated GMs and players.
+ const allowed=()=>isLoggedIn()&&/^[a-f0-9-]{36}$/i.test(scope());
  let shutter=null,shutterMounted=false,shutterOpening=null,mounted=false;
  // The public artwork does not read private media or implement authorization.
  // The caller exclusively controls player-only mount and secure disposal.
@@ -86,7 +87,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  }
  function release(){releaseMain();state.thumbGeneration++;state.loadingThumbs.clear();
   for(const u of state.thumbs.values())win().URL.revokeObjectURL(u);state.thumbs.clear();state.observer?.disconnect();state.observer=null;}
- function clear(){state.seq++;disposeShutter();release();state.campaign='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';resetArcaneFrame(root);root.classList.add('hidden');
+ function clear(){state.seq++;disposeShutter();release();state.campaign='';state.role='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';resetArcaneFrame(root);root.classList.add('hidden');
   const strip=$('arcaneGalleryStrip');if(strip){strip.replaceChildren();strip.dataset.ids='';}}
  const valid=(n,c)=>n===state.seq&&scope()===c&&allowed();
  async function thumb(row,c){
@@ -190,7 +191,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    state.displayedLive=state.live;
    if(!next){
     state.selected='';releaseMain();
-    shutter?.reset();shutterOpening=null;
+    ensureShutter();shutter?.reset();shutterOpening=null;
     if(shutterMounted)homeRatio();
     $('arcaneGalleryEmpty').textContent='Väntar på bilder från spelledaren…';
     render();return;
@@ -201,7 +202,9 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  }
  function sync(row,revision){
   if(!allowed()){if(state.campaign)clear();return;}
-  const c=scope();if(state.campaign!==c){clear();state.campaign=c;}
+  const c=scope(),role=isGM()?'gm':'player';
+  // Clear any private URLs on a role transition; recreate the same gallery.
+  if(state.campaign!==c||state.role!==role){clear();state.campaign=c;state.role=role;}
   const live=row?.campaign_id===c&&row.asset_kind==='image'?row.id:'';
   if(state.revision!==revision||state.live!==live){state.revision=revision;state.live=live;void refresh();}
  }

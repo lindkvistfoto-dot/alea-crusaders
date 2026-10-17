@@ -105,12 +105,15 @@ describe('GOOSE 04B player-only integration',()=>{
   expect(h.gallery.root.classList.contains('hidden')).toBe(true);
   expect(h.gallery.state.rows).toHaveLength(0);
  });
- it('never mounts or reads from the GM preview',async()=>{
+ it('uses the very same GOOSE and authenticated history for the GM',async()=>{
   const h=harness({gm:true});h.gallery.mount();h.gallery.sync(rows[0],1);
   await settle();
-  expect(h.scenes).toHaveLength(0);
-  expect(h.reads).toHaveLength(0);
-  expect(h.requestPaths).toHaveLength(0);
+  expect(h.scenes).toHaveLength(1);
+  expect(h.gallery.state.role).toBe('gm');
+  expect(h.scenes[0].classList.contains('goose-player-shutter--open')).toBe(true);
+  expect(h.reads.some(x=>x.row.id===rows[0].id&&!x.thumb)).toBe(true);
+  expect(h.requestPaths.some(x=>x.startsWith('campaign_material_presentation_history?'))).toBe(true);
+  expect(h.requestPaths.every(x=>!x.startsWith('rpc/'))).toBe(true);
  });
  it('resets the shutter when previously shared private images are revoked',async()=>{
   const h=harness();h.gallery.mount();h.gallery.sync(rows[0],1);

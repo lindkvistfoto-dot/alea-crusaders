@@ -105,13 +105,17 @@ describe('Arcane Gallery release smoke',()=>{
   expect(h.gallery.state.original).toBe('');
   expect(h.nodes.arcaneGalleryImage.classList.contains('hidden')).toBe(true);
  });
- it('never loads private history for a GM or unauthenticated user',()=>{
-  const h=harness({logged:false});
+ it('keeps anonymous visitors out but lets GMs see the exact published history',async()=>{
+  const h=harness({logged:false,history:[{revision:1,material_id:row.id}],materials:[row]});
   h.gallery.sync(row,1);
   expect(h.requests).toHaveLength(0);
   h.auth.logged=true;h.auth.gm=true;h.gallery.sync(row,2);
-  expect(h.requests).toHaveLength(0);
-  h.auth.logged=false;h.gallery.clear();
+  await h.gallery.refresh();
+  expect(h.requests.some(path=>path.startsWith('campaign_material_presentation_history?'))).toBe(true);
+  expect(h.gallery.state.rows.map(x=>x.id)).toEqual([row.id]);
+  expect(h.requests.every(path=>path.includes('campaign_id=eq.'+campaign))).toBe(true);
+  h.auth.logged=false;h.gallery.sync(null,3);
   expect(h.gallery.state.rows).toEqual([]);
+  expect(h.gallery.state.original).toBe('');
  });
 });
