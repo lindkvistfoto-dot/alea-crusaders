@@ -1,6 +1,6 @@
 # ARCANE MORPHING FRAME v0.1 · SISYPHUS acceptance
 
-**Status: preview branch only.** `main`, production deployment and Supabase remain unchanged.
+**Status (2026-10-17): merged into `main` via PR #44.** The image assets, frame composition and CSS are in the repository default branch. This does **not** independently verify that a particular production site is deployed, authenticated end-to-end or visually accepted. No Supabase schema or campaign content is changed by this frame.
 
 ## Source of truth
 
@@ -25,7 +25,7 @@
 - [Mobile: standing 9:16](../tests/visual-regressions/arcane-morph-mobile.png)
 - Fixture: `tests/fixtures/arcane-gallery-visual.html`, which imports the real component markup and CSS, renders public synthetic media, and is photographed in headless Chrome by `.github/workflows/arcane-gallery-visual.yml`.
 
-These screenshots validate the *static appearance and media fit*. They do not substitute for a real-time animation walkthrough, an authenticated end-to-end user session, or video playback testing.
+The desktop/mobile snapshots validate *static appearance and media fit*. The recorded Chromium GIF validates real CSS motion with synthetic content. None of these is a substitute for an authenticated end-to-end session with actual GM/player accounts, nor for future video playback testing.
 
 ## Verification and release gates
 
@@ -33,4 +33,15 @@ These screenshots validate the *static appearance and media fit*. They do not su
 2. Focused Gallery test suite, including new real piston sprite assertions: **passed**, plus static build.
 3. Desktop/mobile sanitized browser snapshots: **generated and reviewed**.
 4. Broad repository CI: still has exactly **48 failures in 27 test files**, matching the baseline `main` run at SHA `98427d9` (also 48 failures / 27 files). The gallery work did not increase this count; a broader regression triage is separate and must not be hidden.
-5. **Outstanding before production:** authenticated in-app visual/interaction smoke test for GM/player switch and real image carousel; decision on existing red baseline CI; final release approval.
+5. Automated Chromium role-switch smoke: `tests/fixtures/arcane-gallery-role-smoke.html` + `scripts/arcane_gallery_role_smoke.cjs`; gates both focused PR and main release workflows. **This uses synthetic images and mocked roles, not real Supabase credentials.** Covers player and GM gallery DOM and media dimensions at four ratios, camera-independent frame height, carousel switching, campaign-scoped request routes, revoked object URLs and clean logout.
+6. Existing broad CI baseline is **red** (48 failures / 27 files measured at PR #44 merge). The scoped Gallery test suite and browser smoke provide an isolated quality gate; they do not reclassify or waive the red broad-suite findings. A repository-wide CI cleanup remains a separate task.
+7. **Still required for genuine production acceptance:** an authorized player account and GM account must open the deployed Alea application, cycle real campaign images through 16:9 / 4:3 / 1:1 / 9:16, verify animated pistons/gears, carousel and revoked image access after a role/campaign change; verify the deployed version equals the tested commit. No secrets, private pictures or fake login are bundled in the test. Final visual acceptance follows this manual check.
+
+## Manual authenticated acceptance checklist
+
+1. In a test campaign, GM stages four private images matching the ratios and checks they remain private before sharing.
+2. GM opens **Arcane Gallery**, uses Previous/Next and portrait/landscape changes; piston artwork remains rigid, rods telescope, gears counter-rotate and full-screen preview works.
+3. A different account with player role opens the same campaign, sees only pictures explicitly shared by GM, and can navigate the same ratios and carousel.
+4. Unshare/archive an image, switch campaign and sign out. Confirm stale images cannot be recalled or displayed from another role or campaign.
+5. Check a narrow mobile screen and desktop. If all pass, mark as final accepted; otherwise file a reproducible visual defect against the frame.
+
