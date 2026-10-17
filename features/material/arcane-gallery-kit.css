@@ -33,35 +33,51 @@
 .arcane-kit-side--left{left:3.7%}
 .arcane-kit-side--right{right:3.7%}
 .arcane-kit-side > img{width:100%;height:auto;flex:none}
-/* A real telescopic frame has fixed upper and lower sockets, a narrow
- * uninterrupted recessed steel shaft and ONE moving source-art bronze sleeve.
- * Only the inset shaft changes length. No photographic HERMES image stretches,
- * tiles vertically, or repeats decorative collars. */
+/* V03 – SOURCE-ART TELESCOPIC CYLINDERS.
+ * A detailed HERMES bronze housing stays at the upper socket while the
+ * original engraved lower carriage follows the lower frame. Between them,
+ * reveal only an inset DARK mechanical rod. The V02 broad smooth silver CSS
+ * cylinder was not real source art and is intentionally removed.
+ * Neither source image tiles vertically nor stretches with image height. */
 .arcane-kit-side-repeat{
  position:relative;display:block;min-height:0;flex:1;overflow:hidden;
- border-inline:clamp(1px,.18cqw,2px) solid #805b34;
+ border-inline:1px solid #6d4b2b;
  background:linear-gradient(90deg,
-   #20160f 0%,#9a6b36 7%,#422916 14%,#171c20 19%,
-   #10171b 35%,#12181d 65%,#192027 80%,
-   #6d4724 88%,#be8f4c 95%,#25180e 100%);
- box-shadow:inset .28cqw 0 .48cqw #000b,
-   inset -.28cqw 0 .48cqw #000b,0 0 .2cqw #0009;
+   #140f0d 0%,#51351f 8%,#9b703f 12%,#3a291b 17%,
+   #10161a 24%,#172228 40%,#18242a 60%,#11181d 76%,
+   #372519 84%,#966633 94%,#21170f 100%);
+ box-shadow:inset .19cqw 0 .35cqw #000c,
+            inset -.19cqw 0 .35cqw #000c;
 }
-/* Narrow metal piston inside dark bronze rails. At 20-34% of the guide
- * width it no longer reads as the broad flat silver rectangle of V01. */
+/* Recessed shaft, far narrower and darker than the former reflective panels. */
 .arcane-kit-side-repeat::before{
- content:"";position:absolute;top:0;bottom:0;left:35%;width:30%;
- border-left:1px solid #4d4b46;border-right:1px solid #6e5735;
- background:linear-gradient(90deg,#22282d,#59666a 23%,#8f9691 43%,
-   #4d5b61 69%,#1c2328 100%);
- box-shadow:inset .13cqw 0 .22cqw #000a,inset -.12cqw 0 .2cqw #000a;
+ content:"";position:absolute;top:0;bottom:0;left:41%;width:18%;z-index:0;
+ border-inline:1px solid #453a2a;
+ background:linear-gradient(90deg,#0d1215,#34434a 25%,#465357 48%,
+   #25343c 75%,#0b1014);
+ box-shadow:inset .12cqw 0 .18cqw #000a,inset -.12cqw 0 .18cqw #000a;
 }
-/* The rigid detailed HERMES sleeve starts at the moving lower attachment
- * and travels with the bottom rail as the frame changes aspect ratio. */
+/* Light engraved shaft edge instead of a featureless chrome rectangle. */
+.arcane-kit-side-repeat::after{
+ content:"";position:absolute;top:0;bottom:0;left:47%;width:2%;
+ background:linear-gradient(180deg,transparent,#416574 23%,#253e48 53%,
+   #406071 79%,transparent);
+ opacity:.28;z-index:0;pointer-events:none;
+}
+/* Fixed decorated upper sleeve: intact HERMES source asset, not a
+ * CSS gradient. Its gold diagonal edging and real etched blue glyphs
+ * visually connect the wheel assembly with the extending mechanism. */
+.arcane-kit-side-upper{
+ position:absolute;left:0;top:0;width:100%;height:auto;
+ display:block;max-width:none;z-index:1;pointer-events:none;
+ filter:drop-shadow(0 .12cqw .16cqw #000b);
+}
+/* Moving bottom sleeve: remains attached to the lower frame.
+ * Its own HERMES engraved brass is not stretched to fit the display. */
 .arcane-kit-side-sleeve{
  position:absolute;left:0;bottom:0;width:100%;height:auto;
  display:block;max-width:none;z-index:2;
- filter:drop-shadow(0 -.15cqw .2cqw #000a);
+ filter:drop-shadow(0 -.15cqw .2cqw #000b);
 }
 .arcane-kit-piston{position:absolute;top:14cqw;bottom:12cqw;width:2.7%;z-index:3}
 .arcane-kit-piston--left{left:11%}

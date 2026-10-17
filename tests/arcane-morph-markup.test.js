@@ -14,8 +14,8 @@ describe('ARCANE MORPHING FRAME shared mechanisms',()=>{
  it('reuses identical decorative mechanics for player and GM without sharing image data',()=>{
   const player=readFileSync(new URL('../features/material/arcane-gallery.js',import.meta.url),'utf8');
   const gm=readFileSync(new URL('../features/material/arcane-gm-preview.js',import.meta.url),'utf8');
-  expect(player).toContain("import {arcaneMorphMarkup} from './arcane-morph-markup.js'");
-  expect(gm).toContain("import {arcaneMorphMarkup} from './arcane-morph-markup.js'");
+  expect(player).toContain("import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03'");
+  expect(gm).toContain("import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03'");
   expect(player).toContain("arcaneMorphMarkup()+'</div>'");
   expect(gm).toContain("arcaneMorphMarkup()+'</div>'");
   expect(player).toContain('legolas.readMedia(row,false)');
