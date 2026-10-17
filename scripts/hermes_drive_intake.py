@@ -226,6 +226,13 @@ def run(request_path: str) -> None:
     print("QUEUE_ACCEPTED", request_path, request["mode"], request["kind"], request["target_key"])
     data = google_file(file_id)
     digest = validate_png(data, request["kind"], request["target_key"])
+    if request["target_key"].startswith("arcane-gallery-goose-"):
+        if request["kind"] != "ui":
+            raise ValueError("GOOSE_REQUIRES_UI_KIND")
+        manifest = json.loads((root / "features/material/goose04/source-manifest.json").read_text())
+        pinned = manifest["assets"].get(request["target_key"])
+        if not pinned or file_id != pinned["drive_file_id"] or digest != pinned["sha256"] or len(data) != pinned["bytes"]:
+            raise ValueError("GOOSE_SOURCE_PIN_MISMATCH")
     path = (
         "assets/hermes/originals/" + request["kind"] + "/" + request["target_key"]
         + "/" + digest + ".png"
