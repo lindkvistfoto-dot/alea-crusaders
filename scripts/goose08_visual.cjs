@@ -48,8 +48,8 @@ async function main(){
   await send('Page.navigate',{url:'http://127.0.0.1:4173/tests/fixtures/goose05-unified.html'});
   await until('window.goose05?.status.loaded && window.goose05.status.gateOpen','initial_open');
   await until("[...document.querySelectorAll('.goose-player-door > img,.goose-player-seal > img')].length===3 && [...document.querySelectorAll('.goose-player-door > img,.goose-player-seal > img')].every(i=>i.complete&&i.naturalWidth>0)",'original_art');
-  const summary=await evaluate("({channels:document.querySelectorAll('.goose-player-energy-flow').length,rods:document.querySelectorAll('.goose-player-piston').length,gearPanels:document.querySelectorAll('.goose-player-gear-train').length,published:window.goose05.status.publishedCalls})");
-  if(summary.channels!==4||summary.rods!==4||summary.gearPanels!==0||summary.published)
+  const summary=await evaluate("({channels:document.querySelectorAll('.goose-player-blue-ink').length,loadedInk:[...document.querySelectorAll('.goose-player-blue-ink')].filter(e=>e.width>100).length,rods:document.querySelectorAll('.goose-player-piston-source').length,gearPanels:document.querySelectorAll('.goose-player-gear-train').length,published:window.goose05.status.publishedCalls})");
+  if(summary.channels!==2||summary.loadedInk!==2||summary.rods!==4||summary.gearPanels!==0||summary.published)
    throw Error('WRONG_LAYER_SET '+JSON.stringify(summary));
   await evaluate("document.getElementById('frodoGooseTestClose').click()");
   await until("document.getElementById('frodoGooseTestStatus').textContent==='Luckorna stängda.'",'closed');
