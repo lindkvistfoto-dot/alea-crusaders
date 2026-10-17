@@ -3832,10 +3832,10 @@ async function fillMapAreaHole(e,index){
  e.stopPropagation();if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
  const hole=mapAreaHoleCandidates[index];if(!hole)return;
  try{
-  const {mergeHole,area}=await import('./features/map/polygon-topology.js');
+  const {mergeHole,sharedBoundaryLength}=await import('./features/map/polygon-topology.js');
   const candidates=mapAreaEditAreas.map(a=>({a,points:areaShapePoints(a)})).map(c=>({...c,merged:mergeHole(c.points,hole.points)})).filter(c=>c.merged);
   if(!candidates.length){alert('Tomrummet delar ingen sammanhängande kant med en polygon som kan utökas.');return}
-  let choice=candidates.find(c=>c.a.id===mapAreaSelectedId)||candidates.sort((x,y)=>Math.abs(area(y.points))-Math.abs(area(x.points)))[0];
+  let choice=candidates.find(c=>c.a.id===mapAreaSelectedId)||candidates.sort((x,y)=>sharedBoundaryLength(y.points,hole.points)-sharedBoundaryLength(x.points,hole.points))[0];
   if(!await askConfirm('Fyll tomrum',`Lägg till tomrummet i polygonen "${choice.a.name||'Utan namn'}"? Yta: ${Math.round(hole.area)}. Övriga polygoner ska inte ändras.`,'Fyll'))return;
   if(mapAreaEditAreas.some(a=>a.id!==choice.a.id&&polygonsOverlap(choice.merged,areaShapePoints(a)))){alert('Fyllning stoppades: geometrin skulle överlappa ett befintligt område.');return}
   await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(choice.a.id),{method:'PATCH',body:JSON.stringify({shape_type:'polygon',shape_data:{points:choice.merged}})});
