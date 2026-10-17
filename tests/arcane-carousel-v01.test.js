@@ -104,4 +104,18 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(library).toContain('frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03');
   expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=3&goose=10&carousel=03');
  });
+ it('shows private thumbnails at their natural proportions with a one-pixel divider',()=>{
+  const gallery=read('features/material/arcane-gallery.js').toString();
+  const css=read('features/material/arcane-carousel.css').toString();
+  expect(gallery).toContain("img.onload=()=>{");
+  expect(gallery).toContain("button.style.aspectRatio=width+' / '+height");
+  expect(gallery).toContain('legolas.readMedia(row,true)');
+  expect(css).toContain('flex:0 0 auto;aspect-ratio:4 / 3');
+  expect(css).toContain('object-fit:contain');
+  expect(css).not.toContain('object-fit:cover');
+  expect(css).toContain('.arcane-gallery-tile + .arcane-gallery-tile::before');
+  expect(css).toContain('width:1px');
+  expect(css).not.toContain('flex-basis:30%');
+ });
+
 });

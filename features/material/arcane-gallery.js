@@ -119,7 +119,15 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    }
    const button=$('arcaneGalleryStrip')?.querySelector('[data-gallery-id="'+row.id+'"]');
    if(!button)return;
-   const img=doc().createElement('img');img.src=url;img.alt='';img.loading='lazy';button.replaceChildren(img);
+   const img=doc().createElement('img');img.alt='';img.loading='lazy';img.decoding='async';
+   // The full, uncut thumbnail sets the tile width at a shared carousel height.
+   // Do not let an old private image resize a tile after campaign/role disposal.
+   img.onload=()=>{
+    if(generation!==state.thumbGeneration||!allowed()||scope()!==c||button.querySelector('img')!==img)return;
+    const width=img.naturalWidth,height=img.naturalHeight;
+    if(width>0&&height>0)button.style.aspectRatio=width+' / '+height;
+   };
+   button.replaceChildren(img);img.src=url;
   }catch(_){/* Private Storage remains authoritative; leave a numbered placeholder. */}
   finally{state.loadingThumbs.delete(row.id);}
  }

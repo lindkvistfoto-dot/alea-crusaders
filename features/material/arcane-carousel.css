@@ -65,7 +65,7 @@
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{
  position:absolute;left:17%;top:29%;width:66%;height:39%;z-index:1;
- display:flex;align-items:stretch;gap:3px;min-height:0;max-height:none;
+ display:flex;align-items:stretch;gap:0;min-height:0;max-height:none;
  overflow-x:auto;overflow-y:hidden;
  padding:0;margin:0;border:0;border-radius:2px;
  background:transparent;box-shadow:none;
@@ -74,7 +74,7 @@
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track::-webkit-scrollbar{display:none}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile{
- flex:0 0 24%;min-width:0;min-height:0;height:100%;
+ flex:0 0 auto;aspect-ratio:4 / 3;min-width:0;min-height:0;height:100%;
  display:block;position:relative;overflow:hidden;
  padding:0;border:0;border-radius:2px;
  background:linear-gradient(135deg,#0b1119,#171a1b);
@@ -82,8 +82,13 @@
  scroll-snap-align:start;
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile img{
- display:block;width:100%;height:100%;object-fit:cover;
+ display:block;width:100%;height:100%;object-fit:contain;
  user-select:none;-webkit-user-drag:none;pointer-events:none;
+}
+/* One pixel of aged-gold metalwork distinguishes adjacent original-ratio photos. */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile + .arcane-gallery-tile::before{
+ content:"";position:absolute;inset:0 auto 0 0;width:1px;
+ background:#bd9a61;z-index:2;pointer-events:none;
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile.is-active::after{
  content:"";position:absolute;inset:0;
@@ -96,10 +101,6 @@
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel + .arcane-gallery-controls{
  margin-top:-.9cqw;
-}
-@media(max-width:480px){
- #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{gap:2px}
- #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile{flex-basis:30%}
 }
 @media(prefers-reduced-motion:reduce){
  #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{scroll-behavior:auto}
