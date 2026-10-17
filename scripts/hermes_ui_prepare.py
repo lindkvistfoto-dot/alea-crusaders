@@ -35,12 +35,12 @@ def prepare(source_name: str) -> tuple[str, str]:
         original.load()
         link_size = next((pixels for (w, h), pixels in LINK_SIZES.items()
                          if original.width * h == original.height * w), None)
-        if original.format != "PNG" or not (640 <= original.width <= 4096 and (
+        if original.format != "PNG" or not ((key in GOOSE_SIZES and original.size == GOOSE_SIZES[key]) or (640 <= original.width <= 4096 and (
             (key == "arcane-mechanism-link" and link_size is not None)
             or (key == "arcane-mechanism-chamber" and original.width == original.height * 3)
             or (key == "arcane-gallery-overlay" and original.size == (1536, 1024))
             or (key in GOOSE_SIZES and original.size == GOOSE_SIZES[key])
-        )):
+        ))):
             raise ValueError("HERMES_UI_BAD_PNG")
         size = link_size if key == "arcane-mechanism-link" else CHAMBER_SIZE
         if key in GOOSE_SIZES:
