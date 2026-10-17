@@ -9,13 +9,13 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[char]);
 
-  async function readNewLocationImages(campaignId, locationId, gm) {
+  async function readNewLocationImages(campaignId, locationId) {
     const links = await dbJson(
       'campaign_image_links?campaign_id=eq.' + encodeURIComponent(campaignId) +
       '&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
       '&select=id,image_id,is_primary,sort_order,caption,player_visible&order=sort_order.asc'
     );
-    const visible = (links || []).filter(link => gm || link.player_visible);
+    const visible = (links || []).filter(link => link.player_visible === true);
     if (!visible.length) return [];
     const ids = [...new Set(visible.map(link => link.image_id))];
     const images = await dbJson(
@@ -58,7 +58,7 @@
     if (!originalGallery) return;
     const selectedArea = campaignMapAreas.find(area => area.id === mapSelectedAreaId);
     if (!selectedArea?.location_id || !centralCampaignId) {
-      return originalRender?.(legacyAssets || []);
+      return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
     }
     const selectedId = selectedArea.id;
     const stillCurrent = () =>
@@ -68,11 +68,11 @@
     const gm = canManageCampaignMaps();
     let linkedImages = [];
     try {
-      linkedImages = await readNewLocationImages(centralCampaignId, selectedArea.location_id, gm);
+      linkedImages = await readNewLocationImages(centralCampaignId, selectedArea.location_id);
     } catch (error) {
       // Preserve the old map gallery if a migration/network/database issue occurs.
       console.warn('Kunde inte läsa det nya kampanjbildbiblioteket:', error);
-      if (stillCurrent()) return originalRender?.(legacyAssets || []);
+      if (stillCurrent()) return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
       return;
     }
     if (!stillCurrent()) return;
@@ -80,7 +80,7 @@
       (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path
     ));
     const remaining = (legacyAssets || [])
-      .filter(image => gm || image.player_visible)
+      .filter(image => image.player_visible === true)
       .filter(image => {
         const key = 'campaign-location-assets/' + image.storage_path;
         if (unique.has(key)) return false;
