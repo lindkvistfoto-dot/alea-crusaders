@@ -7,6 +7,8 @@
 (function(){
  'use strict';
  const BUCKET='alea-skill-art';
+ const HERMES_BUCKET='alea-hermes-public';
+ const HERMES_ICON=/^hermes\/skill\/([a-z0-9]+(?:-[a-z0-9]+)*)\/[a-f0-9]{64}\.webp$/;
  const MAX_BYTES=16*1024*1024;
  const TYPES={
   icon:{title:'FÄRDIGHET IKON',column:'icon_path',accept:'image/png,image/webp',help:'Rund guldram med verkligt transparent bakgrund utanför. PNG rekommenderas.'},
@@ -23,7 +25,9 @@
  const isAdmin=()=>{try{return !!activeUser()?.admin}catch(_){return false}};
  function validPath(path,id,kind){
   const match=PATH.exec(String(path||''));
-  return !!match&&match[1]===String(id)&&match[2]===kind&&(kind!=='icon'||match[3]!=='jpg');
+  if(match&&match[1]===String(id)&&match[2]===kind&&(kind!=='icon'||match[3]!=='jpg'))return true;
+  const hermes=kind==='icon'?HERMES_ICON.exec(String(path||'')):null;
+  return !!hermes&&hermes[1]===String(id).replaceAll('_','-');
  }
  function html(row){
   if(!row||!SLUG.test(String(row.id||'')))return '<section class="skill-art-editor wide"><h3>Färdighetsbilder</h3><p>Spara färdigheten först. Öppna den sedan igen för att ladda upp ikon och illustration.</p></section>';
@@ -75,7 +79,7 @@
    const path=el.dataset.iconPath,id=el.dataset.skillId;
    let url='';
    try{
-    const response=await mapStorageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});
+    const response=await mapStorageFetch('object/'+(HERMES_ICON.test(path)?HERMES_BUCKET:BUCKET)+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});
     if(!response.ok)throw Error('Kunde inte hämta ikon ('+response.status+').');
     const blob=await response.blob();
     if(!blob.size||!['image/png','image/webp'].includes(blob.type))throw Error('Ogiltigt ikonformat.');
@@ -143,7 +147,7 @@
   if(!validPath(path,id,kind))return;
   let url='';
   try{
-   const response=await mapStorageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});
+   const response=await mapStorageFetch('object/'+(HERMES_ICON.test(path)?HERMES_BUCKET:BUCKET)+'/'+path.split('/').map(encodeURIComponent).join('/'),{method:'GET'});
    if(!response.ok)throw new Error('Bildhämtning misslyckades ('+response.status+').');
    const blob=await response.blob();
    if(!blob.size||!blob.type.startsWith('image/'))throw new Error('Ogiltiga bilddata.');

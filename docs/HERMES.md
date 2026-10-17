@@ -4,6 +4,19 @@
 **Version:** 2.3 (aktiv push-baserad intagskedja) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
 **Namn:** HERMES – gudarnas budbärare. Bilden ska nå rätt plats i appen med kvalitet, säkerhet och spårbarhet intakt.
 
+## HERMES FÄRDIGHET IKON – färdighetsregistret (2026-10-17)
+
+HERMES Drive-push stöder nu `kind=skill` för **FÄRDIGHET IKON**, inte illustration. `target_key` är exakt `rule_skills.id` med understreck ersatta av bindestreck, till exempel `gomma-sig` → `rule_skills.id=gomma_sig`. Använd alltid en kontrollerad registermatchning; gissa aldrig målet.
+
+- Låst master: Klättra, cirkulär detaljrik antikguldsram med fyra diamantsmycken, tydligt motiv och transparent bakgrund **utanför ramen**.
+- Godkänt original: kvadratisk RGBA-PNG (640–4096 px) med äkta alfa, i befintliga privata HERMES Drive Inbox; arkiveras oförändrad med SHA-256 i GitHub.
+- Leverans: HERMES 2.1 skapar 640×640 WebP med bibehållen alfa (max 500 kB), verifierar ursprung + Storage, lägger i `alea-hermes-public` under `hermes/skill/<target_key>/<app_sha256>.webp`, och ändrar endast `public.rule_skills.icon_path`.
+- Både tidigare manuella uppladdningar i privata `alea-skill-art` och de nya publika HERMES-ikonerna stöds i admin. `illustration_path` påverkas inte.
+- `hermes_jobs.kind=skill` stöds av databasconstraint. Aktivering kräver `status=active`, verifierad `icon_path` och bildläsning; Drive-uppladdning eller GitHub-commit är i sig **inte** publicering.
+- För fem initiala tjuvikoner: `smyga`, `gomma-sig`, `stjala-foremal`, `lasdyrkning`, `hantera-fallor`.
+
+---
+
 ## HERMES UI – kryptexgrafik (2026-10-16)
 
 HERMES stöder nu även `kind=ui` för `arcane-mechanism-link` och `arcane-mechanism-chamber`. De följer samma aktiva push-kedja med HERMES Drive Inbox, OIDC-autentisering, Drive-original, SHA-256 och GitHub-original. Länken accepterar 3:2-, 4:3- eller 3:4-PNG med RGBA-transparens. Den senaste stora vertikala emblemvarianten är 3:4. Kammarbakgrunden behåller 3:1 och ogenomskinlig RGB/RGBA. UI-intaget startar `.github/workflows/hermes-ui-intake.yml` i stället för besvärjelsepubliceraren.
