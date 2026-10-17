@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><base href="/">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alea – Desktop Combat Image Viewer acceptance</title>
+<link rel="stylesheet" href="/src/styles/app.css">
+<link rel="stylesheet" href="/features/combat/art-viewer.css?v=0.35.241">
+<style>
+html,body{background:#14100c;color:#efd8b2;margin:0;min-height:100vh}
+main{max-width:1490px;margin:0 auto;padding:24px}
+h1{font:26px Georgia,serif;color:#e6c98e;text-align:center;margin:2px 0 8px}
+.subtitle{text-align:center;font:13px system-ui,sans-serif;color:#c2ad83;margin:0 0 25px}
+#combatPage{display:block!important}
+#combatPage .combat-shell-live.test-grid{display:grid;grid-template-columns:1fr 2fr 1fr;gap:15px;align-items:start}
+.test-block{border:1px solid #6d543a;min-height:200px;background:#211a16;
+  padding:15px;color:#a99a87;border-radius:11px}
+.test-block h2{font:18px Georgia,serif;color:#d9b578}
+.test-spells{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:20px 0}
+.test-spells button{border:1px solid #b88a49;color:#ffdfab;font:17px Georgia,serif;
+  background:#4d3118;border-radius:8px;min-height:50px;padding:10px 17px;cursor:pointer}
+#combatPage .combat-participants{grid-column:3}
+@media(max-width:1023px){
+#combatPage .combat-shell-live.test-grid{display:block}
+#combatPage .combat-participants{width:100%;margin-top:13px}
+}
+</style></head>
+<body><main>
+<h1>ARCANE COMBAT · Bildvisare</h1>
+<p class="subtitle">Testmiljö · Klick på besvärjelse i kryptexen · Inga kampanjuppgifter</p>
+<section id="combatPage">
+ <div class="test-spells">
+  <button id="spellEld" type="button">Kryptex · Eld</button>
+  <button id="spellVatten" type="button">Kryptex · Finna vatten</button>
+ </div>
+ <div class="combat-shell combat-shell-live test-grid">
+  <div class="test-block"><h2>Runda</h2><p>Vald handling: Magi</p></div>
+  <div class="test-block"><h2>Stridskarta</h2><p>Visualisering av högerkolumnens placering.</p></div>
+  <aside class="combat-panel combat-participants">
+   <h3>Turordning</h3>
+   <div class="combat-participant-list">
+    <button class="combatant-card" type="button"><b class="name">Lyra Gråväv</b> · SR 1</button>
+    <button class="combatant-card" type="button"><b class="name">Astrid Eldhjärta</b> · SR 1</button>
+    <button class="combatant-card" type="button"><b class="name">Evalin Hugger</b> · SR 2</button>
+   </div>
+   <div id="galleryMount"></div>
+  </aside>
+ </div>
+</section>
+</main>
+<script src="/features/combat/art-viewer.js?v=0.35.241"></script>
+<script>
+window.aleaSpellArt={
+ validPath:path=>/^assets\/spells\/arcane-ivory\/[a-z0-9-]+\.webp$/.test(path),
+ resolveUrl:path=>Promise.resolve('/'+path)
+};
+document.getElementById('galleryMount').innerHTML=window.aleaCombatArtViewer.html('synthetic-combat-1');
+window.aleaCombatArtViewer.render();
+document.getElementById('spellEld').onclick=()=>window.aleaCombatArtViewer.show({
+ title:'ELD (F)',path:'assets/spells/arcane-ivory/eld.webp',source:'spell',battleId:'synthetic-combat-1'
+});
+document.getElementById('spellVatten').onclick=()=>window.aleaCombatArtViewer.show({
+ title:'FINNA VATTEN',path:'assets/spells/arcane-ivory/finna-vatten.webp',source:'spell',battleId:'synthetic-combat-1'
+});
+window.aleaDesktopGalleryFixture={get ready(){return !!window.aleaCombatArtViewer&&!!document.getElementById('combatArtViewer')}};
+</script></body></html>
