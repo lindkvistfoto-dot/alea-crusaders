@@ -23,7 +23,8 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(carousel).toBeGreaterThan(machine);
   expect(controls).toBeGreaterThan(carousel);
   expect(source).toContain('arcane-gallery-carousel-frame');
-  expect(source).toContain('arcane-carousel-v01.webp');
+  expect(source).toContain('arcane-carousel-bronze-match.webp');
+  expect(source).not.toContain('src="./features/material/arcane-carousel-v01.webp"');
   expect(source).not.toContain('arcane-gallery-belt--parked');
   expect(source).toContain('legolas.readMedia(row,true)');
   expect(source).toContain('win().URL.revokeObjectURL');
