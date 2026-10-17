@@ -1,4 +1,4 @@
-/* GOOSE 08 - arcane channels, miniature real-ratio gears, paired bolt rods.
+/* GOOSE 09 - timed left/right energy, sword-safe clockwork and paired bolt rods.
  * All measurements are percentages of the approved HERMES half-plate and seal.
  * Static engraved channels remain almost invisible until the sapphires charge.
  */
@@ -15,13 +15,17 @@
  stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;
  opacity:0;filter:drop-shadow(0 0 2px #71d9ff);
 }
-#arcaneGallery .goose-player-shutter--energizing .goose-player-energy-flow{
- animation:goose08-energy-fill 680ms cubic-bezier(.22,.65,.25,1) both;
+/* Channel timing belongs to the ratchet that fires it, never the global open state.
+   Left pulse only at first click; right pulse only at third click. */
+#arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow,
+#arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow{
+ animation:goose09-energy-fill 680ms cubic-bezier(.22,.65,.25,1) both;
 }
-#arcaneGallery .goose-player-shutter--energizing .goose-player-energy-flow--lower{
+#arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow--lower,
+#arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow--lower{
  animation-delay:90ms;
 }
-@keyframes goose08-energy-fill{
+@keyframes goose09-energy-fill{
  0%{stroke-dashoffset:100;opacity:0}
  75%{opacity:1}
  100%{stroke-dashoffset:0;opacity:.94}
@@ -53,10 +57,10 @@
 #arcaneGallery .goose-player-door--right .goose-player-piston-bolt{
  transform:translateX(-18%);
 }
-#arcaneGallery .goose-player-shutter--unlatched .goose-player-door--left .goose-player-piston-bolt{
+#arcaneGallery .goose-player-shutter--unlatched-left .goose-player-door--left .goose-player-piston-bolt{
  transform:translateX(-25%);
 }
-#arcaneGallery .goose-player-shutter--unlatched .goose-player-door--right .goose-player-piston-bolt{
+#arcaneGallery .goose-player-shutter--unlatched-right .goose-player-door--right .goose-player-piston-bolt{
  transform:translateX(25%);
 }
 #arcaneGallery .goose-player-gear-train{
@@ -84,9 +88,14 @@
 @keyframes goose08-idler{from{transform:rotate(0deg)}to{transform:rotate(-240deg)}}
 @media(prefers-reduced-motion:reduce){
  #arcaneGallery .goose-player-energy-flow{animation:none!important}
- #arcaneGallery .goose-player-shutter--energizing .goose-player-energy-flow{
+ #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-energy-flow,
+ #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-energy-flow{
   stroke-dashoffset:0;opacity:.75
  }
  #arcaneGallery .goose-player-piston-bolt{transition:none!important}
  #arcaneGallery .goose-player-gear{animation:none!important}
 }
+
+/* GOOSE09: no fake brass hub/circle may be rendered over the sword. */
+#arcaneGallery .goose-player-seal .goose-player-gear-train,
+#arcaneGallery .goose-player-seal-half .goose-player-gear-train{display:none!important}
