@@ -32,7 +32,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   // Its public overlay contains no images; thumbnails are authorized blobs.
   '<div class="arcane-gallery-carousel" aria-label="Bildkarusell">'+
    '<div id="arcaneGalleryStrip" class="arcane-gallery-strip arcane-gallery-carousel-track" aria-label="Bläddra bland delade bilder"></div>'+
-   '<img class="arcane-gallery-carousel-frame" src="./features/material/arcane-carousel-v01.webp" alt="" aria-hidden="true" draggable="false">'+
+   '<img class="arcane-gallery-carousel-frame" src="./features/material/arcane-carousel-bronze-match.webp" alt="" aria-hidden="true" draggable="false">'+
   '</div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan delade bilder">'+
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
