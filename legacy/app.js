@@ -3777,7 +3777,7 @@ function mapAreaNodeStart(e,id,index){
  let a=mapAreaEditAreas.find(a=>a.id===id),origin=areaShapePoints(a)[index];if(!origin)return;
  mapAreaSelectedId=id;
  let impacted=mapAreaEditAreas.filter(a=>{let pts=areaShapePoints(a);return pts.some(p=>Math.hypot(p[0]-origin[0],p[1]-origin[1])<.01)||pts.some((p,i)=>pointOnSegment(origin,p,pts[(i+1)%pts.length]))});
- mapAreaNodeDrag={origin:origin.slice(),impacted:impacted.map(a=>({id:a.id,old:areaShapePoints(a),working:mapAreaInsertNodeOnEdge(areaShapePoints(a),origin),shape_type:a.shape_type})),changed:false};
+ mapAreaNodeDrag={origin:origin.slice(),impacted:impacted.map(a=>({id:a.id,old:areaShapePoints(a),working:mapAreaInsertNodeOnEdge(areaShapePoints(a),origin),shape_type:a.shape_type,before_data:JSON.parse(JSON.stringify(a.shape_data))})),changed:false};
  window.addEventListener('pointermove',mapAreaNodeMove);window.addEventListener('pointerup',mapAreaNodeEnd,{once:true});window.addEventListener('pointercancel',mapAreaNodeCancel,{once:true});
  renderMapAreaEditor();
 }
@@ -3805,26 +3805,28 @@ function mapAreaNodeMove(e){
 function mapAreaNodeCancel(){
  window.removeEventListener('pointermove',mapAreaNodeMove);window.removeEventListener('pointerup',mapAreaNodeEnd);
  let drag=mapAreaNodeDrag;if(!drag)return;
- for(let item of drag.impacted){let a=mapAreaEditAreas.find(a=>a.id===item.id);if(a){a.shape_type=item.shape_type;a.shape_data={...a.shape_data,points:item.old}}}
+ for(let item of drag.impacted){let a=mapAreaEditAreas.find(a=>a.id===item.id);if(a){a.shape_type=item.shape_type;a.shape_data=JSON.parse(JSON.stringify(item.before_data))}}
  mapAreaNodeDrag=null;renderMapAreaEditor();
 }
 async function mapAreaNodeEnd(){
  window.removeEventListener('pointermove',mapAreaNodeMove);window.removeEventListener('pointercancel',mapAreaNodeCancel);
  let drag=mapAreaNodeDrag;if(!drag)return;
  if(!drag.changed){mapAreaNodeDrag=null;renderMapAreaEditor();return}
- let modified=drag.impacted.map(item=>({id:item.id,points:areaShapePoints(mapAreaEditAreas.find(a=>a.id===item.id))}));
+ let modified=drag.impacted.map(item=>({id:item.id,before_type:item.shape_type,before_data:item.before_data,points:areaShapePoints(mapAreaEditAreas.find(a=>a.id===item.id))}));
  if(modified.some(x=>!mapAreaPolygonValid(x.points))||mapAreaEditAreas.some((a,i)=>mapAreaEditAreas.slice(i+1).some(b=>polygonsOverlap(areaShapePoints(a),areaShapePoints(b))))){
   mapAreaNodeCancel();showBackupToast('Hörnet kan inte flyttas: ogiltig polygon eller överlapp');return;
  }
  try{
-  for(let m of modified)await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(m.id),{method:'PATCH',body:JSON.stringify({shape_type:'polygon',shape_data:{points:m.points}})});
+  // Single RPC call: database-side transaction checks all original shapes before updating any of them.
+  await dbJson('rpc/update_map_polygon_shapes_atomic',{method:'POST',body:JSON.stringify({p_map_id:mapAreaEditMap.id,p_changes:modified})});
   mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);mapAreaHoleCandidates=[];
   if(activeCampaignMap?.id===mapAreaEditMap.id)setCampaignMapData(activeCampaignMap,mapAreaEditAreas);
-  showBackupToast('✓ Gemensamma hörn sparade');
+  showBackupToast('✓ Gemensamma hörn sparade atomärt');
  }catch(err){
-  for(let item of drag.impacted){try{await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({shape_type:item.shape_type,shape_data:{points:item.old}})})}catch(rollbackError){console.error('Återställning misslyckades',rollbackError)}}
-  try{mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id)}catch(loadError){console.error(loadError)}
-  alert('Kunde inte spara hörnflytten. Återställning har försökts: '+err.message);
+  // Failed RPC leaves database untouched; restore editor from source of truth.
+  try{mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id)}
+  catch(loadError){for(let item of drag.impacted){let a=mapAreaEditAreas.find(a=>a.id===item.id);if(a){a.shape_type=item.shape_type;a.shape_data=JSON.parse(JSON.stringify(item.before_data))}}console.error(loadError)}
+  alert('Hörnflytten sparades inte. Kontrollera att databasmigrationen är installerad: '+err.message);
  }
  mapAreaNodeDrag=null;renderMapAreaEditor();
 }
