@@ -67,11 +67,12 @@ describe('FALK – explicit spell bindings, costs and safe combat dispatch',()=>
  });
  test('casting remains split across two SR unless tagged as quick',()=>{
   expect(src).toContain('ready_round:currentRound+(castRules.quick?0:1)');
-  expect(src).toContain('Number(action.source_data?.ready_round)<=round');
+  expect(src).toContain('(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)');
   expect(src).toContain('resolve_round_offset:quick?0:1')
  });
  test('spell reference metadata is taken from the canonical register',()=>{
-  expect(src).toContain('rule_id:rule.id,attack_magic:rule.attack_magic===true');
+  expect(src).toContain('rule_id:rule.id');
+  expect(src).toContain('attack_magic:rule.attack_magic===true');
   expect(src).toContain("damage_text:rule.damage_text||''");
   expect(src).toContain('if(!binding.supported)errors.push')
  });
