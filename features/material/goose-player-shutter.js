@@ -143,6 +143,8 @@ export function createGoosePlayerShutter({
   scene.classList.add('goose-player-shutter--charged');
   const stopped={transform:'rotate(360deg)'};
   if(!await shift(seal,stopped,stopped,timings.release,token))return false;
+  // Prevent the fourth gem's ignition pulse from restarting at the split.
+  setLights(4);
   scene.classList.remove('goose-player-shutter--charged');
   // Exact 360 degrees: the full emblem and its cropped door-mounted halves
   // have precisely the same registration at the moment of the split.
