@@ -89,7 +89,8 @@
  function trustedDisplayedImage(img){
   if(!img||img.tagName?.toLowerCase()!=='img'||!img.isConnected)return '';
   const value=String(img.currentSrc||img.src||'');
-  if(!value||!img.complete||!img.naturalWidth)return '';
+  if(!value)return '';
+  if(/^data:image\/(?:png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)&&value.length<12000000)return value;
   // No arbitrary remote/data/javascript URLs; all images originate from
   // the combat UI and must be app assets, authenticated blob URLs or Supabase.
   try{
