@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-gallery-goose-right",
+  "source_path": "assets/hermes/originals/ui/arcane-gallery-goose-right/51f99a79769e03d04eae6d47fc049a767cbf22b34d1eff63480777f3864db86d.png",
+  "source_sha256": "51f99a79769e03d04eae6d47fc049a767cbf22b34d1eff63480777f3864db86d",
+  "source_bytes": 1310897,
+  "app_path": "features/material/goose04/right.webp",
+  "app_sha256": "61be562d24831efa248f538f0af0e2d6b906c4680481716ac9df851b39aebb4a",
+  "app_bytes": 197104,
+  "width": 724,
+  "height": 1086,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
