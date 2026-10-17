@@ -3,9 +3,17 @@
  * the central continuous trough exposes the private image thumbnails behind.
  * All image content stays on the RLS-gated Gallery path, not in this stylesheet.
  */
+/* A single assembled machine: the lower HERMES rail must overlap the
+ * upper bronze carousel rail. The carousel moves behind the frame, not over
+ * its portrait or controls; CSS-only docking never touches private media.
+ * Container-relative units preserve the join at mobile and desktop widths. */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-machine{
+ position:relative;z-index:3;overflow:visible;
+}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel{
- position:relative;display:block;width:100%;aspect-ratio:2082 / 515;
- max-width:100%;margin:0 auto;
+ position:relative;z-index:2;display:block;
+ width:100%;max-width:100%;aspect-ratio:2082 / 515;
+ margin:-5.2cqw auto 0;
  isolation:isolate;overflow:hidden;
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-frame{

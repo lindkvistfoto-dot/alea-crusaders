@@ -77,6 +77,28 @@ async function run(){
  }
  assert(requests.every(x=>x.includes('campaign_id=eq.'+campaign)),'unscoped history query');
  assert(requests.every(x=>x.startsWith('campaign_materials?')||x.startsWith('campaign_material_presentation_history?')),'unexpected private API');
+ // Verify that the bronze carousel is physically tucked under the
+ // HERMES bottom rail at both desktop and phone-sized gallery widths.
+ function assertDocked(phase){
+  const machine=gallery.root.querySelector('.arcane-gallery-machine');
+  const carousel=gallery.root.querySelector('.arcane-gallery-carousel');
+  assert(Boolean(machine&&carousel),phase+': missing docking pieces');
+  const m=machine.getBoundingClientRect(),c=carousel.getBoundingClientRect();
+  const overlap=m.bottom-c.top;
+  const width=m.width;
+  assert(overlap>width*.045&&overlap<width*.065,
+   phase+': black gap or excessive cover, overlap='+overlap+' width='+width);
+  const mStyle=getComputedStyle(machine),cStyle=getComputedStyle(carousel);
+  assert(Number(mStyle.zIndex)>Number(cStyle.zIndex),
+   phase+': carousel is painted over the HERMES bottom rail');
+  assert(mStyle.overflow==='visible',phase+': HERMES bottom rail clipped');
+  return {width:Math.round(width),overlap:Math.round(overlap)};
+ }
+ const desktopDock=assertDocked('desktop');
+ const panel=document.querySelector('#legolasPanel');
+ panel.style.width='360px';
+ const phoneDock=assertDocked('phone-width');
+ panel.style.removeProperty('width');
  const privateImageUrl=gallery.state.original;
  assert(privateImageUrl.startsWith('blob:'),'player did not use private blob URL');
  auth.gm=true;gallery.sync(rows[0],5);
@@ -103,7 +125,8 @@ async function run(){
  assert(gallery.state.rows.length===0,'private rows survive logout');
  assert(revoked.includes(lastGMUrl),'GM blob not revoked on logout');
  assert(!gallery.root.querySelector('#arcaneGalleryImage').hasAttribute('src'),'shared image not cleared after logout');
- return {playerHeights,gmHeights,reads:reads.length,revoked:revoked.length,
+ return {playerHeights,gmHeights,desktopDock,phoneDock,
+  reads:reads.length,revoked:revoked.length,
   roles:['player','GM','signed-out'],viewers:1,assets:'public synthetic SVG only'};
 }
 run().then(result=>{
