@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {gooseAssetManifestValid,gooseFourByThreeRatio,gooseQuarterKeyframes,createGoosePlayerShutter} from '../features/material/goose-player-shutter.js';
+import {gooseAssetManifestValid,gooseFourByThreeRatio,gooseQuarterKeyframes,gooseRatchetDuration,gooseDetentDuration,createGoosePlayerShutter} from '../features/material/goose-player-shutter.js';
 
 const assets={
  left:'./features/material/goose04/left.webp',
@@ -73,10 +73,23 @@ describe('GOOSE player-only shutter staging',()=>{
 describe('GOOSE 07 – four sapphire-driven mechanical locks',()=>{
  it('provides stepped keyframes without overshoot or free rotation',()=>{
   const frames=gooseQuarterKeyframes(90,180);
-  expect(frames.map(f=>f.offset)).toEqual([0,.17,.28,.81,.92,1]);
+  expect(frames.map(f=>f.offset)).toEqual([0,.20,.42,.82,.94,1]);
   expect(frames.at(0).transform).toBe('rotate(90deg)');
   expect(frames.at(-1).transform).toBe('rotate(180deg)');
   expect(frames.every(f=>!f.transform.includes('scale'))).toBe(true);
+  expect(gooseQuarterKeyframes(0,90).map(f=>f.offset)).toEqual([0,.17,.28,.81,.92,1]);
+  expect(gooseQuarterKeyframes(180,90).map(f=>f.offset)).toEqual([0,.20,.42,.82,.94,1]);
+ });
+ it('slows the second 90 degree ratchet and its detent in both directions',()=>{
+  expect([gooseRatchetDuration(0,90),gooseRatchetDuration(90,180),
+   gooseRatchetDuration(180,270),gooseRatchetDuration(270,360)])
+   .toEqual([525,1125,525,525]);
+  expect([gooseRatchetDuration(360,270),gooseRatchetDuration(270,180),
+   gooseRatchetDuration(180,90),gooseRatchetDuration(90,0)])
+   .toEqual([525,525,1125,525]);
+  expect(gooseDetentDuration(180)).toBe(260);
+  expect(gooseDetentDuration(90)).toBe(105);
+  expect(gooseDetentDuration(270)).toBe(105);
  });
  it('lights four blue detents in order; splits the sigil only after exactly 360°',async()=>{
   const f=fakeDom(),calls=[],doorStart=[];

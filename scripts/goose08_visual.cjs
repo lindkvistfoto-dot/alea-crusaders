@@ -62,6 +62,13 @@ async function main(){
   await capture('02-left-pulse-first-click');
   await until("document.querySelector('.goose-player-shutter--unlatched-left')!==null",'left_piston_after_pulse');
   await capture('03-left-pistons-after-arrival');
+  // GOOSE10: the 90°→180° ratchet must visibly rotate under the slower
+  // mechanical profile, not just wait longer between two instant poses.
+  await until("[...document.querySelectorAll('.goose-player-seal')].some(el=>el.getAnimations().some(a=>a.effect?.getTiming().duration===1125))",'heavy_second_ratchet');
+  await wait(230);
+  const second=await evaluate("({locks:document.querySelector('.goose-player-shutter').dataset.unlockedLocks,turn:[...document.querySelector('.goose-player-seal').getAnimations()].find(a=>a.effect?.getTiming().duration===1125)?.currentTime})");
+  if(second.locks!=='1'||!(second.turn>0))throw Error('SECOND_RATCHET_NOT_DELIBERATE '+JSON.stringify(second));
+  await capture('03b-second-heavy-90-to-180');
   await until("document.querySelector('.goose-player-shutter--energizing-right')!==null",'right_pulse_third_click');
   const third=await evaluate("({locks:document.querySelector('.goose-player-shutter').dataset.unlockedLocks,left:!!document.querySelector('.goose-player-shutter--unlatched-left'),right:!!document.querySelector('.goose-player-shutter--energizing-right'),rightRods:!!document.querySelector('.goose-player-shutter--unlatched-right')})");
   if(third.locks!=='3'||!third.left||!third.right||third.rightRods)
