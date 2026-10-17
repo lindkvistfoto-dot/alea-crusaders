@@ -39,7 +39,7 @@ describe('HERMES ARCANE SKILL CODEX: scoped public UI art profile',()=>{
  it('Python scripts compile (no runtime credentials needed)',()=>{
   const check=spawnSync('python3',['-c',
    "import ast,pathlib;[ast.parse(pathlib.Path(p).read_text()) for p in ['scripts/hermes_drive_intake.py','scripts/hermes_ui_prepare.py']]"],
-   {cwd:new URL('..',root),encoding:'utf8'});
+   {cwd:root,encoding:'utf8'});
   expect(check.status,check.stderr).toBe(0);
  });
 });
