@@ -1,0 +1,13 @@
+/* Shared image-library photos inside the map's location description. */
+.map-location-gallery.campaign-map-image-gallery{display:block}
+.campaign-map-image-primary{margin:0 0 12px;min-width:0}
+.campaign-map-image-stage{background:rgba(0,0,0,.28);border:1px solid rgba(185,155,90,.35);border-radius:10px;overflow:hidden;min-height:150px;display:grid;place-items:center;color:#b9a789}
+.campaign-map-image-stage img{display:block;width:100%;max-height:360px;object-fit:contain;cursor:zoom-in}
+.campaign-map-image-primary figcaption{padding:7px 2px;color:inherit;font-size:.9rem}
+.campaign-map-image-primary figcaption p{margin:5px 0 0;font-size:.84rem;opacity:.85}
+.campaign-map-image-primary .gm-only{display:inline-block;margin-left:6px}
+.campaign-map-image-thumbnails{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.campaign-map-image-thumb{border:2px solid transparent;background:rgba(0,0,0,.3);padding:2px;border-radius:8px;min-height:64px;aspect-ratio:4/3;overflow:hidden;cursor:pointer;color:inherit;font-size:.7rem}
+.campaign-map-image-thumb.active{border-color:#c4a16b}
+.campaign-map-image-thumb img{display:block;width:100%;height:100%;object-fit:cover;border-radius:4px}
+.campaign-map-image-thumb:focus-visible{outline:2px solid #f0d392;outline-offset:2px}
