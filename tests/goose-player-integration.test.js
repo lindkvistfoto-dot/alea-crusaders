@@ -76,8 +76,8 @@ describe('GOOSE 04B player-only integration',()=>{
   expect(h.scenes[0].classList.contains('goose-player-shutter--open')).toBe(true);
   expect(h.parts['.goose-player-door--left'].style.transform).toBe('translateX(-110%)');
   const heightWrites=h.styleProps.filter(x=>x[0]==='--arcane-frame-height').map(x=>x[1]);
-  expect(heightWrites).toContain('326px'); // 4:3 first
-  expect(heightWrites.at(-1)).toBe('326px');
+  expect(heightWrites).toContain('294px'); // 4:3 first
+  expect(heightWrites.at(-1)).toBe('294px');
   expect(h.scenes[0].querySelector('.goose-player-seal')).toBe(h.parts['.goose-player-seal']);
   expect(h.gallery.root.innerHTML).toContain('arcane-gallery-picture');
   expect(h.gallery.state.selected).toBe(rows[0].id);
@@ -92,7 +92,7 @@ describe('GOOSE 04B player-only integration',()=>{
   expect(h.scenes).toHaveLength(1);
   expect(h.scenes[0].classList.contains('goose-player-shutter--open')).toBe(true);
   const heights=h.styleProps.filter(x=>x[0]==='--arcane-frame-height').map(x=>x[1]);
-  expect(heights.at(-1)).toBe('638px');
+  expect(heights.at(-1)).toBe('607px');
   expect(h.revoked).toContain('blob:goose-1');
  });
  it('immediately revokes private blob and destroys moving artwork on campaign change',async()=>{
@@ -128,11 +128,11 @@ describe('GOOSE 04B player-only integration',()=>{
   expect(await h.gallery.testShutter('close')).toBe(true);
   expect(h.parts['.goose-player-door--left'].style.transform).toBe('translateX(0%)');
   expect(h.parts['.goose-player-seal'].style.opacity).toBe('1');
-  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('326px');
+  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('294px');
   expect(await h.gallery.testShutter('open')).toBe(true);
   expect(h.parts['.goose-player-door--left'].style.transform).toBe('translateX(-110%)');
   expect(h.parts['.goose-player-seal'].style.opacity).toBe('0');
-  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('638px');
+  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('607px');
   expect(h.gallery.state.selected).toBe(before);
   expect(h.gallery.state.original).toBe(firstUrl);
   expect(h.reads.length).toBe(readCount);

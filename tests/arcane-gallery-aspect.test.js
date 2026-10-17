@@ -1,4 +1,5 @@
 import {describe,it,expect} from 'vitest';
+import {readFileSync} from 'node:fs';
 import {arcaneFrameHeight,arcaneMediaDimensions,arcaneGearRotation,arcaneExtensionProgress,sizeArcaneFrame,resetArcaneFrame,arcaneKitFrameHeight} from '../features/material/arcane-gallery-aspect.js';
 describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  const w=390,vh=820;
@@ -60,7 +61,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  it('sizes the new rigid-kit opening exactly for four source aspect ratios',()=>{
   const formats=[[16,9],[4,3],[1,1],[9,16]];
   const heights=formats.map(([w,h])=>arcaneKitFrameHeight(390,w,h,820));
-  expect(heights).toEqual([269,326,402,638]);
+  expect(heights).toEqual([254,294,371,607]);
   expect(arcaneKitFrameHeight(390,0,10)).toBeNull();
   expect(arcaneKitFrameHeight(-1,1,1)).toBeNull();
   const calls=[];
@@ -69,8 +70,15 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
    querySelector:()=>({getBoundingClientRect:()=>({width:390}),
     style:{setProperty:(key,value)=>calls.push([key,value])}})
   };
-  expect(sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},820)).toBe(638);
-  expect(calls).toContainEqual(['--arcane-frame-height','638px']);
+  expect(sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},820)).toBe(607);
+  expect(calls).toContainEqual(['--arcane-frame-height','607px']);
+ });
+ it('preserves the 4:3 GOOSE door geometry under overlapping metal rails',()=>{
+  const css=readFileSync(new URL('../features/material/arcane-gallery-kit.css',import.meta.url),'utf8');
+  expect(css).toContain('top:9cqw!important');
+  expect(css).toContain('height:calc(100% - 17cqw)!important');
+  const width=390,frame=arcaneKitFrameHeight(width,4,3,820);
+  expect(Math.abs(frame-width*.17-width*.78/(4/3))).toBeLessThan(1);
  });
  it('sets only the local media frame height; does not affect other Alea views',()=>{
   const writes=[],classes=[],root={
