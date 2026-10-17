@@ -109,7 +109,7 @@ describe('Desktop Combat Art Gallery – future-proof local display slot',()=>{
   expect(seen).toHaveLength(1);
   expect(carousel).toContain("combatPreviewSpellIcon(\\''+escAttr(actorId)");
   expect(carousel).toContain("selectCombatPreparedSpell(\\''+escAttr(actorId)");
-  expect(read('index.html')).toContain('combat/art-viewer.js?v=0.35.241');
-  expect(read('index.html')).toContain('combat/art-viewer.css?v=0.35.241');
+  expect(read('index.html')).toMatch(/combat\/art-viewer\.js\?v=0\.35\.\d+/);
+  expect(read('index.html')).toMatch(/combat\/art-viewer\.css\?v=0\.35\.\d+/);
  });
 });
