@@ -86,8 +86,8 @@ async function run(){
   const m=machine.getBoundingClientRect(),c=carousel.getBoundingClientRect();
   const overlap=m.bottom-c.top;
   const width=m.width;
-  assert(overlap>width*.045&&overlap<width*.065,
-   phase+': black gap or excessive cover, overlap='+overlap+' width='+width);
+  assert(overlap>width*.102&&overlap<width*.110,
+   phase+': opaque metal rails must meet behind lower HERMES rail, overlap='+overlap+' width='+width);
   const mStyle=getComputedStyle(machine),cStyle=getComputedStyle(carousel);
   assert(Number(mStyle.zIndex)>Number(cStyle.zIndex),
    phase+': carousel is painted over the HERMES bottom rail');
