@@ -8,6 +8,7 @@ const port=9239,chrome=process.env.CHROME_BIN||'google-chrome';
 const base='tests/visual-regressions/goose04b';
 async function main(){
  fs.mkdirSync(base,{recursive:true});
+ fs.mkdirSync(base+'/frames',{recursive:true});
  const browser=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage',
  '--disable-gpu','--disable-background-networking','--no-first-run',
  '--hide-scrollbars','--remote-allow-origins=*','--remote-debugging-port='+port,
@@ -52,15 +53,27 @@ async function main(){
   // A visual test with broken artwork is a failure, not an acceptance screenshot.
   await until("[...document.querySelectorAll('#arcaneGallery .goose-player-shutter img')].length===3 && [...document.querySelectorAll('#arcaneGallery .goose-player-shutter img')].every(i=>i.complete && i.naturalWidth>0)",'goose-assets');
   await until("[...document.querySelectorAll('#arcaneGallery .arcane-kit-art img')].length>15 && [...document.querySelectorAll('#arcaneGallery .arcane-kit-art img')].every(i=>i.complete && i.naturalWidth>0)",'morph-assets');
-  await delay(250);await shot('desktop-01-closed');
+  let frameIndex=0;
+  async function gifFrame(){
+   const r=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+   fs.writeFileSync(base+'/frames/'+String(frameIndex++).padStart(3,'0')+'.png',Buffer.from(r.data,'base64'));
+  }
+  await delay(180);await shot('desktop-01-closed');
+  for(let i=0;i<5;i++)await gifFrame();
   await evalJs('window.gooseDemo.releaseFirst()');
-  await delay(260);await shot('desktop-02-sigil-retreat');
-  await delay(450);await shot('desktop-03-opening');
+  for(let i=0;i<13;i++){
+   await delay(72);
+   await gifFrame();
+   if(i===2)await shot('desktop-02-sigil-retreat');
+   if(i===7)await shot('desktop-03-opening');
+  }
   await until("document.querySelector('.goose-player-shutter--open')!==null",'open');
-  await delay(700);await shot('desktop-04-open');
+  for(let i=0;i<5;i++){await delay(75);await gifFrame();}
+  await shot('desktop-04-open');
   await evalJs('window.gooseDemo.next()');
   await until("window.gooseDemo.snapshot.selected.endsWith('2') && window.gooseDemo.snapshot.frame>700",'portrait');
   await delay(650);await shot('desktop-05-portrait');
+  if(frameIndex<20)throw Error('GOOSE_GIF_FRAMES_TOO_FEW');
   await send('Emulation.setDeviceMetricsOverride',{width:420,height:920,deviceScaleFactor:1,mobile:true});
   await delay(500);await shot('mobile-06-portrait');
   await send('Emulation.clearDeviceMetricsOverride');

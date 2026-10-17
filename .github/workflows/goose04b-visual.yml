@@ -6,6 +6,7 @@ on:
     paths:
       - 'tests/fixtures/goose04b-visual.html'
       - 'scripts/goose04b_visual.cjs'
+      - 'scripts/goose04b_gif.py'
       - 'features/material/arcane-gallery.js'
       - 'features/material/goose-player-shutter.css'
       - '.github/workflows/goose04b-visual.yml'
@@ -33,17 +34,21 @@ jobs:
             sleep 1
           done
           CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose04b_visual.cjs
+          python -m pip install --disable-pip-version-check Pillow==12.3.0
+          python scripts/goose04b_gif.py
       - uses: actions/upload-artifact@v4
         with:
           name: goose04b-real-chromium-screenshots
-          path: tests/visual-regressions/goose04b/*.png
+          path: |
+            tests/visual-regressions/goose04b/*.png
+            tests/visual-regressions/goose04b/*.gif
           if-no-files-found: error
       - name: Pin sanitized screenshots to review branch
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests/visual-regressions/goose04b/*.png
+          git add tests/visual-regressions/goose04b/*.png tests/visual-regressions/goose04b/*.gif
           if ! git diff --cached --quiet; then
             git commit -m "test(goose04b): capture public synthetic player visual acceptance frames"
             git push origin HEAD:sisyphus/goose04b-player-integration-20261017
