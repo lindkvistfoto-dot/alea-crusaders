@@ -1,4 +1,4 @@
-/* GOOSE 09 – faithful metalwork.
+/* GOOSE 10 – original metalwork with stronger, slower cyan illumination.
  * Blue energy is extracted pixel-for-pixel from the APPROVED HERMES doors.
  * No SVG scribbles, decorative balls, new gears or CSS-drawn piston faces.
  */
@@ -7,26 +7,27 @@
  z-index:1;pointer-events:none;display:block;
  opacity:0;mix-blend-mode:screen;
  clip-path:circle(0% at var(--goose-blue-origin-x,50%) 49.5%);
- filter:drop-shadow(0 0 2px #61c8ff);
+ filter:brightness(1.55) saturate(1.5) drop-shadow(0 0 3px #287dea);
 }
 #arcaneGallery .goose-player-door--left .goose-player-blue-ink{--goose-blue-origin-x:55.2%}
 #arcaneGallery .goose-player-door--right .goose-player-blue-ink{--goose-blue-origin-x:45.1%}
 #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
 #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
- animation:goose09-blue-ink-reveal 770ms cubic-bezier(.14,.34,.18,1) both;
+ animation:goose10-blue-ink-reveal 980ms cubic-bezier(.27,.18,.27,1) both;
 }
-@keyframes goose09-blue-ink-reveal{
+@keyframes goose10-blue-ink-reveal{
  0%{clip-path:circle(0% at var(--goose-blue-origin-x,50%) 49.5%);opacity:0}
- 6%{opacity:.96}
- 100%{clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:.94}
+ 10%{opacity:.92}
+ 100%{clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:1}
 }
 /* The upper/lower lock sprites are precisely clipped duplicates of the
  * original door image. Their patina, lighting and proportions are therefore
- * identical to surrounding metal, even during the 1.2% bolt motion. */
+ * identical to surrounding metal. A larger 2.6% stroke reads as a real unlock. */
 #arcaneGallery .goose-player-piston-source{
  position:absolute;inset:0;z-index:2;pointer-events:none;
  display:block;transform:translateX(0);
- transition:transform 420ms cubic-bezier(.2,.5,.25,1);
+ transition:transform 620ms cubic-bezier(.18,.48,.22,1);
+ filter:drop-shadow(0 1px 1.5px #101721b5);
 }
 #arcaneGallery .goose-player-piston-source img{
  position:absolute;inset:0;display:block;
@@ -45,16 +46,16 @@
  clip-path:inset(78% 50% 13.2% 21%);
 }
 #arcaneGallery .goose-player-shutter--unlatched-left .goose-player-door--left .goose-player-piston-source{
- transform:translateX(-1.2%);
+ transform:translateX(-2.6%);
 }
 #arcaneGallery .goose-player-shutter--unlatched-right .goose-player-door--right .goose-player-piston-source{
- transform:translateX(1.2%);
+ transform:translateX(2.6%);
 }
 @media(prefers-reduced-motion:reduce){
  #arcaneGallery .goose-player-blue-ink{animation:none!important}
  #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
  #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
-  clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:.94
+  clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:1
  }
  #arcaneGallery .goose-player-piston-source{transition:none!important}
 }
