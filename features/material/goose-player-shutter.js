@@ -1,67 +1,110 @@
-/* GOOSE 04 – player-only ceremonial shutter (not enabled by default).
- * A rendering controller only: no auth/session, campaigns, Storage or publication writes.
- * The caller must verify player permissions and load the approved HERMES sprites.
+/* GOOSE 06 – The Four Locks.
+ * One shared, authenticated Arcane Gallery gate for players and GMs.
+ * Pure presentation: no private media access, campaign reads or publication writes.
+ * The rotating emblem has four discrete 90-degree ratchets. Once unlocked,
+ * it resolves into two perfectly registered halves rigidly fixed to the doors.
  */
-const unchanged = Object.freeze({ transform: 'translateX(0%)' });
-const settings = Object.freeze({ unlock: 190, retreat: 330, open: 610, close: 600, seal: 360 });
-export function gooseFourByThreeRatio(){ return '4 / 3'; }
-export function gooseAssetManifestValid(assets) {
- return Boolean(assets && ['left','right','seal'].every(k => typeof assets[k] === 'string' &&
-   (assets[k].startsWith('./features/material/') || assets[k].startsWith('/features/material/')) &&
-   !assets[k].includes('..') && /\.webp(?:\?[^#]*)?$/.test(assets[k])));
+const timings=Object.freeze({quarter:525,detent:105,release:420,doors:1780});
+const LOCK_ORDER=Object.freeze(['north','east','south','west']);
+export function gooseFourByThreeRatio(){return '4 / 3';}
+export function gooseAssetManifestValid(assets){
+ return Boolean(assets && ['left','right','seal'].every(k=>
+  typeof assets[k]==='string' &&
+  (assets[k].startsWith('./features/material/')||assets[k].startsWith('/features/material/')) &&
+  !assets[k].includes('..') && /\.webp(?:\?[^#]*)?$/.test(assets[k])));
+}
+/* Fixed angular stops with a hesitant wind-up, a main gear stroke and
+ * a short final detent. No elastic, looping or free-spinning rotation. */
+export function gooseQuarterKeyframes(start,end){
+ const delta=end-start;
+ return [
+  {transform:'rotate('+start+'deg)',offset:0},
+  {transform:'rotate('+(start+delta*.07)+'deg)',offset:.17},
+  {transform:'rotate('+(start+delta*.09)+'deg)',offset:.28},
+  {transform:'rotate('+(start+delta*.85)+'deg)',offset:.81},
+  {transform:'rotate('+(start+delta*.96)+'deg)',offset:.92},
+  {transform:'rotate('+end+'deg)',offset:1}
+ ];
 }
 export function createGoosePlayerShutter({
- host, assets, doc=()=>document, win=()=>window, isPlayer=()=>false
-}) {
- if (!host || !gooseAssetManifestValid(assets)) throw Error('GOOSE_ASSETS_NOT_READY');
- const scene = doc().createElement('div');
+ host,assets,doc=()=>document,win=()=>window,isPlayer=()=>false
+}){
+ if(!host||!gooseAssetManifestValid(assets))throw Error('GOOSE_ASSETS_NOT_READY');
+ const scene=doc().createElement('div');
  scene.className='goose-player-shutter';
  scene.setAttribute('aria-hidden','true');
- scene.innerHTML='<div class="goose-player-door goose-player-door--left"><img alt=""></div>'+
-   '<div class="goose-player-door goose-player-door--right"><img alt=""></div>'+
-   '<div class="goose-player-seal"><img alt=""></div>'+
-   '<div class="goose-player-energy"></div>';
+ scene.innerHTML=
+  '<div class="goose-player-door goose-player-door--left"><img alt="">'+
+   '<span class="goose-player-seal-half goose-player-seal-half--left"></span>'+
+   '<span class="goose-player-lamp goose-player-lamp--north" aria-hidden="true"></span>'+
+   '<span class="goose-player-lamp goose-player-lamp--west" aria-hidden="true"></span></div>'+
+  '<div class="goose-player-door goose-player-door--right"><img alt="">'+
+   '<span class="goose-player-seal-half goose-player-seal-half--right"></span>'+
+   '<span class="goose-player-lamp goose-player-lamp--east" aria-hidden="true"></span>'+
+   '<span class="goose-player-lamp goose-player-lamp--south" aria-hidden="true"></span></div>'+
+  '<div class="goose-player-seal"><img alt=""></div>';
  const left=scene.querySelector('.goose-player-door--left');
  const right=scene.querySelector('.goose-player-door--right');
  const seal=scene.querySelector('.goose-player-seal');
- const energy=scene.querySelector('.goose-player-energy');
+ const leftHalf=scene.querySelector('.goose-player-seal-half--left');
+ const rightHalf=scene.querySelector('.goose-player-seal-half--right');
+ const lamps=LOCK_ORDER.map(name=>scene.querySelector('.goose-player-lamp--'+name));
  left.querySelector('img').src=assets.left;
  right.querySelector('img').src=assets.right;
  seal.querySelector('img').src=assets.seal;
+ for(const half of [leftHalf,rightHalf]){
+  if(half)half.style.backgroundImage='url("'+assets.seal+'")';
+ }
  let phase='closed',epoch=0,active=new Set(),disposed=false;
  const reduced=()=>win().matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
-  function cancel(){
+ function cancel(){
   epoch++;
   for(const animation of active)animation.cancel();
   active.clear();
  }
+ function setLights(count){
+  scene.dataset.unlockedLocks=String(count);
+  lamps.forEach((lamp,index)=>lamp?.classList.toggle('is-lit',index<count));
+ }
  function paintClosed(){
   left.style.transform='translateX(0%)';
   right.style.transform='translateX(0%)';
-  seal.style.transform='scale(1) rotate(0deg)';
+  seal.style.transform='rotate(0deg)';
   seal.style.opacity='1';
-  energy.style.opacity='0';
-  scene.classList.remove('goose-player-shutter--open');
+  setLights(0);
+  scene.classList.remove('goose-player-shutter--open','goose-player-shutter--split');
  }
  function paintOpen(){
   left.style.transform='translateX(-110%)';
   right.style.transform='translateX(110%)';
-  seal.style.transform='scale(.24) rotate(18deg)';
+  seal.style.transform='rotate(360deg)';
   seal.style.opacity='0';
-  energy.style.opacity='0';
-  scene.classList.add('goose-player-shutter--open');
+  setLights(4);
+  scene.classList.add('goose-player-shutter--split','goose-player-shutter--open');
  }
- async function shift(el,from,to,duration,localEpoch){
-  if (localEpoch!==epoch || disposed)return false;
-  if (reduced() || !el.animate || duration===0) { Object.assign(el.style,to); return true; }
-  const animation=el.animate([from,to],{duration,fill:'forwards',easing:'cubic-bezier(.32,.05,.16,1)'});
+ async function shift(el,from,to,duration,token,frames=null){
+  if(token!==epoch||disposed)return false;
+  if(reduced()||!el.animate||duration===0){
+   Object.assign(el.style,to);return true;
+  }
+  const animation=el.animate(frames||[from,to],{
+   duration,fill:'forwards',easing:frames?'linear':'cubic-bezier(.45,.03,.16,1)'
+  });
   active.add(animation);
   try{await animation.finished;}catch{return false;}
   finally{active.delete(animation);}
-  if (localEpoch!==epoch || disposed){ animation.cancel();return false; }
+  if(token!==epoch||disposed){animation.cancel();return false;}
   Object.assign(el.style,to);
   animation.cancel();
   return true;
+ }
+ async function ratchet(from,to,token){
+  return shift(seal,{transform:'rotate('+from+'deg)'},
+   {transform:'rotate('+to+'deg)'},timings.quarter,token,gooseQuarterKeyframes(from,to));
+ }
+ async function detent(angle,token){
+  const still={transform:'rotate('+angle+'deg)'};
+  return shift(seal,still,still,timings.detent,token);
  }
  function mount(){
   if(disposed)throw Error('GOOSE_DISPOSED');
@@ -76,41 +119,56 @@ export function createGoosePlayerShutter({
   paintClosed();
  }
  async function open(){
-  if(disposed||!isPlayer()||phase==='opening'||phase==='open')return false;
-  cancel();const token=epoch;
-  phase='opening';
-  // Full gate opening happens at fixed 4:3. Morph the frame AFTER this resolves.
-  if(!await shift(energy,{opacity:'0'},{opacity:'.95'},settings.unlock,token))return false;
-  if(!await shift(seal,{transform:'scale(1) rotate(0deg)',opacity:'1'},
-   {transform:'scale(.24) rotate(18deg)',opacity:'0'},settings.retreat,token))return false;
+  if(disposed||!isPlayer()||phase!=='closed')return false;
+  cancel();const token=epoch;phase='opening';
+  for(let index=0;index<4;index++){
+   const angle=index*90;
+   if(!await ratchet(angle,angle+90,token))return false;
+   if(token!==epoch||disposed)return false;
+   setLights(index+1); // The blue lamp turns on only AFTER each real stop.
+   if(index<3&&!await detent(angle+90,token))return false;
+  }
+  const stopped={transform:'rotate(360deg)'};
+  if(!await shift(seal,stopped,stopped,timings.release,token))return false;
+  // Exact 360 degrees: the full emblem and its cropped door-mounted halves
+  // have precisely the same registration at the moment of the split.
+  seal.style.opacity='0';
+  scene.classList.add('goose-player-shutter--split');
   const worked=await Promise.all([
-   shift(left,unchanged,{transform:'translateX(-110%)'},settings.open,token),
-   shift(right,unchanged,{transform:'translateX(110%)'},settings.open,token),
-   shift(energy,{opacity:'.95'},{opacity:'0'},settings.open,token)
+   shift(left,{transform:'translateX(0%)'},{transform:'translateX(-110%)'},timings.doors,token),
+   shift(right,{transform:'translateX(0%)'},{transform:'translateX(110%)'},timings.doors,token)
   ]);
   if(token!==epoch||!worked.every(Boolean))return false;
-  phase='open';scene.classList.add('goose-player-shutter--open');
+  phase='open';
+  paintOpen();
   return true;
  }
  async function close({prepareFourByThree=()=>{}}={}){
   if(disposed||!isPlayer()||phase!=='open')return false;
-  cancel();const token=epoch;
-  phase='closing';
+  cancel();const token=epoch;phase='closing';
   scene.classList.remove('goose-player-shutter--open');
-  // The parent reverts the framed picture to 4:3 before the shutters move.
+  // The picture returns to the four-by-three home aperture before the
+  // shutters begin their return; content is still authorization-gated.
   await prepareFourByThree();
   if(token!==epoch||disposed)return false;
   const worked=await Promise.all([
-   shift(left,{transform:'translateX(-110%)'},unchanged,settings.close,token),
-   shift(right,{transform:'translateX(110%)'},unchanged,settings.close,token)
+   shift(left,{transform:'translateX(-110%)'},{transform:'translateX(0%)'},timings.doors,token),
+   shift(right,{transform:'translateX(110%)'},{transform:'translateX(0%)'},timings.doors,token)
   ]);
-  if(!worked.every(Boolean)||token!==epoch)return false;
-  if(!await shift(seal,{transform:'scale(.24) rotate(18deg)',opacity:'0'},
-   {transform:'scale(1) rotate(0deg)',opacity:'1'},settings.seal,token))return false;
-  phase='closed';scene.classList.remove('goose-player-shutter--open');return true;
+  if(token!==epoch||!worked.every(Boolean))return false;
+  // Once both door halves meet, restore the whole seal. There is no fade,
+  // shrinking, teleport or independently drifting metal piece.
+  scene.classList.remove('goose-player-shutter--split');
+  seal.style.opacity='1';
+  seal.style.transform='rotate(360deg)';
+  for(let index=3;index>=0;index--){
+   if(!await ratchet((index+1)*90,index*90,token))return false;
+   if(token!==epoch||disposed)return false;
+   setLights(index);
+   if(index>0&&!await detent(index*90,token))return false;
+  }
+  phase='closed';paintClosed();return true;
  }
- function destroy(){
-  cancel();disposed=true;scene.remove();
- }
+ function destroy(){cancel();disposed=true;scene.remove();}
  return {scene,mount,open,close,reset,destroy,get phase(){return phase;}};
 }
