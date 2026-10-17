@@ -31,7 +31,7 @@ function sandbox(effects=[]){
   combatDamageBonusSpec:()=>({qty:0,sides:0,modifier:0,formula:'Ingen'}),
   combatArmorAbsorption:()=>({absorption:2,names:['Läder']}),
   combatNumber:(value,fallback=0)=>value==null?fallback:Number(value),
-  combatants:[hero,foe],
+  combatants:[hero,foe],combatHideMagicResultPopup:()=>{},
   dbJson:async(path,options)=>{
    writes.push({path,options});
    if(path.startsWith('combatants?'))return [{current_kp:JSON.parse(options.body).current_kp,status:JSON.parse(options.body).status||'active'}];
