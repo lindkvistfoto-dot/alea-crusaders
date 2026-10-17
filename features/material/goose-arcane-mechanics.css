@@ -64,6 +64,12 @@
  display:block;pointer-events:none;opacity:.89;
  filter:drop-shadow(0 1px 2px #000c);
 }
+#arcaneGallery .goose-player-seal-half{overflow:hidden}
+/* Clipped twin copies of the gear train travel with the two seal halves.
+   The full rotor swaps to its pixel-matched halves without vanishing gears. */
+#arcaneGallery .goose-player-seal-half .goose-player-gear-train{top:60.2%;width:38%;height:12.5%}
+#arcaneGallery .goose-player-seal-half--left .goose-player-gear-train{left:81%}
+#arcaneGallery .goose-player-seal-half--right .goose-player-gear-train{left:-19%}
 #arcaneGallery .goose-player-gear-train svg{display:block;width:100%;height:100%;overflow:visible}
 #arcaneGallery .goose-player-gear{
  transform-box:fill-box;transform-origin:center center;
