@@ -3,7 +3,7 @@
  * All media are read through Legolas' authenticated, campaign-scoped Storage.
  */
 import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239';
-import {arcaneMorphMarkup} from './arcane-morph-markup.js';
+import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03';
 const buckets=new Set(['campaign-materials','campaign-actor-images','campaign-location-assets','campaign-maps','combat-scene-maps','combat-icons']);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
