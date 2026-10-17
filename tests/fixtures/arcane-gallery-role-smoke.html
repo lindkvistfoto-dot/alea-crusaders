@@ -66,7 +66,9 @@ const imageReady=(node,id)=>node.querySelector('#'+id)?.naturalWidth>0
 async function run(){
  gallery.sync(rows[0],1);
  await until(()=>gallery.state.selected===rows[0].id && imageReady(gallery.root,'arcaneGalleryImage')
-  &&height(gallery.root)>0,'player opening');
+  &&gallery.root.querySelector('.goose-player-shutter--open')
+  &&gallery.root.querySelector('#arcaneGalleryEmpty').classList.contains('hidden')
+  &&height(gallery.root)>0,'player ceremonial opening and first ratio');
  const playerHeights=[height(gallery.root)];
  assert(!gallery.root.classList.contains('hidden'),'player gallery hidden');
  assert(gm.root.classList.contains('hidden'),'GM private preview visible to player');

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="sv"><head>
+<meta charset="utf-8"><base href="/"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GOOSE 04B visual acceptance — synthetic player</title>
+<link rel="stylesheet" href="/features/material/arcane-gallery.css">
+<style>
+html,body{margin:0;background:radial-gradient(ellipse at top,#1c2a39 0%,#09101a 75%);color:#d7c49d;font:14px Georgia,serif;min-height:100%}
+#legolasPanel{margin:0 auto;max-width:850px;padding:14px 10px 20px}
+#legolasPanel h1{text-align:center;letter-spacing:.19em;font-size:18px;margin:8px 0 5px}
+#legolasPanel .lead{text-align:center;margin:0 0 14px;color:#bda47b}
+#demoStage{max-width:680px;margin:0 auto}
+.hidden{display:none!important}
+</style>
+</head><body><main id="legolasPanel">
+<h1>ALEA CRUSADERS · GOOSE 04B</h1>
+<p class="lead">ARCANE GALLERY · Ceremonial gate, original published HERMES sprites</p>
+<div id="demoStage"></div>
+</main>
+<script type="module">
+import {createArcaneGallery} from '/features/material/arcane-gallery.js';
+const campaign='846e8089-24da-4825-af34-32903117152a';
+const formats=[[1200,900],[900,1600],[1600,900]];
+const rows=formats.map(([w,h],i)=>({
+ id:'123e4567-e89b-42d3-a456-42661417400'+(i+1),
+ campaign_id:campaign,title:['SKELETTBYNS KYRKA','DEN GLÖMDA PORTEN','DET FÖRLORADE RIKET'][i],
+ asset_kind:'image',category:'location',storage_bucket:'campaign-materials',
+ storage_path:campaign+'/synthetic/'+i+'.svg',width:w,height:h
+}));
+const history=rows.slice().reverse().map((row,i)=>({revision:rows.length-i,material_id:row.id}));
+let firstResolve;
+const first=new Promise(resolve=>{firstResolve=resolve});
+function picture(row){
+ const w=row.width,h=row.height;
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'+
+ '<defs><linearGradient id="sky" x2=".1" y2="1"><stop stop-color="#0c2230"/><stop offset=".65" stop-color="#233c4b"/><stop offset="1" stop-color="#0b121a"/></linearGradient></defs>'+
+ '<rect width="100%" height="100%" fill="url(#sky)"/>'+
+ '<circle cx="'+Math.floor(w*.72)+'" cy="'+Math.floor(h*.21)+'" r="'+Math.floor(w*.06)+'" fill="#d2e0d8"/>'+
+ '<path d="M0 '+Math.floor(h*.82)+' L'+Math.floor(w*.22)+' '+Math.floor(h*.38)+' L'+Math.floor(w*.37)+' '+Math.floor(h*.72)+' L'+Math.floor(w*.61)+' '+Math.floor(h*.36)+' L'+w+' '+Math.floor(h*.85)+' V'+h+' H0Z" fill="#141d25"/>'+
+ '<rect y="'+Math.floor(h*.81)+'" width="'+w+'" height="'+Math.floor(h*.19)+'" fill="#1a1a1f"/>'+
+ '<text x="50%" y="91%" fill="#f2d8a2" font-size="'+Math.floor(w*.05)+'" text-anchor="middle" font-family="Georgia">'+row.title+'</text></svg>';
+ return new Blob([svg],{type:'image/svg+xml'});
+}
+const gallery=createArcaneGallery({
+ legolas:{readMedia:async(row,thumb)=>{
+  if(!thumb && row.id===rows[0].id)await first;
+  return picture(row);
+ },previewMaterial(){}},
+ request:async path=>{
+  if(path.startsWith('campaign_material_presentation_history?'))return history;
+  if(path.startsWith('campaign_materials?'))return rows;
+  throw Error('Unexpected mock route');
+ },
+ getCampaign:()=>campaign,isLoggedIn:()=>true,isGM:()=>false
+});
+document.querySelector('#demoStage').append(gallery.mount());
+gallery.sync(rows[0],1);
+window.gooseDemo={
+ gallery,releaseFirst(){firstResolve()},next(){return gallery.step(1)},
+ get snapshot(){
+  const gate=document.querySelector('.goose-player-shutter');
+  const machine=document.querySelector('.arcane-gallery-machine');
+  const pic=document.querySelector('.arcane-gallery-picture');
+  return {gate:gate?.className,sealOpacity:document.querySelector('.goose-player-seal')?.style.opacity,
+   frame:Math.round(machine?.getBoundingClientRect().height||0),
+   aperture:pic?.getBoundingClientRect().toJSON(),
+   selected:gallery.state.selected,
+   image:document.querySelector('#arcaneGalleryImage')?.naturalWidth};
+ }
+};
+</script></body></html>

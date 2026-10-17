@@ -1,0 +1,55 @@
+name: GOOSE 04B Chromium visual capture
+on:
+  push:
+    branches:
+      - sisyphus/goose04b-player-integration-20261017
+    paths:
+      - 'tests/fixtures/goose04b-visual.html'
+      - 'scripts/goose04b_visual.cjs'
+      - 'scripts/goose04b_gif.py'
+      - 'features/material/arcane-gallery.js'
+      - 'features/material/goose-player-shutter.css'
+      - '.github/workflows/goose04b-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci --no-audit --no-fund
+      - name: Record real player gate with synthetic private image
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/goose-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/goose04b-visual.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose04b_visual.cjs
+          python -m pip install --disable-pip-version-check Pillow==12.3.0
+          python scripts/goose04b_gif.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goose04b-real-chromium-screenshots
+          path: |
+            tests/visual-regressions/goose04b/*.png
+            tests/visual-regressions/goose04b/*.gif
+          if-no-files-found: error
+      - name: Pin sanitized screenshots to review branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual-regressions/goose04b/*.png tests/visual-regressions/goose04b/*.gif
+          if ! git diff --cached --quiet; then
+            git commit -m "test(goose04b): capture public synthetic player visual acceptance frames"
+            git push origin HEAD:sisyphus/goose04b-player-integration-20261017
+          fi

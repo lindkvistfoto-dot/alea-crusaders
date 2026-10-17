@@ -1,6 +1,12 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
 import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=1';
 import {arcaneMorphMarkup} from './arcane-morph-markup.js';
+import {createGoosePlayerShutter} from './goose-player-shutter.js';
+const gooseAssets=Object.freeze({
+ left:'./features/material/goose04/left.webp',
+ right:'./features/material/goose04/right.webp',
+ seal:'./features/material/goose04/seal.webp'
+});
 const cols='id,campaign_id,title,description,category,asset_kind,storage_bucket,storage_path,thumbnail_path,mime_type,created_at';
 const encode=encodeURIComponent;
 const safe=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -30,16 +36,57 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  const $=id=>doc().getElementById(id), state={campaign:'',revision:-1,live:'',displayedLive:'',rows:[],selected:'',seq:0,media:0,original:'',thumbs:new Map(),loadingThumbs:new Set(),thumbGeneration:0,observer:null};
  const scope=()=>String(getCampaign()||'');
  const allowed=()=>isLoggedIn()&&!isGM()&&/^[a-f0-9-]{36}$/i.test(scope());
+ let shutter=null,shutterMounted=false,shutterOpening=null,mounted=false;
+ // The public artwork does not read private media or implement authorization.
+ // The caller exclusively controls player-only mount and secure disposal.
+ function disposeShutter(){
+  shutter?.destroy();shutter=null;shutterMounted=false;shutterOpening=null;
+ }
+ function homeRatio(){
+  return sizeArcaneFrame(root,{naturalWidth:4,naturalHeight:3},win().innerHeight);
+ }
+ function ensureShutter(){
+  if(!mounted||!allowed())return null;
+  if(!shutter){
+   const host=root.querySelector('#arcaneGalleryPicture');
+   if(!host)return null;
+   shutter=createGoosePlayerShutter({host,assets:gooseAssets,doc,win,isPlayer:allowed});
+  }
+  if(!shutterMounted)shutterMounted=shutter.mount();
+  if(!shutterMounted)return null;
+  // GOOSE's metalwork has true 2:3 half plates. Never stretch them into
+  // another ratio during the ceremony: the picture aperture starts at 4:3.
+  if(shutter.phase==='closed')homeRatio();
+  return shutter;
+ }
+ async function revealLoaded(img,seq,c,id){
+  if(seq!==state.media||c!==scope()||state.selected!==id||!allowed())return;
+  // The image is decoded and authorized before it enters the visible stage.
+  img.classList.remove('hidden');
+  const gate=shutterMounted?shutter:null;
+  if(gate&&gate.phase!=='open'){
+   if(!shutterOpening){
+    const pending=gate.open();
+    shutterOpening=pending;
+    void pending.finally(()=>{if(shutterOpening===pending)shutterOpening=null;});
+   }
+   if(!await shutterOpening)return;
+  }
+  if(seq!==state.media||c!==scope()||state.selected!==id||!allowed())return;
+  // Only after the inaugural 4:3 opening may the telescopic frame morph.
+  sizeArcaneFrame(root,img,win().innerHeight);
+  $('arcaneGalleryEmpty')?.classList.add('hidden');
+ }
  function releaseMain(){
   state.media++;
   if(state.original)win().URL.revokeObjectURL(state.original);
   state.original='';
   const img=$('arcaneGalleryImage');
-  if(img){img.onload=null;img.removeAttribute('src');img.classList.add('hidden');}
+  if(img){img.onload=null;img.onerror=null;img.removeAttribute('src');img.classList.add('hidden');}
  }
  function release(){releaseMain();state.thumbGeneration++;state.loadingThumbs.clear();
   for(const u of state.thumbs.values())win().URL.revokeObjectURL(u);state.thumbs.clear();state.observer?.disconnect();state.observer=null;}
- function clear(){state.seq++;release();state.campaign='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';resetArcaneFrame(root);root.classList.add('hidden');
+ function clear(){state.seq++;disposeShutter();release();state.campaign='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';resetArcaneFrame(root);root.classList.add('hidden');
   const strip=$('arcaneGalleryStrip');if(strip){strip.replaceChildren();strip.dataset.ids='';}}
  const valid=(n,c)=>n===state.seq&&scope()===c&&allowed();
  async function thumb(row,c){
@@ -99,18 +146,23 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(!allowed())return;const row=state.rows.find(r=>r.id===id&&r.campaign_id===scope());if(!row)return;
   state.selected=id;render();const img=$('arcaneGalleryImage'),c=state.campaign;
   releaseMain();const n=state.media;
+  ensureShutter();
   $('arcaneGalleryEmpty').textContent='Framkallar bilden…';
   $('arcaneGalleryEmpty').classList.remove('hidden');
   try{const blob=await legolas.readMedia(row,false);
    if(n!==state.media||c!==scope()||state.selected!==id||!allowed())return;
    state.original=win().URL.createObjectURL(blob);
-   img.onload=()=>{
-    if(n===state.media&&c===scope()&&state.selected===id&&allowed())
-     sizeArcaneFrame(root,img,win().innerHeight);
+   img.onload=()=>{void revealLoaded(img,n,c,id);};
+   img.onerror=()=>{
+    if(n!==state.media||c!==scope()||state.selected!==id||!allowed())return;
+    // A broken image does not trigger the ceremonial opening.
+    releaseMain();
+    $('arcaneGalleryEmpty').textContent='Bilden kunde inte avkodas.';
+    $('arcaneGalleryEmpty').classList.remove('hidden');
+    $('arcaneGalleryStatus').textContent='Bilden kan inte visas.';
    };
-   img.src=state.original;img.alt=row.title;img.classList.remove('hidden');
+   img.src=state.original;img.alt=row.title;
    if(img.complete&&img.naturalWidth)img.onload();
-   $('arcaneGalleryEmpty').classList.add('hidden');
   }catch(_){if(n===state.media&&allowed()&&c===scope()){
    $('arcaneGalleryEmpty').textContent='Bilden kunde inte läsas.';
    $('arcaneGalleryEmpty').classList.remove('hidden');
@@ -138,6 +190,8 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    state.displayedLive=state.live;
    if(!next){
     state.selected='';releaseMain();
+    shutter?.reset();shutterOpening=null;
+    if(shutterMounted)homeRatio();
     $('arcaneGalleryEmpty').textContent='Väntar på bilder från spelledaren…';
     render();return;
    }
@@ -163,10 +217,12 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   void select(next.id);return true;
  }
  function mount(){
+  mounted=true;
   win().addEventListener?.('resize',()=>{
    const img=$('arcaneGalleryImage');
-   if(allowed()&&state.original&&img)
-    sizeArcaneFrame(root,img,win().innerHeight);
+   if(!allowed())return;
+   if(shutterMounted&&shutter?.phase!=='open')homeRatio();
+   else if(state.original&&img?.naturalWidth)sizeArcaneFrame(root,img,win().innerHeight);
   });
   root.querySelector('#arcaneGalleryPicture').addEventListener('click',openFull);
   root.querySelector('#arcaneGalleryPicture').addEventListener('keydown',e=>{
