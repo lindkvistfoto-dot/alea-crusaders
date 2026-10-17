@@ -1,0 +1,34 @@
+name: GOOSE 07 sapphire lock visual acceptance
+on:
+  push:
+    branches: [sisyphus/goose07-sapphire-locks-20261017]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sapphire-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci --no-audit --no-fund
+      - name: Run Chrome on synthetic GM + approved HERMES art
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/goose07-vite.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/goose05-unified.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose07_sapphire_visual.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: goose07-sapphire-before-during-after
+          path: tests/visual-regressions/goose07/*.png
+          if-no-files-found: warn

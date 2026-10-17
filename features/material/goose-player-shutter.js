@@ -1,8 +1,8 @@
-/* GOOSE 06 – The Four Locks.
+/* GOOSE 07 – Sapphire Lock Sequence.
  * One shared, authenticated Arcane Gallery gate for players and GMs.
  * Pure presentation: no private media access, campaign reads or publication writes.
- * The rotating emblem has four discrete 90-degree ratchets. Once unlocked,
- * it resolves into two perfectly registered halves rigidly fixed to the doors.
+ * The rotating emblem has four discrete 90-degree ratchets. The real sapphire
+ * stones (not extra UI lamps) are the indicators. The seal splits with the doors.
  */
 const timings=Object.freeze({quarter:525,detent:105,release:420,doors:1780});
 const LOCK_ORDER=Object.freeze(['north','east','south','west']);
@@ -36,19 +36,24 @@ export function createGoosePlayerShutter({
  scene.innerHTML=
   '<div class="goose-player-door goose-player-door--left"><img alt="">'+
    '<span class="goose-player-seal-half goose-player-seal-half--left"></span>'+
-   '<span class="goose-player-lamp goose-player-lamp--north" aria-hidden="true"></span>'+
-   '<span class="goose-player-lamp goose-player-lamp--west" aria-hidden="true"></span></div>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--west" aria-hidden="true"></span>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
   '<div class="goose-player-door goose-player-door--right"><img alt="">'+
    '<span class="goose-player-seal-half goose-player-seal-half--right"></span>'+
-   '<span class="goose-player-lamp goose-player-lamp--east" aria-hidden="true"></span>'+
-   '<span class="goose-player-lamp goose-player-lamp--south" aria-hidden="true"></span></div>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--east" aria-hidden="true"></span>'+
+   '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
   '<div class="goose-player-seal"><img alt=""></div>';
  const left=scene.querySelector('.goose-player-door--left');
  const right=scene.querySelector('.goose-player-door--right');
  const seal=scene.querySelector('.goose-player-seal');
  const leftHalf=scene.querySelector('.goose-player-seal-half--left');
  const rightHalf=scene.querySelector('.goose-player-seal-half--right');
- const lamps=LOCK_ORDER.map(name=>scene.querySelector('.goose-player-lamp--'+name));
+ // Top and bottom stones straddle the join: their glow is rendered twice,
+ // cropped by each moving door so light never stays behind when it opens.
+ const sapphires=LOCK_ORDER.map(name=>
+  [...scene.querySelectorAll('.goose-player-sapphire--'+name)]);
  left.querySelector('img').src=assets.left;
  right.querySelector('img').src=assets.right;
  seal.querySelector('img').src=assets.seal;
@@ -62,9 +67,12 @@ export function createGoosePlayerShutter({
   for(const animation of active)animation.cancel();
   active.clear();
  }
- function setLights(count){
+ function setLights(count,pulseIndex=-1){
   scene.dataset.unlockedLocks=String(count);
-  lamps.forEach((lamp,index)=>lamp?.classList.toggle('is-lit',index<count));
+  sapphires.forEach((parts,index)=>parts.forEach(stone=>{
+   stone.classList.toggle('is-lit',index<count);
+   stone.classList.toggle('is-pulsing',index===pulseIndex);
+  }));
  }
  function paintClosed(){
   left.style.transform='translateX(0%)';
@@ -72,6 +80,7 @@ export function createGoosePlayerShutter({
   seal.style.transform='rotate(0deg)';
   seal.style.opacity='1';
   setLights(0);
+  scene.classList.remove('goose-player-shutter--charged');
   scene.classList.remove('goose-player-shutter--open');
   scene.classList.remove('goose-player-shutter--split');
  }
@@ -81,6 +90,7 @@ export function createGoosePlayerShutter({
   seal.style.transform='rotate(360deg)';
   seal.style.opacity='0';
   setLights(4);
+  scene.classList.remove('goose-player-shutter--charged');
   scene.classList.add('goose-player-shutter--split');
   scene.classList.add('goose-player-shutter--open');
  }
@@ -127,11 +137,15 @@ export function createGoosePlayerShutter({
    const angle=index*90;
    if(!await ratchet(angle,angle+90,token))return false;
    if(token!==epoch||disposed)return false;
-   setLights(index+1); // The blue lamp turns on only AFTER each real stop.
+   setLights(index+1,index); // Only the existing sapphire lights at its detent.
    if(index<3&&!await detent(angle+90,token))return false;
   }
+  scene.classList.add('goose-player-shutter--charged');
   const stopped={transform:'rotate(360deg)'};
   if(!await shift(seal,stopped,stopped,timings.release,token))return false;
+  // Prevent the fourth gem's ignition pulse from restarting at the split.
+  setLights(4);
+  scene.classList.remove('goose-player-shutter--charged');
   // Exact 360 degrees: the full emblem and its cropped door-mounted halves
   // have precisely the same registration at the moment of the split.
   seal.style.opacity='0';
