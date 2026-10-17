@@ -1,0 +1,39 @@
+name: GOOSE 05A test buttons visual smoke
+on:
+  push:
+    branches: [sisyphus/goose05a-temporary-gate-buttons-20261017]
+    paths:
+      - 'features/material/frodo-ui.js'
+      - 'features/material/arcane-gallery.js'
+      - 'features/material/frodo-atelier.css'
+      - 'scripts/goose05a_buttons_smoke.cjs'
+      - '.github/workflows/goose05a-buttons.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci --no-audit --no-fund
+      - name: Real Chromium click through GM-only Open and Close controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/goose05a-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/goose05-unified.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose05a_buttons_smoke.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goose05a-temporary-buttons-mobile-desktop
+          path: tests/visual-regressions/goose05a/*.png
+          if-no-files-found: error

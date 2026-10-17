@@ -115,6 +115,34 @@ describe('GOOSE 04B player-only integration',()=>{
   expect(h.requestPaths.some(x=>x.startsWith('campaign_material_presentation_history?'))).toBe(true);
   expect(h.requestPaths.every(x=>!x.startsWith('rpc/'))).toBe(true);
  });
+ it('manually closes and reopens the GM gate without changing the presentation',async()=>{
+  const h=harness({gm:true});h.gallery.mount();h.gallery.sync(rows[0],1);
+  await settle();
+  expect(h.scenes[0].classList.contains('goose-player-shutter--open')).toBe(true);
+  const before=h.gallery.state.selected,readCount=h.reads.length,requestCount=h.requestPaths.length;
+  const firstUrl=h.gallery.state.original;
+  h.elements.arcaneGalleryImage.naturalWidth=1080;
+  h.elements.arcaneGalleryImage.naturalHeight=1920;
+  expect(await h.gallery.testShutter('close')).toBe(true);
+  expect(await h.gallery.testShutter('close')).toBe(true);
+  expect(h.parts['.goose-player-door--left'].style.transform).toBe('translateX(0%)');
+  expect(h.parts['.goose-player-seal'].style.opacity).toBe('1');
+  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('361px');
+  expect(await h.gallery.testShutter('open')).toBe(true);
+  expect(h.parts['.goose-player-door--left'].style.transform).toBe('translateX(-110%)');
+  expect(h.parts['.goose-player-seal'].style.opacity).toBe('0');
+  expect(h.styleProps.filter(x=>x[0]==='--arcane-frame-height').at(-1)[1]).toBe('673px');
+  expect(h.gallery.state.selected).toBe(before);
+  expect(h.gallery.state.original).toBe(firstUrl);
+  expect(h.reads.length).toBe(readCount);
+  expect(h.requestPaths.length).toBe(requestCount);
+ });
+ it('rejects manual shutter commands for players',async()=>{
+  const h=harness();h.gallery.mount();h.gallery.sync(rows[0],1);
+  await settle();
+  expect(await h.gallery.testShutter('close')).toBe(false);
+  expect(h.scenes[0].classList.contains('goose-player-shutter--open')).toBe(true);
+ });
  it('resets the shutter when previously shared private images are revoked',async()=>{
   const h=harness();h.gallery.mount();h.gallery.sync(rows[0],1);
   await settle();h.history.splice(0);h.materials.splice(0);

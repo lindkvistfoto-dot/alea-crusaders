@@ -208,6 +208,24 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   const live=row?.campaign_id===c&&row.asset_kind==='image'?row.id:'';
   if(state.revision!==revision||state.live!==live){state.revision=revision;state.live=live;void refresh();}
  }
+ // GOOSE 05A: local GM-only animation test; never touches Frodo publication.
+ async function testShutter(action){
+  if(!mounted||!allowed()||!isGM()||!state.selected||!state.original||
+     (action!=='open'&&action!=='close'))return false;
+  const img=$('arcaneGalleryImage');
+  if(!img?.complete||!img.naturalWidth)return false;
+  const gate=ensureShutter();
+  if(!gate||!['open','closed'].includes(gate.phase))return false;
+  if((action==='open'&&gate.phase==='open')||
+     (action==='close'&&gate.phase==='closed'))return true;
+  const campaign=scope(),media=state.media,id=state.selected;
+  const success=action==='open'?await gate.open():
+   await gate.close({prepareFourByThree:homeRatio});
+  if(!success||gate!==shutter||!allowed()||!isGM()||scope()!==campaign||
+     media!==state.media||state.selected!==id)return false;
+  if(action==='open')sizeArcaneFrame(root,img,win().innerHeight);
+  return true;
+ }
  function openFull(){const row=state.rows.find(r=>r.id===state.selected);if(!row||!allowed())return;
   if(typeof legolas.previewSequence==='function')legolas.previewSequence(state.rows,row.id);
   else legolas.previewMaterial(row);
@@ -262,5 +280,5 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   });
   return root;
  }
- return {mount,sync,refresh,clear,step,state,root};
+ return {mount,sync,refresh,clear,step,testShutter,state,root};
 }

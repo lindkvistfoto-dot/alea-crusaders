@@ -1,7 +1,7 @@
 /* Frodo v0.34.85 — explicit show-now control for Legolas and Bilbo. */
 import {createFrodo} from './presentation.js?v=0.34.85';
 import {createLivePreview} from './live-preview.js?v=0.35.21';
-import {createArcaneGallery} from './arcane-gallery.js?v=0.35.239&morph=1&goose=05';
+import {createArcaneGallery} from './arcane-gallery.js?v=0.35.239&morph=1&goose=05a';
 // Styles loaded as ordinary <link> elements: GitHub Pages serves unbundled ES modules.
 
 export function mountFrodo({
@@ -14,7 +14,7 @@ export function mountFrodo({
  const scope=()=>String(getCampaign()||'');
  const authenticated=()=>Boolean(isLoggedIn()&&scope());
  let liveId=null,initialized=false,queuedStatus='',queuedError=false;
- let stagedId='',queueSignature='',queueGeneration=0;
+ let stagedId='',queueSignature='',queueGeneration=0,testBusy=false;
  const queueUrls=new Map();
  // GOOSE 05: the GM and players share `gallery`. Staged choices stay
  // exclusively in the administration strip below; selecting them never publishes.
@@ -173,6 +173,10 @@ export function mountFrodo({
   if(openLarge)openLarge.disabled=!activeRow;
   el('frodoGmActions').classList.toggle('hidden',!gm);
   el('frodoGmAdmin')?.classList.toggle('hidden',!gm);
+  el('frodoGooseTestControls')?.classList.toggle('hidden',!gm||!authenticated());
+  for(const id of ['frodoGooseTestOpen','frodoGooseTestClose']){
+   const button=el(id);if(button)button.disabled=!gm||!authenticated()||testBusy;
+  }
   el('frodoPlayerActions').classList.toggle('hidden',gm);
   const notice=el('frodoNotice');
   if(notice){notice.textContent=queuedStatus;notice.classList.toggle('is-error',queuedError);}
@@ -187,6 +191,20 @@ export function mountFrodo({
    ['frodoStop',!gm||state.busy||!state.materialId],
    ['frodoOpenCurrent',gm||!row]
   ]){const btn=el(id);if(btn)btn.disabled=disabled;}
+ }
+ async function testGoose(action){
+  if(!isGM()||!authenticated()||testBusy)return;
+  testBusy=true;
+  const status=el('frodoGooseTestStatus');
+  if(status)status.textContent=action==='open'?'Öppnar luckorna…':'Stänger luckorna…';
+  render();
+  try{
+   const success=await gallery.testShutter(action);
+   if(status)status.textContent=success?
+    (action==='open'?'Luckorna öppna.':'Luckorna stängda.'):
+    'Vänta tills bilden och den pågående rörelsen är klara.';
+  }catch(_){if(status)status.textContent='Lucktestet kunde inte genomföras.';}
+  finally{testBusy=false;render();}
  }
  async function showRow(row){
   if(!isGM())return null;
@@ -241,6 +259,12 @@ export function mountFrodo({
     '<div class="frodo-scene-strip"><span><small>AKTUELL SCEN</small>'+
     '<strong id="frodoSceneName">Ingen aktiv visning</strong></span>'+
     '<span id="frodoSceneIndicator" aria-hidden="true">—</span></div></div>'+
+   '<div id="frodoGooseTestControls" class="frodo-goose-test-controls hidden" '+
+     'role="group" aria-label="Tillfälliga testknappar för GOOSE-luckorna">'+
+    '<span class="frodo-goose-test-label">GOOSE · TEST</span>'+
+    '<button type="button" id="frodoGooseTestOpen">Öppna</button>'+
+    '<button type="button" id="frodoGooseTestClose">Stäng</button>'+
+    '<span id="frodoGooseTestStatus" role="status" aria-live="polite"></span></div>'+
    '<details id="frodoGmAdmin" class="frodo-gm-admin hidden" open>'+
     '<summary><span>⚙ Bildadministration</span><small>Förberedelser · endast SL</small></summary>'+
     '<div class="frodo-gm-admin-body">'+
@@ -266,6 +290,8 @@ export function mountFrodo({
   const help=el('legolasGmQueue')?.querySelector('p');
   if(help)help.textContent='Förbered bilder privat i bildadministrationen. Bara ett uttryckligt visningskommando påverkar deltagarna.';
   el('frodoCloseMobile').addEventListener('click',()=>el('legolasClosePanel')?.click());
+  el('frodoGooseTestOpen').addEventListener('click',()=>{void testGoose('open');});
+  el('frodoGooseTestClose').addEventListener('click',()=>{void testGoose('close');});
   el('frodoGmOpenLarge').addEventListener('click',()=>{
    const row=frodo.state.row;
    if(isGM()&&authenticated()&&frodo.state.loaded&&row&&
