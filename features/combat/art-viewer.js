@@ -109,7 +109,7 @@
  }
  function trustedDisplayedImageUrl(value){
   if(!value)return '';
-  if(/^data:image\\/(?:png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)&&value.length<12000000)return value;
+  if(/^data:image\/(?:png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)&&value.length<12000000)return value;
   try{
    const url=new URL(value,document.baseURI);
    if(url.protocol==='blob:')return value;
