@@ -1,5 +1,5 @@
 @import url("./arcane-morphing-frame.css?v=0.35.239");
-@import url("./arcane-gallery-kit.css?v=0.35.239&kit=1");
+@import url("./arcane-gallery-kit.css?v=0.35.239&kit=2");
 @import url("./goose-player-shutter.css?v=10");
 /* Arcane Gallery: actual transparent HERMES art, not a CSS redraw. */
 #legolasPanel .arcane-gallery{width:min(100%,1150px);margin:12px auto 16px;color:#e7ce9d}
@@ -42,7 +42,7 @@
 #legolasPanel .arcane-gallery-fluid .arcane-gallery-machine{
  aspect-ratio:auto;
  height:var(--arcane-frame-height,66.6667cqw);
- transition:height 460ms cubic-bezier(.22,1,.36,1);
+ transition:height 850ms cubic-bezier(.2,.46,.2,1);
 }
 #legolasPanel .arcane-gallery-fluid .arcane-gallery-overlay{display:none!important}
 #legolasPanel .arcane-gallery-fluid .arcane-gallery-machine::after{

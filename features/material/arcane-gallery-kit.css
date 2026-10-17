@@ -1,4 +1,4 @@
-/* ARCANE MORPHING FRAME · HERMES artwork v0.1 (preview branch).
+/* ARCANE MORPHING FRAME V02 · original HERMES artwork, physical telescopic guides.
  * The art is split into rigid rails, repeating side sections, pistons and separate gears.
  * No portrait, gem or ornament is stretched in the vertical direction.
  * All image URLs are public repo assets; private campaign media remains on authenticated blob URLs.
@@ -10,19 +10,14 @@
 #legolasPanel .arcane-gallery-kit .arcane-gallery-picture,
 #legolasPanel .arcane-gallery-kit.arcane-gallery-fluid .arcane-gallery-picture{
  left:11%!important;top:13cqw!important;width:78%!important;
- height:calc(100% - 34cqw)!important;
+ height:calc(100% - 25cqw)!important;
  border:1px solid #82663f;border-radius:2px;
  background:radial-gradient(ellipse at 50% 35%,#203240 0%,#101a25 65%,#0a0d10 100%);
  box-shadow:inset 0 0 3.5cqw #000c;
 }
-#legolasPanel .arcane-gallery-kit .arcane-gallery-belt,
-#legolasPanel .arcane-gallery-kit.arcane-gallery-fluid .arcane-gallery-belt{
- left:16.6%!important;top:calc(100% - 20.2cqw)!important;
- width:66.7%!important;height:6.4cqw!important;
- z-index:2;background:#0a121b;
- border:1px solid #775c35;
- box-shadow:inset 0 0 .7cqw #000;
-}
+/* V02: thumbnail carousel is intentionally detached from the metal frame.
+ * A dedicated under-frame component can be mounted here in a later release. */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-belt{display:none!important}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-morph{z-index:4}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-morph > .arcane-gallery-gear,
 #legolasPanel .arcane-gallery-kit .arcane-gallery-morph > .arcane-gallery-piston{display:none!important}
@@ -36,36 +31,50 @@
 .arcane-kit-side--left{left:3.7%}
 .arcane-kit-side--right{right:3.7%}
 .arcane-kit-side > img{width:100%;height:auto;flex:none}
-/* A telescoping cylinder needs one continuous rod and one moving sleeve.
- * Never tile a decorative side sprite: repetition creates a false stack of
- * disconnected brass collars when the frame grows tall. */
+/* A real telescopic frame has fixed upper and lower sockets, a narrow
+ * uninterrupted recessed steel shaft and ONE moving source-art bronze sleeve.
+ * Only the inset shaft changes length. No photographic HERMES image stretches,
+ * tiles vertically, or repeats decorative collars. */
 .arcane-kit-side-repeat{
  position:relative;display:block;min-height:0;flex:1;overflow:hidden;
- border-inline:1px solid #6a4b2d;
- background:linear-gradient(90deg,#12110f 0%,#684721 7%,#1b2226 18%,
-   #415b65 28%,#9eaba8 42%,#e1dccc 48%,#798f8c 57%,#2c3b40 74%,
-   #91612f 92%,#17100e 100%);
- box-shadow:inset 0 0 .35cqw #0009,0 0 .2cqw #0009;
+ border-inline:clamp(1px,.18cqw,2px) solid #805b34;
+ background:linear-gradient(90deg,
+   #20160f 0%,#9a6b36 7%,#422916 14%,#171c20 19%,
+   #10171b 35%,#12181d 65%,#192027 80%,
+   #6d4724 88%,#be8f4c 95%,#25180e 100%);
+ box-shadow:inset .28cqw 0 .48cqw #000b,
+   inset -.28cqw 0 .48cqw #000b,0 0 .2cqw #0009;
 }
+/* Narrow metal piston inside dark bronze rails. At 20-34% of the guide
+ * width it no longer reads as the broad flat silver rectangle of V01. */
+.arcane-kit-side-repeat::before{
+ content:"";position:absolute;top:0;bottom:0;left:35%;width:30%;
+ border-left:1px solid #4d4b46;border-right:1px solid #6e5735;
+ background:linear-gradient(90deg,#22282d,#59666a 23%,#8f9691 43%,
+   #4d5b61 69%,#1c2328 100%);
+ box-shadow:inset .13cqw 0 .22cqw #000a,inset -.12cqw 0 .2cqw #000a;
+}
+/* The rigid detailed HERMES sleeve starts at the moving lower attachment
+ * and travels with the bottom rail as the frame changes aspect ratio. */
 .arcane-kit-side-sleeve{
  position:absolute;left:0;bottom:0;width:100%;height:auto;
- display:block;max-width:none;filter:drop-shadow(0 -.15cqw .2cqw #0009);
- /* Its intrinsic aspect is preserved at every frame height. */
+ display:block;max-width:none;z-index:2;
+ filter:drop-shadow(0 -.15cqw .2cqw #000a);
 }
 .arcane-kit-piston{position:absolute;top:14cqw;bottom:12cqw;width:2.7%;z-index:3}
 .arcane-kit-piston--left{left:11%}
 .arcane-kit-piston--right{right:11%}
-.arcane-kit-rod{position:absolute;inset:0 27%;
- border-left:1px solid #d8c3a0;border-right:1px solid #493624;
- background:linear-gradient(90deg,#2a3035,#8faaa9 24%,#f3e8c7 47%,#617a81 72%,#56402b);
- box-shadow:0 0 .6cqw #317a96aa}
+.arcane-kit-rod{position:absolute;inset:0 33%;
+ border-left:1px solid #6e6b60;border-right:1px solid #423322;
+ background:linear-gradient(90deg,#1b2025,#586b70 28%,#929e9e 48%,#3b4c52 73%,#1d2023);
+ box-shadow:inset .08cqw 0 .16cqw #0009}
 /* The authentic HERMES piston is a rigid illustration, never height-stretched.
  * Chrome rods behind it provide the variable length; the source images crossfade
  * between their engraved closed and extended assemblies during the frame morph. */
 .arcane-kit-actuator{
  position:absolute;bottom:0;left:-40%;width:180%;height:auto;max-width:none;
  pointer-events:none;filter:drop-shadow(0 .22cqw .25cqw #000b);
- transition:opacity 460ms cubic-bezier(.22,1,.36,1);
+ transition:opacity 850ms cubic-bezier(.2,.46,.2,1);
 }
 .arcane-kit-actuator--closed{opacity:calc(1 - var(--arcane-extension,0))}
 .arcane-kit-actuator--extended{opacity:var(--arcane-extension,0)}
@@ -74,7 +83,7 @@
 .arcane-kit-socket--bottom{bottom:0;transform:rotate(180deg)}
 .arcane-kit-wheel{position:absolute;top:.85cqw;width:13.4%;height:auto;z-index:8;
  filter:drop-shadow(0 .35cqw .4cqw #000a);
- transition:transform 460ms cubic-bezier(.22,1,.36,1);will-change:transform}
+ transition:transform 850ms cubic-bezier(.2,.46,.2,1);will-change:transform}
 .arcane-kit-wheel--left{left:2.9%;transform:rotate(var(--arcane-gear-angle,0deg))}
 .arcane-kit-wheel--right{right:2.9%;transform:rotate(calc(var(--arcane-gear-angle,0deg) * -1))}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-tile{border:0}
