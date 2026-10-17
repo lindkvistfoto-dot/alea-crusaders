@@ -1,5 +1,7 @@
-name: GOOSE 08 layered mechanism visual acceptance
+name: GOOSE 09 mechanical sequence visual acceptance
 on:
+  push:
+    branches: [sisyphus/goose09-sword-and-phase-correction-20261017]
   pull_request:
     paths:
       - 'features/material/goose-arcane-mechanics.*'
