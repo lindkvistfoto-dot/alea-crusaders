@@ -19,6 +19,7 @@ function harness(character=null){
   const ctx={
     activeUser:()=>({admin:true}),
     document:{getElementById:id=>({value:inputs[id]})},
+    $:id=>({value:inputs[id]}),
     ruleSkills,chars:[],current:character,
     alert:msg=>alerts.push(msg),
     dbJson:async(url,options)=>{requests.push({url,options});return []},
