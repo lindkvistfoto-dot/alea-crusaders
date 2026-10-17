@@ -98,10 +98,10 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   const index=read('index.html').toString();
   const library=read('features/material/library.js').toString();
   const frodo=read('features/material/frodo-ui.js').toString();
-  expect(index).toContain('goose=10&morph=2&carousel=03');
+  expect(index).toContain('goose=10&morph=3&carousel=03');
   expect(index).toContain('&bronze=01&hatch=01');
-  expect(index).toContain('morph=2&goose=10&carousel=01');
-  expect(library).toContain('frodo-ui.js?v=0.35.239&morph=2&goose=10&carousel=01');
-  expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=2&goose=10&carousel=01');
+  expect(index).toContain('morph=3&goose=10&carousel=03');
+  expect(library).toContain('frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03');
+  expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=3&goose=10&carousel=03');
  });
 });
