@@ -1,4 +1,4 @@
-import {gooseDoorMechanicsMarkup} from './goose-arcane-mechanics.js?v=09';
+import {gooseDoorMechanicsMarkup,gooseOriginalBlueInk} from './goose-arcane-mechanics.js?v=09';
 /* GOOSE 09 – Original sword untouched; left channel at detent 1 and right at detent 3.
  * One shared, authenticated Arcane Gallery gate for players and GMs.
  * Pure presentation: no private media access, campaign reads or publication writes.
@@ -60,6 +60,17 @@ export function createGoosePlayerShutter({
  left.querySelector('img').src=assets.left;
  right.querySelector('img').src=assets.right;
  seal.querySelector('img').src=assets.seal;
+ // Reuse the *original* exposed bronze pistons, never sketch replacement UI
+ // blocks or dots over the painted metal. Highlight only actual blue pixels.
+ for(const [door,side] of [[left,'left'],[right,'right']]){
+  const source=door.querySelector('img'),canvas=door.querySelector('.goose-player-blue-ink');
+  const illuminate=()=>{if(canvas)gooseOriginalBlueInk(source,canvas);};
+  if(source.complete&&source.naturalWidth)illuminate();
+  else source.addEventListener?.('load',illuminate,{once:true});
+  door.querySelectorAll?.('.goose-player-piston-source img').forEach(piece=>{
+   piece.src=assets[side];
+  });
+ }
  for(const half of [leftHalf,rightHalf]){
   if(half)half.style.backgroundImage='url("'+assets.seal+'")';
  }
