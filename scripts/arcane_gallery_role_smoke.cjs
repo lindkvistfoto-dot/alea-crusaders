@@ -58,7 +58,7 @@ async function main(){
   await send('Runtime.enable');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/tests/fixtures/arcane-gallery-role-smoke.html'});
   for(let i=0;i<150;i++){
-   const status=await evaluate("document.documentElement.dataset.smoke || ''");
+   const status=await evaluate("document.documentElement?.dataset?.smoke || ''");
    if(status==='passed'){
     const result=await evaluate('window.__arcaneSmokeStatus');
     console.log('ARCANE_ROLE_SMOKE_PASSED',JSON.stringify(result));
