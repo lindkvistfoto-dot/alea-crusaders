@@ -401,6 +401,14 @@
 
 
 /* GOOSE 05 — one exact same published image frame for GM and players.
+ * The existing heading still supplies accessible current-state announcements,
+ * but the one real Gallery supplies the visual title and count. */
+#legolasPanel .frodo-panel .frodo-panel-heading{
+ position:absolute!important;width:1px!important;height:1px!important;
+ padding:0!important;margin:0!important;overflow:hidden!important;
+ clip-path:inset(100%)!important;white-space:nowrap!important;
+}
+/* GOOSE 05 — one exact same published image frame for GM and players.
  * The staging queue is a separate private administration surface. */
 #legolasPanel .frodo-panel{position:relative}
 #legolasPanel .frodo-panel #arcaneGallery{display:block;width:100%;max-width:none;margin:0 auto 10px}
