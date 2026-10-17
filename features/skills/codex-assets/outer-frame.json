@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-outer-frame",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-outer-frame/282f5b6425060e6b37e72eb62e5a072fe8f391b54db70cf129a1ecb3dced6167.png",
+  "source_sha256": "282f5b6425060e6b37e72eb62e5a072fe8f391b54db70cf129a1ecb3dced6167",
+  "source_bytes": 923371,
+  "app_path": "features/skills/codex-assets/outer-frame.webp",
+  "app_sha256": "ba9146485242dcfcfa90c1c27db252ab94a48793d5367b70abc1d54dbb08b991",
+  "app_bytes": 168720,
+  "width": 1012,
+  "height": 1280,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
