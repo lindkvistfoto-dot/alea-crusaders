@@ -171,7 +171,7 @@
   position:relative;
   z-index:5;
   overflow:visible;
-  transform:translateY(-30px);
+  transform:translateY(-60px);
  }
 }
 @media(max-width:760px){
