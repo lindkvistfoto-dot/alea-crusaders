@@ -74,7 +74,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    strip.innerHTML=rows.map((r,i)=>'<button type="button" class="arcane-gallery-tile" data-gallery-id="'+safe(r.id)+'" title="'+safe(r.title)+'" aria-label="Visa '+safe(r.title)+'"><span>'+(i+1)+'</span></button>').join('');
    const lazy=t=>{const r=rows.find(x=>x.id===t.dataset.galleryId);if(r)void thumb(r,state.campaign);};
    if(typeof win().IntersectionObserver==='function'){
-    state.observer=new win().IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){state.observer?.unobserve(e.target);lazy(e.target);}},
+    state.observer=new (win().IntersectionObserver)(entries=>{for(const e of entries)if(e.isIntersecting){state.observer?.unobserve(e.target);lazy(e.target);}},
      {root:strip,rootMargin:'140px'});
     strip.querySelectorAll('[data-gallery-id]').forEach(t=>state.observer.observe(t));
    }else strip.querySelectorAll('[data-gallery-id]').forEach((t,i)=>{if(i<20)lazy(t);});

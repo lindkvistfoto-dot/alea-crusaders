@@ -12,6 +12,8 @@ on:
       - 'tests/material-legolas-viewer.test.js'
       - 'tests/arcane-gallery*.test.js'
       - 'tests/arcane-morph*.test.js'
+      - 'tests/fixtures/arcane-gallery-role-smoke.html'
+      - 'scripts/arcane_gallery_role_smoke.cjs'
       - 'scripts/hermes_drive_intake.py'
       - 'scripts/hermes_ui_prepare.py'
   workflow_dispatch:
@@ -36,5 +38,19 @@ jobs:
       - run: npm ci
       - name: Gallery privacy and asset integrity
         run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-markup.test.js tests/arcane-morph-art-assets.test.js tests/material-legolas-viewer.test.js tests/arcane-gm-preview.test.js tests/arcane-gallery-aspect.test.js tests/material-atelier-mobile.test.js tests/material-frodo-presentation.test.js
+      - name: Browser role-switch and four-ratio smoke (synthetic roles, no private data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/alea-gallery-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/arcane-gallery-role-smoke.html >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then cat /tmp/alea-gallery-vite.log; exit 1; fi
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/arcane_gallery_role_smoke.cjs
       - name: Build static app
         run: npm run build

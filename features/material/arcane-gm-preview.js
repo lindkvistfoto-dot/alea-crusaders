@@ -86,7 +86,7 @@ export function createArcaneGmPreview({
    const scope=state.scope,seq=state.thumbSeq;
    const lazy=tile=>{const row=current(tile.dataset.gmId);if(row)void thumbnail(row,scope,seq);};
    if(typeof win().IntersectionObserver==='function'){
-    state.observer=new win().IntersectionObserver(entries=>{
+    state.observer=new (win().IntersectionObserver)(entries=>{
      for(const e of entries)if(e.isIntersecting){state.observer?.unobserve(e.target);lazy(e.target);}
     },{root:strip,rootMargin:'90px'});
     strip.querySelectorAll('[data-gm-id]').forEach(tile=>state.observer.observe(tile));
