@@ -154,19 +154,24 @@
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-tools{
  border-top:0;padding:1px 5px 0;margin-top:0;
 }
-/* Desktop: free the cryptex to overlap the equipment row, now by 30px.
-   Keep mobile positioning and its existing -46px offset untouched. */
+/* Desktop: move the CRYPTEX artwork, not the shared spell-panel host.
+   A visual transform preserves the surrounding layout and its click targets. */
 @media(min-width:761px){
+ #combatPage .combat-shell-live #combatActionPanel{
+  position:relative;
+  overflow:visible;
+ }
  #combatPage .combat-shell-live .combat-magic-float-shell{
   position:relative;
   z-index:40;
   overflow:visible;
-  margin-top:-30px;
+  margin-top:0;
  }
  #combatPage .combat-shell-live .combat-magic-float-shell>.combat-magic-carousel.cryptex-prototype{
   position:relative;
   z-index:5;
   overflow:visible;
+  transform:translateY(-30px);
  }
 }
 @media(max-width:760px){
