@@ -6,7 +6,7 @@ describe('HERMES spell animation registry integration',()=>{
   const src=read('features/combat/animations.js');
   expect(src).toContain('function optionsHtml(');
   expect(src).toContain("['projectile','effect','area','other'].includes(row.animation_type)||row.category==='magic'");
-  expect(src).toContain('optionsHtml};');
+  expect(src).toContain('window.aleaAnimations={refresh,renderAdmin,mountAdmin,play,validPath,normalize,mediaUrl,optionsHtml,playSequence};');
  });
  it('links spell editor to reusable projectile and impact cues',()=>{
   const app=read('legacy/app.js');
