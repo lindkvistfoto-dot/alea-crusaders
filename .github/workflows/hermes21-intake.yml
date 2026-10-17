@@ -10,6 +10,7 @@ on:
       - 'assets/hermes/originals/spell/**/*.png'
       - 'assets/hermes/originals/symbol/**/*.png'
       - 'assets/hermes/originals/skill/**/*.png'
+      - 'assets/hermes/originals/skill-illustration/**/*.png'
   workflow_dispatch:
     inputs:
       source_path:
