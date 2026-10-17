@@ -1,0 +1,32 @@
+name: Cryptex icon scale regression
+on:
+  push:
+    branches: [fix/cryptex-spell-icon-scale-mobile-20261017]
+    paths:
+      - 'features/combat/spell-art.js'
+      - 'features/combat/magic-carousel.js'
+      - 'tests/cryptex-icon-crop.test.js'
+      - '.github/workflows/cryptex-icon-scale-regression.yml'
+  pull_request:
+    paths:
+      - 'features/combat/spell-art.js'
+      - 'features/combat/magic-carousel.js'
+      - 'tests/cryptex-icon-crop.test.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cryptex-image-sizing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Verify cryptex crop geometry and mobile layout
+        run: npx vitest run tests/cryptex-icon-crop.test.js tests/cryptex-mobile-layout.test.js
+      - name: Check production build
+        run: npm run build
