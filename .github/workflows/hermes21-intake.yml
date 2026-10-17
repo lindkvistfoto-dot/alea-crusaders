@@ -3,10 +3,13 @@ name: HERMES 2.1 – Verify and optimize incoming art
 on:
   push:
     branches: [main]
+    # HERMES 2.1 handles only square spell/symbol/skill icons. UI assets
+    # have their own profile and must not enter this PNG activation job.
+    # Workflow/script revisions can be validated with workflow_dispatch.
     paths:
-      - 'assets/hermes/originals/**/*.png'
-      - 'scripts/hermes2_prepare.py'
-      - '.github/workflows/hermes21-intake.yml'
+      - 'assets/hermes/originals/spell/**/*.png'
+      - 'assets/hermes/originals/symbol/**/*.png'
+      - 'assets/hermes/originals/skill/**/*.png'
   workflow_dispatch:
     inputs:
       source_path:
