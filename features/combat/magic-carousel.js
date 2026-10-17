@@ -111,6 +111,22 @@ function combatMagicCarouselGlyph(value){
  if(/hela|läk/.test(name))return '✚';
  return '✦';
 }
+/* A click on an icon also exhibits the original ARCANE IVORY art in
+ * the desktop-only side gallery. This is UI-only; selecting/preparing magic
+ * still uses the unchanged Expert action function below. */
+function combatPreviewSpellIcon(actorId,spellKey){
+ if(typeof window.matchMedia==='function'&&!window.matchMedia('(min-width:1024px)').matches)return false;
+ if(!activeCombat||String(combatActiveActor()?.id||'')!==String(actorId))return false;
+ const actor=combatants.find(row=>String(row.id)===String(actorId));
+ const spell=actor&&combatSpellOptions(actor).find(row=>combatSpellKey(row)===String(spellKey));
+ if(!spell)return false;
+ const path=combatSpellArtPath(spell.icon_path||spell.image_path);
+ return window.aleaCombatArtViewer?.show?.({
+  title:combatMagicCarouselTags(spell).name||spell.name||'Besvärjelse',
+  path,
+  source:'spell',battleId:activeCombat.id
+ })||false;
+}
 function combatSpellCarouselHtml(actor,action){
  const {items,total}=combatMagicCarouselItems(actor,action);
  if(!items.length)return '<p class="combat-spell-empty">Inga tillgängliga besvärjelser.</p>';
@@ -149,7 +165,7 @@ function combatSpellCarouselHtml(actor,action){
    (i===middleStart+focus?' center':'')+(active?' selected':'')+
    '" data-spell-index="'+(i%items.length)+'" tabindex="-1" aria-hidden="true"'+
    ' title="'+escAttr(spell.name+(hint?' · '+hint:''))+'"'+(disabled?' disabled':'')+
-   ' onclick="selectCombatPreparedSpell(\''+escAttr(actorId)+'\',\''+escAttr(spellKey)+'\')">'+
+   ' onclick="combatPreviewSpellIcon(\''+escAttr(actorId)+'\',\''+escAttr(spellKey)+'\');selectCombatPreparedSpell(\''+escAttr(actorId)+'\',\''+escAttr(spellKey)+'\')">'+
    art+(marks?'<span class="combat-carousel-spell-marks" aria-hidden="true">'+marks+'</span>':'')+
    '<span class="combat-carousel-spell-label">'+escAttr(classification.name)+'</span></button>';
  }).join('');
