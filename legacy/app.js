@@ -3325,7 +3325,7 @@ async function loadCampaignMapAreas(mapId){
  return rows.map(a=>{let valid=isUuid(a.location_id);return {...a,location_id:valid?a.location_id:null,_invalid_location_ref:(!valid&&a.location_id)?String(a.location_id):'',status:valid?(stateMap.get(a.location_id)||'unknown'):'unknown',name:valid?(nameMap.get(a.location_id)||'Okänd plats'):'Ej kopplad'}});
 }
 async function viewCampaignMap(id,reset=true){
- if(!id){setCampaignMapData(null,[]);renderMapLibraryControls();return}
+ if(!id){closeMapLocationInfo();setCampaignMapData(null,[]);renderMapLibraryControls();return}
  let map=campaignMaps.find(m=>m.id===id);if(!map)return;
  if(activeCampaignMap&&activeCampaignMap.id!==map.id)closeMapLocationInfo();
  if(!canManageCampaignMaps()&&!map.player_visible){alert('Den kartan är inte tillgänglig för spelare.');return}
@@ -4078,6 +4078,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  let p=$('mapLocationPanel');if(!p)return;
  p.classList.remove('empty');
  if(!a.location_id){
+  if(gallery)gallery.innerHTML='<div class="map-location-empty">Området saknar kopplad plats och har därför inget bildgalleri.</div>';
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Område')+'</h3><div class="map-location-meta">Ingen plats är kopplad till polygonen.</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>';
   return;
  }
