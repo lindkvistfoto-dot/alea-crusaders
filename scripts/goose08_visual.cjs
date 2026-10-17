@@ -80,6 +80,22 @@ async function main(){
   const status=await evaluate("({text:document.getElementById('status').textContent,ready:window.goose08Demo.ready,controls:document.querySelectorAll('.control-panel button').length})");
   if(!status.ready||status.controls!==2)throw Error('STANDALONE_CONTROLS '+JSON.stringify(status));
   console.log('GOOSE08_STANDALONE_PASS '+JSON.stringify(status));
+  // Confirm that the shareable CDN URL resolves to the committed public page.
+  // This is a public static page: no cookies or private content are requested.
+  const base='https://raw.githack.com/lindkvistfoto-dot/alea-crusaders/goose08-simulator/';
+  const checks=[
+    ['simulations/goose08.html','The Awakening Mechanism','text/html'],
+    ['features/material/goose-player-shutter.js','createGoosePlayerShutter','javascript'],
+    ['features/material/goose04/seal.webp',null,'image/webp']
+  ];
+  for(const [path,marker,mime] of checks){
+   const response=await fetch(base+path,{signal:AbortSignal.timeout(18000)});
+   const type=response.headers.get('content-type')||'';
+   if(!response.ok||!type.includes(mime))throw Error('PUBLIC_SIMULATOR_CDN '+path+' '+response.status+' '+type);
+   if(marker&&!(await response.text()).includes(marker))
+    throw Error('PUBLIC_SIMULATOR_CONTENT '+path);
+   console.log('GOOSE08_PUBLIC_CDN_PASS '+path+' '+response.status+' '+type);
+  }
   console.log('GOOSE08_BROWSER_PASS '+JSON.stringify(summary));
  }finally{try{ws?.close()}catch{}browser.kill('SIGTERM')}
 }
