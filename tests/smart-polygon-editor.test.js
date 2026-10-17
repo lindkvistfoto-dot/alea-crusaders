@@ -29,6 +29,19 @@ describe('Smart Polygon Editor topology',()=>{
   expect(changed.flat().filter(p=>p[0]===12&&p[1]===9)).toHaveLength(3);
   expect(polys[0][2]).toEqual([10,10]);
  });
+ it('does not confuse a concave polygon notch with a sealed gap',()=>{
+  const notch=[[0,0],[30,0],[30,30],[20,30],[20,10],[10,10],[10,30],[0,30]];
+  expect(findHoles([notch])).toEqual([]);
+ });
+ it('fills a notch only once adjoining polygons close its entrance',()=>{
+  const frame=[square(0,0,30,10),square(0,20,30,10),square(0,10,10,10),square(20,10,10,10)];
+  const holes=findHoles(frame);
+  expect(holes).toHaveLength(1);
+  const merged=mergeHole(frame[2],holes[0].points);
+  expect(merged).not.toBeNull();
+  expect(Math.abs(area(merged))).toBeCloseTo(200);
+  expect(findHoles([frame[0],frame[1],merged,frame[3]])).toEqual([]);
+ });
  it('does not merge polygons without a common boundary',()=>{
   expect(mergeHole(square(0,0,10,10),square(20,20,5,5))).toBeNull();
  });
