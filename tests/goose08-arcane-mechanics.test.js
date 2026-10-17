@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {gooseDecorativeGearPath,gooseDoorMechanicsMarkup,gooseSealGearMarkup}
+import {gooseDecorativeGearPath,gooseDoorMechanicsMarkup,gooseSealGearMarkup,gooseOriginalBlueInk}
  from '../features/material/goose-arcane-mechanics.js';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
@@ -21,18 +21,17 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   expect(markup).toContain('viewBox="0 0 112 68"');
   expect(markup).not.toContain('http');
  });
- it('engraves two individually animatable channels on each authentic door',()=>{
+ it('tracks only original blue pixels instead of introducing painted replacement curves',()=>{
   for(const side of ['left','right']){
    const markup=gooseDoorMechanicsMarkup(side);
-   expect(markup.match(/goose-player-energy-flow--/g)).toHaveLength(2);
-   expect(markup.match(/goose-player-piston--/g)).toHaveLength(2);
-   expect(markup).toContain('pathLength="100"');
-   expect(markup).toContain('preserveAspectRatio="none"');
-   expect(markup).toContain('goose-player-energy--'+side);
+   expect(markup).toContain('goose-player-blue-ink--'+side);
+   expect(markup.match(/goose-player-piston-source--/g)).toHaveLength(2);
+   expect(markup).toContain('<canvas');
+   expect(markup).not.toContain('<path');
+   expect(markup).not.toContain('goose-player-gear-train');
   }
-  expect(gooseDoorMechanicsMarkup('left')).toContain('M35.6 49.5');
-  expect(gooseDoorMechanicsMarkup('right')).toContain('M65.8 49.5');
   expect(()=>gooseDoorMechanicsMarkup('outsider')).toThrow('INVALID_GOOSE_SIDE');
+  expect(gooseOriginalBlueInk({},{})).toBe(false);
  });
  it('keeps the original three HERMES sprites and role-gated shared gallery',()=>{
   const code=read('features/material/goose-player-shutter.js');
@@ -74,8 +73,11 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   expect(css).toContain('goose-player-shutter--energizing-right');
   expect(css).toContain('goose-player-shutter--unlatched-left');
   expect(css).toContain('goose-player-shutter--unlatched-right');
+  expect(css).toContain('goose-player-blue-ink');
+  expect(css).toContain('goose-player-piston-source');
+  expect(css).toContain('clip-path:inset(');
   expect(css).toContain('@media(prefers-reduced-motion:reduce)');
-  expect(css).toContain('display:none!important');
+  expect(css).not.toContain('goose-player-gear-train');
   expect(css).not.toContain('goose-player-lamp');
  });
 
