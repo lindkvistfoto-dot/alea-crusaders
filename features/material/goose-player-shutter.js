@@ -72,7 +72,8 @@ export function createGoosePlayerShutter({
   seal.style.transform='rotate(0deg)';
   seal.style.opacity='1';
   setLights(0);
-  scene.classList.remove('goose-player-shutter--open','goose-player-shutter--split');
+  scene.classList.remove('goose-player-shutter--open');
+  scene.classList.remove('goose-player-shutter--split');
  }
  function paintOpen(){
   left.style.transform='translateX(-110%)';
@@ -80,7 +81,8 @@ export function createGoosePlayerShutter({
   seal.style.transform='rotate(360deg)';
   seal.style.opacity='0';
   setLights(4);
-  scene.classList.add('goose-player-shutter--split','goose-player-shutter--open');
+  scene.classList.add('goose-player-shutter--split');
+  scene.classList.add('goose-player-shutter--open');
  }
  async function shift(el,from,to,duration,token,frames=null){
   if(token!==epoch||disposed)return false;
