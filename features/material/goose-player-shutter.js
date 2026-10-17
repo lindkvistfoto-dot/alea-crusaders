@@ -1,11 +1,19 @@
-import {gooseDoorMechanicsMarkup,gooseOriginalBlueInk} from './goose-arcane-mechanics.js?v=09';
-/* GOOSE 09 – Original sword untouched; left channel at detent 1 and right at detent 3.
+import {gooseDoorMechanicsMarkup,gooseOriginalBlueInk} from './goose-arcane-mechanics.js?v=10';
+/* GOOSE 10 – Art-preserving mechanical pacing and energy polish.
  * One shared, authenticated Arcane Gallery gate for players and GMs.
  * Pure presentation: no private media access, campaign reads or publication writes.
  * The rotating emblem has four discrete 90-degree ratchets. The real sapphire
  * stones (not extra UI lamps) are the indicators. The seal splits with the doors.
  */
-const timings=Object.freeze({quarter:525,detent:105,charge:770,release:420,doors:1780});
+const timings=Object.freeze({quarter:525,secondQuarter:1125,detent:105,secondDetent:260,charge:980,release:620,doors:1780});
+// The second quarter is deliberately heavy; the next detent waits for it.
+// Use identical timing in reverse to prevent the closing lock from "snapping".
+export function gooseRatchetDuration(from,to){
+ return Math.min(from,to)===90&&Math.max(from,to)===180?timings.secondQuarter:timings.quarter;
+}
+export function gooseDetentDuration(angle){
+ return angle===180?timings.secondDetent:timings.detent;
+}
 const LOCK_ORDER=Object.freeze(['north','east','south','west']);
 export function gooseFourByThreeRatio(){return '4 / 3';}
 export function gooseAssetManifestValid(assets){
@@ -18,14 +26,14 @@ export function gooseAssetManifestValid(assets){
  * a short final detent. No elastic, looping or free-spinning rotation. */
 export function gooseQuarterKeyframes(start,end){
  const delta=end-start;
- return [
-  {transform:'rotate('+start+'deg)',offset:0},
-  {transform:'rotate('+(start+delta*.07)+'deg)',offset:.17},
-  {transform:'rotate('+(start+delta*.09)+'deg)',offset:.28},
-  {transform:'rotate('+(start+delta*.85)+'deg)',offset:.81},
-  {transform:'rotate('+(start+delta*.96)+'deg)',offset:.92},
-  {transform:'rotate('+end+'deg)',offset:1}
- ];
+ const heavy=Math.min(start,end)===90&&Math.max(start,end)===180;
+ // Step two: slower wind-up, brief resistance, deliberate bronze-tooth drive,
+ // and a restrained final seating. All segments remain monotone and physical.
+ const offsets=heavy?[0,.20,.42,.82,.94,1]:[0,.17,.28,.81,.92,1];
+ const fractions=heavy?[0,.05,.09,.84,.96,1]:[0,.07,.09,.85,.96,1];
+ return fractions.map((fraction,i)=>({
+  transform:'rotate('+(start+delta*fraction)+'deg)',offset:offsets[i]
+ }));
 }
 export function createGoosePlayerShutter({
  host,assets,doc=()=>document,win=()=>window,isPlayer=()=>false
@@ -134,11 +142,11 @@ export function createGoosePlayerShutter({
  }
  async function ratchet(from,to,token){
   return shift(seal,{transform:'rotate('+from+'deg)'},
-   {transform:'rotate('+to+'deg)'},timings.quarter,token,gooseQuarterKeyframes(from,to));
+   {transform:'rotate('+to+'deg)'},gooseRatchetDuration(from,to),token,gooseQuarterKeyframes(from,to));
  }
  async function detent(angle,token){
   const still={transform:'rotate('+angle+'deg)'};
-  return shift(seal,still,still,timings.detent,token);
+  return shift(seal,still,still,gooseDetentDuration(angle),token);
  }
  function mount(){
   if(disposed)throw Error('GOOSE_DISPOSED');
