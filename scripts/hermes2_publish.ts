@@ -63,6 +63,13 @@ async function patch(id:string,fields:Record<string,unknown>){
  const {error}=await db.from("hermes_jobs").update({...fields,updated_at:new Date().toISOString()}).eq("id",id);
  if(error)throw Error("JOB_UPDATE "+error.message);
 }
+function illustrationUuid(sha:string){
+ const hex=sha.slice(0,32).split("");
+ hex[12]="4";
+ hex[16]=(8+(parseInt(hex[16],16)%4)).toString(16);
+ const value=hex.join("");
+ return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
+}
 function checkAsset(a:any){
  if(!a||!["spell","symbol","skill","skill-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
@@ -76,7 +83,7 @@ function checkAsset(a:any){
  const skill=a.kind==="skill"||a.kind==="skill-illustration";
  return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
   field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
-  appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`, assetField};
+  appPath:a.kind==="skill-illustration"?"skill/"+a.target_key.replaceAll("-","_")+"/illustration/"+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
 async function publish(a:any){
  const {table,field,sourcePath,appPath,assetField}=checkAsset(a);
@@ -104,7 +111,7 @@ async function publish(a:any){
   github_run_id:ghRun,created_by:null,status:"staged",attempts:1,previous_icon_path:target[assetField]};
  let job=existing;
  if(job){
-  await patch(job.id,{attempts:(job.attempts||0)+1,status:"staged",error_code:null,error_message:null});
+  await patch(job.id,{attempts:(job.attempts||0)+1,status:"staged",app_path:appPath,error_code:null,error_message:null});
  }else{
   const {data:created,error:createError}=await db.from("hermes_jobs").insert(jobBody).select("*").single();
   if(createError)throw Error("JOB_CREATE "+createError.message);
@@ -113,14 +120,24 @@ async function publish(a:any){
  try{
   await recordEvent(job.id,"staged","HERMES 2.1 source validated; GitHub blob "+gitBlob);
   await immutableUpload("alea-hermes-source",sourcePath,raw,"image/png",a.source_sha256);
-  await immutableUpload("alea-hermes-public",appPath,app,"image/webp",a.app_sha256);
+  const appBucket=a.kind==="skill-illustration"?"alea-skill-art":"alea-hermes-public";
+  await immutableUpload(appBucket,appPath,app,"image/webp",a.app_sha256);
   await patch(job.id,{status:"archived",github_blob_sha:gitBlob,github_commit_sha:ghSha});
   await recordEvent(job.id,"archived","Immutable GitHub original and Supabase readback verified");
-  const publicUrl=db.storage.from("alea-hermes-public").getPublicUrl(appPath).data.publicUrl;
-  const response=await fetch(publicUrl,{cache:"no-store"});
-  if(!response.ok)throw Error("PUBLIC_IMAGE_UNAVAILABLE "+response.status);
-  if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==a.app_sha256)
-   throw Error("PUBLIC_IMAGE_SHA_MISMATCH");
+  if(appBucket==="alea-hermes-public"){
+   const publicUrl=db.storage.from(appBucket).getPublicUrl(appPath).data.publicUrl;
+   const response=await fetch(publicUrl,{cache:"no-store"});
+   if(!response.ok)throw Error("PUBLIC_IMAGE_UNAVAILABLE "+response.status);
+   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==a.app_sha256)
+    throw Error("PUBLIC_IMAGE_SHA_MISMATCH");
+  }else{
+   const {data:signed,error:signedError}=await db.storage.from(appBucket).createSignedUrl(appPath,60);
+   if(signedError||!signed?.signedUrl)throw Error("PRIVATE_IMAGE_SIGNING_FAILED "+(signedError?.message||""));
+   const response=await fetch(signed.signedUrl,{cache:"no-store"});
+   if(!response.ok)throw Error("PRIVATE_IMAGE_UNAVAILABLE "+response.status);
+   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==a.app_sha256)
+    throw Error("PRIVATE_IMAGE_SHA_MISMATCH");
+  }
   await patch(job.id,{status:"verified"});
   const previous=job.previous_icon_path;
   if(target[assetField]!==previous&&target[assetField]!==appPath)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
