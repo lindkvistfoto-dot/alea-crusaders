@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-ornament",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-ornament/23cf89af8c0fcdfee3c0ea9097af56e4a132c79cd60728a174c84d7788972150.png",
+  "source_sha256": "23cf89af8c0fcdfee3c0ea9097af56e4a132c79cd60728a174c84d7788972150",
+  "source_bytes": 20721,
+  "app_path": "features/skills/codex-assets/ornament.webp",
+  "app_sha256": "28a07072206a03324e9242fa201e5250c81750dd92217cfacf84421dfb25e872",
+  "app_bytes": 4712,
+  "width": 102,
+  "height": 111,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
