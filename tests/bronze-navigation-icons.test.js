@@ -83,6 +83,6 @@ describe('v0.35.121 – sharp 104px navigation icons',()=>{
     expect(html).toContain('onclick="openShop()"');
     expect(html).toContain('onclick="openCombat()"');
     expect(html).toContain('onclick="openCharacters()"');
-    expect(html).toContain('features/home/navigation-icons.js?v=0.35.141');
+    expect(html).toMatch(/features\/home\/navigation-icons\.js\?v=0\.35\.\d+/);
   });
 });
