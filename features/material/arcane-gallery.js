@@ -216,7 +216,8 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(!img?.complete||!img.naturalWidth)return false;
   const gate=ensureShutter();
   if(!gate||!['open','closed'].includes(gate.phase))return false;
-  if(gate.phase===action)return true;
+  if((action==='open'&&gate.phase==='open')||
+     (action==='close'&&gate.phase==='closed'))return true;
   const campaign=scope(),media=state.media,id=state.selected;
   const success=action==='open'?await gate.open():
    await gate.close({prepareFourByThree:homeRatio});

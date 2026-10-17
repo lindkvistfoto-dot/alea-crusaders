@@ -28,6 +28,19 @@ describe('GOOSE 05 – one published viewer, separate GM administration',()=>{
   expect(presentation).toContain("request('rpc/frodo_set_presentation'");
   expect(read('features/material/arcane-gallery.js')).not.toContain('rpc/frodo_set_presentation');
  });
+ it('adds exactly two temporary GM-only gate buttons below the shared viewer',()=>{
+  const ui=read('features/material/frodo-ui.js');
+  const css=read('features/material/frodo-atelier.css');
+  const gallery=read('features/material/arcane-gallery.js');
+  expect(ui).toContain('id="frodoGooseTestOpen"');
+  expect(ui).toContain('id="frodoGooseTestClose"');
+  expect(ui).toContain("gallery.testShutter(action)");
+  expect(ui).toContain("el('frodoGooseTestControls')?.classList.toggle('hidden',!gm||!authenticated())");
+  expect(ui.indexOf('id="frodoGooseTestControls"')).toBeLessThan(ui.indexOf('id="frodoGmAdmin"'));
+  expect(gallery).toContain("!isGM()");
+  expect(gallery).toContain('gate.close({prepareFourByThree:homeRatio})');
+  expect(css).toContain('.frodo-goose-test-controls.hidden');
+ });
  it('uses private queue thumbnails and a single mobile close button',()=>{
   const ui=read('features/material/frodo-ui.js');
   const css=read('features/material/frodo-atelier.css');
