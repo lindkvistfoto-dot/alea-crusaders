@@ -63,7 +63,8 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   expect(css).toContain('.arcane-kit-side-upper');
   expect(css).toContain('position:absolute;left:0;top:0;width:100%;height:auto');
   expect(css).not.toContain('#929e9e 48%');
-  expect(css).not.toContain('#465357 48%') === false;
+  expect(css).toContain('#465357 48%');
+  expect(css).not.toContain('#9eaba8 42%');
   const index=read('index.html').toString();
   expect(index).toContain('telescope=03');
   expect(mainCss).toContain('arcane-gallery-kit.css?v=0.35.239&kit=4');
