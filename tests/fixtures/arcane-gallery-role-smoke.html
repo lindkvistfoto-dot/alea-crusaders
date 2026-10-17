@@ -70,6 +70,17 @@ async function run(){
  assert(!gallery.root.classList.contains('hidden'),'player gallery hidden');
  assert(document.querySelectorAll('.arcane-gallery').length===1,'duplicate gallery component mounted');
  assert(gallery.root.querySelectorAll('.arcane-kit-wheel').length===2,'player gears missing');
+ const hatch=gallery.root.querySelector('.arcane-gallery-carousel');
+ const hatchWindow=gallery.root.querySelector('.arcane-gallery-carousel-shutter-window');
+ const hatchSprite=gallery.root.querySelector('.arcane-gallery-carousel-shutter');
+ assert(hatch?.dataset.hatch==='half','hatch should default to half-closed');
+ assert(hatchWindow&&hatchSprite,'missing separate sliding hatch');
+ assert(gallery.root.querySelector('#arcaneGalleryHatchTest').classList.contains('hidden'),
+  'player must not see GM-only hatch controls');
+ assert(gallery.testCarouselHatch('closed')===false,'player must not control hatch test');
+ await hatchSprite.decode();
+ assert(hatchSprite.naturalWidth>0,'hatch art could not decode');
+
  for(let i=1;i<4;i++){
   assert(gallery.step(1),'player carousel step failed at '+i);
   await until(()=>gallery.state.selected===rows[i].id
@@ -149,6 +160,32 @@ async function run(){
  assert(document.querySelectorAll('.arcane-gallery').length===1,'GM created a duplicate gallery');
  assert(revoked.includes(privateImageUrl),'role switch must revoke previous blob');
  assert(gallery.root.querySelectorAll('.arcane-kit-wheel').length===2,'GM shared gears missing');
+ assert(!gallery.root.querySelector('#arcaneGalleryHatchTest').classList.contains('hidden'),
+  'GM hatch test buttons unavailable');
+ // Verify the actual panel slides left from RIGHT across the original trough.
+ // Eliminate timing dependence; this checks geometry and the z-order at rest.
+ hatchSprite.style.transition='none';
+ function checkTravel(widthLabel){
+  const viewport=hatchWindow.getBoundingClientRect();
+  for(const [position,fraction] of [['open',1],['half',.5],['closed',0]]){
+   assert(gallery.testCarouselHatch(position),widthLabel+' '+position+' failed');
+   const pane=hatchSprite.getBoundingClientRect();
+   const expected=viewport.left+viewport.width*fraction;
+   assert(Math.abs(pane.left-expected)<2,
+    widthLabel+' '+position+' mismatch: '+pane.left+' expected '+expected);
+  }
+  assert(gallery.testCarouselHatch('half'),widthLabel+' failed to restore half state');
+  assert(Number(getComputedStyle(hatchWindow).zIndex)>
+    Number(getComputedStyle(gallery.root.querySelector('.arcane-gallery-carousel-track')).zIndex),
+   'hatch must be above thumbnails');
+  assert(Number(getComputedStyle(gallery.root.querySelector('.arcane-gallery-carousel-frame')).zIndex)>
+    Number(getComputedStyle(hatchWindow).zIndex),'bronze frame must mask shutter');
+ }
+ checkTravel('desktop');
+ panel.style.width='360px';
+ checkTravel('phone');
+ panel.style.removeProperty('width');
+
  const gmHeights=[height(gallery.root)];
  for(let i=1;i<4;i++){
   assert(gallery.step(1),'GM local gallery navigation failed');
@@ -163,6 +200,10 @@ async function run(){
  assert(gallery.root.classList.contains('hidden'),'shared gallery visible after logout');
  assert(gallery.state.rows.length===0,'private rows survive logout');
  assert(revoked.includes(lastGMUrl),'GM blob not revoked on logout');
+ assert(gallery.root.querySelector('.arcane-gallery-carousel').dataset.hatch==='half',
+  'logging out must reset local hatch test position');
+ assert(gallery.testCarouselHatch('closed')===false,'logged out must not control hatch');
+
  assert(!gallery.root.querySelector('#arcaneGalleryImage').hasAttribute('src'),'shared image not cleared after logout');
  return {playerHeights,gmHeights,desktopDock,phoneDock,
   reads:reads.length,revoked:revoked.length,

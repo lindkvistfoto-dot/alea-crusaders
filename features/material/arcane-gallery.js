@@ -30,9 +30,19 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   arcaneMorphMarkup()+'</div>'+
   // A dedicated transparent bronze carousel lives BELOW the telescopic frame.
   // Its public overlay contains no images; thumbnails are authorized blobs.
-  '<div class="arcane-gallery-carousel" aria-label="Bildkarusell">'+
+  '<div class="arcane-gallery-carousel" data-hatch="half" aria-label="Bildkarusell">'+
    '<div id="arcaneGalleryStrip" class="arcane-gallery-strip arcane-gallery-carousel-track" aria-label="Bläddra bland delade bilder"></div>'+
+   // Separate, temporarily fitted hatch sprite. The existing frame masks its edges.
+   '<div class="arcane-gallery-carousel-shutter-window" aria-hidden="true">'+
+    '<img class="arcane-gallery-carousel-shutter" src="./features/material/arcane-carousel-hatch-test-v01.webp" alt="" draggable="false">'+
+   '</div>'+
    '<img class="arcane-gallery-carousel-frame" src="./features/material/arcane-carousel-bronze-match.webp" alt="" aria-hidden="true" draggable="false">'+
+  '</div>'+
+  '<div id="arcaneGalleryHatchTest" class="arcane-gallery-hatch-test hidden" role="group" aria-label="Testa karusellucka">'+
+   '<span>LUCKA · TEST</span>'+
+   '<button type="button" data-hatch-test="open">Öppna</button>'+
+   '<button type="button" data-hatch-test="half">Halv</button>'+
+   '<button type="button" data-hatch-test="closed">Stäng</button>'+
   '</div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan delade bilder">'+
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
@@ -93,6 +103,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  function release(){releaseMain();state.thumbGeneration++;state.loadingThumbs.clear();
   for(const u of state.thumbs.values())win().URL.revokeObjectURL(u);state.thumbs.clear();state.observer?.disconnect();state.observer=null;}
  function clear(){state.seq++;disposeShutter();release();state.campaign='';state.role='';state.revision=-1;state.live='';state.displayedLive='';state.rows=[];state.selected='';resetArcaneFrame(root);root.classList.add('hidden');
+  root.querySelector('.arcane-gallery-carousel')?.setAttribute('data-hatch','half');
   const strip=$('arcaneGalleryStrip');if(strip){strip.replaceChildren();strip.dataset.ids='';}}
  const valid=(n,c)=>n===state.seq&&scope()===c&&allowed();
  async function thumb(row,c){
@@ -119,6 +130,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   for(const [id,url] of state.thumbs){if(!visible.has(id)){
    win().URL.revokeObjectURL(url);state.thumbs.delete(id);
   }}
+  $('arcaneGalleryHatchTest')?.classList.toggle('hidden',!isGM());
   $('arcaneGalleryCount').textContent=rows.length+' '+(rows.length===1?'delad bild':'delade bilder');
   $('arcaneGalleryEmpty').classList.toggle('hidden',!!state.selected);
   // Standalone carousel is visible again; thumbnail URLs still follow RLS.
@@ -231,6 +243,17 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(action==='open')sizeArcaneFrame(root,img,win().innerHeight);
   return true;
  }
+ // Local GM-only prototype controls. No campaign write or published state.
+ function testCarouselHatch(position){
+  if(!mounted||!allowed()||!isGM()||!['open','half','closed'].includes(position))return false;
+  const carousel=root.querySelector('.arcane-gallery-carousel');
+  if(!carousel)return false;
+  carousel.dataset.hatch=position;
+  root.querySelectorAll('[data-hatch-test]').forEach(button=>{
+   button.setAttribute('aria-pressed',String(button.dataset.hatchTest===position));
+  });
+  return true;
+ }
  function openFull(){const row=state.rows.find(r=>r.id===state.selected);if(!row||!allowed())return;
   if(typeof legolas.previewSequence==='function')legolas.previewSequence(state.rows,row.id);
   else legolas.previewMaterial(row);
@@ -257,6 +280,11 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
     if(step(e.key==='ArrowLeft'?-1:1))e.preventDefault();
    }
   });
+  root.querySelector('#arcaneGalleryHatchTest')?.addEventListener('click',e=>{
+   const button=e.target.closest('[data-hatch-test]');if(button)testCarouselHatch(button.dataset.hatchTest);
+  });
+  root.querySelectorAll('[data-hatch-test]').forEach(button=>
+   button.setAttribute('aria-pressed',String(button.dataset.hatchTest==='half')));
   root.querySelector('#arcaneGalleryPrev').addEventListener('click',()=>step(-1));
   root.querySelector('#arcaneGalleryNext').addEventListener('click',()=>step(1));
   // Horizontal touch gestures switch pictures without blocking vertical page scroll.
@@ -285,5 +313,5 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   });
   return root;
  }
- return {mount,sync,refresh,clear,step,testShutter,state,root};
+ return {mount,sync,refresh,clear,step,testShutter,testCarouselHatch,state,root};
 }
