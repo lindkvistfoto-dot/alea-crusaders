@@ -66,7 +66,8 @@ function harness({gm=false}={}){
  });
  return {gallery,session,elements,styleProps,scenes,parts,history,materials,revoked,reads,requestPaths};
 }
-async function settle(){for(let n=0;n<60;n++)await Promise.resolve();}
+// Four mechanical locks add detent awaits; flush the entire synthetic animation cycle.
+async function settle(){for(let n=0;n<240;n++)await Promise.resolve();}
 describe('GOOSE 04B player-only integration',()=>{
  it('mounts the three real HERMES WebPs and opens once at 4:3 before morphing',async()=>{
   const h=harness();h.gallery.mount();h.gallery.sync(rows[0],1);

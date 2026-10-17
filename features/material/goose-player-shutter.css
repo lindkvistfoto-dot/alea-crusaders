@@ -1,14 +1,73 @@
-/* GOOSE 04: player gallery inner shutter only, no GM styles. */
+/* GOOSE 06 · The Four Locks. The existing HERMES metalwork is never warped.
+ * All lock lamps and both sigil halves are physically carried by their doors.
+ */
 #arcaneGallery .arcane-gallery-picture{isolation:isolate}
-#arcaneGallery .goose-player-shutter{position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none;isolation:isolate}
-#arcaneGallery .goose-player-door{position:absolute;top:0;width:50%;height:100%;overflow:hidden;will-change:transform}
+#arcaneGallery .goose-player-shutter{
+ position:absolute;inset:0;z-index:2;overflow:hidden;
+ pointer-events:none;isolation:isolate;
+}
+#arcaneGallery .goose-player-door{
+ position:absolute;top:0;width:50%;height:100%;overflow:hidden;
+ will-change:transform;
+}
 #arcaneGallery .goose-player-door--left{left:0}
 #arcaneGallery .goose-player-door--right{right:0}
-#arcaneGallery .goose-player-door img{display:block;width:100%;height:100%;object-fit:fill}
-#arcaneGallery .goose-player-seal{position:absolute;left:32.2%;top:24.86%;width:35.6%;height:48.5%;will-change:transform,opacity;filter:drop-shadow(0 3px 6px #000c)}
-#arcaneGallery .goose-player-seal img{width:100%;height:100%;display:block}
-#arcaneGallery .goose-player-energy{position:absolute;inset:0;opacity:0;pointer-events:none;box-shadow:inset 0 0 14px #3ea5ff88}
+#arcaneGallery .goose-player-door > img{
+ display:block;width:100%;height:100%;object-fit:fill;
+}
+/* The seal remains a single, intact rotor throughout all four detents.
+ * At exactly 360deg it resolves into two pixel-matched, door-mounted crops.
+ * Moving the doors moves the seal halves by precisely the same distance. */
+#arcaneGallery .goose-player-seal{
+ position:absolute;left:32.2%;top:24.86%;width:35.6%;height:48.5%;
+ will-change:transform;filter:drop-shadow(0 3px 6px #000c);
+ transform-origin:50% 50%;
+}
+#arcaneGallery .goose-player-seal > img{width:100%;height:100%;display:block}
+#arcaneGallery .goose-player-seal-half{
+ position:absolute;top:24.86%;height:48.5%;width:35.6%;
+ display:block;opacity:0;
+ background-repeat:no-repeat;
+ background-size:200% 100%;
+ filter:drop-shadow(0 3px 6px #000c);
+}
+#arcaneGallery .goose-player-seal-half--left{
+ left:64.4%;background-position:left center;
+}
+#arcaneGallery .goose-player-seal-half--right{
+ left:0;background-position:right center;
+}
+#arcaneGallery .goose-player-shutter--split .goose-player-seal-half{opacity:1}
+/* Four gemstone lenses bolted into the two shutters.
+ * North -> east -> south -> west illuminate on their detents.
+ * They never float, change position or follow the rotating center emblem. */
+#arcaneGallery .goose-player-lamp{
+ position:absolute;display:block;z-index:2;
+ width:clamp(7px,1.18cqw,14px);height:clamp(7px,1.18cqw,14px);
+ box-sizing:border-box;border-radius:50%;
+ border:1px solid #aa8950;
+ background:radial-gradient(circle at 32% 25%,#736446 0%,#252424 44%,#091016 80%);
+ box-shadow:inset 0 1px 2px #ffe1a355,0 1px 4px #000c;
+ transform:translateY(-50%);transition:background-color 150ms,box-shadow 150ms;
+}
+#arcaneGallery .goose-player-lamp::after{
+ content:"";position:absolute;inset:20%;border-radius:50%;
+ background:#192734;box-shadow:inset 0 0 2px #000;
+}
+#arcaneGallery .goose-player-lamp.is-lit{
+ border-color:#99dfff;
+ background:radial-gradient(circle at 35% 28%,#ecffff 0%,#77daff 36%,#125a9d 68%,#07162b 95%);
+ box-shadow:inset 0 0 3px #fff,0 0 7px 2px #38aafe,0 0 17px #2e87f3b5;
+}
+#arcaneGallery .goose-player-lamp.is-lit::after{
+ background:#b1eeff;box-shadow:0 0 7px #5fcfff;
+}
+#arcaneGallery .goose-player-lamp--north{right:3%;top:19.5%;transform:translate(50%,-50%)}
+#arcaneGallery .goose-player-lamp--east{left:34.6%;top:50%;transform:translate(-50%,-50%)}
+#arcaneGallery .goose-player-lamp--south{left:3%;top:80.5%;transform:translate(-50%,-50%)}
+#arcaneGallery .goose-player-lamp--west{right:34.6%;top:50%;transform:translate(50%,-50%)}
 #arcaneGallery .goose-player-shutter--open .goose-player-door{visibility:hidden}
 @media(prefers-reduced-motion:reduce){
  #arcaneGallery .goose-player-door,#arcaneGallery .goose-player-seal{will-change:auto}
+ #arcaneGallery .goose-player-lamp{transition:none}
 }
