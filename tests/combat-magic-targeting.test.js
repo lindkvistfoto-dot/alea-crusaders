@@ -64,7 +64,8 @@ describe('Eld — SR1 preparation and SR2 targeting',()=>{
   expect(t.scope.api.ready(t.caster,t.action)).toBe(true);
   expect(t.scope.api.targets(t.caster,t.action).has('nox')).toBe(true);
   expect(t.scope.api.candidates(t.caster,t.action).has('nox')).toBe(true);
-  expect(t.scope.api.html(t.caster,t.action)).toContain('Tryck på målporträttet');
+  // The picker now opens from the target portrait, rather than duplicating a hint below the frames.
+  expect(t.scope.api.html(t.caster,t.action)).toBe('');
   t.scope.combatMobileMagicTargetPickerOpen=true;
   expect(t.scope.api.html(t.caster,t.action)).toContain('Nox');
  });
