@@ -20,4 +20,8 @@ The code module `features/material/goose-player-shutter.js` exports a rendering 
 
 No new Supabase tables or database writes. No public access to private campaign media. No modifications to the GM preview. The optional controller accepts only repository-local WebP sources and never reads campaign data.
 
-The standalone offline prototype and its source sprite ZIP are delivered separately. The split GOOSE 04 art includes machine-generated decorative bronze extensions used to keep original metalwork undistorted in 4:3; these remain *provisional* until final image approval.
+Three **provisional** alpha PNG sprites have now been copied into the existing HERMES 2.1 TEMP INBOX on Google Drive with immutable source SHA-256 and exact Drive IDs pinned in `features/material/goose04/source-manifest.json`. The HERMES intake, preparer and publisher have been extended to accept **only** these three GOOSE UI keys and exact source dimensions. GOOSE publishing writes immutable original PNGs and alpha-preserving player-only WebPs under `features/material/goose04/`, without Supabase mutations or changes to currently active Gallery artwork.
+
+These original generated metal sprites remain *provisional* for final visual approval. Their publication to repository storage is distinct from activating the door animation in the player viewer. An app integration PR and authenticated production acceptance are still required.
+
+The standalone offline prototype and source ZIP are delivered separately. The split GOOSE 04 art includes machine-generated decorative bronze extensions used to keep original metalwork undistorted in 4:3; these remain *provisional* until final image approval.
