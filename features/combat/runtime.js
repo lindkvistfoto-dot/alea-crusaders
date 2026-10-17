@@ -6941,6 +6941,7 @@ function renderCombat(){
  void window.aleaSpellArt?.hydrateCombat?.(body);
  combatBindSpellCarousel(body);
  window.aleaCombatArtViewer?.render?.();
+ window.aleaCombatArtViewer?.bind?.(body);
  void combatSyncActiveSpellArtwork();
 }
 
