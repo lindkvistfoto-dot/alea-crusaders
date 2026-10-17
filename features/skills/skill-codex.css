@@ -1,0 +1,100 @@
+/* ARCANE SKILL CODEX — scoped to the read-only skill details modal. */
+#skillModal.skill-codex-active{background:rgba(9,7,5,.83);backdrop-filter:blur(5px);padding:12px;z-index:1430}
+#skillModal.skill-codex-active>.modal{
+  position:relative;width:min(720px,100%);max-height:min(94dvh,960px);
+  padding:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  border:2px solid #ac8749;border-radius:18px;
+  background:#17130e;color:#f2ddb4;
+  box-shadow:0 0 0 1px #352514,0 0 0 4px rgba(21,15,10,.72),0 25px 80px #000c,inset 0 0 30px #0008;
+  scrollbar-color:#806137 #1b160f;
+}
+#skillModal.skill-codex-active>.modal::before{
+  position:absolute;inset:5px;z-index:3;pointer-events:none;content:"";
+  border:1px solid rgba(233,190,112,.36);border-radius:13px;
+}
+#skillModal.skill-codex-active .modalhead{
+  position:relative;min-height:104px;padding:17px 72px 16px 112px;
+  align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 0,rgba(82,68,42,.35),transparent 65%),linear-gradient(135deg,#1a211b,#111711 55%,#19130e);
+  border-bottom:2px solid #8e6b37;
+}
+#skillModal.skill-codex-active .modalhead::after{
+  position:absolute;bottom:-9px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:14px;height:14px;border:1px solid #d5aa61;background:#73552f;content:"";z-index:4
+}
+#skillModal.skill-codex-active #skillModalTitle{
+  margin:0;text-align:center;color:#f4db9d;
+  font:normal clamp(25px,5vw,40px)/1.12 Georgia,"Times New Roman",serif;
+  letter-spacing:.03em;text-shadow:0 2px 2px #000,0 0 16px #d2a45c45;
+  overflow-wrap:anywhere;
+}
+#skillModal.skill-codex-active .skill-codex-icon{
+  position:absolute;top:14px;left:19px;width:72px;height:72px;z-index:5;
+  display:grid;place-items:center;border-radius:50%;
+  background:radial-gradient(circle,#57452e,#211c16 70%);
+  border:1px solid #94703c;box-shadow:0 0 0 3px #16130e,0 1px 14px #0009;
+  overflow:hidden;
+}
+#skillModal.skill-codex-active .skill-codex-icon img{display:block;width:100%;height:100%;object-fit:contain}
+#skillModal.skill-codex-active .skill-codex-icon.is-empty{color:#ba9c65;font:32px Georgia,serif}
+#skillModal.skill-codex-active .modalclose{
+  position:absolute;top:19px;right:20px;width:49px;height:49px;margin:0;
+  border-radius:50%;border:2px solid #b98a4b;
+  background:radial-gradient(circle at 40% 32%,#9b3930,#4d1215 75%);
+  color:#f1d9a0;font:normal 32px/1 Georgia,serif;
+  box-shadow:inset 0 0 0 2px #391012,0 3px 12px #0008;z-index:5
+}
+#skillModal.skill-codex-active .modalclose:hover,#skillModal.skill-codex-active .modalclose:focus-visible{
+  border-color:#f0d196;filter:brightness(1.2);outline-offset:3px;
+}
+#skillModal.skill-codex-active #skillModalBody{background:linear-gradient(135deg,#14120e,#292116 52%,#16120e);padding:0}
+.skill-codex-hero{
+  position:relative;width:100%;aspect-ratio:1.9/1;min-height:215px;max-height:370px;
+  overflow:hidden;background:radial-gradient(circle at 50% 35%,#504333,#171a15 72%);
+  border-bottom:3px ridge #9f7a43;
+}
+.skill-codex-hero img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 42%}
+.skill-codex-hero:not(.has-art)::before{
+  position:absolute;inset:0;content:"";opacity:.55;
+  background:radial-gradient(circle,#9b7a473d 1px,transparent 2px) 0 0/24px 24px,linear-gradient(145deg,transparent 38%,#d4ac6630 50%,transparent 62%);
+}
+.skill-codex-hero-fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#ceb88d;font:italic 17px Georgia,serif;padding:25px}
+.skill-codex-hero.has-art .skill-codex-hero-fallback{display:none}
+.skill-codex-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:18px 17px 19px}
+.skill-codex-stat{min-width:0;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:13px 7px 12px;
+  background:linear-gradient(140deg,#31281c,#1b1712);border:1px solid #927044;border-radius:7px;
+  box-shadow:inset 0 0 0 1px #d3af6550,0 5px 12px #0007}
+.skill-codex-stat-label{font:normal 14px/1.2 Georgia,serif;color:#e6cb93}
+.skill-codex-stat-value{font:700 19px/1.1 Georgia,serif;color:#f6e4bf;overflow-wrap:anywhere}
+.skill-codex-description{
+  position:relative;margin:0 17px 18px;padding:24px 26px 28px;min-height:125px;
+  border:1px solid #b28a52;border-radius:7px;
+  background:linear-gradient(115deg,#c8a778,#efdbb1 24%,#e9d2a6 66%,#c5a377);
+  box-shadow:inset 0 0 20px #633f2b50,0 5px 12px #0008;color:#362719
+}
+#skillModal.skill-codex-active .skill-codex-description h3{
+  margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid #94774d88;
+  color:#3d2b1a;font:normal 25px/1.15 Georgia,serif
+}
+#skillModal.skill-codex-active .skill-codex-description p{
+  margin:0;white-space:pre-line;overflow-wrap:anywhere;
+  color:#352719;font:normal 17px/1.55 Georgia,serif
+}
+@media(max-width:560px){
+ #skillModal.skill-codex-active{padding:8px}
+ #skillModal.skill-codex-active>.modal{width:100%;max-height:calc(100dvh - 16px);border-radius:14px}
+ #skillModal.skill-codex-active .modalhead{min-height:83px;padding:12px 61px 12px 77px}
+ #skillModal.skill-codex-active #skillModalTitle{font-size:clamp(23px,6vw,31px)}
+ #skillModal.skill-codex-active .skill-codex-icon{width:52px;height:52px;top:14px;left:13px}
+ #skillModal.skill-codex-active .skill-codex-icon.is-empty{font-size:23px}
+ #skillModal.skill-codex-active .modalclose{width:39px;height:39px;top:19px;right:12px;font-size:27px}
+ .skill-codex-hero{aspect-ratio:1.25/1;min-height:175px;max-height:290px}
+ .skill-codex-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:13px 12px}
+ .skill-codex-stat{padding:10px 6px;gap:3px}
+ .skill-codex-stat-label{font-size:13px}
+ .skill-codex-stat-value{font-size:18px}
+ .skill-codex-description{margin:0 12px 14px;padding:18px 16px;min-height:100px}
+ #skillModal.skill-codex-active .skill-codex-description h3{font-size:23px}
+ #skillModal.skill-codex-active .skill-codex-description p{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){#skillModal.skill-codex-active .modalclose{transition:none}}
