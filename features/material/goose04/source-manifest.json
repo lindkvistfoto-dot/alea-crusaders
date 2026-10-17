@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "staging; not enabled in player gallery",
+  "assets": {
+    "arcane-gallery-goose-left": {
+      "drive_file_id": "1WxcqUTpQV_nRpOzxDXHnUI8lf2fCC6G3",
+      "name": "goose04_left_c6c2f3dc5508.png",
+      "sha256": "c6c2f3dc550869108fb6ece2011ed6fcc37c0046cd59f5bb1f6ebd598ba4a2a8",
+      "bytes": 1322776,
+      "pixels": [
+        724,
+        1086
+      ],
+      "alpha_minmax": [
+        0,
+        255
+      ]
+    },
+    "arcane-gallery-goose-right": {
+      "drive_file_id": "1ftDBiUKxEogYCbRolP-66Ph9rDbLUQWJ",
+      "name": "goose04_right_51f99a79769e.png",
+      "sha256": "51f99a79769e03d04eae6d47fc049a767cbf22b34d1eff63480777f3864db86d",
+      "bytes": 1310897,
+      "pixels": [
+        724,
+        1086
+      ],
+      "alpha_minmax": [
+        0,
+        255
+      ]
+    },
+    "arcane-gallery-goose-seal": {
+      "drive_file_id": "1bLWYRvTEI2mDUQaRwYFm0sqGPMtB9edO",
+      "name": "goose04_seal_1589692a54c2.png",
+      "sha256": "1589692a54c248e4f298ed61246bc47fdab39fc10e7fa27c4a55d044623aa251",
+      "bytes": 455885,
+      "pixels": [
+        515,
+        527
+      ],
+      "alpha_minmax": [
+        0,
+        255
+      ]
+    }
+  }
+}

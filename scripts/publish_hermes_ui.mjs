@@ -7,9 +7,12 @@ import {readFileSync} from 'node:fs';
 const repo=process.env.GITHUB_REPOSITORY,token=process.env.GITHUB_TOKEN;
 const key=process.env.HERMES_UI_KEY;
 if(repo!=='lindkvistfoto-dot/alea-crusaders'||!token||
- !['arcane-mechanism-link','arcane-mechanism-chamber','arcane-gallery-overlay'].includes(key))throw Error('Invalid HERMES UI context');
-const dir=key==='arcane-gallery-overlay'?'features/material/':'features/combat/';
-const paths=[dir+key+'.webp',dir+key+'.json'];
+ !['arcane-mechanism-link','arcane-mechanism-chamber','arcane-gallery-overlay',
+  'arcane-gallery-goose-left','arcane-gallery-goose-right','arcane-gallery-goose-seal'].includes(key))throw Error('Invalid HERMES UI context');
+const goose=key.startsWith('arcane-gallery-goose-');
+const dir=goose?'features/material/goose04/':key==='arcane-gallery-overlay'?'features/material/':'features/combat/';
+const stem=goose?key.slice('arcane-gallery-goose-'.length):key;
+const paths=[dir+stem+'.webp',dir+stem+'.json'];
 const files=new Map(paths.map(path=>[path,readFileSync(path)]));
 const metadata=JSON.parse(files.get(paths[1]).toString('utf8'));
 if(metadata.kind!=='ui'||metadata.target_key!==key||metadata.app_path!==paths[0])throw Error('Invalid UI manifest');

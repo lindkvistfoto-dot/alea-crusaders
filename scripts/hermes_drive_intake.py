@@ -27,7 +27,8 @@ FILE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 KEY_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 QUEUE_PATTERN = re.compile(r"^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$")
 MAX_BYTES = 8_388_608
-UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay"}
+UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay",
+              "arcane-gallery-goose-left", "arcane-gallery-goose-right", "arcane-gallery-goose-seal"}
 
 
 def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int, bytes]:
@@ -96,16 +97,23 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         if image.format != "PNG":
             raise ValueError("BAD_PNG_FORMAT")
         if kind == "ui":
-            if target_key not in UI_TARGETS or not (640 <= image.width <= 4096 and (
+            if target_key not in UI_TARGETS or not ((target_key.startswith("arcane-gallery-goose-") and (
+                image.size in {(724, 1086), (515, 527)})) or (640 <= image.width <= 4096 and (
                 (target_key == "arcane-mechanism-link" and (
                     image.width * 2 == 3 * image.height or image.width * 3 == 4 * image.height
                     or image.width * 4 == 3 * image.height
                 ))
                 or (target_key == "arcane-mechanism-chamber" and image.width == 3 * image.height)
                 or (target_key == "arcane-gallery-overlay" and (image.width, image.height) == (1536, 1024))
-            )):
+                or (target_key in {"arcane-gallery-goose-left", "arcane-gallery-goose-right"}
+                    and image.size == (724, 1086))
+                or (target_key == "arcane-gallery-goose-seal" and image.size == (515, 527))
+            ))):
                 raise ValueError("BAD_UI_PNG")
-            if target_key == "arcane-mechanism-link":
+            if target_key.startswith("arcane-gallery-goose-"):
+                if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
+                    raise ValueError("GOOSE_SPRITE_REQUIRES_TRUE_ALPHA")
+            elif target_key == "arcane-mechanism-link":
                 if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
                     raise ValueError("UI_LINK_REQUIRES_TRUE_ALPHA")
             elif target_key == "arcane-gallery-overlay":
@@ -219,6 +227,13 @@ def run(request_path: str) -> None:
     print("QUEUE_ACCEPTED", request_path, request["mode"], request["kind"], request["target_key"])
     data = google_file(file_id)
     digest = validate_png(data, request["kind"], request["target_key"])
+    if request["target_key"].startswith("arcane-gallery-goose-"):
+        if request["kind"] != "ui":
+            raise ValueError("GOOSE_REQUIRES_UI_KIND")
+        manifest = json.loads((root / "features/material/goose04/source-manifest.json").read_text())
+        pinned = manifest["assets"].get(request["target_key"])
+        if not pinned or file_id != pinned["drive_file_id"] or digest != pinned["sha256"] or len(data) != pinned["bytes"]:
+            raise ValueError("GOOSE_SOURCE_PIN_MISMATCH")
     path = (
         "assets/hermes/originals/" + request["kind"] + "/" + request["target_key"]
         + "/" + digest + ".png"

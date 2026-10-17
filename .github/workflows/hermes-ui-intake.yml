@@ -28,7 +28,7 @@ jobs:
           HERMES_SOURCE_PATH: ${{ inputs.source_path }}
         run: |
           set -euo pipefail
-          if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay)/[a-f0-9]{64}\.png$ ]]; then
+          if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay|arcane-gallery-goose-left|arcane-gallery-goose-right|arcane-gallery-goose-seal)/[a-f0-9]{64}\.png$ ]]; then
             echo "::error::Invalid HERMES UI source path"; exit 1
           fi
           python scripts/hermes_ui_prepare.py --source "$HERMES_SOURCE_PATH"
