@@ -11,7 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCES = ROOT / "assets/hermes/originals/ui"
 KEYS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay",
         "arcane-gallery-goose-left", "arcane-gallery-goose-right", "arcane-gallery-goose-seal"}
-PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay|arcane-gallery-goose-left|arcane-gallery-goose-right|arcane-gallery-goose-seal)/([a-f0-9]{64})\.png$")
+CODEX_KEYS = {"arcane-skill-codex-outer-frame", "arcane-skill-codex-header", "arcane-skill-codex-leather", "arcane-skill-codex-dark-panel", "arcane-skill-codex-parchment-fishing", "arcane-skill-codex-parchment-neutral", "arcane-skill-codex-stat-plate", "arcane-skill-codex-medallion", "arcane-skill-codex-close-button", "arcane-skill-codex-divider", "arcane-skill-codex-illustration-frame", "arcane-skill-codex-ornament"}
+KEYS |= CODEX_KEYS
+PATTERN = re.compile(r"^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay|arcane-gallery-goose-left|arcane-gallery-goose-right|arcane-gallery-goose-seal|arcane-skill-codex-(?:outer-frame|header|leather|dark-panel|parchment-fishing|parchment-neutral|stat-plate|medallion|close-button|divider|illustration-frame|ornament))/([a-f0-9]{64})\.png$")
 LINK_SIZES = {(3, 2): (768, 512), (4, 3): (768, 576), (3, 4): (576, 768)}
 CHAMBER_SIZE = (768, 256)
 LIMIT = 300000
@@ -35,7 +37,8 @@ def prepare(source_name: str) -> tuple[str, str]:
         original.load()
         link_size = next((pixels for (w, h), pixels in LINK_SIZES.items()
                          if original.width * h == original.height * w), None)
-        if original.format != "PNG" or not ((key in GOOSE_SIZES and original.size == GOOSE_SIZES[key]) or (640 <= original.width <= 4096 and (
+        codex = key in CODEX_KEYS
+        if original.format != "PNG" or not ((codex and 100 <= original.width <= 4096 and 40 <= original.height <= 4096 and original.width * original.height <= 16_000_000) or (key in GOOSE_SIZES and original.size == GOOSE_SIZES[key]) or (640 <= original.width <= 4096 and (
             (key == "arcane-mechanism-link" and link_size is not None)
             or (key == "arcane-mechanism-chamber" and original.width == original.height * 3)
             or (key == "arcane-gallery-overlay" and original.size == (1536, 1024))
@@ -43,7 +46,21 @@ def prepare(source_name: str) -> tuple[str, str]:
         ))):
             raise ValueError("HERMES_UI_BAD_PNG")
         size = link_size if key == "arcane-mechanism-link" else CHAMBER_SIZE
-        if key in GOOSE_SIZES:
+        if codex:
+            if original.mode != "RGBA":
+                raise ValueError("HERMES_CODEX_REQUIRES_RGBA")
+            alpha_min, alpha_max = original.getchannel("A").getextrema()
+            if alpha_min > 16 or alpha_max < 240:
+                raise ValueError("HERMES_CODEX_REQUIRES_ALPHA")
+            image = original.convert("RGBA")
+            if max(image.size) > 1280:
+                factor = 1280 / max(image.size)
+                size = (max(1,round(image.width*factor)),max(1,round(image.height*factor)))
+                image = image.resize(size,Image.Resampling.LANCZOS)
+            else:
+                size = image.size
+            required_alpha = image.getchannel("A").tobytes()
+        elif key in GOOSE_SIZES:
             if original.mode != "RGBA" or original.getchannel("A").getextrema() != (0, 255):
                 raise ValueError("HERMES_GOOSE_ALPHA_REQUIRED")
             image = original.convert("RGBA")
@@ -101,13 +118,15 @@ def prepare(source_name: str) -> tuple[str, str]:
                 image = original.convert("RGB").resize(size, Image.Resampling.LANCZOS)
                 image = ImageEnhance.Brightness(image).enhance(0.80)
                 required_alpha = None
-    app_path = (ROOT / "features/material/goose04" / (key.removeprefix("arcane-gallery-goose-") + ".webp")
+    app_path = (ROOT / "features/skills/codex-assets" / (key.removeprefix("arcane-skill-codex-") + ".webp")
+                if codex else
+                ROOT / "features/material/goose04" / (key.removeprefix("arcane-gallery-goose-") + ".webp")
                 if key in GOOSE_SIZES else
                 ROOT / ("features/material" if key == "arcane-gallery-overlay" else "features/combat") / (key + ".webp"))
     app_path.parent.mkdir(parents=True, exist_ok=True)
-    image.save(app_path, "WEBP", quality=88 if key in GOOSE_SIZES else (80 if key == "arcane-gallery-overlay" else (86 if required_alpha else 82)), method=6, exact=True)
+    image.save(app_path, "WEBP", quality=86 if codex else (88 if key in GOOSE_SIZES else (80 if key == "arcane-gallery-overlay" else (86 if required_alpha else 82))), method=6, exact=True)
     app = app_path.read_bytes()
-    if not 100 <= len(app) <= LIMIT:
+    if not 100 <= len(app) <= (850000 if codex else LIMIT):
         raise ValueError("HERMES_UI_WEBP_SIZE_INVALID")
     with Image.open(app_path) as verify:
         verify.load()

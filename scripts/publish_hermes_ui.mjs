@@ -6,12 +6,13 @@ import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 const repo=process.env.GITHUB_REPOSITORY,token=process.env.GITHUB_TOKEN;
 const key=process.env.HERMES_UI_KEY;
+const codexKeys=new Set(['arcane-skill-codex-outer-frame','arcane-skill-codex-header','arcane-skill-codex-leather','arcane-skill-codex-dark-panel','arcane-skill-codex-parchment-fishing','arcane-skill-codex-parchment-neutral','arcane-skill-codex-stat-plate','arcane-skill-codex-medallion','arcane-skill-codex-close-button','arcane-skill-codex-divider','arcane-skill-codex-illustration-frame','arcane-skill-codex-ornament']);
 if(repo!=='lindkvistfoto-dot/alea-crusaders'||!token||
  !['arcane-mechanism-link','arcane-mechanism-chamber','arcane-gallery-overlay',
-  'arcane-gallery-goose-left','arcane-gallery-goose-right','arcane-gallery-goose-seal'].includes(key))throw Error('Invalid HERMES UI context');
+  'arcane-gallery-goose-left','arcane-gallery-goose-right','arcane-gallery-goose-seal'].includes(key) && !codexKeys.has(key))throw Error('Invalid HERMES UI context');
 const goose=key.startsWith('arcane-gallery-goose-');
-const dir=goose?'features/material/goose04/':key==='arcane-gallery-overlay'?'features/material/':'features/combat/';
-const stem=goose?key.slice('arcane-gallery-goose-'.length):key;
+const dir=codexKeys.has(key)?'features/skills/codex-assets/':goose?'features/material/goose04/':key==='arcane-gallery-overlay'?'features/material/':'features/combat/';
+const stem=codexKeys.has(key)?key.slice('arcane-skill-codex-'.length):goose?key.slice('arcane-gallery-goose-'.length):key;
 const paths=[dir+stem+'.webp',dir+stem+'.json'];
 const files=new Map(paths.map(path=>[path,readFileSync(path)]));
 const metadata=JSON.parse(files.get(paths[1]).toString('utf8'));
