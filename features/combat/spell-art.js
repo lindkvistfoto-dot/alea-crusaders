@@ -112,7 +112,12 @@
  function geometry(img,view,v){
   if(!img?.naturalWidth||!img?.naturalHeight||!view?.getBoundingClientRect)return null;
   const rect=view.getBoundingClientRect();
-  const w=rect.width||view.clientWidth,h=rect.height||view.clientHeight;
+  // Carousel perspective transforms resize the *visual* box but not the
+  // physical icon slot. Cropping against that transformed box double-scales
+  // the icon when it moves from a side window into the central window.
+  const cryptexArt=view.classList?.contains('combat-carousel-spell-art')===true;
+  const w=(cryptexArt?view.offsetWidth:rect.width)||view.clientWidth;
+  const h=(cryptexArt?view.offsetHeight:rect.height)||view.clientHeight;
   if(!(w>0&&h>0))return null;
   const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight)*(zoom(v.zoom)/100);
   const iw=img.naturalWidth*scale,ih=img.naturalHeight*scale;
@@ -396,6 +401,19 @@
    })();
   }
  }
+ // The carousel computes its final tile size AFTER the initial DOM render.
+ // Reapply each loaded icon's crop at that size, retaining saved focus/zoom.
+ function refreshCarouselCrops(root){
+  if(!root?.querySelectorAll)return;
+  root.querySelectorAll('.combat-carousel-spell-art').forEach(view=>{
+   const img=view.querySelector('img');
+   if(!img||img.hidden||!img.naturalWidth)return;
+   positionImage(img,view,{
+    x:focus(view.dataset.focusX),y:focus(view.dataset.focusY),
+    zoom:zoom(view.dataset.zoom)
+   });
+  });
+ }
  function refreshVisibleCrops(){
   for(const kind of Object.keys(TYPES))previewFocus(kind);
   document.querySelectorAll('#adminSpellTable .spell-master-icon-thumb.icon-ready').forEach(button=>{
@@ -415,5 +433,5 @@
   });
  }
  if(typeof window.addEventListener==='function')window.addEventListener('resize',refreshVisibleCrops,{passive:true});
- window.aleaSpellArt={validPath,resolveUrl,artFor,editorHtml,hydrateEditor,hydrateAdminList,adminIconHtml,previewFocus,resetFocus,saveFocus,upload,remove,hydrateCombat,positionImage,positionCutout};
+ window.aleaSpellArt={validPath,resolveUrl,artFor,editorHtml,hydrateEditor,hydrateAdminList,adminIconHtml,previewFocus,resetFocus,saveFocus,upload,remove,hydrateCombat,positionImage,positionCutout,refreshCarouselCrops};
 })();
