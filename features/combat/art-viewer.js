@@ -107,6 +107,18 @@
    return value;
   }catch(_){return ''}
  }
+ function trustedDisplayedImageUrl(value){
+  if(!value)return '';
+  if(/^data:image\\/(?:png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(value)&&value.length<12000000)return value;
+  try{
+   const url=new URL(value,document.baseURI);
+   if(url.protocol==='blob:')return value;
+   if(!['https:','http:'].includes(url.protocol))return '';
+   const sameOrigin=url.origin===window.location.origin;
+   const sb=typeof SUPABASE_URL!=='undefined'&&url.origin===new URL(SUPABASE_URL).origin;
+   return sameOrigin||(sb&&url.pathname.startsWith('/storage/v1/object/'))?url.href:'';
+  }catch(_){return ''}
+ }
  function bind(root){
   if(!root)return;
   const equipment='.combat-turn-equip-art .combat-turn-art';
@@ -132,6 +144,28 @@
   if(root.dataset.aleaGalleryBound!=='1'){
    root.dataset.aleaGalleryBound='1';
   root.addEventListener('click',handle,true);
+  // Hex tokens and attacker/defender portraits also reveal the full combatant
+  // portrait. Do NOT cancel or stop these clicks: targeting must still work.
+  root.addEventListener('click',event=>{
+   const token=event.target?.closest?.('.combat-token-group[data-token-id]');
+   const duel=event.target?.closest?.('.combat-duelist-card[data-gallery-combatant-id] .combat-duelist-portrait');
+   const id=token?.getAttribute('data-token-id')||duel?.closest('[data-gallery-combatant-id]')?.getAttribute('data-gallery-combatant-id');
+   if(!id||!root.contains(token||duel))return;
+   const viewer=root.querySelector('#combatArtViewer');
+   if(!viewer||typeof window.aleaCombatGalleryPortrait!=='function')return;
+   const portrait=window.aleaCombatGalleryPortrait(id);
+   if(!portrait)return;
+   const fallback=token?.querySelector('.combat-portrait-image')?.getAttribute('href')||duel?.querySelector('img')?.src||'';
+   const src=portrait.src||fallback;
+   if(!src)return;
+   // Use the same image trust checks as other gallery sources.
+   // SVG portrait paths and rendered portrait URLs have already been resolved
+   // by the combat runtime; reject any non-app/non-storage origin.
+   const trusted=trustedDisplayedImageUrl(src);
+   if(!trusted)return;
+   show({title:portrait.title,source:'combatant',src:trusted,battleId:viewer.dataset.battleId});
+  },true);
+
   root.addEventListener('keydown',event=>{
    if(event.key!=='Enter'&&event.key!==' ')return;
    const target=event.target?.closest?.(targets);
