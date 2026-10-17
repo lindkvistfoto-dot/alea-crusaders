@@ -3762,13 +3762,22 @@ function mapAreaExistingClick(e,id){
  e.stopPropagation();
  let a=mapAreaEditAreas.find(x=>x.id===id);if(a)openMapStatusMenu(e,a);
 }
+function mapAreaInsertNodeOnEdge(poly,origin){
+ if(poly.some(p=>Math.hypot(p[0]-origin[0],p[1]-origin[1])<.01))return poly.map(p=>p.slice());
+ const result=[];
+ for(let i=0;i<poly.length;i++){
+  const p=poly[i],next=poly[(i+1)%poly.length];result.push(p.slice());
+  if(pointOnSegment(origin,p,next)&&Math.hypot(p[0]-origin[0],p[1]-origin[1])>.01&&Math.hypot(next[0]-origin[0],next[1]-origin[1])>.01)result.push(origin.slice());
+ }
+ return result;
+}
 function mapAreaNodeStart(e,id,index){
  if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
  e.preventDefault();e.stopPropagation();
  let a=mapAreaEditAreas.find(a=>a.id===id),origin=areaShapePoints(a)[index];if(!origin)return;
  mapAreaSelectedId=id;
- let impacted=mapAreaEditAreas.filter(a=>areaShapePoints(a).some(p=>Math.hypot(p[0]-origin[0],p[1]-origin[1])<.01));
- mapAreaNodeDrag={origin:origin.slice(),impacted:impacted.map(a=>({id:a.id,old:areaShapePoints(a),shape_type:a.shape_type})),changed:false};
+ let impacted=mapAreaEditAreas.filter(a=>{let pts=areaShapePoints(a);return pts.some(p=>Math.hypot(p[0]-origin[0],p[1]-origin[1])<.01)||pts.some((p,i)=>pointOnSegment(origin,p,pts[(i+1)%pts.length]))});
+ mapAreaNodeDrag={origin:origin.slice(),impacted:impacted.map(a=>({id:a.id,old:areaShapePoints(a),working:mapAreaInsertNodeOnEdge(areaShapePoints(a),origin),shape_type:a.shape_type})),changed:false};
  window.addEventListener('pointermove',mapAreaNodeMove);window.addEventListener('pointerup',mapAreaNodeEnd,{once:true});window.addEventListener('pointercancel',mapAreaNodeCancel,{once:true});
  renderMapAreaEditor();
 }
@@ -3788,7 +3797,7 @@ function mapAreaNodeMove(e){
  let drag=mapAreaNodeDrag;if(!drag)return;
  let p=mapAreaNodePosition(e);drag.changed=true;
  for(let item of drag.impacted){let area=mapAreaEditAreas.find(a=>a.id===item.id);if(!area)continue;
-  let points=item.old.map(v=>Math.hypot(v[0]-drag.origin[0],v[1]-drag.origin[1])<.01?p.slice():v.slice());
+  let points=item.working.map(v=>Math.hypot(v[0]-drag.origin[0],v[1]-drag.origin[1])<.01?p.slice():v.slice());
   area.shape_type='polygon';area.shape_data={...area.shape_data,points};
  }
  renderMapAreaEditor();
