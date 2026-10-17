@@ -88,7 +88,7 @@ describe("application architecture smoke checks", () => {
   test("prepared spells persist to next SR and status casts apply effects", () => {
     const combat = read("features/combat/runtime.js");
     expect(combat).toContain("'&round_number=gte.'+Math.max(1,round-1)");
-    expect(combat).toContain("Number(action.source_data?.ready_round)<=round");
+    expect(combat).toContain('(Number(activeCombat?.round_number)||1)<(Number(action.source_data?.ready_round)||1)');
     expect(combat).toContain("async function combatCastStatusSpell(actor,target,action)");
     expect(combat).toContain("event_type:'spell_effect'");
     expect(combat).toContain("effect_id:effect.id");
