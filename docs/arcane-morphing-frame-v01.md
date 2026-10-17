@@ -27,6 +27,10 @@
 
 The desktop/mobile snapshots validate *static appearance and media fit*. The recorded Chromium GIF validates real CSS motion with synthetic content. None of these is a substitute for an authenticated end-to-end session with actual GM/player accounts, nor for future video playback testing.
 
+## Fixed production browser bug (2026-10-17)
+
+The player gallery and GM preview both previously used `new win().IntersectionObserver(...)`. When browsers support IntersectionObserver, JavaScript tries to construct `win` instead of `win().IntersectionObserver`, causing the carousel to stop before the image is fetched. The constructor is now explicitly parenthesized as `new (win().IntersectionObserver)(...)` in both components. The synthetic browser smoke exercises this actual rendering path rather than only mocking the interface.
+
 ## Verification and release gates
 
 1. HERMES source, WebP transparency and individual image SHA checks: **passed**.
