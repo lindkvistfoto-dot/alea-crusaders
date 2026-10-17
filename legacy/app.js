@@ -4017,6 +4017,8 @@ function mapPointerUp(e){
 }
 function closeMapLocationInfo(){
  mapSelectedAreaId=null;mapLocationInfoToken++;
+ let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-empty">Välj en plats på kartan för att visa dess delade bilder.</div>'}
+ let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent='Välj en plats på kartan';
  let p=$('mapLocationPanel');if(p){p.classList.add('empty');p.innerHTML='<div class="map-location-empty">Klicka på en synlig plats på kartan för att visa information.</div>'}
  if(activeCampaignMap)renderMapPanel();
 }
@@ -4071,6 +4073,8 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  let a=campaignMapAreas.find(function(x){return x.id===areaId});if(!a)return;
  if(!canManageCampaignMaps()&&a.status==='unknown')return;
  mapSelectedAreaId=a.id;renderMapPanel();
+ let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent=a.name||'Plats';
+ let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-loading">Laddar delade bilder…</div>'}
  let p=$('mapLocationPanel');if(!p)return;
  p.classList.remove('empty');
  if(!a.location_id){
@@ -4089,7 +4093,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
   let pt=rows[0]||[],assets=(rows[1]||[]).filter(function(x){return !x.asset_type||x.asset_type==='image'}),gm=canManageCampaignMaps()?(rows[2]||[]):[];
   let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'';
   let editBtn=canManageCampaignMaps()?'<button class="btn" type="button" onclick="editLocationContent(\''+a.location_id+'\')">✎ Redigera innehåll</button>':'';
-  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(canManageCampaignMaps()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div><div class="map-location-section"><h4>Bilder</h4><div id="mapLocationGallery" class="map-location-gallery"></div></div>'+mapLocationEventsHtml(a.location_id)+(canManageCampaignMaps()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div>':'');
+  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(canManageCampaignMaps()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(canManageCampaignMaps()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div>':'');
   await renderMapLocationPhotos(assets);
  }catch(e){
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div><div class="map-location-empty">Kunde inte läsa platsinformationen: '+escAttr(e.message||'okänt fel')+'</div>';
