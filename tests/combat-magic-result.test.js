@@ -34,6 +34,7 @@ function fixture(overrides={}){
    special:'SÄRSKILT SLAG',perfect:'PERFEKT SLAG',fumble:'FUMMELSLAG'}[o],icon:'✦'}),
   combatDamageResultHtml:d=>d?'<div class="damage">Skada tilldelad</div>':'',
   combatRowPortraitUrl:c=>c?.portrait||'',
+  combatSpellCarouselHtml:()=>'<div data-test-cryptex></div>',
   combatTokenInitials:name=>String(name).split(' ').map(part=>part[0]).join(''),
   escAttr:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
  };
@@ -119,16 +120,17 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(waiting).not.toContain('combat-magic-detail-values');
   expect(waiting).not.toContain('Målet är valt');
   context.activeCombat.round_number=4;
-  expect(context.spellPanel()).toContain('Välj ett mål på kartan');
+  expect(context.spellPanel()).toContain('Välj mål');
+  expect(context.spellPanel()).toContain('combat-portrait-target-button');
   context.combatSelectedTargetId='fighter';
   const ready=context.spellPanel();
-  expect(ready).toContain('Klar att kasta');
+  expect(ready).toContain('Bekräfta kast');
   expect(ready).toContain('combat-magic-duel');
   expect(ready).not.toContain('>MAGIKER</span>');
   expect(ready).toContain('>MÅL</span>');
   expect(ready).toContain('Krigaren');
   expect(ready).toContain('combat-mini-arrow combat-magic-arrow');
-  expect(ready).toContain('Målet är valt. Tryck ✦ igen');
+  expect(ready).toContain('Byt mål');
   expect(ready).not.toContain('combat-spell-result');
  });
  test('vald, manuell och områdesbesvärjelse visar korrekt nästa steg',()=>{
@@ -138,13 +140,13 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   expect(context.spellPanel()).not.toContain('combat-mini-instruction');
   action.source_data.casting_spell=true;
   action.source_data.ready_round=3;
-  expect(context.spellPanel()).toContain('SL avgör effekten efter slaget');
+  expect(context.spellPanel()).toContain('Bekräfta kast');
   action.source_data.magic_binding.kind='area';
-  expect(context.spellPanel()).toContain('Välj centrum på kartan');
+  expect(context.spellPanel()).toContain('Markera centrum på kartan');
   action.source_data.area_center={q:2,r:3};
-  expect(context.spellPanel()).toContain('Klar att kasta');
+  expect(context.spellPanel()).toContain('Område valt');
   action.source_data.magic_binding.cube=true;
-  expect(context.spellPanel()).toContain('Väntar på SL');
+  expect(context.spellPanel()).toContain('<details class="combat-magic-extra" open>');
  });
  test('efter slaget visas resultatstatus utan detaljrutor',()=>{
   const {context,action}=fixture();
@@ -238,9 +240,10 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
    spell_effect_image_path:effect,spell_effect_focus_x:75,spell_effect_focus_y:60,spell_effect_zoom:170
   });
   const html=context.spellPanel();
-  expect(html).toContain('combat-mini-magic resolved has-spell-backdrop');
-  expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="75" data-focus-y="60" data-zoom="170"');
-  expect(html.indexOf('combat-magic-backdrop')).toBeLessThan(html.indexOf('combat-magic-heading'));
+  expect(html).toContain('combat-mini-magic resolved');
+  expect(html).not.toContain('combat-magic-backdrop');
+  expect(html).toContain('class="combat-duel-spell-art" data-spell-art-path="'+effect+'" data-focus-x="75" data-focus-y="60" data-zoom="170"');
+  expect(html.indexOf('combat-magic-heading')).toBeLessThan(html.indexOf('combat-duel-spell-art'));
   expect(html).not.toContain('>MAGIKER</span>');
   // A non-targeted/manual spell keeps the framed effect icon, not a false MÅL.
   expect(html).toContain('EFFEKT');
@@ -256,11 +259,12 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   });
   action.status='planned';action.source_data.casting_spell=false;
   const pending=context.spellPanel();
-  expect(pending).toContain('combat-mini-magic planning has-spell-backdrop');
-  expect(pending).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="85" data-focus-y="15" data-zoom="145"');
+  expect(pending).toContain('combat-mini-magic planning');
+  expect(pending).not.toContain('combat-magic-backdrop');
+  expect(pending).toContain('class="combat-duel-spell-art" data-spell-art-path="'+icon+'" data-focus-x="85" data-focus-y="15" data-zoom="145"');
   expect(pending).not.toContain('combat-mini-instruction');
   action.status='resolved';action.source_data.casting_spell=true;
-  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'"');
+  expect(context.spellPanel()).toContain('class="combat-duel-spell-art" data-spell-art-path="'+icon+'"');
  });
  test('förberedd äldre ELD får bakgrund från master trots att stridshandlingen saknar bildfält',()=>{
   const id='11111111-1111-4111-8111-111111111111';
@@ -277,25 +281,26 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   action.source_data.spell_key=id;
   action.source_data.casting_spell=true;
   const html=context.spellPanel();
-  expect(html).toContain('combat-mini-magic planning has-spell-backdrop');
-  expect(html).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
+  expect(html).toContain('combat-mini-magic planning');
+  expect(html).not.toContain('combat-magic-backdrop');
+  expect(html).toContain('class="combat-duel-spell-art" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
   // A result can still display artwork when a battle was prepared before
   // the artwork feature existed; the current master now controls UI visuals.
   action.status='resolved';
-  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'"');
+  expect(context.spellPanel()).toContain('class="combat-duel-spell-art" data-spell-art-path="'+effect+'"');
   action.source_data.spell_icon_path=icon;
   action.source_data.spell_icon_focus_x=12;
   action.source_data.spell_icon_focus_y=34;
   action.source_data.spell_icon_zoom=140;
   // A stale saved icon cannot override the currently configured master effect.
-   expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
+   expect(context.spellPanel()).toContain('class="combat-duel-spell-art" data-spell-art-path="'+effect+'" data-focus-x="65" data-focus-y="80" data-zoom="170"');
  });
  test('historisk besvärjelse kan matchas på namn när master-ID saknas',()=>{
   const id='11111111-1111-4111-8111-111111111111';
   const icon='spell/'+id+'/22222222-2222-4222-8222-222222222222.webp';
   const {context,action}=fixture({ruleSpells:[{id,name:'ELD (F)',spell_key:'eld',icon_path:icon,icon_focus_x:90,icon_focus_y:10,icon_zoom:150}]});
   action.source_data.spell_name='eld (f)';
-  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+icon+'" data-focus-x="90" data-focus-y="10" data-zoom="150"');
+  expect(context.spellPanel()).toContain('class="combat-duel-spell-art" data-spell-art-path="'+icon+'" data-focus-x="90" data-focus-y="10" data-zoom="150"');
  });
  test('Eld visar inte magikern som sitt eget mål vid återupptagen strid',()=>{
   const {context,action}=fixture();
@@ -307,19 +312,19 @@ describe('Besvärjelsens resultat i stridsrutan',()=>{
   context.combatSelectedTargetId='mage1'; // The loaded battle initially selects the active actor.
   const html=context.spellPanel();
   expect(html).toContain('Välj mål');
-  expect(html).not.toContain('Klar att kasta');
+  expect(html).not.toContain('Byt mål');
   expect(html).toContain('magic-empty-target');
   context.combatSelectedTargetId='fighter';
-  expect(context.spellPanel()).toContain('Klar att kasta');
+  expect(context.spellPanel()).toContain('Byt mål');
  });
  test('gamla stridshändelser fungerar med historisk bild och utan bild',()=>{
   const {context,action}=fixture();
   const old='spell/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222.webp';
   action.source_data.spell_image_path=old;
-  expect(context.spellPanel()).toContain('class="combat-magic-backdrop" data-spell-art-path="'+old+'"');
+  expect(context.spellPanel()).toContain('class="combat-duel-spell-art" data-spell-art-path="'+old+'"');
   action.source_data.spell_image_path='https://example.com/evil.png';
-  expect(context.spellPanel()).not.toContain('class="combat-magic-backdrop"');
-  expect(context.spellPanel()).not.toContain('has-spell-backdrop');
+  expect(context.spellPanel()).not.toContain('class="combat-duel-spell-art"');
+  expect(context.spellPanel()).not.toContain('data-spell-art-path="https://example.com/evil.png"');
  });
  test('områdesmagi och magi utan individuellt mål använder platshållarkort',()=>{
   const {context,action}=fixture();
