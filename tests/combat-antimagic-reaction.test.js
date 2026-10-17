@@ -25,6 +25,7 @@ function harness(known=true,spent=false){
   combatMagicPsyCost:()=>1,combatSpendMagicPsy:async()=>{},combatAwardSpellErf:async()=>null,
   combatRollDice:async()=>({rolls:[{value:12}]}),combatOutcomeLabel:s=>s,combatShowOutcomeOverlay:()=>{},
   combatMagicTargetAllocations:()=>[],combatMagicDamageFormula:()=> '2T6',
+  combatPlaySpellAnimation:()=>{},combatItemMagicAutomatedCount:()=>1,
   combatResolveDamage:async(a,victim)=>{damage.push(victim.id);return {total:7}},
   combatLoadEffects:async()=>{},loadActiveCombat:async()=>{},
   combatCanManage:()=>true,activeUser:()=>({id:'gm'}),escAttr:s=>String(s),
