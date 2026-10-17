@@ -60,7 +60,7 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
  it('sizes the new rigid-kit opening exactly for four source aspect ratios',()=>{
   const formats=[[16,9],[4,3],[1,1],[9,16]];
   const heights=formats.map(([w,h])=>arcaneKitFrameHeight(390,w,h,820));
-  expect(heights).toEqual([304,361,437,673]);
+  expect(heights).toEqual([269,326,402,638]);
   expect(arcaneKitFrameHeight(390,0,10)).toBeNull();
   expect(arcaneKitFrameHeight(-1,1,1)).toBeNull();
   const calls=[];
@@ -69,8 +69,8 @@ describe('Alea Arcane Gallery smooth telescopic media frame',()=>{
    querySelector:()=>({getBoundingClientRect:()=>({width:390}),
     style:{setProperty:(key,value)=>calls.push([key,value])}})
   };
-  expect(sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},820)).toBe(673);
-  expect(calls).toContainEqual(['--arcane-frame-height','673px']);
+  expect(sizeArcaneFrame(root,{naturalWidth:1080,naturalHeight:1920},820)).toBe(638);
+  expect(calls).toContainEqual(['--arcane-frame-height','638px']);
  });
  it('sets only the local media frame height; does not affect other Alea views',()=>{
   const writes=[],classes=[],root={
