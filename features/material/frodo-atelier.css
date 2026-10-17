@@ -470,3 +470,28 @@
   margin:12px 0 0!important
  }
 }
+
+/* GOOSE 05A: temporary shutter test buttons for GM only. */
+#legolasPanel .frodo-panel .frodo-goose-test-controls{
+ display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;
+ margin:4px auto 12px;padding:8px 10px;max-width:520px;
+ border:1px dashed #8c714e70;border-radius:9px;background:#1a211bc7;
+ color:#c4b18d;font:12px system-ui,sans-serif;
+}
+#legolasPanel .frodo-panel .frodo-goose-test-controls.hidden{display:none!important}
+#legolasPanel .frodo-panel .frodo-goose-test-label{
+ color:#af976e;font:700 10px system-ui,sans-serif;letter-spacing:.12em
+}
+#legolasPanel .frodo-panel .frodo-goose-test-controls button{
+ min-height:42px;min-width:95px;padding:7px 16px;border-radius:7px;
+ border:1px solid #c5a46d;background:linear-gradient(#3c3122,#211b16);
+ color:#f5ddb0;font:700 14px Georgia,serif;cursor:pointer
+}
+#legolasPanel .frodo-panel .frodo-goose-test-controls button:disabled{opacity:.45;cursor:wait}
+#legolasPanel .frodo-panel .frodo-goose-test-controls button:focus-visible{outline:3px solid #f9dc9a;outline-offset:2px}
+#legolasPanel .frodo-panel #frodoGooseTestStatus{
+ flex:1 1 100%;text-align:center;font:11px system-ui,sans-serif;color:#cdb994
+}
+@media(max-width:720px){
+ #legolasPanel.legolas-atelier-gm .frodo-goose-test-controls{margin:4px 9px 11px;padding:7px 8px}
+}
