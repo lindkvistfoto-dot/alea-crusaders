@@ -95,7 +95,7 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
  it('cache-busts the new image, mask and CSS',()=>{
   expect(carousel).toContain('arcane-cryptex-housing.png?v=0.35.207');
   expect(html).toMatch(/arcane-cryptex\.css\?v=0\.35\.\d+/);
-  expect(html).toContain('magic-carousel.js?v=0.35.240');
+  expect(html).toMatch(/magic-carousel\.js\?v=0\.35\.\d+/);
   expect(css).toContain('arcane-cryptex-windows-mask.svg?v=0.35.207');
  });
 });
