@@ -4,6 +4,8 @@ on:
     paths:
       - 'features/material/arcane-gallery*'
       - 'features/material/arcane-morph*'
+      - 'features/material/goose-player-shutter*'
+      - 'tests/goose-player-shutter.test.js'
       - 'features/material/frodo-ui.js'
       - 'features/material/library.js'
       - 'index.html'
@@ -31,7 +33,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - name: Gallery and integration regression tests
-        run: npx vitest run tests/arcane-gallery.test.js tests/arcane-gallery-aspect.test.js tests/arcane-morph-markup.test.js tests/arcane-morph-art-assets.test.js tests/arcane-gallery-release-smoke.test.js tests/arcane-gm-preview.test.js tests/material-legolas-viewer.test.js tests/material-atelier-mobile.test.js tests/material-polish.test.js tests/material-frodo-presentation.test.js
+        run: npx vitest run tests/arcane-gallery.test.js tests/goose-player-shutter.test.js tests/arcane-gallery-aspect.test.js tests/arcane-morph-markup.test.js tests/arcane-morph-art-assets.test.js tests/arcane-gallery-release-smoke.test.js tests/arcane-gm-preview.test.js tests/material-legolas-viewer.test.js tests/material-atelier-mobile.test.js tests/material-polish.test.js tests/material-frodo-presentation.test.js
       - name: Browser role-switch and four-ratio smoke (synthetic roles, no private data)
         shell: bash
         run: |
