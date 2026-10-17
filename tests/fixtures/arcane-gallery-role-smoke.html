@@ -112,7 +112,19 @@ run().then(result=>{
  document.querySelector('#result').textContent='PASS '+JSON.stringify(result);
 }).catch(err=>{
  document.documentElement.dataset.smoke='failed';
- window.__arcaneSmokeStatus={error:String(err.stack||err)};
+ window.__arcaneSmokeStatus={
+  error:String(err.stack||err),
+  player:{state:{campaign:gallery.state.campaign,selected:gallery.state.selected,
+   rows:gallery.state.rows.map(r=>r.id),seq:gallery.state.seq,original:gallery.state.original},
+   img:{complete:gallery.root.querySelector('#arcaneGalleryImage')?.complete,
+    width:gallery.root.querySelector('#arcaneGalleryImage')?.naturalWidth,
+    src:gallery.root.querySelector('#arcaneGalleryImage')?.getAttribute('src')?.slice(0,55)},
+   frameHeight:height(gallery.root),
+   status:gallery.root.querySelector('#arcaneGalleryStatus')?.textContent,
+   empty:gallery.root.querySelector('#arcaneGalleryEmpty')?.textContent},
+  requests:requests.slice(0,8),reads:reads.slice(0,8),
+  auth
+ };
  document.querySelector('#result').textContent='FAIL '+String(err.stack||err);
  console.error('ARCANE_AUTH_SMOKE_FAILED',err);
 });
