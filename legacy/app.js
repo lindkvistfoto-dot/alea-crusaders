@@ -3822,7 +3822,7 @@ async function mapAreaNodeEnd(){
 async function showMapAreaHoles(){
  if(!mapAreaEditMap||mapAreaDrawing||mapAreaNodeDrag)return;
  try{
-  const {findHoles}=await import('./features/map/polygon-topology.js');
+  const {findHoles}=await import('../features/map/polygon-topology.js');
   mapAreaHoleCandidates=findHoles(mapAreaEditAreas.map(areaShapePoints));
   renderMapAreaEditor();
   showBackupToast(mapAreaHoleCandidates.length?'Välj ett markerat tomrum för att fylla det':'Inga slutna tomrum hittades');
@@ -3832,7 +3832,7 @@ async function fillMapAreaHole(e,index){
  e.stopPropagation();if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
  const hole=mapAreaHoleCandidates[index];if(!hole)return;
  try{
-  const {mergeHole,sharedBoundaryLength}=await import('./features/map/polygon-topology.js');
+  const {mergeHole,sharedBoundaryLength}=await import('../features/map/polygon-topology.js');
   const candidates=mapAreaEditAreas.map(a=>({a,points:areaShapePoints(a)})).map(c=>({...c,merged:mergeHole(c.points,hole.points)})).filter(c=>c.merged);
   if(!candidates.length){alert('Tomrummet delar ingen sammanhängande kant med en polygon som kan utökas.');return}
   let choice=candidates.find(c=>c.a.id===mapAreaSelectedId)||candidates.sort((x,y)=>sharedBoundaryLength(y.points,hole.points)-sharedBoundaryLength(x.points,hole.points))[0];
