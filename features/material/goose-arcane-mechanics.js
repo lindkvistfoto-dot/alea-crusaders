@@ -16,23 +16,24 @@ export function gooseDecorativeGearPath(teeth,outerRadius,rootRadius){
 }
 // The center seal's sword and laurels are NEVER replaced. Two small, nested
 // brass cogwheels are added near the lower center, with proper 16:12 gearing.
-export function gooseSealGearMarkup(){
+export function gooseSealGearMarkup(part='center'){
+ if(!['center','left','right'].includes(part))throw Error('INVALID_GOOSE_GEAR_PART');
  const big=gooseDecorativeGearPath(16,18,14.2);
  const small=gooseDecorativeGearPath(12,13.5,10.3);
- return '<span class="goose-player-gear-train" aria-hidden="true">'+
+ return '<span class="goose-player-gear-train goose-player-gear-train--'+part+'" aria-hidden="true">'+
   '<svg viewBox="0 0 112 68" preserveAspectRatio="xMidYMid meet">'+
-  '<defs><radialGradient id="goose08-brass" cx=".3" cy=".24" r=".9">'+
+  '<defs><radialGradient id="goose08-brass-'+part+'" cx=".3" cy=".24" r=".9">'+
   '<stop stop-color="#fff0ba"/><stop offset=".37" stop-color="#c59b56"/>'+
   '<stop offset=".75" stop-color="#78522d"/><stop offset="1" stop-color="#312013"/>'+
   '</radialGradient></defs>'+
   '<ellipse cx="56" cy="34" rx="46" ry="25" fill="#1c160f" fill-opacity=".78" stroke="#a27e43" stroke-width="2"/>'+
   '<g transform="translate(42 34)"><g class="goose-player-gear goose-player-gear--drive">'+
-  '<path d="'+big+'" fill="url(#goose08-brass)" stroke="#2d1e12" stroke-width="1.5"/>'+
+  '<path d="'+big+'" fill="url(#goose08-brass-'+part+')" stroke="#2d1e12" stroke-width="1.5"/>'+
   '<circle r="11.5" fill="none" stroke="#e7c581" stroke-width="1.6"/>'+
   '<circle r="4.1" fill="#22180f" stroke="#efc577" stroke-width="2.2"/>'+
   '</g></g>'+
   '<g transform="translate(73.5 34)"><g class="goose-player-gear goose-player-gear--idler">'+
-  '<path d="'+small+'" fill="url(#goose08-brass)" stroke="#2d1e12" stroke-width="1.5"/>'+
+  '<path d="'+small+'" fill="url(#goose08-brass-'+part+')" stroke="#2d1e12" stroke-width="1.5"/>'+
   '<circle r="8.3" fill="none" stroke="#e7c581" stroke-width="1.2"/>'+
   '<circle r="3.1" fill="#22180f" stroke="#efc577" stroke-width="1.8"/>'+
   '</g></g></svg></span>';
