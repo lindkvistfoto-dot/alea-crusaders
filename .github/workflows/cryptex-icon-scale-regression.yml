@@ -26,7 +26,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: Verify cryptex crop geometry and independent admin art
-        run: npx vitest run tests/cryptex-icon-crop.test.js tests/spell-admin-icons.test.js
+      - name: Verify cryptex crop geometry and mobile layout
+        run: npx vitest run tests/cryptex-icon-crop.test.js tests/cryptex-mobile-layout.test.js
       - name: Check production build
         run: npm run build
