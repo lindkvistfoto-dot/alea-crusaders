@@ -127,6 +127,13 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
                 raise ValueError("UI_OPAQUE_SOURCE_REQUIRED")
+        elif kind == "skill-illustration":
+            if image.mode not in ("RGB", "RGBA"):
+                raise ValueError("ILLUSTRATION_REQUIRES_RGB_OR_OPAQUE_RGBA")
+            if not (image.width == image.height and 640 <= image.width <= 4096):
+                raise ValueError("BAD_PNG_DIMENSIONS")
+            if image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255):
+                raise ValueError("ILLUSTRATION_REQUIRES_OPAQUE_FULL_FRAME")
         else:
             if image.mode != "RGBA":
                 raise ValueError("NOT_RGBA_PNG")
