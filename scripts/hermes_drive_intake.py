@@ -29,6 +29,8 @@ QUEUE_PATTERN = re.compile(r"^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$")
 MAX_BYTES = 8_388_608
 UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay",
               "arcane-gallery-goose-left", "arcane-gallery-goose-right", "arcane-gallery-goose-seal"}
+CODEX_UI_TARGETS = {"arcane-skill-codex-outer-frame", "arcane-skill-codex-header", "arcane-skill-codex-leather", "arcane-skill-codex-dark-panel", "arcane-skill-codex-parchment-fishing", "arcane-skill-codex-parchment-neutral", "arcane-skill-codex-stat-plate", "arcane-skill-codex-medallion", "arcane-skill-codex-close-button", "arcane-skill-codex-divider", "arcane-skill-codex-illustration-frame", "arcane-skill-codex-ornament"}
+UI_TARGETS |= CODEX_UI_TARGETS
 
 
 def api(url: str, token: str, *, method: str = "GET", payload=None) -> tuple[int, bytes]:
@@ -97,7 +99,10 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         if image.format != "PNG":
             raise ValueError("BAD_PNG_FORMAT")
         if kind == "ui":
-            if target_key not in UI_TARGETS or not ((target_key.startswith("arcane-gallery-goose-") and (
+            if target_key in CODEX_UI_TARGETS:
+                if not (100 <= image.width <= 4096 and 40 <= image.height <= 4096 and image.width * image.height <= 16_000_000):
+                    raise ValueError("CODEX_UI_DIMENSIONS_INVALID")
+            elif target_key not in UI_TARGETS or not ((target_key.startswith("arcane-gallery-goose-") and (
                 image.size in {(724, 1086), (515, 527)})) or (640 <= image.width <= 4096 and (
                 (target_key == "arcane-mechanism-link" and (
                     image.width * 2 == 3 * image.height or image.width * 3 == 4 * image.height
@@ -110,7 +115,13 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 or (target_key == "arcane-gallery-goose-seal" and image.size == (515, 527))
             ))):
                 raise ValueError("BAD_UI_PNG")
-            if target_key.startswith("arcane-gallery-goose-"):
+            if target_key in CODEX_UI_TARGETS:
+                if image.mode != "RGBA":
+                    raise ValueError("CODEX_UI_REQUIRES_RGBA")
+                alpha_min, alpha_max = image.getchannel("A").getextrema()
+                if alpha_min > 16 or alpha_max < 240:
+                    raise ValueError("CODEX_UI_REQUIRES_TRUE_ALPHA")
+            elif target_key.startswith("arcane-gallery-goose-"):
                 if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
                     raise ValueError("GOOSE_SPRITE_REQUIRES_TRUE_ALPHA")
             elif target_key == "arcane-mechanism-link":
