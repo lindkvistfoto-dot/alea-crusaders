@@ -1,0 +1,56 @@
+/* ARCANE CAROUSEL V01 — separated from the telescopic frame.
+ * Approved HERMES-style bronze asset is a genuine transparent WebP overlay:
+ * the central continuous trough exposes the private image thumbnails behind.
+ * All image content stays on the RLS-gated Gallery path, not in this stylesheet.
+ */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel{
+ position:relative;display:block;width:100%;aspect-ratio:2082 / 515;
+ max-width:100%;margin:0 auto;
+ isolation:isolate;overflow:hidden;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-frame{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+ object-fit:fill;z-index:2;pointer-events:none;user-select:none;
+ -webkit-user-drag:none;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{
+ position:absolute;left:17%;top:29%;width:66%;height:39%;z-index:1;
+ display:flex;align-items:stretch;gap:3px;min-height:0;max-height:none;
+ overflow-x:auto;overflow-y:hidden;
+ padding:0;margin:0;border:0;border-radius:2px;
+ background:transparent;box-shadow:none;
+ touch-action:pan-x;scroll-snap-type:x proximity;scrollbar-width:none;
+ overscroll-behavior-x:contain;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track::-webkit-scrollbar{display:none}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile{
+ flex:0 0 24%;min-width:0;min-height:0;height:100%;
+ display:block;position:relative;overflow:hidden;
+ padding:0;border:0;border-radius:2px;
+ background:linear-gradient(135deg,#0b1119,#171a1b);
+ box-shadow:none;color:#bfa279;
+ scroll-snap-align:start;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile img{
+ display:block;width:100%;height:100%;object-fit:cover;
+ user-select:none;-webkit-user-drag:none;pointer-events:none;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile.is-active::after{
+ content:"";position:absolute;inset:0;
+ border:clamp(1px,.24cqw,3px) solid #e9b666;border-radius:2px;
+ box-shadow:inset 0 0 .7cqw #ffda9580;
+ pointer-events:none;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile:focus-visible{
+ outline:2px solid #f6da9e;outline-offset:-2px;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel + .arcane-gallery-controls{
+ margin-top:-.9cqw;
+}
+@media(max-width:480px){
+ #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{gap:2px}
+ #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track .arcane-gallery-tile{flex-basis:30%}
+}
+@media(prefers-reduced-motion:reduce){
+ #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{scroll-behavior:auto}
+}
