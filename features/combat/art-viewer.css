@@ -6,7 +6,7 @@
 @media(min-width:1024px){
  #combatPage .combat-shell-live .combat-art-viewer{
   display:block;position:relative;isolation:isolate;
-  margin:14px 8px 10px;padding:9px;
+  margin:4px 5px 8px;padding:5px;
   border:1px solid #a9814a;border-radius:11px;
   background:linear-gradient(138deg,#3f3020 0,#17120f 19%,#0b0c0c 52%,#332415 86%,#654422);
   box-shadow:inset 0 0 0 1px #d0aa6f3c,inset 0 2px 16px #000b,0 4px 14px #0009;
@@ -14,8 +14,8 @@
  }
  #combatPage .combat-art-viewer-head{
   display:flex;justify-content:space-between;align-items:center;
-  gap:6px;margin:0 2px 9px;border-bottom:1px solid #7c5a2d;
-  padding:2px 4px 9px;color:#d6ae6b;
+  gap:4px;margin:0 1px 3px;border-bottom:1px solid #7c5a2d;
+  padding:0 2px 3px;color:#d6ae6b;
  }
  #combatPage .combat-art-viewer-eyebrow{
   color:#e2be80;font:700 11px/1.15 Georgia,serif;letter-spacing:.12em;
@@ -34,8 +34,8 @@
   position:relative;display:grid;place-items:center;
   width:100%;aspect-ratio:1/1;
   overflow:hidden;isolation:isolate;
-  padding:7px;
-  border:2px solid #8d6634;border-radius:6px;
+  padding:0;
+  border:1px solid #8d6634;border-radius:6px;
   background:
    radial-gradient(ellipse at 51% 34%,#293038 0,#121923 44%,#0a0d11 100%);
   box-shadow:inset 0 0 0 1px #dab77c6d,inset 0 0 22px #000c,0 1px 7px #0008;
@@ -66,7 +66,7 @@
  #combatPage .combat-art-viewer-corner.bottom-right{right:2px;bottom:2px;border-left:0;border-top:0}
  #combatPage .combat-art-viewer-caption{
   display:grid;gap:5px;text-align:center;max-width:100%;
-  padding:12px 5px 3px;min-width:0;
+  padding:5px 3px 1px;min-width:0;
  }
  #combatPage .combat-art-viewer-type{
   color:#a78a5c;font:700 10px/1.2 system-ui,sans-serif;
@@ -79,4 +79,12 @@
 }
 @media(max-width:1023px){
  #combatPage .combat-art-viewer{display:none!important}
+}
+
+/* Gear art keeps its full outline; combatant portraits use the entire viewport. */
+@media(min-width:1024px){
+ #combatPage .combat-art-viewer-photo .combat-art-viewer-image{object-fit:cover}
+ #combatPage .combat-turn-equip-art .combat-turn-art:focus-visible,
+ #combatPage .combatant-card .combat-row-portrait img:focus-visible,
+ #combatPage .combat-detail-header .combat-row-portrait img:focus-visible{outline:2px solid #e8ca83;outline-offset:2px}
 }
