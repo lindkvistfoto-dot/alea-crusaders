@@ -1,4 +1,4 @@
-/* ARCANE CAROUSEL V01 — separated from the telescopic frame.
+/* ARCANE CAROUSEL V03 — painted-metal docking to telescopic frame.
  * Approved HERMES-style bronze asset is a genuine transparent WebP overlay:
  * the central continuous trough exposes the private image thumbnails behind.
  * All image content stays on the RLS-gated Gallery path, not in this stylesheet.
@@ -6,14 +6,18 @@
 /* A single assembled machine: the lower HERMES rail must overlap the
  * upper bronze carousel rail. The carousel moves behind the frame, not over
  * its portrait or controls; CSS-only docking never touches private media.
- * Container-relative units preserve the join at mobile and desktop widths. */
+ * The WebP's central rail begins below its transparent top pixels, while
+ * the HERMES lower frame artwork ends above its element's box bottom.
+ * The previous 5.2cqw overlap joined CSS boxes but LEFT A VISIBLE DARK SEAM.
+ * An extra 5.4cqw brings the painted bronze rails together, with the upper
+ * HERMES rail deliberately in front on mobile and desktop. */
 #legolasPanel .arcane-gallery-kit .arcane-gallery-machine{
  position:relative;z-index:3;overflow:visible;
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel{
  position:relative;z-index:2;display:block;
  width:100%;max-width:100%;aspect-ratio:2082 / 515;
- margin:-5.2cqw auto 0;
+ margin:-10.6cqw auto 0;
  isolation:isolate;overflow:hidden;
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-frame{
