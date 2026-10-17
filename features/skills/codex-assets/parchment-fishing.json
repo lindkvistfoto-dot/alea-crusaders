@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-parchment-fishing",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-parchment-fishing/18859e82db054994cba0814cde925fd129b6bafad18896175642163100315d5e.png",
+  "source_sha256": "18859e82db054994cba0814cde925fd129b6bafad18896175642163100315d5e",
+  "source_bytes": 2391306,
+  "app_path": "features/skills/codex-assets/parchment-fishing.webp",
+  "app_sha256": "71b59bc0b95d1712fdd9d63f36d2fa7e48335b6a1d83370080225274923af082",
+  "app_bytes": 311266,
+  "width": 1280,
+  "height": 672,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
