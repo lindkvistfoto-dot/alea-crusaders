@@ -50,7 +50,7 @@ describe('Arcane Gold cryptex carousel – square-window lion design',()=>{
   expect(css).toContain('.combat-cryptex-link-layer{');
   expect(css).toContain('.combat-cryptex-link{');
   expect(css).toContain('height:auto;aspect-ratio:3/4');
-  expect(css).toContain('inset:0;z-index:7;overflow:hidden;pointer-events:none');
+  expect(css).toMatch(/\.combat-cryptex-link-layer\s*\{[^}]*inset:0;z-index:3;overflow:hidden;pointer-events:none/s);
   expect(carousel).toContain('const leftEdge=leftRect.right,rightEdge=rightRect.left,gapWidth=rightEdge-leftEdge;');
   expect(carousel).toContain("link.style.left=(leftEdge-box.left).toFixed(2)+'px'");
   expect(carousel).toContain("link.style.width=gapWidth.toFixed(2)+'px'");
