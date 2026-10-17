@@ -79,7 +79,8 @@ function findHoles(polygons){
  return holes.sort((a,b)=>a.area-b.area);
 }
 function mergeHole(polygon,hole){
- const [a,b]=splitPolygons([polygon,hole]);
+ if(!polygon||!hole||polygon.length<3||hole.length<3)return null;
+ const [a,b]=splitPolygons([area(polygon)<0?[...polygon].reverse():polygon,area(hole)<0?[...hole].reverse():hole]);
  const edges=new Map();
  for(let poly of [a,b])for(let i=0;i<poly.length;i++){
   const from=poly[i],to=poly[(i+1)%poly.length],id=edgeKey(from,to);
@@ -101,7 +102,18 @@ function mergeHole(polygon,hole){
  if(Math.abs(area(result)-area(a)-area(b))>Math.max(.01,Math.abs(area(b))*.00001))return null;
  return result;
 }
+function sharedBoundaryLength(polygon,hole){
+ const [a,b]=splitPolygons([polygon,hole]);
+ const edges=new Set();
+ for(let i=0;i<a.length;i++)edges.add(edgeKey(a[i],a[(i+1)%a.length]));
+ let total=0;
+ for(let i=0;i<b.length;i++){
+  const p=b[i],q=b[(i+1)%b.length];
+  if(edges.has(edgeKey(p,q)))total+=Math.hypot(q[0]-p[0],q[1]-p[1]);
+ }
+ return total;
+}
 function moveSharedVertex(polygons,origin,destination){
  return polygons.map(poly=>poly.map(p=>eq(p,origin)?destination.slice():p.slice()));
 }
-export {area,splitPolygons,findHoles,mergeHole,moveSharedVertex};
+export {area,splitPolygons,findHoles,mergeHole,sharedBoundaryLength,moveSharedVertex};
