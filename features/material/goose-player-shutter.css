@@ -1,5 +1,5 @@
-/* GOOSE 06 · The Four Locks. The existing HERMES metalwork is never warped.
- * All lock lamps and both sigil halves are physically carried by their doors.
+/* GOOSE 07 · Four authentic sapphires are the locking indicators.
+ * Original HERMES metalwork and stones remain visible at rest.
  */
 #arcaneGallery .arcane-gallery-picture{isolation:isolate}
 #arcaneGallery .goose-player-shutter{
@@ -38,36 +38,65 @@
  left:0;background-position:right center;
 }
 #arcaneGallery .goose-player-shutter--split .goose-player-seal-half{opacity:1}
-/* Four gemstone lenses bolted into the two shutters.
- * North -> east -> south -> west illuminate on their detents.
- * They never float, change position or follow the rotating center emblem. */
-#arcaneGallery .goose-player-lamp{
- position:absolute;display:block;z-index:2;
- width:clamp(7px,1.18cqw,14px);height:clamp(7px,1.18cqw,14px);
- box-sizing:border-box;border-radius:50%;
- border:1px solid #aa8950;
- background:radial-gradient(circle at 32% 25%,#736446 0%,#252424 44%,#091016 80%);
- box-shadow:inset 0 1px 2px #ffe1a355,0 1px 4px #000c;
- transform:translateY(-50%);transition:background-color 150ms,box-shadow 150ms;
+/* The artwork itself contains four sapphires; this is light ONLY, no new
+ * jewel, border or independent dot. Measurements are keyed to the approved
+ * 4:3 plate artwork and user-reviewed mobile image:
+ * north/south x=50%, y=9%/90%; west/east x=17.8%/82.9%, y=49.5%.
+ * Top and bottom glow spans sit astride the door seam, clipped by the
+ * physical left/right door overflow; the opening carries both halves away.
+ */
+#arcaneGallery .goose-player-sapphire{
+ position:absolute;display:block;z-index:2;pointer-events:none;
+ opacity:0;mix-blend-mode:screen;
+ transition:opacity 160ms ease-out,filter 160ms ease-out;
+ will-change:opacity;
+ background:radial-gradient(ellipse at 45% 36%,
+  rgba(225,252,255,.92) 0%,rgba(120,229,255,.76) 27%,
+  rgba(35,148,255,.52) 55%,rgba(35,148,255,0) 85%);
 }
-#arcaneGallery .goose-player-lamp::after{
- content:"";position:absolute;inset:20%;border-radius:50%;
- background:#192734;box-shadow:inset 0 0 2px #000;
+#arcaneGallery .goose-player-sapphire--north,
+#arcaneGallery .goose-player-sapphire--south{
+ width:9.2%;height:7.0%;
+ clip-path:polygon(50% 0%,94% 44%,50% 100%,6% 44%);
 }
-#arcaneGallery .goose-player-lamp.is-lit{
- border-color:#99dfff;
- background:radial-gradient(circle at 35% 28%,#ecffff 0%,#77daff 36%,#125a9d 68%,#07162b 95%);
- box-shadow:inset 0 0 3px #fff,0 0 7px 2px #38aafe,0 0 17px #2e87f3b5;
+#arcaneGallery .goose-player-sapphire--north{top:9.0%}
+#arcaneGallery .goose-player-sapphire--south{top:90.2%}
+#arcaneGallery .goose-player-door--left .goose-player-sapphire--north,
+#arcaneGallery .goose-player-door--left .goose-player-sapphire--south{
+ right:-4.6%;transform:translateY(-50%);
 }
-#arcaneGallery .goose-player-lamp.is-lit::after{
- background:#b1eeff;box-shadow:0 0 7px #5fcfff;
+#arcaneGallery .goose-player-door--right .goose-player-sapphire--north,
+#arcaneGallery .goose-player-door--right .goose-player-sapphire--south{
+ left:-4.6%;transform:translateY(-50%);
 }
-#arcaneGallery .goose-player-lamp--north{right:3%;top:19.5%;transform:translate(50%,-50%)}
-#arcaneGallery .goose-player-lamp--east{left:34.6%;top:50%;transform:translate(-50%,-50%)}
-#arcaneGallery .goose-player-lamp--south{left:3%;top:80.5%;transform:translate(-50%,-50%)}
-#arcaneGallery .goose-player-lamp--west{right:34.6%;top:50%;transform:translate(50%,-50%)}
+#arcaneGallery .goose-player-sapphire--west,
+#arcaneGallery .goose-player-sapphire--east{
+ top:49.5%;width:9.3%;height:5.2%;
+ border-radius:50%;
+ transform:translate(-50%,-50%);
+}
+#arcaneGallery .goose-player-sapphire--west{left:35.6%}
+#arcaneGallery .goose-player-sapphire--east{left:65.8%}
+#arcaneGallery .goose-player-sapphire.is-lit{
+ opacity:.88;filter:drop-shadow(0 0 7px #46c5ff);
+}
+#arcaneGallery .goose-player-sapphire.is-pulsing{
+ animation:goose-sapphire-ignite 240ms ease-out both;
+}
+#arcaneGallery .goose-player-shutter--charged .goose-player-sapphire.is-lit{
+ animation:goose-sapphire-charge 310ms ease-in-out both;
+}
+@keyframes goose-sapphire-ignite{
+ 0%{opacity:.38;filter:brightness(1)}
+ 48%{opacity:1;filter:brightness(1.9) drop-shadow(0 0 12px #b3f6ff)}
+ 100%{opacity:.88;filter:brightness(1) drop-shadow(0 0 7px #46c5ff)}
+}
+@keyframes goose-sapphire-charge{
+ 0%,100%{opacity:.88;filter:brightness(1) drop-shadow(0 0 7px #46c5ff)}
+ 55%{opacity:1;filter:brightness(1.65) drop-shadow(0 0 14px #a5efff)}
+}
 #arcaneGallery .goose-player-shutter--open .goose-player-door{visibility:hidden}
 @media(prefers-reduced-motion:reduce){
  #arcaneGallery .goose-player-door,#arcaneGallery .goose-player-seal{will-change:auto}
- #arcaneGallery .goose-player-lamp{transition:none}
+ #arcaneGallery .goose-player-sapphire{transition:none;animation:none!important;will-change:auto}
 }
