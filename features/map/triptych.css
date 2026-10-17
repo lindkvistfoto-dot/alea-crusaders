@@ -1,0 +1,84 @@
+/* ALEA CRUSADERS · Campaign map triptych (image | double-width map | description).
+   Keep the map at the visual center, with only shared images in the left viewer. */
+
+body:has(#mapPage:not(.hidden)) > main,
+body:has(#mapPage:not(.hidden)) main:has(> #mapPage) {
+  max-width: 1740px;
+  width: 100%;
+}
+#mapPage .mappage {
+  max-width: 1700px;
+  margin: 0 auto;
+}
+#mapPage .mapworkarea {
+  display: grid;
+  grid-template-columns: minmax(235px, 1fr) minmax(0, 2fr) minmax(260px, 1fr);
+  grid-template-areas: "images map info";
+  gap: 12px;
+  align-items: start;
+}
+#mapPage .mapmain { grid-area: map; min-width: 0; }
+#mapPage .map-location-panel { grid-area: info; }
+#mapPage .map-location-images-panel {
+  grid-area: images;
+  min-width: 0;
+  overflow: auto;
+  max-height: min(78vh, 830px);
+  border: 1px solid #55432f;
+  border-radius: 16px;
+  background: #17120f;
+  padding: 14px;
+  position: sticky;
+  top: 82px;
+  scrollbar-width: thin;
+}
+#mapPage .map-location-panel {
+  max-height: min(78vh, 830px);
+  scrollbar-width: thin;
+}
+#mapPage .map-location-images-head {
+  border-bottom: 1px solid #4b3a29;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+#mapPage .map-location-images-head h3 {
+  font: 700 20px Georgia, serif;
+  color: #f1dfc4;
+  margin: 0 0 5px;
+}
+#mapPage .map-location-images-head p {
+  font-size: 12px;
+  margin: 0;
+}
+#mapPage .map-location-images-panel .map-location-gallery {
+  display: block;
+  min-width: 0;
+}
+#mapPage .campaign-map-image-stage img {
+  max-height: min(53vh, 470px);
+}
+#mapPage .campaign-map-image-thumbnails {
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+}
+#mapPage .mapviewport {
+  height: min(76vh, 830px);
+}
+@media (max-width: 1150px) {
+  #mapPage .mapworkarea {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "map map" "images info";
+  }
+  #mapPage .map-location-images-panel,
+  #mapPage .map-location-panel {
+    position: static;
+    max-height: none;
+  }
+}
+@media (max-width: 700px) {
+  #mapPage .mapworkarea {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "map" "images" "info";
+  }
+  #mapPage .map-location-images-panel { padding: 12px; }
+  #mapPage .mapviewport { height: 68vh; }
+}
