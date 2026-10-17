@@ -101,6 +101,11 @@ async function publish(a:any){
  if(jobError)throw Error("JOB_READ "+jobError.message);
  if(existing?.app_sha256 && existing.app_sha256!==a.app_sha256)throw Error("SOURCE_ALREADY_REGISTERED_DIFFERENT_WEBP");
  if(existing?.status==="rolled_back")throw Error("JOB_WAS_ROLLED_BACK");
+ if(a.kind==="skill-illustration"){
+  const obsoletePath="hermes/skill-illustration/"+a.target_key+"/"+a.app_sha256+".webp";
+  const {error:cleanupError}=await db.storage.from("alea-hermes-public").remove([obsoletePath]);
+  if(cleanupError)console.warn("ORPHANED_PUBLIC_ILLUSTRATION_CLEANUP_FAILED",cleanupError.message);
+ }
  if(existing?.status==="active"){
   if(target[assetField]!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
   console.log("ALREADY_ACTIVE",a.kind,a.target_key);return;
