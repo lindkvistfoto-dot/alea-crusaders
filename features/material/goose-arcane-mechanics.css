@@ -6,17 +6,19 @@
  position:absolute;inset:0;width:100%;height:100%;
  z-index:1;pointer-events:none;display:block;
  opacity:0;mix-blend-mode:screen;
- clip-path:circle(0% at 50% 50%);
+ clip-path:circle(0% at var(--goose-blue-origin-x,50%) 49.5%);
  filter:drop-shadow(0 0 2px #61c8ff);
 }
+#arcaneGallery .goose-player-door--left .goose-player-blue-ink{--goose-blue-origin-x:55.2%}
+#arcaneGallery .goose-player-door--right .goose-player-blue-ink{--goose-blue-origin-x:45.1%}
 #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
 #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
  animation:goose09-blue-ink-reveal 770ms cubic-bezier(.14,.34,.18,1) both;
 }
 @keyframes goose09-blue-ink-reveal{
- 0%{clip-path:circle(0% at 50% 50%);opacity:0}
+ 0%{clip-path:circle(0% at var(--goose-blue-origin-x,50%) 49.5%);opacity:0}
  6%{opacity:.96}
- 100%{clip-path:circle(108% at 50% 50%);opacity:.94}
+ 100%{clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:.94}
 }
 /* The upper/lower lock sprites are precisely clipped duplicates of the
  * original door image. Their patina, lighting and proportions are therefore
@@ -52,7 +54,7 @@
  #arcaneGallery .goose-player-blue-ink{animation:none!important}
  #arcaneGallery .goose-player-shutter--energizing-left .goose-player-door--left .goose-player-blue-ink,
  #arcaneGallery .goose-player-shutter--energizing-right .goose-player-door--right .goose-player-blue-ink{
-  clip-path:circle(108% at 50% 50%);opacity:.94
+  clip-path:circle(108% at var(--goose-blue-origin-x,50%) 49.5%);opacity:.94
  }
  #arcaneGallery .goose-player-piston-source{transition:none!important}
 }
