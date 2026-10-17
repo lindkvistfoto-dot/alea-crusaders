@@ -16,3 +16,9 @@ Sequence: four sapphire detents -> 680 ms energy fill and gear motion -> 420 ms 
 **Test:** run `npm test -- tests/goose-player-shutter.test.js tests/goose08-arcane-mechanics.test.js`, then `npm run build`, and visually inspect the two GM-only temporary open/close buttons on desktop and mobile. Specifically confirm that the vector channels line up with the actual photographed engravings and piston housings. These path control points are *provisional* pending image review.
 
 **Safety:** no automatic merge or deployment without visual signoff. Browser reduced-motion mode skips the mechanical animation.
+
+## GOOSE 09 source-art alignment
+
+The untouched HERMES left/right door WebPs carry the actual blue sapphire faces near 55.2% of the left leaf and 45.1% of the right leaf (leaf-local horizontal coordinates). The GOOSE09 light masks now originate at these same points and the 49.5% vertical coordinate. The previous GOOSE07 settings lit displaced regions at 35.6%/65.8%; do not restore those offsets. The original sword-and-laurel center sprite remains unaltered and receives no additional SVG cog overlay. The overlay blue ink is extracted from the original same-origin door pixels, never synthesized as new wandering curves.
+
+Final deployment still requires checking the actual authenticated user experience; synthetic Chromium/CI validation alone does not prove that a production deployment reflects `main`.
