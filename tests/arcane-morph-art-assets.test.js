@@ -53,7 +53,7 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   const carousel=player.indexOf('class="arcane-gallery-carousel"');
   expect(carousel).toBeGreaterThan(machineEnd);
   expect(player).toContain('arcane-gallery-carousel-frame');
-  expect(player).toContain('arcane-carousel-v01.webp');
+  expect(player).toContain('arcane-carousel-bronze-match.webp');
   expect(player).not.toContain('arcane-gallery-belt--parked');
   expect(player).not.toContain('if(strip&&!strip.hidden)');
   expect(css).not.toContain('#e1dccc 48%');
