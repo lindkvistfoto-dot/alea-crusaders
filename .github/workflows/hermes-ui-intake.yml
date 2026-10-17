@@ -10,7 +10,7 @@ permissions:
   contents: write
   pages: write
 concurrency:
-  group: hermes-ui-publisher
+  group: hermes-ui-publisher-${{ inputs.source_path }}
   cancel-in-progress: false
 jobs:
   publish:
