@@ -39,9 +39,9 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   const gallery=read('features/material/arcane-gallery.js');
   expect(code).toContain("gooseDoorMechanicsMarkup('left')");
   expect(code).toContain("gooseDoorMechanicsMarkup('right')");
-  expect(code).toContain('gooseSealGearMarkup()');
-  expect(code).toContain("gooseSealGearMarkup('left')");
-  expect(code).toContain("gooseSealGearMarkup('right')");
+  expect(code).not.toContain('gooseSealGearMarkup(');
+  // GOOSE 09 restores the unchanged sword and laurel; no SVG hubs may cover it.
+  expect(code).toContain('<div class="goose-player-seal"><img alt=""></div>');
   expect(gallery).toContain("isLoggedIn()&&");
   expect(gallery).toContain("'./features/material/goose04/left.webp'");
   expect(gallery).toContain("'./features/material/goose04/right.webp'");
@@ -49,29 +49,34 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   expect(code).not.toContain('rpc/frodo_set_presentation');
   expect(code).toContain("if(!isPlayer())return false");
  });
- it('charges channels before retracting rods, before doors; reverses on close',()=>{
+ it('fires left from first detent and right from third, before each piston moves',()=>{
   const code=read('features/material/goose-player-shutter.js');
   const opening=code.slice(code.indexOf('async function open(){'),code.indexOf('async function close('));
   const closing=code.slice(code.indexOf('async function close('),code.indexOf('function destroy()'));
   const ordered=[
-   "setLights(index+1,index)",
-   "classList.add('goose-player-shutter--energizing')",
-   "timings.charge",
-   "classList.add('goose-player-shutter--unlatched')",
-   "timings.release",
+   'setLights(index+1,index)',
+   'if(index===0||index===2)',
+   "scene.classList.add('goose-player-shutter--energizing-'+side)",
+   'timings.charge',
+   "scene.classList.add('goose-player-shutter--unlatched-'+side)",
+   'timings.release',
    "goose-player-shutter--split",
    "shift(left,{transform:'translateX(0%)'}"
   ];
-  expect(ordered.map(x=>opening.indexOf(x))).toEqual([...ordered.map(x=>opening.indexOf(x))].sort((a,b)=>a-b));
-  expect(ordered.every(x=>opening.includes(x))).toBe(true);
-  expect(closing.indexOf("shift(left,{transform:'translateX(-110%)'}")).toBeLessThan(
-   closing.indexOf("classList.remove('goose-player-shutter--unlatched')"));
-  expect(closing.indexOf("classList.remove('goose-player-shutter--unlatched')")).toBeLessThan(
-   closing.indexOf("classList.remove('goose-player-shutter--energizing')"));
+  const indices=ordered.map(x=>opening.indexOf(x));
+  expect(indices.every(i=>i>=0)).toBe(true);
+  expect(indices).toEqual([...indices].sort((a,b)=>a-b));
+  expect(opening).toContain("index===0?'left':'right'");
+  expect(closing).toContain("index===2?'right':'left'");
+  expect(closing).toContain("scene.classList.remove('goose-player-shutter--unlatched-'+side)");
   const css=read('features/material/goose-arcane-mechanics.css');
+  expect(css).toContain('goose-player-shutter--energizing-left');
+  expect(css).toContain('goose-player-shutter--energizing-right');
+  expect(css).toContain('goose-player-shutter--unlatched-left');
+  expect(css).toContain('goose-player-shutter--unlatched-right');
   expect(css).toContain('@media(prefers-reduced-motion:reduce)');
-  expect(css).toContain('goose-player-gear--drive');
-  expect(css).toContain('goose-player-piston-bolt');
+  expect(css).toContain('display:none!important');
   expect(css).not.toContain('goose-player-lamp');
  });
+
 });
