@@ -35,6 +35,7 @@ function render(round,{quick=false,casting=true}={}){
   activeCombat:{round_number:round},combatants:[actor,foe],combatSelectedTargetId:'enemy',
   combatActiveActor:()=>actor,combatChosenAction:()=>action,combatActionDefinition:()=>({key:'spell_cast'}),
   combatSpellArtworkForAction:()=>({path:'',x:50,y:50,zoom:100}),
+  combatSpellCarouselHtml:()=>'<div data-cryptex-test></div>',
   combatSpellArtPath:path=>path||'',combatMagicTargetIsReady:()=>true,
   combatMagicHeaderHtml:(_a,target,_data,_can,_art,preparing)=>
    '<div data-phase="'+(preparing?'preparation':'casting')+'" data-target="'+(target?.id||'none')+'"></div>',
