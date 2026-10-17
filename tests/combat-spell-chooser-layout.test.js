@@ -32,7 +32,9 @@ describe('Magi i strid – kompakt besvärjelseval',()=>{
   expect(block).not.toContain('combat-turn-magic-host');
   expect(block).toContain('aria-controls="combatActionPanel"');
   expect(actionPanel).toContain('combat-magic-select-panel');
-  expect(actionPanel).toContain('combatSpellChooserHtml(actor,action)');
+  expect(actionPanel).toContain('combatSpellCarouselHtml(actor,action)');
+  expect(actionPanel).toContain('data-cryptex-layer="floating"');
+  expect(actionPanel).toContain('combat-magic-select-panel');
   expect(read('features/combat/attack-participants.css')).toContain('.combat-magic-select-panel');
   expect(read('index.html')).toContain('features/combat/spell-chooser.css?v=');
  });
