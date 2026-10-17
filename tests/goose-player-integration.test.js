@@ -31,6 +31,7 @@ function harness({gm=false}={}){
  machine.getBoundingClientRect=()=>({width:390});
  machine.style={setProperty:(k,v)=>styleProps.push([k,v]),removeProperty:()=>{}};
  const root=node();
+ root.classList.add('arcane-gallery-kit'); // Match classList to the real root element.
  root.querySelector=k=>k==='.arcane-gallery-machine'?machine:
   k.startsWith('#')?elements[k.slice(1)]||null:null;
  const left=node(),right=node(),seal=node(),energy=node();
