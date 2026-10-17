@@ -6,6 +6,7 @@ on:
       - 'features/material/goose-player-shutter.*'
       - 'tests/fixtures/arcane-gallery-role-smoke.html'
       - 'scripts/goose08_visual.cjs'
+      - 'simulations/goose08.html'
       - '.github/workflows/goose08-visual.yml'
   workflow_dispatch:
 permissions:
