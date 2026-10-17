@@ -280,7 +280,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
     if(step(e.key==='ArrowLeft'?-1:1))e.preventDefault();
    }
   });
-  root.querySelector('#arcaneGalleryHatchTest').addEventListener('click',e=>{
+  root.querySelector('#arcaneGalleryHatchTest')?.addEventListener('click',e=>{
    const button=e.target.closest('[data-hatch-test]');if(button)testCarouselHatch(button.dataset.hatchTest);
   });
   root.querySelectorAll('[data-hatch-test]').forEach(button=>
