@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-stat-plate",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-stat-plate/e5ca069c5710dd0129cfad5c5ad4acf87517fb1ecd30956185d5fd3c2dd68d8e.png",
+  "source_sha256": "e5ca069c5710dd0129cfad5c5ad4acf87517fb1ecd30956185d5fd3c2dd68d8e",
+  "source_bytes": 117037,
+  "app_path": "features/skills/codex-assets/stat-plate.webp",
+  "app_sha256": "b6011349265d7d76a819c3405dfc64f90ddab1944039ad9097f2d590e74737b2",
+  "app_bytes": 20940,
+  "width": 369,
+  "height": 164,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
