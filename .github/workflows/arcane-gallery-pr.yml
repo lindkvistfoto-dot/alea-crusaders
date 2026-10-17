@@ -6,6 +6,11 @@ on:
       - 'features/material/arcane-morph*'
       - 'features/material/goose-player-shutter*'
       - 'tests/goose-player-shutter.test.js'
+      - 'tests/test_hermes_goose_pipeline.py'
+      - 'scripts/hermes_drive_intake.py'
+      - 'scripts/hermes_ui_prepare.py'
+      - 'scripts/publish_hermes_ui.mjs'
+      - '.github/workflows/hermes-ui-intake.yml'
       - 'features/material/frodo-ui.js'
       - 'features/material/library.js'
       - 'index.html'
@@ -32,6 +37,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Verify HERMES GOOSE fixed-geometry alpha pipeline
+        run: |
+          python -m pip install Pillow==12.3.0
+          python -m unittest discover -s tests -p test_hermes_goose_pipeline.py -v
       - name: Gallery and integration regression tests
         run: npx vitest run tests/arcane-gallery.test.js tests/goose-player-shutter.test.js tests/arcane-gallery-aspect.test.js tests/arcane-morph-markup.test.js tests/arcane-morph-art-assets.test.js tests/arcane-gallery-release-smoke.test.js tests/arcane-gm-preview.test.js tests/material-legolas-viewer.test.js tests/material-atelier-mobile.test.js tests/material-polish.test.js tests/material-frodo-presentation.test.js
       - name: Browser role-switch and four-ratio smoke (synthetic roles, no private data)
