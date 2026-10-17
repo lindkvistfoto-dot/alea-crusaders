@@ -215,7 +215,7 @@ def run(request_path: str) -> None:
         set(request) == common_keys | {"drive_file_name"}
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "ui"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")
