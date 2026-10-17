@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-leather",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-leather/16a659251fbedd26f098d5ec747af69adbd4694d511f1019752fb97c4b6567fe.png",
+  "source_sha256": "16a659251fbedd26f098d5ec747af69adbd4694d511f1019752fb97c4b6567fe",
+  "source_bytes": 2850366,
+  "app_path": "features/skills/codex-assets/leather.webp",
+  "app_sha256": "3a589cd33ba1ee891c7c0fb45d351755afc1b8436f4fc153916ee49404b2556f",
+  "app_bytes": 427778,
+  "width": 980,
+  "height": 1280,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
