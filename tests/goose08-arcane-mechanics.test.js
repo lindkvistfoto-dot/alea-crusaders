@@ -75,6 +75,12 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   expect(css).toContain('goose-player-shutter--unlatched-right');
   expect(css).toContain('goose-player-blue-ink');
   expect(css).toContain('goose-player-piston-source');
+  expect(css).toContain('--goose-blue-origin-x:55.2%');
+  expect(css).toContain('--goose-blue-origin-x:45.1%');
+  expect(css).toContain('clip-path:circle(0% at var(--goose-blue-origin-x,50%) 49.5%)');
+  const doorCss=read('features/material/goose-player-shutter.css');
+  expect(doorCss).toContain('.goose-player-sapphire--west{left:55.2%}');
+  expect(doorCss).toContain('.goose-player-sapphire--east{left:45.1%}');
   expect(css).toContain('clip-path:inset(');
   expect(css).toContain('@media(prefers-reduced-motion:reduce)');
   expect(css).not.toContain('goose-player-gear-train');
