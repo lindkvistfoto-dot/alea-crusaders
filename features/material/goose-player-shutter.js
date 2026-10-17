@@ -1,10 +1,11 @@
-/* GOOSE 07 – Sapphire Lock Sequence.
+import {gooseDoorMechanicsMarkup,gooseSealGearMarkup} from './goose-arcane-mechanics.js?v=08';
+/* GOOSE 08 – Sapphire Lock Sequence with arcane channels, gears and bolts.
  * One shared, authenticated Arcane Gallery gate for players and GMs.
  * Pure presentation: no private media access, campaign reads or publication writes.
  * The rotating emblem has four discrete 90-degree ratchets. The real sapphire
  * stones (not extra UI lamps) are the indicators. The seal splits with the doors.
  */
-const timings=Object.freeze({quarter:525,detent:105,release:420,doors:1780});
+const timings=Object.freeze({quarter:525,detent:105,charge:680,release:420,doors:1780});
 const LOCK_ORDER=Object.freeze(['north','east','south','west']);
 export function gooseFourByThreeRatio(){return '4 / 3';}
 export function gooseAssetManifestValid(assets){
@@ -35,16 +36,18 @@ export function createGoosePlayerShutter({
  scene.setAttribute('aria-hidden','true');
  scene.innerHTML=
   '<div class="goose-player-door goose-player-door--left"><img alt="">'+
+   gooseDoorMechanicsMarkup('left')+
    '<span class="goose-player-seal-half goose-player-seal-half--left"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--west" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
   '<div class="goose-player-door goose-player-door--right"><img alt="">'+
+   gooseDoorMechanicsMarkup('right')+
    '<span class="goose-player-seal-half goose-player-seal-half--right"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--east" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
-  '<div class="goose-player-seal"><img alt=""></div>';
+  '<div class="goose-player-seal"><img alt="">'+gooseSealGearMarkup()+'</div>';
  const left=scene.querySelector('.goose-player-door--left');
  const right=scene.querySelector('.goose-player-door--right');
  const seal=scene.querySelector('.goose-player-seal');
@@ -81,6 +84,8 @@ export function createGoosePlayerShutter({
   seal.style.opacity='1';
   setLights(0);
   scene.classList.remove('goose-player-shutter--charged');
+  scene.classList.remove('goose-player-shutter--energizing');
+  scene.classList.remove('goose-player-shutter--unlatched');
   scene.classList.remove('goose-player-shutter--open');
   scene.classList.remove('goose-player-shutter--split');
  }
@@ -91,6 +96,8 @@ export function createGoosePlayerShutter({
   seal.style.opacity='0';
   setLights(4);
   scene.classList.remove('goose-player-shutter--charged');
+  scene.classList.add('goose-player-shutter--energizing');
+  scene.classList.add('goose-player-shutter--unlatched');
   scene.classList.add('goose-player-shutter--split');
   scene.classList.add('goose-player-shutter--open');
  }
@@ -141,7 +148,12 @@ export function createGoosePlayerShutter({
    if(index<3&&!await detent(angle+90,token))return false;
   }
   scene.classList.add('goose-player-shutter--charged');
+  // Four sapphire detents arm the engraved blue conduits and clockwork.
+  // The physical rods retreat only after the energy reaches their housings.
+  scene.classList.add('goose-player-shutter--energizing');
   const stopped={transform:'rotate(360deg)'};
+  if(!await shift(seal,stopped,stopped,timings.charge,token))return false;
+  scene.classList.add('goose-player-shutter--unlatched');
   if(!await shift(seal,stopped,stopped,timings.release,token))return false;
   // Prevent the fourth gem's ignition pulse from restarting at the split.
   setLights(4);
@@ -177,6 +189,11 @@ export function createGoosePlayerShutter({
   scene.classList.remove('goose-player-shutter--split');
   seal.style.opacity='1';
   seal.style.transform='rotate(360deg)';
+  // After both leaves meet, rods engage before the sapphires extinguish.
+  scene.classList.remove('goose-player-shutter--unlatched');
+  const stopped={transform:'rotate(360deg)'};
+  if(!await shift(seal,stopped,stopped,timings.release,token))return false;
+  scene.classList.remove('goose-player-shutter--energizing');
   for(let index=3;index>=0;index--){
    if(!await ratchet((index+1)*90,index*90,token))return false;
    if(token!==epoch||disposed)return false;
