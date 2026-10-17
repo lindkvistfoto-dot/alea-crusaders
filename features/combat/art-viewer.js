@@ -5,8 +5,6 @@
 (function(){
  'use strict';
  let current=null,revision=0,hydration=0;
- const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>
-  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const frame=()=>document.getElementById('combatArtViewer');
 
  function html(battleId){
