@@ -130,7 +130,7 @@ async function publish(a:any){
    const {data:affected,error:activateError}=await q.select("id,"+assetField);
    if(activateError||affected?.length!==1)throw Error("ACTIVATION_CONFLICT");
   }
-  const {data:final,error:readError}=await db.from(table).select(assetField).eq("id",target.id).single();
+  const {data:final,error:readError}=await db.from(table).select("icon_path,illustration_path").eq("id",target.id).single();
   if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
   await recordEvent(job.id,"active","Published and read back "+appPath);
