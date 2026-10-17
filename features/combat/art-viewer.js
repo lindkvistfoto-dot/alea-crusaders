@@ -38,7 +38,7 @@
   close.hidden=!current;
   title.textContent=current?.title||'Ingen bild vald';
   type.textContent=current?.source==='spell'?'BESVÄRJELSE':current?.source==='equipment'?'UTRUSTNING':current?.source==='combatant'?'KOMBATANT':'BILDVISARE';
-  section.classList.toggle('combat-art-viewer-photo',current?.source==='combatant');
+  section.classList?.toggle?.('combat-art-viewer-photo',current?.source==='combatant');
   if(!current){
    empty.textContent='Klicka på en besvärjelse i kryptexen för att visa dess ikon här.';
    empty.hidden=false;return;
@@ -48,6 +48,9 @@
    empty.hidden=false;return;
   }
   const art=window.aleaSpellArt;
+  if(!current.src&&(!art?.validPath?.(current.path)||typeof art.resolveUrl!=='function')){
+   empty.textContent='Bilden kan inte öppnas.';empty.hidden=false;return;
+  }
   const rev=revision;
   empty.textContent='Öppnar bilden…';
   empty.hidden=false;
