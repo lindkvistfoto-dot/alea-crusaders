@@ -26,7 +26,9 @@ const rows=shapes.map(([w,h],i)=>({
 }));
 const history=rows.slice().reverse().map((row,i)=>({revision:4-i,material_id:row.id}));
 const auth={logged:true,gm:false};
-const revoked=[],reads=[],requests=[],writes=[];
+const revoked=[],reads=[],requests=[],writes=[],browserErrors=[];
+window.addEventListener('unhandledrejection',e=>browserErrors.push('promise: '+String(e.reason?.stack||e.reason)));
+window.addEventListener('error',e=>browserErrors.push('error: '+String(e.error?.stack||e.message)));
 const originalRevoke=URL.revokeObjectURL.bind(URL);
 URL.revokeObjectURL=url=>{revoked.push(url);originalRevoke(url);};
 function assert(value,message){if(!value)throw Error(message);}
@@ -122,7 +124,7 @@ run().then(result=>{
    frameHeight:height(gallery.root),
    status:gallery.root.querySelector('#arcaneGalleryStatus')?.textContent,
    empty:gallery.root.querySelector('#arcaneGalleryEmpty')?.textContent},
-  requests:requests.slice(0,8),reads:reads.slice(0,8),
+  requests:requests.slice(0,8),reads:reads.slice(0,8),browserErrors,
   auth
  };
  document.querySelector('#result').textContent='FAIL '+String(err.stack||err);
