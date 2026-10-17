@@ -1,3 +1,4 @@
+@import url("./goose-arcane-mechanics.css?v=09");
 /* GOOSE 07 · Four authentic sapphires are the locking indicators.
  * Original HERMES metalwork and stones remain visible at rest.
  */
@@ -41,7 +42,7 @@
 /* The artwork itself contains four sapphires; this is light ONLY, no new
  * jewel, border or independent dot. Measurements are keyed to the approved
  * 4:3 plate artwork and user-reviewed mobile image:
- * north/south x=50%, y=9%/90%; west/east x=17.8%/82.9%, y=49.5%.
+ * north/south x=50%, y=9%/90%; west/east x=27.6%/72.55%, y=49.5%.
  * Top and bottom glow spans sit astride the door seam, clipped by the
  * physical left/right door overflow; the opening carries both halves away.
  */
@@ -75,8 +76,8 @@
  border-radius:50%;
  transform:translate(-50%,-50%);
 }
-#arcaneGallery .goose-player-sapphire--west{left:35.6%}
-#arcaneGallery .goose-player-sapphire--east{left:65.8%}
+#arcaneGallery .goose-player-sapphire--west{left:55.2%}
+#arcaneGallery .goose-player-sapphire--east{left:45.1%}
 #arcaneGallery .goose-player-sapphire.is-lit{
  opacity:.88;filter:drop-shadow(0 0 7px #46c5ff);
 }
