@@ -20,10 +20,9 @@
  margin:-10.6cqw auto 0;
  isolation:isolate;overflow:hidden;
 }
-/* Temporary ARCANE hatch prototype: clip the moving image to ONLY the
- * original continuous aperture. At 50% the right half is covered; the hatch
- * lives behind the untouched Bronze Match bezel, above authorized thumbnails.
- * The final shutter artwork will be fitted independently after mechanics QA. */
+/* Approved ARCANE bronze shutter V02: only the moving panel is visible;
+ * the original continuous aperture clips it behind the Bronze Match bezel.
+ * Right-to-left motion remains independent of authorized thumbnails. */
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-shutter-window{
  position:absolute;left:17%;top:29%;width:66%;height:39%;
  overflow:hidden;z-index:2;pointer-events:none;isolation:isolate;

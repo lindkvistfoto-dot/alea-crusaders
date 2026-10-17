@@ -3,7 +3,7 @@ import './zip-import.js?v=0.34.92';
 import './storage.js?v=0.34.92';
 import {createAragorn} from './links.js?v=0.34.83';
 import {createLegolas} from './viewer.js?v=0.35.239';
-import {mountFrodo} from './frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03&seam=01&telescope=03&bronze=01&hatch=01&thumb=01';
+import {mountFrodo} from './frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03&seam=01&telescope=03&bronze=01&hatch=02&thumb=01';
 import {mountSam} from './player-folder-ui.js?v=0.35.239';
 import {mountGaladriel} from './galadriel-ui.js?v=0.34.91';
 

@@ -32,9 +32,9 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   // Its public overlay contains no images; thumbnails are authorized blobs.
   '<div class="arcane-gallery-carousel" data-hatch="half" aria-label="Bildkarusell">'+
    '<div id="arcaneGalleryStrip" class="arcane-gallery-strip arcane-gallery-carousel-track" aria-label="Bläddra bland delade bilder"></div>'+
-   // Separate, temporarily fitted hatch sprite. The existing frame masks its edges.
+   // Isolated ARCANE bronze shutter; the approved Bronze Match bezel masks its sliding edges.
    '<div class="arcane-gallery-carousel-shutter-window" aria-hidden="true">'+
-    '<img class="arcane-gallery-carousel-shutter" src="./features/material/arcane-carousel-hatch-test-v01.webp" alt="" draggable="false">'+
+    '<img class="arcane-gallery-carousel-shutter" src="./features/material/arcane-carousel-shutter-v02.webp" alt="" draggable="false">'+
    '</div>'+
    '<img class="arcane-gallery-carousel-frame" src="./features/material/arcane-carousel-bronze-match.webp" alt="" aria-hidden="true" draggable="false">'+
   '</div>'+

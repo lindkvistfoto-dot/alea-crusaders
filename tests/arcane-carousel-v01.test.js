@@ -23,15 +23,17 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(data.length).toBeGreaterThan(20000);
   expect(data.length).toBeLessThan(90000);
  });
- it('contains a real isolated alpha-transparent temporary hatch sprite',()=>{
-  const art=read('features/material/arcane-carousel-hatch-test-v01.webp');
+ it('contains the approved isolated ARCANE bronze shutter V02 with genuine alpha',()=>{
+  const art=read('features/material/arcane-carousel-shutter-v02.webp');
   expect(art.toString('ascii',0,4)).toBe('RIFF');
   expect(art.toString('ascii',8,12)).toBe('WEBP');
   expect(createHash('sha256').update(art).digest('hex'))
-   .toBe('735d00597bdb3f6e591c004b197d67fbc6da71a81a3456eb81a349788d063149');
-  expect(art.length).toBeGreaterThan(50000);
+   .toBe('73612584e5d1e074a51fe4cbc9c3a0f863c904b413e88482b2f0821a2c1d70c4');
+  expect(art.length).toBeGreaterThan(80000);
+  expect(art.length).toBeLessThan(180000);
+  expect(art.includes(Buffer.from('ALPH'))).toBe(true);
  });
- it('mounts temporary half-closed hatch inside original bezel, never replacing it',()=>{
+ it('mounts half-closed bronze shutter inside original bezel, never replacing it',()=>{
   const gallery=read('features/material/arcane-gallery.js').toString();
   const strip=gallery.indexOf('id="arcaneGalleryStrip"');
   const hatch=gallery.indexOf('arcane-gallery-carousel-shutter-window');
@@ -40,7 +42,8 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(hatch).toBeGreaterThan(strip);
   expect(bezel).toBeGreaterThan(hatch);
   expect(gallery).toContain('data-hatch="half"');
-  expect(gallery).toContain('arcane-carousel-hatch-test-v01.webp');
+  expect(gallery).toContain('arcane-carousel-shutter-v02.webp');
+  expect(gallery).not.toContain('arcane-carousel-hatch-test-v01.webp');
   expect(gallery).toContain('function testCarouselHatch(position)');
   expect(gallery).toContain('!isGM()');
   const css=read('features/material/arcane-carousel.css').toString();
@@ -99,7 +102,7 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   const library=read('features/material/library.js').toString();
   const frodo=read('features/material/frodo-ui.js').toString();
   expect(index).toContain('goose=10&morph=3&carousel=03');
-  expect(index).toContain('&bronze=01&hatch=01');
+  expect(index).toContain('&bronze=01&hatch=02');
   expect(index).toContain('morph=3&goose=10&carousel=03');
   expect(library).toContain('frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03');
   expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=3&goose=10&carousel=03');
