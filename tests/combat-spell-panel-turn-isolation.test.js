@@ -34,6 +34,7 @@ function view(current,action,previous=spell()){
   combatLatestResolvedSpellAction:()=>{legacyFallbackCalls++;return previous},
   combatActionDefinition:a=>a?{key:a.source_data?.action_key}:null,
   combatSpellArtworkForAction:()=>({path:'',x:50,y:50,zoom:100}),
+  combatSpellCarouselHtml:()=>'<div data-cryptex-test></div>',
   combatMagicTargetIsReady:()=>false,
   combatMagicHeaderHtml:actor=>'<div class="caster">'+actor.name_snapshot+'</div>',
   combatMagicTargetPickerHtml:()=>'<div class="target-picker"></div>',
