@@ -37,13 +37,13 @@ export function createGoosePlayerShutter({
  scene.innerHTML=
   '<div class="goose-player-door goose-player-door--left"><img alt="">'+
    gooseDoorMechanicsMarkup('left')+
-   '<span class="goose-player-seal-half goose-player-seal-half--left"></span>'+
+   '<span class="goose-player-seal-half goose-player-seal-half--left">'+gooseSealGearMarkup('left')+'</span>'+ 
    '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--west" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
   '<div class="goose-player-door goose-player-door--right"><img alt="">'+
    gooseDoorMechanicsMarkup('right')+
-   '<span class="goose-player-seal-half goose-player-seal-half--right"></span>'+
+   '<span class="goose-player-seal-half goose-player-seal-half--right">'+gooseSealGearMarkup('right')+'</span>'+ 
    '<span class="goose-player-sapphire goose-player-sapphire--north" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--east" aria-hidden="true"></span>'+
    '<span class="goose-player-sapphire goose-player-sapphire--south" aria-hidden="true"></span></div>'+
