@@ -64,26 +64,28 @@ async function patch(id:string,fields:Record<string,unknown>){
  if(error)throw Error("JOB_UPDATE "+error.message);
 }
 function checkAsset(a:any){
- if(!a||!["spell","symbol","skill"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["spell","symbol","skill","skill-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
- if(a.source_path!==expected||a.app_file!==out||a.width!==640||a.height!==640||a.alpha_preserved!==true)
+ const expectsAlpha=a.kind!=="skill-illustration";
+ if(a.source_path!==expected||a.app_file!==out||a.width!==640||a.height!==640||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
- return {table:a.kind==="symbol"?"rule_magic_symbols":a.kind==="skill"?"rule_skills":"rule_spells",
-  field:a.kind==="symbol"?"symbol_key":a.kind==="skill"?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
-  appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`};
+ const skill=a.kind==="skill"||a.kind==="skill-illustration";
+ return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
+  field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
+  appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`, assetField:a.kind==="skill-illustration"?"illustration_path":"icon_path"};
 }
 async function publish(a:any){
- const {table,field,sourcePath,appPath}=checkAsset(a);
+ const {table,field,sourcePath,appPath,assetField}=checkAsset(a);
  const raw=new Uint8Array(await Deno.readFile(a.source_path));
  const app=new Uint8Array(await Deno.readFile(outputRoot+"/"+a.app_file));
  if(raw.length!==a.source_bytes||app.length!==a.app_bytes||app.length>500000)throw Error("FILE_SIZE_MISMATCH");
  if(await digest("SHA-256",raw)!==a.source_sha256)throw Error("SOURCE_SHA_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
  const gitBlob=await assertGithubOriginal(a,raw);
- const {data:target,error:targetError}=await db.from(table).select("id,icon_path").eq(field,a.kind==="skill"?a.target_key.replaceAll("-","_"):a.target_key).maybeSingle();
+ const {data:target,error:targetError}=await db.from(table).select("id,icon_path,illustration_path").eq(field,(a.kind==="skill"||a.kind==="skill-illustration")?a.target_key.replaceAll("-","_"):a.target_key).maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
  const {data:existing,error:jobError}=await db.from("hermes_jobs").select("*")
@@ -92,13 +94,13 @@ async function publish(a:any){
  if(existing?.app_sha256 && existing.app_sha256!==a.app_sha256)throw Error("SOURCE_ALREADY_REGISTERED_DIFFERENT_WEBP");
  if(existing?.status==="rolled_back")throw Error("JOB_WAS_ROLLED_BACK");
  if(existing?.status==="active"){
-  if(target.icon_path!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
+  if(target[assetField]!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
   console.log("ALREADY_ACTIVE",a.kind,a.target_key);return;
  }
  const jobBody={kind:a.kind,target_key:a.target_key,source_sha256:a.source_sha256,app_sha256:a.app_sha256,
   source_path:sourcePath,app_path:appPath,source_bytes:raw.length,app_bytes:app.length,
   github_blob_sha:gitBlob,github_commit_sha:ghSha,origin:"github_actions",
-  github_run_id:ghRun,created_by:null,status:"staged",attempts:1,previous_icon_path:target.icon_path};
+  github_run_id:ghRun,created_by:null,status:"staged",attempts:1,previous_icon_path:target[assetField]};
  let job=existing;
  if(job){
   await patch(job.id,{attempts:(job.attempts||0)+1,status:"staged",error_code:null,error_message:null});
@@ -120,15 +122,15 @@ async function publish(a:any){
    throw Error("PUBLIC_IMAGE_SHA_MISMATCH");
   await patch(job.id,{status:"verified"});
   const previous=job.previous_icon_path;
-  if(target.icon_path!==previous&&target.icon_path!==appPath)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
-  if(target.icon_path!==appPath){
-   let q=db.from(table).update({icon_path:appPath}).eq("id",target.id);
-   q=previous===null?q.is("icon_path",null):q.eq("icon_path",previous);
-   const {data:affected,error:activateError}=await q.select("id,icon_path");
+  if(target[assetField]!==previous&&target[assetField]!==appPath)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
+  if(target[assetField]!==appPath){
+   let q=db.from(table).update({[assetField]:appPath}).eq("id",target.id);
+   q=previous===null?q.is(assetField,null):q.eq(assetField,previous);
+   const {data:affected,error:activateError}=await q.select("id,"+assetField);
    if(activateError||affected?.length!==1)throw Error("ACTIVATION_CONFLICT");
   }
-  const {data:final,error:readError}=await db.from(table).select("icon_path").eq("id",target.id).single();
-  if(readError||final?.icon_path!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
+  const {data:final,error:readError}=await db.from(table).select(assetField).eq("id",target.id).single();
+  if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
   await recordEvent(job.id,"active","Published and read back "+appPath);
   console.log("HERMES_ACTIVE",a.kind,a.target_key,appPath);
