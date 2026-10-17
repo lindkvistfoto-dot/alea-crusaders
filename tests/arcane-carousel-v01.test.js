@@ -14,6 +14,15 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(data.length).toBeGreaterThan(15000);
   expect(data.length).toBeLessThan(90000);
  });
+ it('ships the new approved Bronze Match cutout without altering the original artwork',()=>{
+  const data=read('features/material/arcane-carousel-bronze-match.webp');
+  expect(data.toString('ascii',0,4)).toBe('RIFF');
+  expect(data.toString('ascii',8,12)).toBe('WEBP');
+  expect(createHash('sha256').update(data).digest('hex'))
+   .toBe('b52465a25d66835eabb008b6dcd070620b9c631e1f0be123da650253be245ff3');
+  expect(data.length).toBeGreaterThan(20000);
+  expect(data.length).toBeLessThan(90000);
+ });
  it('mounts below the preserved telescopic gallery rather than over its image',()=>{
   const source=read('features/material/arcane-gallery.js').toString();
   const machine=source.indexOf("arcaneMorphMarkup()+'</div>'");
@@ -23,7 +32,8 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(carousel).toBeGreaterThan(machine);
   expect(controls).toBeGreaterThan(carousel);
   expect(source).toContain('arcane-gallery-carousel-frame');
-  expect(source).toContain('arcane-carousel-v01.webp');
+  expect(source).toContain('arcane-carousel-bronze-match.webp');
+  expect(source).not.toContain('src="./features/material/arcane-carousel-v01.webp"');
   expect(source).not.toContain('arcane-gallery-belt--parked');
   expect(source).toContain('legolas.readMedia(row,true)');
   expect(source).toContain('win().URL.revokeObjectURL');
