@@ -64,15 +64,15 @@ async function patch(id:string,fields:Record<string,unknown>){
  if(error)throw Error("JOB_UPDATE "+error.message);
 }
 function checkAsset(a:any){
- if(!a||!["spell","symbol"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["spell","symbol","skill"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.source_path!==expected||a.app_file!==out||a.width!==640||a.height!==640||a.alpha_preserved!==true)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
- return {table:a.kind==="symbol"?"rule_magic_symbols":"rule_spells",
-  field:a.kind==="symbol"?"symbol_key":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
+ return {table:a.kind==="symbol"?"rule_magic_symbols":a.kind==="skill"?"rule_skills":"rule_spells",
+  field:a.kind==="symbol"?"symbol_key":a.kind==="skill"?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
   appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`};
 }
 async function publish(a:any){
@@ -83,7 +83,7 @@ async function publish(a:any){
  if(await digest("SHA-256",raw)!==a.source_sha256)throw Error("SOURCE_SHA_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
  const gitBlob=await assertGithubOriginal(a,raw);
- const {data:target,error:targetError}=await db.from(table).select("id,icon_path").eq(field,a.target_key).maybeSingle();
+ const {data:target,error:targetError}=await db.from(table).select("id,icon_path").eq(field,a.kind==="skill"?a.target_key.replaceAll("-","_"):a.target_key).maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
  const {data:existing,error:jobError}=await db.from("hermes_jobs").select("*")
