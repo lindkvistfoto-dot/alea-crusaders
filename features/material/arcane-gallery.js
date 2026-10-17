@@ -26,9 +26,11 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  root.innerHTML='<header class="arcane-gallery-heading"><strong>ARCANE GALLERY</strong><span id="arcaneGalleryCount"></span></header>'+
   '<div class="arcane-gallery-machine"><div id="arcaneGalleryPicture" class="arcane-gallery-picture" tabindex="0" role="button" aria-label="Öppna bild i stor vy">'+
   '<img id="arcaneGalleryImage" class="hidden" alt=""><span id="arcaneGalleryEmpty">Väntar på bilder från spelledaren…</span></div>'+
-  '<div class="arcane-gallery-belt"><div id="arcaneGalleryStrip" class="arcane-gallery-strip" aria-label="Bläddra bland bilder"></div></div>'+
   '<img class="arcane-gallery-overlay" src="./features/material/arcane-gallery-overlay.webp?v=0.35.239" alt="" aria-hidden="true">'+
   arcaneMorphMarkup()+'</div>'+
+  // Retain the carousel DOM as an inert, hidden future under-frame mount point.
+  // Do not produce private thumbnails until a separate carousel is enabled.
+  '<div class="arcane-gallery-belt arcane-gallery-belt--parked" hidden aria-hidden="true"><div id="arcaneGalleryStrip" class="arcane-gallery-strip" aria-label="Framtida bildkarusell"></div></div>'+
   '<nav class="arcane-gallery-controls" aria-label="Navigera mellan delade bilder">'+
   '<button type="button" id="arcaneGalleryPrev" class="arcane-gallery-prev" aria-label="Föregående bild">‹</button>'+
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>'+
@@ -116,7 +118,9 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   }}
   $('arcaneGalleryCount').textContent=rows.length+' '+(rows.length===1?'delad bild':'delade bilder');
   $('arcaneGalleryEmpty').classList.toggle('hidden',!!state.selected);
-  if(!strip)return;
+  // Until the independent carousel is implemented, there is no visual strip.
+  // History and previous/next controls still update below this block.
+  if(strip&&!strip.hidden){
   if(strip.dataset.ids!==ids){
    strip.dataset.ids=ids;state.observer?.disconnect();
    strip.innerHTML=rows.map((r,i)=>'<button type="button" class="arcane-gallery-tile" data-gallery-id="'+safe(r.id)+'" title="'+safe(r.title)+'" aria-label="Visa '+safe(r.title)+'"><span>'+(i+1)+'</span></button>').join('');
@@ -134,6 +138,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(activeTile&&strip.scrollTo&&Number.isFinite(activeTile.offsetLeft)){
    const left=Math.max(0,activeTile.offsetLeft-(strip.clientWidth-activeTile.clientWidth)/2);
    strip.scrollTo({left,behavior:'instant'}); // Horizontal only: never jump the page.
+  }
   }
   const row=rows.find(x=>x.id===state.selected),index=row?rows.indexOf(row):-1;
   const prev=$('arcaneGalleryPrev'),next=$('arcaneGalleryNext');
