@@ -1,7 +1,7 @@
 /* Campaign image library - shared campaign asset administration. */
 (function(){
 'use strict';
-const types={place:['Platser','campaign_locations','name'],person:['Personer','campaign_npcs','name'],enemy:['Fiender','campaign_monsters','name'],event:['Händelser','campaign_events','title'],item:['Föremål','campaign_materials','title']};
+const types={place:['Platser','campaign_locations','name'],person:['Personer','campaign_npcs','name'],enemy:['Fiender','campaign_monsters','name'],event:['Händelser','campaign_events','name'],item:['Föremål','campaign_materials','title']};
 const state={type:'place',target:'',images:[],links:[],targets:[],urls:[],search:''};
 const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const id=()=>String(centralCampaignId||'');
@@ -115,7 +115,7 @@ async function migrateOld(){
 }
 function wire(){
  host().querySelector('#cilType').onchange=ev=>{state.type=ev.target.value;state.target='';state.search='';refresh()};
- host().querySelector('#cilSearch').oninput=ev=>{state.search=ev.target.value;render()};
+ host().querySelector('#cilSearch').oninput=ev=>{state.search=ev.target.value;const q=state.search.toLowerCase();host().querySelectorAll('[data-target]').forEach(b=>{b.hidden=!b.textContent.toLowerCase().includes(q)})};
  host().querySelector('#cilReload').onclick=refresh;
  host().querySelectorAll('[data-target]').forEach(b=>b.onclick=()=>{state.target=b.dataset.target;render()});
  host().querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>action(b.closest('[data-link]').dataset.link,b.dataset.command,b.closest('[data-link]')));
