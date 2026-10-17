@@ -97,7 +97,8 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         if image.format != "PNG":
             raise ValueError("BAD_PNG_FORMAT")
         if kind == "ui":
-            if target_key not in UI_TARGETS or not (640 <= image.width <= 4096 and (
+            if target_key not in UI_TARGETS or not ((target_key.startswith("arcane-gallery-goose-") and (
+                image.size in {(724, 1086), (515, 527)})) or (640 <= image.width <= 4096 and (
                 (target_key == "arcane-mechanism-link" and (
                     image.width * 2 == 3 * image.height or image.width * 3 == 4 * image.height
                     or image.width * 4 == 3 * image.height
@@ -107,7 +108,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 or (target_key in {"arcane-gallery-goose-left", "arcane-gallery-goose-right"}
                     and image.size == (724, 1086))
                 or (target_key == "arcane-gallery-goose-seal" and image.size == (515, 527))
-            )):
+            ))):
                 raise ValueError("BAD_UI_PNG")
             if target_key.startswith("arcane-gallery-goose-"):
                 if image.mode != "RGBA" or image.getchannel("A").getextrema() != (0, 255):
