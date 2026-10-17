@@ -37,14 +37,14 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   const gm=read('features/material/arcane-gm-preview.js').toString();
   for(const file of ['upper_frame','lower_frame','gear_west','gear_east',
    'piston_closed_a','piston_extended_a','piston_closed_b','piston_extended_b',
-   'side_left_top','side_left_inner','side_left_bottom','side_right_top',
-   'side_right_inner','side_right_bottom']){
+   'side_left_top','side_left_inner','side_left_outer','side_left_bottom','side_right_top',
+   'side_right_inner','side_right_outer','side_right_bottom']){
    expect(markup+css).toContain(file+'.webp');
   }
   expect(css).not.toContain('background-repeat:repeat-y');
   expect(css).toContain('.arcane-kit-side-sleeve');
   expect(css).toContain('.arcane-kit-side-repeat::before');
-  expect(css).toContain('width:30%');
+  expect(css).toContain('width:18%');
   expect(css).toContain('background:linear-gradient(90deg,');
   expect(css).toContain('height:calc(100% - 17cqw)!important');
   expect(css).toContain('.arcane-gallery-belt{display:none!important}');
@@ -59,6 +59,14 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   expect(css).not.toContain('#e1dccc 48%');
   expect(css).toContain('overflow:hidden');
   expect(markup.match(/arcane-kit-side-sleeve/g)).toHaveLength(2);
+  expect(markup.match(/arcane-kit-side-upper/g)).toHaveLength(2);
+  expect(css).toContain('.arcane-kit-side-upper');
+  expect(css).toContain('position:absolute;left:0;top:0;width:100%;height:auto');
+  expect(css).not.toContain('#929e9e 48%');
+  expect(css).not.toContain('#465357 48%') === false;
+  const index=read('index.html').toString();
+  expect(index).toContain('telescope=03');
+  expect(mainCss).toContain('arcane-gallery-kit.css?v=0.35.239&kit=4');
   expect(markup).not.toContain('side_left_middle.webp');
   expect(markup).not.toContain('side_right_middle.webp');
   expect(css).toContain('arcane-kit-actuator--closed');
