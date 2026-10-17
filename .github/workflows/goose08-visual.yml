@@ -1,0 +1,39 @@
+name: GOOSE 08 layered mechanism visual acceptance
+on:
+  pull_request:
+    paths:
+      - 'features/material/goose-arcane-mechanics.*'
+      - 'features/material/goose-player-shutter.*'
+      - 'tests/fixtures/arcane-gallery-role-smoke.html'
+      - 'scripts/goose08_visual.cjs'
+      - '.github/workflows/goose08-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  goose08-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci --no-audit --no-fund
+      - name: Verify layers and capture physical phases
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/goose08-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/goose05-unified.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose08_visual.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: goose08-five-mechanical-phases
+          path: tests/visual-regressions/goose08/*.png
+          if-no-files-found: warn
