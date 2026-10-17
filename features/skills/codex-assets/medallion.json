@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-medallion",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-medallion/20528df5789fba6bd5728ddf162ab843e0efc8b2d2de4288f0849cd8717e5ecc.png",
+  "source_sha256": "20528df5789fba6bd5728ddf162ab843e0efc8b2d2de4288f0849cd8717e5ecc",
+  "source_bytes": 102206,
+  "app_path": "features/skills/codex-assets/medallion.webp",
+  "app_sha256": "bde075d9cb1e76750211383e7cb7aab646329452cddfd161d87c5efb183370fb",
+  "app_bytes": 21916,
+  "width": 245,
+  "height": 224,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
