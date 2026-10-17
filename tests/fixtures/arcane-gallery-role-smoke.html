@@ -128,6 +128,8 @@ async function run(){
   }
   const paintedGaps=[.3,.7].map(x=>
    paintedEdgeY(bronze,x,'top')-paintedEdgeY(lower,x,'bottom'));
+  assert(paintedGaps.every(g=>g<=0&&g>=-width*.085),
+   phase+': visible bronze-to-bronze seam must be covered, gaps='+paintedGaps);
   return {width:Math.round(width),overlap:Math.round(overlap),
    paintedGaps:paintedGaps.map(g=>Math.round(g*10)/10)};
  }
