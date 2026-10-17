@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arcane Morphing Frame – synthetic authenticated-role smoke</title>
+<link rel="stylesheet" href="/features/material/arcane-gallery.css">
+<style>
+body{margin:0;background:#101720;color:#e7ce9d;font:14px system-ui}
+#legolasPanel{max-width:820px;margin:auto;padding:10px}
+.hidden{display:none!important}
+#result{white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="legolasPanel"><div id="playerTarget"></div><div id="gmTarget"></div><pre id="result">Running smoke…</pre></div>
+<script type="module">
+import {createArcaneGallery} from '/features/material/arcane-gallery.js';
+import {createArcaneGmPreview} from '/features/material/arcane-gm-preview.js';
+const campaign='846e8089-24da-4825-af34-32903117152a';
+const shapes=[[1600,900],[1200,900],[1000,1000],[900,1600]];
+const rows=shapes.map(([w,h],i)=>({
+ id:'123e4567-e89b-42d3-a456-42661417400'+(i+1),campaign_id:campaign,
+ title:'Synthetic '+w+':'+h,asset_kind:'image',category:'location',
+ storage_bucket:'campaign-materials',storage_path:campaign+'/smoke/'+(i+1)+'.svg',
+ width:w,height:h
+}));
+const history=rows.map((row,i)=>({revision:4-i,material_id:row.id}));
+const auth={logged:true,gm:false};
+const revoked=[],reads=[],requests=[],writes=[];
+const originalRevoke=URL.revokeObjectURL.bind(URL);
+URL.revokeObjectURL=url=>{revoked.push(url);originalRevoke(url);};
+function assert(value,message){if(!value)throw Error(message);}
+async function until(predicate,message){
+ for(let i=0;i<160;i++){
+  if(predicate())return;
+  await new Promise(resolve=>setTimeout(resolve,30));
+ }
+ throw Error('Timeout: '+message);
+}
+const legolas={
+ readMedia:async(row,thumb)=>{
+  reads.push({id:row.id,thumb,gm:auth.gm});
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+row.width+'" height="'+row.height+'"><rect width="100%" height="100%" fill="#1d3345"/><circle cx="40%" cy="35%" r="15%" fill="#bca77c"/></svg>';
+  return new Blob([svg],{type:'image/svg+xml'});
+ },
+ previewMaterial:()=>{},previewSequence:()=>{}
+};
+const request=async path=>{
+ requests.push(path);
+ if(path.startsWith('campaign_material_presentation_history?'))return history;
+ if(path.startsWith('campaign_materials?'))return rows;
+ throw Error('Unexpected route '+path);
+};
+const gallery=createArcaneGallery({legolas,request,getCampaign:()=>campaign,
+ isLoggedIn:()=>auth.logged,isGM:()=>auth.gm});
+document.querySelector('#playerTarget').append(gallery.mount());
+const gm=createArcaneGmPreview({legolas,getCampaign:()=>campaign,
+ isLoggedIn:()=>auth.logged,isGM:()=>auth.gm,
+ onPick:id=>writes.push(id)});
+document.querySelector('#gmTarget').append(gm.mount());
+const height=node=>parseInt(node.querySelector('.arcane-gallery-machine').style.getPropertyValue('--arcane-frame-height'),10);
+const imageReady=(node,id)=>node.querySelector('#'+id)?.naturalWidth>0
+  &&node.querySelector('#'+id)?.complete;
+async function run(){
+ gallery.sync(rows[0],1);
+ await until(()=>gallery.state.selected===rows[0].id && imageReady(gallery.root,'arcaneGalleryImage')
+  &&height(gallery.root)>0,'player opening');
+ const playerHeights=[height(gallery.root)];
+ assert(!gallery.root.classList.contains('hidden'),'player gallery hidden');
+ assert(gm.root.classList.contains('hidden'),'GM private preview visible to player');
+ assert(gallery.root.querySelectorAll('.arcane-kit-wheel').length===2,'player gears missing');
+ for(let i=1;i<4;i++){
+  assert(gallery.step(1),'player carousel step failed at '+i);
+  await until(()=>gallery.state.selected===rows[i].id
+   &&gallery.root.querySelector('#arcaneGalleryImage').naturalWidth===rows[i].width
+   &&height(gallery.root)>playerHeights[i-1],'player ratio '+i);
+  playerHeights.push(height(gallery.root));
+ }
+ assert(requests.every(x=>x.includes('campaign_id=eq.'+campaign)),'unscoped history query');
+ assert(requests.every(x=>x.startsWith('campaign_material_')),'unexpected private API');
+ const privateImageUrl=gallery.state.original;
+ assert(privateImageUrl.startsWith('blob:'),'player did not use private blob URL');
+ auth.gm=true;gallery.sync(null,5);gm.sync(rows,rows[0].id,rows[0]);
+ await until(()=>gm.state.selected===rows[0].id && imageReady(gm.root,'arcaneGmImage')
+  &&height(gm.root)>0,'GM opening');
+ assert(gallery.root.classList.contains('hidden'),'player gallery leaked to GM');
+ assert(!gm.root.classList.contains('hidden'),'GM gallery not visible');
+ assert(revoked.includes(privateImageUrl),'player blob not revoked on role change');
+ assert(gm.root.querySelectorAll('.arcane-kit-wheel').length===2,'GM gears missing');
+ const gmHeights=[height(gm.root)];
+ for(let i=1;i<4;i++){
+  gm.step(1);
+  await until(()=>gm.state.selected===rows[i].id
+    &&gm.root.querySelector('#arcaneGmImage').naturalWidth===rows[i].width
+    &&height(gm.root)>gmHeights[i-1],'GM ratio '+i);
+  gmHeights.push(height(gm.root));
+ }
+ assert(writes.every(id=>rows.some(r=>r.id===id)),'invalid queued row selected');
+ const lastGMUrl=gm.state.mainUrl;
+ auth.logged=false;gm.sync([],null,null);gallery.sync(null,6);
+ assert(gm.root.classList.contains('hidden'),'GM gallery visible after logout');
+ assert(gm.state.rows.length===0 && gallery.state.rows.length===0,'private rows survive logout');
+ assert(revoked.includes(lastGMUrl),'GM blob not revoked on logout');
+ assert(!gm.root.querySelector('#arcaneGmImage').hasAttribute('src'),'GM image not cleared on logout');
+ assert(!gallery.root.querySelector('#arcaneGalleryImage').hasAttribute('src'),'player image not cleared on role change');
+ return {playerHeights,gmHeights,reads:reads.length,revoked:revoked.length,
+  roles:['player','GM','signed-out'],assets:'public synthetic SVG only'};
+}
+run().then(result=>{
+ document.documentElement.dataset.smoke='passed';
+ window.__arcaneSmokeStatus=result;
+ document.querySelector('#result').textContent='PASS '+JSON.stringify(result);
+}).catch(err=>{
+ document.documentElement.dataset.smoke='failed';
+ window.__arcaneSmokeStatus={error:String(err.stack||err)};
+ document.querySelector('#result').textContent='FAIL '+String(err.stack||err);
+ console.error('ARCANE_AUTH_SMOKE_FAILED',err);
+});
+</script>
+</body></html>
