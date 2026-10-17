@@ -36,6 +36,16 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
  it('keeps the original three HERMES sprites and role-gated shared gallery',()=>{
   const code=read('features/material/goose-player-shutter.js');
   const gallery=read('features/material/arcane-gallery.js');
+  const index=read('index.html');
+  const library=read('features/material/library.js');
+  const frodo=read('features/material/frodo-ui.js');
+  const galleryCss=read('features/material/arcane-gallery.css');
+  expect(index).toContain('arcane-gallery.css?v=0.35.239&goose=09');
+  expect(index).toContain('library.js?v=0.35.239&morph=1&goose=09');
+  expect(library).toContain('frodo-ui.js?v=0.35.239&morph=1&goose=09');
+  expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=1&goose=09');
+  expect(gallery).toContain("goose-player-shutter.js?v=09");
+  expect(galleryCss).toContain('goose-player-shutter.css?v=09');
   expect(code).toContain("gooseDoorMechanicsMarkup('left')");
   expect(code).toContain("gooseDoorMechanicsMarkup('right')");
   expect(code).not.toContain('gooseSealGearMarkup(');
