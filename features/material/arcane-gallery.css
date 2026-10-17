@@ -1,6 +1,6 @@
 @import url("./arcane-morphing-frame.css?v=0.35.239");
 @import url("./arcane-gallery-kit.css?v=0.35.239&kit=1");
-@import url("./goose-player-shutter.css?v=09");
+@import url("./goose-player-shutter.css?v=10");
 /* Arcane Gallery: actual transparent HERMES art, not a CSS redraw. */
 #legolasPanel .arcane-gallery{width:min(100%,1150px);margin:12px auto 16px;color:#e7ce9d}
 #legolasPanel .arcane-gallery.hidden{display:none!important}
