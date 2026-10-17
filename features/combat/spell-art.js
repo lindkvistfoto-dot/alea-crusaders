@@ -115,7 +115,7 @@
   // Carousel perspective transforms resize the *visual* box but not the
   // physical icon slot. Cropping against that transformed box double-scales
   // the icon when it moves from a side window into the central window.
-  const cryptexArt=view.classList?.contains('combat-carousel-spell-art')===true;
+  const cryptexArt=typeof view.classList?.contains==='function'&&view.classList.contains('combat-carousel-spell-art');
   const w=(cryptexArt?view.offsetWidth:rect.width)||view.clientWidth;
   const h=(cryptexArt?view.offsetHeight:rect.height)||view.clientHeight;
   if(!(w>0&&h>0))return null;
