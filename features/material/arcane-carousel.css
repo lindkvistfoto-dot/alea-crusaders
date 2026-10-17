@@ -20,10 +20,48 @@
  margin:-10.6cqw auto 0;
  isolation:isolate;overflow:hidden;
 }
+/* Temporary ARCANE hatch prototype: clip the moving image to ONLY the
+ * original continuous aperture. At 50% the right half is covered; the hatch
+ * lives behind the untouched Bronze Match bezel, above authorized thumbnails.
+ * The final shutter artwork will be fitted independently after mechanics QA. */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-shutter-window{
+ position:absolute;left:17%;top:29%;width:66%;height:39%;
+ overflow:hidden;z-index:2;pointer-events:none;isolation:isolate;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-shutter{
+ position:absolute;inset:0;width:100%;height:100%;display:block;
+ object-fit:fill;transform:translateX(50%);
+ transition:transform 1050ms cubic-bezier(.24,.48,.19,1);
+ will-change:transform;pointer-events:auto;user-select:none;
+ -webkit-user-drag:none;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel[data-hatch="open"] .arcane-gallery-carousel-shutter{
+ transform:translateX(100%);
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-carousel[data-hatch="closed"] .arcane-gallery-carousel-shutter{
+ transform:translateX(0%);
+}
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-frame{
  position:absolute;inset:0;display:block;width:100%;height:100%;
- object-fit:fill;z-index:2;pointer-events:none;user-select:none;
+ object-fit:fill;z-index:3;pointer-events:none;user-select:none;
  -webkit-user-drag:none;
+}
+/* Test controls are only revealed in JS to authenticated GMs. */
+#legolasPanel .arcane-gallery-kit .arcane-gallery-hatch-test{
+ display:flex;justify-content:center;align-items:center;
+ flex-wrap:wrap;gap:6px;margin:2px auto 6px;
+ font:12px Georgia,serif;color:#c7a875;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-hatch-test.hidden{display:none!important}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-hatch-test button{
+ border:1px solid #977143;border-radius:8px;padding:5px 10px;
+ background:#261e15;color:#e6cda4;cursor:pointer;font:inherit;
+}
+#legolasPanel .arcane-gallery-kit .arcane-gallery-hatch-test button[aria-pressed="true"]{
+ border-color:#e6b866;background:#56402a;
+}
+@media(prefers-reduced-motion:reduce){
+ #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-shutter{transition:none}
 }
 #legolasPanel .arcane-gallery-kit .arcane-gallery-carousel-track{
  position:absolute;left:17%;top:29%;width:66%;height:39%;z-index:1;
