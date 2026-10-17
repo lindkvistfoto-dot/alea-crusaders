@@ -49,6 +49,9 @@ async function main(){
   await send('Page.enable');await send('Runtime.enable');
   await send('Page.navigate',{url:'http://127.0.0.1:4173/tests/fixtures/goose04b-visual.html'});
   await until('!!window.gooseDemo?.snapshot.gate','loaded');
+  // A visual test with broken artwork is a failure, not an acceptance screenshot.
+  await until("[...document.querySelectorAll('#arcaneGallery .goose-player-shutter img')].length===3 && [...document.querySelectorAll('#arcaneGallery .goose-player-shutter img')].every(i=>i.complete && i.naturalWidth>0)",'goose-assets');
+  await until("[...document.querySelectorAll('#arcaneGallery .arcane-kit-art img')].length>15 && [...document.querySelectorAll('#arcaneGallery .arcane-kit-art img')].every(i=>i.complete && i.naturalWidth>0)",'morph-assets');
   await delay(250);await shot('desktop-01-closed');
   await evalJs('window.gooseDemo.releaseFirst()');
   await delay(260);await shot('desktop-02-sigil-retreat');
