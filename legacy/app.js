@@ -3818,7 +3818,7 @@ async function mapAreaNodeEnd(){
  }
  try{
   for(let m of modified)await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(m.id),{method:'PATCH',body:JSON.stringify({shape_type:'polygon',shape_data:{points:m.points}})});
-  mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);
+  mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);mapAreaHoleCandidates=[];
   if(activeCampaignMap?.id===mapAreaEditMap.id)setCampaignMapData(activeCampaignMap,mapAreaEditAreas);
   showBackupToast('✓ Gemensamma hörn sparade');
  }catch(err){
