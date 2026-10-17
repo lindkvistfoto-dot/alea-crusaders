@@ -95,7 +95,11 @@ async function run(){
   const lower=gallery.root.querySelector('.arcane-kit-bottom');
   const bronze=gallery.root.querySelector('.arcane-gallery-carousel-frame');
   assert(lower&&bronze,phase+': source-art rail missing');
-  await Promise.all([lower.decode(),bronze.decode()]);
+  for(const img of [lower,bronze]){
+   try{await img.decode();}
+   catch(err){throw Error(phase+': ART_DECODE_FAILED '+String(err)+
+    ' src='+img.currentSrc+' complete='+img.complete+' width='+img.naturalWidth);}
+  }
   // Transparent margins must NOT count as visible artwork. Find the actual
   // painted alpha edges at two non-gem center rail points from original art.
   function paintedEdgeY(img,fraction,edge){
