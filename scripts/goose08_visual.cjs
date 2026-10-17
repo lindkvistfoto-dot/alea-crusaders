@@ -68,6 +68,18 @@ async function main(){
   await until("window.goose05.status.gateOpen",'opened');
   await capture('05-open');
   if(await evaluate('window.goose05.status.publishedCalls'))throw Error('UNAUTHORIZED_PUBLISH');
+  // Also open the public standalone simulation exactly as an external visitor.
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/simulations/goose08.html'});
+  await until("window.goose08Demo?.ready===true && window.goose08Demo.phase==='closed'",'standalone_ready');
+  await capture('06-public-preview-closed');
+  await evaluate("document.getElementById('openBtn').click()");
+  await until("window.goose08Demo?.phase==='open'",'standalone_opens');
+  await capture('07-public-preview-open');
+  await evaluate("document.getElementById('closeBtn').click()");
+  await until("window.goose08Demo?.phase==='closed'",'standalone_closes');
+  const status=await evaluate("({text:document.getElementById('status').textContent,ready:window.goose08Demo.ready,controls:document.querySelectorAll('.control-panel button').length})");
+  if(!status.ready||status.controls!==2)throw Error('STANDALONE_CONTROLS '+JSON.stringify(status));
+  console.log('GOOSE08_STANDALONE_PASS '+JSON.stringify(status));
   console.log('GOOSE08_BROWSER_PASS '+JSON.stringify(summary));
  }finally{try{ws?.close()}catch{}browser.kill('SIGTERM')}
 }
