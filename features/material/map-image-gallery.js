@@ -5,6 +5,7 @@
 
   const originalRender = window.renderMapLocationPhotos;
   const urls = new Map();
+  let galleryGeneration = 0;
   const encode = value => String(value ?? '').replace(/[&<>"']/g, char => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[char]);
@@ -54,6 +55,7 @@
   }
 
   window.renderMapLocationPhotos = async function renderCampaignMapGallery(legacyAssets) {
+    const generation = ++galleryGeneration;
     const originalGallery = document.getElementById('mapLocationGallery');
     if (!originalGallery) return;
     const selectedArea = campaignMapAreas.find(area => area.id === mapSelectedAreaId);
@@ -64,8 +66,8 @@
     const stillCurrent = () =>
       originalGallery.isConnected &&
       document.getElementById('mapLocationGallery') === originalGallery &&
-      mapSelectedAreaId === selectedId;
-    const gm = canManageCampaignMaps();
+      mapSelectedAreaId === selectedId &&
+      galleryGeneration === generation;
     let linkedImages = [];
     try {
       linkedImages = await readNewLocationImages(centralCampaignId, selectedArea.location_id);
@@ -91,7 +93,7 @@
     const combined = [...linkedImages, ...remaining];
     if (!combined.length) {
       originalGallery.innerHTML =
-        '<div class="map-location-empty">Inga bilder är kopplade till platsen.</div>';
+        '<div class="map-location-empty">Inga bilder har delats för den här platsen.</div>';
       return;
     }
     const main = combined[0];
@@ -99,7 +101,6 @@
     originalGallery.innerHTML =
       '<figure class="campaign-map-image-primary"><div class="campaign-map-image-stage" id="mapCampaignPrimaryImage">Laddar bild…</div>' +
       '<figcaption id="mapCampaignPrimaryCaption">' + encode(main.title) +
-      (gm && !main.player_visible ? ' <span class="gm-only">ENDAST SL</span>' : '') +
       (main.description ? '<p>' + encode(main.description) + '</p>' : '') +
       '</figcaption></figure>' +
       (combined.length > 1
@@ -111,19 +112,19 @@
           ).join('') + '</div>'
         : '');
 
-    const loaded = await Promise.all(combined.map(async item => {
-      try { return await imageUrl(item); }
-      catch (error) { console.warn('Platsbild kunde inte laddas:', item.storage_path, error); return null; }
-    }));
-    if (!stillCurrent()) return;
+    // Load each image independently: the primary preview must not wait for all supporting files.
+    const loaded = Array(combined.length).fill(undefined);
+    let selectedIndex = 0;
     const setMain = index => {
+      if (!stillCurrent()) return;
       const image = combined[index];
       const url = loaded[index];
       const stage = originalGallery.querySelector('#mapCampaignPrimaryImage');
       const caption = originalGallery.querySelector('#mapCampaignPrimaryCaption');
       if (!stage || !caption) return;
       stage.replaceChildren();
-      if (url) {
+      if (url === undefined) stage.textContent = 'Laddar bild…';
+      else if (url) {
         const element = document.createElement('img');
         element.src = url;
         element.alt = image.title || 'Platsbild';
@@ -132,12 +133,6 @@
         stage.appendChild(element);
       } else stage.textContent = 'Bilden kunde inte laddas.';
       caption.textContent = image.title || 'Platsbild';
-      if (gm && !image.player_visible) {
-        const badge = document.createElement('span');
-        badge.className = 'gm-only';
-        badge.textContent = 'ENDAST SL';
-        caption.appendChild(badge);
-      }
       if (image.description) {
         const detail = document.createElement('p');
         detail.textContent = image.description;
@@ -148,14 +143,29 @@
     };
     originalGallery.querySelectorAll('[data-image-index]').forEach(button => {
       const index = Number(button.dataset.imageIndex);
-      if (loaded[index]) {
-        const preview = document.createElement('img');
-        preview.src = loaded[index];
-        preview.alt = combined[index].title || 'Stödbild';
-        button.replaceChildren(preview);
-      } else button.textContent = 'Bild saknas';
-      button.addEventListener('click', () => setMain(index));
+      button.addEventListener('click', () => { selectedIndex = index; setMain(index); });
     });
     setMain(0);
+    combined.forEach((image, index) => {
+      void imageUrl(image).then(url => {
+        if (!stillCurrent()) return;
+        loaded[index] = url;
+        const button = originalGallery.querySelector('[data-image-index="' + index + '"]');
+        if (button) {
+          const preview = document.createElement('img');
+          preview.src = url;
+          preview.alt = image.title || 'Stödbild';
+          button.replaceChildren(preview);
+        }
+        if (selectedIndex === index) setMain(index);
+      }).catch(error => {
+        console.warn('Platsbild kunde inte laddas:', image.storage_path, error);
+        if (!stillCurrent()) return;
+        loaded[index] = null;
+        const button = originalGallery.querySelector('[data-image-index="' + index + '"]');
+        if (button) button.textContent = 'Bild saknas';
+        if (selectedIndex === index) setMain(index);
+      });
+    });
   };
 })();
