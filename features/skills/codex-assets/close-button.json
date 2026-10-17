@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-close-button",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-close-button/e7fefb7e2791316c0a9e0005be4f26d4117a6b40157d4981ce2179d7f2d9e6a1.png",
+  "source_sha256": "e7fefb7e2791316c0a9e0005be4f26d4117a6b40157d4981ce2179d7f2d9e6a1",
+  "source_bytes": 44291,
+  "app_path": "features/skills/codex-assets/close-button.webp",
+  "app_sha256": "660f4ec08ef091b276de7418fa265006c6eb7a8720a5e1455e902cd095c22b6e",
+  "app_bytes": 9016,
+  "width": 162,
+  "height": 134,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
