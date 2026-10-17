@@ -34,6 +34,7 @@ describe('Magic-item combat uses normal Expert spell phases',()=>{
    combatPayForSpell:async(...args)=>payments.push(args),
    combatAwardSpellErf:async()=>null,combatResolveBeskyddarePassage:async()=>({checks:[],blocked:false}),
    combatDeferForAntimagic:async()=>false,combatMagicDamageFormula:()=> '1T6',
+   combatPlaySpellAnimation:()=>{},
    combatResolveDamage:async()=>{effects.push(1);return{total:2}},
    combatOutcomeLabel:()=> 'Lyckat',
    dbJson:async(path,opts)=>{logs.push({path,body:JSON.parse(opts.body)});return []}};
