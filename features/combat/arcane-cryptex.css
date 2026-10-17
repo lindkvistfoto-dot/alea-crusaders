@@ -154,14 +154,14 @@
 #combatPage .combat-shell-live .cryptex-prototype .combat-magic-carousel-tools{
  border-top:0;padding:1px 5px 0;margin-top:0;
 }
-/* Desktop: free the cryptex to overlap the equipment row, initially by 20px.
+/* Desktop: free the cryptex to overlap the equipment row, now by 50px.
    Keep mobile positioning and its existing -46px offset untouched. */
 @media(min-width:761px){
  #combatPage .combat-shell-live .combat-magic-float-shell{
   position:relative;
   z-index:40;
   overflow:visible;
-  margin-top:-20px;
+  margin-top:-50px;
  }
  #combatPage .combat-shell-live .combat-magic-float-shell>.combat-magic-carousel.cryptex-prototype{
   position:relative;
