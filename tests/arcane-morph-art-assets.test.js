@@ -48,13 +48,14 @@ describe('HERMES · Arcane Morphing Frame v0.1 asset acceptance',()=>{
   expect(css).toContain('background:linear-gradient(90deg,');
   expect(css).toContain('height:calc(100% - 25cqw)!important');
   expect(css).toContain('.arcane-gallery-belt{display:none!important}');
-  // The visible image must reach the lower frame. The old in-frame strip
-  // is kept outside the machine, hidden for a separate future component.
+  // Separate V01 trough must come AFTER the machine and show private tiles.
   const machineEnd=player.indexOf("arcaneMorphMarkup()+'</div>'");
-  const parked=player.indexOf('arcane-gallery-belt--parked');
-  expect(parked).toBeGreaterThan(machineEnd);
-  expect(player).toContain('hidden aria-hidden="true"');
-  expect(player).toContain('if(strip&&!strip.hidden)');
+  const carousel=player.indexOf('class="arcane-gallery-carousel"');
+  expect(carousel).toBeGreaterThan(machineEnd);
+  expect(player).toContain('arcane-gallery-carousel-frame');
+  expect(player).toContain('arcane-carousel-v01.webp');
+  expect(player).not.toContain('arcane-gallery-belt--parked');
+  expect(player).not.toContain('if(strip&&!strip.hidden)');
   expect(css).not.toContain('#e1dccc 48%');
   expect(css).toContain('overflow:hidden');
   expect(markup.match(/arcane-kit-side-sleeve/g)).toHaveLength(2);
