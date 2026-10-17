@@ -70,6 +70,9 @@ async function main(){
   if(await evaluate('window.goose05.status.publishedCalls'))throw Error('UNAUTHORIZED_PUBLISH');
   // Also open the public standalone simulation exactly as an external visitor.
   await send('Page.navigate',{url:'http://127.0.0.1:4173/goose08.html'});
+  await wait(1250);
+  console.log('GOOSE08_PREVIEW_DIAGNOSTIC',JSON.stringify(await evaluate(
+   "({title:document.title,button:!!document.getElementById('openBtn'),gate:!!document.getElementById('gate'),demo:typeof window.goose08Demo,body:document.body?.textContent?.slice(0,160),resources:performance.getEntriesByType('resource').slice(-8).map(x=>({name:x.name.split('/').slice(-2).join('/'),duration:Math.round(x.duration)}))})")));
   await until("window.goose08Demo?.ready===true && window.goose08Demo.phase==='closed'",'standalone_ready');
   await capture('06-public-preview-closed');
   await evaluate("document.getElementById('openBtn').click()");
