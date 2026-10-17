@@ -1,24 +1,40 @@
-# GOOSE 08 – The Awakening Mechanism (staging)
+# GOOSE 09 — Ceremonial Gallery shutters: implementation and acceptance
 
-**Status:** review-only development branch; NOT published, NOT merged.
+**Technical status (17 October 2026):** integrated on the GOOSE09 release branch, with focused Gallery PR tests, production build and synthetic Chrome mechanical-sequence test passing. Merge to `main` is a distinct release step. Production deployment and authenticated GM/player visual acceptance require a live-session check.
 
-The sealed gate now has **four separate vector animation layers** above the immutable GOOSE 04 HERMES art:
+## Approved artwork — do not redraw
 
-1. Real sapphire ignition (existing GOOSE 07) at each of four physical 90-degree ratchet stops.
-2. Two low-contrast engraved paths on each door leaf, illuminated from the 3 and 9 o'clock sapphires toward the upper and lower lock housing.
-3. Two interlocking 16:12 brass gear SVGs embedded at the lower middle of the existing sword-and-laurel seal. One turns +180 degrees while the other turns -240 degrees.
-4. Two upper and lower piston/rod housings per leaf, retracting after the energy arrives and re-engaging after the leaves return.
+- The immutable GOOSE04/HERMES transparent WebP assets `left.webp`, `right.webp` and `seal.webp` remain unchanged. Each door is a real 2:3 metal half of the 4:3 closed aperture.
+- The original sword, laurels and round emblem remain intact. GOOSE08's extra SVG cog/hub overlays are **not mounted** in GOOSE09.
+- ARCANE MORPHING FRAME remains separate: the existing 29 HERMES sprites are preserved, with segmented rails, independently rotating wheels, telescopic rods and responsive image proportions.
 
-All layers are SVG/CSS and adjustable independently for visual calibration. The original three verified transparent WebP files remain unchanged. No raster redraw or change to their SHA-256 manifests; no Supabase data, private campaign media, permissions, or publication flow changes.
+## Actual live graphic layers
 
-Sequence: four sapphire detents -> 680 ms energy fill and gear motion -> 420 ms bolt retraction -> physical split and 1780 ms door travel. On closing, reverse the mechanical lock engagement before extinguishing the sapphires. Media authorization and image aspect morphing remain managed solely by Arcane Gallery.
+1. Three original door/sigil image sprites, moving as rigid objects. The center seal remains a whole rotating image for all four ratchets; its left and right halves become precisely registered crops attached to the door plates only after one full revolution.
+2. Existing four sapphire stones lit by optical overlays, without extra button-shaped dots. North/south illumination is split across the moving seam.
+3. Two independent original-blue-ink canvases, one per door, tinted from the real cyan/blue pixels in the approved HERMES bitmaps. Their circular reveal originates near the actual side sapphires (left leaf 55.2%, right leaf 45.1%, both 49.5% vertical); no fabricated blue line is drawn on the original.
+4. Four clipped duplicates of the original metal lock artwork for subtle upper/lower bolt motion, synchronized with their respective blue energy pulses. No CSS-drawn bronze blocks or stretched pistons.
 
-**Test:** run `npm test -- tests/goose-player-shutter.test.js tests/goose08-arcane-mechanics.test.js`, then `npm run build`, and visually inspect the two GM-only temporary open/close buttons on desktop and mobile. Specifically confirm that the vector channels line up with the actual photographed engravings and piston housings. These path control points are *provisional* pending image review.
+## Mechanical timing
 
-**Safety:** no automatic merge or deployment without visual signoff. Browser reduced-motion mode skips the mechanical animation.
+- Four 90-degree ratchet steps, each 525 ms with 105 ms between steps.
+- Step 1: left sapphire, original blue channels light for 770 ms, then left bolts release over 420 ms.
+- Step 3: right sapphire, blue channels light for 770 ms, then right bolts release over 420 ms.
+- The fourth detent completes the 360-degree lock; seal crops remain physically attached to their moving door halves.
+- Both doors withdraw simultaneously over 1,780 ms. On closure the doors meet first and the locking process runs in reverse.
+- Reduced-motion settings skip moving transitions while preserving correct states.
 
-## GOOSE 09 source-art alignment
+## Application behavior and security
 
-The untouched HERMES left/right door WebPs carry the actual blue sapphire faces near 55.2% of the left leaf and 45.1% of the right leaf (leaf-local horizontal coordinates). The GOOSE09 light masks now originate at these same points and the 49.5% vertical coordinate. The previous GOOSE07 settings lit displaced regions at 35.6%/65.8%; do not restore those offsets. The original sword-and-laurel center sprite remains unaltered and receives no additional SVG cog overlay. The overlay blue ink is extracted from the original same-origin door pixels, never synthesized as new wandering curves.
+The SAME Arcane Gallery viewer is used for GM and players. GM staging/administration is separate and the temporary GM-only Open/Close test controls do not publish material. All images are selected from authorized campaign presentation history, never from the public mock preview. Private Blob URLs are revoked on logout, role switch, campaign change, and withdrawal of shared images. The frame morphs only after the initial authorized ceremonial opening.
 
-Final deployment still requires checking the actual authenticated user experience; synthetic Chromium/CI validation alone does not prove that a production deployment reflects `main`.
+## Verification
+
+- [GOOSE09 focused Gallery verification](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39044048810) — passed (Vitest, authorization and four-ratio browser smoke, production build).
+- [GOOSE09 Chrome mechanical phases](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39044048675) — passed with screenshot artifact of the closed door, left/right sapphire activation, bolting, travel and open state.
+- The full repository CI still has failures in unrelated legacy tests; those are NOT represented as passing.
+- Genuine signed-in player/GM visual acceptance and deployed commit verification are still required to claim a visually approved production experience.
+
+## Visual acceptance checklist
+
+Open the deployed Gallery with a real authorized player and GM. Confirm the authentic metalwork/sword, correct sapphire location, blue engraved lines, left/right lock progression, joined and separated seal, no distortion at 4:3, and smooth morph to 16:9 / 1:1 / 9:16. Repeat opening/closing with the GM test controls, verify smaller screens and reduced motion, then revoke access and verify no private image remains.
