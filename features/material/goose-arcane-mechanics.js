@@ -38,23 +38,39 @@ export function gooseSealGearMarkup(part='center'){
   '<circle r="3.1" fill="#22180f" stroke="#efc577" stroke-width="1.8"/>'+
   '</g></g></svg></span>';
 }
+/* GOOSE09 – original-plate luminescence: no hand-drawn channel paths.
+ * The canvas contains *only* selected cyan pixels from the original,
+ * so when the light expands it precisely follows existing blue engravings.
+ */
 export function gooseDoorMechanicsMarkup(side){
  if(side!=='left'&&side!=='right')throw Error('INVALID_GOOSE_SIDE');
- const isLeft=side==='left';
- const x=isLeft?35.6:65.8;
- const middle=isLeft?56:45;
- const shoulder=isLeft?79:22;
- const tip=isLeft?89:11;
- const upper='M'+x+' 49.5 C'+middle+' 49.5 '+shoulder+' 37 '+tip+' 14';
- const lower='M'+x+' 49.5 C'+middle+' 49.5 '+shoulder+' 63 '+tip+' 86';
- const paths=[upper,lower];
- const lines=paths.map((d,i)=>'<path d="'+d+'" class="goose-player-energy-engraving" />'+
-   '<path d="'+d+'" pathLength="100" class="goose-player-energy-flow goose-player-energy-flow--'+(i?'lower':'upper')+'" />').join('');
- return '<svg class="goose-player-energy goose-player-energy--'+side+
-  '" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'+
-  lines+'</svg>'+
-  '<span class="goose-player-piston goose-player-piston--north" aria-hidden="true">'+
-  '<span class="goose-player-piston-housing"></span><span class="goose-player-piston-bolt"></span></span>'+
-  '<span class="goose-player-piston goose-player-piston--south" aria-hidden="true">'+
-  '<span class="goose-player-piston-housing"></span><span class="goose-player-piston-bolt"></span></span>';
+ return '<canvas class="goose-player-blue-ink goose-player-blue-ink--'+side+
+  '" aria-hidden="true"></canvas>'+
+  '<span class="goose-player-piston-source goose-player-piston-source--north" aria-hidden="true"><img alt=""></span>'+
+  '<span class="goose-player-piston-source goose-player-piston-source--south" aria-hidden="true"><img alt=""></span>';
+}
+export function gooseOriginalBlueInk(source,canvas){
+ if(!source||!canvas?.getContext||!source.naturalWidth||!source.naturalHeight)return false;
+ const width=source.naturalWidth,height=source.naturalHeight;
+ const scratch=source.ownerDocument?.createElement?.('canvas');
+ if(!scratch?.getContext)return false;
+ scratch.width=width;scratch.height=height;
+ try{
+  const ctx=scratch.getContext('2d',{willReadFrequently:true});
+  if(!ctx)return false;
+  ctx.drawImage(source,0,0,width,height);
+  const image=ctx.getImageData(0,0,width,height);
+  const bytes=image.data;
+  for(let k=0;k<bytes.length;k+=4){
+   const r=bytes[k],g=bytes[k+1],b=bytes[k+2],a=bytes[k+3];
+   // Bronze/gold is warm and stays fully transparent. Real cyan inlays
+   // remain, matching all twists in the physically painted metal paths.
+   const blue=Math.max(0,Math.min(255,(b-r-6)*3,(b-g-3)*5));
+   bytes[k]=72;bytes[k+1]=192;bytes[k+2]=255;
+   bytes[k+3]=a>40&&b>52?Math.round(blue*a/255):0;
+  }
+  canvas.width=width;canvas.height=height;
+  canvas.getContext('2d')?.putImageData(image,0,0);
+  return true;
+ }catch{return false;} // Browser may forbid reading an external image; never crash.
 }
