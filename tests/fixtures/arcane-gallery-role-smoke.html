@@ -79,7 +79,7 @@ async function run(){
  assert(requests.every(x=>x.startsWith('campaign_materials?')||x.startsWith('campaign_material_presentation_history?')),'unexpected private API');
  // Verify that the bronze carousel is physically tucked under the
  // HERMES bottom rail at both desktop and phone-sized gallery widths.
- function assertDocked(phase){
+ async function assertDocked(phase){
   const machine=gallery.root.querySelector('.arcane-gallery-machine');
   const carousel=gallery.root.querySelector('.arcane-gallery-carousel');
   assert(Boolean(machine&&carousel),phase+': missing docking pieces');
@@ -87,17 +87,45 @@ async function run(){
   const overlap=m.bottom-c.top;
   const width=m.width;
   assert(overlap>width*.102&&overlap<width*.110,
-   phase+': opaque metal rails must meet behind lower HERMES rail, overlap='+overlap+' width='+width);
+   phase+': insufficient overlap of HERMES and carousel boxes: '+overlap);
   const mStyle=getComputedStyle(machine),cStyle=getComputedStyle(carousel);
   assert(Number(mStyle.zIndex)>Number(cStyle.zIndex),
    phase+': carousel is painted over the HERMES bottom rail');
   assert(mStyle.overflow==='visible',phase+': HERMES bottom rail clipped');
-  return {width:Math.round(width),overlap:Math.round(overlap)};
+  const lower=gallery.root.querySelector('.arcane-kit-bottom');
+  const bronze=gallery.root.querySelector('.arcane-gallery-carousel-frame');
+  assert(lower&&bronze,phase+': source-art rail missing');
+  await Promise.all([lower.decode(),bronze.decode()]);
+  // Transparent margins must NOT count as visible artwork. Find the actual
+  // painted alpha edges at two non-gem center rail points from original art.
+  function paintedEdgeY(img,fraction,edge){
+   const canvas=document.createElement('canvas');
+   canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+   const context=canvas.getContext('2d',{willReadFrequently:true});
+   context.drawImage(img,0,0);
+   const x=Math.round((canvas.width-1)*fraction);
+   const pixels=context.getImageData(x,0,1,canvas.height).data;
+   let y=edge==='bottom'?-1:canvas.height;
+   for(let i=0;i<canvas.height;i++){
+    const alpha=pixels[i*4+3];
+    if(alpha>128){
+     if(edge==='top'){y=i;break;}
+     y=i;
+    }
+   }
+   assert(y>=0&&y<canvas.height,phase+': no painted pixel at '+fraction);
+   const rect=img.getBoundingClientRect();
+   return rect.top+(y+.5)*rect.height/canvas.height;
+  }
+  const paintedGaps=[.3,.7].map(x=>
+   paintedEdgeY(bronze,x,'top')-paintedEdgeY(lower,x,'bottom'));
+  return {width:Math.round(width),overlap:Math.round(overlap),
+   paintedGaps:paintedGaps.map(g=>Math.round(g*10)/10)};
  }
- const desktopDock=assertDocked('desktop');
+ const desktopDock=await assertDocked('desktop');
  const panel=document.querySelector('#legolasPanel');
  panel.style.width='360px';
- const phoneDock=assertDocked('phone-width');
+ const phoneDock=await assertDocked('phone-width');
  panel.style.removeProperty('width');
  const privateImageUrl=gallery.state.original;
  assert(privateImageUrl.startsWith('blob:'),'player did not use private blob URL');
