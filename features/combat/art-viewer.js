@@ -108,8 +108,7 @@
   }catch(_){return ''}
  }
  function bind(root){
-  if(!root||root.dataset.aleaGalleryBound==='1')return;
-  root.dataset.aleaGalleryBound='1';
+  if(!root)return;
   const equipment='.combat-turn-equip-art .combat-turn-art';
   const portraits='.combatant-card .combat-row-portrait img, .combat-detail-header .combat-row-portrait img';
   const targets=equipment+', '+portraits;
@@ -130,6 +129,8 @@
    if(event.type==='click')event.preventDefault();
    show({title,battleId:fight.dataset.battleId||fight.getAttribute('data-battle-id'),source:isEquipment?'equipment':'combatant',src:url});
   }
+  if(root.dataset.aleaGalleryBound!=='1'){
+   root.dataset.aleaGalleryBound='1';
   root.addEventListener('click',handle,true);
   root.addEventListener('keydown',event=>{
    if(event.key!=='Enter'&&event.key!==' ')return;
@@ -137,6 +138,7 @@
    if(!target)return;
    event.preventDefault();handle({target,type:'click',stopPropagation:()=>event.stopPropagation(),preventDefault:()=>{}});
   },true);
+  }
   root.querySelectorAll(targets).forEach(img=>{
    img.tabIndex=0;img.setAttribute('role','button');
    img.setAttribute('aria-label','Visa '+(img.alt||'bild')+' i Arcane Gallery');
