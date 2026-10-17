@@ -70,12 +70,13 @@ function checkAsset(a:any){
  const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  const expectsAlpha=a.kind!=="skill-illustration";
+ const assetField: "icon_path" | "illustration_path" = a.kind==="skill-illustration"?"illustration_path":"icon_path";
  if(a.source_path!==expected||a.app_file!==out||a.width!==640||a.height!==640||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
  const skill=a.kind==="skill"||a.kind==="skill-illustration";
  return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
   field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
-  appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`, assetField:a.kind==="skill-illustration"?"illustration_path":"icon_path"};
+  appPath:`hermes/${a.kind}/${a.target_key}/${a.app_sha256}.webp`, assetField};
 }
 async function publish(a:any){
  const {table,field,sourcePath,appPath,assetField}=checkAsset(a);
