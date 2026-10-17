@@ -113,13 +113,16 @@ async function run(){
    const pixels=context.getImageData(x,0,1,canvas.height).data;
    let y=edge==='bottom'?-1:canvas.height;
    for(let i=0;i<canvas.height;i++){
-    const alpha=pixels[i*4+3];
-    if(alpha>128){
+    const o=i*4,r=pixels[o],g=pixels[o+1],blue=pixels[o+2],alpha=pixels[o+3];
+    // Count BRONZE metal instead of the opaque dark shadow extending into
+    // the transparent margin of HERMES sprites.
+    const visibleMetal=alpha>128&&r>85&&g>40&&r>g*1.12&&g>blue*1.15;
+    if(visibleMetal){
      if(edge==='top'){y=i;break;}
      y=i;
     }
    }
-   assert(y>=0&&y<canvas.height,phase+': no painted pixel at '+fraction);
+   assert(y>=0&&y<canvas.height,phase+': no visible bronze at '+fraction);
    const rect=img.getBoundingClientRect();
    return rect.top+(y+.5)*rect.height/canvas.height;
   }
