@@ -53,6 +53,10 @@
   const el=slot(kind);
   if(!el)return;
   for(const input of el.querySelectorAll('input,button'))input.disabled=on;
+  if(!on){
+   const remove=el.querySelector('button');
+   if(remove)remove.disabled=!validPath(getRow(editorId)?.[TYPES[kind].column],editorId,kind);
+  }
  }
  function release(){
   for(const url of previews.values())URL.revokeObjectURL(url);
@@ -139,8 +143,8 @@
     await loadImage(id,kind,path,token);
     status(kind,'✓ Sparad '+info.width+' × '+info.height+' px. '+TYPES[kind].title+' är kopplad till färdigheten.');
    }
-  }catch(error){status(kind,'Uppladdningen misslyckades: '+(error.message||error))}
-  finally{pending.delete(key);busy(kind,false)}
+  }catch(error){if(token===generation&&editorId===id)status(kind,'Uppladdningen misslyckades: '+(error.message||error))}
+  finally{pending.delete(key);if(token===generation&&editorId===id)busy(kind,false)}
  }
  async function remove(id,kind){
   if(!SLUG.test(String(id))||!TYPES[kind]||!isAdmin()||!getRow(id))return;
