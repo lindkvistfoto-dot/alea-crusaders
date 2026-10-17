@@ -331,6 +331,9 @@ function combatBindSpellCarousel(root){
   track.style.setProperty('--combat-carousel-tile-width',tileWidth+'px');
   track.style.setProperty('--combat-carousel-gap',finalGap+'px');
   sync();
+  // Images that loaded before measure() may still have the old default
+  // pixel dimensions. Reposition them after layout and every resize.
+  if(cryptex)window.aleaSpellArt?.refreshCarouselCrops?.(track);
   measureNameplate(); // Also adapt on window resize and orientation change.
  }
  function settle(){
