@@ -6928,7 +6928,7 @@ function renderCombat(){
     '<section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+
    '</div>'+
   '</div>'+
-  '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div>'+window.aleaCombatArtViewer?.html?.(activeCombat.id)+'</aside>'+
+  '<aside class="combat-panel combat-participants"><h3>Turordning</h3><div class="combat-participant-list">'+participantHtml+'</div>'+(window.aleaCombatArtViewer?.html?.(activeCombat.id)||'')+'</aside>'+
  '</div>'+combatantDetailsPopupHtml();
  if(magicScrollTop){
   const nextSpellList=body.querySelector('.combat-spell-catalog');
