@@ -3693,8 +3693,8 @@ async function deleteCampaignLocation(id){
  if(!await askConfirm('Ta bort plats',`Vill du ta bort ${l.location_key}. ${l.name}? Platsen kan bara tas bort om ingen polygon eller annan koppling använder den.`,'Ta bort',true))return;
  try{await dbJson('campaign_locations?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadCampaignPlaceData();renderAdminMaps()}catch(e){alert('Kunde inte ta bort platsen: '+e.message)}
 }
-let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='';
-function closeMapAreaEditor(){mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];$('mapAreaEditor').classList.add('hidden')}
+let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='',mapAreaSelectedId=null,mapAreaNodeDrag=null;
+function closeMapAreaEditor(){if(mapAreaNodeDrag)return;mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;$('mapAreaEditor').classList.add('hidden')}
 async function openMapAreaEditor(mapId){
  let map=campaignMaps.find(m=>m.id===mapId);if(!map)return;
  try{
@@ -3738,9 +3738,10 @@ function draftOverlapsExisting(){return mapAreaDraft.length>=3&&mapAreaEditAreas
 function renderMapAreaEditor(){
  if(!mapAreaEditMap)return;
  let svg=$('mapAreaSvg'),overlap=draftOverlapsExisting();
- let existing=mapAreaEditAreas.map(a=>{let pts=areaShapePoints(a).map(p=>p.join(',')).join(' ');return`<polygon class="map-editor-zone" data-area-id="${escAttr(a.id)}" points="${escAttr(pts)}" onclick="mapAreaExistingClick(event,'${a.id}')"><title>${escAttr(a.name||'Plats')}</title></polygon>`}).join('');
+ let existing=mapAreaEditAreas.map(a=>{let pts=areaShapePoints(a).map(p=>p.join(',')).join(' ');return`<polygon class="map-editor-zone ${a.id===mapAreaSelectedId?'selected':''}" data-area-id="${escAttr(a.id)}" points="${escAttr(pts)}" onclick="mapAreaExistingClick(event,'${a.id}')"><title>${escAttr(a.name||'Plats')}</title></polygon>`}).join('');
+ let nodes=!mapAreaDrawing?mapAreaEditAreas.flatMap(a=>areaShapePoints(a).map((p,i)=>({p,i,id:a.id}))).map(n=>{let shared=mapAreaEditAreas.reduce((count,a)=>count+Number(areaShapePoints(a).some(p=>Math.hypot(p[0]-n.p[0],p[1]-n.p[1])<.01)),0)>1;return`<circle class="map-editor-vertex ${shared?'shared':''}" cx="${n.p[0]}" cy="${n.p[1]}" r="6" vector-effect="non-scaling-stroke" onpointerdown="mapAreaNodeStart(event,'${n.id}',${n.i})"><title>Dra hörnpunkt${shared?' (delad)':''}</title></circle>`}).join(''):'';
  let draft=mapAreaDraft.length?`<polygon class="map-editor-draft ${overlap?'overlap':''}" points="${mapAreaDraft.map(p=>p.join(',')).join(' ')}"></polygon>${mapAreaDraft.map(p=>`<circle class="map-editor-point" cx="${p[0]}" cy="${p[1]}" r="5"></circle>`).join('')}`:'';
- svg.innerHTML=existing+draft;
+ svg.innerHTML=existing+draft+nodes;
  let locMap=new Map(campaignLocations.map(l=>[l.id,l]));
  $('mapAreaList').innerHTML=mapAreaEditAreas.length?mapAreaEditAreas.map((a,i)=>{let l=locMap.get(a.location_id);let options='<option value="">Ingen plats</option>'+campaignLocations.map(x=>`<option value="${x.id}" ${a.location_id===x.id?'selected':''}>${escAttr(sitePath(x.site_id)+' › '+x.location_key+'. '+x.name)}</option>`).join('');let pills=mapStatusPillsHtml(a);return`<div class="map-area-list-row"><div><b>Polygon ${i+1}</b><div class="muted">${l?'Kopplad':'Ej kopplad'}</div></div><select onchange="assignMapAreaLocation('${a.id}',this.value)" aria-label="Koppla polygon ${i+1} till plats">${options}</select><div class="map-status-pills">${pills}</div><button class="deletebtn" onclick="deleteMapArea('${a.id}')">×</button></div>`}).join(''):'<div class="map-area-empty">Inga polygoner definierade ännu.</div>';
  $('mapAreaUndoBtn').disabled=!mapAreaDrawing||!mapAreaDraft.length;$('mapAreaSaveBtn').disabled=!mapAreaDrawing||mapAreaDraft.length<3||overlap;
@@ -3754,8 +3755,66 @@ function mapStatusPillsHtml(a){
 }
 function mapAreaExistingClick(e,id){
  if(mapAreaDrawing)return;
+ mapAreaSelectedId=id;renderMapAreaEditor();
  e.stopPropagation();
  let a=mapAreaEditAreas.find(x=>x.id===id);if(a)openMapStatusMenu(e,a);
+}
+function mapAreaNodeStart(e,id,index){
+ if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
+ e.preventDefault();e.stopPropagation();
+ let a=mapAreaEditAreas.find(a=>a.id===id),origin=areaShapePoints(a)[index];if(!origin)return;
+ mapAreaSelectedId=id;
+ let impacted=mapAreaEditAreas.filter(a=>areaShapePoints(a).some(p=>Math.hypot(p[0]-origin[0],p[1]-origin[1])<.01));
+ mapAreaNodeDrag={origin:origin.slice(),impacted:impacted.map(a=>({id:a.id,old:areaShapePoints(a),shape_type:a.shape_type})),changed:false};
+ window.addEventListener('pointermove',mapAreaNodeMove);window.addEventListener('pointerup',mapAreaNodeEnd,{once:true});window.addEventListener('pointercancel',mapAreaNodeCancel,{once:true});
+ renderMapAreaEditor();
+}
+function mapAreaNodePosition(e){
+ let rect=$('mapAreaSvg').getBoundingClientRect();
+ return [Math.max(0,Math.min(mapAreaEditMap.width,(e.clientX-rect.left)/rect.width*mapAreaEditMap.width)),Math.max(0,Math.min(mapAreaEditMap.height,(e.clientY-rect.top)/rect.height*mapAreaEditMap.height))].map(n=>Math.round(n*10)/10);
+}
+function mapAreaPolygonValid(poly){
+ if(poly.length<3||Math.abs(poly.reduce((sum,p,i)=>sum+p[0]*poly[(i+1)%poly.length][1]-poly[(i+1)%poly.length][0]*p[1],0))<.1)return false;
+ for(let i=0;i<poly.length;i++)for(let j=i+1;j<poly.length;j++){
+  if(j===i+1||(i===0&&j===poly.length-1))continue;
+  if(segmentsProperIntersect(poly[i],poly[(i+1)%poly.length],poly[j],poly[(j+1)%poly.length]))return false;
+ }
+ return true;
+}
+function mapAreaNodeMove(e){
+ let drag=mapAreaNodeDrag;if(!drag)return;
+ let p=mapAreaNodePosition(e);drag.changed=true;
+ for(let item of drag.impacted){let area=mapAreaEditAreas.find(a=>a.id===item.id);if(!area)continue;
+  let points=item.old.map(v=>Math.hypot(v[0]-drag.origin[0],v[1]-drag.origin[1])<.01?p.slice():v.slice());
+  area.shape_type='polygon';area.shape_data={...area.shape_data,points};
+ }
+ renderMapAreaEditor();
+}
+function mapAreaNodeCancel(){
+ window.removeEventListener('pointermove',mapAreaNodeMove);window.removeEventListener('pointerup',mapAreaNodeEnd);
+ let drag=mapAreaNodeDrag;if(!drag)return;
+ for(let item of drag.impacted){let a=mapAreaEditAreas.find(a=>a.id===item.id);if(a){a.shape_type=item.shape_type;a.shape_data={...a.shape_data,points:item.old}}}
+ mapAreaNodeDrag=null;renderMapAreaEditor();
+}
+async function mapAreaNodeEnd(){
+ window.removeEventListener('pointermove',mapAreaNodeMove);window.removeEventListener('pointercancel',mapAreaNodeCancel);
+ let drag=mapAreaNodeDrag;if(!drag)return;
+ if(!drag.changed){mapAreaNodeDrag=null;renderMapAreaEditor();return}
+ let modified=drag.impacted.map(item=>({id:item.id,points:areaShapePoints(mapAreaEditAreas.find(a=>a.id===item.id))}));
+ if(modified.some(x=>!mapAreaPolygonValid(x.points))||mapAreaEditAreas.some((a,i)=>mapAreaEditAreas.slice(i+1).some(b=>polygonsOverlap(areaShapePoints(a),areaShapePoints(b))))){
+  mapAreaNodeCancel();showBackupToast('Hörnet kan inte flyttas: ogiltig polygon eller överlapp');return;
+ }
+ try{
+  for(let m of modified)await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(m.id),{method:'PATCH',body:JSON.stringify({shape_type:'polygon',shape_data:{points:m.points}})});
+  mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id);
+  if(activeCampaignMap?.id===mapAreaEditMap.id)setCampaignMapData(activeCampaignMap,mapAreaEditAreas);
+  showBackupToast('✓ Gemensamma hörn sparade');
+ }catch(err){
+  for(let item of drag.impacted){try{await dbJson('campaign_map_areas?id=eq.'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({shape_type:item.shape_type,shape_data:{points:item.old}})})}catch(rollbackError){console.error('Återställning misslyckades',rollbackError)}}
+  try{mapAreaEditAreas=await loadCampaignMapAreas(mapAreaEditMap.id)}catch(loadError){console.error(loadError)}
+  alert('Kunde inte spara hörnflytten. Återställning har försökts: '+err.message);
+ }
+ mapAreaNodeDrag=null;renderMapAreaEditor();
 }
 function mapZoneClick(e,id){
  e.stopPropagation();
