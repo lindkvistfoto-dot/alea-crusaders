@@ -1,0 +1,50 @@
+name: GOOSE 05 shared gallery visual acceptance
+on:
+  push:
+    branches: [sisyphus/goose05-unified-gallery-20261017]
+    paths:
+      - 'features/material/frodo-ui.js'
+      - 'features/material/frodo-atelier.css'
+      - 'features/material/arcane-gallery.js'
+      - 'tests/fixtures/goose05-unified.html'
+      - 'scripts/goose05_visual.cjs'
+      - '.github/workflows/goose05-visual.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - run: npm ci --no-audit --no-fund
+      - name: Capture authenticated-role simulation without real data
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4173 --strictPort >/tmp/goose05-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:4173/tests/fixtures/goose05-unified.html >/dev/null; then break; fi
+            sleep 1
+          done
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/goose05_visual.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goose05-shared-gallery-gm-mobile-desktop
+          path: tests/visual-regressions/goose05/*.png
+          if-no-files-found: error
+      - name: Commit synthetic screenshots for visual review
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/visual-regressions/goose05/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "test(goose05): capture GM and shared gallery visual review"
+            git push origin HEAD:sisyphus/goose05-unified-gallery-20261017
+          fi
