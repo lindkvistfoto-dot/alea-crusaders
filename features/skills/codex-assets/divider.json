@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-divider",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-divider/45bc0a348a545abaa6d98333c78ef0c6a9b5f442de80179ce355db8e516dd62b.png",
+  "source_sha256": "45bc0a348a545abaa6d98333c78ef0c6a9b5f442de80179ce355db8e516dd62b",
+  "source_bytes": 19004,
+  "app_path": "features/skills/codex-assets/divider.webp",
+  "app_sha256": "f833d8192738376228909e908e187b7b9592898174cf94786fdb3d5c6037dd20",
+  "app_bytes": 4286,
+  "width": 285,
+  "height": 45,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
