@@ -18,7 +18,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: hermes-drive-queue
+  group: hermes-drive-queue-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
