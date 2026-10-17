@@ -69,7 +69,7 @@ async function main(){
   await capture('05-open');
   if(await evaluate('window.goose05.status.publishedCalls'))throw Error('UNAUTHORIZED_PUBLISH');
   // Also open the public standalone simulation exactly as an external visitor.
-  await send('Page.navigate',{url:'http://127.0.0.1:4173/simulations/goose08.html'});
+  await send('Page.navigate',{url:'http://127.0.0.1:4173/goose08.html'});
   await until("window.goose08Demo?.ready===true && window.goose08Demo.phase==='closed'",'standalone_ready');
   await capture('06-public-preview-closed');
   await evaluate("document.getElementById('openBtn').click()");
@@ -84,7 +84,7 @@ async function main(){
   // This is a public static page: no cookies or private content are requested.
   const base='https://raw.githack.com/lindkvistfoto-dot/alea-crusaders/goose08-simulator/';
   const checks=[
-    ['simulations/goose08.html','The Awakening Mechanism','text/html'],
+    ['goose08.html','The Awakening Mechanism','text/html'],
     ['features/material/goose-player-shutter.js','createGoosePlayerShutter','javascript'],
     ['features/material/goose04/seal.webp',null,'image/webp']
   ];
