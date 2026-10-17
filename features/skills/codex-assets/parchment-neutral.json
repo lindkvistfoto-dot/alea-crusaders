@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-parchment-neutral",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-parchment-neutral/2c1bde79f99771e7ab42b27df6a81e60da230fc1428f5d11f55376c841eaca41.png",
+  "source_sha256": "2c1bde79f99771e7ab42b27df6a81e60da230fc1428f5d11f55376c841eaca41",
+  "source_bytes": 366865,
+  "app_path": "features/skills/codex-assets/parchment-neutral.webp",
+  "app_sha256": "1c58c4a846a1c82ddd6934b6eb3c7d2eb2aba04ab66f41b782051ebe93f828be",
+  "app_bytes": 56142,
+  "width": 1014,
+  "height": 185,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
