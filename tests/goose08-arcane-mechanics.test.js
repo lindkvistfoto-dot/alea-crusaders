@@ -15,6 +15,9 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   const markup=gooseSealGearMarkup();
   expect(markup).toContain('goose-player-gear--drive');
   expect(markup).toContain('goose-player-gear--idler');
+  expect(gooseSealGearMarkup('left')).toContain('goose08-brass-left');
+  expect(gooseSealGearMarkup('right')).toContain('goose08-brass-right');
+  expect(()=>gooseSealGearMarkup('outside')).toThrow('INVALID_GOOSE_GEAR_PART');
   expect(markup).toContain('viewBox="0 0 112 68"');
   expect(markup).not.toContain('http');
  });
@@ -37,6 +40,8 @@ describe('GOOSE 08 – non-destructive arcane mechanism layers',()=>{
   expect(code).toContain("gooseDoorMechanicsMarkup('left')");
   expect(code).toContain("gooseDoorMechanicsMarkup('right')");
   expect(code).toContain('gooseSealGearMarkup()');
+  expect(code).toContain("gooseSealGearMarkup('left')");
+  expect(code).toContain("gooseSealGearMarkup('right')");
   expect(gallery).toContain("isLoggedIn()&&");
   expect(gallery).toContain("'./features/material/goose04/left.webp'");
   expect(gallery).toContain("'./features/material/goose04/right.webp'");
