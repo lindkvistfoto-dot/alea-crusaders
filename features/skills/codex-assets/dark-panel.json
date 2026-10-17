@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "kind": "ui",
+  "target_key": "arcane-skill-codex-dark-panel",
+  "source_path": "assets/hermes/originals/ui/arcane-skill-codex-dark-panel/00525a0a21a0233fd7f82ef3df0176cd2498f5e887c527f35086122a6ed8486b.png",
+  "source_sha256": "00525a0a21a0233fd7f82ef3df0176cd2498f5e887c527f35086122a6ed8486b",
+  "source_bytes": 1725202,
+  "app_path": "features/skills/codex-assets/dark-panel.webp",
+  "app_sha256": "6ed14f3511fd932ca4ea7739522c1528f0d4df69c1c21095c7df59ccc2ab28ca",
+  "app_bytes": 224646,
+  "width": 1280,
+  "height": 497,
+  "alpha_preserved": true,
+  "supabase_activation": false
+}
