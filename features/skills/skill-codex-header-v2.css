@@ -46,7 +46,7 @@
  transform:translateY(5px);
  text-align:center;
  text-wrap:balance;
- font:normal clamp(25px,3.3vw,39px)/1.07 Georgia,"Times New Roman",serif;
+ font:normal clamp(30px,4.5vw,43px)/1.07 Georgia,"Times New Roman",serif;
  letter-spacing:.018em;
  color:#f0d69b;
  text-shadow:0 2px 3px #000,0 0 12px #f0bd6133;
@@ -128,7 +128,7 @@
  }
  #skillModal.skill-codex-active #skillModalTitle {
   transform:translateY(4px);
-  font-size:clamp(21px,6.3vw,31px);
+  font-size:clamp(24px,7.4vw,32px);
   letter-spacing:.012em;
  }
 }
