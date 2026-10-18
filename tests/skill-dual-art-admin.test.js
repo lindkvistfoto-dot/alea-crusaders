@@ -13,17 +13,22 @@ const skillId='klattra';
 const guid='a3729cc1-a80d-48d3-b162-d8a196d78054';
 const icon='skill/'+skillId+'/icon/'+guid+'.png';
 const illustration='skill/'+skillId+'/illustration/'+guid+'.webp';
+const wide='skill/'+skillId+'/illustration_wide/'+guid+'.jpg';
 
-describe('FÄRDIGHET IKON and ILLUSTRATION admin',()=>{
+describe('FÄRDIGHET IKON, ILLUSTRATION and ILLUSTRATION WIDE admin',()=>{
  it('renders independent preview/upload/remove controls for a saved skill',()=>{
-  const view=helper().editorHtml({id:skillId,name:'Klättra',icon_path:icon,illustration_path:illustration});
+  const view=helper().editorHtml({id:skillId,name:'Klättra',icon_path:icon,illustration_path:illustration,illustration_wide_path:wide});
   expect(view).toContain('FÄRDIGHET IKON');
   expect(view).toContain('FÄRDIGHET ILLUSTRATION');
+  expect(view).toContain('FÄRDIGHET ILLUSTRATION WIDE');
   expect(view).toContain('data-kind="icon"');
   expect(view).toContain('data-kind="illustration"');
+  expect(view).toContain('data-kind="illustration_wide"');
   expect(view).toContain("aleaSkillArt.upload(event,'klattra','icon')");
   expect(view).toContain("aleaSkillArt.upload(event,'klattra','illustration')");
-  expect(view.match(/Byt bild/g)).toHaveLength(2);
+  expect(view).toContain("aleaSkillArt.upload(event,'klattra','illustration_wide')");
+  expect(view).toContain("aleaSkillArt.remove('klattra','illustration_wide')");
+  expect(view.match(/Byt bild/g)).toHaveLength(3);
  });
  it('requires saving a newly created skill before artwork can be uploaded',()=>{
   const view=helper().editorHtml(null);
@@ -34,6 +39,8 @@ describe('FÄRDIGHET IKON and ILLUSTRATION admin',()=>{
   const art=helper();
   expect(art.validPath(icon,skillId,'icon')).toBe(true);
   expect(art.validPath(illustration,skillId,'illustration')).toBe(true);
+  expect(art.validPath(wide,skillId,'illustration_wide')).toBe(true);
+  expect(art.validPath(wide,skillId,'illustration')).toBe(false);
   expect(art.validPath('skill/'+skillId+'/icon/'+guid+'.jpg',skillId,'icon')).toBe(false);
   expect(art.validPath(icon,skillId,'illustration')).toBe(false);
   expect(art.validPath(icon,'smyga','icon')).toBe(false);
@@ -46,6 +53,8 @@ describe('FÄRDIGHET IKON and ILLUSTRATION admin',()=>{
   expect(main).toContain("window.aleaSkillArt?.hydrate(r?.id||'')");
   expect(main).toContain('window.aleaSkillArt?.closeEditor()');
   expect(main).toContain('● Illustration');
+  expect(main).toContain('● WIDE');
+  expect(css).toContain('.skill-art-preview-illustration_wide');
   expect(css).toContain('skill-art-preview-icon');
  });
  it('retains original alpha and resolution, with isolated columns for each type',()=>{
@@ -56,6 +65,8 @@ describe('FÄRDIGHET IKON and ILLUSTRATION admin',()=>{
   expect(moduleSource).not.toContain('canvas.toBlob');
   expect(moduleSource).toContain("icon_path");
   expect(moduleSource).toContain("illustration_path");
+  expect(moduleSource).toContain("illustration_wide_path");
+  expect(moduleSource).toContain('w*9!==h*16');
  });
  it('keeps the new bucket private, scoped and uploads admin-only',()=>{
   expect(migration).toContain("'alea-skill-art',false");
