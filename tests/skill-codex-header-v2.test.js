@@ -23,6 +23,10 @@ describe('ARCANE SKILL CODEX WIDE — integrated header V2',()=>{
   expect(css).toContain('::before');
   expect(css).toContain('::after');
   expect(css).toContain('pointer-events:none');
+  // The base stylesheet uses left:50% on ::after; clear it to seat the X at right.
+  expect(css).toContain('left:auto');
+  expect(css).toContain('bottom:auto');
+  expect(css).toContain('.modalhead::after {right:var(--codex-seat-inset)}');
   expect(css).toContain('z-index:1');
  });
  it('aligns title in middle grid track and vertically centers both controls',()=>{
