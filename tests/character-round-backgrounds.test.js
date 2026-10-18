@@ -36,7 +36,8 @@ describe('Character-specific round artwork',()=>{
   expect(runtime).toContain('const roundPool=await window.aleaRoundGallery?.getActivePool?.()||[]');
   expect(runtime).toContain("const customPath=sourceType==='character'?stats.round_background_path:null");
   expect(runtime).toContain("round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null");
-  expect(runtime).toContain("state:{...(row.state||{}),round_background_source:");
+  expect(runtime).toContain("round_background_source:roundArtSource,round_background_path:roundArtPath,round_background_id:randomArt?.id||null");
+  expect(runtime).toContain("state:{...(row.state||{}),race_name:stats.race_name");
   expect(gallery).toContain('getActivePool,pickRandomForCombat');
  });
  it('resolves active actor per redraw and never flashes a previous actor image',()=>{

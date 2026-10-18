@@ -27,6 +27,7 @@ function mount({cacheEntries=[],getNpcPortraitUrl}={}){
   combatPlayerPortraitSource:()=>({url:'blob:hero-portrait'}),
   combatTokenInitials:name=>String(name).slice(0,2).toUpperCase(),
   combatIconCachedUrl:()=>'',escAttr:value=>String(value),
+  window:{},combatants:[],
   renderCombat:()=>{renders++},
   console
  };
@@ -69,8 +70,8 @@ describe('Porträtt i turordning – SLP och fiender',()=>{
  });
  test('ny strid sparar bildsökvägarna i kombatanternas state',()=>{
   expect(runtime).toContain('portrait_image_path:stats.portrait_image_path');
-  expect(runtime).toContain("&select=id,name,image_path,attributes,weapons,shield,armor,spells'");
-  expect(runtime).toContain("&select=id,name,image_path,attributes,weapons,shield,armor'");
+  expect(runtime).toContain("select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells,race,gender");
+  expect(runtime).toContain("select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,race,gender");
  });
  test('aktiv turpanel använder samma bildkälla som turordningen',()=>{
   expect(runtime).toContain('const url=combatRowPortraitUrl(combatant),initials=combatTokenInitials(combatant.name_snapshot');
