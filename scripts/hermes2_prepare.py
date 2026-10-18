@@ -17,7 +17,7 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration|skill-illustration-wide)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -42,12 +42,15 @@ def prepare(source: Path, output_root: Path) -> dict:
     with Image.open(io.BytesIO(raw)) as original:
         if original.format != "PNG":
             raise ValueError(f"{relative}: expected PNG")
-        wide = kind == "skill-illustration-wide"
-        if wide and not (640 <= original.width <= 4096 and 360 <= original.height <= 4096 and abs(original.width / original.height - 16 / 9) / (16 / 9) <= 0.003):
+        wide = kind in ("skill-illustration-wide", "spell-illustration-wide")
+        spell_wide = kind == "spell-illustration-wide"
+        if wide and not (640 <= original.width <= 4096 and 360 <= original.height <= 4096 and (
+            1.25 <= original.width / original.height <= 2.4 if spell_wide
+            else abs(original.width / original.height - 16 / 9) / (16 / 9) <= 0.003)):
             raise ValueError(f"{relative}: expected landscape near 16:9 (0.3% tolerance)")
         if not wide and (original.width != original.height or not EDGE <= original.width <= 4096):
             raise ValueError(f"{relative}: expected square 640–4096 px")
-        if kind in ("skill-illustration", "skill-illustration-wide"):
+        if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide"):
             if original.mode not in ("RGB", "RGBA"):
                 raise ValueError(f"{relative}: expected RGB or opaque RGBA illustration")
             if original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255):
@@ -66,18 +69,19 @@ def prepare(source: Path, output_root: Path) -> dict:
             if low == 255 or high == 0:
                 raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")
             required_alpha = image.getchannel("A").tobytes()
+    max_webp = 2_500_000 if kind == 'spell-illustration-wide' else MAX_WEBP
     webp = None
     quality_used = None
     for quality in QUALITIES:
         buffer = io.BytesIO()
         image.save(buffer, "WEBP", quality=quality, method=6, exact=True)
         candidate = buffer.getvalue()
-        if len(candidate) <= MAX_WEBP:
+        if len(candidate) <= max_webp:
             webp = candidate
             quality_used = quality
             break
     if webp is None:
-        raise ValueError(f"{relative}: cannot optimize under 500 kB")
+        raise ValueError(f"{relative}: cannot optimize under {max_webp} bytes")
     if required_alpha is not None and (webp[:4] != b"RIFF" or webp[8:12] != b"WEBP" or webp[12:16] != b"VP8X" or not webp[20] & 16):
         raise ValueError(f"{relative}: optimized WebP alpha header invalid")
     with Image.open(io.BytesIO(webp)) as check:
