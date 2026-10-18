@@ -87,18 +87,26 @@ body.character-glowup-active #view #grundPanel > .glow-base-section > .section-t
   letter-spacing:-.018em;
   text-shadow:0 2px 2px #000,0 0 17px #d2a05b23;
 }
-body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::before{display:none}
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::before{
+  content:'';
+  position:absolute;
+  display:block;
+  bottom:-3px;
+  left:50%;
+  transform:translateX(-50%);
+  width:30px;
+  height:30px;
+  background:var(--arcane-attribute-atlas) 71.4286% 50% / 800% 300% no-repeat;
+}
 body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::after{
   content:'';
   position:absolute;
   display:block;
-  inset:auto 6% 0;
+  inset:auto 6% 11px;
   width:auto;
-  height:13px;
+  height:1px;
   margin:0;
-  background:
-    var(--arcane-attribute-atlas) 71.4286% 50% / 800% 300% no-repeat,
-    linear-gradient(90deg,transparent 0,#a9804b 16%,#ae8850 84%,transparent 100%) center / 100% 1px no-repeat;
+  background:linear-gradient(90deg,transparent 0,#a9804b 16%,#ae8850 84%,transparent 100%);
 }
 
 /* The original grid remains the authoritative edit/control surface. */
