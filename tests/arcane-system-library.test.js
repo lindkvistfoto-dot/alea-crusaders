@@ -85,6 +85,21 @@ describe('ARCANE system library v1',()=>{
     expect(html).toContain('id="identity"');
   });
 
+  it('closes the portrait/nameplate seam and keeps narrow stats on one line on mobile',()=>{
+    const v2=css.slice(css.indexOf('ARCANE character mobile seam v2'));
+    expect(v2).toContain('@media(max-width:700px)');
+    expect(v2).toContain('margin-top:clamp(-92px,-19vw,-67px)!important');
+    expect(v2).toContain('minmax(0,1.32fr) minmax(0,1.32fr)');
+    expect(v2).toContain('white-space:nowrap');
+    expect(v2).toContain('text-overflow:ellipsis');
+    expect(v2).toContain('overflow-wrap:normal');
+    expect(v2).toContain('body.character-glowup-active.editing');
+    expect(v2).toContain('.grund-input');
+    expect(css).toContain('z-index:3');
+    expect(html).toContain('id="portrait"');
+    expect(html).toContain('id="identity"');
+  });
+
   it('provides admin navigation, a filterable gallery and a working back path',()=>{
     expect(html).toContain("openAdminSection('arcaneSystem')");
     expect(html).toContain('id="adminArcaneSystem"');
