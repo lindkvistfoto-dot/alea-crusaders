@@ -56,15 +56,18 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  const width=Number(machine?.getBoundingClientRect?.().width||machine?.clientWidth||0);
  const fit=root?.classList?.contains?.('arcane-gallery-kit')?arcaneKitFrameHeight:arcaneFrameHeight;
  let target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
- // On desktop the carousel sits at the side, so it consumes no vertical room.
- // Keep the brass frame inside the viewport; image content uses object-fit:contain.
+ // Preserve the image-derived ratio above. Desktop merely supplies an upper
+ // viewport bound; the left-hand carousel does not consume frame height.
+ // The frame is visually lifted 26px over the header, returning that room to
+ // the usable viewport. Never overwrite a shorter landscape/square target.
  if(target&&root?.id==='arcaneGallery'&&root?.classList?.contains('arcane-gallery-kit')
     &&typeof window!=='undefined'&&window.innerWidth>=901&&viewportHeight>0){
-  const available=Math.max(230,viewportHeight-88);
-  target=Math.min(target,available);
-  // The artwork's rigid upper/lower ornaments need at least 65% of width.
-  // When the viewport is too short, prefer the rigid-art minimum to distortion.
-  target=Math.max(target,width*.65);
+  const desktopOverlap=26;
+  const reservedTop=58;
+  const reservedBottom=28;
+  const available=viewportHeight-reservedTop-reservedBottom+desktopOverlap;
+  const rigidMinimum=width*.65; // genuine source-art rails cannot collapse further
+  target=Math.round(Math.max(rigidMinimum,Math.min(target,Math.max(0,available))));
  }
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
