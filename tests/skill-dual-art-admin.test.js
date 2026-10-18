@@ -66,7 +66,7 @@ describe('FÄRDIGHET IKON, ILLUSTRATION and ILLUSTRATION WIDE admin',()=>{
   expect(moduleSource).toContain("icon_path");
   expect(moduleSource).toContain("illustration_path");
   expect(moduleSource).toContain("illustration_wide_path");
-  expect(moduleSource).toContain('w*9!==h*16');
+  expect(moduleSource).toContain('ratioError>0.003');
  });
  it('keeps the new bucket private, scoped and uploads admin-only',()=>{
   expect(migration).toContain("'alea-skill-art',false");
