@@ -11,6 +11,7 @@ on:
       - 'assets/hermes/originals/symbol/**/*.png'
       - 'assets/hermes/originals/skill/**/*.png'
       - 'assets/hermes/originals/skill-illustration/**/*.png'
+      - 'assets/hermes/originals/skill-illustration-wide/**/*.png'
   workflow_dispatch:
     inputs:
       source_path:
@@ -45,7 +46,7 @@ jobs:
         run: |
           args=()
           if [ -n "$HERMES_SOURCE_PATH" ]; then
-            if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/(spell|symbol|skill|skill-illustration)/[a-z0-9]+(-[a-z0-9]+)*/[a-f0-9]{64}\.png$ ]] || [ ! -f "$HERMES_SOURCE_PATH" ]; then
+            if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/(spell|symbol|skill|skill-illustration|skill-illustration-wide)/[a-z0-9]+(-[a-z0-9]+)*/[a-f0-9]{64}\.png$ ]] || [ ! -f "$HERMES_SOURCE_PATH" ]; then
               echo "::error::Invalid or missing HERMES source_path"; exit 1
             fi
             args+=(--source "$HERMES_SOURCE_PATH")

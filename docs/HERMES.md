@@ -218,3 +218,10 @@ Animationer är dekorativa och får inte styra spelregler eller blockera tärnin
 ## HERMES UI – Arcane Gallery (2026-10-16)
 
 `kind=ui`, `target_key=arcane-gallery-overlay`: 1536×1024 PNG i Drive-originalet; HERMES omvandlar **endast appfilen** till 1152×768 transparent WebP genom en verifierbar geometrisk alfamask. Transparenta områden: utanför apparaten, hela bildfönstret och fem miniatyrfönster. Källbilden är oförändrad, ingen privat kampanjbild distribueras som publik UI-resurs. Appens bildmaterial hämtas separat under Supabase Storage-RLS.
+
+
+## HERMES WIDE — 2026-10-18
+
+Separat bakåtkompatibel bildtyp `skill-illustration-wide` går genom samma Drive-push-intag och HERMES 2.1-publicerare. Ogenomskinlig PNG, 640–4096 px bredd, 360–4096 px höjd, nära 16:9 med relativ tolerans 0,3 %. WebP behåller native-proportioner och skalas endast ned om den överstiger 2560×1440; högst 500 000 byte. Ingen beskärning eller uppskalning. De äldre kvadratiska profilerna är oförändrade.
+
+Original arkiveras innehållsadresserat under `assets/hermes/originals/skill-illustration-wide/<target_key>/<sha256>.png` och i privata `alea-hermes-source`. Leverans går till privata `alea-skill-art` under `skill/<id>/illustration_wide/<deterministisk-uuid-v4>.webp`. Aktivering uppdaterar endast `rule_skills.illustration_wide_path` efter GitHub-blobverifiering, Storage-checksummor och signerad URL-återläsning. Befintlig WIDE stoppas; samma redan registrerade resultat kan återförsökas idempotent. Slutlig återläsning kontrollerar även att ikon och kvadratisk illustration är oförändrade. Ingen åtkomstpolicy eller publik behörighet ändras.

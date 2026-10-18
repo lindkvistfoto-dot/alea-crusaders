@@ -17,7 +17,7 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration|skill-illustration-wide)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -42,14 +42,21 @@ def prepare(source: Path, output_root: Path) -> dict:
     with Image.open(io.BytesIO(raw)) as original:
         if original.format != "PNG":
             raise ValueError(f"{relative}: expected PNG")
-        if original.width != original.height or not EDGE <= original.width <= 4096:
+        wide = kind == "skill-illustration-wide"
+        if wide and not (640 <= original.width <= 4096 and 360 <= original.height <= 4096 and abs(original.width / original.height - 16 / 9) / (16 / 9) <= 0.003):
+            raise ValueError(f"{relative}: expected landscape near 16:9 (0.3% tolerance)")
+        if not wide and (original.width != original.height or not EDGE <= original.width <= 4096):
             raise ValueError(f"{relative}: expected square 640–4096 px")
-        if kind == "skill-illustration":
+        if kind in ("skill-illustration", "skill-illustration-wide"):
             if original.mode not in ("RGB", "RGBA"):
                 raise ValueError(f"{relative}: expected RGB or opaque RGBA illustration")
             if original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255):
                 raise ValueError(f"{relative}: illustration must be full-frame and opaque")
-            image = original.convert("RGB").resize((EDGE, EDGE), Image.Resampling.LANCZOS)
+            image = original.convert("RGB")
+            if not wide:
+                image = image.resize((EDGE, EDGE), Image.Resampling.LANCZOS)
+            else:
+                image.thumbnail((2560, 1440), Image.Resampling.LANCZOS)
             required_alpha = None
         else:
             if original.mode != "RGBA":
@@ -74,7 +81,7 @@ def prepare(source: Path, output_root: Path) -> dict:
     if required_alpha is not None and (webp[:4] != b"RIFF" or webp[8:12] != b"WEBP" or webp[12:16] != b"VP8X" or not webp[20] & 16):
         raise ValueError(f"{relative}: optimized WebP alpha header invalid")
     with Image.open(io.BytesIO(webp)) as check:
-        if check.format != "WEBP" or check.size != (EDGE, EDGE):
+        if check.format != "WEBP" or check.size != image.size:
             raise ValueError(f"{relative}: corrupt output WebP")
         if required_alpha is not None and check.convert("RGBA").getchannel("A").tobytes() != required_alpha:
             raise ValueError(f"{relative}: alpha channel changed")
@@ -90,7 +97,7 @@ def prepare(source: Path, output_root: Path) -> dict:
         "source_sha256": digest, "source_bytes": len(raw),
         "app_file": target.relative_to(output_root).as_posix(),
         "app_sha256": app_sha, "app_bytes": len(webp),
-        "width": EDGE, "height": EDGE, "alpha_preserved": required_alpha is not None,
+        "width": image.width, "height": image.height, "alpha_preserved": required_alpha is not None,
         "webp_quality": quality_used,
     }
     metadata_path = target.with_suffix(".json")

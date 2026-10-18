@@ -15,6 +15,17 @@
 
 ---
 
+## Styrande användartillägg — 2026-10-18
+
+Detta tillägg har företräde framför äldre exakta format- och QA-formuleringar nedan.
+
+- Exakt matematisk 16:9 är inte ett stoppkrav. Liggande bredbild nära 16:9 godtas utan beskärning, sträckning eller uppskalning för formatets skull. HERMES använder samma relativa tolerans som befintlig admin: 0,3 %. Native 1672×941 är godkänt.
+- Leverans behåller naturliga proportioner och native-upplösning upp till 2560×1440. Högre upplösning är ett mål, inte skäl att underkänna den godkända piloten.
+- Användaren har godkänt Geografi andra försöket som visuell kvalitetsreferens och Första hjälpen-piloten med blå skymning samt varm lägereld/lykta som helt enligt specifikationen. Dessa godkännanden ersätter tidigare underkännanden av samma bilder.
+- Första hjälpen saknar separat illustration och har uttryckligen producerats från den faktiska ikonens motiv, utan ramen. Detta är ett godkänt pilotundantag, inte tillåtelse att gissa andra saknade original.
+- Variera ljussättning aktivt enligt ljusfamiljerna nedan, med bevarad scenidentitet.
+- Ikon och kvadratisk illustration förblir orörda. WIDE publiceras separat genom HERMES.
+
 ## 1. UPPDRAG
 
 Skapa en filmiskt vacker och övertygande fotorealistisk bredbildsversion av varje befintlig **FÄRDIGHET ILLUSTRATION**.
