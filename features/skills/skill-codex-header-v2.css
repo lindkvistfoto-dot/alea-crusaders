@@ -20,7 +20,9 @@
  justify-items:center;
  min-height:112px;
  padding:3px 6px;
- background:url("./codex-assets/header.webp") center/100% 100% no-repeat;
+ /* Crop the obsolete end diamonds out of the original banner; preserve its
+    central leather texture, top jewel and uninterrupted gold rails. */
+ background:url("./codex-assets/header.webp") center/138% 100% no-repeat;
  border:0;
 }
 /* Sockets hide old corner ornaments and tie the controls into the metal rails. */
