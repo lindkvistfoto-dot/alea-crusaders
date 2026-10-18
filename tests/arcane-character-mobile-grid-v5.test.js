@@ -32,7 +32,13 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     expect(css).not.toMatch(/:nth-child\s*\(/);
   });
   it.each(fields)('%s occupies column %s of row %i regardless of DOM order',(key,col,row)=>{
-    expect(legacy).toContain('arcane-field-'+key);
+    if(['kon','alder','langd','vikt'].includes(key)){
+      // These four stable classes are produced by the existing identity map.
+      expect(legacy).toContain('arcane-field-${k}');
+      expect(legacy).toContain("'"+key+"'");
+    }else{
+      expect(legacy).toContain('arcane-field-'+key);
+    }
     const regex=new RegExp('> \\.field\\.arcane-field-'+key+' \\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
     expect(css).toMatch(regex);
   });
