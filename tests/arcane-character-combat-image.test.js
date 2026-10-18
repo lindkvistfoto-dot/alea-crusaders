@@ -72,6 +72,7 @@ describe('ARCANE character: portrait default and compact combat icon',()=>{
   expect(css).toContain('arcane-character-image-grid');
   expect(legacy).toContain('renderCharacterCombatIconGallery();');
   expect(legacy).toContain('if(!file||!current||!canEditCharacter(current))return;');
+  expect(legacy).toContain('function handlePortraitFile(file){if(!file||!current||!canEditCharacter(current))return;');
   expect(legacy).toContain('if(!current?.combatIconPath||!canEditCharacter(current))return;');
  });
 });
