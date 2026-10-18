@@ -102,20 +102,30 @@ describe('ARCANE SKILL CODEX',()=>{
  it('fetches private illustration and icon through authenticated storage buckets',async()=>{
   const h=harness();
   h.rules[0].icon_path='skill/fiska/icon/abc.webp';
-  h.rules[0].illustration_path='skill/fiska/illustration/abc.webp';
+  h.rules[0].illustration_path='skill/fiska/illustration/old-square.webp';
+  h.rules[0].illustration_wide_path='skill/fiska/illustration_wide/abc.webp';
   h.win.showRuleSkillById('fiska');
   await new Promise(resolve=>setImmediate(resolve));
   const paths=h.ctx.mapStorageFetch.mock.calls.map(args=>args[0]);
   expect(paths).toContain('object/alea-skill-art/skill/fiska/icon/abc.webp');
-  expect(paths).toContain('object/alea-skill-art/skill/fiska/illustration/abc.webp');
+  expect(paths).toContain('object/alea-skill-art/skill/fiska/illustration_wide/abc.webp');
+  expect(paths).not.toContain('object/alea-skill-art/skill/fiska/illustration/old-square.webp');
   expect(h.getHero().replaceChildren).toHaveBeenCalled();
   h.win.closeSkillInfo();
   expect(h.ctx.URL.revokeObjectURL).toHaveBeenCalled();
  });
+ it('does not silently substitute the old square illustration when WIDE is missing',async()=>{
+  const h=harness();
+  h.rules[0].illustration_path='skill/fiska/illustration/old-square.webp';
+  h.win.showRuleSkillById('fiska');
+  await new Promise(resolve=>setImmediate(resolve));
+  expect(h.body.innerHTML).toContain('FÄRDIGHET ILLUSTRATION WIDE saknas');
+  expect(h.ctx.mapStorageFetch).not.toHaveBeenCalled();
+ });
  it('rejects a foreign/unverified image path before making any request',()=>{
   const h=harness();
   h.rules[0].icon_path='../../someone-else.png';
-  h.rules[0].illustration_path='https://example.com/unsafe.jpg';
+  h.rules[0].illustration_wide_path='https://example.com/unsafe.jpg';
   h.win.showRuleSkillById('fiska');
   expect(h.ctx.mapStorageFetch).not.toHaveBeenCalled();
  });
