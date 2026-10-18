@@ -9,7 +9,15 @@ function harness(){
  const classes=new Set(['hidden']);
  const icon={replaceChildren:vi.fn(),classList:{add:vi.fn(),remove:vi.fn()}};
  const hero={replaceChildren:vi.fn(),classList:{add:vi.fn(),remove:vi.fn()}};
- const title={textContent:''},body={innerHTML:''},closeButton={focus:vi.fn()};
+ const titleText={textContent:'',scrollWidth:80},titleViewport={clientWidth:130};
+ const titleClasses=new Set();
+ const title={
+  get textContent(){return titleText.textContent},
+  querySelector:s=>({'[data-spell-codex-title-text]':titleText,'[data-spell-codex-title-viewport]':titleViewport}[s]||null),
+  classList:{add:v=>titleClasses.add(v),remove:v=>titleClasses.delete(v),contains:v=>titleClasses.has(v)},
+  style:{setProperty:vi.fn()}
+ };
+ const body={innerHTML:''},closeButton={focus:vi.fn()};
  const root={
   classList:{add:v=>classes.add(v),remove:v=>classes.delete(v),contains:v=>classes.has(v)},
   addEventListener:vi.fn(),querySelector:s=>({
@@ -38,7 +46,7 @@ function harness(){
  };
  const window={aleaSpellArt:art};
  runInNewContext(script,{document,window,ruleSpells:[spell],ruleMagicSchools:[{id:'eld',name:'Elementarmagi'}],console});
- return {root,classes,icon,hero,title,body,spell,window,origin,art,resolved,keyDown:e=>keydown?.(e)};
+ return {root,classes,icon,hero,title,titleText,titleViewport,titleClasses,body,spell,window,origin,art,resolved,keyDown:e=>keydown?.(e)};
 }
 describe('Admin spell name opens the ARCANE SPELL CODEX',()=>{
  it('loads the dedicated stylesheet/script after spell art and makes the master name a keyboard-accessible button',()=>{
@@ -93,7 +101,46 @@ describe('Admin spell name opens the ARCANE SPELL CODEX',()=>{
   expect(h.classes.has('hidden')).toBe(true);
   expect(h.origin.focus).toHaveBeenCalled();
  });
- it('escapes registry text, refuses missing IDs and closes on Escape',()=>{
+ it('pans only overflowing names inside the title slot, keeping short titles centered',()=>{
+  const h=harness();
+  h.window.aleaSpellCodex.openFromAdmin(KEY);
+  expect(h.titleClasses.has('is-scrolling')).toBe(false);
+  h.titleText.scrollWidth=290;
+  h.spell.name='Återuppväckelsens magnifika besvärjelse';
+  h.window.aleaSpellCodex.openFromAdmin(KEY);
+  expect(h.titleClasses.has('is-scrolling')).toBe(true);
+  expect(h.title.textContent).toBe(h.spell.name);
+  expect(h.title.style.setProperty).toHaveBeenCalledWith('--spell-title-shift','-160px');
+  h.titleText.scrollWidth=90;
+  h.spell.name='Ljus';
+  h.window.aleaSpellCodex.openFromAdmin(KEY);
+  expect(h.titleClasses.has('is-scrolling')).toBe(false);
+ });
+ it('keeps descriptions and spell effects but omits notes and rulebook citation',()=>{
+  const h=harness();
+  h.spell.notes='Privat notering';
+  h.spell.source_label='Drakar och Demoner Expert regelbok';
+  h.spell.effect_per_eg='En extra ruta';
+  h.spell.resistance_text='Motstånd med PSY';
+  h.window.aleaSpellCodex.openFromAdmin(KEY);
+  expect(h.body.innerHTML).toContain('Beskrivning');
+  expect(h.body.innerHTML).toContain('Effekt per effektgrad');
+  expect(h.body.innerHTML).toContain('Motstånd med PSY');
+  expect(h.body.innerHTML).not.toContain('Noteringar');
+  expect(h.body.innerHTML).not.toContain('Privat notering');
+  expect(h.body.innerHTML).not.toContain('Källa:');
+  expect(h.body.innerHTML).not.toContain('Drakar och Demoner Expert regelbok');
+ });
+ it('styles smaller text and an overflow-only marquee, with reduced-motion alternative',()=>{
+  const css=read('features/combat/spell-codex.css');
+  expect(css).toContain('@keyframes spell-codex-title-pan');
+  expect(css).toContain('#spellCodexTitle.is-scrolling .spell-codex-title-text');
+  expect(css).toContain('font-size:clamp(16px,4.3vw,21px)');
+  expect(css).toContain('font:700 16px/1.18 Georgia');
+  expect(css).toContain('@media(prefers-reduced-motion:reduce)');
+  expect(css).not.toContain('.spell-codex-source');
+ });
+  it('escapes registry text, refuses missing IDs and closes on Escape',()=>{
   const h=harness();
   expect(h.window.aleaSpellCodex.openFromAdmin('unknown')).toBe(false);
   expect(h.classes.has('hidden')).toBe(true);
