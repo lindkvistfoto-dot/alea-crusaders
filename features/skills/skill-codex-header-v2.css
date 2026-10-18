@@ -30,6 +30,11 @@
  display:block;
  content:"";
  top:50%;
+ bottom:auto;
+ left:auto;
+ right:auto;
+ border:0;
+ border-radius:0;
  transform:translateY(-50%);
  width:var(--codex-seat-size);
  height:var(--codex-seat-size);
