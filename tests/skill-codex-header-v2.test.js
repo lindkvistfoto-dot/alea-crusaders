@@ -6,7 +6,7 @@ const html=file('index.html');
 const base=file('features/skills/skill-codex-wide.css');
 const scope='#skillModal.skill-codex-active';
 
-describe('ARCANE SKILL CODEX WIDE — Sisyphus header V5',()=>{
+describe('ARCANE SKILL CODEX WIDE — Sisyphus header V6',()=>{
  it('touches only the skill heading, icon and X (never 16:9 art, stats or parchment)',()=>{
   expect(css).toContain(scope+' .modalhead');
   expect(css).toContain(scope+' #skillModalTitle');
@@ -56,14 +56,14 @@ describe('ARCANE SKILL CODEX WIDE — Sisyphus header V5',()=>{
   expect(css).toContain('align-self:center');
   expect(css).toContain('text-align:center');
   expect(css).toContain('transform:translateY(4px)');
-  expect(css).toContain('font:normal clamp(27px,3.8vw,37px)/1.07 Georgia');
-  expect(css).toContain('font-size:clamp(18px,5.9vw,25px)');
-  expect(css).toContain('font-size:clamp(22px,6.6vw,29px)');
+  expect(css).toContain('font:normal clamp(23px,3.2vw,33px)/1.05 Georgia');
+  expect(css).toContain('font-size:clamp(17px,5.1vw,22px)');
+  expect(css).toContain('font-size:clamp(19px,5.6vw,25px)');
   expect(css).toContain('@media(max-width:560px)');
   expect(css).toContain('@media(max-width:330px)');
  });
  it('loads after the other Codex styles so no cached old header appears',()=>{
   expect(html.indexOf('skill-codex-header-v2.css')).toBeGreaterThan(html.indexOf('skill-codex-wide.css'));
-  expect(html).toContain('skill-codex-header-v2.css?v=0.35.265');
+  expect(html).toContain('skill-codex-header-v2.css?v=0.35.268');
  });
 });
