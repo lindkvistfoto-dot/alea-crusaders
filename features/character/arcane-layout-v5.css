@@ -109,7 +109,7 @@
     width:100%!important;
     min-width:0!important;
     max-width:100%!important;
-    font:700 clamp(15px,3.9vw,21px)/1.12 Georgia,"Times New Roman",serif!important;
+    font:700 clamp(17px,4.9vw,22px)/1.12 Georgia,"Times New Roman",serif!important;
     letter-spacing:-.025em!important;
     text-align:center!important;
     white-space:nowrap!important;
@@ -124,7 +124,7 @@
     max-width:100%!important;
     margin:0!important;
     padding:0!important;
-    font:500 clamp(11px,2.8vw,14px)/1.23 Georgia,"Times New Roman",serif!important;
+    font:500 clamp(12px,3.15vw,15px)/1.23 Georgia,"Times New Roman",serif!important;
     color:#e8d2a5;
     white-space:nowrap!important;
     text-align:center!important;
