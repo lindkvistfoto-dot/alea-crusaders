@@ -137,6 +137,7 @@
  function notice(message,state='loading'){
   // Persistent, high-contrast status ABOVE the modal so Android users see the
   // result when the document picker closes even if the image pane is scrolled away.
+  if(!document.getElementById||!document.body?.appendChild||!document.createElement)return;
   let el=document.getElementById('skillArtUploadNotice');
   if(!el){
    el=document.createElement('div');el.id='skillArtUploadNotice';
@@ -167,7 +168,7 @@
   for(const url of previews.values())URL.revokeObjectURL(url);
   previews.clear();
  }
- function closeEditor(){generation++;editorId='';release();const el=document.getElementById('skillArtUploadNotice');if(el)el.hidden=true}
+ function closeEditor(){generation++;editorId='';release();const el=document.getElementById?.('skillArtUploadNotice');if(el)el.hidden=true}
  function hydrate(id){
   closeEditor();if(!SLUG.test(String(id||'')))return;
   editorId=id;const token=generation,row=getRow(id);
