@@ -1245,6 +1245,7 @@ const ADMIN_SECTION_META={
  sounds:['Ljudregister','Ljud för strid, tärningar och magi'],
  animations:['Animationer · HERMES','Videoeffekter knutna till stridshändelser'],
  specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
+ arcaneSystem:['ARCANE · Systembibliotek','Återanvändbara grafiska systemkomponenter'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1324,6 +1325,8 @@ async function openAdminSection(key='overview'){
   await window.aleaAnimations?.renderAdmin?.()
  }else if(activeAdminSection==='specialImages'){
   await selectSpecialImageTab(activeSpecialImageTab)
+ }else if(activeAdminSection==='arcaneSystem'){
+  window.aleaArcaneSystem?.renderAdmin?.()
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
