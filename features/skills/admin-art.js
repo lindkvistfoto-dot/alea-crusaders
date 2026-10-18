@@ -1,6 +1,7 @@
-/* ALEA CRUSADERS · independent skill icon and illustration uploads.
+/* ALEA CRUSADERS · independent skill icon, square illustration and WIDE illustration uploads.
  * FÄRDIGHET IKON: square PNG/WebP with genuine transparent corners.
  * FÄRDIGHET ILLUSTRATION: square PNG/JPEG/WebP, stored without resampling.
+ * FÄRDIGHET ILLUSTRATION WIDE: 16:9 PNG/JPEG/WebP, stored without resampling.
  * Stored paths live on rule_skills, not on individual characters.
  * HERMES import/export is deliberately a separate follow-on integration.
  */
@@ -12,10 +13,11 @@
  const MAX_BYTES=16*1024*1024;
  const TYPES={
   icon:{title:'FÄRDIGHET IKON',column:'icon_path',accept:'image/png,image/webp',help:'Rund guldram med verkligt transparent bakgrund utanför. PNG rekommenderas.'},
-  illustration:{title:'FÄRDIGHET ILLUSTRATION',column:'illustration_path',accept:'image/png,image/jpeg,image/webp',help:'Kvadratisk, fotorealistisk fantasyscen utan ram. Originalkvalitet bevaras.'}
+  illustration:{title:'FÄRDIGHET ILLUSTRATION',column:'illustration_path',accept:'image/png,image/jpeg,image/webp',help:'Kvadratisk (1:1), fotorealistisk fantasyscen. Ursprunglig bild bevaras.'},
+  illustration_wide:{title:'FÄRDIGHET ILLUSTRATION WIDE',column:'illustration_wide_path',accept:'image/png,image/jpeg,image/webp',help:'Liggande 16:9, utan ram. Denna bild visas på ARCANE SKILL CODEX WIDE. Originalet bevaras.'}
  };
  const SLUG=/^[a-z0-9][a-z0-9_-]{0,99}$/;
- const PATH=/^skill\/([a-z0-9][a-z0-9_-]{0,99})\/(icon|illustration)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|webp|jpg)$/;
+ const PATH=/^skill\/([a-z0-9][a-z0-9_-]{0,99})\/(icon|illustration|illustration_wide)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|webp|jpg)$/;
  const MIME_EXT={'image/png':'png','image/webp':'webp','image/jpeg':'jpg'};
  const pending=new Set();
  const previews=new Map();
@@ -30,21 +32,21 @@
   return !!hermes&&hermes[1]===String(id).replaceAll('_','-');
  }
  function html(row){
-  if(!row||!SLUG.test(String(row.id||'')))return '<section class="skill-art-editor wide"><h3>Färdighetsbilder</h3><p>Spara färdigheten först. Öppna den sedan igen för att ladda upp ikon och illustration.</p></section>';
+  if(!row||!SLUG.test(String(row.id||'')))return '<section class="skill-art-editor wide"><h3>Färdighetsbilder</h3><p>Spara färdigheten först. Öppna den sedan igen för att ladda upp ikon, illustration och WIDE-illustration.</p></section>';
   const id=String(row.id);
   return '<section class="skill-art-editor wide" aria-label="Bilder för färdighet">'+
-   '<h3>Färdighetsbilder · två separata motiv</h3>'+
-   '<p class="skill-art-intro">Båda bilderna knyts till <strong>'+escape(row.name||id)+'</strong>. Ikon och illustration laddas upp var för sig och sparas direkt. Ändringar av färdighetens text sparas med den vanliga Spara-knappen.</p>'+
+   '<h3>Färdighetsbilder · tre bildtyper</h3>'+
+   '<p class="skill-art-intro">Alla tre bilderna knyts till <strong>'+escape(row.name||id)+'</strong>. Varje bildtyp laddas upp separat och sparas direkt. Ändringar av färdighetens text sparas med den vanliga Spara-knappen.</p>'+
    '<div class="skill-art-grid">'+Object.entries(TYPES).map(([kind,type])=>{
     const path=validPath(row[type.column],id,kind)?row[type.column]:'';
     return '<section class="skill-art-slot" data-kind="'+kind+'"><h4>'+type.title+'</h4>'+
-     '<div class="skill-art-preview '+(kind==='icon'?'skill-art-preview-icon':'skill-art-preview-illustration')+'" role="img" aria-label="Förhandsvisning '+type.title+'">'+
+     '<div class="skill-art-preview skill-art-preview-'+kind+'" role="img" aria-label="Förhandsvisning '+type.title+'">'+
       '<span class="skill-art-placeholder">'+(path?'Laddar bild…':'Ingen bild uppladdad')+'</span></div>'+
      '<p class="skill-art-help">'+type.help+'</p>'+
      '<div class="skill-art-controls"><label class="smallbtn skill-art-upload"> '+(path?'Byt bild':'Ladda upp bild')+
       '<input type="file" accept="'+type.accept+'" aria-label="Ladda upp '+type.title+'" onchange="aleaSkillArt.upload(event,\''+escape(id)+'\',\''+kind+'\')"></label>'+
      '<button type="button" class="smallbtn" '+(path?'':'disabled')+' onclick="aleaSkillArt.remove(\''+escape(id)+'\',\''+kind+'\')">Ta bort</button></div>'+
-     '<p class="skill-art-status" role="status" aria-live="polite">'+(path?'Sparad bild finns.':'Välj en kvadratisk bild, högst 16 MB.')+'</p></section>';
+     '<p class="skill-art-status" role="status" aria-live="polite">'+(path?'Sparad bild finns.':'Välj bild i angivet format, högst 16 MB.')+'</p></section>';
    }).join('')+'</div></section>';
  }
 
@@ -174,7 +176,11 @@
    const img=new Image();
    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('Bilden går inte att läsa.'));img.src=temp});
    const w=img.naturalWidth,h=img.naturalHeight;
-   if(!w||!h||w!==h||w*h>50000000)throw Error('Bilden måste vara kvadratisk (1:1) och högst 50 megapixel.');
+   if(!w||!h||w*h>50000000)throw Error('Bildens upplösning måste vara högst 50 megapixel.');
+   if(kind==='illustration_wide'){
+    if(w*9!==h*16)throw Error('WIDE-bilden måste vara exakt 16:9 (t.ex. 1920 × 1080 eller 1536 × 864).');
+    if(w<640||h<360)throw Error('WIDE-bilden måste vara minst 640 × 360 pixlar.');
+   }else if(w!==h)throw Error('Den här bildtypen måste vara kvadratisk (1:1).');
    if(kind==='icon'){
     const canvas=document.createElement('canvas');canvas.width=canvas.height=48;
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
