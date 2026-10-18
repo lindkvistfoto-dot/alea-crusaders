@@ -19,6 +19,20 @@
  const SLUG=/^[a-z0-9][a-z0-9_-]{0,99}$/;
  const PATH=/^skill\/([a-z0-9][a-z0-9_-]{0,99})\/(icon|illustration|illustration_wide)\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|webp|jpg)$/;
  const MIME_EXT={'image/png':'png','image/webp':'webp','image/jpeg':'jpg'};
+ // Some Android DocumentsProvider / Drive pickers provide a generic MIME type.
+ // The file must still decode as a real image in inspect() before upload.
+ function normalizedMime(file){
+  const type=String(file?.type||'').toLowerCase();
+  if(MIME_EXT[type])return type;
+  if(type==='image/jpg'||type==='image/pjpeg')return 'image/jpeg';
+  if(type===''||type==='application/octet-stream'){
+   const name=String(file?.name||'').toLowerCase();
+   if(/\.png$/.test(name))return 'image/png';
+   if(/\.webp$/.test(name))return 'image/webp';
+   if(/\.jpe?g$/.test(name))return 'image/jpeg';
+  }
+  return '';
+ }
  const pending=new Set();
  const previews=new Map();
  let editorId='',generation=0;
@@ -120,8 +134,25 @@
  function slot(kind){
   return document.querySelector('#adminEditor .skill-art-slot[data-kind="'+kind+'"]');
  }
- function status(kind,message){
-  const el=slot(kind)?.querySelector('.skill-art-status');if(el)el.textContent=message||'';
+ function notice(message,state='loading'){
+  // Persistent, high-contrast status ABOVE the modal so Android users see the
+  // result when the document picker closes even if the image pane is scrolled away.
+  let el=document.getElementById('skillArtUploadNotice');
+  if(!el){
+   el=document.createElement('div');el.id='skillArtUploadNotice';
+   el.className='skill-art-upload-notice';el.setAttribute('role','status');
+   el.setAttribute('aria-live','polite');
+   el.setAttribute('aria-atomic','true');
+   document.body.appendChild(el);
+  }
+  el.dataset.state=state;
+  el.textContent=message;
+  el.hidden=false;
+ }
+ function status(kind,message,state){
+  const el=slot(kind)?.querySelector('.skill-art-status');
+  if(el){el.textContent=message||'';el.dataset.state=state||'loading'}
+  if(state)notice(message,state);
  }
  function busy(kind,on){
   const el=slot(kind);
@@ -136,7 +167,7 @@
   for(const url of previews.values())URL.revokeObjectURL(url);
   previews.clear();
  }
- function closeEditor(){generation++;editorId='';release()}
+ function closeEditor(){generation++;editorId='';release();const el=document.getElementById('skillArtUploadNotice');if(el)el.hidden=true}
  function hydrate(id){
   closeEditor();if(!SLUG.test(String(id||'')))return;
   editorId=id;const token=generation,row=getRow(id);
@@ -169,8 +200,9 @@
  }
  async function inspect(file,kind){
   if(!file||!Object.prototype.hasOwnProperty.call(TYPES,kind))throw Error('Ogiltig bildtyp.');
-  if(!TYPES[kind].accept.split(',').includes(file.type)||file.size<1||file.size>MAX_BYTES)
-   throw Error(kind==='icon'?'Välj PNG eller WebP, högst 16 MB.':'Välj PNG, JPG eller WebP, högst 16 MB.');
+  const mime=normalizedMime(file);
+  if(!TYPES[kind].accept.split(',').includes(mime)||file.size<1||file.size>MAX_BYTES)
+   throw Error(kind==='icon'?'Välj PNG eller WebP, högst 16 MB.':'Välj en PNG-, JPG- eller WebP-bild, högst 16 MB. HEIC stöds inte.');
   let temp=URL.createObjectURL(file);
   try{
    const img=new Image();
@@ -178,7 +210,8 @@
    const w=img.naturalWidth,h=img.naturalHeight;
    if(!w||!h||w*h>50000000)throw Error('Bildens upplösning måste vara högst 50 megapixel.');
    if(kind==='illustration_wide'){
-    if(w*9!==h*16)throw Error('WIDE-bilden måste vara exakt 16:9 (t.ex. 1920 × 1080 eller 1536 × 864).');
+    const ratioError=Math.abs(w/h-16/9)/(16/9);
+    if(ratioError>0.003)throw Error('WIDE-bilden måste vara 16:9 (t.ex. 1920 × 1080 eller 1536 × 864). Vald bild: '+w+' × '+h+' px.');
     if(w<640||h<360)throw Error('WIDE-bilden måste vara minst 640 × 360 pixlar.');
    }else if(w!==h)throw Error('Den här bildtypen måste vara kvadratisk (1:1).');
    if(kind==='icon'){
@@ -190,26 +223,33 @@
     if(corners.some(([x,y])=>ctx.getImageData(x,y,1,1).data[3]>24))
      throw Error('Ikonen måste ha äkta transparens utanför den runda ramen (inte vit, svart eller schackrutig bakgrund).');
    }
-   return {width:w,height:h};
+   return {width:w,height:h,mime};
   }finally{URL.revokeObjectURL(temp)}
  }
  async function upload(event,id,kind){
-  const input=event?.target,file=input?.files?.[0];if(input)input.value='';
-  if(!file||!SLUG.test(String(id))||!TYPES[kind]||!isAdmin()||!getRow(id))return;
-  const key=id+':'+kind;if(pending.has(key))return;
-  pending.add(key);busy(kind,true);status(kind,'Kontrollerar och laddar upp bilden…');
+  const input=event?.target,file=input?.files?.[0];
+  // Do not clear the input before reading the file. Some Android document
+  // providers grant a temporary content URI that can be lost on early reset.
+  if(!file){status(kind,'Ingen fil valdes. Välj bilden igen.','error');return}
+  if(!SLUG.test(String(id))||!TYPES[kind]||!getRow(id)||!isAdmin()){
+   status(kind,'Kunde inte starta uppladdningen. Öppna den sparade färdigheten som administratör och försök igen.','error');return;
+  }
+  const key=id+':'+kind;if(pending.has(key)){status(kind,'En uppladdning pågår redan. Vänta tills den är klar.','loading');return}
+  pending.add(key);busy(kind,true);status(kind,'Fil vald: '+file.name+' · kontrollerar bilden…','loading');
   const token=generation;
   try{
    const info=await inspect(file,kind);
+   status(kind,'Laddar upp '+file.name+' ('+info.width+' × '+info.height+' px)…','loading');
    if(!crypto?.randomUUID)throw Error('Webbläsaren saknar säker filidentifiering.');
-   const path='skill/'+id+'/'+kind+'/'+crypto.randomUUID()+'.'+MIME_EXT[file.type];
+   const path='skill/'+id+'/'+kind+'/'+crypto.randomUUID()+'.'+MIME_EXT[info.mime];
    const response=await mapStorageFetch('object/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/'),{
-    method:'POST',headers:{'Content-Type':file.type,'x-upsert':'false'},body:file
+    method:'POST',headers:{'Content-Type':info.mime,'x-upsert':'false'},body:file
    });
    if(!response.ok){
     const data=await response.json().catch(()=>null);
     throw Error(data?.message||data?.error||'Bilduppladdningen misslyckades ('+response.status+').');
    }
+   status(kind,'Bilden överförd · kopplar den till färdigheten…','loading');
    const column=TYPES[kind].column;
    await dbJson('rule_skills?id=eq.'+encodeURIComponent(id),{
     method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({[column]:path})
@@ -219,10 +259,16 @@
    if(token===generation&&editorId===id){
     const pane=slot(kind);if(pane){const button=pane.querySelector('.skill-art-upload');if(button)button.firstChild.textContent=' Byt bild';const remove=pane.querySelector('button');if(remove)remove.disabled=false}
     await loadImage(id,kind,path,token);
-    status(kind,'✓ Sparad '+info.width+' × '+info.height+' px. '+TYPES[kind].title+' är kopplad till färdigheten.');
+    status(kind,'✓ Sparad! '+info.width+' × '+info.height+' px · '+TYPES[kind].title+' är kopplad till färdigheten.','success');
    }
-  }catch(error){if(token===generation&&editorId===id)status(kind,'Uppladdningen misslyckades: '+(error.message||error))}
-  finally{pending.delete(key);if(token===generation&&editorId===id)busy(kind,false)}
+  }catch(error){
+   console.warn('Färdighetsbild: uppladdning misslyckades',error);
+   if(token===generation&&editorId===id)status(kind,'Uppladdningen misslyckades: '+(error.message||error),'error');
+  }finally{
+   // Reset only after processing the Android file handle.
+   if(input)input.value='';
+   pending.delete(key);if(token===generation&&editorId===id)busy(kind,false);
+  }
  }
  async function remove(id,kind){
   if(!SLUG.test(String(id))||!TYPES[kind]||!isAdmin()||!getRow(id))return;
