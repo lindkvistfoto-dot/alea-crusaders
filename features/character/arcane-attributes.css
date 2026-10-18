@@ -1,0 +1,318 @@
+/* ARCANE GRUNDEGENSKAPER v2
+ * Generated raster assets from the approved character-sheet art.
+ * CSS draws layout, responsive lines and live text only; NO new SVG.
+ * Sprite: 512x192 RGBA, 8 columns x 3 rows of 64x64.
+ */
+:root{
+  --arcane-attribute-atlas:url('../../assets/arcane/system/v2/attributes-atlas.png');
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section{
+  position:relative;
+  isolation:isolate;
+  margin:43px 0 26px;
+  padding:64px clamp(12px,2.5vw,23px) 21px;
+  border:2px solid #a17a48;
+  border-radius:24px;
+  background:
+    radial-gradient(ellipse at 50% -24%,rgba(35,91,62,.55),transparent 68%),
+    radial-gradient(ellipse at 1% 90%,rgba(26,66,47,.24),transparent 36%),
+    repeating-linear-gradient(101deg,#20301a09 0 3px,#e9c58103 4px 6px),
+    linear-gradient(160deg,#062319,#07150f 58%,#06100d);
+  box-shadow:
+    inset 0 0 0 4px #130f0a,inset 0 0 0 6px #8c603b,
+    inset 0 0 26px #000b,0 0 0 3px #1c110b,0 14px 35px #0009;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section::before{
+  content:'';
+  position:absolute;
+  pointer-events:none;
+  z-index:2;
+  top:-42px;
+  left:50%;
+  transform:translateX(-50%);
+  width:88px;
+  height:88px;
+  border-radius:50%;
+  background:radial-gradient(circle,#113724 15%,#170e09 68%);
+  border:2px solid #9c7547;
+  box-shadow:0 3px 9px #0009,inset 0 0 7px #0008;
+}
+html.arcane-attributes-ready body.character-glowup-active #view #grundPanel > .glow-base-section::before{
+  border:0;
+  box-shadow:none;
+  background-image:var(--arcane-attribute-atlas);
+  background-size:800% 300%;
+  background-position:0 50%;
+  background-repeat:no-repeat;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section::after{
+  content:'';
+  position:absolute;
+  inset:8px;
+  z-index:0;
+  pointer-events:none;
+  border:1px solid rgba(191,146,82,.36);
+  border-radius:17px;
+}
+body.character-glowup-active #view #grundPanel .arcane-attribute-corners{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+}
+body.character-glowup-active #view #grundPanel .arcane-attribute-corner{
+  position:absolute;
+  width:clamp(37px,8vw,66px);
+  aspect-ratio:1;
+  display:block;
+  opacity:.91;
+  background-image:var(--arcane-attribute-atlas);
+  background-size:800% 300%;
+  background-repeat:no-repeat;
+}
+body.character-glowup-active #view #grundPanel .arcane-corner-tl{top:-6px;left:-6px;background-position:14.2857% 50%}
+body.character-glowup-active #view #grundPanel .arcane-corner-tr{top:-6px;right:-6px;background-position:28.5714% 50%}
+body.character-glowup-active #view #grundPanel .arcane-corner-bl{bottom:-6px;left:-6px;background-position:42.8571% 50%}
+body.character-glowup-active #view #grundPanel .arcane-corner-br{bottom:-6px;right:-6px;background-position:57.1429% 50%}
+
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title{
+  position:relative;
+  z-index:2;
+  display:block;
+  margin:0 0 21px;
+  padding:0 0 23px;
+  color:#f7e8c9;
+  text-align:center;
+  font:700 clamp(27px,4.9vw,42px)/1.08 Georgia,'Times New Roman',serif;
+  letter-spacing:-.018em;
+  text-shadow:0 2px 2px #000,0 0 17px #d2a05b23;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::before{display:none}
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::after{
+  content:'';
+  position:absolute;
+  display:block;
+  inset:auto 6% 0;
+  width:auto;
+  height:13px;
+  margin:0;
+  background:
+    var(--arcane-attribute-atlas) 71.4286% 50% / 800% 300% no-repeat,
+    linear-gradient(90deg,transparent 0,#a9804b 16%,#ae8850 84%,transparent 100%) center / 100% 1px no-repeat;
+}
+
+/* The original grid remains the authoritative edit/control surface. */
+body.character-glowup-active #view #grundPanel #basegrid{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(74px,17%,106px) clamp(67px,16%,100px);
+  width:100%;
+  overflow:hidden;
+  border:1px solid #9f7745;
+  border-radius:16px;
+  background:linear-gradient(170deg,#05231a,#06150f 65%,#05110d);
+  box-shadow:inset 0 1px 0 #dbb77370,0 4px 18px #0006;
+}
+body.character-glowup-active #view #grundPanel #basegrid > div{
+  position:relative;
+  min-width:0;
+  min-height:74px;
+  padding:10px clamp(6px,1.6vw,16px);
+  border:0;
+  border-bottom:1px solid #97714891;
+  color:#f0e8d7;
+  background:transparent;
+}
+body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head{
+  min-height:53px;
+  display:flex;
+  align-items:center;
+  background:linear-gradient(180deg,#075037,#083925);
+  border-bottom:2px solid #a98451;
+  color:#f0e3c7;
+  font:700 clamp(13px,2vw,20px)/1.1 Georgia,'Times New Roman',serif;
+  text-shadow:0 2px 2px #000;
+}
+body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head:not(:nth-child(3n+1)){justify-content:center}
+body.character-glowup-active #view #grundPanel #basegrid > :nth-child(3n+2),
+body.character-glowup-active #view #grundPanel #basegrid > :nth-child(3n+3){
+  border-left:1px solid rgba(158,113,64,.4);
+}
+body.character-glowup-active #view #grundPanel #basegrid > :nth-last-child(-n+3){border-bottom:0}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{
+  display:flex;
+  align-items:center;
+  gap:clamp(6px,1.5vw,13px);
+  color:#f4ebdb;
+  font:500 clamp(15px,2.1vw,23px)/1.1 Georgia,'Times New Roman',serif;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{
+  display:inline-flex;
+  flex:0 0 clamp(35px,6.6vw,61px);
+  width:clamp(35px,6.6vw,61px);
+  height:clamp(35px,6.6vw,61px);
+  align-items:center;
+  justify-content:center;
+  border:0;
+  color:#c9af7f;
+  font-size:clamp(20px,3vw,28px);
+}
+html.arcane-attributes-ready body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{
+  font-size:0;
+  background-image:var(--arcane-attribute-atlas);
+  background-size:800% 300%;
+  background-repeat:no-repeat;
+  background-position:0 0;
+}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="styrka"] .glow-base-icon{background-position:14.2857% 0}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="karisma"] .glow-base-icon{background-position:28.5714% 0}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="storlek"] .glow-base-icon{background-position:42.8571% 0}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="smidighet"] .glow-base-icon{background-position:57.1429% 0}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="intelligens"] .glow-base-icon{background-position:71.4286% 0}
+html.arcane-attributes-ready #basegrid [data-arcane-attribute="psykisk-kraft"] .glow-base-icon{background-position:85.7143% 0}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-label{min-width:0;overflow-wrap:normal}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-value{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff3db;
+  font:700 clamp(24px,3.4vw,39px)/1 Georgia,'Times New Roman',serif;
+  text-shadow:0 2px 3px #000a;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-group{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{
+  width:clamp(45px,7.2vw,62px);
+  height:clamp(45px,7.2vw,62px);
+  min-width:0;
+  display:grid;
+  place-items:center;
+  border:1px solid #946739;
+  border-radius:50%;
+  padding:0;
+  background:radial-gradient(circle,#352416 0%,#211911 60%,#6e4c2f 78%,#0b130d);
+  color:#efbb65;
+  font:700 clamp(22px,3vw,33px)/1 Georgia,'Times New Roman',serif;
+}
+html.arcane-attributes-ready body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{
+  border:0;
+  background:var(--arcane-attribute-atlas) 100% 0 / 800% 300% no-repeat;
+}
+body.character-glowup-active #view #grundPanel #basegrid input.grund-input{
+  min-width:0;
+  width:100%;
+  max-width:75px;
+  padding:6px 3px;
+  background:#102a20;
+  color:#fff1db;
+  border:1px solid #a88456;
+  border-radius:6px;
+  text-align:center;
+  font:700 20px/1.2 Georgia,serif;
+}
+
+/* Keep bonus XP at the END of the character's Grundsida, never in the matrix. */
+body.character-glowup-active #view #grundPanel > .arcane-bonus-footer{
+  position:relative;
+  margin:26px 0 12px;
+  padding:9px;
+  border:2px solid #936d42;
+  border-radius:13px;
+  background:linear-gradient(135deg,#0a251b,#101a12 78%);
+  box-shadow:inset 0 0 0 2px #19120c,0 8px 20px #0008;
+}
+body.character-glowup-active #view #grundPanel > .arcane-bonus-footer > .bonus-exp-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:9px;
+  min-height:54px;
+  padding:7px 10px;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#e4cfa5;
+  text-transform:uppercase;
+  font:700 clamp(10px,1.7vw,15px)/1.2 Georgia,serif;
+  letter-spacing:.05em;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .label::before{
+  content:'✦';
+  color:#d4a35b;
+  font-size:25px;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .mini-stepper{
+  display:flex;align-items:center;gap:8px;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .erfval{
+  min-width:20px;
+  color:#ffedcc;
+  text-align:center;
+  font:700 22px Georgia,serif;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .mini-stepper button{
+  display:grid;place-items:center;
+  width:42px;height:42px;
+  padding:0;
+  border:1px solid #bf9255;
+  border-radius:9px;
+  background:linear-gradient(145deg,#332317,#1b140f 60%,#120f0c);
+  box-shadow:inset 0 1px 0 #f6d39658,inset 0 -2px 5px #0009;
+  color:#f6e3bd;
+  font:700 29px/1 Georgia,serif;
+  cursor:pointer;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer .mini-stepper button:is(:hover,:focus-visible){
+  border-color:#f0cd89;
+  background:linear-gradient(#403020,#20170e);
+}
+#adminArcaneSystem .arcane-system-preview .arcane-system-sprite{
+  display:block;
+  width:min(100%,116px);
+  aspect-ratio:1;
+  margin:auto;
+  background-size:800% 300%;
+  background-repeat:no-repeat;
+  background-position:calc(var(--arcane-col) * 100% / 7) calc(var(--arcane-row) * 100% / 2);
+}
+
+@media(max-width:560px){
+  body.character-glowup-active #view #grundPanel > .glow-base-section{
+    margin-top:36px;padding:48px 9px 14px;border-radius:18px;
+  }
+  body.character-glowup-active #view #grundPanel > .glow-base-section::before{top:-34px;width:70px;height:70px}
+  body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title{
+    font-size:clamp(23px,6.1vw,31px);padding-bottom:19px;margin-bottom:14px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid{
+    grid-template-columns:minmax(0,1fr) 58px 56px;
+    border-radius:12px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid > div{min-height:67px;padding:8px 5px}
+  body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head{
+    min-height:45px;font-size:12px;padding:7px 4px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{font-size:clamp(13px,3.65vw,17px);gap:5px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{
+    width:33px;height:33px;flex-basis:33px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-value{font-size:27px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{
+    width:45px;height:45px;font-size:24px;
+  }
+  body.character-glowup-active #view #grundPanel .arcane-bonus-footer .label{font-size:10px;letter-spacing:0}
+  body.character-glowup-active #view #grundPanel .arcane-bonus-footer .mini-stepper button{width:35px;height:35px}
+}
+@media(max-width:365px){
+  body.character-glowup-active #view #grundPanel #basegrid{grid-template-columns:minmax(0,1fr) 50px 49px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{width:29px;height:29px;flex-basis:29px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{font-size:12px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{width:39px;height:39px}
+}
