@@ -1,5 +1,5 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
-import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=3';
+import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=4&side=1';
 import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03';
 import {createGoosePlayerShutter} from './goose-player-shutter.js?v=10';
 const gooseAssets=Object.freeze({
@@ -309,8 +309,8 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   },{passive:true});
   picture.addEventListener('touchcancel',()=>startTouch=null,{passive:true});
   const strip=root.querySelector('#arcaneGalleryStrip');let drag=null,moved=false;
-  strip.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0){drag={x:e.clientX,left:strip.scrollLeft};moved=false;}});
-  strip.addEventListener('pointermove',e=>{if(drag){const d=e.clientX-drag.x;if(Math.abs(d)>5){strip.scrollLeft=drag.left-d;moved=true;}}});
+  strip.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0){drag={x:e.clientX,y:e.clientY,left:strip.scrollLeft,top:strip.scrollTop,vertical:win().innerWidth>=901};moved=false;}});
+  strip.addEventListener('pointermove',e=>{if(drag){const d=drag.vertical?e.clientY-drag.y:e.clientX-drag.x;if(Math.abs(d)>5){if(drag.vertical)strip.scrollTop=drag.top-d;else strip.scrollLeft=drag.left-d;moved=true;}}});
   ['pointerup','pointercancel','pointerleave'].forEach(e=>strip.addEventListener(e,()=>drag=null));
   strip.addEventListener('click',e=>{if(moved){moved=false;return;}const b=e.target.closest('[data-gallery-id]');if(b)void select(b.dataset.galleryId);});
   strip.addEventListener('keydown',e=>{
