@@ -44,8 +44,8 @@
   grid-template-rows:minmax(0,1fr) auto;
   column-gap:clamp(4px,.8vw,14px);row-gap:4px;
   align-items:start;
-  /* Portrait-safe gallery width: fixed sidebar plus a frame sized from usable height. */
-  width:min(90%, calc(clamp(112px,15vw,194px) + clamp(4px,.8vw,14px) + (100dvh - 135px) / 1.557), 1500px)!important;
+  /* Portrait-safe gallery width: fill remaining screen height with the 9:16 rigid-kit rails. */
+  width:min(90%, calc(clamp(112px,15vw,194px) + clamp(4px,.8vw,14px) + (100dvh - 5px) / 1.557), 1500px)!important;
   max-width:calc(100vw - 12px)!important;
   margin:-20px auto 0!important;padding:0!important;
   border:0!important;border-radius:0!important;
