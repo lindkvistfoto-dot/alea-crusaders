@@ -58,11 +58,11 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  let target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
  // Preserve the image-derived ratio above. Desktop merely supplies an upper
  // viewport bound; the left-hand carousel does not consume frame height.
- // The frame is visually lifted 26px over the header, returning that room to
+ // The frame is visually lifted 46px over the header, returning that room to
  // the usable viewport. Never overwrite a shorter landscape/square target.
  if(target&&root?.id==='arcaneGallery'&&root?.classList?.contains('arcane-gallery-kit')
     &&typeof window!=='undefined'&&window.innerWidth>=901&&viewportHeight>0){
-  const desktopOverlap=26;
+  const desktopOverlap=46;
   const reservedTop=58;
   const reservedBottom=28;
   const available=viewportHeight-reservedTop-reservedBottom+desktopOverlap;
