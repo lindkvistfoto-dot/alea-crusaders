@@ -54,14 +54,36 @@ describe('Master skill table artwork',()=>{
   const render=app.split('\n').find(s=>s.startsWith('function renderAdminSkills()'));
   expect(render).toContain('window.aleaSkillArt?.listIconHtml?.(r)');
   expect(render).toContain('window.aleaSkillArt?.hydrateList?.()');
-  expect(render.indexOf('listIconHtml')).toBeLessThan(render.indexOf('showRuleSkillById'));
+  expect(render.indexOf('listIconHtml')).toBeLessThan(render.indexOf('skill-codex-open'));
+  expect(render).toContain('window.aleaSkillCodex.openFromAdmin(this.dataset.skillCodexId)');
+  expect(render).toContain('data-skill-codex-id');
+  expect(render).toContain('editRuleSkill');
   expect(render).toContain('deleteRuleSkill');
   expect(render).toContain('● Illustration');
   expect(css).toContain('.adminskilltable .skill-art-row');
+  expect(css).toContain('.adminskilltable .skill-codex-open:focus-visible');
   expect(css).toContain('object-fit:contain');
   expect(css).toContain('@media(max-width:700px)');
  });
- it('shows a compact placeholder when icon is missing, never uses illustration as the thumbnail',()=>{
+ it('renders an accessible name button that opens the Codex from the admin registry',()=>{
+  const render=app.split('\n').find(s=>s.startsWith('function renderAdminSkills()'));
+  const nodes={adminSkillTable:{innerHTML:''},adminSkillStatus:{textContent:''}};
+  const ctx={
+   $:id=>nodes[id],ruleSkillsLoaded:true,
+   ruleSkills:[{id:'fiska',name:'Fiska',type:'VIL',base_attribute:'INT',cost:1,bc:'0'}],
+   escAttr:value=>String(value),
+   window:{aleaSkillArt:{listIconHtml:()=>'<span class="skill-art-row-thumb">✦</span>',hydrateList:()=>{}}}
+  };
+  runInNewContext(render,ctx);
+  ctx.renderAdminSkills();
+  expect(nodes.adminSkillTable.innerHTML).toContain('<button type="button" class="rule-name skill-codex-open"');
+  expect(nodes.adminSkillTable.innerHTML).toContain('data-skill-codex-id="fiska"');
+  expect(nodes.adminSkillTable.innerHTML).toContain('onclick="window.aleaSkillCodex.openFromAdmin(this.dataset.skillCodexId)"');
+  expect(nodes.adminSkillTable.innerHTML).toContain('aria-label="Visa färdighetskort för Fiska"');
+  expect(nodes.adminSkillTable.innerHTML).toContain("editRuleSkill('fiska')");
+  expect(nodes.adminSkillTable.innerHTML).toContain("deleteRuleSkill('fiska')");
+ });
+  it('shows a compact placeholder when icon is missing, never uses illustration as the thumbnail',()=>{
   const {art}=fixture();
   const missing=art.listIconHtml({id:'spara',name:'Spåra',icon_path:null,illustration_path:illustration});
   expect(missing).toContain('skill-art-row-fallback');

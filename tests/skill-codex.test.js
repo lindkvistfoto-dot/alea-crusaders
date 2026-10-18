@@ -82,7 +82,21 @@ describe('ARCANE SKILL CODEX',()=>{
   expect(h.body.innerHTML).not.toContain('<script>');
   expect(h.getIcon().className).toContain('skill-codex-icon');
  });
- it('also works for a player skill, and closing removes the scoped appearance',async()=>{
+ it('opens the same read-only card directly from admin without an active character',()=>{
+  const h=harness();
+  h.ctx.current=null;
+  expect(h.win.aleaSkillCodex.openFromAdmin('fiska')).toBe(true);
+  expect(h.title.textContent).toBe('Fiska');
+  expect(h.body.innerHTML).toContain('Beskrivning');
+  expect(h.classes.has('hidden')).toBe(false);
+  expect(h.classes.has('skill-codex-active')).toBe(true);
+  h.win.closeSkillInfo();
+  expect(h.classes.has('hidden')).toBe(true);
+  expect(h.classes.has('skill-codex-active')).toBe(false);
+  expect(h.win.aleaSkillCodex.openFromAdmin('unknown')).toBe(false);
+  expect(h.classes.has('hidden')).toBe(true);
+ });
+  it('also works for a player skill, and closing removes the scoped appearance',async()=>{
   const h=harness();
   await h.win.showSkillInfo(0);
   expect(h.title.textContent).toBe('Fiska');

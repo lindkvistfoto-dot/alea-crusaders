@@ -92,6 +92,13 @@
   if(iconPath)void loadArt(skill,'icon',iconPath,token);
   if(illustrationPath)void loadArt(skill,'illustration_wide',illustrationPath,token);
  }
+ // The admin registry opens this same read-only card without requiring a selected character.
+ function openFromAdmin(id){
+  const row=typeof ruleSkills!=='undefined'?ruleSkills.find(x=>String(x.id)===String(id)):null;
+  if(!row)return false;
+  render(row);
+  return true;
+ }
  const originalRule=window.showRuleSkillById;
  const originalInfo=window.showSkillInfo;
  const originalClose=window.closeSkillInfo;
@@ -119,5 +126,5 @@
  if(typeof originalWeapon==='function'){
   window.showWeaponInfo=function(){reset();return originalWeapon.apply(this,arguments)};
  }
- window.aleaSkillCodex={render,reset,validArt};
+ window.aleaSkillCodex={render,reset,validArt,openFromAdmin};
 })();

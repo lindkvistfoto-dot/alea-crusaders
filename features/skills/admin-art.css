@@ -52,3 +52,14 @@
 .adminskilltable .skill-art-row-copy .rule-name{display:block}
 .adminskilltable .skill-art-row-copy .skill-art-indicator{margin-top:1px}
 @media(max-width:700px){.adminskilltable .skill-art-row{gap:7px;min-height:36px}.adminskilltable .skill-art-row-thumb{flex-basis:36px;width:36px;height:36px;border-radius:7px}.adminskilltable .skill-art-row-fallback{font-size:19px}.adminskilltable .skill-art-row-copy .skill-art-indicator{font-size:10px}}
+
+/* Admin skill names open the exact same read-only Codex as character skills. */
+.adminskilltable .skill-codex-open{
+ appearance:none;display:block;width:fit-content;max-width:100%;margin:0;padding:0;
+ border:0;border-radius:2px;background:transparent;color:inherit;
+ font:inherit;font-weight:800;line-height:inherit;text-align:left;
+ text-decoration:underline;text-decoration-style:dotted;text-underline-offset:4px;
+ cursor:pointer;overflow-wrap:anywhere;
+}
+.adminskilltable .skill-codex-open:hover{color:#f3d69f;text-decoration-style:solid}
+.adminskilltable .skill-codex-open:focus-visible{outline:2px solid #f3d69f;outline-offset:3px}
