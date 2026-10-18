@@ -1,0 +1,600 @@
+{
+  "date": "2026-10-18",
+  "status": "Final HERMES jobs processing; generation quota blocked",
+  "generation_reset_reported": "2026-10-18T22:43:43+02:00",
+  "transfers": [
+    {
+      "key": "bola",
+      "kind": "skill-illustration-wide",
+      "drive": "1imM5MqpqYH4S-azAb0RoEJASHU6wXlx9",
+      "source_sha256": null
+    },
+    {
+      "key": "dolkar",
+      "kind": "skill-illustration-wide",
+      "drive": "17RS9rydQcql8BC3edKGTNSmqRM7fb-J1",
+      "source_sha256": null
+    },
+    {
+      "key": "enhandssvard",
+      "kind": "skill-illustration-wide",
+      "drive": "16GDqUGPvWa0x4Dhw1Zjre0OEgtFal6A6",
+      "source_sha256": null
+    },
+    {
+      "key": "forkladnad",
+      "kind": "skill-illustration-wide",
+      "drive": "132A0X3O_CE1z_6BaAsY9AkUiy3eDLnrX",
+      "source_sha256": null
+    },
+    {
+      "key": "giftkunskap",
+      "kind": "skill-illustration-wide",
+      "drive": "1YfRqYA9L-7xu3n9Vxu7n4YlHib-FIpBy",
+      "source_sha256": null
+    },
+    {
+      "key": "dra-vapen",
+      "kind": "skill-illustration-wide",
+      "drive": "1mfKZE6NkRHRsc0nQHVl_cp4xjXu1gj93",
+      "source_sha256": null
+    },
+    {
+      "key": "geografi",
+      "kind": "skill-illustration-wide",
+      "drive": "1EmFN04uTV0vXW-ZI4V3sSHOhpJHyWAyk",
+      "source_sha256": null
+    },
+    {
+      "key": "forhora",
+      "kind": "skill-illustration",
+      "drive": "19uF4Nit1zHaDctal3GuTJahAEV9dBRC8",
+      "source_sha256": null
+    },
+    {
+      "key": "forsta-hjalpen",
+      "kind": "skill-illustration",
+      "drive": "1P5r6-e3xpj4olUDWSRUCSubHYBh937fT",
+      "source_sha256": null
+    },
+    {
+      "key": "hantera-fallor",
+      "kind": "skill-illustration",
+      "drive": "1FEnVPS8xSAaCdjiT36C7RPB9y8tCnFoY",
+      "source_sha256": null
+    },
+    {
+      "key": "hantverk",
+      "kind": "skill-illustration",
+      "drive": "1sLmImdR4Q0Pa2b2c89cSaA2ak2sBUWin",
+      "source_sha256": null
+    },
+    {
+      "key": "forhora",
+      "kind": "skill-illustration-wide",
+      "drive": "1ktc3Lu0zvYNiOKswZcSbFabPcxNjMmmG",
+      "source_sha256": null
+    },
+    {
+      "key": "hantera-fallor",
+      "kind": "skill-illustration-wide",
+      "drive": "17z0K1DijMGFCXiDFRr-OVT8uIMHGCRXS",
+      "source_sha256": null
+    },
+    {
+      "key": "hantverk",
+      "kind": "skill-illustration-wide",
+      "drive": "1vn11jyFVTKTGSshV4JLTfhzZDD_APjON",
+      "source_sha256": null
+    },
+    {
+      "key": "heraldik",
+      "kind": "skill-illustration",
+      "drive": "1-sl12QY7DFC5O9JoKg30Sr4yAARBtSAt",
+      "light": "Cool morning window beams and restrained warm candles",
+      "source_sha256": null
+    },
+    {
+      "key": "historia",
+      "kind": "skill-illustration",
+      "drive": "1-fvQ7Uq1nlQNfgcc01V5paLciF4rxU1a",
+      "light": "Late afternoon window sunlight shafts in dusty archive",
+      "source_sha256": null
+    },
+    {
+      "key": "hoppa",
+      "kind": "skill-illustration",
+      "drive": "124K0BS13JduByTVjt0epROoTJlh42uHL",
+      "light": "Bright natural late morning sky",
+      "source_sha256": null
+    },
+    {
+      "key": "jaga",
+      "kind": "skill-illustration",
+      "drive": "1_glBJVXjemFY341nVeZJNO1WxbPZzh9f",
+      "light": "Cool dawn mist with subtle peach first-light rim",
+      "source_sha256": null
+    },
+    {
+      "key": "juridik",
+      "kind": "skill-illustration",
+      "drive": "1aIeXd8POpCIGTppHI__JhVJyTzvpHQqa",
+      "light": "Neutral soft overcast windowlight and gentle candle accents",
+      "source_sha256": null
+    },
+    {
+      "key": "kamouflage",
+      "kind": "skill-illustration",
+      "drive": "16Q73R7OsbTBxuMFh6NooOJnBgZaFCWFZ",
+      "light": "Soft shadowed forest light after rain, damp leaves with small highlights",
+      "source_sha256": null
+    },
+    {
+      "key": "karate",
+      "kind": "skill-illustration",
+      "drive": "1eiL-94xlaOYAmcdO1PRkyENRgMKnf2q5",
+      "light": "Clear cool dawn with warm rim",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "kastvapen",
+      "kind": "skill-illustration",
+      "drive": "1GFmth9TpsGqtlb5H7ZdhEeIRGfOefl-_",
+      "light": "Soft overcast post-rain daylight",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "klubbor-hammare",
+      "kind": "skill-illustration",
+      "drive": "1GZSccinraQgq48dsu3fJzgtWSoAprLOQ",
+      "light": "Low golden evening sidelight",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "kopsla",
+      "kind": "skill-illustration",
+      "drive": "1f8RYvkR0h5svPrx24viySZWqn12jceDE",
+      "light": "Soft filtered mid-day awning light",
+      "queued": true,
+      "source_sha256": "a481b17d84e9625ade8f1487e346afde0ef46a95c183749bc6ca0c72d9e9197c"
+    },
+    {
+      "key": "kulturkannedom",
+      "kind": "skill-illustration",
+      "drive": "1pC4YOBilFO-rOUavQ__C3xknvrosGxt7",
+      "light": "Warm late-day market sunlight and cool awning shade",
+      "queued": true,
+      "source_sha256": "7f2ae060449f5a2a48c3803e52160615236be29ec2affa0885e7f959cef2cee4"
+    },
+    {
+      "key": "kunskap-om-magi",
+      "kind": "skill-illustration",
+      "drive": "14q7lKMW7iIZHJ04-eikKmA6jBs9aLqyk",
+      "light": "Cool nocturnal window light, restrained blue crystal light and warm candles",
+      "queued": true,
+      "source_sha256": "4b3967e648b89e7f1566f44511d0006943679a3b00c6a38488fd845bbfd66257"
+    },
+    {
+      "key": "heraldik",
+      "kind": "skill-illustration-wide",
+      "drive": "1W8dCnfYU-tO5oHxp2gwmydWp12T5fntE",
+      "light": "Cool morning window beams and restrained warm candles",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "historia",
+      "kind": "skill-illustration-wide",
+      "drive": "1OTtZvlOuSQ1f8NUa8wKmwBya9S7TKlOo",
+      "light": "Late afternoon window sunlight shafts in dusty archive",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "hoppa",
+      "kind": "skill-illustration-wide",
+      "drive": "1rv2G49eYgBf8xaRhNWVDyyvX8imrV3Z1",
+      "light": "Bright natural late morning sky",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "jaga",
+      "kind": "skill-illustration-wide",
+      "drive": "1mZXfFjdLaRzZV0Heyrnk5G5Or472H5ly",
+      "light": "Cool dawn mist with subtle peach first-light rim",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "juridik",
+      "kind": "skill-illustration-wide",
+      "drive": "1FcubqE8EIOgMfVHlq4Ct71RR-p_SPXD4",
+      "light": "Neutral soft overcast windowlight and gentle candle accents",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "kamouflage",
+      "kind": "skill-illustration-wide",
+      "drive": "1y7mt3bmrz2n_JYhUkTnFLCuVgMbWzuTW",
+      "light": "Soft shadowed forest light after rain, damp leaves with small highlights",
+      "queued": true,
+      "source_sha256": null
+    },
+    {
+      "key": "kopsla",
+      "kind": "skill-illustration-wide",
+      "drive": "1pOnvlzUPDxmI88lh9MB4p1IKiiWnDLQH",
+      "queued": true,
+      "source_sha256": "fa5292e7d219da0cb84e7ff9ce9cae3331da77686736467a4e6bd46294dfbba4"
+    },
+    {
+      "key": "kulturkannedom",
+      "kind": "skill-illustration-wide",
+      "drive": "1oS9bAhW8vGOSLJAzOQwhjfZCnT_SmYWx",
+      "queued": true,
+      "source_sha256": "21b706a13ba1f4ebf606fabcbb21267fde7f127d94a4db9108e2a3d5530d8466"
+    },
+    {
+      "key": "kunskap-om-magi",
+      "kind": "skill-illustration-wide",
+      "drive": "11s-YljVL-c6lW0JJvisO99zgJhedn2W2",
+      "queued": true,
+      "source_sha256": "22564f462851b91e87e1926a38f53b88c510411229c53ebbdf95573780499d74"
+    },
+    {
+      "key": "lakekonst",
+      "kind": "skill-illustration",
+      "drive": "1S1WsHZhVJO9mV2GUrrMLS2_O9RyAXfc5",
+      "light": "Soft diffused morning windowlight",
+      "queued": true,
+      "source_sha256": "1c8506bbc7cb24e1077fd36341664e668f63add7c5e161cc8a7b7b8325304819"
+    },
+    {
+      "key": "lasdyrkning",
+      "kind": "skill-illustration",
+      "drive": "1CUzrb54DDkeupYvDCZ7znSLxDgB0EB1K",
+      "light": "Cool blue dusk ambient with subtle warm light through arch",
+      "queued": true,
+      "source_sha256": "bd33d7b264ec1922f594457bff4a9d5b04382f341138e4f538c5b89234e4ae91"
+    },
+    {
+      "key": "lasso",
+      "kind": "skill-illustration",
+      "drive": "1AFIam_pllom0TxrqX_7tp1MWvvpaLWcl",
+      "light": "Golden low sunset light and long shadows",
+      "queued": true,
+      "source_sha256": "94b921fe739ae9ec48f587e9ea656ec2ead303425a1b391c8971a869d5d52e81"
+    },
+    {
+      "key": "lyssna",
+      "kind": "skill-illustration",
+      "drive": "1vYY4Xc8UBvwxS30Sxr1aghBRW75XDW8U",
+      "light": "Dim warm interior light and narrow cool doorway spill",
+      "queued": true,
+      "source_sha256": "86cf021adce85bbefa2bb542dcd10ec910a150db6339291b66eea556cec08bb6"
+    },
+    {
+      "key": "muta",
+      "kind": "skill-illustration",
+      "drive": "1-SsJeTky0-NbThHC9tg68SRTk7zAzWQT",
+      "light": "Blue twilight and warm existing torches",
+      "queued": true,
+      "source_sha256": "dc27016db03639ed10070bd323ab84437f7f398c0973ab07cfe2b9f57c41be23"
+    },
+    {
+      "key": "omradeskannedom",
+      "kind": "skill-illustration",
+      "drive": "1SYWLyix-dQhuxnBnm6mJ7eP6OjB1WJKn",
+      "light": "Clear fresh morning light, soft mist over waterfall",
+      "queued": true,
+      "source_sha256": "4566b50b68cfb60e4505ca8937daa6f835f21a5c72568826d98124abb4ba4f30"
+    },
+    {
+      "key": "orientering",
+      "kind": "skill-illustration",
+      "drive": "1YM2ZVo063Ik8NEi1ebEYJzQVztLedYOi",
+      "light": "Misty cool dawn and pale pink sky",
+      "queued": true,
+      "source_sha256": "55300f26d80b263cbb31dd2cbd782474b5e32256c45ad4ca3bfcde2656083692"
+    },
+    {
+      "key": "overlevnad",
+      "kind": "skill-illustration",
+      "drive": "1bvniAokDvBFB61RLh8ki9iQX065RqgMo",
+      "light": "Blue dusk and warm practical campfire",
+      "queued": true,
+      "source_sha256": "b3d450f39b89a0a675eef1e5900f0e9c725c63184d1d26acbdbcd590d8907c78"
+    },
+    {
+      "key": "overtala",
+      "kind": "skill-illustration",
+      "drive": "1dl8WXsH5OrdZOTEznE6fPryVOKfbgAKR",
+      "light": "Dramatic soft daylight after rain with cloud break",
+      "queued": true,
+      "source_sha256": "0a52e887838d0e38e37d8b1135b14843f0ae22a309b8493a0dca4f7f26bc918a"
+    },
+    {
+      "key": "overtala-snabbt",
+      "kind": "skill-illustration",
+      "drive": "1LS6yJa1w_oPtwvJN6vmYOC-OS5yu8WLN",
+      "light": "Warm indoor candle/lantern light against rainy blue evening",
+      "queued": true,
+      "source_sha256": "c7125522d480f7fd78a0b08d36848b785645f156d088c0044d79f8a63a12a65d"
+    },
+    {
+      "key": "ovriga-svard",
+      "kind": "skill-illustration",
+      "drive": "1qFtqA497VIUGj2nb8hIMPnCEbjvnvQmx",
+      "light": "Soft neutral overcast light",
+      "queued": true,
+      "source_sha256": "73709807e558eb1f6758b5cad9df75dabb84b2691f7ab6452546e8c182da1d10"
+    },
+    {
+      "key": "pilbagar",
+      "kind": "skill-illustration",
+      "drive": "1a-FJCdJtlvOmKEJisFAF_BEkXGOCJCh7",
+      "light": "Warm golden evening sun and cool distance",
+      "queued": true,
+      "source_sha256": "4aecd61168bdccaa82040df3023232df985670152f4f7aea880256e5d48a7789"
+    },
+    {
+      "key": "lakekonst",
+      "kind": "skill-illustration-wide",
+      "drive": "1JH6JerFWqS9P4pkGcN9q5ryiaRYhwtCk",
+      "queued": true,
+      "source_sha256": "93b4db49a342a340d3fbaad0f55b6cdedd89c7cd93080fb56f0122adf8d659eb"
+    },
+    {
+      "key": "lasdyrkning",
+      "kind": "skill-illustration-wide",
+      "drive": "1lno8P2eebDFvOaCI8MUWmlb4YQ4n7dtQ",
+      "queued": true,
+      "source_sha256": "a68a2995b41ac36471555baf8c8b4ae5bd80309e3327dd405c1b8a6cef378811"
+    },
+    {
+      "key": "lasso",
+      "kind": "skill-illustration-wide",
+      "drive": "1288QtYR7GSV5_Rud9mzIhEkhzw0rFrQH",
+      "queued": true,
+      "source_sha256": "ffbacd4d8207dd6b0bb4f2c04e96306d4549ca27cdc41c2f6acd631d09ab2891"
+    },
+    {
+      "key": "lyssna",
+      "kind": "skill-illustration-wide",
+      "drive": "1-M-ct6Gg28po6bCYvLk6MCOWGBGVzSiQ",
+      "light": "Dim warm interior light and narrow cool doorway spill",
+      "queued": true,
+      "source_sha256": "704f5fd7b5889cd8ceac6b6423cbc22087fa158d02afdf121fa0693c464cb222"
+    },
+    {
+      "key": "muta",
+      "kind": "skill-illustration-wide",
+      "drive": "1rUwtYHtuoCrxHFtVUIottoZ1P-mtJc6r",
+      "light": "Blue twilight and warm existing torches",
+      "queued": true,
+      "source_sha256": "be5c6679017a7a0d956e943a7805e57eda6c0713cc3446a63e5389b7cb0bf2cc"
+    },
+    {
+      "key": "omradeskannedom",
+      "kind": "skill-illustration-wide",
+      "drive": "1jYyhMrJoTSPC88CroF6UiQQsAtETlvZX",
+      "light": "Clear fresh morning light, soft mist over waterfall",
+      "queued": true,
+      "source_sha256": "f203bd35e9af3842edebd627da280de8949eacefe92d5618ea1f662ca9f3364b"
+    },
+    {
+      "key": "orientering",
+      "kind": "skill-illustration-wide",
+      "drive": "1YyYuyH1FibJNJbrh7GnZ9UQuIw0RRZN_",
+      "light": "Misty cool dawn and pale pink sky",
+      "queued": true,
+      "source_sha256": "3f00c238c0a98d8c143165f63939bf95bba0d0f558ec6eff6ba5dee746514888"
+    },
+    {
+      "key": "overlevnad",
+      "kind": "skill-illustration-wide",
+      "drive": "17R_yIuUylmoxGzkqDdpePUrlXvoi1-Pn",
+      "light": "Blue dusk and warm practical campfire",
+      "queued": true,
+      "source_sha256": "4d0d39b22328e24888b2e9237bb89f527d33d8305ff7ce805aa573a349f9900d"
+    },
+    {
+      "key": "overtala",
+      "kind": "skill-illustration-wide",
+      "drive": "1FYLwm7GEALzIZ8Y3ZUqlc7E5VBwWPVD-",
+      "light": "Dramatic soft daylight after rain with cloud break",
+      "queued": true,
+      "source_sha256": "6f603a0936d7314c76f64d2cb7a938e494ffab17bde3fbd0b0f8b8e75cfe8495"
+    },
+    {
+      "key": "overtala-snabbt",
+      "kind": "skill-illustration-wide",
+      "drive": "1wFvhEyMNpUezM6ZgeQGyrk6ouQDWoP6X",
+      "light": "Warm indoor candle/lantern light against rainy blue evening",
+      "queued": true,
+      "source_sha256": "8269eccd605dac011646d7ed4f08f6cf1b0c29c623e01cd1e88e38d6ce05b7c1"
+    },
+    {
+      "key": "ovriga-svard",
+      "kind": "skill-illustration-wide",
+      "drive": "12IfiR5SoVpeLAugEUN42EGUMJrn1YwKD",
+      "light": "Soft neutral overcast light",
+      "queued": true,
+      "source_sha256": "e5a13c9427c78b86c3086ccde78302f7978e0e884b4d7b60ca1e5fb591bad0f1"
+    },
+    {
+      "key": "pilbagar",
+      "kind": "skill-illustration-wide",
+      "drive": "1owEYGFkyQWQKd-RLX6QQ92Iu_vSsqoRa",
+      "light": "Warm golden evening sun and cool distance",
+      "queued": true,
+      "source_sha256": "1f2495d4f6b8466f2333f6451e2964fdd1b0b6d7c188bf120cceaced1658b7cf"
+    },
+    {
+      "key": "piskor",
+      "kind": "skill-illustration",
+      "drive": "1jdXxT2Ef3juzMoVfjFIXiNUKxkY773_J",
+      "light": "Cool fresh daylight after rain; tiny wood fibres not sparks",
+      "queued": true,
+      "source_sha256": "f40903b4e4f2d766487f5b2cb8566721fb0fd597df3aad595909c3f657430925"
+    },
+    {
+      "key": "rakning",
+      "kind": "skill-illustration",
+      "drive": "1LePwmbIjJf-1ROqt5cjmqVhXncow8LLh",
+      "light": "Warm fireplace and subtle cool window fill",
+      "queued": true,
+      "source_sha256": "6b9e3475d1214d5cade3933ea9f9334d1e24f7be6d34b1e529d5c7f40e63e6a5"
+    },
+    {
+      "key": "schack-bradspel",
+      "kind": "skill-illustration",
+      "drive": "1sGi4Q7f3rK3ETg_AGNjMEucm8qIOGR6x",
+      "light": "Neutral diffuse afternoon windowlight with candle accents",
+      "queued": true,
+      "source_sha256": "a8fe4c99aa6ee799d16c0a8da487dfd78c3604d7e206a1162d108f707931c710"
+    },
+    {
+      "key": "sjunga-spela",
+      "kind": "skill-illustration",
+      "drive": "1BcTQlYmrBv_HemQMfHSniX-4_zy51zQ3",
+      "light": "Blue twilight and motivated warm firelight",
+      "queued": true,
+      "source_sha256": "7292e3ed187237b5a13d024da1895ab67fce4104d81c6cf2568f2c7e7e5243f2"
+    },
+    {
+      "key": "skoldar",
+      "kind": "skill-illustration",
+      "drive": "1LXvB0vTnLX_-QRgPwOP8j5OqBBCn5xgg",
+      "light": "Clear late morning daylight",
+      "queued": true,
+      "source_sha256": "a9b15deb89fe31581b34bc15dec71a491f22560f2f8b196bbf9742d6a88ed223"
+    },
+    {
+      "key": "slagor-gissel",
+      "kind": "skill-illustration",
+      "drive": "16VMmKkpYEqBy1A4bPR1KPpLQuiXsDoSn",
+      "light": "Golden evening backlight with cool forest shadows",
+      "queued": true,
+      "source_sha256": "80196134686fca2bf60b51c3cc8fc387d4322bdf54c5f862f0900c28755a90a5"
+    },
+    {
+      "key": "slagsmal",
+      "kind": "skill-illustration",
+      "drive": "1SAtAf2FQ-NmlInPFIF3k4SymScClczCB",
+      "light": "Neutral cloudy morning daylight",
+      "queued": true,
+      "source_sha256": "0719c27bfa8a6c8d9f9f6f5a96de366e8c5c1d3b4c6e4834ca0e42c8c4b484f2"
+    },
+    {
+      "key": "slungor",
+      "kind": "skill-illustration",
+      "drive": "1M8sAwbN9ChmELokGhGpuaHE250J3Cz8J",
+      "light": "Clear cool daylight",
+      "queued": true,
+      "source_sha256": "01d177c5905217b6aa2cad14518d6de28c5d8a95acee94d28899c9f44982c685"
+    },
+    {
+      "key": "smyga",
+      "kind": "skill-illustration",
+      "drive": "1rxwfpWPQwumj3JSEv8fzaE8tuOWjmXdU",
+      "light": "Blue twilight with subtle warm horizon",
+      "queued": true,
+      "source_sha256": "7ee996b62a6d80920630ca10b839f118f26e946b4b7df6b15c0f9be0b4b00f6e"
+    },
+    {
+      "key": "spara",
+      "kind": "skill-illustration",
+      "drive": "1VK9-S5b8xP_fPMyU-eb2C5GWqxF2MCDn",
+      "light": "Soft misty sunrise",
+      "queued": true,
+      "source_sha256": "50acac3e0f1adc6e0e0ea0f5e8c4c049f868a7513141a1a1a1c3dfce56d4dfe9"
+    },
+    {
+      "key": "spjut",
+      "kind": "skill-illustration",
+      "drive": "1SKUue_9wwLn9e09e-CffV3QJxiGj9CSm",
+      "light": "Golden evening sidelight",
+      "queued": true,
+      "source_sha256": "33bc271f0c890b0b363053b9c51f8a5761151dc0583dac98ee54b212d9ee8590"
+    },
+    {
+      "key": "stangvapen",
+      "kind": "skill-illustration",
+      "drive": "10LTw8-HW7PABfKD4507NfmqLWxlPFw3z",
+      "light": "Diffuse post-rain daylight and muted reflections",
+      "queued": true,
+      "source_sha256": "f007cb60fda1f9061ce8f11937415cb1fb497ecc9a13d361ffc7ba23e72ca3c6"
+    },
+    {
+      "key": "stavar",
+      "kind": "skill-illustration",
+      "drive": "1vKOyNIUlvGnN8Q49xM2z36_U3inKvhCA",
+      "light": "Neutral cloudy daylight",
+      "queued": true,
+      "source_sha256": "885b0f22ad42c9bb9977c55c40cf2515b845f7d42443acc1f081f80903b8c52a"
+    },
+    {
+      "key": "stjala-foremal",
+      "kind": "skill-illustration",
+      "drive": "11LH82zp-wlM13FNZost4pj5yrgzL558l",
+      "light": "Soft natural morning market light",
+      "queued": true,
+      "source_sha256": "d54bcfa2141c4b37c41e4a3ce251ebe01142f4f5400926c46edc032ad67cd67e"
+    },
+    {
+      "key": "piskor",
+      "kind": "skill-illustration-wide",
+      "drive": "1DegAw4Tn47D23iep68R6h0SEWA5_D6-I",
+      "light": "Cool fresh daylight after rain; tiny wood fibres not sparks",
+      "queued": true,
+      "source_sha256": "d56b3d3cd87b6b8f96b7d3d3227bdb50777db8f148d6351b43f85810d162b304"
+    },
+    {
+      "key": "rakning",
+      "kind": "skill-illustration-wide",
+      "drive": "1P6FMXJ2iaZTX4b9HDa1DpR1DkQxHM6SH",
+      "light": "Warm fireplace and subtle cool window fill",
+      "queued": true,
+      "source_sha256": "b4868fcaf988a4e9af97728074bdab6adffcb8d1d1ae8758f81930dfd56d369a"
+    },
+    {
+      "key": "schack-bradspel",
+      "kind": "skill-illustration-wide",
+      "drive": "1MnLCxL-87lHOjJ9KUoo3rCxBz6uVSxgG",
+      "light": "Neutral diffuse afternoon windowlight with candle accents",
+      "queued": true,
+      "source_sha256": "67f77c875def2eff1f58785f86b4cdd8227a28d58f6ee7eacbf2281c4aea0706"
+    },
+    {
+      "key": "sjunga-spela",
+      "kind": "skill-illustration-wide",
+      "drive": "1lC4vBqPhE8q6tbQbZblv7G6LzcANtVV4",
+      "light": "Blue twilight and motivated warm firelight",
+      "queued": true,
+      "source_sha256": "6d03dc2afed7aa17ac2208c3deb0ae6fc4cd525a4ac0120d8c1cfa96d2a5a7e4"
+    },
+    {
+      "key": "skoldar",
+      "kind": "skill-illustration-wide",
+      "drive": "1AyO_WHChQFUSrdgbaLkXqcCdo23Loz8C",
+      "light": "Clear late morning daylight",
+      "queued": true,
+      "source_sha256": "7300448b80c516e4dc73024c04dc8a1e35325243a417035032cb758e93b69f64"
+    },
+    {
+      "key": "slagor-gissel",
+      "kind": "skill-illustration-wide",
+      "drive": "1DTiRH85mYi9y-RnahYkW4PeW8NhkxDyR",
+      "light": "Golden evening backlight with cool forest shadows",
+      "queued": true,
+      "source_sha256": "ff17fa3130599907ed095da60f7d592feeebbd942b7e4d839d0db28c21410d53"
+    }
+  ],
+  "note": "Three earlier active C wide jobs (karate, kastvapen, klubbor-hammare) are verified separately in final report; transfer records lost from in-memory loop on workspace crash. Published assets persisted remotely."
+}
