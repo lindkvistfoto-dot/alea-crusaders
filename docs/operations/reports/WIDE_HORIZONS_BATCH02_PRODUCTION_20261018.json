@@ -1,0 +1,122 @@
+{
+  "baseline": [
+    {
+      "id": "administrationsjuridik",
+      "name": "Administrationsjuridik",
+      "icon_path": "hermes/skill/administrationsjuridik/734ebfc9498eaccf25ee54395ca736fc2daff665d1acae315e15e137a2455293.webp",
+      "illustration_path": "skill/administrationsjuridik/illustration/2b11cc09-7669-48ce-8eee-e45ff42fee71.webp",
+      "illustration_wide_path": null,
+      "target_key": "administrationsjuridik",
+      "source_sha256": "158986009c2bc02a24352a14a151269030c61df796818dd3c841e2620a2b295c"
+    },
+    {
+      "id": "astrologi",
+      "name": "Astrologi",
+      "icon_path": "hermes/skill/astrologi/f8dfeedc179c48e0e02656d10bc9e55ab11ac34f7eba0d1b2a8c70a8ba1dc17d.webp",
+      "illustration_path": "skill/astrologi/illustration/69744c6b-d937-42b0-b6d6-5eaf4fa8a13c.webp",
+      "illustration_wide_path": null,
+      "target_key": "astrologi",
+      "source_sha256": "0b5da7d7017dac392304b1c189dd2f0f8c5d97caabf000d5290560605837692a"
+    },
+    {
+      "id": "blasror",
+      "name": "Blåsrör",
+      "icon_path": "hermes/skill/blasror/5f7161781523979f3cd0f3d4fe4fdddef23237e1dd816a6fca5b20cf66b01cae.webp",
+      "illustration_path": "skill/blasror/illustration/c5e664e5-46bd-4d14-9b6d-bcbbd3f690b2.webp",
+      "illustration_wide_path": null,
+      "target_key": "blasror",
+      "source_sha256": "e602da42d0a9a7fd5c3c4e5286271ef730d04f98765485e5c0d68f3af887b056"
+    },
+    {
+      "id": "drogkunskap",
+      "name": "Drogkunskap",
+      "icon_path": "hermes/skill/drogkunskap/2c4aab5c952400836d77d311a865789396967a96d405f7de2eacf766a20f3f68.webp",
+      "illustration_path": "skill/drogkunskap/illustration/4adf58ac-08e8-4a6e-a31a-e663bd352a9d.webp",
+      "illustration_wide_path": null,
+      "target_key": "drogkunskap",
+      "source_sha256": "53a880aa9ad496ed030576f5ff082e2ea4008fb94f71955ee83b5c0d57e06044"
+    },
+    {
+      "id": "gomma_sig",
+      "name": "Gömma sig",
+      "icon_path": "hermes/skill/gomma-sig/e7b14acf69b02af4a67c943584e145f6e0a58c076627b8b0894418ac41fe3a38.webp",
+      "illustration_path": "skill/gomma_sig/illustration/deeab502-ef41-45ae-9327-841411563397.webp",
+      "illustration_wide_path": null,
+      "target_key": "gomma-sig",
+      "source_sha256": "c3a09ca8893c5c7f02a1fa508e7c47c48cca13b1f6370040e499c87b208ef812"
+    }
+  ],
+  "outputs": {
+    "administrationsjuridik": "/workspace/scratch/aea4277329f9/generated_images/exec-dffafe86-dc46-49b6-877d-d1f2b878b06b.png",
+    "astrologi": "/workspace/scratch/aea4277329f9/generated_images/exec-a28b4a2d-1eb1-433a-919e-b00447381170.png",
+    "blasror": "/workspace/scratch/aea4277329f9/generated_images/exec-c6d17ca8-881c-4da1-ac4a-64622c313b38.png",
+    "gomma-sig": "/workspace/scratch/aea4277329f9/generated_images/exec-b86ab182-0996-4cd4-8857-7d1d27029fd8.png",
+    "drogkunskap": "/workspace/scratch/aea4277329f9/generated_images/exec-57d38ea8-e099-4c41-a178-1524b8bf2a5c.png"
+  },
+  "metadata": {
+    "administrationsjuridik": {
+      "path": "/workspace/scratch/aea4277329f9/generated_images/exec-dffafe86-dc46-49b6-877d-d1f2b878b06b.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 2574066,
+      "sha256": "f63f138d44cd1fc5b4ad9d7709c5b4c354fd2719aea2169b01ea7c878975b96b"
+    },
+    "astrologi": {
+      "path": "/workspace/scratch/aea4277329f9/generated_images/exec-a28b4a2d-1eb1-433a-919e-b00447381170.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 3169407,
+      "sha256": "7a1cf17b6f3e6e71f3e1ee10ac4820966cf643a9c8f9bb7c9c157c4e89d9f39d"
+    },
+    "blasror": {
+      "path": "/workspace/scratch/aea4277329f9/generated_images/exec-c6d17ca8-881c-4da1-ac4a-64622c313b38.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 3158634,
+      "sha256": "17e9b62a97d23856f89d6df477e87bf251747826980dea1fde6c85e22cc0f77c"
+    },
+    "gomma-sig": {
+      "path": "/workspace/scratch/aea4277329f9/generated_images/exec-b86ab182-0996-4cd4-8857-7d1d27029fd8.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 3083801,
+      "sha256": "9073402c6708a75f13fa884eedbf14e2fbdae4e7def3ddfeddabba851f68eea5"
+    },
+    "drogkunskap": {
+      "path": "/workspace/scratch/aea4277329f9/generated_images/exec-57d38ea8-e099-4c41-a178-1524b8bf2a5c.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 2957282,
+      "sha256": "e2b3c32c627bd15813089cb9a47cbb680d95f10d477e44635d3b161fc8a52ad7"
+    }
+  },
+  "prompts": {
+    "administrationsjuridik": "Use case: identity-preserve. ALEA CRUSADERS photographic fantasy film still, environmental outpainting of input 1 square scene into a wide approximately 16:9 composition. Input 1 is the edit target and authority for exact action, clothes, props, setting; input 2 approved photographic portrait is primary authority for woman's real face, natural skin and photographic treatment. Retain source scene height and all essential hands, wax seal, papers, characters; widen architecture and desk naturally on both sides, no letterbox. Same auburn woman leaning over table, index finger pointing at red wax seal on flat parchment; same middle-aged curly dark/grey bearded official opposite, hand at chin, holding parchment, navy gold embroidered robe and medallion. Same green gold-pattern cloak rectangular buckle, ivory blouse, leather torso and forearm bracers. Same stone royal administrative hall, blue gold banners, tall leaded windows, papers, quill, inkwell, seal stamp. LIGHT: pale early morning sunlight shafts through tall windows, slightly cool ambient stone shadows, restrained warm highlights on real skin and dusty volumetric light. Make a believable live-action location photograph with real human performers, imperfect pores, flyaway hair, tactile worn linen and leather, physically plausible exposure and depth. No illustration, no painted face, no glossy CGI, no beauty smoothing, no added story objects or characters, no labels. Preserve source storytelling exactly; not a new scene.",
+    "astrologi": "Use case: identity-preserve and environmental outpainting. Extend input 1 square ASTROLOGI scene laterally into cinematic approximately16:9 wide photograph, retaining its full essential height, entire astrolabe, hands, raised knee and flat star chart, same action and place. Input 2 is the primary approved photographic identity reference for the auburn woman: real face, hazel eyes, freckles, pores and flyaway hair. Input1 defines same clothes, pose, props and location; do not copy its illustrated rendering. Real woman seated on rocky alpine ledge, one hand raising a real brass astrolabe to the stars, other resting on flat hand-drawn parchment star chart; green gold patterned cloak and rectangular buckle, ivory rolled sleeves, brown leather vest, bracers and boots, rope and hooks at belt. Same leather satchel, existing lantern on right, snowy mountain skyline, conifer valley, lake and distant warmly lit medieval town. Widen rocky foreground and lake valley continuously. LIGHT: genuine dark cobalt night, silver-blue off-camera moonlight on landscape and subtle cool face shadows, motivated amber light from existing lantern gently illuminating hands and brass. Restrained believable Milky Way and pinpoint stars, no daytime or sunset, no gigantic moon. Photoreal live-action epic fantasy film shot on real mountain location with practical costume and prop, true skin microtexture, imperfect materials, realistic exposure and atmospheric distance, cinematic but not oversaturated. No painting, CGI, plastic doll face, beauty retouching, invented story objects or extra characters, no border or text.",
+    "drogkunskap": "Use case: identity-preserve, environmental outpainting. Input1 edit target is actual square DROGKUNSKAP scene: widen the same scene to cinematic approximately16:9 preserving full important height and all hands, vial, herb bunch, mortar and foreground herbal workbench. Input2 primary identity and photographic master: same real blond male elf performer, long half-braided blond hair, grey-green eyes, realistic pointed prosthetic ears and skin. Transfer real photographic treatment from portrait, NOT input1 illustration rendering. Same seated male elf concentrating on small corked glass vial with golden liquid raised in his right hand; left hand holding mixed yellow/white/purple medicinal herbs above stone mortar and pestle. Same dark green cloak gold tree embroidery, round tree brooch, ivory linen sleeves, brown leather vest and tree-pattern bracers. Same alpine conifer lakeshore camp, blue lake, jagged snowy mountain skyline, same jars and bundles on stone work surface. Extend naturally on both sides, preserve geography and same actions. LIGHT: spectacular but physically believable low golden sunset light crossing his hair and cheek and transmitting through amber glass, cool teal mountain and forest shadows, subtly pink high clouds, no added sun disk required. Rich warm/cool separation with realistic exposed face, not all-orange image. Actual live-action epic fantasy film on real location, candid photograph, irregular skin pores, real hair, tactile fabrics and weathered leather, real glass caustics and stone texture, atmospheric distance and cinematic photographic dynamic range. No illustration, no painting, no wax skin, no CGI, no invented props, no magic effects, no additional people, no writing or border.",
+    "gomma-sig": "Use case: identity-preserve environmental outpainting. Transform input1 actual GÖMMA SIG square illustration to approximately16:9 cinematic live-action wide frame by extending environment left and right, keeping whole essential figure and boot to the sole. Input2 approved photographic portrait is primary reference for real face, hazel-green eyes, natural freckles/pores, auburn hair and real costume materials. Input1 authority for exact same scene: woman crouched tight behind ivy-clad broken stone wall on left, one hand touching wall, looking alertly right along ruin passage; raised bent knee, visible entire brown boot, green gold patterned cloak rectangular brass buckle, ivory rolled sleeve, brown leather bodice and bracers, rope and metal hooks at hip. Same overgrown stone ruins with broken tall pillars and stone arch on right, ferns and ivy, distant conifers and mountain. Preserve geography and storytelling, widen ruined corridor naturally, no added characters, enemies or magic. LIGHT: cool misty dawn in ruins, soft blue-grey open-sky ambient light and subtle rose-peach first light on distant mountain and top edges of ruin; woman's hiding place remains in believable cool shadow with enough exposure to clearly see real face. Atmospheric depth with delicate low ground mist, no golden midday rays. Real photographed fantasy-film location and actual adult actress, practical weathered clothing, no painted contours or airbrushed skin, realistic hands, loose hair strands, damp uneven stone and moss, restrained color and film optics. Not illustration, not CGI, not game art. No text, border or letterbox. Retain original full essential height by slight camera pullback as needed.",
+    "drogkunskapCorrection": "Precise corrective edit of this image. Remove the newly invented tent, tent poles and campsite structure at far right background completely; replace that small region with continuous original natural lakeshore rocks, grass and conifers. Remove added wooden crates and bowls at far right foreground, continue the existing natural rocky herbal working surface with only the original types of loose medicinal herb bundles and small plain glass jars. Preserve everything else: same real blond elf face, pointed ears, hair, green embroidered cloak and brooch, pose and expression, hands holding golden vial and herb bunch, mortar/pestle, original herbs, lake, snowy mountains, sunset lighting, photographic texture, wide dimensions. No new objects, no change to composition or exposure."
+  },
+  "lights": {
+    "administrationsjuridik": "Infallande morgonljus genom höga fönster",
+    "astrologi": "Kallt nattljus och varm lykta",
+    "blasror": "Filtrerat dagsljus och solstrålar genom lövverk",
+    "drogkunskap": "Gyllene solnedgång med svala bergsskuggor",
+    "gomma-sig": "Sval dimmig gryning med rosa bergsljus"
+  }
+}
