@@ -260,3 +260,7 @@
 .spell-art-wide-preview .spell-art-empty{color:#d6b481;padding:24px;text-align:center}
 .spell-art-wide-actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
 .spell-art-pane-wide .spell-art-help{display:block;max-width:630px}
+
+/* BESVÄRJELSE ILLUSTRATION: complete 1:1 image, without any crop controls. */
+.spell-art-square-preview{width:min(100%,290px);aspect-ratio:1/1;min-height:0}
+.spell-art-square-preview img{width:100%;height:100%;object-fit:contain}

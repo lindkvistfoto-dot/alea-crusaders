@@ -138,7 +138,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
                 raise ValueError("UI_OPAQUE_SOURCE_REQUIRED")
-        elif kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide"):
+        elif kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration"):
             if image.mode not in ("RGB", "RGBA"):
                 raise ValueError("ILLUSTRATION_REQUIRES_RGB_OR_OPAQUE_RGBA")
             if kind in ("skill-illustration-wide", "spell-illustration-wide"):
@@ -230,7 +230,7 @@ def run(request_path: str) -> None:
         set(request) == common_keys | {"drive_file_name"}
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "ui"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")

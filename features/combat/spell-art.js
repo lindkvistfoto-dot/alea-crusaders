@@ -1,6 +1,6 @@
-/* Alea Crusaders – independent icon and effect illustration per spell.
- * Immutable private WebP files and square, pointer-draggable crop previews.
- * The same pixel crop geometry is used in admin and combat (no re-encoding).
+/* Alea Crusaders – independent icon, effect, cutout, square and WIDE spell art.
+ * Immutable private WebP files. Display illustrations retain full compositions;
+ * the pre-existing effect and icon retain their independently adjustable crops.
  */
 (function(){
  'use strict';
@@ -11,6 +11,7 @@
   icon:{title:'Besvärjelseikon',description:'Kvadratisk bild för besvärjelseväljaren och små symboler.',path:'icon_path',x:'icon_focus_x',y:'icon_focus_y',zoom:'icon_zoom'},
   effect:{title:'Effektbild · magiruta',description:'Kvadratisk illustration längst ned till höger i magirutan.',path:'effect_image_path',x:'effect_focus_x',y:'effect_focus_y',zoom:'effect_zoom'},
   cutout:{title:'Besvärjelse-cutout · mittenruta',description:'Frilagd bild med transparent bakgrund som kan sticka upp ovanför guldramen.',path:'cutout_path',x:'cutout_x',y:'cutout_y',zoom:'cutout_scale'},
+  illustration:{title:'BESVÄRJELSE ILLUSTRATION',description:'Kvadratisk (1:1) illustration för besvärjelsen, helt separat från effektbild och ikon. Ingen beskärning.',path:'illustration_path'},
   wide:{title:'BESVÄRJELSE ILLUSTRATION WIDE',description:'Liggande illustration för besvärjelsekortet. Originalformatet behålls och bilden är oberoende av övriga magibilder.',path:'illustration_wide_path'}
  };
  const MAX_INPUT=12*1024*1024,MAX_OUTPUT=6*1024*1024;
@@ -25,7 +26,10 @@
  const getRow=id=>typeof ruleSpells!=='undefined'?(ruleSpells||[]).find(r=>String(r.id)===String(id)):null;
  const canManage=()=>{try{return !!activeUser()?.admin}catch(_){return false}};
  function artFor(row,kind){
-  if(kind==='wide')return {path:validPath(row?.illustration_wide_path)?row.illustration_wide_path:'',x:50,y:50,zoom:100};
+  if(kind==='wide'||kind==='illustration'){
+   const path=row?.[TYPES[kind].path];
+   return {path:PATH.test(String(path||''))?path:'',x:50,y:50,zoom:100};
+  }
   const type=TYPES[kind]||TYPES.effect;
   // Never fall back to a square image when a cutout is missing.
   const path=row?.[type.path]!==undefined?row[type.path]:(kind==='cutout'?'':(row?.image_path||''));
@@ -73,13 +77,13 @@
  function paneHtml(row,kind){
   const t=TYPES[kind],v=artFor(row,kind);
   const id=esc(row.id),k=esc(kind),cutout=kind==='cutout';
-  if(kind==='wide')return '<section class="spell-art-pane spell-art-pane-wide" data-kind="wide" data-spell-id="'+id+'">'+
+  if(kind==='wide'||kind==='illustration')return '<section class="spell-art-pane spell-art-pane-'+k+'" data-kind="'+k+'" data-spell-id="'+id+'">'+
    '<h4>'+t.title+'</h4><p>'+t.description+'</p>'+
-   '<div class="spell-art-wide-preview">'+(v.path?'<img data-spell-art-preview="'+esc(v.path)+'" alt="Illustration för '+esc(row.name||'besvärjelse')+'" hidden>':'<span class="spell-art-empty">Ingen WIDE-illustration uppladdad</span>')+'</div>'+
+   '<div class="spell-art-wide-preview '+(kind==='illustration'?'spell-art-square-preview':'')+'">'+(v.path?'<img data-spell-art-preview="'+esc(v.path)+'" alt="Illustration för '+esc(row.name||'besvärjelse')+'" hidden>':'<span class="spell-art-empty">Ingen '+(kind==='wide'?'WIDE-':'kvadratisk ')+'illustration uppladdad</span>')+'</div>'+
    '<div class="spell-art-wide-actions"><label class="smallbtn spell-art-upload">'+(v.path?'Byt illustration':'Lägg till illustration')+
-    '<input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Ladda upp WIDE-illustration" onchange="aleaSpellArt.upload(event,\''+id+'\',\'wide\')"></label>'+
-    (v.path?'<button type="button" class="smallbtn" onclick="aleaSpellArt.remove(\''+id+'\',\'wide\')">Ta bort bildkoppling</button>':'')+'</div>'+
-   '<small class="spell-art-help">Liggande format 1,25:1–2,4:1, minst 640 × 360 px. Max 12 MB. Originalets proportioner bevaras, ingen beskärning. Uppladdningar är privata och historiska filer raderas inte.</small>'+
+    '<input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Ladda upp '+t.title+'" onchange="aleaSpellArt.upload(event,\''+id+'\',\''+k+'\')"></label>'+
+    (v.path?'<button type="button" class="smallbtn" onclick="aleaSpellArt.remove(\''+id+'\',\''+k+'\')">Ta bort bildkoppling</button>':'')+'</div>'+
+   '<small class="spell-art-help">'+(kind==='illustration'?'Kvadratisk 1:1, minst 640 × 640 px. Max 12 MB. Originalmotivet visas helt, utan beskärning.':'Liggande format 1,25:1–2,4:1, minst 640 × 360 px. Max 12 MB. Originalets proportioner bevaras, ingen beskärning.')+' Uppladdningar är privata och historiska filer raderas inte.</small>'+
    '<p class="spell-art-status" role="status" aria-live="polite"></p></section>';
   return '<section class="spell-art-pane" data-kind="'+k+'" data-spell-id="'+id+'">'+
    '<h4>'+t.title+'</h4><p>'+t.description+'</p>'+
@@ -115,8 +119,8 @@
  function editorHtml(row){
   if(!row?.id||!UUID.test(String(row.id)))return '<section class="spell-art-editor"><h3>Besvärjelsebilder</h3><p class="muted">Spara den nya besvärjelsen först och öppna den sedan för att lägga till bilder.</p></section>';
   return '<section class="spell-art-editor"><h3>Besvärjelsebilder</h3>'+
-   '<p>Fyra oberoende bildfält: ikon, effektbild, transparent cutout och WIDE-illustration för besvärjelsekortet. Bilder kan bytas separat.</p>'+
-   paneHtml(row,'icon')+paneHtml(row,'effect')+paneHtml(row,'cutout')+paneHtml(row,'wide')+
+   '<p>Fem oberoende bildfält: ikon (ARCANE IVORY), effektbild, transparent cutout, kvadratisk BESVÄRJELSE ILLUSTRATION och BESVÄRJELSE ILLUSTRATION WIDE. Varje bild byts separat.</p>'+
+   paneHtml(row,'icon')+paneHtml(row,'effect')+paneHtml(row,'cutout')+paneHtml(row,'illustration')+paneHtml(row,'wide')+
    '</section>';
  }
  function geometry(img,view,v){
@@ -232,13 +236,13 @@
    const path=artFor(row,kind).path;
    const img=pane.querySelector('[data-spell-art-preview]');
    if(!img||!path)continue;
-   if(kind!=='wide')bindDrag(pane);
+   if(kind!=='wide'&&kind!=='illustration')bindDrag(pane);
    try{
     const url=await resolveUrl(path);
     if(!img.isConnected||pane.dataset.spellId!==String(row.id)||img.dataset.spellArtPreview!==path)continue;
-    img.onload=()=>{if(img.isConnected&&kind!=='wide')previewFocus(kind)};
+    img.onload=()=>{if(img.isConnected&&kind!=='wide'&&kind!=='illustration')previewFocus(kind)};
     img.src=url;img.hidden=false;
-    if(kind!=='wide'&&img.complete&&img.naturalWidth)previewFocus(kind);
+    if(kind!=='wide'&&kind!=='illustration'&&img.complete&&img.naturalWidth)previewFocus(kind);
    }catch(error){setStatus(kind,'Kunde inte visa bilden: '+(error.message||error))}
   }
  }
@@ -258,7 +262,7 @@
  }
  async function saveFocus(id,kind='effect'){
   kind=validKind(kind);const t=TYPES[kind],pane=paneFor(kind);
-  if(kind==='wide')return;
+  if(kind==='wide'||kind==='illustration')return;
   if(!canManage()||!getRow(id)||!pane||inFlight.has(kind))return;
   const v=paneValues(pane),patch={[t.x]:v.x,[t.y]:v.y,[t.zoom]:v.zoom};
   inFlight.add(kind);setStatus(kind,'Sparar bildutsnitt…');
@@ -281,6 +285,8 @@
     throw Error('Bildens dimensioner är för stora.');
    if(kind==='wide'&&(img.naturalWidth<640||img.naturalHeight<360||img.naturalWidth/img.naturalHeight<1.25||img.naturalWidth/img.naturalHeight>2.4))
     throw Error('WIDE måste vara liggande (1,25:1–2,4:1) och minst 640 × 360 px. Ingen exakt 16:9-beskärning krävs.');
+   if(kind==='illustration'&&(img.naturalWidth!==img.naturalHeight||img.naturalWidth<640))
+    throw Error('BESVÄRJELSE ILLUSTRATION måste vara kvadratisk (1:1), minst 640 × 640 pixlar.');
    const scale=kind==='wide'?Math.min(1,2560/img.naturalWidth,1440/img.naturalHeight):Math.min(1,1920/img.naturalWidth,1920/img.naturalHeight);
    const canvas=document.createElement('canvas');
    canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
@@ -305,9 +311,9 @@
    });
    if(!response.ok){const err=await response.json().catch(()=>null);throw Error(err?.message||err?.error||'Lagring misslyckades ('+response.status+').')}
    // A new image starts at a usable zoom so a square image can be dragged too.
-   const patch=kind==='wide'?{[t.path]:path}:{[t.path]:path,[t.x]:50,[t.y]:kind==='cutout'?90:50,[t.zoom]:kind==='cutout'?160:120};
+   const patch=kind==='wide'||kind==='illustration'?{[t.path]:path}:{[t.path]:path,[t.x]:50,[t.y]:kind==='cutout'?90:50,[t.zoom]:kind==='cutout'?160:120};
    await dbJson('rule_spells?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(patch)});
-   updateRow(id,patch);refreshEditor(id);setStatus(kind,kind==='wide'?'✓ WIDE-illustration uppladdad och sparad.':'✓ Bild uppladdad. Dra bilden och välj Spara utsnitt.');
+   updateRow(id,patch);refreshEditor(id);setStatus(kind,kind==='wide'?'✓ WIDE-illustration uppladdad och sparad.':kind==='illustration'?'✓ Kvadratisk illustration uppladdad och sparad.':'✓ Bild uppladdad. Dra bilden och välj Spara utsnitt.');
   }catch(error){
    setStatus(kind,'Kunde inte ladda upp: '+(error.message||error));
    console.error('Spell artwork upload',error)
@@ -428,7 +434,7 @@
   });
  }
  function refreshVisibleCrops(){
-  for(const kind of Object.keys(TYPES))if(kind!=='wide')previewFocus(kind);
+  for(const kind of Object.keys(TYPES))if(kind!=='wide'&&kind!=='illustration')previewFocus(kind);
   document.querySelectorAll('#adminSpellTable .spell-master-icon-thumb.icon-ready').forEach(button=>{
    const img=button.querySelector('img');
    if(img?.naturalWidth)positionImage(img,button,{x:button.dataset.spellIconX,y:button.dataset.spellIconY,zoom:button.dataset.spellIconZoom});

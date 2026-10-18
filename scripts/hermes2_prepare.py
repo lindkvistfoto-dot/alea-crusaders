@@ -17,7 +17,7 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(spell|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -50,7 +50,7 @@ def prepare(source: Path, output_root: Path) -> dict:
             raise ValueError(f"{relative}: expected landscape near 16:9 (0.3% tolerance)")
         if not wide and (original.width != original.height or not EDGE <= original.width <= 4096):
             raise ValueError(f"{relative}: expected square 640–4096 px")
-        if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide"):
+        if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration"):
             if original.mode not in ("RGB", "RGBA"):
                 raise ValueError(f"{relative}: expected RGB or opaque RGBA illustration")
             if original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255):

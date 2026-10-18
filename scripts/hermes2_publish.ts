@@ -71,23 +71,25 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any){
- if(!a||!["spell","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["spell","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  const spellWide=a.kind==="spell-illustration-wide";
+ const spellSquare=a.kind==="spell-illustration";
+ const spellArt=spellWide||spellSquare;
  const wide=a.kind==="skill-illustration-wide"||spellWide;
- const illustration=a.kind==="skill-illustration"||wide;
+ const illustration=a.kind==="skill-illustration"||wide||spellSquare;
  const expectsAlpha=!illustration;
  const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" = wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
  const validDimensions=spellWide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
  if(a.source_path!==expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
- const skill=a.kind==="skill"||(illustration&&!spellWide);
+ const skill=a.kind==="skill"||(illustration&&!spellArt);
  return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
   field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
-  appPath:spellWide?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
+  appPath:spellArt?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
 type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null};
 async function publish(a:any){
@@ -98,7 +100,7 @@ async function publish(a:any){
  if(await digest("SHA-256",raw)!==a.source_sha256)throw Error("SOURCE_SHA_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
  const gitBlob=await assertGithubOriginal(a,raw);
- const targetFields=table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_wide_path":"id,icon_path";
+ const targetFields=table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
  const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
@@ -133,7 +135,7 @@ async function publish(a:any){
  try{
   await recordEvent(job.id,"staged","HERMES 2.1 source validated; GitHub blob "+gitBlob);
   await immutableUpload("alea-hermes-source",sourcePath,raw,"image/png",a.source_sha256);
-  const appBucket=a.kind==="spell-illustration-wide"?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+  const appBucket=(a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
   await immutableUpload(appBucket,appPath,app,"image/webp",a.app_sha256);
   await patch(job.id,{status:"archived",github_blob_sha:gitBlob,github_commit_sha:ghSha});
   await recordEvent(job.id,"archived","Immutable GitHub original and Supabase readback verified");
@@ -163,7 +165,8 @@ async function publish(a:any){
   const {data:final,error:readError}=await db.from(table).select(targetFields).eq("id",target.id).returns<ArtTarget[]>().single();
   if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
   if(a.kind==="skill-illustration-wide" && (final.icon_path!==target.icon_path || final.illustration_path!==target.illustration_path))throw Error("EXISTING_ART_CHANGED_DURING_WIDE_ACTIVATION");
-  if(a.kind==="spell-illustration-wide" && (final.icon_path!==target.icon_path || final.effect_image_path!==target.effect_image_path || final.cutout_path!==target.cutout_path))throw Error("EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION");
+  if(a.kind==="spell-illustration-wide" && (final.icon_path!==target.icon_path || final.effect_image_path!==target.effect_image_path || final.cutout_path!==target.cutout_path || final.illustration_path!==target.illustration_path))throw Error("EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION");
+  if(a.kind==="spell-illustration" && (final.icon_path!==target.icon_path || final.effect_image_path!==target.effect_image_path || final.cutout_path!==target.cutout_path || final.illustration_wide_path!==target.illustration_wide_path))throw Error("EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
   await recordEvent(job.id,"active","Published and read back "+appPath);
   console.log("HERMES_ACTIVE",a.kind,a.target_key,appPath);
