@@ -44,7 +44,7 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
   });
   it('keeps title and subtitle inside the lion plaque with readable one-line sizes',()=>{
     expect(css).toContain('min-height:100px!important');
-    expect(css).toContain('font:700 clamp(15px,3.9vw,21px)');
+    expect(css).toContain('font:700 clamp(17px,4.9vw,22px)');
     expect(css).toContain('white-space:nowrap!important');
     expect(css).toContain('text-overflow:ellipsis!important');
     expect(css).toContain('arcane-nameplate-subtitle');
