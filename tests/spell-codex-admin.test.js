@@ -81,7 +81,7 @@ describe('Admin spell name opens the ARCANE SPELL CODEX',()=>{
   expect(h.body.innerHTML).toContain('Elementarmagi');
   expect(h.body.innerHTML).toContain('Magisk eld');
   expect(h.body.innerHTML).toContain('BESVÄRJELSE ILLUSTRATION WIDE saknas');
-  await Promise.resolve();await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
   expect(h.art.artFor).toHaveBeenCalledWith(h.spell,'icon');
   expect(h.art.artFor).toHaveBeenCalledWith(h.spell,'wide');
   expect(h.icon.replaceChildren).toHaveBeenCalledTimes(2);
@@ -110,7 +110,7 @@ describe('Admin spell name opens the ARCANE SPELL CODEX',()=>{
   const h=harness();
   h.spell.illustration_wide_path=null;
   h.window.aleaSpellCodex.openFromAdmin(KEY);
-  await Promise.resolve();await Promise.resolve();
+  await new Promise(resolve=>setImmediate(resolve));
   expect(h.body.innerHTML).toContain('BESVÄRJELSE ILLUSTRATION WIDE saknas');
   expect(h.art.resolveUrl).toHaveBeenCalledTimes(1);
   expect(h.resolved).not.toContain(h.spell.illustration_path);
