@@ -1,5 +1,5 @@
 /* Arcane Gallery – private images, Frodo revisions, Galadriel signal refresh. */
-import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=4&side=1';
+import {sizeArcaneFrame,resetArcaneFrame} from './arcane-gallery-aspect.js?v=0.35.239&morph=5&side=2';
 import {arcaneMorphMarkup} from './arcane-morph-markup.js?telescope=03';
 import {createGoosePlayerShutter} from './goose-player-shutter.js?v=10';
 const gooseAssets=Object.freeze({
@@ -275,6 +275,23 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  }
  function mount(){
   mounted=true;
+  // CSS grid can change the frame width after the first image decode.
+  // Recalculate from natural media dimensions whenever that width settles.
+  const machine=root.querySelector('.arcane-gallery-machine');
+  if(typeof win().ResizeObserver==='function'&&machine){
+   let previousWidth=0;
+   const resizeObserver=new (win().ResizeObserver)(entries=>{
+    const nextWidth=Math.round(entries[0]?.contentRect?.width||0);
+    if(!nextWidth||nextWidth===previousWidth)return;
+    previousWidth=nextWidth;
+    const img=$('arcaneGalleryImage');
+    if(allowed()&&state.original&&img?.naturalWidth&&
+       (!shutterMounted||shutter?.phase==='open')){
+     sizeArcaneFrame(root,img,win().innerHeight);
+    }
+   });
+   resizeObserver.observe(machine);
+  }
   win().addEventListener?.('resize',()=>{
    const img=$('arcaneGalleryImage');
    if(!allowed())return;
