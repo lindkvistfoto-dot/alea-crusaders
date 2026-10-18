@@ -138,11 +138,12 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
                 raise ValueError("UI_OPAQUE_SOURCE_REQUIRED")
-        elif kind in ("skill-illustration", "skill-illustration-wide"):
+        elif kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide"):
             if image.mode not in ("RGB", "RGBA"):
                 raise ValueError("ILLUSTRATION_REQUIRES_RGB_OR_OPAQUE_RGBA")
-            if kind == "skill-illustration-wide":
-                if not (640 <= image.width <= 4096 and 360 <= image.height <= 4096 and abs(image.width / image.height - 16 / 9) / (16 / 9) <= 0.003):
+            if kind in ("skill-illustration-wide", "spell-illustration-wide"):
+                ratio_ok = (1.25 <= image.width / image.height <= 2.4) if kind == "spell-illustration-wide" else (abs(image.width / image.height - 16 / 9) / (16 / 9) <= 0.003)
+                if not (640 <= image.width <= 4096 and 360 <= image.height <= 4096 and ratio_ok):
                     raise ValueError("WIDE_REQUIRES_LANDSCAPE_NEAR_16_9")
             elif not (image.width == image.height and 640 <= image.width <= 4096):
                 raise ValueError("BAD_PNG_DIMENSIONS")
@@ -229,7 +230,7 @@ def run(request_path: str) -> None:
         set(request) == common_keys | {"drive_file_name"}
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "ui"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")

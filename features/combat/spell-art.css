@@ -252,3 +252,11 @@
 .spell-master-icon-thumb.icon-failed{border-color:#b96b64}
 .spell-master-icon-thumb.icon-failed .spell-master-icon-symbol{color:#e8a09a}
 @media(max-width:700px){.spell-master-icon-thumb{width:42px;height:42px;flex-basis:42px}}
+
+/* BESVÄRJELSE ILLUSTRATION WIDE — full uncropped preview, independent image slot. */
+.spell-art-wide-preview{width:min(100%,630px);min-height:130px;display:grid;place-items:center;overflow:hidden;border:2px solid #bb884e;border-radius:10px;background:#1e1413}
+.spell-art-wide-preview img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain}
+.spell-art-wide-preview img[hidden]{display:none!important}
+.spell-art-wide-preview .spell-art-empty{color:#d6b481;padding:24px;text-align:center}
+.spell-art-wide-actions{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.spell-art-pane-wide .spell-art-help{display:block;max-width:630px}

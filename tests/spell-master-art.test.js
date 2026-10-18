@@ -132,6 +132,42 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(css).toContain('touch-action:none');
   expect(ctx.window.aleaSpellArt.editorHtml(null)).toContain('Spara den nya besvärjelsen först');
  });
+ it('adds a fourth independent WIDE slot that uploads, replaces and unlinks without altering spell icons',async()=>{
+  const {ctx,row,db,host}=fixture();
+  expect(ctx.window.aleaSpellArt.editorHtml(row)).toContain("aleaSpellArt.upload(event,'"+SPELL+"','wide')");
+  expect(ctx.window.aleaSpellArt.editorHtml(row)).toContain('BESVÄRJELSE ILLUSTRATION WIDE');
+  ctx.Image=class{
+   naturalWidth=1440;naturalHeight=960;
+   set src(url){Promise.resolve().then(()=>this.onload?.())}
+  };
+  const file={type:'image/png',size:1000};
+  await ctx.window.aleaSpellArt.upload({target:{value:'image.png',files:[file]}},SPELL,'wide');
+  expect(JSON.parse(db.mock.calls[0][1].body)).toEqual({illustration_wide_path:NEXT});
+  expect(row.illustration_wide_path).toBe(NEXT);
+  expect(row.icon_path).toBe(PATH);
+  expect(row.effect_image_path).toBe(PATH);
+  expect(host.innerHTML).toContain('Ta bort bildkoppling');
+  await ctx.window.aleaSpellArt.remove(SPELL,'wide');
+  expect(JSON.parse(db.mock.calls[1][1].body)).toEqual({illustration_wide_path:null});
+  expect(row.illustration_wide_path).toBeNull();
+  expect(row.icon_path).toBe(PATH);
+  expect(row.effect_image_path).toBe(PATH);
+ });
+ it('defines the WIDE schema and HERMES routing without forcing 16:9',()=>{
+  const migration=read('supabase/migrations/20261018113000_spell_illustration_wide.sql');
+  const prepare=read('scripts/hermes2_prepare.py');
+  const publish=read('scripts/hermes2_publish.ts');
+  const intake=read('scripts/hermes_drive_intake.py');
+  const workflow=read('.github/workflows/hermes21-intake.yml');
+  expect(migration).toContain('add column if not exists illustration_wide_path');
+  expect(migration).toContain('grant update (illustration_wide_path)');
+  expect(prepare).toContain('spell-illustration-wide');
+  expect(prepare).toContain('1.25 <= original.width / original.height <= 2.4');
+  expect(intake).toContain('spell-illustration-wide');
+  expect(publish).toContain('alea-spell-art');
+  expect(publish).toContain('EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION');
+  expect(workflow).toContain('assets/hermes/originals/spell-illustration-wide/**/*.png');
+ });
  it('drags a square image with pointer events and updates X/Y sliders',async()=>{
   const {ctx,panes}=fixture();
   await ctx.window.aleaSpellArt.hydrateEditor();
