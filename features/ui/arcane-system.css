@@ -164,6 +164,34 @@ html.arcane-system-images-ready body.character-glowup-active #view #grundPanel .
   font:700 31px/1 Georgia,serif;
   color:#f7d5a5;
 }
+/*
+ * ARCANE portrait/nameplate joint.
+ * On stacked layouts the plaque overlaps the photo's bottom brass rail.
+ * The photo stays above the identity panel's broad stat-panel background,
+ * while the plaque and live character text sit above both. Avoid changing
+ * portrait cropping, source art, or editable fields.
+ */
+@media(max-width:850px){
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel > .hero{
+    isolation:isolate;
+    overflow:visible;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait{
+    z-index:2;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity{
+    margin-top:clamp(-38px,-8.3vw,-26px);
+    isolation:auto;
+    z-index:auto;
+    overflow:visible;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity::before{
+    z-index:3;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field{
+    z-index:4;
+  }
+}
 @media(max-width:700px){
   html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait::after{
     border-image-width:25px;
