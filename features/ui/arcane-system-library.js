@@ -8,6 +8,7 @@
   const VERSION='1.0.0';
   const BASE='./assets/arcane/system/v1/';
   const ATTRIBUTE_ATLAS='./assets/arcane/system/v2/attributes-atlas.png';
+  const ATTRIBUTE_HEADER_V3='./assets/arcane/system/v3/attribute-title-plaque.webp';
   const DEFINITIONS=[
     ['portrait-frame','Porträttram','Ramar','Genomskinlig mitt för rollpersonsporträtt'],
     ['nameplate','Namnskylt','Ramar','Text läggs ovanpå, aldrig inbakad'],
@@ -47,17 +48,19 @@
     ['attribute-corner-tr','Övre högra ornament','Grundegenskaper','Infällt hörn',2,1],
     ['attribute-corner-bl','Nedre vänstra ornament','Grundegenskaper','Infällt hörn',3,1],
     ['attribute-corner-br','Nedre högra ornament','Grundegenskaper','Infällt hörn',4,1],
-    ['attribute-header-jewel','Rubrikdiamant','Grundegenskaper','Grön ädelsten och metallinläggning',5,1]
+    ['attribute-header-jewel','Rubrikdiamant','Grundegenskaper','Grön ädelsten och metallinläggning',5,1],
+    ['attribute-title-plaque','Rubrikplakett · v3','Grundegenskaper','Bildgenererad rubrikram för ARCANE ATTRIBUTE BOARD']
   ];
   const CATALOG=Object.freeze(DEFINITIONS.map(function(def){
+    const header=def[0]==='attribute-title-plaque';
     const sprite=Number.isInteger(def[4])?Object.freeze({
       col:def[4],row:def[5],columns:8,rows:3
     }):null;
     return Object.freeze({id:def[0],name:def[1],category:def[2],
-      description:def[3],version:sprite?'2.0.0':VERSION,
-      src:sprite?ATTRIBUTE_ATLAS:BASE+def[0]+'.avif',sprite,
-      format:sprite?'image/png':'image/avif',
-      source:sprite?'ARCANE system/v2':'ARCANE system/v1'});
+      description:def[3],version:header?'3.0.0':sprite?'2.0.0':VERSION,
+      src:header?ATTRIBUTE_HEADER_V3:sprite?ATTRIBUTE_ATLAS:BASE+def[0]+'.avif',sprite,
+      format:header?'image/webp':sprite?'image/png':'image/avif',
+      source:header?'ARCANE system/v3':sprite?'ARCANE system/v2':'ARCANE system/v1'});
   }));
   const BY_ID=new Map(CATALOG.map(entry=>[entry.id,entry]));
   const CRITICAL=['portrait-frame','nameplate','stat-panel','combat-medallion',
