@@ -55,8 +55,8 @@ describe('ARCANE character: portrait default and compact combat icon',()=>{
   expect(legacy).toContain('class="arcane-nameplate-subtitle"');
   expect(legacy).toContain('escAttr(i.ras||"—")');
   expect(legacy).toContain('escAttr(i.yrke||"—")');
-  expect(legacy).toContain('<div class="field wide"><div class="label">Ras</div>');
-  expect(legacy).toContain('<div class="field wide"><div class="label">Yrke / titel</div>');
+  expect(legacy).toContain('<div class="field wide arcane-field-ras"><div class="label">Ras</div>');
+  expect(legacy).toContain('<div class="field wide arcane-field-yrke"><div class="label">Yrke / titel</div>');
   const v4=css.slice(css.indexOf('ARCANE identity v4'));
   expect(v4).toContain("'race race title title'");
   expect(v4).toContain('display:flex!important');
