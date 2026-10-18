@@ -26,6 +26,18 @@ Detta tillägg har företräde framför äldre exakta format- och QA-formulering
 - Variera ljussättning aktivt enligt ljusfamiljerna nedan, med bevarad scenidentitet.
 - Ikon och kvadratisk illustration förblir orörda. WIDE publiceras separat genom HERMES.
 
+## Fotografiska porträttmasters — styrande tillägg 2026-10-18
+
+Användarens senaste godkända porträtt styr nu ansiktsidentitet och fotografisk återgivning för dessa två återkommande färdighetskaraktärer. Tidigare WIDE-bilders illustrerade ansiktsåtergivning ska inte kopieras.
+
+- **Kvinnan:** `WIDE_MASTER_PORTRAIT_WOMAN_20261018.png`, privat HERMES Drive-original `1DTHKuym5mBrx8PAcR-8e1cXL3TzFbVLP`.
+- **Alvjägaren:** `WIDE_MASTER_PORTRAIT_ELF-HUNTER_20261018.png`, privat HERMES Drive-original `1DGSRDOwhMB5kTCzLhbJaRhRCZ93o2zL8`.
+- Hämta och läs det relevanta porträttet som faktisk bildreferens. Porträttet är primär källa för ansiktsdrag, naturlig hud, hår och materialens fotografiska trovärdighet.
+- Läs även respektive faktisk originalillustration. Den styr handling, kroppsställning, klädsel, utrustning, kamerariktning och plats. Porträttets neutrala pose/bakgrund ska inte ersätta scenen.
+- Ange referensernas roller uttryckligen i bildmotorn: **porträtt = fotografisk identitet**, **originalillustration = scen och handling**. Bredda scenerna bildbaserat, utan att förlora väsentligt innehåll.
+- Ljuset ska synligt variera och forma bilden, inte bara färga samma dagsljus. Välj exempelvis dimmig gryning, låg gyllene solnedgång, blå skymning, mjukt mulet dagsljus eller ett motiverat infallande fönsterljus med diskret stoft och skuggpartier.
+- Den första femman är avgränsad till Bluffa, Akrobatik, Botanik, Armborst och Geologi. Publicering genom HERMES sker efter bildgranskning enligt aktuellt användaruppdrag; ingen automatisk utökning till nästa batch.
+
 ## 1. UPPDRAG
 
 Skapa en filmiskt vacker och övertygande fotorealistisk bredbildsversion av varje befintlig **FÄRDIGHET ILLUSTRATION**.
