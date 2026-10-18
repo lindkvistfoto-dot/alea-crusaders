@@ -52,7 +52,7 @@ describe('ARCANE ATTRIBUTE BOARD v3',()=>{
     expect(game).toContain("o.g===''?'—':o.g");
     expect(v3).toContain('.glow-base-value');
     expect(v3).toContain('.glow-base-group .calculated-value');
-    expect(v3).toContain('#basegrid input');
+    expect(v2).toContain('input.grund-input');
   });
   it('keeps bonus experience outside the board at the very bottom of Grundsida',()=>{
     expect(decorator).toContain('function relocateBonusExperience()');
