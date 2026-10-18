@@ -467,7 +467,7 @@ html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view
     grid-template-rows:minmax(96px,auto) minmax(53px,auto) minmax(77px,auto) minmax(58px,auto) minmax(59px,auto)!important;
   }
   html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.name{
-    padding:10px 32px 7px!important;
+    padding:10px clamp(41px,11vw,54px) 7px!important;
     gap:3px;
   }
   html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.name .val{
