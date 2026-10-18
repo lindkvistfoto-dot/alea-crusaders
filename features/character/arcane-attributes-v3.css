@@ -1,0 +1,185 @@
+/*
+ * ARCANE ATTRIBUTE BOARD v3
+ * Ornamental title is a real image-generated, transparent WebP asset.
+ * Icons and medallions come from the approved seven-attribute v2 atlas.
+ * All cell values, rule groups, editing and bonus XP remain live HTML.
+ */
+:root{
+  --arcane-attribute-v3-plaque:url('../../assets/arcane/system/v3/attribute-title-plaque.webp');
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section{
+  --attribute-gold:#b99458;
+  --attribute-dark:#061710;
+  padding:clamp(38px,6vw,60px) clamp(9px,2.6vw,22px) clamp(14px,2.4vw,23px);
+  border:2px solid #b18b53;
+  border-radius:19px;
+  background:
+    radial-gradient(ellipse at 50% -10%,rgba(14,71,46,.4),transparent 58%),
+    radial-gradient(ellipse at center,#073423 0%,#061a12 70%,#030b08 100%);
+  box-shadow:
+    0 0 0 3px #160e09,0 0 0 5px #5c4329,
+    inset 0 0 0 2px #d0a86e53,inset 0 0 22px #010907,
+    0 16px 35px #000b;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section::before{
+  z-index:5; /* The III medal overlays the top edge of the generated banner. */
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section::after{
+  inset:7px;
+  border-radius:14px;
+  border:1px solid #c79b6047;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+  position:relative;
+  z-index:3;
+  min-height:clamp(98px,18vw,154px);
+  margin:0 0 clamp(9px,1.9vw,18px);
+  padding:clamp(24px,4.3vw,40px) 9% clamp(18px,3vw,31px);
+  background-image:
+    var(--arcane-attribute-v3-plaque),
+    linear-gradient(#0b3b2b,#071710);
+  background-size:100% 100%,100% 100%;
+  background-position:center,center;
+  background-repeat:no-repeat;
+  border:0;
+  color:#f5e6cb;
+  font:700 clamp(21px,4.7vw,45px)/1.06 Georgia,'Times New Roman',serif;
+  letter-spacing:-.035em;
+  text-align:center;
+  text-wrap:balance;
+  text-shadow:0 3px 3px #000e,0 0 16px #d6a45d40;
+}
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::before,
+body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title::after{
+  display:none; /* Banner already contains the title-end gem and rail. */
+}
+/* Raise the carved corner ornament over the plain board background without
+   obscuring any labels or blocking interaction. */
+body.character-glowup-active #view #grundPanel .arcane-attribute-corners{
+  z-index:4;
+}
+body.character-glowup-active #view #grundPanel .arcane-attribute-corner{
+  opacity:1;
+}
+/* One visually integrated, gridded bronze tablet. */
+body.character-glowup-active #view #grundPanel #basegrid{
+  border:2px solid #ab824c;
+  border-radius:13px;
+  background:
+    radial-gradient(ellipse at top,#094b33 0%,#082819 40%,#04160f 100%);
+  box-shadow:
+    0 0 0 1px #3d2a17,inset 0 0 0 1px #d5b57946,
+    inset 0 0 25px #0009,0 10px 26px #0009;
+}
+body.character-glowup-active #view #grundPanel #basegrid > div{
+  border-bottom:1px solid #af875c8c;
+  color:#f1e7d4;
+}
+body.character-glowup-active #view #grundPanel #basegrid > :nth-child(3n+2),
+body.character-glowup-active #view #grundPanel #basegrid > :nth-child(3n+3){
+  border-left:1px solid #bb975c8c;
+}
+body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head{
+  background:linear-gradient(180deg,#076b49 0%,#064830 54%,#052c20 100%);
+  border-bottom:2px solid #d0a468;
+  color:#f6e8cc;
+  font:700 clamp(12px,1.9vw,20px)/1.14 Georgia,'Times New Roman',serif;
+}
+body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head:first-child{
+  padding-left:clamp(9px,1.9vw,20px);
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{
+  font:500 clamp(14px,2.1vw,23px)/1.12 Georgia,'Times New Roman',serif;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{
+  filter:drop-shadow(0 2px 3px #000c);
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-label{
+  white-space:normal;
+  text-wrap:balance;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-value{
+  color:#fff1d5;
+  font:700 clamp(23px,3.5vw,41px)/1 Georgia,'Times New Roman',serif;
+  text-shadow:0 2px 3px #000c;
+}
+body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{
+  filter:drop-shadow(0 2px 4px #0009);
+}
+/* Genuine generated gem artwork at real grid intersections. No SVG. */
+html.arcane-attributes-ready body.character-glowup-active #view #grundPanel #basegrid > :is(.glow-base-name,.glow-base-value,.glow-base-col-1,.glow-base-col-2)::after{
+  content:'';
+  position:absolute;
+  z-index:5;
+  right:-9px;
+  bottom:-9px;
+  width:17px;
+  height:17px;
+  pointer-events:none;
+  background:var(--arcane-attribute-atlas) 71.4286% 50% / 800% 300% no-repeat;
+  filter:drop-shadow(0 1px 2px #000b);
+}
+body.character-glowup-active #view #grundPanel #basegrid > :nth-last-child(-n+3)::after{
+  display:none;
+}
+body.character-glowup-active #view #grundPanel .arcane-bonus-footer{
+  border-color:#ac824d;
+  box-shadow:0 0 0 1px #2e2215,inset 0 0 0 1px #c79b6040,0 7px 20px #0009;
+}
+
+/* Small phone layouts: preserve useful room for names, FV input and grouping. */
+@media(max-width:560px){
+  body.character-glowup-active #view #grundPanel > .glow-base-section{
+    padding:35px 8px 11px;
+    margin-top:35px;
+  }
+  body.character-glowup-active #view #grundPanel > .glow-base-section::before{
+    top:-30px;
+    width:69px;
+    height:69px;
+  }
+  body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title{
+    min-height:100px;
+    margin-bottom:8px;
+    padding:24px 7% 15px;
+    font-size:clamp(19px,5.25vw,29px);
+  }
+  body.character-glowup-active #view #grundPanel #basegrid{
+    grid-template-columns:minmax(0,1fr) 58px 56px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid > div{
+    min-height:68px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{
+    font-size:clamp(12px,3.7vw,17px);
+    gap:5px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{
+    flex:0 0 34px;width:34px;height:34px;
+  }
+  body.character-glowup-active #view #grundPanel #basegrid > .glow-base-head{
+    font-size:clamp(11px,2.8vw,13px);
+  }
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-value{
+    font-size:clamp(24px,6.5vw,30px);
+  }
+  html.arcane-attributes-ready body.character-glowup-active #view #grundPanel #basegrid > :is(.glow-base-name,.glow-base-value,.glow-base-col-1,.glow-base-col-2)::after{
+    width:13px;
+    height:13px;
+    right:-7px;
+    bottom:-7px;
+  }
+}
+@media(max-width:365px){
+  body.character-glowup-active #view #grundPanel > .glow-base-section > .section-title{font-size:19px}
+  body.character-glowup-active #view #grundPanel #basegrid{grid-template-columns:minmax(0,1fr) 52px 48px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-icon{flex-basis:29px;width:29px;height:29px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-name{font-size:12px}
+  body.character-glowup-active #view #grundPanel #basegrid .glow-base-group .calculated-value{width:38px;height:38px}
+}
