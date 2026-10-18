@@ -1,0 +1,284 @@
+/*
+ * ALEA / ARCANE — Character Sheet mobile grid v5
+ *
+ * Authoritative MOBILE layout. Every field has a semantic class assigned in
+ * legacy/app.js, so changing the rendering order cannot move the fields.
+ * This stylesheet is loaded AFTER the legacy Arcane style sheets. The old
+ * nth-child and grid-template-area layouts cannot override this mapping.
+ *
+ * The portrait and name plaque stay visually separate but have a restrained
+ * bronze joint. All values and inputs remain live HTML.
+ */
+@media (max-width: 850px) {
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel > .hero {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:0!important;
+    align-items:start;
+    overflow:visible;
+    isolation:isolate;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity {
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-template-rows:minmax(100px,auto) repeat(4,minmax(68px,auto))!important;
+    grid-template-areas:none!important;
+    grid-auto-flow:row!important;
+    align-content:start!important;
+    align-items:stretch!important;
+    gap:7px!important;
+    /* Only the upper diamond joins the portrait rail, not the text plaque. */
+    margin-top:clamp(-29px,-5.5vw,-17px)!important;
+    min-width:0;
+    overflow:visible!important;
+    isolation:auto;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity::before {
+    height:110px!important;
+    top:-7px!important;
+    left:-5px;
+    right:-5px;
+    z-index:2;
+    pointer-events:none;
+  }
+
+  /* Undo positional legacy rules before applying explicit row/column slots. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field[class*="arcane-field-"] {
+    grid-area:auto!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    min-width:0;
+    box-sizing:border-box;
+    margin:0!important;
+    position:relative;
+    z-index:4;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-name {
+    grid-column:1 / -1!important;
+    grid-row:1!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-ras {
+    grid-column:1!important;
+    grid-row:2!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-yrke {
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-kon {
+    grid-column:1!important;
+    grid-row:3!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-alder {
+    grid-column:2!important;
+    grid-row:3!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-langd {
+    grid-column:1!important;
+    grid-row:4!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-vikt {
+    grid-column:2!important;
+    grid-row:4!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat {
+    grid-column:1!important;
+    grid-row:5!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-stand {
+    grid-column:2!important;
+    grid-row:5!important;
+  }
+
+  /* Name and subtitle are ONE inscription, not two asymmetrical fields. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-name {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:4px!important;
+    height:auto!important;
+    min-height:100px!important;
+    padding:14px clamp(19px,5vw,34px) 12px!important;
+    border:0!important;
+    box-shadow:none!important;
+    background:transparent!important;
+    text-align:center!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.arcane-field-name .val {
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    font:700 clamp(17px,4.9vw,22px)/1.12 Georgia,"Times New Roman",serif!important;
+    letter-spacing:-.025em!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    overflow-wrap:normal!important;
+    margin:0!important;
+    text-wrap:nowrap!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity .arcane-nameplate-subtitle {
+    display:block!important;
+    max-width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    font:500 clamp(12px,3.15vw,15px)/1.23 Georgia,"Times New Roman",serif!important;
+    color:#e8d2a5;
+    white-space:nowrap!important;
+    text-align:center!important;
+    text-wrap:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    hyphens:none;
+  }
+
+  /* Two genuinely independent fields for race and profession, including
+     their original select inputs while editing. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-ras,
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-yrke {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+    align-self:stretch!important;
+    gap:2px;
+    min-height:68px!important;
+    padding:8px 9px!important;
+    text-align:center!important;
+    border:0!important;
+    border-radius:0!important;
+    background:var(--arcane-art-stat) center / 100% 100% no-repeat!important;
+    box-shadow:none!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.arcane-field-ras .label,
+  html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.arcane-field-yrke .label {
+    display:block!important;
+    margin:0!important;
+    color:#d9bc8a;
+    font-size:10px!important;
+    letter-spacing:.035em!important;
+    line-height:1.14;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > :is(.field.arcane-field-ras,.field.arcane-field-yrke) .val {
+    margin:2px 0 0!important;
+    padding:0!important;
+    max-width:100%;
+    color:#f3e3c8;
+    font:500 clamp(13px,3.6vw,17px)/1.15 Georgia,"Times New Roman",serif!important;
+    overflow-wrap:anywhere;
+    text-align:center!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-ras .val::after {
+    content:none!important;
+  }
+  /* A real editable value should never stretch outside its own card. */
+  html.arcane-system-images-ready body.character-glowup-active.editing #view #grundPanel #identity .grund-input {
+    display:block;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box;
+    font-size:clamp(12px,3.2vw,15px)!important;
+    margin:4px 0 0!important;
+  }
+
+  /* Person facts: equal-size full-width halves, not nested micro-panels. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > :is(.field.arcane-field-kon,.field.arcane-field-alder,.field.arcane-field-langd,.field.arcane-field-vikt,.field.arcane-field-stand) {
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:flex-start!important;
+    min-height:68px!important;
+    border:0!important;
+    border-radius:0!important;
+    padding:10px 8px 9px 35px!important;
+    background:var(--arcane-art-stat) center / 100% 100% no-repeat!important;
+    box-shadow:none!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > :is(.field.arcane-field-kon,.field.arcane-field-alder,.field.arcane-field-langd,.field.arcane-field-vikt,.field.arcane-field-stand) .label {
+    font-size:10px!important;
+    letter-spacing:.045em!important;
+    line-height:1.1;
+    margin:0;
+    white-space:nowrap;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > :is(.field.arcane-field-kon,.field.arcane-field-alder,.field.arcane-field-langd,.field.arcane-field-vikt,.field.arcane-field-stand) .val {
+    display:block;
+    font:500 clamp(14px,3.7vw,18px)/1.2 Georgia,"Times New Roman",serif!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    overflow-wrap:normal!important;
+    max-width:100%;
+    margin:5px 0 0!important;
+    text-align:left;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > :is(.field.arcane-field-kon,.field.arcane-field-alder,.field.arcane-field-langd,.field.arcane-field-vikt,.field.arcane-field-stand)::before {
+    left:8px!important;
+    width:19px!important;
+    height:23px!important;
+    opacity:.95;
+  }
+
+  /* Entire combat card and medal are small, in a regular grid cell. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat {
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px;
+    min-height:68px!important;
+    height:auto!important;
+    border:0!important;
+    border-radius:0!important;
+    padding:6px 5px!important;
+    background:var(--arcane-art-stat) center / 100% 100% no-repeat!important;
+    box-shadow:none!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat > .label {
+    margin:0!important;
+    padding:0;
+    font-size:10px!important;
+    line-height:1.1;
+    letter-spacing:.015em;
+    text-align:center;
+    white-space:nowrap;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat .character-combat-icon-control {
+    flex:0 0 45px!important;
+    width:45px!important;
+    max-width:45px!important;
+    height:50px!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:5px 4px!important;
+    background:var(--arcane-art-combat) center / contain no-repeat!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat .combat-icon-hex {
+    width:27px!important;
+    height:31px!important;
+    padding:2px!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat .character-combat-icon-actions {
+    display:none!important;
+  }
+}
+@media (max-width:370px) {
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity {
+    column-gap:5px!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-name {
+    padding-inline:21px!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active:not(.editing) #view #grundPanel #identity > .field.arcane-field-name .val {
+    font-size:15px!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat {
+    gap:3px;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat > .label {
+    font-size:9px!important;
+  }
+}
