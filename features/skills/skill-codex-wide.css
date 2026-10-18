@@ -1,0 +1,140 @@
+/* ARCANE SKILL CODEX WIDE — isolated overrides on top of verified HERMES art.
+   All sizes are content-driven; the outer modal is the ONLY scroll container.
+   No changes to weapon / magic / admin modals. */
+#skillModal.skill-codex-active>.modal {
+ width:min(780px,100%);
+ height:auto;
+ max-height:calc(100dvh - 20px);
+ overflow-y:auto;
+ overflow-x:hidden;
+ overscroll-behavior:contain;
+ scrollbar-gutter:stable;
+ -webkit-overflow-scrolling:touch;
+ background-color:#171a15;
+}
+#skillModal.skill-codex-active #skillModalBody {
+ padding:0 0 max(14px, env(safe-area-inset-bottom,0px));
+ overflow:visible;
+}
+#skillModal.skill-codex-active .skill-codex-hero {
+ position:relative;
+ aspect-ratio:16/9;
+ box-sizing:border-box;
+ height:auto;
+ min-height:0;
+ max-height:none;
+ overflow:hidden;
+ margin:0 12px;
+ width:calc(100% - 24px);
+ border:none;
+ border-radius:8px;
+ background:#1e1b15;
+ box-shadow:0 6px 16px #0009;
+}
+#skillModal.skill-codex-active .skill-codex-hero img {
+ width:100%;height:100%;
+ object-fit:contain;
+ object-position:center;
+}
+#skillModal.skill-codex-active .skill-codex-hero::after {
+ content:"";
+ position:absolute;inset:0;
+ pointer-events:none;
+ background:url("./codex-assets/wide-frame.svg") center/100% 100% no-repeat;
+ z-index:2;
+}
+#skillModal.skill-codex-active .skill-codex-stats {
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ align-items:stretch;
+ gap:7px;
+ padding:11px 17px;
+}
+#skillModal.skill-codex-active .skill-codex-stat {
+ box-sizing:border-box;
+ min-height:66px;
+ padding:9px 5px;
+ gap:3px;
+}
+#skillModal.skill-codex-active .skill-codex-stat-label {
+ font:normal clamp(11px,1.8vw,14px)/1.15 Georgia,serif;
+ overflow-wrap:anywhere;
+}
+#skillModal.skill-codex-active .skill-codex-stat-value {
+ font:700 clamp(16px,2.5vw,20px)/1.15 Georgia,serif;
+}
+#skillModal.skill-codex-active .skill-codex-description {
+ box-sizing:border-box;
+ width:calc(100% - 34px);
+ height:auto;
+ max-height:none;
+ min-height:200px;
+ margin:0 17px 16px;
+ padding:22px 26px 28px;
+ overflow:visible;
+ border:2px solid #b48d56;
+ border-radius:11px;
+ background:#e6cda4 url("./codex-assets/parchment-paper.svg") left top/160px 160px repeat;
+ box-shadow:inset 0 0 0 5px rgba(123,78,40,.12),inset 0 0 25px #855a3155,0 5px 12px #0008;
+ color:#352718;
+}
+#skillModal.skill-codex-active .skill-codex-description::before {
+ content:"";
+ position:absolute;inset:8px;
+ border:1px solid rgba(116,78,42,.22);
+ border-radius:6px;
+ pointer-events:none;
+}
+#skillModal.skill-codex-active .skill-codex-description h3 {
+ margin:0 0 12px;
+ position:relative;
+ font:normal 28px/1.2 Georgia,serif;
+}
+#skillModal.skill-codex-active .skill-codex-description p {
+ margin:0;
+ position:relative;
+ font:normal 18px/1.5 Georgia,serif;
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+ max-height:none;
+}
+@media(max-width:560px) {
+ #skillModal.skill-codex-active {padding:6px}
+ #skillModal.skill-codex-active>.modal {
+  width:100%;
+  max-height:calc(100dvh - 12px);
+  scrollbar-gutter:auto;
+ }
+ #skillModal.skill-codex-active .skill-codex-hero {
+  width:calc(100% - 16px);
+  margin:0 8px;
+  aspect-ratio:16/9;
+ }
+ #skillModal.skill-codex-active .skill-codex-stats {
+  grid-template-columns:1fr 1.43fr .86fr .84fr;
+  gap:4px;
+  padding:8px 10px;
+ }
+ #skillModal.skill-codex-active .skill-codex-stat {
+  min-height:58px;
+  padding:6px 3px;
+  gap:3px;
+ }
+ #skillModal.skill-codex-active .skill-codex-stat-label {
+  font-size:clamp(9px,2.5vw,12px);
+  letter-spacing:-.015em;
+ }
+ #skillModal.skill-codex-active .skill-codex-stat-value {font-size:16px}
+ #skillModal.skill-codex-active .skill-codex-description {
+  width:calc(100% - 22px);
+  min-height:180px;
+  margin:0 11px 14px;
+  padding:19px 20px 27px;
+ }
+ #skillModal.skill-codex-active .skill-codex-description h3 {font-size:24px;margin-bottom:10px}
+ #skillModal.skill-codex-active .skill-codex-description p {font-size:16px;line-height:1.55}
+}
+@media(max-width:330px) {
+ #skillModal.skill-codex-active .skill-codex-stat-label{font-size:9px}
+ #skillModal.skill-codex-active .skill-codex-description{padding-inline:15px}
+}
