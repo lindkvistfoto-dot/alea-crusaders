@@ -113,7 +113,7 @@
       return '<article class="arcane-system-tile'+(asset.sprite?' is-loaded':'')+'" data-asset="'+asset.id+'">'+
        '<div class="arcane-system-preview">'+
        (asset.sprite
-         ? '<span class="arcane-system-sprite" aria-hidden="true" style="background-image:url('+escape(asset.src)+');background-position:'+((asset.sprite.col/7)*100).toFixed(4)+'% '+((asset.sprite.row/2)*100).toFixed(4)+'%'"></span>'
+         ? '<span class="arcane-system-sprite" aria-hidden="true" style="background-image:url('+escape(asset.src)+');background-position:'+((asset.sprite.col/7)*100).toFixed(4)+'% '+((asset.sprite.row/2)*100).toFixed(4)+'%"></span>'
          : '<img loading="lazy" alt="" src="'+escape(asset.src)+'" '+
            'onload="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-loaded\')" '+
            'onerror="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-missing\')">')+
