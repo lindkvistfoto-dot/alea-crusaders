@@ -65,9 +65,14 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
   const desktopOverlap=46;
   const reservedTop=58;
   const reservedBottom=28;
-  const available=viewportHeight-reservedTop-reservedBottom+desktopOverlap;
+  // Use the actual top edge after the 46px lift, not just a guessed
+  // header height. The bronze bottom stays inside the visible viewport.
+  const measuredTop=Number(machine?.getBoundingClientRect?.().top);
+  const measuredAvailable=Number.isFinite(measuredTop)&&measuredTop>=0
+   ?viewportHeight-measuredTop-12
+   :viewportHeight-reservedTop-reservedBottom+desktopOverlap;
   const rigidMinimum=width*.65; // genuine source-art rails cannot collapse further
-  target=Math.round(Math.max(rigidMinimum,Math.min(target,Math.max(0,available))));
+  target=Math.round(Math.max(rigidMinimum,Math.min(target,Math.max(0,measuredAvailable))));
  }
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
