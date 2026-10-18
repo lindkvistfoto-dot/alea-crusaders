@@ -49,6 +49,13 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   '<p id="arcaneGalleryStatus" class="arcane-gallery-status" role="status" aria-live="polite"></p>'+
   '<button type="button" id="arcaneGalleryNext" class="arcane-gallery-next" aria-label="Nästa bild">›</button></nav>';
  const $=id=>doc().getElementById(id), state={campaign:'',role:'',revision:-1,live:'',displayedLive:'',rows:[],selected:'',seq:0,media:0,original:'',thumbs:new Map(),loadingThumbs:new Set(),thumbGeneration:0,observer:null};
+ // Wheel zoom affects only the authorized picture, never the bronze frame.
+ let pictureScale=1;
+ function resetPictureZoom(){
+  pictureScale=1;
+  const img=root.querySelector('#arcaneGalleryImage');
+  if(img){img.style.transform='';img.style.transformOrigin='';}
+ }
  const scope=()=>String(getCampaign()||'');
  // GOOSE 05: one published-gallery renderer for authenticated GMs and players.
  const allowed=()=>isLoggedIn()&&/^[a-f0-9-]{36}$/i.test(scope());
@@ -94,6 +101,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   $('arcaneGalleryEmpty')?.classList.add('hidden');
  }
  function releaseMain(){
+  resetPictureZoom();
   state.media++;
   if(state.original)win().URL.revokeObjectURL(state.original);
   state.original='';
@@ -298,6 +306,23 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    if(shutterMounted&&shutter?.phase!=='open')homeRatio();
    else if(state.original&&img?.naturalWidth)sizeArcaneFrame(root,img,win().innerHeight);
   });
+  const pictureViewport=root.querySelector('#arcaneGalleryPicture');
+  pictureViewport.addEventListener('wheel',event=>{
+   const img=$('arcaneGalleryImage');
+   if(!allowed()||!state.original||!img?.naturalWidth||img.classList.contains('hidden'))return;
+   event.preventDefault();
+   // Exponential wheel zoom; the pointer remains the zoom anchor.
+   const next=Math.max(1,Math.min(5,pictureScale*Math.exp(-event.deltaY*.0014)));
+   if(next===pictureScale)return;
+   if(pictureScale===1){
+    const bounds=pictureViewport.getBoundingClientRect();
+    img.style.transformOrigin=((event.clientX-bounds.left)/bounds.width*100)+'% '+
+      ((event.clientY-bounds.top)/bounds.height*100)+'%';
+   }
+   pictureScale=next;
+   img.style.transform=next===1?'':'scale('+next.toFixed(3)+')';
+   if(next===1)img.style.transformOrigin='';
+  },{passive:false});
   root.querySelector('#arcaneGalleryPicture').addEventListener('click',openFull);
   root.querySelector('#arcaneGalleryPicture').addEventListener('keydown',e=>{
    if(e.key==='Enter'||e.key===' '){e.preventDefault();openFull();}
