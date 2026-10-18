@@ -56,13 +56,15 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  const width=Number(machine?.getBoundingClientRect?.().width||machine?.clientWidth||0);
  const fit=root?.classList?.contains?.('arcane-gallery-kit')?arcaneKitFrameHeight:arcaneFrameHeight;
  let target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
- // Desktop shared-gallery viewport: portrait pictures are contained inside
- // a height-limited aperture, without distorting the bronze source artwork.
- // Reserve the carousel (about 14.2% of width), navigation and safe margins.
+ // On desktop the carousel sits at the side, so it consumes no vertical room.
+ // Keep the brass frame inside the viewport; image content uses object-fit:contain.
  if(target&&root?.id==='arcaneGallery'&&root?.classList?.contains('arcane-gallery-kit')
     &&typeof window!=='undefined'&&window.innerWidth>=901&&viewportHeight>0){
-  const remaining=viewportHeight-125-width*.142-52;
-  target=Math.min(target,Math.max(width*.65,remaining));
+  const available=Math.max(230,viewportHeight-88);
+  target=Math.min(target,available);
+  // The artwork's rigid upper/lower ornaments need at least 65% of width.
+  // When the viewport is too short, prefer the rigid-art minimum to distortion.
+  target=Math.max(target,width*.65);
  }
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
