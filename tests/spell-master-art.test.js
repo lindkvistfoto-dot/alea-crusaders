@@ -153,6 +153,58 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(row.icon_path).toBe(PATH);
   expect(row.effect_image_path).toBe(PATH);
  });
+ it('adds an independent square spell illustration and unlinks without changing existing art',async()=>{
+  const {ctx,row,db,host}=fixture();
+  const markup=ctx.window.aleaSpellArt.editorHtml(row);
+  expect(markup).toContain('BESVÄRJELSE ILLUSTRATION');
+  expect(markup).toContain("aleaSpellArt.upload(event,'"+SPELL+"','illustration')");
+  expect(markup).toContain('spell-art-square-preview');
+  expect(css).toContain('.spell-art-square-preview');
+  expect(ctx.window.aleaSpellArt.artFor(row,'illustration').path).toBe('');
+  ctx.Image=class{
+   naturalWidth=1200;naturalHeight=1200;
+   set src(url){Promise.resolve().then(()=>this.onload?.())}
+  };
+  await ctx.window.aleaSpellArt.upload({target:{value:'square.png',files:[{type:'image/png',size:1000}]}},SPELL,'illustration');
+  expect(JSON.parse(db.mock.calls[0][1].body)).toEqual({illustration_path:NEXT});
+  expect(row.illustration_path).toBe(NEXT);
+  expect(row.icon_path).toBe(PATH);
+  expect(row.effect_image_path).toBe(PATH);
+  expect(row.cutout_path).toBeNull();
+  expect(host.innerHTML).toContain('Ta bort bildkoppling');
+  await ctx.window.aleaSpellArt.remove(SPELL,'illustration');
+  expect(JSON.parse(db.mock.calls[1][1].body)).toEqual({illustration_path:null});
+  expect(row.illustration_path).toBeNull();
+  expect(row.icon_path).toBe(PATH);
+  expect(row.effect_image_path).toBe(PATH);
+ });
+ it('rejects rectangular pictures for the square spell illustration instead of cropping',async()=>{
+  const {ctx,row,db,store}=fixture();
+  ctx.Image=class{
+   naturalWidth=1280;naturalHeight=720;
+   set src(url){Promise.resolve().then(()=>this.onload?.())}
+  };
+  await ctx.window.aleaSpellArt.upload({target:{value:'landscape.png',files:[{type:'image/png',size:1000}]}},SPELL,'illustration');
+  expect(db).not.toHaveBeenCalled();
+  expect(store).not.toHaveBeenCalled();
+  expect(row.illustration_path).toBeUndefined();
+ });
+ it('enforces square illustration HERMES contracts and scoped database column',()=>{
+  const migration=read('supabase/migrations/20261018124500_spell_square_illustration.sql');
+  const prepare=read('scripts/hermes2_prepare.py');
+  const publisher=read('scripts/hermes2_publish.ts');
+  const intake=read('scripts/hermes_drive_intake.py');
+  const workflow=read('.github/workflows/hermes21-intake.yml');
+  expect(migration).toContain('add column if not exists illustration_path');
+  expect(migration).toContain('grant update (illustration_path)');
+  expect(migration).not.toContain('update public.rule_spells set');
+  expect(prepare).toContain('spell-illustration');
+  expect(prepare).toContain('original.width != original.height');
+  expect(intake).toContain('spell-illustration');
+  expect(publisher).toContain('EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION');
+  expect(publisher).toContain('a.kind==="spell-illustration"');
+  expect(workflow).toContain('assets/hermes/originals/spell-illustration/**/*.png');
+ });
  it('defines the WIDE schema and HERMES routing without forcing 16:9',()=>{
   const migration=read('supabase/migrations/20261018113000_spell_illustration_wide.sql');
   const prepare=read('scripts/hermes2_prepare.py');
