@@ -1,0 +1,37 @@
+-- ARCANE SKILL CODEX WIDE: add third, independent 16:9 artwork slot.
+-- Original objects remain immutable; removing artwork unlinks the row.
+alter table public.rule_skills
+  add column if not exists illustration_wide_path text;
+
+alter table public.rule_skills
+  drop constraint if exists rule_skills_illustration_wide_path_scoped;
+alter table public.rule_skills
+  add constraint rule_skills_illustration_wide_path_scoped check (
+    illustration_wide_path is null or (
+      illustration_wide_path ~ '^skill/[a-z0-9][a-z0-9_-]{0,99}/illustration_wide/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](png|webp|jpg)$'
+      and split_part(illustration_wide_path, '/', 2) = id
+    )
+  );
+
+comment on column public.rule_skills.illustration_wide_path is
+ 'FÄRDIGHET ILLUSTRATION WIDE: 16:9 high-fantasy original, private alea-skill-art, independent of square illustration_path.';
+
+-- Preserve the existing private bucket and authenticated/admin-only security:
+-- permit exactly the new /illustration_wide/ kind while leaving other kinds unchanged.
+drop policy if exists skill_art_read on storage.objects;
+create policy skill_art_read on storage.objects
+  for select to authenticated using (
+    bucket_id = 'alea-skill-art'
+    and name ~ '^skill/[a-z0-9][a-z0-9_-]{0,99}/(icon|illustration|illustration_wide)/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](png|webp|jpg)$'
+    and exists (select 1 from public.rule_skills sk where sk.id = split_part(storage.objects.name,'/',2))
+  );
+
+drop policy if exists skill_art_upload_admin on storage.objects;
+create policy skill_art_upload_admin on storage.objects
+  for insert to authenticated with check (
+    bucket_id = 'alea-skill-art'
+    and (select private.is_admin())
+    and name ~ '^skill/[a-z0-9][a-z0-9_-]{0,99}/(icon|illustration|illustration_wide)/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](png|webp|jpg)$'
+    and not (split_part(storage.objects.name,'/',3)='icon' and storage.objects.name ~ '[.]jpg$')
+    and exists (select 1 from public.rule_skills sk where sk.id = split_part(storage.objects.name,'/',2))
+  );
