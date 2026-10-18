@@ -17,6 +17,18 @@
   background:transparent!important;box-shadow:none!important;
   overflow:visible!important;
  }
+ /* Frodo wraps the gallery in its own colored card: strip only that chrome. */
+ #legolasPanel .frodo-panel:has(> #arcaneGallery:not(.hidden)){
+  box-sizing:border-box;
+  width:100%!important;max-width:none!important;
+  padding:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  overflow:visible!important;
+ }
+ #legolasPanel .frodo-panel:has(> #arcaneGallery:not(.hidden)) > .frodo-panel-heading{
+  display:none!important;
+ }
  /* Player gallery only: no heading card or closing cross. */
  #legolasPanel:has(#arcaneGallery:not(.hidden)) .legolas-heading,
  #legolasPanel:has(#arcaneGallery:not(.hidden)) .legolas-close,
