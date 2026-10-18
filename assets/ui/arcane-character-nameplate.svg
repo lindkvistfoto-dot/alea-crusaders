@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="184" viewBox="0 0 1000 184" preserveAspectRatio="none" aria-hidden="true">
+<defs>
+ <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#e6c586"/><stop offset=".35" stop-color="#8e592e"/><stop offset=".65" stop-color="#e6c07c"/><stop offset="1" stop-color="#74502f"/></linearGradient>
+ <g id="ornament" stroke="url(#gold)" stroke-linejoin="round" fill="none">
+  <path stroke-width="3.2" d="M15 116 V44 Q15 16 43 16 H123"/>
+  <path stroke-width="1.7" d="M26 105 V49 Q26 27 48 27 H99"/>
+  <path stroke-width="3" d="M15 58 C46 68 80 43 77 18"/>
+  <path stroke-width="2" d="M30 88 C81 93 91 50 68 49 C46 49 66 79 92 64"/>
+  <path stroke-width="1.7" d="M46 37 C65 48 70 29 84 27"/>
+  <path stroke-width="2" d="M33 111 C55 102 56 121 38 129"/>
+  <path stroke-width="2" d="M41 18 l-8 8 8 8 8 -8Z" fill="#0f4939"/>
+  <path stroke-width="3" d="M37 137 C61 139 73 155 78 167"/>
+ </g>
+</defs>
+<path d="M20 0 H980 L1000 22 V157 L978 184 H22 L0 157 V22Z" fill="#080e0b" fill-opacity=".2" stroke="#312113" stroke-width="8"/>
+<path d="M25 7 H975 L992 24 V154 L974 177 H26 L8 154 V24Z" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+<path d="M155 22 H845 M188 163 H812" fill="none" stroke="url(#gold)" stroke-width="1.2" stroke-opacity=".55"/>
+<use href="#ornament"/><use href="#ornament" transform="translate(1000 0) scale(-1 1)"/>
+<path d="M500 5 l14 14 -14 14 -14 -14Z" fill="#0d392d" stroke="url(#gold)" stroke-width="2"/>
+<path d="M500 150 l12 12 -12 12 -12 -12Z" fill="#0d392d" stroke="url(#gold)" stroke-width="2"/>
+<path d="M275 142 H464 M536 142 H725" stroke="url(#gold)" stroke-width="1.6" opacity=".7"/>
+<path d="M500 130 l12 12 -12 12 -12 -12Z" fill="#70491d" stroke="url(#gold)" stroke-width="2.1"/>
+</svg>
