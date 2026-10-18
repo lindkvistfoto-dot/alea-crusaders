@@ -88,6 +88,7 @@ function checkAsset(a:any){
   field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
   appPath:illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
+type ArtTarget = {id:string; icon_path:string|null; illustration_path:string|null; illustration_wide_path?:string|null};
 async function publish(a:any){
  const {table,field,sourcePath,appPath,assetField}=checkAsset(a);
  const raw=new Uint8Array(await Deno.readFile(a.source_path));
@@ -97,7 +98,7 @@ async function publish(a:any){
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
  const gitBlob=await assertGithubOriginal(a,raw);
  const targetFields=table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":"id,icon_path,illustration_path";
- const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).maybeSingle();
+ const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
  const {data:existing,error:jobError}=await db.from("hermes_jobs").select("*")
@@ -157,7 +158,7 @@ async function publish(a:any){
    const {data:affected,error:activateError}=await q.select("id,"+assetField);
    if(activateError||affected?.length!==1)throw Error("ACTIVATION_CONFLICT");
   }
-  const {data:final,error:readError}=await db.from(table).select(targetFields).eq("id",target.id).single();
+  const {data:final,error:readError}=await db.from(table).select(targetFields).eq("id",target.id).returns<ArtTarget[]>().single();
   if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
   if(a.kind==="skill-illustration-wide" && (final.icon_path!==target.icon_path || final.illustration_path!==target.illustration_path))throw Error("EXISTING_ART_CHANGED_DURING_WIDE_ACTIVATION");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
