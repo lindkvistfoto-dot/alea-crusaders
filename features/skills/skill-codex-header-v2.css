@@ -1,52 +1,35 @@
-/* ARCANE SKILL CODEX WIDE — HEADER V2
-   The original HERMES leather/gold banner remains. Two opaque, gilded recesses
-   replace the visible corner diamonds UNDER icon and close, with fixed seats
-   that keep both controls centered independent of the heading length.
-   Scope is restricted to skill details; hero, stats and parchment stay intact.
+/* ARCANE SKILL CODEX WIDE — restrained title bar (V3).
+   Only the skill modal header is affected. FÄRDIGHET IKON already owns its
+   gold/bronze frame. No extra medallions, seats or decorative socket layers.
+   The close control is a compact oxblood ARCANE BUTTON, inside the leather
+   title strip rather than across its ornate rails.
 */
 #skillModal.skill-codex-active .modalhead {
- --codex-seat-size:104px;
- --codex-seat-inset:6px;
- --codex-side-track:120px;
- --codex-icon-size:76px;
- --codex-close-size:60px;
+ --codex-side-track:108px;
+ --codex-icon-size:62px;
+ --codex-icon-inset:24px;
+ --codex-close-inset:26px;
  position:relative;
  isolation:isolate;
  box-sizing:border-box;
  display:grid;
  grid-template-columns:var(--codex-side-track) minmax(0,1fr) var(--codex-side-track);
- grid-template-rows:minmax(112px,auto);
+ grid-template-rows:minmax(106px,auto);
  align-items:center;
  justify-items:center;
- min-height:112px;
- padding:3px 6px;
- /* Crop the obsolete end diamonds out of the original banner; preserve its
-    central leather texture, top jewel and uninterrupted gold rails. */
+ min-height:106px;
+ padding:0;
+ /* Keep the ARCANE header and centre ornament. Crop the unused end diamonds
+    rather than cover them with another gold frame or a round module. */
  background:url("./codex-assets/header.webp") center/138% 100% no-repeat;
  border:0;
 }
-/* Sockets hide old corner ornaments and tie the controls into the metal rails. */
+/* Disable the old Codex bottom pseudo jewel and all former V2 socket surfaces. */
 #skillModal.skill-codex-active .modalhead::before,
 #skillModal.skill-codex-active .modalhead::after {
- position:absolute;
- display:block;
- content:"";
- top:50%;
- bottom:auto;
- left:auto;
- right:auto;
- border:0;
- border-radius:0;
- transform:translateY(-50%);
- width:var(--codex-seat-size);
- height:var(--codex-seat-size);
- aspect-ratio:1;
- pointer-events:none;
- background:url("./codex-assets/header-recess-v2.svg") center/contain no-repeat;
- z-index:1;
+ content:none;
+ display:none;
 }
-#skillModal.skill-codex-active .modalhead::before {left:var(--codex-seat-inset)}
-#skillModal.skill-codex-active .modalhead::after {right:var(--codex-seat-inset)}
 #skillModal.skill-codex-active #skillModalTitle {
  grid-column:2;
  grid-row:1;
@@ -61,24 +44,27 @@
  padding:0;
  text-align:center;
  text-wrap:balance;
- font:normal clamp(24px,3.3vw,39px)/1.07 Georgia,"Times New Roman",serif;
- letter-spacing:.024em;
+ font:normal clamp(24px,3vw,39px)/1.08 Georgia,"Times New Roman",serif;
+ letter-spacing:.02em;
  color:#f0d69b;
  text-shadow:0 2px 3px #000,0 0 12px #f0bd6133;
  overflow-wrap:anywhere;
 }
 #skillModal.skill-codex-active .skill-codex-icon {
  position:absolute;
- top:50%;
- left:calc(var(--codex-seat-inset) + (var(--codex-seat-size) - var(--codex-icon-size))/2);
+ top:54%;
+ left:var(--codex-icon-inset);
+ right:auto;
  transform:translateY(-50%);
+ display:block;
  width:var(--codex-icon-size);
  height:var(--codex-icon-size);
  z-index:3;
  margin:0;
+ padding:0;
  border:0;
- border-radius:50%;
- background:transparent;
+ border-radius:0;
+ background:none;
  box-shadow:none;
  overflow:visible;
 }
@@ -90,69 +76,76 @@
  width:100%;
  height:100%;
  object-fit:contain;
- border-radius:50%;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ box-shadow:none;
 }
 #skillModal.skill-codex-active .modalclose {
  position:absolute;
- top:50%;
- right:calc(var(--codex-seat-inset) + (var(--codex-seat-size) - var(--codex-close-size))/2);
+ top:54%;
+ right:var(--codex-close-inset);
  left:auto;
  transform:translateY(-50%);
  z-index:3;
  box-sizing:border-box;
  display:grid;
  place-items:center;
- width:var(--codex-close-size);
- height:var(--codex-close-size);
+ width:44px;
+ height:44px;
  min-width:44px;
  min-height:44px;
- padding:0;
  margin:0;
- border:2px solid #c89d56;
- border-radius:50%;
+ padding:0 0 2px;
+ /* ARCANE BUTTON: dark oxblood leather, a single understated bronze edge. */
+ border:1px solid #b48a4e;
+ border-radius:8px;
  background:
-  radial-gradient(circle at 36% 25%,rgba(255,234,174,.25),transparent 33%),
-  radial-gradient(circle at 52% 68%,#771f19,#3e1011 72%,#230e0d);
- box-shadow:inset 0 0 0 3px #3f2319,inset 0 0 0 5px #b77f3d,0 2px 8px #0008;
- color:#f8e0a8;
- font:normal 38px/1 Georgia,"Times New Roman",serif;
- text-shadow:0 2px 2px #1d0806;
+  radial-gradient(ellipse at 26% 18%,rgba(255,224,172,.12),transparent 60%),
+  linear-gradient(155deg,#642025 0%,#451317 54%,#2d0b0e 100%);
+ box-shadow:inset 0 1px 0 #f8d59750,inset 0 -2px 3px #12050680,0 2px 5px #0007;
+ color:#f4d7a1;
+ font:normal 29px/1 Georgia,"Times New Roman",serif;
+ text-shadow:0 1px 2px #160609;
  cursor:pointer;
 }
-#skillModal.skill-codex-active .modalclose:hover,
-#skillModal.skill-codex-active .modalclose:focus-visible {
- border-color:#f3d698;
+#skillModal.skill-codex-active .modalclose:hover {
  background:
-  radial-gradient(circle at 36% 25%,rgba(255,234,174,.31),transparent 33%),
-  radial-gradient(circle at 52% 68%,#8c2820,#501415 72%,#2e0d0d);
- filter:brightness(1.1);
- outline-offset:3px;
+  radial-gradient(ellipse at 26% 18%,rgba(255,224,172,.16),transparent 60%),
+  linear-gradient(155deg,#76242a 0%,#51161a 54%,#350d11 100%);
+ border-color:#e4bb73;
 }
-@media(max-width:560px){
+#skillModal.skill-codex-active .modalclose:focus-visible {
+ outline:2px solid #f1d39b;
+ outline-offset:2px;
+ border-color:#e4bb73;
+}
+@media(max-width:560px) {
  #skillModal.skill-codex-active .modalhead {
-  --codex-seat-size:87px;
-  --codex-seat-inset:2px;
-  --codex-side-track:90px;
-  --codex-icon-size:64px;
-  --codex-close-size:55px;
-  min-height:100px;
-  grid-template-rows:minmax(100px,auto);
-  padding:0 2px;
+  --codex-side-track:82px;
+  --codex-icon-size:52px;
+  --codex-icon-inset:20px;
+  --codex-close-inset:20px;
+  min-height:96px;
+  grid-template-rows:minmax(96px,auto);
  }
  #skillModal.skill-codex-active #skillModalTitle {
-  font-size:clamp(21px,6.7vw,31px);
-  letter-spacing:.013em;
+  font-size:clamp(21px,6.2vw,31px);
+  letter-spacing:.012em;
  }
- #skillModal.skill-codex-active .modalclose {font-size:34px}
+ #skillModal.skill-codex-active .modalclose {font-size:27px}
 }
-@media(max-width:330px){
+@media(max-width:330px) {
  #skillModal.skill-codex-active .modalhead {
-  --codex-seat-size:74px;
-  --codex-side-track:74px;
-  --codex-icon-size:57px;
-  --codex-close-size:49px;
-  min-height:91px;
-  grid-template-rows:minmax(91px,auto);
+  --codex-side-track:70px;
+  --codex-icon-size:46px;
+  --codex-icon-inset:15px;
+  --codex-close-inset:13px;
+  min-height:88px;
+  grid-template-rows:minmax(88px,auto);
  }
  #skillModal.skill-codex-active #skillModalTitle {font-size:clamp(19px,6vw,27px)}
+}
+@media(prefers-reduced-motion:reduce) {
+ #skillModal.skill-codex-active .modalclose {transition:none}
 }
