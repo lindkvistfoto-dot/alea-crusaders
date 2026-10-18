@@ -4,6 +4,8 @@
  * The modal keeps its read-only accessible DOM, close semantics, and original
  * private per-skill icon/illustration images.
  */
+/* The global audio dock is 6500; the active dialog must sit above it. */
+#skillModal.skill-codex-active {z-index:7000}
 #skillModal.skill-codex-active > .modal {
  background:#17180f url("./codex-assets/leather.webp") center/100% 100% no-repeat;
  border:2px solid #b58d4d;border-radius:17px;
@@ -27,15 +29,15 @@
  text-shadow:0 2px 4px #000;
 }
 #skillModal.skill-codex-active .skill-codex-icon {
- width:77px;height:77px;top:14px;left:17px;overflow:visible;
+ width:64px;height:64px;top:20px;left:20px;overflow:visible;
  background:transparent;border:0;border-radius:50%;box-shadow:none;
 }
 #skillModal.skill-codex-active .skill-codex-icon::after {
- content:"";position:absolute;inset:0;pointer-events:none;
- background:url("./codex-assets/medallion.webp") center/contain no-repeat;
+ /* FÄRDIGHET IKON already has the approved metal rim and four gems. */
+ content:none;
 }
 #skillModal.skill-codex-active .skill-codex-icon img {
- width:78%;height:78%;position:absolute;top:11%;left:11%;
+ width:100%;height:100%;position:absolute;top:0;left:0;
  object-fit:contain;border-radius:50%;
 }
 #skillModal.skill-codex-active .modalclose {
@@ -49,20 +51,22 @@
 }
 #skillModal.skill-codex-active .skill-codex-hero {
  margin:0 12px;width:calc(100% - 24px);height:auto;aspect-ratio:1.8/1;
- min-height:0;max-height:none;overflow:hidden;border:0;
+ min-height:0;max-height:none;overflow:hidden;
+ border:2px solid #9e7841;border-radius:5px;
  background:radial-gradient(circle,#53452c,#20160f);
- box-shadow:0 2px 10px #000b;
+ box-shadow:inset 0 0 0 1px #49331f,0 3px 10px #000b;
 }
 #skillModal.skill-codex-active .skill-codex-hero::after {
- content:"";inset:0;position:absolute;z-index:2;pointer-events:none;
- background:url("./codex-assets/illustration-frame.webp") center/100% 100% no-repeat;
+ /* A 3.4:1 illustration frame should not be stretched over square art.
+    Keep the unobstructed image with a thin bronze border instead. */
+ content:none;
 }
-#skillModal.skill-codex-active .skill-codex-hero img {object-position:center 42%}
+#skillModal.skill-codex-active .skill-codex-hero img {object-position:center 25%}
 #skillModal.skill-codex-active .skill-codex-stats {
- gap:10px;padding:17px 22px;
+ gap:8px;padding:12px 17px;
 }
 #skillModal.skill-codex-active .skill-codex-stat {
- min-height:90px;padding:12px 9px;gap:6px;
+ min-height:78px;padding:9px 7px;gap:4px;
  background:#241b12 url("./codex-assets/stat-plate.webp") center/100% 100% no-repeat;
  border:0;box-shadow:none;border-radius:0;
 }
@@ -73,7 +77,7 @@
  font:700 20px Georgia,serif;color:#f1dcad;
 }
 #skillModal.skill-codex-active .skill-codex-description {
- min-height:185px;margin:0 22px 25px;padding:31px 34px;
+ min-height:155px;margin:0 17px 25px;padding:25px 28px 35px;
  background:#dfc495 url("./codex-assets/parchment-neutral.webp") center/100% 100% no-repeat;
  border:0;border-radius:0;box-shadow:none;color:#352315;
 }
@@ -96,26 +100,31 @@
  }
  #skillModal.skill-codex-active #skillModalTitle {font-size:clamp(23px,6vw,30px)}
  #skillModal.skill-codex-active .skill-codex-icon {
-  width:56px;height:56px;top:17px;left:10px;
+  width:46px;height:46px;top:23px;left:14px;
  }
  #skillModal.skill-codex-active .modalclose {
   width:45px;height:45px;top:22px;right:9px;
  }
  #skillModal.skill-codex-active .skill-codex-hero {
   margin:0 8px;width:calc(100% - 16px);
-  aspect-ratio:1.25/1;
+  /* FÄRDIGHET ILLUSTRATION is square: preserve all of it on mobile. */
+  aspect-ratio:1/1;
+ }
+ #skillModal.skill-codex-active .skill-codex-hero img {
+  object-fit:contain;object-position:center;
  }
  #skillModal.skill-codex-active .skill-codex-stats {
-  grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:12px;
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:10px 12px 8px;
  }
  #skillModal.skill-codex-active .skill-codex-stat {
-  min-height:74px;padding:7px;gap:5px;
+  min-height:66px;padding:7px;gap:3px;
  }
  #skillModal.skill-codex-active .skill-codex-stat-label {font-size:14px}
  #skillModal.skill-codex-active .skill-codex-stat-value {font-size:18px}
  #skillModal.skill-codex-active .skill-codex-description {
-  margin:0 12px 15px;padding:24px 22px;min-height:150px;
+  margin:0 12px 18px;padding:23px 22px 35px;min-height:135px;
  }
  #skillModal.skill-codex-active .skill-codex-description h3 {font-size:24px}
  #skillModal.skill-codex-active .skill-codex-description p {font-size:16px}
+ #skillModal.skill-codex-active #skillModalBody {padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
 }
