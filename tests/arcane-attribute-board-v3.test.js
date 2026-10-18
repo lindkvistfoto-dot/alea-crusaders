@@ -43,7 +43,7 @@ describe('ARCANE ATTRIBUTE BOARD v3',()=>{
       expect(decorator).toContain(attribute);
       if(attribute!=='fysik')expect(v2).toContain('[data-arcane-attribute="'+attribute+'"] .glow-base-icon{background-position:'+position+'}');
     }
-    expect(v2).toContain('attribute-atlas.png');
+    expect(v2).toContain('attributes-atlas.png');
     expect(v3).toContain('var(--arcane-attribute-atlas)');
   });
   it('retains live numbers, group medallions, edit inputs and game calculations',()=>{
