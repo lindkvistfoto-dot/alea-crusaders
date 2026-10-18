@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="224" viewBox="0 0 200 224" aria-hidden="true">
+<defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe0a0"/><stop offset=".28" stop-color="#8e582b"/><stop offset=".6" stop-color="#d3a45d"/><stop offset=".9" stop-color="#5a361f"/><stop offset="1" stop-color="#d7b06d"/></linearGradient>
+<linearGradient id="leather" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#174432"/><stop offset="1" stop-color="#08140e"/></linearGradient></defs>
+<path d="M100 5 167 26 194 91 174 164 100 217 26 164 6 91 33 26Z" fill="#130f0b" stroke="#392614" stroke-width="10"/>
+<path d="M100 6 167 27 193 91 174 163 100 215 26 163 7 91 33 27Z" fill="url(#leather)" stroke="url(#gold)" stroke-width="6"/>
+<path d="M100 17 159 36 182 93 164 156 100 202 36 156 18 93 41 36Z" fill="none" stroke="#dcba78" stroke-width="1.6" opacity=".72"/>
+<path d="M100 29 146 46 166 94 150 145 100 185 50 145 34 94 54 46Z" fill="#0b1c15" stroke="#6b4928" stroke-width="2.6"/>
+<path d="M100 18 105 24 100 30 95 24Z M100 188 105 194 100 200 95 194Z M22 94 28 100 22 106 16 100Z M178 94 184 100 178 106 172 100Z" fill="#0b5140" stroke="url(#gold)" stroke-width="1.4"/>
+<path d="M38 137 Q20 119 27 97 M162 137 Q180 119 173 97" fill="none" stroke="url(#gold)" stroke-width="2.1" stroke-linecap="round"/>
+<path d="M45 48 Q62 35 77 30 M155 48 Q138 35 123 30" fill="none" stroke="url(#gold)" stroke-width="2" stroke-linecap="round"/>
+</svg>
