@@ -25,7 +25,7 @@
    '<strong class="skill-codex-stat-value">'+safe(value==null||value===''?'—':value)+'</strong></div>';
  }
  function validArt(row,kind){
-  const path=row?.[kind==='icon'?'icon_path':'illustration_path'];
+  const path=row?.[kind==='icon'?'icon_path':kind==='illustration_wide'?'illustration_wide_path':'illustration_path'];
   if(typeof path!=='string'||!path)return '';
   if(!window.aleaSkillArt?.validPath?.(path,String(row.id||''),kind))return '';
   return path;
@@ -47,13 +47,13 @@
     URL.revokeObjectURL(url);return;
    }
    const img=document.createElement('img');
-   img.alt=kind==='icon'?'Färdighetsikon för '+(row?.name||'färdigheten'):'Illustration av '+(row?.name||'färdigheten');
+   img.alt=kind==='icon'?'Färdighetsikon för '+(row?.name||'färdigheten'):'WIDE-illustration av '+(row?.name||'färdigheten');
    img.decoding='async';
    img.src=url;
    host.querySelector('.skill-codex-hero-fallback')?.remove();
    host.replaceChildren(img);
    host.classList.remove('is-empty');
-   if(kind==='illustration')host.classList.add('has-art');
+   if(kind==='illustration_wide')host.classList.add('has-art');
    urls.add(url);
   }catch(error){
    if(url)URL.revokeObjectURL(url);
@@ -77,7 +77,7 @@
   header?.insertBefore(icon,title);
   const description=skill.description||'Ingen beskrivning är inlagd.';
   body.innerHTML='<div class="skill-codex-hero" data-skill-codex-hero>'+
-    '<div class="skill-codex-hero-fallback">Illustration kommer snart</div></div>'+
+    '<div class="skill-codex-hero-fallback">FÄRDIGHET ILLUSTRATION WIDE saknas</div></div>'+
     '<div class="skill-codex-stats">'+
      stat('Typ',skill.type)+
      stat('Grundegenskap',skill.grundegenskap||skill.base_attribute)+
@@ -88,9 +88,9 @@
   root.classList.add('skill-codex-active');
   root.classList.remove('hidden');
   const token=generation;
-  const iconPath=validArt(skill,'icon'),illustrationPath=validArt(skill,'illustration');
+  const iconPath=validArt(skill,'icon'),illustrationPath=validArt(skill,'illustration_wide');
   if(iconPath)void loadArt(skill,'icon',iconPath,token);
-  if(illustrationPath)void loadArt(skill,'illustration',illustrationPath,token);
+  if(illustrationPath)void loadArt(skill,'illustration_wide',illustrationPath,token);
  }
  const originalRule=window.showRuleSkillById;
  const originalInfo=window.showSkillInfo;
