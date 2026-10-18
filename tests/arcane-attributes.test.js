@@ -31,7 +31,7 @@ describe('ARCANE Grundegenskaper · isolated v2 raster components',()=>{
       expect(registry).toContain("'attribute-"+item+"'");
     }
     expect(registry).toContain("const ATTRIBUTE_ATLAS=");
-    expect(registry).toContain("version:sprite?'2.0.0':VERSION");
+    expect(registry).toContain("version:header?'3.0.0':sprite?'2.0.0':VERSION");
     expect(registry).toContain("columns:8,rows:3");
     expect(registry).toContain("classList.toggle('arcane-attributes-ready',ok)");
     expect(html).toContain('<option value="Grundegenskaper">Grundegenskaper</option>');
