@@ -66,6 +66,25 @@ describe('ARCANE system library v1',()=>{
     expect(css).toContain("tab-inactive.avif");
   });
 
+  it('joins the lion nameplate to the portrait rail without hiding the portrait or fields',()=>{
+    const start=css.indexOf('ARCANE portrait/nameplate joint');
+    const seam=css.slice(start,css.indexOf('@media(max-width:700px)',start));
+    expect(start).toBeGreaterThan(0);
+    expect(seam).toContain('@media(max-width:850px)');
+    expect(seam).toContain('margin-top:clamp(-38px,-8.3vw,-26px)');
+    expect(seam).toContain('#grundPanel #portrait{');
+    expect(seam).toContain('z-index:2');
+    expect(seam).toContain('#grundPanel #identity::before{');
+    expect(seam).toContain('z-index:3');
+    expect(seam).toContain('#grundPanel #identity > .field{');
+    expect(seam).toContain('z-index:4');
+    expect(seam).toContain('isolation:auto');
+    expect(css).toContain('border-image-source:var(--arcane-art-portrait)');
+    expect(css).toContain('background:var(--arcane-art-nameplate)');
+    expect(html).toContain('id="portrait"');
+    expect(html).toContain('id="identity"');
+  });
+
   it('provides admin navigation, a filterable gallery and a working back path',()=>{
     expect(html).toContain("openAdminSection('arcaneSystem')");
     expect(html).toContain('id="adminArcaneSystem"');
