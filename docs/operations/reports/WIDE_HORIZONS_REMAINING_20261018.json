@@ -1,0 +1,289 @@
+{
+  "date": "2026-10-18",
+  "verified_at": "2026-10-18 14:20:22.613227+00",
+  "missing_square": 18,
+  "missing_wide": 27,
+  "generation": {
+    "error": "usage_limit_reached",
+    "http_status": 429,
+    "reported_reset": "2026-10-18T22:43:43+02:00"
+  },
+  "instructions": "Resume without overwriting existing fields; re-read database and HERMES jobs. Use approved portrait masters plus actual source; icon-based square then image-based WIDE. Twelve reference-less skills require visual source or a separate composition decision.",
+  "portrait_drive": {
+    "woman": "1DTHKuym5mBrx8PAcR-8e1cXL3TzFbVLP",
+    "elf": "1DGSRDOwhMB5kTCzLhbJaRhRCZ93o2zL8"
+  },
+  "klattra_source": "assets/hermes/references/skill/klattra/f4f88a022a42376c487f93038b3a185c09e53c39b416566fc47c7076e7c1c91a.png",
+  "remaining": [
+    {
+      "id": "djurtraning",
+      "name": "Djurträning",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "finna_dolda_ting",
+      "name": "Finna dolda ting",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "grottorientering",
+      "name": "Grottorientering",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "hasardspel",
+      "name": "Hasardspel",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "ilmarsch",
+      "name": "Ilmarsch",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "kanot",
+      "name": "Kanot",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "klattra",
+      "name": "Klättra",
+      "icon_path": "skill/klattra/icon/fd76290f-66e5-4dfd-8b3e-e3220a66c41d.png",
+      "illustration_path": "skill/klattra/illustration/456693fc-8673-42f7-9307-4c9f5bd76d2f.png",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": null
+    },
+    {
+      "id": "kora_vagn",
+      "name": "Köra vagn",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "navigera",
+      "name": "Navigera",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "rida",
+      "name": "Rida",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "simma",
+      "name": "Simma",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "skidakning",
+      "name": "Skidåkning",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "skridskoakning",
+      "name": "Skridskoåkning",
+      "icon_path": null,
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "missing_visual_source",
+      "recommended_light": null
+    },
+    {
+      "id": "slagsmal",
+      "name": "Slagsmål",
+      "icon_path": "hermes/skill/slagsmal/e443c2d06aa29f27b2a60d143333504a83b0cce775efe6c32545af996c2bc4e2.webp",
+      "illustration_path": "skill/slagsmal/illustration/2a41cccd-2c8b-4799-b394-b1b306856abc.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Neutral cloudy morning daylight"
+    },
+    {
+      "id": "slungor",
+      "name": "Slungor",
+      "icon_path": "hermes/skill/slungor/310ce78f8a366244d1f85d28dc0ed71a73c5129a4db9658d42a9187a6faf5026.webp",
+      "illustration_path": "skill/slungor/illustration/e0cc6400-309b-4925-a3c2-57e6e3c646ad.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Clear cool daylight"
+    },
+    {
+      "id": "smyga",
+      "name": "Smyga",
+      "icon_path": "hermes/skill/smyga/269bf06a756e308f86e32a925952b9c6d0e025a598272a7f42b46ed6cad00b9c.webp",
+      "illustration_path": "skill/smyga/illustration/11efa83f-3578-4d09-93d5-0a6ad690d4c6.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Blue twilight with subtle warm horizon"
+    },
+    {
+      "id": "spara",
+      "name": "Spåra",
+      "icon_path": "hermes/skill/spara/434616aa37212e71b25e0d9e9fca00fa69c567f23887fd1445142f4afc0cd246.webp",
+      "illustration_path": "skill/spara/illustration/91200f31-8822-48ad-8f84-c5d6bd3941b1.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Soft misty sunrise"
+    },
+    {
+      "id": "spjut",
+      "name": "Spjut",
+      "icon_path": "hermes/skill/spjut/a76685eb03dc79880dba8ddf632dcbdfd9d4bb9812e0bbfa154c0ea7b0f4a047.webp",
+      "illustration_path": "skill/spjut/illustration/ad74c961-dfb4-4548-a5dc-5a15f50b3d1b.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Golden evening sidelight"
+    },
+    {
+      "id": "stangvapen",
+      "name": "Stångvapen",
+      "icon_path": "hermes/skill/stangvapen/a01edf1dc69a54da20dfb1acb5c36bb182ab2d0c2f5cd55e1e3a49654346acd4.webp",
+      "illustration_path": "skill/stangvapen/illustration/f4cc4917-70f0-4ef8-bae9-4f00dfbcb35c.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Diffuse post-rain daylight and muted reflections"
+    },
+    {
+      "id": "stavar",
+      "name": "Stavar",
+      "icon_path": "hermes/skill/stavar/80dc516f3b403c87b07ad654991f50d667836cd099a4e219dbecfdd6a55d7dc3.webp",
+      "illustration_path": "skill/stavar/illustration/63ca7ff5-0bea-4c40-8e89-016681542e39.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Neutral cloudy daylight"
+    },
+    {
+      "id": "stjala_foremal",
+      "name": "Stjäla föremål",
+      "icon_path": "hermes/skill/stjala-foremal/87b6478a9555f48618d7d865143d7712ec64f89fbfdbe63caf56bd119c2eb319.webp",
+      "illustration_path": "skill/stjala_foremal/illustration/06e1baf0-8263-4a6d-9fe4-2dea7fd0f289.webp",
+      "needs_square": false,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Soft natural morning market light"
+    },
+    {
+      "id": "taekwondo",
+      "name": "Taekwondo",
+      "icon_path": "hermes/skill/taekwondo/6b65c09b0bcef0cd4c251512f0617be759c984fd4d0ccb6e137b2e0f8412230c.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Low warm evening side light"
+    },
+    {
+      "id": "undre_varlden",
+      "name": "Undre världen",
+      "icon_path": "hermes/skill/undre-varlden/90f767c062b87c4ac1863846ae1c245f10e460edec870cb8f442d8ec6e52cfde.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Dim late dusk sky fill with restrained warm reflected light"
+    },
+    {
+      "id": "upptacka_fara",
+      "name": "Upptäcka fara",
+      "icon_path": "hermes/skill/upptacka-fara/462b87be2763c97d60fd74944951402ef2d451b859c2383a2e8ecc4f82f7fec3.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Silver blue moonlight, quiet natural night"
+    },
+    {
+      "id": "vardesatta",
+      "name": "Värdesätta",
+      "icon_path": "hermes/skill/vardesatta/e2f533faf7a3c044162ac1c14a65b52cb6ace2a45d39d95bcf83bc8633001f97.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Bright diffused awning daylight"
+    },
+    {
+      "id": "yxor",
+      "name": "Yxor",
+      "icon_path": "hermes/skill/yxor/4244ea92183081208d9038354c33164896864b13ce80cf28f4a87a7711d75938.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Soft cool early morning with warm first sunlight"
+    },
+    {
+      "id": "zoologi",
+      "name": "Zoologi",
+      "icon_path": "hermes/skill/zoologi/ee6538f7bf7bd7d4421204df095efde255427f8ff605d52ed139b57b18c50aef.webp",
+      "illustration_path": null,
+      "needs_square": true,
+      "needs_wide": true,
+      "blocker": "image_generation_usage_limit",
+      "recommended_light": "Natural dappled late afternoon daylight"
+    }
+  ]
+}
