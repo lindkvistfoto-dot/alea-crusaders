@@ -7,6 +7,7 @@ const html=read('index.html');
 const legacy=read('legacy/app.js');
 const library=read('features/ui/arcane-system-library.js');
 const css=read('features/ui/arcane-system.css');
+const vite=read('vite.config.js');
 const assets=[
   'portrait-frame','nameplate','stat-panel','combat-medallion',
   'equipment-button','tab-active','tab-inactive','nav-active','nav-inactive',
@@ -44,6 +45,7 @@ describe('ARCANE system library v1',()=>{
     expect(html.indexOf('arcane-system.css')).toBeGreaterThan(html.indexOf('arcane-profile.css'));
     expect(html.indexOf('arcane-system-library.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));
     expect(css).toContain('html.arcane-system-images-ready body.character-glowup-active');
+    expect(vite).toContain('copyStaticTree("alea-copy-arcane-system-art", "assets/arcane/system", "assets/arcane/system")');
     expect(library).toContain("document.documentElement.classList.toggle('arcane-system-images-ready',ready)");
   });
 
