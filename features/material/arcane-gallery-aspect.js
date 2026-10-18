@@ -55,7 +55,15 @@ export function sizeArcaneFrame(root,media,viewportHeight=0){
  const machine=root?.querySelector?.('.arcane-gallery-machine');
  const width=Number(machine?.getBoundingClientRect?.().width||machine?.clientWidth||0);
  const fit=root?.classList?.contains?.('arcane-gallery-kit')?arcaneKitFrameHeight:arcaneFrameHeight;
- const target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
+ let target=dimensions&&fit(width,dimensions.width,dimensions.height,viewportHeight);
+ // Desktop shared-gallery viewport: portrait pictures are contained inside
+ // a height-limited aperture, without distorting the bronze source artwork.
+ // Reserve the carousel (about 14.2% of width), navigation and safe margins.
+ if(target&&root?.id==='arcaneGallery'&&root?.classList?.contains('arcane-gallery-kit')
+    &&typeof window!=='undefined'&&window.innerWidth>=901&&viewportHeight>0){
+  const remaining=viewportHeight-125-width*.142-52;
+  target=Math.min(target,Math.max(width*.65,remaining));
+ }
  if(!target||!machine?.style?.setProperty)return null;
  machine.style.setProperty('--arcane-frame-height',target+'px');
  machine.style.setProperty('--arcane-gear-angle',arcaneGearRotation(target,width)+'deg');
