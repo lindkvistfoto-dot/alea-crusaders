@@ -19,6 +19,7 @@ describe('ARCANE SKILL CODEX WIDE — integrated header V2',()=>{
  it('replaces visual corner ornaments with opaque decorative recesses',()=>{
   expect(css).toContain('header-recess-v2.svg');
   expect(svg).toContain('fill="#11120d"');
+  expect(css).toContain('header.webp\") center/138% 100% no-repeat');
   expect(svg).toContain('viewBox="0 0 180 180"');
   expect(css).toContain('::before');
   expect(css).toContain('::after');
