@@ -116,8 +116,8 @@ describe('ARCANE system library v1',()=>{
     expect(subtitle).toContain("text-align:center");
     expect(subtitle).toContain("font-size:clamp(19px,5.15vw,25px)");
     expect(subtitle).not.toContain("transform:translateY");
-    expect(legacy).toContain('<div class="field wide"><div class="label">Ras</div>');
-    expect(legacy).toContain('<div class="field wide"><div class="label">Yrke / titel</div>');
+    expect(legacy).toContain('<div class="field wide arcane-field-ras"><div class="label">Ras</div>');
+    expect(legacy).toContain('<div class="field wide arcane-field-yrke"><div class="label">Yrke / titel</div>');
   });
 
   it('provides admin navigation, a filterable gallery and a working back path',()=>{
