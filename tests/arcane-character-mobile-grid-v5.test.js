@@ -33,7 +33,7 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
   });
   it.each(fields)('%s occupies column %s of row %i regardless of DOM order',(key,col,row)=>{
     expect(legacy).toContain('arcane-field-'+key);
-    const regex=new RegExp('> \\.arcane-field-'+key+' \\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
+    const regex=new RegExp('> \\.field\\.arcane-field-'+key+' \\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
     expect(css).toMatch(regex);
   });
   it('keeps title and subtitle inside the lion plaque with readable one-line sizes',()=>{
@@ -46,8 +46,8 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     expect(legacy).toContain('escAttr(i.yrke||"—")');
   });
   it('keeps actual race and profession fields visible, even while editing',()=>{
-    expect(css).toContain('> .arcane-field-ras,');
-    expect(css).toContain('> .arcane-field-yrke {');
+    expect(css).toContain('> .field.arcane-field-ras,');
+    expect(css).toContain('> .field.arcane-field-yrke {');
     expect(css).toContain('display:flex!important');
     expect(css).toContain('body.character-glowup-active.editing');
     expect(css).toContain('.grund-input');
@@ -55,7 +55,7 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     expect(legacy).toContain('class="field wide arcane-field-yrke"');
   });
   it('places the portrait-based miniature beside social standing in standard sized cards',()=>{
-    expect(css).toContain('> .arcane-field-combat {');
+    expect(css).toContain('> .field.arcane-field-combat {');
     expect(css).toContain('flex-direction:row!important');
     expect(css).toContain('flex:0 0 45px!important');
     expect(css).toContain('width:27px!important');
