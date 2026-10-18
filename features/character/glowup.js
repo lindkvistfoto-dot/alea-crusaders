@@ -33,7 +33,19 @@
       const value = title.textContent.trim();
       if (value === "Grundegenskaper") {
         title.dataset.glowIcon = "▥";
-        title.closest(".section")?.classList.add("glow-stat-section", "glow-base-section");
+        const section = title.closest(".section");
+        section?.classList.add("glow-stat-section", "glow-base-section");
+        if (section && !section.querySelector(".arcane-attribute-corners")) {
+          const corners = document.createElement("div");
+          corners.className = "arcane-attribute-corners";
+          corners.setAttribute("aria-hidden", "true");
+          ["tl","tr","bl","br"].forEach(position => {
+            const corner = document.createElement("span");
+            corner.className = "arcane-attribute-corner arcane-corner-" + position;
+            corners.appendChild(corner);
+          });
+          section.prepend(corners);
+        }
       } else if (value === "Härledda värden") {
         title.dataset.glowIcon = "✦";
         title.closest(".section")?.classList.add("glow-stat-section", "glow-derived-section");
@@ -63,6 +75,11 @@
       const label = nameCell.textContent.trim();
 
       nameCell.classList.add("glow-base-name");
+      nameCell.dataset.arcaneAttribute = ({
+        "Fysik":"fysik", "Styrka":"styrka", "Karisma":"karisma",
+        "Storlek":"storlek", "Smidighet":"smidighet",
+        "Intelligens":"intelligens", "Psykisk kraft":"psykisk-kraft"
+      })[label] || "";
       valueCell.classList.add("glow-base-value");
       groupCell.classList.add("glow-base-group");
 
@@ -85,6 +102,26 @@
 
     const bonus = grid.querySelector(".bonus-exp-row");
     if (bonus) bonus.classList.add("glow-bonus-exp");
+  }
+
+  // Bonus-ERF hör till rollpersonen, inte till grundegenskapsmatrisen.
+  // Flytta den redan existerande kontrollen; behåll stepLive/behörighet/save.
+  function relocateBonusExperience() {
+    const panel = document.getElementById("grundPanel");
+    const grid = document.getElementById("basegrid");
+    if (!panel || !grid) return;
+    const bonus = grid.querySelector(":scope > .bonus-exp-row");
+    let footer = panel.querySelector(":scope > .arcane-bonus-footer");
+    if (!bonus) return;
+    if (!footer) {
+      footer = document.createElement("section");
+      footer.className = "arcane-bonus-footer";
+      footer.setAttribute("aria-label", "Bonuserfarenhetspoäng");
+      panel.appendChild(footer);
+    }
+    bonus.classList.add("glow-bonus-exp");
+    footer.replaceChildren(bonus);
+    panel.appendChild(footer); // alltid sist, även om övrigt innehåll ändras
   }
 
   function decorateDerived() {
@@ -141,6 +178,7 @@
     syncCharacterViewClass();
     decorateSectionTitles();
     decorateBaseGrid();
+    relocateBonusExperience();
     decorateDerived();
   }
 

@@ -31,3 +31,23 @@ Sökbar visning finns under **Administration → ARCANE · Systembibliotek**. Ka
 Biblioteket förladdar de element som rollpersonssidan kräver. Bildramarna aktiveras först när alla nödvändiga bilder har laddats, annars behålls den tidigare CSS/SVG-designen. De nya filerna är optimerade för mobil storlek och beskrivs i enhetliga komponentnycklar; de ursprungliga större PNG-masterfilerna sparas separat för vidare produktion.
 
 Ändra aldrig rollpersonsdata eller befintliga knapparnas funktion för att byta grafisk komponent.
+## Grundegenskaper · rasterark v2 (2026-10-18)
+
+`assets/arcane/system/v2/attributes-atlas.png` är ett faktiskt RGBA-PNG-ark
+(512×192, 8 kolumner × 3 rader) baserat på den godkända ARCANE-illustrationen.
+De sju metallmedaljongerna, gruppsigillet utan inbakad siffra, krönet III,
+fyra hörn och rubrikdiamanten är individuellt sökbara som
+`attribute-fysik`, `attribute-styrka`, `attribute-karisma`,
+`attribute-storlek`, `attribute-smidighet`,
+`attribute-intelligens`, `attribute-psykisk-kraft`,
+`attribute-group-medallion`, `attribute-title-medallion`,
+`attribute-corner-{tl,tr,bl,br}` och `attribute-header-jewel`.
+Använd `window.aleaArcaneSystem.get(id).sprite` för ruta/koordinat
+och `resolve(id)` för samma atlas-URL; SVG genereras inte.
+
+`features/character/arcane-attributes.css` är panel- och matrisskiktet.
+`features/character/glowup.js` flyttar bara den befintliga bonuserfarenhets-
+kontrollen till sist i grundfliken, utan att kopiera eller ändra dess värde,
+rättighetskontroll eller `stepLive`-hanterare. Attributgrafikens laddningsgrind
+är oberoende av de 23 gamla v1-resurserna; om den inte laddar visas
+ursprungliga textsymboler och beräknade siffror.

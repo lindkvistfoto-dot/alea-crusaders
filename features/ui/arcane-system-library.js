@@ -7,6 +7,7 @@
   'use strict';
   const VERSION='1.0.0';
   const BASE='./assets/arcane/system/v1/';
+  const ATTRIBUTE_ATLAS='./assets/arcane/system/v2/attributes-atlas.png';
   const DEFINITIONS=[
     ['portrait-frame','Porträttram','Ramar','Genomskinlig mitt för rollpersonsporträtt'],
     ['nameplate','Namnskylt','Ramar','Text läggs ovanpå, aldrig inbakad'],
@@ -30,12 +31,33 @@
     ['icon-height','Längd','Ikoner','Längd'],
     ['icon-weight','Vikt','Ikoner','Vikt'],
     ['icon-heart','Hjärta','Ikoner','Stånd'],
-    ['icon-equipment','Utrustning','Ikoner','Utrustningsknapp']
+    ['icon-equipment','Utrustning','Ikoner','Utrustningsknapp'],
+    // Individer i den AI-genererade, godkända ARCANE-atlasen.
+    // Varje ruta är 64x64 px i ett 8x3-ark; ingen SVG eller symbolfont.
+    ['attribute-fysik','Fysik','Grundegenskaper','Muskelsigill, bronshölje',0,0],
+    ['attribute-styrka','Styrka','Grundegenskaper','Korsade svärd',1,0],
+    ['attribute-karisma','Karisma','Grundegenskaper','Stjärnsigill',2,0],
+    ['attribute-storlek','Storlek','Grundegenskaper','Heraldisk sköld',3,0],
+    ['attribute-smidighet','Smidighet','Grundegenskaper','Förgylld vinge',4,0],
+    ['attribute-intelligens','Intelligens','Grundegenskaper','Uppslagen bok',5,0],
+    ['attribute-psykisk-kraft','Psykisk kraft','Grundegenskaper','Ockult öga',6,0],
+    ['attribute-group-medallion','Gruppsigill','Grundegenskaper','Nummerfritt bronssigill för dynamiska gruppvärden',7,0],
+    ['attribute-title-medallion','Attributkrön III','Grundegenskaper','Mittmedaljong för panelens rubrik',0,1],
+    ['attribute-corner-tl','Övre vänstra ornament','Grundegenskaper','Infällt hörn',1,1],
+    ['attribute-corner-tr','Övre högra ornament','Grundegenskaper','Infällt hörn',2,1],
+    ['attribute-corner-bl','Nedre vänstra ornament','Grundegenskaper','Infällt hörn',3,1],
+    ['attribute-corner-br','Nedre högra ornament','Grundegenskaper','Infällt hörn',4,1],
+    ['attribute-header-jewel','Rubrikdiamant','Grundegenskaper','Grön ädelsten och metallinläggning',5,1]
   ];
   const CATALOG=Object.freeze(DEFINITIONS.map(function(def){
+    const sprite=Number.isInteger(def[4])?Object.freeze({
+      col:def[4],row:def[5],columns:8,rows:3
+    }):null;
     return Object.freeze({id:def[0],name:def[1],category:def[2],
-      description:def[3],version:VERSION,src:BASE+def[0]+'.avif',
-      format:'image/avif',source:'ARCANE system/v1'});
+      description:def[3],version:sprite?'2.0.0':VERSION,
+      src:sprite?ATTRIBUTE_ATLAS:BASE+def[0]+'.avif',sprite,
+      format:sprite?'image/png':'image/avif',
+      source:sprite?'ARCANE system/v2':'ARCANE system/v1'});
   }));
   const BY_ID=new Map(CATALOG.map(entry=>[entry.id,entry]));
   const CRITICAL=['portrait-frame','nameplate','stat-panel','combat-medallion',
@@ -62,6 +84,11 @@
     });
   }
   function preload(){
+    // Attributgrafiken har egen readiness-grind. Gamla systemikonerna förblir
+    // opåverkade om det nya grafikarket inte kan hämtas.
+    imageStatus(BY_ID.get('attribute-fysik')).then(ok=>{
+      document.documentElement.classList.toggle('arcane-attributes-ready',ok);
+    });
     if(preloadPromise)return preloadPromise;
     preloadPromise=Promise.all(CRITICAL.map(id=>imageStatus(BY_ID.get(id)))).then(results=>{
       const ready=results.every(Boolean);
@@ -83,11 +110,13 @@
     });
     host.innerHTML=showing.map(asset=>{
       const status=loaded.get(asset.id);
-      return '<article class="arcane-system-tile" data-asset="'+asset.id+'">'+
+      return '<article class="arcane-system-tile'+(asset.sprite?' is-loaded':'')+'" data-asset="'+asset.id+'">'+
        '<div class="arcane-system-preview">'+
-       '<img loading="lazy" alt="" src="'+escape(asset.src)+'" '+
-         'onload="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-loaded\')" '+
-         'onerror="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-missing\')">'+
+       (asset.sprite
+         ? '<span class="arcane-system-sprite" aria-hidden="true" style="background-image:url('+escape(asset.src)+');--arcane-col:'+asset.sprite.col+';--arcane-row:'+asset.sprite.row+'"></span>'
+         : '<img loading="lazy" alt="" src="'+escape(asset.src)+'" '+
+           'onload="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-loaded\')" '+
+           'onerror="this.closest(\'.arcane-system-tile\')?.classList.add(\'is-missing\')">')+
        '<span class="arcane-system-missing">Bildfil saknas i appens assets-mapp</span></div>'+
        '<h3>'+escape(asset.name)+'</h3>'+
        '<p>'+escape(asset.description)+'</p>'+
