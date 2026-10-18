@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Infälld bronsinfattning">
+<defs>
+ <radialGradient id="leather" cx="44%" cy="38%" r="70%">
+  <stop offset="0" stop-color="#34402d"/><stop offset=".48" stop-color="#131e17"/>
+  <stop offset=".75" stop-color="#0a100d"/><stop offset="1" stop-color="#050807"/>
+ </radialGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+  <stop offset="0" stop-color="#3b2618"/><stop offset=".18" stop-color="#f4d493"/>
+  <stop offset=".35" stop-color="#846036"/><stop offset=".51" stop-color="#d9a959"/>
+  <stop offset=".72" stop-color="#56371f"/><stop offset=".88" stop-color="#f3d194"/>
+  <stop offset="1" stop-color="#5e3e23"/>
+ </linearGradient>
+ <linearGradient id="rim" x1="0" x2="0" y1="0" y2="1">
+  <stop offset="0" stop-color="#f1d39a"/><stop offset=".3" stop-color="#8d602e"/>
+  <stop offset=".65" stop-color="#5e3c25"/><stop offset="1" stop-color="#e3b77e"/>
+ </linearGradient>
+</defs>
+<!-- Opaque dark inlay masks the old corner ornament without altering its parent frame. -->
+<circle cx="90" cy="90" r="83" fill="#11120d" stroke="#2c1b11" stroke-width="3"/>
+<!-- Deliberate mounting tabs merge the circular seat into the frame's top/bottom rails. -->
+<path d="M90 2 104 17 96 25 84 25 76 17Z M90 178 76 163 84 155 96 155 104 163Z M2 90 17 76 26 83 26 97 17 104Z M178 90 163 104 154 97 154 83 163 76Z"
+      fill="url(#gold)" stroke="#22160d" stroke-width="3"/>
+<circle cx="90" cy="90" r="78" fill="#312519" stroke="url(#gold)" stroke-width="9"/>
+<circle cx="90" cy="90" r="71" fill="url(#leather)" stroke="#1b130b" stroke-width="4"/>
+<circle cx="90" cy="90" r="67" fill="none" stroke="url(#rim)" stroke-width="2.8"/>
+<circle cx="90" cy="90" r="61" fill="none" stroke="#d5ab6d" stroke-opacity=".38" stroke-width="1.3"/>
+<path d="M31 59Q51 27 90 24M149 121Q129 153 90 156" fill="none" stroke="#f6dcac" stroke-opacity=".52" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M33 123Q55 155 90 156M147 57Q127 25 90 24" fill="none" stroke="#1d130d" stroke-width="3" stroke-linecap="round"/>
+</svg>
