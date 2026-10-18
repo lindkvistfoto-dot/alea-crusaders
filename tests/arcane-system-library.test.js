@@ -86,9 +86,9 @@ describe('ARCANE system library v1',()=>{
   });
 
   it('closes the portrait/nameplate seam and keeps narrow stats on one line on mobile',()=>{
-    const v2=css.slice(css.indexOf('ARCANE character mobile seam v2'));
+    const v2=css.slice(css.indexOf('ARCANE mobile character geometry'));
     expect(v2).toContain('@media(max-width:700px)');
-    expect(v2).toContain('margin-top:clamp(-92px,-19vw,-67px)!important');
+    expect(v2).toContain('margin-top:clamp(-42px,-8vw,-28px)!important');
     expect(v2).toContain('minmax(0,1.32fr) minmax(0,1.32fr)');
     expect(v2).toContain('white-space:nowrap');
     expect(v2).toContain('text-overflow:ellipsis');
@@ -98,6 +98,26 @@ describe('ARCANE system library v1',()=>{
     expect(css).toContain('z-index:3');
     expect(html).toContain('id="portrait"');
     expect(html).toContain('id="identity"');
+  });
+
+  it('centers the race and profession beneath the name while reducing photo occlusion',()=>{
+    const legacyName=legacy.slice(legacy.indexOf("$('identity').innerHTML="));
+    expect(legacyName).toContain('class="arcane-nameplate-subtitle"');
+    expect(legacyName).toContain('escAttr(i.ras||"—")');
+    expect(legacyName).toContain('escAttr(i.yrke||"—")');
+    expect(css).toContain('margin-top:clamp(-42px,-8vw,-28px)!important');
+    const subtitle=css.slice(css.indexOf('ARCANE centered nameplate subtitle'));
+    expect(subtitle).toContain("body.character-glowup-active:not(.editing)");
+    expect(subtitle).toContain("grid-template-areas:");
+    expect(subtitle).toContain("'name name name name'");
+    expect(subtitle).toContain("display:none;");
+    expect(subtitle).toContain("flex-direction:column");
+    expect(subtitle).toContain("align-items:center");
+    expect(subtitle).toContain("text-align:center");
+    expect(subtitle).toContain("font-size:clamp(19px,5.15vw,25px)");
+    expect(subtitle).not.toContain("transform:translateY");
+    expect(legacy).toContain('<div class="field wide"><div class="label">Ras</div>');
+    expect(legacy).toContain('<div class="field wide"><div class="label">Yrke / titel</div>');
   });
 
   it('provides admin navigation, a filterable gallery and a working back path',()=>{
