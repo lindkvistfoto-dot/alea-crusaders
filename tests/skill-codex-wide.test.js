@@ -34,7 +34,7 @@ describe('ARCANE SKILL CODEX WIDE',()=>{
   expect(ctrl.validPath(image,'smyga','illustration_wide')).toBe(false);
   expect(ctrl.validPath('../'+image,id,'illustration_wide')).toBe(false);
   expect(ctrl.validPath('skill/'+id+'/illustration_wide/'+guid+'.jpg',id,'illustration_wide')).toBe(true);
-  expect(admin).toContain("w*9!==h*16");
+  expect(admin).toContain("ratioError>0.003");
   expect(admin).toContain("w<640||h<360");
   expect(admin).toContain("illustration_wide_path");
  });
