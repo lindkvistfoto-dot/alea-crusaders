@@ -1,30 +1,31 @@
-/* ARCANE SKILL CODEX WIDE — restrained title bar (V3).
-   Only the skill modal header is affected. FÄRDIGHET IKON already owns its
-   gold/bronze frame. No extra medallions, seats or decorative socket layers.
-   The close control is a compact oxblood ARCANE BUTTON, inside the leather
-   title strip rather than across its ornate rails.
-*/
+/* ARCANE SKILL CODEX WIDE — header V4, restored original banner.
+ * No extra frames, corner sockets, simulated ornament layers, or database changes.
+ * The locked FÄRDIGHET IKON carries its own border and may overlap the
+ * top/bottom of the LEATHER TITLE STRIP (not the entire card).
+ * The original round oxblood X sits inward on leather, away from the end gem.
+ * Only the skill modal header is scoped: 16:9 art, stats & parchment untouched.
+ */
 #skillModal.skill-codex-active .modalhead {
- --codex-side-track:108px;
- --codex-icon-size:62px;
- --codex-icon-inset:24px;
- --codex-close-inset:26px;
+ --codex-side-track:25%;
+ --codex-icon-size:100px;
+ --codex-icon-inset:clamp(22px,4.5%,38px);
+ --codex-close-size:76px;
+ --codex-close-inset:17.5%;
  position:relative;
  isolation:isolate;
  box-sizing:border-box;
  display:grid;
  grid-template-columns:var(--codex-side-track) minmax(0,1fr) var(--codex-side-track);
- grid-template-rows:minmax(106px,auto);
+ grid-template-rows:minmax(122px,auto);
  align-items:center;
  justify-items:center;
- min-height:106px;
+ min-height:122px;
  padding:0;
- /* Keep the ARCANE header and centre ornament. Crop the unused end diamonds
-    rather than cover them with another gold frame or a round module. */
- background:url("./codex-assets/header.webp") center/138% 100% no-repeat;
+ overflow:visible;
+ background:url("./codex-assets/header.webp") center/100% 100% no-repeat;
  border:0;
 }
-/* Disable the old Codex bottom pseudo jewel and all former V2 socket surfaces. */
+/* Remove only legacy pseudo-jewel; do not paint any replacement ornament. */
 #skillModal.skill-codex-active .modalhead::before,
 #skillModal.skill-codex-active .modalhead::after {
  content:none;
@@ -37,15 +38,16 @@
  justify-self:center;
  position:relative;
  z-index:2;
- width:100%;
  min-width:0;
+ width:100%;
  max-width:100%;
  margin:0;
  padding:0;
+ transform:translateY(5px);
  text-align:center;
  text-wrap:balance;
- font:normal clamp(24px,3vw,39px)/1.08 Georgia,"Times New Roman",serif;
- letter-spacing:.02em;
+ font:normal clamp(30px,4.5vw,43px)/1.07 Georgia,"Times New Roman",serif;
+ letter-spacing:.018em;
  color:#f0d69b;
  text-shadow:0 2px 3px #000,0 0 12px #f0bd6133;
  overflow-wrap:anywhere;
@@ -62,11 +64,11 @@
  z-index:3;
  margin:0;
  padding:0;
+ overflow:visible;
  border:0;
  border-radius:0;
  background:none;
  box-shadow:none;
- overflow:visible;
 }
 #skillModal.skill-codex-active .skill-codex-icon::after {content:none}
 #skillModal.skill-codex-active .skill-codex-icon img {
@@ -89,62 +91,60 @@
  transform:translateY(-50%);
  z-index:3;
  box-sizing:border-box;
- display:grid;
- place-items:center;
- width:44px;
- height:44px;
+ display:block;
+ width:var(--codex-close-size);
+ height:var(--codex-close-size);
  min-width:44px;
  min-height:44px;
  margin:0;
- padding:0 0 2px;
- /* ARCANE BUTTON: dark oxblood leather, a single understated bronze edge. */
- border:1px solid #b48a4e;
- border-radius:8px;
- background:
-  radial-gradient(ellipse at 26% 18%,rgba(255,224,172,.12),transparent 60%),
-  linear-gradient(155deg,#642025 0%,#451317 54%,#2d0b0e 100%);
- box-shadow:inset 0 1px 0 #f8d59750,inset 0 -2px 3px #12050680,0 2px 5px #0007;
- color:#f4d7a1;
- font:normal 29px/1 Georgia,"Times New Roman",serif;
- text-shadow:0 1px 2px #160609;
+ padding:0;
+ border:0;
+ border-radius:50%;
+ background:transparent url("./codex-assets/close-button.webp") center/contain no-repeat;
+ box-shadow:none;
+ color:transparent;
+ font-size:0;
+ text-shadow:none;
  cursor:pointer;
 }
 #skillModal.skill-codex-active .modalclose:hover {
- background:
-  radial-gradient(ellipse at 26% 18%,rgba(255,224,172,.16),transparent 60%),
-  linear-gradient(155deg,#76242a 0%,#51161a 54%,#350d11 100%);
- border-color:#e4bb73;
+ background:transparent url("./codex-assets/close-button.webp") center/contain no-repeat;
+ filter:brightness(1.13);
 }
 #skillModal.skill-codex-active .modalclose:focus-visible {
- outline:2px solid #f1d39b;
+ outline:2px solid #f3d8a6;
  outline-offset:2px;
- border-color:#e4bb73;
+ filter:brightness(1.13);
 }
 @media(max-width:560px) {
  #skillModal.skill-codex-active .modalhead {
-  --codex-side-track:82px;
-  --codex-icon-size:52px;
+  --codex-side-track:34%;
+  --codex-icon-size:82px;
   --codex-icon-inset:20px;
-  --codex-close-inset:20px;
-  min-height:96px;
-  grid-template-rows:minmax(96px,auto);
+  --codex-close-size:66px;
+  --codex-close-inset:17.5%;
+  min-height:108px;
+  grid-template-rows:minmax(108px,auto);
  }
  #skillModal.skill-codex-active #skillModalTitle {
-  font-size:clamp(21px,6.2vw,31px);
+  transform:translateY(4px);
+  font-size:clamp(24px,7.4vw,32px);
   letter-spacing:.012em;
  }
- #skillModal.skill-codex-active .modalclose {font-size:27px}
 }
 @media(max-width:330px) {
  #skillModal.skill-codex-active .modalhead {
-  --codex-side-track:70px;
-  --codex-icon-size:46px;
-  --codex-icon-inset:15px;
-  --codex-close-inset:13px;
-  min-height:88px;
-  grid-template-rows:minmax(88px,auto);
+  --codex-side-track:36%;
+  --codex-icon-size:74px;
+  --codex-icon-inset:13px;
+  --codex-close-size:62px;
+  --codex-close-inset:17.5%;
+  min-height:101px;
+  grid-template-rows:minmax(101px,auto);
  }
- #skillModal.skill-codex-active #skillModalTitle {font-size:clamp(19px,6vw,27px)}
+ #skillModal.skill-codex-active #skillModalTitle {
+  font-size:clamp(19px,6.2vw,27px);
+ }
 }
 @media(prefers-reduced-motion:reduce) {
  #skillModal.skill-codex-active .modalclose {transition:none}
