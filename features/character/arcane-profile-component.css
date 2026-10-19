@@ -9,11 +9,6 @@
  * All measures below use CSS px, not source-art/physical screenshot px.
  */
 @media (max-width:850px) {
-  /* Image-backed cards reach out to the approved portrait-width composition.
-     One shared bleed value moves both columns together, never individually. */
-  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
-    --ac-profile-bleed:clamp(11px,5vw,22px);
-  }
   body.character-glowup-active #view #grundPanel > .hero {
     display:grid;
     grid-template-columns:minmax(0,1fr);
@@ -51,7 +46,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   --ac-card-height:clamp(52px,14vw,70px);
   --ac-icon-width:clamp(34px,10vw,49px);
   --ac-icon-size:clamp(20px,5.8vw,29px);
-  --ac-profile-bleed:0px;
+  --ac-profile-bleed:clamp(11px,5vw,22px);
   --ac-profile-serif:'Baskerville','Palatino Linotype','Book Antiqua','Times New Roman',serif;
   display:block!important;
   position:relative;
@@ -327,6 +322,10 @@ body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-
   }
 }
 @media(min-width:851px){
+  /* Mobile frames may use a shared bleed; desktop returns to its old bounds. */
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
+    --ac-profile-bleed:0px;
+  }
   /* Large screens retain the working desktop portrait beside the identity. */
   body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
     --ac-card-height:68px;
