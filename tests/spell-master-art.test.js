@@ -201,8 +201,10 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(prepare).toContain('spell-illustration');
   expect(prepare).toContain('original.width != original.height');
   expect(intake).toContain('spell-illustration');
-  expect(publisher).toContain('EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION');
   expect(publisher).toContain('a.kind==="spell-illustration"');
+  expect(publisher).toContain('q=previous===null?q.is(assetField,null):q.eq(assetField,previous)');
+  expect(publisher).toContain('final?.[assetField]!==appPath');
+  expect(publisher).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION');
   expect(workflow).toContain('assets/hermes/originals/spell-illustration/**/*.png');
  });
  it('defines the WIDE schema and HERMES routing without forcing 16:9',()=>{
@@ -217,7 +219,9 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(prepare).toContain('1.25 <= original.width / original.height <= 2.4');
   expect(intake).toContain('spell-illustration-wide');
   expect(publish).toContain('alea-spell-art');
-  expect(publish).toContain('EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION');
+  expect(publish).toContain('q=previous===null?q.is(assetField,null):q.eq(assetField,previous)');
+  expect(publish).toContain('final?.[assetField]!==appPath');
+  expect(publish).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION');
   expect(workflow).toContain('assets/hermes/originals/spell-illustration-wide/**/*.png');
  });
  it('drags a square image with pointer events and updates X/Y sliders',async()=>{
