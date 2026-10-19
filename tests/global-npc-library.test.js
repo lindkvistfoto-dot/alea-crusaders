@@ -24,6 +24,6 @@ describe("Permanent SLP library integration", () => {
   it("escapes all text data before injecting into admin HTML", () => {
     expect(ui).toContain("escapeHtml");
     expect(ui).toContain("safe(item.name)");
-    expect(ui).toContain("safe(item.secrets)");
+    expect(ui).toContain('profileText("Hemligheter (endast SL)", item.secrets)');
   });
 });
