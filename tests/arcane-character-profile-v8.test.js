@@ -50,6 +50,8 @@ describe('ARCANE character profile v8 — structural component',()=>{
     expect(styles).toContain('--ac-panel-gap:clamp(');
     expect(styles).toContain('--ac-icon-width:clamp(');
     expect(styles).toContain('--ac-profile-bleed:clamp(11px,5vw,22px)');
+    expect(styles).toContain('@media(min-width:851px)');
+    expect(styles.indexOf('--ac-profile-bleed:clamp(11px,5vw,22px)')).toBeLessThan(styles.indexOf('--ac-profile-bleed:0px'));
     expect(styles).toContain('margin:0 0 0 calc(0px - var(--ac-profile-bleed))');
     expect(styles).toContain('background:var(--arcane-art-stat) center / 104% 140% no-repeat;');
     expect(styles).not.toContain('--ac-card-fill');
