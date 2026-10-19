@@ -42,11 +42,12 @@
    even if the ornamental-image preload fails. */
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
   --arcane-profile-component:8;
-  --ac-panel-gap:clamp(5px,1.6vw,9px);
+  --ac-panel-gap:clamp(2px,.7vw,5px);
   --ac-card-height:clamp(52px,14vw,70px);
   --ac-icon-width:clamp(34px,10vw,49px);
   --ac-icon-size:clamp(20px,5.8vw,29px);
-  --ac-card-fill:#0a241c;
+  --ac-profile-bleed:clamp(11px,5vw,22px);
+  --ac-profile-serif:'Baskerville','Palatino Linotype','Book Antiqua','Times New Roman',serif;
   display:block!important;
   position:relative;
   width:100%;
@@ -74,10 +75,10 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   grid-auto-flow:row;
   grid-auto-rows:auto;
   gap:var(--ac-panel-gap) clamp(7px,2.2vw,15px);
-  width:100%;
+  width:calc(100% + var(--ac-profile-bleed) + var(--ac-profile-bleed));
   min-width:0;
-  margin:0;
-  padding:0 clamp(5px,1.2vw,10px) 12px;
+  margin:0 0 0 calc(0px - var(--ac-profile-bleed));
+  padding:0 1px 8px;
   box-sizing:border-box;
   align-content:start;
   align-items:stretch;
@@ -120,7 +121,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   display:block;
   width:100%;
   margin:0!important;
-  font:700 clamp(19px,5.2vw,35px)/1.1 Georgia,'Times New Roman',serif!important;
+  font:600 clamp(19px,5.2vw,35px)/1.1 var(--ac-profile-serif)!important;
   color:#f6e5c7!important;
   white-space:nowrap;
   overflow:hidden;
@@ -131,7 +132,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   display:block;
   width:100%;
   margin:0;
-  font:500 clamp(12px,3.35vw,20px)/1.15 Georgia,'Times New Roman',serif;
+  font:400 clamp(12px,3.35vw,20px)/1.15 var(--ac-profile-serif);
   color:#e7cda2;
   text-align:center;
   white-space:nowrap;
@@ -151,7 +152,9 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   padding:clamp(5px,1.2vw,8px) clamp(8px,1.9vw,12px);
   border:0;
   border-radius:0;
-  background:var(--arcane-art-stat) center / 100% 124% no-repeat, var(--ac-card-fill);
+  /* The underlying AVIF already contains its own green leather. A second
+     solid-color layer created the visible rectangular plate outside the gold. */
+  background:var(--arcane-art-stat) center / 104% 140% no-repeat;
   isolation:isolate;
   overflow:hidden;
 }
@@ -219,8 +222,8 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   width:100%;
   margin:0!important;
   padding:0!important;
-  font:700 clamp(9px,2.55vw,12px)/1.12 system-ui,sans-serif!important;
-  letter-spacing:.035em!important;
+  font:600 clamp(9px,2.4vw,12px)/1.12 var(--ac-profile-serif)!important;
+  letter-spacing:.025em!important;
   color:#d5b77d!important;
   text-transform:uppercase;
   white-space:nowrap;
@@ -235,7 +238,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   max-width:100%;
   margin:0!important;
   padding:0!important;
-  font:500 clamp(15px,4.35vw,23px)/1.15 Georgia,'Times New Roman',serif!important;
+  font:400 clamp(15px,4.1vw,22px)/1.15 var(--ac-profile-serif)!important;
   letter-spacing:0!important;
   color:#f8e9d0!important;
   white-space:nowrap!important;
@@ -319,6 +322,10 @@ body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-
   }
 }
 @media(min-width:851px){
+  /* Mobile frames may use a shared bleed; desktop returns to its old bounds. */
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
+    --ac-profile-bleed:0px;
+  }
   /* Large screens retain the working desktop portrait beside the identity. */
   body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
     --ac-card-height:68px;
