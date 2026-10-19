@@ -31,3 +31,13 @@ describe('HERMES WIDE publisher routing',()=>{
   expect(()=>check(asset('skill-illustration',1672,941))).toThrow();
  });
 });
+
+describe('HERMES independent art activation',()=>{
+ it('allows sibling art fields to change after target slot compare-and-swap',()=>{
+  expect(source).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION');
+  expect(source).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION');
+  expect(source).not.toContain('EXISTING_ART_CHANGED_DURING_WIDE_ACTIVATION');
+  expect(source).toContain('final?.[assetField]!==appPath');
+  expect(source).toContain('q=previous===null?q.is(assetField,null):q.eq(assetField,previous)');
+ });
+});
