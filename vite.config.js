@@ -16,6 +16,7 @@ export default defineConfig({
   base: "./",
   publicDir: false,
   plugins: [
+    copyStaticTree("alea-copy-hand-rules", "src/features/combat", "src/features/combat"),
     copyStaticTree("alea-copy-legacy", "legacy", "legacy"),
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-dice-assets", "alea-dicebox-assets-v1.1.4", "alea-dicebox-assets-v1.1.4"),

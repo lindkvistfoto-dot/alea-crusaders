@@ -1,0 +1,40 @@
+name: SISYPHUS hand rules and combat integration
+on:
+  pull_request:
+    paths:
+      - 'src/features/combat/**'
+      - 'src/main.js'
+      - 'legacy/app.js'
+      - 'features/combat/runtime.js'
+      - 'features/combat/two-weapons.css'
+      - 'features/skills/two-weapons.js'
+      - 'supabase/migrations/*sisyphus*'
+      - 'tests/sisyphus*'
+      - 'scripts/*sisyphus*'
+      - '.github/workflows/sisyphus-two-weapons.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  local-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SISYPHUS_WORK_DIR: ${{ runner.temp }}/sisyphus
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: npm ci --no-audit --no-fund
+      - run: pip install -r scripts/requirements-sisyphus-test.txt
+      - run: python -m playwright install --with-deps chromium
+      - name: Focused regression tests
+        run: npm test -- tests/sisyphus-hand-rules.test.js tests/sisyphus-combat-runtime.test.js tests/weapon-grip-equipment.test.js tests/combat-primary-hand-weapon-ui.test.js tests/combat-npc-hand-loadout.test.js tests/bjorn.test.js tests/npc-magic-arena.test.js tests/crocodile.test.js
+      - name: PostgreSQL rules, RLS, races, ammunition and SQL parity
+        run: python scripts/test-sisyphus-postgres.py
+      - name: Chromium combat, reactions, undo and player polling
+        run: python scripts/test-sisyphus-browser.py
+      - name: Documented build workaround
+        run: npx vite build --minify=false

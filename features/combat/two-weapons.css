@@ -1,0 +1,13 @@
+/* Reuses the application's ARCANE .btn artwork and typography. */
+.combat-two-weapons{display:flex;flex-direction:column;gap:5px;padding:12px;margin:8px 10px;border:1px solid #8b7045;border-radius:6px;background:rgba(17,13,9,.85);color:#ead4ac;font-size:13px;line-height:1.4}
+.combat-two-weapons>b{letter-spacing:.12em;color:#d8b371}
+.combat-two-weapons p{margin:3px 0;color:#f0bb84}
+.combat-two-weapons ol{margin:4px 0;padding-left:20px}
+.combat-two-weapon-choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.combat-two-weapon-choices .btn{font-size:13px;min-height:38px;white-space:normal}
+.combat-two-weapon-choices .selected{outline:2px solid #d9b771;outline-offset:1px}
+.combat-two-weapons select{max-width:100%;margin-left:8px}
+.combat-two-specializations{padding:12px;margin-top:12px;border:1px solid #8b7045;border-radius:6px}
+.combat-two-specializations .rule-editor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.combat-two-specializations select{width:100%}
+@media(max-width:600px){.combat-two-weapon-choices .btn{flex:1 1 110px}.combat-two-weapons{margin:6px 0}}

@@ -27,11 +27,13 @@ describe('Ammo registry / range weapon linkage',()=>{
   expect(registry).toContain("set status='resolving'");
   expect(registry).toContain('action_id uuid primary key references public.combat_actions');
   expect(registry).toContain('create or replace function public.combat_refund_ammunition');
-  expect(runtime).toContain("rpc/combat_spend_ammunition");
+  const hands=read('supabase/migrations/20261019091740_sisyphus_two_weapons.sql');
+  expect(hands).toContain('ammo:=public.combat_spend_ammunition(a.id,weapon_key,p_projectile_key)');
+  expect(runtime).toContain('await combatClaimWeaponAction(action,target,null,weapon,projectileKey||null)');
   expect(runtime).toContain("rpc/combat_refund_ammunition");
   expect(runtime).toContain("info.mode==='ranged'?combatWeaponProjectileKey(weapon):''");
   expect(runtime).toContain("await combatResolveAttackAction(actor,target,action,weapon,info.mode)");
-  const consume=runtime.indexOf("rpc/combat_spend_ammunition");
+  const consume=runtime.indexOf("await combatClaimWeaponAction(action,target,null,weapon,projectileKey||null)");
   const roll=runtime.indexOf("await combatResolveAttackAction(actor,target,action,weapon,info.mode)",consume);
   expect(roll).toBeGreaterThan(consume);
  });

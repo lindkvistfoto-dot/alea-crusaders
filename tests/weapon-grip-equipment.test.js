@@ -8,12 +8,13 @@ function body(from,to){
  if(start<0||end<0)throw Error('Expected equipment functions missing');
  return source.slice(start,end);
 }
+const handRules=readFileSync(new URL('../src/features/combat/hand-rules.js',import.meta.url),'utf8');
 const context={
  equipRefEquals:(a,b)=>Boolean(a&&b&&a.kind===b.kind&&a.itemId===b.itemId),
  equipItemByRef:(c,ref)=>c.weapons.find(w=>w.equipId===ref.itemId)
 };
 runInNewContext(
- body('function weaponGripRule(', 'function weaponGripForCharacter(')+
+ handRules+'\n'+body('function weaponGripRule(', 'function weaponGripForCharacter(')+
  body('function refreshEquippedWeaponGrip(', 'function armorTypeById(')+
  '\nthis.grip=weaponGripRule;this.refreshGrip=refreshEquippedWeaponGrip;',context
 );
@@ -22,17 +23,17 @@ context.weaponGripForCharacter=(item,c)=>({
 });
 
 describe('one- or two-handed equipment with strength groups',()=>{
- it('allows group 4 bastardsword in one hand for strength group 4',()=>{
-  const g=context.grip('1-2H',4,4);
+ it('allows group 4 bastardsword in one hand for strength group 5',()=>{
+  const g=context.grip('1-2H',4,5);
   expect(g.canUse).toBe(true);expect(g.hands).toBe(1);
   expect(g.glMultiplier).toBe(1);expect(g.status).toBe('normal');
  });
- it('uses two hands when one strength group below and half GL when two below',()=>{
+ it('uses two hands at required group and half GL one group below',()=>{
+  expect(context.grip('1-2H',4,4).hands).toBe(2);
+  expect(context.grip('1-2H',4,4).glMultiplier).toBe(1);
   expect(context.grip('1-2H',4,3).hands).toBe(2);
-  expect(context.grip('1-2H',4,3).glMultiplier).toBe(1);
-  expect(context.grip('1-2H',4,2).hands).toBe(2);
-  expect(context.grip('1-2H',4,2).glMultiplier).toBe(.5);
-  expect(context.grip('1-2H',4,1).canUse).toBe(false);
+  expect(context.grip('1-2H',4,3).glMultiplier).toBe(.5);
+  expect(context.grip('1-2H',4,2).canUse).toBe(false);
  });
  it('does not turn dedicated 2H weapons into one-handed weapons',()=>{
   expect(context.grip('2H',4,4).hands).toBe(2);
@@ -40,7 +41,7 @@ describe('one- or two-handed equipment with strength groups',()=>{
  });
  it('releases the secondary slot when previously saved as two-handed',()=>{
   const ref={kind:'weapon',itemId:'bastardsword',hands:2,primaryHand:'rightHand',ruleStatus:'normal',glMultiplier:1};
-  const c={styGroup:4,weapons:[{equipId:'bastardsword',handling:'1-2H',strengthGroup:4}],currentEquipment:{leftHand:{...ref},rightHand:{...ref}}};
+  const c={styGroup:5,weapons:[{equipId:'bastardsword',handling:'1-2H',strengthGroup:4}],currentEquipment:{leftHand:{...ref},rightHand:{...ref}}};
   expect(context.refreshGrip(c)).toBe(true);
   expect(c.currentEquipment.leftHand).toBe(null);
   expect(c.currentEquipment.rightHand.hands).toBe(1);

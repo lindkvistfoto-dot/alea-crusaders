@@ -17,6 +17,8 @@ function harness(definitions=[],effects=[],round=3){
   combatEffectDefinition:row=>byId.get(row.effect_id),
   combatEffectIsActive:(row,r=round)=>row.status==='active'&&row.applied_round<=r&&(row.expires_round==null||r<=row.expires_round),
   combatHasUnusedAction:()=>true,
+  combatMovementHasUsedMoreThanHalf:()=>false,
+  combatParryAction:()=>({slot_key:'primary'}),
   combatParryOptions:()=>[{key:'shield'}],
  };
  runInNewContext(extract('function combatRestrictionFlags(','function combatEffectAttributeDelta(')+
