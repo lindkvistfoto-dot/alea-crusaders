@@ -109,7 +109,7 @@ async function publish(a:any){
   .eq("kind",a.kind).eq("target_key",a.target_key).eq("source_sha256",a.source_sha256).maybeSingle();
  if(jobError)throw Error("JOB_READ "+jobError.message);
  if(existing?.app_sha256 && existing.app_sha256!==a.app_sha256)throw Error("SOURCE_ALREADY_REGISTERED_DIFFERENT_WEBP");
- if(a.kind==="skill-illustration-wide" && target.illustration_wide_path!==null && !(existing && target.illustration_wide_path===appPath && existing.app_path===appPath))throw Error("WIDE_ALREADY_EXISTS_REVIEW_REQUIRED");
+ // Explicit HERMES publish dispatches may replace an existing wide illustration. The publisher snapshots the old path in previous_icon_path and activates only with compare-and-set below; concurrent changes still fail closed.
  if(existing?.status==="rolled_back")throw Error("JOB_WAS_ROLLED_BACK");
  if(a.kind==="skill-illustration"){
   const obsoletePath="hermes/skill-illustration/"+a.target_key+"/"+a.app_sha256+".webp";
