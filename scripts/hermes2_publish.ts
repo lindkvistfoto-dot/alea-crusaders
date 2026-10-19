@@ -163,10 +163,8 @@ async function publish(a:any){
    if(activateError||affected?.length!==1)throw Error("ACTIVATION_CONFLICT");
   }
   const {data:final,error:readError}=await db.from(table).select(targetFields).eq("id",target.id).returns<ArtTarget[]>().single();
+  // The selected slot is protected by the compare-and-swap above. Other art fields are independent and may be activated concurrently.
   if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
-  if(a.kind==="skill-illustration-wide" && (final.icon_path!==target.icon_path || final.illustration_path!==target.illustration_path))throw Error("EXISTING_ART_CHANGED_DURING_WIDE_ACTIVATION");
-  if(a.kind==="spell-illustration-wide" && (final.icon_path!==target.icon_path || final.effect_image_path!==target.effect_image_path || final.cutout_path!==target.cutout_path || final.illustration_path!==target.illustration_path))throw Error("EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION");
-  if(a.kind==="spell-illustration" && (final.icon_path!==target.icon_path || final.effect_image_path!==target.effect_image_path || final.cutout_path!==target.cutout_path || final.illustration_wide_path!==target.illustration_wide_path))throw Error("EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
   await recordEvent(job.id,"active","Published and read back "+appPath);
   console.log("HERMES_ACTIVE",a.kind,a.target_key,appPath);
