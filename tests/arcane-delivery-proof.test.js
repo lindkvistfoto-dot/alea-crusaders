@@ -10,6 +10,6 @@ describe('finished ARCANE profile delivery',()=>{
  });
  it('cache busts the existing v8 component without changing its script',()=>{
   expect(html).toContain('arcane-profile-component.js?v=20261019-8');
-  expect(html).toContain('arcane-profile-component.css?v=20261019-8d');
+  expect(html).toContain('arcane-profile-component.css?v=20261019-8e');
  });
 });

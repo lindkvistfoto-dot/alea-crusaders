@@ -38,7 +38,7 @@ function testHarness(){
 
 describe('ARCANE character profile v8 — structural component',()=>{
   it('links exactly one profile component CSS and runs the JS after legacy render',()=>{
-    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8d');
+    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8e');
     expect(html).toContain('features/character/arcane-profile-component.js?v=20261019-8');
     expect(html.indexOf('arcane-profile-component.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
     expect(html.indexOf('arcane-profile-component.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));

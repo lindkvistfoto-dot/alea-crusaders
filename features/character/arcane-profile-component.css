@@ -17,7 +17,7 @@
     grid-template-columns:minmax(0,1fr);
     gap:0;
     /* Lift the visible frame 16px; tab art and handlers stay untouched. */
-    margin-top:-12px;
+    margin-top:-16px;
     align-items:start;
     min-width:0;
   }
@@ -315,6 +315,10 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   display:none!important; /* Image choice belongs to Bilder, unchanged. */
 }
 /* Input rows may grow; editing must never clip live controls. */
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted{
+  --ac-card-height:clamp(64px,16vw,78px);
+  --ac-name-lift:0px;
+}
 body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-structure{
   grid-template-rows:auto repeat(4,minmax(var(--ac-card-height),auto));
 }

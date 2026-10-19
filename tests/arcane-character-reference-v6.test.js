@@ -11,7 +11,7 @@ const icons=['icon-person','icon-swords','icon-female','icon-hourglass',
 
 describe('ARCANE reference artwork and geometry — v8',()=>{
  it('loads exactly one final component after previous profile materials',()=>{
-   expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8d');
+   expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8e');
    expect(html.indexOf('arcane-profile-component.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
    expect(html).not.toMatch(/href="[^"]*arcane-layout-v[567]\.css/);
  });
