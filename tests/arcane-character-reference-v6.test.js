@@ -11,7 +11,7 @@ const icons=['icon-person','icon-swords','icon-female','icon-hourglass',
 
 describe('ARCANE reference artwork and geometry — v8',()=>{
  it('loads exactly one final component after previous profile materials',()=>{
-   expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8c');
+   expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8e');
    expect(html.indexOf('arcane-profile-component.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
    expect(html).not.toMatch(/href="[^"]*arcane-layout-v[567]\.css/);
  });
@@ -41,7 +41,7 @@ describe('ARCANE reference artwork and geometry — v8',()=>{
    expect(js).toContain("layout.appendChild(plaque)");
    expect(js).toContain("layout.appendChild(card)");
    expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
-   expect(css).toContain('grid-template-rows:auto repeat(4,var(--ac-card-height))');
+   expect(css).toContain('grid-template-rows:auto repeat(4,calc(var(--ac-card-height) - var(--ac-card-overlap)))');
    expect(css).not.toContain('grid-template-areas:');
  });
 });

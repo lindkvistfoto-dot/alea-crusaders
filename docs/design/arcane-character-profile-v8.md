@@ -49,3 +49,73 @@ Ny mobilbild visade fortfarande en grön rektangel runt varje ram **efter att** 
 Namnskyltens nedre marginal minskar till `-9px` så de första två korten placeras närmare Astrid. Rubrikerna får mindre, lätt seriftext och fältvärdena blir mindre och viktmässigt lättare. `EB Garamond` läses uttryckligen in via Google Fonts; annars används den smalare numeriska storleken med lokal serif-fallback. Typsnittets **verkliga** laddning måste kontrolleras visuellt på mobil, eftersom en fontstack utan inläsning tidigare gav samma Android-standardfont.
 
 **Framtida permanent bildlösning:** Om masken skulle klippa hörnornament i olika bredder, beskär det verkliga rasteroriginalet i en versionshanterad HERMES-bildprofil och ersätt masken. Lägg inte till nya generella `#identity > .field`- eller `nth-child`-regler.
+
+## Slutfinish 2026-10-19 — fortsatt v8
+
+Visuellt underlag: `24532.jpg` (nuläge) och `24530.jpg` (godkänd referens), tillhandahållna i uppdraget. Originalbilder, porträttkälla, DOM och datahanterande JavaScript är oförändrade.
+
+### Inventering före ändring
+
+- `src/styles/app.css`: generella `.hero`, `.field`, `.field.wide`, `.portrait` och mobilregler. V8:s befintliga fältreset och wrapper isolerar korten.
+- `arcane-profile.css`: äldre identity-grid, direkta `.field:nth-child(...)`, Unicode-symboler, SVG-fallback och porträttets grundmått. De direkta barnselektorerna matchar inte de flyttade v8-fälten.
+- `arcane-system.css`: rasterram, tidigare negativ identity-marginal, gamla ikon-pseudoelement samt undertitel- och stridsikonregler. V8:s befintliga reset neutraliserar fältens pseudoelement; varje fält är ensamt barn i sin innehållswrapper, så de historiska ikonernas nth-child(5–9) matchar inte heller.
+- `index.html` laddade dessutom två tillfälliga leveransmarkörer: en inline röd porträttsignal och en gul namnskyltssignal i en separat CSS-fil. Båda är nu borttagna, inklusive den extra CSS-filen.
+- V5–v7 laddas fortfarande inte. Systembibliotekets resurskopplingar behöver ingen ändring.
+
+### Samlade måttändringar i komponenten
+
+| Egenskap | Före | Efter |
+| --- | --- | --- |
+| Namn och undertitel | centrerade | samma grupp lyft 8 CSS-px via `--ac-name-lift` |
+| Namnskyltens nedre marginal | -9px | -19px |
+| Gemensamt radgap | clamp(2px,.7vw,5px) | clamp(1.4px,.49vw,3.5px) |
+| Radsteg | korthöjd + gap | korthöjd − `--ac-card-overlap:3px` + gap |
+| Ikonstorlek | clamp(20px,5.8vw,29px) | clamp(25px,7.25vw,36.25px) |
+| Ikonstorlek ≤350px | 19px | 23.75px |
+| Mobilporträttets aspect-ratio | 1.72/1 | 1.51/1, cirka 13.9 % högre vid samma bredd |
+| Mobilhero margin-top | 4px från äldre profil-CSS | -16px, uppmätt lyft 16px |
+| CSS-cacheversion | 20261019-8c | 20261019-8e |
+
+Kortens höjd, bredd, ikonkolumn och textplacering behålls gemensamma. Överlappet gäller endast ramarnas osynliga yttre marginaler. Med befintlig klippning är det beräknade synliga radgapet vid 320/375/390/430px cirka 7.75/8.29/8.74/9.94px, jämfört med 11.42/12.08/12.56/13.85px: minskning cirka 28–32 %. Redigeringslägets auto-rader använder inget överlapp. Efter webbläsarkontrollen får de minst `clamp(64px,16vw,78px)` höjd och `--ac-name-lift:0px`, så etiketter och kontroller får plats. Alla åtta kort har samma höjd också vid 320px.
+
+### Spöksymbolernas orsak
+
+Inspektion av de verkliga AVIF-filerna visar fristående bildfragment i själva ikonexporterna: till höger om timglaset och längdmätaren, vid viktens och hjärtats högra kant samt under personsigillet. `stat-panel.avif` har hörnornament men ingen extra huvudikon. Problemet kan alltså inte lösas genom att lägga ytterligare en pseudoelementreset ovanpå den befintliga.
+
+Komponenten klipper endast ikonernas bildytor med lokala `--ac-icon-crop`-värden och centrerar den kvarvarande synliga ikonen. Person: nederkant 9 %; timglas/längd: högerkant 28 %; vikt/hjärta: högerkant 12 %. Rasteroriginalen, panelbakgrunden och dess hörnornament är orörda. Ingen bildproduktion eller ny bildresurs ingår.
+
+### Verifiering och begränsningar
+
+- Befintliga tester för komponent, mobilgrid, rasterreferens, stridsikon/porträttkoppling och pensionerade leveransmarkörer körs efter ändringen.
+- Hela testsuiten jämförs med körning före ändringar; de 29 ursprungliga felen i 17 filer redovisas separat från denna ändring.
+- `npm run build` kördes både på oförändrad HEAD och efter ändringen. Båda kraschar i byggverktyget med `Segmentation fault` (exit 139), efter transformering. Produktionsbygget kan därför inte anges som godkänt i denna miljö.
+- Ursprunglig begränsning, senare löst med utökad körbehörighet: faktisk Chromium-rendering kunde först inte genomföras: processen stoppas av sandlådans socketbegränsning (`setsockopt: Operation not permitted`). Lokal webbserver nekas också (`listen EPERM`). Därför finns ingen verifierad före-/efterskärmbild och ingen genomförd visuell acceptans vid 320/375/390/430px eller i redigeringsläge. Beräknade CSS-mått ersätter inte denna återstående kontroll. Den privata porträttkällan har inte ersatts med någon annan bild.
+
+
+## Genomförd Chromium-jämförelse 2026-10-19
+
+Utökad körbehörighet gjorde att lokal HTTP-server och Chromium kunde starta. Sexton bilder togs: före och efter vid 320, 375, 390 och 430 CSS-px, med och utan redigeringsläge. Alla efterbilder granskades. De kommer från en isolerad komponentfixture med appens aktuella stylesheet-kedja, originalets identity-renderingsuttryck, v8:s oförändrade mountkod och riktiga rasterresurser. Före använder komponent-CSS från checkoutens HEAD före ändringar; main-städningen ändrade inte denna CSS. De tillfälliga röda/gula markörerna visas inte.
+
+**Avgränsning:** Astrids fullständiga sparade porträttkälla finns inte i checkouten. Testfixturen använder därför samma porträttpixlar ur `24532.jpg` i båda versionerna. Detta ändrar ingen bild eller källa i appen och är ingen nygenerering. Kontrollen verifierar ramens och bildytans storlek samt komponentens layout, men inte originalporträttets slutliga beskärning eller den inloggade livevyn. Testdata och lokala inmatningshändelser påverkar ingen riktig rollperson. Flikarnas originalgrafik används; fixturen testar inte appens fullständiga fliknavigation.
+
+| Mobilbredd | Porträttbredd, oförändrad | Höjd före → efter | Radgap före → efter |
+| --- | --- | --- | --- |
+| 320px | 282px | 163.95 → 186.75px | 11.41 → 7.74px |
+| 375px | 337px | 195.92 → 223.17px | 12.08 → 8.28px |
+| 390px | 352px | 204.64 → 233.11px | 12.55 → 8.73px |
+| 430px | 392px | 227.91 → 259.59px | 13.83 → 9.93px |
+
+Porträttets DOM-mått och kortens radsteg är uppmätta i Chromium. Radgapet ovan räknas från uppmätta kortboxar och komponentens befintliga klippgränser; det är inte en automatisk pixelidentifiering av guldramen. Bilderna granskas också visuellt.
+
+Kontrollen visade att den första `margin-top:-12px`-justeringen faktiskt bara lyfte porträttet 12px. Den ändrades till -16px, varefter uppmätt lyft är 16px i alla fyra bredder. Den visade också etiketter nära ramkanten i redigeringsläge; gemensam större korthöjd och återställd namnplacering löser detta. CSS-importen cachebryts nu till `20261019-8e`.
+
+- Namntexten ligger exakt 8px högre relativt namnskylten i visningsläge. Undertiteln är kvar och går fri från det nedre ornamentet.
+- Första raden flyttas cirka 10.7–10.9px närmare namnskylten. Alla åtta kort har samma bredd och höjd inom varje renderat läge.
+- Ikonboxarna ökar 25 %, och kantfragmenten syns inte i efterbilderna. Panelernas hörnornament finns kvar.
+- Ingen horisontell sidöverströmning vid de fyra bredderna. Flikar och porträtt överlappar inte.
+- Åtta inmatningskontroller finns kvar i varje redigeringsrendering, inmatning av namn uppdaterar fixturens modell efter återmontering och stridsikonens porträttfallback används.
+- 25 riktade tester passerar. Hela testsuiten efter korrigeringarna: 1260 passerar och samma 29 kända fel i 17 filer. Produktionsbygget kraschar fortfarande med exit 139 även utanför den begränsade sandlådan.
+
+Bevis: `tests/visual-regressions/arcane-profile-v8/` innehåller före/efter vid 390px, redigeringsläge vid 320px och samtliga uppmätta boxar i `metrics.json`. En lokal jämförelse med alla sexton bilder finns i `/workspace/arcane-v8-review/comparison.html`.
+
+Reproducering med `scripts/arcane_profile_visual.cjs`: sätt `ARCANE_REFERENCE_IMAGE` till den tillhandahållna nulägesskärmbilden, `ARCANE_FONT_FILE` till en lokal EB Garamond latin variabel WOFF2 (400–600) och valfritt `ARCANE_VISUAL_OUT` till resultatmappen. Kör `node scripts/arcane_profile_visual.cjs` med Chromium och rätt att öppna loopback-sockets. Scriptet blockerar externa webbläsaranrop, laddar ingen backend och ändrar ingen appdata.

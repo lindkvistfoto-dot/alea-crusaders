@@ -16,12 +16,14 @@
     display:grid;
     grid-template-columns:minmax(0,1fr);
     gap:0;
+    /* Lift the visible frame 16px; tab art and handlers stay untouched. */
+    margin-top:-16px;
     align-items:start;
     min-width:0;
   }
   /* Preserve the image-backed hero portrait with its genuine raster frame. */
   html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait {
-    aspect-ratio:1.72/1;
+    aspect-ratio:1.51/1;
     max-height:none;
     min-height:0;
     width:100%;
@@ -45,10 +47,13 @@
    even if the ornamental-image preload fails. */
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
   --arcane-profile-component:8;
-  --ac-panel-gap:clamp(2px,.7vw,5px);
+  --ac-panel-gap:clamp(1.4px,.49vw,3.5px);
+  /* Only transparent frame gutters overlap; visible gold rails stay apart. */
+  --ac-card-overlap:3px;
+  --ac-name-lift:8px;
   --ac-card-height:clamp(52px,14vw,70px);
   --ac-icon-width:clamp(34px,10vw,49px);
-  --ac-icon-size:clamp(20px,5.8vw,29px);
+  --ac-icon-size:clamp(25px,7.25vw,36.25px);
   --ac-profile-bleed:clamp(11px,5vw,22px);
   --ac-profile-serif:'EB Garamond',Georgia,'Times New Roman',serif;
   display:block!important;
@@ -74,7 +79,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted:
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-structure {
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
-  grid-template-rows:auto repeat(4,var(--ac-card-height));
+  grid-template-rows:auto repeat(4,calc(var(--ac-card-height) - var(--ac-card-overlap)));
   grid-auto-flow:row;
   grid-auto-rows:auto;
   gap:var(--ac-panel-gap) clamp(7px,2.2vw,15px);
@@ -94,8 +99,8 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   align-items:center;
   justify-content:center;
   height:clamp(79px,21vw,116px);
-  /* Reduce the empty band beneath Astrid's plaque without moving the plaque. */
-  margin:0 0 -9px;
+  /* Bring all four rows 10px closer to the plaque. */
+  margin:0 0 -19px;
   min-width:0;
   background:var(--arcane-art-nameplate) center / 100% 100% no-repeat;
 }
@@ -117,6 +122,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   background:transparent!important;
   text-align:center!important;
   box-sizing:border-box;
+  transform:translateY(calc(0px - var(--ac-name-lift)));
 }
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted:not(.none) .arcane-profile-nameplate .field .label{
   display:none;
@@ -183,6 +189,23 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   max-width:100%;
   object-fit:contain;
   filter:drop-shadow(0 1px 2px #0009);
+  clip-path:inset(var(--ac-icon-crop,0));
+  transform:translate(var(--ac-icon-shift-x,0),var(--ac-icon-shift-y,0));
+}
+/* The v1 icon exports contain detached atlas fragments at their edges.
+   Crop the fragments in presentation, never the panel's corner ornaments.
+   Recenter the remaining visible raster within the unchanged icon lane. */
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--ras{
+  --ac-icon-crop:0 0 9% 0;
+  --ac-icon-shift-y:4.5%;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted :is(.arcane-profile-card--alder,.arcane-profile-card--langd){
+  --ac-icon-crop:0 28% 0 0;
+  --ac-icon-shift-x:14%;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted :is(.arcane-profile-card--vikt,.arcane-profile-card--stand){
+  --ac-icon-crop:0 12% 0 0;
+  --ac-icon-shift-x:6%;
 }
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-field-divider{
   height:68%;
@@ -292,6 +315,10 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   display:none!important; /* Image choice belongs to Bilder, unchanged. */
 }
 /* Input rows may grow; editing must never clip live controls. */
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted{
+  --ac-card-height:clamp(64px,16vw,78px);
+  --ac-name-lift:0px;
+}
 body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-structure{
   grid-template-rows:auto repeat(4,minmax(var(--ac-card-height),auto));
 }
@@ -320,7 +347,7 @@ body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-
 @media(max-width:350px){
   body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted{
     --ac-icon-width:29px;
-    --ac-icon-size:19px;
+    --ac-icon-size:23.75px;
     --ac-card-height:51px;
   }
   body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
