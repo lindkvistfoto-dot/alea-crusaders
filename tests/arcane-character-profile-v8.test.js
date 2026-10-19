@@ -38,7 +38,7 @@ function testHarness(){
 
 describe('ARCANE character profile v8 — structural component',()=>{
   it('links exactly one profile component CSS and runs the JS after legacy render',()=>{
-    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8c');
+    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8d');
     expect(html).toContain('features/character/arcane-profile-component.js?v=20261019-8');
     expect(html.indexOf('arcane-profile-component.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
     expect(html.indexOf('arcane-profile-component.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));
@@ -46,7 +46,7 @@ describe('ARCANE character profile v8 — structural component',()=>{
   });
   it('has one consistent two-column layout with a single declared frame height',()=>{
     expect(styles).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
-    expect(styles).toContain('grid-template-rows:auto repeat(4,var(--ac-card-height))');
+    expect(styles).toContain('grid-template-rows:auto repeat(4,calc(var(--ac-card-height) - var(--ac-card-overlap)))');
     expect(styles).toContain('--ac-panel-gap:clamp(');
     expect(styles).toContain('--ac-icon-width:clamp(');
     expect(styles).toContain('--ac-profile-bleed:clamp(11px,5vw,22px)');
@@ -60,7 +60,7 @@ describe('ARCANE character profile v8 — structural component',()=>{
     expect(styles).toContain("--ac-profile-serif:'EB Garamond'");
     expect(styles).toContain("fonts.googleapis.com/css2?family=EB+Garamond");
     expect(styles).toContain("clip-path:inset(8% 1.5% 10% 3%)");
-    expect(styles).toContain("margin:0 0 -9px");
+    expect(styles).toContain("margin:0 0 -19px");
     expect(styles).not.toContain("font:600 clamp(9px,2.4vw,12px)");
     expect(styles).toContain('.arcane-profile-field-divider');
     expect(styles).not.toContain('nth-child(');

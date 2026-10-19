@@ -10,12 +10,12 @@ const css=read('features/character/arcane-profile-component.css'),legacy=read('l
 describe('ARCANE character mobile layout — canonical v8',()=>{
   it('does not mount v5/v6/v7 positional CSS',()=>{
     for(const file of ['v5','v6','v7']) expect(html).not.toContain('href="./features/character/arcane-layout-'+file+'.css');
-    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8c');
+    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8d');
     expect(html).toContain('features/character/arcane-profile-component.js?v=20261019-8');
   });
   it('has fixed icon, divider and text columns — not positional nth-child',()=>{
     expect(css).toContain('grid-template-columns:var(--ac-icon-width) 1px minmax(0,1fr)');
-    expect(css).toContain('grid-template-rows:auto repeat(4,var(--ac-card-height))');
+    expect(css).toContain('grid-template-rows:auto repeat(4,calc(var(--ac-card-height) - var(--ac-card-overlap)))');
     expect(js).toContain("layout.className = 'arcane-profile-structure'");
     expect(js).toContain("content.className = 'arcane-profile-card-content'");
     expect(css).not.toContain('nth-child(');

@@ -49,3 +49,44 @@ Ny mobilbild visade fortfarande en grön rektangel runt varje ram **efter att** 
 Namnskyltens nedre marginal minskar till `-9px` så de första två korten placeras närmare Astrid. Rubrikerna får mindre, lätt seriftext och fältvärdena blir mindre och viktmässigt lättare. `EB Garamond` läses uttryckligen in via Google Fonts; annars används den smalare numeriska storleken med lokal serif-fallback. Typsnittets **verkliga** laddning måste kontrolleras visuellt på mobil, eftersom en fontstack utan inläsning tidigare gav samma Android-standardfont.
 
 **Framtida permanent bildlösning:** Om masken skulle klippa hörnornament i olika bredder, beskär det verkliga rasteroriginalet i en versionshanterad HERMES-bildprofil och ersätt masken. Lägg inte till nya generella `#identity > .field`- eller `nth-child`-regler.
+
+## Slutfinish 2026-10-19 — fortsatt v8
+
+Visuellt underlag: `24532.jpg` (nuläge) och `24530.jpg` (godkänd referens), tillhandahållna i uppdraget. Originalbilder, porträttkälla, DOM och datahanterande JavaScript är oförändrade.
+
+### Inventering före ändring
+
+- `src/styles/app.css`: generella `.hero`, `.field`, `.field.wide`, `.portrait` och mobilregler. V8:s befintliga fältreset och wrapper isolerar korten.
+- `arcane-profile.css`: äldre identity-grid, direkta `.field:nth-child(...)`, Unicode-symboler, SVG-fallback och porträttets grundmått. De direkta barnselektorerna matchar inte de flyttade v8-fälten.
+- `arcane-system.css`: rasterram, tidigare negativ identity-marginal, gamla ikon-pseudoelement samt undertitel- och stridsikonregler. V8:s befintliga reset neutraliserar fältens pseudoelement; varje fält är ensamt barn i sin innehållswrapper, så de historiska ikonernas nth-child(5–9) matchar inte heller.
+- `index.html` laddade dessutom två tillfälliga leveransmarkörer: en inline röd porträttsignal och en gul namnskyltssignal i en separat CSS-fil. Båda är nu borttagna, inklusive den extra CSS-filen.
+- V5–v7 laddas fortfarande inte. Systembibliotekets resurskopplingar behöver ingen ändring.
+
+### Samlade måttändringar i komponenten
+
+| Egenskap | Före | Efter |
+| --- | --- | --- |
+| Namn och undertitel | centrerade | samma grupp lyft 8 CSS-px via `--ac-name-lift` |
+| Namnskyltens nedre marginal | -9px | -19px |
+| Gemensamt radgap | clamp(2px,.7vw,5px) | clamp(1.4px,.49vw,3.5px) |
+| Radsteg | korthöjd + gap | korthöjd − `--ac-card-overlap:3px` + gap |
+| Ikonstorlek | clamp(20px,5.8vw,29px) | clamp(25px,7.25vw,36.25px) |
+| Ikonstorlek ≤350px | 19px | 23.75px |
+| Mobilporträttets aspect-ratio | 1.72/1 | 1.51/1, cirka 13.9 % högre vid samma bredd |
+| Mobilhero margin-top | 4px från äldre profil-CSS | -12px, lyft 16px |
+| CSS-cacheversion | 20261019-8c | 20261019-8d |
+
+Kortens höjd, bredd, ikonkolumn och textplacering behålls gemensamma. Överlappet gäller endast ramarnas osynliga yttre marginaler. Med befintlig klippning är det beräknade synliga radgapet vid 320/375/390/430px cirka 7.75/8.29/8.74/9.94px, jämfört med 11.42/12.08/12.56/13.85px: minskning cirka 28–32 %. Redigeringslägets befintliga auto-rader använder inget överlapp och låter formulären växa.
+
+### Spöksymbolernas orsak
+
+Inspektion av de verkliga AVIF-filerna visar fristående bildfragment i själva ikonexporterna: till höger om timglaset och längdmätaren, vid viktens och hjärtats högra kant samt under personsigillet. `stat-panel.avif` har hörnornament men ingen extra huvudikon. Problemet kan alltså inte lösas genom att lägga ytterligare en pseudoelementreset ovanpå den befintliga.
+
+Komponenten klipper endast ikonernas bildytor med lokala `--ac-icon-crop`-värden och centrerar den kvarvarande synliga ikonen. Person: nederkant 9 %; timglas/längd: högerkant 28 %; vikt/hjärta: högerkant 12 %. Rasteroriginalen, panelbakgrunden och dess hörnornament är orörda. Ingen bildproduktion eller ny bildresurs ingår.
+
+### Verifiering och begränsningar
+
+- Befintliga tester för komponent, mobilgrid, rasterreferens, stridsikon/porträttkoppling och pensionerade leveransmarkörer körs efter ändringen.
+- Hela testsuiten jämförs med körning före ändringar; de 29 ursprungliga felen i 17 filer redovisas separat från denna ändring.
+- `npm run build` kördes både på oförändrad HEAD och efter ändringen. Båda kraschar i byggverktyget med `Segmentation fault` (exit 139), efter transformering. Produktionsbygget kan därför inte anges som godkänt i denna miljö.
+- Faktisk Chromium-rendering kunde inte genomföras: processen stoppas av sandlådans socketbegränsning (`setsockopt: Operation not permitted`). Lokal webbserver nekas också (`listen EPERM`). Därför finns ingen verifierad före-/efterskärmbild och ingen genomförd visuell acceptans vid 320/375/390/430px eller i redigeringsläge. Beräknade CSS-mått ersätter inte denna återstående kontroll. Den privata porträttkällan har inte ersatts med någon annan bild.
