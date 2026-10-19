@@ -82,6 +82,45 @@
     position:relative;
     overflow:visible;
     z-index:2;
+    grid-area:auto!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-name{
+    grid-column:1 / -1!important;
+    grid-row:1!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-ras{
+    grid-column:1!important;
+    grid-row:2!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-yrke{
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-kon{
+    grid-column:1!important;
+    grid-row:3!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-alder{
+    grid-column:2!important;
+    grid-row:3!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-langd{
+    grid-column:1!important;
+    grid-row:4!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-vikt{
+    grid-column:2!important;
+    grid-row:4!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-combat{
+    grid-column:1!important;
+    grid-row:5!important;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-stand{
+    grid-column:2!important;
+    grid-row:5!important;
   }
   html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #identity > .field.arcane-field-name{
     grid-column:1 / -1!important;
