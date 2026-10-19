@@ -30,3 +30,4 @@
  .global-npc-card {padding:13px}
  .global-npc-columns {columns:1}
 }
+.global-npc-avatar {width:76px;height:98px;flex:none;display:block;object-fit:cover;object-position:center 25%;border-radius:9px;border:2px solid #b99a5e;box-shadow:0 2px 12px #0007;background:#212b26}

@@ -26,4 +26,10 @@ describe("Permanent SLP library integration", () => {
     expect(ui).toContain("safe(item.name)");
     expect(ui).toContain('profileText("Hemligheter (endast SL)", item.secrets)');
   });
+  it("renders the verified private portrait when preloaded", () => {
+    expect(ui).toContain("preloadNpcPortraits(entries)");
+    expect(ui).toContain("npcPortraitCachedUrl(item.image_path)");
+    expect(ui).toContain("global-npc-avatar");
+    expect(css).toContain(".global-npc-avatar");
+  });
 });

@@ -55,7 +55,9 @@
       '<button type="button" data-library-action="refresh" class="smallbtn">Uppdatera</button></div>';
     const cards = entries.map(item =>
       '<article class="global-npc-card"><div class="global-npc-card-top">' +
-      '<span class="global-npc-initial" aria-hidden="true">' + safe(item.name?.slice(0, 1) || "✦") + '</span>' +
+      (item.image_path && typeof npcPortraitCachedUrl === "function" && npcPortraitCachedUrl(item.image_path)
+        ? '<img class="global-npc-avatar" src="' + attr(npcPortraitCachedUrl(item.image_path)) + '" alt="Porträtt av ' + attr(item.name) + '">'
+        : '<span class="global-npc-initial" aria-hidden="true">' + safe(item.name?.slice(0, 1) || "✦") + '</span>') +
       '<div><h4>' + safe(item.name) + '</h4><p>' + safe(item.title) + '</p>' +
       '<small>' + safe(item.race) + ' · ' + safe(item.profession) + (item.age_years ? ' · ' + safe(item.age_years) + ' år' : "") + '</small></div></div>' +
       '<p class="global-npc-description">' + safe(item.description) + '</p>' +
@@ -82,6 +84,7 @@
     try {
       entries = await dbJson("global_npcs?select=*&active=eq.true&order=name.asc");
       if (!Array.isArray(entries)) entries = [];
+      if (typeof preloadNpcPortraits === "function") await preloadNpcPortraits(entries);
       loaded = true;
     } catch (error) {
       status("Kunde inte läsa biblioteket: " + error.message);

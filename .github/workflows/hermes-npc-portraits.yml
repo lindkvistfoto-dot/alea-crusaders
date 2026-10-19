@@ -1,0 +1,80 @@
+name: HERMES – private recurring SLP portraits
+
+on:
+  push:
+    branches: [main, feat/global-npc-portrait-intake-20261020]
+    paths:
+      - 'hermes/npc-portraits/*.json'
+  workflow_dispatch:
+    inputs:
+      request_path:
+        description: 'Existing hermes/npc-portraits/*.json manifest'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: hermes-global-npc-portraits
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned portrait codec
+        run: python -m pip install Pillow==12.3.0
+      - name: Verify publisher syntax
+        run: python -m py_compile scripts/hermes_npc_portraits.py
+      - id: google
+        name: Authenticate to private HERMES Drive Inbox (read only)
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+      - name: Verify images; publish only on main
+        shell: bash
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          HERMES_BEFORE: ${{ github.event.before }}
+          HERMES_REQUEST_PATH: ${{ inputs.request_path }}
+        run: |
+          set -euo pipefail
+          requests=()
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            if ! git cat-file -e "${HERMES_BEFORE}^{commit}" 2>/dev/null; then
+              echo "::error::Cannot resolve prior commit"; exit 1
+            fi
+            mapfile -t requests < <(git diff --name-only --diff-filter=AM "$HERMES_BEFORE" "$GITHUB_SHA" -- hermes/npc-portraits/)
+          else
+            requests+=("$HERMES_REQUEST_PATH")
+          fi
+          if [ "${#requests[@]}" -eq 0 ]; then
+            echo "::error::No changed HERMES portrait manifest"; exit 1
+          fi
+          mode=verify
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then mode=publish; fi
+          if [ "$mode" = "publish" ] && [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY. No images published"; exit 1
+          fi
+          for path in "${requests[@]}"; do
+            if [[ ! "$path" =~ ^hermes/npc-portraits/[a-z0-9-]{1,90}\.json$ ]] || [ ! -f "$path" ]; then
+              echo "::error::Invalid request path"; exit 1
+            fi
+            python scripts/hermes_npc_portraits.py "$path" "$mode"
+          done
+          echo "### HERMES NPC: $mode completed for ${#requests[@]} manifest(s)" >> "$GITHUB_STEP_SUMMARY"
