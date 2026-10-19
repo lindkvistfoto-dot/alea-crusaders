@@ -1,0 +1,316 @@
+/*
+ * ARCANE Character Profile v8 — single reusable character-card component.
+ * Visual master: approved Astrid Eldhjärta concept 2026-10-19.
+ *
+ * This stylesheet owns the layout of .arcane-profile-structure and its cards.
+ * It does not inherit ANY old identity grid, nth-child placement, or special
+ * race/profession treatment. Artwork is the original system/v1 raster AVIF.
+ *
+ * All measures below use CSS px, not source-art/physical screenshot px.
+ */
+@media (max-width:850px) {
+  body.character-glowup-active #view #grundPanel > .hero {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:0;
+    align-items:start;
+    min-width:0;
+  }
+  /* Preserve the image-backed hero portrait with its genuine raster frame. */
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait {
+    aspect-ratio:1.72/1;
+    max-height:none;
+    min-height:0;
+    width:100%;
+    margin:0;
+    border:0;
+    border-radius:0;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait > img {
+    padding:clamp(10px,2.7vw,16px);
+    object-fit:cover;
+    object-position:center 28%;
+    border-radius:0;
+  }
+  html.arcane-system-images-ready body.character-glowup-active #view #grundPanel #portrait::after {
+    border-image-source:var(--arcane-art-portrait);
+    border-image-slice:18% 17% fill;
+    border-image-width:clamp(14px,4vw,28px);
+  }
+}
+/* The mount class is independent of the ready state. Editing and values work
+   even if the ornamental-image preload fails. */
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted {
+  --arcane-profile-component:8;
+  --ac-panel-gap:clamp(5px,1.6vw,9px);
+  --ac-card-height:clamp(52px,14vw,70px);
+  --ac-icon-width:clamp(34px,10vw,49px);
+  --ac-icon-size:clamp(20px,5.8vw,29px);
+  --ac-card-fill:#0a241c;
+  display:block!important;
+  position:relative;
+  width:100%;
+  min-width:0;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-image:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+  isolation:isolate;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted::before{
+  content:none!important;
+  display:none!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-structure {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:auto repeat(4,var(--ac-card-height));
+  grid-auto-flow:row;
+  grid-auto-rows:auto;
+  gap:var(--ac-panel-gap) clamp(7px,2.2vw,15px);
+  width:100%;
+  min-width:0;
+  margin:0;
+  padding:0 clamp(5px,1.2vw,10px) 12px;
+  box-sizing:border-box;
+  align-content:start;
+  align-items:stretch;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate{
+  grid-column:1/-1;
+  grid-row:1;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:clamp(79px,21vw,116px);
+  margin:0 0 clamp(8px,2.2vw,13px);
+  min-width:0;
+  background:var(--arcane-art-nameplate) center / 100% 100% no-repeat;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate > .field {
+  width:100%!important;
+  max-width:100%!important;
+  min-height:0!important;
+  height:100%!important;
+  margin:0!important;
+  padding:clamp(9px,2.5vw,17px) clamp(34px,10vw,86px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:3px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  text-align:center!important;
+  box-sizing:border-box;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted:not(.none) .arcane-profile-nameplate .field .label{
+  display:none;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate .field .val {
+  display:block;
+  width:100%;
+  margin:0!important;
+  font:700 clamp(19px,5.2vw,35px)/1.1 Georgia,'Times New Roman',serif!important;
+  color:#f6e5c7!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:center;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate .arcane-nameplate-subtitle {
+  display:block;
+  width:100%;
+  margin:0;
+  font:500 clamp(12px,3.35vw,20px)/1.15 Georgia,'Times New Roman',serif;
+  color:#e7cda2;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
+  position:relative;
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:var(--ac-icon-width) 1px minmax(0,1fr);
+  align-items:center;
+  height:var(--ac-card-height);
+  min-width:0;
+  min-height:0;
+  margin:0;
+  padding:clamp(5px,1.2vw,8px) clamp(8px,1.9vw,12px);
+  border:0;
+  border-radius:0;
+  background:var(--arcane-art-stat) center / 100% 124% no-repeat, var(--ac-card-fill);
+  isolation:isolate;
+  overflow:hidden;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-icon-slot{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  pointer-events:none;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-field-icon{
+  display:block;
+  width:var(--ac-icon-size);
+  height:var(--ac-icon-size);
+  max-width:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 1px 2px #0009);
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-field-divider{
+  height:68%;
+  width:1px;
+  display:block;
+  background:linear-gradient(transparent,#bf9457 30%,#7c5735 75%,transparent);
+  box-shadow:1px 0 0 #050e0b;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content{
+  display:flex;
+  align-items:center;
+  width:100%;
+  height:100%;
+  min-width:0;
+  padding:0 2px 0 clamp(6px,1.4vw,11px);
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content > .field{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:2px!important;
+  position:static!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-image:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content > .field::before,
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content > .field::after{
+  content:none!important;
+  display:none!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content .field > .label{
+  display:block!important;
+  width:100%;
+  margin:0!important;
+  padding:0!important;
+  font:700 clamp(9px,2.55vw,12px)/1.12 system-ui,sans-serif!important;
+  letter-spacing:.035em!important;
+  color:#d5b77d!important;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:left!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content .field > .val{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  margin:0!important;
+  padding:0!important;
+  font:500 clamp(15px,4.35vw,23px)/1.15 Georgia,'Times New Roman',serif!important;
+  letter-spacing:0!important;
+  color:#f8e9d0!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  overflow-wrap:normal!important;
+  text-align:left!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--combat .arcane-profile-card-content > .field {
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:3px!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--combat .field > .label {
+  flex:1 1 auto;
+  min-width:0;
+  width:auto;
+  margin:0!important;
+  letter-spacing:0!important;
+  font-size:clamp(8px,2.3vw,11px)!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--combat .character-combat-icon-control {
+  flex:0 0 clamp(30px,8vw,44px)!important;
+  width:clamp(30px,8vw,44px)!important;
+  max-width:clamp(30px,8vw,44px)!important;
+  height:clamp(33px,9vw,49px)!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:3px 2px!important;
+  border:0!important;
+  background:var(--arcane-art-combat) center / contain no-repeat!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--combat .combat-icon-hex{
+  flex:0 0 auto!important;
+  width:clamp(22px,5.8vw,30px)!important;
+  height:clamp(24px,6.7vw,34px)!important;
+  margin:0!important;
+  padding:1px!important;
+}
+body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .character-combat-icon-actions{
+  display:none!important; /* Image choice belongs to Bilder, unchanged. */
+}
+/* Editing works in the SAME fields; it never creates a second data model. */
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
+  min-height:var(--ac-card-height);
+  height:auto;
+}
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content .grund-input,
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate .grund-input{
+  display:block;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:2px 0 0!important;
+  box-sizing:border-box!important;
+  padding:5px!important;
+  font:500 clamp(11px,3vw,15px)/1.1 system-ui,sans-serif!important;
+}
+@media(max-width:350px){
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted{
+    --ac-icon-width:29px;
+    --ac-icon-size:19px;
+    --ac-card-height:51px;
+  }
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
+    padding-inline:5px;
+  }
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card-content{
+    padding-left:4px;
+  }
+}
+@media(min-width:851px){
+  /* Large screens retain the working desktop portrait beside the identity. */
+  body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
+    --ac-card-height:68px;
+  }
+}
