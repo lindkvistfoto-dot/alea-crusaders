@@ -8,6 +8,9 @@
  *
  * All measures below use CSS px, not source-art/physical screenshot px.
  */
+/* Explicitly load the font: Android otherwise substitutes the same system
+   serif for Georgia/Baskerville/Palatino, making typography changes invisible. */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap');
 @media (max-width:850px) {
   body.character-glowup-active #view #grundPanel > .hero {
     display:grid;
@@ -47,7 +50,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   --ac-icon-width:clamp(34px,10vw,49px);
   --ac-icon-size:clamp(20px,5.8vw,29px);
   --ac-profile-bleed:clamp(11px,5vw,22px);
-  --ac-profile-serif:'Baskerville','Palatino Linotype','Book Antiqua','Times New Roman',serif;
+  --ac-profile-serif:'EB Garamond',Georgia,'Times New Roman',serif;
   display:block!important;
   position:relative;
   width:100%;
@@ -91,7 +94,8 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   align-items:center;
   justify-content:center;
   height:clamp(79px,21vw,116px);
-  margin:0 0 clamp(8px,2.2vw,13px);
+  /* Reduce the empty band beneath Astrid's plaque without moving the plaque. */
+  margin:0 0 -9px;
   min-width:0;
   background:var(--arcane-art-nameplate) center / 100% 100% no-repeat;
 }
@@ -121,7 +125,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   display:block;
   width:100%;
   margin:0!important;
-  font:600 clamp(19px,5.2vw,35px)/1.1 var(--ac-profile-serif)!important;
+  font:500 clamp(19px,5.2vw,35px)/1.1 var(--ac-profile-serif)!important;
   color:#f6e5c7!important;
   white-space:nowrap;
   overflow:hidden;
@@ -155,6 +159,11 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   /* The underlying AVIF already contains its own green leather. A second
      solid-color layer created the visible rectangular plate outside the gold. */
   background:var(--arcane-art-stat) center / 104% 140% no-repeat;
+  /* The AVIF source itself contains opaque dark-green pixels outside its
+     gold relief. Clip ONLY that outer artwork gutter; keep the original frame,
+     emerald interior, icon lane and live text untouched. Insets are based
+     on the visible frame bounds in the 2026-10-19 mobile reference. */
+  clip-path:inset(8% 1.5% 10% 3%);
   isolation:isolate;
   overflow:hidden;
 }
@@ -222,7 +231,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   width:100%;
   margin:0!important;
   padding:0!important;
-  font:600 clamp(9px,2.4vw,12px)/1.12 var(--ac-profile-serif)!important;
+  font:500 clamp(8px,2.15vw,10px)/1.12 var(--ac-profile-serif)!important;
   letter-spacing:.025em!important;
   color:#d5b77d!important;
   text-transform:uppercase;
@@ -238,7 +247,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   max-width:100%;
   margin:0!important;
   padding:0!important;
-  font:400 clamp(15px,4.1vw,22px)/1.15 var(--ac-profile-serif)!important;
+  font:400 clamp(13px,3.65vw,19px)/1.15 var(--ac-profile-serif)!important;
   letter-spacing:0!important;
   color:#f8e9d0!important;
   white-space:nowrap!important;
@@ -259,7 +268,7 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
   width:auto;
   margin:0!important;
   letter-spacing:0!important;
-  font-size:clamp(8px,2.3vw,11px)!important;
+  font-size:clamp(8px,2vw,10px)!important;
 }
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card--combat .character-combat-icon-control {
   flex:0 0 clamp(30px,8vw,44px)!important;
