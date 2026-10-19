@@ -41,3 +41,11 @@ Gridens två kolumner är lika breda och ingen CSS `nth-child` behövs för plac
 Beskär då källbildernas externa alfa till en ny versionskatalog, **enligt HERMES**, och implementera skalenlig 9-slice/`border-image` som en del av samma komponent. Undvik fler specialregler. Ingen ny masterbild produceras inom detta v8-uppdrag; de befintliga versionerade originalen återanvänds oförändrade.
 
 **Återställning:** ta bort v8 CSS-/JS-importerna från `index.html` och återaktivera tidigare version vid behov; inga speldata eller databasfält har ändrats.
+
+## Finjustering 2026-10-19 (samma v8-komponent)
+
+Ny mobilbild visade fortfarande en grön rektangel runt varje ram **efter att** den extra CSS-bakgrunden tagits bort. Den gröna ytterytan följer den befintliga `stat-panel.avif`-grafiken. V8 maskerar därför rasterkortets **yttre marginal** med `clip-path:inset(8% 1.5% 10% 3%)`. Detta är en kontrollerad och lokalt avgränsad beskärning, inte ett nytt bildoriginal eller en SVG. Ornamenten innanför klippgränsen ska bevaras och granskas på riktig Android-skärm.
+
+Namnskyltens nedre marginal minskar till `-9px` så de första två korten placeras närmare Astrid. Rubrikerna får mindre, lätt seriftext och fältvärdena blir mindre och viktmässigt lättare. `EB Garamond` läses uttryckligen in via Google Fonts; annars används den smalare numeriska storleken med lokal serif-fallback. Typsnittets **verkliga** laddning måste kontrolleras visuellt på mobil, eftersom en fontstack utan inläsning tidigare gav samma Android-standardfont.
+
+**Framtida permanent bildlösning:** Om masken skulle klippa hörnornament i olika bredder, beskär det verkliga rasteroriginalet i en versionshanterad HERMES-bildprofil och ersätt masken. Lägg inte till nya generella `#identity > .field`- eller `nth-child`-regler.
