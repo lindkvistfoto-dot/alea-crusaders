@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "description": "User-provided approved master SLP portraits in original upload order. Private Drive masters, private Storage WebP. No public GitHub images.",
+  "portraits": [
+    {
+      "npc_key": "mira-tornstig",
+      "drive_file_id": "10-CR1Djvz1SpYJOPygAcTkWMCI7iBOg-",
+      "source_sha256": "31216116cd12cb75df26f5a8b76c9dfaab2e686db347f83e79ef9105552735d9"
+    },
+    {
+      "npc_key": "caelion-dimmspar",
+      "drive_file_id": "1-An8P31Myel8fG3iES0FsAoGxhAiJoNu",
+      "source_sha256": "5d7a789b16cc8ad225b4c356664ec2e36f69953c47855bf3c1a707f30aa3cf38"
+    },
+    {
+      "npc_key": "serenya-eldsloja",
+      "drive_file_id": "11Jc2L7KZ4coYcl2-LsZMIBTIVHN0Uuwn",
+      "source_sha256": "d8519ae6b98c7282cf2db7d412650974de34cbbb7367c6049b9f41985740d6a0"
+    },
+    {
+      "npc_key": "odran-stjarnfall",
+      "drive_file_id": "1P2KQAp94S-UHWZ0BS-uwpG7MykKhHcZH",
+      "source_sha256": "6267282c774e722ff12f249793739c070729b06ee2c959c5cf4833a33d237d02"
+    }
+  ]
+}
