@@ -506,33 +506,36 @@ function setCharacterWeaponMaster(i,value){
  save();renderWeapons();refreshTotalBep()
 }
 function weaponRuleData(item){
- let r=ruleWeaponForItem(item),ownGroup=Number(item?.strengthGroup);
+ let r=ruleWeaponForItem(item),ownGroup=item?.strengthGroup==null||item?.strengthGroup===''?NaN:Number(item.strengthGroup);
  return {
   handling:item?.handling||r?.handling||'',
-  strengthGroup:Number.isFinite(ownGroup)?ownGroup:(Number.isFinite(Number(r?.strength_group))?Number(r.strength_group):null)
+  strengthGroup:Number.isFinite(ownGroup)?ownGroup:(r?.strength_group!=null&&Number.isFinite(Number(r.strength_group))?Number(r.strength_group):null)
  }
 }
 function weaponGripRule(handling,weaponGroup,charGroup){
- let req=Number(weaponGroup),cg=Number(charGroup);
- if(!['1H','1-2H','2H'].includes(handling)||!Number.isInteger(req)||!Number.isInteger(cg))return {canUse:false,hands:null,glMultiplier:0,status:'invalid'};
- if(handling==='1H'){
-  if(cg>=req)return {canUse:true,hands:1,glMultiplier:1,status:'normal'};
-  if(cg===req-1)return {canUse:true,hands:1,glMultiplier:.5,status:'understrength'};
-  return {canUse:false,hands:1,glMultiplier:0,status:'too_weak'}
+ return globalThis.aleaHandRules.grip(handling,weaponGroup,charGroup)
+}
+function characterHeldEquipment(c){
+ const sty=c?.base?.Styrka?.v,group=sty==null||sty===''?null:baseGroup(sty);
+ return globalThis.aleaHandRules.resolveHands(c||{},group,ruleWeaponForItem)
+}
+function characterResolvedEquipment(c){
+ const resolved=characterHeldEquipment(c),equipment={...c?.currentEquipment};
+ for(const slot of globalThis.aleaHandRules.slots){
+  const held=resolved.hands[slot];
+  equipment[slot]=held?{...held.ref,hands:held.grip?.hands||1,glMultiplier:held.grip?.glMultiplier??1,ruleStatus:held.grip?.status}:null
  }
- if(handling==='2H'){
-  if(cg>=req)return {canUse:true,hands:2,glMultiplier:1,status:'normal'};
-  if(cg===req-1)return {canUse:true,hands:2,glMultiplier:.5,status:'understrength'};
-  return {canUse:false,hands:2,glMultiplier:0,status:'too_weak'}
- }
- // For 1–2H weapons, matching the required STY group is enough for one-handed use.
- if(cg>=req)return {canUse:true,hands:1,glMultiplier:1,status:'normal'};
- if(cg===req-1)return {canUse:true,hands:2,glMultiplier:1,status:'normal'};
- if(cg===req-2)return {canUse:true,hands:2,glMultiplier:.5,status:'understrength'};
- return {canUse:false,hands:2,glMultiplier:0,status:'too_weak'}
+ return equipment
+}
+function currentEquipmentRuleNotesHtml(c){
+ const resolved=characterHeldEquipment(c);
+ return '<div class="weapon-grip-note" role="status">Svärdshand: '+
+  escAttr(({leftHand:'Vänster',rightHand:'Höger',both:'Båda'})[globalThis.aleaHandRules.swordHand(c?.derived?.Svärdshand)])+
+  ' · '+escAttr(resolved.weapons.map(item=>item.name+': '+weaponGripLabel(weaponGripForCharacter(item,c))).join(' · '))+
+  (resolved.issues.length?' · '+escAttr(resolved.issues.join(' · ')):'')+'</div>'
 }
 function weaponGripForCharacter(item,c=current){
- let d=weaponRuleData(item),sty=Number(c?.base?.Styrka?.v),cg=Number.isFinite(sty)?baseGroup(sty):null;
+ let d=weaponRuleData(item),sty=c?.base?.Styrka?.v,cg=sty==null||sty===''?null:baseGroup(sty);
  if(!d.handling||d.strengthGroup===null)return {linked:false,canUse:true,hands:null,glMultiplier:1,status:'legacy',handling:d.handling,strengthGroup:d.strengthGroup,charGroup:cg};
  let res=weaponGripRule(d.handling,d.strengthGroup,cg);
  return {...res,linked:true,handling:d.handling,strengthGroup:d.strengthGroup,charGroup:cg}
@@ -1159,7 +1162,7 @@ async function deleteRuleShield(id){
 async function ensureCentralCampaign(){let rows=await dbJson('campaigns?select=id,name,created_by&order=created_at.asc');let c=rows.find(x=>x.name==='Skelettbyns Hemlighet')||rows[0];if(!c&&activeUser()?.admin){let created=await dbJson('campaigns',{method:'POST',body:JSON.stringify({name:'Skelettbyns Hemlighet',description:'Alea Crusaders-kampanj',created_by:supabaseSession.user.id})});c=created&&created[0];if(c)await dbJson('campaign_members',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({campaign_id:c.id,user_id:supabaseSession.user.id,role:'gm'})})}centralCampaignId=c?.id||null;return c}
 async function loadCampaignPlayerProfiles(){try{campaignPlayerProfiles=await dbJson('profiles?select=id,display_name&order=display_name.asc')}catch(e){campaignPlayerProfiles=[];console.warn('Kunde inte läsa kampanjspelare',e)}}
 async function importLocalCharactersToCentral(){if(!centralCampaignId||!activeUser()?.admin||!chars.length)return;let payload=chars.map(c=>({campaign_id:centralCampaignId,owner_id:null,name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c),created_by:supabaseSession.user.id}));let rows=await dbJson('characters',{method:'POST',body:JSON.stringify(payload)});if(rows?.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',_persistedOwnerId:r.owner_id||'SLP'}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));}}
-async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;return}await Promise.all([loadCampaignMapRole(),loadCampaignPlayerProfiles()]);let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,round_background_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',_persistedOwnerId:r.owner_id||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||'',roundBackgroundPath:r.round_background_path||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];const repairedGripIds=new Set();chars.forEach(c=>{ensureEquipmentState(c);if(refreshEquippedWeaponGrip(c)&&c._dbId)repairedGripIds.add(c._dbId);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralCharacterSnapshots=new Map(chars.filter(c=>c._dbId).map(c=>[c._dbId,characterSyncFingerprint(c)]));centralReady=true;if(repairedGripIds.size){repairedGripIds.forEach(id=>centralCharacterSnapshots.delete(id));scheduleCentralSave()}}
+async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;return}await Promise.all([loadCampaignMapRole(),loadCampaignPlayerProfiles()]);let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,round_background_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',_persistedOwnerId:r.owner_id||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||'',roundBackgroundPath:r.round_background_path||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];chars.forEach(c=>{ensureEquipmentState(c);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralCharacterSnapshots=new Map(chars.filter(c=>c._dbId).map(c=>[c._dbId,characterSyncFingerprint(c)]));centralReady=true}
 function characterSyncPayload(c){return {name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c)}}
 function characterSyncFingerprint(c){return JSON.stringify(characterSyncPayload(c))}
 async function syncCharacterToCentral(c){
@@ -1864,7 +1867,7 @@ function currentEquipmentMagicSparkHtml(magical){
   '</span>';
 }
 function currentEquipSlotHtml(slot){
- const ref=current.currentEquipment?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
+ const ref=(typeof characterResolvedEquipment==='function'?characterResolvedEquipment(current):current.currentEquipment)?.[slot],item=equipItemByRef(current,ref),label=CURRENT_EQUIP_LABELS[slot]||slot;
  const value=item?.name||'',occupied=!!item;
  const art=window.aleaEquipmentArt?.imageTag(currentEquipmentItemArtPath(ref,item,slot))||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
@@ -1991,7 +1994,7 @@ function currentEquipmentFigureHtml(character){
 function renderCurrentEquipment(){
  if(!current)return;ensureEquipmentState(current);
  const el=$('currentEquipmentBody');if(!el)return;
- const eq=current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left);
+ const eq=typeof characterResolvedEquipment==='function'?characterResolvedEquipment(current):current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left);
  const two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
  const hands=two?gandalfTwoHandSlotHtml(leftItem):currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand');
  el.innerHTML='<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
@@ -1999,10 +2002,10 @@ function renderCurrentEquipment(){
   ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
   hands+
   currentEquipProjectileSlotHtml(current)+
-  '</section><div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
+  '</section>'+(typeof currentEquipmentRuleNotesHtml==='function'?currentEquipmentRuleNotesHtml(current):'')+'<div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
  if(currentEquipmentPickerSlot)renderCurrentEquipmentPicker();
 }
-function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);if(refreshEquippedWeaponGrip(current))save();currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
+function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
 function closeCurrentEquipment(){currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden')}
 function openCurrentEquipmentPicker(slot){
  currentEquipmentPickerSlot=slot;renderCurrentEquipment();
@@ -2051,6 +2054,7 @@ function chooseCurrentEquipment(slot,kind,itemId,hands=1){
  }
  ensureEquipmentState(current);let eq=current.currentEquipment,hand=slot==='leftHand'||slot==='rightHand';
  if(!hand){eq[slot]={kind,itemId};currentEquipmentPickerSlot=null;save();renderCurrentEquipment();return}
+ if(kind==='weapon'){const candidate=(current.weapons||[]).find(x=>x.equipId===itemId),g=weaponGripForCharacter(candidate,current);if(g.linked&&!g.canUse){alert('Rollpersonens STY-grupp är för låg för att använda vapnet.');return}}
  clearTwoHandIfNeeded();
  ['leftHand','rightHand'].forEach(s=>{let r=eq[s];if(r&&r.kind===kind&&r.itemId===itemId)eq[s]=null});
  if(kind==='weapon'){

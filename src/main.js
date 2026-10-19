@@ -130,6 +130,7 @@ window.combatAttackResultHtml=function(action){
 /* v0.33.68 — one-turn GM undo */
 const COMBAT_UNDO_CURRENT_KEY="turn_undo_current";
 const COMBAT_UNDO_LAST_KEY="turn_undo_last";
+const COMBAT_UNDO_ACTION_KEY="action_undo_current";
 let combatUndoCapturePromise=null;
 let combatUndoTransitioning=false;
 let combatUndoRestoring=false;
@@ -208,6 +209,7 @@ function combatUndoSnapshotMatchesActiveTurn(snapshot){
   if(String(snapshot.combat_id)!==String(activeCombat.id))return false;
   if(String(snapshot.actor_id)!==String(activeCombat.active_actor_id))return false;
   if(Number(snapshot.round_number)!==Number(activeCombat.round_number))return false;
+  if(snapshot.phase!==(activeCombat.phase||"movement"))return false;
   return true;
 }
 
@@ -272,15 +274,25 @@ function combatUndoInstallButton(){
   button.hidden=false;
   const last=(typeof activeCombat!=="undefined"&&activeCombat?.settings&&typeof activeCombat.settings==="object")
     ?activeCombat.settings[COMBAT_UNDO_LAST_KEY]:null;
-  const disabled=!last||combatUndoRestoring;
-  const label=last?.actor_name?"Ångra senaste drag · "+last.actor_name:"Ångra senaste drag";
+  const action=combatUndoSettings()[COMBAT_UNDO_ACTION_KEY];
+  const current=action&&combatUndoSnapshotMatchesActiveTurn(action)?action:null;
+  const disabled=(!last&&!current)||combatUndoRestoring;
+  const label=current?"Ångra senaste handling · "+current.actor_name:last?.actor_name?"Ångra senaste drag · "+last.actor_name:"Ångra senaste drag";
   if(button.disabled!==disabled)button.disabled=disabled;
   if(button.title!==label)button.title=label;
   if(button.getAttribute("aria-label")!==label)button.setAttribute("aria-label",label);
 }
 
 window.combatUndoBeforeActorAction=async function(){
-  return combatUndoEnsureCurrentSnapshot();
+  const turn=await combatUndoEnsureCurrentSnapshot();
+  const action=combatUndoBuildSnapshot();
+  if(action){
+    const last=await dbJson("combat_area_events?combat_id=eq."+encodeURIComponent(action.combat_id)+"&select=id&order=id.desc&limit=1");
+    action.area_event_max_id=Number(last?.[0]?.id)||0;
+    await combatUndoPersistSettings({[COMBAT_UNDO_ACTION_KEY]:action});
+    combatUndoInstallButton();
+  }
+  return turn;
 };
 
 window.combatUndoAfterTurnAdvanced=async function(snapshot){
@@ -301,6 +313,7 @@ window.combatUndoAfterTurnAdvanced=async function(snapshot){
   }finally{
     combatUndoTransitioning=false;
   }
+  await combatUndoPersistSettings({[COMBAT_UNDO_ACTION_KEY]:null});
   await combatUndoEnsureCurrentSnapshot();
   combatUndoInstallButton();
 };
@@ -308,15 +321,18 @@ window.combatUndoAfterTurnAdvanced=async function(snapshot){
 window.undoLastCombatTurn=async function(event){
   event?.stopPropagation?.();
   if(combatUndoRestoring||typeof combatCanManage!=="function"||!combatCanManage())return;
+  if(typeof combatWeaponExecutionBusy!=="undefined"&&combatWeaponExecutionBusy)return;
   if(typeof activeCombat==="undefined"||!activeCombat?.id)return;
-  const snapshot=combatUndoSettings()[COMBAT_UNDO_LAST_KEY];
+  const action=combatUndoSettings()[COMBAT_UNDO_ACTION_KEY];
+  const actionSnapshot=action&&combatUndoSnapshotMatchesActiveTurn(action)?action:null;
+  const snapshot=actionSnapshot||combatUndoSettings()[COMBAT_UNDO_LAST_KEY];
   if(!snapshot||String(snapshot.combat_id)!==String(activeCombat.id))return;
-  if(combatUndoActiveTurnAlreadyStarted()){
+  if(!actionSnapshot&&combatUndoActiveTurnAlreadyStarted()){
     alert("Du kan inte ångra föregående drag efter att nästa kombatant börjat agera.");
     return;
   }
   const actorName=snapshot.actor_name||"senaste kombatanten";
-  if(!window.confirm("Ångra hela senaste draget för "+actorName+"?"))return;
+  if(!window.confirm((actionSnapshot?"Ångra senaste handlingen för ":"Ångra hela senaste draget för ")+actorName+"?"))return;
   combatUndoRestoring=true;combatUndoInstallButton();
   const combatId=activeCombat.id,cid=encodeURIComponent(combatId);
   try{
@@ -328,6 +344,16 @@ window.undoLastCombatTurn=async function(event){
       return round>Number(snapshot.round_number)||(
         round===Number(snapshot.round_number)&&!baselineActions.has(String(row.id))
       );
+    });
+    // Refund only shots absent from, or not yet spent in, this checkpoint.
+    // The server locks the spend row; repeated undo cannot refund it twice.
+    const refundIds=(currentActions||[]).filter(row=>{
+      const before=baselineActions.get(String(row.id));
+      return removals.some(item=>String(item.id)===String(row.id))||
+        (before&&["planned","reserved"].includes(before.status));
+    });
+    for(const row of refundIds)await dbJson("rpc/combat_undo_ammunition",{
+      method:"POST",body:JSON.stringify({p_action_id:row.id})
     });
     await Promise.all(removals.map(row=>dbJson("combat_actions?id=eq."+encodeURIComponent(row.id),{
       method:"DELETE",headers:{"Prefer":"return=minimal"}
@@ -388,7 +414,7 @@ window.undoLastCombatTurn=async function(event){
     await dbJson("combat_log?combat_id=eq."+cid+"&id=gt."+logMax,{
       method:"DELETE",headers:{"Prefer":"return=minimal"}
     });
-    const restoredSettings={...combatUndoSettings(),
+    const restoredSettings={...combatUndoSettings(),[COMBAT_UNDO_ACTION_KEY]:null,
       [COMBAT_UNDO_LAST_KEY]:null,
       [COMBAT_UNDO_CURRENT_KEY]:snapshot
     };

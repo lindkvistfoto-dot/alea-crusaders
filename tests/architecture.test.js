@@ -638,7 +638,7 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("Färdighet måste anges för varje vapen.");
     expect(legacy).toContain("function weaponLinkedFvHtml");
     expect(combat).toContain("function combatWeaponSkillTarget");
-    expect(combat).toContain("const fv=combatAttackFv(weapon,actor)");
+    expect(combat).toContain("combatWeaponActionFv(actor,weapon,action)");
     expect(combat).toContain("item_group:'skills'");
     expect(combat).toContain("awardCharacterErfItem(actor.source_id,itemGroup,itemKey");
   });
@@ -646,7 +646,7 @@ describe("application architecture smoke checks", () => {
   test("weapon instance grip overrides master values", () => {
     const legacy = read("legacy/app.js");
     expect(legacy).toContain("handling:item?.handling||r?.handling||''");
-    expect(legacy).toContain("let r=ruleWeaponForItem(item),ownGroup=Number(item?.strengthGroup)");
+    expect(legacy).toContain("ownGroup=item?.strengthGroup==null||item?.strengthGroup===''?NaN:Number(item.strengthGroup)");
     expect(legacy).toContain("Number.isFinite(ownGroup)?ownGroup");
   });
 

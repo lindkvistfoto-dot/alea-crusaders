@@ -4,6 +4,7 @@ function combatSideLabel(s){return s==='heroes'?'Hjältar':s==='enemies'?'Fiende
 function combatStatusLabel(s){return s==='setup'?'Förberedelse':s==='active'?'Pågår':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'—')}
 function combatCanManage(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 let combatDiceBusy=false,combatDiceLastRoll=null,combatDiceFadeTimer=null;
+let combatWeaponExecutionBusy=false;
 let combatMobileTargetPickerOpen=false,combatMobileMagicTargetPickerOpen=false;
 // The mobile DiceBox render surface must be square, even when the panel/map isn't.
 function combatDiceStageSide(rect){
@@ -395,7 +396,9 @@ function combatSourceStats(sceneCombatant,sources){
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
   shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
-  ambidextrous:attributes.ambidextrous===true||data.ambidextrous===true,
+  swordHand:globalThis.aleaHandRules?.swordHand(derived.Svärdshand,attributes.ambidextrous===true||data.ambidextrous===true)||'rightHand',
+  skills:Array.isArray(data.skills)?data.skills:(Array.isArray(source?.skills)?source.skills:[]),
+  ambidextrous:globalThis.aleaHandRules?.swordHand(derived.Svärdshand,attributes.ambidextrous===true||data.ambidextrous===true)==='both'||attributes.ambidextrous===true||data.ambidextrous===true,
   spells:(Array.isArray(data.spells)?data.spells:(Array.isArray(source?.spells)?source.spells:[])).map(spell=>{
    const rule=(Array.isArray(ruleSpells)?ruleSpells:[]).find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||(row.name||'').localeCompare(spell?.name||'','sv',{sensitivity:'base'})===0);
    return {...spell,rule_id:rule?.id||null,attack_magic:rule?.attack_magic===true,damage_text:rule?.damage_text||'',range_text:rule?.range_text||'',school_id:rule?.school_id||null}
@@ -441,8 +444,8 @@ async function combatLoadSceneRuntimeData(scene){
   dbJson('campaign_combat_scene_combatants?scene_id=eq.'+sceneId+'&select=*&order=sort_order.asc,name.asc'),
   dbJson('campaign_combat_scene_hexes?scene_id=eq.'+sceneId+'&select=q,r,movement_mode,sight_mode,movement_cost,notes&order=r.asc,q.asc'),
   dbJson('characters?campaign_id=eq.'+campaignId+'&select=id,name,owner_id,combat_icon_path,round_background_path,data'),
-  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells,race,gender'),
-  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,race,gender')
+  dbJson('campaign_npcs?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,spells,skills,race,gender'),
+  dbJson('campaign_monsters?campaign_id=eq.'+campaignId+'&select=id,name,image_path,combat_icon_path,attributes,weapons,shield,armor,skills,race,gender')
  ]);
  return{
   sceneCombatants:Array.isArray(sceneCombatants)?sceneCombatants:[],
@@ -1069,6 +1072,10 @@ function combatIsActiveTurn(combatant){
 function combatChosenAction(combatant){
  if(!combatant||!activeCombat)return null;
  const round=Number(activeCombat.round_number)||1;
+ if(activeCombat.phase==='late'){
+  const secondary=(combatActions||[]).find(a=>String(a.combatant_id)===String(combatant.id)&&Number(a.round_number)===round&&a.slot_key==='secondary'&&a.status!=='cancelled');
+  if(secondary)return secondary
+ }
  // An unfinished cast survives the SR transition and must take precedence
  // over a fresh action row in the new SR. Targets are chosen only at cast time.
  const prepared=(combatActions||[]).filter(action=>
@@ -1096,8 +1103,11 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
  if(!combatant||!def||def.automatic||def.reactive||!combatCanChoosePrimaryAction(combatant))return;
- if(combatMovementHasUsedMoreThanHalf(combatant))return;
+ if(combatMovementHasUsedMoreThanHalf(combatant)||activeCombat.phase==='late')return;
+ if(combatRoundWeaponActions(combatant).some(a=>globalThis.aleaHandRules.spent(a)))return;
  await window.combatUndoBeforeActorAction?.();
+ const secondary=combatRoundWeaponActions(combatant).find(a=>a.slot_key==='secondary');
+ if(secondary)await dbJson('combat_actions?id=eq.'+encodeURIComponent(secondary.id)+'&status=in.(planned,reserved)',{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status:'cancelled'})});
  const round=Number(activeCombat.round_number)||1;
  const existing=combatChosenAction(combatant);
  if(existing?.source_data?.casting_spell&&existing.status==='planned'){alert('Avsluta först den förberedda besvärjelsen.');return}
@@ -1121,7 +1131,7 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
  };
  try{
   if(existing){
-   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id),{
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id)+'&status=in.(planned,reserved)',{
     method:'PATCH',headers:{'Prefer':'return=minimal'},
     body:JSON.stringify({
      phase:body.phase,action_type:body.action_type,slot_key:body.slot_key,
@@ -1145,7 +1155,9 @@ function combatPrimaryActionIsSpent(action){
 }
 function combatHasUnusedAction(combatant){
  if(!combatant||combatMovementHasUsedMoreThanHalf(combatant))return false;
- return !combatPrimaryActionIsSpent(combatChosenAction(combatant))
+ const action=combatChosenAction(combatant);
+ if(action?.source_data?.two_weapons)return ['planned','reserved'].includes(action.status)&&combatWeaponActionIsLegal(combatant,action);
+ return !combatPrimaryActionIsSpent(action)
 }
 function combatSuccessfulMeleeAttack(action){
  const mode=action?.result?.attack_mode||action?.source_data?.mode;
@@ -1176,7 +1188,7 @@ function combatAntimagicOptions(caster,ids){
   if(!target||target.side===caster.side||['dead','removed'].includes(target.status))continue;
   for(const mage of combatants){
    if(mage.side!==target.side||['dead','removed'].includes(mage.status)||combatCannotReact(mage)||!combatHasUnusedAction(mage))continue;
-   if(combatChosenAction(mage)?.source_data?.casting_spell===true)continue;
+   if(combatChosenAction(mage)?.source_data?.casting_spell===true||combatChosenAction(mage)?.source_data?.two_weapons===true)continue;
    const spell=combatSpellOptions(mage).find(s=>String(s.name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim()==='ANTIMAGI');
    if(!spell||Number(mage.current_psy)<1)continue;
    const reach=combatSpellRangeHexes(mage,{source_data:{range_text:spell.range_text,effect_grade:1}});
@@ -1325,27 +1337,32 @@ function combatChooseAntimagic(mageId,actionId,targetId){
 function combatDeclineAntimagic(actionId){return combatResolveAntimagic(actionId)}
 
 async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
+ if(combatWeaponExecutionBusy)return;
  const opportunity=combatPendingParryOpportunity();
  if(!opportunity||String(opportunity.defender.id)!==String(defenderId)||String(opportunity.attack.id)!==String(attackActionId))return;
  const defender=opportunity.defender,attack=opportunity.attack,attacker=opportunity.attacker;
- if(!combatHasUnusedAction(defender)||!combatCanManage())return;
+ if(!combatCanParryAttack(defender)||!combatCanManage())return;
  const option=combatParryOption(defender,parryKey);
  if(!option)return;
- const existing=combatChosenAction(defender),parryId=existing?.id||crypto.randomUUID();
+ const reservation=combatParryAction(defender);
+ const existing=reservation?.id?reservation:null,parryId=existing?.id||crypto.randomUUID();
+ await window.combatUndoBeforeActorAction?.();
  const sourceData={
+  ...(existing?.source_data||{}),hand:option.hand||null,weapon_key:option.kind==='weapon'?combatWeaponKey(option.item):null,
   action_key:'parry',label:'Parera',mode:'reaction',
   reaction_to_action_id:attack.id,attacker_id:attack.combatant_id,
   parry_key:option.key,parry_name:option.name,parry_kind:option.kind
  };
  const payload={
-  phase:'reaction',action_type:'parry',slot_key:'primary',source_data:sourceData,
-  target_combatant_id:attack.combatant_id,status:'resolving',
+  phase:'reaction',action_type:'parry',slot_key:existing?.slot_key||'primary',source_data:sourceData,
+  target_combatant_id:attack.combatant_id,status:'reserved',
   sequence:Math.max(0,(combatNumber(defender.state?.initiative_rank,1)||1)-1),
   result:{reaction_to_action_id:attack.id},player_visible:true
  };
+ combatWeaponExecutionBusy=true;
  try{
   if(existing){
-   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id),{
+   await dbJson('combat_actions?id=eq.'+encodeURIComponent(existing.id)+'&status=in.(planned,reserved)',{
     method:'PATCH',headers:{'Prefer':'return=minimal'},
     body:JSON.stringify({...payload,updated_at:new Date().toISOString()})
    })
@@ -1355,10 +1372,12 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
     round_number:Number(activeCombat.round_number)||1,...payload,created_by:activeUser()?.id||null
    })})
   }
+  const claimed=await combatClaimWeaponAction({...payload,id:parryId},attacker,option.key);
+  option.fv=Number(claimed.fv);option.hand=claimed.hand;
   const rolled=await combatExpertRoll('Parering · '+defender.name_snapshot+' med '+option.name,option.fv);
   const parryResult={
    success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,
-   fv:option.fv,item_key:option.key,item_name:option.name,item_kind:option.kind
+   fv:option.fv,hand:option.hand||null,item_key:option.key,item_name:option.name,item_kind:option.kind
   };
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(parryId),{
    method:'PATCH',headers:{'Prefer':'return=minimal'},
@@ -1398,12 +1417,16 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
  }catch(error){
   console.error('Kunde inte genomföra parering',error);
   alert('Kunde inte genomföra parering: '+(error?.message||error))
- }
+ }finally{combatWeaponExecutionBusy=false}
 }
 async function declineCombatParry(defenderId,attackActionId){
+ if(combatWeaponExecutionBusy)return;
  const opportunity=combatPendingParryOpportunity();
  if(!opportunity||String(opportunity.defender.id)!==String(defenderId)||String(opportunity.attack.id)!==String(attackActionId)||!combatCanManage())return;
+ combatWeaponExecutionBusy=true;
  try{
+  await window.combatUndoBeforeActorAction?.();
+  await dbJson('rpc/combat_claim_hit',{method:'POST',body:JSON.stringify({p_attack_id:opportunity.attack.id})});
   const attackMode=opportunity.attack.result?.attack_mode||opportunity.attack.source_data?.mode||'melee';
   const weapon=combatActionWeapon(opportunity.attacker,opportunity.attack,attackMode);
   const attackResult={
@@ -1428,7 +1451,7 @@ async function declineCombatParry(defenderId,attackActionId){
  }catch(error){
   console.error('Kunde inte avstå parering',error);
   alert('Kunde inte registrera valet: '+(error?.message||error))
- }
+ }finally{combatWeaponExecutionBusy=false}
 }
 function combatReactionPromptHtml(){
  return ''
@@ -1591,6 +1614,7 @@ function combatFumbleResultHtml(result){
 }
 function combatCharacterSource(combatant){
  if(combatant?.source_type!=='character'||typeof chars==='undefined')return null;
+ if(typeof combatCharacterSnapshots!=='undefined'&&combatCharacterSnapshots.has(String(combatant.source_id)))return combatCharacterSnapshots.get(String(combatant.source_id));
  return (chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id))||null
 }
 function combatWeaponSkillTarget(combatant,weapon){
@@ -1606,6 +1630,117 @@ function combatAttackFv(weapon,combatant=null){
  }
  const fv=combatNumber(weapon?.fv,null);
  return fv!=null&&fv>0?Math.floor(fv):null
+}
+function combatHeldEquipment(combatant,profile=combatAttackProfile(combatant)){
+ const disabled=[...(combatant?.state?.broken_weapon_keys||[]),...(combatant?.state?.dropped_weapon_keys||[])];
+ return globalThis.aleaHandRules.resolveHands(profile,baseGroup(profile.sty),ruleWeaponForItem,disabled)
+}
+function combatResolvedEquipment(combatant,profile=combatAttackProfile(combatant)){
+ const held=combatHeldEquipment(combatant,profile),eq={...profile.currentEquipment};
+ for(const slot of globalThis.aleaHandRules.slots){
+  const h=held.hands[slot];eq[slot]=h?{...h.ref,hands:h.grip?.hands||1}:null
+ }
+ return eq
+}
+function combatRoundWeaponActions(combatant){
+ return (combatActions||[]).filter(a=>String(a.combatant_id)===String(combatant?.id)&&
+  Number(a.round_number)===(Number(activeCombat?.round_number)||1)&&
+  ['primary','secondary'].includes(a.slot_key)&&a.status!=='cancelled')
+}
+function combatTwoWeaponContext(combatant,firstHand=null){
+ const profile=combatAttackProfile(combatant);
+ const plan=combatRoundWeaponActions(combatant).find(a=>a.source_data?.two_weapons);
+ return globalThis.aleaHandRules.twoWeapons(profile,combatHeldEquipment(combatant,profile),firstHand||plan?.source_data?.first_hand)
+}
+function combatWeaponActionFv(combatant,weapon,action){
+ const fv=combatAttackFv(weapon,combatant);
+ return action?.source_data?.two_weapons?globalThis.aleaHandRules.actionFv(fv,combatTwoWeaponContext(combatant,action.source_data.first_hand)):fv
+}
+function combatWeaponActionIsLegal(combatant,action){
+ if(!action?.source_data?.two_weapons)return true;
+ const context=combatTwoWeaponContext(combatant,action.source_data.first_hand);
+ if(!context.eligible||combatMovementHasUsedMoreThanHalf(combatant))return false;
+ const slot=action.source_data.hand;
+ const held=combatHeldEquipment(combatant).hands[slot];
+ return !!held?.usable&&combatWeaponKey(held.item)===action.source_data.weapon_key&&
+  combatWeaponActionFv(combatant,held.item,action)>0
+}
+function combatParryAction(combatant){
+ if(combatChosenAction(combatant)?.source_data?.casting_spell===true)return null;
+ const rows=combatRoundWeaponActions(combatant);
+ const plan=rows.find(a=>a.source_data?.two_weapons);
+ if(plan)return rows.find(a=>a.action_type==='parry'&&['planned','reserved'].includes(a.status)&&combatWeaponActionIsLegal(combatant,a))||null;
+ const primary=rows.find(a=>a.slot_key==='primary');
+ return !primary||['planned','reserved'].includes(primary.status)?primary||{slot_key:'primary'}:null
+}
+async function chooseCombatTwoWeapons(combatantId,mode,firstHand=null){
+ const actor=combatants.find(c=>String(c.id)===String(combatantId));
+ const incoming=combatPendingParryOpportunity();
+ const reaction=mode!=='attack_attack'&&String(incoming?.defender?.id)===String(actor?.id);
+ if(!actor||!combatCanManage()||(!combatCanChoosePrimaryAction(actor)&&!reaction)||activeCombat.phase==='late'||combatMovementHasUsedMoreThanHalf(actor)||combatChosenAction(actor)?.source_data?.casting_spell)return;
+ if(!combatTwoWeaponContext(actor,firstHand).eligible)return;
+ await window.combatUndoBeforeActorAction?.();
+ try{
+  await dbJson('rpc/combat_plan_two_weapons',{method:'POST',body:JSON.stringify({p_combatant_id:actor.id,p_mode:mode,p_first_hand:firstHand||combatTwoWeaponContext(actor).firstHand})});
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){alert('Kunde inte välja Två vapen: '+error.message)}
+}
+async function combatClaimWeaponAction(action,target,parryKey=null,weapon=null,projectileKey=null){
+ return dbJson('rpc/combat_claim_weapon_action',{method:'POST',body:JSON.stringify({p_action_id:action.id,p_target_id:target.id,p_parry_key:parryKey,p_projectile_key:projectileKey,p_weapon_key:weapon?._unarmed?'unarmed':weapon?combatWeaponKey(weapon):null})})
+}
+function combatTwoWeaponsHtml(actor,{reaction=false}={}){
+ if(!actor)return '';
+ const profile=combatAttackProfile(actor),held=combatHeldEquipment(actor,profile),combo=combatTwoWeaponContext(actor);
+ const rows=combatRoundWeaponActions(actor),selected=rows.find(a=>a.source_data?.two_weapons);
+ const locked=rows.some(a=>globalThis.aleaHandRules.spent(a));
+ const canChoose=combatCanManage()&&!locked&&!combatCannotAct(actor)&&!combatChosenAction(actor)?.source_data?.casting_spell&&activeCombat.phase!=='late'&&
+  !combatMovementHasUsedMoreThanHalf(actor)&&(reaction||combatIsActiveTurn(actor));
+ const arg=value=>escAttr(JSON.stringify(String(value)));
+ const handLabel=slot=>slot==='rightHand'?'Höger':'Vänster';
+ const hands=['rightHand','leftHand'].map(slot=>{
+  const h=held.hands[slot];
+  return '<span>'+handLabel(slot)+' hand: <b>'+escAttr(h?.item?.name||'Tom')+'</b>'+
+   (h?.grip?' · '+h.grip.hands+'H'+(h.grip.glMultiplier===.5?' · GL ½':'')+(h.usable?'':' · Otillgängligt'):'')+'</span>'
+ }).join('');
+ const modes=[['attack_attack','Attack + Attack'],['attack_parry','Attack + Parering'],['parry_parry','Parering + Parering']];
+ const buttons=combo.eligible?'<div class="combat-two-weapon-choices">'+modes.filter(([mode])=>!reaction||mode!=='attack_attack').map(([mode,label])=>
+  '<button type="button" class="btn'+(selected?.source_data?.combination_mode===mode?' selected':'')+'" aria-pressed="'+(selected?.source_data?.combination_mode===mode)+'" onclick="chooseCombatTwoWeapons('+arg(actor.id)+','+arg(mode)+')" '+(!canChoose?'disabled':'')+'>'+label+'</button>'
+ ).join('')+'</div>':'';
+ const ambi=profile.ambidextrous||profile.swordHand==='both';
+ const order=combo.eligible&&ambi?'<label>Förstahand <select aria-label="Förstahand för Två vapen" onchange="chooseCombatTwoWeapons('+arg(actor.id)+','+arg(selected?.source_data?.combination_mode||'attack_attack')+',this.value)" '+(!canChoose?'disabled':'')+'>'+['rightHand','leftHand'].map(h=>'<option value="'+h+'" '+(combo.firstHand===h?'selected':'')+'>'+handLabel(h)+'</option>').join('')+'</select></label>':'';
+ const next=rows.find(a=>['planned','reserved'].includes(a.status)&&combatWeaponActionIsLegal(actor,a));
+ const status=rows.map(a=>'<li>'+escAttr(a.slot_key==='secondary'?'Andra handlingen':'Första handlingen')+': '+
+  escAttr(a.source_data?.weapon_name||a.source_data?.label||a.action_type)+' · '+
+  escAttr(a.status==='reserved'?'Parering reserverad':a.status==='planned'?(a.phase==='late'?'Attack efter övriga attacker':'Kvar'):a.status==='resolving'?'Pågår':'Förbrukad')+'</li>').join('');
+ const fvs=combo.eligible?'<span>FV: '+escAttr(combo.firstWeapon.name)+' '+globalThis.aleaHandRules.actionFv(combatAttackFv(combo.firstWeapon,actor),combo)+
+  ' / '+escAttr(combo.secondWeapon.name)+' '+globalThis.aleaHandRules.actionFv(combatAttackFv(combo.secondWeapon,actor),combo)+
+  (combo.trained?' · Tränad kombination':' · Otränad kombination −15 FV')+'</span>':'<span>'+escAttr(combo.reason)+'</span>';
+ return '<section class="combat-two-weapons" aria-label="Två vapen och handutrustning"><b>TVÅ VAPEN</b>'+hands+
+  '<span>Svärdshand: '+(profile.swordHand==='both'?'Båda':handLabel(combo.firstHand))+'</span>'+fvs+order+buttons+
+  (selected&&!combo.eligible?'<p role="status">Kombinationen är inte längre tillgänglig. Förbrukade handlingar behålls.</p>':'')+
+  (held.issues.length?'<p role="status">'+escAttr(held.issues.join(' · '))+'</p>':'')+(status?'<ol>'+status+'</ol>':'')+(next?'<span>Nästa vapen: '+escAttr(next.source_data?.weapon_name||'—')+'</span>':'')+combatHandEquipmentEditorHtml(actor,profile)+'</section>'
+}
+function combatHandEquipmentEditorHtml(actor,profile=combatAttackProfile(actor)){
+ if(!combatCanManage())return '';
+ const arg=escAttr(JSON.stringify(String(actor.id)));
+ const choices=[['weapon',profile.weapons||[]],['shield',profile.shields||[]],['equipment',profile.equipment||[]]];
+ return '<details class="combat-hand-editor"><summary>Tillfällig handutrustning · SL</summary>'+['rightHand','leftHand'].map(slot=>
+  '<label>'+(slot==='rightHand'?'Höger':'Vänster')+' hand<select aria-label="Tillfällig '+(slot==='rightHand'?'höger':'vänster')+' hand" onchange="combatSetHandEquipment('+arg+',\''+slot+'\',this.value)"><option value="">Tom hand</option>'+
+   choices.map(([kind,items])=>items.map(item=>{
+    const value=kind+':'+String(item.equipId||item.id||'');
+    const ref=profile.currentEquipment?.[slot];
+    return '<option value="'+escAttr(value)+'" '+(ref?.kind===kind&&String(ref.itemId)===String(item.equipId||item.id)?'selected':'')+'>'+escAttr(item.name||'Föremål')+'</option>'
+   }).join('')).join('')+'</select></label>'
+ ).join('')+'<small>Gäller denna strid. Redan förbrukade handlingar behålls.</small></details>'
+}
+async function combatSetHandEquipment(combatantId,slot,value){
+ if(!combatCanManage()||combatDiceBusy)return;
+ const split=String(value||'').indexOf(':'),kind=split<0?null:value.slice(0,split),itemId=split<0?null:value.slice(split+1);
+ await window.combatUndoBeforeActorAction?.();
+ try{
+  await dbJson('rpc/combat_set_hand_equipment',{method:'POST',body:JSON.stringify({p_combatant_id:combatantId,p_slot:slot,p_kind:kind,p_item_id:itemId})});
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){alert('Kunde inte ändra handutrustningen: '+error.message)}
 }
 function combatOutcomeMeta(outcome){
  if(typeof expertOutcomePresentation==='function')return expertOutcomePresentation(outcome);
@@ -1969,7 +2104,7 @@ function combatStartMeleeFx(actor,target){
 }
 
 async function combatResolveAttackAction(actor,target,action,weapon,attackMode='melee'){
- const fv=combatAttackFv(weapon,actor);
+ const fv=action._claimed_rules?.fv??(typeof combatWeaponActionFv==='function'?combatWeaponActionFv(actor,weapon,action):combatAttackFv(weapon,actor));
  if(fv==null)throw new Error((weapon?.name||'Vapnet')+' saknar ett giltigt FV.');
  const label=(weapon?.name||'Vapen')+' · '+actor.name_snapshot+' → '+target.name_snapshot;
  const meleeFx=attackMode==='melee'?combatStartMeleeFx(actor,target):null;
@@ -1991,7 +2126,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
-  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',attack_mode:attackMode,
+  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',weapon_snapshot:{...weapon},gl_multiplier:action._claimed_rules?.grip?.gl_multiplier??1,hand:action._claimed_rules?.hand||action.source_data?.hand||null,attack_mode:attackMode,
   full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
   rule_engine:'expert_skill',
   hit_resolved:!success,
@@ -2043,34 +2178,35 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  return result
 }
 async function rollCombatAttack(actorId,targetId){
- if(combatDiceBusy||!combatCanManage())return;
+ if(combatDiceBusy||combatWeaponExecutionBusy||!combatCanManage())return;
  const actor=combatants.find(row=>String(row.id)===String(actorId));
  const target=combatants.find(row=>String(row.id)===String(targetId));
  const action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(!actor||!target||!action||combatCannotAct(actor)||def?.type!=='attack'||!combatIsActiveTurn(actor)||action.status!=='planned')return;
  const mode=def.mode||action?.source_data?.mode||'auto';
- const weapon=combatActionWeapon(actor,action,mode);
+ let weapon=combatActionWeapon(actor,action,mode);
  if(!weapon)return;
  const possible=combatPossibleAttackTargets(actor,mode,weapon),info=possible.get(String(target.id));
  if(!info)return;
  const projectileKey=info.mode==='ranged'?combatWeaponProjectileKey(weapon):'';
- let consumed=false;
+ let consumed=false,resolutionStarted=false;
+ combatWeaponExecutionBusy=true;
  try{
+  if(!combatWeaponActionIsLegal(actor,action))throw new Error('Vapnet eller Två vapen-kombinationen är inte längre tillgänglig.');
   if(info.mode==='ranged'&&!projectileKey&&['projectile','thrown'].includes(combatWeaponCategory(weapon)))
    throw new Error('Vapnet saknar projektiltyp i vapenregistret.');
-  if(projectileKey){
-   if(combatAmmoStock(actor,projectileKey)<1)throw new Error('Slut på ammunition. Fyll på projektiler under rollpersonens Vapen.');
-   const response=await dbJson('rpc/combat_spend_ammunition',{method:'POST',body:JSON.stringify({
-    p_action_id:action.id,p_weapon_key:combatWeaponKey(weapon),p_projectile_key:projectileKey
-   })});
-   if(response?.already_spent)throw new Error('Detta skott har redan förbrukat ammunition.');
-   consumed=true;
-   await combatReloadAmmoCharacter(actor);
-  }
+  if(projectileKey&&combatAmmoStock(actor,projectileKey)<1)throw new Error('Slut på ammunition. Fyll på projektiler under rollpersonens Vapen.');
+  await window.combatUndoBeforeActorAction?.();
+  // The claim invokes existing combat_spend_ammunition in the same transaction.
+  action._claimed_rules=await combatClaimWeaponAction(action,target,null,weapon,projectileKey||null);
+  consumed=!!action._claimed_rules?.ammunition;action.status='resolving';
+  if(consumed)await combatReloadAmmoCharacter(actor);
+  weapon={...weapon,...(action._claimed_rules?.weapon||{})};
+  resolutionStarted=true;
   await combatResolveAttackAction(actor,target,action,weapon,info.mode);
   await loadActiveCombat(null,{preserveSelectedTarget:true})
  }catch(error){
-  if(consumed){
+  if(consumed&&!resolutionStarted){
    try{
     const refunded=await dbJson('rpc/combat_refund_ammunition',{method:'POST',body:JSON.stringify({p_action_id:action.id})});
     if(refunded===true)await combatReloadAmmoCharacter(actor)
@@ -2078,7 +2214,7 @@ async function rollCombatAttack(actorId,targetId){
   }
   console.error('Kunde inte slå attack',error);
   alert('Attackslaget kunde inte genomföras: '+(error?.message||error))
- }
+ }finally{combatWeaponExecutionBusy=false}
 }
 function combatAttackExecutionHtml(target){
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
@@ -2095,7 +2231,7 @@ function combatAttackExecutionHtml(target){
   return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>'+
    (ammoKey?'Slut på ammunition. Lägg till '+escAttr((typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(ammoKey)?.name:null)||ammoKey)+' under Vapen → Projektiler.':'Vapnet saknar projektiltyp i grundregistret.')+
    '</span></div>';
- const fv=combatAttackFv(weapon,actor);
+ const fv=typeof combatWeaponActionFv==='function'?combatWeaponActionFv(actor,weapon,action):combatAttackFv(weapon,actor);
  if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slås ännu.</span></div>';
  return '<div class="combat-attack-execute">'+
   '<div><span>Valt mål · '+(info.mode==='melee'?'Närstrid':'Avstånd')+'</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' · FV '+fv+' · '+info.distance+' hex</small></div>'+
@@ -2105,7 +2241,7 @@ function combatAttackExecutionHtml(target){
 async function chooseCombatAttackWeapon(combatantId,weaponKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const action=combatChosenAction(combatant),def=combatActionDefinition(action);
- if(!combatant||!action||def?.type!=='attack'||!combatCanChoosePrimaryAction(combatant))return;
+ if(!combatant||!action||action.status!=='planned'||action.source_data?.two_weapons||def?.type!=='attack'||!combatCanChoosePrimaryAction(combatant))return;
  const mode=def.mode||action?.source_data?.mode||'auto';
  const weapon=combatAttackWeaponOptions(combatant,mode).find(item=>combatWeaponKey(item)===String(weaponKey));
  if(!weapon)return;
@@ -2819,7 +2955,15 @@ function combatTurnOrderIds(){
   .map(row=>String(row.id))
 }
 function combatCanEndTurn(combatant){
- return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&(!combatIsMovementPlanning(combatant)||combatCannotMove(combatant))&&!combatPendingParryOpportunity()&&!combatPendingAntimagic()
+ return !!combatant&&combatCanManage()&&combatIsActiveTurn(combatant)&&activeCombat?.status==='active'&&(!combatIsMovementPlanning(combatant)||combatCannotMove(combatant))&&!combatPendingParryOpportunity()&&!combatPendingAntimagic()&&!combatWeaponExecutionBusy&&!(combatActions||[]).some(a=>Number(a.round_number)===Number(activeCombat.round_number)&&['pending','resolving'].includes(a.status))
+}
+function combatLateAttackOrder(){
+ return combatTurnOrderIds().filter(id=>{
+  const actor=combatants.find(c=>String(c.id)===String(id));
+  const action=combatRoundWeaponActions(actor).find(a=>a.slot_key==='secondary'&&a.action_type==='attack');
+  const primary=combatRoundWeaponActions(actor).find(a=>a.slot_key==='primary');
+  return actor&&combatIsOnBattlefield(actor)&&!combatCannotAct(actor)&&primary?.status==='resolved'&&primary.action_type==='attack'&&action?.status==='planned'&&combatWeaponActionIsLegal(actor,action)
+ })
 }
 async function endCombatTurn(event,combatantId){
  event?.stopPropagation?.();
@@ -2830,15 +2974,22 @@ async function endCombatTurn(event,combatantId){
  if(!order.length)return;
  const currentIndex=Math.max(0,order.indexOf(String(actor.id)));
  const nextIndex=currentIndex+1;
- const newRound=nextIndex>=order.length;
+ const latePass=activeCombat.phase==='late';
+ const lateActions=combatLateAttackOrder();
+ const nextLate=latePass?lateActions.find(id=>order.indexOf(String(id))>currentIndex):null;
+ const beginLate=!latePass&&nextIndex>=order.length&&lateActions.length>0;
+ const newRound=latePass?!nextLate:nextIndex>=order.length&&!beginLate;
  const currentRound=Number(activeCombat.round_number)||1;
- const nextActorId=newRound?null:order[nextIndex];
+ const nextActorId=newRound?null:latePass?nextLate:beginLate?lateActions[0]:order[nextIndex];
+ const nextPhase=(latePass||beginLate)?'late':'movement';
  const round=currentRound+(newRound?1:0);
- const combatId=activeCombat.id;
+ const combatId=activeCombat.id,previousPhase=activeCombat.phase;
  const undoSnapshot=await window.combatUndoBeforeActorAction?.();
  try{
-  await combatTickAreaStay(actor,currentRound);
-  await combatTickOngoingEffects(actor,currentRound);
+  if(!latePass){
+   await combatTickAreaStay(actor,currentRound);
+   await combatTickOngoingEffects(actor,currentRound);
+  }
   await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
    combat_id:combatId,campaign_id:centralCampaignId,round_number:currentRound,
    phase:'movement',actor_id:actor.id,target_id:null,event_type:'turn_end',
@@ -2850,31 +3001,23 @@ async function endCombatTurn(event,combatantId){
     method:'PATCH',headers:{'Prefer':'return=minimal'},
     body:JSON.stringify({movement_remaining:combatMovementMaximum(row),updated_at:new Date().toISOString()})
    })));
-   const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
-   await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{
-    method:'PATCH',headers:{'Prefer':'return=minimal'},
-    body:JSON.stringify({
-     active_actor_id:null,active_responder_id:null,round_number:round,phase:'initiative',
-     initiative:pendingInitiative,updated_at:new Date().toISOString()
-    })
-   });
+   await dbJson('rpc/combat_advance_turn',{method:'POST',body:JSON.stringify({p_combat_id:combatId,p_actor_id:actor.id,p_round:currentRound,p_phase:previousPhase,p_next_actor_id:null,p_next_phase:'initiative',p_new_round:true})});
    await loadActiveCombat(combatId);
    await combatRollAndApplyInitiative(combatId,{roundNumber:round});
    await loadActiveCombat(combatId);
    try{await window.combatUndoAfterTurnAdvanced?.(undoSnapshot)}catch(undoError){console.warn('Kunde inte uppdatera ångra-checkpoint efter turbyte',undoError)}
    return
   }
-  await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{
-   method:'PATCH',headers:{'Prefer':'return=minimal'},
-   body:JSON.stringify({active_actor_id:nextActorId,active_responder_id:null,round_number:round,phase:'movement',updated_at:new Date().toISOString()})
-  });
+  await dbJson('rpc/combat_advance_turn',{method:'POST',body:JSON.stringify({p_combat_id:combatId,p_actor_id:actor.id,p_round:currentRound,p_phase:previousPhase,p_next_actor_id:nextActorId,p_next_phase:nextPhase,p_new_round:false})});
   await loadActiveCombat(combatId);
   try{await window.combatUndoAfterTurnAdvanced?.(undoSnapshot)}catch(undoError){console.warn('Kunde inte uppdatera ångra-checkpoint efter turbyte',undoError)}
  }catch(error){
   console.error('Kunde inte avsluta draget',error);
-  alert('Kunde inte avsluta draget: '+(error?.message||error))
+  alert('Kunde inte avsluta draget: '+(error?.message||error));
+  await loadActiveCombat(combatId)
  }
 }
+const combatCharacterSnapshots=new Map();
 async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
  const selectedTargetBeforeLoad=combatSelectedTargetId;
  activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
@@ -2907,6 +3050,12 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    combatMagicCarouselRecordCasts();
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
    await combatLoadEffects();
+   const characterIds=combatants.filter(c=>c.source_type==='character').map(c=>c.source_id);
+   combatCharacterSnapshots.clear();
+   if(characterIds.length){
+    const sources=await dbJson('characters?id=in.('+characterIds.map(encodeURIComponent).join(',')+')&select=id,data');
+    for(const row of sources||[])combatCharacterSnapshots.set(String(row.id),{...row.data,_dbId:row.id})
+   }
    await combatLoadAmmoSpends();
    await combatExpireElapsedEffects();
    const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
@@ -3330,23 +3479,26 @@ function combatAttackProfile(combatant){
  // For NPCs and monsters this combat instance's snapshot, not the source register, is authoritative.
  if(['npc','monster'].includes(combatant?.source_type)&&combatant?.state?.attack_profile){
   const npcProfile=typeof combatNpcNormalizeProfile==='function'?combatNpcNormalizeProfile(stored):stored;
-  return {...npcProfile,weapons:Array.isArray(npcProfile.weapons)?npcProfile.weapons:[],shields:npcProfile.shields||[],
+  return {...npcProfile,currentEquipment:combatant?.state?.equipment_override??npcProfile.currentEquipment,weapons:Array.isArray(npcProfile.weapons)?npcProfile.weapons:[],shields:npcProfile.shields||[],
    armor:npcProfile.armor||[],projectiles:npcProfile.projectiles||[],
    sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),combatNumber(stored.sty,10)),
    sto:combatNumber(combatEffectiveAttribute(combatant,'STO'),combatNumber(stored.sto,10)),
    smi:combatNumber(combatEffectiveAttribute(combatant,'SMI'),combatNumber(stored.smi,10))}
  }
  let src=null;
- if(combatant?.source_type==='character'&&typeof chars!=='undefined')src=(chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id));
+ if(combatant?.source_type==='character'&&typeof combatCharacterSource==='function')src=combatCharacterSource(combatant);
+ else if(combatant?.source_type==='character'&&typeof chars!=='undefined')src=(chars||[]).find(c=>String(c._dbId||c.id)===String(combatant.source_id));
  else if(combatant?.source_type==='npc'&&typeof campaignNpcs!=='undefined')src=(campaignNpcs||[]).find(c=>String(c.id)===String(combatant.source_id));
  else if(combatant?.source_type==='monster'&&typeof campaignMonsters!=='undefined')src=(campaignMonsters||[]).find(c=>String(c.id)===String(combatant.source_id));
  if(!src)return{
+  ...stored,
+  sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),combatNumber(stored.sty,10)),
   weapons:Array.isArray(stored.weapons)?stored.weapons:[],
-  currentEquipment:stored.currentEquipment||null,
+  currentEquipment:combatant?.state?.equipment_override??stored.currentEquipment??null,
   shields:Array.isArray(stored.shields)?stored.shields:[],
   armor:Array.isArray(stored.armor)?stored.armor:[],equipment:Array.isArray(stored.equipment)?stored.equipment:[],projectiles:Array.isArray(stored.projectiles)?stored.projectiles:[],
   damage_bonus:stored.damage_bonus??null,
-  sty:combatNumber(stored.sty,combatNumber(combatant?.state?.sty,10)),
+  sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),combatNumber(stored.sty,combatNumber(combatant?.state?.sty,10))),
   sto:combatNumber(stored.sto,combatNumber(combatant?.state?.sto,10)),
   smi:combatNumber(stored.smi,combatNumber(combatant?.state?.smi,10))
  };
@@ -3364,7 +3516,10 @@ function combatAttackProfile(combatant){
  return{
   ...stored,
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(src.weapons)?src.weapons:(Array.isArray(stored.weapons)?stored.weapons:[])),
-  currentEquipment:data.currentEquipment||stored.currentEquipment||null,
+  currentEquipment:combatant?.state?.equipment_override??data.currentEquipment??stored.currentEquipment??null,
+  swordHand:globalThis.aleaHandRules.swordHand(derived.Svärdshand,data.ambidextrous===true||stored.ambidextrous===true),
+  ambidextrous:globalThis.aleaHandRules.swordHand(derived.Svärdshand,data.ambidextrous===true||stored.ambidextrous===true)==='both',
+  skills:Array.isArray(data.skills)?data.skills:(stored.skills||[]),
   shields,armor,equipment:Array.isArray(data.equipment)?data.equipment:(Array.isArray(stored.equipment)?stored.equipment:[]),projectiles:Array.isArray(data.projectiles)?data.projectiles:(Array.isArray(stored.projectiles)?stored.projectiles:[]),
   damage_bonus:derived.Skadebonus??derived.skadebonus??stored.damage_bonus??null,
   sty:combatNumber(combatEffectiveAttribute(combatant,'STY'),sty),
@@ -3378,11 +3533,11 @@ function combatWeaponCategory(weapon){
 }
 function combatAvailableWeapons(combatant,mode='auto'){
  const profile=combatAttackProfile(combatant),weapons=Array.isArray(profile.weapons)?profile.weapons:[];
- let available=weapons;
+ let available=typeof combatHeldEquipment==='function'?combatHeldEquipment(combatant,profile).weapons:weapons;
  if(profile.currentEquipment){
   const refs=[profile.currentEquipment.leftHand,profile.currentEquipment.rightHand].filter(ref=>ref?.kind==='weapon'&&ref.itemId);
   const ids=new Set(refs.map(ref=>String(ref.itemId)));
-  available=weapons.filter(weapon=>ids.has(String(weapon.equipId||weapon.id)))
+  available=available.filter(weapon=>ids.has(String(weapon.equipId||weapon.id)))
  }
  const disabled=new Set([
   ...(Array.isArray(combatant?.state?.broken_weapon_keys)?combatant.state.broken_weapon_keys:[]),
@@ -3518,7 +3673,7 @@ function combatParryOptions(combatant){
   const key=String(option.key||'');if(!key||seen.has(key))return;
   seen.add(key);out.push(option)
  };
- const shields=Array.isArray(profile.shields)?profile.shields:[];
+ const shields=typeof combatHeldEquipment==='function'?combatHeldEquipment(combatant,profile).shields:(Array.isArray(profile.shields)?profile.shields:[]);
  let shieldIds=null;
  if(profile.currentEquipment){
   shieldIds=new Set([profile.currentEquipment.leftHand,profile.currentEquipment.rightHand]
@@ -3543,7 +3698,13 @@ function combatParryOptions(combatant){
   abs:0,
   item:weapon
  }));
- return out
+ const reservation=typeof combatParryAction==='function'?combatParryAction(combatant):null;
+ const hand=reservation?.source_data?.two_weapons?reservation.source_data.hand:null;
+ return out.filter(option=>!hand||(option.kind==='weapon'&&combatWeaponKey(option.item)===reservation.source_data.weapon_key)).map(option=>{
+  const eq=combatAttackProfile(combatant).currentEquipment||{};
+  const slot=['rightHand','leftHand'].find(s=>String(eq[s]?.itemId)===String(option.item?.equipId||option.item?.id));
+  return {...option,hand:hand||slot||null,fv:hand?combatWeaponActionFv(combatant,option.item,reservation):option.fv}
+ }).filter(option=>Number(option.fv)>0)
 }
 function combatParryOption(combatant,key){
  const options=combatParryOptions(combatant);
@@ -3551,7 +3712,7 @@ function combatParryOption(combatant,key){
  return options.find(option=>option.key===String(key))||null
 }
 function combatCanParryAttack(defender){
- return !!defender&&!combatCannotReact(defender)&&combatHasUnusedAction(defender)&&combatParryOptions(defender).length>0
+ return !!defender&&!combatCannotReact(defender)&&!combatMovementHasUsedMoreThanHalf(defender)&&!!combatParryAction(defender)&&combatParryOptions(defender).length>0
 }
 async function combatExpertRoll(label,fv){
  const first=await combatRollDice([{qty:1,sides:20}],label);
@@ -3747,9 +3908,14 @@ function combatParryResultHtml(result){
 
 /* Attack displays the equipped primary hand (right unless explicitly left).
    An ambidextrous combatant can swap between two equipped weapons in this tile. */
+function combatUnarmedWeapon(combatant){
+ const profile=combatAttackProfile(combatant);
+ const skill=(profile.skills||[]).find(s=>s.skillId==='slagsmal'||s.skill_id==='slagsmal');
+ return {name:'Obeväpnad',_unarmed:true,skillId:'slagsmal',fv:combatNumber(skill?.fv,null),damage:'1T3'}
+}
 function combatPrimaryHandWeapon(combatant,mode='auto'){
  const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
- const preferred=String(eq.mainHand||eq.primaryHand||eq.dominantHand||
+ const preferred=String(profile.swordHand||eq.mainHand||eq.primaryHand||eq.dominantHand||
   profile.mainHand||profile.primaryHand||profile.dominantHand||profile.dominant_hand||'right').toLowerCase();
  const main=/^(left|vänster)/.test(preferred)?'leftHand':'rightHand';
  const options=combatAttackWeaponOptions(combatant,mode);
@@ -3761,7 +3927,7 @@ function combatPrimaryHandWeapon(combatant,mode='auto'){
  return equipped(main)||equipped(main==='rightHand'?'leftHand':'rightHand')||null
 }
 function combatAmbidextrousDuelWeapons(combatant,action,mode='auto'){
- if(!combatant||action?.status!=='planned')return [];
+ if(!combatant||action?.status!=='planned'||action.source_data?.two_weapons)return [];
  const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
  if(profile.ambidextrous!==true&&combatant?.state?.attributes?.ambidextrous!==true)return [];
  const options=combatAttackWeaponOptions(combatant,mode);
@@ -3783,14 +3949,15 @@ async function combatCycleDuelWeapon(combatantId){
  await chooseCombatAttackWeapon(combatantId,combatWeaponKey(next))
 }
 function combatActionWeapon(combatant,action,mode='auto'){
+ if(action?.status==='resolved'&&action?.result?.weapon_snapshot)return action.result.weapon_snapshot;
  const selectedKey=String(action?.source_data?.weapon_key||action?.result?.weapon_key||'');
- if(selectedKey==='unarmed')return {name:'Obeväpnad',_unarmed:true};
+ if(selectedKey==='unarmed')return combatUnarmedWeapon(combatant);
  if(selectedKey){
   const selected=combatAttackWeaponOptions(combatant,'auto').find(weapon=>combatWeaponKey(weapon)===selectedKey);
-  if(selected)return selected
+  return selected||null
  }
  const options=combatAttackWeaponOptions(combatant,mode);
- if(!options.length)return mode==='ranged'?null:{name:'Obeväpnad',_unarmed:true};
+ if(!options.length)return mode==='ranged'?null:combatUnarmedWeapon(combatant);
  return combatPrimaryHandWeapon(combatant,mode)||(options.length===1?options[0]:null)
 }
 function combatMeleeReachHexesForWeapon(weapon){
@@ -5825,7 +5992,7 @@ function combatDefenseReactionHtml(pending){
  const argument=value=>safe(JSON.stringify(String(value)));
  const defenderArg=argument(defender.id),attackArg=argument(attack.id);
  const profile=typeof combatAttackProfile==='function'?combatAttackProfile(defender):{};
- const current=profile?.currentEquipment||{};
+ const current=typeof combatResolvedEquipment==='function'?combatResolvedEquipment(defender,profile):(profile?.currentEquipment||{});
  const legal=kind=>options.filter(option=>option?.kind===kind&&Number(option.fv)>0);
  const best=kind=>legal(kind).sort((a,b)=>Number(b.fv)-Number(a.fv))[0]||null;
  // The displayed weapons must be the defender's held equipment, even when
@@ -5907,6 +6074,7 @@ function combatDefenseReactionHtml(pending){
    '<div><small>FÖRSVAR</small><strong>'+safe(defender.name_snapshot)+'</strong></div>'+
    '<span class="combat-defense-drawer-alert">VÄLJ</span>'+
   '</div>'+
+  (typeof combatTwoWeaponsHtml==='function'?combatTwoWeaponsHtml(defender,{reaction:true}):'')+
   '<div class="combat-defense-drawer-actions" role="group" aria-label="Välj försvar">'+
    defenseChoice('shield')+weaponChoice+
    '<button type="button" class="btn combat-take-hit-btn combat-defense-choice combat-defense-decline take-hit"'+
@@ -6121,7 +6289,7 @@ function combatTurnActionState(combatant){
 /* Real master artwork for the active combatant: equipped weapons, shield,
    chest armor and the ammunition for currently equipped ranged weapons only. */
 function combatTurnEquipmentHtml(combatant){
- const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
+ const profile=combatAttackProfile(combatant),eq=typeof combatResolvedEquipment==='function'?combatResolvedEquipment(combatant,profile):(profile.currentEquipment||{});
  const weapons=Array.isArray(profile.weapons)?profile.weapons:[];
  const shields=Array.isArray(profile.shields)?profile.shields:[];
  const armor=Array.isArray(profile.armor)?profile.armor:[];
@@ -6289,7 +6457,7 @@ function combatTurnPanelHtml(){
     '<div class="combat-row-tool combat-turn-action-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+actor.id+'\')" '+(!canEnd?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/end-round.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
    '</div>'+
   '</div>'+
-  '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+
+  '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+combatTwoWeaponsHtml(actor)+
  '</div>'
 }
 // KROKODIL: strongest matching ward protects from matching damage kind.

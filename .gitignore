@@ -3,6 +3,7 @@ dist/
 .vite/
 .vitest/
 coverage/
+work/sisyphus-postgres/
 .DS_Store
 
 # Never commit short-lived Google authentication credentials

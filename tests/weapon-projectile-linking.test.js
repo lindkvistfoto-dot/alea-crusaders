@@ -105,7 +105,8 @@ describe('Alea projectile links and shared images',()=>{
   expect(migration).toContain("rule_weapons_ranged_ammo_required");
   expect(migration).toContain("category not in ('projectile','thrown') or projectile_key is not null");
   expect(runtime).toContain("rule?.projectile_key||weapon.projectileKey||weapon.projectile_key");
-  expect(runtime).toContain('rpc/combat_spend_ammunition');
+  expect(runtime).toContain('await combatClaimWeaponAction(action,target,null,weapon,projectileKey||null)');
+  expect(read('supabase/migrations/20261019091740_sisyphus_two_weapons.sql')).toContain('public.combat_spend_ammunition(a.id,weapon_key,p_projectile_key)');
   expect(runtime).toContain('combatAmmoStock(actor,projectileKey)<1');
  });
 });
