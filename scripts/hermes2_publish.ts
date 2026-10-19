@@ -5,6 +5,7 @@
  * Only activates image after source/app/URL checksums and DB CAS succeed.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+import { assertSpellCutoutWritable } from "./hermes2_asset_profiles.ts";
 
 const url=Deno.env.get("SUPABASE_URL")||"";
 const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -71,18 +72,19 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any){
- if(!a||!["spell","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  const spellWide=a.kind==="spell-illustration-wide";
  const spellSquare=a.kind==="spell-illustration";
- const spellArt=spellWide||spellSquare;
+ const spellCutout=a.kind==="spell-cutout";
+ const spellArt=spellWide||spellSquare||spellCutout;
  const wide=a.kind==="skill-illustration-wide"||spellWide;
  const illustration=a.kind==="skill-illustration"||wide||spellSquare;
  const expectsAlpha=!illustration;
- const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" = wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
+ const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" = spellCutout?"cutout_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
  const validDimensions=spellWide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
  if(a.source_path!==expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
@@ -120,6 +122,10 @@ async function publish(a:any){
   if(target[assetField]!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
   console.log("ALREADY_ACTIVE",a.kind,a.target_key);return;
  }
+ // Cutouts are pilot-only and fail closed if the spell already has an image.
+ // Retries may proceed only when the target already points at this exact
+ // deterministic, content-derived asset path.
+ if(a.kind==="spell-cutout")assertSpellCutoutWritable(target.cutout_path,appPath);
  const jobBody={kind:a.kind,target_key:a.target_key,source_sha256:a.source_sha256,app_sha256:a.app_sha256,
   source_path:sourcePath,app_path:appPath,source_bytes:raw.length,app_bytes:app.length,
   github_blob_sha:gitBlob,github_commit_sha:ghSha,origin:"github_actions",
@@ -135,7 +141,7 @@ async function publish(a:any){
  try{
   await recordEvent(job.id,"staged","HERMES 2.1 source validated; GitHub blob "+gitBlob);
   await immutableUpload("alea-hermes-source",sourcePath,raw,"image/png",a.source_sha256);
-  const appBucket=(a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
   await immutableUpload(appBucket,appPath,app,"image/webp",a.app_sha256);
   await patch(job.id,{status:"archived",github_blob_sha:gitBlob,github_commit_sha:ghSha});
   await recordEvent(job.id,"archived","Immutable GitHub original and Supabase readback verified");

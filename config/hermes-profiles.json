@@ -3,6 +3,39 @@
   "version": "1.0",
   "policy": "forward-only",
   "profiles": {
+    "arcane-spell-cutout": {
+      "status": "pilot",
+      "purpose": "transparent-spell-art-over-combat-gold-frame",
+      "kind": "spell-cutout",
+      "master_dir": "assets/hermes/originals/spell-cutout/<spell_key>",
+      "source_format": "png",
+      "source_aspect_ratio": "1:1",
+      "source_minimum": "1024x1024",
+      "source_maximum": "4096x4096",
+      "source_alpha": "required-genuine-transparency",
+      "delivery_format": "webp",
+      "delivery_width": 640,
+      "delivery_height": 640,
+      "delivery_max_bytes": 500000,
+      "transparency": "required-preserved",
+      "storage_bucket": "alea-spell-art",
+      "storage_path": "spell/<spell_uuid>/<deterministic_uuid>.webp",
+      "database_table": "public.rule_spells",
+      "database_column": "cutout_path",
+      "overwrite_policy": "never-replace-existing-cutout",
+      "pipeline": [
+        "scripts/hermes_drive_intake.py",
+        "scripts/hermes2_prepare.py",
+        "scripts/hermes2_publish.ts"
+      ],
+      "verification": [
+        "tests/test_hermes_spell_cutout.py",
+        "tests/hermes-spell-cutout-profile.test.js",
+        "HERMES SHA-256 source and storage readback",
+        "database compare-and-set and readback",
+        "spell admin and combat frame visual check"
+      ]
+    },
     "arcane-ivory-spell-icon": {
       "status": "active",
       "purpose": "spell-selector-and-cryptex",
