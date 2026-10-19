@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const css=read('features/character/arcane-layout-v5.css');
+const css=read('features/character/arcane-layout-v7.css');
 const html=read('index.html');
 const legacy=read('legacy/app.js');
 const fields=[
@@ -17,14 +17,16 @@ const fields=[
   ['stand','2',5]
 ];
 
-describe('ARCANE mobile character grid v5 — fixed positions',()=>{
+describe('ARCANE mobile character grid v7 — fixed positions',()=>{
   it('loads after the old ARCANE styles and busts the character script cache',()=>{
-    expect(html).toContain('features/character/arcane-layout-v5.css?v=1');
-    expect(html.indexOf('arcane-layout-v5.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
+    expect(html).toContain('features/character/arcane-layout-v7.css?v=20261019-2');
+    expect(html).not.toContain('<link rel="stylesheet" href="./features/character/arcane-layout-v5.css');
+    expect(html).not.toContain('<link rel="stylesheet" href="./features/character/arcane-layout-v6.css');
+    expect(html.indexOf('arcane-layout-v7.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
     expect(html).toContain('legacy/app.js?v=0.35.267&arcane-grid=5');
   });
   it('uses two explicit tracks and no implicit named grid areas on phones and tablets',()=>{
-    expect(css).toContain('@media (max-width: 850px)');
+    expect(css).toContain('@media (max-width:850px)');
     expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))!important');
     expect(css).toContain('grid-template-areas:none!important');
     expect(css).toContain('grid-area:auto!important');
@@ -39,12 +41,12 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     }else{
       expect(legacy).toContain('arcane-field-'+key);
     }
-    const regex=new RegExp('> \\.field\\.arcane-field-'+key+' \\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
+    const regex=new RegExp('> \\.field\\.arcane-field-'+key+'\\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
     expect(css).toMatch(regex);
   });
   it('keeps title and subtitle inside the lion plaque with readable one-line sizes',()=>{
-    expect(css).toContain('min-height:100px!important');
-    expect(css).toContain('font:700 clamp(17px,4.9vw,22px)');
+    expect(css).toContain('min-height:clamp(73px,20.5vw,96px)!important');
+    expect(css).toContain('font:700 clamp(19px,5.5vw,32px)');
     expect(css).toContain('white-space:nowrap!important');
     expect(css).toContain('text-overflow:ellipsis!important');
     expect(css).toContain('arcane-nameplate-subtitle');
@@ -52,8 +54,8 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     expect(legacy).toContain('escAttr(i.yrke||"—")');
   });
   it('keeps actual race and profession fields visible, even while editing',()=>{
-    expect(css).toContain('> .field.arcane-field-ras,');
-    expect(css).toContain('> .field.arcane-field-yrke {');
+    expect(css).toContain('> .field.arcane-field-ras{');
+    expect(css).toContain('> .field.arcane-field-yrke{');
     expect(css).toContain('display:flex!important');
     expect(css).toContain('body.character-glowup-active.editing');
     expect(css).toContain('.grund-input');
@@ -61,11 +63,11 @@ describe('ARCANE mobile character grid v5 — fixed positions',()=>{
     expect(legacy).toContain('class="field wide arcane-field-yrke"');
   });
   it('places the portrait-based miniature beside social standing in standard sized cards',()=>{
-    expect(css).toContain('> .field.arcane-field-combat {');
+    expect(css).toContain('> .field.arcane-field-combat{');
     expect(css).toContain('flex-direction:row!important');
-    expect(css).toContain('flex:0 0 45px!important');
-    expect(css).toContain('width:27px!important');
-    expect(css).toContain('height:31px!important');
+    expect(css).toContain('flex:0 0 clamp(35px,10vw,50px)!important');
+    expect(css).toContain('width:clamp(23px,6.5vw,31px)!important');
+    expect(css).toContain('height:clamp(27px,7.5vw,36px)!important');
     expect(legacy).toContain('characterCombatIconSource(c)');
     expect(legacy).toContain('getPortraitSrc(c)');
   });
