@@ -279,6 +279,16 @@ body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted 
 body.character-glowup-active #view #grundPanel #identity.arcane-profile-mounted .character-combat-icon-actions{
   display:none!important; /* Image choice belongs to Bilder, unchanged. */
 }
+/* Input rows may grow; editing must never clip live controls. */
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-structure{
+  grid-template-rows:auto repeat(4,minmax(var(--ac-card-height),auto));
+}
+body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-nameplate .field .label{
+  display:block!important;
+  margin:0 0 3px!important;
+  font:700 10px/1.1 system-ui,sans-serif!important;
+  color:#d5b77d!important;
+}
 /* Editing works in the SAME fields; it never creates a second data model. */
 body.character-glowup-active.editing #view #grundPanel #identity.arcane-profile-mounted .arcane-profile-card{
   min-height:var(--ac-card-height);
