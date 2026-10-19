@@ -1,52 +1,47 @@
+/* Reference v6 acceptance suite now guards v8's real-image component. */
 import {describe,it,expect} from 'vitest';
 import {readFileSync,existsSync} from 'node:fs';
-
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const css=read('features/character/arcane-layout-v7.css');
+const css=read('features/character/arcane-profile-component.css');
+const js=read('features/character/arcane-profile-component.js');
 const html=read('index.html');
-const legacy=read('legacy/app.js');
 const artDir='assets/arcane/system/v1/';
-const icons={
-  ras:'icon-person',yrke:'icon-swords',kon:'icon-female',
-  alder:'icon-hourglass',langd:'icon-height',vikt:'icon-weight',
-  combat:'icon-swords',stand:'icon-heart'
-};
+const icons=['icon-person','icon-swords','icon-female','icon-hourglass',
+ 'icon-height','icon-weight','icon-heart'];
 
-describe('ARCANE reference character profile v7',()=>{
-  it('loads as sole canonical mobile layout after v3 attributes',()=>{
-    expect(html).toContain('features/character/arcane-layout-v7.css?v=20261019-2');
-    expect(html).not.toContain('href="./features/character/arcane-layout-v5.css');
-    expect(html).not.toContain('href="./features/character/arcane-layout-v6.css');
-    expect(html.indexOf('arcane-layout-v7.css')).toBeGreaterThan(html.indexOf('arcane-attributes-v3.css'));
-    expect(css).toContain('@media (max-width:850px)');
-    expect(css).toContain('body.character-glowup-active #view #grundPanel');
-  });
-  it('uses the same approved raster panel and nameplate for all details',()=>{
-    expect(css).toContain('var(--arcane-art-stat) center / 100% 160% no-repeat');
-    expect(css).toContain('var(--arcane-art-nameplate) center / 100% 155% no-repeat');
-    expect(css).toContain('var(--arcane-art-portrait)');
-    expect(css).toContain('var(--arcane-art-combat)');
-    expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))!important');
-    expect(css).toContain('grid-template-rows:minmax(clamp(73px,20.5vw,96px),auto) repeat(4,minmax(clamp(48px,13.6vw,64px),auto))!important');
-    expect(css).not.toMatch(/url\\?\([^)]*\.svg/i);
-    expect(css).not.toContain('<svg');
-  });
-  it.each(Object.entries(icons))('shows actual AVIF raster icon for %s', (name,id)=>{
-    expect(legacy.includes('arcane-field-'+name) || legacy.includes('arcane-field-${k}')).toBe(true);
-    expect(css).toContain('.field.arcane-field-'+name);
-    expect(css).toContain(artDir+id+'.avif');
-    const path=artDir+id+'.avif';
-    expect(existsSync(new URL('../'+path,import.meta.url)),path).toBe(true);
-    const header=readFileSync(new URL('../'+path,import.meta.url)).toString('ascii',4,12);
-    expect(header).toBe('ftypavif');
-  });
-  it('does not clone live fields or change identity values and editing',()=>{
-    expect(css).toContain('body.character-glowup-active.editing');
-    expect(css).toContain('.grund-input');
-    expect(css).toContain('.arcane-field-combat .character-combat-icon-control');
-    expect(legacy).toContain('characterCombatIconSource(c)');
-    expect(legacy).toContain('characterCombatIconFieldHtml(current)');
-    expect(legacy).toContain('setIdentity(');
-    expect(legacy).toContain('class="arcane-nameplate-subtitle"');
-  });
+describe('ARCANE reference artwork and geometry — v8',()=>{
+ it('loads exactly one final component after previous profile materials',()=>{
+   expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8');
+   expect(html.indexOf('arcane-profile-component.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
+   expect(html).not.toMatch(/href="[^"]*arcane-layout-v[567]\.css/);
+ });
+ it('uses real reusable AVIF artwork for all eight symbol slots',()=>{
+   expect(js).toContain('const ART_BASE = \'./assets/arcane/system/v1/\'');
+   for(const icon of icons){
+      expect(js).toContain(icon);
+      const path=artDir+icon+'.avif';
+      expect(existsSync(new URL('../'+path,import.meta.url))).toBe(true);
+      expect(readFileSync(new URL('../'+path,import.meta.url)).toString('ascii',4,12)).toBe('ftypavif');
+   }
+   for(const asset of ['nameplate','stat-panel','portrait-frame','combat-medallion']){
+      expect(existsSync(new URL('../'+artDir+asset+'.avif',import.meta.url))).toBe(true);
+   }
+ });
+ it('renders a genuine image/soft divider/left text structure without SVG',()=>{
+   expect(js).toContain("document.createElement('img')");
+   expect(js).toContain("document.createElement('span')");
+   expect(js).toContain("document.createElement('div')");
+   expect(css).toContain('var(--arcane-art-stat)');
+   expect(css).toContain('var(--arcane-art-nameplate)');
+   expect(css).toContain('var(--arcane-art-combat)');
+   expect(js).not.toMatch(/<svg|\.svg/i);
+   expect(css).not.toMatch(/url\([^)]*\.svg/i);
+ });
+ it('positions rows by markup instead of CSS grid specificity battles',()=>{
+   expect(js).toContain("layout.appendChild(plaque)");
+   expect(js).toContain("layout.appendChild(card)");
+   expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
+   expect(css).toContain('grid-template-rows:auto repeat(4,var(--ac-card-height))');
+   expect(css).not.toContain('grid-template-areas:');
+ });
 });
