@@ -69,7 +69,7 @@ def prepare(source: Path, output_root: Path) -> dict:
             if low == 255 or high == 0:
                 raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")
             required_alpha = image.getchannel("A").tobytes()
-    max_webp = MAX_WEBP  # Keep every app image within hermes_jobs_app_bytes_check (524288 bytes).
+    max_webp = 524_288 if kind == 'spell-illustration-wide' else MAX_WEBP  # Match the database cap exactly.
     webp = None
     quality_used = None
     for quality in QUALITIES:
