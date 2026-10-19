@@ -14,7 +14,8 @@ function testHarness(){
     constructor(tag='div'){this.tagName=tag;this.className='';this.children=[];this.dataset={};this.attrs={};this.handler=()=>42;}
     get classList(){const el=this;return {
       contains:k=>el.className.split(/\s+/).includes(k),
-      add:k=>{if(!el.className.split(/\s+/).includes(k))el.className+=' '+k;}
+      add:k=>{if(!el.className.split(/\s+/).includes(k))el.className+=' '+k;},
+      [Symbol.iterator]:function*(){yield* el.className.split(/\s+/);}
     }}
     setAttribute(k,v){this.attrs[k]=v}
     appendChild(x){this.children.push(x);return x}
