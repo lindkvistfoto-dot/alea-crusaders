@@ -152,7 +152,8 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         else:
             if image.mode != "RGBA":
                 raise ValueError("NOT_RGBA_PNG")
-            if not (image.width == image.height and 640 <= image.width <= 4096):
+            min_edge = 1024 if kind == "spell-cutout" else 640
+            if not (image.width == image.height and min_edge <= image.width <= 4096):
                 raise ValueError("BAD_PNG_DIMENSIONS")
             alpha_min, alpha_max = image.getchannel("A").getextrema()
             if alpha_min == 255 or alpha_max == 0:
@@ -230,7 +231,7 @@ def run(request_path: str) -> None:
         set(request) == common_keys | {"drive_file_name"}
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "ui"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "spell-cutout", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")
