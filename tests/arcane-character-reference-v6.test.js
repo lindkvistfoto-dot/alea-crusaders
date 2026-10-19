@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync,existsSync} from 'node:fs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const css=read('features/character/arcane-layout-v6.css');
+const css=read('features/character/arcane-layout-v7.css');
 const html=read('index.html');
 const legacy=read('legacy/app.js');
 const artDir='assets/arcane/system/v1/';
@@ -12,21 +12,22 @@ const icons={
   combat:'icon-swords',stand:'icon-heart'
 };
 
-describe('ARCANE reference character profile v6',()=>{
-  it('loads last, above the previous v5 layout and v3 attributes',()=>{
-    expect(html).toContain('features/character/arcane-layout-v6.css?v=1');
-    expect(html.indexOf('arcane-layout-v6.css')).toBeGreaterThan(html.indexOf('arcane-layout-v5.css'));
-    expect(html.indexOf('arcane-layout-v6.css')).toBeGreaterThan(html.indexOf('arcane-attributes-v3.css'));
+describe('ARCANE reference character profile v7',()=>{
+  it('loads as sole canonical mobile layout after v3 attributes',()=>{
+    expect(html).toContain('features/character/arcane-layout-v7.css?v=20261019-2');
+    expect(html).not.toContain('href="./features/character/arcane-layout-v5.css');
+    expect(html).not.toContain('href="./features/character/arcane-layout-v6.css');
+    expect(html.indexOf('arcane-layout-v7.css')).toBeGreaterThan(html.indexOf('arcane-attributes-v3.css'));
     expect(css).toContain('@media (max-width:850px)');
     expect(css).toContain('body.character-glowup-active #view #grundPanel');
   });
   it('uses the same approved raster panel and nameplate for all details',()=>{
-    expect(css).toContain('var(--arcane-art-stat) center / 100% 100% no-repeat');
-    expect(css).toContain('var(--arcane-art-nameplate) center / 100% 100% no-repeat');
+    expect(css).toContain('var(--arcane-art-stat) center / 100% 160% no-repeat');
+    expect(css).toContain('var(--arcane-art-nameplate) center / 100% 155% no-repeat');
     expect(css).toContain('var(--arcane-art-portrait)');
     expect(css).toContain('var(--arcane-art-combat)');
     expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))!important');
-    expect(css).toContain('grid-template-rows:minmax(clamp(82px,23vw,104px),auto) repeat(4,minmax(clamp(56px,15vw,68px),auto))!important');
+    expect(css).toContain('grid-template-rows:minmax(clamp(73px,20.5vw,96px),auto) repeat(4,minmax(clamp(48px,13.6vw,64px),auto))!important');
     expect(css).not.toMatch(/url\\?\([^)]*\.svg/i);
     expect(css).not.toContain('<svg');
   });
