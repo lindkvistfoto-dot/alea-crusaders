@@ -234,7 +234,7 @@ Playwrights Chromium med `python -m playwright install chromium` först.
 | Nya regressioner | – | 0 |
 | Lokal PostgreSQL | – | 45 kontroller godkända, inklusive 297 SQL/JS-fattningsfall |
 | Chromium + lokal PostgreSQL | – | 9 kontroller godkända |
-| Standardbygge | Historiskt känt minifieringsproblem | Exit 139, `Segmentation fault`, efter 95 transformerade moduler |
+| Standardbygge | Även oförändrad main `8aeead5a` ger exit 139 | Exit 139, `Segmentation fault`, efter 95 transformerade moduler |
 | `vite build --minify=false` | – | Godkänt; kopierad regelmodul matchar källan |
 
 Inga tester stängdes av eller hoppades över. Befintliga testförväntningar för den
@@ -272,3 +272,5 @@ uppdaterades; de tidigare 29 misslyckade testfallen är oförändrade.
 - `material-native-pages-bootstrap.test.js` — GitHub Pages native material bootstrap loads material independently of the dice-box module entry
 - `section-help-ui.test.js` — Shared section information component keeps each provision on one horizontal row and moves guidance behind the help icon
 - `skill-art-android-picker.test.js` — Android DocumentsProvider skill-art upload shows uploaded file feedback atop the editor with cache-busted assets
+
+Standardbyggets fel reproducerades även med oförändrad main i en separat materialiserad byggfixture (inte ett Git-worktree). Implementationscommit: `7d07f90abd9df8c6a527f86ee337a610c034e24e`.
