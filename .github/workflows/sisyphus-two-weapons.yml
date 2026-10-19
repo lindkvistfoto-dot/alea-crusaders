@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      SISYPHUS_WORK_DIR: ${{ runner.temp }}/sisyphus
+      SISYPHUS_WORK_DIR: /tmp/alea-sisyphus-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
