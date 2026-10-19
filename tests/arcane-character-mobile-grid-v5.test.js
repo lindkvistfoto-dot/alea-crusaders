@@ -1,73 +1,39 @@
+/* v5 regression suite retained as historical filename.
+ * Assert current v8 architecture instead of requiring the retired v5 CSS.
+ */
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const css=read('features/character/arcane-layout-v7.css');
-const html=read('index.html');
-const legacy=read('legacy/app.js');
-const fields=[
-  ['name','1 / -1',1],
-  ['ras','1',2],
-  ['yrke','2',2],
-  ['kon','1',3],
-  ['alder','2',3],
-  ['langd','1',4],
-  ['vikt','2',4],
-  ['combat','1',5],
-  ['stand','2',5]
-];
+const html=read('index.html'),js=read('features/character/arcane-profile-component.js');
+const css=read('features/character/arcane-profile-component.css'),legacy=read('legacy/app.js');
 
-describe('ARCANE mobile character grid v7 — fixed positions',()=>{
-  it('loads after the old ARCANE styles and busts the character script cache',()=>{
-    expect(html).toContain('features/character/arcane-layout-v7.css?v=20261019-2');
-    expect(html).not.toContain('<link rel="stylesheet" href="./features/character/arcane-layout-v5.css');
-    expect(html).not.toContain('<link rel="stylesheet" href="./features/character/arcane-layout-v6.css');
-    expect(html.indexOf('arcane-layout-v7.css')).toBeGreaterThan(html.indexOf('arcane-system.css'));
-    expect(html).toContain('legacy/app.js?v=0.35.267&arcane-grid=5');
+describe('ARCANE character mobile layout — canonical v8',()=>{
+  it('does not mount v5/v6/v7 positional CSS',()=>{
+    for(const file of ['v5','v6','v7']) expect(html).not.toContain('href="./features/character/arcane-layout-'+file+'.css');
+    expect(html).toContain('features/character/arcane-profile-component.css?v=20261019-8');
+    expect(html).toContain('features/character/arcane-profile-component.js?v=20261019-8');
   });
-  it('uses two explicit tracks and no implicit named grid areas on phones and tablets',()=>{
-    expect(css).toContain('@media (max-width:850px)');
-    expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))!important');
-    expect(css).toContain('grid-template-areas:none!important');
-    expect(css).toContain('grid-area:auto!important');
-    expect(css).toContain('grid-auto-flow:row!important');
-    expect(css).not.toMatch(/:nth-child\s*\(/);
+  it('has fixed icon, divider and text columns — not positional nth-child',()=>{
+    expect(css).toContain('grid-template-columns:var(--ac-icon-width) 1px minmax(0,1fr)');
+    expect(css).toContain('grid-template-rows:auto repeat(4,var(--ac-card-height))');
+    expect(js).toContain("layout.className = 'arcane-profile-structure'");
+    expect(js).toContain("content.className = 'arcane-profile-card-content'");
+    expect(css).not.toContain('nth-child(');
   });
-  it.each(fields)('%s occupies column %s of row %i regardless of DOM order',(key,col,row)=>{
-    if(['kon','alder','langd','vikt'].includes(key)){
-      // These four stable classes are produced by the existing identity map.
-      expect(legacy).toContain('arcane-field-${k}');
-      expect(legacy).toContain("'"+key+"'");
-    }else{
-      expect(legacy).toContain('arcane-field-'+key);
+  it('uses the original nine semantic fields in a fixed reference order',()=>{
+    for(const key of ['name','ras','yrke','kon','alder','langd','vikt','combat','stand']){
+      expect(legacy.includes('arcane-field-'+key)||legacy.includes('arcane-field-${k}')).toBe(true);
     }
-    const regex=new RegExp('> \\.field\\.arcane-field-'+key+'\\{\\s*grid-column:'+col.replaceAll('/','\\/')+'!important;\\s*grid-row:'+row+'!important;');
-    expect(css).toMatch(regex);
+    expect(js).toContain("['ras','icon-person']");
+    expect(js).toContain("['yrke','icon-swords']");
+    expect(js).toContain("['combat','icon-swords']");
   });
-  it('keeps title and subtitle inside the lion plaque with readable one-line sizes',()=>{
-    expect(css).toContain('min-height:clamp(73px,20.5vw,96px)!important');
-    expect(css).toContain('font:700 clamp(19px,5.5vw,32px)');
-    expect(css).toContain('white-space:nowrap!important');
-    expect(css).toContain('text-overflow:ellipsis!important');
-    expect(css).toContain('arcane-nameplate-subtitle');
-    expect(legacy).toContain('escAttr(i.ras||"—")');
-    expect(legacy).toContain('escAttr(i.yrke||"—")');
-  });
-  it('keeps actual race and profession fields visible, even while editing',()=>{
-    expect(css).toContain('> .field.arcane-field-ras{');
-    expect(css).toContain('> .field.arcane-field-yrke{');
-    expect(css).toContain('display:flex!important');
+  it('keeps one underlying live field and retains normal editing',()=>{
+    expect(js).toContain('content.appendChild(byName.get(key))');
+    expect(js).toContain("plaque.appendChild(byName.get('name'))");
+    expect(js).toContain("new MutationObserver(() => mount(host))");
     expect(css).toContain('body.character-glowup-active.editing');
     expect(css).toContain('.grund-input');
-    expect(legacy).toContain('class="field wide arcane-field-ras"');
-    expect(legacy).toContain('class="field wide arcane-field-yrke"');
-  });
-  it('places the portrait-based miniature beside social standing in standard sized cards',()=>{
-    expect(css).toContain('> .field.arcane-field-combat{');
-    expect(css).toContain('flex-direction:row!important');
-    expect(css).toContain('flex:0 0 clamp(35px,10vw,50px)!important');
-    expect(css).toContain('width:clamp(23px,6.5vw,31px)!important');
-    expect(css).toContain('height:clamp(27px,7.5vw,36px)!important');
     expect(legacy).toContain('characterCombatIconSource(c)');
     expect(legacy).toContain('getPortraitSrc(c)');
   });
