@@ -1,0 +1,39 @@
+{
+  "schema": "skylla-edge-deployment/v1",
+  "project_id": "wbmosmkirsitkonejzpg",
+  "function": {
+    "id": "27f01c3e-5bc2-48bd-ae47-3c3657c21700",
+    "slug": "skylla-verify",
+    "name": "skylla-verify",
+    "status": "ACTIVE",
+    "version": 1,
+    "created_at": 1792496683294,
+    "updated_at": 1792496683294,
+    "verify_jwt": true,
+    "import_map": true,
+    "entrypoint_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_27f01c3e-5bc2-48bd-ae47-3c3657c21700_1/source/index.ts",
+    "import_map_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_27f01c3e-5bc2-48bd-ae47-3c3657c21700_1/source/deno.json",
+    "ezbr_sha256": "d537757e095ef45fc5f88a14c5e06690e3b40e5b100175c8f01b248fcf95b2b2"
+  },
+  "verification_enabled_by_this_operation": false,
+  "activation_variables_added": false,
+  "operator_session_provided": false,
+  "source_objects_read": 0,
+  "deletion_supported": false,
+  "unauthenticated_smoke_test": {
+    "status": 401,
+    "code": "UNAUTHORIZED_NO_AUTH_HEADER"
+  },
+  "local_runtime_tests": {
+    "node": "24.19.0",
+    "deno": "2.5.4",
+    "tests": 31,
+    "failed": 0
+  },
+  "entrypoint_deno_check": "passed",
+  "limitations": [
+    "Platform ACTIVE denotes routing availability, not SKYLLA_ENABLED.",
+    "No authenticated production invocation has been performed.",
+    "No server activation variables were read or changed."
+  ]
+}
