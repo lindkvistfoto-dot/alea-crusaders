@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "project": "ALEA – HERMES",
+  "status": "chimaira-structure-created",
+  "root_folder_id": "1dDogTKyENAGzEHz4x6dQzpe27o6KpeYf",
+  "inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+  "folders": {
+    "original_archive": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
+    "review": "1toJsbGa0OKfl76I_unP3ovaRhJ3xIg3a",
+    "quarantine": "1RVXv2vYDhMgWg3elSEsamyFoCP6dwv0X",
+    "batches_reports": "17OrRrAnZJMtF1pqNLT380KzP7ZIbC8qV",
+    "backups": "124t6C0dYdf4cY8vc7bk2Ko5-QVzpaHQ5",
+    "medusa_staging": "1Dtf6kgaIv9MQo_OI1ID0oCCGUdiyYcFP"
+  },
+  "archive_categories": {
+    "spells": "1T8C-vfuCcOSL6NImzwtn5Sp3vS5g5S6I",
+    "skills": "1Z163zYNQBpBTcVPFtTmyjaOYGmG02_cO",
+    "player_characters": "1E-DjEo_PvylXmHZlFPmTAa9Lr6HSSoUl",
+    "npcs_monsters": "1ePRSVUzCMrE9N32Pv77IwfIo_cnhMJ4R",
+    "equipment": "1nZ4WmTRJ21N0m-Ry5DUjxu9CkAd4bAlP",
+    "places": "1_h6SMSD7zVoROtbc5YxOK12x6sm4v57Q",
+    "maps": "1eYe8Vvvcd31UCVbJvfX3kkOuBS3ahqeC",
+    "ui": "1ZOQ-YGkkAHUwOqjS0UfsTk1rVKgNz3At",
+    "scenes": "1_Xs5xgzVHazM0u7jkuPE4KZ87dvnW_zk"
+  },
+  "spell_types": {
+    "icon": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+    "cutout": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+    "square": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+    "wide": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA"
+  },
+  "skill_types": {
+    "icon": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+    "square": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+    "wide": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm"
+  },
+  "staging": {
+    "current_icons": "1PVtYHJI1d4kiJJZJ3DkMV1o0AJm0l6Ip",
+    "legacy": "103By1wyShEW967x8Dc8ClHFiBwd-FOE5",
+    "unclassified": "14vsqlMfQLYcqQrTdDfO37vqyV9GO4G-E"
+  },
+  "safety": {
+    "preserve_inbox_id": true,
+    "no_automatic_moves_or_deletes": true,
+    "archive_not_yet_populated": true,
+    "backups_folder_is_not_backup_proof": true,
+    "service_account": "hermes-transfer@alea-hermes.iam.gserviceaccount.com"
+  }
+}
