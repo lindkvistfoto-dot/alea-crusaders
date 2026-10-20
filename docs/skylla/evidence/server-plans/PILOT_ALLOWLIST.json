@@ -1,0 +1,69 @@
+{
+  "schema": "skylla-server-allowlist/v1",
+  "project_id": "wbmosmkirsitkonejzpg",
+  "plan_sha256": "81188b277c8f106908e10e668c2e971820b1105a83126ef83fcf7e5c81aee9f4",
+  "entries": [
+    {
+      "id": "dfde03b4c32019ac3620c422bca95894613c85904e7818378f7731a409dcbed8",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+      "sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "size_bytes": 2974937,
+      "permanent_drive_file_id": "1btAgKpJ7EJxN0TdpVnPdlyRJRKC9Jt_P",
+      "target_folder_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+      "drive_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "drive_complete_decode": true,
+      "drive_verified_at": "2026-10-20T11:24:49.208446+00:00"
+    },
+    {
+      "id": "04bf2b7f564a71b4160c7903c8bcf22a370d4b00b9c56b86c78becd3a2f725c4",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "size_bytes": 3021435,
+      "permanent_drive_file_id": "1-Klfq586WG_xsGSCg2YlGZB5caNhuhXR",
+      "target_folder_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+      "drive_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "drive_complete_decode": true,
+      "drive_verified_at": "2026-10-20T11:24:49.017833+00:00"
+    },
+    {
+      "id": "bd62f8535dc9495cbcd4a42c952939926eb3f50b52fe92a6a3d3424e0a3bebef",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+      "sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "size_bytes": 2453778,
+      "permanent_drive_file_id": "1XvAruubAwqnywdrDDy-abz7Caw_4HIdi",
+      "target_folder_id": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+      "drive_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "drive_complete_decode": true,
+      "drive_verified_at": "2026-10-20T11:24:48.577803+00:00"
+    },
+    {
+      "id": "771cb4f1fb54093000b84d6110b478c08d6d9668f6f68900658a58e42cd25292",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+      "sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "size_bytes": 3027933,
+      "permanent_drive_file_id": "1z0Ji36h9hW_iDtQ3msbauAOAUF78qv3x",
+      "target_folder_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+      "drive_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "drive_complete_decode": true,
+      "drive_verified_at": "2026-10-20T11:24:48.766090+00:00"
+    },
+    {
+      "id": "baba99fe9c82620dcd69c6922e22d0249446133c85bdb1f7cbf9d91ee597377f",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+      "sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "size_bytes": 2721849,
+      "permanent_drive_file_id": "1-AKRprbY-c1d2FCgoc-JdK7ZLuOtF28w",
+      "target_folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+      "drive_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "drive_complete_decode": true,
+      "drive_verified_at": "2026-10-20T11:24:48.415246+00:00"
+    }
+  ],
+  "safe_to_delete": false,
+  "deletion_supported": false
+}

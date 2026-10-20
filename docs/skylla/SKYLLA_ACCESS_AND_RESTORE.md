@@ -2,13 +2,13 @@
 
 ## Nödvändig autentisering
 
-Supabase SQL-anslutningen kan läsa inventarium och HERMES-register, men kan inte hämta privata Storage-bytes eller utfärda signerade objektlänkar. Miljön redovisar inga tillförda Storage-credentials. Projektägaren bekräftade att signerade läskapabiliteter saknas. Ingen serverfil-, SQL-secrets-, Vault-, RLS- eller nyckelinhämtning används för att kringgå det.
+SQL-anslutningen läser inventarium och register. Direkta privata Storage-credentials och tidigare signerade GET-filer saknas fortfarande, men byteåtkomst har nu etablerats via den separata, kortlivade [driftsättningsbundna verifieraren](SKYLLA_SCOPED_ACCESS.md). Fem privata original har faktiskt verifierats mot Drive. Bred servernyckel stannar i Supabase; inga manuella objektlänkar behövs.
 
-En redan behörig operatör behöver utfärda signerad GET för exakt de fem källpaths som finns i [SKYLLA_PLANNED_PILOT.csv](SKYLLA_PLANNED_PILOT.csv), lämpligen 300 sekunders giltighet. Använd inte bildtransformering. Leverera KERBEROS-kapabilitetsfiler privat med läge `0600`, utanför Git/chatt/loggar. Varje fil innehåller `object_path`, förväntad `sha256`, `size_bytes`, faktisk `expires_at` och `signed_url`. En bred service-role-/secret-nyckel behöver inte tillföras Codex. KERBEROS `read_supabase` används för HTTPS-binär GET, exakt projekt/bucket/path, tidsgräns och full filverifiering. Supabases verkliga signerade giltighet måste stämma; klientens tidsfält kan inte förkorta serverns token.
+Den befintliga anslutningens driftsättningsbehörighet används för en fast allowlist och hash av en lokalt skapad 256-bitars kapabilitet. Själva hemligheten lagras med `0600` utanför Git och gäller högst 30 minuter. Funktionen kan bara läsa och byteverifiera de bundlade originalen. Ett normalt [operatörsläge](SKYLLA_SUPABASE_AUTOMATION.md) med befintlig administratörssession finns också. KERBEROS signerade GET-metod finns kvar som alternativ när sådana kortlivade filer faktiskt finns.
 
 Inga DELETE-rättigheter behövs för aktuell förberedelse. De kan ordnas först efter separat godkännande av en byteverifierad exakt batch, via en snävt avgränsad betrodd operatör. Privata app-WebP behöver också autentiserad kontroll före radering; de ingår aldrig i raderingslistan.
 
-Drive-anslutningen kunde faktiskt skapa de fem nya kopiorna och läsa tillbaka dem. CLI-adaptern kan i en senare miljö använda en privat tillförd kortlivad `SKYLLA_DRIVE_TOKEN` med läs-/kopieringskapabilitet till just Inbox-källorna och avsedda målmappar. Token anges aldrig som kommandoargument. HERMES-tjänstekontots `drive.readonly` har inte ändrats.
+Drive-anslutningen kan skapa nya kopior och läsa tillbaka hela arkivbytesen; aktuellt antal finns i manifestet. CLI-adaptern kan i en senare miljö använda en privat tillförd kortlivad `SKYLLA_DRIVE_TOKEN` med läs-/kopieringskapabilitet till just Inbox-källorna och avsedda målmappar. Token anges aldrig som kommandoargument. HERMES-tjänstekontots `drive.readonly` har inte ändrats.
 
 ## Verktyg
 
@@ -23,7 +23,7 @@ python scripts/skylla_archive.py archive-drive \
   --output /private/drive-readback.new.json
 ```
 
-Lägg endast till `--enable-copy` i en uttryckligen avsedd arkivkörning. Gör inga nya kopior av de fem redan registrerade ID:na: använd readback/reuse. Den verkliga femfilspiloten utfördes via Drive-connectorn och verifierades med samma `pair_proof`-funktion. Fristående `verify-pair` kan kontrollera två materialiserade bytefiler med descriptor och rå metadata. Output skapas exklusivt; inne i repot tillåts rapporter endast under `docs/skylla/`.
+Lägg endast till `--enable-copy` i en uttryckligen avsedd arkivkörning. Gör inga nya kopior av de fem redan registrerade ID:na: använd readback/reuse. Den verkliga arkiveringen utfördes via Drive-connectorn och verifierades med samma `pair_proof`-funktion. Fristående `verify-pair` kan kontrollera två materialiserade bytefiler med descriptor och rå metadata. Output skapas exklusivt; inne i repot tillåts rapporter endast under `docs/skylla/`.
 
 `eligibility` kräver aktuella Supabase-bytes, permanent Drive-readback, identiska hashvärden/längder, klara beroenden och verifierade visningsbilder/pekare. Evidens äldre än tio minuter spärrar förslaget. Separat batchgodkännande krävs fortfarande; funktionen sätter aldrig `safe_to_delete=true`. Sparad evidens måste uppdateras om arbetet återupptas senare. `archive_batch` redovisar ett separat resultat för varje fil; det är inte en raderingsbatch.
 

@@ -38,6 +38,8 @@ def build(manifest, evidence, folders):
                 or row.get('target_folder_id') != desc['target_folder_id']
                 or proof.get('target_folder_id') != desc['target_folder_id']
                 or proof.get('permanent_drive_file_id') == desc['inbox_file_id']
+                or proof.get('inbox_file_id') != desc['inbox_file_id']
+                or proof.get('version_id') != 'sha256:' + sha
                 or desc['inbox_file_id'] not in row['inbox_file_ids']):
             raise s.k.Blocked('PERMANENT_READBACK_IDENTITY_REQUIRED')
         for side in ('source_drive_verification', 'archive_verification'):

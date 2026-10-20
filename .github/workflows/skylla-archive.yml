@@ -4,24 +4,44 @@ on:
     paths:
       - scripts/skylla_archive.py
       - scripts/skylla_edge_plan.py
+      - scripts/skylla_reconcile.py
+      - scripts/skylla_scoped_verify.py
+      - scripts/skylla_display_verify.py
+      - supabase/functions/skylla-display-read/**
+      - supabase/functions/skylla-verify-scoped/**
       - scripts/skylla_operator_verify.mjs
       - supabase/functions/skylla-verify/**
       - tests/skylla_edge_checks.mjs
       - tests/test_skylla_edge_plan.py
+      - tests/test_skylla_reconcile.py
+      - tests/test_skylla_scoped_verify.py
+      - tests/test_skylla_display_verify.py
       - tests/test_skylla_archive.py
       - config/skylla-fast-track-policy.json
+      - config/hermes-drive-folders.json
+      - docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md
       - .github/workflows/skylla-archive.yml
   push:
     branches: ['artemis/skylla-*']
     paths:
       - scripts/skylla_archive.py
       - scripts/skylla_edge_plan.py
+      - scripts/skylla_reconcile.py
+      - scripts/skylla_scoped_verify.py
+      - scripts/skylla_display_verify.py
+      - supabase/functions/skylla-display-read/**
+      - supabase/functions/skylla-verify-scoped/**
       - scripts/skylla_operator_verify.mjs
       - supabase/functions/skylla-verify/**
       - tests/skylla_edge_checks.mjs
       - tests/test_skylla_edge_plan.py
+      - tests/test_skylla_reconcile.py
+      - tests/test_skylla_scoped_verify.py
+      - tests/test_skylla_display_verify.py
       - tests/test_skylla_archive.py
       - config/skylla-fast-track-policy.json
+      - config/hermes-drive-folders.json
+      - docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md
       - .github/workflows/skylla-archive.yml
 permissions:
   contents: read
@@ -36,7 +56,10 @@ jobs:
             scripts
             tests
             config
+            docs/skylla
             supabase/functions/skylla-verify
+            supabase/functions/skylla-verify-scoped
+            supabase/functions/skylla-display-read
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -45,6 +68,9 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_skylla_archive.py' -v
       - run: python -m unittest discover -s tests -p 'test_kerberos_archive.py' -v
       - run: python -m unittest discover -s tests -p 'test_skylla_edge_plan.py' -v
+      - run: python -m unittest discover -s tests -p 'test_skylla_reconcile.py' -v
+      - run: python -m unittest discover -s tests -p 'test_skylla_scoped_verify.py' -v
+      - run: python -m unittest discover -s tests -p 'test_skylla_display_verify.py' -v
       - uses: actions/setup-node@v6
         with:
           node-version: '24'

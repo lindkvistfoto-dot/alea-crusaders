@@ -217,6 +217,11 @@ def eligibility(desc, drive, supabase, dependencies, policy):
     if (not dependencies or dependencies.get("app_images_verified") is not True
             or dependencies.get("reference_paths_unchanged") is not True):
         reasons.append("display_image_or_reference_health_not_verified")
+    restore_path = ROOT / "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md"
+    if (not dependencies or dependencies.get("restore_plan_reference") != "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md"
+            or not restore_path.is_file()
+            or dependencies.get("restore_plan_sha256") != k.digest(restore_path.read_bytes())):
+        reasons.append("documented_restore_plan_missing_or_changed")
     for name, proof in (("drive", drive), ("supabase", supabase), ("dependencies", dependencies)):
         try:
             value = proof.get("observed_at" if name == "dependencies" else "verified_at")
@@ -227,6 +232,9 @@ def eligibility(desc, drive, supabase, dependencies, policy):
             reasons.append(name + "_evidence_missing_or_stale")
     eligible = not reasons
     return {"eligible_for_delete_proposal": eligible, "safe_to_delete": False,
+            "owner_approval_verified": False,
+            "restore_readback_verified": bool(drive and drive.get("bytes_equal") is True
+                and drive.get("archive_verification", {}).get("complete_decode") is True),
             "deletion_status": "awaiting_separate_batch_approval" if eligible else "blocked",
             "blocking_issues": reasons, "estimated_reclaimable_bytes": desc["expected_size_bytes"] if eligible else 0,
             "independent_backup_waived_by": policy.get("decision_reference"),

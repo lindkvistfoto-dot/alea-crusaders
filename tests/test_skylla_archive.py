@@ -55,6 +55,13 @@ class Drive:
 
 
 class SkyllaTests(unittest.TestCase):
+    def test_restore_plan_is_a_machine_checked_gate(self):
+        desc, drive, source, deps = self.proofs()
+        deps.pop('restore_plan_sha256')
+        report = s.eligibility(desc, drive, source, deps, POLICY)
+        self.assertFalse(report['eligible_for_delete_proposal'])
+        self.assertIn('documented_restore_plan_missing_or_changed', report['blocking_issues'])
+
     def proofs(self):
         raw, desc = fixture()
         backend = Drive(raw, desc)
@@ -64,6 +71,8 @@ class SkyllaTests(unittest.TestCase):
         deps = {"status": "clear", "object_path": desc["object_path"], "active_consumers": [],
                 "observed_at": k.now(), "evidence_reference": "synthetic-live-audit",
                 "app_images_verified": True, "reference_paths_unchanged": True}
+        deps.update({"restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+                     "restore_plan_sha256": k.digest((ROOT / "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md").read_bytes())})
         return desc, drive, source, deps
 
     def test_complete_png_copy_readback_and_restore(self):

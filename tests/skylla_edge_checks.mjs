@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {deflateSync} from 'node:zlib';
 import {createHandler, decodePNG, sha256, crc32, boundedBody, PROJECT, BUCKET} from '../supabase/functions/skylla-verify/core.mjs';
 import {verifySkyllaPlan, createAleaSkyllaClient} from '../scripts/skylla_operator_verify.mjs';
+import {createCapabilityHandler} from '../supabase/functions/skylla-verify/capability.mjs';
+import {createDisplayHandler} from '../supabase/functions/skylla-verify/display.mjs';
 const test = globalThis.Deno ? (name,fn) => Deno.test(name,fn) : nodeTest;
 
 const chunk = (type, data) => {
@@ -189,4 +191,84 @@ test('explicit per-object verification failure retains later read-only results',
   const client={functions:{invoke:async()=>++calls===1?{data:null,error:{stop_batch:false}}:{data:good,error:null}}};
   const result=await verifySkyllaPlan(client,{...s.plan,entries:[s.entry,s.entry]});
   assert.equal(result.receipts[0].status,'blocked');assert.equal(result.receipts[1].status,'verified_complete');
+});
+
+async function scoped({capEdit,planEdit,storage}={}) {
+  const s=await setup();const token='S'.repeat(43),current=Date.parse('2026-10-20T12:00:00Z');
+  const capability={enabled:true,token_sha256:await sha256(new TextEncoder().encode(token)),
+    not_before:'2026-10-20T11:59:00Z',expires_at:'2026-10-20T12:10:00Z',plan_sha256:s.plan.plan_sha256};
+  if(capEdit)capEdit(capability);if(planEdit)await planEdit(s.plan);
+  const calls=[];
+  const handler=createCapabilityHandler({plan:s.plan,capability,env:k=>k==='SUPABASE_SERVICE_ROLE_KEY'?'synthetic-server-only':undefined,
+    now:()=>current,fetcher:async(url,options)=>{
+      calls.push({url,options});assert.equal(options.method,'GET');assert.equal(options.redirect,'error');
+      assert.equal(url,`https://${PROJECT}.supabase.co/storage/v1/object/authenticated/${BUCKET}/${s.entry.object_path}`);
+      return storage?storage(s.bytes):new Response(s.bytes);
+    }});
+  const request=(body={id:s.entry.id,plan_sha256:s.plan.plan_sha256},headers={},method='POST')=>new Request('https://scoped.synthetic',{
+    method,headers:{'x-skylla-capability':token,'content-type':'application/json',...headers},...(method==='POST'?{body:JSON.stringify(body)}:{})});
+  return {...s,handler,request,calls,capability,token};
+}
+test('scoped capability returns only a verified receipt and keeps server credentials internal',async()=>{
+  const s=await scoped();const r=await s.handler(s.request());assert.equal(r.status,200);
+  const p=await r.json();assert.equal(p.status,'verified_complete');assert.equal(p.sha256,s.entry.sha256);
+  assert.equal(p.authorization_method,'deployment_scoped_read_capability');assert.equal(p.safe_to_delete,false);
+  assert.equal(s.calls.length,1);assert.equal(JSON.stringify(p).includes(s.token),false);
+  assert.equal(JSON.stringify(p).includes('synthetic-server-only'),false);
+});
+test('missing, wrong and oversized scoped tokens cannot read Storage',async()=>{
+  for(const token of ['', 'W'.repeat(43),'S'.repeat(5000)]){
+    const s=await scoped();assert.equal((await s.handler(s.request(undefined,{'x-skylla-capability':token}))).status,401);
+    assert.equal(s.calls.length,0);
+  }
+});
+test('disabled, expired, future, overlong and differently scoped capability are rejected',async()=>{
+  for(const capEdit of [c=>c.enabled=false,c=>c.expires_at='2026-10-20T11:59:59Z',
+    c=>c.not_before='2026-10-20T12:01:00Z',c=>c.not_before='2026-10-20T10:00:00Z',
+    c=>c.plan_sha256='0'.repeat(64),c=>c.token_sha256='invalid']){
+    const s=await scoped({capEdit});assert.equal((await s.handler(s.request())).status,503);assert.equal(s.calls.length,0);
+  }
+});
+test('scoped caller cannot select another object, path, bucket, checksum or write action',async()=>{
+  const s=await scoped();
+  for(const body of [{id:'b'.repeat(64),plan_sha256:s.plan.plan_sha256},
+    ...['object_path','bucket','sha256','action','url'].map(key=>({id:s.entry.id,plan_sha256:s.plan.plan_sha256,[key]:'forbidden'}))]){
+    assert.ok([400,403].includes((await s.handler(s.request(body))).status));
+  }
+  assert.equal(s.calls.length,0);
+});
+test('scoped browser origins, non-POST requests and malformed plans are blocked',async()=>{
+  const s=await scoped();assert.equal((await s.handler(s.request(undefined,{origin:'https://evil.synthetic'}))).status,403);
+  assert.equal((await s.handler(s.request(undefined,{},'DELETE'))).status,405);assert.equal(s.calls.length,0);
+  const bad=await scoped({planEdit:p=>{p.entries[0].drive_sha256='0'.repeat(64);}});
+  assert.equal((await bad.handler(bad.request())).status,503);assert.equal(bad.calls.length,0);
+});
+test('scoped missing, interrupted and altered source cannot yield a verified receipt',async()=>{
+  for(const storage of [()=>new Response('',{status:404}),b=>new Response(b.subarray(0,-1)),
+    b=>{const bad=Buffer.from(b);bad[40]^=1;return new Response(bad);}]){
+    const s=await scoped({storage});const r=await s.handler(s.request());assert.equal(r.status,422);
+    assert.equal((await r.json()).safe_to_delete,false);
+  }
+});
+test('separate display scope pins five WebPs and cannot read source originals',async()=>{
+  const bytes=Buffer.from('synthetic-binary-display'),sha=await sha256(bytes),token='D'.repeat(43);
+  const entries=Array.from({length:5},(_,i)=>({id:String(i).repeat(64),bucket:'alea-spell-art',
+    path:`spell/synthetic/${i}.webp`,sha256:sha,size_bytes:bytes.length}));
+  const plan={schema:'skylla-display-read-plan/v1',project_id:PROJECT,entries,
+    plan_sha256:await sha256(new TextEncoder().encode(JSON.stringify(entries)))};
+  const capability={enabled:true,token_sha256:await sha256(new TextEncoder().encode(token)),plan_sha256:plan.plan_sha256,
+    not_before:'2026-10-20T11:59:00Z',expires_at:'2026-10-20T12:10:00Z'};
+  let reads=0;
+  const make=()=>createDisplayHandler({plan,capability,env:()=> 'synthetic-server-only',now:()=>Date.parse('2026-10-20T12:00:00Z'),
+    fetcher:async(url,options)=>{reads++;assert.equal(url,`https://${PROJECT}.supabase.co/storage/v1/object/authenticated/alea-spell-art/spell/synthetic/0.webp`);
+      assert.equal(options.method,'GET');assert.equal(options.redirect,'error');return new Response(bytes);}});
+  const req=(value=token,body={id:entries[0].id,plan_sha256:plan.plan_sha256})=>new Request('https://display.synthetic',{
+    method:'POST',headers:{'x-skylla-capability':value},body:JSON.stringify(body)});
+  assert.equal((await make()(req(''))).status,401);assert.equal(reads,0);
+  const good=await make()(req());assert.equal(good.status,200);assert.deepEqual(Buffer.from(await good.arrayBuffer()),bytes);
+  assert.equal(good.headers.get('cache-control'),'no-store');
+  assert.equal((await make()(req(token,{id:entries[0].id,plan_sha256:plan.plan_sha256,action:'delete'}))).status,400);
+  entries[0].bucket='alea-hermes-source';plan.plan_sha256=await sha256(new TextEncoder().encode(JSON.stringify(entries)));capability.plan_sha256=plan.plan_sha256;
+  assert.equal((await make()(req(token,{id:entries[0].id,plan_sha256:plan.plan_sha256}))).status,503);assert.equal(reads,1);
+  capability.enabled=false;assert.equal((await make()(req())).status,503);
 });

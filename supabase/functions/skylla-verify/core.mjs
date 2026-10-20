@@ -118,7 +118,7 @@ export async function decodePNG(b) {
     pixel_sha256:await sha256(pixels), complete_decode:true};
 }
 
-function validEntry(e) {
+export function validEntry(e) {
   return e.bucket === BUCKET && /^[a-f0-9]{64}$/.test(e.id) &&
     /^[a-f0-9]{64}$/.test(e.sha256) && Number.isInteger(e.size_bytes) &&
     e.size_bytes > 0 && e.size_bytes <= MAX_BYTES &&
@@ -126,6 +126,29 @@ function validEntry(e) {
     e.object_path.endsWith('/'+e.sha256+'.png') &&
     /^[A-Za-z0-9_-]{10,}$/.test(e.permanent_drive_file_id) &&
     e.drive_sha256 === e.sha256 && e.drive_complete_decode === true;
+}
+
+export async function verifyStorageEntry(entry, planSHA, {env, fetcher = fetch, now = Date.now, until}) {
+  if (now() >= until) fail('VERIFIER_EXPIRED');
+  const service = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (!service) fail('SERVER_CONFIGURATION_REQUIRED');
+  const response = await fetcher(BASE+'/storage/v1/object/authenticated/'+BUCKET+'/'+entry.object_path,
+    {method:'GET',redirect:'error',signal:AbortSignal.timeout(20000),
+      headers:{authorization:'Bearer '+service,apikey:service}});
+  const bytes = await boundedBody(response,entry.size_bytes);
+  if (bytes.length !== entry.size_bytes) fail('SOURCE_SIZE_MISMATCH');
+  const actual = await sha256(bytes);
+  if (actual !== entry.sha256) fail('SOURCE_SHA256_MISMATCH');
+  const image = await decodePNG(bytes);
+  if (now() >= until) fail('VERIFIER_EXPIRED');
+  const wide = entry.object_path.split('/')[0].endsWith('-wide'), ratio = image.width/image.height;
+  if ((!wide && image.width !== image.height) || (wide &&
+      (entry.object_path.startsWith('skill') ? Math.abs(ratio-16/9)/(16/9)>0.003 : ratio<1.25 || ratio>2.4))) fail('CATEGORY_SHAPE_MISMATCH');
+  return {schema:'skylla-server-verification/v1',plan_sha256:planSHA,
+    id:entry.id,project_id:PROJECT,system:'supabase',bucket:BUCKET,object_path:entry.object_path,
+    sha256:actual,size_bytes:bytes.length,...image,status:'verified_complete',
+    permanent_drive_file_id:entry.permanent_drive_file_id,drive_sha256:entry.drive_sha256,
+    verified_at:new Date(now()).toISOString(),safe_to_delete:false,deletion_authorized:false};
 }
 
 export function createHandler({plan, env, fetcher = fetch, now = Date.now}) {
@@ -175,28 +198,9 @@ export function createHandler({plan, env, fetcher = fetch, now = Date.now}) {
       }
       entry = plan.entries.find(e=>e.id === body.id);
       if (!entry) return reply({error:'OBJECT_NOT_ALLOWLISTED'},403,origin);
-      if (now() >= until) return reply({error:'VERIFIER_EXPIRED'},503,origin);
       // Fixed project, bucket and bundled path: caller cannot choose a URL,
       // bucket, checksum, size, write action or signing operation.
-      const service = env('SUPABASE_SERVICE_ROLE_KEY');
-      const response = await get('/storage/v1/object/authenticated/'+BUCKET+'/'+entry.object_path,
-        'Bearer '+service,service);
-      const bytes = await boundedBody(response,entry.size_bytes);
-      if (bytes.length !== entry.size_bytes) fail('SOURCE_SIZE_MISMATCH');
-      const actual = await sha256(bytes);
-      if (actual !== entry.sha256) fail('SOURCE_SHA256_MISMATCH');
-      const image = await decodePNG(bytes);
-      if (now() >= until) return reply({error:'VERIFIER_EXPIRED'},503,origin);
-      const wide = entry.object_path.split('/')[0].endsWith('-wide');
-      const ratio = image.width/image.height;
-      if ((!wide && image.width !== image.height) || (wide &&
-          (entry.object_path.startsWith('skill') ? Math.abs(ratio-16/9)/(16/9)>0.003 : ratio<1.25 || ratio>2.4))) fail('CATEGORY_SHAPE_MISMATCH');
-      return reply({schema:'skylla-server-verification/v1',plan_sha256:plan.plan_sha256,
-        id:entry.id,project_id:PROJECT,system:'supabase',bucket:BUCKET,object_path:entry.object_path,
-        sha256:actual,size_bytes:bytes.length,...image,status:'verified_complete',
-        permanent_drive_file_id:entry.permanent_drive_file_id,drive_sha256:entry.drive_sha256,
-        verified_at:new Date(now()).toISOString(),safe_to_delete:false,
-        deletion_authorized:false},200,origin);
+      return reply(await verifyStorageEntry(entry,plan.plan_sha256,{env,fetcher,now,until}),200,origin);
     } catch {
       // Never reflect fetch errors, request headers, response bodies or secrets.
       return reply({error:'VERIFICATION_FAILED',id:entry?.id || null,safe_to_delete:false},422,origin);

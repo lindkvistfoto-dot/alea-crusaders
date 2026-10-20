@@ -1,8 +1,10 @@
-# SKYLLA – automatiserad privat byteverifiering i Supabase
+# SKYLLA – byteverifiering via operatörssession
+
+Den primära, faktiskt provade vägen är nu [driftsättningsbunden läskapabilitet](SKYLLA_SCOPED_ACCESS.md), som inte kräver operatörssession i Codex. Denna sida beskriver det alternativa operatörsläget.
 
 ## Levererad lösning
 
-Den separata Edge Function `skylla-verify` är driftsatt i `wbmosmkirsitkonejzpg` med `verify_jwt=true`. **Verifieringsläget är avstängt som standard.** Ingen aktivering eller privat Storage-läsning har utförts. En verklig POST utan autentisering avvisades av plattformen med HTTP 401. HERMES-funktionen har inte ändrats.
+Den separata Edge Function `skylla-verify` är driftsatt i `wbmosmkirsitkonejzpg` med `verify_jwt=true`. **Verifieringsläget är avstängt som standard.** Detta operatörsläge har inte aktiverats. Privata Storage-läsningar har därefter verifierats genom den separata kapabilitetsvägen. En verklig POST utan autentisering avvisades av plattformen med HTTP 401. HERMES-funktionen har inte ändrats.
 
 En befintlig inloggad administratör kan automatiskt gå igenom den bundlade fillistan med [operatörsklienten](../../scripts/skylla_operator_verify.mjs). Ingen behöver skapa 519 länkar. Varken servernycklar, signerade länkar eller bildbytes skickas till Codex. Projektets inbyggda `SUPABASE_SERVICE_ROLE_KEY` används endast inne i funktionen för autentiserad binär GET från det fasta projektet och bucketen `alea-hermes-source`.
 
@@ -59,11 +61,11 @@ setTimeout(() => URL.revokeObjectURL(skyllaReportURL), 10000);
 
 Detta använder samma befintliga sessionsförnyelse och publika API-identifierare som `features/combat/hermes2.js`. Kopiera aldrig sessionstoken till chatt, Git, logg eller Codex. Körningen är sekventiell, sparar ett resultat per objekt och behåller blockerade resultat. Kvittot ska tillföras som vanlig rapport, utan autentiseringsmaterial. Efter avbrott kan en avgränsad delmängd av samma fasta lista verifieras igen genom att använda dess original-ID:n och samma planhash; driftsätt aldrig nya filer via anropspayloaden.
 
-En projektoperatör med rätt att konfigurera funktionsmiljön och en befintlig inloggad Alea-administratör saknas i den aktuella körmiljön. Därför påstås ingen privat byteåtkomst vara löst eller någon verklig Storage-verifiering vara genomförd ännu.
+En projektoperatör med rätt att konfigurera funktionsmiljön och en befintlig inloggad Alea-administratör saknas i den aktuella körmiljön. Det hindrar inte den separat verifierade kapabilitetsvägen, som använder den befintliga driftsättningsbehörigheten.
 
 ## Tester och begränsningar
 
-31 syntetiska JavaScript-tester passerar i både Node 24.19.0 och Deno 2.5.4. Fem Python-tester verifierar att serverlistan inte kan byggas från enbart metadata, fel permanent ID, fel mapp, ofullständig avkodning eller dubblettposter. Deno-kontroll av entrypoint passerar. Lokalt avkodades dessutom pilotens fem redan hämtade Drive-original; rekonstruerade pixelhashar matchade Pillow för samtliga, 102–153 ms per bild i denna miljö. Detta är inte ett prestandalöfte för Supabases produktionsruntime.
+38 syntetiska JavaScript-tester passerar i både Node 24.19.0 och Deno 2.5.4. Fem Python-tester verifierar att serverlistan inte kan byggas från enbart metadata, fel permanent ID, fel mapp, ofullständig avkodning eller dubblettposter. Deno-kontroll av entrypoint passerar. Lokalt avkodades dessutom pilotens fem redan hämtade Drive-original; rekonstruerade pixelhashar matchade Pillow för samtliga, 102–153 ms per bild i denna miljö. Detta är inte ett prestandalöfte för Supabases produktionsruntime.
 
 Supabases dokumenterade Edge-gränser är 256 MiB minne, två sekunder CPU per request och 150 sekunder worker-väggtid på Free. Lösningen läser en fil per request och använder en mindre minnesgräns för avkodade bilder. Verklig autentiserad femfilskörning måste fortfarande bekräfta driftbeteendet.
 
