@@ -1,0 +1,270 @@
+{
+  "schema": "kerberos-five-file-pilot-plan/v1",
+  "mode": "planning_only",
+  "created_at": "2026-10-20T11:05:09.621023+00:00",
+  "integrated_main_commit": "500e60b7f83e0edc9324546ce2e0495515d057d4",
+  "medusa_manifest_drive_file_id": "1bdJ-b2P47cpZYUReGCefHP-WmW0rHJi5",
+  "medusa_manifest_raw_sha256": "c6da4b287597d981db4f495fb47c04154760d610221f784e8b21c4291bd99289",
+  "folder_registry_sha256": "df2f1bb0183262f7b3c4dc3d4e972b3fc6982ea65a518d28ca3fd92bdfbf98df",
+  "original_count": 5,
+  "source_bytes": 14199932,
+  "execution_gate": {
+    "fresh_five_source_byte_reads": true,
+    "independent_backup_provisioned": false,
+    "backup_write_and_separate_restore_access_verified": false,
+    "drive_copy_capability_verified": false,
+    "production_copy_adapter_reviewed": false,
+    "may_start_real_archive_copy": false
+  },
+  "backup_requirement": {
+    "provider_recommendation": "S3 in separate account, separate custodian and restore identity; encrypted offline medium is acceptable alternative",
+    "proposed_prefix_template": "s3://<separate-account-bucket>/alea-crusaders/kerberos/pilot-20261020/",
+    "provisioned_location": null,
+    "minimum_recommended_capacity_bytes": 104857600,
+    "source_bytes": 14199932,
+    "same_Drive_account_accepted": false,
+    "fresh_remote_download_required": true
+  },
+  "steps": [
+    {
+      "order": 1,
+      "action": "read exact source IDs, compute SHA-256 over full bytes, decode PNG, compare manifest size/dimensions/mode",
+      "status": "passed_read_only"
+    },
+    {
+      "order": 2,
+      "action": "only after backup and access gates pass, copy source to registered target folder without changing source parents; capture new permanent Drive ID",
+      "status": "blocked"
+    },
+    {
+      "order": 3,
+      "action": "read new archive ID and parent, decode full PNG, compare SHA-256/size and source bytes",
+      "status": "not_started"
+    },
+    {
+      "order": 4,
+      "action": "export verified bytes into provisioned independent provider and record provider/account/object version/location; fresh remote readback",
+      "status": "blocked"
+    },
+    {
+      "order": 5,
+      "action": "fresh download with separate restore identity to new isolated location, full decode and byte compare",
+      "status": "blocked"
+    },
+    {
+      "order": 6,
+      "action": "persist per-file immutable source/archive/backup/restore receipts; keep all failures; no overwrite, movement or deletion",
+      "status": "plan_and_read_only_evidence_created"
+    }
+  ],
+  "retry_policy": "one executor and lock per content identity; find existing copies by target folder and content/version appProperties; verify existing exact ID; conflicting or multiple copies block; ambiguous timeout requires reconciliation before retry",
+  "originals": [
+    {
+      "pilot_id": "KERBEROS-PILOT-01",
+      "asset_key": "spell/varseblivning",
+      "file_name": "ARCANE_IVORY_varseblivning_recovery_20261020.png",
+      "source_drive_file_id": "1GHgNkHN0KHuSM4T3hnUq5lOjN_2iID9b",
+      "source_inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+      "sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "size_bytes": 2721849,
+      "format": "PNG",
+      "dimensions": "1254x1254",
+      "color_mode": "RGBA",
+      "category": "spells",
+      "variant": "icon",
+      "target_folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+      "target_folder_name": "01 – Ikon ARCANE IVORY",
+      "archive_drive_file_id": null,
+      "version_id": "sha256:1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "idempotency_key": "sha256:1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "batch": "KERBEROS-FIVE-FILE-PILOT-20261020",
+      "register_links": [
+        {
+          "entity": "spells",
+          "key": "varseblivning",
+          "name": "VARSEBLIVNING",
+          "field": "icon_path"
+        },
+        {
+          "entity": "spells",
+          "key": "varseblivning",
+          "field": "icon_path"
+        }
+      ],
+      "github_original_path": "assets/hermes/originals/spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+      "github_blob_sha": "c02ac112ce1257a720493df1d374488bdf7dd075",
+      "active_dependency_policy": "preserve_existing_sources_references_and_HERMES_inputs",
+      "live_database_reference_audit": "not_performed; MEDUSA snapshot retained",
+      "status": "source_bytes_verified_archive_copy_blocked",
+      "backup_identity": null,
+      "archive_readback_verified": false,
+      "independent_backup_verified": false,
+      "restore_verified": false,
+      "may_copy_now": false,
+      "may_move": false,
+      "safe_to_delete": false
+    },
+    {
+      "pilot_id": "KERBEROS-PILOT-02",
+      "asset_key": "spell-cutout/antimagi",
+      "file_name": "arcane-cutout-pilot-v1-20261019-antimagi.png",
+      "source_drive_file_id": "1_pNuKW3HLBI9_DwuVrOPVOFbVitEYCx1",
+      "source_inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+      "sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "size_bytes": 2453778,
+      "format": "PNG",
+      "dimensions": "1254x1254",
+      "color_mode": "RGBA",
+      "category": "spells",
+      "variant": "cutout",
+      "target_folder_id": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+      "target_folder_name": "02 – Cutout ARCANE",
+      "archive_drive_file_id": null,
+      "version_id": "sha256:bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "idempotency_key": "sha256:bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "batch": "KERBEROS-FIVE-FILE-PILOT-20261020",
+      "register_links": [
+        {
+          "entity": "spells",
+          "key": "antimagi",
+          "name": "ANTIMAGI",
+          "field": "cutout_path"
+        }
+      ],
+      "github_original_path": "assets/hermes/originals/spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+      "github_blob_sha": "f6bdd35059e980c8ea3882320124a69304fe6906",
+      "active_dependency_policy": "preserve_existing_sources_references_and_HERMES_inputs",
+      "live_database_reference_audit": "not_performed; MEDUSA snapshot retained",
+      "status": "source_bytes_verified_archive_copy_blocked",
+      "backup_identity": null,
+      "archive_readback_verified": false,
+      "independent_backup_verified": false,
+      "restore_verified": false,
+      "may_copy_now": false,
+      "may_move": false,
+      "safe_to_delete": false
+    },
+    {
+      "pilot_id": "KERBEROS-PILOT-03",
+      "asset_key": "spell-illustration-wide/varseblivning",
+      "file_name": "spell-illustration-wide-varseblivning-20261018-1402.png",
+      "source_drive_file_id": "1odFegBa_8HHRHv1TjRxMocXeBFHK8gop",
+      "source_inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+      "sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "size_bytes": 3027933,
+      "format": "PNG",
+      "dimensions": "1672x941",
+      "color_mode": "RGB",
+      "category": "spells",
+      "variant": "wide",
+      "target_folder_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+      "target_folder_name": "04 – Illustration Wide",
+      "archive_drive_file_id": null,
+      "version_id": "sha256:8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "idempotency_key": "sha256:8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "batch": "KERBEROS-FIVE-FILE-PILOT-20261020",
+      "register_links": [
+        {
+          "entity": "spells",
+          "key": "varseblivning",
+          "name": "VARSEBLIVNING",
+          "field": "illustration_wide_path"
+        }
+      ],
+      "github_original_path": "assets/hermes/originals/spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+      "github_blob_sha": "4efb3a607e6a83a142f6eb489e38d4da117c2d45",
+      "active_dependency_policy": "preserve_existing_sources_references_and_HERMES_inputs",
+      "live_database_reference_audit": "not_performed; MEDUSA snapshot retained",
+      "status": "source_bytes_verified_archive_copy_blocked",
+      "backup_identity": null,
+      "archive_readback_verified": false,
+      "independent_backup_verified": false,
+      "restore_verified": false,
+      "may_copy_now": false,
+      "may_move": false,
+      "safe_to_delete": false
+    },
+    {
+      "pilot_id": "KERBEROS-PILOT-04",
+      "asset_key": "skill/administrationsjuridik",
+      "file_name": "administrationsjuridik.png",
+      "source_drive_file_id": "1cGkeaiVuoV9QNopNaaMUK4KD3oh0kTd4",
+      "source_inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+      "sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "size_bytes": 3021435,
+      "format": "PNG",
+      "dimensions": "1254x1254",
+      "color_mode": "RGBA",
+      "category": "skills",
+      "variant": "icon",
+      "target_folder_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+      "target_folder_name": "01 – Ikon",
+      "archive_drive_file_id": null,
+      "version_id": "sha256:ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "idempotency_key": "sha256:ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "batch": "KERBEROS-FIVE-FILE-PILOT-20261020",
+      "register_links": [
+        {
+          "entity": "skills",
+          "key": "administrationsjuridik",
+          "name": "Administrationsjuridik",
+          "field": "icon_path"
+        }
+      ],
+      "github_original_path": "assets/hermes/originals/skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "github_blob_sha": "62fb6de8a2447eb982f9b0f7bc8ab7069cfc5134",
+      "active_dependency_policy": "preserve_existing_sources_references_and_HERMES_inputs",
+      "live_database_reference_audit": "not_performed; MEDUSA snapshot retained",
+      "status": "source_bytes_verified_archive_copy_blocked",
+      "backup_identity": null,
+      "archive_readback_verified": false,
+      "independent_backup_verified": false,
+      "restore_verified": false,
+      "may_copy_now": false,
+      "may_move": false,
+      "safe_to_delete": false
+    },
+    {
+      "pilot_id": "KERBEROS-PILOT-05",
+      "asset_key": "skill-illustration-wide/akrobatik",
+      "file_name": "WIDE_AKROBATIK_PORTRAIT_MASTER_20261018.png",
+      "source_drive_file_id": "1HBkgpvdGeTtV6WVNruSgDQdVYMTjvxfj",
+      "source_inbox_folder_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+      "sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "size_bytes": 2974937,
+      "format": "PNG",
+      "dimensions": "1672x941",
+      "color_mode": "RGB",
+      "category": "skills",
+      "variant": "wide",
+      "target_folder_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+      "target_folder_name": "03 – Illustration Wide",
+      "archive_drive_file_id": null,
+      "version_id": "sha256:c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "idempotency_key": "sha256:c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "batch": "KERBEROS-FIVE-FILE-PILOT-20261020",
+      "register_links": [
+        {
+          "entity": "skills",
+          "key": "akrobatik",
+          "name": "Akrobatik",
+          "field": "illustration_wide_path"
+        }
+      ],
+      "github_original_path": "assets/hermes/originals/skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+      "github_blob_sha": "e341978553ae59686196be472c6a679868c8ad2f",
+      "active_dependency_policy": "preserve_existing_sources_references_and_HERMES_inputs",
+      "live_database_reference_audit": "not_performed; MEDUSA snapshot retained",
+      "status": "source_bytes_verified_archive_copy_blocked",
+      "backup_identity": null,
+      "archive_readback_verified": false,
+      "independent_backup_verified": false,
+      "restore_verified": false,
+      "may_copy_now": false,
+      "may_move": false,
+      "safe_to_delete": false
+    }
+  ],
+  "production_archive_copies": 0,
+  "safe_to_delete": false
+}
