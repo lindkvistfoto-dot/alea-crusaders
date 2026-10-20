@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Keyless GitHub Actions client; secrets stay in memory or RUNNER_TEMP, never artifacts."""
 import argparse
+import base64
 import json
 import os
 from pathlib import Path
@@ -97,8 +98,16 @@ def prepare(args):
     if args.mode == 'execute' and (not policy['execution_enabled'] or not overview['environment']['owner_gate_verified']):
         batch.atomic_json(output / 'PREFLIGHT.json', {**overview, 'blocker': 'PRODUCTION_EXECUTION_DISABLED_OR_UNPROTECTED'})
         raise batch.archive.k.Blocked('PRODUCTION_EXECUTION_DISABLED_OR_UNPROTECTED')
+    batch.atomic_json(output / 'PREFLIGHT.json', overview)
+    identity_token = oidc('prepare')
+    # Diagnostics only: decoded claims NEVER establish trust (server verifies signature).
+    claims = json.loads(base64.urlsafe_b64decode(identity_token.split('.')[1] + '==='))
+    context = {k: claims.get(k) for k in
+        ['sub', 'ref', 'environment', 'repository_id', 'actor_id', 'workflow_ref', 'workflow_sha', 'run_id', 'run_attempt']}
+    batch.atomic_json(output / 'GITHUB_CONTEXT.json', context)
+    print('GITHUB_CONTEXT ' + json.dumps(context))
     prepared = request(ENDPOINT, {'operation': 'prepare', 'batch_id': args.batch_id,
-        'manifest_sha256': args.manifest_sha256, 'mode': args.mode}, {'Authorization': 'Bearer ' + oidc('prepare')})
+        'manifest_sha256': args.manifest_sha256, 'mode': args.mode}, {'Authorization': 'Bearer ' + identity_token})
     if any(prepared.get(k) != overview[k] for k in ('batch_id', 'manifest_sha256', 'object_count', 'expected_bytes', 'mode')):
         raise batch.archive.k.Blocked('BROKER_MANIFEST_MISMATCH')
     batch.atomic_json(output / 'TICKET.json', prepared)  # Signed approval description; NOT an access credential.
