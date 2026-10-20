@@ -18,7 +18,7 @@
   ],
   "comparison": {
     "baseline": "docs/skylla/evidence/CI_BASELINE_COMPARISON.json",
-    "baseline_main_commit": "500e60b7",
+    "baseline_main_commit": "500e60b7f83e0edc9324546ce2e0495515d057d4",
     "exact_failed_case_set_matches": true,
     "failed_cases_per_head": 29,
     "new_failed_cases": [],

@@ -28,14 +28,6 @@ on:
         description: 'Tidigare körnings-ID för journalåterupptagning (valfritt)'
         type: string
         required: false
-  # A real, read-only development run before this workflow reaches main.
-  push:
-    branches: [artemis/skylla-mobile-operations-20261020]
-    paths:
-      - '.github/workflows/skylla-mobile.yml'
-      - 'scripts/skylla_mobile.py'
-      - 'supabase/functions/skylla-mobile/**'
-      - 'supabase/functions/skylla-verify/mobile.mjs'
 
 permissions:
   contents: read

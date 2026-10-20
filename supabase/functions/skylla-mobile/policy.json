@@ -6,7 +6,9 @@
   "owner_id": "337302317",
   "workflow": ".github/workflows/skylla-mobile.yml",
   "environment": "skylla-production",
-  "dry_run_refs": ["refs/heads/main", "refs/heads/artemis/skylla-mobile-operations-20261020"],
+  "dry_run_refs": [
+    "refs/heads/main"
+  ],
   "catalog_path": "config/skylla-mobile-batches.json",
   "credential_minutes": 20,
   "ticket_minutes": 60

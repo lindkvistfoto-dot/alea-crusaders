@@ -1,0 +1,16 @@
+{
+  "batch_id": "SKYLLA-BATCH-001",
+  "manifest_sha256": "638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090",
+  "object_count": 100,
+  "expected_bytes": 333077975,
+  "mode": "dry-run",
+  "environment": {
+    "public_repository_supported": true,
+    "inspected": false,
+    "owner_gate_verified": false,
+    "blocker": "ENVIRONMENT_MISSING_OR_READ_ACCESS_UNAVAILABLE"
+  },
+  "execution_enabled": false,
+  "commit": "9848e137d48440a9964f2701c74a0046fa9766c2",
+  "ticket_expires_at": "2026-10-20T15:48:05.000Z"
+}

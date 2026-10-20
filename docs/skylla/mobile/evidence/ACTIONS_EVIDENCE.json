@@ -1,0 +1,20 @@
+{
+  "schema": "skylla-mobile-actions-evidence/v1",
+  "run_id": 39442513843,
+  "commit": "9848e137d48440a9964f2701c74a0046fa9766c2",
+  "run_url": "https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39442513843",
+  "preflight_artifact_id": 12273703085,
+  "result_artifact_id": 12275456515,
+  "result_artifact_sha256": "20fdd8c36edb7a696ded03635605d22c28fe269919bead598094ea5a70b7b15e",
+  "downloaded_zip_sha256_matches_github_digest": true,
+  "google_failure": {
+    "code": "unauthorized_client",
+    "description": "The given credential is rejected by the attribute condition."
+  },
+  "local_skylla_checks_passed": 214,
+  "skylla_synthetic_actions_run_id": 39442514651,
+  "synthetic_actions_conclusion": "success",
+  "production_execution_enabled": false,
+  "development_push_trigger_removed_after_test": true,
+  "no_production_deletions": true
+}

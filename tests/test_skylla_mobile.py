@@ -106,6 +106,7 @@ class MobileTests(unittest.TestCase):
         self.assertIn('--mode dry-run', text)
         self.assertNotIn('secrets.', text)
         self.assertNotIn('pull_request_target:', text)
+        self.assertNotIn('  push:', text)
         self.assertNotIn('SUPABASE_SERVICE_ROLE_KEY', text)
         self.assertNotIn('write-all', text)
         self.assertIn('cancel-in-progress: false', text)

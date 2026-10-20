@@ -2,7 +2,7 @@
 
 ## Autentisering och exakt batch
 
-`workflow_dispatch` startar en körning. Utvecklingsgrenen har dessutom ett avgränsat push-trigger för den första verkliga Actions-dry-run-körningen. Inget pull-request-event kan starta drift. Alla körningar delar en concurrency-grupp utan automatisk avbrytning.
+`workflow_dispatch` startar en körning. Den första verkliga Actions-dry-run-körningen gjordes med ett tillfälligt avgränsat push-trigger på utvecklingsgrenen; detta trigger och serverns utvecklingsref togs bort efter provet. Levererat driftflöde tillåter endast manuell körning på `main`. Inget pull-request-event kan starta drift. Alla körningar delar en concurrency-grupp utan automatisk avbrytning.
 
 Supabase-funktionen `skylla-mobile` verifierar GitHubs RS256-signatur med fast issuer/JWKS. Repository-ID, ägar-ID, actor-ID, workflow-fil, ref, workflow-SHA, commit, event och kort JWT-livslängd måste stämma. Endast ägaren kan starta drift. Betrodd repositorykod på `main` ingår i säkerhetsgränsen; ägarens GitHub-konto ska skyddas med MFA.
 
