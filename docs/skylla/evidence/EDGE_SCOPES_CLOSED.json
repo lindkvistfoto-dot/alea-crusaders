@@ -1,0 +1,64 @@
+{
+  "observed_at": "2026-10-20T13:09:31.083Z",
+  "temporary_capability_scopes_enabled": false,
+  "operator_mode_activated_by_this_operation": false,
+  "functions": [
+    {
+      "id": "872a3457-bf2b-4b38-9533-e0e223aea898",
+      "slug": "skylla-verify-scoped",
+      "name": "skylla-verify-scoped",
+      "status": "ACTIVE",
+      "version": 7,
+      "created_at": 1792498186936,
+      "updated_at": 1792501768010,
+      "verify_jwt": false,
+      "import_map": true,
+      "entrypoint_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_872a3457-bf2b-4b38-9533-e0e223aea898_7/source/skylla-verify-scoped/index.ts",
+      "import_map_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_872a3457-bf2b-4b38-9533-e0e223aea898_7/source/skylla-verify-scoped/deno.json",
+      "ezbr_sha256": "62c26da9266e0b1fa87c42696ca6f270f6d8d8bba85f95d0f9cbae5b7cc03d62"
+    },
+    {
+      "id": "3e23dd9b-9931-456b-b20a-f85d76bbf91e",
+      "slug": "skylla-display-read",
+      "name": "skylla-display-read",
+      "status": "ACTIVE",
+      "version": 4,
+      "created_at": 1792499132256,
+      "updated_at": 1792501768966,
+      "verify_jwt": false,
+      "import_map": true,
+      "entrypoint_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_3e23dd9b-9931-456b-b20a-f85d76bbf91e_4/source/skylla-display-read/index.ts",
+      "import_map_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_3e23dd9b-9931-456b-b20a-f85d76bbf91e_4/source/skylla-display-read/deno.json",
+      "ezbr_sha256": "c463e384fd7b3911ce035fd83ff233d21183d93ac4b5f55602cb7c6a0a9aa95d"
+    },
+    {
+      "id": "27f01c3e-5bc2-48bd-ae47-3c3657c21700",
+      "slug": "skylla-verify",
+      "name": "skylla-verify",
+      "status": "ACTIVE",
+      "version": 2,
+      "created_at": 1792496683294,
+      "updated_at": 1792501770942,
+      "verify_jwt": true,
+      "import_map": true,
+      "entrypoint_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_27f01c3e-5bc2-48bd-ae47-3c3657c21700_2/source/skylla-verify/index.ts",
+      "import_map_path": "file:///tmp/user_fn_wbmosmkirsitkonejzpg_27f01c3e-5bc2-48bd-ae47-3c3657c21700_2/source/skylla-verify/deno.json",
+      "ezbr_sha256": "55172d036e91a1a141f0c2831606b9597ee2dee79738c0fa2476fca30956a08e"
+    }
+  ],
+  "production_data_deletions": 0,
+  "live_disabled_checks": [
+    {
+      "function": "skylla-verify-scoped",
+      "http_status": 503,
+      "error": "CAPABILITY_DISABLED_OR_EXPIRED",
+      "private_reads_possible": false
+    },
+    {
+      "function": "skylla-display-read",
+      "http_status": 503,
+      "error": "DISABLED_OR_EXPIRED",
+      "private_reads_possible": false
+    }
+  ]
+}

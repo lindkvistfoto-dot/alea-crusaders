@@ -1,6 +1,6 @@
 {
   "schema": "skylla-display-checks/v1",
-  "observed_at": "2026-10-20T12:29:31.893999+00:00",
+  "observed_at": "2026-10-20T13:00:45.340276+00:00",
   "plan_sha256": "682367539d99e87df1a28124d1fd9c005f0ad8816ab507b40c024bc67d7f1c9e",
   "results": [
     {
@@ -15,7 +15,7 @@
       "height": 640,
       "color_mode": "RGBA",
       "complete_decode": true,
-      "verified_at": "2026-10-20T12:29:27.475729+00:00",
+      "verified_at": "2026-10-20T13:00:42.899193+00:00",
       "reference_changed": false,
       "safe_to_delete": false
     },
@@ -31,7 +31,7 @@
       "height": 640,
       "color_mode": "RGBA",
       "complete_decode": true,
-      "verified_at": "2026-10-20T12:29:28.241828+00:00",
+      "verified_at": "2026-10-20T13:00:43.435229+00:00",
       "reference_changed": false,
       "safe_to_delete": false
     },
@@ -47,7 +47,7 @@
       "height": 941,
       "color_mode": "RGB",
       "complete_decode": true,
-      "verified_at": "2026-10-20T12:29:29.829019+00:00",
+      "verified_at": "2026-10-20T13:00:44.127952+00:00",
       "reference_changed": false,
       "safe_to_delete": false
     },
@@ -63,7 +63,7 @@
       "height": 640,
       "color_mode": "RGBA",
       "complete_decode": true,
-      "verified_at": "2026-10-20T12:29:30.584896+00:00",
+      "verified_at": "2026-10-20T13:00:44.843272+00:00",
       "reference_changed": false,
       "safe_to_delete": false
     },
@@ -79,7 +79,7 @@
       "height": 941,
       "color_mode": "RGB",
       "complete_decode": true,
-      "verified_at": "2026-10-20T12:29:31.892718+00:00",
+      "verified_at": "2026-10-20T13:00:45.339319+00:00",
       "reference_changed": false,
       "safe_to_delete": false
     }

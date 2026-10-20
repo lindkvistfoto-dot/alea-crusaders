@@ -1,0 +1,149 @@
+{
+  "observed_at": "2026-10-20T13:05:39.941185+00:00",
+  "scope": "five exact pilot originals only; remaining per-object dependency decisions stay blocked",
+  "pilot": [
+    {
+      "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "status": "clear",
+      "active_consumers": [],
+      "observed_at": "2026-10-20T13:05:39.941185+00:00",
+      "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+      "app_images_verified": true,
+      "app_images_verified_at": "2026-10-20T13:00:44.843272+00:00",
+      "reference_paths_unchanged": true,
+      "job_id": "dd80a703-957a-49d0-8d9d-e2e95c3cef8d",
+      "job_status": "active",
+      "current_registry_matches": [
+        {
+          "table": "rule_skills",
+          "id": "administrationsjuridik",
+          "field": "icon_path"
+        }
+      ],
+      "basis": [
+        "deployed HERMES v8 active guard precedes source read",
+        "publisher active guard precedes source upload",
+        "rollback uses prior WebP pointer",
+        "no active/queued HERMES workflow",
+        "current registered image fields do not reference source objects",
+        "fresh full WebP byte/decode check"
+      ]
+    },
+    {
+      "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+      "status": "clear",
+      "active_consumers": [],
+      "observed_at": "2026-10-20T13:05:39.941185+00:00",
+      "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+      "app_images_verified": true,
+      "app_images_verified_at": "2026-10-20T13:00:45.339319+00:00",
+      "reference_paths_unchanged": true,
+      "job_id": "c421f36a-dfe0-4999-b64c-f794ba96db79",
+      "job_status": "active",
+      "current_registry_matches": [
+        {
+          "table": "rule_skills",
+          "id": "akrobatik",
+          "field": "illustration_wide_path"
+        }
+      ],
+      "basis": [
+        "deployed HERMES v8 active guard precedes source read",
+        "publisher active guard precedes source upload",
+        "rollback uses prior WebP pointer",
+        "no active/queued HERMES workflow",
+        "current registered image fields do not reference source objects",
+        "fresh full WebP byte/decode check"
+      ]
+    },
+    {
+      "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+      "status": "clear",
+      "active_consumers": [],
+      "observed_at": "2026-10-20T13:05:39.941185+00:00",
+      "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+      "app_images_verified": true,
+      "app_images_verified_at": "2026-10-20T13:00:44.127952+00:00",
+      "reference_paths_unchanged": true,
+      "job_id": "f5542312-5798-45c9-80e2-aa151ad20776",
+      "job_status": "active",
+      "current_registry_matches": [
+        {
+          "table": "rule_spells",
+          "id": "a481c285-31f0-469c-96ce-0599b05305df",
+          "field": "illustration_wide_path"
+        }
+      ],
+      "basis": [
+        "deployed HERMES v8 active guard precedes source read",
+        "publisher active guard precedes source upload",
+        "rollback uses prior WebP pointer",
+        "no active/queued HERMES workflow",
+        "current registered image fields do not reference source objects",
+        "fresh full WebP byte/decode check"
+      ]
+    },
+    {
+      "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+      "status": "clear",
+      "active_consumers": [],
+      "observed_at": "2026-10-20T13:05:39.941185+00:00",
+      "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+      "app_images_verified": true,
+      "app_images_verified_at": "2026-10-20T13:00:43.435229+00:00",
+      "reference_paths_unchanged": true,
+      "job_id": "3f398839-908d-4817-bedd-031d0a70fa12",
+      "job_status": "active",
+      "current_registry_matches": [
+        {
+          "table": "rule_spells",
+          "id": "1f8a94c6-a1a6-402a-9f55-15b2e8977ade",
+          "field": "cutout_path"
+        }
+      ],
+      "basis": [
+        "deployed HERMES v8 active guard precedes source read",
+        "publisher active guard precedes source upload",
+        "rollback uses prior WebP pointer",
+        "no active/queued HERMES workflow",
+        "current registered image fields do not reference source objects",
+        "fresh full WebP byte/decode check"
+      ]
+    },
+    {
+      "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+      "status": "clear",
+      "active_consumers": [],
+      "observed_at": "2026-10-20T13:05:39.941185+00:00",
+      "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+      "app_images_verified": true,
+      "app_images_verified_at": "2026-10-20T13:00:42.899193+00:00",
+      "reference_paths_unchanged": true,
+      "job_id": "560ed5ff-eb77-4707-b57b-afaaf5186bcf",
+      "job_status": "active",
+      "current_registry_matches": [
+        {
+          "table": "rule_spells",
+          "id": "a481c285-31f0-469c-96ce-0599b05305df",
+          "field": "icon_path"
+        }
+      ],
+      "basis": [
+        "deployed HERMES v8 active guard precedes source read",
+        "publisher active guard precedes source upload",
+        "rollback uses prior WebP pointer",
+        "no active/queued HERMES workflow",
+        "current registered image fields do not reference source objects",
+        "fresh full WebP byte/decode check"
+      ]
+    }
+  ],
+  "registry_rows": 185,
+  "changed_image_fields_since_MEDUSA": [],
+  "all_14_bucket_counts_and_sizes_unchanged": true,
+  "source_count": 519,
+  "source_metadata_bytes": 1501614754,
+  "active_hermes_runs": [],
+  "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+  "owner_approved": false
+}

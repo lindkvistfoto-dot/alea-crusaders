@@ -1,0 +1,12 @@
+{
+  "validated_objects": 519,
+  "verified_archive_records": 507,
+  "unique_archive_files": 506,
+  "source_byte_proofs": 507,
+  "technical_candidates": 5,
+  "deletion_authorized": false,
+  "unknown_copy_outcomes": 0,
+  "unverified_copy_outcomes": 0,
+  "secret_value_matches_in_changed_files": [],
+  "actual_secret_values_printed": false
+}

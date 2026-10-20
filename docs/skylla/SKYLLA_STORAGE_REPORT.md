@@ -1,29 +1,21 @@
-# SKYLLA Storage – 2026-10-20
+# SKYLLA – Storage efter arkivering
 
 | Mått | Resultat |
 |---|---:|
 | Aktuella Supabase-original | 519 |
-| Metadataförd storlek i `alea-hermes-source` | 1 501 614 754 bytes |
-| Permanenta Drive-kopior med full byte-readback | 5 / 14 199 932 bytes |
-| Aktuella Supabase-original lästa som bytes | 0 |
-| Raderingsklara Supabase-objekt | **0** |
-| Blockerade Supabase-objekt | **519** |
-| Utförda raderingar / frigjorda bytes | **0 / 0** |
-| Villkorad potential för femfilspiloten | 14 199 932 bytes |
-| Villkorad maximal potential enligt aktuellt inventarium | 1 501 614 754 bytes, cirka 1,50 GB / 1,40 GiB |
+| Metadataförd source-volym | 1 501 614 754 bytes |
+| Originalposter verifierade i Drive och från Supabase-bytes | 507 / 1 468 662 842 bytes |
+| Unika permanenta Drive-filer | 506 / 1 465 949 422 bytes |
+| Ännu inte arkiverade symboloriginal | 12 / 32 951 912 metadataförda bytes |
+| Tekniska kandidater för första ägargodkännande | 5 / 14 199 932 bytes |
+| Övriga objekt blockerade för raderingsförslag | 514 |
+| Objekt godkända för faktisk radering | 0 |
+| Utförda raderingar / faktiskt frigjorda bytes | **0 / 0** |
 
-Den maximala potentialen är ingen prognos om säkert frigörbar volym. Varje objekt måste först klara aktuella byte-, arkiv-, referens- och beroendekontroller. Misslyckade jobb och oklassificerade källor kan behöva bevaras. **Nu verifierat frigörbart: 0 bytes.**
+Kandidatvolymen är en villkorad besparing efter separat ägargodkännande, färska kontroller och lyckad Storage-radering. Den totala 1,50 GB-potentialen är inte automatiskt raderingsklar. 507 verifierade originalposter motsvarar cirka 1,47 GB; kvarvarande 12 har ännu inte byteverifierats mot permanent arkiv. Kvoten har inte minskat under denna icke-destruktiva körning.
 
-[SKYLLA_ARCHIVE_MANIFEST.json](SKYLLA_ARCHIVE_MANIFEST.json) innehåller exakt en post per aktuellt objekt, totalt 519. `source_actual_sha256=null` för samtliga; jobbens registrerade hash är tydligt separerad. Fem poster har verklig Drive SHA-256, permanent ID, version och readbackbevis. Övriga 514 har ännu inget SKYLLA-arkivbevis. Kandidat-CSV innehåller inga overifierade objekt.
+Metadata före/efter visar oförändrade objektantal och bytevolymer i alla 14 buckets. Visningsbuckets och deras innehåll har bevarats. [Färsk Storage-snapshot](evidence/STORAGE_FRESH.json). Metadata är ett volymmått; de separata serverkvittona och Drive-readbackerna utgör integritetsbevisen.
 
-Läsande Storage-metadata före/efter Drive-piloten visar oförändrat antal och volym för samtliga 14 buckets. Inga Supabase-skrivningar har gjorts. Se [tidigare snapshot](evidence/LIVE_APP_AND_STORAGE_SNAPSHOT.json) och [slutlig snapshot](evidence/FINAL_STORAGE_SNAPSHOT.json). Metadata är ett volymmått, inte en filintegritetskontroll.
+Primär läsåtkomst är löst med tidsbegränsad, driftsättningsbunden kapabilitet. Inga 519 manuella länkar eller breda nycklar i arbetsmiljön behövs. Alla tillfälliga kapabiliteter har stängts av efter kontrollen. För framtida verifiering driftsätter en behörig operatör en ny fast avgränsad plan och ett kort fönster. [Åtkomst och återställning](SKYLLA_ACCESS_AND_RESTORE.md).
 
-Alla visningsbuckets är utanför policyn, inklusive `alea-hermes-public` (158 objekt / 25 564 008 bytes), `alea-spell-art` (220 / 65 991 104) och `alea-skill-art` (174 / 59 152 854). Dessa har inte ändrats. Inga databasrader, aktiva bildpekare, original i Git eller Git-historik ändrades.
-
-## Nästa mätbara steg
-
-Tillför exakt fem kortlivade signerade läskapabiliteter enligt [åtkomstdokumentationen](SKYLLA_ACCESS_AND_RESTORE.md). Verifiera aktuell Storage-fil mot dess permanenta arkivfil. Uppdatera beroenden och visningsbildskontroller och skapa ett nytt immutable kandidatmanifest. Projektägaren ska därefter godkänna de fem exakta paths som verkligen klarat kontrollerna.
-
-Efter ett sådant separat beslut används endast Supabase Storage-API med explicit bucket och pathlista; ingen SQL-radering, inga globbar eller bucket-operationer. Kontrollera objektantal/metadata-bytevolym, appreferenser, visningsbilder och HERMES-status före/efter. Vid delvis misslyckad radering: stoppa, mät verkligt kvarvarande objekt och rapportera per path. Fortsätt inte med nästa batch. Ett återförsök kräver avstämning och nytt batchbeslut.
-
-Ingen radering av något slag körs automatiskt av denna PR. Den är ett explicit policyundantag och verifierat Drive-pilotunderlag för granskning.
+Efter godkänd femfilspilot: planera nästa batch, exempelvis högst 25 original, och verifiera dess egna käll-/arkivbytes, beroenden och visningsbilder på nytt. Begär separat godkännande av exakt pathlista före varje radering. Mät återstående objekt och metadata-bytevolym efter varje batch; kontrollera Aleas visningsbilder och referenser. Stoppa vid delvis misslyckande eller annan avvikelse. Radera aldrig en bucket, använd inga jokertecken och ändra aldrig `storage.objects` med SQL.
