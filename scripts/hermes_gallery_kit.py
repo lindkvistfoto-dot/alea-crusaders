@@ -128,7 +128,7 @@ def main():
                     "path": path, "source_sha256": digest(data), "app_sha256": digest(webp),
                     "width": image.width, "height": image.height, "alpha_preserved": True
                 }
-    outputs[sprite_manifest["original_path"]] = archive
+    # Original ZIP remains in Drive; never include it in Git publication.
     manifest_path = f"{DEST}/manifest.json"
     outputs[manifest_path] = (json.dumps(sprite_manifest, indent=2, ensure_ascii=False) + "\n").encode()
     print("HERMES_GALLERY_SPRITES_VALIDATED", len(sprite_manifest["sprites"]),
@@ -174,4 +174,4 @@ def main():
                           "- Supabase activation: none\n")
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit("MINOTAURUS: Gallery Kit publication retired; existing WebP assets retained")

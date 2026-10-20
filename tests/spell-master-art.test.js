@@ -205,7 +205,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(publisher).toContain('q=previous===null?q.is(assetField,null):q.eq(assetField,previous)');
   expect(publisher).toContain('final?.[assetField]!==appPath');
   expect(publisher).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_SQUARE_ACTIVATION');
-  expect(workflow).toContain('assets/hermes/originals/spell-illustration/**/*.png');
+  expect(workflow).toContain('GitHub-original publication retired');
  });
  it('defines the WIDE schema and HERMES routing without forcing 16:9',()=>{
   const migration=read('supabase/migrations/20261018113000_spell_illustration_wide.sql');
@@ -222,7 +222,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(publish).toContain('q=previous===null?q.is(assetField,null):q.eq(assetField,previous)');
   expect(publish).toContain('final?.[assetField]!==appPath');
   expect(publish).not.toContain('EXISTING_SPELL_ART_CHANGED_DURING_WIDE_ACTIVATION');
-  expect(workflow).toContain('assets/hermes/originals/spell-illustration-wide/**/*.png');
+  expect(workflow).toContain('GitHub-original publication retired');
  });
  it('drags a square image with pointer events and updates X/Y sliders',async()=>{
   const {ctx,panes}=fixture();

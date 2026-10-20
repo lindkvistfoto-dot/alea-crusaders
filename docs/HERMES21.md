@@ -1,3 +1,5 @@
+> Historisk dokumentation. Originalpublicering från GitHub/HERMES 2.0 är stängd genom MINOTAURUS. Aktiv standard: [HERMES.md](HERMES.md).
+
 # HERMES 2.1 – LOCKED CHAT → DRIVE → GITHUB TRANSPORT (2026-10-15)
 
 ## Proven result: STOPP

@@ -13,9 +13,8 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
-  actions: write
 
 concurrency:
   group: hermes-drive-queue-${{ github.sha }}
@@ -30,11 +29,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            hermes/queue
+            config
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install pinned image verifier
         run: python -m pip install Pillow==12.3.0
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Typecheck publisher
+        run: deno check --node-modules-dir=auto scripts/hermes2_publish.ts
 
       - id: google
         name: Authenticate as read-only HERMES Drive service account
@@ -49,7 +59,8 @@ jobs:
       - name: Consume exactly the queue JSONs committed in this push
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          GITHUB_TOKEN: ${{ github.token }}
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
           HERMES_BEFORE: ${{ github.event.before }}
           HERMES_REQUEST_PATH: ${{ inputs.request_path }}
         shell: bash
@@ -67,9 +78,22 @@ jobs:
           if [ "${#requests[@]}" -eq 0 ]; then
             echo "::error::No new HERMES queue JSON found"; exit 1
           fi
+          failed=0
           for request in "${requests[@]}"; do
             if [[ ! "$request" =~ ^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$ ]]; then
               echo "::error::Invalid HERMES request path"; exit 1
             fi
-            python scripts/hermes_drive_intake.py "$request"
+            output="$RUNNER_TEMP/hermes-direct/${request##*/}"
+            if ! python scripts/hermes_drive_intake.py "$request" --output "$output"; then
+              failed=1; continue
+            fi
+            if [ -f "$output/manifest.json" ]; then
+              if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+                echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; failed=1; continue
+              fi
+              if ! deno run --allow-env --allow-net --allow-read="$output" --node-modules-dir=auto scripts/hermes2_publish.ts "$output/manifest.json" "$output"; then
+                failed=1
+              fi
+            fi
           done
+          exit "$failed"

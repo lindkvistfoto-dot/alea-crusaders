@@ -1,42 +1,13 @@
-name: HERMES UI – verify, optimize and publish cryptex graphics
+name: HERMES – hermes-ui-intake retired
 on:
   workflow_dispatch:
-    inputs:
-      source_path:
-        description: Verified immutable HERMES UI PNG source path
-        required: true
-        type: string
 permissions:
-  contents: write
-  pages: write
-concurrency:
-  group: hermes-ui-publisher-${{ inputs.source_path }}
-  cancel-in-progress: false
+  contents: read
 jobs:
-  publish:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+  retired:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: python -m pip install Pillow==12.3.0
-      - name: Verify immutable PNG and prepare optimized WebP
-        env:
-          HERMES_SOURCE_PATH: ${{ inputs.source_path }}
+      - name: Reject retired original publication
         run: |
-          set -euo pipefail
-          if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/ui/(arcane-mechanism-link|arcane-mechanism-chamber|arcane-gallery-overlay|arcane-gallery-goose-left|arcane-gallery-goose-right|arcane-gallery-goose-seal|arcane-skill-codex-(outer-frame|header|leather|dark-panel|parchment-fishing|parchment-neutral|stat-plate|medallion|close-button|divider|illustration-frame|ornament))/[a-f0-9]{64}\.png$ ]]; then
-            echo "::error::Invalid HERMES UI source path"; exit 1
-          fi
-          python scripts/hermes_ui_prepare.py --source "$HERMES_SOURCE_PATH"
-          echo "HERMES_UI_KEY=$(basename "$(dirname "$HERMES_SOURCE_PATH")")" >> "$GITHUB_ENV"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Publish verified app WebP via Git Data API and request Pages
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/publish_hermes_ui.mjs
+          echo "::error::MINOTAURUS: GitHub-original publication retired. Use hermes/queue Drive intake; existing WebP assets remain available."
+          exit 1

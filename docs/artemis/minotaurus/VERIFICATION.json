@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "issue": 128,
+  "pr": 129,
+  "verified_publisher_commit": "bf1c98540dbde8bf9e5d69fc5fb02703aeefc519",
+  "local": {
+    "javascript_tests": 54,
+    "javascript_files": 9,
+    "python_tests": 15,
+    "new_targeted_failures": 0
+  },
+  "actions": {
+    "minotaurus_run": 39478636220,
+    "guard": "success",
+    "deno_publisher_and_edge_typecheck": "success",
+    "full_ci_run": 39478636080,
+    "baseline_failure_names": 29,
+    "initial_pr_failure_names": 31,
+    "missing_baseline_failure_names": [],
+    "new_failure_names_fixed": [
+      "tests/arcane-gallery-release-smoke.test.js > Arcane Gallery release smoke > ships the verified original and optimized WebP with preserved transparency",
+      "tests/arcane-morph-art-assets.test.js > HERMES · Arcane Morphing Frame v0.1 asset acceptance > retains a verified immutable source ZIP and publishes 29 lossless sprites"
+    ],
+    "baseline_reference": "docs/skylla/evidence/CI_BASELINE_COMPARISON.json",
+    "full_suite_not_run_locally": true,
+    "followup_ci": {
+      "head": "bbd879092880ad9f5578002e549162140f02c3b1",
+      "run": 39479964505,
+      "failed_tests": 29,
+      "passed_tests": 1271,
+      "new_failures": [],
+      "missing_baseline_failures": [],
+      "comparison": "exact normalized full test-name set",
+      "gallery_run": 39479964425,
+      "gallery_vitest_passed": 89,
+      "gallery_browser_smoke": "CHROME_NOT_READY",
+      "browser_failure_not_investigated": true
+    }
+  },
+  "deleted_original_files": 547,
+  "deleted_quarantine_files": 18,
+  "original_and_quarantine_bytes": 1564113258,
+  "source_bucket": {
+    "checked_at": "2026-10-20T18:58:23.659904+00:00",
+    "objects": 0,
+    "bytes": 0
+  },
+  "legacy_edge": {
+    "version": 10,
+    "status": "ACTIVE",
+    "verify_jwt": true,
+    "source_upload_code_present": false
+  },
+  "pilot": {
+    "drive_download_and_webp_conversion": "verified",
+    "active_hash_match": true,
+    "live_storage_upload": "not_yet_run",
+    "plan": "POST_MERGE_PILOT.md",
+    "after_manual_merge": true,
+    "new_credentials_or_wif_trust_changes": false
+  }
+}

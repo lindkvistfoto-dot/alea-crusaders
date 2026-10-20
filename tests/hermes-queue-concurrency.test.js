@@ -8,9 +8,8 @@ describe('HERMES queue concurrency safeguards',()=>{
   expect(drive).toContain('group: hermes-drive-queue-${{ github.sha }}');
   expect(drive).toContain('cancel-in-progress: false');
  });
- it('keys UI publisher jobs to their immutable asset source',()=>{
-  expect(ui).toContain('group: hermes-ui-publisher-${{ inputs.source_path }}');
-  expect(ui).toContain('cancel-in-progress: false');
+ it('retires the old UI publisher without a push trigger',()=>{
+  expect(ui).toContain('exit 1');expect(ui).not.toContain('push:');
  });
  it('permits verified large original JSON read-back, not the old 1MiB truncation',()=>{
   expect(intake).toContain('result.read(MAX_BYTES * 2)');

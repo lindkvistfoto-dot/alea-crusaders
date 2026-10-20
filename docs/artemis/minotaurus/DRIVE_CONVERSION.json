@@ -1,0 +1,21 @@
+{
+  "status": "drive_download_and_conversion_verified_not_live_storage_pilot",
+  "drive_file_id": "1I6Wx2kTtVqN2l76cjwqvdOmN3_iLDY6C",
+  "asset": {
+    "schema": 1,
+    "kind": "symbol",
+    "target_key": "stopp",
+    "source_path": "drive://1I6Wx2kTtVqN2l76cjwqvdOmN3_iLDY6C",
+    "source_sha256": "bc00be5e732aca25b78a7ff7c8cdceed07f097e922da73c13bb44fc05e5b3e49",
+    "source_bytes": 2678163,
+    "app_file": "symbol/stopp/de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170.webp",
+    "app_sha256": "de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170",
+    "app_bytes": 167144,
+    "width": 640,
+    "height": 640,
+    "alpha_preserved": true,
+    "webp_quality": 90
+  },
+  "active_stopp_path_readback": "hermes/symbol/stopp/de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170.webp",
+  "source_objects_sql_readback": 0
+}

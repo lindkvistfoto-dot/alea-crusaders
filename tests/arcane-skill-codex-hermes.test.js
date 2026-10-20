@@ -16,8 +16,7 @@ describe('HERMES ARCANE SKILL CODEX: scoped public UI art profile',()=>{
    const key='arcane-skill-codex-'+suffix;
    expect(intake).toContain(key);
    expect(prepare).toContain(key);
-   expect(publish).toContain(key);
-   expect(workflow).toContain('arcane-skill-codex-');
+   expect(workflow).toContain('publication retired');
   }
   expect(intake).toContain('arcane-gallery-goose-seal');
   expect(prepare).toContain('arcane-mechanism-link');
@@ -31,10 +30,10 @@ describe('HERMES ARCANE SKILL CODEX: scoped public UI art profile',()=>{
  });
  it('sends only statically named skill UI resources to GitHub pages, never DB writes',()=>{
   expect(prepare).toContain('features/skills/codex-assets');
-  expect(publish).toContain('features/skills/codex-assets/');
+  expect(publish).toContain('static UI publisher retired');
   expect(publish).not.toContain('rule_skills.icon_path');
   expect(publish).not.toContain('dbJson(');
-  expect(workflow).toContain('HERMES_SOURCE_PATH');
+  expect(workflow).not.toContain('HERMES_SOURCE_PATH');
  });
  it('Python scripts compile (no runtime credentials needed)',()=>{
   const check=spawnSync('python3',['-c',

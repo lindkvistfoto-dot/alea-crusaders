@@ -1,92 +1,13 @@
-name: HERMES 2.1 – Verify and optimize incoming art
-
+name: HERMES – hermes21-intake retired
 on:
-  push:
-    branches: [main]
-    # HERMES 2.1 handles spell icons, private spell cutouts, and spell/skill
-    # illustrations. UI assets have their own profile and job.
-    # Workflow/script revisions can be validated with workflow_dispatch.
-    paths:
-      - 'assets/hermes/originals/spell/**/*.png'
-      - 'assets/hermes/originals/symbol/**/*.png'
-      - 'assets/hermes/originals/skill/**/*.png'
-      - 'assets/hermes/originals/skill-illustration/**/*.png'
-      - 'assets/hermes/originals/skill-illustration-wide/**/*.png'
-      - 'assets/hermes/originals/spell-illustration-wide/**/*.png'
-      - 'assets/hermes/originals/spell-illustration/**/*.png'
-      - 'assets/hermes/originals/spell-cutout/**/*.png'
   workflow_dispatch:
-    inputs:
-      source_path:
-        description: 'Exact immutable PNG source path to process (one item)'
-        required: false
-        type: string
-
 permissions:
   contents: read
-
-concurrency:
-  group: hermes21-intake-${{ github.ref }}-${{ inputs.source_path || github.sha }}
-  cancel-in-progress: false
-
 jobs:
-  prepare:
+  retired:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install image codec
-        run: python -m pip install Pillow==12.3.0
-      - name: Verify source and create content-addressed WebP
-        shell: bash
-        env:
-          HERMES_SOURCE_PATH: ${{ inputs.source_path }}
+      - name: Reject retired original publication
         run: |
-          args=()
-          if [ -n "$HERMES_SOURCE_PATH" ]; then
-            if [[ ! "$HERMES_SOURCE_PATH" =~ ^assets/hermes/originals/(spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/[a-z0-9]+(-[a-z0-9]+)*/[a-f0-9]{64}\.png$ ]] || [ ! -f "$HERMES_SOURCE_PATH" ]; then
-              echo "::error::Invalid or missing HERMES source_path"; exit 1
-            fi
-            args+=(--source "$HERMES_SOURCE_PATH")
-          fi
-          if [ "${{ github.event_name }}" = "push" ]; then
-            before="${{ github.event.before }}"
-            if git cat-file -e "${before}^{commit}" 2>/dev/null; then
-              while IFS= read -r file; do
-                if [[ "$file" == assets/hermes/originals/*/*/*.png ]] && [ -f "$file" ]; then
-                  args+=(--source "$file")
-                fi
-              done < <(git diff --name-only --diff-filter=ACM "$before" "$GITHUB_SHA" -- assets/hermes/originals/)
-            fi
-          fi
-          python scripts/hermes2_prepare.py --output "$RUNNER_TEMP/hermes21-output" "${args[@]}"
-      - name: Archive the optimized asset for the HERMES publisher
-        uses: actions/upload-artifact@v4
-        with:
-          name: hermes21-verified-images
-          path: ${{ runner.temp }}/hermes21-output/
-          retention-days: 7
-          if-no-files-found: error
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - name: Typecheck HERMES publisher
-        run: deno check --node-modules-dir=auto scripts/hermes2_publish.ts
-      - name: Publish safely to Supabase when service key is configured
-        env:
-          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::HERMES publication blocked: missing repository secret HERMES_SUPABASE_SERVICE_ROLE_KEY."
-            echo "### HERMES FAILED: Supabase credential missing, no publication or activation" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          deno run -A --node-modules-dir=auto scripts/hermes2_publish.ts "$RUNNER_TEMP/hermes21-output/manifest.json" "$RUNNER_TEMP/hermes21-output"
-          echo "### HERMES: image verified and activated in Supabase" >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::MINOTAURUS: GitHub-original publication retired. Use hermes/queue Drive intake; existing WebP assets remain available."
+          exit 1

@@ -1,0 +1,30 @@
+{
+  "before": {
+    "tree": "b8bec4b11df23556855ae40609c736365f351f55",
+    "files": 2211,
+    "bytes": 1633186234,
+    "seconds": [
+      12.998,
+      7.3112,
+      7.6467
+    ],
+    "median_seconds": 7.6467
+  },
+  "after": {
+    "tree": "49132abb493400e104fc70c8ed2df8e2b46cac16",
+    "files": 1652,
+    "bytes": 69048452,
+    "seconds": [
+      0.2764,
+      0.2775,
+      0.4185
+    ],
+    "median_seconds": 0.2775
+  },
+  "method": "Local complete tree materialization: git read-tree + checkout-index to fresh tmp directory, 3 runs per tree, existing local Git objects, no network. Not a GitHub Actions clone/transfer benchmark.",
+  "originals_removed": 547,
+  "quarantine_files_removed": 18,
+  "original_bytes_removed": 1549957260,
+  "quarantine_bytes_removed": 14155998,
+  "total_asset_bytes_removed": 1564113258
+}

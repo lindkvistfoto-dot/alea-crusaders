@@ -7,7 +7,7 @@ const logic=source.slice(source.indexOf('function illustrationUuid'),source.inde
 const check=vm.runInNewContext(stripTypeScriptTypes(logic+'\ncheckAsset;'));
 function asset(kind,width=640,height=640){
  const sha='a'.repeat(64);return {kind,target_key:'forsta-hjalpen',source_sha256:sha,app_sha256:sha,
- source_path:`assets/hermes/originals/${kind}/forsta-hjalpen/${sha}.png`,
+ source_path:"drive://verified-source-id",
  app_file:`${kind}/forsta-hjalpen/${sha}.webp`,width,height,
  alpha_preserved:!['skill-illustration','skill-illustration-wide'].includes(kind)};
 }
