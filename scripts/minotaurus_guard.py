@@ -10,7 +10,7 @@ def git(*args):
 
 def check(base, head='HEAD'):
     files=git('ls-tree','-r','--name-only',head,'--','assets/hermes/originals/','hermes/quarantine/')
-    changed=git('diff','--name-only','--diff-filter=ACMR',base,head)
+    changed=git('diff','--no-renames','--name-only','--diff-filter=ACMR',base,head)
     bad=sorted(set(files+[p for p in changed if p.lower().endswith('.png')]))
     if bad:
         raise SystemExit('MINOTAURUS: original assets prohibited: '+', '.join(bad[:10]))

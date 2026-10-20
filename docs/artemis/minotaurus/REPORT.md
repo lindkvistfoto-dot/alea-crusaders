@@ -2,7 +2,7 @@
 
 ## Result
 
-The original deletion commit removes 547 original files (1,549,957,260 bytes) and 18 quarantine files (14,155,998 bytes) from the current tree: **1,564,113,258 bytes / 1,564.11 MB** of original assets. Existing WebP files, UI manifests and production image pointers are retained. Main and Git history are unchanged until this PR is reviewed/merged; historical Git objects remain afterward.
+The original deletion commit removes 547 original files (546 PNGs + 1 ZIP; 1,549,957,260 bytes) and 18 quarantine files (14,155,998 bytes) from the current tree: **1,564,113,258 bytes / 1,564.11 MB** of original assets. Existing WebP files, UI manifests and production image pointers are retained. Main and Git history are unchanged until this PR is reviewed/merged; historical Git objects remain afterward.
 
 Local full-tree checkout median: **7.6467 s before → 0.2775 s after** (3 fresh destinations each; existing local Git objects, no network). Measured tree size: 1,633,186,234 → 69,048,452 bytes. See `CHECKOUT.json` for exact samples and measured trees. This is filesystem checkout materialization, not a new GitHub Actions clone measurement. PR #113 records a historical ~117.4 s Actions transfer; no comparable new Actions transfer measurement is available yet.
 
@@ -46,3 +46,7 @@ PRs **#126 and #127 are untouched**, including their branches, configuration and
 The initial full PR CI had the exact 29 documented baseline failure names plus two newly affected source-file assertions in `arcane-gallery-release-smoke.test.js` and `arcane-morph-art-assets.test.js`. These two assertions now verify retained WebP bytes against hashes, preserve source identities and ensure the retired Git original paths are absent. The 29 inherited failures were compared by name only, not investigated or modified. The targeted gallery checks are included in the MINOTAURUS guard. See `VERIFICATION.json`.
 
 GitHub’s paginated PR file list confirms all 547 original-file paths and 18 quarantine paths. The deletion stays in its original single commit; this follow-up changes tests and documentation only. Existing WebP bytes and manifests are unchanged. Until manual merge, the retired GitHub workflows are changes in the PR; the legacy Supabase endpoint is already retired in deployed version 10.
+
+Follow-up Actions head `bbd879092880ad9f5578002e549162140f02c3b1`: [full CI run 39479964505](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39479964505) now has exactly the documented **29 baseline failures / 1,271 passed tests**, with zero additional or missing failure names. [Gallery run 39479964425](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39479964425) passes all **89 Vitest checks**, then stops at browser startup with `CHROME_NOT_READY`; production build is consequently skipped there. That runner/browser blocker is recorded without further investigation. No full suite was run manually.
+
+The original regression guard now uses `git diff --no-renames` so listing added/modified filenames cannot invoke rename-content matching against deleted originals in a partial clone. Both guard tests and the proposed-tree check pass locally. The publisher and deployed Edge source are unchanged since the successful Deno run.
