@@ -1,0 +1,15 @@
+{
+  "mode": "read_only_actual_production_objects",
+  "object_count": 100,
+  "source_bytes": 333077975,
+  "first_read_seconds": 237.734589,
+  "repeat_read_seconds": 182.21609,
+  "first_sha256_computations": 100,
+  "repeat_sha256_computations": 0,
+  "repeat_signed_receipt_reuses": 100,
+  "same_private_capability_and_journal_for_both_runs": true,
+  "deleted_objects": 0,
+  "note": "Read-only timings. Additional registry source-reference checks were deployed during the end of the repeat run. Deletion speed is not measured.",
+  "journal_events": 400,
+  "journal_sha256": "1a8596d6a6277d614c4d2c9ce9340345e35571344908af3f370e8f806b12fcfa"
+}

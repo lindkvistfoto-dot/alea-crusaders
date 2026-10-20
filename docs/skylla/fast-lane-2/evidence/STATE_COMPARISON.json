@@ -1,0 +1,17 @@
+{
+  "source_objects": 514,
+  "source_bytes": 1487414822,
+  "source_before_sha256": "af85197d4477e466959281d2f0dd570a7b8ac6fbac07cbce6786512662e01f4b",
+  "source_after_sha256": "af85197d4477e466959281d2f0dd570a7b8ac6fbac07cbce6786512662e01f4b",
+  "jobs_before_sha256": "101deb7fc7e782490e9bd95ccc639568a137f6f7e19e30226fa1fa852a3a2f14",
+  "jobs_after_sha256": "101deb7fc7e782490e9bd95ccc639568a137f6f7e19e30226fa1fa852a3a2f14",
+  "registry_before_sha256": "a35f3f49f886e3f632724a2d68addee09b417c784932bea7f64c87754e50e832",
+  "registry_after_sha256": "a35f3f49f886e3f632724a2d68addee09b417c784932bea7f64c87754e50e832",
+  "before_observed_at": "2026-10-20 14:00:45.099789+00",
+  "after_observed_at": "2026-10-20 14:18:20.86644+00",
+  "changed_db_references": [],
+  "source_objects_deleted": 0,
+  "source_bytes_freed": 0,
+  "hermes_jobs_unchanged": 519,
+  "registry_rows_unchanged": 185
+}
