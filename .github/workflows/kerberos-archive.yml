@@ -1,0 +1,38 @@
+name: KERBEROS synthetic archive checks
+
+on:
+  pull_request:
+    paths:
+      - scripts/kerberos_archive.py
+      - scripts/requirements-kerberos.txt
+      - tests/test_kerberos_archive.py
+      - .github/workflows/kerberos-archive.yml
+  push:
+    branches: ['artemis/kerberos-*']
+    paths:
+      - scripts/kerberos_archive.py
+      - scripts/requirements-kerberos.txt
+      - tests/test_kerberos_archive.py
+      - .github/workflows/kerberos-archive.yml
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            tests
+            config
+            docs/kerberos
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r scripts/requirements-kerberos.txt
+      - run: python -m unittest discover -s tests -p 'test_kerberos_archive.py' -v

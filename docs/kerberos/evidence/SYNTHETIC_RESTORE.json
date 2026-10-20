@@ -1,0 +1,287 @@
+{
+  "schema": "kerberos-synthetic-evidence/v1",
+  "simulation": true,
+  "production_transfers": 0,
+  "independent_production_backup_proven": false,
+  "descriptor": {
+    "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "size_bytes": 78,
+    "drive_file_id": "synthetic-drive-id",
+    "folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+    "category": "spells",
+    "variant": "icon",
+    "register_links": [
+      {
+        "entity": "spells",
+        "key": "synthetic",
+        "field": "icon_path"
+      }
+    ],
+    "version_id": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "inbox_file_id": "synthetic-inbox-id",
+    "batch": "test-only"
+  },
+  "first_drill": {
+    "schema": "kerberos-drill/v1",
+    "simulation": true,
+    "identity": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "version_id": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "source": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.078839+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true
+    },
+    "archive": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.079230+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "simulated_file_id": "archive/5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077.png",
+      "write": "created"
+    },
+    "backup": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.079460+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "location": "independent-store/5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077.png",
+      "object_identity": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "write": "created",
+      "independent_production_backup": false
+    },
+    "restore": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.079604+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "bytes_equal_original": true
+    },
+    "safe_to_delete": false,
+    "production_archive_verified": false
+  },
+  "idempotent_drill": {
+    "schema": "kerberos-drill/v1",
+    "simulation": true,
+    "identity": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "version_id": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+    "source": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.079750+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true
+    },
+    "archive": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.079936+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "simulated_file_id": "archive/5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077.png",
+      "write": "already_present"
+    },
+    "backup": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.080203+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "location": "independent-store/5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077.png",
+      "object_identity": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "write": "already_present",
+      "independent_production_backup": false
+    },
+    "restore": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.080332+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true,
+      "bytes_equal_original": true
+    },
+    "safe_to_delete": false,
+    "production_archive_verified": false
+  },
+  "dry_export": {
+    "schema": "kerberos-backup/v1",
+    "backup_identity": {
+      "provider": "offline_encrypted",
+      "account": "synthetic-custodian",
+      "location": "synthetic-test-mount",
+      "custodian": "synthetic-owner",
+      "provisioning_evidence": "synthetic-only-NOT-independent-production-backup",
+      "object_id": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077"
+    },
+    "source": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.080721+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true
+    },
+    "independence_verified": false,
+    "safe_to_delete": false,
+    "dry_run": true,
+    "export_verified": false,
+    "restore_verified": false
+  },
+  "export_and_restore": {
+    "schema": "kerberos-backup/v1",
+    "backup_identity": {
+      "provider": "offline_encrypted",
+      "account": "synthetic-custodian",
+      "location": "synthetic-test-mount",
+      "custodian": "synthetic-owner",
+      "provisioning_evidence": "synthetic-only-NOT-independent-production-backup",
+      "object_id": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077"
+    },
+    "source": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.080961+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true
+    },
+    "independence_verified": false,
+    "safe_to_delete": false,
+    "dry_run": false,
+    "export_verified": true,
+    "restore_verified": true,
+    "export_readback": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "verified_at": "2026-10-20T10:11:51.081090+00:00",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "status": "verified_complete",
+      "complete_decode": true
+    },
+    "restore": {
+      "schema": "kerberos-restore/v1",
+      "source": {
+        "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+        "size_bytes": 78,
+        "verified_at": "2026-10-20T10:11:51.081176+00:00",
+        "format": "PNG",
+        "width": 8,
+        "height": 6,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "backup_identity": {
+        "provider": "offline_encrypted",
+        "account": "synthetic-custodian",
+        "location": "synthetic-test-mount",
+        "custodian": "synthetic-owner",
+        "provisioning_evidence": "synthetic-only-NOT-independent-production-backup",
+        "object_id": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077"
+      },
+      "restore": {
+        "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+        "size_bytes": 78,
+        "verified_at": "2026-10-20T10:11:51.081263+00:00",
+        "format": "PNG",
+        "width": 8,
+        "height": 6,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "bytes_equal_original": true,
+      "independence_verified": false,
+      "safe_to_delete": false
+    },
+    "backup_file_name": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077.png"
+  },
+  "synthetic_drive_registry": {
+    "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077": {
+      "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "size_bytes": 78,
+      "drive_file_id": "synthetic-drive-id",
+      "folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+      "category": "spells",
+      "variant": "icon",
+      "register_links": [
+        {
+          "entity": "spells",
+          "key": "synthetic",
+          "field": "icon_path"
+        }
+      ],
+      "version_id": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "inbox_file_id": "synthetic-inbox-id",
+      "batch": "test-only",
+      "identity": "sha256:5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+      "format": "PNG",
+      "width": 8,
+      "height": 6,
+      "color_mode": "RGBA",
+      "archive_status": "archived_verified",
+      "verified_at": "2026-10-20T10:11:51.081964+00:00",
+      "archive_readback": {
+        "sha256": "5152d8c7117dc35af0e44423d83f6e16937b19741da541aa259c8a4b348fa077",
+        "size_bytes": 78,
+        "verified_at": "2026-10-20T10:11:51.081964+00:00",
+        "format": "PNG",
+        "width": 8,
+        "height": 6,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true,
+        "drive_file_id": "synthetic-drive-id",
+        "folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+        "readback": true,
+        "system": "drive"
+      },
+      "safe_to_delete": false
+    }
+  }
+}
