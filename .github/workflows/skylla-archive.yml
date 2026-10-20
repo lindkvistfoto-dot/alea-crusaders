@@ -9,6 +9,12 @@ on:
       - scripts/skylla_display_verify.py
       - scripts/skylla_delete_pilot.py
       - scripts/skylla_batch.py
+      - scripts/skylla_mobile.py
+      - supabase/functions/skylla-mobile/**
+      - tests/skylla_mobile_checks.mjs
+      - tests/test_skylla_mobile.py
+      - config/skylla-mobile-batches.json
+      - .github/workflows/skylla-mobile.yml
       - supabase/functions/skylla-batch/**
       - tests/skylla_batch_checks.mjs
       - tests/test_skylla_batch.py
@@ -39,6 +45,12 @@ on:
       - scripts/skylla_display_verify.py
       - scripts/skylla_delete_pilot.py
       - scripts/skylla_batch.py
+      - scripts/skylla_mobile.py
+      - supabase/functions/skylla-mobile/**
+      - tests/skylla_mobile_checks.mjs
+      - tests/test_skylla_mobile.py
+      - config/skylla-mobile-batches.json
+      - .github/workflows/skylla-mobile.yml
       - supabase/functions/skylla-batch/**
       - tests/skylla_batch_checks.mjs
       - tests/test_skylla_batch.py
@@ -78,6 +90,7 @@ jobs:
             supabase/functions/skylla-display-read
             supabase/functions/skylla-delete-pilot
             supabase/functions/skylla-batch
+            supabase/functions/skylla-mobile
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -97,3 +110,5 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_skylla_delete_pilot.py' -v
       - run: python -m unittest discover -s tests -p 'test_skylla_batch.py' -v
       - run: node tests/skylla_batch_checks.mjs
+      - run: python -m unittest discover -s tests -p 'test_skylla_mobile.py' -v
+      - run: node tests/skylla_mobile_checks.mjs

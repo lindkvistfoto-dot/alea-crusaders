@@ -1,0 +1,32 @@
+{
+  "reviewed_at": "2026-10-20",
+  "integration_order": [
+    124,
+    125
+  ],
+  "pull_requests": [
+    {
+      "number": 124,
+      "merge_commit": "285790eee18e703760c75d0a9c93b4e9ff54eb2e",
+      "ci_job_id": 118666507586
+    },
+    {
+      "number": 125,
+      "merge_commit": "45d8ce8a2213282cf5b1f14ac473011bba85d070",
+      "ci_job_id": 118683486131
+    }
+  ],
+  "comparison": {
+    "baseline": "docs/skylla/evidence/CI_BASELINE_COMPARISON.json",
+    "baseline_main_commit": "500e60b7",
+    "exact_failed_case_set_matches": true,
+    "failed_cases_per_head": 29,
+    "new_failed_cases": [],
+    "missing_baseline_failed_cases": []
+  },
+  "relevant_integration_tests_passed": 194,
+  "general_suite_rerun": false,
+  "production_originals_modified": false,
+  "database_references_changed": [],
+  "hermes_publication_started": false
+}

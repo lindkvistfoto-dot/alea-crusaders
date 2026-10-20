@@ -1,0 +1,209 @@
+name: SKYLLA Mobile Operations
+run-name: SKYLLA ${{ inputs.mode || 'dry-run' }} · ${{ inputs.batch_id || 'SKYLLA-BATCH-001' }} · ${{ inputs.manifest_sha256 || '638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_id:
+        description: 'Exakt batch-ID (100 objekt / 333077975 byte för BATCH-001)'
+        type: choice
+        options: [SKYLLA-BATCH-001]
+        required: true
+      manifest_sha256:
+        description: 'Exakt manifest SHA-256, jämför med batchplanen före start'
+        type: string
+        default: 638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090
+        required: true
+      mode:
+        description: 'dry-run kan inte radera. execute är spärrat i denna leverans.'
+        type: choice
+        options: [dry-run, execute]
+        default: dry-run
+        required: true
+      resume_attempt:
+        description: 'Försöksnummer för den tidigare journalen (normalt 1)'
+        type: string
+        default: '1'
+      resume_run_id:
+        description: 'Tidigare körnings-ID för journalåterupptagning (valfritt)'
+        type: string
+        required: false
+  # A real, read-only development run before this workflow reaches main.
+  push:
+    branches: [artemis/skylla-mobile-operations-20261020]
+    paths:
+      - '.github/workflows/skylla-mobile.yml'
+      - 'scripts/skylla_mobile.py'
+      - 'supabase/functions/skylla-mobile/**'
+      - 'supabase/functions/skylla-verify/mobile.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skylla-source-storage
+  cancel-in-progress: false
+
+env:
+  BATCH_ID: ${{ inputs.batch_id || 'SKYLLA-BATCH-001' }}
+  MANIFEST_SHA256: ${{ inputs.manifest_sha256 || '638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090' }}
+  SKYLLA_MODE: ${{ inputs.mode || 'dry-run' }}
+
+jobs:
+  preflight:
+    name: Bind exact batch and inspect owner gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      id-token: write
+    outputs:
+      count: ${{ steps.plan.outputs.count }}
+      bytes: ${{ steps.plan.outputs.bytes }}
+      execute_ready: ${{ steps.plan.outputs.execute_ready }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            config
+            docs/skylla
+            supabase/functions/skylla-mobile
+      - run: python -m pip install -r scripts/requirements-kerberos.txt
+      - id: plan
+        name: Read-only preflight and signed approval description
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/skylla_mobile.py prepare --batch-id "$BATCH_ID"
+          --manifest-sha256 "$MANIFEST_SHA256" --mode "$SKYLLA_MODE" --output skylla-preflight
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: skylla-preflight-${{ github.run_attempt }}
+          path: skylla-preflight/
+          retention-days: 7
+          if-no-files-found: error
+
+  dry-run:
+    name: Read only · ${{ needs.preflight.outputs.count }} objects · ${{ needs.preflight.outputs.bytes }} bytes
+    if: ${{ (inputs.mode || 'dry-run') == 'dry-run' }}
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            config
+            docs/skylla
+            supabase/functions/skylla-mobile
+      - run: python -m pip install -r scripts/requirements-kerberos.txt
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: skylla-preflight-${{ github.run_attempt }}
+          path: skylla-preflight
+      - name: Resume a previous journal (same repository, manifest checked by runner)
+        if: ${{ inputs.resume_run_id != '' && inputs.resume_run_id != null }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: skylla-result-${{ inputs.resume_attempt || '1' }}
+          run-id: ${{ inputs.resume_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/skylla-result
+      - id: google
+        name: Short-lived Google Drive read token (existing HERMES WIF)
+        continue-on-error: true
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          access_token_lifetime: 1200s
+          create_credentials_file: false
+      - name: Verify current source, permanent Drive revision and dependencies; no writes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+        run: >-
+          python scripts/skylla_mobile.py run --batch-id "$BATCH_ID"
+          --manifest-sha256 "$MANIFEST_SHA256" --mode dry-run
+          --ticket skylla-preflight/TICKET.json --output "$RUNNER_TEMP/skylla-result"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: skylla-result-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/skylla-result/
+          retention-days: 7
+          if-no-files-found: warn
+
+  execute:
+    name: Approve ${{ inputs.batch_id }} · ${{ needs.preflight.outputs.count }} objects · ${{ needs.preflight.outputs.bytes }} bytes
+    if: ${{ inputs.mode == 'execute' && needs.preflight.outputs.execute_ready == 'true' }}
+    needs: preflight
+    environment:
+      name: skylla-production
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      deployments: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            config
+            docs/skylla
+            supabase/functions/skylla-mobile
+      - run: python -m pip install -r scripts/requirements-kerberos.txt
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: skylla-preflight-${{ github.run_attempt }}
+          path: skylla-preflight
+      - name: Resume a previous journal
+        if: ${{ inputs.resume_run_id != '' && inputs.resume_run_id != null }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: skylla-result-${{ inputs.resume_attempt || '1' }}
+          run-id: ${{ inputs.resume_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/skylla-result
+      - id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          access_token_lifetime: 1200s
+          create_credentials_file: false
+      - name: Run only the exact environment-approved batch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+        run: >-
+          python scripts/skylla_mobile.py run --batch-id "$BATCH_ID"
+          --manifest-sha256 "$MANIFEST_SHA256" --mode execute
+          --ticket skylla-preflight/TICKET.json --output "$RUNNER_TEMP/skylla-result"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: skylla-result-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/skylla-result/
+          retention-days: 7
+          if-no-files-found: warn

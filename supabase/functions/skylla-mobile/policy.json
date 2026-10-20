@@ -1,0 +1,13 @@
+{
+  "schema": "skylla-mobile-policy/v1",
+  "execution_enabled": false,
+  "repository": "lindkvistfoto-dot/alea-crusaders",
+  "repository_id": "1403008145",
+  "owner_id": "337302317",
+  "workflow": ".github/workflows/skylla-mobile.yml",
+  "environment": "skylla-production",
+  "dry_run_refs": ["refs/heads/main", "refs/heads/artemis/skylla-mobile-operations-20261020"],
+  "catalog_path": "config/skylla-mobile-batches.json",
+  "credential_minutes": 20,
+  "ticket_minutes": 60
+}
