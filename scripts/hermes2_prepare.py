@@ -127,12 +127,31 @@ def main() -> None:
         originals = sorted(ROOT.glob("*/*/*.png"))
     if not originals:
         raise SystemExit("No immutable HERMES original PNGs found")
-    result = [prepare(path, args.output) for path in originals]
+    # An invalid image must not block publication of all other valid images
+    # from the same paid GitHub Actions checkout.
+    result = []
+    failures = []
+    for path in originals:
+        try:
+            result.append(prepare(path, args.output))
+        except Exception as error:
+            message = str(error).replace("\\n", " ")[:350]
+            failures.append({"source": str(path.relative_to(ROOT)), "error": message})
+            print(f"::error title=HERMES invalid PNG::{message}", flush=True)
+
+    args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "manifest.json").write_text(
         json.dumps({"schema": 1, "assets": result}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    if failures:
+        (args.output / "rejected.json").write_text(
+            json.dumps(failures, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        print(f"HERMES_PARTIAL: {len(failures)} rejected, {len(result)} accepted", flush=True)
     print(f"HERMES 2.1 prepared {len(result)} assets; no Supabase rows changed.")
+    if not result:
+        raise SystemExit("HERMES has no valid assets to publish")
 
 
 if __name__ == "__main__":
