@@ -1,0 +1,9 @@
+{
+  "medusa_manifest_drive_file_id": "1bdJ-b2P47cpZYUReGCefHP-WmW0rHJi5",
+  "manifest_size_bytes": 4158918,
+  "manifest_raw_sha256": "c6da4b287597d981db4f495fb47c04154760d610221f784e8b21c4291bd99289",
+  "manifest_canonical_sha256": "c3107befd7bbbd8ce1aed4c48cb568b4d166cacacb625ff0a0f2f9d3727dfcd4",
+  "main_commit": "c63d3f5f57141e1cce6ce7f5ad0dccd21a6593b5",
+  "medusa_sha_pr_head": "0226a7930d1955df9e78fb4e546dafe68a27eed7",
+  "plan_canonical_sha256": "27fdd6faae68f5969337d82d02e455dc42c4cb52f795ee61df8b55c19c115067"
+}

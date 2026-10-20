@@ -7,3 +7,7 @@ coverage/
 
 # Never commit short-lived Google authentication credentials
 gha-creds-*.json
+
+# Python archive verification / synthetic tests
+__pycache__/
+*.py[cod]
