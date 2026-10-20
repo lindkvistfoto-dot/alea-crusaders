@@ -111,4 +111,9 @@ jobs:
             exit 1
           fi
           deno run -A --node-modules-dir=auto scripts/hermes2_publish.ts "$RUNNER_TEMP/hermes21-output/manifest.json" "$RUNNER_TEMP/hermes21-output"
-          echo "### HERMES: image verified and activated in Supabase" >> "$GITHUB_STEP_SUMMARY"
+          if [ -s "$RUNNER_TEMP/hermes21-output/rejected.json" ]; then
+            echo "### HERMES PARTIAL: valid assets published, invalid sources rejected" >> "$GITHUB_STEP_SUMMARY"
+            python -c 'import json,os; p=os.environ["RUNNER_TEMP"]+"/hermes21-output/rejected.json"; print("HERMES rejected:",len(json.load(open(p))))'
+            exit 1
+          fi
+          echo "### HERMES: all images verified and activated in Supabase" >> "$GITHUB_STEP_SUMMARY"
