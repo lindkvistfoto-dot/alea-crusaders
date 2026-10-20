@@ -44,7 +44,7 @@ cannot trigger a publication.
 ## Targeted verification
 
 ```sh
-python -m unittest -v test_hermes4_manifest_to_queue.py
+python -m unittest -v tests/test_minotaurus_hermes4_manifest.py
 ```
 
 No image originals or binaries belong in this repository.
