@@ -1,0 +1,11 @@
+{
+  "schema": "skylla-live-hermes-audit/v1",
+  "observed_at": "2026-10-20T12:52:16.756Z",
+  "function_slug": "hermes-v2",
+  "deployed_version": 8,
+  "ezbr_sha256": "ecb00dd50723399e02ad4e5c32bf5128077abedf7a58f374436507ca647c20d9",
+  "verify_jwt": true,
+  "active_returns_before_source_download": true,
+  "rollback_downloads_source": false,
+  "production_function_changed_by_SKYLLA": false
+}

@@ -1,0 +1,26 @@
+{
+  "observed_at": "2026-10-20T11:27:17.827Z",
+  "git_main": "500e60b7f83e0edc9324546ce2e0495515d057d4",
+  "running_workflows": [],
+  "queued_workflows": [],
+  "code_findings": [
+    {
+      "path": "supabase/functions/hermes-v2/index.ts:117",
+      "finding": "active job retry returns before private original download"
+    },
+    {
+      "path": "supabase/functions/hermes-v2/index.ts:122",
+      "finding": "non-active retry reads exact private source; failed jobs require review"
+    },
+    {
+      "path": "supabase/functions/hermes-v2/index.ts:162",
+      "finding": "rollback updates prior WebP pointer; no source-bucket download"
+    },
+    {
+      "path": "scripts/hermes2_publish.ts:120",
+      "finding": "active publication returns before source upload; no dispatch performed"
+    }
+  ],
+  "scope": "five pilot sources only; remaining per-object dependency audits are unknown",
+  "must_refresh_before_any_deletion": true
+}

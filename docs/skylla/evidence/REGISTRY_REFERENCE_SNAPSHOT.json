@@ -1,0 +1,1646 @@
+{
+  "schema": "skylla-registry-reference-snapshot/v1",
+  "observed_at": "2026-10-20T11:52:32.218Z",
+  "method": "read-only SQL; image fields only; no writes",
+  "scope": "rule_spells, rule_skills, rule_magic_symbols; excludes unenumerated runtime consumers",
+  "rows": [
+    {
+      "table_name": "rule_spells",
+      "registry_id": "ebe29d23-750e-4527-8c48-897e79a84d2b",
+      "registry_key": "animera-dod",
+      "icon_path": "hermes/spell/animera-dod/7b053cb7960dd108c8ee94bd9973550a17c8330af2d95231446a575140c31ecb.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/a393999f-7246-4931-a451-20e2946ed74e.webp",
+      "illustration_wide_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/1e07c039-3546-4591-b1df-d28ba4b0cef3.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "1f8a94c6-a1a6-402a-9f55-15b2e8977ade",
+      "registry_key": "antimagi",
+      "icon_path": "hermes/spell/antimagi/4f106315f37cd7f96d7e2c327f8a983a8c598b9c1feffe2aec6d0fe7b3ca9e74.webp",
+      "effect_image_path": null,
+      "cutout_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/837d1597-bd25-479f-8bc0-5d10aa782259.webp",
+      "illustration_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/a7c04349-915c-4d51-a1a9-3adce847e8c8.webp",
+      "illustration_wide_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/f63a8bfb-c022-4193-8e3c-c33afc6026f5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "af9c53e1-ce24-4686-8bd5-5aa1bcd4b756",
+      "registry_key": "aterfinnande",
+      "icon_path": "hermes/spell/aterfinnande/beb6552ccb366b8aa200309cbf997f0e683ae5d1d4196376c3b97b0d3a83e033.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/af9c53e1-ce24-4686-8bd5-5aa1bcd4b756/1bb65443-bcd0-451f-8bff-e70048d87174.webp",
+      "illustration_wide_path": "spell/af9c53e1-ce24-4686-8bd5-5aa1bcd4b756/58025f8d-a6d0-4fb6-9fd3-ba3879697f65.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "30dbf8d5-9edc-4090-9eae-1eaa186c44e2",
+      "registry_key": "aterfinnande-med-studs",
+      "icon_path": "hermes/spell/aterfinnande-med-studs/6cbde9d7a64fdf4cd237dfc2e2025baa066482eb2ce505b1f3081b9a6e020b5e.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/dc65fc33-1e85-4136-99d2-bea49e49a0e1.webp",
+      "illustration_wide_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/77d55b04-2ad1-4152-a39e-9a9ceac57a58.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "52b3cfd6-3b77-498a-8add-3163e3a8e092",
+      "registry_key": "atervinna",
+      "icon_path": "hermes/spell/atervinna/7bca2999b3888923ae26e974594779aeef4ba3b8b77f84423842adcb51274764.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/52b3cfd6-3b77-498a-8add-3163e3a8e092/3da1d5f2-a029-4915-b027-c143a8db1898.webp",
+      "illustration_wide_path": "spell/52b3cfd6-3b77-498a-8add-3163e3a8e092/63b049d9-3d5f-491f-a866-12552930b483.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "98e60263-9e0b-4cc8-859c-ebfb70e18fb4",
+      "registry_key": "aura",
+      "icon_path": "hermes/spell/aura/f38649cd80251ca9fd76a764d701f2751f91fb427a08313d2fcc8f3aa40c4a38.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/a219fae1-c558-473c-a19e-a57938bf12e0.webp",
+      "illustration_wide_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/ab1774d8-bf94-4400-ae74-83af940d01b2.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
+      "registry_key": "avbild",
+      "icon_path": "hermes/spell/avbild/06b68a8068c0daf7b64a0531b3dabc386547542e7b64e9b908b3a17f8883c958.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/955767c6-242b-4444-bc89-088c3dfe0873.webp",
+      "illustration_wide_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/77c64bd9-5786-4882-9364-a4810adfa9da.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "1af70dd4-8073-4629-9752-163701513d11",
+      "registry_key": "balans",
+      "icon_path": "hermes/spell/balans/da92f98b9eecd8f208e0488a3bc6599da09c8959e5a771d728c738f8510baa50.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/1af70dd4-8073-4629-9752-163701513d11/8f55cd92-83c3-45ec-b460-ef6a8db4db7f.webp",
+      "illustration_wide_path": "spell/1af70dd4-8073-4629-9752-163701513d11/24d225f9-939c-4610-818a-f3a492716cfa.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "e4d78a8a-1d02-49ea-9c88-7a9c68c4a471",
+      "registry_key": "beskyddare",
+      "icon_path": "hermes/spell/beskyddare/393146cfdf84f294f2d1b9f1c1e8f90eefa5dca549f948ae71656db887ce3452.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/e4d78a8a-1d02-49ea-9c88-7a9c68c4a471/28ca1d1d-de2f-4e42-a520-096a2e1d156f.webp",
+      "illustration_wide_path": "spell/e4d78a8a-1d02-49ea-9c88-7a9c68c4a471/4361559b-d71e-4d6b-af3f-dee1038bacd2.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "6c23b6dd-df00-4e47-8930-3b4b2732cebb",
+      "registry_key": "besudla",
+      "icon_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/67e2d68e-a423-458b-ac07-3f65bca7039b.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/3b0ff270-c41b-42c5-8323-425bc1beff90.webp",
+      "illustration_wide_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/727e182a-d1af-499d-b201-9fae804ff902.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "15f752a6-cd4f-43ff-9281-64f4ec4de1e0",
+      "registry_key": "blidhet",
+      "icon_path": "hermes/spell/blidhet/93f778c768f43528d9a9e50cbf519b633825ec25c85f58342df29da89e6782d8.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/15f752a6-cd4f-43ff-9281-64f4ec4de1e0/dfd6cbae-9854-4956-a4f2-fedfb0d1dea9.webp",
+      "illustration_wide_path": "spell/15f752a6-cd4f-43ff-9281-64f4ec4de1e0/e952922d-4a9e-4a4e-9c14-0278e15de59a.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "57ec3414-661b-4120-ae17-0a9b57a02c85",
+      "registry_key": "blixt",
+      "icon_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/8134cc34-a339-4a40-9710-76b6eb98f20a.webp",
+      "effect_image_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/7ff1fcb8-0638-469e-931d-c7e65867095b.webp",
+      "cutout_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/f16491ce-e0a7-47b5-954e-de276aa0665e.webp",
+      "illustration_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/eac86a57-11e6-4d9d-89ff-608eda234ba6.webp",
+      "illustration_wide_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/62c54a66-ab63-4ac3-afdd-4989e7d22e11.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "1b5c4c32-bc4b-404e-a253-da804f2faef7",
+      "registry_key": "dimma",
+      "icon_path": "spell/1b5c4c32-bc4b-404e-a253-da804f2faef7/2ef9cb45-c5fb-44ff-a26c-9ef3902f4f19.webp",
+      "effect_image_path": null,
+      "cutout_path": "spell/1b5c4c32-bc4b-404e-a253-da804f2faef7/2abb7f50-0aff-402d-8d58-1d64fa1acadd.webp",
+      "illustration_path": "spell/1b5c4c32-bc4b-404e-a253-da804f2faef7/d358a823-1e3a-4f73-8332-b384ea57e4a8.webp",
+      "illustration_wide_path": "spell/1b5c4c32-bc4b-404e-a253-da804f2faef7/d469599f-44f9-4986-99c8-17da142c81f3.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "8ecc5bb2-e099-4def-b503-b7e6fc9685d4",
+      "registry_key": "distraktion",
+      "icon_path": "hermes/spell/distraktion/547c6dddda7ef3d430ae76a24b343b33c49c659722130fd40057ce3ff73d2048.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/97a0bd9e-36e8-4e01-87d2-d1ccd0685ff8.webp",
+      "illustration_wide_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/849c08c7-897b-466d-86f4-8b4a3e198722.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "0240dee6-77c8-4101-9ac0-ca613b4094b6",
+      "registry_key": "dodshand",
+      "icon_path": "hermes/spell/dodshand/58186a01f1abc1ac2a1ed1609e72e5b93a31ce5695d26c7f7afafb34385eaf94.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/0240dee6-77c8-4101-9ac0-ca613b4094b6/ce2e0f05-0956-48d4-9d76-5ece7d911eea.webp",
+      "illustration_wide_path": "spell/0240dee6-77c8-4101-9ac0-ca613b4094b6/2ad9b59d-417e-43ed-9c71-b8dc854ba121.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d441b542-f8ce-47d8-ac85-5129fee115bc",
+      "registry_key": "eld",
+      "icon_path": "spell/d441b542-f8ce-47d8-ac85-5129fee115bc/ee1e6504-3c76-4405-a56e-c9c8d41d5d67.webp",
+      "effect_image_path": "spell/d441b542-f8ce-47d8-ac85-5129fee115bc/4a4ce1bc-0269-4adf-8b5a-bd6fb5d19baa.webp",
+      "cutout_path": "spell/d441b542-f8ce-47d8-ac85-5129fee115bc/f7aff350-c5fe-477a-96ae-fa26bffa9307.webp",
+      "illustration_path": "spell/d441b542-f8ce-47d8-ac85-5129fee115bc/1cd6ce97-5378-4c61-8f12-483eb3a92530.webp",
+      "illustration_wide_path": "spell/d441b542-f8ce-47d8-ac85-5129fee115bc/1df381ca-96b1-4060-9773-831f9e959632.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "6c376023-f541-4bdf-baaf-034cbb722620",
+      "registry_key": "energistrale",
+      "icon_path": "hermes/spell/energistrale/858414a79fe9fa3425c12b9d5dea609015266784565ef975b3af7dc9ec55596f.webp",
+      "effect_image_path": null,
+      "cutout_path": "spell/6c376023-f541-4bdf-baaf-034cbb722620/bb74d4c5-1885-4abb-ba9a-c61a21eecabd.webp",
+      "illustration_path": "spell/6c376023-f541-4bdf-baaf-034cbb722620/ea5a281c-ca1d-4fa0-a0d2-57e34da0502a.webp",
+      "illustration_wide_path": "spell/6c376023-f541-4bdf-baaf-034cbb722620/823da168-94eb-4bc1-a0a3-5b602cd8417a.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a",
+      "registry_key": "fata-morgana",
+      "icon_path": "hermes/spell/fata-morgana/79534d885068f31157b9cbdcafa24f3a228b1f5aa998d057e1b68a752318292d.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a/04204a64-cd40-4691-a73b-9ade6c8ab171.webp",
+      "illustration_wide_path": "spell/4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a/3b101ac8-a057-4964-847c-a6b5ba03f9fe.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "a4d13efa-10ed-4ed6-8eeb-0261a5759af7",
+      "registry_key": "finna-vatten",
+      "icon_path": "assets/spells/arcane-ivory/finna-vatten.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/a4d13efa-10ed-4ed6-8eeb-0261a5759af7/0614fb41-1d00-4aee-bbd0-190d0b31ba04.webp",
+      "illustration_wide_path": "spell/a4d13efa-10ed-4ed6-8eeb-0261a5759af7/8385ed2d-6f41-493e-a60d-946b6a15ff0b.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "e11e3b67-23dc-4f66-80c2-0c129af67de0",
+      "registry_key": "flyga",
+      "icon_path": "hermes/spell/flyga/413b8c160a105d8295d87c5340425bea0c76ee78c043d803a4591af0d534f350.webp",
+      "effect_image_path": null,
+      "cutout_path": "spell/e11e3b67-23dc-4f66-80c2-0c129af67de0/30c4abff-7092-4691-a20b-4c6591cac0c0.webp",
+      "illustration_path": "spell/e11e3b67-23dc-4f66-80c2-0c129af67de0/5d67f5e9-0c3d-4324-86b0-825d8aa0ed98.webp",
+      "illustration_wide_path": "spell/e11e3b67-23dc-4f66-80c2-0c129af67de0/f83eb6f3-52ac-4711-af3c-8a0856cb0ee3.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087",
+      "registry_key": "forandra",
+      "icon_path": "assets/spells/arcane-ivory/forandra.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087/067c79d5-fd7a-4a6f-bee9-17a7de219168.webp",
+      "illustration_wide_path": "spell/db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087/13c1337b-b2de-472a-9ea9-26d8f74f0b22.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "b605ff92-a1f3-450d-92f4-7bf5204dd693",
+      "registry_key": "forbanna-vapen",
+      "icon_path": "hermes/spell/forbanna-vapen/f073ec50a635926daaea80afbb4580e0dad85f6871e41f73c9cbd64d24e4de30.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/b605ff92-a1f3-450d-92f4-7bf5204dd693/3bf83cb5-ec85-4a30-9ea6-b69ec603fa32.webp",
+      "illustration_wide_path": "spell/b605ff92-a1f3-450d-92f4-7bf5204dd693/8cb80834-c64b-4248-9c79-a579dd4fc275.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "7af538ef-677f-4cc2-835d-8ca712c20c5d",
+      "registry_key": "forrollad-somn",
+      "icon_path": "hermes/spell/forrollad-somn/9d4312c0602f48bc9451c7aabc252355c581c38b04db40f042254e943bb03f5f.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/7af538ef-677f-4cc2-835d-8ca712c20c5d/ca5df9df-f1a9-40c4-aebf-1f78481f19b9.webp",
+      "illustration_wide_path": "spell/7af538ef-677f-4cc2-835d-8ca712c20c5d/5eef1be6-3f3c-4077-bad0-796001cfdd12.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9a2f01bf-d59e-4895-afe8-20e74f8825d0",
+      "registry_key": "forsegla",
+      "icon_path": "hermes/spell/forsegla/534f0cc7927f163b54efea0bcdb9388e752aea91fdb1c34b72451f2963e98eff.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9a2f01bf-d59e-4895-afe8-20e74f8825d0/2b14fbb4-f9d7-4caa-8b8e-2576f690d604.webp",
+      "illustration_wide_path": "spell/9a2f01bf-d59e-4895-afe8-20e74f8825d0/47273eb8-8071-46d3-9c84-a2225ab35afd.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "4dde471e-abb0-485c-84e2-345e655bc58e",
+      "registry_key": "forvirra",
+      "icon_path": "hermes/spell/forvirra/271fa336854821f58f9e0124fdcff6bf715a754ed7afb45270ad252aca40b23b.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/4dde471e-abb0-485c-84e2-345e655bc58e/61d88473-8d04-4dfc-a505-f820b1b33326.webp",
+      "illustration_wide_path": "spell/4dde471e-abb0-485c-84e2-345e655bc58e/63b03560-e297-446d-8a7d-1f9dceebd617.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "6bfb1150-5e63-49eb-9c81-096589b98b2f",
+      "registry_key": "frammana-skicka-bort-elementar-eld",
+      "icon_path": "hermes/spell/frammana-skicka-bort-elementar-eld/61b2edb3ee1c79d350bece9c764a30ccaa4a4c19a5edc2bba549c010cf6ed3dd.webp",
+      "effect_image_path": "spell/6bfb1150-5e63-49eb-9c81-096589b98b2f/e6ccfdfc-5600-4bbd-97a2-6db5655e0d72.webp",
+      "cutout_path": "spell/6bfb1150-5e63-49eb-9c81-096589b98b2f/e5e3ecae-9069-4bbb-a6e5-e9606664dc77.webp",
+      "illustration_path": "spell/6bfb1150-5e63-49eb-9c81-096589b98b2f/5b27e976-abd1-4451-a1c5-10850305569d.webp",
+      "illustration_wide_path": "spell/6bfb1150-5e63-49eb-9c81-096589b98b2f/748875e6-6756-412e-99f4-3ba29ecfe548.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "1e9035e1-44db-455d-a510-553be3ed4a83",
+      "registry_key": "frammana-skicka-bort-elementar-jord",
+      "icon_path": "hermes/spell/frammana-skicka-bort-elementar-jord/67c154708f1da784d0c620553fe1ace9a785a0dde22f9266a1b8914fa5f6b480.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/e9910d30-9c1a-442e-8bc3-d1b8de7c8111.webp",
+      "illustration_wide_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/a5a68191-15a8-49fc-8364-9926f0734ffd.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9d4628af-9aa1-440d-946a-4aed28eb2caa",
+      "registry_key": "frammana-skicka-bort-elementar-luft",
+      "icon_path": "hermes/spell/frammana-skicka-bort-elementar-luft/ad7c345d7255c3fd0b8df1636403b6e5c153245b2ca64d437fba3f9a1e244f75.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9d4628af-9aa1-440d-946a-4aed28eb2caa/6d147fda-86cc-44ea-831d-eb7a51ab80e4.webp",
+      "illustration_wide_path": "spell/9d4628af-9aa1-440d-946a-4aed28eb2caa/0cd9c8cf-7a0b-40a4-9580-f0299608fd78.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d3145a34-d95c-4631-a8cf-395b73e6aece",
+      "registry_key": "frammana-skicka-bort-elementar-vatten",
+      "icon_path": "hermes/spell/frammana-skicka-bort-elementar-vatten/665f7393a34adaf5b85ffb779145d1a396c4c27f0a10057bc2865d423a83b487.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/1811894b-70c1-4e47-a8e8-0ef52cc311fe.webp",
+      "illustration_wide_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/0bc6fc93-e63f-4377-9850-384ff201cc78.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "f30feb8f-7a61-40ca-af41-95a0a3fd81ae",
+      "registry_key": "frost",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/a8a3014c-9d77-4c58-837f-55c679a6f044.webp",
+      "illustration_wide_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/c7af52cb-3e84-4bcc-9409-7e80612ef899.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "8a9e979b-c86f-48d9-ab1d-e74f5425db94",
+      "registry_key": "gasmoln",
+      "icon_path": "hermes/spell/gasmoln/898e7c25cb21e061b2707b120f8e61a3757fcd0c4ed0a021e8c4cb70c627ad6b.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/8a9e979b-c86f-48d9-ab1d-e74f5425db94/cb8733f9-59df-4447-84cd-5764d767eb91.webp",
+      "illustration_wide_path": "spell/8a9e979b-c86f-48d9-ab1d-e74f5425db94/24c71314-ef48-486f-9d3c-d659fbacc444.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "708ea7ff-0cc7-4563-b528-4e9c194c8ae2",
+      "registry_key": "hava-forstening",
+      "icon_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/a5729e0e-3444-4260-8a85-f9d9dbb11274.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/f4765430-7568-4522-9f31-9727ff561514.webp",
+      "illustration_wide_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/0d4f1f7c-c0df-4a5a-beb1-288bf63a9021.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "618d3e0b-6de0-4657-9664-e5a4f5ae1418",
+      "registry_key": "hela",
+      "icon_path": "spell/618d3e0b-6de0-4657-9664-e5a4f5ae1418/7cd3ac90-0e80-423b-ae37-baebcb4450d7.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/618d3e0b-6de0-4657-9664-e5a4f5ae1418/84577ec0-5caa-41fb-b6bc-d40c7f145caf.webp",
+      "illustration_wide_path": "spell/618d3e0b-6de0-4657-9664-e5a4f5ae1418/2d9b04ce-72ee-45a7-9d86-3cb68d8f757d.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "ea4887d6-f6a9-46ac-bc9f-05064f1f747d",
+      "registry_key": "hjarnblank",
+      "icon_path": "hermes/spell/hjarnblank/e82d59ddc4b256dca594a731916b416e31e24ba831824b9e4ab89c4372f7f0ca.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/ea4887d6-f6a9-46ac-bc9f-05064f1f747d/77820681-79b6-4aa7-8e9d-d826b0d5ba6b.webp",
+      "illustration_wide_path": "spell/ea4887d6-f6a9-46ac-bc9f-05064f1f747d/d7758b69-bf2b-4159-a50a-bb7f3a8cffee.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "b0bebee1-3014-4172-b01a-7f22d8738384",
+      "registry_key": "horsel",
+      "icon_path": "hermes/spell/horsel/f1b0205c628acfa341e374c1fd75229578bf7cc24275ab26e7e54f0a644fab4e.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/b0bebee1-3014-4172-b01a-7f22d8738384/cb65c576-fd07-46ad-882f-0d9ce6376f2a.webp",
+      "illustration_wide_path": "spell/b0bebee1-3014-4172-b01a-7f22d8738384/7c45f7f5-320e-46b2-b234-c4fad6f3770e.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "c094e4ec-286b-47fa-8d30-7f2350e86535",
+      "registry_key": "illusion",
+      "icon_path": "hermes/spell/illusion/3acb440bac275cba686ce0fb20347b902ceac201c1cdbc74605942f8bed674ec.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/c094e4ec-286b-47fa-8d30-7f2350e86535/9e167dd4-7971-4ead-ae48-2232cdbf2636.webp",
+      "illustration_wide_path": "spell/c094e4ec-286b-47fa-8d30-7f2350e86535/f7d926b0-43a5-4133-98c3-ef07d830ae6e.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "a60a963d-ccc1-4dc6-8d27-d25eaad7776a",
+      "registry_key": "jordvag",
+      "icon_path": "hermes/spell/jordvag/a5bb67756b4579326fd3680f4c9b71b775409e13085871d019b054400b29b6bf.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/a60a963d-ccc1-4dc6-8d27-d25eaad7776a/a742ed9e-5781-4060-b863-36de3119e21c.webp",
+      "illustration_wide_path": "spell/a60a963d-ccc1-4dc6-8d27-d25eaad7776a/91ec4d5f-d84b-4651-8918-c09cd6dc27bc.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "32972520-d0b3-4a70-bb4a-a6c26983f13a",
+      "registry_key": "koldvag",
+      "icon_path": "hermes/spell/koldvag/87087949ba5795991beef0050aedec429a12c9b55c867458c032822637fa11ac.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/0d01082d-0525-4da8-93b3-939ba165ae5d.webp",
+      "illustration_wide_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/56638200-34fc-402b-b05a-62590aefbeab.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "5a69bc6d-4044-4a5b-bb29-6107353a6d86",
+      "registry_key": "kontrollera-andar",
+      "icon_path": "hermes/spell/kontrollera-andar/74912624b1a904a407872460dd89dd917596f3389998a14fa20a4f81f193953d.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/5a69bc6d-4044-4a5b-bb29-6107353a6d86/f33cc8dc-37f8-4fdf-a07c-0eb65143153b.webp",
+      "illustration_wide_path": "spell/5a69bc6d-4044-4a5b-bb29-6107353a6d86/27c93066-a854-450d-9a19-5afc396a6be9.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "e8b638c2-bafa-435f-8b5c-203513ee586b",
+      "registry_key": "kontrollera-hogre-odod",
+      "icon_path": "hermes/spell/kontrollera-hogre-odod/6ad7001149f93295a527ca9ee27a29edd849bbf01d855071e1a0ec0593866bdf.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/e8b638c2-bafa-435f-8b5c-203513ee586b/6f22f977-c697-4c34-a9c3-7b820770bbfd.webp",
+      "illustration_wide_path": "spell/e8b638c2-bafa-435f-8b5c-203513ee586b/48d66424-d895-4795-bdb5-84e76f1b15ee.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d418a544-981f-4356-96e0-d2e4cc424bc4",
+      "registry_key": "kontrollera-lagre-odod",
+      "icon_path": "hermes/spell/kontrollera-lagre-odod/984ba4cacc18a90ab5d505d6fb27977d7034e957f389aee9c0c72958e943e3ca.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/d418a544-981f-4356-96e0-d2e4cc424bc4/0f4bd3fb-cc0e-48a7-88eb-7812498b4a91.webp",
+      "illustration_wide_path": "spell/d418a544-981f-4356-96e0-d2e4cc424bc4/ecd33aed-e77d-41ce-b883-b2e625e6ef15.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9b6d9af9-961c-41c2-91fa-2b3fb1548bfc",
+      "registry_key": "kontrollera-varelse",
+      "icon_path": "spell/9b6d9af9-961c-41c2-91fa-2b3fb1548bfc/487597ef-c774-4542-b4a6-039386fa32c5.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9b6d9af9-961c-41c2-91fa-2b3fb1548bfc/43aafb65-aee3-4ef1-8e33-ad0aeebf28c9.webp",
+      "illustration_wide_path": "spell/9b6d9af9-961c-41c2-91fa-2b3fb1548bfc/3cfbbfec-f1c0-42de-a4bb-d8f3cc2f08cd.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d830f576-c67c-44fe-8478-6270d4a42483",
+      "registry_key": "langsamhet",
+      "icon_path": "hermes/spell/langsamhet/d795082d53200476431afbaec0c4b0925836a36dff2ffc92c239159069024802.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/d830f576-c67c-44fe-8478-6270d4a42483/60436689-df61-4ae9-8359-b64413d8a153.webp",
+      "illustration_wide_path": "spell/d830f576-c67c-44fe-8478-6270d4a42483/47a5bcc2-1845-48da-94e5-75cd489bcb31.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "ac14e458-d79f-4642-8de7-ba805212ec20",
+      "registry_key": "livsuttomning",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/ac14e458-d79f-4642-8de7-ba805212ec20/3c146ddd-5c56-4a7b-9bb6-f9000b9f02e3.webp",
+      "illustration_wide_path": "spell/ac14e458-d79f-4642-8de7-ba805212ec20/5b075928-e48d-40bb-9000-af32ec2941aa.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "813ac317-f0fb-42c1-b808-7d6e2cae9afe",
+      "registry_key": "ljusvag",
+      "icon_path": "hermes/spell/ljusvag/f1c608c168b2e35699a130618421ccedb62d8bd2005f225f42c94023b6297bf6.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/813ac317-f0fb-42c1-b808-7d6e2cae9afe/23404e4b-1d48-4255-a487-e29b53d3cdc3.webp",
+      "illustration_wide_path": "spell/813ac317-f0fb-42c1-b808-7d6e2cae9afe/8aa69946-bf0f-4c4b-9642-3cbece6c6d0c.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "f5c76c18-a089-481f-b70f-e1ef05226b2a",
+      "registry_key": "luftvag",
+      "icon_path": "hermes/spell/luftvag/d0e7814204dbf041c56addafc86f3488d0f28b44c6bd10cc302a926798b0b9db.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/f5c76c18-a089-481f-b70f-e1ef05226b2a/e0beebd3-7000-4084-b459-4baf885dceda.webp",
+      "illustration_wide_path": "spell/f5c76c18-a089-481f-b70f-e1ef05226b2a/a16c236f-42e8-4d03-88d9-99d2a7efebd6.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "87ca7703-279d-4f85-9c1f-c482838c2346",
+      "registry_key": "lungfilter",
+      "icon_path": "hermes/spell/lungfilter/38931d2eb45f8aa1130e85d63b9b1362fa3e589f1e023733553acd381c9fda71.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/87ca7703-279d-4f85-9c1f-c482838c2346/afe13a65-c9b1-452d-b4e2-068d60fe1776.webp",
+      "illustration_wide_path": "spell/87ca7703-279d-4f85-9c1f-c482838c2346/ce9faac2-7719-4f60-84be-ac9f1b0604ca.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "8831c64c-8b90-466a-8005-989785c20fb5",
+      "registry_key": "lyft",
+      "icon_path": "hermes/spell/lyft/94e332c43222e97f2512c325247c7977ac975517c32f6b90f5f7b8b1b862b08c.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/8831c64c-8b90-466a-8005-989785c20fb5/1b62ba44-926d-4ec3-88f9-cfcddd3a2491.webp",
+      "illustration_wide_path": "spell/8831c64c-8b90-466a-8005-989785c20fb5/f294be9e-ece4-42c3-99f9-a77bd83b997e.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "3a4860c2-f389-44a9-9d34-144994f84774",
+      "registry_key": "magisk-syn",
+      "icon_path": "hermes/spell/magisk-syn/43bdc5a51c679afdb84ad309269d2310086429fc85029079fd5cfe796bd1eaf4.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/3a4860c2-f389-44a9-9d34-144994f84774/6e46aef2-095c-4b25-97b7-4ce4f414c6f3.webp",
+      "illustration_wide_path": "spell/3a4860c2-f389-44a9-9d34-144994f84774/b586aeca-ae3a-4e93-86c3-7d5afe1c10a5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "ed6e452e-16bb-4b2d-b0e8-9b24187b2a5b",
+      "registry_key": "minne",
+      "icon_path": "hermes/spell/minne/da849c18683798926385456028cf18c2f2fb750d6eec781c4f65d2d9202347c4.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/ed6e452e-16bb-4b2d-b0e8-9b24187b2a5b/64da4371-cf46-441e-9582-191b19f83939.webp",
+      "illustration_wide_path": "spell/ed6e452e-16bb-4b2d-b0e8-9b24187b2a5b/a8ae1db0-5703-4e68-badb-1aeeee83d38d.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "0ea83e73-8915-4896-9ca5-448dc64b76a1",
+      "registry_key": "minska",
+      "icon_path": "hermes/spell/minska/85b76a0bd770a6e78cd38166b1bbc681ed7c0d6ee753344f46ed9e685dc1b625.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/0ea83e73-8915-4896-9ca5-448dc64b76a1/cdec7b54-73b4-413b-89f3-d2f9018b3d21.webp",
+      "illustration_wide_path": "spell/0ea83e73-8915-4896-9ca5-448dc64b76a1/c6be3a77-245b-4ef6-94c3-7dfdb43708c7.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "0438bd30-46ec-44f6-836d-db768b86c04c",
+      "registry_key": "morker-illusionism",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/bb2a97cb-91c6-4efd-9d09-56ac022954d2.webp",
+      "illustration_wide_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/0b436356-4973-443a-bd20-ec126addb766.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "a681539d-42a0-4674-92f5-6815491c3427",
+      "registry_key": "morkersyn",
+      "icon_path": "hermes/spell/morkersyn/d371ce433d6307d316c779c9e9b07ae521ea0641878baa5f919efb69e8853e9a.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/9d9f1112-3644-4bd6-9e4f-86385a53d954.webp",
+      "illustration_wide_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/6dca8bbc-4a87-415e-9bc3-3588bb143978.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "89385567-6b18-4496-b1d7-0813f064b34c",
+      "registry_key": "morkervag",
+      "icon_path": "hermes/spell/morkervag/f321efcd2028d1f4862a4e336f065f2b493f99ffe68ad1c917fc8dfc467e18f0.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/2da76561-b75d-4f11-b794-2cfa8b9fae73.webp",
+      "illustration_wide_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/18c31ab7-c1aa-4602-8c59-7215eeb8dfc5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+      "registry_key": "motstandskraft",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/bfcd0842-2727-48b6-a31c-9474f8245251.webp",
+      "illustration_wide_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/943d9e22-6676-4935-8cc9-77db0510f9cf.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "012717d7-26c8-4923-8a2d-ac72d14252dc",
+      "registry_key": "ogonmatt",
+      "icon_path": "hermes/spell/ogonmatt/0120abc1d131920f3800a68fc6672afb220365a97dbcdd5d7f6d374535ac2347.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/77a0baf8-6ab1-44ea-8574-95ab90a612cb.webp",
+      "illustration_wide_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/ea4ef3de-d05f-4880-a166-bc06548854ff.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "dbc35cbc-b8e1-4528-92e3-371d2cd1536f",
+      "registry_key": "oka",
+      "icon_path": "hermes/spell/oka/e3ac249f27ae47a2c4717d45f9edc2b3e42a5937832ba6a212eec1283adaf2e2.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/3f4a3bde-6c90-4d2f-8c99-86b813d3ec4b.webp",
+      "illustration_wide_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/0235a853-031e-4a92-a0cd-c37b3415f6c6.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d7748d2d-f9e5-4c9e-b0a0-35b908785f51",
+      "registry_key": "oppna",
+      "icon_path": "hermes/spell/oppna/1aa3260ac8d13f52e3808394df028a98aeaec2dd34628f0f7b590773e9f015ce.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/82fc4228-430f-45c7-80b9-4cdc56c00574.webp",
+      "illustration_wide_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/155a7c8a-d28e-4ef3-806a-d85ab1d9cc9d.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "c648413f-2ed6-4d00-8a21-039db74ee429",
+      "registry_key": "oradd",
+      "icon_path": "hermes/spell/oradd/d1e4318c1ea7be8c041d9f1b5cb49156e335b9786083a7107f00343718f11fbb.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/649dd3f6-ffd4-4b3a-8343-9a7369317dec.webp",
+      "illustration_wide_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/e377cffb-6f03-4c38-82ba-36ab4f1bb45b.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9e9b12f7-9cac-43ed-82cf-15953a5e7053",
+      "registry_key": "orientering",
+      "icon_path": "hermes/spell/orientering/4317e5ae6a4b78259d942066e8d3fe0001b4bd3dba66ddb8243caaee7c7bcf31.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/1fcc53b3-4917-4f04-8c88-38a23f28827a.webp",
+      "illustration_wide_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/d0c35e11-6fe9-400b-bb80-c13998dc144f.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "e72abdf8-c016-4b1e-9674-eee97923bc40",
+      "registry_key": "osynlighet",
+      "icon_path": "hermes/spell/osynlighet/d41d791ce596064f5b05972f8ad0ec65668acaeacb651502ff9d84911a54d8f7.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/6266ca88-ab3f-4e5e-89b1-ab4788b5048d.webp",
+      "illustration_wide_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/248ad1c7-77c0-4709-aeea-acac8ea222ab.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "4f270898-01cc-4a2c-ba00-a13187262882",
+      "registry_key": "panik",
+      "icon_path": "hermes/spell/panik/e30c83dd61272f0aa4e16e34031d5d1d69b38fab4d1f460839d06df4622e411c.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/2d83019e-42b8-44b7-bc0c-3570e6969d88.webp",
+      "illustration_wide_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/5cce6a7d-e495-4143-bc48-7d324ce1d512.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "3c3e2221-29e0-4de2-87be-2611c97140ea",
+      "registry_key": "paralysering",
+      "icon_path": "hermes/spell/paralysering/6947c101ce4045516a492680fe7ed7302844413b67b971a1dc6a7868170f8ef3.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/22654c62-f3e5-4878-8ee7-0c783efa55d0.webp",
+      "illustration_wide_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/ca68bee0-3286-4302-b0fc-893f26969572.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "7bd45836-8ea1-4bfe-b5f3-8101b5f849af",
+      "registry_key": "radsla",
+      "icon_path": "hermes/spell/radsla/038e8e50ab00e3305bce37957c4493714777965bd0e76ae6a65949fd170acf69.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/7bd45836-8ea1-4bfe-b5f3-8101b5f849af/7834c7b5-448a-4afd-b086-40ff83132273.webp",
+      "illustration_wide_path": "spell/7bd45836-8ea1-4bfe-b5f3-8101b5f849af/1818a573-b704-4c87-9d02-d02882ecf60e.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "8e326f4c-6de9-4ff1-992c-f4f4947c8a3b",
+      "registry_key": "regnstart",
+      "icon_path": "spell/8e326f4c-6de9-4ff1-992c-f4f4947c8a3b/b2a3ed38-bdcf-4302-a808-acfc92ac7dc3.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/8e326f4c-6de9-4ff1-992c-f4f4947c8a3b/91a95edb-87e9-4b50-b6d1-4b8596b98726.webp",
+      "illustration_wide_path": "spell/8e326f4c-6de9-4ff1-992c-f4f4947c8a3b/6e2afe85-e5a7-4814-a1e8-c6a0136c021c.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9108d6a2-3bc6-4abb-9541-551fd18847e8",
+      "registry_key": "regnstopp",
+      "icon_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/de9b923e-8859-464f-bf16-87825b1d859d.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/3b3b0467-e6d3-48b9-ad3d-758ea26133a0.webp",
+      "illustration_wide_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/c47e593b-847d-441e-8735-feed2562614f.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "912c993c-d31f-4c9e-a573-a28ab4536c50",
+      "registry_key": "rena",
+      "icon_path": "spell/912c993c-d31f-4c9e-a573-a28ab4536c50/949050d1-8a91-4f9e-a835-0f204522fda3.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/912c993c-d31f-4c9e-a573-a28ab4536c50/b738242a-ab8f-4f76-88f1-77deb4a8ae9d.webp",
+      "illustration_wide_path": "spell/912c993c-d31f-4c9e-a573-a28ab4536c50/c4564bc7-471a-4bed-91e6-0a5ad8bdeff3.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "e4aa1ce6-6ec6-4269-963a-e4e6b724276a",
+      "registry_key": "sannsyn",
+      "icon_path": "hermes/spell/sannsyn/bee2be45cbd563e4ac71e142fc2d2f0a47966ecfae56c4660c4bb80070e14208.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/30266d57-b266-4ee6-9e68-c86167099200.webp",
+      "illustration_wide_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/600c6a9b-1a69-409c-b807-b00673579bd5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9bc53fb0-c26f-458d-aeb0-b7398b492f40",
+      "registry_key": "sinnesmask",
+      "icon_path": "hermes/spell/sinnesmask/e3285f6425dff08a701dfd0122fc66c560772dd6c2e2b2e6cee0c844d5f574ba.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9bc53fb0-c26f-458d-aeb0-b7398b492f40/ac7d2cb4-9c28-4e2e-8c35-be83b08a2916.webp",
+      "illustration_wide_path": "spell/9bc53fb0-c26f-458d-aeb0-b7398b492f40/434136e1-51f0-488d-8c02-02a60140f5d1.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "54b365bd-a344-4cd6-8133-aaa4e033fc7d",
+      "registry_key": "skanthorsel",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/54b365bd-a344-4cd6-8133-aaa4e033fc7d/328cfbbc-73d4-4f38-9332-510ffe916de4.webp",
+      "illustration_wide_path": "spell/54b365bd-a344-4cd6-8133-aaa4e033fc7d/817ed728-27cb-48a9-80f7-218b1151455b.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "301bc9d7-47de-4831-b733-125f03bcef0d",
+      "registry_key": "skingra",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/301bc9d7-47de-4831-b733-125f03bcef0d/5c6fa89a-6998-49bd-8ae6-891c80926f98.webp",
+      "illustration_wide_path": "spell/301bc9d7-47de-4831-b733-125f03bcef0d/5240e83e-ab07-44e4-ba6f-330bff8c6bf5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1",
+      "registry_key": "smartta",
+      "icon_path": "hermes/spell/smartta/2db2b1e8a262c33857c653cee382f779c44514c235560d0cac8d2237784132e1.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1/d8b2e6ca-5612-4735-a0ca-f74fccb6e018.webp",
+      "illustration_wide_path": "spell/5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1/dd261bbe-6cdc-473a-9c4d-54f2a16074c3.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "82d55374-6bc0-4488-8a2c-cad8dc406006",
+      "registry_key": "snabbhet",
+      "icon_path": "hermes/spell/snabbhet/973828b226dad2ae49c1ade0de6a0272cdb9ed5d59afdca7c7b32616bc85ea38.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/4c256a26-9a1f-4dc9-86b6-f4f1519cc86f.webp",
+      "illustration_wide_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/09e270e2-472b-425e-a664-2d9e5349c879.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "7575ceed-df3d-43af-b3e8-a5105df6d33f",
+      "registry_key": "snabbvax",
+      "icon_path": "spell/7575ceed-df3d-43af-b3e8-a5105df6d33f/fab11d06-2969-4e50-96f2-6dc9f95daaee.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/7575ceed-df3d-43af-b3e8-a5105df6d33f/e04e1b73-6635-44da-9f78-1665a5c3492b.webp",
+      "illustration_wide_path": "spell/7575ceed-df3d-43af-b3e8-a5105df6d33f/02f48217-d0d3-4c92-ac4d-66806b013761.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "ec7e654d-042e-4def-b550-6b0cba0fb6f2",
+      "registry_key": "snubbla",
+      "icon_path": "hermes/spell/snubbla/ff3aab3d2dd6471b0ac2c19019fa59ec960405f8df80790dcd5be2256ffe0f32.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/ec7e654d-042e-4def-b550-6b0cba0fb6f2/737c1267-fbbf-4aa2-97f2-707d8657c0ba.webp",
+      "illustration_wide_path": "spell/ec7e654d-042e-4def-b550-6b0cba0fb6f2/dc363f9e-b9d9-4322-bf17-e97060b5b716.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "78c31001-110d-4876-99c2-98281885e8a0",
+      "registry_key": "sparlos",
+      "icon_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/16e618dc-8645-427a-bce9-238397110634.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/ea04f1ca-d010-49d1-847b-c0cb847cc260.webp",
+      "illustration_wide_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/d34d761a-857c-43eb-91ba-d952d24f26a6.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "d5eb1354-eaa5-4941-829b-639eff69ce7f",
+      "registry_key": "sprang",
+      "icon_path": "hermes/spell/sprang/7e8ed07321843cd96c49890ddadacd43b2cc6e0ca8ad55f0e3f9d56deecc60f6.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/d5eb1354-eaa5-4941-829b-639eff69ce7f/9610f9e1-ee95-4356-b49a-0eab78d20dd9.webp",
+      "illustration_wide_path": "spell/d5eb1354-eaa5-4941-829b-639eff69ce7f/cbe38ee3-8315-4a5c-a96c-a471e941a3ef.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "3cf3092b-35dd-4ac1-95b4-efe4149533b8",
+      "registry_key": "stenvagg",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/3cf3092b-35dd-4ac1-95b4-efe4149533b8/eff1f39d-fc50-4597-a75c-d67517a28a50.webp",
+      "illustration_wide_path": "spell/3cf3092b-35dd-4ac1-95b4-efe4149533b8/f828545b-dbec-43dc-8a53-68e794cf1480.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "7128fef3-dd66-48e0-bf78-e04e043efe8b",
+      "registry_key": "syn",
+      "icon_path": "hermes/spell/syn/b27181767964bc7d9368adee35ce5f54d64ea0eaa4e8ce7241ebddb1e08b355a.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/6bf2e0b3-cf15-4a22-9c84-3b75c11b9c19.webp",
+      "illustration_wide_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/29f5b731-aa17-4693-9c7c-2b67f0e19feb.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "add799aa-eb12-432f-b210-1d177679f81c",
+      "registry_key": "tala-med-dod",
+      "icon_path": "hermes/spell/tala-med-dod/0617dc682fc38e7ebc39fd1491ecfbf663889e9c790e972f9744d36752eca197.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/add799aa-eb12-432f-b210-1d177679f81c/e9490a1d-3314-413e-9f86-6dea9b548706.webp",
+      "illustration_wide_path": "spell/add799aa-eb12-432f-b210-1d177679f81c/a45e8b5c-4199-487d-a11d-d1d3e5e24e8d.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "a8ab5aca-9298-4f68-8561-3cd5cd38cd1c",
+      "registry_key": "tala-med-varelse",
+      "icon_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/c3e88fb1-d7fb-4b50-a509-2ec70c216786.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/129ac489-2657-40fe-aa09-d7b3d242a382.webp",
+      "illustration_wide_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/d08d66dc-8ec2-4346-a660-4a4851277ea8.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "f2e741a9-d307-4483-8755-d8314c05def5",
+      "registry_key": "teleportera",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": "spell/f2e741a9-d307-4483-8755-d8314c05def5/47c52c9e-cb1c-4b95-9f62-408b7fb1e6e7.webp",
+      "illustration_path": "spell/f2e741a9-d307-4483-8755-d8314c05def5/a2be59c9-220a-487e-a634-f989e011fef9.webp",
+      "illustration_wide_path": "spell/f2e741a9-d307-4483-8755-d8314c05def5/0b12fae7-79dd-448d-b30e-0af2d7791059.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "215459ca-3928-439a-a83c-66c200755d80",
+      "registry_key": "terror",
+      "icon_path": "hermes/spell/terror/b635038a753e90154d72c872c0f2d7e68b3405dcbd9f4e1290c90992b71e4cc3.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/215459ca-3928-439a-a83c-66c200755d80/d4a60abc-0c59-4028-8c4c-9a7c8a9c5966.webp",
+      "illustration_wide_path": "spell/215459ca-3928-439a-a83c-66c200755d80/ddcab8e8-b483-47b2-991d-5780975339fe.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "f836aa38-1427-4d11-be99-8e115be746b0",
+      "registry_key": "tillkalla-varelse",
+      "icon_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/c6994ff5-7ca9-445c-a863-c3d6906db600.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/1c375ef9-716f-4e40-9c38-8fbe14b428b2.webp",
+      "illustration_wide_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/f03b3ffa-f91c-4c49-9e34-e5c4203b7d1a.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "0e68f3f5-7b27-41b2-bc2d-1442979565e0",
+      "registry_key": "tystnad",
+      "icon_path": "hermes/spell/tystnad/8091dcfb739743d97582fe67ff1748dadbc1ad0dd2ca9ee6d4d9d6638789dd5a.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/735b0af8-0d0c-4bf0-996d-b028670df3da.webp",
+      "illustration_wide_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/c7e93d55-2cf4-4b26-a437-8bed8f6cf596.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "4e059a95-ebe6-4178-a772-063aaf8c01f5",
+      "registry_key": "vaderforutsagelse",
+      "icon_path": "assets/spells/arcane-ivory/vaderforutsagelse.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/4e059a95-ebe6-4178-a772-063aaf8c01f5/a793ca87-70c8-4ffb-aae7-c6d416592a6b.webp",
+      "illustration_wide_path": "spell/4e059a95-ebe6-4178-a772-063aaf8c01f5/1984adc3-bcbf-4c48-a56a-ea8fb7c13d4a.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "dd69c120-c125-4d02-819d-03b34c6038d5",
+      "registry_key": "vaderkontroll",
+      "icon_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/10ec5adb-f282-48ea-b681-dcc3f6081f2e.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/6a1ab652-c8de-4d21-8181-e59e6cf7e504.webp",
+      "illustration_wide_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/960cc287-550a-48e9-9f0f-d6f89184e33e.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "4cad4cda-2d4d-4837-beb1-6a4c9aad1171",
+      "registry_key": "vapenvag",
+      "icon_path": null,
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/4cad4cda-2d4d-4837-beb1-6a4c9aad1171/f7be7b81-0694-4b34-aedc-7dbb47b1258c.webp",
+      "illustration_wide_path": "spell/4cad4cda-2d4d-4837-beb1-6a4c9aad1171/951d65a8-3ae4-467c-80ed-fb86762ab7a4.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "a481c285-31f0-469c-96ce-0599b05305df",
+      "registry_key": "varseblivning",
+      "icon_path": "hermes/spell/varseblivning/f018e27049444148fb86b1d13cecbb912fe09e4929144ef81bf8bc8ac734a96b.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/a481c285-31f0-469c-96ce-0599b05305df/7e91d1f6-3c08-4c9a-9d9d-cfe8718fb727.webp",
+      "illustration_wide_path": "spell/a481c285-31f0-469c-96ce-0599b05305df/e950df3d-bc1e-44dd-8dba-e05aa46cf5e5.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9f632181-222d-4c78-b099-f716ced6af98",
+      "registry_key": "vindkontroll",
+      "icon_path": "assets/spells/arcane-ivory/vindkontroll.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9f632181-222d-4c78-b099-f716ced6af98/bbbf11d4-cd62-49e1-9f4d-7bbffcf24f71.webp",
+      "illustration_wide_path": "spell/9f632181-222d-4c78-b099-f716ced6af98/7bdd037c-80a3-4d03-8bc7-24ca6b3e8619.webp"
+    },
+    {
+      "table_name": "rule_spells",
+      "registry_id": "9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d",
+      "registry_key": "voodoo-ritual",
+      "icon_path": "hermes/spell/voodoo-ritual/26544bccd9528c7535edd058d580352a7230452009e0435f312749e32825a70f.webp",
+      "effect_image_path": null,
+      "cutout_path": null,
+      "illustration_path": "spell/9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d/03a5508c-54aa-41a0-ac80-42e3a7c0aacf.webp",
+      "illustration_wide_path": "spell/9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d/15c7bb8e-6514-4114-af43-fb94012ca329.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "administrationsjuridik",
+      "registry_key": "administrationsjuridik",
+      "icon_path": "hermes/skill/administrationsjuridik/734ebfc9498eaccf25ee54395ca736fc2daff665d1acae315e15e137a2455293.webp",
+      "illustration_path": "skill/administrationsjuridik/illustration/2b11cc09-7669-48ce-8eee-e45ff42fee71.webp",
+      "illustration_wide_path": "skill/administrationsjuridik/illustration_wide/e3b6f09f-cb70-4c63-852b-66de99d6249a.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "akrobatik",
+      "registry_key": "akrobatik",
+      "icon_path": "hermes/skill/akrobatik/b86b465be50eff4df02d41163903b787118bce87ef1b0321a6bad300814f5133.webp",
+      "illustration_path": "skill/akrobatik/illustration/3bee8115-768a-4963-ac00-2050eaa98a83.webp",
+      "illustration_wide_path": "skill/akrobatik/illustration_wide/d5ba3c3f-0a79-4351-8e0e-10594fe7eb77.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "armborst",
+      "registry_key": "armborst",
+      "icon_path": "hermes/skill/armborst/2f0abc015a28eecad5d4594d786ad3cb7c1c0cdca875dc7c2cbad6de0216a930.webp",
+      "illustration_path": "skill/armborst/illustration/6b2b2534-aa9f-4892-874d-0d218dacaa18.webp",
+      "illustration_wide_path": "skill/armborst/illustration_wide/fc0135f2-7d08-4ee1-9e2f-b238e00f3062.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "astrologi",
+      "registry_key": "astrologi",
+      "icon_path": "hermes/skill/astrologi/f8dfeedc179c48e0e02656d10bc9e55ab11ac34f7eba0d1b2a8c70a8ba1dc17d.webp",
+      "illustration_path": "skill/astrologi/illustration/69744c6b-d937-42b0-b6d6-5eaf4fa8a13c.webp",
+      "illustration_wide_path": "skill/astrologi/illustration_wide/6c6494cb-f293-457e-9539-eeebc4264dcc.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "blasror",
+      "registry_key": "blasror",
+      "icon_path": "hermes/skill/blasror/5f7161781523979f3cd0f3d4fe4fdddef23237e1dd816a6fca5b20cf66b01cae.webp",
+      "illustration_path": "skill/blasror/illustration/c5e664e5-46bd-4d14-9b6d-bcbbd3f690b2.webp",
+      "illustration_wide_path": "skill/blasror/illustration_wide/579e518b-8d5f-479e-88e3-b74fac072eec.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "bluffa",
+      "registry_key": "bluffa",
+      "icon_path": "hermes/skill/bluffa/fc52e2fc60c8f56f7e01be5e4ec3dfc6dd4b69f771cc74985e72518ad609bb64.webp",
+      "illustration_path": "skill/bluffa/illustration/cafcc8cd-a45d-430d-9db3-cb30e9d09a8b.webp",
+      "illustration_wide_path": "skill/bluffa/illustration_wide/cf867244-0ce0-4dea-9aef-2bc2b3dcb483.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "bola",
+      "registry_key": "bola",
+      "icon_path": "hermes/skill/bola/cffd76e1e9ae2cadd06ff052498b6013a37dc27c79026d93444b18f87af8c183.webp",
+      "illustration_path": "skill/bola/illustration/356cb329-2763-4d30-b193-d5523f1860ca.webp",
+      "illustration_wide_path": "skill/bola/illustration_wide/f5bb533d-ed06-4350-8e09-d06a8d2cb91d.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "botanik",
+      "registry_key": "botanik",
+      "icon_path": "hermes/skill/botanik/e1a3ff17313c225ae40825aa8e73d2644e7e797127dbb3dfe836c93d2f36d91d.webp",
+      "illustration_path": "skill/botanik/illustration/36c81775-9240-4fc6-b86b-9d6d70daa964.webp",
+      "illustration_wide_path": "skill/botanik/illustration_wide/6adf0e4b-8b34-46d0-9940-ef1577b97071.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "djurtraning",
+      "registry_key": "djurtraning",
+      "icon_path": "hermes/skill/djurtraning/966f9455000c3d669b013a5177b58a85c81f0b7f800453258f7fee5daf786327.webp",
+      "illustration_path": "skill/djurtraning/illustration/643bf58b-9807-49a4-8109-208dcecdef87.webp",
+      "illustration_wide_path": "skill/djurtraning/illustration_wide/dd7e52b4-cf01-4500-9909-b679b7870f79.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "dolkar",
+      "registry_key": "dolkar",
+      "icon_path": "hermes/skill/dolkar/84a3d0054180d1be1d1c91b333be771f7e2c573724a99295d4ef0873619eebfd.webp",
+      "illustration_path": "skill/dolkar/illustration/fa764c06-ea4d-4a6a-b8c9-04d22d05154c.webp",
+      "illustration_wide_path": "skill/dolkar/illustration_wide/74c5b80f-7bad-42c1-8bf5-62a117c74769.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "dra_vapen",
+      "registry_key": "dra_vapen",
+      "icon_path": "hermes/skill/dra-vapen/aebbdef557b3295c568812783de559aaa89427ae4ef4ba5f829ad71cc71b6cc6.webp",
+      "illustration_path": "skill/dra_vapen/illustration/dc4bcf51-effb-4c48-9788-643000913dd6.webp",
+      "illustration_wide_path": "skill/dra_vapen/illustration_wide/b49ef575-cf5f-4034-ba10-14ebb0f7e433.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "drogkunskap",
+      "registry_key": "drogkunskap",
+      "icon_path": "hermes/skill/drogkunskap/2c4aab5c952400836d77d311a865789396967a96d405f7de2eacf766a20f3f68.webp",
+      "illustration_path": "skill/drogkunskap/illustration/4adf58ac-08e8-4a6e-a31a-e663bd352a9d.webp",
+      "illustration_wide_path": "skill/drogkunskap/illustration_wide/667e6925-95ad-49e9-8daf-d52d735dc3da.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "enhandssvard",
+      "registry_key": "enhandssvard",
+      "icon_path": "hermes/skill/enhandssvard/b764854dc2d6eb50eed06aeca65abbe4c5778e312745c9f673c81daa722907e5.webp",
+      "illustration_path": "skill/enhandssvard/illustration/71b60a18-3b4a-490e-9802-fdb848a90e85.webp",
+      "illustration_wide_path": "skill/enhandssvard/illustration_wide/b03e0752-d956-4c81-8b0c-896adc66d289.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "finna_dolda_ting",
+      "registry_key": "finna_dolda_ting",
+      "icon_path": "hermes/skill/finna-dolda-ting/ce12b507282b5a0156d5f20acc7d3347b8b50785a4e9b8bce3c1d00e264c05cb.webp",
+      "illustration_path": "skill/finna_dolda_ting/illustration/88a694f2-817c-43d5-a059-45f639528c95.webp",
+      "illustration_wide_path": "skill/finna_dolda_ting/illustration_wide/bb293aa8-15c6-4487-865e-c94fe7fe17a7.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "fiska",
+      "registry_key": "fiska",
+      "icon_path": "hermes/skill/fiska/4e2932a39130c9f959dadeeb8c89f89499fcd49886079b1ed88921286ef3ad46.webp",
+      "illustration_path": "skill/fiska/illustration/ed594e28-a692-4c2f-9501-e63eba3887fd.webp",
+      "illustration_wide_path": "skill/fiska/illustration_wide/7844ba04-6e32-4ed6-977f-18a0fb1e3ea0.png"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "forhora",
+      "registry_key": "forhora",
+      "icon_path": "hermes/skill/forhora/19998635b5eed691873c83ce54fd4fa884907e1025cb280b577a07f9d077d445.webp",
+      "illustration_path": "skill/forhora/illustration/c85e0a37-ce74-43c5-9f4d-cf0398ec022c.webp",
+      "illustration_wide_path": "skill/forhora/illustration_wide/c3256a81-76c2-43a4-9a73-d38bd51f2b07.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "forkladnad",
+      "registry_key": "forkladnad",
+      "icon_path": "hermes/skill/forkladnad/e551134059c91f02062ec33e8c3b2d43815dfc059103c5d4eefa22d3518533ce.webp",
+      "illustration_path": "skill/forkladnad/illustration/e08499ef-d916-48e5-be5f-a68d8baac435.webp",
+      "illustration_wide_path": "skill/forkladnad/illustration_wide/5a3b72ce-fcd5-4226-97bf-9869a7aa1d8a.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "forsta_hjalpen",
+      "registry_key": "forsta_hjalpen",
+      "icon_path": "hermes/skill/forsta-hjalpen/632fc042d48350cb093bbcd0d6ab4b90a13b0f6934e94671bd61995a6862b85e.webp",
+      "illustration_path": "skill/forsta_hjalpen/illustration/47bdab24-3a1c-4919-803c-22f3cc1286c8.webp",
+      "illustration_wide_path": "skill/forsta_hjalpen/illustration_wide/002592fa-fa2f-4be9-85c6-8dca10a6aaf3.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "geografi",
+      "registry_key": "geografi",
+      "icon_path": "hermes/skill/geografi/c949b6f7c27e9564aad060000b450f8cd4ee18ccecbe0fd604e342b50b19c8da.webp",
+      "illustration_path": "skill/geografi/illustration/bf5053bf-a18e-439e-a03a-147d1bf8c0e4.webp",
+      "illustration_wide_path": "skill/geografi/illustration_wide/1548e762-e815-48e5-b5f3-3c5235263f40.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "geologi",
+      "registry_key": "geologi",
+      "icon_path": "hermes/skill/geologi/6458bff214ccbea7147ddc534ea2206c571b7f30d9c3a85c9af59c65e3624a43.webp",
+      "illustration_path": "skill/geologi/illustration/9bc1466d-a38f-4af8-a6d3-847f6666f3a8.webp",
+      "illustration_wide_path": "skill/geologi/illustration_wide/bb9f862d-888e-4034-809b-d6f2c90aacc7.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "giftkunskap",
+      "registry_key": "giftkunskap",
+      "icon_path": "hermes/skill/giftkunskap/08c2404d59cf27c62a1032ea23ed88c23ed2a9a32df2abbc3708026e2cbf3cb6.webp",
+      "illustration_path": "skill/giftkunskap/illustration/a1b9bf7c-08d0-4bdb-895c-09f36d8fed86.webp",
+      "illustration_wide_path": "skill/giftkunskap/illustration_wide/178f8898-4786-4edd-9262-b1b3985ea6a1.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "gomma_sig",
+      "registry_key": "gomma_sig",
+      "icon_path": "hermes/skill/gomma-sig/e7b14acf69b02af4a67c943584e145f6e0a58c076627b8b0894418ac41fe3a38.webp",
+      "illustration_path": "skill/gomma_sig/illustration/deeab502-ef41-45ae-9327-841411563397.webp",
+      "illustration_wide_path": "skill/gomma_sig/illustration_wide/c3d5fb14-48c5-4cee-84ea-f841fffea501.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "grottorientering",
+      "registry_key": "grottorientering",
+      "icon_path": "hermes/skill/grottorientering/c003c2be2b64d1208a2029c0dc1eba8a7528d661d004c54785003d1df2ddacc3.webp",
+      "illustration_path": "skill/grottorientering/illustration/da5c5ae9-be5f-4da4-8e63-59a822d60e06.webp",
+      "illustration_wide_path": "skill/grottorientering/illustration_wide/13e1e4fa-de79-4860-8fdd-0650fe2c604b.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "hantera_fallor",
+      "registry_key": "hantera_fallor",
+      "icon_path": "hermes/skill/hantera-fallor/93041ab4dde8d856e0dd971c871dabcb57ded9e9e8883900068fc18ec25469ea.webp",
+      "illustration_path": "skill/hantera_fallor/illustration/9fd5651b-5c4c-44fc-bcf3-2736b8f1a48b.webp",
+      "illustration_wide_path": "skill/hantera_fallor/illustration_wide/628909a3-bc8b-4e55-bbed-7466395ff323.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "hantverk",
+      "registry_key": "hantverk",
+      "icon_path": "hermes/skill/hantverk/bb39638a0b9a768af9111e82cb9edf076e321dd48824af90303a3f13cd216b09.webp",
+      "illustration_path": "skill/hantverk/illustration/1cd7827a-4a6e-430f-8e86-0048c2c07ff1.webp",
+      "illustration_wide_path": "skill/hantverk/illustration_wide/97868117-c242-4458-b10b-cbf947e20929.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "hasardspel",
+      "registry_key": "hasardspel",
+      "icon_path": "hermes/skill/hasardspel/c06986395deb5de5e597f7ffd2fc002711ef7f7afc2bdaf487399e04d35f43ca.webp",
+      "illustration_path": "skill/hasardspel/illustration/736cb86f-103e-48a8-be94-fa5e89950ac5.webp",
+      "illustration_wide_path": "skill/hasardspel/illustration_wide/a095f24c-4f39-4862-8ba0-a29c7e17b3cb.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "heraldik",
+      "registry_key": "heraldik",
+      "icon_path": "hermes/skill/heraldik/bc82404e28caebf67481fbb0823ae1ac99a46045c8ed446d5db693d84a5909b4.webp",
+      "illustration_path": "skill/heraldik/illustration/a00ec8b8-282d-4dd6-a06c-635b039aebee.webp",
+      "illustration_wide_path": "skill/heraldik/illustration_wide/17b6c198-1f14-49ce-8152-782316925d10.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "historia",
+      "registry_key": "historia",
+      "icon_path": "hermes/skill/historia/bc34e6cd71d3a803b2e99e0980051051223b827521d259c2d8aefb77f6663e81.webp",
+      "illustration_path": "skill/historia/illustration/65c0202c-2c0c-4fa2-b5b4-a0e8f1eb1e64.webp",
+      "illustration_wide_path": "skill/historia/illustration_wide/7f2d5d38-2e37-4e19-957f-3f556b0120ec.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "hoppa",
+      "registry_key": "hoppa",
+      "icon_path": "hermes/skill/hoppa/37a9d1f8c37219555e3be16b50da29ef242e144561112623bf6416797f7d5521.webp",
+      "illustration_path": "skill/hoppa/illustration/ad8c061a-1cce-4122-8c4c-094ccd12a190.webp",
+      "illustration_wide_path": "skill/hoppa/illustration_wide/4688673d-6b4b-43a7-9a74-ca01418b524c.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "ilmarsch",
+      "registry_key": "ilmarsch",
+      "icon_path": "hermes/skill/ilmarsch/967c269a8abb7d2907525cdac0bb61f48cfd38bdc8127a901f65ec85fcc4fa67.webp",
+      "illustration_path": "skill/ilmarsch/illustration/9fc3d892-f7a2-43c4-a805-c40c08198ec6.webp",
+      "illustration_wide_path": "skill/ilmarsch/illustration_wide/15cd8202-c631-4f21-a8de-9ac8c190ca60.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "jaga",
+      "registry_key": "jaga",
+      "icon_path": "hermes/skill/jaga/a8de7cc910b4640476b2fe888374d100b1f72cdc1fc5ad136d3780e81457643e.webp",
+      "illustration_path": "skill/jaga/illustration/53d60635-9dfc-4d46-80ed-7e00ec8cd8ac.webp",
+      "illustration_wide_path": "skill/jaga/illustration_wide/4f42d709-14f1-4b59-b9ad-a2bae0dfa2f0.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "judo",
+      "registry_key": "judo",
+      "icon_path": "hermes/skill/judo/50744a6bededcaa8049943534a38aaef5b919c53424e50ed9dd961199216a793.webp",
+      "illustration_path": "skill/judo/illustration/77f15360-87c4-4b40-b4f0-b657668da393.webp",
+      "illustration_wide_path": "skill/judo/illustration_wide/abf06aae-61b3-46d4-b5ae-91c5488ffcc3.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "juridik",
+      "registry_key": "juridik",
+      "icon_path": "hermes/skill/juridik/f6aaf76456c105be64f6419354604ed274c75bdd1e880b4223718f7cc2886f32.webp",
+      "illustration_path": "skill/juridik/illustration/3467e5df-cf0c-460d-aac5-13e668045b56.webp",
+      "illustration_wide_path": "skill/juridik/illustration_wide/aa21fe9f-8a15-420c-9777-437e2f7b26c8.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kamouflage",
+      "registry_key": "kamouflage",
+      "icon_path": "hermes/skill/kamouflage/492445049a03cf699dd5dbcad0b085e86ad28171461ab0052cb611d61cd28aaa.webp",
+      "illustration_path": "skill/kamouflage/illustration/7269e7f6-4d03-4b12-9feb-4e7b12331d46.webp",
+      "illustration_wide_path": "skill/kamouflage/illustration_wide/651bbba3-13af-4268-8ec9-6dacecdc2ebe.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kanot",
+      "registry_key": "kanot",
+      "icon_path": "hermes/skill/kanot/3a4065800b973cfa986fb291fdbe3033a4ea5085082db4acd428bc66498be192.webp",
+      "illustration_path": "skill/kanot/illustration/c09e9c35-4aa4-4da4-bd48-e9d2ed31e323.webp",
+      "illustration_wide_path": "skill/kanot/illustration_wide/8e65a909-acb3-4b83-ab89-664740f3bb14.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "karate",
+      "registry_key": "karate",
+      "icon_path": "hermes/skill/karate/6cc31bde0f7a1dac099c131fa3d2957dba4b36d4d5ca1d5c45695843193cf424.webp",
+      "illustration_path": "skill/karate/illustration/5e372a44-f411-45f8-bc59-5296523f6fc1.webp",
+      "illustration_wide_path": "skill/karate/illustration_wide/8059403f-1578-47a7-ad52-c138b7722baf.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kastvapen",
+      "registry_key": "kastvapen",
+      "icon_path": "hermes/skill/kastvapen/ba5348677c3463538c509e5255405194f7ba402320ea0205eb206b2b08a43e9b.webp",
+      "illustration_path": "skill/kastvapen/illustration/5b85107f-1e27-4b70-9af3-e5c7d821fbd4.webp",
+      "illustration_wide_path": "skill/kastvapen/illustration_wide/38ded10f-a161-4b22-9916-e0762dd84a28.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "klattra",
+      "registry_key": "klattra",
+      "icon_path": "skill/klattra/icon/fd76290f-66e5-4dfd-8b3e-e3220a66c41d.png",
+      "illustration_path": "skill/klattra/illustration/456693fc-8673-42f7-9307-4c9f5bd76d2f.png",
+      "illustration_wide_path": "skill/klattra/illustration_wide/354ef32f-f7db-4297-a9f2-af21ad21bd4e.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "klubbor_hammare",
+      "registry_key": "klubbor_hammare",
+      "icon_path": "hermes/skill/klubbor-hammare/c5f918fb5b6b92b57e3fd1c82e97028b759c80f952576ef517e011824545deb5.webp",
+      "illustration_path": "skill/klubbor_hammare/illustration/f4ebccd7-4523-4683-bb79-5e1a05372a1c.webp",
+      "illustration_wide_path": "skill/klubbor_hammare/illustration_wide/af2ab532-cfef-4702-8d5c-335410b2f144.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kopsla",
+      "registry_key": "kopsla",
+      "icon_path": "hermes/skill/kopsla/2126fab193bd7928b2b6e8ace6af25e717065cc870aef36b681b89002ae437ed.webp",
+      "illustration_path": "skill/kopsla/illustration/21f53c65-b067-4129-a5eb-829584fca9af.webp",
+      "illustration_wide_path": "skill/kopsla/illustration_wide/12847018-436b-4173-b09f-5b797afd5680.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kora_vagn",
+      "registry_key": "kora_vagn",
+      "icon_path": "hermes/skill/kora-vagn/fc1b07d82b8cf4d698ac75696b39ec56dad115a0cba569e687d466054d26bed1.webp",
+      "illustration_path": "skill/kora_vagn/illustration/07d1d5da-6541-4ab0-9ca1-c868ea20a02d.webp",
+      "illustration_wide_path": "skill/kora_vagn/illustration_wide/b4b4c0e5-67c7-4639-aa6b-07dd23b96986.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kulturkannedom",
+      "registry_key": "kulturkannedom",
+      "icon_path": "hermes/skill/kulturkannedom/570d695dd17575b3c2a8d4afc8d8dea76ade9827ba3dd3b2ca64e61078918299.webp",
+      "illustration_path": "skill/kulturkannedom/illustration/d3f47e00-1728-42e1-b856-eef47a501e7a.webp",
+      "illustration_wide_path": "skill/kulturkannedom/illustration_wide/0bafda1e-1cb5-4dc9-96a9-7adc7052bf06.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "kunskap_om_magi",
+      "registry_key": "kunskap_om_magi",
+      "icon_path": "hermes/skill/kunskap-om-magi/970f14baf14cc1c4fe47836d9b57aca8903f32a668fd007a362223c195835eec.webp",
+      "illustration_path": "skill/kunskap_om_magi/illustration/db455a6d-45a2-40c2-8b6d-384196714189.webp",
+      "illustration_wide_path": "skill/kunskap_om_magi/illustration_wide/880a03cc-8957-4432-bada-7604d84ce798.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "lakekonst",
+      "registry_key": "lakekonst",
+      "icon_path": "hermes/skill/lakekonst/8ad85fb40e611160f8f9d812b8cc04030c419acde2c6a7664595320c5dc80899.webp",
+      "illustration_path": "skill/lakekonst/illustration/a0322b96-eaff-447c-a8c1-81b0f24ae1d5.webp",
+      "illustration_wide_path": "skill/lakekonst/illustration_wide/c50dd319-cf7c-46ff-ab5f-c27a61a3905a.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "lasdyrkning",
+      "registry_key": "lasdyrkning",
+      "icon_path": "hermes/skill/lasdyrkning/6d0976ca4ddc3c8ff3d19f79be1017830a6cf19e492a467754d4b39b17f4bcb8.webp",
+      "illustration_path": "skill/lasdyrkning/illustration/19224c03-4f1a-40bb-9d8a-743b620c62b9.webp",
+      "illustration_wide_path": "skill/lasdyrkning/illustration_wide/4d3ef823-d98e-4656-ad17-cb14a99ac601.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "lasso",
+      "registry_key": "lasso",
+      "icon_path": "hermes/skill/lasso/b619d7fda66a9a4569cb897f176de576bc062c9150bb6dbc029e44940105fd15.webp",
+      "illustration_path": "skill/lasso/illustration/09283b7b-8d70-49b2-bc7c-8df65d58448f.webp",
+      "illustration_wide_path": "skill/lasso/illustration_wide/c9921890-3ea9-40b0-9a29-a49eb74f6f67.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "lyssna",
+      "registry_key": "lyssna",
+      "icon_path": "hermes/skill/lyssna/4bc3a62c928043d67d29ae5a50716ec0c73d25a68670116028386c96c89c0a78.webp",
+      "illustration_path": "skill/lyssna/illustration/9670c66b-b758-4a64-8505-25ecea57c23f.webp",
+      "illustration_wide_path": "skill/lyssna/illustration_wide/39818a0e-2868-4af7-aefe-24688a138184.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "muta",
+      "registry_key": "muta",
+      "icon_path": "hermes/skill/muta/12b4360e38fb23d39c44b63a819d51aa168fa5e81be45f76e684482d5ed80127.webp",
+      "illustration_path": "skill/muta/illustration/9f5127ba-469b-4762-80ca-9b0722d5f9de.webp",
+      "illustration_wide_path": "skill/muta/illustration_wide/9de4dbb2-d3e3-412d-80d6-0f2bfe8cd5c0.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "navigera",
+      "registry_key": "navigera",
+      "icon_path": "hermes/skill/navigera/dff01d4da6f6c6dd678459b6da941f8d55c8c756bbaf822f8a1df2104aac6497.webp",
+      "illustration_path": "skill/navigera/illustration/f6f1af0a-6ddd-4f4d-83aa-1b6eeb5f2d32.webp",
+      "illustration_wide_path": "skill/navigera/illustration_wide/f6c64539-b5a1-4f75-815e-c3a3e88dfa4d.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "omradeskannedom",
+      "registry_key": "omradeskannedom",
+      "icon_path": "hermes/skill/omradeskannedom/a21cfbbffa1a87a50a42afb47732cb963ec8e93435e0448f1e416b1d4408a169.webp",
+      "illustration_path": "skill/omradeskannedom/illustration/a7b06c95-1074-4a7b-b2a9-f63b67a3f32d.webp",
+      "illustration_wide_path": "skill/omradeskannedom/illustration_wide/b688c1f8-472b-4bbb-9c4c-4eb19c64aebc.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "orientering",
+      "registry_key": "orientering",
+      "icon_path": "hermes/skill/orientering/483ac0b651a54ba0216530159eccfa283081c86a40772264602a8612db20355d.webp",
+      "illustration_path": "skill/orientering/illustration/f3391382-ab79-429f-a00c-8b47220cc5ad.webp",
+      "illustration_wide_path": "skill/orientering/illustration_wide/12260e65-a7ff-43aa-8329-45537ad80bc8.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "overlevnad",
+      "registry_key": "overlevnad",
+      "icon_path": "hermes/skill/overlevnad/ef9c7db05a540e3d114fc2ca97b8c0487d36e96f86e0ba4b37d2b12f8c58e784.webp",
+      "illustration_path": "skill/overlevnad/illustration/bb13b820-6913-469a-abe7-02eda92cb0bf.webp",
+      "illustration_wide_path": "skill/overlevnad/illustration_wide/efd16039-6f4c-4412-a2c6-bc7fec476a2e.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "overtala",
+      "registry_key": "overtala",
+      "icon_path": "hermes/skill/overtala/3b266ddd74156d3d222d9ff11554ec7ed4640069d6f9817db0b6fc307ae584e5.webp",
+      "illustration_path": "skill/overtala/illustration/3e2e660b-fd89-4ad6-a421-2742f61c6398.webp",
+      "illustration_wide_path": "skill/overtala/illustration_wide/41cf41ad-42ff-4eb8-9a98-7cf7d8b83513.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "overtala_snabbt",
+      "registry_key": "overtala_snabbt",
+      "icon_path": "hermes/skill/overtala-snabbt/fe51c6f35aa1e7179483d7340c647856174cc9d85ae12be5173a5d91cc2c1ee1.webp",
+      "illustration_path": "skill/overtala_snabbt/illustration/9b8299fe-fb9d-4022-8c63-843b80f0e3f6.webp",
+      "illustration_wide_path": "skill/overtala_snabbt/illustration_wide/fd61aed2-8780-4877-81d3-0821ac4a3d59.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "ovriga_svard",
+      "registry_key": "ovriga_svard",
+      "icon_path": "hermes/skill/ovriga-svard/25c1973108915da5a9a498dd58f7359f0300b07aacd9838148f718080381a28e.webp",
+      "illustration_path": "skill/ovriga_svard/illustration/e7f68f24-2ab6-44a5-b3c6-8a6f5147d143.webp",
+      "illustration_wide_path": "skill/ovriga_svard/illustration_wide/655c1bc5-d6f2-445a-a2d3-30e97acd8f01.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "pilbagar",
+      "registry_key": "pilbagar",
+      "icon_path": "hermes/skill/pilbagar/d9705f3189c927e2478dd3ede34e5e252432c163df6014950b2f838bce83c119.webp",
+      "illustration_path": "skill/pilbagar/illustration/70f08613-dc8c-4628-ad7d-397eaa1ad27f.webp",
+      "illustration_wide_path": "skill/pilbagar/illustration_wide/9f5e022f-3ad5-4b06-8259-65abe0e93f37.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "piskor",
+      "registry_key": "piskor",
+      "icon_path": "hermes/skill/piskor/2e1c5cc0ce5a0ee13df1fdd8cc39ce997b894ffcc87ac3def105274d2d693e81.webp",
+      "illustration_path": "skill/piskor/illustration/23cc5199-19c2-4919-973a-93d235b89d82.webp",
+      "illustration_wide_path": "skill/piskor/illustration_wide/a51352cb-8ef2-4943-b3dc-eec221aa034e.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "rakning",
+      "registry_key": "rakning",
+      "icon_path": "hermes/skill/rakning/d2a75cadefe75255a7497b00d715b10c72c3b68d8c512df808bcfd890cf1325a.webp",
+      "illustration_path": "skill/rakning/illustration/cfa45644-50ee-496e-bc59-3dbe2aa04120.webp",
+      "illustration_wide_path": "skill/rakning/illustration_wide/54f72eb9-c0b6-4fbd-b05c-59b5273ae595.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "rida",
+      "registry_key": "rida",
+      "icon_path": "hermes/skill/rida/a3f92544e4996b227016550519caa461abe2854c66c2af88f40484fed93797f0.webp",
+      "illustration_path": "skill/rida/illustration/45ee1e28-e7c2-4738-9ab4-2d64e17e70ba.webp",
+      "illustration_wide_path": "skill/rida/illustration_wide/354574cb-c6b9-4b66-bb34-bafca5e05c01.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "schack_bradspel",
+      "registry_key": "schack_bradspel",
+      "icon_path": "hermes/skill/schack-bradspel/4377f177b7f39c592efbc3dc8f30e2ed9aac4caa9bddda85ba590cd5752ab79b.webp",
+      "illustration_path": "skill/schack_bradspel/illustration/3f74658c-0d49-4656-96a1-12ad27675e2d.webp",
+      "illustration_wide_path": "skill/schack_bradspel/illustration_wide/94dd73e4-f9b7-47b4-84b7-1510e0c160d2.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "simma",
+      "registry_key": "simma",
+      "icon_path": "hermes/skill/simma/033baa204512ab0eae797fc83d6e5dc494481bc2d81e11772859ebb5cdb83122.webp",
+      "illustration_path": "skill/simma/illustration/09001451-7b3e-4656-bf4f-f19ae57186b6.webp",
+      "illustration_wide_path": "skill/simma/illustration_wide/42a1b7e0-e2a4-4c75-a613-853f6e9fd4c2.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "sjunga_spela",
+      "registry_key": "sjunga_spela",
+      "icon_path": "hermes/skill/sjunga-spela/01ee8b8637bcfea7e90d8d2f7f8a5be57122abdc408c2e6a3870f166c69134f4.webp",
+      "illustration_path": "skill/sjunga_spela/illustration/67d731d0-2046-4af7-83f1-2d034906fc17.webp",
+      "illustration_wide_path": "skill/sjunga_spela/illustration_wide/f6760fc4-6967-413b-ac27-2dba61821c87.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "skidakning",
+      "registry_key": "skidakning",
+      "icon_path": "hermes/skill/skidakning/b11edb2c29d46bf5b446699b655df04cb6d800f46e8f51acaae1d80281b4b8a0.webp",
+      "illustration_path": "skill/skidakning/illustration/3be34106-973a-4099-ba56-283c9807415b.webp",
+      "illustration_wide_path": "skill/skidakning/illustration_wide/e8d3789e-0738-45b7-a3db-f6f199168818.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "skoldar",
+      "registry_key": "skoldar",
+      "icon_path": "hermes/skill/skoldar/2b3d71be39e397f9c2db22055e80ade3a39456f9605c5d58de6d0f7064053f05.webp",
+      "illustration_path": "skill/skoldar/illustration/6b1059f6-307b-4062-afff-477dc0de80cd.webp",
+      "illustration_wide_path": "skill/skoldar/illustration_wide/4ceaf419-d7fd-47bb-b80e-a5cbb12a9c41.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "skridskoakning",
+      "registry_key": "skridskoakning",
+      "icon_path": "hermes/skill/skridskoakning/fb0e802af814355563c843f56d039c1eda5dfbd6ca93113eafc0370588da7bc7.webp",
+      "illustration_path": "skill/skridskoakning/illustration/f7064337-d2d6-43b3-8129-a7669a5b48cc.webp",
+      "illustration_wide_path": "skill/skridskoakning/illustration_wide/6f248a96-ea38-47dc-b2e8-a83d2f08b00a.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "slagor_gissel",
+      "registry_key": "slagor_gissel",
+      "icon_path": "hermes/skill/slagor-gissel/c686799a178988a86b94cb245dbb1edcd466fbcd373cb9d08d60403807d246e5.webp",
+      "illustration_path": "skill/slagor_gissel/illustration/1fdace72-1241-4bf5-95ac-06ba21069b34.webp",
+      "illustration_wide_path": "skill/slagor_gissel/illustration_wide/5bc8aa40-cb6e-4205-ad02-f79c4075c4fd.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "slagsmal",
+      "registry_key": "slagsmal",
+      "icon_path": "hermes/skill/slagsmal/e443c2d06aa29f27b2a60d143333504a83b0cce775efe6c32545af996c2bc4e2.webp",
+      "illustration_path": "skill/slagsmal/illustration/2a41cccd-2c8b-4799-b394-b1b306856abc.webp",
+      "illustration_wide_path": "skill/slagsmal/illustration_wide/62327a84-cd79-46f5-a9da-f1c2ff31b24f.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "slungor",
+      "registry_key": "slungor",
+      "icon_path": "hermes/skill/slungor/ca77b9bb816016e87492a69e241f1b2a3c43b041baab8969d001ae2b7c59b4b5.webp",
+      "illustration_path": "skill/slungor/illustration/e0cc6400-309b-4925-a3c2-57e6e3c646ad.webp",
+      "illustration_wide_path": "skill/slungor/illustration_wide/ed6ff119-f09a-4865-bf2b-2a5f1fd3035d.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "smyga",
+      "registry_key": "smyga",
+      "icon_path": "hermes/skill/smyga/269bf06a756e308f86e32a925952b9c6d0e025a598272a7f42b46ed6cad00b9c.webp",
+      "illustration_path": "skill/smyga/illustration/11efa83f-3578-4d09-93d5-0a6ad690d4c6.webp",
+      "illustration_wide_path": "skill/smyga/illustration_wide/54a178b3-b91f-445e-a20a-d13895e6152b.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "spara",
+      "registry_key": "spara",
+      "icon_path": "hermes/skill/spara/434616aa37212e71b25e0d9e9fca00fa69c567f23887fd1445142f4afc0cd246.webp",
+      "illustration_path": "skill/spara/illustration/91200f31-8822-48ad-8f84-c5d6bd3941b1.webp",
+      "illustration_wide_path": "skill/spara/illustration_wide/edbe0568-dfe8-40d9-b66c-5f6339bba46d.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "spjut",
+      "registry_key": "spjut",
+      "icon_path": "hermes/skill/spjut/a76685eb03dc79880dba8ddf632dcbdfd9d4bb9812e0bbfa154c0ea7b0f4a047.webp",
+      "illustration_path": "skill/spjut/illustration/ad74c961-dfb4-4548-a5dc-5a15f50b3d1b.webp",
+      "illustration_wide_path": "skill/spjut/illustration_wide/79f70c9e-0e91-4db1-9d16-9b953624f10e.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "stangvapen",
+      "registry_key": "stangvapen",
+      "icon_path": "hermes/skill/stangvapen/a01edf1dc69a54da20dfb1acb5c36bb182ab2d0c2f5cd55e1e3a49654346acd4.webp",
+      "illustration_path": "skill/stangvapen/illustration/f4cc4917-70f0-4ef8-bae9-4f00dfbcb35c.webp",
+      "illustration_wide_path": "skill/stangvapen/illustration_wide/7b71e6d9-ae7b-45df-ba56-c607e49269e6.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "stavar",
+      "registry_key": "stavar",
+      "icon_path": "hermes/skill/stavar/80dc516f3b403c87b07ad654991f50d667836cd099a4e219dbecfdd6a55d7dc3.webp",
+      "illustration_path": "skill/stavar/illustration/63ca7ff5-0bea-4c40-8e89-016681542e39.webp",
+      "illustration_wide_path": "skill/stavar/illustration_wide/554ae78b-6b64-4b0c-908d-9eb79fa1b1ca.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "stjala_foremal",
+      "registry_key": "stjala_foremal",
+      "icon_path": "hermes/skill/stjala-foremal/87b6478a9555f48618d7d865143d7712ec64f89fbfdbe63caf56bd119c2eb319.webp",
+      "illustration_path": "skill/stjala_foremal/illustration/06e1baf0-8263-4a6d-9fe4-2dea7fd0f289.webp",
+      "illustration_wide_path": "skill/stjala_foremal/illustration_wide/199723b8-bf9e-4a87-b0cc-b3c7c6f822ee.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "taekwondo",
+      "registry_key": "taekwondo",
+      "icon_path": "hermes/skill/taekwondo/6b65c09b0bcef0cd4c251512f0617be759c984fd4d0ccb6e137b2e0f8412230c.webp",
+      "illustration_path": "skill/taekwondo/illustration/3c1e1a7e-b472-46f7-9ad0-b1ef9ddfc172.webp",
+      "illustration_wide_path": "skill/taekwondo/illustration_wide/00ca2bcc-5f3c-4338-ab84-a05a3be819f4.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "taktik",
+      "registry_key": "taktik",
+      "icon_path": "hermes/skill/taktik/7bbde35ede993ed448c6854d149e63f7a4e8dc5702ca0196793a8da751d98c20.webp",
+      "illustration_path": "skill/taktik/illustration/911860ec-86c7-4821-a179-e999ac777e0c.webp",
+      "illustration_wide_path": "skill/taktik/illustration_wide/d0cd3c8b-a1bc-4540-a9c5-245e6c3d9bdf.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "tva_vapen",
+      "registry_key": "tva_vapen",
+      "icon_path": "hermes/skill/tva-vapen/4aef86b7202b2f097634be636b04494d5beec68ec9e348fcf6f008df01dfda19.webp",
+      "illustration_path": "skill/tva_vapen/illustration/7853c3dc-fe27-4c61-bd6b-61feea1d5be3.webp",
+      "illustration_wide_path": "skill/tva_vapen/illustration_wide/83e970e3-4994-4778-8746-855f923ec853.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "undre_varlden",
+      "registry_key": "undre_varlden",
+      "icon_path": "hermes/skill/undre-varlden/90f767c062b87c4ac1863846ae1c245f10e460edec870cb8f442d8ec6e52cfde.webp",
+      "illustration_path": "skill/undre_varlden/illustration/89cd291a-34fa-4d44-a9f2-21494d2e95a3.webp",
+      "illustration_wide_path": "skill/undre_varlden/illustration_wide/7bf3c0b9-94eb-4416-9141-a25ce39796d6.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "upptacka_fara",
+      "registry_key": "upptacka_fara",
+      "icon_path": "hermes/skill/upptacka-fara/462b87be2763c97d60fd74944951402ef2d451b859c2383a2e8ecc4f82f7fec3.webp",
+      "illustration_path": "skill/upptacka_fara/illustration/df39d7a3-58a8-423d-aedd-cb1a034421df.webp",
+      "illustration_wide_path": "skill/upptacka_fara/illustration_wide/d84f9b1f-4f85-4343-8d57-d106711ef146.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "vardesatta",
+      "registry_key": "vardesatta",
+      "icon_path": "hermes/skill/vardesatta/e2f533faf7a3c044162ac1c14a65b52cb6ace2a45d39d95bcf83bc8633001f97.webp",
+      "illustration_path": "skill/vardesatta/illustration/db234aeb-de3a-4d0c-836a-53dec224c752.webp",
+      "illustration_wide_path": "skill/vardesatta/illustration_wide/79025b3e-ad87-443b-a092-af624ffee015.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "yxor",
+      "registry_key": "yxor",
+      "icon_path": "hermes/skill/yxor/4244ea92183081208d9038354c33164896864b13ce80cf28f4a87a7711d75938.webp",
+      "illustration_path": "skill/yxor/illustration/ee2a3465-ca71-4b76-8654-38d3405a671a.webp",
+      "illustration_wide_path": "skill/yxor/illustration_wide/cc8ced5b-5bce-4dd5-a4bf-15cc55d6442a.webp"
+    },
+    {
+      "table_name": "rule_skills",
+      "registry_id": "zoologi",
+      "registry_key": "zoologi",
+      "icon_path": "hermes/skill/zoologi/ee6538f7bf7bd7d4421204df095efde255427f8ff605d52ed139b57b18c50aef.webp",
+      "illustration_path": "skill/zoologi/illustration/d7889531-044c-4e8e-905c-466091829e98.webp",
+      "illustration_wide_path": "skill/zoologi/illustration_wide/89061f15-f5ca-4577-8113-9a5de23cdaae.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "2fc4fbc1-6447-4340-9fa3-3d7b6b9fd1a2",
+      "registry_key": "blindhet",
+      "icon_path": "hermes/symbol/blindhet/d9b22c268e8a4dd61a0e112e9ccfda539d8815c343536f4dfa40e24da355b9a4.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "5bf767c6-1711-4c1e-a874-e71a92bc1ac8",
+      "registry_key": "elementarskydd",
+      "icon_path": "hermes/symbol/elementarskydd/77de2e17f8c093a367f9b2edf3ee642501c5d609168b28611b25ca734f633bfa.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "d1d88783-fba6-471b-8de1-d57ef02709c7",
+      "registry_key": "epilepsi",
+      "icon_path": "hermes/symbol/epilepsi/b69ab7e927889f4733ce6eb466d3a7d60d6971da072a5bf00f612ce2d4ea06bc.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "45349b18-70b9-405d-8a30-015ec1daef0a",
+      "registry_key": "fjarrskrift",
+      "icon_path": "hermes/symbol/fjarrskrift/92cf8dc818c9633af9dca6049d5648651e0e8cfd0b85da11843ef00488714398.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "4db87094-2d1e-409f-a34a-32b383c246bc",
+      "registry_key": "fred",
+      "icon_path": "hermes/symbol/fred/061fefc52db535e9f793a0478ceeed2689e6b47d01d85efebacba23d4189a941.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "abd66cfd-03ba-4297-a7cc-796a15385cf3",
+      "registry_key": "fruktan",
+      "icon_path": "hermes/symbol/fruktan/d3b618fc09ef4e3774da35541caa540c1ce4f1898ff8867d121099ea264c1a79.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "1979cb4f-18aa-4e04-a04d-1a33cc4281e4",
+      "registry_key": "glomska",
+      "icon_path": "hermes/symbol/glomska/bb1b4a8bf9b9a979905dfd0a3bbd9252a1701bf32e19f1079936c8e53a2d9a88.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "54099cd4-0b84-4fdc-85d3-5bf17d835c43",
+      "registry_key": "kraft",
+      "icon_path": "hermes/symbol/kraft/28f307894f57ccb0a827d49516e8798342e777dd3a71feb0076336382a9b82db.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "e1f566c4-61fa-4d66-9364-ae0e9ce52753",
+      "registry_key": "lockelse",
+      "icon_path": "hermes/symbol/lockelse/10b1cb950aca4e226117e760d1cd85059e53f511570d9c9cb323db80ff435c89.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "e2aaa393-d566-43b4-b07d-54bbff18f235",
+      "registry_key": "osakerhet",
+      "icon_path": "hermes/symbol/osakerhet/c74f10d6e4a397ffdd71d25449cee6c6a34674f5799b4d286f81bfce772e600a.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "8a5ce9d5-8e14-4207-9893-d5905549860a",
+      "registry_key": "stopp",
+      "icon_path": "hermes/symbol/stopp/de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170.webp"
+    },
+    {
+      "table_name": "rule_magic_symbols",
+      "registry_id": "f924b330-3b74-42d8-aca4-755ce95a0a55",
+      "registry_key": "vanskap",
+      "icon_path": "hermes/symbol/vanskap/7bafa2f426d1a5d81b9c610722f6dc7d9c62e2a1a7050872b131c05d4d40a42c.webp"
+    }
+  ]
+}

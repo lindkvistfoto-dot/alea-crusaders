@@ -1,0 +1,65 @@
+{
+  "observed_at": "2026-10-20 13:46:32.259607+00",
+  "deleted_objects": [
+    {
+      "id": "5ba215ea-61bc-453f-a227-b88b6aad30b0",
+      "path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+      "bucket": "alea-hermes-source",
+      "version": "f7213779-509c-4997-b2ef-2adcc93317cb",
+      "size_bytes": 2974937,
+      "updated_at": "2026-10-18T11:46:50.461995+00:00"
+    },
+    {
+      "id": "dfa48253-cb07-4a47-863b-aad6e02b6e2e",
+      "path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "bucket": "alea-hermes-source",
+      "version": "d0f84ab9-245d-4390-8caf-6a40cedec690",
+      "size_bytes": 3021435,
+      "updated_at": "2026-10-17T15:24:50.423781+00:00"
+    },
+    {
+      "id": "46858c27-6295-48f7-a1ee-e102737f1d9f",
+      "path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+      "bucket": "alea-hermes-source",
+      "version": "6f851499-4d49-4ac0-a49b-6958c8ad29e6",
+      "size_bytes": 2453778,
+      "updated_at": "2026-10-19T20:30:35.868078+00:00"
+    },
+    {
+      "id": "43c559d1-1d28-45fe-a7ca-f537a2d467cb",
+      "path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+      "bucket": "alea-hermes-source",
+      "version": "d0c5b71e-e95c-44c3-a6af-820e76a9238f",
+      "size_bytes": 3027933,
+      "updated_at": "2026-10-18T12:14:52.324984+00:00"
+    },
+    {
+      "id": "85b5549e-586d-4079-8543-29e50e343709",
+      "path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+      "bucket": "alea-hermes-source",
+      "version": "d6a5412e-012a-471f-9ada-20baf796972e",
+      "size_bytes": 2721849,
+      "updated_at": "2026-10-20T05:00:35.346013+00:00"
+    }
+  ],
+  "removed_count": 5,
+  "freed_object_bytes": 14199932,
+  "source_before": {
+    "bytes": 1501614754,
+    "bucket": "alea-hermes-source",
+    "objects": 519
+  },
+  "source_after": {
+    "bytes": 1487414822,
+    "bucket": "alea-hermes-source",
+    "objects": 514
+  },
+  "remaining_objects_unchanged": 1260,
+  "unexpected_added_objects": [],
+  "unexpected_changed_objects": [],
+  "registry_rows_unchanged": 185,
+  "hermes_jobs_unchanged": 519,
+  "other_buckets_unchanged": 13,
+  "display_binary_sha_and_decode_unchanged": 5,
+  "further_deletion_authorized": false
+}
