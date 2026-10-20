@@ -141,3 +141,10 @@ test('scope is not a Supabase API key and is never returned by run results',asyn
   const p=await readEnvelope(a.credential,secret,()=>clock);assert.equal(p.type,'batch-access');assert.equal(p.exp-p.iat,1200);
   const out=JSON.stringify(await(await s.run(a.credential)).json());assert.ok(!out.includes(a.credential));assert.ok(!out.includes(secret));
 });
+
+test('GitHub immutable-ID subject format matches this exact repository only',async()=>{
+  const s=await setup();
+  const prefix='repo:lindkvistfoto-dot@337302317/alea-crusaders@1403008145';
+  assert.equal((await s.prepare('dry-run',{sub:prefix+':ref:refs/heads/main'})).status,200);
+  assert.equal((await s.prepare('dry-run',{sub:prefix.replace('1403008145','99')+':ref:refs/heads/main'})).status,403);
+});

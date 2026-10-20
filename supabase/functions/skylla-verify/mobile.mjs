@@ -80,8 +80,12 @@ export function createMobileHandler({policy,folders,env,fetcher=fetch,now=Date.n
       if(policy.execution_enabled!==true)fail('PRODUCTION_EXECUTION_DISABLED');
       if(c.ref!=='refs/heads/main'||c.event_name!=='workflow_dispatch')fail('PROTECTED_MAIN_DISPATCH_REQUIRED');
     }else if(mode!=='dry-run'||!policy.dry_run_refs.includes(c.ref)||!['push','workflow_dispatch'].includes(c.event_name))fail('TRUSTED_DRY_RUN_REQUIRED');
-    const expected=protectedJob?`repo:${policy.repository}:environment:${policy.environment}`:`repo:${policy.repository}:ref:${c.ref}`;
-    if(c.sub!==expected||(protectedJob?c.environment!==policy.environment:!!c.environment))fail('WRONG_JOB_ENVIRONMENT');
+    const [owner,repository]=policy.repository.split('/');
+    // GitHub's immutable-ID subject format is enabled on this repository.
+    // Accept only the two exact issuer formats; all individual ID claims are also checked.
+    const prefixes=[`repo:${policy.repository}`,`repo:${owner}@${policy.owner_id}/${repository}@${policy.repository_id}`];
+    const suffix=protectedJob?`:environment:${policy.environment}`:`:ref:${c.ref}`;
+    if(!prefixes.some(p=>c.sub===p+suffix)||(protectedJob?c.environment!==policy.environment:!!c.environment))fail('WRONG_JOB_ENVIRONMENT');
   };
   const ownerApproval=async(c,token)=>{
     if(!token||token.length>2048)fail('GITHUB_REVIEW_READ_TOKEN_REQUIRED');
