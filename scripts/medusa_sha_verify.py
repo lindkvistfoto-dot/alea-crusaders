@@ -348,12 +348,12 @@ def write_reports(report, output):
     extra = ["recorded_original_sha256", "storage_metadata_bytes", "hermes_recorded_source_bytes",
              "drive_sha256_provenance", "verification_method", "verified_at"]
     with (output / "MEDUSA_SHA_VERIFICATION.csv").open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=FIELDS + extra, extrasaction="ignore")
+        writer = csv.DictWriter(stream, fieldnames=FIELDS + extra, extrasaction="ignore", lineterminator="\n")
         writer.writeheader()
         writer.writerows(report["source_objects"])
     with (output / "MEDUSA_SHA_CLEANUP_CANDIDATES.csv").open("w", newline="") as stream:
         fields = ["system", "path", "content_sha256", "sha256", "drive_file_ids", "candidate_basis", "safe_to_delete"]
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         for entry in report["cleanup_candidates"]:
             writer.writerow({**entry, "drive_file_ids": ";".join(entry.get("drive_file_ids", []))})

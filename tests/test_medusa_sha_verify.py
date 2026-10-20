@@ -186,6 +186,8 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(original.read_bytes(), before)
             self.assertEqual({p.name for p in output.iterdir()}, {
                 "MEDUSA_SHA_VERIFICATION.json", "MEDUSA_SHA_VERIFICATION.csv", "MEDUSA_SHA_CLEANUP_CANDIDATES.csv"})
+            for csv_path in output.glob("*.csv"):
+                self.assertNotIn(b"\r\n", csv_path.read_bytes())
             text = (ROOT / "scripts/medusa_sha_verify.py").read_text()
             for forbidden in ("import requests", "import urllib", "create_client(", "createClient(",
                               ".storage.", "SUPABASE_SERVICE_ROLE_KEY", "workflow_dispatch"):
