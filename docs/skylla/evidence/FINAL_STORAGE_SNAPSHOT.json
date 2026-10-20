@@ -1,0 +1,85 @@
+{
+  "buckets": [
+    {
+      "bytes": "445300",
+      "objects": 3,
+      "bucket_id": "alea-character-round-backgrounds"
+    },
+    {
+      "bytes": "6147913",
+      "objects": 6,
+      "bucket_id": "alea-combat-animations"
+    },
+    {
+      "bytes": "12220260",
+      "objects": 110,
+      "bucket_id": "alea-equipment-art"
+    },
+    {
+      "bytes": "25564008",
+      "objects": 158,
+      "bucket_id": "alea-hermes-public"
+    },
+    {
+      "bytes": "1501614754",
+      "objects": 519,
+      "bucket_id": "alea-hermes-source"
+    },
+    {
+      "bytes": "12844676",
+      "objects": 40,
+      "bucket_id": "alea-hit-figures"
+    },
+    {
+      "bytes": "1765914",
+      "objects": 7,
+      "bucket_id": "alea-round-backgrounds"
+    },
+    {
+      "bytes": "59152854",
+      "objects": 174,
+      "bucket_id": "alea-skill-art"
+    },
+    {
+      "bytes": "65991104",
+      "objects": 220,
+      "bucket_id": "alea-spell-art"
+    },
+    {
+      "bytes": "2779066",
+      "objects": 14,
+      "bucket_id": "campaign-actor-images"
+    },
+    {
+      "bytes": "18373276",
+      "objects": 6,
+      "bucket_id": "campaign-location-assets"
+    },
+    {
+      "bytes": "15673476",
+      "objects": 5,
+      "bucket_id": "campaign-maps"
+    },
+    {
+      "bytes": "36002",
+      "objects": 1,
+      "bucket_id": "combat-icons"
+    },
+    {
+      "bytes": "7726272",
+      "objects": 2,
+      "bucket_id": "combat-scene-maps"
+    }
+  ],
+  "observed_at": "2026-10-20T11:27:57.539996+00:00",
+  "job_statuses": [
+    {
+      "jobs": 502,
+      "status": "active"
+    },
+    {
+      "jobs": 17,
+      "status": "failed"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "skills": [
+    {
+      "id": "akrobatik",
+      "icon_path": "hermes/skill/akrobatik/b86b465be50eff4df02d41163903b787118bce87ef1b0321a6bad300814f5133.webp",
+      "illustration_path": "skill/akrobatik/illustration/3bee8115-768a-4963-ac00-2050eaa98a83.webp",
+      "illustration_wide_path": "skill/akrobatik/illustration_wide/d5ba3c3f-0a79-4351-8e0e-10594fe7eb77.webp"
+    },
+    {
+      "id": "administrationsjuridik",
+      "icon_path": "hermes/skill/administrationsjuridik/734ebfc9498eaccf25ee54395ca736fc2daff665d1acae315e15e137a2455293.webp",
+      "illustration_path": "skill/administrationsjuridik/illustration/2b11cc09-7669-48ce-8eee-e45ff42fee71.webp",
+      "illustration_wide_path": "skill/administrationsjuridik/illustration_wide/e3b6f09f-cb70-4c63-852b-66de99d6249a.webp"
+    }
+  ],
+  "spells": [
+    {
+      "icon_path": "hermes/spell/antimagi/4f106315f37cd7f96d7e2c327f8a983a8c598b9c1feffe2aec6d0fe7b3ca9e74.webp",
+      "spell_key": "antimagi",
+      "cutout_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/837d1597-bd25-479f-8bc0-5d10aa782259.webp",
+      "effect_image_path": null,
+      "illustration_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/a7c04349-915c-4d51-a1a9-3adce847e8c8.webp",
+      "illustration_wide_path": "spell/1f8a94c6-a1a6-402a-9f55-15b2e8977ade/f63a8bfb-c022-4193-8e3c-c33afc6026f5.webp"
+    },
+    {
+      "icon_path": "hermes/spell/varseblivning/f018e27049444148fb86b1d13cecbb912fe09e4929144ef81bf8bc8ac734a96b.webp",
+      "spell_key": "varseblivning",
+      "cutout_path": null,
+      "effect_image_path": null,
+      "illustration_path": "spell/a481c285-31f0-469c-96ce-0599b05305df/7e91d1f6-3c08-4c9a-9d9d-cfe8718fb727.webp",
+      "illustration_wide_path": "spell/a481c285-31f0-469c-96ce-0599b05305df/e950df3d-bc1e-44dd-8dba-e05aa46cf5e5.webp"
+    }
+  ],
+  "observed_at": "2026-10-20T11:25:07.666333+00:00",
+  "storage_baseline": [
+    {
+      "bytes": "445300",
+      "objects": 3,
+      "bucket_id": "alea-character-round-backgrounds"
+    },
+    {
+      "bytes": "6147913",
+      "objects": 6,
+      "bucket_id": "alea-combat-animations"
+    },
+    {
+      "bytes": "12220260",
+      "objects": 110,
+      "bucket_id": "alea-equipment-art"
+    },
+    {
+      "bytes": "25564008",
+      "objects": 158,
+      "bucket_id": "alea-hermes-public"
+    },
+    {
+      "bytes": "1501614754",
+      "objects": 519,
+      "bucket_id": "alea-hermes-source"
+    },
+    {
+      "bytes": "12844676",
+      "objects": 40,
+      "bucket_id": "alea-hit-figures"
+    },
+    {
+      "bytes": "1765914",
+      "objects": 7,
+      "bucket_id": "alea-round-backgrounds"
+    },
+    {
+      "bytes": "59152854",
+      "objects": 174,
+      "bucket_id": "alea-skill-art"
+    },
+    {
+      "bytes": "65991104",
+      "objects": 220,
+      "bucket_id": "alea-spell-art"
+    },
+    {
+      "bytes": "2779066",
+      "objects": 14,
+      "bucket_id": "campaign-actor-images"
+    },
+    {
+      "bytes": "18373276",
+      "objects": 6,
+      "bucket_id": "campaign-location-assets"
+    },
+    {
+      "bytes": "15673476",
+      "objects": 5,
+      "bucket_id": "campaign-maps"
+    },
+    {
+      "bytes": "36002",
+      "objects": 1,
+      "bucket_id": "combat-icons"
+    },
+    {
+      "bytes": "7726272",
+      "objects": 2,
+      "bucket_id": "combat-scene-maps"
+    }
+  ]
+}

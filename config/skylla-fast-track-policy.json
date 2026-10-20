@@ -1,0 +1,18 @@
+{
+  "schema": "skylla-policy/v1",
+  "policy_id": "SKYLLA-FAST-TRACK-123",
+  "decision_reference": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+  "project_id": "wbmosmkirsitkonejzpg",
+  "bucket": "alea-hermes-source",
+  "independent_backup_required": false,
+  "exception": "Project owner explicitly accepts pending independent NAS backup for this bucket only.",
+  "source_bytes_required": true,
+  "full_png_decode_required": true,
+  "permanent_drive_readback_required": true,
+  "exact_byte_equality_required": true,
+  "dependencies_must_be_clear": true,
+  "separate_approval_per_delete_batch_required": true,
+  "first_pilot_max_objects": 5,
+  "automatic_deletion_enabled": false,
+  "kerberos_default_policy_unchanged": true
+}

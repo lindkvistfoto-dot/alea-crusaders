@@ -1,0 +1,262 @@
+{
+  "schema": "skylla-drive-readbacks/v1",
+  "count": 5,
+  "verified_bytes": 14199932,
+  "proofs": [
+    {
+      "schema": "skylla-drive-proof/v1",
+      "archive_status": "verified_readback",
+      "inbox_file_id": "1GHgNkHN0KHuSM4T3hnUq5lOjN_2iID9b",
+      "permanent_drive_file_id": "1-AKRprbY-c1d2FCgoc-JdK7ZLuOtF28w",
+      "target_folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+      "version_id": "sha256:1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "source_drive_verification": {
+        "sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+        "size_bytes": 2721849,
+        "verified_at": "2026-10-20T11:24:48.306476+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "archive_verification": {
+        "sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+        "size_bytes": 2721849,
+        "verified_at": "2026-10-20T11:24:48.360375+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "drive_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "size_bytes": 2721849,
+      "bytes_equal": true,
+      "verified_at": "2026-10-20T11:24:48.415246+00:00",
+      "descriptor": {
+        "bucket": "alea-hermes-source",
+        "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+        "kind": "spell",
+        "target_key": "varseblivning",
+        "expected_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+        "expected_size_bytes": 2721849,
+        "inbox_file_id": "1GHgNkHN0KHuSM4T3hnUq5lOjN_2iID9b",
+        "target_folder_id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+        "pilot_id": "KERBEROS-PILOT-01"
+      },
+      "source_inbox_parent_after": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "shared": false,
+      "archive_metadata_method": "metadata + native image search with exact parent/name and trashed=false",
+      "repeat_search_single_same_id": true
+    },
+    {
+      "schema": "skylla-drive-proof/v1",
+      "archive_status": "verified_readback",
+      "inbox_file_id": "1_pNuKW3HLBI9_DwuVrOPVOFbVitEYCx1",
+      "permanent_drive_file_id": "1XvAruubAwqnywdrDDy-abz7Caw_4HIdi",
+      "target_folder_id": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+      "version_id": "sha256:bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "source_drive_verification": {
+        "sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+        "size_bytes": 2453778,
+        "verified_at": "2026-10-20T11:24:48.498880+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "archive_verification": {
+        "sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+        "size_bytes": 2453778,
+        "verified_at": "2026-10-20T11:24:48.538726+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "drive_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "size_bytes": 2453778,
+      "bytes_equal": true,
+      "verified_at": "2026-10-20T11:24:48.577803+00:00",
+      "descriptor": {
+        "bucket": "alea-hermes-source",
+        "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+        "kind": "spell-cutout",
+        "target_key": "antimagi",
+        "expected_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+        "expected_size_bytes": 2453778,
+        "inbox_file_id": "1_pNuKW3HLBI9_DwuVrOPVOFbVitEYCx1",
+        "target_folder_id": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+        "pilot_id": "KERBEROS-PILOT-02"
+      },
+      "source_inbox_parent_after": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "shared": false,
+      "archive_metadata_method": "metadata + native image search with exact parent/name and trashed=false",
+      "repeat_search_single_same_id": true
+    },
+    {
+      "schema": "skylla-drive-proof/v1",
+      "archive_status": "verified_readback",
+      "inbox_file_id": "1odFegBa_8HHRHv1TjRxMocXeBFHK8gop",
+      "permanent_drive_file_id": "1z0Ji36h9hW_iDtQ3msbauAOAUF78qv3x",
+      "target_folder_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+      "version_id": "sha256:8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "source_drive_verification": {
+        "sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+        "size_bytes": 3027933,
+        "verified_at": "2026-10-20T11:24:48.672844+00:00",
+        "format": "PNG",
+        "width": 1672,
+        "height": 941,
+        "color_mode": "RGB",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "archive_verification": {
+        "sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+        "size_bytes": 3027933,
+        "verified_at": "2026-10-20T11:24:48.720658+00:00",
+        "format": "PNG",
+        "width": 1672,
+        "height": 941,
+        "color_mode": "RGB",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "drive_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "size_bytes": 3027933,
+      "bytes_equal": true,
+      "verified_at": "2026-10-20T11:24:48.766090+00:00",
+      "descriptor": {
+        "bucket": "alea-hermes-source",
+        "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+        "kind": "spell-illustration-wide",
+        "target_key": "varseblivning",
+        "expected_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+        "expected_size_bytes": 3027933,
+        "inbox_file_id": "1odFegBa_8HHRHv1TjRxMocXeBFHK8gop",
+        "target_folder_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "pilot_id": "KERBEROS-PILOT-03"
+      },
+      "source_inbox_parent_after": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "shared": false,
+      "archive_metadata_method": "metadata + native image search with exact parent/name and trashed=false",
+      "repeat_search_single_same_id": true
+    },
+    {
+      "schema": "skylla-drive-proof/v1",
+      "archive_status": "verified_readback",
+      "inbox_file_id": "1cGkeaiVuoV9QNopNaaMUK4KD3oh0kTd4",
+      "permanent_drive_file_id": "1-Klfq586WG_xsGSCg2YlGZB5caNhuhXR",
+      "target_folder_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+      "version_id": "sha256:ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "source_drive_verification": {
+        "sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+        "size_bytes": 3021435,
+        "verified_at": "2026-10-20T11:24:48.891059+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "archive_verification": {
+        "sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+        "size_bytes": 3021435,
+        "verified_at": "2026-10-20T11:24:48.962520+00:00",
+        "format": "PNG",
+        "width": 1254,
+        "height": 1254,
+        "color_mode": "RGBA",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "drive_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "size_bytes": 3021435,
+      "bytes_equal": true,
+      "verified_at": "2026-10-20T11:24:49.017833+00:00",
+      "descriptor": {
+        "bucket": "alea-hermes-source",
+        "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+        "kind": "skill",
+        "target_key": "administrationsjuridik",
+        "expected_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+        "expected_size_bytes": 3021435,
+        "inbox_file_id": "1cGkeaiVuoV9QNopNaaMUK4KD3oh0kTd4",
+        "target_folder_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "pilot_id": "KERBEROS-PILOT-04"
+      },
+      "source_inbox_parent_after": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "shared": false,
+      "archive_metadata_method": "metadata + native image search with exact parent/name and trashed=false",
+      "repeat_search_single_same_id": true
+    },
+    {
+      "schema": "skylla-drive-proof/v1",
+      "archive_status": "verified_readback",
+      "inbox_file_id": "1HBkgpvdGeTtV6WVNruSgDQdVYMTjvxfj",
+      "permanent_drive_file_id": "1btAgKpJ7EJxN0TdpVnPdlyRJRKC9Jt_P",
+      "target_folder_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+      "version_id": "sha256:c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "source_drive_verification": {
+        "sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+        "size_bytes": 2974937,
+        "verified_at": "2026-10-20T11:24:49.116458+00:00",
+        "format": "PNG",
+        "width": 1672,
+        "height": 941,
+        "color_mode": "RGB",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "archive_verification": {
+        "sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+        "size_bytes": 2974937,
+        "verified_at": "2026-10-20T11:24:49.163048+00:00",
+        "format": "PNG",
+        "width": 1672,
+        "height": 941,
+        "color_mode": "RGB",
+        "status": "verified_complete",
+        "complete_decode": true
+      },
+      "drive_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "size_bytes": 2974937,
+      "bytes_equal": true,
+      "verified_at": "2026-10-20T11:24:49.208446+00:00",
+      "descriptor": {
+        "bucket": "alea-hermes-source",
+        "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+        "kind": "skill-illustration-wide",
+        "target_key": "akrobatik",
+        "expected_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+        "expected_size_bytes": 2974937,
+        "inbox_file_id": "1HBkgpvdGeTtV6WVNruSgDQdVYMTjvxfj",
+        "target_folder_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "pilot_id": "KERBEROS-PILOT-05"
+      },
+      "source_inbox_parent_after": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "shared": false,
+      "archive_metadata_method": "metadata + native image search with exact parent/name and trashed=false",
+      "repeat_search_single_same_id": true
+    }
+  ]
+}
