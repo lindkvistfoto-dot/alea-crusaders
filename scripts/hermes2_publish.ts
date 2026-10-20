@@ -9,7 +9,6 @@ import { assertSpellCutoutWritable } from "./hermes2_asset_profiles.ts";
 
 const url=Deno.env.get("SUPABASE_URL")||"";
 const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
-const ghToken=Deno.env.get("GITHUB_TOKEN")||"";
 const ghSha=Deno.env.get("GITHUB_SHA")||"";
 const ghRef=Deno.env.get("GITHUB_REF")||"";
 const ghRun=Deno.env.get("GITHUB_RUN_ID")||"";
@@ -20,28 +19,12 @@ if(Deno.args.length!==2)throw Error("Usage: deno run -A scripts/hermes2_publish.
 const db=createClient(url,secret,{auth:{persistSession:false}});
 const manifest=JSON.parse(await Deno.readTextFile(Deno.args[0]));
 const outputRoot=Deno.args[1];
-if(manifest.schema!==1||!Array.isArray(manifest.assets)||manifest.assets.length<1)throw Error("INVALID_MANIFEST");
+if(manifest.schema!==2||!["pilot","publish"].includes(manifest.publication_mode)||!Array.isArray(manifest.assets)||manifest.assets.length<1)throw Error("INVALID_MANIFEST");
 
 function bytesToHex(data:Uint8Array){return [...data].map(b=>b.toString(16).padStart(2,"0")).join("")}
 async function digest(type:"SHA-1"|"SHA-256",bytes:Uint8Array){
  const buffer=new ArrayBuffer(bytes.length);new Uint8Array(buffer).set(bytes);
  return bytesToHex(new Uint8Array(await crypto.subtle.digest(type,buffer)));
-}
-async function blobSha(bytes:Uint8Array){
- const prefix=new TextEncoder().encode("blob "+bytes.length+"\0");
- const combined=new Uint8Array(prefix.length+bytes.length);
- combined.set(prefix);combined.set(bytes,prefix.length);
- return digest("SHA-1",combined);
-}
-async function assertGithubOriginal(asset:any,raw:Uint8Array){
- const expected=await blobSha(raw);
- const target=`https://api.github.com/repos/${repo}/contents/${asset.source_path}?ref=${ghSha}`;
- const response=await fetch(target,{headers:{Accept:"application/vnd.github+json",
-  ...(ghToken?{Authorization:"Bearer "+ghToken}:{}),"X-GitHub-Api-Version":"2022-11-28"}});
- if(!response.ok)throw Error("GITHUB_SOURCE_LOOKUP_"+response.status);
- const data=await response.json();
- if(data.sha!==expected)throw Error("GITHUB_BLOB_SHA_MISMATCH");
- return expected;
 }
 async function verifyStorage(bucket:string,path:string,sha:string){
  const {data,error}=await db.storage.from(bucket).download(path);
@@ -50,11 +33,28 @@ async function verifyStorage(bucket:string,path:string,sha:string){
  if(await digest("SHA-256",bytes)!==sha)throw Error("STORAGE_SHA256_MISMATCH "+bucket);
 }
 async function immutableUpload(bucket:string,path:string,bytes:Uint8Array,mime:string,sha:string){
+ if(!["alea-hermes-public","alea-spell-art","alea-skill-art"].includes(bucket)||mime!=="image/webp"||!path.endsWith(".webp"))throw Error("DISPLAY_WEBP_ONLY");
  const {error}=await db.storage.from(bucket).upload(path,new Blob([new Uint8Array(bytes)],{type:mime}),
   {upsert:false,contentType:mime,cacheControl:"31536000"});
  if(error&&!/already exists|duplicate|409|resource already/i.test(error.message))
   throw Error("STORAGE_UPLOAD_FAILED "+bucket+" "+error.message);
  await verifyStorage(bucket,path,sha);
+}
+async function verifyDelivery(bucket:string,path:string,sha:string){
+ if(bucket==="alea-hermes-public"){
+   const publicUrl=db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+   const response=await fetch(publicUrl,{cache:"no-store"});
+   if(!response.ok)throw Error("PUBLIC_IMAGE_UNAVAILABLE "+response.status);
+   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==sha)
+    throw Error("PUBLIC_IMAGE_SHA_MISMATCH");
+  }else{
+   const {data:signed,error:signedError}=await db.storage.from(bucket).createSignedUrl(path,60);
+   if(signedError||!signed?.signedUrl)throw Error("PRIVATE_IMAGE_SIGNING_FAILED "+(signedError?.message||""));
+   const response=await fetch(signed.signedUrl,{cache:"no-store"});
+   if(!response.ok)throw Error("PRIVATE_IMAGE_UNAVAILABLE "+response.status);
+   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==sha)
+    throw Error("PRIVATE_IMAGE_SHA_MISMATCH");
+  }
 }
 async function recordEvent(id:string,state:string,message:string){
  const {error}=await db.from("hermes_job_events").insert({job_id:id,state,message:message.slice(0,400)});
@@ -75,7 +75,7 @@ function checkAsset(a:any){
  if(!a||!["spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
- const expected=`assets/hermes/originals/${a.kind}/${a.target_key}/${a.source_sha256}.png`;
+ const expected=/^drive:\/\/[A-Za-z0-9_-]{10,160}$/.test(a.source_path||"");
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  const spellWide=a.kind==="spell-illustration-wide";
  const spellSquare=a.kind==="spell-illustration";
@@ -86,40 +86,44 @@ function checkAsset(a:any){
  const expectsAlpha=!illustration;
  const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" = spellCutout?"cutout_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
  const validDimensions=spellWide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
- if(a.source_path!==expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
+ if(!expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
  const skill=a.kind==="skill"||(illustration&&!spellArt);
  return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
-  field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:`${a.kind}/${a.target_key}/${a.source_sha256}.png`,
+  field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:a.source_path,
   appPath:spellArt?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
 type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null};
 async function publish(a:any){
  const {table,field,sourcePath,appPath:declaredAppPath,assetField}=checkAsset(a);
- const raw=new Uint8Array(await Deno.readFile(a.source_path));
  const app=new Uint8Array(await Deno.readFile(outputRoot+"/"+a.app_file));
- if(raw.length!==a.source_bytes||app.length!==a.app_bytes||app.length>(a.kind==="spell-illustration-wide"?2500000:500000))throw Error("FILE_SIZE_MISMATCH");
- if(await digest("SHA-256",raw)!==a.source_sha256)throw Error("SOURCE_SHA_MISMATCH");
+ if(!Number.isInteger(a.source_bytes)||a.source_bytes<100||a.source_bytes>8388608||app.length!==a.app_bytes||app.length>(a.kind==="spell-illustration-wide"?524288:500000))throw Error("FILE_SIZE_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
- const gitBlob=await assertGithubOriginal(a,raw);
  const targetFields=table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
  const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
+ const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+ if(manifest.publication_mode==="pilot"){
+  const pilotPath="hermes/minotaurus-pilot/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp";
+  await immutableUpload(appBucket,pilotPath,app,"image/webp",a.app_sha256);
+  await verifyDelivery(appBucket,pilotPath,a.app_sha256);
+  const {data:after,error}=await db.from(table).select(targetFields).eq("id",target.id).returns<ArtTarget[]>().single();
+  if(error||JSON.stringify(after)!==JSON.stringify(target))throw Error("PILOT_TARGET_CHANGED");
+  console.log("HERMES_DIRECT_PILOT_VERIFIED",JSON.stringify({kind:a.kind,target_key:a.target_key,source_path:a.source_path,source_sha256:a.source_sha256,source_bytes:a.source_bytes,app_sha256:a.app_sha256,app_bytes:app.length,bucket:appBucket,path:pilotPath,pointers_unchanged:true}));
+  return;
+ }
  const {data:existing,error:jobError}=await db.from("hermes_jobs").select("*")
   .eq("kind",a.kind).eq("target_key",a.target_key).eq("source_sha256",a.source_sha256).maybeSingle();
  if(jobError)throw Error("JOB_READ "+jobError.message);
  if(existing?.app_sha256 && existing.app_sha256!==a.app_sha256)throw Error("SOURCE_ALREADY_REGISTERED_DIFFERENT_WEBP");
  // Explicit HERMES publish dispatches may replace an existing wide illustration. The publisher snapshots the old path in previous_icon_path and activates only with compare-and-set below; concurrent changes still fail closed.
  if(existing?.status==="rolled_back")throw Error("JOB_WAS_ROLLED_BACK");
- if(a.kind==="skill-illustration"){
-  const obsoletePath="hermes/skill-illustration/"+a.target_key+"/"+a.app_sha256+".webp";
-  const {error:cleanupError}=await db.storage.from("alea-hermes-public").remove([obsoletePath]);
-  if(cleanupError)console.warn("ORPHANED_PUBLIC_ILLUSTRATION_CLEANUP_FAILED",cleanupError.message);
- }
  if(existing?.status==="active"){
   if(target[assetField]!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
+  await verifyStorage(appBucket,existing.app_path,a.app_sha256);
+  await verifyDelivery(appBucket,existing.app_path,a.app_sha256);
   console.log("ALREADY_ACTIVE",a.kind,a.target_key);return;
  }
  // Cutouts are pilot-only and fail closed if the spell already has an image.
@@ -127,38 +131,23 @@ async function publish(a:any){
  // deterministic, content-derived asset path.
  if(a.kind==="spell-cutout")assertSpellCutoutWritable(target.cutout_path,appPath);
  const jobBody={kind:a.kind,target_key:a.target_key,source_sha256:a.source_sha256,app_sha256:a.app_sha256,
-  source_path:sourcePath,app_path:appPath,source_bytes:raw.length,app_bytes:app.length,
-  github_blob_sha:gitBlob,github_commit_sha:ghSha,origin:"github_actions",
+  source_path:sourcePath,app_path:appPath,source_bytes:a.source_bytes,app_bytes:app.length,
+  github_blob_sha:null,github_commit_sha:ghSha,origin:"github_actions",
   github_run_id:ghRun,created_by:null,status:"staged",attempts:1,previous_icon_path:target[assetField]};
  let job=existing;
  if(job){
-  await patch(job.id,{attempts:(job.attempts||0)+1,status:"staged",app_path:appPath,error_code:null,error_message:null});
+  await patch(job.id,{attempts:(job.attempts||0)+1,status:"staged",source_path:sourcePath,source_bytes:a.source_bytes,github_blob_sha:null,github_commit_sha:ghSha,github_run_id:ghRun,app_path:appPath,error_code:null,error_message:null});
  }else{
   const {data:created,error:createError}=await db.from("hermes_jobs").insert(jobBody).select("*").single();
   if(createError)throw Error("JOB_CREATE "+createError.message);
   job=created;
  }
  try{
-  await recordEvent(job.id,"staged","HERMES 2.1 source validated; GitHub blob "+gitBlob);
-  await immutableUpload("alea-hermes-source",sourcePath,raw,"image/png",a.source_sha256);
-  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+  await recordEvent(job.id,"staged","Drive original decoded and SHA-256 verified: "+a.source_path);
   await immutableUpload(appBucket,appPath,app,"image/webp",a.app_sha256);
-  await patch(job.id,{status:"archived",github_blob_sha:gitBlob,github_commit_sha:ghSha});
-  await recordEvent(job.id,"archived","Immutable GitHub original and Supabase readback verified");
-  if(appBucket==="alea-hermes-public"){
-   const publicUrl=db.storage.from(appBucket).getPublicUrl(appPath).data.publicUrl;
-   const response=await fetch(publicUrl,{cache:"no-store"});
-   if(!response.ok)throw Error("PUBLIC_IMAGE_UNAVAILABLE "+response.status);
-   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==a.app_sha256)
-    throw Error("PUBLIC_IMAGE_SHA_MISMATCH");
-  }else{
-   const {data:signed,error:signedError}=await db.storage.from(appBucket).createSignedUrl(appPath,60);
-   if(signedError||!signed?.signedUrl)throw Error("PRIVATE_IMAGE_SIGNING_FAILED "+(signedError?.message||""));
-   const response=await fetch(signed.signedUrl,{cache:"no-store"});
-   if(!response.ok)throw Error("PRIVATE_IMAGE_UNAVAILABLE "+response.status);
-   if(await digest("SHA-256",new Uint8Array(await response.arrayBuffer()))!==a.app_sha256)
-    throw Error("PRIVATE_IMAGE_SHA_MISMATCH");
-  }
+  await patch(job.id,{status:"archived",github_blob_sha:null,github_commit_sha:ghSha});
+  await recordEvent(job.id,"archived","Drive original retained; optimized WebP Storage readback verified");
+  await verifyDelivery(appBucket,appPath,a.app_sha256);
   await patch(job.id,{status:"verified"});
   const previous=job.previous_icon_path;
   if(target[assetField]!==previous&&target[assetField]!==appPath)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
@@ -181,5 +170,9 @@ async function publish(a:any){
   throw e;
  }
 }
-for(const asset of manifest.assets)await publish(asset);
+const failures=[];
+for(const asset of manifest.assets){
+ try{await publish(asset)}catch(e){failures.push(String(e));console.error("HERMES_ASSET_FAILED",asset.kind,asset.target_key,String(e))}
+}
+if(failures.length)throw Error("HERMES_BATCH_FAILED "+failures.length);
 console.log("HERMES 2.1: verified publication finished.");

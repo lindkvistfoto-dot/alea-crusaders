@@ -11,3 +11,7 @@ gha-creds-*.json
 # Python archive verification / synthetic tests
 __pycache__/
 *.py[cod]
+
+# MINOTAURUS: originals stay in Google Drive, never in this working tree
+/assets/hermes/originals/
+/hermes/quarantine/

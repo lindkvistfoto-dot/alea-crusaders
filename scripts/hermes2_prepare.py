@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HERMES 2.1: deterministic, immutable GitHub-original -> verified WebP + manifest.
+"""HERMES 2.1: deterministic PNG bytes -> verified WebP + manifest.
 
 This stage intentionally does NOT change Supabase, existing icons or spell rules.
 Publishing is a separate, authenticated HERMES step after these integrity gates pass.
@@ -34,7 +34,14 @@ def prepare(source: Path, output_root: Path) -> dict:
     if not match:
         raise ValueError(f"invalid HERMES original path: {relative}")
     kind, key, digest = match.groups()
-    raw = source.read_bytes()
+    return prepare_bytes(source.read_bytes(), kind, key, digest, output_root,
+                         "assets/hermes/originals/" + relative)
+
+
+def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Path, source_path: str) -> dict:
+    relative = f"{kind}/{key}/{digest}.png"
+    if not PATH_PATTERN.fullmatch(relative):
+        raise ValueError("invalid HERMES profile, key or SHA-256")
     if not 100 <= len(raw) <= MAX_SOURCE:
         raise ValueError(f"{relative}: invalid source byte size")
     if sha256(raw) != digest:
@@ -98,7 +105,7 @@ def prepare(source: Path, output_root: Path) -> dict:
     target.write_bytes(webp)
     manifest = {
         "schema": 1, "kind": kind, "target_key": key,
-        "source_path": "assets/hermes/originals/" + relative,
+        "source_path": source_path,
         "source_sha256": digest, "source_bytes": len(raw),
         "app_file": target.relative_to(output_root).as_posix(),
         "app_sha256": app_sha, "app_bytes": len(webp),
@@ -124,7 +131,7 @@ def main() -> None:
             except ValueError as error:
                 raise SystemExit(f"Path outside HERMES originals: {path}") from error
     else:
-        originals = sorted(ROOT.glob("*/*/*.png"))
+        raise SystemExit("GitHub-original intake retired; use hermes_drive_intake.py")
     if not originals:
         raise SystemExit("No immutable HERMES original PNGs found")
     result = [prepare(path, args.output) for path in originals]

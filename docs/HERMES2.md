@@ -1,3 +1,5 @@
+> Historisk dokumentation. Originalpublicering från GitHub/HERMES 2.0 är stängd genom MINOTAURUS. Aktiv standard: [HERMES.md](HERMES.md).
+
 # HERMES 2.0 — LÅST MÅLARKITEKTUR OCH DRIFTSKONTRAKT
 
 **Beslutad 2026-10-15.** Status: **Pilot driftsatt, full produktionskedja ännu inte slutverifierad.**

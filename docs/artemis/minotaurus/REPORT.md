@@ -1,0 +1,42 @@
+# MINOTAURUS — Issue #128 delivery
+
+## Result
+
+One proposed commit removes 547 original PNGs (1,549,957,260 bytes) and 18 quarantine files (14,155,998 bytes) from the current tree: **1,564,113,258 bytes / 1,564.11 MB** of original assets. Existing WebP files, UI manifests and production image pointers are retained. Main and Git history are unchanged until this PR is reviewed/merged; historical Git objects remain afterward.
+
+Local full-tree checkout median: **7.6467 s before → 0.2775 s after** (3 fresh destinations each; existing local Git objects, no network). Measured tree size: 1,633,186,234 → 69,048,452 bytes. See `CHECKOUT.json` for exact samples and measured trees. This is filesystem checkout materialization, not a new GitHub Actions clone measurement. PR #113 records a historical ~117.4 s Actions transfer; no comparable new Actions transfer measurement is available yet.
+
+## Direct publication
+
+The existing Drive intake, Pillow 12.3.0 converter, Supabase client, buckets, job log and compare-and-set activation are reused. No new framework, credentials, bucket, database schema or RLS policy is introduced. PNG bytes are validated in memory and never emitted to Git or Supabase. Only optimized WebP and metadata leave conversion. Source SHA-256 is pinned in the queue instruction; manifest paths use stable `drive://<file-id>` provenance.
+
+All eight existing HERMES 2.1 kinds retain their field/bucket routing, dimensions and transparency rules. Independent queue items continue after an item fails, with a failed final batch status. Source bucket uploads and the previous destructive public-illustration cleanup are removed. Already-active jobs only verify their existing WebP; historical provenance and active pointers are retained.
+
+Pilot mode uses a separate content-addressed display path and performs Storage download, public/signed URL checksum verification and unchanged-target readback without writing jobs or target references. `docs/artemis/minotaurus/pilot-request.json` is the exact STOPP pilot instruction; it is deliberately outside the active queue so merging this PR cannot implicitly publish it.
+
+## Evidence and remaining pilot work
+
+- Real Drive STOPP original downloaded from the existing Inbox: Drive ID `1I6Wx2kTtVqN2l76cjwqvdOmN3_iLDY6C`, 2,678,163 PNG bytes, SHA-256 `bc00be5e732aca25b78a7ff7c8cdceed07f097e922da73c13bb44fc05e5b3e49`.
+- Existing converter generated 167,144 WebP bytes, SHA-256 `de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170`, exactly matching the currently active STOPP content-addressed path. See `DRIVE_CONVERSION.json`.
+- SQL readback at **2026-10-20 18:46:11 UTC**: `alea-hermes-source` **0 objects / 0 bytes**; active STOPP pointer unchanged.
+- Existing `hermes-v2` Edge Function is now **version 10, ACTIVE, verify_jwt=true**. Deployed source readback confirms no `.upload(` and rejects every publication action except explicit legacy icon rollback. Existing admin authentication is retained. No production image reference was changed.
+- Local tests exercise real conversion for all eight kinds; publisher tests execute the production publisher with mocked Storage/DB responses, testing isolated pilot writes, readback corruption, CAS conflict, already-active verification and rejected legacy/untrusted input. These are not live Storage upload evidence.
+
+**Remaining merge gate:** run the new main-only Drive workflow once in `mode=pilot` with the committed STOPP instruction, using the existing Google WIF and `HERMES_SUPABASE_SERVICE_ROLE_KEY`; retain `HERMES_DIRECT_PILOT_VERIFIED`, confirm the isolated WebP by readback, and recheck source count 0 and unchanged active pointer. The new code has not been exercised in a live Storage upload run. The local executor has no usable publishing credentials/network path; terminal requests stalled and were abandoned. The configured main-only Actions identity is reused rather than widening WIF trust, adding a token or introducing a broker. Deno typecheck is included in focused CI; Deno is not installed locally. No new live publication success is claimed.
+
+The PR remains **draft / not ready to merge** until those live checks are resolved through the existing authorized runner. Review can proceed with all completed code and deletions in one commit. No auto-merge.
+
+## Removed dependencies and overlap
+
+No runtime JS/HTML consumers of `assets/hermes/originals/` or `hermes/quarantine/` remain. The Drive intake no longer calls GitHub upload/dispatch; the publisher no longer fetches GitHub originals or reads/writes source Storage. The old HERMES 2.1, UI, legacy-reference and Gallery Kit publication workflows explicitly fail and have no PNG push trigger, so this deletion cannot start original publication. UI upload is staged for a separately reviewed Drive migration; existing optimized static UI is retained. Historical verification/archive tools and pure offline converter helpers still mention old paths for audit/restore; they are not active publication dependencies.
+
+PR **#113** overlaps the old HERMES 2.1/UI checkout paths, source hydration and publisher fault isolation. MINOTAURUS supersedes its GitHub-source intake/hydration approach, incorporates blobless sparse checkout for Drive intake and independent batch failure handling, and removes the original consumer entirely. Do not merge #113 unchanged after this PR: close/supersede it or re-scope its remaining relevant measurements/tests after review. #113 is not edited or merged here.
+
+PRs **#126 and #127 are untouched**, including their branches, configuration and data. `config/hermes-drive-folders.json` is unchanged. No Drive original or existing display asset was deleted. The 29 inherited CI failures were not investigated.
+
+## Focused verification
+
+- 47 JavaScript tests passed across 7 relevant files.
+- 15 Python tests passed: 3 direct-flow tests, 2 Git regression guard tests, 10 existing HERMES conversion tests.
+- Publisher and legacy Edge Function TypeScript syntax parsed locally; executable legacy rejection tests cover auth/method errors, PNG multipart rejection, import/retry 410 and diagnostics.
+- Git diff whitespace check and proposed-tree original guard pass. CI repeats the focused regression suite and runs Deno typecheck.

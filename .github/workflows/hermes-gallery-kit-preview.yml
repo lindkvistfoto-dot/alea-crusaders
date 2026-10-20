@@ -1,33 +1,13 @@
-name: HERMES Gallery Kit – verified preview import
+name: HERMES – hermes-gallery-kit-preview retired
 on:
-  push:
-    branches:
-      - sisyphus/arcane-gallery-shared-mechanics-20261016
-    paths:
-      - 'scripts/hermes_gallery_kit.py'
-      - 'assets/hermes/originals/ui/arcane-gallery-kit/*.zip'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
-concurrency:
-  group: hermes-gallery-kit-preview-v01
-  cancel-in-progress: false
-
+  contents: read
 jobs:
-  import:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/sisyphus/arcane-gallery-shared-mechanics-20261016'
+  retired:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install pinned image verifier
-        run: python -m pip install Pillow==12.3.0
-      - name: Verify immutable original and publish 29 lossless sprites to preview branch
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/hermes_gallery_kit.py
+      - name: Reject retired original publication
+        run: |
+          echo "::error::MINOTAURUS: GitHub-original publication retired. Use hermes/queue Drive intake; existing WebP assets remain available."
+          exit 1

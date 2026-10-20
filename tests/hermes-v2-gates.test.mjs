@@ -46,23 +46,14 @@ describe('HERMES 2.0 release safety contracts',()=>{
   expect(edge).toContain('if(!profile?.is_admin)return fail(403,"ADMIN_REQUIRED"');
   expect(edge).toContain('ADMIN_LOOKUP_FAILED');
  });
- it('only activates after bytes, archive, delivery, and target readback',()=>{
-  const edge=read('supabase/functions/hermes-v2/index.ts');
-  const checks=['pngInfo(src)','webpInfo(out)','await store(SOURCE','await store(PUBLIC','await archive(','await checkReadback(PUBLIC','await fetch(publicUrl','DATABASE_READBACK_MISMATCH'];
-  for(const x of checks)expect(edge).toContain(x);
-  expect(edge.indexOf('await fetch(publicUrl')).toBeLessThan(edge.indexOf('.update({icon_path:job.app_path})'));
-  expect(edge).toContain('GITHUB_TOKEN_NOT_CONFIGURED');
- });
- it('supports signed, immutable one-click Osäkerhet import from archived GitHub bytes',()=>{
-  const edge=read('supabase/functions/hermes-v2/index.ts');
-  const ui=read('features/combat/hermes2.js');
-  expect(edge).toContain('body.action==="import_osakerhet"');
-  expect(edge).toContain('PILOT_PNG_CHECKSUM_MISMATCH');
-  expect(edge).toContain('PILOT_GIT_SHA_MISMATCH');
-  expect(edge).toContain('legacyPath="assets/spells/arcane-ivory/"');
-  expect(edge).toContain('auth.getUser(jwt)');
-  expect(ui).toContain('Kör Osäkerhet-pilot utan uppladdning');
-  expect(ui).toContain("action:'import_osakerhet'");
+ it('retires import, retry and original staging while retaining explicit rollback',()=>{
+  const edge=read('supabase/functions/hermes-v2/index.ts'),ui=read('features/combat/hermes2.js');
+  expect(edge).toContain('HERMES_ORIGINAL_PUBLICATION_RETIRED');
+  expect(edge).toContain('body.action!=="rollback"');
+  expect(edge).not.toContain('.upload(');expect(edge).not.toContain('api.github.com');
+  expect(edge).not.toContain('alea-hermes-source');
+  expect(edge).toContain('ROLLBACK_READBACK_FAILED');
+  expect(ui).not.toContain('FormData');expect(ui).not.toContain("action:'retry'");
  });
  it('recognizes content-addressed HERMES icon paths in both admin and combat',()=>{
   const art=read('features/combat/spell-art.js'),runtime=read('features/combat/runtime.js'),symbols=read('features/combat/admin-symbols.js');
