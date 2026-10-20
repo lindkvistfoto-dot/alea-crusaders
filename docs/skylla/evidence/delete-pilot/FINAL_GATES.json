@@ -1,0 +1,82 @@
+[
+  {
+    "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+    "technical_gate": {
+      "eligible_for_delete_proposal": true,
+      "safe_to_delete": false,
+      "owner_approval_verified": false,
+      "restore_readback_verified": true,
+      "deletion_status": "awaiting_separate_batch_approval",
+      "blocking_issues": [],
+      "estimated_reclaimable_bytes": 2721849,
+      "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+      "delete_api_invoked": false
+    },
+    "owner_approved": true,
+    "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json"
+  },
+  {
+    "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+    "technical_gate": {
+      "eligible_for_delete_proposal": true,
+      "safe_to_delete": false,
+      "owner_approval_verified": false,
+      "restore_readback_verified": true,
+      "deletion_status": "awaiting_separate_batch_approval",
+      "blocking_issues": [],
+      "estimated_reclaimable_bytes": 2453778,
+      "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+      "delete_api_invoked": false
+    },
+    "owner_approved": true,
+    "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json"
+  },
+  {
+    "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+    "technical_gate": {
+      "eligible_for_delete_proposal": true,
+      "safe_to_delete": false,
+      "owner_approval_verified": false,
+      "restore_readback_verified": true,
+      "deletion_status": "awaiting_separate_batch_approval",
+      "blocking_issues": [],
+      "estimated_reclaimable_bytes": 3027933,
+      "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+      "delete_api_invoked": false
+    },
+    "owner_approved": true,
+    "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json"
+  },
+  {
+    "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+    "technical_gate": {
+      "eligible_for_delete_proposal": true,
+      "safe_to_delete": false,
+      "owner_approval_verified": false,
+      "restore_readback_verified": true,
+      "deletion_status": "awaiting_separate_batch_approval",
+      "blocking_issues": [],
+      "estimated_reclaimable_bytes": 3021435,
+      "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+      "delete_api_invoked": false
+    },
+    "owner_approved": true,
+    "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json"
+  },
+  {
+    "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+    "technical_gate": {
+      "eligible_for_delete_proposal": true,
+      "safe_to_delete": false,
+      "owner_approval_verified": false,
+      "restore_readback_verified": true,
+      "deletion_status": "awaiting_separate_batch_approval",
+      "blocking_issues": [],
+      "estimated_reclaimable_bytes": 2974937,
+      "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+      "delete_api_invoked": false
+    },
+    "owner_approved": true,
+    "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json"
+  }
+]

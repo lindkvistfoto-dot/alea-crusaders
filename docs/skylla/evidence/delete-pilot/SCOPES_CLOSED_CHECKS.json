@@ -1,0 +1,20 @@
+[
+  {
+    "function": "skylla-delete-pilot",
+    "http_status": 503,
+    "error": "DELETE_CAPABILITY_DISABLED_OR_EXPIRED",
+    "disabled": true
+  },
+  {
+    "function": "skylla-display-read",
+    "http_status": 503,
+    "error": "DISABLED_OR_EXPIRED",
+    "disabled": true
+  },
+  {
+    "function": "skylla-verify-scoped",
+    "http_status": 503,
+    "error": "CAPABILITY_DISABLED_OR_EXPIRED",
+    "disabled": true
+  }
+]

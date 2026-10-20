@@ -1,21 +1,20 @@
-# SKYLLA – Storage efter arkivering
+# SKYLLA – Storage efter godkänd femfilspilot
 
-| Mått | Resultat |
-|---|---:|
-| Aktuella Supabase-original | 519 |
-| Metadataförd source-volym | 1 501 614 754 bytes |
-| Originalposter verifierade i Drive och från Supabase-bytes | 507 / 1 468 662 842 bytes |
-| Unika permanenta Drive-filer | 506 / 1 465 949 422 bytes |
-| Ännu inte arkiverade symboloriginal | 12 / 32 951 912 metadataförda bytes |
-| Tekniska kandidater för första ägargodkännande | 5 / 14 199 932 bytes |
-| Övriga objekt blockerade för raderingsförslag | 514 |
-| Objekt godkända för faktisk radering | 0 |
-| Utförda raderingar / faktiskt frigjorda bytes | **0 / 0** |
+| Mått | Före | Efter |
+|---|---:|---:|
+| Original i `alea-hermes-source` | 519 | 514 |
+| Source-volym, byte | 1 501 614 754 | 1 487 414 822 |
+| Alla Storage-objekt | 1 265 | 1 260 |
+| Raderade godkända original | 0 | 5 |
+| Verifierat frigjort | 0 | **14 199 932 byte** |
+| Återstående auktoriserade raderingar | 0 | **0** |
 
-Kandidatvolymen är en villkorad besparing efter separat ägargodkännande, färska kontroller och lyckad Storage-radering. Den totala 1,50 GB-potentialen är inte automatiskt raderingsklar. 507 verifierade originalposter motsvarar cirka 1,47 GB; kvarvarande 12 har ännu inte byteverifierats mot permanent arkiv. Kvoten har inte minskat under denna icke-destruktiva körning.
+Inventariets differens är exakt de fem godkända objekten, utan tillkomna eller oväntat ändrade objekt. Samtliga återstående 1 260 objekts metadataidentiteter, exakta paths, storlekar, versioner och ändringstider är identiska. De 13 övriga bucketarnas antal och bytevolymer är oförändrade. Alla registerbildfält och HERMES-jobb är oförändrade. Fem berörda visningsbilder verifierades genom autentiserad binär nedladdning, SHA-256 och full WebP-avkodning före och efter.
 
-Metadata före/efter visar oförändrade objektantal och bytevolymer i alla 14 buckets. Visningsbuckets och deras innehåll har bevarats. [Färsk Storage-snapshot](evidence/STORAGE_FRESH.json). Metadata är ett volymmått; de separata serverkvittona och Drive-readbackerna utgör integritetsbevisen.
+[Verifierad differens och exakta borttagna objekt](evidence/delete-pilot/STORAGE_DIFF.json), [föreinventarium](evidence/delete-pilot/STORAGE_BEFORE.json), [efterinventarium](evidence/delete-pilot/STORAGE_AFTER.json). Inventariernas per-objekthash inkluderar exakta paths; orelaterade privata objektnamn publiceras inte. Storage-API-frånvaro och faktiska tidigare bytebevis finns i [pilotrapporten](SKYLLA_DELETE_PILOT_REPORT.md).
 
-Primär läsåtkomst är löst med tidsbegränsad, driftsättningsbunden kapabilitet. Inga 519 manuella länkar eller breda nycklar i arbetsmiljön behövs. Alla tillfälliga kapabiliteter har stängts av efter kontrollen. För framtida verifiering driftsätter en behörig operatör en ny fast avgränsad plan och ett kort fönster. [Åtkomst och återställning](SKYLLA_ACCESS_AND_RESTORE.md).
+Byteantalet beskriver verifierat borttagna Storage-original. Supabases fakturerings-/kvotdashboard kan ha fördröjd uppdatering och har inte kontrollerats. Cirka 1,49 GB återstår i source-bucketen; kvotproblemet är därför inte fullt löst av denna begränsade pilot.
 
-Efter godkänd femfilspilot: planera nästa batch, exempelvis högst 25 original, och verifiera dess egna käll-/arkivbytes, beroenden och visningsbilder på nytt. Begär separat godkännande av exakt pathlista före varje radering. Mät återstående objekt och metadata-bytevolym efter varje batch; kontrollera Aleas visningsbilder och referenser. Stoppa vid delvis misslyckande eller annan avvikelse. Radera aldrig en bucket, använd inga jokertecken och ändra aldrig `storage.objects` med SQL.
+Historiskt är 507 originalposter arkiverade och byteverifierade mot Drive (506 unika arkivfiler). Fem har nu verifierats borttagna från Supabase och finns kvar i bevarat Drive-arkiv/Inbox. 502 arkiverade original finns kvar i Supabase och kräver förnyade säkerhetskontroller och eget batchgodkännande. Tolv symboloriginal / 32 951 912 byte kräver först explicit mappning, arkivering och byteverifiering.
+
+Alla tillfälliga raderings-/läskapabilitetsscope är avstängda. Ingen följande batch är auktoriserad. Vid ett nytt uppdrag krävs exakt pathlista, aktuella käll-/arkivbytes, beroendekontroll och bildhälsa före varje eventuell radering. Stoppa vid okända överföringsutfall; verifiera frånvaro och inventariedifferens före återförsök. Radera aldrig en bucket, använd inga jokertecken och radera inte via SQL i `storage.objects`.

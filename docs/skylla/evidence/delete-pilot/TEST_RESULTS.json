@@ -1,0 +1,14 @@
+{
+  "skylla_python_passed": 45,
+  "skylla_javascript_passed": 65,
+  "kerberos_python_passed": 28,
+  "medusa_python_passed": 15,
+  "hermes_cutout_python_passed": 3,
+  "hermes_vitest_passed": 14,
+  "total_relevant_passed": 170,
+  "failed": 0,
+  "new_synthetic_delete_tests_passed": 32,
+  "deno_production_entrypoint_check": "passed",
+  "live_source_writes": "five explicitly owner-approved Storage API deletes only",
+  "live_database_reference_changes": []
+}

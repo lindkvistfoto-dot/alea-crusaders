@@ -1,0 +1,56 @@
+{
+  "schema": "skylla-owner-approved-pilot/v1",
+  "recorded_at": "2026-10-20T13:40:15.497002+00:00",
+  "approval_source": "Explicit project owner instruction in current Codex conversation",
+  "owner_approved": true,
+  "quoted_instruction": "Jag godk\u00e4nner radering av exakt de fem angivna originalobjekten i \"alea-hermes-source\".",
+  "conditions": [
+    "Revalidate all safety gates before deletion; skip ineligible objects",
+    "Delete no other objects",
+    "Preserve display images and active references",
+    "Verify absence, display health and exact reclaimed object bytes",
+    "New owner approval required before any further deletion"
+  ],
+  "approved_proposal_sha256": "9dfb91c59d1a94acf9b0a269d66315975b5d9e6f197f2cb1171d658a77f01f1c",
+  "approved_manifest_sha256": "024cc48cd4fb60faa5023f927d7c06aa1c83e944b2a206d3396a97ef4fc84fd6",
+  "objects": [
+    {
+      "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
+      "source_actual_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "drive_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
+      "permanent_drive_file_id": "1btAgKpJ7EJxN0TdpVnPdlyRJRKC9Jt_P",
+      "size_bytes": 2974937
+    },
+    {
+      "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "source_actual_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "drive_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
+      "permanent_drive_file_id": "1-Klfq586WG_xsGSCg2YlGZB5caNhuhXR",
+      "size_bytes": 3021435
+    },
+    {
+      "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
+      "source_actual_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "drive_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
+      "permanent_drive_file_id": "1XvAruubAwqnywdrDDy-abz7Caw_4HIdi",
+      "size_bytes": 2453778
+    },
+    {
+      "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
+      "source_actual_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "drive_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
+      "permanent_drive_file_id": "1z0Ji36h9hW_iDtQ3msbauAOAUF78qv3x",
+      "size_bytes": 3027933
+    },
+    {
+      "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
+      "source_actual_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "drive_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
+      "permanent_drive_file_id": "1-AKRprbY-c1d2FCgoc-JdK7ZLuOtF28w",
+      "size_bytes": 2721849
+    }
+  ],
+  "approved_object_count": 5,
+  "approved_bytes": 14199932,
+  "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123"
+}

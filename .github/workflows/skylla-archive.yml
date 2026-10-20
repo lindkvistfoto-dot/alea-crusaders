@@ -7,6 +7,10 @@ on:
       - scripts/skylla_reconcile.py
       - scripts/skylla_scoped_verify.py
       - scripts/skylla_display_verify.py
+      - scripts/skylla_delete_pilot.py
+      - supabase/functions/skylla-delete-pilot/**
+      - tests/skylla_delete_checks.mjs
+      - tests/test_skylla_delete_pilot.py
       - supabase/functions/skylla-display-read/**
       - supabase/functions/skylla-verify-scoped/**
       - scripts/skylla_operator_verify.mjs
@@ -29,6 +33,10 @@ on:
       - scripts/skylla_reconcile.py
       - scripts/skylla_scoped_verify.py
       - scripts/skylla_display_verify.py
+      - scripts/skylla_delete_pilot.py
+      - supabase/functions/skylla-delete-pilot/**
+      - tests/skylla_delete_checks.mjs
+      - tests/test_skylla_delete_pilot.py
       - supabase/functions/skylla-display-read/**
       - supabase/functions/skylla-verify-scoped/**
       - scripts/skylla_operator_verify.mjs
@@ -60,6 +68,7 @@ jobs:
             supabase/functions/skylla-verify
             supabase/functions/skylla-verify-scoped
             supabase/functions/skylla-display-read
+            supabase/functions/skylla-delete-pilot
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -75,3 +84,5 @@ jobs:
         with:
           node-version: '24'
       - run: node tests/skylla_edge_checks.mjs
+      - run: node tests/skylla_delete_checks.mjs
+      - run: python -m unittest discover -s tests -p 'test_skylla_delete_pilot.py' -v

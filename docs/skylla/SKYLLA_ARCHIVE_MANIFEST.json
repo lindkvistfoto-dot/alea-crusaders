@@ -1,6 +1,6 @@
 {
   "schema": "skylla-archive-manifest/v1",
-  "generated_at": "2026-10-20T13:05:40.045314+00:00",
+  "generated_at": "2026-10-20 13:46:32.259607+00",
   "policy": {
     "schema": "skylla-policy/v1",
     "policy_id": "SKYLLA-FAST-TRACK-123",
@@ -21,34 +21,38 @@
   },
   "project_id": "wbmosmkirsitkonejzpg",
   "main_baseline": "500e60b7f83e0edc9324546ce2e0495515d057d4",
-  "metadata_observed_at": "2026-10-20T11:19:40.079812+00:00",
-  "scope_note": "Actual Drive copies and server-side Storage byte proofs at recorded times. No Supabase data writes, source moves, overwrites, reference changes or deletions. Every approved execution must revalidate gates within 600 seconds.",
+  "metadata_observed_at": "2026-10-20 13:46:32.259607+00",
+  "scope_note": "Five exact owner-approved source objects deleted via Storage API after fresh verification. Historical manifest retains all 519 identities. Other 514 source objects require fresh gates and new approval. Display objects, registry fields and HERMES jobs unchanged.",
   "summary": {
-    "supabase_objects": 519,
-    "supabase_metadata_bytes": 1501614754,
+    "supabase_objects": 514,
+    "supabase_metadata_bytes": 1487414822,
     "drive_archive_verified": 507,
     "drive_archive_verified_bytes": 1468662842,
-    "supabase_current_byte_verified": 507,
-    "delete_eligible": 5,
+    "supabase_current_byte_verified": 0,
+    "delete_eligible": 0,
     "blocked_objects": 514,
     "estimated_current_reclaimable_bytes": 0,
-    "potential_after_all_gates_bytes": 1501614754,
-    "pilot_potential_bytes": 14199932,
-    "deleted_objects": 0,
-    "saved_bytes": 0,
+    "potential_after_all_gates_bytes": 1487414822,
+    "pilot_potential_bytes": 0,
+    "deleted_objects": 5,
+    "saved_bytes": 14199932,
     "failed_jobs_requiring_retry_review": 17,
     "drive_archive_unique_files": 506,
     "drive_archive_unique_bytes": 1465949422,
     "drive_archive_pending": 12,
     "supabase_last_byte_verified": 507,
-    "awaiting_owner_approval": 5,
+    "awaiting_owner_approval": 0,
     "safe_to_delete_objects": 0,
-    "delete_proposal_bytes": 14199932,
+    "delete_proposal_bytes": 0,
     "supabase_verification_events": 512,
-    "unmapped_symbol_objects": 12
+    "unmapped_symbol_objects": 12,
+    "initial_supabase_objects": 519,
+    "initial_supabase_metadata_bytes": 1501614754,
+    "remaining_supabase_last_byte_verified": 502,
+    "note": "507 historical byte proofs retained; five were freshly revalidated then deleted. No remaining object is currently authorized for deletion."
   },
   "first_delete_pilot": {
-    "status": "READY_FOR_SEPARATE_OWNER_APPROVAL",
+    "status": "COMPLETED_ALL_FIVE_VERIFIED_ABSENT",
     "planned_paths": [
       "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
       "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
@@ -56,16 +60,19 @@
       "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
       "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png"
     ],
-    "eligible_paths": [
-      "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
-      "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+    "eligible_paths": [],
+    "separate_batch_approval": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+    "owner_approved": true,
+    "deletion_executed": true,
+    "deleted_paths": [
+      "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
       "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
       "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
-      "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png"
+      "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
+      "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png"
     ],
-    "separate_batch_approval": null,
-    "owner_approved": false,
-    "deletion_executed": false
+    "freed_bytes": 14199932,
+    "further_deletion_authorized": false
   },
   "objects": [
     {
@@ -183,13 +190,14 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
       "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
       "source_actual_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
-      "source_sha256_status": "verified_complete_at_recorded_time",
+      "source_sha256_status": "verified_before_owner_approved_deletion",
       "recorded_job_sha256_not_current_bytes": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
       "size_bytes": 2974937,
       "drive_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
@@ -210,47 +218,34 @@
         "object_path": "skill-illustration-wide/akrobatik/c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d.png",
         "status": "clear",
         "active_consumers": [],
-        "observed_at": "2026-10-20T13:05:39.941185+00:00",
-        "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+        "observed_at": "2026-10-20T13:40:15.497002+00:00",
+        "evidence_reference": "docs/skylla/evidence/delete-pilot/DEPENDENCIES_BEFORE.json",
         "app_images_verified": true,
-        "app_images_verified_at": "2026-10-20T13:00:45.339319+00:00",
+        "app_images_verified_at": "2026-10-20T13:39:25.059330+00:00",
         "reference_paths_unchanged": true,
+        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743",
         "job_id": "c421f36a-dfe0-4999-b64c-f794ba96db79",
         "job_status": "active",
-        "current_registry_matches": [
-          {
-            "table": "rule_skills",
-            "id": "akrobatik",
-            "field": "illustration_wide_path"
-          }
-        ],
-        "basis": [
-          "deployed HERMES v8 active guard precedes source read",
-          "publisher active guard precedes source upload",
-          "rollback uses prior WebP pointer",
-          "no active/queued HERMES workflow",
-          "current registered image fields do not reference source objects",
-          "fresh full WebP byte/decode check"
-        ],
-        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
-        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743"
+        "workflow_idle": true,
+        "hermes_v8_unchanged": true
       },
       "archive_status": "verified_readback",
       "source_metadata_updated_at": "2026-10-18T11:46:50.461995+00:00",
       "pilot_selected": true,
       "potential_source_bytes": 2974937,
-      "eligible_for_delete_proposal": true,
+      "eligible_for_delete_proposal": false,
       "safe_to_delete": false,
-      "deletion_status": "awaiting_separate_batch_approval",
+      "deletion_status": "deleted_verified_absent",
       "blocking_issues": [],
-      "estimated_reclaimable_bytes": 2974937,
+      "estimated_reclaimable_bytes": 0,
       "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
-      "delete_api_invoked": false,
-      "archive_verified_at": "2026-10-20T12:58:21.425297+00:00",
-      "source_verified_at": "2026-10-20T12:59:39.831Z",
+      "delete_api_invoked": true,
+      "archive_verified_at": "2026-10-20T13:38:00.968677+00:00",
+      "source_verified_at": "2026-10-20T13:43:33.871Z",
       "source_verification": {
         "schema": "skylla-server-verification/v1",
-        "plan_sha256": "2e63ccb5615150e382f704e026ba847e7c89be4b4da7109fd382fda0ff0b2fd2",
+        "plan_sha256": "8c3d9d48fb3891df8b5b3e6c8598e3534af859c0b6fd3e10a434ec0e9b08c79a",
         "id": "dfde03b4c32019ac3620c422bca95894613c85904e7818378f7731a409dcbed8",
         "project_id": "wbmosmkirsitkonejzpg",
         "system": "supabase",
@@ -267,13 +262,11 @@
         "status": "verified_complete",
         "permanent_drive_file_id": "1btAgKpJ7EJxN0TdpVnPdlyRJRKC9Jt_P",
         "drive_sha256": "c3eae2dfd9464809c0332fad02d7d5cccc3fc9b0c10a14e3c9cba7b7aa2a895d",
-        "verified_at": "2026-10-20T12:59:39.831Z",
+        "verified_at": "2026-10-20T13:43:33.871Z",
         "safe_to_delete": false,
-        "deletion_authorized": false,
-        "authorization_method": "deployment_scoped_read_capability",
-        "capability_expires_at": "2026-10-20T13:13:42.625191+00:00"
+        "deletion_authorized": false
       },
-      "source_evidence_reference": "docs/skylla/evidence/SCOPED_SOURCE_BATCH_E_RECEIPTS.json",
+      "source_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
       "kind": "skill-illustration-wide",
       "image_category": "skills",
       "image_variant": "wide",
@@ -289,7 +282,7 @@
       },
       "archive_evidence_reference": "docs/skylla/evidence/DRIVE_ARCHIVE_READBACKS.json",
       "content_identity_shared_with_other_object": false,
-      "owner_approval_verified": false,
+      "owner_approval_verified": true,
       "restore_readback_verified": true,
       "must_revalidate_before_deletion": true,
       "delete_execution_blockers": [
@@ -314,7 +307,12 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": false,
+      "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+      "deletion_verified_at": "2026-10-20T13:43:35.683Z",
+      "deletion_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
+      "reclaimed_bytes": 2974937
     },
     {
       "bucket": "alea-hermes-source",
@@ -431,7 +429,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -548,7 +547,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -665,7 +665,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -782,7 +783,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -899,7 +901,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1009,7 +1012,8 @@
         "declared_target_key": "bola",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1126,7 +1130,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1243,7 +1248,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1360,7 +1366,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1470,7 +1477,8 @@
         "declared_target_key": "dra-vapen",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1587,7 +1595,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1704,7 +1713,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1821,7 +1831,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -1938,7 +1949,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2055,7 +2067,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2172,7 +2185,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2289,7 +2303,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2406,7 +2421,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2523,7 +2539,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2640,7 +2657,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2757,7 +2775,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2874,7 +2893,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -2991,7 +3011,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3108,7 +3129,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3225,7 +3247,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3342,7 +3365,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3459,7 +3483,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3577,7 +3602,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3687,7 +3713,8 @@
         "declared_target_key": "ilmarsch",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3804,7 +3831,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -3921,7 +3949,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4038,7 +4067,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4155,7 +4185,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4272,7 +4303,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4389,7 +4421,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4506,7 +4539,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4623,7 +4657,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4733,7 +4768,8 @@
         "declared_target_key": "kastvapen",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4850,7 +4886,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -4961,7 +4998,8 @@
         "declared_target_key": "klattra",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5078,7 +5116,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5195,7 +5234,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5312,7 +5352,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5429,7 +5470,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5546,7 +5588,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5663,7 +5706,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5780,7 +5824,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -5897,7 +5942,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6014,7 +6060,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6131,7 +6178,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6248,7 +6296,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6358,7 +6407,8 @@
         "declared_target_key": "navigera",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6475,7 +6525,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6592,7 +6643,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6709,7 +6761,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6826,7 +6879,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -6943,7 +6997,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7060,7 +7115,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7177,7 +7233,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7294,7 +7351,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7411,7 +7469,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7528,7 +7587,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7638,7 +7698,8 @@
         "declared_target_key": "rida",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7755,7 +7816,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7872,7 +7934,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -7989,7 +8052,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8106,7 +8170,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8223,7 +8288,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8340,7 +8406,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8457,7 +8524,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8574,7 +8642,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8684,7 +8753,8 @@
         "declared_target_key": "slungor",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8801,7 +8871,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -8918,7 +8989,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9035,7 +9107,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9152,7 +9225,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9269,7 +9343,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9386,7 +9461,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9503,7 +9579,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9620,7 +9697,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9737,7 +9815,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9854,7 +9933,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -9971,7 +10051,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10088,7 +10169,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10205,7 +10287,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10315,7 +10398,8 @@
         "declared_target_key": "vardesatta",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10432,7 +10516,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10549,7 +10634,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10666,7 +10752,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10783,7 +10870,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -10900,7 +10988,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11017,7 +11106,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11134,7 +11224,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11251,7 +11342,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11368,7 +11460,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11485,7 +11578,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11602,7 +11696,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11719,7 +11814,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11836,7 +11932,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -11953,7 +12050,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12070,7 +12168,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12187,7 +12286,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12304,7 +12404,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12421,7 +12522,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12538,7 +12640,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12655,7 +12758,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12772,7 +12876,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -12889,7 +12994,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13006,7 +13112,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13123,7 +13230,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13240,7 +13348,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13357,7 +13466,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13474,7 +13584,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13591,7 +13702,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13708,7 +13820,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13825,7 +13938,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -13942,7 +14056,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14059,7 +14174,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14176,7 +14292,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14293,7 +14410,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14410,7 +14528,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14527,7 +14646,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14644,7 +14764,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14761,7 +14882,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14878,7 +15000,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -14995,7 +15118,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15112,7 +15236,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15229,7 +15354,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15346,7 +15472,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15463,7 +15590,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15580,7 +15708,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15697,7 +15826,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15814,7 +15944,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -15931,7 +16062,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16048,7 +16180,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16165,7 +16298,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16282,7 +16416,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16399,7 +16534,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16516,7 +16652,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16633,7 +16770,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16750,7 +16888,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16867,7 +17006,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -16984,7 +17124,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17101,7 +17242,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17218,7 +17360,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17335,7 +17478,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17452,7 +17596,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17569,7 +17714,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17686,7 +17832,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17803,7 +17950,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -17920,7 +18068,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18037,7 +18186,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18154,7 +18304,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18271,7 +18422,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18388,7 +18540,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18505,7 +18658,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18622,7 +18776,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18739,7 +18894,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18856,7 +19012,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -18973,7 +19130,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19090,7 +19248,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19207,7 +19366,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19324,7 +19484,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19441,7 +19602,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19558,7 +19720,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19675,7 +19838,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19792,7 +19956,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -19909,7 +20074,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20026,13 +20192,14 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
       "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
       "source_actual_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
-      "source_sha256_status": "verified_complete_at_recorded_time",
+      "source_sha256_status": "verified_before_owner_approved_deletion",
       "recorded_job_sha256_not_current_bytes": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
       "size_bytes": 3021435,
       "drive_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
@@ -20053,47 +20220,34 @@
         "object_path": "skill/administrationsjuridik/ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54.png",
         "status": "clear",
         "active_consumers": [],
-        "observed_at": "2026-10-20T13:05:39.941185+00:00",
-        "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+        "observed_at": "2026-10-20T13:40:15.497002+00:00",
+        "evidence_reference": "docs/skylla/evidence/delete-pilot/DEPENDENCIES_BEFORE.json",
         "app_images_verified": true,
-        "app_images_verified_at": "2026-10-20T13:00:44.843272+00:00",
+        "app_images_verified_at": "2026-10-20T13:39:24.460303+00:00",
         "reference_paths_unchanged": true,
+        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743",
         "job_id": "dd80a703-957a-49d0-8d9d-e2e95c3cef8d",
         "job_status": "active",
-        "current_registry_matches": [
-          {
-            "table": "rule_skills",
-            "id": "administrationsjuridik",
-            "field": "icon_path"
-          }
-        ],
-        "basis": [
-          "deployed HERMES v8 active guard precedes source read",
-          "publisher active guard precedes source upload",
-          "rollback uses prior WebP pointer",
-          "no active/queued HERMES workflow",
-          "current registered image fields do not reference source objects",
-          "fresh full WebP byte/decode check"
-        ],
-        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
-        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743"
+        "workflow_idle": true,
+        "hermes_v8_unchanged": true
       },
       "archive_status": "verified_readback",
       "source_metadata_updated_at": "2026-10-17T15:24:50.423781+00:00",
       "pilot_selected": true,
       "potential_source_bytes": 3021435,
-      "eligible_for_delete_proposal": true,
+      "eligible_for_delete_proposal": false,
       "safe_to_delete": false,
-      "deletion_status": "awaiting_separate_batch_approval",
+      "deletion_status": "deleted_verified_absent",
       "blocking_issues": [],
-      "estimated_reclaimable_bytes": 3021435,
+      "estimated_reclaimable_bytes": 0,
       "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
-      "delete_api_invoked": false,
-      "archive_verified_at": "2026-10-20T12:58:21.308995+00:00",
-      "source_verified_at": "2026-10-20T12:59:40.765Z",
+      "delete_api_invoked": true,
+      "archive_verified_at": "2026-10-20T13:38:00.861656+00:00",
+      "source_verified_at": "2026-10-20T13:43:31.117Z",
       "source_verification": {
         "schema": "skylla-server-verification/v1",
-        "plan_sha256": "2e63ccb5615150e382f704e026ba847e7c89be4b4da7109fd382fda0ff0b2fd2",
+        "plan_sha256": "8c3d9d48fb3891df8b5b3e6c8598e3534af859c0b6fd3e10a434ec0e9b08c79a",
         "id": "04bf2b7f564a71b4160c7903c8bcf22a370d4b00b9c56b86c78becd3a2f725c4",
         "project_id": "wbmosmkirsitkonejzpg",
         "system": "supabase",
@@ -20110,13 +20264,11 @@
         "status": "verified_complete",
         "permanent_drive_file_id": "1-Klfq586WG_xsGSCg2YlGZB5caNhuhXR",
         "drive_sha256": "ab2152a5bda4384e1275eab22bde45bb2e5d9e1b945616af81468cbb53987a54",
-        "verified_at": "2026-10-20T12:59:40.765Z",
+        "verified_at": "2026-10-20T13:43:31.117Z",
         "safe_to_delete": false,
-        "deletion_authorized": false,
-        "authorization_method": "deployment_scoped_read_capability",
-        "capability_expires_at": "2026-10-20T13:13:42.625191+00:00"
+        "deletion_authorized": false
       },
-      "source_evidence_reference": "docs/skylla/evidence/SCOPED_SOURCE_BATCH_E_RECEIPTS.json",
+      "source_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
       "kind": "skill",
       "image_category": "skills",
       "image_variant": "icon",
@@ -20132,7 +20284,7 @@
       },
       "archive_evidence_reference": "docs/skylla/evidence/DRIVE_ARCHIVE_READBACKS.json",
       "content_identity_shared_with_other_object": false,
-      "owner_approval_verified": false,
+      "owner_approval_verified": true,
       "restore_readback_verified": true,
       "must_revalidate_before_deletion": true,
       "delete_execution_blockers": [
@@ -20157,7 +20309,12 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": false,
+      "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+      "deletion_verified_at": "2026-10-20T13:43:33.234Z",
+      "deletion_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
+      "reclaimed_bytes": 3021435
     },
     {
       "bucket": "alea-hermes-source",
@@ -20274,7 +20431,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20391,7 +20549,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20508,7 +20667,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20625,7 +20785,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20742,7 +20903,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20859,7 +21021,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -20976,7 +21139,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21093,7 +21257,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21210,7 +21375,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21327,7 +21493,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21437,7 +21604,8 @@
         "declared_target_key": "dra-vapen",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21554,7 +21722,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21671,7 +21840,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21788,7 +21958,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -21905,7 +22076,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22022,7 +22194,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22139,7 +22312,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22256,7 +22430,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22373,7 +22548,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22490,7 +22666,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22607,7 +22784,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22724,7 +22902,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22841,7 +23020,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -22958,7 +23138,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23075,7 +23256,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23192,7 +23374,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23309,7 +23492,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23426,7 +23610,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23543,7 +23728,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23660,7 +23846,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23777,7 +23964,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -23894,7 +24082,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24011,7 +24200,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24128,7 +24318,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24245,7 +24436,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24362,7 +24554,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24479,7 +24672,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24596,7 +24790,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24713,7 +24908,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24830,7 +25026,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -24947,7 +25144,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25064,7 +25262,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25181,7 +25380,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25298,7 +25498,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25415,7 +25616,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25532,7 +25734,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25649,7 +25852,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25766,7 +25970,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -25883,7 +26088,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26000,7 +26206,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26117,7 +26324,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26234,7 +26442,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26351,7 +26560,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26468,7 +26678,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26585,7 +26796,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26702,7 +26914,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26819,7 +27032,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -26936,7 +27150,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27053,7 +27268,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27170,7 +27386,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27287,7 +27504,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27404,7 +27622,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27521,7 +27740,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27638,7 +27858,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27755,7 +27976,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27872,7 +28094,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -27982,7 +28205,8 @@
         "declared_target_key": "slungor",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28099,7 +28323,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28216,7 +28441,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28333,7 +28559,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28450,7 +28677,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28567,7 +28795,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28684,7 +28913,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28801,7 +29031,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -28918,7 +29149,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29035,7 +29267,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29152,7 +29385,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29269,7 +29503,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29386,7 +29621,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29503,7 +29739,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29620,7 +29857,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -29737,13 +29975,14 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
       "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
       "source_actual_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
-      "source_sha256_status": "verified_complete_at_recorded_time",
+      "source_sha256_status": "verified_before_owner_approved_deletion",
       "recorded_job_sha256_not_current_bytes": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
       "size_bytes": 2453778,
       "drive_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
@@ -29764,47 +30003,34 @@
         "object_path": "spell-cutout/antimagi/bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49.png",
         "status": "clear",
         "active_consumers": [],
-        "observed_at": "2026-10-20T13:05:39.941185+00:00",
-        "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+        "observed_at": "2026-10-20T13:40:15.497002+00:00",
+        "evidence_reference": "docs/skylla/evidence/delete-pilot/DEPENDENCIES_BEFORE.json",
         "app_images_verified": true,
-        "app_images_verified_at": "2026-10-20T13:00:43.435229+00:00",
+        "app_images_verified_at": "2026-10-20T13:39:22.958713+00:00",
         "reference_paths_unchanged": true,
+        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743",
         "job_id": "3f398839-908d-4817-bedd-031d0a70fa12",
         "job_status": "active",
-        "current_registry_matches": [
-          {
-            "table": "rule_spells",
-            "id": "1f8a94c6-a1a6-402a-9f55-15b2e8977ade",
-            "field": "cutout_path"
-          }
-        ],
-        "basis": [
-          "deployed HERMES v8 active guard precedes source read",
-          "publisher active guard precedes source upload",
-          "rollback uses prior WebP pointer",
-          "no active/queued HERMES workflow",
-          "current registered image fields do not reference source objects",
-          "fresh full WebP byte/decode check"
-        ],
-        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
-        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743"
+        "workflow_idle": true,
+        "hermes_v8_unchanged": true
       },
       "archive_status": "verified_readback",
       "source_metadata_updated_at": "2026-10-19T20:30:35.868078+00:00",
       "pilot_selected": true,
       "potential_source_bytes": 2453778,
-      "eligible_for_delete_proposal": true,
+      "eligible_for_delete_proposal": false,
       "safe_to_delete": false,
-      "deletion_status": "awaiting_separate_batch_approval",
+      "deletion_status": "deleted_verified_absent",
       "blocking_issues": [],
-      "estimated_reclaimable_bytes": 2453778,
+      "estimated_reclaimable_bytes": 0,
       "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
-      "delete_api_invoked": false,
-      "archive_verified_at": "2026-10-20T12:58:21.023398+00:00",
-      "source_verified_at": "2026-10-20T12:59:41.407Z",
+      "delete_api_invoked": true,
+      "archive_verified_at": "2026-10-20T13:38:00.632354+00:00",
+      "source_verified_at": "2026-10-20T13:43:26.598Z",
       "source_verification": {
         "schema": "skylla-server-verification/v1",
-        "plan_sha256": "2e63ccb5615150e382f704e026ba847e7c89be4b4da7109fd382fda0ff0b2fd2",
+        "plan_sha256": "8c3d9d48fb3891df8b5b3e6c8598e3534af859c0b6fd3e10a434ec0e9b08c79a",
         "id": "bd62f8535dc9495cbcd4a42c952939926eb3f50b52fe92a6a3d3424e0a3bebef",
         "project_id": "wbmosmkirsitkonejzpg",
         "system": "supabase",
@@ -29821,13 +30047,11 @@
         "status": "verified_complete",
         "permanent_drive_file_id": "1XvAruubAwqnywdrDDy-abz7Caw_4HIdi",
         "drive_sha256": "bb1fc153d2b347eb3f9ce46ef742102f45d26d6bff48e419de669a75b1517d49",
-        "verified_at": "2026-10-20T12:59:41.407Z",
+        "verified_at": "2026-10-20T13:43:26.598Z",
         "safe_to_delete": false,
-        "deletion_authorized": false,
-        "authorization_method": "deployment_scoped_read_capability",
-        "capability_expires_at": "2026-10-20T13:13:42.625191+00:00"
+        "deletion_authorized": false
       },
-      "source_evidence_reference": "docs/skylla/evidence/SCOPED_SOURCE_BATCH_E_RECEIPTS.json",
+      "source_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
       "kind": "spell-cutout",
       "image_category": "spells",
       "image_variant": "cutout",
@@ -29843,7 +30067,7 @@
       },
       "archive_evidence_reference": "docs/skylla/evidence/DRIVE_ARCHIVE_READBACKS.json",
       "content_identity_shared_with_other_object": false,
-      "owner_approval_verified": false,
+      "owner_approval_verified": true,
       "restore_readback_verified": true,
       "must_revalidate_before_deletion": true,
       "delete_execution_blockers": [
@@ -29868,7 +30092,12 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": false,
+      "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+      "deletion_verified_at": "2026-10-20T13:43:28.115Z",
+      "deletion_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
+      "reclaimed_bytes": 2453778
     },
     {
       "bucket": "alea-hermes-source",
@@ -29985,7 +30214,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30102,7 +30332,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30219,7 +30450,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30336,7 +30568,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30458,7 +30691,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30575,7 +30809,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30692,7 +30927,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30814,7 +31050,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -30936,7 +31173,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31053,7 +31291,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31170,7 +31409,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31292,7 +31532,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31409,7 +31650,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31526,7 +31768,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31643,7 +31886,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31760,7 +32004,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31877,7 +32122,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -31999,7 +32245,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32116,7 +32363,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32233,7 +32481,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32350,7 +32599,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32468,7 +32718,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32585,7 +32836,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32702,7 +32954,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32819,7 +33072,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -32936,7 +33190,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33053,7 +33308,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33175,7 +33431,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33293,7 +33550,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33415,7 +33673,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33532,7 +33791,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33649,7 +33909,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33766,7 +34027,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -33883,7 +34145,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34005,7 +34268,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34122,7 +34386,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34239,7 +34504,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34356,7 +34622,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34473,7 +34740,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34590,7 +34858,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34707,7 +34976,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34824,7 +35094,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -34941,7 +35212,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35058,7 +35330,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35168,7 +35441,8 @@
         "declared_target_key": "kontrollera-vapen",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35290,7 +35564,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35407,7 +35682,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35524,7 +35800,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35641,7 +35918,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35758,7 +36036,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35875,7 +36154,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -35992,7 +36272,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36102,7 +36383,8 @@
         "declared_target_key": "magins-osynliga-elementar",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36219,7 +36501,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36336,7 +36619,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36453,7 +36737,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36570,7 +36855,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36687,7 +36973,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36804,7 +37091,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -36921,7 +37209,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37038,7 +37327,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37155,7 +37445,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37272,7 +37563,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37389,7 +37681,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37506,7 +37799,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37623,7 +37917,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37740,7 +38035,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37857,7 +38153,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -37974,7 +38271,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38091,7 +38389,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38208,7 +38507,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38325,7 +38625,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38442,7 +38743,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38559,7 +38861,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38676,7 +38979,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38793,7 +39097,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -38910,7 +39215,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39027,7 +39333,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39144,7 +39451,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39261,7 +39569,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39378,7 +39687,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39495,7 +39805,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39612,7 +39923,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39729,7 +40041,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39846,7 +40159,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -39963,7 +40277,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40080,7 +40395,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40197,7 +40513,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40314,7 +40631,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40431,7 +40749,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40548,7 +40867,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40670,7 +40990,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -40787,13 +41108,14 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
       "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
       "source_actual_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
-      "source_sha256_status": "verified_complete_at_recorded_time",
+      "source_sha256_status": "verified_before_owner_approved_deletion",
       "recorded_job_sha256_not_current_bytes": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
       "size_bytes": 3027933,
       "drive_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
@@ -40814,47 +41136,34 @@
         "object_path": "spell-illustration-wide/varseblivning/8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca.png",
         "status": "clear",
         "active_consumers": [],
-        "observed_at": "2026-10-20T13:05:39.941185+00:00",
-        "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+        "observed_at": "2026-10-20T13:40:15.497002+00:00",
+        "evidence_reference": "docs/skylla/evidence/delete-pilot/DEPENDENCIES_BEFORE.json",
         "app_images_verified": true,
-        "app_images_verified_at": "2026-10-20T13:00:44.127952+00:00",
+        "app_images_verified_at": "2026-10-20T13:39:23.768295+00:00",
         "reference_paths_unchanged": true,
+        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743",
         "job_id": "f5542312-5798-45c9-80e2-aa151ad20776",
         "job_status": "active",
-        "current_registry_matches": [
-          {
-            "table": "rule_spells",
-            "id": "a481c285-31f0-469c-96ce-0599b05305df",
-            "field": "illustration_wide_path"
-          }
-        ],
-        "basis": [
-          "deployed HERMES v8 active guard precedes source read",
-          "publisher active guard precedes source upload",
-          "rollback uses prior WebP pointer",
-          "no active/queued HERMES workflow",
-          "current registered image fields do not reference source objects",
-          "fresh full WebP byte/decode check"
-        ],
-        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
-        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743"
+        "workflow_idle": true,
+        "hermes_v8_unchanged": true
       },
       "archive_status": "verified_readback",
       "source_metadata_updated_at": "2026-10-18T12:14:52.324984+00:00",
       "pilot_selected": true,
       "potential_source_bytes": 3027933,
-      "eligible_for_delete_proposal": true,
+      "eligible_for_delete_proposal": false,
       "safe_to_delete": false,
-      "deletion_status": "awaiting_separate_batch_approval",
+      "deletion_status": "deleted_verified_absent",
       "blocking_issues": [],
-      "estimated_reclaimable_bytes": 3027933,
+      "estimated_reclaimable_bytes": 0,
       "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
-      "delete_api_invoked": false,
-      "archive_verified_at": "2026-10-20T12:58:21.150657+00:00",
-      "source_verified_at": "2026-10-20T12:59:42.216Z",
+      "delete_api_invoked": true,
+      "archive_verified_at": "2026-10-20T13:38:00.734789+00:00",
+      "source_verified_at": "2026-10-20T13:43:28.745Z",
       "source_verification": {
         "schema": "skylla-server-verification/v1",
-        "plan_sha256": "2e63ccb5615150e382f704e026ba847e7c89be4b4da7109fd382fda0ff0b2fd2",
+        "plan_sha256": "8c3d9d48fb3891df8b5b3e6c8598e3534af859c0b6fd3e10a434ec0e9b08c79a",
         "id": "771cb4f1fb54093000b84d6110b478c08d6d9668f6f68900658a58e42cd25292",
         "project_id": "wbmosmkirsitkonejzpg",
         "system": "supabase",
@@ -40871,13 +41180,11 @@
         "status": "verified_complete",
         "permanent_drive_file_id": "1z0Ji36h9hW_iDtQ3msbauAOAUF78qv3x",
         "drive_sha256": "8e46774c98dfe3b6902fafc5bde3e642b36530c0cbaa09a5a77f0ab6522b56ca",
-        "verified_at": "2026-10-20T12:59:42.216Z",
+        "verified_at": "2026-10-20T13:43:28.745Z",
         "safe_to_delete": false,
-        "deletion_authorized": false,
-        "authorization_method": "deployment_scoped_read_capability",
-        "capability_expires_at": "2026-10-20T13:13:42.625191+00:00"
+        "deletion_authorized": false
       },
-      "source_evidence_reference": "docs/skylla/evidence/SCOPED_SOURCE_BATCH_E_RECEIPTS.json",
+      "source_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
       "kind": "spell-illustration-wide",
       "image_category": "spells",
       "image_variant": "wide",
@@ -40893,7 +41200,7 @@
       },
       "archive_evidence_reference": "docs/skylla/evidence/DRIVE_ARCHIVE_READBACKS.json",
       "content_identity_shared_with_other_object": false,
-      "owner_approval_verified": false,
+      "owner_approval_verified": true,
       "restore_readback_verified": true,
       "must_revalidate_before_deletion": true,
       "delete_execution_blockers": [
@@ -40918,7 +41225,12 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": false,
+      "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+      "deletion_verified_at": "2026-10-20T13:43:30.259Z",
+      "deletion_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
+      "reclaimed_bytes": 3027933
     },
     {
       "bucket": "alea-hermes-source",
@@ -41035,7 +41347,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41152,7 +41465,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41269,7 +41583,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41386,7 +41701,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41503,7 +41819,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41620,7 +41937,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41737,7 +42055,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41854,7 +42173,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -41971,7 +42291,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42088,7 +42409,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42210,7 +42532,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42327,7 +42650,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42444,7 +42768,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42561,7 +42886,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42678,7 +43004,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42795,7 +43122,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -42917,7 +43245,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43034,7 +43363,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43156,7 +43486,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43274,7 +43605,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43391,7 +43723,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43508,7 +43841,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43625,7 +43959,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43742,7 +44077,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43859,7 +44195,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -43976,7 +44313,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44094,7 +44432,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44211,7 +44550,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44328,7 +44668,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44445,7 +44786,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44562,7 +44904,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44679,7 +45022,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44796,7 +45140,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -44913,7 +45258,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45030,7 +45376,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45152,7 +45499,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45269,7 +45617,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45391,7 +45740,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45508,7 +45858,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45625,7 +45976,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45747,7 +46099,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45864,7 +46217,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -45981,7 +46335,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46091,7 +46446,8 @@
         "declared_target_key": "kontrollera-vapen",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46208,7 +46564,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46325,7 +46682,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46442,7 +46800,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46559,7 +46918,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46676,7 +47036,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46793,7 +47154,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -46910,7 +47272,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47020,7 +47383,8 @@
         "declared_target_key": "magins-osynliga-elementar",
         "matching_current_records": []
       },
-      "historical_version_review_required": true
+      "historical_version_review_required": true,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47137,7 +47501,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47254,7 +47619,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47371,7 +47737,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47488,7 +47855,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47605,7 +47973,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47727,7 +48096,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47844,7 +48214,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -47961,7 +48332,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48078,7 +48450,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48195,7 +48568,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48312,7 +48686,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48429,7 +48804,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48546,7 +48922,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48663,7 +49040,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48780,7 +49158,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -48897,7 +49276,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49014,7 +49394,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49131,7 +49512,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49248,7 +49630,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49365,7 +49748,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49482,7 +49866,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49599,7 +49984,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49716,7 +50102,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49833,7 +50220,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -49950,7 +50338,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50067,7 +50456,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50184,7 +50574,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50301,7 +50692,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50418,7 +50810,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50535,7 +50928,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50652,7 +51046,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50769,7 +51164,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -50886,7 +51282,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51003,7 +51400,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51120,7 +51518,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51237,7 +51636,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51354,7 +51754,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51471,7 +51872,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51588,7 +51990,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51705,7 +52108,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51823,7 +52227,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -51940,7 +52345,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52057,7 +52463,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52174,7 +52581,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52291,7 +52699,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52408,7 +52817,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52525,7 +52935,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52642,7 +53053,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52759,7 +53171,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52876,7 +53289,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -52993,7 +53407,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53110,7 +53525,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53227,7 +53643,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53344,7 +53761,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53461,7 +53879,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53578,7 +53997,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53695,7 +54115,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53812,7 +54233,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -53929,7 +54351,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54046,7 +54469,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54163,7 +54587,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54280,7 +54705,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54397,7 +54823,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54514,7 +54941,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54631,7 +55059,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54748,7 +55177,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54865,7 +55295,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -54982,7 +55413,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55099,7 +55531,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55216,7 +55649,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55333,7 +55767,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55450,7 +55885,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55567,7 +56003,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55684,7 +56121,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55801,7 +56239,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -55918,7 +56357,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56035,7 +56475,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56152,7 +56593,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56269,7 +56711,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56386,7 +56829,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56503,7 +56947,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56620,7 +57065,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56737,7 +57183,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56854,7 +57301,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -56971,7 +57419,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57088,7 +57537,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57205,7 +57655,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57322,7 +57773,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57439,7 +57891,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57556,7 +58009,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57673,7 +58127,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57790,7 +58245,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -57907,7 +58363,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58024,7 +58481,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58141,7 +58599,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58258,7 +58717,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58375,7 +58835,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58492,7 +58953,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58609,7 +59071,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58726,7 +59189,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58843,7 +59307,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -58960,7 +59425,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59077,7 +59543,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59194,13 +59661,14 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
       "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
       "source_actual_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
-      "source_sha256_status": "verified_complete_at_recorded_time",
+      "source_sha256_status": "verified_before_owner_approved_deletion",
       "recorded_job_sha256_not_current_bytes": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
       "size_bytes": 2721849,
       "drive_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
@@ -59221,47 +59689,34 @@
         "object_path": "spell/varseblivning/1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3.png",
         "status": "clear",
         "active_consumers": [],
-        "observed_at": "2026-10-20T13:05:39.941185+00:00",
-        "evidence_reference": "docs/skylla/evidence/DEPENDENCY_AUDIT_FRESH.json",
+        "observed_at": "2026-10-20T13:40:15.497002+00:00",
+        "evidence_reference": "docs/skylla/evidence/delete-pilot/DEPENDENCIES_BEFORE.json",
         "app_images_verified": true,
-        "app_images_verified_at": "2026-10-20T13:00:42.899193+00:00",
+        "app_images_verified_at": "2026-10-20T13:39:22.046283+00:00",
         "reference_paths_unchanged": true,
+        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
+        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743",
         "job_id": "560ed5ff-eb77-4707-b57b-afaaf5186bcf",
         "job_status": "active",
-        "current_registry_matches": [
-          {
-            "table": "rule_spells",
-            "id": "a481c285-31f0-469c-96ce-0599b05305df",
-            "field": "icon_path"
-          }
-        ],
-        "basis": [
-          "deployed HERMES v8 active guard precedes source read",
-          "publisher active guard precedes source upload",
-          "rollback uses prior WebP pointer",
-          "no active/queued HERMES workflow",
-          "current registered image fields do not reference source objects",
-          "fresh full WebP byte/decode check"
-        ],
-        "restore_plan_reference": "docs/skylla/SKYLLA_ACCESS_AND_RESTORE.md",
-        "restore_plan_sha256": "b5feb83e5cff473cd486a30485ed21b925d8f98f92d80cdb7b977aee93d9c743"
+        "workflow_idle": true,
+        "hermes_v8_unchanged": true
       },
       "archive_status": "verified_readback",
       "source_metadata_updated_at": "2026-10-20T05:00:35.346013+00:00",
       "pilot_selected": true,
       "potential_source_bytes": 2721849,
-      "eligible_for_delete_proposal": true,
+      "eligible_for_delete_proposal": false,
       "safe_to_delete": false,
-      "deletion_status": "awaiting_separate_batch_approval",
+      "deletion_status": "deleted_verified_absent",
       "blocking_issues": [],
-      "estimated_reclaimable_bytes": 2721849,
+      "estimated_reclaimable_bytes": 0,
       "independent_backup_waived_by": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
-      "delete_api_invoked": false,
-      "archive_verified_at": "2026-10-20T12:58:20.929299+00:00",
-      "source_verified_at": "2026-10-20T13:01:26.000Z",
+      "delete_api_invoked": true,
+      "archive_verified_at": "2026-10-20T13:38:00.535870+00:00",
+      "source_verified_at": "2026-10-20T13:43:22.954Z",
       "source_verification": {
         "schema": "skylla-server-verification/v1",
-        "plan_sha256": "2e63ccb5615150e382f704e026ba847e7c89be4b4da7109fd382fda0ff0b2fd2",
+        "plan_sha256": "8c3d9d48fb3891df8b5b3e6c8598e3534af859c0b6fd3e10a434ec0e9b08c79a",
         "id": "baba99fe9c82620dcd69c6922e22d0249446133c85bdb1f7cbf9d91ee597377f",
         "project_id": "wbmosmkirsitkonejzpg",
         "system": "supabase",
@@ -59278,13 +59733,11 @@
         "status": "verified_complete",
         "permanent_drive_file_id": "1-AKRprbY-c1d2FCgoc-JdK7ZLuOtF28w",
         "drive_sha256": "1110033ba0ee81d60e73caeb78b82be7df81ed893097da9ae5e7b19657e5e1f3",
-        "verified_at": "2026-10-20T13:01:26.000Z",
+        "verified_at": "2026-10-20T13:43:22.954Z",
         "safe_to_delete": false,
-        "deletion_authorized": false,
-        "authorization_method": "deployment_scoped_read_capability",
-        "capability_expires_at": "2026-10-20T13:13:42.625191+00:00"
+        "deletion_authorized": false
       },
-      "source_evidence_reference": "docs/skylla/evidence/SCOPED_SOURCE_BATCH_E_RECEIPTS.json",
+      "source_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
       "kind": "spell",
       "image_category": "spells",
       "image_variant": "icon",
@@ -59300,7 +59753,7 @@
       },
       "archive_evidence_reference": "docs/skylla/evidence/DRIVE_ARCHIVE_READBACKS.json",
       "content_identity_shared_with_other_object": false,
-      "owner_approval_verified": false,
+      "owner_approval_verified": true,
       "restore_readback_verified": true,
       "must_revalidate_before_deletion": true,
       "delete_execution_blockers": [
@@ -59325,7 +59778,12 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": false,
+      "owner_approval_reference": "docs/skylla/evidence/delete-pilot/OWNER_APPROVAL.json",
+      "deletion_verified_at": "2026-10-20T13:43:25.747Z",
+      "deletion_evidence_reference": "docs/skylla/evidence/delete-pilot/DELETE_RECEIPTS.json",
+      "reclaimed_bytes": 2721849
     },
     {
       "bucket": "alea-hermes-source",
@@ -59442,7 +59900,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59523,7 +59982,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59604,7 +60064,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59685,7 +60146,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59766,7 +60228,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59847,7 +60310,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -59928,7 +60392,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60009,7 +60474,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60090,7 +60556,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60171,7 +60638,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60250,7 +60718,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60331,7 +60800,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     },
     {
       "bucket": "alea-hermes-source",
@@ -60412,7 +60882,8 @@
           }
         ]
       },
-      "historical_version_review_required": false
+      "historical_version_review_required": false,
+      "supabase_present": true
     }
   ],
   "verification_freshness_window_seconds": 600
