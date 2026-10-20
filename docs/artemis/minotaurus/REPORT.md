@@ -2,7 +2,7 @@
 
 ## Result
 
-One proposed commit removes 547 original PNGs (1,549,957,260 bytes) and 18 quarantine files (14,155,998 bytes) from the current tree: **1,564,113,258 bytes / 1,564.11 MB** of original assets. Existing WebP files, UI manifests and production image pointers are retained. Main and Git history are unchanged until this PR is reviewed/merged; historical Git objects remain afterward.
+The original deletion commit removes 547 original files (1,549,957,260 bytes) and 18 quarantine files (14,155,998 bytes) from the current tree: **1,564,113,258 bytes / 1,564.11 MB** of original assets. Existing WebP files, UI manifests and production image pointers are retained. Main and Git history are unchanged until this PR is reviewed/merged; historical Git objects remain afterward.
 
 Local full-tree checkout median: **7.6467 s before → 0.2775 s after** (3 fresh destinations each; existing local Git objects, no network). Measured tree size: 1,633,186,234 → 69,048,452 bytes. See `CHECKOUT.json` for exact samples and measured trees. This is filesystem checkout materialization, not a new GitHub Actions clone measurement. PR #113 records a historical ~117.4 s Actions transfer; no comparable new Actions transfer measurement is available yet.
 
@@ -18,13 +18,13 @@ Pilot mode uses a separate content-addressed display path and performs Storage d
 
 - Real Drive STOPP original downloaded from the existing Inbox: Drive ID `1I6Wx2kTtVqN2l76cjwqvdOmN3_iLDY6C`, 2,678,163 PNG bytes, SHA-256 `bc00be5e732aca25b78a7ff7c8cdceed07f097e922da73c13bb44fc05e5b3e49`.
 - Existing converter generated 167,144 WebP bytes, SHA-256 `de7b10aa1e2627afb3e681d0f19e1692f280960aa22ff8435965342faf61a170`, exactly matching the currently active STOPP content-addressed path. See `DRIVE_CONVERSION.json`.
-- SQL readback at **2026-10-20 18:46:11 UTC**: `alea-hermes-source` **0 objects / 0 bytes**; active STOPP pointer unchanged.
+- SQL readback at **2026-10-20 18:58:23 UTC**: `alea-hermes-source` **0 objects / 0 bytes**; active STOPP pointer unchanged.
 - Existing `hermes-v2` Edge Function is now **version 10, ACTIVE, verify_jwt=true**. Deployed source readback confirms no `.upload(` and rejects every publication action except explicit legacy icon rollback. Existing admin authentication is retained. No production image reference was changed.
 - Local tests exercise real conversion for all eight kinds; publisher tests execute the production publisher with mocked Storage/DB responses, testing isolated pilot writes, readback corruption, CAS conflict, already-active verification and rejected legacy/untrusted input. These are not live Storage upload evidence.
 
-**Remaining merge gate:** run the new main-only Drive workflow once in `mode=pilot` with the committed STOPP instruction, using the existing Google WIF and `HERMES_SUPABASE_SERVICE_ROLE_KEY`; retain `HERMES_DIRECT_PILOT_VERIFIED`, confirm the isolated WebP by readback, and recheck source count 0 and unchanged active pointer. The new code has not been exercised in a live Storage upload run. The local executor has no usable publishing credentials/network path; terminal requests stalled and were abandoned. The configured main-only Actions identity is reused rather than widening WIF trust, adding a token or introducing a broker. Deno typecheck is included in focused CI; Deno is not installed locally. No new live publication success is claimed.
+**Remaining live validation after manual merge:** run the new main-only Drive workflow once in `mode=pilot` with the committed STOPP instruction, using the existing Google WIF and `HERMES_SUPABASE_SERVICE_ROLE_KEY`; retain `HERMES_DIRECT_PILOT_VERIFIED`, confirm the isolated WebP by readback, and recheck source count 0 and unchanged active pointer. The new code has not been exercised in a live Storage upload run. The local executor has no usable publishing credentials/network path; terminal requests stalled and were abandoned. The configured main-only Actions identity is reused rather than widening WIF trust, adding a token or introducing a broker. Deno typecheck passed in [MINOTAURUS Actions run 39478636220](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/39478636220); Deno is not installed locally. No new live publication success is claimed.
 
-The PR remains **draft / not ready to merge** until those live checks are resolved through the existing authorized runner. Review can proceed with all completed code and deletions in one commit. No auto-merge.
+The completed code and deletions are ready for review. Because existing WIF is main-only, a reviewer may approve manual merge with the explicitly limited [post-merge STOPP pilot](POST_MERGE_PILOT.md) as the operational acceptance check. This is not a claim that live publication already passed. Production activation remains outside this pilot. No auto-merge.
 
 ## Removed dependencies and overlap
 
@@ -36,7 +36,13 @@ PRs **#126 and #127 are untouched**, including their branches, configuration and
 
 ## Focused verification
 
-- 47 JavaScript tests passed across 7 relevant files.
+- 54 JavaScript tests passed across 9 relevant files, including both gallery asset tests.
 - 15 Python tests passed: 3 direct-flow tests, 2 Git regression guard tests, 10 existing HERMES conversion tests.
 - Publisher and legacy Edge Function TypeScript syntax parsed locally; executable legacy rejection tests cover auth/method errors, PNG multipart rejection, import/retry 410 and diagnostics.
-- Git diff whitespace check and proposed-tree original guard pass. CI repeats the focused regression suite and runs Deno typecheck.
+- Git diff whitespace check and proposed-tree original guard pass. CI repeats the focused regression suite; original-guard and Deno typecheck already passed remotely.
+
+## Final verification follow-up
+
+The initial full PR CI had the exact 29 documented baseline failure names plus two newly affected source-file assertions in `arcane-gallery-release-smoke.test.js` and `arcane-morph-art-assets.test.js`. These two assertions now verify retained WebP bytes against hashes, preserve source identities and ensure the retired Git original paths are absent. The 29 inherited failures were compared by name only, not investigated or modified. The targeted gallery checks are included in the MINOTAURUS guard. See `VERIFICATION.json`.
+
+GitHub’s paginated PR file list confirms all 547 original-file paths and 18 quarantine paths. The deletion stays in its original single commit; this follow-up changes tests and documentation only. Existing WebP bytes and manifests are unchanged. Until manual merge, the retired GitHub workflows are changes in the PR; the legacy Supabase endpoint is already retired in deployed version 10.

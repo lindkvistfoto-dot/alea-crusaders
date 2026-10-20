@@ -53,7 +53,7 @@ Ingen automatisk Drive-radering, Storage-radering eller Git-historikändring ing
 
 ## Leverans och återstående liveprov
 
-Se [MINOTAURUS-rapporten](artemis/minotaurus/REPORT.md), mätprotokollet och pilotens verifierade källhash där. Live Storage-pilot och Actions-typkontroll ska verifieras innan PR:n behandlas som färdig för merge. Ingen automatisk merge.
+Se [MINOTAURUS-rapporten](artemis/minotaurus/REPORT.md), mätprotokollet och pilotens verifierade källhash där. Actions-typkontrollen är godkänd. Eftersom WIF endast tillåter `main` finns en [begränsad STOPP-pilot efter manuell merge](artemis/minotaurus/POST_MERGE_PILOT.md). PR:n kan granskas med denna uttryckliga efterkontroll; livepublicering är ännu inte verifierad. Ingen automatisk merge.
 
 ## 9. HERMES VFX – animationshändelser
 

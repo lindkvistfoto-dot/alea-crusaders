@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {createArcaneGallery} from '../features/material/arcane-gallery.js';
 
@@ -39,10 +39,13 @@ function harness({logged=true,gm=false,history=[],materials=[]}={}){
  return {gallery,auth,reads,requests,revoked,nodes};
 }
 describe('Arcane Gallery release smoke',()=>{
- it('ships the verified original and optimized WebP with preserved transparency',()=>{
+ it('retains verified WebP and historical provenance without a GitHub original dependency',()=>{
   const m=JSON.parse(read('features/material/arcane-gallery-overlay.json').toString());
-  const original=read(m.source_path),app=read(m.app_path);
-  expect(createHash('sha256').update(original).digest('hex')).toBe(m.source_sha256);
+  const app=read(m.app_path);
+  expect(m.source_sha256).toBe('180de8fde27bd0070903692ebb78ce813a03de9d49bc36ee65f6a462d9c45868');
+  expect(m.source_path).toBe('assets/hermes/originals/ui/arcane-gallery-overlay/'+m.source_sha256+'.png');
+  expect(existsSync(new URL('../'+m.source_path,import.meta.url))).toBe(false);
+  expect(m.app_sha256).toBe('a56709bd59bd78508ff4609523deb8194fa8936e9b20ae5e2c96b828a75b92e0');
   expect(createHash('sha256').update(app).digest('hex')).toBe(m.app_sha256);
   expect(app.subarray(0,4).toString('ascii')).toBe('RIFF');
   expect(app.subarray(8,12).toString('ascii')).toBe('WEBP');
