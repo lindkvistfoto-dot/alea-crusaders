@@ -1,0 +1,3616 @@
+{
+  "schema": "skylla-fast-lane-batch/v2",
+  "batch_id": "SKYLLA-BATCH-001",
+  "project_id": "wbmosmkirsitkonejzpg",
+  "bucket": "alea-hermes-source",
+  "approval_required": true,
+  "prepared_at": "2026-10-20T14:08:55.424921+00:00",
+  "entries": [
+    {
+      "id": "d3ed3c9a96e1f58b4f6297519107e22f5f45a0b4c4f942c81ccea162db82229c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/skridskoakning/9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978.png",
+      "sha256": "9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978",
+      "size_bytes": 3850173,
+      "inbox_file_id": "18wFwBqg5eLRVm0X5pOzxUlvthN_qdVZL",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d3f32887-dfcb-4a95-9201-28b07676e0b1",
+        "version": "6646061e-6756-41ad-8e22-9d994ae6019f",
+        "etag": "\"b3af50e740e1bbaf528b3ba8beeb7b2d\"",
+        "last_modified": "2026-10-19T06:40:10.230+00:00",
+        "size_bytes": 3850173
+      },
+      "drive": {
+        "file_id": "1TgpScdtpEjaZGs1yDnXvf1v7kmZ7CxZH",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86Jb3lNOVY0K0IxT1VHaVlqeDdtRHZ5TXVFSEhzPQ",
+        "revision_modified_at": "2026-10-20T12:14:30.468Z",
+        "sha256": "9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978",
+        "size_bytes": 3850173,
+        "full_readback_at": "2026-10-20T12:15:13.864759+00:00",
+        "full_readback_receipt_sha256": "d29a84db96ddf08d9b1b34bc9aaa4afaa82af46ffa156e2236ef6522999758b6"
+      },
+      "dependency": {
+        "job_id": "1b7d5545-fff6-46ff-8bb6-3c6c8bd79307",
+        "kind": "skill",
+        "target_key": "skridskoakning",
+        "app_path": "hermes/skill/skridskoakning/fb0e802af814355563c843f56d039c1eda5dfbd6ca93113eafc0370588da7bc7.webp",
+        "app_sha256": "fb0e802af814355563c843f56d039c1eda5dfbd6ca93113eafc0370588da7bc7",
+        "registry_table": "rule_skills",
+        "registry_id": "skridskoakning",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "a914bd65f6317db9a4b5fb76ad39235622f7853ecae7de7c43ce0628b23cba2d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/rida/d7f0177a03f9f695063612543e111e5afabc107d440aa1434deeeb2f9e80caa0.png",
+      "sha256": "d7f0177a03f9f695063612543e111e5afabc107d440aa1434deeeb2f9e80caa0",
+      "size_bytes": 3810407,
+      "inbox_file_id": "19WyI3ylnVVM1Tp13TBLipoBEp1HqvI0p",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "32c1f7a0-cdae-4813-bdf3-114367cf73dc",
+        "version": "b3a1942c-ff7b-4c55-8df8-508c1954f2c7",
+        "etag": "\"3fdc525249560410b25e790786367ef5\"",
+        "last_modified": "2026-10-19T06:39:41.643+00:00",
+        "size_bytes": 3810407
+      },
+      "drive": {
+        "file_id": "1KMvg6Ce0paSUZvnQTUVE0M97lQrCTRUa",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JNTRnOWxDYzlxeEtDRitBeXYra0Jyd201Um1VPQ",
+        "revision_modified_at": "2026-10-20T12:14:13.073Z",
+        "sha256": "d7f0177a03f9f695063612543e111e5afabc107d440aa1434deeeb2f9e80caa0",
+        "size_bytes": 3810407,
+        "full_readback_at": "2026-10-20T12:15:13.094151+00:00",
+        "full_readback_receipt_sha256": "c59a3cfa692ba85624ae72b85aa287ca6e7689d0ad6072dbe14f478375577f74"
+      },
+      "dependency": {
+        "job_id": "e115f31f-01ef-4dc3-9077-fd3df3868d79",
+        "kind": "skill",
+        "target_key": "rida",
+        "app_path": "hermes/skill/rida/a3f92544e4996b227016550519caa461abe2854c66c2af88f40484fed93797f0.webp",
+        "app_sha256": "a3f92544e4996b227016550519caa461abe2854c66c2af88f40484fed93797f0",
+        "registry_table": "rule_skills",
+        "registry_id": "rida",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "0f08d8e770b58f242cd01057dd299658cab1c12b12a4f0722ce2fad3d7ac5b4e",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/ilmarsch/3abbc297a86eb7aba14cf6f5e753a0deae8731f7e7fd5ddd2d1e145cc3b4046b.png",
+      "sha256": "3abbc297a86eb7aba14cf6f5e753a0deae8731f7e7fd5ddd2d1e145cc3b4046b",
+      "size_bytes": 3810294,
+      "inbox_file_id": "1m6cZY07JYxZOE3jjx9q3t-TwCZt0Dp5q",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "7e30c578-23aa-4276-9ae4-8740826421be",
+        "version": "95a96324-986f-4c09-96a8-318e70a67b0a",
+        "etag": "\"c03f9c8fae235d10bd5c6fd042a633dd\"",
+        "last_modified": "2026-10-19T06:39:27.674+00:00",
+        "size_bytes": 3810294
+      },
+      "drive": {
+        "file_id": "15y4F0fSaM_FFXCK5BVOFMxHZXZ0jVL3K",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JaGo0aTlYVmdVUkJ6eFh5d3cxdTl4RERLTDVZPQ",
+        "revision_modified_at": "2026-10-20T12:07:13.839Z",
+        "sha256": "3abbc297a86eb7aba14cf6f5e753a0deae8731f7e7fd5ddd2d1e145cc3b4046b",
+        "size_bytes": 3810294,
+        "full_readback_at": "2026-10-20T12:07:48.377404+00:00",
+        "full_readback_receipt_sha256": "45342d73f4c413b4e8d220fecb58b6d8a3c501c4a4a576d9a1406085f559a10b"
+      },
+      "dependency": {
+        "job_id": "dd5acad0-5b78-4eb0-8e02-c2d4eb822b28",
+        "kind": "skill",
+        "target_key": "ilmarsch",
+        "app_path": "hermes/skill/ilmarsch/967c269a8abb7d2907525cdac0bb61f48cfd38bdc8127a901f65ec85fcc4fa67.webp",
+        "app_sha256": "967c269a8abb7d2907525cdac0bb61f48cfd38bdc8127a901f65ec85fcc4fa67",
+        "registry_table": "rule_skills",
+        "registry_id": "ilmarsch",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "d172036517bd5b99f82c5c0b012f45b561a65d06c19528a04a9fcde162ae1de5",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/navigera/b4fecf9349eae4611f700c3e91b2595a7192e5f46e6e8883b28650232d805391.png",
+      "sha256": "b4fecf9349eae4611f700c3e91b2595a7192e5f46e6e8883b28650232d805391",
+      "size_bytes": 3745926,
+      "inbox_file_id": "1kF2-YKrDCVac3wkOvL0zmynSdbF221Lx",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "4c6f790c-207a-4c18-bec9-02722fca4c95",
+        "version": "35c66bc3-00fc-4e54-b64d-d7acf04374a7",
+        "etag": "\"3922b9d11f7249f7cc26c4f6e886a03d\"",
+        "last_modified": "2026-10-19T06:39:48.007+00:00",
+        "size_bytes": 3745926
+      },
+      "drive": {
+        "file_id": "1zLboHxjQlRm2go_5kF_sGfn3cPMlpegD",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JN3hsa3A3TStWR21IUFVia3NwL3U0bTNlellZPQ",
+        "revision_modified_at": "2026-10-20T12:08:51.334Z",
+        "sha256": "b4fecf9349eae4611f700c3e91b2595a7192e5f46e6e8883b28650232d805391",
+        "size_bytes": 3745926,
+        "full_readback_at": "2026-10-20T12:09:22.645850+00:00",
+        "full_readback_receipt_sha256": "111fcaa2cf7c37fcd92de4f4c9da03749ee5ba20d891fff6bb65087c57f2f582"
+      },
+      "dependency": {
+        "job_id": "0265660c-0b9d-4500-919b-18112a14109f",
+        "kind": "skill",
+        "target_key": "navigera",
+        "app_path": "hermes/skill/navigera/dff01d4da6f6c6dd678459b6da941f8d55c8c756bbaf822f8a1df2104aac6497.webp",
+        "app_sha256": "dff01d4da6f6c6dd678459b6da941f8d55c8c756bbaf822f8a1df2104aac6497",
+        "registry_table": "rule_skills",
+        "registry_id": "navigera",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "ddaaad487d559aa8832d2e37147c954ecacf77815ef74b95af87f3c0b8a5436d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/grottorientering/5d07681245f9d732ba931e59dd2b92a427a4ad9ab10e118e31936c508aec60e9.png",
+      "sha256": "5d07681245f9d732ba931e59dd2b92a427a4ad9ab10e118e31936c508aec60e9",
+      "size_bytes": 3724337,
+      "inbox_file_id": "1e9Tud4zJWqj2RQLVFJ3zlon-IgzFcXuF",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "9f1b84ec-4148-4749-b28e-a6d44fa9e722",
+        "version": "6513870d-c266-4533-9ec0-1c01c1d21877",
+        "etag": "\"32358f369c28f216b5457ddf91070b70\"",
+        "last_modified": "2026-10-19T06:38:56.194+00:00",
+        "size_bytes": 3724337
+      },
+      "drive": {
+        "file_id": "1VPAPmTQNfWVlh7ildVzmsAoNfOi1yVYY",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JWTZKcFp6cXVvbXJ4ODQ4L1A3bjd4NFJjZVdjPQ",
+        "revision_modified_at": "2026-10-20T12:06:54.972Z",
+        "sha256": "5d07681245f9d732ba931e59dd2b92a427a4ad9ab10e118e31936c508aec60e9",
+        "size_bytes": 3724337,
+        "full_readback_at": "2026-10-20T12:07:47.506861+00:00",
+        "full_readback_receipt_sha256": "3ca387ba4369913d57fbcaaa190833c6c7632ea9147dac2d031ea269d7606477"
+      },
+      "dependency": {
+        "job_id": "b780ed38-67f2-4eca-a5a0-3be219f108f0",
+        "kind": "skill",
+        "target_key": "grottorientering",
+        "app_path": "hermes/skill/grottorientering/c003c2be2b64d1208a2029c0dc1eba8a7528d661d004c54785003d1df2ddacc3.webp",
+        "app_sha256": "c003c2be2b64d1208a2029c0dc1eba8a7528d661d004c54785003d1df2ddacc3",
+        "registry_table": "rule_skills",
+        "registry_id": "grottorientering",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "dbddf9819ac81d701cb356c6a2a3c08c7c3d3455b5a558660cd64d19a8ea40dd",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/frammana-skicka-bort-elementar-vatten/b0b41890385a73b7ac117b948eee3f3b7cf6500adc4d3e37af64c41508de8889.png",
+      "sha256": "b0b41890385a73b7ac117b948eee3f3b7cf6500adc4d3e37af64c41508de8889",
+      "size_bytes": 3688472,
+      "inbox_file_id": "1G_vzCmQrEFTCfMIkbVok46hrNYsurTOB",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "79735e32-43f1-4811-9079-749ecb058988",
+        "version": "2b22ade5-254c-46c2-a636-44a89f06e232",
+        "etag": "\"b74dcaac14a8c42a4c3b0bba9f49c73c\"",
+        "last_modified": "2026-10-19T06:52:29.636+00:00",
+        "size_bytes": 3688472
+      },
+      "drive": {
+        "file_id": "1VyTnwhlyiO8MCVtliqO1yTM8EzEM0KO4",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JTXRTdnBTamZFVTdwWERTdGJEaFJxdG53RkZzPQ",
+        "revision_modified_at": "2026-10-20T12:42:58.737Z",
+        "sha256": "b0b41890385a73b7ac117b948eee3f3b7cf6500adc4d3e37af64c41508de8889",
+        "size_bytes": 3688472,
+        "full_readback_at": "2026-10-20T12:44:06.485890+00:00",
+        "full_readback_receipt_sha256": "e77756afc49d5e3fcab97f5e65cbbf5f77f087c8b8c0a3a7cfa86aee8557c922"
+      },
+      "dependency": {
+        "job_id": "d999ee37-9037-4c40-b044-711df187f045",
+        "kind": "spell-illustration",
+        "target_key": "frammana-skicka-bort-elementar-vatten",
+        "app_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/1811894b-70c1-4e47-a8e8-0ef52cc311fe.webp",
+        "app_sha256": "1811894b70c1fe4728e80ef52cc311fe766269f8c5570941dcea1152090f403a",
+        "registry_table": "rule_spells",
+        "registry_id": "d3145a34-d95c-4631-a8cf-395b73e6aece",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "b9ac310d21c0eff80fab732b7ce9854d18898a715739547bd67a62394dce9783",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/geologi/64227a23b5bd8faf6050742caa4dd4c6e8d168702548db4f2fc157df16f5d44f.png",
+      "sha256": "64227a23b5bd8faf6050742caa4dd4c6e8d168702548db4f2fc157df16f5d44f",
+      "size_bytes": 3671609,
+      "inbox_file_id": "1MAsqbFrxiXIYU6K3BaMsRgezPCwHmdHv",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "be64fc03-e2b5-42f1-acc4-1726a7b1349c",
+        "version": "30816e5a-f07e-4dc3-9270-3fa6983961d3",
+        "etag": "\"a0928e6d663ffd0258f533883339dc0e\"",
+        "last_modified": "2026-10-17T15:39:53.303+00:00",
+        "size_bytes": 3671609
+      },
+      "drive": {
+        "file_id": "1vJ6UiS05Kv0A80FQFbhdWMvSzuZwLIYR",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JNWpOR0dFWXJhWFpZd0Nzakh3NDVQZDNmbXRRPQ",
+        "revision_modified_at": "2026-10-20T12:06:28.814Z",
+        "sha256": "64227a23b5bd8faf6050742caa4dd4c6e8d168702548db4f2fc157df16f5d44f",
+        "size_bytes": 3671609,
+        "full_readback_at": "2026-10-20T12:07:47.157009+00:00",
+        "full_readback_receipt_sha256": "873df3b78cab0ff38a8bdc971d521293e0b30f22e0dc0ee74fe2b2577fda776a"
+      },
+      "dependency": {
+        "job_id": "07c6cd36-7859-49ad-ac32-aceacb34f4e3",
+        "kind": "skill",
+        "target_key": "geologi",
+        "app_path": "hermes/skill/geologi/6458bff214ccbea7147ddc534ea2206c571b7f30d9c3a85c9af59c65e3624a43.webp",
+        "app_sha256": "6458bff214ccbea7147ddc534ea2206c571b7f30d9c3a85c9af59c65e3624a43",
+        "registry_table": "rule_skills",
+        "registry_id": "geologi",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "0ff18ad5c1acc360cc936eec9d12b5b148941306cbed2ab483913f29f92da3a4",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/djurtraning/94e60b9f43be2302a7108bc3371bc514508789eb8cfe08420fd547c0fefe1d1e.png",
+      "sha256": "94e60b9f43be2302a7108bc3371bc514508789eb8cfe08420fd547c0fefe1d1e",
+      "size_bytes": 3671027,
+      "inbox_file_id": "1sCVjG8pb-ktMqtXzISg8J-awcp15jQa1",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "4226a0f4-172d-4cd8-9e29-a89d9c8f30b2",
+        "version": "8012fb9b-a98c-4e38-8b8f-eb4c9d8639a3",
+        "etag": "\"d7c05fe01401d015cb3ea41852f6c0b2\"",
+        "last_modified": "2026-10-19T06:38:43.746+00:00",
+        "size_bytes": 3671027
+      },
+      "drive": {
+        "file_id": "1KiVY2xyW6DgLLlbcflFEQvaPE-ivmPMc",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JM1dlMjhXUGtDOE9LaUNzd09iOVlmUHZBOWxBPQ",
+        "revision_modified_at": "2026-10-20T12:04:57.438Z",
+        "sha256": "94e60b9f43be2302a7108bc3371bc514508789eb8cfe08420fd547c0fefe1d1e",
+        "size_bytes": 3671027,
+        "full_readback_at": "2026-10-20T12:05:38.895989+00:00",
+        "full_readback_receipt_sha256": "175313e7f9731c4f7d359be3e8d14f8dcfd91a370b4357287c7e40fa1f43fca0"
+      },
+      "dependency": {
+        "job_id": "6d5e528a-bace-4839-87a0-7ad07b39c639",
+        "kind": "skill",
+        "target_key": "djurtraning",
+        "app_path": "hermes/skill/djurtraning/966f9455000c3d669b013a5177b58a85c81f0b7f800453258f7fee5daf786327.webp",
+        "app_sha256": "966f9455000c3d669b013a5177b58a85c81f0b7f800453258f7fee5daf786327",
+        "registry_table": "rule_skills",
+        "registry_id": "djurtraning",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "d23a528ed6268dfe637a8cef6e6649e0c10c5d7e4f127ccba2ca51b2648d5d1c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/simma/0ca82a34644524cb7deac136b0ef4ac2b76b18cc77add6c4bdc6341d8b510923.png",
+      "sha256": "0ca82a34644524cb7deac136b0ef4ac2b76b18cc77add6c4bdc6341d8b510923",
+      "size_bytes": 3668589,
+      "inbox_file_id": "1iY3veYo2-jFVo5mpziNxy3Vnd64HLEsX",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "38cd8004-f592-49eb-9c80-364893d397d3",
+        "version": "53c9e702-8843-4c68-a829-f11af1752f85",
+        "etag": "\"d326933b024548677b85663d43e5779d\"",
+        "last_modified": "2026-10-19T06:39:43.055+00:00",
+        "size_bytes": 3668589
+      },
+      "drive": {
+        "file_id": "12EiGXU5P4xWbOK5yjftHYV9gTRRk3ZjR",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86Jam4vN3h6N1NwT21nWkN5Q3FHZDEwL0RZdDVvPQ",
+        "revision_modified_at": "2026-10-20T12:14:18.096Z",
+        "sha256": "0ca82a34644524cb7deac136b0ef4ac2b76b18cc77add6c4bdc6341d8b510923",
+        "size_bytes": 3668589,
+        "full_readback_at": "2026-10-20T12:15:13.348123+00:00",
+        "full_readback_receipt_sha256": "cbddf7114d5c8374af9d8909cfb574ac191ce114f4ec606048ba3f44d35d9ebc"
+      },
+      "dependency": {
+        "job_id": "6181727d-f7d3-48ac-a388-ccb498a54a44",
+        "kind": "skill",
+        "target_key": "simma",
+        "app_path": "hermes/skill/simma/033baa204512ab0eae797fc83d6e5dc494481bc2d81e11772859ebb5cdb83122.webp",
+        "app_sha256": "033baa204512ab0eae797fc83d6e5dc494481bc2d81e11772859ebb5cdb83122",
+        "registry_table": "rule_skills",
+        "registry_id": "simma",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "79017a1113e68c24fb00dbf7cc26059294ad5e0b503c96fe944c094d2bfe6c7f",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/finna-dolda-ting/9948f8f00a21bbf8da7f20f4fc780e4b11f8c08f9bba78dcec0dc7d2b12e286f.png",
+      "sha256": "9948f8f00a21bbf8da7f20f4fc780e4b11f8c08f9bba78dcec0dc7d2b12e286f",
+      "size_bytes": 3646110,
+      "inbox_file_id": "1520G11Xlmp0d22JFHZWkUN4hnEhwb4t5",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d287b724-a3c1-4205-a3b4-6936b029c250",
+        "version": "02f4858e-f561-46e7-aec9-2d5e7e416ffc",
+        "etag": "\"a8ad1c3554faa56ddd5b634f5761f031\"",
+        "last_modified": "2026-10-19T06:38:50.841+00:00",
+        "size_bytes": 3646110
+      },
+      "drive": {
+        "file_id": "14bjfn4xzUUYdw1ahXHeXLk70d9QdcSPe",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JQ0NkeTBJQjg2bzViYTBtV2pIMVZ3bEV2a1JnPQ",
+        "revision_modified_at": "2026-10-20T12:06:09.489Z",
+        "sha256": "9948f8f00a21bbf8da7f20f4fc780e4b11f8c08f9bba78dcec0dc7d2b12e286f",
+        "size_bytes": 3646110,
+        "full_readback_at": "2026-10-20T12:07:46.424837+00:00",
+        "full_readback_receipt_sha256": "f973ec50d94d976e33dfa71438271a62e1b5411e026fd7906fd6e37aec98f85a"
+      },
+      "dependency": {
+        "job_id": "e310cb93-b106-4f23-b6a4-a3c6d419f21d",
+        "kind": "skill",
+        "target_key": "finna-dolda-ting",
+        "app_path": "hermes/skill/finna-dolda-ting/ce12b507282b5a0156d5f20acc7d3347b8b50785a4e9b8bce3c1d00e264c05cb.webp",
+        "app_sha256": "ce12b507282b5a0156d5f20acc7d3347b8b50785a4e9b8bce3c1d00e264c05cb",
+        "registry_table": "rule_skills",
+        "registry_id": "finna_dolda_ting",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "cbad2fd88faf9b10d84e58ba3d7509e51b2cbc1e8eadee19e2ab4e803c69ba9a",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/kora-vagn/e9063cc326b82b9f42784a194d49571640317a50cc53316e758f46c8956b7195.png",
+      "sha256": "e9063cc326b82b9f42784a194d49571640317a50cc53316e758f46c8956b7195",
+      "size_bytes": 3643955,
+      "inbox_file_id": "1sxy04DTP3QOXg-ux2StRcMWg8KD-6DtY",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "1b3308bc-b100-4214-95ec-4deb5f7885a3",
+        "version": "4a73047b-c9cf-40e5-adae-ebda9f24042a",
+        "etag": "\"734c1383bc820f2a211953d3fd2e6fbd\"",
+        "last_modified": "2026-10-19T06:39:34.771+00:00",
+        "size_bytes": 3643955
+      },
+      "drive": {
+        "file_id": "10DO6liTbOqii_JqIiT_QnAKlN5mqUIqJ",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JRjlUVVo5aXpiT1JWYkZ3aVhQN00xUkRkYUNBPQ",
+        "revision_modified_at": "2026-10-20T12:08:30.931Z",
+        "sha256": "e9063cc326b82b9f42784a194d49571640317a50cc53316e758f46c8956b7195",
+        "size_bytes": 3643955,
+        "full_readback_at": "2026-10-20T12:09:21.743090+00:00",
+        "full_readback_receipt_sha256": "0dbcdc05b1ea98b0a92d1eabada61c409a4a016f44465675f1cfaff88d10dfbc"
+      },
+      "dependency": {
+        "job_id": "1b3648b9-3b8b-498a-ab8a-f4fb89a65a4d",
+        "kind": "skill",
+        "target_key": "kora-vagn",
+        "app_path": "hermes/skill/kora-vagn/fc1b07d82b8cf4d698ac75696b39ec56dad115a0cba569e687d466054d26bed1.webp",
+        "app_sha256": "fc1b07d82b8cf4d698ac75696b39ec56dad115a0cba569e687d466054d26bed1",
+        "registry_table": "rule_skills",
+        "registry_id": "kora_vagn",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "9b0f4809eef438a527168024afa94c5560433f280b259273b421947cef73409b",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/kanot/171446fa4ef5073da778c2dac153fc533bb9a4c70fbfbb1e48b39e80d382def6.png",
+      "sha256": "171446fa4ef5073da778c2dac153fc533bb9a4c70fbfbb1e48b39e80d382def6",
+      "size_bytes": 3613429,
+      "inbox_file_id": "1p2PDYRiigUL60AYqvI8MlyzbnTnxcs9_",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "cafe2666-f0e1-4400-8db3-904af61a43a1",
+        "version": "d2b6d1d6-f536-4002-b6b7-5ea4942e1392",
+        "etag": "\"48a40af86074131ac2126bf58d490e86\"",
+        "last_modified": "2026-10-19T06:39:18.879+00:00",
+        "size_bytes": 3613429
+      },
+      "drive": {
+        "file_id": "1Napgb4ZlC8VTVYkMC3oqMKYN5pLNDFI9",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JSWV1SHpINGRUQ2tLOTFERWVrRVhBN0F1OHpVPQ",
+        "revision_modified_at": "2026-10-20T12:08:17.957Z",
+        "sha256": "171446fa4ef5073da778c2dac153fc533bb9a4c70fbfbb1e48b39e80d382def6",
+        "size_bytes": 3613429,
+        "full_readback_at": "2026-10-20T12:09:21.108352+00:00",
+        "full_readback_receipt_sha256": "0b639d73cf0202b67bd47097c1d58c891cf28330e60bd3686092e3521eae62ac"
+      },
+      "dependency": {
+        "job_id": "96450ced-33e3-45f2-88e3-599e61e00a11",
+        "kind": "skill",
+        "target_key": "kanot",
+        "app_path": "hermes/skill/kanot/3a4065800b973cfa986fb291fdbe3033a4ea5085082db4acd428bc66498be192.webp",
+        "app_sha256": "3a4065800b973cfa986fb291fdbe3033a4ea5085082db4acd428bc66498be192",
+        "registry_table": "rule_skills",
+        "registry_id": "kanot",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "08da8956605993c7c6a92f350ee7c4f32de0e8314b38e13966cc485feaa9fe59",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/botanik/0665eae124505e164278d785c31029581db6881b47b96fc7cc9953ba2bd0bf2c.png",
+      "sha256": "0665eae124505e164278d785c31029581db6881b47b96fc7cc9953ba2bd0bf2c",
+      "size_bytes": 3608171,
+      "inbox_file_id": "1LE1vXEsfQ7ov4j4hmyAU1J7bviS_TybB",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "e69d3698-d3e7-49c2-ae86-748d32907871",
+        "version": "6c684e71-23b3-4de6-9b86-5029793af0c4",
+        "etag": "\"9f3418d261f68a207871f3d42ec95778\"",
+        "last_modified": "2026-10-17T14:19:28.166+00:00",
+        "size_bytes": 3608171
+      },
+      "drive": {
+        "file_id": "16ZceBhKCkwFUl0eG0dFK_M5kkSKQi8mE",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JdEtyblZKMzdxR0tRMjdvb1RZazY1N2hUZC9RPQ",
+        "revision_modified_at": "2026-10-20T12:04:59.927Z",
+        "sha256": "0665eae124505e164278d785c31029581db6881b47b96fc7cc9953ba2bd0bf2c",
+        "size_bytes": 3608171,
+        "full_readback_at": "2026-10-20T12:05:38.722913+00:00",
+        "full_readback_receipt_sha256": "406cf20737b5f2017fb5bb3b2ad8f774c92a80857e97f9aef9db36a7e28240ff"
+      },
+      "dependency": {
+        "job_id": "cc89a34f-f945-423f-bea4-4f96b135046e",
+        "kind": "skill",
+        "target_key": "botanik",
+        "app_path": "hermes/skill/botanik/e1a3ff17313c225ae40825aa8e73d2644e7e797127dbb3dfe836c93d2f36d91d.webp",
+        "app_sha256": "e1a3ff17313c225ae40825aa8e73d2644e7e797127dbb3dfe836c93d2f36d91d",
+        "registry_table": "rule_skills",
+        "registry_id": "botanik",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "21b4362c1d964ee6126fcdafb3ceec9c9b223f7f55a2305b8fccfdc11810301c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/skidakning/0abdb4660447f011724bd671e1382c23340b2dabb079ac323a581af95976c06f.png",
+      "sha256": "0abdb4660447f011724bd671e1382c23340b2dabb079ac323a581af95976c06f",
+      "size_bytes": 3601698,
+      "inbox_file_id": "1VyDZm5thHExR10nop27U_E8QH_Xm8Ck_",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "406303a0-f2ba-4256-8201-a5edf6a74ab1",
+        "version": "c4315a66-148c-4f7c-a9af-7aac2d3342b4",
+        "etag": "\"d8df75f1eeb7dfb9b61bec6b615855ef\"",
+        "last_modified": "2026-10-19T06:39:58.400+00:00",
+        "size_bytes": 3601698
+      },
+      "drive": {
+        "file_id": "1uekBpH_8vPWfhX5AvKuRhU0EjqWErwkJ",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JdlZuUG43RzhDU0V2OExrT3VETU80OVlDRDRVPQ",
+        "revision_modified_at": "2026-10-20T12:14:24.491Z",
+        "sha256": "0abdb4660447f011724bd671e1382c23340b2dabb079ac323a581af95976c06f",
+        "size_bytes": 3601698,
+        "full_readback_at": "2026-10-20T12:15:13.616332+00:00",
+        "full_readback_receipt_sha256": "1a2e508f6de1d0c15adfa962858e293c2e9917791b1ddadc7b7c9f6961cfd850"
+      },
+      "dependency": {
+        "job_id": "a1e2bb3e-6360-4bd7-924a-440da357e9fd",
+        "kind": "skill",
+        "target_key": "skidakning",
+        "app_path": "hermes/skill/skidakning/b11edb2c29d46bf5b446699b655df04cb6d800f46e8f51acaae1d80281b4b8a0.webp",
+        "app_sha256": "b11edb2c29d46bf5b446699b655df04cb6d800f46e8f51acaae1d80281b4b8a0",
+        "registry_table": "rule_skills",
+        "registry_id": "skidakning",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "2b08dafa550309bf4c08ed9f83936013dca3afeca79b4545a0cbe183183092e7",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/omradeskannedom/afed800b2c90778fd92ae1d003b4447acfcbe860ae8dc915385960ded15fab76.png",
+      "sha256": "afed800b2c90778fd92ae1d003b4447acfcbe860ae8dc915385960ded15fab76",
+      "size_bytes": 3593379,
+      "inbox_file_id": "1X2NoGMq50OyIDiSlk1FHLGSET_lJogjZ",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "27b66d7b-96ea-408a-84fd-1317f02d474c",
+        "version": "9f48687a-4304-4c60-a9fa-f89b8e28e638",
+        "etag": "\"13a6b83f244ab11a4537740556ff4a06\"",
+        "last_modified": "2026-10-17T16:07:12.442+00:00",
+        "size_bytes": 3593379
+      },
+      "drive": {
+        "file_id": "1zyc4mtjnrtUwODq_dFdqyPgnJUrWQdua",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JVmUvR1FFeDlGOGZ3TjJVbmI2eXJxQi9kQ2JjPQ",
+        "revision_modified_at": "2026-10-20T12:08:53.489Z",
+        "sha256": "afed800b2c90778fd92ae1d003b4447acfcbe860ae8dc915385960ded15fab76",
+        "size_bytes": 3593379,
+        "full_readback_at": "2026-10-20T12:09:22.769039+00:00",
+        "full_readback_receipt_sha256": "2017f9e88d3a19f589bd40da4a47b1d1325340bb6a1ee56a8c438c21b551fec3"
+      },
+      "dependency": {
+        "job_id": "4e374c9b-2169-41fa-8737-c303b1077b40",
+        "kind": "skill",
+        "target_key": "omradeskannedom",
+        "app_path": "hermes/skill/omradeskannedom/a21cfbbffa1a87a50a42afb47732cb963ec8e93435e0448f1e416b1d4408a169.webp",
+        "app_sha256": "a21cfbbffa1a87a50a42afb47732cb963ec8e93435e0448f1e416b1d4408a169",
+        "registry_table": "rule_skills",
+        "registry_id": "omradeskannedom",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "b6e03de7952e4fb3cdc8c48529938a14f1cb4ebc1b8f4eed88f57fddfc4d56b3",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/geografi/73744dc8a4890abc137617f1da8556fb705af809396ac1083aec214f7d86ca92.png",
+      "sha256": "73744dc8a4890abc137617f1da8556fb705af809396ac1083aec214f7d86ca92",
+      "size_bytes": 3568806,
+      "inbox_file_id": "1dHO604-wymMJ6ZNCUxrrSzoqS1ASH-C0",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "2d5dfbd0-eed8-49ea-b5b8-6c8a90a103de",
+        "version": "76019265-ecfd-42e3-885f-98a6a68ec510",
+        "etag": "\"2d71884ecca1cae33804f504b1012202\"",
+        "last_modified": "2026-10-17T15:38:24.516+00:00",
+        "size_bytes": 3568806
+      },
+      "drive": {
+        "file_id": "1iBYrQ8adJg-nTFMjiDZHHzAaX6GY2G-I",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JblhpbStRSUpBK2lvM2JoVmlNTXhSVG5ua3ZJPQ",
+        "revision_modified_at": "2026-10-20T12:06:26.488Z",
+        "sha256": "73744dc8a4890abc137617f1da8556fb705af809396ac1083aec214f7d86ca92",
+        "size_bytes": 3568806,
+        "full_readback_at": "2026-10-20T12:07:47.031691+00:00",
+        "full_readback_receipt_sha256": "fd9da0c660426f035791a873f905629ba08506d7bca1896394e883a7d88da14b"
+      },
+      "dependency": {
+        "job_id": "eec2df09-4875-4bc4-bae3-af614d7d783e",
+        "kind": "skill",
+        "target_key": "geografi",
+        "app_path": "hermes/skill/geografi/c949b6f7c27e9564aad060000b450f8cd4ee18ccecbe0fd604e342b50b19c8da.webp",
+        "app_sha256": "c949b6f7c27e9564aad060000b450f8cd4ee18ccecbe0fd604e342b50b19c8da",
+        "registry_table": "rule_skills",
+        "registry_id": "geografi",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "fd9afaeb08d602fb7b6e94d7a7607bf1adaa6994703f102d266424d5fd1550ec",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/geologi/f7b040b1fe570742fab42177475d271e6a8503651dc7ab762dc9025e3039b81b.png",
+      "sha256": "f7b040b1fe570742fab42177475d271e6a8503651dc7ab762dc9025e3039b81b",
+      "size_bytes": 3521829,
+      "inbox_file_id": "1CXQ82mna_W_0QBSZpB-vFTrKUIE_L0V7",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "907aa669-9e66-49b9-9a97-9742dd09966a",
+        "version": "9b28428d-f07f-42b9-ba97-b1e41a2bc0da",
+        "etag": "\"3433b7d49f17d8bcf54aef9daa706721\"",
+        "last_modified": "2026-10-17T22:54:34.429+00:00",
+        "size_bytes": 3521829
+      },
+      "drive": {
+        "file_id": "16zJ-wsZoZmseWlVb71IEXB0BsnMUNNvq",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JcEp1SUIzcmRXakVVQkx5YWxVWE9YRFA0QkJvPQ",
+        "revision_modified_at": "2026-10-20T11:56:23.196Z",
+        "sha256": "f7b040b1fe570742fab42177475d271e6a8503651dc7ab762dc9025e3039b81b",
+        "size_bytes": 3521829,
+        "full_readback_at": "2026-10-20T11:56:54.772984+00:00",
+        "full_readback_receipt_sha256": "97ab6152007dc715e1e7db19b5e8aa9864df5b56b742889e08647fba7c18e743"
+      },
+      "dependency": {
+        "job_id": "13fa17ce-a017-49fe-96f0-cf573f7c23ee",
+        "kind": "skill-illustration",
+        "target_key": "geologi",
+        "app_path": "skill/geologi/illustration/9bc1466d-a38f-4af8-a6d3-847f6666f3a8.webp",
+        "app_sha256": "9bc1466da38faaf8e6d3847f6666f3a852718a142b86cb1bf1f671ac224a4bdc",
+        "registry_table": "rule_skills",
+        "registry_id": "geologi",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "6b1315171605dac167fea05e06ebb270a1e65e543f95dcfa302d0e836988b407",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/fiska/17941afa008b117cef60df8097c1fbbc07c6a4ad898a47739e7bec8c914a35db.png",
+      "sha256": "17941afa008b117cef60df8097c1fbbc07c6a4ad898a47739e7bec8c914a35db",
+      "size_bytes": 3492516,
+      "inbox_file_id": "1Fo4nuNL6Is63tgYN0IlH-hil1Fz8uEfR",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "83213e7a-2b58-48b6-a3b5-2166b017aa00",
+        "version": "c677b8d2-174d-46dc-b8ea-c39fd4e447aa",
+        "etag": "\"44164ea9fc77037b12b2475b31ef6c94\"",
+        "last_modified": "2026-10-17T14:15:54.837+00:00",
+        "size_bytes": 3492516
+      },
+      "drive": {
+        "file_id": "1os6y9JdmY2OY2H1PmjYxdNO613vlF1_R",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JVk1KOGVDb0NQQ3MzSnp2R1FFY1pBczRPbmxZPQ",
+        "revision_modified_at": "2026-10-20T12:06:14.802Z",
+        "sha256": "17941afa008b117cef60df8097c1fbbc07c6a4ad898a47739e7bec8c914a35db",
+        "size_bytes": 3492516,
+        "full_readback_at": "2026-10-20T12:07:46.579477+00:00",
+        "full_readback_receipt_sha256": "0168e1292ad0b6a90e09a4daba26bd6bcdae74a2c29fd3e19ba83ffb217eb723"
+      },
+      "dependency": {
+        "job_id": "d2e5ef2c-9436-4b8c-8daa-5e9b9a7f945d",
+        "kind": "skill",
+        "target_key": "fiska",
+        "app_path": "hermes/skill/fiska/4e2932a39130c9f959dadeeb8c89f89499fcd49886079b1ed88921286ef3ad46.webp",
+        "app_sha256": "4e2932a39130c9f959dadeeb8c89f89499fcd49886079b1ed88921286ef3ad46",
+        "registry_table": "rule_skills",
+        "registry_id": "fiska",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "6d673d7bfce9d356c497f3b4fde78bc601ad21f3d1b7410a6b4f5a4d17be5ca1",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/forandra/5536f9446c8f257399f6a7c593b43c329f23411efee4c823b051a5dc66e4ef8d.png",
+      "sha256": "5536f9446c8f257399f6a7c593b43c329f23411efee4c823b051a5dc66e4ef8d",
+      "size_bytes": 3488230,
+      "inbox_file_id": "1aFViPnP0AFJSthYadzL2tJ2hQcgQApsd",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "dcd5d40d-3b26-4154-a685-193c3b37ec00",
+        "version": "96279dff-10da-4a13-941e-74e9d78fca38",
+        "etag": "\"5132852e3e6eaad5075d43ca69291b74\"",
+        "last_modified": "2026-10-18T19:40:26.598+00:00",
+        "size_bytes": 3488230
+      },
+      "drive": {
+        "file_id": "1bvLVMHb663xLTF12N4B9i3fXlXyry93I",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JazBHYlFGOFJWMHFYOVU4T3FuMDg0UFZseXdZPQ",
+        "revision_modified_at": "2026-10-20T12:42:35.786Z",
+        "sha256": "5536f9446c8f257399f6a7c593b43c329f23411efee4c823b051a5dc66e4ef8d",
+        "size_bytes": 3488230,
+        "full_readback_at": "2026-10-20T12:44:05.793181+00:00",
+        "full_readback_receipt_sha256": "433f54edc266f6e439442ac50b58c80420baf03dd4519fd0a355e4d226dfa425"
+      },
+      "dependency": {
+        "job_id": "6a8f37a0-6da6-4512-8517-2dea8a1b8671",
+        "kind": "spell-illustration",
+        "target_key": "forandra",
+        "app_path": "spell/db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087/067c79d5-fd7a-4a6f-bee9-17a7de219168.webp",
+        "app_sha256": "067c79d5fd7aaa6fbee917a7de219168d4414912990c5d4f666831276e9122f9",
+        "registry_table": "rule_spells",
+        "registry_id": "db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "3cf800581557f85a08bf6860907f632368a7b72313ec3eba41563f51ba150b77",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/zoologi/8be473c707555d58371cd90b3b304656108f2d376c0a59e6fa8bbf7c587c7754.png",
+      "sha256": "8be473c707555d58371cd90b3b304656108f2d376c0a59e6fa8bbf7c587c7754",
+      "size_bytes": 3481040,
+      "inbox_file_id": "1kGR0uUgvj43u0PP_jSsbOITFuNZ60nM4",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "925e22db-0899-4303-bc89-9193c3bc7b49",
+        "version": "11c205d6-3346-4fb0-abc1-07d0b49465c6",
+        "etag": "\"abe4a4a1a9df6740493a156caabb1d8d\"",
+        "last_modified": "2026-10-17T16:19:44.867+00:00",
+        "size_bytes": 3481040
+      },
+      "drive": {
+        "file_id": "1kzEH5jp8rdQ4oddBPOliUfSKRuv0F_-R",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JcDYvVEZrYTloZUJGWTllSyt2Vm5uNVQwTE5jPQ",
+        "revision_modified_at": "2026-10-20T12:16:05.966Z",
+        "sha256": "8be473c707555d58371cd90b3b304656108f2d376c0a59e6fa8bbf7c587c7754",
+        "size_bytes": 3481040,
+        "full_readback_at": "2026-10-20T12:17:31.270017+00:00",
+        "full_readback_receipt_sha256": "fefa9061731129fe0a458869fa17f0ae7d46599c84208e23ad60b856746a88f8"
+      },
+      "dependency": {
+        "job_id": "3c2d84b4-c992-4fdb-8399-308797540078",
+        "kind": "skill",
+        "target_key": "zoologi",
+        "app_path": "hermes/skill/zoologi/ee6538f7bf7bd7d4421204df095efde255427f8ff605d52ed139b57b18c50aef.webp",
+        "app_sha256": "ee6538f7bf7bd7d4421204df095efde255427f8ff605d52ed139b57b18c50aef",
+        "registry_table": "rule_skills",
+        "registry_id": "zoologi",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "b339bd0766a8b049fb82c5ce3eb33beeefbe2902c5011cd95cf26a7e608f88da",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/orientering/9ddb4a27a9d9abffc148adaa41e2301fc29318c97754c77a8db5da15b59c8829.png",
+      "sha256": "9ddb4a27a9d9abffc148adaa41e2301fc29318c97754c77a8db5da15b59c8829",
+      "size_bytes": 3471602,
+      "inbox_file_id": "1y6leTFhkIZ7EDEMb2n1RHurXF7vvrUm0",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "6dd4001d-9407-43b7-aa1d-37eac16df42f",
+        "version": "d2b74251-b5d3-41b5-b964-a438e75f9b58",
+        "etag": "\"3ee8c54c949302e4d03f76d855de1859\"",
+        "last_modified": "2026-10-17T14:16:09.527+00:00",
+        "size_bytes": 3471602
+      },
+      "drive": {
+        "file_id": "1GQLHNZds-mpu9OQSg5nayZwLvgq3Qd6i",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JbzNsNjFTdGFCT1c4V0p1dmZndkxpcktiVlY0PQ",
+        "revision_modified_at": "2026-10-20T12:08:58.546Z",
+        "sha256": "9ddb4a27a9d9abffc148adaa41e2301fc29318c97754c77a8db5da15b59c8829",
+        "size_bytes": 3471602,
+        "full_readback_at": "2026-10-20T12:09:22.919134+00:00",
+        "full_readback_receipt_sha256": "2b2aa3ca605fb7f1db04d1f4ca749a4b031a966cf00cbe74ade2313d54e7849a"
+      },
+      "dependency": {
+        "job_id": "1056db06-5486-46ee-94ad-e86e98c936e9",
+        "kind": "skill",
+        "target_key": "orientering",
+        "app_path": "hermes/skill/orientering/483ac0b651a54ba0216530159eccfa283081c86a40772264602a8612db20355d.webp",
+        "app_sha256": "483ac0b651a54ba0216530159eccfa283081c86a40772264602a8612db20355d",
+        "registry_table": "rule_skills",
+        "registry_id": "orientering",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "868129b25d6671aaa0085099e0b95338382d2f6b373605238c36d4089431d43c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/akrobatik/ce1c5784cae196513be6045b7d26d1e7ed50c225e13533eeead247682180fe47.png",
+      "sha256": "ce1c5784cae196513be6045b7d26d1e7ed50c225e13533eeead247682180fe47",
+      "size_bytes": 3465637,
+      "inbox_file_id": "1Ic4PARN4bQ4cPVpem7JU4nMVdTQEemoT",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "08d81249-487d-4684-9219-b882fb141fae",
+        "version": "186e4b54-cce8-4e11-a543-70d63ce44947",
+        "etag": "\"3e3ba3983f55bca705dcc8728ad315c8\"",
+        "last_modified": "2026-10-17T20:57:05.696+00:00",
+        "size_bytes": 3465637
+      },
+      "drive": {
+        "file_id": "1M8lnWXfiUHxwarTT2nEY7qsEDpuMj_Bs",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JM0thcDVwc3JqWG9DMEtrc0RDc3FCUWlFR0lBPQ",
+        "revision_modified_at": "2026-10-20T12:04:41.935Z",
+        "sha256": "ce1c5784cae196513be6045b7d26d1e7ed50c225e13533eeead247682180fe47",
+        "size_bytes": 3465637,
+        "full_readback_at": "2026-10-20T12:05:37.929550+00:00",
+        "full_readback_receipt_sha256": "fb32e7b61418d6857d777e2028ee6d97299b04e1c7798084c1d5cfa0931b1d3e"
+      },
+      "dependency": {
+        "job_id": "e07b0e77-b6f4-4ec4-9c61-7b0cb455b7b2",
+        "kind": "skill",
+        "target_key": "akrobatik",
+        "app_path": "hermes/skill/akrobatik/b86b465be50eff4df02d41163903b787118bce87ef1b0321a6bad300814f5133.webp",
+        "app_sha256": "b86b465be50eff4df02d41163903b787118bce87ef1b0321a6bad300814f5133",
+        "registry_table": "rule_skills",
+        "registry_id": "akrobatik",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "8e9a5111afd3f8db8704f0de17b61914242f4f046ad02dee749e20e84514fcaf",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/omradeskannedom/f203bd35e9af3842edebd627da280de8949eacefe92d5618ea1f662ca9f3364b.png",
+      "sha256": "f203bd35e9af3842edebd627da280de8949eacefe92d5618ea1f662ca9f3364b",
+      "size_bytes": 3454518,
+      "inbox_file_id": "1jYyhMrJoTSPC88CroF6UiQQsAtETlvZX",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "f5355b18-f9c1-4476-9d7d-7670ee1d8e3e",
+        "version": "6b8bc09c-191b-4eef-9e69-c1629d7b719a",
+        "etag": "\"4dd578761570cfcb18ac6c90eae8400e\"",
+        "last_modified": "2026-10-18T14:05:53.145+00:00",
+        "size_bytes": 3454518
+      },
+      "drive": {
+        "file_id": "1FILqtKfMifEvKMpFBxXCmw9aDq1dnDDC",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JRUdpditvMlA0RmUrYUhzdGZaYmFsN0ZtZnFjPQ",
+        "revision_modified_at": "2026-10-20T11:49:10.516Z",
+        "sha256": "f203bd35e9af3842edebd627da280de8949eacefe92d5618ea1f662ca9f3364b",
+        "size_bytes": 3454518,
+        "full_readback_at": "2026-10-20T11:50:20.629873+00:00",
+        "full_readback_receipt_sha256": "67139c27859890cf72e448943af47c1f6fff207a8a7f5b4df3f591f4a8c6f0ff"
+      },
+      "dependency": {
+        "job_id": "9ae9783c-072d-4a07-9bed-79caf507eecf",
+        "kind": "skill-illustration-wide",
+        "target_key": "omradeskannedom",
+        "app_path": "skill/omradeskannedom/illustration_wide/b688c1f8-472b-4bbb-9c4c-4eb19c64aebc.webp",
+        "app_sha256": "b688c1f8472b8bbbdc4c4eb19c64aebcdea2388c2423e03b270f96e7c9c89da3",
+        "registry_table": "rule_skills",
+        "registry_id": "omradeskannedom",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "9f6d99354700e03c7e395d0feec0c0cb1cd4822d5f968d8e0323dc7fd5c3221f",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/kulturkannedom/2f5268ae914a14546372100b9c7c401d012f5d5d4cff891ee288125ee77d9f19.png",
+      "sha256": "2f5268ae914a14546372100b9c7c401d012f5d5d4cff891ee288125ee77d9f19",
+      "size_bytes": 3429022,
+      "inbox_file_id": "1PF8iIaWhKXbBQR-DSsh4f6UeJemeY26L",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "6e7262c8-6504-4b3e-aa91-cd2c0801b8d6",
+        "version": "ea420c66-c7a3-49ba-b347-9ababaf28177",
+        "etag": "\"6c0d48a0c34f061bf97b17852739f11a\"",
+        "last_modified": "2026-10-17T15:56:07.784+00:00",
+        "size_bytes": 3429022
+      },
+      "drive": {
+        "file_id": "1LpPz_nCsFqtildGDSqBoJjMqW77AbVLM",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JdEJLZGR4RnNBUkg4VTVrZWROa0poS1FEaEMwPQ",
+        "revision_modified_at": "2026-10-20T12:08:33.260Z",
+        "sha256": "2f5268ae914a14546372100b9c7c401d012f5d5d4cff891ee288125ee77d9f19",
+        "size_bytes": 3429022,
+        "full_readback_at": "2026-10-20T12:09:21.868044+00:00",
+        "full_readback_receipt_sha256": "5867adf4b17468075c6a0bb9fec882cc331c6f56a1b883683a732a59be53af63"
+      },
+      "dependency": {
+        "job_id": "f6d5161e-4763-4a81-aef1-1f96fb1106c1",
+        "kind": "skill",
+        "target_key": "kulturkannedom",
+        "app_path": "hermes/skill/kulturkannedom/570d695dd17575b3c2a8d4afc8d8dea76ade9827ba3dd3b2ca64e61078918299.webp",
+        "app_sha256": "570d695dd17575b3c2a8d4afc8d8dea76ade9827ba3dd3b2ca64e61078918299",
+        "registry_table": "rule_skills",
+        "registry_id": "kulturkannedom",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "abd223ff94447233df767758ac281a20169da353621f54a59e86c58f58510da6",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/jaga/c7a947e819376b6783741f65d04a8c7c30cfa0dfb33dc9e0273c592a7a39c643.png",
+      "sha256": "c7a947e819376b6783741f65d04a8c7c30cfa0dfb33dc9e0273c592a7a39c643",
+      "size_bytes": 3402687,
+      "inbox_file_id": "1mZXfFjdLaRzZV0Heyrnk5G5Or472H5ly",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "4f7d8424-afe4-48ca-846e-bd8a917e56cb",
+        "version": "d360e66e-1c6e-434f-b7b4-6a4e1ecc36b4",
+        "etag": "\"98f289046a25f277967cd4fe77b568e5\"",
+        "last_modified": "2026-10-18T12:58:01.994+00:00",
+        "size_bytes": 3402687
+      },
+      "drive": {
+        "file_id": "1xtkM0dYOeK18ZmflfxRcIpywOcVmD4x8",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JSDNSaDdVMTUrUW5BMEpUTWIvUVp4VTFDVW44PQ",
+        "revision_modified_at": "2026-10-20T11:45:28.462Z",
+        "sha256": "c7a947e819376b6783741f65d04a8c7c30cfa0dfb33dc9e0273c592a7a39c643",
+        "size_bytes": 3402687,
+        "full_readback_at": "2026-10-20T11:46:07.306467+00:00",
+        "full_readback_receipt_sha256": "c6609e4195b02a4fd056be8957d10cd30f0e5219058df0eb7bf5dbc38fc99a22"
+      },
+      "dependency": {
+        "job_id": "00d1a311-64d4-44a2-9bf4-0d8354b686a7",
+        "kind": "skill-illustration-wide",
+        "target_key": "jaga",
+        "app_path": "skill/jaga/illustration_wide/4f42d709-14f1-4b59-b9ad-a2bae0dfa2f0.webp",
+        "app_sha256": "4f42d70914f13b5939ada2bae0dfa2f0c85fab16da61780edb0f4a787fe8dc9e",
+        "registry_table": "rule_skills",
+        "registry_id": "jaga",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "77f2bcf12a63a27c9a04414049eb399fa5deb0cc1b8fd45966786bed590393c4",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/overlevnad/b28c3224f315d6aa87f20f410cdc6c4a09627fab2294b51e82d18cef1f6d21a8.png",
+      "sha256": "b28c3224f315d6aa87f20f410cdc6c4a09627fab2294b51e82d18cef1f6d21a8",
+      "size_bytes": 3394695,
+      "inbox_file_id": "1MO9S2JaPSCbLwHQREtu3NjMy8gFNFwuD",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "bcf63d71-7439-4ad3-8ba5-dd66e2638312",
+        "version": "3eebfc8e-3e33-4b75-b460-f33baec8dc7b",
+        "etag": "\"1eeefb3f9ca2e70476b6b6bd71061642\"",
+        "last_modified": "2026-10-17T14:16:31.396+00:00",
+        "size_bytes": 3394695
+      },
+      "drive": {
+        "file_id": "1CJHTHA23Hfc5G9Z8SpjThGfQAHrb_Scr",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JQjBQT1FkeXp6L0lmYnRPeHJwODNWczhxV1o4PQ",
+        "revision_modified_at": "2026-10-20T12:08:56.338Z",
+        "sha256": "b28c3224f315d6aa87f20f410cdc6c4a09627fab2294b51e82d18cef1f6d21a8",
+        "size_bytes": 3394695,
+        "full_readback_at": "2026-10-20T12:09:23.064331+00:00",
+        "full_readback_receipt_sha256": "efd5284173b18bc9928d0204474eb7cd4555a9b7e5c2ca9616114edbfb355cd7"
+      },
+      "dependency": {
+        "job_id": "6275d5ba-edd3-40d4-835e-5d072aef1e2a",
+        "kind": "skill",
+        "target_key": "overlevnad",
+        "app_path": "hermes/skill/overlevnad/ef9c7db05a540e3d114fc2ca97b8c0487d36e96f86e0ba4b37d2b12f8c58e784.webp",
+        "app_sha256": "ef9c7db05a540e3d114fc2ca97b8c0487d36e96f86e0ba4b37d2b12f8c58e784",
+        "registry_table": "rule_skills",
+        "registry_id": "overlevnad",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "4362970dc348829807732a2eac5863d9e371b440793a2f2d1827492f88963ac8",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/geografi/777ac2c82e03345ecc795d5cca4a5a8291aa8e83713bf6aedc0429ee0ef32ce6.png",
+      "sha256": "777ac2c82e03345ecc795d5cca4a5a8291aa8e83713bf6aedc0429ee0ef32ce6",
+      "size_bytes": 3394158,
+      "inbox_file_id": "1e8Lij4FWBQpmbiMIpRZ0P-VtmVzBabCL",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "4c585c79-f7d0-4308-afff-6c9b8e1449f0",
+        "version": "328da4b1-6343-4365-aa3c-efa65477259e",
+        "etag": "\"615b7ffeb22ad696fbcc955b97a71422\"",
+        "last_modified": "2026-10-17T22:51:58.873+00:00",
+        "size_bytes": 3394158
+      },
+      "drive": {
+        "file_id": "13ox8WJHGZsrLBM-NQOdRg_xoVYf9tyyD",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JN0Z0YU96aXlqQ280elNPYUhlR0VaY1JFTUU0PQ",
+        "revision_modified_at": "2026-10-20T11:56:19.237Z",
+        "sha256": "777ac2c82e03345ecc795d5cca4a5a8291aa8e83713bf6aedc0429ee0ef32ce6",
+        "size_bytes": 3394158,
+        "full_readback_at": "2026-10-20T11:56:54.113453+00:00",
+        "full_readback_receipt_sha256": "a7c2e130c4b01584027e3782f17b689b9ca200010cd62a54ca523c6119c92001"
+      },
+      "dependency": {
+        "job_id": "5735a8d6-9ba7-4876-93cf-c6a6c4d09b1a",
+        "kind": "skill-illustration",
+        "target_key": "geografi",
+        "app_path": "skill/geografi/illustration/bf5053bf-a18e-439e-a03a-147d1bf8c0e4.webp",
+        "app_sha256": "bf5053bfa18e339e203a147d1bf8c0e4b4a5c6e96125c9f68f296337e2b9445b",
+        "registry_table": "rule_skills",
+        "registry_id": "geografi",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "2d34870c87a7c8440abd8dd5c5456008489ec488128d7b351a1a377ea75ba2d1",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/rida/a3cb2e0036e43203dfe0ebe858cdc5d84d62f530d4d44cd749232fa7db2ae938.png",
+      "sha256": "a3cb2e0036e43203dfe0ebe858cdc5d84d62f530d4d44cd749232fa7db2ae938",
+      "size_bytes": 3385009,
+      "inbox_file_id": "1BwZI-VgtV60GnKn4gaiP-lwUOXxvtcCI",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "3d521e2c-8c08-41df-b0f7-5ab383d70942",
+        "version": "a74e3326-e815-4efc-8e2e-90fb282623f0",
+        "etag": "\"970d58f71fca72be156c16a3287c4d5e\"",
+        "last_modified": "2026-10-19T05:02:05.572+00:00",
+        "size_bytes": 3385009
+      },
+      "drive": {
+        "file_id": "1AahJJm08XMly-Dz5NpbY95szsolxZWMH",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JdUJFSzBEOXJuc2lOSVNwMDlDSWFreDQremVFPQ",
+        "revision_modified_at": "2026-10-20T11:49:45.943Z",
+        "sha256": "a3cb2e0036e43203dfe0ebe858cdc5d84d62f530d4d44cd749232fa7db2ae938",
+        "size_bytes": 3385009,
+        "full_readback_at": "2026-10-20T11:50:26.309866+00:00",
+        "full_readback_receipt_sha256": "ffdc888df101317d1d4e455d14e973db78811ae0adc2141c88cc7a901e686163"
+      },
+      "dependency": {
+        "job_id": "99a1e3b6-2d29-452b-9c25-c298d6eddff9",
+        "kind": "skill-illustration-wide",
+        "target_key": "rida",
+        "app_path": "skill/rida/illustration_wide/354574cb-c6b9-4b66-bb34-bafca5e05c01.webp",
+        "app_sha256": "354574cbc6b90b66bb34bafca5e05c0175cc7318ffddae6993800e86086d766a",
+        "registry_table": "rule_skills",
+        "registry_id": "rida",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "74b94d39c30c76847abaf30638fe19525d1324b0065f87f8bbe4c46fea5ea3cf",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/hasardspel/2ef567ec0f4e9f84a68a94a587863ab4b8d5328815e265399a620f1274c3b71a.png",
+      "sha256": "2ef567ec0f4e9f84a68a94a587863ab4b8d5328815e265399a620f1274c3b71a",
+      "size_bytes": 3381087,
+      "inbox_file_id": "1QSI_bmAgvGsaQpSvjKR3bO2JqbV1OkY9",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "68b3d73d-b18e-46b8-9ea2-be1db822a69e",
+        "version": "d0336b59-44b5-488e-8052-731465dc00a0",
+        "etag": "\"d3524444193b4afb66f61d21e16cd773\"",
+        "last_modified": "2026-10-19T06:40:00.038+00:00",
+        "size_bytes": 3381087
+      },
+      "drive": {
+        "file_id": "1CAY8zF2NCwQ9lXA9mVrWAAimj-LH9eth",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86Jd043cVlDcjRNUC9EaGtDRityN2JJMjVraUNFPQ",
+        "revision_modified_at": "2026-10-20T12:07:01.776Z",
+        "sha256": "2ef567ec0f4e9f84a68a94a587863ab4b8d5328815e265399a620f1274c3b71a",
+        "size_bytes": 3381087,
+        "full_readback_at": "2026-10-20T12:07:47.886008+00:00",
+        "full_readback_receipt_sha256": "de4608e7daef57cfc1e55287e00b96663463f500e77456711ea384cdefcdbfc2"
+      },
+      "dependency": {
+        "job_id": "b18a6b2a-a8e5-4de9-be9e-ba82b5c38853",
+        "kind": "skill",
+        "target_key": "hasardspel",
+        "app_path": "hermes/skill/hasardspel/c06986395deb5de5e597f7ffd2fc002711ef7f7afc2bdaf487399e04d35f43ca.webp",
+        "app_sha256": "c06986395deb5de5e597f7ffd2fc002711ef7f7afc2bdaf487399e04d35f43ca",
+        "registry_table": "rule_skills",
+        "registry_id": "hasardspel",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "bcd91012cdb0832453f531d7072c11a43655df8ad410a792ce9be0a36c0462c5",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/astrologi/a11674985eb2ba7a4659e33b30f34907a8cf9819bfc385729084d642f0313a32.png",
+      "sha256": "a11674985eb2ba7a4659e33b30f34907a8cf9819bfc385729084d642f0313a32",
+      "size_bytes": 3380063,
+      "inbox_file_id": "1oleyJxQr5kJEsL5cVx2yE6W7_Hlxq-Dg",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "8aea4060-7423-4b43-a091-592a1ab01375",
+        "version": "2feafaf2-1000-46a2-a41e-0a3d69c58447",
+        "etag": "\"05892508479f2b6576f838ec7a182108\"",
+        "last_modified": "2026-10-17T15:26:20.842+00:00",
+        "size_bytes": 3380063
+      },
+      "drive": {
+        "file_id": "19UwY4NNo97ydbmMa2DT4il67eQm41Dep",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JVGJlWTQ2c3RDUmRmMjgvZ2NHUi9jek5UYXNNPQ",
+        "revision_modified_at": "2026-10-20T12:04:47.147Z",
+        "sha256": "a11674985eb2ba7a4659e33b30f34907a8cf9819bfc385729084d642f0313a32",
+        "size_bytes": 3380063,
+        "full_readback_at": "2026-10-20T12:05:38.193356+00:00",
+        "full_readback_receipt_sha256": "0ce4bf330ceaa518a324deb0d1a6425d87314b5f6c73a7c965be7a7083f467ae"
+      },
+      "dependency": {
+        "job_id": "f2b2e5f9-26e4-4f88-b583-8598d0413481",
+        "kind": "skill",
+        "target_key": "astrologi",
+        "app_path": "hermes/skill/astrologi/f8dfeedc179c48e0e02656d10bc9e55ab11ac34f7eba0d1b2a8c70a8ba1dc17d.webp",
+        "app_sha256": "f8dfeedc179c48e0e02656d10bc9e55ab11ac34f7eba0d1b2a8c70a8ba1dc17d",
+        "registry_table": "rule_skills",
+        "registry_id": "astrologi",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "4b19d4f197d65ee15357d753121b6642ad32dd88f88f9f0807fa843436d2ea50",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/motstandskraft/18698cb27c351b7900ff2a4c194148035d5d02161760d45bc21706fcfd256f11.png",
+      "sha256": "18698cb27c351b7900ff2a4c194148035d5d02161760d45bc21706fcfd256f11",
+      "size_bytes": 3371262,
+      "inbox_file_id": "1m-enykAhoa15dnUYmsLLNFlMzYueg35-",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "eec87411-28d3-4065-b3c7-8fb3a4e1afec",
+        "version": "fd581a09-1d3a-46d0-bd41-b2583b62562d",
+        "etag": "\"f30de414a075ad72c0894757c828c78c\"",
+        "last_modified": "2026-10-19T05:36:55.843+00:00",
+        "size_bytes": 3371262
+      },
+      "drive": {
+        "file_id": "1ojNlj-UK2nOtxYGwyGPdZMY_QBi6gd7-",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JclliQklTQ0dPSzNaOVV3MVAzRmthUU1ncEtZPQ",
+        "revision_modified_at": "2026-10-20T12:29:41.785Z",
+        "sha256": "18698cb27c351b7900ff2a4c194148035d5d02161760d45bc21706fcfd256f11",
+        "size_bytes": 3371262,
+        "full_readback_at": "2026-10-20T12:30:36.338844+00:00",
+        "full_readback_receipt_sha256": "de508a201cbcf01bacbbf592720bcc1afcd4ac36ed97e45e8d41eb9988bdcc1b"
+      },
+      "dependency": {
+        "job_id": "3f939b2e-6e7c-4a73-90bd-444098301b22",
+        "kind": "spell-illustration-wide",
+        "target_key": "motstandskraft",
+        "app_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/943d9e22-6676-4935-8cc9-77db0510f9cf.webp",
+        "app_sha256": "943d9e226676a9350cc977db0510f9cf20fe9abbed460c99354b514eb51002db",
+        "registry_table": "rule_spells",
+        "registry_id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "61ed3ebf1cc3a67a77e71289a287888279171ce0774d2ed6b5becd11f1d63125",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/frammana-skicka-bort-elementar-jord/b451ab6fe93d2ae38badd983156e9ae6765650f0668fb02671c8056382ff2dfc.png",
+      "sha256": "b451ab6fe93d2ae38badd983156e9ae6765650f0668fb02671c8056382ff2dfc",
+      "size_bytes": 3355275,
+      "inbox_file_id": "1iBiO4RO3aQOL2T2hHBXMlAvhpboycjEq",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "5d423960-978d-42c6-a9c0-2751283adab9",
+        "version": "d02d5d73-91ac-4432-9f0b-e2618d388652",
+        "etag": "\"82e1528c0d60e0d7b96a91c4fb5908fc\"",
+        "last_modified": "2026-10-18T19:45:30.228+00:00",
+        "size_bytes": 3355275
+      },
+      "drive": {
+        "file_id": "1C7rrsC1JCUrCoh53PcXvO5VXWQhNR0SB",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JTlRVdlVIMXFNek15UnpVbHpKcmRCQUVCR05vPQ",
+        "revision_modified_at": "2026-10-20T12:42:54.617Z",
+        "sha256": "b451ab6fe93d2ae38badd983156e9ae6765650f0668fb02671c8056382ff2dfc",
+        "size_bytes": 3355275,
+        "full_readback_at": "2026-10-20T12:44:06.302223+00:00",
+        "full_readback_receipt_sha256": "55cea4b27ea817f7b7381e7a96c68dda254ff7b479129140683b357b31884f87"
+      },
+      "dependency": {
+        "job_id": "119a63e4-1b34-431f-a18a-c62fa5b71fa3",
+        "kind": "spell-illustration",
+        "target_key": "frammana-skicka-bort-elementar-jord",
+        "app_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/e9910d30-9c1a-442e-8bc3-d1b8de7c8111.webp",
+        "app_sha256": "e9910d309c1a942e8bc3d1b8de7c81113c7ef18793eea2ac8d6397bb65c2ccba",
+        "registry_table": "rule_spells",
+        "registry_id": "1e9035e1-44db-455d-a510-553be3ed4a83",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "50a338368a5e06cc2adb60c139db80dfe7ca3381adefe8c58b8de859f881c1ed",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/armborst/eba952d8946548062280bce02eda7e73b75aa06a72337ad68cc2d3f0ba41cb53.png",
+      "sha256": "eba952d8946548062280bce02eda7e73b75aa06a72337ad68cc2d3f0ba41cb53",
+      "size_bytes": 3353720,
+      "inbox_file_id": "1DRb39afwZmRz_poRXBQzVi1PCW1vS1tv",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "be50abe6-5816-48db-bbfc-62edf6d06f26",
+        "version": "7bbbe857-1334-402b-bdef-17ab158df092",
+        "etag": "\"60e66d8f647b1df994dd82b43b85c663\"",
+        "last_modified": "2026-10-17T16:47:09.476+00:00",
+        "size_bytes": 3353720
+      },
+      "drive": {
+        "file_id": "1ij0pQZ1aJKjfiX6_JDXIJg9d5VQ3UWor",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JcXhIY0VwWGxOOEZEKzVVd1JkMTdDY21CaitZPQ",
+        "revision_modified_at": "2026-10-20T12:04:44.944Z",
+        "sha256": "eba952d8946548062280bce02eda7e73b75aa06a72337ad68cc2d3f0ba41cb53",
+        "size_bytes": 3353720,
+        "full_readback_at": "2026-10-20T12:05:38.065305+00:00",
+        "full_readback_receipt_sha256": "bf932c6b0e39d3f7b5236daaa226725621aabf2c2fd32ed1fe5fdcd60c20586c"
+      },
+      "dependency": {
+        "job_id": "f3b5c038-a8de-4976-be3d-2052e8d010ea",
+        "kind": "skill",
+        "target_key": "armborst",
+        "app_path": "hermes/skill/armborst/2f0abc015a28eecad5d4594d786ad3cb7c1c0cdca875dc7c2cbad6de0216a930.webp",
+        "app_sha256": "2f0abc015a28eecad5d4594d786ad3cb7c1c0cdca875dc7c2cbad6de0216a930",
+        "registry_table": "rule_skills",
+        "registry_id": "armborst",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "1aa0e8e8d6326df2442e3ff49fe405c62860128a1be35c16f191565dfc8f792e",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/omradeskannedom/4566b50b68cfb60e4505ca8937daa6f835f21a5c72568826d98124abb4ba4f30.png",
+      "sha256": "4566b50b68cfb60e4505ca8937daa6f835f21a5c72568826d98124abb4ba4f30",
+      "size_bytes": 3350189,
+      "inbox_file_id": "1SYWLyix-dQhuxnBnm6mJ7eP6OjB1WJKn",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "83205b9b-cea5-4d45-a284-47e61a842d2a",
+        "version": "018a835a-92d6-44f2-be63-23427faa5784",
+        "etag": "\"6d610e0aadd9841c2cb59f8a73530831\"",
+        "last_modified": "2026-10-18T13:53:25.788+00:00",
+        "size_bytes": 3350189
+      },
+      "drive": {
+        "file_id": "1gFjoTcA0zMnwiGDErQtK9lEzbdml2b1_",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JdkRLSjg5UndsZ1BCQmdtY0hRM2diN0xqc1JNPQ",
+        "revision_modified_at": "2026-10-20T12:00:31.158Z",
+        "sha256": "4566b50b68cfb60e4505ca8937daa6f835f21a5c72568826d98124abb4ba4f30",
+        "size_bytes": 3350189,
+        "full_readback_at": "2026-10-20T12:01:12.399296+00:00",
+        "full_readback_receipt_sha256": "2a2b09abe0a363b9376627b2b618fb62c250c5e73743fc06ecf96945f48c52d1"
+      },
+      "dependency": {
+        "job_id": "2ba1e778-f00b-4465-9dac-3f5e78a5a65c",
+        "kind": "skill-illustration",
+        "target_key": "omradeskannedom",
+        "app_path": "skill/omradeskannedom/illustration/a7b06c95-1074-4a7b-b2a9-f63b67a3f32d.webp",
+        "app_sha256": "a7b06c9510749a7b32a9f63b67a3f32d52063da55479e5dbd27b5ac8089349f5",
+        "registry_table": "rule_skills",
+        "registry_id": "omradeskannedom",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "e143bad8ff1003d40df40ce4884a5ee293089737c86471c5d8d42b33e9687945",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/geologi/35d7efd5e97e1c2614add174180a4b5c6613b291db840cf93755ec28e1b92523.png",
+      "sha256": "35d7efd5e97e1c2614add174180a4b5c6613b291db840cf93755ec28e1b92523",
+      "size_bytes": 3341972,
+      "inbox_file_id": "1MIAhi_JSexmeDoiHxTcGLG5NB0kYmi1j",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d5ce7655-809f-4e9b-a1be-b1c3637b1b8f",
+        "version": "f53bded4-ef95-4c2e-bc26-35aa23c62af9",
+        "etag": "\"50142d65b679deb0db6c6023667c44cd\"",
+        "last_modified": "2026-10-18T11:53:31.232+00:00",
+        "size_bytes": 3341972
+      },
+      "drive": {
+        "file_id": "1pn36ac1EF7nG3Yxw5RBGPFa29NTFyImm",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JdkMyVlUyaWdiZlE2WDVKSEZSemxDMkxEamJ3PQ",
+        "revision_modified_at": "2026-10-20T11:42:43.875Z",
+        "sha256": "35d7efd5e97e1c2614add174180a4b5c6613b291db840cf93755ec28e1b92523",
+        "size_bytes": 3341972,
+        "full_readback_at": "2026-10-20T11:42:58.196252+00:00",
+        "full_readback_receipt_sha256": "9ffeaf17b43391d63cd8520c7521b2b8143f0ace9f33b5c01a1e2d5f9243daa4"
+      },
+      "dependency": {
+        "job_id": "29a24517-b620-4d8d-90be-4962a3c5c409",
+        "kind": "skill-illustration-wide",
+        "target_key": "geologi",
+        "app_path": "skill/geologi/illustration_wide/bb9f862d-888e-4034-809b-d6f2c90aacc7.webp",
+        "app_sha256": "bb9f862d888ed034009bd6f2c90aacc7613e5dd872335e1a4ca3b9051c72abda",
+        "registry_table": "rule_skills",
+        "registry_id": "geologi",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "52e633e868ba35342b076b90b474a7a1a056f7fe629b1009cd4dc587f10cdb27",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/heraldik/72c77ae89c53972b35581d1d5a8ddf514f2b918ec35af2e2d3feac1e652f2c26.png",
+      "sha256": "72c77ae89c53972b35581d1d5a8ddf514f2b918ec35af2e2d3feac1e652f2c26",
+      "size_bytes": 3334503,
+      "inbox_file_id": "1mnws9kG3HtYfUX27DPt2xJ2c8ikjpQ72",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "c17810d1-e2e2-4d8d-b05b-ed496911c56b",
+        "version": "23f00169-c746-41e3-8f4d-818ad1fcbb43",
+        "etag": "\"8512f9e7581ba68d3db6c5e680f44988\"",
+        "last_modified": "2026-10-17T15:51:07.331+00:00",
+        "size_bytes": 3334503
+      },
+      "drive": {
+        "file_id": "1ouSe_TKIHw1IP-U27zw1UgppURfZl72t",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JMTE0SkY1bTNCQ2diQk53aHRxWEg3TWpzY3djPQ",
+        "revision_modified_at": "2026-10-20T12:07:09.495Z",
+        "sha256": "72c77ae89c53972b35581d1d5a8ddf514f2b918ec35af2e2d3feac1e652f2c26",
+        "size_bytes": 3334503,
+        "full_readback_at": "2026-10-20T12:07:48.006446+00:00",
+        "full_readback_receipt_sha256": "344cec527ca7cbdb452959ff8f3593141d20ce2e78601c2da55a75a627ae4712"
+      },
+      "dependency": {
+        "job_id": "fce10e62-c387-4aa8-ad5b-e5aebb5c51e6",
+        "kind": "skill",
+        "target_key": "heraldik",
+        "app_path": "hermes/skill/heraldik/bc82404e28caebf67481fbb0823ae1ac99a46045c8ed446d5db693d84a5909b4.webp",
+        "app_sha256": "bc82404e28caebf67481fbb0823ae1ac99a46045c8ed446d5db693d84a5909b4",
+        "registry_table": "rule_skills",
+        "registry_id": "heraldik",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "4fdb022ae88c22e953705e88284e09244650356d02845b90397be3faabbdb18f",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/botanik/9358285c0cb2e67febe24bdae074ef17f9f41d242796a5d1bfbb264c77c40a1e.png",
+      "sha256": "9358285c0cb2e67febe24bdae074ef17f9f41d242796a5d1bfbb264c77c40a1e",
+      "size_bytes": 3333854,
+      "inbox_file_id": "1eCQssMzvThAxzLvUl0nf2Jblph28vWun",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "be9d9fdd-4978-4101-ba74-d4b71d762214",
+        "version": "329e6ca7-9f4f-4f07-a44d-aea796508162",
+        "etag": "\"e4c168daba6feb3a2e19ab48844f37a8\"",
+        "last_modified": "2026-10-17T22:20:38.170+00:00",
+        "size_bytes": 3333854
+      },
+      "drive": {
+        "file_id": "1Vm2av_uHOmlGh9eL8jolN7nN_COUeywh",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JQTc1dU5JMGN3eCt2eUc4T3JmMURlNlBPL2VBPQ",
+        "revision_modified_at": "2026-10-20T11:54:19.281Z",
+        "sha256": "9358285c0cb2e67febe24bdae074ef17f9f41d242796a5d1bfbb264c77c40a1e",
+        "size_bytes": 3333854,
+        "full_readback_at": "2026-10-20T11:56:46.912081+00:00",
+        "full_readback_receipt_sha256": "19a00e1e2d8a795ee0361e84b8d952106d1c08ab3eebff41d09ead78712494c3"
+      },
+      "dependency": {
+        "job_id": "c5e9f449-1c73-4aa3-8b3f-c672bd2782bd",
+        "kind": "skill-illustration",
+        "target_key": "botanik",
+        "app_path": "skill/botanik/illustration/36c81775-9240-4fc6-b86b-9d6d70daa964.webp",
+        "app_sha256": "36c8177592405fc6b86b9d6d70daa96443174a6211d0e5ba73326c174b60739d",
+        "registry_table": "rule_skills",
+        "registry_id": "botanik",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "58e9f47905e5324d1dbdd7b3467002f06d888d67e48a4471d67770f677cd37a2",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/tystnad/f65de102077ab18c83da34e82fa6a3af0c50d17662ca93f2830c514d8cf4f9af.png",
+      "sha256": "f65de102077ab18c83da34e82fa6a3af0c50d17662ca93f2830c514d8cf4f9af",
+      "size_bytes": 3332845,
+      "inbox_file_id": "18XbzPv50n_VpqDU_OddgZixZ0Ne-9207",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "1bb2b10c-d920-4e28-92a8-a33274360142",
+        "version": "1af2c0ba-7f40-4572-954a-fe88e5b55241",
+        "etag": "\"6dc809f013e380d7fec0c4c6e3af888a\"",
+        "last_modified": "2026-10-19T05:32:58.398+00:00",
+        "size_bytes": 3332845
+      },
+      "drive": {
+        "file_id": "1GnncK9uAlwlmQ5oH7vilKBTfAzFDJ2oQ",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JMFJSaXVJSmhhVFpleXhHWk54bGVKTTZ5WlFZPQ",
+        "revision_modified_at": "2026-10-20T12:39:51.412Z",
+        "sha256": "f65de102077ab18c83da34e82fa6a3af0c50d17662ca93f2830c514d8cf4f9af",
+        "size_bytes": 3332845,
+        "full_readback_at": "2026-10-20T12:41:29.135205+00:00",
+        "full_readback_receipt_sha256": "9361827dae14898b23efaf51a6a24ef8e13329d0ac7824de25d8d3aa056b85c4"
+      },
+      "dependency": {
+        "job_id": "0c2c9c75-1096-4984-9a65-c876db22d490",
+        "kind": "spell-illustration-wide",
+        "target_key": "tystnad",
+        "app_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/c7e93d55-2cf4-4b26-a437-8bed8f6cf596.webp",
+        "app_sha256": "c7e93d552cf42b26e4378bed8f6cf59676690dc1272acaf5f9922a6994c02f40",
+        "registry_table": "rule_spells",
+        "registry_id": "0e68f3f5-7b27-41b2-bc2d-1442979565e0",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "1c902753b7199a343d66c6323403c94cafbd6d8879fd360603604617fd111d30",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/dolkar/efd81ac3d57c8af99861de143590595256f010cde60f4f116e662db0d2eda6c4.png",
+      "sha256": "efd81ac3d57c8af99861de143590595256f010cde60f4f116e662db0d2eda6c4",
+      "size_bytes": 3321045,
+      "inbox_file_id": "1V-w68oGBtw8tADYvfnPwA9y5oq-EGuwT",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "eba8fcbc-dd32-4b18-ae48-0e1a27e8b5a5",
+        "version": "46f1d806-6b17-4107-b64d-a3e092881fbf",
+        "etag": "\"ffd08d5c62f06251f7af6c9119c51b02\"",
+        "last_modified": "2026-10-17T18:06:24.611+00:00",
+        "size_bytes": 3321045
+      },
+      "drive": {
+        "file_id": "1Ln5coGCdA3UYGBxgOU33XDcfGcQVlYwp",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JejVVdXRNVlpFMFVSa1RUVmEraGttWTJPNGRjPQ",
+        "revision_modified_at": "2026-10-20T12:05:04.477Z",
+        "sha256": "efd81ac3d57c8af99861de143590595256f010cde60f4f116e662db0d2eda6c4",
+        "size_bytes": 3321045,
+        "full_readback_at": "2026-10-20T12:05:39.060054+00:00",
+        "full_readback_receipt_sha256": "aa0f26441b0f303628a60fcbd54472117009c1abd35bc0b263edee3ddd46c3cd"
+      },
+      "dependency": {
+        "job_id": "9de902bb-0d24-49d5-9463-462e97f613ef",
+        "kind": "skill",
+        "target_key": "dolkar",
+        "app_path": "hermes/skill/dolkar/84a3d0054180d1be1d1c91b333be771f7e2c573724a99295d4ef0873619eebfd.webp",
+        "app_sha256": "84a3d0054180d1be1d1c91b333be771f7e2c573724a99295d4ef0873619eebfd",
+        "registry_table": "rule_skills",
+        "registry_id": "dolkar",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "9be4f7062a47fdcc4058247f23c79319f2297c4deadafbb307d47e89a6179494",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/spara/0a4b21e5d20d968b114dea072320e093c3878567e123c6d308f923dd5a304789.png",
+      "sha256": "0a4b21e5d20d968b114dea072320e093c3878567e123c6d308f923dd5a304789",
+      "size_bytes": 3319699,
+      "inbox_file_id": "132acRUbDSr_Q7KICvWZk15RdFOORAvYo",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "0a47b571-e730-432f-a51c-55c4b487f108",
+        "version": "28bdd145-cca0-414d-a84d-f4e036a24391",
+        "etag": "\"5a8650d302b1d193fc4b983dca7656fc\"",
+        "last_modified": "2026-10-18T22:46:05.985+00:00",
+        "size_bytes": 3319699
+      },
+      "drive": {
+        "file_id": "1lcNPzhi_XJONoFn8-5yhks4Mjx-T7JgA",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JWDhpYmZ3RW91MnFkYllrV1JUT3hJeVdlSGNZPQ",
+        "revision_modified_at": "2026-10-20T11:51:23.779Z",
+        "sha256": "0a4b21e5d20d968b114dea072320e093c3878567e123c6d308f923dd5a304789",
+        "size_bytes": 3319699,
+        "full_readback_at": "2026-10-20T11:52:10.711811+00:00",
+        "full_readback_receipt_sha256": "67b5bcd7edec5f83a66b30d8badafffb8c59b07aacd7695b62de811c95a9a643"
+      },
+      "dependency": {
+        "job_id": "685b48a1-90bd-4c70-905d-334fb09bb908",
+        "kind": "skill-illustration-wide",
+        "target_key": "spara",
+        "app_path": "skill/spara/illustration_wide/edbe0568-dfe8-40d9-b66c-5f6339bba46d.webp",
+        "app_sha256": "edbe0568dfe840d9b66c5f6339bba46dfdd3366cb1ec0055e8af5825a4dca584",
+        "registry_table": "rule_skills",
+        "registry_id": "spara",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "993b90d83b71262e5e74d6d82f566a594b621d9c212c5129be3a6f1062f29b49",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/drogkunskap/be9340501e61febce425d780f3cbb082208942f675e626a0cd6506e487b0e78e.png",
+      "sha256": "be9340501e61febce425d780f3cbb082208942f675e626a0cd6506e487b0e78e",
+      "size_bytes": 3317613,
+      "inbox_file_id": "1WlM24Ch5nrMg4gYWY-NOtdLdqXjtKTju",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "f7684229-aaf7-4f44-ab60-4529ee719b8c",
+        "version": "63ff8ec6-db75-41ee-af2d-cb8997c16975",
+        "etag": "\"0401b1c6cac7d0da3c228e04e670e410\"",
+        "last_modified": "2026-10-17T15:27:53.155+00:00",
+        "size_bytes": 3317613
+      },
+      "drive": {
+        "file_id": "1ik7Pv1XmzYpjioZyTSBGzfn6xAblTnOn",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JK2J5Ujk5dUpVa0JhelZ5Uk1nUDJOVWZFbjRrPQ",
+        "revision_modified_at": "2026-10-20T12:06:04.326Z",
+        "sha256": "be9340501e61febce425d780f3cbb082208942f675e626a0cd6506e487b0e78e",
+        "size_bytes": 3317613,
+        "full_readback_at": "2026-10-20T12:07:46.120545+00:00",
+        "full_readback_receipt_sha256": "39333fc6b2919ac48361ff76c0075757a8c9fa683fa906c7245ad7c6af7cdf9e"
+      },
+      "dependency": {
+        "job_id": "477e404d-005d-4105-b5b8-57c083fd256e",
+        "kind": "skill",
+        "target_key": "drogkunskap",
+        "app_path": "hermes/skill/drogkunskap/2c4aab5c952400836d77d311a865789396967a96d405f7de2eacf766a20f3f68.webp",
+        "app_sha256": "2c4aab5c952400836d77d311a865789396967a96d405f7de2eacf766a20f3f68",
+        "registry_table": "rule_skills",
+        "registry_id": "drogkunskap",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "1c730f28522728c2f6ae38181015a35dfde70229ae195b36f51bc45a5a472a50",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/hantverk/392f4534d9c3a7504bbd3a9b9f78c6231049fec4265b3a40c8ea98a2e93aa2e0.png",
+      "sha256": "392f4534d9c3a7504bbd3a9b9f78c6231049fec4265b3a40c8ea98a2e93aa2e0",
+      "size_bytes": 3317049,
+      "inbox_file_id": "1trRj0QvASXmOfkzD0eKMTVY_2Vtp32w_",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "a3ee47dc-3d1b-4b18-ad06-4de407d1c8e6",
+        "version": "c485bb29-39d8-47f8-a3f5-139d5cf27c1d",
+        "etag": "\"f3df14b6b7e11643f140f4a860008324\"",
+        "last_modified": "2026-10-17T15:43:07.589+00:00",
+        "size_bytes": 3317049
+      },
+      "drive": {
+        "file_id": "1ecEK8u6i7fSX68hVMgNWeiFSlvp05frm",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JUE11d0UvUkJxMlBBK25ucy9TejRRWS9zL0pRPQ",
+        "revision_modified_at": "2026-10-20T12:06:59.433Z",
+        "sha256": "392f4534d9c3a7504bbd3a9b9f78c6231049fec4265b3a40c8ea98a2e93aa2e0",
+        "size_bytes": 3317049,
+        "full_readback_at": "2026-10-20T12:07:47.752750+00:00",
+        "full_readback_receipt_sha256": "bc67f21654a3df975486bdbdf828ac4edfb8c92b7ccb9d0a03f94f59662db820"
+      },
+      "dependency": {
+        "job_id": "81ce4118-5ce1-4741-a3cd-09a5df05b678",
+        "kind": "skill",
+        "target_key": "hantverk",
+        "app_path": "hermes/skill/hantverk/bb39638a0b9a768af9111e82cb9edf076e321dd48824af90303a3f13cd216b09.webp",
+        "app_sha256": "bb39638a0b9a768af9111e82cb9edf076e321dd48824af90303a3f13cd216b09",
+        "registry_table": "rule_skills",
+        "registry_id": "hantverk",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "1d03e34e57c5b0832badbd5d28f1cf442fc60e494e6906462d88582c789bd43a",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/slagsmal/ccd1e5424601dc591583caf3916bb2232f5c0dc545ecee3b4b91b6954c0c2df7.png",
+      "sha256": "ccd1e5424601dc591583caf3916bb2232f5c0dc545ecee3b4b91b6954c0c2df7",
+      "size_bytes": 3307911,
+      "inbox_file_id": "10ceWYSwtFxJ0i9HvJJQprZAmxJ1zji1G",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "1702a2cc-5395-4297-a2ea-fe3168da22a3",
+        "version": "3497fa65-6650-4ff4-ac73-0737d207b5c9",
+        "etag": "\"a29bba49b73976d9a7acd5a8ad555fc5\"",
+        "last_modified": "2026-10-17T19:11:22.889+00:00",
+        "size_bytes": 3307911
+      },
+      "drive": {
+        "file_id": "1IK4jpc9UfN1kSwvbZP2qW38pmOxZBWyC",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JZGpQbkxXbDZabmJEMGhmTkJRVENha0xoTnp3PQ",
+        "revision_modified_at": "2026-10-20T12:14:34.946Z",
+        "sha256": "ccd1e5424601dc591583caf3916bb2232f5c0dc545ecee3b4b91b6954c0c2df7",
+        "size_bytes": 3307911,
+        "full_readback_at": "2026-10-20T12:15:14.094425+00:00",
+        "full_readback_receipt_sha256": "c6431afbad17d62b2fb9ef692203393cea7f10285fbc6d46b9a3ce172aa86488"
+      },
+      "dependency": {
+        "job_id": "dc920375-a022-4c79-b646-f0f77aa8a0a4",
+        "kind": "skill",
+        "target_key": "slagsmal",
+        "app_path": "hermes/skill/slagsmal/e443c2d06aa29f27b2a60d143333504a83b0cce775efe6c32545af996c2bc4e2.webp",
+        "app_sha256": "e443c2d06aa29f27b2a60d143333504a83b0cce775efe6c32545af996c2bc4e2",
+        "registry_table": "rule_skills",
+        "registry_id": "slagsmal",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "40aab0da2ed00773fa8206d4fcf71ec55ac974b4dac398459c253250f1663a36",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/forandra/0014a6d680f3a45da12f94cc80cda06d3abf5f9bed7b6705c48e9917ec45def5.png",
+      "sha256": "0014a6d680f3a45da12f94cc80cda06d3abf5f9bed7b6705c48e9917ec45def5",
+      "size_bytes": 3300721,
+      "inbox_file_id": "1rKojz80HwmoCU4fT1_MpxXUasVgwoDrc",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "accb4c8f-9821-4780-869c-6f87ca6bde90",
+        "version": "584810b4-1fae-4fb2-87d4-4c0d0a940a1f",
+        "etag": "\"5ad8db965843705cc0046e7396370ab9\"",
+        "last_modified": "2026-10-19T06:52:06.086+00:00",
+        "size_bytes": 3300721
+      },
+      "drive": {
+        "file_id": "1kwQrEiMxG6R6JUSLaYkBfeKrBNukmxhO",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JYi82bTVLeHhGWkN2WVNwWEpWT3BzK0IxekVVPQ",
+        "revision_modified_at": "2026-10-20T12:18:56.041Z",
+        "sha256": "0014a6d680f3a45da12f94cc80cda06d3abf5f9bed7b6705c48e9917ec45def5",
+        "size_bytes": 3300721,
+        "full_readback_at": "2026-10-20T12:19:31.651648+00:00",
+        "full_readback_receipt_sha256": "2640df1742f0a165bd4f4eab1437092ea7624ebcb9b0bfca3d2a47d58fc067b9"
+      },
+      "dependency": {
+        "job_id": "c0acfe2a-0139-46c9-a023-59cb80dc3366",
+        "kind": "spell-illustration-wide",
+        "target_key": "forandra",
+        "app_path": "spell/db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087/13c1337b-b2de-472a-9ea9-26d8f74f0b22.webp",
+        "app_sha256": "13c1337bb2de872a5ea926d8f74f0b22f647b708c6aa515cabb440a63ea2cd2e",
+        "registry_table": "rule_spells",
+        "registry_id": "db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "218e0f645db4c6c7462fb6083e9ea97b825d1162120cd77b025e118bb85d251d",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/koldvag/e321b1d8a7c079f2a3b9f57d093b16b8f7102a0e7945b4965028cae5f886dd51.png",
+      "sha256": "e321b1d8a7c079f2a3b9f57d093b16b8f7102a0e7945b4965028cae5f886dd51",
+      "size_bytes": 3297334,
+      "inbox_file_id": "1uNLFb0JmJGe7y_ZRC2Gki6k9G7KwRuA6",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d96b3f11-c395-4d3f-9332-a5e77c400f0a",
+        "version": "3c099987-1946-4a4a-ad70-e3013fe1a167",
+        "etag": "\"a0f86cfbda4f904039046cc0eec7663b\"",
+        "last_modified": "2026-10-18T19:35:42.939+00:00",
+        "size_bytes": 3297334
+      },
+      "drive": {
+        "file_id": "1Kqg8sedXxMK6sbniS-ZDg6PR5AyA_4wQ",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JbUZYRmkydmJwU2VPeVZuaW16QTFMbHVqcVowPQ",
+        "revision_modified_at": "2026-10-20T12:44:44.425Z",
+        "sha256": "e321b1d8a7c079f2a3b9f57d093b16b8f7102a0e7945b4965028cae5f886dd51",
+        "size_bytes": 3297334,
+        "full_readback_at": "2026-10-20T12:45:56.656895+00:00",
+        "full_readback_receipt_sha256": "70cf93c49d2cf3ca873d1cd9487630f5abdfa6cdf9d2968acd13725820098c0e"
+      },
+      "dependency": {
+        "job_id": "cd9d6769-e788-42b0-b01f-9902a46e578d",
+        "kind": "spell-illustration",
+        "target_key": "koldvag",
+        "app_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/0d01082d-0525-4da8-93b3-939ba165ae5d.webp",
+        "app_sha256": "0d01082d05251da893b3939ba165ae5d8814279242426aa52aa9690605e1ec94",
+        "registry_table": "rule_spells",
+        "registry_id": "32972520-d0b3-4a70-bb4a-a6c26983f13a",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "7095f0f52703f5b310981417f828e751d9dd26f65d05ef3c2a975555450d2941",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/slagor-gissel/ff17fa3130599907ed095da60f7d592feeebbd942b7e4d839d0db28c21410d53.png",
+      "sha256": "ff17fa3130599907ed095da60f7d592feeebbd942b7e4d839d0db28c21410d53",
+      "size_bytes": 3292946,
+      "inbox_file_id": "1DTiRH85mYi9y-RnahYkW4PeW8NhkxDyR",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d1b094b9-4061-42f6-879c-45d514cfc21b",
+        "version": "412fc4fb-2e93-406f-adef-3e1af440aa0f",
+        "etag": "\"4dae926045880ce8289103b6220a6f2e\"",
+        "last_modified": "2026-10-18T14:19:45.676+00:00",
+        "size_bytes": 3292946
+      },
+      "drive": {
+        "file_id": "1XOH_uAQDCUoqw6lVSOnTmQMgF50VR0Tt",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JUmxjTC9DRzdaT25zR3l0KzV3bThXa05xdTNZPQ",
+        "revision_modified_at": "2026-10-20T11:51:04.388Z",
+        "sha256": "ff17fa3130599907ed095da60f7d592feeebbd942b7e4d839d0db28c21410d53",
+        "size_bytes": 3292946,
+        "full_readback_at": "2026-10-20T11:52:07.348527+00:00",
+        "full_readback_receipt_sha256": "0f686e617e67114978bbf9d620f3a66ddd82202eb2e360ee102a4e8f3658a8bf"
+      },
+      "dependency": {
+        "job_id": "1d904ccc-14de-48d2-a2c0-459d6660ee16",
+        "kind": "skill-illustration-wide",
+        "target_key": "slagor-gissel",
+        "app_path": "skill/slagor_gissel/illustration_wide/5bc8aa40-cb6e-4205-ad02-f79c4075c4fd.webp",
+        "app_sha256": "5bc8aa40cb6ea2056d02f79c4075c4fd50bac2b3c598f68994670ee23215d30b",
+        "registry_table": "rule_skills",
+        "registry_id": "slagor_gissel",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "6646a1afb89aaada1330da1b19f4ee78bbe81cd8e04d29ae292edf99bbc3fffa",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/motstandskraft/92a85d66cc30262d1a7dfb3fc0b2a1013156c20eb3db21f7086a1547a8ae944b.png",
+      "sha256": "92a85d66cc30262d1a7dfb3fc0b2a1013156c20eb3db21f7086a1547a8ae944b",
+      "size_bytes": 3287506,
+      "inbox_file_id": "16otNH0sToAIRhLK_u4_8wdAUZKvZDZlv",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "794f483f-9339-4cbc-a90c-5f44404e5347",
+        "version": "96630903-e52a-4285-a3a4-f3276d8fb4ab",
+        "etag": "\"79b037c6157a01c5f6dcb0af361fef5a\"",
+        "last_modified": "2026-10-19T05:20:10.144+00:00",
+        "size_bytes": 3287506
+      },
+      "drive": {
+        "file_id": "11cAJ7rrgTyCAOm7n_6nSI7l_Hx3z87um",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86Ja2RkcjR1OHB3N1I0K3A1T3dpeGgvTjUwKzlBPQ",
+        "revision_modified_at": "2026-10-20T12:46:39.472Z",
+        "sha256": "92a85d66cc30262d1a7dfb3fc0b2a1013156c20eb3db21f7086a1547a8ae944b",
+        "size_bytes": 3287506,
+        "full_readback_at": "2026-10-20T12:48:31.723080+00:00",
+        "full_readback_receipt_sha256": "4887834b646133529a29df807bfe3fb4f83ef98dd0e67bb12889076ef28530d1"
+      },
+      "dependency": {
+        "job_id": "f4fcc3b8-0e1a-42ea-9c49-0b2afca7b13d",
+        "kind": "spell-illustration",
+        "target_key": "motstandskraft",
+        "app_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/bfcd0842-2727-48b6-a31c-9474f8245251.webp",
+        "app_sha256": "bfcd0842272738b6a31c9474f82452519d2dd90d1af85281a05daea498f7e8dd",
+        "registry_table": "rule_spells",
+        "registry_id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "aa494a1415be7982bc05c158ce9c642e07578b1765f215a349de5e3dbe6c656a",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/frammana-skicka-bort-elementar-jord/ce03dc7ac7638fab0fcc11c36a9c752ac1926b7a20fea8f3226894f51d4aa1e2.png",
+      "sha256": "ce03dc7ac7638fab0fcc11c36a9c752ac1926b7a20fea8f3226894f51d4aa1e2",
+      "size_bytes": 3285692,
+      "inbox_file_id": "1H-XO5JXMczvPcXXfCCT-UoLDbu6QRA_O",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "1450d279-da1a-49a3-a171-3cf331e3f0d1",
+        "version": "3ab9c84c-60aa-43e2-95f9-9be2076fef76",
+        "etag": "\"1c40cf27ab28fbba160c82134b0c6ab8\"",
+        "last_modified": "2026-10-19T06:55:08.900+00:00",
+        "size_bytes": 3285692
+      },
+      "drive": {
+        "file_id": "1rLS2GVjOrA97MG9f9nmfJHclJd51HPkm",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JajkwTk10WURhSDdML2lwZ1MyQTRuYnRrR2c4PQ",
+        "revision_modified_at": "2026-10-20T12:22:09.766Z",
+        "sha256": "ce03dc7ac7638fab0fcc11c36a9c752ac1926b7a20fea8f3226894f51d4aa1e2",
+        "size_bytes": 3285692,
+        "full_readback_at": "2026-10-20T12:23:43.978420+00:00",
+        "full_readback_receipt_sha256": "db2bf9b581e6b441a01e0341fad95643f54e6bdc60bd8dfcd9f855aa7c5f36bf"
+      },
+      "dependency": {
+        "job_id": "f7110313-3111-439d-9de6-6289c5eb542d",
+        "kind": "spell-illustration-wide",
+        "target_key": "frammana-skicka-bort-elementar-jord",
+        "app_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/a5a68191-15a8-49fc-8364-9926f0734ffd.webp",
+        "app_sha256": "a5a6819115a849fc43649926f0734ffde8ec0bc41bde695f347a36c92ce74941",
+        "registry_table": "rule_spells",
+        "registry_id": "1e9035e1-44db-455d-a510-553be3ed4a83",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "23d77ac8edf9cfbd03a9c7fe6ffc2eee7f6d59b130dd55264a6a3456091f4ae9",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/historia/b9931ad59056aa2185731624d323d711531d1f9c3423d4550cbfc1dfa9a74b7c.png",
+      "sha256": "b9931ad59056aa2185731624d323d711531d1f9c3423d4550cbfc1dfa9a74b7c",
+      "size_bytes": 3266035,
+      "inbox_file_id": "1sfVAZb055TSEvMeqOaKxg4MvinTVZSPr",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "61188d27-b010-4d9b-9107-40b6d32ea7c6",
+        "version": "b8a2873f-da27-4998-80e6-2f6e25f79e7e",
+        "etag": "\"047cd5f13dc802594f26a319122a1824\"",
+        "last_modified": "2026-10-17T15:52:59.272+00:00",
+        "size_bytes": 3266035
+      },
+      "drive": {
+        "file_id": "17mohYhv53hTchoOhD-N7_GyrLGJzI7t7",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JYWZyZ3p1K3BGeTVBNkhDcWwzVDRkZTdFMURzPQ",
+        "revision_modified_at": "2026-10-20T12:07:07.287Z",
+        "sha256": "b9931ad59056aa2185731624d323d711531d1f9c3423d4550cbfc1dfa9a74b7c",
+        "size_bytes": 3266035,
+        "full_readback_at": "2026-10-20T12:07:48.124660+00:00",
+        "full_readback_receipt_sha256": "6654c961dbc156f5879c37f77953fe0ea11c070b9927e7d6e927a34702b81dcf"
+      },
+      "dependency": {
+        "job_id": "e7eb72b2-4215-44b0-9538-e5fa32f13b48",
+        "kind": "skill",
+        "target_key": "historia",
+        "app_path": "hermes/skill/historia/bc34e6cd71d3a803b2e99e0980051051223b827521d259c2d8aefb77f6663e81.webp",
+        "app_sha256": "bc34e6cd71d3a803b2e99e0980051051223b827521d259c2d8aefb77f6663e81",
+        "registry_table": "rule_skills",
+        "registry_id": "historia",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "4fd850e7f4a81e123a6a9fd17ce78a2f6e19d77877d650bb6cf39bea48a52c81",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/spjut/838106d52849128e178b96c41dd0cb43e62cbb23ba05cb86be9e48d156bb7176.png",
+      "sha256": "838106d52849128e178b96c41dd0cb43e62cbb23ba05cb86be9e48d156bb7176",
+      "size_bytes": 3265686,
+      "inbox_file_id": "1WoeDKsvXIpZ7_k9slx5SoHrxHLCIaFA_",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d24b83d0-e118-4cec-b7b0-f07b6f6fa44a",
+        "version": "808b0f84-8085-4d1f-8f1f-ac8f62d069d8",
+        "etag": "\"f2c71336b53509d14d64f2406cba3354\"",
+        "last_modified": "2026-10-18T22:45:49.324+00:00",
+        "size_bytes": 3265686
+      },
+      "drive": {
+        "file_id": "1LPJFFSGc8iyC7-FMpuunow5GwvaoszdH",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86Jcm1RK2ZXaEdFZHNySjdSaDZaM3ZSSlo0S0xvPQ",
+        "revision_modified_at": "2026-10-20T11:51:26.467Z",
+        "sha256": "838106d52849128e178b96c41dd0cb43e62cbb23ba05cb86be9e48d156bb7176",
+        "size_bytes": 3265686,
+        "full_readback_at": "2026-10-20T11:52:11.360357+00:00",
+        "full_readback_receipt_sha256": "1e161bdbaa3b9a381313c418978da357058f696d7023e8c85b33cd18dbd18d91"
+      },
+      "dependency": {
+        "job_id": "5bc6b455-d147-4664-bf45-c93f836db14c",
+        "kind": "skill-illustration-wide",
+        "target_key": "spjut",
+        "app_path": "skill/spjut/illustration_wide/79f70c9e-0e91-4db1-9d16-9b953624f10e.webp",
+        "app_sha256": "79f70c9e0e915db19d169b953624f10e095ae8d28cf013b377f166230d225440",
+        "registry_table": "rule_skills",
+        "registry_id": "spjut",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "652bfbd435391eda6da50c9dd1e809804e708aa77efe32a123211ee4699a044d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/slagor-gissel/531f10d839ea0b687673283547c6e3de6853d07338ec3aaa2c61b7d953e24a53.png",
+      "sha256": "531f10d839ea0b687673283547c6e3de6853d07338ec3aaa2c61b7d953e24a53",
+      "size_bytes": 3261774,
+      "inbox_file_id": "1WTOsdc9GIvVhrY9BF3WHY73__VgDBq5w",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "4a18ec13-d388-4fb2-a8db-5b0bf70ecc9d",
+        "version": "fbcaf7fe-8920-43a8-be12-9b543fa96737",
+        "etag": "\"e2e38a4519b7e3e28888b2f2c97c577b\"",
+        "last_modified": "2026-10-17T19:08:38.470+00:00",
+        "size_bytes": 3261774
+      },
+      "drive": {
+        "file_id": "1hHNXqsr850Mgiwc8z4L3ZyK3gE7OR4wm",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JT09zSS9uU1ZHTkZ2YjBqSDV5bXhrb2U3c05nPQ",
+        "revision_modified_at": "2026-10-20T12:14:32.725Z",
+        "sha256": "531f10d839ea0b687673283547c6e3de6853d07338ec3aaa2c61b7d953e24a53",
+        "size_bytes": 3261774,
+        "full_readback_at": "2026-10-20T12:15:13.976766+00:00",
+        "full_readback_receipt_sha256": "0b21f7e743b6c63b3173679f455b63a994ff78e35c1cb6bd0bd1047b4c232a1f"
+      },
+      "dependency": {
+        "job_id": "440cbb0c-ac8a-4451-8d1c-d7aa1b9b3f4d",
+        "kind": "skill",
+        "target_key": "slagor-gissel",
+        "app_path": "hermes/skill/slagor-gissel/c686799a178988a86b94cb245dbb1edcd466fbcd373cb9d08d60403807d246e5.webp",
+        "app_sha256": "c686799a178988a86b94cb245dbb1edcd466fbcd373cb9d08d60403807d246e5",
+        "registry_table": "rule_skills",
+        "registry_id": "slagor_gissel",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "43a47d152bde3aaeeb91afedf29b7fb3dda151ed900ed76e311aa3eba30cc7cf",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/geografi/423f4ec172da54ff0da2ad072c6079585482b59af9ef101ce720e450e1c9194e.png",
+      "sha256": "423f4ec172da54ff0da2ad072c6079585482b59af9ef101ce720e450e1c9194e",
+      "size_bytes": 3258188,
+      "inbox_file_id": "1EmFN04uTV0vXW-ZI4V3sSHOhpJHyWAyk",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d0ef574f-8a69-4aa5-be7a-e3e4ba6e25ed",
+        "version": "7ed1a17f-69fc-4519-bcc4-a502ffc286b2",
+        "etag": "\"83918334c3e6cbf4056f3eb5868744c3\"",
+        "last_modified": "2026-10-18T12:44:54.313+00:00",
+        "size_bytes": 3258188
+      },
+      "drive": {
+        "file_id": "1d4esa7azuzNXOTHXRPRKx7_x0WNYuAmp",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JR1hBeWtvbWtCa0RMcmI4Q1FYQlJmU2xXbWtVPQ",
+        "revision_modified_at": "2026-10-20T11:42:40.678Z",
+        "sha256": "423f4ec172da54ff0da2ad072c6079585482b59af9ef101ce720e450e1c9194e",
+        "size_bytes": 3258188,
+        "full_readback_at": "2026-10-20T11:42:57.523223+00:00",
+        "full_readback_receipt_sha256": "3f091d7e23433d4e1178257dc70d30fed171d22389a0764a9a9e25e590402369"
+      },
+      "dependency": {
+        "job_id": "75abe1e8-c93e-4337-b277-ec6b97516af0",
+        "kind": "skill-illustration-wide",
+        "target_key": "geografi",
+        "app_path": "skill/geografi/illustration_wide/1548e762-e815-48e5-b5f3-3c5235263f40.webp",
+        "app_sha256": "1548e762e815d8e5b5f33c5235263f40a2d2b0774f8d36a8c785fc11a6bdc184",
+        "registry_table": "rule_skills",
+        "registry_id": "geografi",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "286d918b42130dbd765fa414473461b28c883f34a1161ca6c334d607ef3a16a2",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/oppna/dd7444f4287eb6721d891a9837a4dc0d97513724c8d2fb3e2b22e07ba8d17f62.png",
+      "sha256": "dd7444f4287eb6721d891a9837a4dc0d97513724c8d2fb3e2b22e07ba8d17f62",
+      "size_bytes": 3257569,
+      "inbox_file_id": "1cq22vKCrrKFMiEdt475EK4TNjWccrkia",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "5e1e6560-541c-4553-95fb-5447d5025a66",
+        "version": "91175e16-3585-4b67-942f-3ba18464b17e",
+        "etag": "\"029f2684f8b3552e5c67e8bdd9a5cd9c\"",
+        "last_modified": "2026-10-19T05:17:13.260+00:00",
+        "size_bytes": 3257569
+      },
+      "drive": {
+        "file_id": "166tWd6BHdh-MKtw-FZJFxdSHXnE74HJ9",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JNWczLzFEZkF5SXhEbm9zV29zQTR2WTBJVk9RPQ",
+        "revision_modified_at": "2026-10-20T12:29:49.849Z",
+        "sha256": "dd7444f4287eb6721d891a9837a4dc0d97513724c8d2fb3e2b22e07ba8d17f62",
+        "size_bytes": 3257569,
+        "full_readback_at": "2026-10-20T12:30:36.638812+00:00",
+        "full_readback_receipt_sha256": "d028e4ac35341aced9bab037586d57292a2e3e91cacdde405c0569a968e9d952"
+      },
+      "dependency": {
+        "job_id": "8f20de8e-260a-4107-bb35-9358c80f5993",
+        "kind": "spell-illustration-wide",
+        "target_key": "oppna",
+        "app_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/155a7c8a-d28e-4ef3-806a-d85ab1d9cc9d.webp",
+        "app_sha256": "155a7c8ad28e0ef3006ad85ab1d9cc9dcacca5ec51d90482a74478157682f95c",
+        "registry_table": "rule_spells",
+        "registry_id": "d7748d2d-f9e5-4c9e-b0a0-35b908785f51",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "989705b0bf9f24ea852038c739e08e445faf7bedb11e38532943fdbd2984b16d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/astrologi/0b5da7d7017dac392304b1c189dd2f0f8c5d97caabf000d5290560605837692a.png",
+      "sha256": "0b5da7d7017dac392304b1c189dd2f0f8c5d97caabf000d5290560605837692a",
+      "size_bytes": 3256711,
+      "inbox_file_id": "1aX_ye3bWDB6ptQBQJZp6nfVm9S_6MoUk",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "8a894837-fd4b-49e1-9082-44001fc858b8",
+        "version": "222a1c79-4b4a-4690-95b1-840ab1f51e38",
+        "etag": "\"eccecd204dfeb6383f985bd061384b8f\"",
+        "last_modified": "2026-10-17T22:09:36.700+00:00",
+        "size_bytes": 3256711
+      },
+      "drive": {
+        "file_id": "11BOFTw5qHcuvPk-4DOUHaHd7HHovHESa",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JcTFWbXB0dS9ZR28rR2psRkhkcFplM3lydGgwPQ",
+        "revision_modified_at": "2026-10-20T11:53:17.644Z",
+        "sha256": "0b5da7d7017dac392304b1c189dd2f0f8c5d97caabf000d5290560605837692a",
+        "size_bytes": 3256711,
+        "full_readback_at": "2026-10-20T11:53:53.220365+00:00",
+        "full_readback_receipt_sha256": "ce9a04013e7c260487cbe02dc15eb6b40b2d7e4c18659a0d9113022efb86b4d4"
+      },
+      "dependency": {
+        "job_id": "0d2220df-c503-4d20-8e87-0b6c1f69e820",
+        "kind": "skill-illustration",
+        "target_key": "astrologi",
+        "app_path": "skill/astrologi/illustration/69744c6b-d937-42b0-b6d6-5eaf4fa8a13c.webp",
+        "app_sha256": "69744c6bd93742b076d65eaf4fa8a13c98eb4f2e2ece0a9a474e275f61bf7569",
+        "registry_table": "rule_skills",
+        "registry_id": "astrologi",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "f1b3f88d2f7baada3ad014f434934ab36c6fdb23da0bf73a9ab73c46c43c7983",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/besudla/34c4ee05f244d8fbaff694525e5877e3b7cd24c1a4227c6e46c3eb0eb6f170aa.png",
+      "sha256": "34c4ee05f244d8fbaff694525e5877e3b7cd24c1a4227c6e46c3eb0eb6f170aa",
+      "size_bytes": 3251176,
+      "inbox_file_id": "19EewSJ1CjNOFhN7sTyNtPweTGYFInKZm",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "07f44830-281b-4ddc-9dae-0c18d0a48061",
+        "version": "6726f5b7-41f3-41fd-b9f4-09f9b58b61f2",
+        "etag": "\"3effd6c3b3e1ae50960fd44d0eced173\"",
+        "last_modified": "2026-10-18T19:05:22.678+00:00",
+        "size_bytes": 3251176
+      },
+      "drive": {
+        "file_id": "1kwZfxre9tCQ3s2yjM6ckiCqnhNNJQu7s",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JRSsvNytZTFN3REQ0bk15Q0N1NEVoak5YUlk0PQ",
+        "revision_modified_at": "2026-10-20T12:18:15.089Z",
+        "sha256": "34c4ee05f244d8fbaff694525e5877e3b7cd24c1a4227c6e46c3eb0eb6f170aa",
+        "size_bytes": 3251176,
+        "full_readback_at": "2026-10-20T12:19:30.625332+00:00",
+        "full_readback_receipt_sha256": "ac7f8a676777475088c7dba51f24082cc050e63e92d230960b953c0ee3ce8d1e"
+      },
+      "dependency": {
+        "job_id": "d4616b7f-5caa-4140-88cc-d0f9c5437c42",
+        "kind": "spell-illustration-wide",
+        "target_key": "besudla",
+        "app_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/727e182a-d1af-499d-b201-9fae804ff902.webp",
+        "app_sha256": "727e182ad1afc99df2019fae804ff902dc59aa34bbc0ac1a9a6a456dcf5170de",
+        "registry_table": "rule_spells",
+        "registry_id": "6c23b6dd-df00-4e47-8930-3b4b2732cebb",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "c78c31560071475e3587f570bdc3671c3dd1c021d9ab0072d51261cb39a3f37d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/grottorientering/29f69344e597b040113b394f01c115439a90c2dc21d6b4d3a1e779142cd9ad6a.png",
+      "sha256": "29f69344e597b040113b394f01c115439a90c2dc21d6b4d3a1e779142cd9ad6a",
+      "size_bytes": 3249987,
+      "inbox_file_id": "1eSkr10cFEazSEY3U4IOZxemukXBpXvnx",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "e4d11bcd-a4fa-4b81-8ba4-fbc076a242a5",
+        "version": "bcbc68b7-cdc1-43bf-bca2-52cfca542302",
+        "etag": "\"e383d899e9c8e3c891f076999e8d3adb\"",
+        "last_modified": "2026-10-18T22:10:09.595+00:00",
+        "size_bytes": 3249987
+      },
+      "drive": {
+        "file_id": "1_IszuAUmR0t4jMc-Imcl3M9rydoAJpM7",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JcW94RmRKVTE3VS8wdEpyT1h2VDM4eXd6RW1ZPQ",
+        "revision_modified_at": "2026-10-20T11:43:19.343Z",
+        "sha256": "29f69344e597b040113b394f01c115439a90c2dc21d6b4d3a1e779142cd9ad6a",
+        "size_bytes": 3249987,
+        "full_readback_at": "2026-10-20T11:43:46.753822+00:00",
+        "full_readback_receipt_sha256": "3e2da704eaf2dbc2b9972b0cd880d4925137bda372e2d41e923a16699527057d"
+      },
+      "dependency": {
+        "job_id": "0bee2dff-d15e-4463-95a1-b63fe0e3f282",
+        "kind": "skill-illustration-wide",
+        "target_key": "grottorientering",
+        "app_path": "skill/grottorientering/illustration_wide/13e1e4fa-de79-4860-8fdd-0650fe2c604b.webp",
+        "app_sha256": "13e1e4fade7998600fdd0650fe2c604becedc78c5a1c4c4ed5d596ad088fbf60",
+        "registry_table": "rule_skills",
+        "registry_id": "grottorientering",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "ef7023ecb00e8e0aebd0e57b2d2b0cabdd378f38b1bd27747a03f1217e5c5531",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/giftkunskap/f3de15711a5d189b28c57880b5902cf996c078ef1429ddd0eab10cf1b0887803.png",
+      "sha256": "f3de15711a5d189b28c57880b5902cf996c078ef1429ddd0eab10cf1b0887803",
+      "size_bytes": 3247258,
+      "inbox_file_id": "1367yon4l_O3tnWtjbenZ_qNZi_rIbpff",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "ad728d81-ee22-4372-89a8-6aa3d37dd0b1",
+        "version": "43614a25-71f1-4d58-9b27-3f2598d73d23",
+        "etag": "\"df5743de8f1c8233705c83cc1055a4ed\"",
+        "last_modified": "2026-10-17T15:41:24.696+00:00",
+        "size_bytes": 3247258
+      },
+      "drive": {
+        "file_id": "1EelVhOH7fZA2w4vugQ0exhLajLhaDB2g",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JZ3ZzQUxYbUtpNjhJSUFHN1FYMVR4OHMzYkFNPQ",
+        "revision_modified_at": "2026-10-20T12:06:31.983Z",
+        "sha256": "f3de15711a5d189b28c57880b5902cf996c078ef1429ddd0eab10cf1b0887803",
+        "size_bytes": 3247258,
+        "full_readback_at": "2026-10-20T12:07:47.271786+00:00",
+        "full_readback_receipt_sha256": "7fcd4398cb49ec9c728151439ae440bcb333f6a4b840f59906c6e024489fde0a"
+      },
+      "dependency": {
+        "job_id": "a4059cd5-1006-4438-ac11-8187064e62a2",
+        "kind": "skill",
+        "target_key": "giftkunskap",
+        "app_path": "hermes/skill/giftkunskap/08c2404d59cf27c62a1032ea23ed88c23ed2a9a32df2abbc3708026e2cbf3cb6.webp",
+        "app_sha256": "08c2404d59cf27c62a1032ea23ed88c23ed2a9a32df2abbc3708026e2cbf3cb6",
+        "registry_table": "rule_skills",
+        "registry_id": "giftkunskap",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "29b0898408469784c40e4e9c3c0adb552567292cfb909708e59dd855cf1fe817",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/snabbvax/9ac71cad132f43004a67a3ee4a0087a662680c83394ede4c0cced8cab89e1a02.png",
+      "sha256": "9ac71cad132f43004a67a3ee4a0087a662680c83394ede4c0cced8cab89e1a02",
+      "size_bytes": 3246988,
+      "inbox_file_id": "1CZk4Jycfy_NHP6wD1SbAaSLQORvsUklq",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "c225d293-895c-4a3c-abba-3eafc1533633",
+        "version": "17cfba0a-3b00-4562-8524-d86e72169982",
+        "etag": "\"f104f217f06371c642999726de5c0a23\"",
+        "last_modified": "2026-10-18T12:48:48.493+00:00",
+        "size_bytes": 3246988
+      },
+      "drive": {
+        "file_id": "1iaSpeq9InXi3Mb-nEcZw8A4a4oDlQuhW",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JdFd0Q08vcGdJTjdkSnJZR2FsNERQb2lBbHBJPQ",
+        "revision_modified_at": "2026-10-20T12:49:16.632Z",
+        "sha256": "9ac71cad132f43004a67a3ee4a0087a662680c83394ede4c0cced8cab89e1a02",
+        "size_bytes": 3246988,
+        "full_readback_at": "2026-10-20T12:50:40.787740+00:00",
+        "full_readback_receipt_sha256": "74bec99fa3da211585d14c474585102ed6f8c90e01c6061875c3d163f0975860"
+      },
+      "dependency": {
+        "job_id": "2df304f9-7f6d-411a-8c19-7dfc9e1c4919",
+        "kind": "spell-illustration",
+        "target_key": "snabbvax",
+        "app_path": "spell/7575ceed-df3d-43af-b3e8-a5105df6d33f/e04e1b73-6635-44da-9f78-1665a5c3492b.webp",
+        "app_sha256": "e04e1b736635b4da9f781665a5c3492b56868b45d49a42b68b77d7fe3ee431dd",
+        "registry_table": "rule_spells",
+        "registry_id": "7575ceed-df3d-43af-b3e8-a5105df6d33f",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "854c7a36e61789a7371c8f4b707f44a1d98cbc464514414c8e1d30708a0b6d0e",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/stangvapen/2039b7ec4221ec447c422b85b0f311be35a9ff3edcd103ff5d480f34b4f957e7.png",
+      "sha256": "2039b7ec4221ec447c422b85b0f311be35a9ff3edcd103ff5d480f34b4f957e7",
+      "size_bytes": 3245802,
+      "inbox_file_id": "1e2E5m-TiNy0S0qiwjdcanoTCff2GwIbW",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "2892ffc6-c84d-4639-988d-25e107693049",
+        "version": "759c06d8-7ce8-4747-b26b-d6fc050060df",
+        "etag": "\"993402460f94788b255ccc59e1c779ea\"",
+        "last_modified": "2026-10-17T19:22:29.278+00:00",
+        "size_bytes": 3245802
+      },
+      "drive": {
+        "file_id": "1hPscPY_JsWfHSx5FG8Lb1CsilS3z2Lox",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JQTNNc20wWVc4aGpWMFYzQWROT3hlOW5hOFdvPQ",
+        "revision_modified_at": "2026-10-20T12:15:38.830Z",
+        "sha256": "2039b7ec4221ec447c422b85b0f311be35a9ff3edcd103ff5d480f34b4f957e7",
+        "size_bytes": 3245802,
+        "full_readback_at": "2026-10-20T12:17:30.308458+00:00",
+        "full_readback_receipt_sha256": "f2da235c372944177d44772aa47b3a37609cd95c02639935dc7248fa2d2272f3"
+      },
+      "dependency": {
+        "job_id": "5eac33ee-bc61-464f-b6c1-e8cf98488a79",
+        "kind": "skill",
+        "target_key": "stangvapen",
+        "app_path": "hermes/skill/stangvapen/a01edf1dc69a54da20dfb1acb5c36bb182ab2d0c2f5cd55e1e3a49654346acd4.webp",
+        "app_sha256": "a01edf1dc69a54da20dfb1acb5c36bb182ab2d0c2f5cd55e1e3a49654346acd4",
+        "registry_table": "rule_skills",
+        "registry_id": "stangvapen",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "2ce49a4f03303fe4761c4189abfea56e6d117b785a0da1eaf5e866fe0202690d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/armborst/5e17632af79f6ffc6a8be5b8423786c7c1ccdb5351a87a709c779451dd9ad232.png",
+      "sha256": "5e17632af79f6ffc6a8be5b8423786c7c1ccdb5351a87a709c779451dd9ad232",
+      "size_bytes": 3243898,
+      "inbox_file_id": "1qNQK4Zk0ieSM1AG14x6lXc4aoRzlpL68",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "fbc8c807-232f-4e4b-b509-b2267cc2823e",
+        "version": "a8765ba0-acdc-41b4-82a2-e16e0ffd70d5",
+        "etag": "\"c8ec158186e90ccef9e1275c1635c01d\"",
+        "last_modified": "2026-10-17T22:04:31.657+00:00",
+        "size_bytes": 3243898
+      },
+      "drive": {
+        "file_id": "1AWLQhzMdW6cBNP7ci7xYru9fMy7SsS-s",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JVWlQVGg5TTlOWUxhaDZKOVdWRG44WGczNnZjPQ",
+        "revision_modified_at": "2026-10-20T11:53:14.917Z",
+        "sha256": "5e17632af79f6ffc6a8be5b8423786c7c1ccdb5351a87a709c779451dd9ad232",
+        "size_bytes": 3243898,
+        "full_readback_at": "2026-10-20T11:53:52.594590+00:00",
+        "full_readback_receipt_sha256": "b0d2b23d19bfa9e0148428ac80b4a1aec729b4591cea89a546392d5c32fa0425"
+      },
+      "dependency": {
+        "job_id": "65ffbe3c-838a-4238-8bca-a7624121e2ae",
+        "kind": "skill-illustration",
+        "target_key": "armborst",
+        "app_path": "skill/armborst/illustration/6b2b2534-aa9f-4892-874d-0d218dacaa18.webp",
+        "app_sha256": "6b2b2534aa9fe892474d0d218dacaa18fab44f7867a7a0d441140ef0b977335d",
+        "registry_table": "rule_skills",
+        "registry_id": "armborst",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "eab8eece362d6760c4f2c9d5d91c6811f52af48877ea3c90c544461057e59ab1",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/lyft/f5fd63d249077d763347ed5195bf161f1ad46ba726f7dd5dab2bfa3adc7c9052.png",
+      "sha256": "f5fd63d249077d763347ed5195bf161f1ad46ba726f7dd5dab2bfa3adc7c9052",
+      "size_bytes": 3233583,
+      "inbox_file_id": "1IrfmjcxeVZlNATNTf3GC0fTO4n-8mej8",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "2e4d977d-d4ec-4b48-993a-7a0d48e94d95",
+        "version": "d5ac8d81-d0ae-4e5d-a7bc-eff98a4c1453",
+        "etag": "\"a72761e527cbc81e552fd6c734e3f657\"",
+        "last_modified": "2026-10-19T05:20:29.275+00:00",
+        "size_bytes": 3233583
+      },
+      "drive": {
+        "file_id": "1FCJ34hCJFj45IEn8zdf114Ie5BnUgljw",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JM3g0RDl1bHYzWDZXM1JhdnAxcXZLemhFR1FJPQ",
+        "revision_modified_at": "2026-10-20T12:45:12.311Z",
+        "sha256": "f5fd63d249077d763347ed5195bf161f1ad46ba726f7dd5dab2bfa3adc7c9052",
+        "size_bytes": 3233583,
+        "full_readback_at": "2026-10-20T12:45:57.662265+00:00",
+        "full_readback_receipt_sha256": "faaf3a1952ed8904935214063b1f37ad727acafcb297268d83506f8ea969a8ca"
+      },
+      "dependency": {
+        "job_id": "be31e1d2-6e31-4325-86b2-491936377874",
+        "kind": "spell-illustration",
+        "target_key": "lyft",
+        "app_path": "spell/8831c64c-8b90-466a-8005-989785c20fb5/1b62ba44-926d-4ec3-88f9-cfcddd3a2491.webp",
+        "app_sha256": "1b62ba44926d1ec348f9cfcddd3a2491157e60c7adf4dc9bb4f37a5e1e6d461a",
+        "registry_table": "rule_spells",
+        "registry_id": "8831c64c-8b90-466a-8005-989785c20fb5",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "e31fbe10b79ad5d32c5115f97625f76358227db1220030500593c46aebbaaea7",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/kopsla/4128a8c67fbe47c26b2916e980ecba401ed3f4b44f17c531ea04a25b00bae88c.png",
+      "sha256": "4128a8c67fbe47c26b2916e980ecba401ed3f4b44f17c531ea04a25b00bae88c",
+      "size_bytes": 3225729,
+      "inbox_file_id": "1k5TQ_AHvNppKj0VfpzWMt5kqkAMnOhjR",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "c021263b-0e7c-4d1b-8e19-2729daf56f95",
+        "version": "a409109b-b84e-4dbb-886a-8919213c544e",
+        "etag": "\"73e4ab04561b53455aac70efd741c0e0\"",
+        "last_modified": "2026-10-17T15:03:05.520+00:00",
+        "size_bytes": 3225729
+      },
+      "drive": {
+        "file_id": "1yUFiqKjB2Jmm90kjIyzvraII0LReUUP_",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JY0c4YWw0S25XaUN1SGk1WE4zaU9ERi9PSy9nPQ",
+        "revision_modified_at": "2026-10-20T12:08:26.500Z",
+        "sha256": "4128a8c67fbe47c26b2916e980ecba401ed3f4b44f17c531ea04a25b00bae88c",
+        "size_bytes": 3225729,
+        "full_readback_at": "2026-10-20T12:09:21.603517+00:00",
+        "full_readback_receipt_sha256": "84759408ab10ae1be8bdd645921b206d13fbf0c5fa64d15e39853a999d4652fb"
+      },
+      "dependency": {
+        "job_id": "e0386d79-ae15-4783-a662-287b0ee7b5f0",
+        "kind": "skill",
+        "target_key": "kopsla",
+        "app_path": "hermes/skill/kopsla/2126fab193bd7928b2b6e8ace6af25e717065cc870aef36b681b89002ae437ed.webp",
+        "app_sha256": "2126fab193bd7928b2b6e8ace6af25e717065cc870aef36b681b89002ae437ed",
+        "registry_table": "rule_skills",
+        "registry_id": "kopsla",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "a238b9d49b4637e0c14f6cb793440e12b80557194c47c3b3e6f1b57d7fc73948",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/lasso/1baf83f80acfb9eb11c9d74f79452b671a1ae8f07daefa74c24f37629a10a128.png",
+      "sha256": "1baf83f80acfb9eb11c9d74f79452b671a1ae8f07daefa74c24f37629a10a128",
+      "size_bytes": 3219942,
+      "inbox_file_id": "1H5mOAlBJOiYPTrlOeNSAvykdFpj9UaB5",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "9d2312fb-fb31-491e-899e-9c7a1a88a28a",
+        "version": "8a65e191-d27e-41d4-abdc-58efb86984b7",
+        "etag": "\"97085d928583ac56cdaefa5db26b05f0\"",
+        "last_modified": "2026-10-17T18:52:06.203+00:00",
+        "size_bytes": 3219942
+      },
+      "drive": {
+        "file_id": "1fRVrMqSrbHu77rpuVL6fXXZvvbzoyo6g",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JRndCU3g3eWhzeXVPcElOMDR1enA4M29mSmhnPQ",
+        "revision_modified_at": "2026-10-20T12:08:43.830Z",
+        "sha256": "1baf83f80acfb9eb11c9d74f79452b671a1ae8f07daefa74c24f37629a10a128",
+        "size_bytes": 3219942,
+        "full_readback_at": "2026-10-20T12:09:22.323092+00:00",
+        "full_readback_receipt_sha256": "c99d5a71d3530a6f57d1c98f57f7dbc62c65da1b81b4a1fcacfe92d2a40133c4"
+      },
+      "dependency": {
+        "job_id": "b2b5a945-4ba7-4952-8f11-7f42fb4e2156",
+        "kind": "skill",
+        "target_key": "lasso",
+        "app_path": "hermes/skill/lasso/b619d7fda66a9a4569cb897f176de576bc062c9150bb6dbc029e44940105fd15.webp",
+        "app_sha256": "b619d7fda66a9a4569cb897f176de576bc062c9150bb6dbc029e44940105fd15",
+        "registry_table": "rule_skills",
+        "registry_id": "lasso",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "3dd38b7113f3e1e14a332edea9424d9c537044a778640d2261c631ccff9b1027",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/blixt/0bc9d7da28e8c69cf8b66dd181a201e750e6cb19f1136bd804e99e3122017509.png",
+      "sha256": "0bc9d7da28e8c69cf8b66dd181a201e750e6cb19f1136bd804e99e3122017509",
+      "size_bytes": 3219809,
+      "inbox_file_id": "1uPj3IOn7m6NgmJFRC2tTI3wtxjj2M8-i",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "fdd66a23-e8a3-4df4-8d89-f3e2bfb51664",
+        "version": "4cd09bd7-3a6a-4736-a5b4-4a1d6a54de9c",
+        "etag": "\"be8ffc2cc98bbbc7d4192f8ea4035843\"",
+        "last_modified": "2026-10-18T12:48:58.723+00:00",
+        "size_bytes": 3219809
+      },
+      "drive": {
+        "file_id": "1g2_m8x-RvI-AEP_LBotIQkq-EJHGFRby",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JWFI2dFNvYVZYN2dtVEVHSGxKdnFLRHo0SlFVPQ",
+        "revision_modified_at": "2026-10-20T12:18:22.524Z",
+        "sha256": "0bc9d7da28e8c69cf8b66dd181a201e750e6cb19f1136bd804e99e3122017509",
+        "size_bytes": 3219809,
+        "full_readback_at": "2026-10-20T12:19:30.793973+00:00",
+        "full_readback_receipt_sha256": "4a15c88f2d9c327de511683c4250b4bf935bb4a94e8482faa85b763c8d2237c9"
+      },
+      "dependency": {
+        "job_id": "010239d7-b4b6-4051-b7f1-4c63f2f23ab8",
+        "kind": "spell-illustration-wide",
+        "target_key": "blixt",
+        "app_path": "spell/57ec3414-661b-4120-ae17-0a9b57a02c85/62c54a66-ab63-4ac3-afdd-4989e7d22e11.webp",
+        "app_sha256": "62c54a66ab63dac32fdd4989e7d22e11f67454098ada56dc205271aad91162f6",
+        "registry_table": "rule_spells",
+        "registry_id": "57ec3414-661b-4120-ae17-0a9b57a02c85",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "491fe08f483b17fbd2a2bef7650433ba88e0aa71a2dfc46466247c2138cd2a2d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/stangvapen/c7644319adf6ad63a86f142a411b6c3482a631577c8c78d82b4a03027df50b60.png",
+      "sha256": "c7644319adf6ad63a86f142a411b6c3482a631577c8c78d82b4a03027df50b60",
+      "size_bytes": 3215993,
+      "inbox_file_id": "1HFP5eWvvR1lIeVtKHlrNYty2NKat0w9Q",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "5758695d-a0d1-460b-a391-f58de90f0e22",
+        "version": "2596771d-f2b0-4faf-83c8-7ae77ad513a6",
+        "etag": "\"1c37aee84445b1a5286edf2cdd2ed8e6\"",
+        "last_modified": "2026-10-18T22:45:53.824+00:00",
+        "size_bytes": 3215993
+      },
+      "drive": {
+        "file_id": "1iPlBJcI-sm_4KXItZKeVIIiDRkqssQMt",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JeU9RZWJLMkR3eXFBWjhMMXJFRWdTK2FjeElZPQ",
+        "revision_modified_at": "2026-10-20T11:51:28.699Z",
+        "sha256": "c7644319adf6ad63a86f142a411b6c3482a631577c8c78d82b4a03027df50b60",
+        "size_bytes": 3215993,
+        "full_readback_at": "2026-10-20T11:52:12.002347+00:00",
+        "full_readback_receipt_sha256": "457a248e5807877136dc6278de60296a61f9e03570b2968f44f511404b2fff31"
+      },
+      "dependency": {
+        "job_id": "f5bc1258-65f8-4114-bd9b-dab86f89d901",
+        "kind": "skill-illustration-wide",
+        "target_key": "stangvapen",
+        "app_path": "skill/stangvapen/illustration_wide/7b71e6d9-ae7b-45df-ba56-c607e49269e6.webp",
+        "app_sha256": "7b71e6d9ae7bf5dffa56c607e49269e6b58aed0bf14bf4aa771be0284be54b7a",
+        "registry_table": "rule_skills",
+        "registry_id": "stangvapen",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "c1cad8725503e5efdba9cba76c19f4b3d7025b6c82762e1a52ce6fd035ed28a2",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/syn/6669a1c3fe709228998c164f7e7e554bd6937a6cc9b3881ceb8fa5f265a9c58c.png",
+      "sha256": "6669a1c3fe709228998c164f7e7e554bd6937a6cc9b3881ceb8fa5f265a9c58c",
+      "size_bytes": 3213567,
+      "inbox_file_id": "1tSmeFjRkSqzzFCSv7HcmaDQYFKjl5O6K",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "43077297-6396-46cf-adbf-2ad0eaf8c586",
+        "version": "4b4128fb-0763-4ed5-8362-53a9d4e0b3c2",
+        "etag": "\"08c32dd58628e3eb644f0529200af375\"",
+        "last_modified": "2026-10-19T05:22:09.654+00:00",
+        "size_bytes": 3213567
+      },
+      "drive": {
+        "file_id": "13NGZ6GpVDkljO1B1ol15K90uGa5oArIv",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JbHgwSlNCdTFmTkIrNzBnQUxCM1VvSEVlcEtVPQ",
+        "revision_modified_at": "2026-10-20T12:49:24.425Z",
+        "sha256": "6669a1c3fe709228998c164f7e7e554bd6937a6cc9b3881ceb8fa5f265a9c58c",
+        "size_bytes": 3213567,
+        "full_readback_at": "2026-10-20T12:50:41.269147+00:00",
+        "full_readback_receipt_sha256": "44a4a77f0fc826eb56321f9812ce5508181ad7c3f132bd7a310b44816607a2b1"
+      },
+      "dependency": {
+        "job_id": "0d2b0f61-a17d-4403-9fb1-62d11613ffc4",
+        "kind": "spell-illustration",
+        "target_key": "syn",
+        "app_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/6bf2e0b3-cf15-4a22-9c84-3b75c11b9c19.webp",
+        "app_sha256": "6bf2e0b3cf157a221c843b75c11b9c199e06c7410ffe62fcbc2df7cf0474634b",
+        "registry_table": "rule_spells",
+        "registry_id": "7128fef3-dd66-48e0-bf78-e04e043efe8b",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "680ebdd5608272896c115c3c39e6f7afd4a1e9ea93e6dc2d2aaca4ec42e802bb",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/overtala/6bebbed6adfb489deb0cab55cbcd75428d2b536d36ee1cb0dab019258811f255.png",
+      "sha256": "6bebbed6adfb489deb0cab55cbcd75428d2b536d36ee1cb0dab019258811f255",
+      "size_bytes": 3209643,
+      "inbox_file_id": "1Pq66tggheubAaBsGVJckIlxSy7r59jwV",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "e83b42e3-cb93-4160-a21e-4e9a5228d69d",
+        "version": "d5055de5-5514-4d84-a0a2-2b8cb0031132",
+        "etag": "\"df69f9134b0def1e0c78a44eeef3fd44\"",
+        "last_modified": "2026-10-17T15:14:28.456+00:00",
+        "size_bytes": 3209643
+      },
+      "drive": {
+        "file_id": "19r1apiOYPhltcUgwa7STaKLqWF0BqYB8",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JZ1pWUm8wUXdaWDhBR2YzanJielVIT0JqWENRPQ",
+        "revision_modified_at": "2026-10-20T12:09:56.606Z",
+        "sha256": "6bebbed6adfb489deb0cab55cbcd75428d2b536d36ee1cb0dab019258811f255",
+        "size_bytes": 3209643,
+        "full_readback_at": "2026-10-20T12:15:12.541805+00:00",
+        "full_readback_receipt_sha256": "d947ec2b8fc9f2847c1fd0a1b47d728ec5675961febd91b128b3512806d39238"
+      },
+      "dependency": {
+        "job_id": "31181faa-7dcb-4892-b08a-a398fc5dddbd",
+        "kind": "skill",
+        "target_key": "overtala",
+        "app_path": "hermes/skill/overtala/3b266ddd74156d3d222d9ff11554ec7ed4640069d6f9817db0b6fc307ae584e5.webp",
+        "app_sha256": "3b266ddd74156d3d222d9ff11554ec7ed4640069d6f9817db0b6fc307ae584e5",
+        "registry_table": "rule_skills",
+        "registry_id": "overtala",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "3ac537f4fe43b0f10e83d6e39bf209ce5e50a45955b7a3712c823ca7b31bb1db",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/kunskap-om-magi/4221975de063676bf5ba3095f5cd6ba17637b788b6b5fcc87b2851d2d37b3cb9.png",
+      "sha256": "4221975de063676bf5ba3095f5cd6ba17637b788b6b5fcc87b2851d2d37b3cb9",
+      "size_bytes": 3203729,
+      "inbox_file_id": "1vcibmPsnMROQLcuPHmoumiqp47SwwdNQ",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "b797d2b0-8e2f-4855-90ec-4882dca33d07",
+        "version": "9ffa7730-72c2-4b9e-9850-368fae0c6cd5",
+        "etag": "\"07ed88800419ffebb56cadb7790f14b4\"",
+        "last_modified": "2026-10-17T16:03:43.887+00:00",
+        "size_bytes": 3203729
+      },
+      "drive": {
+        "file_id": "1AclZMAn5HhuTzOA3TRbjFw-ImNakP14P",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JcXJLM0Q0UVAyUzY2WkdZNGErbkcxdGljOHlRPQ",
+        "revision_modified_at": "2026-10-20T12:08:36.274Z",
+        "sha256": "4221975de063676bf5ba3095f5cd6ba17637b788b6b5fcc87b2851d2d37b3cb9",
+        "size_bytes": 3203729,
+        "full_readback_at": "2026-10-20T12:09:21.993780+00:00",
+        "full_readback_receipt_sha256": "d17d32c644d4a7bb3fe77c1a0d19ef6044c5c16a88fb32b46893719dfaa936fd"
+      },
+      "dependency": {
+        "job_id": "21ce7745-ae46-4ca3-ac7b-6bac7df05eec",
+        "kind": "skill",
+        "target_key": "kunskap-om-magi",
+        "app_path": "hermes/skill/kunskap-om-magi/970f14baf14cc1c4fe47836d9b57aca8903f32a668fd007a362223c195835eec.webp",
+        "app_sha256": "970f14baf14cc1c4fe47836d9b57aca8903f32a668fd007a362223c195835eec",
+        "registry_table": "rule_skills",
+        "registry_id": "kunskap_om_magi",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "d4dedcfc48b06a7b1039d3e69ed9ed89c42a74bd081353f33cef12c139c500c3",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/bola/4ec9614ee10b5c97ef101a0ed7a01244d4c65fdd68e1c702ea097de118cba86e.png",
+      "sha256": "4ec9614ee10b5c97ef101a0ed7a01244d4c65fdd68e1c702ea097de118cba86e",
+      "size_bytes": 3201243,
+      "inbox_file_id": "1RSND4pycEYS-IXRqSFPLvArgIY2-Gqaa",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "c6bf7c8b-2c6a-44a4-9093-a8d987a23c0d",
+        "version": "d2f57cb3-9dc1-4505-8ee0-e90b21187b87",
+        "etag": "\"9a3e5fed100fc6c30d765f34bbb840b5\"",
+        "last_modified": "2026-10-17T18:04:24.095+00:00",
+        "size_bytes": 3201243
+      },
+      "drive": {
+        "file_id": "14YjpsL6gk7f9ICm9npWun036oYW3Qpqc",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JRzMvTU92c2RZeUZpaWpCOENBR0gxYUkwZWwwPQ",
+        "revision_modified_at": "2026-10-20T12:04:52.090Z",
+        "sha256": "4ec9614ee10b5c97ef101a0ed7a01244d4c65fdd68e1c702ea097de118cba86e",
+        "size_bytes": 3201243,
+        "full_readback_at": "2026-10-20T12:05:38.552821+00:00",
+        "full_readback_receipt_sha256": "f66216a02ea4cf9174b9dfec8dba2599b1098999a4e2b1bff3f8a5f3ff2dea73"
+      },
+      "dependency": {
+        "job_id": "bf1cc1da-ab9e-485a-b2bc-1b770548f42e",
+        "kind": "skill",
+        "target_key": "bola",
+        "app_path": "hermes/skill/bola/cffd76e1e9ae2cadd06ff052498b6013a37dc27c79026d93444b18f87af8c183.webp",
+        "app_sha256": "cffd76e1e9ae2cadd06ff052498b6013a37dc27c79026d93444b18f87af8c183",
+        "registry_table": "rule_skills",
+        "registry_id": "bola",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "93d1c15f336163cb677eac6ea4029f6e3d5795e07a3fa20c96082f833b0b16f3",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/sannsyn/34d0266fa7113d1c8888d96ae03ef751bbdaf34ba57734f37545c81fe9ebea03.png",
+      "sha256": "34d0266fa7113d1c8888d96ae03ef751bbdaf34ba57734f37545c81fe9ebea03",
+      "size_bytes": 3201060,
+      "inbox_file_id": "1Fv1iLONSJLMTbtl_USt2nR9Begb-bLyW",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "3426e739-75ff-4c3d-a6be-7cb61f9f36e2",
+        "version": "483d3673-1bde-4846-9fb8-dbac6927edbc",
+        "etag": "\"066016b67584ef9053c3d880ca87273d\"",
+        "last_modified": "2026-10-19T05:22:12.181+00:00",
+        "size_bytes": 3201060
+      },
+      "drive": {
+        "file_id": "1RjSAov53k5-sDtJmYPJm1sFye27AQ31g",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JNitWaENRWjdPU3o5UmJTbnFXQk9jM2RPaEJrPQ",
+        "revision_modified_at": "2026-10-20T12:47:12.556Z",
+        "sha256": "34d0266fa7113d1c8888d96ae03ef751bbdaf34ba57734f37545c81fe9ebea03",
+        "size_bytes": 3201060,
+        "full_readback_at": "2026-10-20T12:48:32.921113+00:00",
+        "full_readback_receipt_sha256": "ffc2eadba5da98e46c70ac5f3fd0a421ca63cedc67098d5fd7c5c5caca35a106"
+      },
+      "dependency": {
+        "job_id": "75db7602-62bc-47f8-ad43-c3ea34de4718",
+        "kind": "spell-illustration",
+        "target_key": "sannsyn",
+        "app_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/30266d57-b266-4ee6-9e68-c86167099200.webp",
+        "app_sha256": "30266d57b2668ee65e68c86167099200b755d4c881e00ed13c1cef78cb4e7d3e",
+        "registry_table": "rule_spells",
+        "registry_id": "e4aa1ce6-6ec6-4269-963a-e4e6b724276a",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "e8e1745426fad408daa15e1e2d1bf1720b8f5ffe349de97b09be66700ca80300",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/minne/24dcf60be1a5feee9628048a37edf14f3ca8603ac4d1dece60f7683e6963d99d.png",
+      "sha256": "24dcf60be1a5feee9628048a37edf14f3ca8603ac4d1dece60f7683e6963d99d",
+      "size_bytes": 3199946,
+      "inbox_file_id": "10px6X-MNh3-q0VlRK2iJLYEvP3Qq3alF",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "96ea39b7-b169-4b3c-9196-30fb8de2beed",
+        "version": "d4b1d97e-2f35-43a0-a9d3-ea8508fd049d",
+        "etag": "\"3e1a8dc498c798183d2433dc671430f9\"",
+        "last_modified": "2026-10-19T05:36:49.248+00:00",
+        "size_bytes": 3199946
+      },
+      "drive": {
+        "file_id": "1QnK__OUZyz9v2b21LVHdumHcj87pCVE1",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JZUJxMWlVYUVqSExQMkREb3UrMUlvTWNNcXF3PQ",
+        "revision_modified_at": "2026-10-20T12:29:26.367Z",
+        "sha256": "24dcf60be1a5feee9628048a37edf14f3ca8603ac4d1dece60f7683e6963d99d",
+        "size_bytes": 3199946,
+        "full_readback_at": "2026-10-20T12:30:35.882723+00:00",
+        "full_readback_receipt_sha256": "c31f1b5b52dc3724613432bf7178fee77546e883f5cc14b45a2eb970c0327747"
+      },
+      "dependency": {
+        "job_id": "08fabced-01f9-4c1e-b7bd-802c3e554a90",
+        "kind": "spell-illustration-wide",
+        "target_key": "minne",
+        "app_path": "spell/ed6e452e-16bb-4b2d-b0e8-9b24187b2a5b/a8ae1db0-5703-4e68-badb-1aeeee83d38d.webp",
+        "app_sha256": "a8ae1db05703ae687adb1aeeee83d38dcf1878620d282ed27a5514b5837a1c15",
+        "registry_table": "rule_spells",
+        "registry_id": "ed6e452e-16bb-4b2d-b0e8-9b24187b2a5b",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "41dffd693ef69b0efe8d90ecee6ba70e3ab57cf02e3690e3cf517123d2fb4f93",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/karate/f4c04cd633a2afe431dd889a4545c7f8398097ff9a9528677ee17334fbfcf587.png",
+      "sha256": "f4c04cd633a2afe431dd889a4545c7f8398097ff9a9528677ee17334fbfcf587",
+      "size_bytes": 3196355,
+      "inbox_file_id": "1X74ZBIRHZfVpvHdwuZJGpLO6EXlvn-x8",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "adf8d5bd-d98a-4925-8c82-3eb01ea0e6a3",
+        "version": "4418bfcd-332f-4df1-8626-ceaa5970a2d2",
+        "etag": "\"5768e09e944c5dc15619521f809d710f\"",
+        "last_modified": "2026-10-17T18:22:44.157+00:00",
+        "size_bytes": 3196355
+      },
+      "drive": {
+        "file_id": "1Ag5SAcCSY10wpdgEz5Vtdn0XJFwzyvLK",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86Ja251SUdDL25oMGVyV1lVTGlLTmZpRmJWakNRPQ",
+        "revision_modified_at": "2026-10-20T12:08:20.562Z",
+        "sha256": "f4c04cd633a2afe431dd889a4545c7f8398097ff9a9528677ee17334fbfcf587",
+        "size_bytes": 3196355,
+        "full_readback_at": "2026-10-20T12:09:21.232992+00:00",
+        "full_readback_receipt_sha256": "40af22cf7422a698d2813cf1b90ac713e61df3ec1f1f036652dda1ee4f4991cc"
+      },
+      "dependency": {
+        "job_id": "a74d7ff7-140e-438e-83e5-cc536bcd828c",
+        "kind": "skill",
+        "target_key": "karate",
+        "app_path": "hermes/skill/karate/6cc31bde0f7a1dac099c131fa3d2957dba4b36d4d5ca1d5c45695843193cf424.webp",
+        "app_sha256": "6cc31bde0f7a1dac099c131fa3d2957dba4b36d4d5ca1d5c45695843193cf424",
+        "registry_table": "rule_skills",
+        "registry_id": "karate",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "5f65d29c5d26586abea46a37837a90edd8137f8433a24496a5c161bf3eada00b",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/klubbor-hammare/db3a55cc1ad5cea4784c564d47a861ffa05570041dfc2ac22f92a3a22006a8b0.png",
+      "sha256": "db3a55cc1ad5cea4784c564d47a861ffa05570041dfc2ac22f92a3a22006a8b0",
+      "size_bytes": 3195896,
+      "inbox_file_id": "1Vah732V4-pRa_71GEPWJXC3MvMNVoB3E",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "b4986bad-bf9c-4139-978a-ae8181e27328",
+        "version": "581a7d3b-8d4b-49f7-a464-a6dd41c7759e",
+        "etag": "\"81b07ae4ffc829df1b19646afd33a2d3\"",
+        "last_modified": "2026-10-17T18:47:14.925+00:00",
+        "size_bytes": 3195896
+      },
+      "drive": {
+        "file_id": "1eepeN3tcHV9WUZRUxdV2FLRHeDR3nFOO",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JSlMrc29jT2tXalpBb3lVZHJpNlFhZHpGRTFRPQ",
+        "revision_modified_at": "2026-10-20T12:08:28.755Z",
+        "sha256": "db3a55cc1ad5cea4784c564d47a861ffa05570041dfc2ac22f92a3a22006a8b0",
+        "size_bytes": 3195896,
+        "full_readback_at": "2026-10-20T12:09:21.479188+00:00",
+        "full_readback_receipt_sha256": "0dd18af83c1c2129b6f74cc0239cf75285bf9cb910dfdbac0b47827c7d723f1b"
+      },
+      "dependency": {
+        "job_id": "06391d3f-c565-4250-81d2-86200d7f25d7",
+        "kind": "skill",
+        "target_key": "klubbor-hammare",
+        "app_path": "hermes/skill/klubbor-hammare/c5f918fb5b6b92b57e3fd1c82e97028b759c80f952576ef517e011824545deb5.webp",
+        "app_sha256": "c5f918fb5b6b92b57e3fd1c82e97028b759c80f952576ef517e011824545deb5",
+        "registry_table": "rule_skills",
+        "registry_id": "klubbor_hammare",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "f67c6f24ea3e03b4241bd41be84183d8a076ab9aab328c53842e651b6f9cb370",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/yxor/479e8e1ad73e811d76939ffd5937e314d2f2fadfd3a433a0622506c11a6c510a.png",
+      "sha256": "479e8e1ad73e811d76939ffd5937e314d2f2fadfd3a433a0622506c11a6c510a",
+      "size_bytes": 3194481,
+      "inbox_file_id": "1DuIzOJWar_93TdlNL6dwxh4xISv-t-Ft",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "cd329ed0-1e56-4157-8ec1-0e92151a25ac",
+        "version": "fe08d412-7cec-461b-8b40-2a38ad27a8be",
+        "etag": "\"b9ac65b74e7a7da9790a3b8781791742\"",
+        "last_modified": "2026-10-17T20:58:06.617+00:00",
+        "size_bytes": 3194481
+      },
+      "drive": {
+        "file_id": "1HTVbcpGCXpxQk38qMGfCqy4GMzMop9J6",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JVS9lTTYxeEVMOXdITnR0SFV3UnNpbGxzQ3lvPQ",
+        "revision_modified_at": "2026-10-20T12:16:03.062Z",
+        "sha256": "479e8e1ad73e811d76939ffd5937e314d2f2fadfd3a433a0622506c11a6c510a",
+        "size_bytes": 3194481,
+        "full_readback_at": "2026-10-20T12:17:31.151472+00:00",
+        "full_readback_receipt_sha256": "8942bfb34ca0cbb1fd15e81826a129c565a8acc0a26dd47e9a32db78b1c24260"
+      },
+      "dependency": {
+        "job_id": "fca34e1b-0783-4cc1-8208-f188b257b5dc",
+        "kind": "skill",
+        "target_key": "yxor",
+        "app_path": "hermes/skill/yxor/4244ea92183081208d9038354c33164896864b13ce80cf28f4a87a7711d75938.webp",
+        "app_sha256": "4244ea92183081208d9038354c33164896864b13ce80cf28f4a87a7711d75938",
+        "registry_table": "rule_skills",
+        "registry_id": "yxor",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "de45287445cd478f52814e3bf8b52cf14ea8d128daf5a041f5d5fd6d1dda597e",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/ilmarsch/f0948b6c8e9bb255ffbe19dbfe2869bea961963790179c6022f2f15a06949481.png",
+      "sha256": "f0948b6c8e9bb255ffbe19dbfe2869bea961963790179c6022f2f15a06949481",
+      "size_bytes": 3192801,
+      "inbox_file_id": "1uedypayG6VosGdknyOUPdl59Bmlqfsdx",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "b8317c0b-bd15-4dd4-9f2e-3200f6498187",
+        "version": "1fa99f90-c427-4306-b787-ea3300624e87",
+        "etag": "\"854ca19f3d0df5948533415e5f806884\"",
+        "last_modified": "2026-10-19T05:02:35.996+00:00",
+        "size_bytes": 3192801
+      },
+      "drive": {
+        "file_id": "1B9x71HvT2VDXVG3N0cfJc6WrvqgX1nmp",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JS1RISmYrZlhRSnViVUNUUHRpdS9qSlBvK1h3PQ",
+        "revision_modified_at": "2026-10-20T11:44:43.874Z",
+        "sha256": "f0948b6c8e9bb255ffbe19dbfe2869bea961963790179c6022f2f15a06949481",
+        "size_bytes": 3192801,
+        "full_readback_at": "2026-10-20T11:45:15.514208+00:00",
+        "full_readback_receipt_sha256": "367fa342911f7e49e5bb72cf172c9a09642c0eb6e4baa5c4771ff1dfcc08888b"
+      },
+      "dependency": {
+        "job_id": "6eef9c7b-4f0c-472e-94ee-4f3097ba5d45",
+        "kind": "skill-illustration-wide",
+        "target_key": "ilmarsch",
+        "app_path": "skill/ilmarsch/illustration_wide/15cd8202-c631-4f21-a8de-9ac8c190ca60.webp",
+        "app_sha256": "15cd8202c631df2168de9ac8c190ca60fe243aeaf81abcc03c72f4b21cba7821",
+        "registry_table": "rule_skills",
+        "registry_id": "ilmarsch",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "01bece0753bd06bc6349425239fc4fd9db617ed5defcb0bc7d9fdf01361c04cc",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/fiska/884f8811e7e1c7a61ee9475666f7e72ddbcb51cf5d7543444b08dae066656b82.png",
+      "sha256": "884f8811e7e1c7a61ee9475666f7e72ddbcb51cf5d7543444b08dae066656b82",
+      "size_bytes": 3189736,
+      "inbox_file_id": "1NIM2R_f5-dfhzY6XYW9lzp2etqJrPhNZ",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "278c0b66-f1bb-4d21-a681-b19003305280",
+        "version": "f002e8c0-b0e3-49b0-a6a4-b9d67f816e3d",
+        "etag": "\"ad0c41487a9c2f25bfb4b0078a299cb3\"",
+        "last_modified": "2026-10-17T22:47:25.097+00:00",
+        "size_bytes": 3189736
+      },
+      "drive": {
+        "file_id": "177gj_lvfOug8wh0monFn4uZ_X-IuojzF",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JdmpHTit5OUVNVXlyTjVTZldaZldmVFM0ODVBPQ",
+        "revision_modified_at": "2026-10-20T11:56:07.666Z",
+        "sha256": "884f8811e7e1c7a61ee9475666f7e72ddbcb51cf5d7543444b08dae066656b82",
+        "size_bytes": 3189736,
+        "full_readback_at": "2026-10-20T11:56:51.511543+00:00",
+        "full_readback_receipt_sha256": "2b2851fed42e01be5dab31eb8f62c9c4a8bc8172e47ae501014a946a1daed12a"
+      },
+      "dependency": {
+        "job_id": "e21c45f3-7980-4bd5-a442-641ce72c32d5",
+        "kind": "skill-illustration",
+        "target_key": "fiska",
+        "app_path": "skill/fiska/illustration/ed594e28-a692-4c2f-9501-e63eba3887fd.webp",
+        "app_sha256": "ed594e28a692dc2f5501e63eba3887fd80e378f4441893f273328330718eb0e1",
+        "registry_table": "rule_skills",
+        "registry_id": "fiska",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "66afa315f1a8a035f58e71aea2e04e69e2c602bdff34ad4eb49e8b27c3e674ab",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/regnstopp/42748773d20996adc817ccd32c7ad913edfb7efd7e34fe3cc111949baa76b90f.png",
+      "sha256": "42748773d20996adc817ccd32c7ad913edfb7efd7e34fe3cc111949baa76b90f",
+      "size_bytes": 3189187,
+      "inbox_file_id": "18k5qnQ_26mTkRl2r640ncAVvyU7l6zzL",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "17a686e7-1c5c-46d2-b2f5-9fb2f3c77574",
+        "version": "88f23226-05b3-488a-857d-818a83d5cf0f",
+        "etag": "\"d43c19353cc73c02b10fa75647af3030\"",
+        "last_modified": "2026-10-18T13:01:49.017+00:00",
+        "size_bytes": 3189187
+      },
+      "drive": {
+        "file_id": "1LknzMGLsc96e1s6TvPZHHXW6wgUlgUP-",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JNXk3amNXYnlNcllRdjdXVE5udXYwbGUxbVNVPQ",
+        "revision_modified_at": "2026-10-20T12:47:05.928Z",
+        "sha256": "42748773d20996adc817ccd32c7ad913edfb7efd7e34fe3cc111949baa76b90f",
+        "size_bytes": 3189187,
+        "full_readback_at": "2026-10-20T12:48:32.722366+00:00",
+        "full_readback_receipt_sha256": "3fba9868bab78fffd6506b484a958a3dbd866cbbf91c830a45c70db53ee914a0"
+      },
+      "dependency": {
+        "job_id": "482c7d78-dc8f-4313-9f9b-a6cbfa3de9b4",
+        "kind": "spell-illustration",
+        "target_key": "regnstopp",
+        "app_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/3b3b0467-e6d3-48b9-ad3d-758ea26133a0.webp",
+        "app_sha256": "3b3b0467e6d358b9ad3d758ea26133a0997b7e484fcc127fde954327b8b05431",
+        "registry_table": "rule_spells",
+        "registry_id": "9108d6a2-3bc6-4abb-9541-551fd18847e8",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "1c03e94d81c4761408c9a6825a7d67f5587e899b5f35a691b09af6d46ac6b29c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/drogkunskap/53a880aa9ad496ed030576f5ff082e2ea4008fb94f71955ee83b5c0d57e06044.png",
+      "sha256": "53a880aa9ad496ed030576f5ff082e2ea4008fb94f71955ee83b5c0d57e06044",
+      "size_bytes": 3187486,
+      "inbox_file_id": "1L66og47yhdrLpAMlTWuXnIduGl6bRLGw",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "51cad928-9d93-44dd-b852-78940ea446f0",
+        "version": "e9676ecc-a016-4eac-b22a-5206707124b4",
+        "etag": "\"9643655dac4fcb645151070d52633a76\"",
+        "last_modified": "2026-10-17T22:40:42.838+00:00",
+        "size_bytes": 3187486
+      },
+      "drive": {
+        "file_id": "1sjJLUaag-Z-gRIG3rXTBNLI03q_Nz72r",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JQnZ6T2w2ZDJwUVNTYVRKM3dOT0kyRW5Ja2NFPQ",
+        "revision_modified_at": "2026-10-20T11:54:31.674Z",
+        "sha256": "53a880aa9ad496ed030576f5ff082e2ea4008fb94f71955ee83b5c0d57e06044",
+        "size_bytes": 3187486,
+        "full_readback_at": "2026-10-20T11:56:49.528126+00:00",
+        "full_readback_receipt_sha256": "bd3528f9476062678c6cdff3a77160d56aa6784d570a8d985bf3e9e714220976"
+      },
+      "dependency": {
+        "job_id": "2a9a6806-54dc-4115-902a-287448726677",
+        "kind": "skill-illustration",
+        "target_key": "drogkunskap",
+        "app_path": "skill/drogkunskap/illustration/4adf58ac-08e8-4a6e-a31a-e663bd352a9d.webp",
+        "app_sha256": "4adf58ac08e8ca6e631ae663bd352a9d456e2c719d458a33a4e3dd48ad41aa3d",
+        "registry_table": "rule_skills",
+        "registry_id": "drogkunskap",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "553c1ca89f92f75095cb97a86436848f3e1584afe3a8a73676cd0ef5e34a780c",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/hantera-fallor/f15bfb8dde62f4c47e83a444a02d34643d4efcb0725f3e5e9d4ea6094d4edf99.png",
+      "sha256": "f15bfb8dde62f4c47e83a444a02d34643d4efcb0725f3e5e9d4ea6094d4edf99",
+      "size_bytes": 3178355,
+      "inbox_file_id": "17z0K1DijMGFCXiDFRr-OVT8uIMHGCRXS",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "9ccbed80-d880-4b65-a6b7-690353a2bdcb",
+        "version": "b639fe69-75e9-41fb-ae34-84b2b5724ff3",
+        "etag": "\"6a08d602df82d6e2d6ae2fc5cb9ccdef\"",
+        "last_modified": "2026-10-18T12:48:55.315+00:00",
+        "size_bytes": 3178355
+      },
+      "drive": {
+        "file_id": "1iukuLoOCH6vWL5ZtdtZp-YkwEvot8kUE",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JZ2ZMWkpCYXhObCt3eXJCMXQveTJKdUNOY1NzPQ",
+        "revision_modified_at": "2026-10-20T11:43:22.432Z",
+        "sha256": "f15bfb8dde62f4c47e83a444a02d34643d4efcb0725f3e5e9d4ea6094d4edf99",
+        "size_bytes": 3178355,
+        "full_readback_at": "2026-10-20T11:43:47.409254+00:00",
+        "full_readback_receipt_sha256": "1c2c4913aed7f59d5f14375241e6fc5ecbcd60ad91551cecc363557473c3c150"
+      },
+      "dependency": {
+        "job_id": "dd5940c9-d70e-4861-bf2f-89414852c86f",
+        "kind": "skill-illustration-wide",
+        "target_key": "hantera-fallor",
+        "app_path": "skill/hantera_fallor/illustration_wide/628909a3-bc8b-4e55-bbed-7466395ff323.webp",
+        "app_sha256": "628909a3bc8bee55bbed7466395ff3239b0ea010d2808b571f67e10175f2b120",
+        "registry_table": "rule_skills",
+        "registry_id": "hantera_fallor",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "b67af83de722c6b4307a7023bfc6f6f4d3f1b146708ee7894a1541c8a145bfc4",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/skoldar/223946e32aa79d95a6a2cb874a9563276c6cec96ad97faaa12d6a37f838ffe20.png",
+      "sha256": "223946e32aa79d95a6a2cb874a9563276c6cec96ad97faaa12d6a37f838ffe20",
+      "size_bytes": 3171366,
+      "inbox_file_id": "18xNwPy6ij4JQA-j8uYzuyrWvqwpIoYpD",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "44826ac8-c0a1-43df-9629-3317c9f07ed6",
+        "version": "63b4e36e-e96f-4590-8302-55e545522401",
+        "etag": "\"ecc2ee2a925ed5e240f9a56010789803\"",
+        "last_modified": "2026-10-17T19:06:12.088+00:00",
+        "size_bytes": 3171366
+      },
+      "drive": {
+        "file_id": "1B9wwtDx_OT8RGQrx7RgITZ9dqTnb4P_k",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JNHQ3VXgwSy9nTjY1UTc1d1pXb3ArQ0ZTbHdzPQ",
+        "revision_modified_at": "2026-10-20T12:14:27.341Z",
+        "sha256": "223946e32aa79d95a6a2cb874a9563276c6cec96ad97faaa12d6a37f838ffe20",
+        "size_bytes": 3171366,
+        "full_readback_at": "2026-10-20T12:15:13.730123+00:00",
+        "full_readback_receipt_sha256": "2db795c7a93f84f59f604f43e4a23db70e201379f01f5d4195c4009f7885895b"
+      },
+      "dependency": {
+        "job_id": "b1eb8a81-c82c-46ae-b867-4b0fdb385e45",
+        "kind": "skill",
+        "target_key": "skoldar",
+        "app_path": "hermes/skill/skoldar/2b3d71be39e397f9c2db22055e80ade3a39456f9605c5d58de6d0f7064053f05.webp",
+        "app_sha256": "2b3d71be39e397f9c2db22055e80ade3a39456f9605c5d58de6d0f7064053f05",
+        "registry_table": "rule_skills",
+        "registry_id": "skoldar",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "f6818d37fc0cfba19d4c6ac7852d320190fbb38b9434431faebbff173ea4c8e2",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/snabbhet/e8d2ac27fde152cc321f1c4f473553bade80e00e8355c5529e2f1c0e335a1ffb.png",
+      "sha256": "e8d2ac27fde152cc321f1c4f473553bade80e00e8355c5529e2f1c0e335a1ffb",
+      "size_bytes": 3170362,
+      "inbox_file_id": "1vcDwx6osTorgcMKbogAL5sX6YmBjKD-v",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "a8d09fb1-64c9-49aa-a4ed-c110573e7818",
+        "version": "19cc8e05-7885-4c15-9364-3f27a74c0bc7",
+        "etag": "\"36fdc7bb8cec7aa0f64d0f28110a4cdf\"",
+        "last_modified": "2026-10-19T05:20:12.257+00:00",
+        "size_bytes": 3170362
+      },
+      "drive": {
+        "file_id": "1iHHYmEl92Xpm8_IIOQjKXc_R322I-j70",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JZHZDQ1IyY01PVmowclhReWV6cXNXeVUzSmRJPQ",
+        "revision_modified_at": "2026-10-20T12:49:06.707Z",
+        "sha256": "e8d2ac27fde152cc321f1c4f473553bade80e00e8355c5529e2f1c0e335a1ffb",
+        "size_bytes": 3170362,
+        "full_readback_at": "2026-10-20T12:50:40.684844+00:00",
+        "full_readback_receipt_sha256": "1e39f1e1de8db72c26e9af401b0db156c1da1c1e8e0b34dcbb4298c9964d2f80"
+      },
+      "dependency": {
+        "job_id": "004bb976-1a1b-4641-ac08-28f0563a844d",
+        "kind": "spell-illustration",
+        "target_key": "snabbhet",
+        "app_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/4c256a26-9a1f-4dc9-86b6-f4f1519cc86f.webp",
+        "app_sha256": "4c256a269a1f8dc946b6f4f1519cc86f7351f320f218e49d4e68c0ded895339d",
+        "registry_table": "rule_spells",
+        "registry_id": "82d55374-6bc0-4488-8a2c-cad8dc406006",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "28c530df706f9f7cf85afa506fde42b1ab5307cc59a658f0f329ef075628aec1",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/juridik/f3e02922cb137f3b2d001b812f8c9889de18955c66ab3d6fef9818976df4736a.png",
+      "sha256": "f3e02922cb137f3b2d001b812f8c9889de18955c66ab3d6fef9818976df4736a",
+      "size_bytes": 3169447,
+      "inbox_file_id": "1Suau5HwmzSTWMzhrLQjeHztBPWU0xUfY",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "208ca3bc-5577-4faa-8448-4f70f7196ab9",
+        "version": "e7645470-2e68-480a-8cc7-938d5bae0260",
+        "etag": "\"a2761435dc2b33405b78d51965052cea\"",
+        "last_modified": "2026-10-17T15:54:37.629+00:00",
+        "size_bytes": 3169447
+      },
+      "drive": {
+        "file_id": "1mOMqOmfWbaSXqXEq4TojMQR8U386hbNf",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JVFFrODVHVHNxRkNUYlVXY0h2WE5UTmlzbUhzPQ",
+        "revision_modified_at": "2026-10-20T12:08:15.766Z",
+        "sha256": "f3e02922cb137f3b2d001b812f8c9889de18955c66ab3d6fef9818976df4736a",
+        "size_bytes": 3169447,
+        "full_readback_at": "2026-10-20T12:09:20.876344+00:00",
+        "full_readback_receipt_sha256": "d5db7fb6d7e303df1b51e2039d51b4e51734d7b45ac9408aa4740186e125ba82"
+      },
+      "dependency": {
+        "job_id": "89f5dd53-36b8-4014-8bd4-0f1b8664b5b7",
+        "kind": "skill",
+        "target_key": "juridik",
+        "app_path": "hermes/skill/juridik/f6aaf76456c105be64f6419354604ed274c75bdd1e880b4223718f7cc2886f32.webp",
+        "app_sha256": "f6aaf76456c105be64f6419354604ed274c75bdd1e880b4223718f7cc2886f32",
+        "registry_table": "rule_skills",
+        "registry_id": "juridik",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "6e9396415f8a60e4035fddee16a5cd57c8e4dbbe2d82a4c9a40200eddeea6062",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/astrologi/7a1cf17b6f3e6e71f3e1ee10ac4820966cf643a9c8f9bb7c9c157c4e89d9f39d.png",
+      "sha256": "7a1cf17b6f3e6e71f3e1ee10ac4820966cf643a9c8f9bb7c9c157c4e89d9f39d",
+      "size_bytes": 3169407,
+      "inbox_file_id": "1uCsxANGmzIin2B7rHs9A7C_HjZlGSed6",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "19b41993-e0ff-4cdb-9b5d-1ca5753def98",
+        "version": "f0fa1442-eb9f-4f85-814e-c801ed372810",
+        "etag": "\"04f2fcc37c354ab8960a35907d2d50dd\"",
+        "last_modified": "2026-10-18T12:13:46.374+00:00",
+        "size_bytes": 3169407
+      },
+      "drive": {
+        "file_id": "1ePu2c6kNd-UE_RJFkZyawz460Al3foDB",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JSDlJWFVXS3o5VUJ3SVR3UkhRSWxIcm9vdUZBPQ",
+        "revision_modified_at": "2026-10-20T11:37:26.614Z",
+        "sha256": "7a1cf17b6f3e6e71f3e1ee10ac4820966cf643a9c8f9bb7c9c157c4e89d9f39d",
+        "size_bytes": 3169407,
+        "full_readback_at": "2026-10-20T11:37:35.000681+00:00",
+        "full_readback_receipt_sha256": "9aa99800e341c27248a1b61774d67777eefb0f807983dd1a49fdba41986c6a03"
+      },
+      "dependency": {
+        "job_id": "3c22a378-71fb-4387-9687-38550a3ebcc7",
+        "kind": "skill-illustration-wide",
+        "target_key": "astrologi",
+        "app_path": "skill/astrologi/illustration_wide/6c6494cb-f293-457e-9539-eeebc4264dcc.webp",
+        "app_sha256": "6c6494cbf293a57e1539eeebc4264dccae946d463ad8815ce38b2f3e9a6eada6",
+        "registry_table": "rule_skills",
+        "registry_id": "astrologi",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "e9b988a206290f87a6410d9b03ef38cafc2ec8d0075963dbbbf8ed2fa44cb392",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/tva-vapen/d0b9c7658ccb056635933efa21c3e8a43103900f74c423d3a7c2afbaa0be335d.png",
+      "sha256": "d0b9c7658ccb056635933efa21c3e8a43103900f74c423d3a7c2afbaa0be335d",
+      "size_bytes": 3168961,
+      "inbox_file_id": "1mWbLFc-hY7I-S0ZZHcIE0ldu6zqXMK0N",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "c94c6c88-a536-4d52-b088-6e95d0216871",
+        "version": "bbc19c45-952a-4f29-bb48-8b92225963c5",
+        "etag": "\"040d8cf68d478d1d4df9a24972a10654\"",
+        "last_modified": "2026-10-19T08:24:14.447+00:00",
+        "size_bytes": 3168961
+      },
+      "drive": {
+        "file_id": "1cJU9pu5ktNLMqbEGQoumrnM_pBF0BDz4",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JTm81dnkvODBtWjNNbHlqc2JtejVhdG4wdUM4PQ",
+        "revision_modified_at": "2026-10-20T11:52:40.297Z",
+        "sha256": "d0b9c7658ccb056635933efa21c3e8a43103900f74c423d3a7c2afbaa0be335d",
+        "size_bytes": 3168961,
+        "full_readback_at": "2026-10-20T11:53:46.631715+00:00",
+        "full_readback_receipt_sha256": "cceccd767d11b94d8669cf5f52fceb5601685595f8d00f9a21cd819e71f3e4fb"
+      },
+      "dependency": {
+        "job_id": "784438d0-a850-4e5e-8d51-b5ccfbf165dc",
+        "kind": "skill-illustration-wide",
+        "target_key": "tva-vapen",
+        "app_path": "skill/tva_vapen/illustration_wide/83e970e3-4994-4778-8746-855f923ec853.webp",
+        "app_sha256": "83e970e349948778c746855f923ec85357902b3a3c7dbd71a28a9d4e64e2b3b9",
+        "registry_table": "rule_skills",
+        "registry_id": "tva_vapen",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "6b198152cb2687f1b502d593bf86d60859aeeb369673af14bdb44cd1d4935c8d",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/dolkar/3122eef4e3aa2312c6c021a1a6385b277ecd3e9bd2e98dd3a4fa75a2b7010a99.png",
+      "sha256": "3122eef4e3aa2312c6c021a1a6385b277ecd3e9bd2e98dd3a4fa75a2b7010a99",
+      "size_bytes": 3167159,
+      "inbox_file_id": "14Hu7U9DZJzuYK9HaAeLjONZK618azT2y",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "48f4e11b-0f93-4f16-a26f-387a8397c0fb",
+        "version": "b648a95e-caa2-4825-9058-a49c56039673",
+        "etag": "\"3875c1004d877e8419e273512c9afe0f\"",
+        "last_modified": "2026-10-17T22:23:16.610+00:00",
+        "size_bytes": 3167159
+      },
+      "drive": {
+        "file_id": "1Od6Cf03TXtZ7v9o75vyZ-MU8oDKxTzxp",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JR20zZjhuWVBGaFRYZVYxQ0JGNGNVSWlXUzJvPQ",
+        "revision_modified_at": "2026-10-20T11:54:25.229Z",
+        "sha256": "3122eef4e3aa2312c6c021a1a6385b277ecd3e9bd2e98dd3a4fa75a2b7010a99",
+        "size_bytes": 3167159,
+        "full_readback_at": "2026-10-20T11:56:48.210919+00:00",
+        "full_readback_receipt_sha256": "41fa6775adc0fbc85b95913953616fda66a04080bd636899a54da14ba83e2c27"
+      },
+      "dependency": {
+        "job_id": "51faf725-b565-4124-b678-8c0634d67d1b",
+        "kind": "skill-illustration",
+        "target_key": "dolkar",
+        "app_path": "skill/dolkar/illustration/fa764c06-ea4d-4a6a-b8c9-04d22d05154c.webp",
+        "app_sha256": "fa764c06ea4dba6af8c904d22d05154c93f5d68b8ac59daf3ad1546b3b9dde01",
+        "registry_table": "rule_skills",
+        "registry_id": "dolkar",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "d63bc6da666e8772f28e18939a05d0623ae5cda4354b34586c6fd7588332d775",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/hantera-fallor/9f5b5c41d98831655354422c064ed0f5e237df18672e8f838b29c83e00554bce.png",
+      "sha256": "9f5b5c41d98831655354422c064ed0f5e237df18672e8f838b29c83e00554bce",
+      "size_bytes": 3163037,
+      "inbox_file_id": "1FEnVPS8xSAaCdjiT36C7RPB9y8tCnFoY",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "ed580c9b-3950-4058-991e-5981e03e0a10",
+        "version": "bb0af5bc-2e0a-4a7b-9ab1-001a544119ee",
+        "etag": "\"d8f4069e18d30ead3e1ec76ab10ce329\"",
+        "last_modified": "2026-10-18T12:45:15.182+00:00",
+        "size_bytes": 3163037
+      },
+      "drive": {
+        "file_id": "14vQbKvFXhoGRvrZygNsPON-cse6tO4I_",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JaHgrU3NYb0hLUG04U3hFcGtWYnFnSkZxMy9VPQ",
+        "revision_modified_at": "2026-10-20T11:57:24.137Z",
+        "sha256": "9f5b5c41d98831655354422c064ed0f5e237df18672e8f838b29c83e00554bce",
+        "size_bytes": 3163037,
+        "full_readback_at": "2026-10-20T11:58:24.064032+00:00",
+        "full_readback_receipt_sha256": "e7e386fb4b63b3f78974613a8880c218cced88f4d8bb429d92acabeaf3a50303"
+      },
+      "dependency": {
+        "job_id": "9b9f0f97-94f9-4460-8671-67792e09aa1e",
+        "kind": "skill-illustration",
+        "target_key": "hantera-fallor",
+        "app_path": "skill/hantera_fallor/illustration/9fd5651b-5c4c-44fc-bcf3-2736b8f1a48b.webp",
+        "app_sha256": "9fd5651b5c4cf4fcbcf32736b8f1a48bc64a6f5d522875d812399e133b4f80a5",
+        "registry_table": "rule_skills",
+        "registry_id": "hantera_fallor",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "c1807963724ebb5c8f41b69251c17883fe218e9996eb9b31dfb49d608f64b5a1",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/jaga/912ef8a80a54032158b06c98eccb7bb1bd8a71d67aa193d2e0d859e3723202c2.png",
+      "sha256": "912ef8a80a54032158b06c98eccb7bb1bd8a71d67aa193d2e0d859e3723202c2",
+      "size_bytes": 3162186,
+      "inbox_file_id": "1_glBJVXjemFY341nVeZJNO1WxbPZzh9f",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "f96eb68b-45f1-44ab-ae88-2e8559376ed4",
+        "version": "658e3805-711d-4532-a8c3-6a6de93a4086",
+        "etag": "\"dbd0f8acd507505dfa0a6f60f98b4560\"",
+        "last_modified": "2026-10-18T12:55:23.802+00:00",
+        "size_bytes": 3162186
+      },
+      "drive": {
+        "file_id": "1SxyO_tBBKzrA5jrHJ9HGNK45VlABvV89",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86Jb0Y5N05JS2JPeTczZ0NDM2c5TGtPOHhsN0tJPQ",
+        "revision_modified_at": "2026-10-20T11:57:43.926Z",
+        "sha256": "912ef8a80a54032158b06c98eccb7bb1bd8a71d67aa193d2e0d859e3723202c2",
+        "size_bytes": 3162186,
+        "full_readback_at": "2026-10-20T11:58:28.672368+00:00",
+        "full_readback_receipt_sha256": "acb4a22751d13026ead4db2ced901610c208dc4205bda425d1f90b2b52a18865"
+      },
+      "dependency": {
+        "job_id": "536fa358-3d1f-48dc-8ace-6dde1552f1aa",
+        "kind": "skill-illustration",
+        "target_key": "jaga",
+        "app_path": "skill/jaga/illustration/53d60635-9dfc-4d46-80ed-7e00ec8cd8ac.webp",
+        "app_sha256": "53d606359dfc0d46c0ed7e00ec8cd8acbf7ec4d571a4217eecd37dc9bc06a2e7",
+        "registry_table": "rule_skills",
+        "registry_id": "jaga",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "8c5c801ea3171aa638d930e0a4e442a8c798a7f436426f6268aca0cc94dd8d43",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/sannsyn/3776e6742deeccf9fcdf40a490e2bac39666280a9519f1244baab27a9e750e58.png",
+      "sha256": "3776e6742deeccf9fcdf40a490e2bac39666280a9519f1244baab27a9e750e58",
+      "size_bytes": 3159314,
+      "inbox_file_id": "1r31iW6FW-r9-nWsyOkgk1xS-s0e1G5xa",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "5e8a63d0-fc1a-442b-9d1f-3c89e71febab",
+        "version": "1039a301-2a14-45d7-b396-e9619dccc1e2",
+        "etag": "\"26f769fece3b0d72566be5ebc48f9c8a\"",
+        "last_modified": "2026-10-19T05:22:30.564+00:00",
+        "size_bytes": 3159314
+      },
+      "drive": {
+        "file_id": "1e32Ja41IJHWaa98dk-iHnO0g9BtDnjnb",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JS3hZeUlaWXdlWlQzOVl3TTRTS1ZqeXdBa3g4PQ",
+        "revision_modified_at": "2026-10-20T12:33:59.952Z",
+        "sha256": "3776e6742deeccf9fcdf40a490e2bac39666280a9519f1244baab27a9e750e58",
+        "size_bytes": 3159314,
+        "full_readback_at": "2026-10-20T12:37:22.677733+00:00",
+        "full_readback_receipt_sha256": "b37445a3e1671d581827a836e783f7f2cb5f03cd3a09eb4487d63e726579d559"
+      },
+      "dependency": {
+        "job_id": "4dd9d942-e646-432a-afce-dc272beedffc",
+        "kind": "spell-illustration-wide",
+        "target_key": "sannsyn",
+        "app_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/600c6a9b-1a69-409c-b807-b00673579bd5.webp",
+        "app_sha256": "600c6a9b1a69709c7807b00673579bd510880165b59373359b378280b75f020f",
+        "registry_table": "rule_spells",
+        "registry_id": "e4aa1ce6-6ec6-4269-963a-e4e6b724276a",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "24aec21230421fd88c30ff9134435cec4fe6a91afbd67fcbee831da8b7fc09b9",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/blasror/17e9b62a97d23856f89d6df477e87bf251747826980dea1fde6c85e22cc0f77c.png",
+      "sha256": "17e9b62a97d23856f89d6df477e87bf251747826980dea1fde6c85e22cc0f77c",
+      "size_bytes": 3158634,
+      "inbox_file_id": "1u7k-QTEN1RB_MH2aCrU_xhFm9a_cPm4f",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "d98052e1-8a25-46da-bc42-b46ac03496c6",
+        "version": "26e2fec1-50cf-46bf-8e6e-730739dccc00",
+        "etag": "\"e71cdc5cb55087ca423ab0db592effe0\"",
+        "last_modified": "2026-10-18T12:13:32.769+00:00",
+        "size_bytes": 3158634
+      },
+      "drive": {
+        "file_id": "1q7HVACG-zipPpKdhqP-bRgXgts7EsKH7",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JN3lydDZVbldmZ3hiOUxvcEpVVFFWMThwQmJVPQ",
+        "revision_modified_at": "2026-10-20T11:37:40.158Z",
+        "sha256": "17e9b62a97d23856f89d6df477e87bf251747826980dea1fde6c85e22cc0f77c",
+        "size_bytes": 3158634,
+        "full_readback_at": "2026-10-20T11:37:49.513287+00:00",
+        "full_readback_receipt_sha256": "ebe4deffcc938f5170fb4a82d21d5b7576c4d535df7f673239a76beb19934cdc"
+      },
+      "dependency": {
+        "job_id": "e480ae0d-9809-4cfe-91bd-48b7daf48786",
+        "kind": "skill-illustration-wide",
+        "target_key": "blasror",
+        "app_path": "skill/blasror/illustration_wide/579e518b-8d5f-479e-88e3-b74fac072eec.webp",
+        "app_sha256": "579e518b8d5fa79e48e3b74fac072eecb4821e4d10d126f1e91f477f76bfc761",
+        "registry_table": "rule_skills",
+        "registry_id": "blasror",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "4c22f7bf5b79dfcd5d6ece438b0ebd1e008b2fee577178d42af5e8845db87302",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/sjunga-spela/f52a89ded34dd931b5730ea52a3720865aa1e567353d51db1fa0f7e2b932da20.png",
+      "sha256": "f52a89ded34dd931b5730ea52a3720865aa1e567353d51db1fa0f7e2b932da20",
+      "size_bytes": 3157276,
+      "inbox_file_id": "1_S8DPsL6EDN3eMCC-AJ9LvegtklDO6zo",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "43396743-6816-4b08-bb59-19fe60a48575",
+        "version": "43f62144-65e1-44c9-9ab5-398bc5f175b2",
+        "etag": "\"f9435a4df5b024d47a67a14ed1a49733\"",
+        "last_modified": "2026-10-17T15:17:25.583+00:00",
+        "size_bytes": 3157276
+      },
+      "drive": {
+        "file_id": "1spvJVJEUI2lHW630dIeoAdbcGqOjv5np",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JSGswU21lNHdaODNaditadm1vUW0yM0pXYkxJPQ",
+        "revision_modified_at": "2026-10-20T12:14:20.802Z",
+        "sha256": "f52a89ded34dd931b5730ea52a3720865aa1e567353d51db1fa0f7e2b932da20",
+        "size_bytes": 3157276,
+        "full_readback_at": "2026-10-20T12:15:13.472894+00:00",
+        "full_readback_receipt_sha256": "0e69551ebfc9e97dc37036cda30b805b60138c954f8c0b1d84601131195038c9"
+      },
+      "dependency": {
+        "job_id": "91e5a5aa-2a66-4af8-ba3d-01c7ced75cb6",
+        "kind": "skill",
+        "target_key": "sjunga-spela",
+        "app_path": "hermes/skill/sjunga-spela/01ee8b8637bcfea7e90d8d2f7f8a5be57122abdc408c2e6a3870f166c69134f4.webp",
+        "app_sha256": "01ee8b8637bcfea7e90d8d2f7f8a5be57122abdc408c2e6a3870f166c69134f4",
+        "registry_table": "rule_skills",
+        "registry_id": "sjunga_spela",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "f2deeb7629b278bbce35194fa7a11ed780ee5adf3892071695d6cc993399a1da",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/orientering/3f00c238c0a98d8c143165f63939bf95bba0d0f558ec6eff6ba5dee746514888.png",
+      "sha256": "3f00c238c0a98d8c143165f63939bf95bba0d0f558ec6eff6ba5dee746514888",
+      "size_bytes": 3155610,
+      "inbox_file_id": "1YyYuyH1FibJNJbrh7GnZ9UQuIw0RRZN_",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "679de2ca-e1f9-470d-990e-a1988dee9244",
+        "version": "370625ef-8085-44a5-b080-1848791c0b75",
+        "etag": "\"f59103db05827a1527d36024807f7331\"",
+        "last_modified": "2026-10-18T14:05:30.646+00:00",
+        "size_bytes": 3155610
+      },
+      "drive": {
+        "file_id": "1ESTdi6rjoQNFRdckGoFcjGFyywzwyid3",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86JcU5mNTkwRTc5d1JrNTRaeDhzTWFRZEY1Y004PQ",
+        "revision_modified_at": "2026-10-20T11:49:16.761Z",
+        "sha256": "3f00c238c0a98d8c143165f63939bf95bba0d0f558ec6eff6ba5dee746514888",
+        "size_bytes": 3155610,
+        "full_readback_at": "2026-10-20T11:50:21.237449+00:00",
+        "full_readback_receipt_sha256": "437d418712d9d7ca51b598e81c7d826dfc6d2a9c6eee1462edff6f25b9b66310"
+      },
+      "dependency": {
+        "job_id": "46f6ea22-31b6-460e-ae1c-49e3bb3f7e09",
+        "kind": "skill-illustration-wide",
+        "target_key": "orientering",
+        "app_path": "skill/orientering/illustration_wide/12260e65-a7ff-43aa-8329-45537ad80bc8.webp",
+        "app_sha256": "12260e65a7ff03aa432945537ad80bc83269ede10e2e41959d1bf247e3783035",
+        "registry_table": "rule_skills",
+        "registry_id": "orientering",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "54d1a472b911c017e3ed71657c0b965eb48b4bbd9dedbdb3c90b05fd9e5385a6",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/frost/4c959a65cc06eefc6d18cf59b5da29bc4bd7483af2cece18a2df39c21856a1ab.png",
+      "sha256": "4c959a65cc06eefc6d18cf59b5da29bc4bd7483af2cece18a2df39c21856a1ab",
+      "size_bytes": 3149011,
+      "inbox_file_id": "1rjrkAczoHNxvIi57uVGBFAkmKaAkuu-T",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "6ed0bc86-a666-4e1b-a53e-1722c2d07160",
+        "version": "dac604cf-5d62-4a78-80e9-4c6a864a4d54",
+        "etag": "\"de47cd9bba7bc604417510c64cdd7e32\"",
+        "last_modified": "2026-10-18T12:49:35.628+00:00",
+        "size_bytes": 3149011
+      },
+      "drive": {
+        "file_id": "1rvBC1SHhr7QK7BWFzdvbSZ_W1uNLCggI",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JQVpkTVJjY1NxME9QV2RnQUErMGxxSkVjcGEwPQ",
+        "revision_modified_at": "2026-10-20T12:43:01.658Z",
+        "sha256": "4c959a65cc06eefc6d18cf59b5da29bc4bd7483af2cece18a2df39c21856a1ab",
+        "size_bytes": 3149011,
+        "full_readback_at": "2026-10-20T12:44:06.581670+00:00",
+        "full_readback_receipt_sha256": "45139986d3afea792815dc7623ce10c11e70185f137d828aa279ec2a1cbec7ad"
+      },
+      "dependency": {
+        "job_id": "a3314a0f-8c4c-4873-aa66-f50258ee77a6",
+        "kind": "spell-illustration",
+        "target_key": "frost",
+        "app_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/a8a3014c-9d77-4c58-837f-55c679a6f044.webp",
+        "app_sha256": "a8a3014c9d772c58c37f55c679a6f044f3d99c1e424c9217106413710b1a1f69",
+        "registry_table": "rule_spells",
+        "registry_id": "f30feb8f-7a61-40ca-af41-95a0a3fd81ae",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "23b85581f2de5df02a279b54b3ed8e40e34223b15d8c8cbaa0e0c6fbc1f05ad2",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/blasror/ef003f96e83df64712e498325620156100fffeb0a2ede75611566e1995124836.png",
+      "sha256": "ef003f96e83df64712e498325620156100fffeb0a2ede75611566e1995124836",
+      "size_bytes": 3148406,
+      "inbox_file_id": "1MbXXWf5jm9ntMAEXxbib7D__pNaiOsNO",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "cacf3bdd-1fb1-41bb-bc05-17be3cfad409",
+        "version": "edbabbe2-f475-42c5-9489-95f40d4ce967",
+        "etag": "\"a5bdebe23a13d2ddac5a8450f4592129\"",
+        "last_modified": "2026-10-17T18:01:56.748+00:00",
+        "size_bytes": 3148406
+      },
+      "drive": {
+        "file_id": "1999IpVIgoSKm2MJu_6AhmpY2wvFVGvGq",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JKzA2U2pMRmRCSnZZNXhUVG4waGJONW5XaUdnPQ",
+        "revision_modified_at": "2026-10-20T12:04:49.962Z",
+        "sha256": "ef003f96e83df64712e498325620156100fffeb0a2ede75611566e1995124836",
+        "size_bytes": 3148406,
+        "full_readback_at": "2026-10-20T12:05:38.321929+00:00",
+        "full_readback_receipt_sha256": "fd8c6223524b75fdb1e927757fb6d84ce5cdecf9629ab376f1071792b00a285c"
+      },
+      "dependency": {
+        "job_id": "a79f4583-8058-41dd-8d25-64e744831ba9",
+        "kind": "skill",
+        "target_key": "blasror",
+        "app_path": "hermes/skill/blasror/5f7161781523979f3cd0f3d4fe4fdddef23237e1dd816a6fca5b20cf66b01cae.webp",
+        "app_sha256": "5f7161781523979f3cd0f3d4fe4fdddef23237e1dd816a6fca5b20cf66b01cae",
+        "registry_table": "rule_skills",
+        "registry_id": "blasror",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "5cbf165ec533cee6aa7770d7f35fadfafbc9f4f5126b889340794ff79c5fd85a",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill/forsta-hjalpen/72bf84d981db5d245d3c53aaff9af803a0b123ea5a0773789dbad4fcb84719b2.png",
+      "sha256": "72bf84d981db5d245d3c53aaff9af803a0b123ea5a0773789dbad4fcb84719b2",
+      "size_bytes": 3147387,
+      "inbox_file_id": "1Ag03I-KnPLjG_9Vc6PkGWPxGgr35xjmb",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "0cd805a2-1d82-45d9-a8b6-a6888a39db45",
+        "version": "a3a5392b-b01a-4d16-a595-10bcdd71b17d",
+        "etag": "\"9f0ab8811b627a137dcc1f3f281d5586\"",
+        "last_modified": "2026-10-17T15:29:21.240+00:00",
+        "size_bytes": 3147387
+      },
+      "drive": {
+        "file_id": "1UIgogI456qm2wYK39N4dSZY_R47VJoaM",
+        "parent_id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+        "revision_id": "0B0ijFzf4F86JYThLclFpNkVwUXlFMVBDZ0wyZDFldGw1a21BPQ",
+        "revision_modified_at": "2026-10-20T12:06:24.008Z",
+        "sha256": "72bf84d981db5d245d3c53aaff9af803a0b123ea5a0773789dbad4fcb84719b2",
+        "size_bytes": 3147387,
+        "full_readback_at": "2026-10-20T12:07:46.917842+00:00",
+        "full_readback_receipt_sha256": "0625bc236a49da60231031aaa2c2787b3bfe683f44dd45b52d62628e5e1e005d"
+      },
+      "dependency": {
+        "job_id": "35bfd227-c231-40e0-8959-dd45e4a07417",
+        "kind": "skill",
+        "target_key": "forsta-hjalpen",
+        "app_path": "hermes/skill/forsta-hjalpen/632fc042d48350cb093bbcd0d6ab4b90a13b0f6934e94671bd61995a6862b85e.webp",
+        "app_sha256": "632fc042d48350cb093bbcd0d6ab4b90a13b0f6934e94671bd61995a6862b85e",
+        "registry_table": "rule_skills",
+        "registry_id": "forsta_hjalpen",
+        "registry_field": "icon_path"
+      }
+    },
+    {
+      "id": "1806f6e2a72520416f8a0ddce5b62fd211ee0a2767cb4355284f40f8516474ee",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/skridskoakning/bb8fcf5de4bb0e409b3fb553b1809ce1e49c118727c549bd6a09b15ef70cb417.png",
+      "sha256": "bb8fcf5de4bb0e409b3fb553b1809ce1e49c118727c549bd6a09b15ef70cb417",
+      "size_bytes": 3146308,
+      "inbox_file_id": "1QF93N4iBQLk71E7n3MzhxN9C8gncETBV",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "74af6d17-384a-4688-a792-a19de9adc6e1",
+        "version": "a51d4ce3-ccd1-4351-b82e-24637b41e54c",
+        "etag": "\"75ac695ef0ec677844a07d92bafc78ee\"",
+        "last_modified": "2026-10-18T22:50:48.423+00:00",
+        "size_bytes": 3146308
+      },
+      "drive": {
+        "file_id": "1nZv0T9wuNJW6Y6ddzbf9CVCLSpJOhVdD",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86Jdzd1cTFNT1IvRGFaY1RWdTZGSTMvekFFWjJvPQ",
+        "revision_modified_at": "2026-10-20T11:51:01.181Z",
+        "sha256": "bb8fcf5de4bb0e409b3fb553b1809ce1e49c118727c549bd6a09b15ef70cb417",
+        "size_bytes": 3146308,
+        "full_readback_at": "2026-10-20T11:52:06.693122+00:00",
+        "full_readback_receipt_sha256": "f0d3f47dccb0e1649d26c2437d6ee1e901e6a438d901b4d7cc49530dee1e9d8f"
+      },
+      "dependency": {
+        "job_id": "42fe6bd1-04e9-423e-89a4-7df09f3bc5da",
+        "kind": "skill-illustration-wide",
+        "target_key": "skridskoakning",
+        "app_path": "skill/skridskoakning/illustration_wide/6f248a96-ea38-47dc-b2e8-a83d2f08b00a.webp",
+        "app_sha256": "6f248a96ea38e7dcf2e8a83d2f08b00ad37bfb1553e992f9354b3be8d019020e",
+        "registry_table": "rule_skills",
+        "registry_id": "skridskoakning",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "cc1b1e1a1d9871c69b821f3cf9e889763d64e406acbf629a7c7cb851fbe848de",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration/gomma-sig/c3a09ca8893c5c7f02a1fa508e7c47c48cca13b1f6370040e499c87b208ef812.png",
+      "sha256": "c3a09ca8893c5c7f02a1fa508e7c47c48cca13b1f6370040e499c87b208ef812",
+      "size_bytes": 3144858,
+      "inbox_file_id": "1tebvPyLav5dRvfQbZT_CO0kClKpsTbgB",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "cd46af9d-1d98-486f-81bb-fa6fb3d34efb",
+        "version": "a92b0b2e-3d46-48dc-a581-19c0ffc8ab6b",
+        "etag": "\"df4eff4c4aafae50ea143d9b2eac3c33\"",
+        "last_modified": "2026-10-17T23:00:21.583+00:00",
+        "size_bytes": 3144858
+      },
+      "drive": {
+        "file_id": "1gvF-fWNy7hticlKyctxMmIQbuZSbdTPR",
+        "parent_id": "1d42VoYS2mf2xrcrdEUQ-Vpr7GdJvt6YZ",
+        "revision_id": "0B0ijFzf4F86JUDFZODBoWWhNbGg0V01xVjhkVkxHZzZ0c2Q0PQ",
+        "revision_modified_at": "2026-10-20T11:56:27.876Z",
+        "sha256": "c3a09ca8893c5c7f02a1fa508e7c47c48cca13b1f6370040e499c87b208ef812",
+        "size_bytes": 3144858,
+        "full_readback_at": "2026-10-20T11:56:56.114991+00:00",
+        "full_readback_receipt_sha256": "222fab5aa478835075ad111d003a1b3501e48f6c71d3b3238d84c6cb1729ddb8"
+      },
+      "dependency": {
+        "job_id": "418dc359-2dbc-424e-8bb9-c155ab34c1c0",
+        "kind": "skill-illustration",
+        "target_key": "gomma-sig",
+        "app_path": "skill/gomma_sig/illustration/deeab502-ef41-45ae-9327-841411563397.webp",
+        "app_sha256": "deeab502ef4125ae1327841411563397a118e2711189c2848bd3e91eb83df610",
+        "registry_table": "rule_skills",
+        "registry_id": "gomma_sig",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "8bee57fdac104baee936982e05414e3cdecf62595af57972b278455ef60f15de",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/aterfinnande-med-studs/32fe8606fd524b287ae3dc5c2c4ff7cf12584d9a84b8362a5c6cc5f5e6335526.png",
+      "sha256": "32fe8606fd524b287ae3dc5c2c4ff7cf12584d9a84b8362a5c6cc5f5e6335526",
+      "size_bytes": 3143921,
+      "inbox_file_id": "1Bvx8Ts10B-hV3wfii_pMIIRbO4dkwHIU",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "59e28752-3776-4537-bec7-1769c56f52de",
+        "version": "c1216d4c-c5a1-402c-8422-0bd6560b8653",
+        "etag": "\"ae349e56b4c0070a4d4faf79dfab85e2\"",
+        "last_modified": "2026-10-19T05:23:59.260+00:00",
+        "size_bytes": 3143921
+      },
+      "drive": {
+        "file_id": "1872Tky8ySvQ-ZKXhukkegQonozzISlKE",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JbVRta2tLeWpZOFJhMXlhU0haM1c2ZitpalhzPQ",
+        "revision_modified_at": "2026-10-20T12:17:06.361Z",
+        "sha256": "32fe8606fd524b287ae3dc5c2c4ff7cf12584d9a84b8362a5c6cc5f5e6335526",
+        "size_bytes": 3143921,
+        "full_readback_at": "2026-10-20T12:17:31.879123+00:00",
+        "full_readback_receipt_sha256": "1be818a9cfff9c2125665f95682816c9f8d3b60beff286e4f9fe999d4261d455"
+      },
+      "dependency": {
+        "job_id": "c0e42d16-35ee-4b40-ac2f-8c853cae78c9",
+        "kind": "spell-illustration-wide",
+        "target_key": "aterfinnande-med-studs",
+        "app_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/77d55b04-2ad1-4152-a39e-9a9ceac57a58.webp",
+        "app_sha256": "77d55b042ad18152239e9a9ceac57a58e3837de854602fd9eaa485b5ee1fab0c",
+        "registry_table": "rule_spells",
+        "registry_id": "30dbf8d5-9edc-4090-9eae-1eaa186c44e2",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "2034d9aea03f6471f8b637bcb9caa8f50255d7c738a0b607377273954e2aa2fc",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration/langsamhet/3be9506365274358fed711c9ab70c0b4760cb878653c0a7dd2e8ce4e4ce6abbe.png",
+      "sha256": "3be9506365274358fed711c9ab70c0b4760cb878653c0a7dd2e8ce4e4ce6abbe",
+      "size_bytes": 3142330,
+      "inbox_file_id": "10xpyO_oK3SUcS7n_IjJybXEK-hBEfLHz",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "1e6d345e-af0c-4a7a-ae0e-36d6bcca5b7c",
+        "version": "f1ece217-0be4-4ba3-bd29-30be603f6544",
+        "etag": "\"aace60008563d6939a5fa0fb27c4d449\"",
+        "last_modified": "2026-10-19T06:51:39.955+00:00",
+        "size_bytes": 3142330
+      },
+      "drive": {
+        "file_id": "1l6pY2wCQz2AYtUm7weVv4Cu4SXobg-Ap",
+        "parent_id": "1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ",
+        "revision_id": "0B0ijFzf4F86JTC9wZ09ncG9BdEJxeFBnaEwvTTNWNjFtbWtNPQ",
+        "revision_modified_at": "2026-10-20T12:45:00.358Z",
+        "sha256": "3be9506365274358fed711c9ab70c0b4760cb878653c0a7dd2e8ce4e4ce6abbe",
+        "size_bytes": 3142330,
+        "full_readback_at": "2026-10-20T12:45:57.192493+00:00",
+        "full_readback_receipt_sha256": "35401b8460590f7b1418a5f0c15a194b3bcb5d54e69d0528efd8269e7a5a698d"
+      },
+      "dependency": {
+        "job_id": "0c81541c-703f-4f1f-aa13-f8d4a56b1065",
+        "kind": "spell-illustration",
+        "target_key": "langsamhet",
+        "app_path": "spell/d830f576-c67c-44fe-8478-6270d4a42483/60436689-df61-4ae9-8359-b64413d8a153.webp",
+        "app_sha256": "60436689df61aae9c359b64413d8a153f4f08475d4edbb240ec3bf43f78ed01b",
+        "registry_table": "rule_spells",
+        "registry_id": "d830f576-c67c-44fe-8478-6270d4a42483",
+        "registry_field": "illustration_path"
+      }
+    },
+    {
+      "id": "145690408acedd6c26e4f8a437809b1f475616d1b8b68fc78c5772f2ac6daa41",
+      "bucket": "alea-hermes-source",
+      "object_path": "spell-illustration-wide/avbild/573f36204952f0424834fbfdf9260f969c65143a2d5a19b08bf8143bf20c9be8.png",
+      "sha256": "573f36204952f0424834fbfdf9260f969c65143a2d5a19b08bf8143bf20c9be8",
+      "size_bytes": 3141896,
+      "inbox_file_id": "1rgjpTy0QePYPG0sPC08uhF2eV7jt8A31",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "ff150d9c-f1a7-4de8-a867-67d0d189a2bc",
+        "version": "236c6391-01da-47d6-9215-0b15efb5bb6c",
+        "etag": "\"a939a5bed5161a666088606114d7a7b3\"",
+        "last_modified": "2026-10-18T19:01:41.671+00:00",
+        "size_bytes": 3141896
+      },
+      "drive": {
+        "file_id": "1VQBS2fMVu9lspn-_dMv9oZAOp3zvd5Sq",
+        "parent_id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+        "revision_id": "0B0ijFzf4F86JWTZ6c0cwQzYyVGdDMmZrYSt3WGppcDliWEJnPQ",
+        "revision_modified_at": "2026-10-20T12:17:55.124Z",
+        "sha256": "573f36204952f0424834fbfdf9260f969c65143a2d5a19b08bf8143bf20c9be8",
+        "size_bytes": 3141896,
+        "full_readback_at": "2026-10-20T12:19:30.358728+00:00",
+        "full_readback_receipt_sha256": "2e04f31bb3a736fb2390c18c1fc465f29fad6cf8f11b5cd2e12ae88f399dbccf"
+      },
+      "dependency": {
+        "job_id": "b4babeb1-3a58-4df0-9627-a1b5c362621e",
+        "kind": "spell-illustration-wide",
+        "target_key": "avbild",
+        "app_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/77c64bd9-5786-4882-9364-a4810adfa9da.webp",
+        "app_sha256": "77c64bd9578678829364a4810adfa9dadd8c5eadfa31c135e779255824fbcc57",
+        "registry_table": "rule_spells",
+        "registry_id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
+        "registry_field": "illustration_wide_path"
+      }
+    },
+    {
+      "id": "d831ba23109ba7cfcfe8f9659e682be3a5649dc878178506e3080dd08cf3f988",
+      "bucket": "alea-hermes-source",
+      "object_path": "skill-illustration-wide/dolkar/0adc92acbe394bf5bc745a9fb453b6d5b80147c0ecd7607739bc59eeff68e517.png",
+      "sha256": "0adc92acbe394bf5bc745a9fb453b6d5b80147c0ecd7607739bc59eeff68e517",
+      "size_bytes": 3141875,
+      "inbox_file_id": "17RS9rydQcql8BC3edKGTNSmqRM7fb-J1",
+      "complete_decode": true,
+      "source_identity": {
+        "id": "5098c9ee-e655-4ddd-8040-d984642144fa",
+        "version": "aa5bddd3-33e1-4edb-b561-30a2e9d1ecf6",
+        "etag": "\"3ffa4508356a3cf2f5057cdc081945fb\"",
+        "last_modified": "2026-10-18T12:39:47.168+00:00",
+        "size_bytes": 3141875
+      },
+      "drive": {
+        "file_id": "1ODVXBMegfVXjJ8kcNvsPRuFR2rDEam_A",
+        "parent_id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+        "revision_id": "0B0ijFzf4F86Jckp4UmsvWHp3RGZYQWEybGNRd09NWUIwL0RzPQ",
+        "revision_modified_at": "2026-10-20T11:39:14.019Z",
+        "sha256": "0adc92acbe394bf5bc745a9fb453b6d5b80147c0ecd7607739bc59eeff68e517",
+        "size_bytes": 3141875,
+        "full_readback_at": "2026-10-20T11:39:29.477729+00:00",
+        "full_readback_receipt_sha256": "3e14598061811b7bcb8ca7d3adfeb7a2f468de133c243feff38897a23fca68fa"
+      },
+      "dependency": {
+        "job_id": "2721fd2d-3dec-4e20-a06e-d32fc3b4e720",
+        "kind": "skill-illustration-wide",
+        "target_key": "dolkar",
+        "app_path": "skill/dolkar/illustration_wide/74c5b80f-7bad-42c1-8bf5-62a117c74769.webp",
+        "app_sha256": "74c5b80f7badc2c14bf562a117c747699e6913042a12eae548a288ce52442a85",
+        "registry_table": "rule_skills",
+        "registry_id": "dolkar",
+        "registry_field": "illustration_wide_path"
+      }
+    }
+  ],
+  "baseline_source_objects": 514,
+  "baseline_source_bytes": 1487414822,
+  "potential_reclaimable_bytes": 333077975,
+  "independent_backup_waiver": "https://github.com/lindkvistfoto-dot/alea-crusaders/issues/123",
+  "hermes_bundle_sha256": "ecb00dd50723399e02ad4e5c32bf5128077abedf7a58f374436507ca647c20d9",
+  "manifest_sha256": "638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090"
+}

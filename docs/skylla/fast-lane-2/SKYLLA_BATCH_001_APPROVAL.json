@@ -1,0 +1,13 @@
+{
+  "schema": "skylla-batch-owner-approval/v2",
+  "batch_id": "SKYLLA-BATCH-001",
+  "manifest_sha256": "638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090",
+  "manifest_file": "docs/skylla/fast-lane-2/SKYLLA_BATCH_001.json",
+  "object_count": 100,
+  "potential_reclaimable_bytes": 333077975,
+  "owner_approved": false,
+  "execute_capability_issued": false,
+  "deletion_executed": false,
+  "additional_objects_authorized": false,
+  "manifest_file_sha256": "89b4e5b7aee1709a4feac2c25b9cff80468f613fe5d95f536fced8b538d5a652"
+}

@@ -1,0 +1,17 @@
+{
+  "new_python_batch_tests": 30,
+  "new_javascript_batch_tests": 26,
+  "skylla_python_total": 75,
+  "skylla_javascript_total": 91,
+  "kerberos_python": 28,
+  "total_relevant_passed": 194,
+  "failures": 0,
+  "deno_entrypoint_check": "passed",
+  "full_alea_suite_invoked_per_batch": false,
+  "synthetic_deletion_only": true,
+  "actual_verification_runs": 2,
+  "actual_objects_per_run": 100,
+  "actual_delete_calls": 0,
+  "actual_readonly_execute_denial_http_status": 403,
+  "actual_closed_endpoint_http_status": 503
+}

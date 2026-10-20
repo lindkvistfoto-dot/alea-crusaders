@@ -1,0 +1,12 @@
+[
+  {
+    "case": "delete_forbidden_in_read_only_scope",
+    "http_status": 403,
+    "error": "EXACT_BATCH_OWNER_APPROVAL_REQUIRED"
+  },
+  {
+    "case": "object_outside_scope_forbidden",
+    "http_status": 403,
+    "error": "OBJECT_OUTSIDE_BATCH"
+  }
+]

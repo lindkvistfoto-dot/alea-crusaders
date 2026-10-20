@@ -1,0 +1,42 @@
+{
+  "manifest_sha256": "638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090",
+  "id": "d3ed3c9a96e1f58b4f6297519107e22f5f45a0b4c4f942c81ccea162db82229c",
+  "bucket": "alea-hermes-source",
+  "object_path": "skill/skridskoakning/9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978.png",
+  "sha256": "9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978",
+  "size_bytes": 3850173,
+  "verification_receipt": {
+    "payload": {
+      "bucket": "alea-hermes-source",
+      "drive_file_id": "1TgpScdtpEjaZGs1yDnXvf1v7kmZ7CxZH",
+      "drive_revision_id": "0B0ijFzf4F86Jb3lNOVY0K0IxT1VHaVlqeDdtRHZ5TXVFSEhzPQ",
+      "object_path": "skill/skridskoakning/9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978.png",
+      "project_id": "wbmosmkirsitkonejzpg",
+      "schema": "skylla-signed-byte-proof/v2",
+      "sha256": "9861e9f2e6b933b2294fd08eca13a901d626a8d273656ded3e09bfdf12e7d978",
+      "size_bytes": 3850173,
+      "source_identity": {
+        "etag": "b3af50e740e1bbaf528b3ba8beeb7b2d",
+        "id": "d3f32887-dfcb-4a95-9201-28b07676e0b1",
+        "last_modified": "2026-10-19T06:40:10.230Z",
+        "size_bytes": 3850173,
+        "version": "6646061e-6756-41ad-8e22-9d994ae6019f"
+      },
+      "verified_at": "2026-10-20T14:09:02.361Z"
+    },
+    "signature": "6b480a464ec76dda866ca1d3f50953be64596f82e5588c982a49fbf7331a708f"
+  },
+  "source_identity": {
+    "id": "d3f32887-dfcb-4a95-9201-28b07676e0b1",
+    "version": "6646061e-6756-41ad-8e22-9d994ae6019f",
+    "etag": "b3af50e740e1bbaf528b3ba8beeb7b2d",
+    "size_bytes": 3850173,
+    "last_modified": "2026-10-19T06:40:10.230Z"
+  },
+  "source_hash_receipt_reused": true,
+  "drive_revision_id": "0B0ijFzf4F86Jb3lNOVY0K0IxT1VHaVlqeDdtRHZ5TXVFSEhzPQ",
+  "dependencies_clear": true,
+  "status": "verified",
+  "delete_api_invoked": false,
+  "observed_at": "2026-10-20T14:18:04.833Z"
+}

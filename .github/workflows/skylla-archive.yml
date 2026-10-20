@@ -8,6 +8,10 @@ on:
       - scripts/skylla_scoped_verify.py
       - scripts/skylla_display_verify.py
       - scripts/skylla_delete_pilot.py
+      - scripts/skylla_batch.py
+      - supabase/functions/skylla-batch/**
+      - tests/skylla_batch_checks.mjs
+      - tests/test_skylla_batch.py
       - supabase/functions/skylla-delete-pilot/**
       - tests/skylla_delete_checks.mjs
       - tests/test_skylla_delete_pilot.py
@@ -34,6 +38,10 @@ on:
       - scripts/skylla_scoped_verify.py
       - scripts/skylla_display_verify.py
       - scripts/skylla_delete_pilot.py
+      - scripts/skylla_batch.py
+      - supabase/functions/skylla-batch/**
+      - tests/skylla_batch_checks.mjs
+      - tests/test_skylla_batch.py
       - supabase/functions/skylla-delete-pilot/**
       - tests/skylla_delete_checks.mjs
       - tests/test_skylla_delete_pilot.py
@@ -69,6 +77,7 @@ jobs:
             supabase/functions/skylla-verify-scoped
             supabase/functions/skylla-display-read
             supabase/functions/skylla-delete-pilot
+            supabase/functions/skylla-batch
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
@@ -86,3 +95,5 @@ jobs:
       - run: node tests/skylla_edge_checks.mjs
       - run: node tests/skylla_delete_checks.mjs
       - run: python -m unittest discover -s tests -p 'test_skylla_delete_pilot.py' -v
+      - run: python -m unittest discover -s tests -p 'test_skylla_batch.py' -v
+      - run: node tests/skylla_batch_checks.mjs

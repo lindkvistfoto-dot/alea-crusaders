@@ -1,0 +1,6 @@
+{
+  "http_status": 503,
+  "error": "BATCH_CAPABILITY_DISABLED_OR_EXPIRED",
+  "disabled": true,
+  "checked_at": "2026-10-20T14:18:32.452888+00:00"
+}
