@@ -12,6 +12,8 @@ import json
 import os
 import re
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -71,14 +73,16 @@ def find_drive_file_by_name(file_name: str) -> str:
     return matches[0]["id"]
 
 
-def google_file(file_id: str) -> bytes:
+def drive_file(file_id: str, folder: str) -> bytes:
+    if not isinstance(file_id, str) or not FILE_ID_PATTERN.fullmatch(file_id):
+        raise ValueError("INVALID_DRIVE_FILE_ID")
     token = os.environ["GOOGLE_ACCESS_TOKEN"]
     base = "https://www.googleapis.com/drive/v3/files/" + file_id
     _, meta_bytes = api(
         base + "?fields=id,name,mimeType,size,parents,trashed", token)
     meta = json.loads(meta_bytes)
-    if meta.get("trashed") or FOLDER not in meta.get("parents", []):
-        raise ValueError("FILE_NOT_IN_HERMES_INBOX")
+    if meta.get("trashed") or folder not in meta.get("parents", []):
+        raise ValueError("FILE_NOT_IN_REQUIRED_HERMES_FOLDER")
     if meta.get("mimeType") != "image/png":
         raise ValueError("FILE_NOT_PNG_MIME")
     if not 100 <= int(meta.get("size", 0)) <= MAX_BYTES:
@@ -87,6 +91,190 @@ def google_file(file_id: str) -> bytes:
     if len(data) != int(meta["size"]):
         raise ValueError("FILE_TRUNCATED")
     return data
+
+
+def google_file(file_id: str) -> bytes:
+    return drive_file(file_id, FOLDER)
+
+
+KINDS = {"spell", "spell-cutout", "symbol", "skill", "skill-illustration",
+         "skill-illustration-wide", "spell-illustration", "spell-illustration-wide"}
+
+
+def archive_folder(kind: str, folders: dict) -> str:
+    group, profile = {
+        "spell": ("spell_types", "icon"), "symbol": ("spell_types", "icon"),
+        "spell-cutout": ("spell_types", "cutout"),
+        "spell-illustration": ("spell_types", "square"),
+        "spell-illustration-wide": ("spell_types", "wide"),
+        "skill": ("skill_types", "icon"), "skill-illustration": ("skill_types", "square"),
+        "skill-illustration-wide": ("skill_types", "wide"),
+    }[kind]
+    return folders[group][profile]
+
+
+def batch_request(request: dict) -> dict:
+    """Normalize the small queue format or Work's approved records, never infer publish."""
+    mode = request.get("mode")
+    if mode not in ("verify", "pilot", "publish"):
+        raise ValueError("BATCH_MODE_REQUIRED")
+    if request.get("schema") == 4 and set(request) == {"schema", "mode", "items"}:
+        items = request["items"]
+    elif request.get("schema_version") == "1.0" and isinstance(request.get("records"), list):
+        items = []
+        for row in request["records"]:
+            if not isinstance(row, dict):
+                items.append(row)
+                continue
+            inbox = row.get("inbox_file_id", row.get("drive_file_id"))
+            archive = row.get("archive_file_id")
+            if archive is None and row.get("inbox_file_id") and row.get("drive_file_id") and row["drive_file_id"] != inbox:
+                archive = row.get("drive_file_id")
+            items.append({"kind": row.get("image_type"), "target_key": row.get("spell_key"),
+                          "target_id": row.get("spell_id"), "drive_file_id": inbox,
+                          "source_sha256": row.get("sha256"), "archive_file_id": archive,
+                          "visual_approved": row.get("quality_status") == "approved"})
+    else:
+        raise ValueError("INVALID_BATCH_SCHEMA")
+    if not isinstance(items, list) or not 1 <= len(items) <= 100:
+        raise ValueError("BATCH_REQUIRES_1_TO_100_ITEMS")
+    slots = [(item.get("kind"), item.get("target_key")) for item in items if isinstance(item, dict)]
+    # Reject duplicate target slots before any download, conversion or publication.
+    if len({json.dumps(slot) for slot in slots}) != len(slots):
+        raise ValueError("DUPLICATE_BATCH_TARGET")
+    return {"schema": 4, "mode": mode, "items": items}
+
+
+def validate_batch_item(item: dict) -> None:
+    required = {"kind", "target_key", "target_id", "drive_file_id", "source_sha256", "visual_approved"}
+    if not isinstance(item, dict) or not required <= set(item) or set(item) - required - {"archive_file_id"}:
+        raise ValueError("INVALID_BATCH_ITEM")
+    if not isinstance(item["kind"], str) or item["kind"] not in KINDS:
+        raise ValueError("INVALID_HERMES_KIND")
+    if not isinstance(item["target_key"], str) or not KEY_PATTERN.fullmatch(item["target_key"]):
+        raise ValueError("INVALID_TARGET_KEY")
+    if not isinstance(item["target_id"], str) or not re.fullmatch(r"[a-z0-9_-]{1,80}", item["target_id"]):
+        raise ValueError("PINNED_TARGET_ID_REQUIRED")
+    if not isinstance(item["source_sha256"], str) or not re.fullmatch(r"[a-f0-9]{64}", item["source_sha256"]):
+        raise ValueError("PINNED_SOURCE_SHA256_REQUIRED")
+    if item["visual_approved"] is not True:
+        raise ValueError("VISUAL_APPROVAL_REQUIRED")
+
+
+def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
+    """One authenticated batch; only WebP/JSON reach disk. A failed image stays isolated."""
+    if not 1 <= workers <= 4:
+        raise ValueError("WORKERS_MUST_BE_1_TO_4")
+    batch = batch_request(request)
+    if output_root.resolve().is_relative_to(Path.cwd().resolve()):
+        raise ValueError("OUTPUT_MUST_BE_OUTSIDE_CHECKOUT")
+    folders = json.loads((Path(__file__).resolve().parents[1] / "config/hermes-drive-folders.json").read_text())
+    if folders["inbox_folder_id"] != FOLDER:
+        raise ValueError("INBOX_CONFIGURATION_MISMATCH")
+    # Never let stale files from a previous invocation become publication input.
+    output_root.mkdir(parents=True, exist_ok=True)
+    for name in ("manifest.json", "publisher-report.json", "batch-report.json", "retry-request.json"):
+        (output_root / name).unlink(missing_ok=True)
+    started = time.monotonic()
+
+    def prepare_item(index_item):
+        index, item = index_item
+        result = {"index": index, "request": item, "status": "failed", "stage": "validation"}
+        item_start = time.monotonic()
+        try:
+            validate_batch_item(item)
+            raw = google_file(item["drive_file_id"])
+            if validate_png(raw, item["kind"], item["target_key"]) != item["source_sha256"]:
+                raise ValueError("DRIVE_SOURCE_SHA256_MISMATCH")
+            if item["kind"] == "spell-cutout":
+                with Image.open(io.BytesIO(raw)) as image:
+                    if image.getchannel("A").getextrema()[0] != 0:
+                        raise ValueError("CUTOUT_REQUIRES_FULLY_TRANSPARENT_PIXELS")
+            if batch["mode"] == "verify":
+                result["status"] = "verified"
+                return result, None
+            result["stage"] = "archive"
+            archive_id = item.get("archive_file_id")
+            if not archive_id:
+                raise ValueError("ARCHIVE_COPY_REQUIRED_USE_CONNECTED_DRIVE")
+            if archive_id == item["drive_file_id"]:
+                raise ValueError("ARCHIVE_MUST_BE_SEPARATE_FROM_INBOX")
+            archived = drive_file(archive_id, archive_folder(item["kind"], folders))
+            if len(archived) != len(raw) or hashlib.sha256(archived).hexdigest() != item["source_sha256"]:
+                raise ValueError("DRIVE_ARCHIVE_SHA256_MISMATCH")
+            result["archive_verified"] = True
+            result["stage"] = "conversion"
+            from hermes2_prepare import prepare_bytes
+            asset = prepare_bytes(raw, item["kind"], item["target_key"], item["source_sha256"],
+                                  output_root, "drive://" + archive_id)
+            asset.update(target_id=item["target_id"], batch_index=index,
+                         archive_file_id=archive_id, archive_verified=True,
+                         inbox_file_id=item["drive_file_id"])
+            result["status"] = "prepared"
+            return result, asset
+        except Exception as error:
+            # api() removes credentials and response bodies from provider errors.
+            result["error"] = str(error)[:400]
+            print("HERMES_ITEM_FAILED", index, result["stage"], result["error"])
+            return result, None
+        finally:
+            result["elapsed_seconds"] = round(time.monotonic() - item_start, 3)
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        prepared = list(pool.map(prepare_item, enumerate(batch["items"])))
+    results = [result for result, _ in prepared]
+    manifest = {"schema": 2, "publication_mode": batch["mode"], "archive_required": True,
+                "assets": [asset for _, asset in prepared if asset is not None]}
+    report = {"schema": 4, "mode": batch["mode"], "workers": workers,
+              "elapsed_seconds": round(time.monotonic() - started, 3), "items": results}
+    (output_root / "intake-report.json").write_text(json.dumps(report, indent=2) + "\n")
+    if manifest["assets"]:
+        (output_root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    return manifest
+
+
+def finalize_batch(output_root: Path) -> bool:
+    """Combine both stages and emit a retry instruction containing only failed images."""
+    report = json.loads((output_root / "intake-report.json").read_text())
+    publication_file = output_root / "publisher-report.json"
+    publication = json.loads(publication_file.read_text()) if publication_file.exists() else {}
+    published = {item["index"]: item for item in publication.get("items", [])}
+    retries = []
+    for item in report["items"]:
+        if item["status"] == "prepared":
+            outcome = published.get(item["index"], {"status": "failed", "error": publication.get("error") or "PUBLICATION_NOT_COMPLETED"})
+            item["publication"] = outcome
+            item["status"] = outcome["status"]
+        if item["status"] == "failed":
+            retries.append(item["request"])
+    report["source_bucket_empty"] = publication.get("source_bucket_empty")
+    report["publication_error"] = publication.get("error")
+    report["elapsed_seconds"] += publication.get("elapsed_seconds", 0)
+    report["run_id"] = os.environ.get("GITHUB_RUN_ID")
+    report["commit"] = os.environ.get("GITHUB_SHA")
+    report["failed"] = len(retries)
+    report["succeeded"] = len(report["items"]) - len(retries)
+    success = not retries and not publication.get("error") and (
+        report["mode"] == "verify" or publication.get("source_bucket_empty") is True)
+    report["success"] = success
+    (output_root / "batch-report.json").write_text(json.dumps(report, indent=2) + "\n")
+    if retries:
+        (output_root / "retry-request.json").write_text(json.dumps(
+            {"schema": 4, "mode": report["mode"], "items": retries}, indent=2) + "\n")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as stream:
+            stream.write(f"### HERMES 4.0: {report['succeeded']}/{len(report['items'])} succeeded\n\n")
+            stream.write("| Target | Result | Error |\n|---|---|---|\n")
+            for item in report["items"]:
+                request = item["request"] if isinstance(item["request"], dict) else {}
+                error = item.get("error", item.get("publication", {}).get("error", ""))
+                clean = lambda value: str(value).replace("|", "/").replace("\n", " ").replace("<", "&lt;")
+                stream.write(f"| {clean(request.get('target_key', '?'))} | {item['status']} | {clean(error)} |\n")
+            stream.write(f"\nSource bucket empty: {report['source_bucket_empty']}. See JSON artifact for hashes, archive IDs, paths and retry input.\n")
+    print("HERMES_BATCH_REPORT", json.dumps({key: report[key] for key in (
+        "succeeded", "failed", "success", "elapsed_seconds", "source_bucket_empty")}))
+    return success
 
 
 def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
@@ -160,7 +348,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def run(request_path: str, output_root: Path | None = None) -> dict | None:
+def run(request_path: str, output_root: Path | None = None, workers: int = 3) -> dict | None:
     if not QUEUE_PATTERN.fullmatch(request_path):
         raise ValueError("INVALID_QUEUE_PATH")
     if os.environ.get("GITHUB_REPOSITORY") != REPO or os.environ.get("GITHUB_REF") != "refs/heads/main":
@@ -170,6 +358,10 @@ def run(request_path: str, output_root: Path | None = None) -> dict | None:
     if not request_file.is_relative_to((root / "hermes" / "queue").resolve()) or not request_file.is_file():
         raise ValueError("QUEUE_FILE_NOT_FOUND")
     request = json.loads(request_file.read_text(encoding="utf-8"))
+    if isinstance(request, dict) and (request.get("schema") == 4 or "records" in request):
+        if output_root is None:
+            raise ValueError("BATCH_OUTPUT_REQUIRED")
+        return run_batch(request, output_root, workers)
     common_keys = {"schema", "kind", "target_key", "mode"}
     if not isinstance(request, dict) or not (
         set(request) in [common_keys | {selector} | extra
@@ -225,7 +417,13 @@ def run(request_path: str, output_root: Path | None = None) -> dict | None:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("request")
+    parser.add_argument("request", nargs="?")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--finalize", action="store_true")
     args = parser.parse_args()
-    run(args.request, args.output)
+    if args.finalize:
+        raise SystemExit(0 if finalize_batch(args.output) else 1)
+    if not args.request:
+        parser.error("request is required unless --finalize is used")
+    run(args.request, args.output, args.workers)
