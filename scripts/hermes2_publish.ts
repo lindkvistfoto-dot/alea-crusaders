@@ -181,5 +181,15 @@ async function publish(a:any){
   throw e;
  }
 }
-for(const asset of manifest.assets)await publish(asset);
+const failedAssets:string[]=[];
+for(const asset of manifest.assets){
+ try{
+  await publish(asset);
+ }catch(e){
+  const message=String(e instanceof Error?e.message:e);
+  failedAssets.push(asset.kind+"/"+asset.target_key+": "+message);
+  console.error("HERMES_ASSET_FAILED",asset.kind,asset.target_key,message);
+ }
+}
+if(failedAssets.length)throw Error("HERMES_BATCH_PARTIAL_FAILURE "+failedAssets.length+" asset(s): "+failedAssets.join("; ").slice(0,900));
 console.log("HERMES 2.1: verified publication finished.");
