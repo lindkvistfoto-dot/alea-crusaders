@@ -1,4 +1,6 @@
 # Protokoll HERMES
+
+> **HERMES 3.0 – nytt förslag under granskning:** [Arkitektur, WIF och staging/release-grindar](HERMES3.md). HERMES 2.3 nedan fortsätter att vara gällande produktionskedja tills särskilt releasebeslut tagits. Ingen automatisk migrering.
 **Alea Crusaders – gemensam standard för bildproduktion, överföring och publicering**
 
 **Version:** 2.3 (aktiv push-baserad intagskedja) · **Införd:** 2026-10-15 · **Status:** GÄLLER FRAMÅT  
