@@ -1,0 +1,53 @@
+{
+  "folder_id": "1x49xC5Ueb_Nz_0kJkXiTYNiMLHj5x8aj",
+  "files": [
+    {
+      "name": "MEDUSA_MASTER_MANIFEST.json",
+      "drive_file_id": "1bdJ-b2P47cpZYUReGCefHP-WmW0rHJi5",
+      "drive_url": "https://drive.google.com/file/d/1bdJ-b2P47cpZYUReGCefHP-WmW0rHJi5/view",
+      "bytes": 4158918,
+      "sha256": "c6da4b287597d981db4f495fb47c04154760d610221f784e8b21c4291bd99289",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    },
+    {
+      "name": "MEDUSA_INVENTORY_REPORT.md",
+      "drive_file_id": "1iVAJ2uyN5Om2HPp64rFU3BffS--M2lZE",
+      "drive_url": "https://drive.google.com/file/d/1iVAJ2uyN5Om2HPp64rFU3BffS--M2lZE/view",
+      "bytes": 7735,
+      "sha256": "93594d7991d07469dd28bcb0c187a16cb06578454d4e9d0755db1c0163cfc623",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    },
+    {
+      "name": "MEDUSA_EXCEPTIONS.csv",
+      "drive_file_id": "1stxS2m6JU6r9IXIlcrvmYh30Tu2f4n_A",
+      "drive_url": "https://drive.google.com/file/d/1stxS2m6JU6r9IXIlcrvmYh30Tu2f4n_A/view",
+      "bytes": 282921,
+      "sha256": "dbd1d749ec532652b5ef156f91d5227cc16596e6cbc8d32a7b4821564142d61f",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    },
+    {
+      "name": "MEDUSA_KERBEROS_HANDOFF.csv",
+      "drive_file_id": "153CvtdiZwDq68m8iT_OY_Cs5woqY38h8",
+      "drive_url": "https://drive.google.com/file/d/153CvtdiZwDq68m8iT_OY_Cs5woqY38h8/view",
+      "bytes": 1733,
+      "sha256": "47b5995201cadb84660c402c280b92b8246e1eaf0ce962752a5e930ec61ada3e",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    },
+    {
+      "name": "MEDUSA_HYDRA_HANDOFF.csv",
+      "drive_file_id": "1ovAOQpAJ8BDRFo-d8y2Pgbkgsi8sJsG-",
+      "drive_url": "https://drive.google.com/file/d/1ovAOQpAJ8BDRFo-d8y2Pgbkgsi8sJsG-/view",
+      "bytes": 5514,
+      "sha256": "b78aaf4f155646433e3b123863d1c3477f68e31af335173fab812ba1d5cb1437",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    },
+    {
+      "name": "MEDUSA_CODEX_BINARY_VERIFICATION_TASK.md",
+      "drive_file_id": "1i47zr6cCs-ZAut_VV8AdqQIPKgksZG1F",
+      "drive_url": "https://drive.google.com/file/d/1i47zr6cCs-ZAut_VV8AdqQIPKgksZG1F/view",
+      "bytes": 4163,
+      "sha256": "d7874e17801c95eeb2e4cfbdc1f04e7e848b354df4083be24ebb49bf73d71305",
+      "method": "Drive fetch download_raw_file=true include_base64=false -> materialized complete file"
+    }
+  ]
+}
