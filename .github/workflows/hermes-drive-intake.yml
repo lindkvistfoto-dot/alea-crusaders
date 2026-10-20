@@ -27,9 +27,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
+      # Intake needs queue JSONs and Python scripts, not 1.5 GB of image originals.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            hermes/queue
+            features/material/goose04
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
