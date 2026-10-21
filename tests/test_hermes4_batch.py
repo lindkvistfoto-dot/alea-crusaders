@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 import unittest
+from urllib.parse import parse_qs, urlsplit
 from pathlib import Path
 from unittest.mock import patch
 
@@ -192,6 +193,52 @@ class Hermes4Batch(unittest.TestCase):
             self.assertEqual(report['items'][3]['stage'], 'archive')
             self.assertIn('HTTP_403', report['items'][3]['error'])
 
+    def test_hidden_parent_requires_server_membership_for_the_exact_archive_id(self):
+        metadata = dict(name="original's\\cutout.png", mimeType='image/png', size=str(len(self.raw)))
+        responses = [(200, json.dumps(metadata).encode()),
+                     (200, json.dumps(dict(files=[dict(id='archive-source-0')])).encode()),
+                     (200, self.raw)]
+        with patch.dict(os.environ, {'GOOGLE_ACCESS_TOKEN': 'test-only-token'}), \
+             patch.object(intake, 'api', side_effect=responses) as api:
+            self.assertEqual(intake.drive_file('archive-source-0', 'required-archive'), self.raw)
+        query = parse_qs(urlsplit(api.call_args_list[1].args[0]).query)
+        self.assertEqual(query['q'], ["'required-archive' in parents and name = 'original\\'s\\\\cutout.png' and trashed = false"])
+        self.assertEqual(query['corpora'], ['user'])
+        self.assertEqual(query['fields'], ['nextPageToken,incompleteSearch,files(id)'])
+        self.assertEqual([call.args[1] for call in api.call_args_list], ['test-only-token'] * 3)
+        self.assertTrue(api.call_args_list[2].args[0].endswith('/archive-source-0?alt=media'))
+
+    def test_hidden_parent_without_complete_exact_id_evidence_never_downloads(self):
+        metadata = dict(name='cutout.png', mimeType='image/png', size=str(len(self.raw)), parents=[])
+        for listing in (dict(files=[]), dict(files=[dict(id='same-name-other-file')]),
+                        dict(files=[dict(id='archive-source-0')], nextPageToken='more'),
+                        dict(files=[dict(id='archive-source-0')], incompleteSearch=True)):
+            with self.subTest(listing=listing), \
+                 patch.dict(os.environ, {'GOOGLE_ACCESS_TOKEN': 'test-only-token'}), \
+                 patch.object(intake, 'api', side_effect=[(200, json.dumps(metadata).encode()),
+                                                        (200, json.dumps(listing).encode())]) as api:
+                with self.assertRaisesRegex(ValueError, 'FILE_PARENT_MEMBERSHIP_UNVERIFIED'):
+                    intake.drive_file('archive-source-0', 'required-archive')
+                self.assertEqual(api.call_count, 2)
+
+    def test_trashed_archive_with_hidden_parent_never_queries_or_downloads(self):
+        metadata = dict(name='cutout.png', mimeType='image/png', size=str(len(self.raw)), trashed=True)
+        with patch.dict(os.environ, {'GOOGLE_ACCESS_TOKEN': 'test-only-token'}), \
+             patch.object(intake, 'api', return_value=(200, json.dumps(metadata).encode())) as api:
+            with self.assertRaisesRegex(ValueError, 'FILE_NOT_IN_REQUIRED_HERMES_FOLDER'):
+                intake.drive_file('archive-source-0', 'required-archive')
+            self.assertEqual(api.call_count, 1)
+
+    def test_hidden_parent_query_permission_denial_never_downloads(self):
+        metadata = dict(name='cutout.png', mimeType='image/png', size=str(len(self.raw)))
+        with patch.dict(os.environ, {'GOOGLE_ACCESS_TOKEN': 'test-only-token'}), \
+             patch.object(intake, 'api', side_effect=[(200, json.dumps(metadata).encode()),
+                                                    RuntimeError('HTTP_403 GET /drive/v3/files')]) as api:
+            with self.assertRaisesRegex(RuntimeError, 'HTTP_403'):
+                intake.drive_file('archive-source-0', 'required-archive')
+            self.assertEqual(api.call_count, 2)
+
 
 if __name__ == '__main__':
     unittest.main()
+
