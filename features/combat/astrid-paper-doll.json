@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "source_name": "24813.png",
+  "source_sha256": "b28061ae78ca98c0b55c8b3647d402257c33064534ac7e39866a5fd050ac406c",
+  "display_path": "features/combat/astrid-paper-doll.webp",
+  "display_sha256": "705c17fd342e5172072c572fe4f755f193af82ac65e51dd21c9793385e7ddd32",
+  "encoding": "lossless WebP; exact RGBA roundtrip verified",
+  "width": 900,
+  "height": 780,
+  "alpha_bounds": [
+    339,
+    118,
+    561,
+    698
+  ],
+  "base_top_face_center": {
+    "x": 451,
+    "y": 604
+  },
+  "base_width_px": 216,
+  "target_hex_width_fraction": 0.94,
+  "database_references_changed": [],
+  "publication": "PR asset only; no HERMES publication or Storage upload",
+  "source_drive_file_id": "1W5WQqxcLgN5Ks1Em-H9gM59kTvRQ3-uA",
+  "source_drive_archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
+  "archive_sha256_verified": "b28061ae78ca98c0b55c8b3647d402257c33064534ac7e39866a5fd050ac406c"
+}
