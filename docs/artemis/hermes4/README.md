@@ -1,5 +1,7 @@
 # HERMES 4.0 — en batch genom den befintliga kedjan
 
+Detta dokument beskriver den befintliga pilotkedjan. Den nya Work-samordnaren, verifierade Inbox-flyttar och kvarvarande driftsberoenden beskrivs i [ARTEMIS-automatiseringen](AUTOMATION.md). Dess ready-manifest är en separat ingång; gamla pilotmanifest startas inte automatiskt.
+
 Kedjan är **bild → Inbox → bildkontroll → permanent Drive-arkiv → WebP → Supabase → Alea**. Codex gör Drive-arkivsteget med den befintliga anslutna användaridentiteten. Därefter kör en enda Actions-körning hela den befintliga intags-, konverterings- och publiceringskoden för alla objekt. Ingen ny publicerare, databas, tjänst eller originalbucket används.
 
 ## Varför arkivkopieringen använder Drive-anslutningen

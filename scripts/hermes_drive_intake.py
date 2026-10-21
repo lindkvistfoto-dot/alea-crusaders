@@ -272,6 +272,7 @@ def finalize_batch(output_root: Path) -> bool:
     report["publication_error"] = publication.get("error")
     report["elapsed_seconds"] += publication.get("elapsed_seconds", 0)
     report["run_id"] = os.environ.get("GITHUB_RUN_ID")
+    report["run_attempt"] = int(os.environ.get("GITHUB_RUN_ATTEMPT", "1"))
     report["commit"] = os.environ.get("GITHUB_SHA")
     report["failed"] = len(retries)
     report["succeeded"] = len(report["items"]) - len(retries)
