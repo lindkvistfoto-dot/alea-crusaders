@@ -1,0 +1,51 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "beskyddare",
+      "target_id": "e4d78a8a-1d02-49ea-9c88-7a9c68c4a471",
+      "drive_file_id": "1lZLLo7bNR31bfMQjHd8NPfXSQ1QmREbx",
+      "archive_file_id": "1r9GkcpslxAmujR0tkd04iVP1wa6z7mEW",
+      "source_sha256": "55424686af350143b9ed54941a56f47dfec35052afe29396641c310519a03842",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "snabbvax",
+      "target_id": "7575ceed-df3d-43af-b3e8-a5105df6d33f",
+      "drive_file_id": "1LN5lcRrKFwFzRtoQqrOYvJSg8aRZlYOX",
+      "archive_file_id": "15WspLvntCvj1uYGyAaRhpNdY8usiPhwg",
+      "source_sha256": "fe3abd12641af357b473bef23d6673bfe2ba0a47c5fe5ceab8a5c04662df3093",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "forandra",
+      "target_id": "db91b9eb-0f17-4f90-8bc8-7e6dc1d8a087",
+      "drive_file_id": "1VKqMZktR77kSpgwvsrZFVQW0zsbSQ78T",
+      "archive_file_id": "1ooFKdS_rgB7-GLJHJnkj6dfVL0fLf0zE",
+      "source_sha256": "047fac4af9a43be8ad69d7376ea3946f7832e71b94d8f53e7e762703f9337e0f",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "tala-med-dod",
+      "target_id": "add799aa-eb12-432f-b210-1d177679f81c",
+      "drive_file_id": "19jz3XioxknYjzy3V11IMsc0rowtICYS-",
+      "archive_file_id": "1p-S5aCCbhOxNKG_LWshShIqmizapI66b",
+      "source_sha256": "a528c623a8099fe5f7921b00fec6cf769061c931495eec2908d535856d33d3d7",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "vindkontroll",
+      "target_id": "9f632181-222d-4c78-b099-f716ced6af98",
+      "drive_file_id": "1yWDjdwznPw4IgaYMZ0ZWagjj_0gZlZMq",
+      "archive_file_id": "1J62HFU3fWivUc56vQWwmXpxezpVXcbBX",
+      "source_sha256": "d44f401a20e44408cce115985cd3999360eb35fe16816f8ac40bf897900bdb06",
+      "visual_approved": true
+    }
+  ]
+}
