@@ -1,7 +1,17 @@
-# Protokoll HERMES — MINOTAURUS
+# Protokoll HERMES 4.0 — MINOTAURUS / HYDRA
 
 Standard för nya bilder från och med Issue #128: **Google Drive → HERMES → WebP → Supabase**.
 Original arkiveras i befintligt Google Drive-originalarkiv. Ingen PNG får nypubliceras till GitHub eller `alea-hermes-source`. Befintliga appfiler och aktiva bildreferenser behålls.
+
+## HERMES 4.0: gemensam batch
+
+**Bild → Drive Inbox → bildkontroll → permanent CHIMAIRA-arkiv → WebP → Supabase → Alea.**
+
+Nya batcher använder **en** `schema=4`-köfil med 1–100 bilder och ett explicit `mode`. Samma Actions-körning hämtar och validerar Inbox- och arkivbytes, konverterar med befintlig Pillow-kod och publicerar med befintlig TypeScript-publicerare. Högst tre oberoende bilder behandlas samtidigt. Bildfel isoleras; slutrapport och ett manifest med enbart misslyckade objekt sparas som JSON-artifact.
+
+Arkivkopieringen utförs av Codex via den befintliga anslutna Drive-identiteten efter bildkontroll. Actions behåller oförändrat read-only WIF och kräver SHA-verifierad arkivkopia i rätt konfigurerad mapp innan publicering. En saknad eller oläsbar arkivkopia stoppar bara det berörda objektet. Inga skrivrättigheter eller nya credentials läggs på WIF-kontot.
+
+Se [HERMES 4.0: manifest, arkivsteg och femfilspilot](artemis/hermes4/README.md). De tidigare `schema=1`-köfilerna nedan behålls för befintliga explicita MINOTAURUS-anrop; använd batchformatet för HERMES 4.0.
 
 ## Intag och publicering
 
@@ -25,7 +35,7 @@ Original arkiveras i befintligt Google Drive-originalarkiv. Ingen PNG får nypub
 
 `verify` hämtar och validerar utan publicering. `pilot` publicerar bara optimerad WebP under `hermes/minotaurus-pilot/<kind>/<key>/<hash>.webp`, verifierar återläsning och oförändrad målpost, och skriver inga jobb eller aktiva DB-pekare. `publish` aktiverar endast det uttryckliga kömålet. Publicering kräver källhash; äldre köfiler utan hash får inte återspelas som publicering.
 
-En batch är flera explicita köfiler i samma push; varje fil får egen temporär output. Fel för ett mål hindrar inte övriga oberoende mål, men hela körningen blir röd om något misslyckas. Saknad push-föregångare stoppar intaget; hela den historiska kön behandlas aldrig som fallback.
+Det äldre formatet kan behandla flera explicita köfiler i samma push; varje fil får egen temporär output. HERMES 4.0 samlar i stället bilderna i en köfil. Fel för ett mål hindrar inte övriga oberoende mål, men hela körningen blir röd om något misslyckas. Saknad push-föregångare stoppar intaget; hela den historiska kön behandlas aldrig som fallback.
 
 ## Befintliga profiler och fält
 
@@ -53,7 +63,7 @@ Ingen automatisk Drive-radering, Storage-radering eller Git-historikändring ing
 
 ## Leverans och återstående liveprov
 
-Se [MINOTAURUS-rapporten](artemis/minotaurus/REPORT.md), mätprotokollet och pilotens verifierade källhash där. Actions-typkontrollen är godkänd. Eftersom WIF endast tillåter `main` finns en [begränsad STOPP-pilot efter manuell merge](artemis/minotaurus/POST_MERGE_PILOT.md). PR:n kan granskas med denna uttryckliga efterkontroll; livepublicering är ännu inte verifierad. Ingen automatisk merge.
+MINOTAURUS STOPP-piloten är [verifierad efter merge](artemis/minotaurus/POST_MERGE_RESULT.md). HERMES 4.0:s femfilspilot kräver granskad merge, det nya Work-manifestet och verifierade arkivkopior. WIF tillåter fortsatt bara `main`. Ingen automatisk merge.
 
 ## 9. HERMES VFX – animationshändelser
 

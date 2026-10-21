@@ -1,0 +1,22 @@
+{
+  "method": "Real Pillow 12.3.0 PNG validation and WebP conversion; synthetic 1024x1024 RGBA ellipse (8458 bytes). Mock Inbox and archive reads each add 150 ms. No network, Supabase upload or Actions setup measured. One sample per case.",
+  "samples": [
+    {
+      "images": 5,
+      "workers": 1,
+      "measured_seconds": 10.842
+    },
+    {
+      "images": 5,
+      "workers": 3,
+      "measured_seconds": 5.133
+    },
+    {
+      "images": 20,
+      "workers": 3,
+      "measured_seconds": 16.519
+    }
+  ],
+  "images_91_estimated_seconds": 75.161,
+  "estimate_basis": "Linear extrapolation from the synthetic 20-image case, not live production timing."
+}

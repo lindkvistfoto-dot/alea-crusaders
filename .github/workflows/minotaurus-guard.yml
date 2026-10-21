@@ -20,6 +20,7 @@ jobs:
             features/combat
             features/material
             supabase
+            config
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -30,12 +31,13 @@ jobs:
         run: python scripts/minotaurus_guard.py "$BASE" "$HEAD"
       - run: python -m pip install Pillow==12.3.0
       - run: python -m unittest discover -s tests -p 'test_minotaurus*.py'
+      - run: python -m unittest discover -s tests -p 'test_hermes4*.py'
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx vitest run tests/minotaurus-publisher.test.mjs tests/hermes-wide-publisher.test.mjs tests/hermes-spell-cutout-profile.test.js tests/hermes-v2-gates.test.mjs tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-art-assets.test.js
+      - run: npx vitest run tests/minotaurus-publisher.test.mjs tests/hermes4-batch-publisher.test.mjs tests/hermes-wide-publisher.test.mjs tests/hermes-spell-cutout-profile.test.js tests/hermes-v2-gates.test.mjs tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-art-assets.test.js
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
