@@ -45,3 +45,11 @@ it('returns a sanitized provider failure and preserves its own error when the ch
   await expect(hermes4WorkTick(tools)).rejects.toThrow('WORK_RPC_PROTOCOL_ERROR');
   expect(tools.write_stdin.mock.calls[0][0].chars).toBe(line({isError:true}));
 });
+
+it('passes direct trash authorization only when writes are explicitly enabled',async()=>{
+  for(const allowWrites of [false,true]){
+    const tools={exec_command:vi.fn(async()=>finished)};
+    await hermes4WorkTick(tools,{allowWrites});
+    expect(tools.exec_command.mock.calls[0][0].cmd.includes('--allow-trash')).toBe(allowWrites);
+  }
+});

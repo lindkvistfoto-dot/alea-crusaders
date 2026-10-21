@@ -5,6 +5,7 @@
  */
 const reads = new Set([
   'google_drive_get_file_metadata', 'google_drive_search', 'google_drive_list_folder', 'google_drive_fetch',
+  'google_drive_list_file_revisions',
   'github_fetch', 'github_download_workflow_artifact',
 ]);
 const writes = new Set([
@@ -24,7 +25,7 @@ export async function hermes4WorkTick(tools, {
   let pending = '';
   try {
     let chunk = await tools.exec_command({
-      cmd: `python -u scripts/hermes4_work.py --ledger ${quote(ledger)}`,
+      cmd: `python -u scripts/hermes4_work.py --ledger ${quote(ledger)}${allowWrites ? ' --allow-trash' : ''}`,
       workdir: repo, tty: true, yield_time_ms: 1000, max_output_tokens: 40000,
     });
     session = chunk.session_id;

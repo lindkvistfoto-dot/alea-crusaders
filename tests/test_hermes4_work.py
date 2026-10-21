@@ -19,7 +19,6 @@ import hermes_drive_intake as intake
 
 FOLDERS = json.loads(work.CONFIG.read_text())
 ARCHIVE = FOLDERS['spell_types']['cutout']
-QUARANTINE = FOLDERS['folders']['verified_duplicates']
 REPORTS = FOLDERS['folders']['batches_reports']
 
 
@@ -34,16 +33,20 @@ def png(color=120):
 class FakeDrive:
     def __init__(self):
         self.files, self.copies, self.moves, self.reports = {}, [], [], {}
-        self.copy_timeout = self.move_timeout = self.report_timeout = False
+        self.copy_timeout = self.move_timeout = self.report_timeout = self.trash_timeout = False
+        self.trashes = []
 
     def add(self, file_id, name, data, folder, mime='image/png'):
         self.files[file_id] = dict(id=file_id, name=name, mimeType=mime, size=str(len(data)),
-                                   parents=[folder], data=data, trashed=False)
+                                   parents=[folder], data=data, trashed=False, headRevisionId='revision-1', properties={})
 
     def meta(self, file_id):
         if file_id not in self.files:
             raise RuntimeError('missing file')
         return {k: copy.deepcopy(v) for k, v in self.files[file_id].items() if k != 'data'}
+
+    def revision(self, file_id):
+        return self.meta(file_id)['headRevisionId']
 
     def list(self, folder, name=None):
         return [self.meta(k) for k, m in self.files.items() if folder in m['parents'] and not m['trashed']
@@ -78,14 +81,36 @@ class FakeDrive:
             self.report_timeout = False
             raise TimeoutError('response lost after report saved')
 
-    def ensure_reader(self, file_id):
+    def ensure_reader(self, file_id, allow_inbox_editor=False):
         pass  # Remote read-only ACLs are exercised separately by connector contract tests.
+
+
+class FakeTrash:
+    def __init__(self, drive):
+        self.drive = drive
+
+    def trash(self, file_id, revision, intent):
+        meta = self.drive.files[file_id]
+        work.require(meta['parents'] == [work.FOLDER], 'CLEANUP_OUTSIDE_INBOX')
+        work.require(meta['headRevisionId'] == revision, 'SOURCE_REVISION_CHANGED')
+        if not meta['trashed']:
+            meta.update(trashed=True, explicitlyTrashed=True, properties=dict(hermesCleanup=intent))
+            self.drive.trashes.append(file_id)
+            if self.drive.trash_timeout:
+                self.drive.trash_timeout = False
+                raise TimeoutError('trash response lost')
+        work.require(meta['properties'].get('hermesCleanup') == intent, 'TRASHED_BY_OTHER_OPERATION')
+        return dict(file_id=file_id, source_revision=revision, intent=intent, trashed=True)
 
 
 class FakeGitHub:
     def __init__(self, drive):
         self.drive, self.queues, self.finished = drive, {}, {}
         self.writes, self.timeout = 0, False
+        self.pending = {}
+
+    def pending_sources(self):
+        return self.pending
 
     def enqueue(self, path, request):
         if path not in self.queues:
@@ -105,6 +130,7 @@ class FakeGitHub:
         request = self.queues[path]
         if real_conversion:
             with tempfile.TemporaryDirectory() as out, \
+                 patch.object(intake, 'verify_source_revision'), \
                  patch.object(intake, 'google_file', side_effect=lambda i: self.drive.read(i, work.MAX_BYTES)), \
                  patch.object(intake, 'drive_file', side_effect=lambda i, _: self.drive.read(i, work.MAX_BYTES)):
                 manifest = intake.run_batch(request, Path(out))
@@ -142,7 +168,8 @@ class WorkFlow(unittest.TestCase):
         self.addCleanup(self.ledger.close)
         self.drive = FakeDrive()
         self.github = FakeGitHub(self.drive)
-        self.worker = work.Coordinator(self.drive, self.github, self.ledger)
+        self.cleanup = FakeTrash(self.drive)
+        self.worker = work.Coordinator(self.drive, self.github, self.ledger, cleanup=self.cleanup)
         self.value = dict(schema=4, mode='publish', batch_id='isolated-test', complete=True, expected_count=5, items=[])
         for i in range(5):
             raw = png(i + 100)
@@ -150,7 +177,7 @@ class WorkFlow(unittest.TestCase):
             self.drive.add(file_id, f'synthetic-{i}.png', raw, work.FOLDER)
             self.value['items'].append(dict(kind='spell-cutout', target_key=f'test-{i}', target_id=f'test_{i}',
                                            drive_file_id=file_id, source_sha256=hashlib.sha256(raw).hexdigest(),
-                                           visual_approved=True))
+                                           visual_approved=True, source_revision='revision-1'))
         self.manifest()
 
     def manifest(self, value=None, file_id='manifest-test-0'):
@@ -170,15 +197,17 @@ class WorkFlow(unittest.TestCase):
         self.tick()
         self.assertEqual((len(self.drive.copies), self.github.writes), (5, 1))
         self.assertFalse(self.drive.moves)
+        self.assertFalse(self.drive.trashes)
         self.github.finish(real_conversion=True)
         self.tick()
         self.assertEqual(self.report()['counts'], dict(received=5, archived=5, published_webp=5,
-                                                      activated_references=5, moved_from_inbox=5))
+                                                      activated_references=5, moved_from_inbox=5, trashed_from_inbox=5))
         self.assertEqual(self.report()['attempts'][0]['duration_ms'], 42000)
         self.assertEqual(self.report()['status'], 'completed')
         self.assertEqual(self.drive.meta('manifest-test-0')['parents'], [REPORTS])
         for i in range(5):
-            self.assertEqual(self.drive.meta(f'inbox-source-{i}')['parents'], [QUARANTINE])
+            self.assertEqual(self.drive.meta(f'inbox-source-{i}')['parents'], [work.FOLDER])
+            self.assertTrue(self.drive.meta(f'inbox-source-{i}')['trashed'])
             self.assertEqual(self.drive.read(f'archive-copy-{i}', work.MAX_BYTES),
                              self.drive.read(f'inbox-source-{i}', work.MAX_BYTES))
         before = (self.github.writes, len(self.drive.copies), len(self.drive.moves))
@@ -192,7 +221,7 @@ class WorkFlow(unittest.TestCase):
             self.drive.add(file_id, f'synthetic-{i}.png', raw, work.FOLDER)
             self.value['items'].append(dict(kind='spell-cutout', target_key=f'test-{i}', target_id=f'test_{i}',
                                            drive_file_id=file_id, source_sha256=hashlib.sha256(raw).hexdigest(),
-                                           visual_approved=True))
+                                           visual_approved=True, source_revision='revision-1'))
         self.value['expected_count'] = 20
         self.manifest()
         self.tick()
@@ -200,7 +229,7 @@ class WorkFlow(unittest.TestCase):
         self.github.finish()
         self.tick()
         self.assertEqual(self.report()['counts'], dict(received=20, archived=20, published_webp=20,
-                                                      activated_references=20, moved_from_inbox=20))
+                                                      activated_references=20, moved_from_inbox=20, trashed_from_inbox=20))
         self.assertEqual(self.report()['status'], 'completed')
         self.assertFalse(self.report()['retryable'])
 
@@ -218,7 +247,7 @@ class WorkFlow(unittest.TestCase):
                 if failure == 'wrong_parent': self.drive.files['inbox-source-0']['parents'] = [ARCHIVE]
                 self.manifest(value)
                 case_ledger = work.Ledger(Path(self.tmp.name) / (failure + '.db'))
-                self.worker = work.Coordinator(self.drive, self.github, case_ledger)
+                self.worker = work.Coordinator(self.drive, self.github, case_ledger, cleanup=self.cleanup)
                 try:
                     self.tick()
                     self.assertEqual((self.drive.copies, self.github.writes, self.drive.moves), ([], 0, []))
@@ -244,7 +273,7 @@ class WorkFlow(unittest.TestCase):
         self.tick()
         self.assertEqual(self.report()['status'], 'completed')
 
-    def test_partial_publication_moves_only_successes_and_retries_only_failure(self):
+    def test_partial_publication_trashes_only_successes_and_retries_only_failure(self):
         self.tick()
         self.github.finish(failed=(2,))
         self.tick()
@@ -259,19 +288,20 @@ class WorkFlow(unittest.TestCase):
         self.assertEqual(self.report()['status'], 'completed')
         self.assertEqual(len(self.drive.copies), 5)
 
-    def test_lost_move_response_and_restart_only_finish_cleanup(self):
+    def test_lost_trash_response_and_restart_only_finish_cleanup(self):
         self.tick()
         self.github.finish()
-        self.drive.move_timeout = True
+        self.drive.trash_timeout = True
         self.tick()
         self.assertEqual(self.report()['counts']['moved_from_inbox'], 4)
         self.ledger.close()
         self.ledger = work.Ledger(Path(self.tmp.name) / 'ledger.db')
-        self.worker = work.Coordinator(self.drive, self.github, self.ledger)
+        self.cleanup = FakeTrash(self.drive)
+        self.worker = work.Coordinator(self.drive, self.github, self.ledger, cleanup=self.cleanup)
         self.addCleanup(self.ledger.close)
         self.tick()
         self.assertEqual(self.report()['status'], 'completed')
-        self.assertEqual((self.github.writes, len(self.drive.copies), len(self.drive.moves)), (1, 5, 6))
+        self.assertEqual((self.github.writes, len(self.drive.copies), len(self.drive.trashes), len(self.drive.moves)), (1, 5, 5, 1))
 
     def test_report_failure_leaves_manifest_and_retry_finishes_without_republishing(self):
         self.tick()
@@ -301,6 +331,37 @@ class WorkFlow(unittest.TestCase):
         self.assertEqual(self.report()['status'], 'completed')
         self.assertEqual(self.github.writes, 1)
 
+    def test_changed_revision_with_identical_bytes_keeps_source_in_inbox(self):
+        self.tick()
+        self.github.finish()
+        self.drive.files['inbox-source-0']['headRevisionId'] = 'revision-2'
+        self.tick()
+        self.assertFalse(self.drive.meta('inbox-source-0')['trashed'])
+        self.assertEqual(self.report()['items'][0]['error'], 'SOURCE_REVISION_CHANGED')
+        self.assertEqual(self.github.writes, 1)
+
+    def test_another_batch_claim_blocks_cleanup_without_republication(self):
+        self.tick()
+        self.github.finish()
+        with self.ledger.db:
+            self.ledger.db.execute('UPDATE sources SET batch=? WHERE id=?', ('another-running-batch', 'inbox-source-0'))
+        self.tick()
+        self.assertFalse(self.drive.meta('inbox-source-0')['trashed'])
+        self.assertEqual(self.report()['items'][0]['error'], 'SOURCE_CLAIM_CONFLICT')
+        self.assertEqual(self.github.writes, 1)
+
+    def test_another_pending_actions_batch_blocks_trash_of_shared_source(self):
+        self.tick()
+        self.github.finish()
+        self.github.pending['inbox-source-0'] = {'hermes/queue/unrelated-batch.json'}
+        self.tick()
+        self.assertFalse(self.drive.meta('inbox-source-0')['trashed'])
+        self.assertEqual(self.report()['items'][0]['error'], 'SOURCE_IN_OTHER_ACTIONS_BATCH')
+        self.github.pending.clear()
+        self.tick()
+        self.assertTrue(self.drive.meta('inbox-source-0')['trashed'])
+        self.assertEqual(self.github.writes, 1)
+
     def test_changed_manifest_and_reused_source_are_rejected(self):
         self.tick()
         self.value['items'][0]['target_key'] = 'changed-target'
@@ -308,6 +369,7 @@ class WorkFlow(unittest.TestCase):
         result = self.tick()
         self.assertTrue(any(e['error'] == 'BATCH_ID_REUSED' for e in result['errors']))
         self.assertFalse(self.drive.moves)
+        self.assertFalse(self.drive.trashes)
         other = copy.deepcopy(self.value)
         other['batch_id'] = 'another-batch'
         self.manifest(other, 'manifest-test-1')
@@ -332,6 +394,7 @@ class WorkFlow(unittest.TestCase):
         receipt['run']['conclusion'] = 'cancelled'
         self.tick()
         self.assertFalse(self.drive.moves)
+        self.assertFalse(self.drive.trashes)
         self.assertEqual(self.github.writes, 2)
         self.assertEqual(len(list(self.github.queues.values())[-1]['items']), 5)
         self.github.finish()
@@ -358,6 +421,7 @@ class WorkFlow(unittest.TestCase):
             self.github.finished[list(self.github.queues)[0]] = r
             self.tick()
             self.assertFalse(self.drive.moves)
+            self.assertFalse(self.drive.trashes)
             self.assertEqual(self.report()['counts']['activated_references'], 0)
 
     def test_bounded_automatic_retries_preserve_failure_and_do_not_spin(self):
@@ -368,6 +432,7 @@ class WorkFlow(unittest.TestCase):
         self.assertEqual(self.github.writes, 3)
         self.assertFalse(self.report()['automatic_retry_remaining'])
         self.assertFalse(self.drive.moves)
+        self.assertFalse(self.drive.trashes)
         self.tick()
         self.assertEqual(self.github.writes, 3)
 
@@ -387,12 +452,13 @@ class WorkFlow(unittest.TestCase):
         self.tick()
         self.assertEqual(self.github.writes, 0)
         self.assertFalse(self.drive.moves)
+        self.assertFalse(self.drive.trashes)
 
 
 class Contracts(unittest.TestCase):
     def test_batch_capacity_and_duplicate_identities(self):
         item = dict(kind='spell-cutout', target_key='test', target_id='test', drive_file_id='inbox-test-0',
-                    source_sha256='a' * 64, visual_approved=True)
+                    source_sha256='a' * 64, visual_approved=True, source_revision='revision-1')
         for count in (1, 20, 100):
             value = dict(schema=4, mode='publish', complete=True, batch_id='capacity', expected_count=count,
                          items=[dict(item, target_key=f'test-{i}', target_id=f'test_{i}',

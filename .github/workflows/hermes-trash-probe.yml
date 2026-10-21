@@ -1,0 +1,50 @@
+name: HERMES – isolated trash permission probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  probe:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            config
+            hermes/fixtures
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.3.0
+      - id: reader
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+      - id: cleanup
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.metadata
+          create_credentials_file: false
+      - name: Probe only committed synthetic file IDs; never publish
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.reader.outputs.access_token }}
+          HERMES_CLEANUP_ACCESS_TOKEN: ${{ steps.cleanup.outputs.access_token }}
+        run: python scripts/hermes4_trash_probe.py "$RUNNER_TEMP/hermes-trash-probe.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hermes-trash-probe
+          path: ${{ runner.temp }}/hermes-trash-probe.json
+          if-no-files-found: ignore

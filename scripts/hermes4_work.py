@@ -22,6 +22,7 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import urlencode
 
 from PIL import Image
+from hermes4_drive_trash import InboxTrash, REVISION
 from hermes_drive_intake import (FOLDER, REPO, MAX_BYTES, FILE_ID_PATTERN,
                                  archive_folder, batch_request, validate_batch_item, validate_png)
 
@@ -118,22 +119,27 @@ class Ledger:
             self.db.execute('INSERT INTO batches VALUES (?,?)', (value['batch_id'], canonical(state)))
         return state
 
+    def assert_source_owner(self, file_id, batch_id):
+        owner = self.db.execute('SELECT batch FROM sources WHERE id=?', (file_id,)).fetchone()
+        require(owner is not None and owner[0] == batch_id, 'SOURCE_CLAIM_CONFLICT')
+
     def states(self):
         return [json.loads(row[0]) for row in self.db.execute('SELECT state FROM batches ORDER BY id')]
 
 
 class Coordinator:
-    def __init__(self, drive, github, ledger, folders=None, max_attempts=3):
+    def __init__(self, drive, github, ledger, folders=None, max_attempts=3, cleanup=None):
         self.drive, self.github, self.ledger = drive, github, ledger
         self.folders = folders or json.loads(CONFIG.read_text())
         self.max_attempts = max_attempts
+        self.cleanup = cleanup if cleanup is not None else InboxTrash()
         require(self.folders['inbox_folder_id'] == FOLDER, 'INBOX_CONFIGURATION_MISMATCH')
-        require(self.folders['folders']['verified_duplicates'] != self.folders['folders']['quarantine'],
-                'USE_VERIFIED_DUPLICATES_NOT_GENERAL_QUARANTINE')
         require(self.folders['safety']['no_automatic_deletes'] is True
-                and self.folders['safety']['verified_delivery_moves_only'] is True, 'VERIFIED_MOVE_POLICY_REQUIRED')
+                and self.folders['safety']['verified_delivery_trash_only'] is True, 'VERIFIED_TRASH_POLICY_REQUIRED')
 
     def checked_bytes(self, file_id, folder, item):
+        if folder == FOLDER and item.get('source_revision'):
+            require(self.drive.revision(file_id) == item['source_revision'], 'SOURCE_REVISION_CHANGED')
         meta = self.drive.meta(file_id)
         require(not meta.get('trashed') and folder in meta.get('parents', []), 'WRONG_DRIVE_PARENT')
         require(meta.get('mimeType') == 'image/png', 'FILE_NOT_PNG_MIME')
@@ -142,6 +148,8 @@ class Coordinator:
         require(any(m['id'] == file_id for m in self.drive.list(folder, meta['name'])), 'LIVE_FILE_MEMBERSHIP_UNVERIFIED')
         require(100 <= int(meta.get('size', 0)) <= MAX_BYTES, 'FILE_SIZE_OUT_OF_RANGE')
         raw = self.drive.read(file_id, MAX_BYTES)
+        if folder == FOLDER and item.get('source_revision'):
+            require(self.drive.revision(file_id) == item['source_revision'], 'SOURCE_REVISION_CHANGED')
         require(len(raw) == int(meta['size']), 'FILE_TRUNCATED')
         with contextlib.redirect_stdout(sys.stderr):
             digest = validate_png(raw, item['kind'], item['target_key'])
@@ -188,7 +196,7 @@ class Coordinator:
         return all(r.get('archive_verified') and 'error' not in r for r in state['items'])
 
     def queue(self, state):
-        indexes = [i for i, row in enumerate(state['items']) if row['status'] not in ('active', 'moved')]
+        indexes = [i for i, row in enumerate(state['items']) if row['status'] not in ('active', 'trashed', 'moved')]
         if not indexes or len(state['attempts']) >= self.max_attempts:
             return
         # Retry only the remaining items; verify their archive and Inbox again before a new start.
@@ -198,7 +206,8 @@ class Coordinator:
             try:
                 self.checked_bytes(row['request']['drive_file_id'], FOLDER, row['request'])
                 self.checked_bytes(row['archive_file_id'], archive_folder(row['request']['kind'], self.folders), row['request'])
-                self.drive.ensure_reader(row['request']['drive_file_id'])
+                self.ledger.assert_source_owner(row['request']['drive_file_id'], state['id'])
+                self.drive.ensure_reader(row['request']['drive_file_id'], allow_inbox_editor=True)
                 self.drive.ensure_reader(row['archive_file_id'])
                 row.pop('error', None)
             except Exception as error:
@@ -273,38 +282,56 @@ class Coordinator:
         self.ledger.save(state)
         return True
 
-    def move_verified(self, state):
-        quarantine = self.folders['folders']['verified_duplicates']
+    def trash_verified(self, state):
+        try:
+            pending = self.github.pending_sources()
+        except Exception as error:
+            for row in state['items']:
+                if row['status'] == 'active':
+                    row.update(stage='cleanup', error=safe_error(error))
+            self.ledger.save(state)
+            return
+        own_paths = {attempt['path'] for attempt in state['attempts']}
         for row in state['items']:
             if row['status'] != 'active':
                 continue
             try:
                 row['stage'] = 'cleanup'
                 item = row['request']
-                # Recheck the permanent original before removing the Inbox parent.
+                self.ledger.assert_source_owner(item['drive_file_id'], state['id'])
+                require(not (set(pending.get(item['drive_file_id'], [])) - own_paths),
+                        'SOURCE_IN_OTHER_ACTIONS_BATCH')
+                require(row.get('publication', {}).get('target_id') == item['target_id'],
+                        'PUBLICATION_PROOF_INCOMPLETE')
+                require(isinstance(item.get('source_revision'), str) and REVISION.fullmatch(item['source_revision']),
+                        'PINNED_SOURCE_REVISION_REQUIRED')
                 row['archive_verified'] = False
                 self.checked_bytes(row['archive_file_id'], archive_folder(item['kind'], self.folders), item)
                 row['archive_verified'] = True
-                meta = self.drive.meta(item['drive_file_id'])
-                if FOLDER in meta.get('parents', []):
+                if not row.get('cleanup_intent'):
                     self.checked_bytes(item['drive_file_id'], FOLDER, item)
-                    self.drive.move(item['drive_file_id'], FOLDER, quarantine)
-                self.checked_bytes(item['drive_file_id'], quarantine, item)
-                require(FOLDER not in self.drive.meta(item['drive_file_id'])['parents'], 'INBOX_MOVE_UNCONFIRMED')
-                row.update(status='moved', stage='completed')
+                    row['cleanup_intent'] = hashlib.sha256((state['digest'] + item['drive_file_id']
+                                                          + item['source_revision']).encode()).hexdigest()
+                    self.ledger.save(state)  # Before the PATCH; same intent survives a lost response.
+                result = self.cleanup.trash(item['drive_file_id'], item['source_revision'], row['cleanup_intent'])
+                require(result.get('file_id') == item['drive_file_id'] and result.get('trashed') is True
+                        and result.get('source_revision') == item['source_revision']
+                        and result.get('intent') == row['cleanup_intent'], 'TRASH_READBACK_FAILED')
+                row.update(status='trashed', stage='completed', cleanup=result)
                 row.pop('error', None)
             except Exception as error:
                 row['error'] = safe_error(error)
             self.ledger.save(state)
 
     def report(self, state):
-        done = all(r['status'] == 'moved' for r in state['items'])
+        done = all(r['status'] in ('trashed', 'moved') for r in state['items'])
         state['status'] = 'pending'
         counts = dict(received=sum(bool(r.get('received')) for r in state['items']),
                       archived=sum(bool(r.get('archive_verified')) for r in state['items']),
                       published_webp=sum('publication' in r for r in state['items']),
                       activated_references=sum('publication' in r for r in state['items']),
-                      moved_from_inbox=sum(r['status'] == 'moved' for r in state['items']))
+                      moved_from_inbox=sum(r['status'] in ('trashed', 'moved') for r in state['items']),
+                      trashed_from_inbox=sum(r['status'] == 'trashed' for r in state['items']))
         report = dict(schema=4, batch_id=state['id'], manifest_sha256=state['digest'], status=state['status'],
                       expected_count=len(state['items']), counts=counts, items=state['items'], attempts=state['attempts'],
                       retryable=True, automatic_retry_remaining=not done and len(state['attempts']) < self.max_attempts,
@@ -338,7 +365,7 @@ class Coordinator:
             if attempt['status'] != 'completed':
                 if not self.publication(state, attempt):
                     return self.report(state)
-            self.move_verified(state)
+            self.trash_verified(state)
             if any(r['status'] == 'failed' for r in state['items']):
                 self.queue(state)
             state.pop('error', None)
@@ -393,8 +420,10 @@ class ToolRPC:
 
 
 def json_content(result):
-    while isinstance(result, dict) and isinstance(result.get('content'), str):
-        result = json.loads(result['content'])
+    # Unwrap the connector once. A GitHub Contents response itself contains a
+    # base64 `content` field, which must remain intact for its caller to decode.
+    if isinstance(result, dict) and isinstance(result.get('content'), str):
+        return json.loads(result['content'])
     return result
 
 
@@ -416,6 +445,13 @@ def materialized(result, limit):
 class ConnectedDrive:
     def __init__(self, call):
         self.call = call
+
+    def revision(self, file_id):
+        result = self.call('google_drive_list_file_revisions', fileId=file_id, pageSize=1000)
+        revision = result.get('currentRevisionId')
+        require(not result.get('nextPageToken') and not result.get('next_page_token')
+                and isinstance(revision, str) and REVISION.fullmatch(revision), 'SOURCE_REVISION_UNVERIFIED')
+        return revision
 
     def meta(self, file_id):
         m = self.call('google_drive_get_file_metadata', fileId=file_id,
@@ -478,7 +514,7 @@ class ConnectedDrive:
         require(isinstance(file_id, str) and FILE_ID_PATTERN.fullmatch(file_id), 'COPY_ID_MISSING')
         return file_id
 
-    def ensure_reader(self, file_id):
+    def ensure_reader(self, file_id, allow_inbox_editor=False):
         account = json.loads(CONFIG.read_text())['safety']['service_account']
         def roles():
             meta = self.call('google_drive_get_file_metadata', fileId=file_id,
@@ -486,11 +522,16 @@ class ConnectedDrive:
             require(isinstance(meta.get('permissions'), list), 'DRIVE_PERMISSION_METADATA_REQUIRED')
             return [p['role'] for p in meta['permissions'] if p.get('emailAddress') == account]
         existing = roles()
-        require(all(role == 'reader' for role in existing), 'HERMES_MUST_REMAIN_READ_ONLY')
+        allowed = {'reader'}
+        if allow_inbox_editor:
+            require(self.meta(file_id).get('parents') == [FOLDER], 'EDITOR_ALLOWANCE_ONLY_FOR_INBOX')
+            allowed.add('writer')
+        require(all(role in allowed for role in existing), 'HERMES_MUST_REMAIN_READ_ONLY')
         if not existing:
             self.call('google_drive_share_file', url='https://drive.google.com/file/d/' + file_id + '/view',
                       user_email=account, permission='reader')
-        require(set(roles()) == {'reader'}, 'HERMES_READER_PERMISSION_UNCONFIRMED')
+        final = roles()
+        require(bool(final) and set(final) <= allowed, 'HERMES_READER_PERMISSION_UNCONFIRMED')
 
     def move(self, file_id, source, destination):
         meta = self.meta(file_id)
@@ -522,6 +563,32 @@ class ConnectedGitHub:
 
     def get(self, path):
         return json_content(self.call('github_fetch', url=self.root + path))
+
+    def pending_sources(self):
+        """Conservatively inspect queue snapshots of every non-completed main run.
+
+        Together with the locked, permanent ledger claims this prevents another
+        managed batch from owning the source while cleanup is in progress.
+        """
+        heads, claims = set(), {}
+        for status in ('queued', 'in_progress', 'waiting', 'requested', 'pending'):
+            data = self.get('/actions/runs?' + urlencode(dict(branch='main', status=status, per_page=100)))
+            require(data['total_count'] <= 100, 'PENDING_ACTIONS_LIST_INCOMPLETE')
+            heads.update(r['head_sha'] for r in data['workflow_runs']
+                         if r['path'] == '.github/workflows/hermes-drive-intake.yml' and r['status'] != 'completed')
+        for head in heads:
+            listing = self.get('/contents/hermes/queue?' + urlencode(dict(ref=head)))
+            require(isinstance(listing, list) and len(listing) < 1000, 'QUEUE_DIRECTORY_LIMIT_REACHED')
+            for file in listing:
+                if not file['path'].endswith('.json'):
+                    continue
+                content = self.get('/contents/' + file['path'] + '?' + urlencode(dict(ref=head)))
+                request = json.loads(base64.b64decode(content['content']))
+                items = [request] if request.get('schema') == 1 else batch_request(request)['items']
+                for item in items:
+                    require(isinstance(item.get('drive_file_id'), str), 'PENDING_SOURCE_ID_UNVERIFIED')
+                    claims.setdefault(item['drive_file_id'], set()).add(file['path'])
+        return claims
 
     def enqueue(self, path, request):
         # Read the directory instead of interpreting arbitrary connector error strings as 404.
@@ -578,6 +645,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ledger', required=True, type=Path)
+    parser.add_argument('--allow-trash', action='store_true')
     args = parser.parse_args()
     if sys.stdin.isatty():
         # Tool hosts use a PTY so stdin stays open. Disable echo/canonical buffering
@@ -587,7 +655,8 @@ if __name__ == '__main__':
     ledger = Ledger(args.ledger)
     try:
         call = ToolRPC()
-        result = Coordinator(ConnectedDrive(call), ConnectedGitHub(call), ledger).tick()
+        result = Coordinator(ConnectedDrive(call), ConnectedGitHub(call), ledger,
+                             cleanup=InboxTrash(enabled=args.allow_trash)).tick()
         # Detailed reports are already stored in Drive. Keep the tool transcript bounded.
         summary = dict(errors=result['errors'], reports=[{
             k: r[k] for k in ('batch_id', 'status', 'counts', 'retryable', 'automatic_retry_remaining', 'error')

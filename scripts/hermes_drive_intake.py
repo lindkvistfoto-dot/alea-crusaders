@@ -168,7 +168,7 @@ def batch_request(request: dict) -> dict:
 
 def validate_batch_item(item: dict) -> None:
     required = {"kind", "target_key", "target_id", "drive_file_id", "source_sha256", "visual_approved"}
-    if not isinstance(item, dict) or not required <= set(item) or set(item) - required - {"archive_file_id"}:
+    if not isinstance(item, dict) or not required <= set(item) or set(item) - required - {"archive_file_id", "source_revision"}:
         raise ValueError("INVALID_BATCH_ITEM")
     if not isinstance(item["kind"], str) or item["kind"] not in KINDS:
         raise ValueError("INVALID_HERMES_KIND")
@@ -178,8 +178,22 @@ def validate_batch_item(item: dict) -> None:
         raise ValueError("PINNED_TARGET_ID_REQUIRED")
     if not isinstance(item["source_sha256"], str) or not re.fullmatch(r"[a-f0-9]{64}", item["source_sha256"]):
         raise ValueError("PINNED_SOURCE_SHA256_REQUIRED")
+    if 'source_revision' in item and (not isinstance(item['source_revision'], str) or
+            not re.fullmatch(r'[A-Za-z0-9_-]{1,200}', item['source_revision'])):
+        raise ValueError('PINNED_SOURCE_REVISION_REQUIRED')
     if item["visual_approved"] is not True:
         raise ValueError("VISUAL_APPROVAL_REQUIRED")
+
+
+def verify_source_revision(item):
+    if not isinstance(item.get('drive_file_id'), str) or not FILE_ID_PATTERN.fullmatch(item['drive_file_id']):
+        raise ValueError('INVALID_DRIVE_FILE_ID')
+    _, data = api('https://www.googleapis.com/drive/v3/files/' + item['drive_file_id'] +
+                  '?fields=id,headRevisionId,trashed', os.environ['GOOGLE_ACCESS_TOKEN'])
+    meta = json.loads(data)
+    if meta.get('id') != item['drive_file_id'] or meta.get('trashed') is not False or (
+            meta.get('headRevisionId') != item['source_revision']):
+        raise ValueError('SOURCE_REVISION_CHANGED')
 
 
 def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
@@ -204,7 +218,11 @@ def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
         item_start = time.monotonic()
         try:
             validate_batch_item(item)
+            if item.get('source_revision'):
+                verify_source_revision(item)
             raw = google_file(item["drive_file_id"])
+            if item.get('source_revision'):
+                verify_source_revision(item)
             if validate_png(raw, item["kind"], item["target_key"]) != item["source_sha256"]:
                 raise ValueError("DRIVE_SOURCE_SHA256_MISMATCH")
             if item["kind"] == "spell-cutout":

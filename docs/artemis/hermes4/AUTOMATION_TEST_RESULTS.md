@@ -1,5 +1,7 @@
 # ARTEMIS – verifiering av automatiseringen
 
+**Aktuell komplettering:** papperskorgsstädning och dess blockerade verkliga HERMES-prov redovisas i [TRASH_TEST_REPORT.md](TRASH_TEST_REPORT.md). Nedanstående Drive-flyttprov och testantal avser föregående PR-version `b2af50e7`, inte ett verifierat papperskorgsprov.
+
 Testdatum: 2026-10-21. Bas: `59f9815c1b5bb1739ab027283fcc44ff15477c39` (senaste `main` vid start). Inga riktiga köfiler, nya produktionscutouts eller Supabase-skrivningar ingår. Den befintliga publiceraren, WIF-trusten och databasschemat har inte ändrats.
 
 ## Automatiska tester
