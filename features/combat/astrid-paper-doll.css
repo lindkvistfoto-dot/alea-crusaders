@@ -1,0 +1,42 @@
+.combat-paper-doll-controls{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:6px;
+ padding-top:8px;
+ font-size:12px;
+}
+.combat-paper-doll-controls button{
+ border:1px solid #6f5a43;
+ border-radius:6px;
+ padding:6px 10px;
+ background:#1d1712;
+ color:#ead5b3;
+ cursor:pointer;
+}
+.combat-paper-doll-controls button[aria-pressed="true"]{
+ border-color:#dfbb70;
+ background:#44341d;
+}
+.combat-paper-doll-controls button:focus-visible{
+ outline:2px solid #dfbb70;
+ outline-offset:2px;
+}
+/* Visibility retains the exact classic hit rectangles without painting the art.
+   Only the hit element opts back in. Its existing pointer-events:all is retained. */
+.combat-paper-doll-classic{visibility:hidden}
+.combat-paper-doll-classic .combat-miniature{filter:none}
+.combat-paper-doll-classic .combat-mini-hit{visibility:visible}
+.combat-paper-doll-classic .combat-token{visibility:visible;opacity:0}
+.combat-paper-doll,
+.combat-paper-doll-image,
+.combat-paper-doll-ring{pointer-events:none}
+.combat-paper-doll-ring{
+ fill:none;
+ stroke:#51d276;
+ stroke-width:1.5;
+ vector-effect:non-scaling-stroke;
+}
+.combat-paper-doll.selected .combat-paper-doll-ring{stroke:#ffd06f;stroke-width:3}
+.combat-paper-doll.attack-target .combat-paper-doll-ring{stroke:#e1493f;stroke-width:3}
+.combat-paper-doll.movement-planning .combat-paper-doll-ring{stroke:#71ff91;stroke-width:3}

@@ -1,0 +1,29 @@
+{
+  "base_commit": "59f9815c1b5bb1739ab027283fcc44ff15477c39",
+  "pilot_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "full_suite": {
+    "passed": 1285,
+    "failed": 29,
+    "files_passed": 189,
+    "files_failed": 17
+  },
+  "baseline_full_suite": {
+    "passed": 1279,
+    "failed": 29,
+    "files_passed": 188,
+    "files_failed": 17
+  },
+  "new_failures": [],
+  "build": {
+    "branch_exit": 139,
+    "baseline_exit": 139,
+    "error": "Vite/Rolldown segmentation fault after module transformation"
+  },
+  "archive_bytes_verified": true,
+  "rgba_roundtrip_identical": true,
+  "database_references_changed": [],
+  "live_campaign_tested": false
+}

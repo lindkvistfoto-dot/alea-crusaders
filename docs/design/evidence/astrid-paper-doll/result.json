@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "viewports": [
+    1200,
+    768,
+    390
+  ],
+  "classicMapIdentical": true,
+  "otherActorsIdentical": true,
+  "hitGeometryIdentical": true,
+  "overhang": {
+    "tag": "svg",
+    "token": false
+  },
+  "syntheticMovementOverlay": true,
+  "selection": true,
+  "turnChange": true,
+  "defeatedFallback": true,
+  "databaseCalls": 0
+}

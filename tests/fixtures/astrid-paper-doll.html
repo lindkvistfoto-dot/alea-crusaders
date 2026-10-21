@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="sv">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Astrid · visuell stridspilot</title>
+<link rel="stylesheet" href="/src/styles/app.css">
+<link rel="stylesheet" href="/features/combat/astrid-paper-doll.css">
+<style>
+ body{margin:0;padding:16px;background:#181d1b;color:#ead5b3;font-family:system-ui}
+ main{max-width:1000px;margin:auto}
+ h1{font-size:20px} .combat-board{height:auto!important;aspect-ratio:800/520;width:100%;background:#353d32}
+ .combat-map-svg{width:100%;height:100%;display:block}
+ #result{padding:8px;font-size:13px}
+</style>
+<script src="/features/combat/astrid-paper-doll.js"></script>
+<main id="combatPage"><h1>Astrid · Arcane Paper Doll</h1><div id="combatBody"></div><div id="result" role="status">Lokal provstrid · inga databasanslutningar</div></main>
+<script>
+let combatants=[
+ {id:'astrid-battle',source_type:'character',source_id:'astrid-db',name_snapshot:'Astrid Eldhjärta',side:'heroes',status:'active',q:2,r:2},
+ {id:'lyra-battle',source_type:'character',source_id:'lyra-db',name_snapshot:'Lyra',side:'heroes',status:'active',q:4,r:2},
+ {id:'enemy-battle',source_type:'monster',source_id:'enemy-db',name_snapshot:'Skelettvakt',side:'enemies',status:'active',q:2,r:3}
+];
+const chars=[{id:'astrid',_dbId:'astrid-db'}];
+let combatSelectedTargetId=null,combatMovementPlan=null,planning=false,activeId='astrid-battle',attack=false;
+const combatMapView={zoom:1};
+const combatAreaPlacementActive=false,combatGmPlacementId=null,combatAreaDraftCenter=null,combatRuntimeMapUrl='';
+let portrait='';
+const g={size:34,width:800,height:520,xPitch:Math.sqrt(3)*34,rowPitch:51,offsetX:80,offsetY:60};
+const combatRuntimeMapMeta={name:'Lokal testkarta'},activeCombat={name:'Provstrid'};
+function escAttr(s){return String(s).replaceAll('&','&amp;').replaceAll('"','&quot;')}
+function combatRuntimeGeometry(){return g}
+function combatMapEnsureView(){}
+function combatMapViewBox(){return{x:0,y:0,width:g.width/ combatMapView.zoom,height:g.height/ combatMapView.zoom}}
+function combatHexPoints(x,y,r){return Array.from({length:6},(_,i)=>{const a=(60*i-30)*Math.PI/180;return(x+r*Math.cos(a))+','+(y+r*Math.sin(a))}).join(' ')}
+function combatPortraitHexPoints(r){return combatHexPoints(0,0,r)}
+function combatRuntimeHexCells(){return Array.from({length:7},(_,r)=>Array.from({length:9},(_,q)=>({key:q+','+r,q,r,x:g.xPitch*(q+r/2)+g.offsetX,y:g.rowPitch*r+g.offsetY,movement_mode:'normal',sight_mode:'clear'}))).flat()}
+function combatActiveActor(){return combatants.find(c=>c.id===activeId)}
+function combatMovementPlanningActor(){return planning?combatActiveActor():null}
+function combatIsMovementPlanning(c){return planning&&c.id===activeId}
+function combatIsActiveTurn(c){return c.id===activeId}
+function combatCurrentAttackTargets(){return attack?new Map([['astrid-battle',{distance:1}]]):new Map()}
+function combatCanManage(){return false}
+function combatChosenAction(){return null}
+function combatTerrainIsWall(){return false}
+function combatAreasForHex(){return[]}
+function combatFootprintCells(c,q=c.q,r=c.r){return[{q,r}]}
+function combatFootprintKey(c){return c.q+','+c.r}
+function combatReachableHexes(){return new Map(combatRuntimeHexCells().map(c=>[c.key,1]))}
+function combatDestinationKeepsAction(){return true}
+function combatMovementOccupied(actor,q,r){return combatants.some(c=>c.id!==actor.id&&c.q===q&&c.r===r)}
+function combatMiniatureVisual(){return{type:'portrait',url:portrait}}
+function combatTokenClick(event,id){event.stopPropagation();combatSelectedTargetId=id;renderCombat();document.getElementById('result').textContent='Vald: '+id}
+function combatMovementDragStart(event,id){window.lastDrag=id}
+function previewCombatMovementToHex(event,q,r){
+ event.stopPropagation();
+ if(event.detail===2){const actor=combatActiveActor();actor.q=q;actor.r=r;planning=false;combatMovementPlan=null}
+ else combatMovementPlan={combatantId:activeId,q,r};
+ renderCombat()
+}
+function combatMapDoubleClick(){}
+function combatMapWheel(){}
+function combatMapTouchGate(){}
+function combatMapPointerDown(){}
+function combatMapPointerMove(){}
+function combatMapPointerEnd(){}
+function renderCombat(){document.getElementById('combatBody').innerHTML='<div class="combat-board">'+renderCombatMap()+'</div>'+combatMapFooterHtml()}
+async function start(){
+ const [runtime,legacy]=await Promise.all([fetch('/features/combat/runtime.js').then(r=>r.text()),fetch('/legacy/app.js').then(r=>r.text())]);
+ portrait=legacy.match(/const ASTRID_PORTRAIT='([^']+)'/)[1];
+ const parts=[
+  runtime.slice(runtime.indexOf('function combatTokenInitials('),runtime.indexOf('function combatHexNeighbors(')),
+  runtime.slice(runtime.indexOf('function combatMovementHitTargetsHtml('),runtime.indexOf('// Stridsdeltagare bär sitt porträtt')),
+  runtime.slice(runtime.indexOf('function combatMapFooterHtml('),runtime.indexOf('function combatMapPresetsHtml('))
+ ];
+ const script=document.createElement('script');script.textContent=parts.join('\n');document.body.append(script);
+ renderCombat();window.fixtureReady=true
+}
+start().catch(e=>{document.getElementById('result').textContent=String(e);throw e});
+</script>
+</html>
