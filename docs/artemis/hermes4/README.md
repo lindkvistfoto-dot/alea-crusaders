@@ -46,6 +46,8 @@ Work-formatet `schema_version: "1.0"` med `records` stöds också när Codex utt
 4. Läs tillbaka arkivkopians bytes och verifiera SHA-256 och storlek mot Inbox-originalet. Spara det verkliga returnerade arkiv-ID:t i manifestet. Kontrollera att HERMES-servicekontot har läsrätt till just arkivfilen; använd befintlig Drive-delning till samma konto om rättigheten saknas. Ändra inga andra Drive-rättigheter.
 5. Skriv en ny unik köfil med de fem objekten. Arkivfel för en bild rapporteras separat och ska åtgärdas utan att skapa dubbla kopior för redan färdiga objekt. Om ett ofärdigt objekt ändå ingår i batchen misslyckas bara det objektets arkivgrind.
 
+När ett arkivoriginal är individuellt delat men arkivmappen inte är delad kan Drive utelämna `parents` för servicekontot. Intaget försöker då en avgränsad `files.list` med den konfigurerade mappen som direkt förälder och exakt filnamn, och kräver att det fastlåsta arkivfil-ID:t finns i ett fullständigt resultat. Ett annat ID med samma namn, ett ofullständigt resultat eller nekad åtkomst godtas aldrig. Om Drive inte kan ge detta bevis stoppas objektet med `FILE_PARENT_MEMBERSHIP_UNVERIFIED`. Ingen mappdelning, behörighetsändring eller bredare OAuth-scope görs som fallback. Liveverifiera beteendet med HERMES-identiteten efter godkänd merge.
+
 Inga original flyttas från Inbox, laddas upp som GitHub-blobbar eller läggs i Supabase. Ingen ny långlivad originalkopia utanför Drive skapas.
 
 ## En Actions-körning och slutrapport

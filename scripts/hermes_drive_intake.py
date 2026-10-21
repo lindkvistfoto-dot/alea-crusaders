@@ -81,12 +81,33 @@ def drive_file(file_id: str, folder: str) -> bytes:
     _, meta_bytes = api(
         base + "?fields=id,name,mimeType,size,parents,trashed", token)
     meta = json.loads(meta_bytes)
-    if meta.get("trashed") or folder not in meta.get("parents", []):
+    if meta.get("trashed"):
+        raise ValueError("FILE_NOT_IN_REQUIRED_HERMES_FOLDER")
+    parents = meta.get("parents", [])
+    if parents and folder not in parents:
         raise ValueError("FILE_NOT_IN_REQUIRED_HERMES_FOLDER")
     if meta.get("mimeType") != "image/png":
         raise ValueError("FILE_NOT_PNG_MIME")
     if not 100 <= int(meta.get("size", 0)) <= MAX_BYTES:
         raise ValueError("FILE_SIZE_OUT_OF_RANGE")
+    if not parents:
+        # Individually shared files can hide an unshared parent's metadata.
+        # Require server-side membership evidence for this exact file instead;
+        # never treat missing parents or a matching filename alone as proof.
+        if not FILE_ID_PATTERN.fullmatch(folder) or not isinstance(meta.get("name"), str) or not meta["name"]:
+            raise ValueError("FILE_PARENT_MEMBERSHIP_UNVERIFIED")
+        name = meta["name"].replace("\\", "\\\\").replace("'", "\\'")
+        query = "'" + folder + "' in parents and name = '" + name + "' and trashed = false"
+        url = "https://www.googleapis.com/drive/v3/files?" + urllib.parse.urlencode({
+            "q": query, "fields": "nextPageToken,incompleteSearch,files(id)",
+            "pageSize": 100, "corpora": "user", "spaces": "drive",
+        })
+        _, listing_bytes = api(url, token)
+        listing = json.loads(listing_bytes)
+        if listing.get("nextPageToken") or listing.get("incompleteSearch") or not any(
+            item.get("id") == file_id for item in listing.get("files", [])
+        ):
+            raise ValueError("FILE_PARENT_MEMBERSHIP_UNVERIFIED")
     _, data = api(base + "?alt=media", token)
     if len(data) != int(meta["size"]):
         raise ValueError("FILE_TRUNCATED")
@@ -427,3 +448,4 @@ if __name__ == "__main__":
     if not args.request:
         parser.error("request is required unless --finalize is used")
     run(args.request, args.output, args.workers)
+
