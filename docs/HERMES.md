@@ -11,6 +11,8 @@ Nya batcher använder **en** `schema=4`-köfil med 1–100 bilder och ett explic
 
 Arkivkopieringen utförs av Codex via den befintliga anslutna Drive-identiteten efter bildkontroll. Actions behåller oförändrat read-only WIF och kräver SHA-verifierad arkivkopia i rätt konfigurerad mapp innan publicering. En saknad eller oläsbar arkivkopia stoppar bara det berörda objektet. Inga skrivrättigheter eller nya credentials läggs på WIF-kontot.
 
+Work-sidans mottagande, arkivering, köläggning, rapportåterläsning och verifierade Inbox-städning med `trashed=true` finns i [ARTEMIS-automatiseringen](artemis/hermes4/AUTOMATION.md). Den kräver en beständig Work-host som ännu inte är driftsatt; se dess uttryckliga externa beroenden. Ingen automatisk permanent radering tillåts.
+
 Se [HERMES 4.0: manifest, arkivsteg och femfilspilot](artemis/hermes4/README.md). De tidigare `schema=1`-köfilerna nedan behålls för befintliga explicita MINOTAURUS-anrop; använd batchformatet för HERMES 4.0.
 
 ## Intag och publicering
