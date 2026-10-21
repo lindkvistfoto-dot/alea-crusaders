@@ -1,0 +1,51 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "skingra",
+      "target_id": "301bc9d7-47de-4831-b733-125f03bcef0d",
+      "drive_file_id": "18rzh0zU3y6wOsTVTEoCppy69ABxLtX1E",
+      "archive_file_id": "1-qpqfUCpKKcdvxeTfyzcbsEGWjeZnXAx",
+      "source_sha256": "7bd8108a41366fb11aaac4228eb4bcad6ec258d6a625bb3199b2f86151ce8e2f",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "varseblivning",
+      "target_id": "a481c285-31f0-469c-96ce-0599b05305df",
+      "drive_file_id": "1oXhwfMeJMRL979BqO7C6ldS8pAC1aHI6",
+      "archive_file_id": "14FpBFvJhExIXKHl7su6ZBMvvgznaM5wX",
+      "source_sha256": "f6a83153010c0048020a8c8fc9eea684dc40a87198aa7bfe9e33520fd2d859fb",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "rena",
+      "target_id": "912c993c-d31f-4c9e-a573-a28ab4536c50",
+      "drive_file_id": "10NYNYqmwP67ZoGKNvQf9rwtKpD7UU3_e",
+      "archive_file_id": "1ENwUMzxQokwsrY2wXTWgiosP3FWnFjL7",
+      "source_sha256": "88b01139d16f419311645adf1d5d9c309a2482dbb07ff46268972238028287f7",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "hela",
+      "target_id": "618d3e0b-6de0-4657-9664-e5a4f5ae1418",
+      "drive_file_id": "14JjOInKOh-fV-u5O5DrE9-2FGBiJonaQ",
+      "archive_file_id": "11jjBhM7YUebEuHjuzqQZSXcRcS9RlOG_",
+      "source_sha256": "5febaa3d96e4036a636538c2d04f814fdc72b0c132e3d07a7f10c5a6cad8a80d",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "regnstart",
+      "target_id": "8e326f4c-6de9-4ff1-992c-f4f4947c8a3b",
+      "drive_file_id": "1hKljfDhuHxWUVkY3Dn7zoxlRgKI7PCbg",
+      "archive_file_id": "1H3uBm6bD_DvfiDFaULUkpFAuQw3doN08",
+      "source_sha256": "306bfa7fb69f9172ba07cb4da2328544c1b5591e766416b3419e686befa75430",
+      "visual_approved": true
+    }
+  ]
+}
