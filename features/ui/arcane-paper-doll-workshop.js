@@ -129,7 +129,9 @@
   }
   const staged=cutoutFile?await stageCutout(record,poseKey):existing?.[0]?.staging_path;
   if(!staged)throw new Error('Välj en cutout innan du sparar posen.');
-  const mounting={schema:1,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:baseScale}};
+  const poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
+  if(!poseName)throw new Error('Ogiltigt Battle Pose-val.');
+  const mounting={schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:baseScale}};
   const row=replacing
    ?{pending_staging_path:staged,pending_base_key:currentBase().key,pending_mounting_profile:mounting,updated_at:new Date().toISOString()}
    :{combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
@@ -147,7 +149,7 @@
     pose_id:saved.id,asset_kind:'battle-pose-cutout',source_path:staged,idempotency_key:crypto.randomUUID()
    })});
   }catch(error){throw new Error('Monteringsprofilen är sparad men HERMES kunde inte kölägga bilden: '+error.message)}
-  setStatus('HERMES har tagit emot '+(replacing?'ersättningen':'leveransen')+' för '+record.name+' · '+poseKey+'. '+(replacing?'Den tidigare bilden förblir aktiv tills den nya verifierats.':'Väntar på arkivering och publicering.'));
+  setStatus('HERMES har tagit emot '+(replacing?'ersättningen':'leveransen')+' för '+record.name+' · '+poseName+'. '+(replacing?'Den tidigare bilden förblir aktiv tills den nya verifierats.':'Väntar på arkivering och publicering.'));
  }
  async function loadPose(){
   const {record,poseKey}=poseSelection();
