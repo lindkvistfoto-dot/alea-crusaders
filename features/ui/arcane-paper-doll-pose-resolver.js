@@ -18,6 +18,7 @@ for(const [id,label,shieldable] of families){
 }
 const POSES=Object.freeze(catalog.map(p=>Object.freeze(p)));
 const POSE_KEYS=Object.freeze(POSES.map(p=>p.id));
+const POSE_NAMES=Object.freeze(Object.fromEntries(POSES.map(p=>[p.id,p.label])));
 const ALIASES=Object.freeze({enhandsvard:'enhandssvard',enhands_svard:'enhandssvard',dolk:'dolkar',stav:'stavar',pilbage:'pilbagar',yxa:'yxor',klubbor:'klubbor_hammare'});
 const shieldable=new Set(families.filter(f=>f[2]).map(f=>f[0]));
 const valid=new Set(families.map(f=>f[0]));
@@ -37,12 +38,10 @@ function resolve(equipment={},availablePoseIds=[]){
  const grip=String(equipment.grip||'').toUpperCase();
  const twoHanded=handling==='2H'||(handling==='1-2H'&&grip==='2H');
  const shield=!!equipment.hasShield&&!twoHanded;
- const requested=family?(shield&&shieldable.has(family)?family+'_shield':family):'standard';
- const candidates=[requested];
- if(requested.endsWith('_shield'))candidates.push(family);
- candidates.push('standard');
+ const requested=family?(shield&&shieldable.has(family)?family+'_shield':family):equipment.hasWeapon===false?'slagsmal':'standard';
+ const candidates=[requested,'standard'];
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
 }
-root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,poseFamily,fromCharacter,resolve});
+root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,resolve});
 })(globalThis);
