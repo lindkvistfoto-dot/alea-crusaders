@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
-it('renders Paper Doll overlays without a missing baseScale declaration',()=>{
+it('renders Paper Doll overlays without a missing baseScale declaration',async()=>{
  const source=readFileSync(new URL('../features/combat/paper-doll-map.js',import.meta.url),'utf8');
  const context={globalThis:null};
  context.globalThis=context;
@@ -17,9 +17,10 @@ it('renders Paper Doll overlays without a missing baseScale declaration',()=>{
  context.Image=class {set src(_value){this.onload?.()}};
  context.renderCombat=()=>{};
  context.aleaCombatPaperDollMap.load();
- return Promise.resolve().then(()=>Promise.resolve()).then(()=>Promise.resolve()).then(()=>{
+ for(let i=0;i<10;i++)await Promise.resolve();
+ {
   const output=context.aleaCombatPaperDollMap.render('<circle/>',{id:'s1'},{x:10,y:20},{size:42});
   expect(output).toContain('combat-paper-doll-universal');
   expect(output).toContain('stand.webp');
- });
+ }
 });
