@@ -2,6 +2,7 @@
 (function(root){
  'use strict';
  const resolver=root.aleaCombatPaperDollResolver;
+ const STANDARD_BASE='arcane-bronze-ivory-pointed-hex-high-angle';
  let assets={},loading=false,ready=false,poseRows=new Map(),poseLoading=false;
  const failed=new Set(),checked=new Set();
  function load(){
@@ -79,7 +80,9 @@
   if(typeof combatFootprintShape!=='function')return classic;
   const published=publishedPose(actor);
   const profile=published?.mounting_profile||{},cutout=profile.cutout||{},baseProfile=profile.base||{};
-  const baseAsset=published?.base_key&&assets[published.base_key]?.src?assets[published.base_key]:assets[resolver.BASE];
+  // All single-hex combatants use High Angle regardless of the pose's workshop base.
+  // Fall back to the original base only while High Angle is unavailable.
+  const baseAsset=assets[STANDARD_BASE]?.src?assets[STANDARD_BASE]:assets[resolver.BASE];
   const chosenAssets={...assets,[resolver.BASE]:baseAsset};
   const publicPose=published?.image_path&&typeof SUPABASE_URL==='string'?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+published.image_path:'';
   const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:combatFootprintShape(actor),battlePoseUrl:publicPose||pose(actor),portraitUrl:portrait(actor)});
