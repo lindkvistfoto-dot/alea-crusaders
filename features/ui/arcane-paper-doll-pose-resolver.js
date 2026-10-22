@@ -17,6 +17,7 @@ for(const [id,label,shieldable] of families){
  if(shieldable)catalog.push({id:id+'_shield',label:label+' och sköld'});
 }
 const POSES=Object.freeze(catalog.map(p=>Object.freeze(p)));
+const POSE_KEYS=Object.freeze(POSES.map(p=>p.id));
 const ALIASES=Object.freeze({enhandsvard:'enhandssvard',enhands_svard:'enhandssvard',dolk:'dolkar',stav:'stavar',pilbage:'pilbagar',yxa:'yxor',klubbor:'klubbor_hammare'});
 const shieldable=new Set(families.filter(f=>f[2]).map(f=>f[0]));
 const valid=new Set(families.map(f=>f[0]));
@@ -43,5 +44,5 @@ function resolve(equipment={},availablePoseIds=[]){
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
 }
-root.aleaBattlePoseCatalog=Object.freeze({POSES,poseFamily,fromCharacter,resolve});
+root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,poseFamily,fromCharacter,resolve});
 })(globalThis);
