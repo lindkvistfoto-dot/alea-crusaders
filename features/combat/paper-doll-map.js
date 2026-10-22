@@ -26,12 +26,12 @@
  function loadPublishedPoses(){
   if(poseLoading||typeof dbJson!=='function')return;
   poseLoading=true;
-  dbJson('combatant_battle_poses?select=combatant_type,combatant_id,pose_key,image_path,base_key,mounting_profile&pose_key=eq.standard&publication_status=eq.published&is_active=eq.true')
+  dbJson('combatant_battle_poses?select=combatant_type,combatant_id,pose_key,image_path,base_key,mounting_profile&publication_status=eq.published&is_active=eq.true')
    .then(rows=>{
     const next=new Map();
     for(const row of Array.isArray(rows)?rows:[]){
      if(!row.image_path||!/^hermes\/[a-z0-9/_-]+\/[a-f0-9]{64}\.webp$/.test(row.image_path))continue;
-     next.set(row.combatant_type+':'+row.combatant_id,row);
+     next.set(row.combatant_type+':'+row.combatant_id+':'+row.pose_key,row);
     }
     poseRows=next;
     if(typeof renderCombat==='function')renderCombat();
@@ -43,7 +43,23 @@
   const id=String(actor?.source_id||'');
   if(!id)return null;
   const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
-  for(const kind of aliases){const row=poseRows.get(kind+':'+id);if(row)return row}
+  const available=new Set();
+  for(const kind of aliases){
+   for(const key of root.aleaBattlePoseCatalog?.POSES||[]){
+    if(poseRows.has(kind+':'+id+':'+key.id))available.add(key.id);
+   }
+  }
+  let equipment={};
+  if(type==='character'&&typeof chars!=='undefined'){
+   const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
+   equipment=root.aleaBattlePoseCatalog?.fromCharacter(source)||{};
+  }
+  const match=root.aleaBattlePoseCatalog?.resolve(equipment,[...available]);
+  if(!match?.poseId)return null;
+  for(const kind of aliases){
+   const row=poseRows.get(kind+':'+id+':'+match.poseId);
+   if(row)return row;
+  }
   return null;
  }
  function portrait(actor){
