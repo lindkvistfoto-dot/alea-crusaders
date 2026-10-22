@@ -63,7 +63,7 @@ def run(job):
  if len(rows)!=1 or rows[0]["staging_path"]!=source_path or rows[0]["publication_status"] not in ("draft","queued"):
   raise ValueError("POSE_STAGING_MISMATCH")
  import re
- expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\\.(png|webp)$"
+ expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
  if not re.fullmatch(expected,source_path):raise ValueError("BAD_STAGING_PATH")
  original=storage_download("alea-battle-pose-staging",source_path)
  if not 100<=len(original)<=12000000:raise ValueError("INVALID_ORIGINAL_SIZE")
