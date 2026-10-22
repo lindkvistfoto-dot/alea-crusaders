@@ -10,12 +10,12 @@ const assets=()=>rows().map((row,i)=>({kind:'system-asset',target_key:row.asset_
  app_file:`system-asset/${row.asset_key}/${sha}.webp`,app_bytes:raw.length,
  width:profiles.assets[row.asset_key].display_size[0],height:profiles.assets[row.asset_key].display_size[1],alpha_preserved:true}));
 
-it('activates two system pointers through existing jobs, public Storage readback and idempotent retry',async()=>{
+it('activates all configured system pointers through existing jobs, public Storage readback and idempotent retry',async()=>{
  const state=database({systemRows:rows()});const input=assets();
  // Harness bytes are the simulated output of the separately tested converter.
  const first=await run(state,{assets:input});expect(first.error).toBeUndefined();
- expect(first.report.items.map(x=>x.status)).toEqual(['active','active']);
- expect(state.jobs.size).toBe(2);
+ expect(first.report.items.map(x=>x.status)).toEqual(Array(Object.keys(profiles.assets).length).fill('active'));
+ expect(state.jobs.size).toBe(Object.keys(profiles.assets).length);
  expect(state.calls.uploads.every(x=>x.bucket==='alea-hermes-public'&&!x.upsert)).toBe(true);
  for(const a of input){const row=state.targets.get(a.target_id);
   expect(row.asset_path).toBe('hermes/'+a.app_file);expect(row.app_sha256).toBe(sha);
@@ -23,7 +23,8 @@ it('activates two system pointers through existing jobs, public Storage readback
  }
  const retry=await run(state,{assets:input});expect(retry.error).toBeUndefined();
  expect(retry.report.items.every(x=>x.status==='already_active')).toBe(true);
- expect(state.calls.uploads).toHaveLength(2);expect(state.calls.targetWrites).toHaveLength(2);
+ expect(state.calls.uploads).toHaveLength(Object.keys(profiles.assets).length);
+ expect(state.calls.targetWrites).toHaveLength(Object.keys(profiles.assets).length);
 });
 
 it('rejects wrong keys, UUID, dimensions, alpha or missing batch archive before upload',async()=>{
@@ -45,6 +46,6 @@ it('corrupt upload or post-activation read failure cannot leave a published poin
   const state=database({systemRows:rows(),...option});const input=assets();
    const result=await run(state,{assets:input});expect(result.error).toBeDefined();
   const failed=state.targets.get(rows()[0].id);expect(failed.asset_path).toBeNull();expect(failed.app_sha256).toBeNull();
-  expect(state.targets.get(rows()[1].id).asset_path).toBeTruthy();
+  for(const row of rows().slice(1))expect(state.targets.get(row.id).asset_path).toBeTruthy();
  }
 });

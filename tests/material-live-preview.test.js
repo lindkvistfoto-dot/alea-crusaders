@@ -61,7 +61,8 @@ describe('Frodo — GM preview of currently shared material',()=>{
   const ui=readFileSync(new URL('../features/material/frodo-ui.js',import.meta.url),'utf8');
   const css=readFileSync(new URL('../features/material/material-polish.css',import.meta.url),'utf8');
   expect(ui).toContain('gm&&authenticated()&&state.loaded');
-  expect(ui).toContain("preview.set(activeRow?.asset_kind==='image'?activeRow:null,scope())");
+  expect(ui).toContain("row.campaign_id===scope()&&!row.archived_at?row:null");
+  expect(ui).toContain('preview.clear();');
   expect(ui).toContain("legolas.readMedia(row,thumbnail)");
   expect(ui).toContain('frodoGmOpenLarge');
   expect(ui).toContain('legolas.previewMaterial(row)');

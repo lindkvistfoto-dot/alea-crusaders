@@ -53,6 +53,7 @@ function mapFor(rows,activeId){
 }
 function cardFor(actor,activeId){
  const ctx={
+  combatChosenAction:()=>null,combatActionDefinition:()=>null,activeCombat:null,
   combatSelectedTargetId:null,
   combatIsActiveTurn:c=>c.id===activeId,
   combatCurrentAttackTargets:()=>new Map(),

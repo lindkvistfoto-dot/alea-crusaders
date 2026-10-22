@@ -9,7 +9,7 @@ const rows=()=>Object.entries(profiles.assets).map(([key,def])=>({id:def.id,asse
  app_bytes:1234,app_sha256:'a'.repeat(64),asset_path:`hermes/system-asset/${key}/${'a'.repeat(64)}.webp`,
  source_path:'drive://must-not-leak'}));
 
-it('maps both stable keys to immutable BENGALI/Workshop asset references without archive provenance',()=>{
+it('maps all registered stable keys to immutable BENGALI/Workshop asset references without archive provenance',()=>{
  const api=adapter(),result=api.toWorkshop(rows(),'https://example.supabase.co');
  expect(api.keys).toEqual(Object.keys(profiles.assets));
  for(const ref of result.assets){

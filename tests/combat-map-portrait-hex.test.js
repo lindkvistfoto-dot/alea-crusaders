@@ -13,6 +13,7 @@ function miniature(actor,src){
  const ctx={
   combatRowPortraitUrl:()=>src,
   combatPlayerPortraitSource:()=>src?{url:src}:null,
+  combatMiniatureVisual:()=>({url:src,type:src?'portrait':'none'}),
   combatPortraitHexPoints:size=>String(size)+'-hex',
   combatPlayerMiniatureKind:()=>null,
   combatMiniatureWarrior:()=>'',combatMiniatureWizard:()=>'',combatMiniatureDuck:()=>'',
@@ -58,7 +59,9 @@ describe('Porträtt i hexagonkartan',()=>{
   expect(runtime).toContain("combatHexPoints(cell.x,cell.y,g.size*.97)");
  });
  test('mapparen återanvänder samma porträtthämtare som turordningen',()=>{
-  expect(mini).toContain('combatRowPortraitUrl(combatant)');
+  expect(mini).toContain('combatMiniatureVisual(combatant)');
+  expect(runtime).toContain('const source=combatActorImageRecord(combatant)');
+  expect(runtime).toContain('combatNpcPortraitSrc(source.portraitPath)');
   expect(runtime).toContain('const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass)');
  });
 });

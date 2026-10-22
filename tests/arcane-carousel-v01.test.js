@@ -105,7 +105,7 @@ describe('ARCANE CAROUSEL V01 — independent transparent image trough',()=>{
   expect(index).toContain('&bronze=01&hatch=02');
   expect(index).toContain('morph=3&goose=10&carousel=03');
   expect(library).toContain('frodo-ui.js?v=0.35.239&morph=3&goose=10&carousel=03');
-  expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=3&goose=10&carousel=03');
+  expect(frodo).toContain('arcane-gallery.js?v=0.35.239&morph=7&goose=10&carousel=03');
  });
  it('shows private thumbnails at their natural proportions with a one-pixel divider',()=>{
   const gallery=read('features/material/arcane-gallery.js').toString();
