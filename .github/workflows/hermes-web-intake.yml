@@ -1,4 +1,5 @@
 name: HERMES 4.1 – Web intake delivery
+# Pilot: first real Standard-pose delivery. Never enable a recurring schedule before OAuth production approval.
 on:
   push:
     branches: [main]
