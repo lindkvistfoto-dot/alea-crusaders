@@ -1,5 +1,10 @@
 name: HERMES 4.1 – Web intake delivery
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-web-intake.yml'
+      - 'scripts/hermes_web_worker.py'
   workflow_dispatch:
 
 permissions:
