@@ -47,7 +47,7 @@ class SystemAssets(unittest.TestCase):
         with tempfile.TemporaryDirectory() as output, tempfile.TemporaryDirectory() as again:
             first = self.execute(output)['assets']
             second = self.execute(again)['assets']
-            self.assertEqual(len(first), 2)
+            self.assertEqual(len(first), len(PROFILE['assets']))
             self.assertEqual([x['app_sha256'] for x in first], [x['app_sha256'] for x in second])
             for a in first:
                 profile = PROFILE['assets'][a['target_key']]
@@ -65,7 +65,7 @@ class SystemAssets(unittest.TestCase):
         self.sources['archive-system-0'] += b'changed'
         with tempfile.TemporaryDirectory() as output:
             assets = self.execute(output)['assets']
-            self.assertEqual([a['batch_index'] for a in assets], [1])
+            self.assertEqual([a['batch_index'] for a in assets], list(range(1, len(self.items))))
             report = json.loads(Path(output, 'intake-report.json').read_text())
             self.assertEqual(report['items'][0]['error'], 'DRIVE_ARCHIVE_SHA256_MISMATCH')
 
