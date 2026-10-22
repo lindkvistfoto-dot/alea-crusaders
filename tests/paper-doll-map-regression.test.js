@@ -15,9 +15,11 @@ it('renders Paper Doll overlays without a missing baseScale declaration',async()
  context.SUPABASE_URL='https://example.supabase.co';
  context.dbJson=async()=>[];
  context.Image=class {set src(_value){this.onload?.()}};
- context.renderCombat=()=>{};
+ let signal;
+ const rendered=new Promise(resolve=>{signal=resolve});
+ context.renderCombat=()=>signal();
  context.aleaCombatPaperDollMap.load();
- for(let i=0;i<10;i++)await Promise.resolve();
+ await rendered;
  {
   const output=context.aleaCombatPaperDollMap.render('<circle/>',{id:'s1'},{x:10,y:20},{size:42});
   expect(output).toContain('combat-paper-doll-universal');
