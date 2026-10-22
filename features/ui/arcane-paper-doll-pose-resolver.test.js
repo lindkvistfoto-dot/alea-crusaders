@@ -18,6 +18,9 @@ describe('Sisyfos: Swedish battle poses',()=>{
  it('does not offer a shield pose for pure two-hand weapons',()=>{
   expect(resolve({weaponClass:'stavar',hasShield:true,handling:'2H'},['stavar']).poseId).toBe('stavar');
  });
+ it('does not replace missing shield pose with an incorrect unshielded pose',()=>{
+  expect(resolve({weaponClass:'enhandssvard',hasShield:true,handling:'1H'},['enhandssvard','standard']).poseId).toBe('standard');
+ });
  it('falls back safely to the combatant standard pose',()=>{
   expect(resolve({weaponClass:'pilbagar'},['standard']).poseId).toBe('standard');
   expect(resolve({weaponClass:'pilbagar'},[]).poseId).toBeNull();
