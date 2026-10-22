@@ -54,10 +54,11 @@
   const status=controls.querySelector('#apdwActionStatus');if(status)left.append(status);
   layout.prepend(left);
   const picker=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-picker');
+  const upload=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-upload');
   const scale=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-scale');
   const stand=document.querySelector('#arcanePaperDollWorkshopMount .apdw-stand-settings');
   const title=document.createElement('h3');title.textContent='Bilder & inställningar';controls.prepend(title);
-  for(const element of [picker,scale,stand].filter(Boolean))controls.insertBefore(element,controls.querySelector('.apdw-control-group'));
+  for(const element of [picker,upload,scale,stand].filter(Boolean))controls.insertBefore(element,controls.querySelector('.apdw-control-group'));
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
