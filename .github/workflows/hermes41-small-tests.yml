@@ -23,5 +23,13 @@ jobs:
       - run: python -m pip install Pillow==12.0.0
       - name: Compile worker and tests
         run: python -m py_compile scripts/hermes_web_worker.py tests/test_hermes_web_worker.py
-      - name: Run offline regression suite
+      - name: Test SHA256
+        run: python -m unittest discover -s tests -p test_hermes_web_worker.py -k digest -v
+      - name: Test OAuth failure isolation
+        run: python -m unittest discover -s tests -p test_hermes_web_worker.py -k oauth -v
+      - name: Test Drive archive handling
+        run: python -m unittest discover -s tests -p test_hermes_web_worker.py -k archive -v
+      - name: Test recovery
+        run: python -m unittest discover -s tests -p test_hermes_web_worker.py -k recover -v
+      - name: Full regression suite
         run: python -m unittest discover -s tests -p test_hermes_web_worker.py -v
