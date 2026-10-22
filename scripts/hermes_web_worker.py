@@ -22,9 +22,8 @@ def user_drive_token():
  req=urllib.request.Request("https://oauth2.googleapis.com/token",data=body,headers={"Content-Type":"application/x-www-form-urlencoded"},method="POST")
  with urllib.request.urlopen(req,timeout=25) as response:
   return json.load(response)["access_token"]
-TOKEN=user_drive_token()
-FOLDER=os.environ["HERMES_WEB_ARCHIVE_FOLDER_ID"]
-if not all((KEY,TOKEN,FOLDER)): raise RuntimeError("HERMES_WORKER_CONFIG_MISSING")
+TOKEN=None
+FOLDER=os.environ.get("HERMES_WEB_ARCHIVE_FOLDER_ID","")
 BASE={"apikey":KEY,"Authorization":"Bearer "+KEY}
 
 def fetch(url,method="GET",body=None,headers=None,limit=14000000):
@@ -98,6 +97,10 @@ def run(job):
  print("HERMES_DELIVERED",ident)
 
 def main():
+ global TOKEN
+ if not FOLDER:raise RuntimeError('HERMES_ARCHIVE_FOLDER_MISSING')
+ TOKEN=user_drive_token()
+ if not TOKEN:raise RuntimeError('HERMES_DRIVE_OAUTH_MISSING')
  jobs=rest("rpc/hermes_claim_web_jobs","POST",{"batch_size":3})
  for job in jobs:
   try:run(job)
