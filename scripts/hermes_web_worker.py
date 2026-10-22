@@ -105,13 +105,15 @@ def run(job):
   name=ident+"-"+sha+"."+img.format.lower()
   drive_id=find_archived_original(name,sha)
   if not drive_id:drive_id=archive(original,name,mime)
- patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
+ archived=patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
+ if len(archived)!=1:raise ValueError("ARCHIVE_STATE_UPDATE_FAILED")
  img=img.convert("RGBA")
  img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
  out=io.BytesIO();img.save(out,format="WEBP",quality=85,method=6)
  data=out.getvalue();webp_sha=digest(data)
  path="hermes/battle-pose-cutout/"+pose_id+"/"+webp_sha+".webp"
- patch("hermes_web_jobs",ident,{"state":"publishing"})
+ publishing=patch("hermes_web_jobs",ident,{"state":"publishing"})
+ if len(publishing)!=1:raise ValueError("PUBLISHING_STATE_UPDATE_FAILED")
  try:
   fetch(SUPA+"/storage/v1/object/alea-hermes-public/"+path,"POST",data,{**BASE,"Content-Type":"image/webp","x-upsert":"false"})
  except urllib.error.HTTPError as e:
