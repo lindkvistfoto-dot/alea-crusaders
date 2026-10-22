@@ -29,7 +29,7 @@ jobs:
           workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
           service_account: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
           token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive.file
+          access_token_scopes: https://www.googleapis.com/auth/drive
           create_credentials_file: false
       - name: Verify Drive folder metadata (read-only, no writes)
         env:
