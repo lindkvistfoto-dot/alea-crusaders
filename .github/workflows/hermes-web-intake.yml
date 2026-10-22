@@ -3,12 +3,13 @@ name: HERMES 4.1 – Web intake delivery
 # Manual recovery trigger: re-run queued HERMES deliveries (2026-10-22).
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '2-59/5 * * * *'
   push:
     branches: [main]
     paths:
       - '.github/workflows/hermes-web-intake.yml'
       - 'scripts/hermes_web_worker.py'
+      - 'scripts/hermes_queue_health.py'
   workflow_dispatch:
 
 permissions:
@@ -67,3 +68,14 @@ jobs:
           HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
           HERMES_WEB_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
         run: python scripts/hermes_web_worker.py
+      - name: Check HERMES queue age (alert on stale jobs)
+        if: always()
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::HERMES service role secret missing"
+            exit 1
+          fi
+          python scripts/hermes_queue_health.py
