@@ -56,6 +56,18 @@ def archive(data,name,mime):
  if digest(readback)!=digest(data):raise ValueError("ARCHIVE_HASH_MISMATCH")
  return ident
 
+def find_archived_original(name, expected_sha):
+ import urllib.parse
+ query=urllib.parse.urlencode({"q":"'"+FOLDER+"' in parents and name = '"+name+"' and trashed = false","fields":"nextPageToken,files(id,name,parents)","page_size":100})
+ result=json.loads(fetch("https://www.googleapis.com/drive/v3/files?"+query,headers={"Authorization":"Bearer "+TOKEN}))
+ matches=result.get("files",[])
+ if result.get("nextPageToken") or len(matches)>1:raise ValueError("ARCHIVE_AMBIGUOUS")
+ if not matches:return None
+ ident=matches[0]["id"]
+ readback=fetch("https://www.googleapis.com/drive/v3/files/"+ident+"?alt=media",headers={"Authorization":"Bearer "+TOKEN})
+ if digest(readback)!=expected_sha:raise ValueError("ARCHIVE_HASH_MISMATCH")
+ return ident
+
 def run(job):
  ident=job["id"];pose_id=job["pose_id"];source_path=job["source_path"]
  rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
@@ -90,7 +102,9 @@ def run(job):
   readback=fetch("https://www.googleapis.com/drive/v3/files/"+drive_id+"?alt=media",headers={"Authorization":"Bearer "+TOKEN})
   if digest(readback)!=sha:raise ValueError("ARCHIVE_HASH_MISMATCH")
  else:
-  drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
+  name=ident+"-"+sha+"."+img.format.lower()
+  drive_id=find_archived_original(name,sha)
+  if not drive_id:drive_id=archive(original,name,mime)
  patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
  img=img.convert("RGBA")
  img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
