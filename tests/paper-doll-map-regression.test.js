@@ -6,7 +6,7 @@ it('renders Paper Doll overlays without a missing baseScale declaration',async()
  const source=readFileSync(new URL('../features/combat/paper-doll-map.js',import.meta.url),'utf8');
  const context={globalThis:null};
  context.globalThis=context;
- context.aleaCombatPaperDollResolver={BASE:'legacy',STAND:'stand',resolve:(_actor,{assets})=>({mode:'portrait-stand',baseUrl:assets.legacy.src,standUrl:'stand.webp',portraitUrl:''})};
+ context.aleaCombatPaperDollResolver={BASE:'legacy',STAND:'stand',assetsByKey:result=>Object.fromEntries(Object.entries(result.systemArt).map(([key,id])=>[key,result.assets.find(asset=>asset.id===id)])),resolve:(_actor,{assets})=>({mode:'portrait-stand',baseUrl:assets.legacy.src,standUrl:'stand.webp',portraitUrl:''})};
  context.combatFootprintShape=()=> 'single';
  context.combatHexPoints=()=> '0,0 1,0 1,1';
  runInNewContext(source,context);
