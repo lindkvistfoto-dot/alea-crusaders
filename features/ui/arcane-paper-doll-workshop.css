@@ -30,3 +30,11 @@
 .apdw-base-picker select{min-width:190px;max-width:100%;padding:8px;background:#17120e;color:#ead8b4;border:1px solid #8c7046;border-radius:6px}
 .apdw-base-picker label{display:flex;align-items:center;gap:8px}
 .apdw-base-only-mode .apdw-stand,.apdw-base-only-mode .apdw-stand-placeholder,.apdw-base-only-mode .apdw-portrait-window,.apdw-base-only-mode .apdw-shadow{display:none!important}
+
+/* ARES: independent baseplate scale and centered mount anchor. */
+.apdw-base{transform:scale(var(--base-scale,.7));transform-origin:center center}
+.apdw-base-placeholder{transform:scale(var(--base-scale,.7));transform-origin:center center}
+.apdw-anchor{position:absolute;z-index:6;left:var(--anchor-x,50%);top:var(--anchor-y,64%);width:12px;height:12px;border:2px solid #f5d899;border-radius:50%;background:#5c381b;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #1c100b99;pointer-events:none}
+.apdw-anchor[hidden]{display:none!important}
+.apdw-base-scale{display:flex;align-items:center;gap:12px;margin:10px 0;color:#ead8b4}
+.apdw-base-scale input{flex:1;min-width:80px}
