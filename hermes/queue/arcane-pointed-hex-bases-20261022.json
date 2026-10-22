@@ -1,0 +1,24 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-bronze-ivory-pointed-hex-high-angle",
+      "target_id": "b8131d52-a0c8-46a1-9bb8-9f6225b8c0a1",
+      "drive_file_id": "1q15a9vrLgqTz5lkxb5C8fNHIuFPS7toC",
+      "archive_file_id": "1rrFLKJlWToIdQq769F6DAnDGAhNMmkuy",
+      "source_sha256": "40e54d648abb142bde40bd4121be0ff3eba2d7656b4a538b5b15a56a3a83bc08",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-bronze-ivory-pointed-hex-low-angle",
+      "target_id": "39c5d2f1-7a65-47f0-bd21-5ce7d61d81e3",
+      "drive_file_id": "1Hn5vb3078S4JDOlAmOPXjZP_eW3lardS",
+      "archive_file_id": "1J2jzQmHQI3VMhWYXx0Qwbf_JHt3wrUae",
+      "source_sha256": "55d26b7e61a21bdc8ebec54ba1fe5837dfabce02d13046f8b1aa1ed994107d0d",
+      "visual_approved": true
+    }
+  ]
+}
