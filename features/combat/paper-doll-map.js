@@ -2,7 +2,7 @@
 (function(root){
  'use strict';
  const resolver=root.aleaCombatPaperDollResolver;
- let assets={},loading=false,ready=false;
+ let assets={},loading=false,ready=false,poseRows=new Map(),poseLoading=false;
  const failed=new Set(),checked=new Set();
  function load(){
   if(loading||ready||!resolver||!root.aleaArcanePaperDollAssets||typeof dbJson!=='function'||typeof SUPABASE_URL==='undefined')return;
@@ -18,9 +18,33 @@
   }).then(rows=>{
    assets=Object.fromEntries(rows.filter(Boolean));
    ready=true;
+   loadPublishedPoses();
    if(typeof renderCombat==='function')renderCombat();
   }).catch(err=>{console.warn('ARES systembilder kunde inte laddas',err)})
     .finally(()=>{loading=false});
+ }
+ function loadPublishedPoses(){
+  if(poseLoading||typeof dbJson!=='function')return;
+  poseLoading=true;
+  dbJson('combatant_battle_poses?select=combatant_type,combatant_id,pose_key,image_path,base_key,mounting_profile&pose_key=eq.standard&publication_status=eq.published&is_active=eq.true')
+   .then(rows=>{
+    const next=new Map();
+    for(const row of Array.isArray(rows)?rows:[]){
+     if(!row.image_path||!/^hermes\/[a-z0-9/_-]+\/[a-f0-9]{64}\.webp$/.test(row.image_path))continue;
+     next.set(row.combatant_type+':'+row.combatant_id,row);
+    }
+    poseRows=next;
+    if(typeof renderCombat==='function')renderCombat();
+   }).catch(error=>console.warn('ARES published poses unavailable; using classic fallback',error))
+    .finally(()=>{poseLoading=false});
+ }
+ function publishedPose(actor){
+  const type=String(actor?.source_type||'');
+  const id=String(actor?.source_id||'');
+  if(!id)return null;
+  const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
+  for(const kind of aliases){const row=poseRows.get(kind+':'+id);if(row)return row}
+  return null;
  }
  function portrait(actor){
   if(typeof combatRowPortraitUrl!=='function')return '';
@@ -37,12 +61,21 @@
  function render(classic,actor,cell,g,stateClasses=''){
   if(!ready){load();return classic}
   if(typeof combatFootprintShape!=='function')return classic;
-  const selected=resolver.resolve(actor,{assets,footprint:combatFootprintShape(actor),battlePoseUrl:pose(actor),portraitUrl:portrait(actor)});
+  const published=publishedPose(actor);
+  const profile=published?.mounting_profile||{},cutout=profile.cutout||{},baseProfile=profile.base||{};
+  const baseAsset=published?.base_key&&assets[published.base_key]?.src?assets[published.base_key]:assets[resolver.BASE];
+  const chosenAssets={...assets,[resolver.BASE]:baseAsset};
+  const publicPose=published?.image_path&&typeof SUPABASE_URL==='string'?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+published.image_path:'';
+  const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:combatFootprintShape(actor),battlePoseUrl:publicPose||pose(actor),portraitUrl:portrait(actor)});
   if(selected.mode==='classic')return classic;
   // One base occupies the same hex as the classic marker; no hit geometry changes.
   const unit=g.size/42,baseWidth=73,baseHeight=48,baseY=9;
   const standHeight=99,standWidth=66,standBottom=baseY-7;
   const standTop=standBottom-standHeight;
+  const poseScale=selected.mode==='battle-pose'&&published?Math.max(.2,Math.min(1.5,Number(cutout.scale||65)/65)):1;
+  const poseX=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.x||0)))*.4:0;
+  const poseY=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.y||0)))*.4:0;
+  const artWidth=standWidth*poseScale,artHeight=standHeight*poseScale;
   const actorId=String(actor?.id||'unknown').replace(/[^a-zA-Z0-9_-]/g,'_');
   const clip='aresPortrait_'+actorId;
   const art=selected.mode==='battle-pose'?selected.poseUrl:selected.standUrl;
@@ -56,7 +89,7 @@
    '<image href="'+esc(selected.baseUrl)+'" x="'+(-baseWidth/2)+'" y="'+(baseY-baseHeight*.63)+'" width="'+baseWidth+'" height="'+baseHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
    (isStand&&selected.portraitUrl?'<defs><clipPath id="'+clip+'"><ellipse cx="'+(portraitX+portraitW/2)+'" cy="'+(portraitY+portraitH/2)+'" rx="'+(portraitW/2)+'" ry="'+(portraitH/2)+'"/></clipPath></defs>'+
     '<image href="'+esc(selected.portraitUrl)+'" x="'+portraitX+'" y="'+portraitY+'" width="'+portraitW+'" height="'+portraitH+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clip+')"/>':'')+
-   '<image href="'+esc(art)+'" x="'+(-standWidth/2)+'" y="'+standTop+'" width="'+standWidth+'" height="'+standHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
+   '<image href="'+esc(art)+'" x="'+(-artWidth/2+poseX)+'" y="'+(standBottom-artHeight-poseY)+'" width="'+artWidth+'" height="'+artHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
    '<polygon points="'+combatHexPoints(0,0,39)+'" class="combat-paper-doll-universal-ring"/>'+
    '</g>';
   return '<g class="combat-paper-doll-classic">'+classic+'</g>'+overlay;
