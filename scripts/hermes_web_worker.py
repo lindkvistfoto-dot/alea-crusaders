@@ -48,7 +48,9 @@ def archive(data,name,mime):
  boundary="hermes41archive"
  b=boundary.encode()
  metadata=json.dumps({"name":name,"parents":[FOLDER]}).encode()
- payload=b"--"+b+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+metadata+b"\r\n--"+b+b"\r\nContent-Type: "+mime.encode()+b"\r\n\r\n"+data+b"\r\n--"+b+b"--\r\n"
+ payload=b"--"+b+b"\r
+Content-Type: application/json; charset=UTF-8\r\n\r\n"+metadata+b"\r\n--"+b+b"\r
+Content-Type: "+mime.encode()+b"\r\n\r\n"+data+b"\r\n--"+b+b"--\r\n"
  result=fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents","POST",payload,{"Authorization":"Bearer "+TOKEN,"Content-Type":"multipart/related; boundary="+boundary})
  ident=json.loads(result)["id"]
  meta=json.loads(fetch("https://www.googleapis.com/drive/v3/files/"+ident+"?fields=id,parents",headers={"Authorization":"Bearer "+TOKEN}))
@@ -74,7 +76,8 @@ def run(job):
  mime="image/png" if img.format=="PNG" else "image/webp"
  drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
  patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
- img=img.convert("RGBA")\n img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
+ img=img.convert("RGBA")
+ img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
  out=io.BytesIO();img.save(out,format="WEBP",quality=85,method=6)
  data=out.getvalue();webp_sha=digest(data)
  path="hermes/battle-pose-cutout/"+pose_id+"/"+webp_sha+".webp"
