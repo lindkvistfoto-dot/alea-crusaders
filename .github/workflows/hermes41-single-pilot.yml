@@ -13,7 +13,7 @@ jobs:
   deliver-one:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Retry after service-role-only invoker RPC permission fix.
+    # Retry after granting service_role SELECT and UPDATE on hermes_web_jobs.
     steps:
       - uses: actions/checkout@v4
         with:
