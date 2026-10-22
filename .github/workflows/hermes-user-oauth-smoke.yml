@@ -1,0 +1,75 @@
+name: HERMES 4.1 – User OAuth archive smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-user-oauth-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  archive-test:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Verify Google OAuth and isolated Drive archive
+        env:
+          CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          FOLDER_ID: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,urllib.error,urllib.parse,urllib.request
+          def call(url,method='GET',body=None,headers=None):
+              req=urllib.request.Request(url,data=body,headers=headers or {},method=method)
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as response:return response.read()
+              except urllib.error.HTTPError as exc:
+                  detail=exc.read(2048).decode('utf-8','replace')
+                  try:
+                      parsed=json.loads(detail)
+                      error=parsed.get('error',{})
+                      reason=error.get('errors',[{}])[0].get('reason') if isinstance(error,dict) else str(error)
+                      print('HERMES_OAUTH_API_ERROR',exc.code,reason)
+                  except ValueError:print('HERMES_OAUTH_API_ERROR',exc.code,'unparseable')
+                  raise
+          assert all(os.environ.get(k) for k in ('CLIENT_ID','CLIENT_SECRET','REFRESH_TOKEN','FOLDER_ID'))
+          body=urllib.parse.urlencode({
+              'client_id':os.environ['CLIENT_ID'],
+              'client_secret':os.environ['CLIENT_SECRET'],
+              'refresh_token':os.environ['REFRESH_TOKEN'],
+              'grant_type':'refresh_token'
+          }).encode()
+          token=json.loads(call('https://oauth2.googleapis.com/token','POST',body,
+              {'Content-Type':'application/x-www-form-urlencoded'}))['access_token']
+          auth={'Authorization':'Bearer '+token}
+          folder=os.environ['FOLDER_ID']
+          info=json.loads(call('https://www.googleapis.com/drive/v3/files/'+urllib.parse.quote(folder,safe='')+'?fields=id,name,mimeType,trashed,capabilities(canAddChildren)',headers=auth))
+          assert info['id']==folder and info['mimeType']=='application/vnd.google-apps.folder' and not info.get('trashed')
+          assert info.get('capabilities',{}).get('canAddChildren') is True,'FOLDER_NOT_WRITABLE'
+          print('HERMES_OAUTH_REFRESH_AND_FOLDER_OK')
+          boundary='hermes_oauth_smoke'
+          payload=('HERMES 4.1 user OAuth archive smoke '+os.environ['RUN_ID']+'\n').encode()
+          meta=json.dumps({'name':'hermes-oauth-smoke-'+os.environ['RUN_ID']+'.txt','parents':[folder],'mimeType':'text/plain'}).encode()
+          multipart=(('--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n').encode()+meta+
+                     ('\r\n--'+boundary+'\r\nContent-Type: text/plain\r\n\r\n').encode()+payload+
+                     ('\r\n--'+boundary+'--\r\n').encode())
+          file_id=None
+          try:
+              created=json.loads(call('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,parents',
+                  'POST',multipart,{**auth,'Content-Type':'multipart/related; boundary='+boundary}))
+              file_id=created['id']
+              assert folder in created.get('parents',[]),'WRONG_PARENT'
+              received=call('https://www.googleapis.com/drive/v3/files/'+urllib.parse.quote(file_id,safe='')+'?alt=media',headers=auth)
+              assert hashlib.sha256(received).digest()==hashlib.sha256(payload).digest(),'READBACK_HASH_MISMATCH'
+              print('HERMES_OAUTH_ARCHIVE_WRITE_READBACK_OK')
+          finally:
+              if file_id:
+                  call('https://www.googleapis.com/drive/v3/files/'+urllib.parse.quote(file_id,safe=''),'DELETE',headers=auth)
+                  print('HERMES_OAUTH_TEST_FILE_DELETED')
+          PY
