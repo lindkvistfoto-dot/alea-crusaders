@@ -82,3 +82,9 @@
 #arcanePaperDollWorkshopMount .apdw-base{inset:auto 0 0;width:100%;height:auto;max-height:100%;object-fit:contain;object-position:center bottom;transform:scale(var(--base-scale,.35));transform-origin:50% 100%}
 #arcanePaperDollWorkshopMount .apdw-base-placeholder{transform:scale(var(--base-scale,.35));transform-origin:50% 100%}
 #arcanePaperDollWorkshopMount .apdw-anchor{top:auto;bottom:4%;transform:translate(-50%,50%)}
+
+/* Match the navigation banner's centered content width on desktop. */
+@media(min-width:900px){
+ #adminPaperDollWorkshop{width:100%;max-width:1100px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+ #arcanePaperDollWorkshopMount{width:100%;max-width:100%}
+}
