@@ -4,7 +4,8 @@
  'use strict';
  const DEFINITIONS=Object.freeze({
   'arcane-paper-doll-hexagon-base':Object.freeze({id:'2ab9aa61-4b89-4d7f-8905-19ce644d9121',width:1220,height:811}),
-  'arcane-portrait-stand':Object.freeze({id:'8aa5641c-f0d2-4f80-bf25-ff616dc2cdce',width:1067,height:1280})
+  'arcane-portrait-stand':Object.freeze({id:'8aa5641c-f0d2-4f80-bf25-ff616dc2cdce',width:1067,height:1280}),
+  'arcane-portrait-stand-generic':Object.freeze({id:'d6ad2f3e-70a6-4c2a-89be-9b02b9fd27e8',width:853,height:1280})
  });
  const BUCKET='alea-hermes-public';
  const COLUMNS='id,asset_key,label,asset_path,app_sha256,app_bytes,width,height,alpha_preserved';
