@@ -101,3 +101,10 @@
  #adminPaperDollWorkshop{max-width:none;width:100%;margin:0;box-sizing:border-box}
  #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* Three-base workshop and local cutout calibration. */
+#arcanePaperDollWorkshopMount .apdw-cutout{position:absolute;z-index:7;height:auto;max-width:none;transform:translateX(-50%);object-fit:contain;pointer-events:none;filter:none}
+#arcanePaperDollWorkshopMount .apdw-base-upload,#arcanePaperDollWorkshopMount .apdw-cutout-controls{display:grid;gap:8px;padding:12px;border:1px solid #70573c;border-radius:10px;margin:10px 0}
+#arcanePaperDollWorkshopMount .apdw-cutout-controls label{display:grid;gap:4px}
+#arcanePaperDollWorkshopMount .apdw-cutout-controls input[type=range]{width:100%}
+#arcanePaperDollWorkshopMount .apdw-base-only-mode .apdw-cutout{display:none}
