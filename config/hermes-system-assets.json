@@ -7,16 +7,41 @@
     "arcane-paper-doll-hexagon-base": {
       "id": "2ab9aa61-4b89-4d7f-8905-19ce644d9121",
       "label": "Arcane Bronze Ivory Hexagon",
-      "source_size": [1220, 811],
-      "display_size": [1220, 811],
+      "source_size": [
+        1220,
+        811
+      ],
+      "display_size": [
+        1220,
+        811
+      ],
       "archive_folder_id": "15owJsI9QGMo5X1LqjUrBFH9XTAivjavD"
     },
     "arcane-portrait-stand": {
       "id": "8aa5641c-f0d2-4f80-bf25-ff616dc2cdce",
       "label": "Arcane Portrait Stand – Master 01",
-      "source_size": [1145, 1374],
-      "display_size": [1067, 1280],
+      "source_size": [
+        1145,
+        1374
+      ],
+      "display_size": [
+        1067,
+        1280
+      ],
       "archive_folder_id": "1fWWCjzJ1LacH6y-MmecYp8UUrZ0zQFeE"
+    },
+    "arcane-portrait-stand-generic": {
+      "id": "d6ad2f3e-70a6-4c2a-89be-9b02b9fd27e8",
+      "label": "Arcane Portrait Stand – Generic Battle Pose",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
     }
   }
 }
