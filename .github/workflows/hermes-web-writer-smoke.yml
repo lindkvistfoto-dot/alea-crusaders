@@ -1,0 +1,46 @@
+name: HERMES 4.1 – Archive writer authentication smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-web-writer-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify-archive-writer:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Validate configuration
+        env:
+          WRITER: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
+          FOLDER: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+        run: |
+          test "$WRITER" = "hermes-archive-writer@alea-hermes.iam.gserviceaccount.com"
+          test "$FOLDER" = "1a_YuFpuD3RBfmNSWKrWJGgT28vnSNzsg"
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.file
+          create_credentials_file: false
+      - name: Verify Drive folder metadata (read-only, no writes)
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          FOLDER: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          url='https://www.googleapis.com/drive/v3/files/'+os.environ['FOLDER']+'?fields=id,name,mimeType,trashed'
+          req=urllib.request.Request(url,headers={'Authorization':'Bearer '+os.environ['GOOGLE_ACCESS_TOKEN']})
+          with urllib.request.urlopen(req,timeout=20) as response: info=json.load(response)
+          assert info['id']==os.environ['FOLDER'] and info['mimeType']=='application/vnd.google-apps.folder' and not info.get('trashed',False)
+          print('HERMES_WRITER_AUTH_AND_FOLDER_READ_OK')
+          PY
