@@ -64,6 +64,19 @@ class WorkerTests(unittest.TestCase):
   self.assertTrue(any(row.get("state")=="published" for _,row in calls))
 
 
+ def test_corrupt_archive_never_published(self):
+  worker=self.worker
+  pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
+  job={"id":"job","pose_id":"pose","source_path":pose["staging_path"],"archive_drive_file_id":"existing"}
+  worker.FOLDER="test-folder"
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "fields=id,parents" in url:return b'{"parents":["test-folder"]}'
+   if "alt=media" in url:return b"corrupted"
+   raise AssertionError(url)
+  with patch.object(worker,"rest",return_value=[pose]),patch.object(worker,"storage_download",return_value=png()),patch.object(worker,"fetch",side_effect=fake_fetch),patch.object(worker,"archive") as archive:
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):worker.run(job)
+   archive.assert_not_called()
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
