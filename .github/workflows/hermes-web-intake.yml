@@ -26,6 +26,7 @@ jobs:
           filter: blob:none
           sparse-checkout: |
             scripts
+            tests
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -39,6 +40,8 @@ jobs:
           import sys
           print('HERMES_RUNTIME_OK',sys.version.split()[0],Image.__version__)
           PY
+      - name: Offline HERMES regression tests
+        run: python -m unittest discover -s tests -p test_hermes_web_worker.py -v
       - name: Require dedicated writer configuration
         env:
           OAUTH_CLIENT: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
