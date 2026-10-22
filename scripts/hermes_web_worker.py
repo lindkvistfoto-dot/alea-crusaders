@@ -72,7 +72,14 @@ def run(job):
   raise ValueError("INVALID_TRANSPARENT_IMAGE")
  sha=digest(original)
  mime="image/png" if img.format=="PNG" else "image/webp"
- drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
+ drive_id=job.get("archive_drive_file_id")
+ if drive_id:
+  meta=json.loads(fetch("https://www.googleapis.com/drive/v3/files/"+drive_id+"?fields=id,parents",headers={"Authorization":"Bearer "+TOKEN}))
+  if FOLDER not in meta.get("parents",[]):raise ValueError("ARCHIVE_WRONG_FOLDER")
+  readback=fetch("https://www.googleapis.com/drive/v3/files/"+drive_id+"?alt=media",headers={"Authorization":"Bearer "+TOKEN})
+  if digest(readback)!=sha:raise ValueError("ARCHIVE_HASH_MISMATCH")
+ else:
+  drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
  patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
  img=img.convert("RGBA")
  img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
