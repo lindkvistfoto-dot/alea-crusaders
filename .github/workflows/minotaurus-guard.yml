@@ -19,6 +19,7 @@ jobs:
             tests
             features/combat
             features/material
+            features/ui
             supabase
             config
       - uses: actions/setup-python@v5
@@ -37,7 +38,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
-      - run: npx vitest run tests/minotaurus-publisher.test.mjs tests/hermes4-batch-publisher.test.mjs tests/hermes-wide-publisher.test.mjs tests/hermes-spell-cutout-profile.test.js tests/hermes-v2-gates.test.mjs tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-art-assets.test.js
+      - run: npx vitest run tests/minotaurus-publisher.test.mjs tests/hermes4-batch-publisher.test.mjs tests/hermes-system-assets-publisher.test.mjs tests/arcane-paper-doll-assets.test.js tests/arcane-system-assets-rls.test.mjs tests/hermes-wide-publisher.test.mjs tests/hermes-spell-cutout-profile.test.js tests/hermes-v2-gates.test.mjs tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-art-assets.test.js
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

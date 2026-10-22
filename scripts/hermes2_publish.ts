@@ -5,7 +5,7 @@
  * Only activates image after source/app/URL checksums and DB CAS succeed.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
-import { assertSpellCutoutWritable } from "./hermes2_asset_profiles.ts";
+import { assertSpellCutoutWritable, systemAssetProfile } from "./hermes2_asset_profiles.ts";
 
 const url=Deno.env.get("SUPABASE_URL")||"";
 const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -74,13 +74,21 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any,archiveRequired=false){
- if(!a||!["spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  if(archiveRequired&&(a.archive_verified!==true||a.source_path!=="drive://"+a.archive_file_id||
    !Number.isInteger(a.batch_index)||a.batch_index<0||typeof a.target_id!=="string"))throw Error("VERIFIED_DRIVE_ARCHIVE_REQUIRED");
  const expected=/^drive:\/\/[A-Za-z0-9_-]{10,160}$/.test(a.source_path||"");
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
+ if(a.kind==='system-asset'){
+  const profile=systemAssetProfile(a.target_key);
+  if(!archiveRequired||!expected||a.app_file!==out||a.target_id!==profile.id||
+    a.width!==profile.display_size[0]||a.height!==profile.display_size[1]||a.alpha_preserved!==true)
+   throw Error('INVALID_SYSTEM_ASSET_METADATA');
+  return {table:'arcane_system_assets',field:'asset_key',sourcePath:a.source_path,
+   appPath:'hermes/'+out,assetField:'asset_path' as const};
+ }
  const spellWide=a.kind==="spell-illustration-wide";
  const spellSquare=a.kind==="spell-illustration";
  const spellCutout=a.kind==="spell-cutout";
@@ -97,19 +105,24 @@ function checkAsset(a:any,archiveRequired=false){
   field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:a.source_path,
   appPath:spellArt?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
-type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null};
+type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null; asset_path?:string|null; app_sha256?:string|null; app_bytes?:number|null; width?:number|null; height?:number|null; alpha_preserved?:boolean|null};
 async function publish(a:any){
  const {table,field,sourcePath,appPath:declaredAppPath,assetField}=checkAsset(a,manifest.archive_required===true);
  const app=new Uint8Array(await Deno.readFile(outputRoot+"/"+a.app_file));
  if(!Number.isInteger(a.source_bytes)||a.source_bytes<100||a.source_bytes>8388608||app.length!==a.app_bytes||app.length>(a.kind==="spell-illustration-wide"?524288:500000))throw Error("FILE_SIZE_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
- const targetFields=table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
+ const system=a.kind==='system-asset';
+ const systemFields=['asset_path','app_sha256','app_bytes','width','height','alpha_preserved'] as const;
+ const targetFields=system?'id,asset_key,'+systemFields.join(','):table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
  const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
  if(a.target_id!==undefined&&target.id!==a.target_id)throw Error("TARGET_ID_MISMATCH "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+ const activationFields=system?{asset_path:appPath,app_sha256:a.app_sha256,app_bytes:app.length,width:a.width,height:a.height,alpha_preserved:true}:{[assetField]:appPath};
+ const previousFields=system?Object.fromEntries(systemFields.map(field=>[field,target[field]])):{[assetField]:target[assetField]};
+ const metadataMatches=(row:ArtTarget)=>!system||systemFields.every(field=>row?.[field]===(activationFields as Record<string,unknown>)[field]);
  if(manifest.publication_mode==="pilot"){
   const pilotPath="hermes/minotaurus-pilot/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp";
   await immutableUpload(appBucket,pilotPath,app,"image/webp",a.app_sha256);
@@ -126,7 +139,7 @@ async function publish(a:any){
  // Explicit HERMES publish dispatches may replace an existing wide illustration. The publisher snapshots the old path in previous_icon_path and activates only with compare-and-set below; concurrent changes still fail closed.
  if(existing?.status==="rolled_back")throw Error("JOB_WAS_ROLLED_BACK");
  if(existing?.status==="active"){
-  if(target[assetField]!==existing.app_path)throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
+  if(target[assetField]!==existing.app_path||!metadataMatches(target))throw Error("ACTIVE_RECORD_HAS_BEEN_CHANGED");
   await verifyStorage(appBucket,existing.app_path,a.app_sha256);
   await verifyDelivery(appBucket,existing.app_path,a.app_sha256);
   console.log("ALREADY_ACTIVE",a.kind,a.target_key);
@@ -159,7 +172,7 @@ async function publish(a:any){
   const previous=job.previous_icon_path;
   if(target[assetField]!==previous&&target[assetField]!==appPath)throw Error("TARGET_CHANGED_REVIEW_REQUIRED");
   if(target[assetField]!==appPath){
-   let q=db.from(table).update({[assetField]:appPath}).eq("id",target.id);
+   let q=db.from(table).update(activationFields).eq("id",target.id);
    q=previous===null?q.is(assetField,null):q.eq(assetField,previous);
    const {data:affected,error:activateError}=await q.select("id,"+assetField);
    if(activateError||affected?.length!==1)throw Error("ACTIVATION_CONFLICT");
@@ -167,7 +180,7 @@ async function publish(a:any){
   }
   const {data:final,error:readError}=await db.from(table).select(targetFields).eq("id",target.id).returns<ArtTarget[]>().single();
   // The selected slot is protected by compare-and-swap. Sibling art fields may activate concurrently.
-  if(readError||final?.[assetField]!==appPath)throw Error("DATABASE_READBACK_MISMATCH");
+  if(readError||final?.[assetField]!==appPath||!metadataMatches(final))throw Error("DATABASE_READBACK_MISMATCH");
   await patch(job.id,{status:"active",activated_at:new Date().toISOString(),error_code:null,error_message:null});
   await recordEvent(job.id,"active","Published and read back "+appPath);
   console.log("HERMES_ACTIVE",a.kind,a.target_key,appPath);
@@ -178,7 +191,7 @@ async function publish(a:any){
    // Restore only this invocation's slot if a post-activation check fails.
    // A concurrent replacement must never be overwritten by recovery.
    try{
-    const {data:restored,error}=await db.from(table).update({[assetField]:job.previous_icon_path})
+    const {data:restored,error}=await db.from(table).update(system?previousFields:{[assetField]:job.previous_icon_path})
      .eq("id",target.id).eq(assetField,appPath).select("id,"+assetField);
     if(error||restored?.length!==1)msg="ACTIVATION_ROLLBACK_REVIEW_REQUIRED "+msg;
    }catch{msg="ACTIVATION_ROLLBACK_REVIEW_REQUIRED "+msg}

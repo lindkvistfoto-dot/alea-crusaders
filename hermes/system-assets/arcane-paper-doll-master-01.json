@@ -1,0 +1,24 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-paper-doll-hexagon-base",
+      "target_id": "2ab9aa61-4b89-4d7f-8905-19ce644d9121",
+      "drive_file_id": "14BO3nNm-EDw1DKNJKOfwBouceJvzZ4z-",
+      "archive_file_id": "1_B9T0X7jCCj47nyjl5D1u29CLR11tyw0",
+      "source_sha256": "5110e8857b893971f9de080a9f0d5c5b9097dffc1770432b8448be86edf711df",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-portrait-stand",
+      "target_id": "8aa5641c-f0d2-4f80-bf25-ff616dc2cdce",
+      "drive_file_id": "1IiIFM1foA2QVJV4dsqNAosDu_c6iDLH1",
+      "archive_file_id": "1B05VBDjT61RkMQ0cZs5dApMYqK6ia4Bw",
+      "source_sha256": "b6b9682bdc3e94965b6ff2e95baf450ebdbd079e9a24f0340bcfc41bd469ca40",
+      "visual_approved": true
+    }
+  ]
+}

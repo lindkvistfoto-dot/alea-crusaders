@@ -1,3 +1,4 @@
+import "../features/ui/arcane-paper-doll-assets.js";
 import "./features/dice/dice3d.js?v=0.35.218";
 // Material panel is a separate HTML module entry: it must still start
 // if external dice rendering or other main-app dependencies fail.
