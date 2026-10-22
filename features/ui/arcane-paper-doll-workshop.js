@@ -24,8 +24,7 @@
  function makeOptions(){return records.map(item=>'<option value="'+escape(item.id)+'" '+(item.id===selected?'selected':'')+'>'+escape((kinds[item.kind]||'Porträtt')+' · '+item.name)+'</option>').join('')}
  function render(){
   const mount=$('arcanePaperDollWorkshopMount');if(!mount)return;
-  mount.innerHTML='<div class="apdw-head"><div><h2>Arcane Paper Doll · Dockfabriken</h2><p>Kalibrera en gemensam montering och återanvänd den för olika kombattanter.</p></div><span class="apdw-badge">ADMINVERKSTAD</span></div>'+ 
-   '<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite">'+escape(statusText())+'</p>'+ 
+  mount.innerHTML='<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite" hidden>'+escape(statusText())+'</p>'+ 
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
    '<div class="apdw-base-scale"><label for="apdwBaseScale">Basens skala</label><input id="apdwBaseScale" type="range" min="20" max="100" value="'+baseScale+'"><output id="apdwBaseScaleOut">'+baseScale+'%</output><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
    '<div class="apdw-stand-settings"><b>Montera porträttstolpe</b><label>Storlek <input id="apdwStandScale" type="range" min="30" max="120" value="'+standScale+'"><output id="apdwStandScaleOut">'+standScale+'%</output></label><label>Sidled <input id="apdwStandX" type="range" min="-40" max="40" value="'+standX+'"><output id="apdwStandXOut">'+standX+'%</output></label><label>Höjd <input id="apdwStandY" type="range" min="-60" max="40" value="'+standY+'"><output id="apdwStandYOut">'+standY+'%</output></label></div>'+ 
