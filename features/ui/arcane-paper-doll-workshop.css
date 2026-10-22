@@ -112,3 +112,8 @@
 /* Cutout-only workshop: no synthetic hex artwork or obsolete portrait/stand. */
 #arcanePaperDollWorkshopMount .apdw-base-unavailable{position:absolute;z-index:2;left:10%;right:10%;bottom:18%;padding:12px;border:1px solid #9c7c4e;border-radius:8px;background:#201912e8;color:#f0d6a5;text-align:center;font-size:13px}
 #arcanePaperDollWorkshopMount .apdw-base-unavailable[hidden]{display:none!important}
+
+/* Strictly layered mounting: the base remains visible beneath the figure. */
+#arcanePaperDollWorkshopMount .apdw-base{z-index:1!important}
+#arcanePaperDollWorkshopMount .apdw-cutout{z-index:5!important;max-height:85%;width:auto;object-fit:contain;pointer-events:none}
+#arcanePaperDollWorkshopMount .apdw-cutout-controls{background:#201a13}
