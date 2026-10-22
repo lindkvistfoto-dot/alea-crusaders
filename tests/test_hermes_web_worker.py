@@ -23,7 +23,9 @@ def png():
  return out.getvalue()
 
 class WorkerTests(unittest.TestCase):
- def setUp(self):self.worker=load_worker()
+ def setUp(self):
+  self.worker=load_worker()
+  self.worker.TOKEN="offline-test-token"
  def test_digest_stable(self):
   self.assertEqual(self.worker.digest(b"hello"),"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
  def test_no_job_claim_if_oauth_fails(self):
