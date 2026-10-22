@@ -130,14 +130,19 @@
  }
  async function loadPose(){
   const {record,poseKey}=poseSelection();
-  const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
+  const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
   const item=rows?.[0];if(!item)throw new Error('Ingen sparad profil finns för denna pose.');
   const p=item.mounting_profile||{},c=p.cutout||p,b=p.base||{};
   if(![c.scale,c.x,c.y].every(Number.isFinite))throw new Error('Profilen saknar giltiga monteringsvärden.');
   cutoutScale=Math.max(20,Math.min(150,c.scale));cutoutX=Math.max(-80,Math.min(80,c.x));cutoutY=Math.max(-80,Math.min(80,c.y));
   if(Number.isFinite(b.scale))baseScale=Math.max(20,Math.min(100,b.scale));
   const base=BASES.find(x=>x.key===item.base_key);if(base)baseId=base.id;
-  render();setStatus('Monteringsprofil laddad. Lokal cutout måste väljas igen tills HERMES-publicering är färdig.');
+  cutoutFile=null;
+  if(item.staging_path&&typeof authFetch==='function'&&typeof supabaseSession!=='undefined'&&supabaseSession?.access_token){
+   const signed=await authFetch('/storage/v1/object/sign/alea-battle-pose-staging/'+item.staging_path,{method:'POST',headers:{Authorization:'Bearer '+supabaseSession.access_token},body:JSON.stringify({expiresIn:3600})});
+   if(signed.ok){const result=await signed.json();if(result.signedURL)cutoutUrl=SUPABASE_URL+'/storage/v1'+result.signedURL}
+  }
+  render();setStatus('Monteringsprofil laddad'+(cutoutUrl?' med cutout från privat lagring.':'. Cutout måste väljas igen.') );
  }
  function handleAction(action){try{if(action==='save-pose'){savePose().catch(error=>setStatus(error.message,'error'));return}if(action==='load-pose'){loadPose().catch(error=>setStatus(error.message,'error'));return}if(action==='clear-cutout'){if(cutoutUrl)URL.revokeObjectURL(cutoutUrl);cutoutUrl='';cutoutFile=null;applyCutout();setStatus('Cutout borttagen från förhandsvisningen.');return}if(action==='reset'){values={...DEFAULT};applyProfile(snapshot('Återställ'));handleZoom('reset');setStatus('Reglagen och zoomen återställda.');return}if(action==='save'){const name=$('apdwProfileName')?.value.trim();if(!name)throw new Error('Ange ett namn på monteringsprofilen.');profiles[name]=snapshot(name);saveStore();render();if($('apdwProfileSelect'))$('apdwProfileSelect').value=name;if($('apdwProfileName'))$('apdwProfileName').value=name;setStatus('Profilen “'+name+'” sparades och kan användas med valfritt porträtt.');return}if(action==='load'){const name=$('apdwProfileSelect')?.value;if(!name||!profiles[name])throw new Error('Välj en sparad profil först.');applyProfile(profiles[name]);$('apdwProfileName').value=name;setStatus('Profilen “'+name+'” återlästes.');return}if(action==='delete'){const name=$('apdwProfileSelect')?.value;if(!name||!profiles[name])throw new Error('Välj en sparad profil först.');delete profiles[name];saveStore();render();setStatus('Profilen togs bort.');return}if(action==='export'){const name=$('apdwProfileSelect')?.value||$('apdwProfileName')?.value.trim()||'monteringsprofil';const profile=profiles[name]||snapshot(name);download(name+'.json',JSON.stringify(profile,null,2));setStatus('JSON-profil exporterad.');return}if(action==='import'){$('apdwImportFile')?.click()}}catch(error){setStatus(error.message,'error')}}
  function download(name,text){const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name.replace(/[^\p{L}\p{N}._-]+/gu,'_');a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
