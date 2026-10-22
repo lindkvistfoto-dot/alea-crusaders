@@ -59,7 +59,19 @@ def archive(data,name,mime):
 def run(job):
  ident=job["id"];pose_id=job["pose_id"];source_path=job["source_path"]
  rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
- if len(rows)!=1 or rows[0]["staging_path"]!=source_path or rows[0]["publication_status"] not in ("draft","queued"):
+ if len(rows)!=1 or rows[0]["staging_path"]!=source_path:
+  raise ValueError("POSE_STAGING_MISMATCH")
+ if rows[0]["publication_status"]=="published":
+  published_path=rows[0].get("image_path") or ""
+  if not published_path.startswith("hermes/battle-pose-cutout/"+pose_id+"/"):
+   raise ValueError("POSE_PUBLISHED_PATH_MISMATCH")
+  expected_hash=published_path.rsplit("/",1)[-1].removesuffix(".webp")
+  if len(expected_hash)!=64 or digest(storage_download("alea-hermes-public",published_path))!=expected_hash:
+   raise ValueError("PUBLISHED_READBACK_MISMATCH")
+  completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":published_path,"completed_at":datetime.now(timezone.utc).isoformat()})
+  if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
+  return
+ if rows[0]["publication_status"] not in ("draft","queued"):
   raise ValueError("POSE_STAGING_MISMATCH")
  import re
  expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
@@ -93,7 +105,8 @@ def run(job):
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
  updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})
  if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
- patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
+ completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
+ if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
  print("HERMES_DELIVERED",ident)
 
 def main():
