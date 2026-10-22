@@ -24,3 +24,9 @@
 #arcanePaperDollWorkshopMount .apdw-placeholder[hidden],
 #arcanePaperDollWorkshopMount .apdw-base[hidden],
 #arcanePaperDollWorkshopMount .apdw-stand[hidden]{display:none!important}
+
+/* ARES baseplate foundation: calibrate the universal hex independently. */
+.apdw-base-picker{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 14px;padding:12px;border:1px solid #8c7046;border-radius:10px;background:#211a14;color:#ead8b4}
+.apdw-base-picker select{min-width:190px;max-width:100%;padding:8px;background:#17120e;color:#ead8b4;border:1px solid #8c7046;border-radius:6px}
+.apdw-base-picker label{display:flex;align-items:center;gap:8px}
+.apdw-base-only-mode .apdw-stand,.apdw-base-only-mode .apdw-stand-placeholder,.apdw-base-only-mode .apdw-portrait-window,.apdw-base-only-mode .apdw-shadow{display:none!important}
