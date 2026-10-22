@@ -35,7 +35,16 @@ def fetch(url,method="GET",body=None,headers=None,limit=14000000):
 
 def rest(path,method="GET",data=None):
  headers={**BASE,"Content-Type":"application/json","Prefer":"return=representation"}
- raw=fetch(SUPA+"/rest/v1/"+path,method,json.dumps(data).encode() if data is not None else None,headers)
+ try:
+  raw=fetch(SUPA+"/rest/v1/"+path,method,json.dumps(data).encode() if data is not None else None,headers)
+ except urllib.error.HTTPError as error:
+  try:
+   info=json.loads(error.read(2048))
+   code=str(info.get("code","unknown"))[:40]
+   message=str(info.get("message","unknown"))[:160]
+  except (ValueError,UnicodeError):
+   code="unparseable";message="response unavailable"
+  raise RuntimeError("SUPABASE_REST_ERROR status="+str(error.code)+" code="+code+" message="+message) from None
  return json.loads(raw) if raw else []
 
 def digest(data):return hashlib.sha256(data).hexdigest()
@@ -56,10 +65,34 @@ def archive(data,name,mime):
  if digest(readback)!=digest(data):raise ValueError("ARCHIVE_HASH_MISMATCH")
  return ident
 
+def find_archived_original(name, expected_sha):
+ import urllib.parse
+ query=urllib.parse.urlencode({"q":"'"+FOLDER+"' in parents and name = '"+name+"' and trashed = false","fields":"nextPageToken,files(id,name,parents)","page_size":100})
+ result=json.loads(fetch("https://www.googleapis.com/drive/v3/files?"+query,headers={"Authorization":"Bearer "+TOKEN}))
+ matches=result.get("files",[])
+ if result.get("nextPageToken") or len(matches)>1:raise ValueError("ARCHIVE_AMBIGUOUS")
+ if not matches:return None
+ ident=matches[0]["id"]
+ readback=fetch("https://www.googleapis.com/drive/v3/files/"+ident+"?alt=media",headers={"Authorization":"Bearer "+TOKEN})
+ if digest(readback)!=expected_sha:raise ValueError("ARCHIVE_HASH_MISMATCH")
+ return ident
+
 def run(job):
  ident=job["id"];pose_id=job["pose_id"];source_path=job["source_path"]
  rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
- if len(rows)!=1 or rows[0]["staging_path"]!=source_path or rows[0]["publication_status"] not in ("draft","queued"):
+ if len(rows)!=1 or rows[0]["staging_path"]!=source_path:
+  raise ValueError("POSE_STAGING_MISMATCH")
+ if rows[0]["publication_status"]=="published":
+  published_path=rows[0].get("image_path") or ""
+  if not published_path.startswith("hermes/battle-pose-cutout/"+pose_id+"/"):
+   raise ValueError("POSE_PUBLISHED_PATH_MISMATCH")
+  expected_hash=published_path.rsplit("/",1)[-1].removesuffix(".webp")
+  if len(expected_hash)!=64 or digest(storage_download("alea-hermes-public",published_path))!=expected_hash:
+   raise ValueError("PUBLISHED_READBACK_MISMATCH")
+  completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":published_path,"completed_at":datetime.now(timezone.utc).isoformat()})
+  if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
+  return
+ if rows[0]["publication_status"] not in ("draft","queued"):
   raise ValueError("POSE_STAGING_MISMATCH")
  import re
  expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
@@ -78,14 +111,18 @@ def run(job):
   readback=fetch("https://www.googleapis.com/drive/v3/files/"+drive_id+"?alt=media",headers={"Authorization":"Bearer "+TOKEN})
   if digest(readback)!=sha:raise ValueError("ARCHIVE_HASH_MISMATCH")
  else:
-  drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
- patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
+  name=ident+"-"+sha+"."+img.format.lower()
+  drive_id=find_archived_original(name,sha)
+  if not drive_id:drive_id=archive(original,name,mime)
+ archived=patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
+ if len(archived)!=1:raise ValueError("ARCHIVE_STATE_UPDATE_FAILED")
  img=img.convert("RGBA")
  img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
  out=io.BytesIO();img.save(out,format="WEBP",quality=85,method=6)
  data=out.getvalue();webp_sha=digest(data)
  path="hermes/battle-pose-cutout/"+pose_id+"/"+webp_sha+".webp"
- patch("hermes_web_jobs",ident,{"state":"publishing"})
+ publishing=patch("hermes_web_jobs",ident,{"state":"publishing"})
+ if len(publishing)!=1:raise ValueError("PUBLISHING_STATE_UPDATE_FAILED")
  try:
   fetch(SUPA+"/storage/v1/object/alea-hermes-public/"+path,"POST",data,{**BASE,"Content-Type":"image/webp","x-upsert":"false"})
  except urllib.error.HTTPError as e:
@@ -93,7 +130,8 @@ def run(job):
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
  updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})
  if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
- patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
+ completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
+ if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
  print("HERMES_DELIVERED",ident)
 
 def main():
