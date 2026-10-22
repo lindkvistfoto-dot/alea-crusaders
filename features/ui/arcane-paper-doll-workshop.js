@@ -37,7 +37,7 @@
    '</div></div></div>'+ 
    '<div class="apdw-controls"><div class="apdw-cutout-controls"><b>Montera figur på vald bas</b><p class="apdw-help">Basen ligger kvar underst. Figuren placeras i ett separat transparent lager ovanpå.</p><label for="apdwCutoutFile">Ladda upp FIGUR / CUTOUT (PNG/WebP)</label><input id="apdwCutoutFile" type="file" accept="image/png,image/webp"><label>Storlek <input id="apdwCutoutScale" type="range" min="20" max="150" value="'+cutoutScale+'"><output id="apdwCutoutScaleOut">'+cutoutScale+'%</output></label><label>Sidled <input id="apdwCutoutX" type="range" min="-80" max="80" value="'+cutoutX+'"><output id="apdwCutoutXOut">'+cutoutX+'%</output></label><label>Höjd <input id="apdwCutoutY" type="range" min="-80" max="80" value="'+cutoutY+'"><output id="apdwCutoutYOut">'+cutoutY+'%</output></label><button type="button" data-action="clear-cutout" class="btn">Ta bort cutout</button><small>Endast lokal förhandsvisning. Ingen publicering.</small></div>'+ 
    '<div class="apdw-control-grid"></div>'+ 
-   '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+[['standard','Standard'],['mounted_front','Mounted front'],['mounted_left','Mounted left'],['mounted_right','Mounted right'],['sword_shield','Sword & shield'],['staff_two_handed_front','Staff two-handed front'],['bow','Bow'],['dual_wield','Dual wield'],['unarmed','Unarmed']].map(([key,label])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Spara Battle Pose-utkast</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Sparar cutout och monteringsprofil samt skapar ett leveransjobb hos HERMES. Posen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
+   '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+[['standard','Standard'],['mounted_front','Mounted front'],['mounted_left','Mounted left'],['mounted_right','Mounted right'],['sword_shield','Sword & shield'],['staff_two_handed_front','Staff two-handed front'],['bow','Bow'],['dual_wield','Dual wield'],['unarmed','Unarmed']].map(([key,label])=>'<option value="'+key+'">'+label+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Spara och leverera via HERMES</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Sparar cutout och monteringsprofil samt skapar ett leveransjobb hos HERMES. Posen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
   arrangeWorkspace();bind();applyAssets();applyBaseMode();
@@ -115,21 +115,29 @@
  async function savePose(){
   const {record,poseKey}=poseSelection();
   if(typeof dbJson!=='function')throw new Error('Databasanslutning saknas.');
-  const query='combatant_battle_poses?select=id,publication_status,image_path,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey);
+  const query='combatant_battle_poses?select=id,publication_status,image_path,staging_path,pending_staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey);
   const existing=await dbJson(query);
-  if(existing?.[0]?.publication_status==='published')throw new Error('Posen är publicerad och kan inte skrivas över av ett utkast.');
+  const replacing=existing?.[0]?.publication_status==='published';
+  if(replacing){
+   if(existing[0].pending_staging_path)throw new Error('En ersättning väntar redan på HERMES. Vänta tills den har levererats.');
+   if(!cutoutFile)throw new Error('Välj en ny cutout innan du ersätter den publicerade posen.');
+   if(!root.confirm('Ersätt '+record.name+' · '+poseKey+'? Den befintliga bilden fortsätter visas tills HERMES verifierat den nya.'))return;
+  }
   if(existing?.[0]?.id){
    const inFlight=await dbJson('hermes_web_jobs?select=id,state&pose_id=eq.'+encodeURIComponent(existing[0].id)+'&state=in.(queued,archiving,archived,optimizing,publishing)&limit=1');
    if(inFlight?.length)throw new Error('HERMES behandlar redan den här posen. Vänta tills leveransen är klar innan du sparar igen.');
   }
   const staged=cutoutFile?await stageCutout(record,poseKey):existing?.[0]?.staging_path;
   if(!staged)throw new Error('Välj en cutout innan du sparar posen.');
-  const row={combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
-    mounting_profile:{schema:1,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:baseScale}},publication_status:'draft',is_active:false,updated_at:new Date().toISOString()};
+  const mounting={schema:1,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:baseScale}};
+  const row=replacing
+   ?{pending_staging_path:staged,pending_base_key:currentBase().key,pending_mounting_profile:mounting,updated_at:new Date().toISOString()}
+   :{combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
+     mounting_profile:mounting,publication_status:'draft',is_active:false,updated_at:new Date().toISOString()};
   let saved;
   try{
    const rows=existing?.[0]?.id
-    ?await dbJson('combatant_battle_poses?id=eq.'+encodeURIComponent(existing[0].id),{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)})
+    ?await dbJson('combatant_battle_poses?id=eq.'+encodeURIComponent(existing[0].id)+(replacing?'&publication_status=eq.published&pending_staging_path=is.null':''),{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)})
     :await dbJson('combatant_battle_poses',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)});
    saved=rows?.[0];
   }catch(error){throw new Error('Cutouten finns i säker mellanlagring men poseposten kunde inte sparas: '+error.message)}
@@ -139,7 +147,7 @@
     pose_id:saved.id,asset_kind:'battle-pose-cutout',source_path:staged,idempotency_key:crypto.randomUUID()
    })});
   }catch(error){throw new Error('Monteringsprofilen är sparad men HERMES kunde inte kölägga bilden: '+error.message)}
-  setStatus('HERMES har tagit emot leveransuppdraget för '+record.name+' · '+poseKey+'. Väntar på arkivering och publicering; posen är ännu inte aktiv.');
+  setStatus('HERMES har tagit emot '+(replacing?'ersättningen':'leveransen')+' för '+record.name+' · '+poseKey+'. '+(replacing?'Den tidigare bilden förblir aktiv tills den nya verifierats.':'Väntar på arkivering och publicering.'));
  }
  async function loadPose(){
   const {record,poseKey}=poseSelection();
