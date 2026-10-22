@@ -17,10 +17,13 @@ jobs:
           sparse-checkout: |
             scripts/hermes_web_worker.py
             tests/test_hermes_web_worker.py
+            features/ui/arcane-paper-doll-workshop.js
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
+      - name: Check Dockfabriken JavaScript syntax
+        run: node --check features/ui/arcane-paper-doll-workshop.js
       - name: Run eleven isolated tests and report each outcome
         shell: bash
         run: |
