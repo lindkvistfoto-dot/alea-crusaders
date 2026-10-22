@@ -80,10 +80,14 @@ def find_archived_original(name, expected_sha):
 def run(job):
  ident=job["id"];pose_id=job["pose_id"];source_path=job["source_path"]
  rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
- if len(rows)!=1 or rows[0]["staging_path"]!=source_path:
+ if len(rows)!=1:raise ValueError("POSE_NOT_FOUND")
+ pose=rows[0]
+ replacement=(pose["publication_status"]=="published" and pose.get("pending_staging_path")==source_path)
+ if not replacement and pose["staging_path"]!=source_path:
   raise ValueError("POSE_STAGING_MISMATCH")
- if rows[0]["publication_status"]=="published":
-  published_path=rows[0].get("image_path") or ""
+ if pose["publication_status"]=="published" and not replacement:
+  published_path=pose.get("image_path") or ""
+  if job.get("output_path") and job["output_path"]!=published_path:raise ValueError("PUBLISHED_JOB_MISMATCH")
   if not published_path.startswith("hermes/battle-pose-cutout/"+pose_id+"/"):
    raise ValueError("POSE_PUBLISHED_PATH_MISMATCH")
   expected_hash=published_path.rsplit("/",1)[-1].removesuffix(".webp")
@@ -92,10 +96,10 @@ def run(job):
   completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":published_path,"completed_at":datetime.now(timezone.utc).isoformat()})
   if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
   return
- if rows[0]["publication_status"] not in ("draft","queued"):
+ if not replacement and pose["publication_status"] not in ("draft","queued"):
   raise ValueError("POSE_STAGING_MISMATCH")
  import re
- expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
+ expected=r"^battle-pose/"+re.escape(pose["combatant_type"])+"/"+re.escape(pose["combatant_id"])+"/"+re.escape(pose["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
  if not re.fullmatch(expected,source_path):raise ValueError("BAD_STAGING_PATH")
  original=storage_download("alea-battle-pose-staging",source_path)
  if not 100<=len(original)<=12000000:raise ValueError("INVALID_ORIGINAL_SIZE")
@@ -128,7 +132,16 @@ def run(job):
  except urllib.error.HTTPError as e:
   if e.code!=409:raise
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
- updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})
+ if replacement:
+  update_filter="combatant_battle_poses?id=eq."+pose_id+"&pending_staging_path=eq."+source_path+"&publication_status=eq.published"
+  values={"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,
+          "staging_path":source_path,"base_key":pose["pending_base_key"],
+          "mounting_profile":pose["pending_mounting_profile"],
+          "pending_staging_path":None,"pending_base_key":None,"pending_mounting_profile":None}
+ else:
+  update_filter="combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)"
+  values={"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True}
+ updated=rest(update_filter,"PATCH",values)
  if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
  completed=patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
  if len(completed)!=1:raise ValueError("JOB_COMPLETION_FAILED")
