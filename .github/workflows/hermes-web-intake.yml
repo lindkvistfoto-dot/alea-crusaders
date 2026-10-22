@@ -2,6 +2,7 @@ name: HERMES 4.1 – Web intake delivery
 # Pilot: first real Standard-pose delivery. Never enable a recurring schedule before OAuth production approval.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - '.github/workflows/hermes-web-intake.yml'
       - 'scripts/hermes_web_worker.py'
