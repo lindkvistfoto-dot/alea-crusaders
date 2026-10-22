@@ -95,6 +95,16 @@ class WorkerTests(unittest.TestCase):
    archive.assert_not_called()
   self.assertEqual(calls[0]["state"],"published")
 
+ def test_recover_orphaned_drive_file(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  original=png()
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "alt=media" in url:return original
+   return b'{"files":[{"id":"existing"}]}'
+  with patch.object(worker,"fetch",side_effect=fake_fetch):
+   self.assertEqual(worker.find_archived_original("job-sha.png",worker.digest(original)),"existing")
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
