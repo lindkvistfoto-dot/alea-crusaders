@@ -3,6 +3,8 @@
 (function(root){
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
+ const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory',key:'arcane-paper-doll-hexagon-base',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
+ let baseOnly=true;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=100;
  const $=id=>document.getElementById(id);
@@ -24,6 +26,7 @@
   const mount=$('arcanePaperDollWorkshopMount');if(!mount)return;
   mount.innerHTML='<div class="apdw-head"><div><h2>Arcane Paper Doll · Dockfabriken</h2><p>Kalibrera en gemensam montering och återanvänd den för olika kombattanter.</p></div><span class="apdw-badge">ADMINVERKSTAD</span></div>'+ 
    '<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite">'+escape(statusText())+'</p>'+ 
+   '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Hexagon → porträtt → stolpram</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
    '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
    '<div class="apdw-placeholder apdw-base-placeholder" aria-hidden="true"><div class="apdw-placeholder-hex"></div><span>BRONZE IVORY<br>HEXAGON</span></div><img class="apdw-base" alt="Bronze Ivory-hexagon" hidden>'+ 
@@ -34,10 +37,11 @@
    '<div class="apdw-control-grid">'+control('scale','Skala','%')+control('x','Horisontell position','%')+control('y','Vertikal position','%')+control('perspective','Perspektiv','°')+control('tilt','Stolpens lutning','°')+control('mask','Maskning','%')+control('shadow','Kontaktskugga','px')+'</div>'+ 
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
-  bind();applyAssets();applyPortrait();
+  bind();applyAssets();applyPortrait();applyBaseMode();
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
+  $('apdwBaseOnly')?.addEventListener('change',event=>{baseOnly=event.target.checked;applyBaseMode()});
   $('apdwPortraitSelect')?.addEventListener('change',e=>{selected=e.target.value;applyPortrait()});
   $('apdwPortraitSelect')?.addEventListener('input',()=>{});
   document.querySelectorAll('#arcanePaperDollWorkshopMount [data-value]').forEach(input=>input.addEventListener('input',()=>{values[input.dataset.value]=Number(input.value);$('apdw-'+input.dataset.value+'Out').value=input.value+({scale:'%',x:'%',y:'%',perspective:'°',tilt:'°',mask:'%',shadow:'px'}[input.dataset.value]);applyValues()}));
@@ -46,6 +50,7 @@
   $('arcanePaperDollWorkshopMount')?.addEventListener('click',event=>{const action=event.target.closest('[data-action]')?.dataset.action;if(action)handleAction(action);const z=event.target.closest('[data-zoom]')?.dataset.zoom;if(z)handleZoom(z)});
  }
  function applyValues(){const stage=$('apdwStage');if(!stage)return;for(const [key,css] of Object.entries({scale:'--p-scale',x:'--p-x',y:'--p-y',perspective:'--p-perspective',tilt:'--stand-tilt',mask:'--mask',shadow:'--contact-shadow'}))stage.style.setProperty(css,key==='scale'?String(values[key]/100):values[key]+(key==='perspective'||key==='tilt'?'deg':key==='shadow'?'px':'%'));const token=$('apdwMapToken');if(token)token.style.transform='translate(-50%,-50%) scale('+values.scale/100+')';}
+ function applyBaseMode(){const stage=$('apdwStage');if(stage)stage.classList.toggle('apdw-base-only-mode',baseOnly)}
  function applyAssets(){const base=asset('arcane-paper-doll-hexagon-base'),stand=asset('arcane-portrait-stand');const bi=$('arcanePaperDollWorkshopMount .apdw-base'),si=$('arcanePaperDollWorkshopMount .apdw-stand');const bp=$('arcanePaperDollWorkshopMount .apdw-base-placeholder'),sp=$('arcanePaperDollWorkshopMount .apdw-stand-placeholder');if(bi&&base){bi.src=base.src;bi.hidden=false;if(bp)bp.hidden=true}if(si&&stand){si.src=stand.src;si.hidden=false;if(sp)sp.hidden=true}}
  function applyPortrait(){const img=$('apdwPortrait'),initial=$('arcanePaperDollWorkshopMount .apdw-initials'),r=activeRecord(),status=$('apdwPortraitStatus');if(!img)return;img.onload=()=>{img.hidden=false;if(initial)initial.hidden=true;if(status)status.textContent=(kinds[r?.kind]||'Porträtt')+' · '+(r?.name||'')};img.onerror=()=>{img.hidden=true;if(initial)initial.hidden=false;if(status)status.textContent=r?.src?'Porträttet gick inte att läsa; välj en annan bild eller kontrollera bildåtkomsten.':'Valt register saknar porträtt. Du kan fortsätta kalibrera och spara profilen.'};if(r?.src){img.src=r.src;img.alt='Porträtt av '+r.name}else{img.removeAttribute('src');img.hidden=true;if(initial)initial.hidden=false;if(status)status.textContent='Välj ett registrerat porträtt. Monteringsprofiler fungerar även utan vald person.'}const token=$('apdwMapToken');if(token){token.style.backgroundImage=r?.src?'url("'+r.src.replace(/["\\]/g,'')+'")':'none';token.textContent=r?.src?'':'✦'}}
  function setStatus(message,type=''){const el=$('apdwActionStatus');if(el){el.textContent=message;el.dataset.state=type}}
