@@ -44,7 +44,8 @@ describe('Ammo registry / range weapon linkage',()=>{
   expect(recovery).toContain("set status='completed'");
   expect(runtime).toContain('id="combatAmmoRecoverAllowed"');
   expect(runtime).toContain('id="combatAmmoRecoverChance"');
-  expect(runtime).toContain('Avsluta strid & sammanfatta');
+  expect(runtime).toContain('id="combatStopBtn"');
+  expect(runtime).toContain('onclick="combatFinishAndRecover()"');
   expect(runtime).toContain("rpc/combat_finish_and_recover");
   expect(runtime).toContain("combatAmmoSpends.length>0");
   expect(runtime).toContain("Avsluta först striden och välj om projektiler kan återhämtas");

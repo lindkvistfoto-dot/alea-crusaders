@@ -6,19 +6,25 @@ const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.u
 const css=readFileSync(new URL('../src/styles/app.css',import.meta.url),'utf8');
 const start=runtime.indexOf('function combatPlayerMiniatureSvg(');
 const end=runtime.indexOf('function combatHexNeighbors(',start);
+const visualStart=runtime.indexOf('function combatMiniatureVisual(');
+const visualEnd=runtime.indexOf('function combatRowPortraitUrl(',visualStart);
 if(start<0||end<start)throw Error('Hex miniature renderer not found');
+if(visualStart<0||visualEnd<visualStart)throw Error('Hex portrait resolver not found');
 const mini=runtime.slice(start,end);
+const visual=runtime.slice(visualStart,visualEnd);
 
 function miniature(actor,src){
  const ctx={
   combatRowPortraitUrl:()=>src,
   combatPlayerPortraitSource:()=>src?{url:src}:null,
+  combatActorImageRecord:()=>({portraitPath:src,portraitUrl:''}),
+  combatNpcPortraitSrc:path=>path||'',combatNpcIconSrc:()=>'',
   combatPortraitHexPoints:size=>String(size)+'-hex',
   combatPlayerMiniatureKind:()=>null,
   combatMiniatureWarrior:()=>'',combatMiniatureWizard:()=>'',combatMiniatureDuck:()=>'',
   escAttr:x=>String(x).replaceAll('&','&amp;').replaceAll('"','&quot;'),
  };
- runInNewContext(mini+'\nthis.renderHex=combatPlayerMiniatureSvg;',ctx);
+ runInNewContext(mini+'\n'+visual+'\nthis.renderHex=combatPlayerMiniatureSvg;',ctx);
  return ctx.renderHex({...actor,id:actor.id||'actor'}, {x:100,y:200},{size:42});
 }
 describe('Porträtt i hexagonkartan',()=>{
@@ -58,7 +64,8 @@ describe('Porträtt i hexagonkartan',()=>{
   expect(runtime).toContain("combatHexPoints(cell.x,cell.y,g.size*.97)");
  });
  test('mapparen återanvänder samma porträtthämtare som turordningen',()=>{
-  expect(mini).toContain('combatRowPortraitUrl(combatant)');
+  expect(mini).toContain('combatMiniatureVisual(combatant)');
+  expect(visual).toContain('combatActorImageRecord(combatant)');
   expect(runtime).toContain('const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass)');
  });
 });

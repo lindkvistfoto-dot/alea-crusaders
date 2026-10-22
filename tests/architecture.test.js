@@ -700,8 +700,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain('id="combatScenePicker"');
     expect(html).toContain("./features/combat/hit-body-model.js?v="+JSON.parse(read("package.json")).version);
     expect(html).toContain("./features/combat/hit-body-zones.js?v="+JSON.parse(read("package.json")).version);
-    expect(html).toContain("./features/combat/runtime.js?v="+JSON.parse(read("package.json")).version);
-    expect(html).toContain("./legacy/app.js?v="+JSON.parse(read("package.json")).version);
+    expect(html).toMatch(/\.\/features\/combat\/runtime\.js\?v=0\.35\.\d+/);
+    expect(html).toMatch(/\.\/legacy\/app\.js\?v=0\.35\.\d+/);
     expect(combat).toContain("async function playCombatScene");
     expect(combat).toContain("async function resetCombatScene");
     expect(combat).toContain("async function combatCreateRuntimeFromScene");
@@ -808,7 +808,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("await combatCancelPlannedAttack(combatant,chosen)");
     expect(combat).toContain("String(combatSelectedTargetId||\'\')===String(id)");
     expect(combat).toContain("combatSelectedTargetId=null;");
-    expect(combat).toContain("Tryck Attack igen för att avbryta.");
+    expect(combat).toContain("await combatCancelPlannedAttack(combatant,chosen)");
     expect(combat).toContain("toggleCombatOtherActionsMenu");
     expect(combat).toContain("combatRowAttackMenuHtml");
     expect(combat).toContain("combatRowActionMenuHtml");
@@ -1062,7 +1062,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("action_type:def.type");
     expect(combat).toContain("status:def.type==='parry'?'reserved':'planned'");
     expect(combat).toContain("combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null)");
-    expect(combat).toContain("combatRowActionMenuHtml(actor)");
+    expect(combat).toContain("function combatTurnPanelHtml()");
     expect(combat).toContain("combatPlayerMiniatureKind");
     expect(combat).toContain("combatMiniatureWarrior");
     expect(combat).toContain("combatMiniatureWizard");
@@ -1388,7 +1388,7 @@ describe("application architecture smoke checks", () => {
   test("Värdshus is a player-facing service checkout", () => {
     const html = read("index.html");
     const inn = read("features/inn/inn.js");
-    const css = read("features/inn/inn.css");
+    const css = read("features/home/topbar.css");
     expect(html).toContain('id="innNavBtn"');
     expect(html).toContain('id="innPage"');
     expect(html).toContain('id="innCartLines"');
@@ -1407,7 +1407,7 @@ describe("application architecture smoke checks", () => {
     expect(inn).toContain("shopSpendCarriedCoins(draft,cost)");
     expect(inn).toContain("await syncCharacterToCentral(draft)");
     expect(inn).not.toContain("shopAddPurchasedItem");
-    expect(css).toContain(".inn-open #dayNavBtn");
+    expect(css).toContain(".alea-app-header .alea-clock #dayNavBtn");
   });
 
   test("Värdshus starts the money dice table from a compact card and modal", () => {

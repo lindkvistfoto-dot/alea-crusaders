@@ -10,11 +10,11 @@ const version=JSON.parse(read('package.json')).version;
 
 describe('GitHub Pages native material bootstrap',()=>{
  it('loads material independently of the dice-box module entry',()=>{
-  expect(html).toContain('<script type="module" src="./features/material/library.js?v='+version+'"></script>');
+  expect(html).toMatch(new RegExp('<script type="module" src="\\./features/material/library\\.js\\?v='+version+'(?:&[^\"]*)?"></script>'));
   expect(html).toContain('<script type="module" src="./src/main.js?v='+version+'"></script>');
   expect(read('src/main.js')).not.toMatch(/^import [^;\n]*material\/library\.js/gm);
-  expect(html.indexOf('features/material/library.js?v='+version+''))
-   .toBeLessThan(html.indexOf('src/main.js?v='+version+''));
+  expect(html.indexOf('features/material/library.js?v='+version))
+   .toBeLessThan(html.indexOf('src/main.js?v='+version));
  });
  it('uses native HTML stylesheets, never bare CSS imports in JS modules',()=>{
   for(const name of ['viewer','frodo-ui','player-folder','realtime']){

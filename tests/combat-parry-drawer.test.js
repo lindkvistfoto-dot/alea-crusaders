@@ -31,6 +31,8 @@ function harness(opportunity=null,extra={}){
   combatAttackResultHtml:action=>'<div class="combat-attack-result">'+escAttr(action.id)+'</div>',
   combatMiniParticipantHtml:(role,person)=>'<div>'+role+' '+escAttr(person.name_snapshot)+'</div>',
   combatActiveActor:()=>null,combatChosenAction:()=>null,combatActionDefinition:()=>null,
+  combatMovementPlanningActor:()=>null,
+  combatMovementPlan:null,
   ...extra
  };
  runInNewContext(centerTile+code+'\nthis.exports={drawer:combatDefenseReactionHtml,panel:combatAttackPanelHtml,choose:combatSubmitDefenseChoice};',env);

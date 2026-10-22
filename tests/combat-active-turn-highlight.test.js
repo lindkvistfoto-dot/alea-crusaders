@@ -61,6 +61,7 @@ function cardFor(actor,activeId){
   combatNumber:(value,fallback)=>value==null?fallback:Number(value),
   combatMentalStatusLabel:()=>null,
   combatIsMovementPlanning:()=>false,
+  combatChosenAction:()=>null,
   combatIsFlying:()=>false,
   combatActiveEffects:[],
   combatEffectIsActive:()=>false,

@@ -26,6 +26,7 @@ function harness({ward=0,armor=5,before=11}={}){
    return path.startsWith('combatants?')?[{current_kp:payload.current_kp,status:payload.status||'active'}]:[]},
   escAttr:x=>String(x),combatOutcomeMeta:outcome=>({icon:'★',label:outcome}),
   combatHitLocationResultHtml:()=>'',combatHitLocationCameraHtml:()=>'',combatFumbleResultHtml:()=>'',combatParryResultHtml:()=>'', 
+  combatHideMagicResultPopup:()=>{},
   Math,Date,Number,String,Array
  };
  runInNewContext(damageSource+'\n'+runtime.slice(resultBegin,resultEnd)+'\nthis.api={damage:combatResolveDamage,display:combatDamageResultHtml,attack:combatAttackResultHtml};',env);

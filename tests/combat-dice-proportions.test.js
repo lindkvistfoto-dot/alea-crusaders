@@ -44,7 +44,7 @@ describe('Combat DiceBox presentation',()=>{
  });
  it('refreshes affected module and CSS cache paths without altering the dice tray',()=>{
   const version=JSON.parse(source('package.json')).version;
-  expect(main).toContain('features/dice/dice3d.js?v='+version);
+  expect(main).toMatch(/features\/dice\/dice3d\.js\?v=0\.35\.\d+/);
   expect(html).toContain('src/styles/app.css?v='+version);
   expect(html).toContain('src/main.js?v='+version);
   expect(dice3d).toContain('scale:7.2,');

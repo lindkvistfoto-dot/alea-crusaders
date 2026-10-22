@@ -30,9 +30,10 @@ describe('Stop combat and after-action report', () => {
   test('the GM has a stop control in the battle header, not buried in ammunition settings', () => {
     const html = read('index.html');
     const runtime = read('features/combat/runtime.js');
-    expect(html).toContain('id="combatStopBtn"');
-    expect(html).toContain('onclick="combatFinishAndRecover()"');
-    expect(runtime).toContain("const showStop=combatCanManage()&&!!activeCombat&&['active','paused'].includes(activeCombat.status)");
+    expect(runtime).toContain('id="combatStopBtn"');
+    expect(runtime).toContain('onclick="combatFinishAndRecover()"');
+    expect(runtime).toContain("activeCombat&&['active','paused'].includes(activeCombat.status)");
+    expect(runtime).toContain("if(!combatCanManage()||!activeCombat||!['active','paused'].includes(activeCombat.status)||combatStopBusy)return");
     expect(runtime).toContain("await dbJson('rpc/combat_finish_and_recover'");
     expect(runtime).toContain("await window.combatPersistFinishedSummary(combatId,result)");
     expect(runtime).toContain("if(activeCombat.status==='completed')");

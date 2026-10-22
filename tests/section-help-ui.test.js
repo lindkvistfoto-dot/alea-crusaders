@@ -66,6 +66,7 @@ describe('Shared section information component',()=>{
   const version=JSON.parse(read('package.json')).version;
   expect(html).toContain('section-help.js?v='+version);
   expect(html).toContain('section-help.css?v='+version);
-  expect(html.indexOf('section-help.js?v='+version)).toBeLessThan(html.indexOf('legacy/app.js?v='+version));
+  expect(html.indexOf('section-help.js?v='+version)).toBeGreaterThanOrEqual(0);
+  expect(html.indexOf('section-help.js?v='+version)).toBeLessThan(html.indexOf('legacy/app.js'));
  });
 });
