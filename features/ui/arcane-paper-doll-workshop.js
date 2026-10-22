@@ -4,7 +4,7 @@
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory',key:'arcane-paper-doll-hexagon-base',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
- let baseOnly=true;
+ let baseOnly=true,baseScale=70,showAnchor=false;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=100;
  const $=id=>document.getElementById(id);
@@ -27,10 +27,11 @@
   mount.innerHTML='<div class="apdw-head"><div><h2>Arcane Paper Doll · Dockfabriken</h2><p>Kalibrera en gemensam montering och återanvänd den för olika kombattanter.</p></div><span class="apdw-badge">ADMINVERKSTAD</span></div>'+ 
    '<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite">'+escape(statusText())+'</p>'+ 
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
+   '<div class="apdw-base-scale"><label for="apdwBaseScale">Basens skala</label><input id="apdwBaseScale" type="range" min="40" max="100" value="'+baseScale+'"><output id="apdwBaseScaleOut">'+baseScale+'%</output><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Hexagon → porträtt → stolpram</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
-   '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
+   '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--base-scale:'+baseScale/100+';--zoom:'+zoom/100+';--p-scale:+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
    '<div class="apdw-placeholder apdw-base-placeholder" aria-hidden="true"><div class="apdw-placeholder-hex"></div><span>BRONZE IVORY<br>HEXAGON</span></div><img class="apdw-base" alt="Bronze Ivory-hexagon" hidden>'+ 
-   '<div class="apdw-shadow" aria-hidden="true"></div><div class="apdw-portrait-window"><div class="apdw-portrait-mask" id="apdwPortraitMask"><span class="apdw-initials">✦</span><img id="apdwPortrait" alt="" hidden></div></div>'+ 
+   '<span class="apdw-anchor" id="apdwAnchor" '+(showAnchor?'':'hidden')+' aria-label="Monteringspunkt"></span><div class="apdw-shadow" aria-hidden="true"></div><div class="apdw-portrait-window"><div class="apdw-portrait-mask" id="apdwPortraitMask"><span class="apdw-initials">✦</span><img id="apdwPortrait" alt="" hidden></div></div>'+ 
    '<div class="apdw-placeholder apdw-stand-placeholder" aria-hidden="true"><div class="apdw-stand-arch"></div><div class="apdw-stand-post"></div><div class="apdw-stand-foot"></div></div><img class="apdw-stand" alt="Arcane Portrait Stand" hidden>'+ 
    '</div></div><div class="apdw-minimap" aria-label="Förhandsvisning på testhexkarta"><div class="apdw-hexmap">'+Array.from({length:7},(_,i)=>'<span class="apdw-map-hex h'+i+'"></span>').join('')+'<span class="apdw-map-token" id="apdwMapToken">✦</span></div><small>Testhexkarta · provplacering</small></div></div>'+ 
    '<div class="apdw-controls"><div class="apdw-control-group"><label for="apdwPortraitSelect">Porträtt</label><select id="apdwPortraitSelect"><option value="">Välj kombattant…</option>'+makeOptions()+'</select><p id="apdwPortraitStatus" class="apdw-help" role="status">Välj rollperson, SLP, fiende eller monster. Porträttet följer inte med i monteringsprofilen.</p></div>'+ 
@@ -41,6 +42,8 @@
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
+  $('apdwBaseScale')?.addEventListener('input',e=>{baseScale=Number(e.target.value);$('apdwBaseScaleOut').textContent=baseScale+'%';$('apdwStage')?.style.setProperty('--base-scale',baseScale/100)});
+  $('apdwShowAnchor')?.addEventListener('change',e=>{showAnchor=e.target.checked;const anchor=$('apdwAnchor');if(anchor)anchor.hidden=!showAnchor});
   $('apdwBaseOnly')?.addEventListener('change',event=>{baseOnly=event.target.checked;applyBaseMode()});
   $('apdwPortraitSelect')?.addEventListener('change',e=>{selected=e.target.value;applyPortrait()});
   $('apdwPortraitSelect')?.addEventListener('input',()=>{});
