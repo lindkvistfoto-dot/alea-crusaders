@@ -4,10 +4,14 @@ import importlib.util
 import io
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 from PIL import Image
 
 REPO_ROOT=Path(__file__).resolve().parents[1]
+SCRIPTS_DIR=str(REPO_ROOT/'scripts')
+if SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0,SCRIPTS_DIR)
 
 def load_module(name, relative_path):
     spec=importlib.util.spec_from_file_location(name,REPO_ROOT/relative_path)
