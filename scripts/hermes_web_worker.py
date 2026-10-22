@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """HERMES 4.1: private staging -> verified Drive archive -> immutable WebP.
-Requires server-side service role and dedicated Drive writer. Never run in browser.
+Requires server-side service role and owner-authorized OAuth. Never run in browser.
 """
 import hashlib
 import io
@@ -13,7 +13,16 @@ from PIL import Image
 
 SUPA=os.environ["SUPABASE_URL"].rstrip("/")
 KEY=os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-TOKEN=os.environ["GOOGLE_ACCESS_TOKEN"]
+def user_drive_token():
+ client=os.environ["HERMES_OAUTH_CLIENT_ID"]
+ secret=os.environ["HERMES_OAUTH_CLIENT_SECRET"]
+ refresh=os.environ["HERMES_OAUTH_REFRESH_TOKEN"]
+ import urllib.parse
+ body=urllib.parse.urlencode({"client_id":client,"client_secret":secret,"refresh_token":refresh,"grant_type":"refresh_token"}).encode()
+ req=urllib.request.Request("https://oauth2.googleapis.com/token",data=body,headers={"Content-Type":"application/x-www-form-urlencoded"},method="POST")
+ with urllib.request.urlopen(req,timeout=25) as response:
+  return json.load(response)["access_token"]
+TOKEN=user_drive_token()
 FOLDER=os.environ["HERMES_WEB_ARCHIVE_FOLDER_ID"]
 if not all((KEY,TOKEN,FOLDER)): raise RuntimeError("HERMES_WORKER_CONFIG_MISSING")
 BASE={"apikey":KEY,"Authorization":"Bearer "+KEY}
@@ -53,7 +62,9 @@ def run(job):
  rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
  if len(rows)!=1 or rows[0]["staging_path"]!=source_path or rows[0]["publication_status"] not in ("draft","queued"):
   raise ValueError("POSE_STAGING_MISMATCH")
- if not source_path.startswith("battle-pose/"):raise ValueError("BAD_STAGING_PATH")
+ import re
+ expected=r"^battle-pose/"+re.escape(rows[0]["combatant_type"])+"/"+re.escape(rows[0]["combatant_id"])+"/"+re.escape(rows[0]["pose_key"])+r"/[0-9a-f-]{36}\.(png|webp)$"
+ if not re.fullmatch(expected,source_path):raise ValueError("BAD_STAGING_PATH")
  original=storage_download("alea-battle-pose-staging",source_path)
  if not 100<=len(original)<=12000000:raise ValueError("INVALID_ORIGINAL_SIZE")
  img=Image.open(io.BytesIO(original));img.load()
@@ -63,7 +74,7 @@ def run(job):
  mime="image/png" if img.format=="PNG" else "image/webp"
  drive_id=archive(original,ident+"-"+sha+"."+img.format.lower(),mime)
  patch("hermes_web_jobs",ident,{"archive_drive_file_id":drive_id,"source_sha256":sha,"state":"archived"})
- img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
+ img=img.convert("RGBA")\n img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
  out=io.BytesIO();img.save(out,format="WEBP",quality=85,method=6)
  data=out.getvalue();webp_sha=digest(data)
  path="hermes/battle-pose-cutout/"+pose_id+"/"+webp_sha+".webp"
@@ -73,7 +84,7 @@ def run(job):
  except urllib.error.HTTPError as e:
   if e.code!=409:raise
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
- patch("combatant_battle_poses",pose_id,{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})
+ updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})\n if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
  patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
  print("HERMES_DELIVERED",ident)
 

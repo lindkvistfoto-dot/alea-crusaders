@@ -1,10 +1,14 @@
 name: HERMES 4.1 – Web intake delivery
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-web-intake.yml'
+      - 'scripts/hermes_web_worker.py'
   workflow_dispatch:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: hermes-web-intake-worker
@@ -13,7 +17,7 @@ concurrency:
 jobs:
   deliver:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -24,28 +28,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install Pillow==12.3.0
+      - run: python -m pip install Pillow==12.0.0
       - name: Require dedicated writer configuration
         env:
-          WRITER: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
+          OAUTH_CLIENT: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
           ARCHIVE: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
           SERVICE: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          test -n "$WRITER" || { echo "::error::Dedicated HERMES writer missing"; exit 1; }
+          test -n "$OAUTH_CLIENT" || { echo "::error::HERMES OAuth client missing"; exit 1; }
           test -n "$ARCHIVE" || { echo "::error::Archive folder missing"; exit 1; }
           test -n "$SERVICE" || { echo "::error::Supabase server secret missing"; exit 1; }
-      - id: google
-        uses: google-github-actions/auth@v3
-        with:
-          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
-          service_account: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/drive.file
-          create_credentials_file: false
       - name: Deliver queued originals through HERMES
         env:
           SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
-          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
           HERMES_WEB_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
         run: python scripts/hermes_web_worker.py
