@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const context={};context.globalThis=context;
+vm.runInNewContext(fs.readFileSync('features/combat/paper-doll-resolver.js','utf8'),context);
+const r=context.aleaCombatPaperDollResolver;
+const assets={[r.BASE]:{src:'base.webp'},[r.STAND]:{src:'stand.webp'}};
+assert.equal(r.resolve({id:1},{assets,footprint:'single',battlePoseUrl:'pose.webp'}).mode,'battle-pose');
+assert.equal(r.resolve({id:1},{assets,footprint:'single',portraitUrl:'portrait.webp'}).mode,'portrait-stand');
+assert.equal(r.resolve({id:1},{assets,footprint:'single'}).mode,'portrait-stand');
+assert.equal(r.resolve({id:1},{assets,footprint:'line2'}).mode,'classic');
+assert.equal(r.resolve({id:1},{assets:{}}).mode,'classic');
+assert.equal(r.resolve({id:1},{assets:{[r.BASE]:assets[r.BASE]}}).mode,'classic');
+console.log('ARES resolver tests passed');
