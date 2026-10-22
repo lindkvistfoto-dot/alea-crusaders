@@ -1246,6 +1246,7 @@ const ADMIN_SECTION_META={
  animations:['Animationer · HERMES','Videoeffekter knutna till stridshändelser'],
  specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
  arcaneSystem:['ARCANE · Systembibliotek','Återanvändbara grafiska systemkomponenter'],
+ paperDollWorkshop:['Arcane Paper Doll · Dockfabriken','Montera återanvändbara spelpjäser från befintliga porträtt'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1327,6 +1328,8 @@ async function openAdminSection(key='overview'){
   await selectSpecialImageTab(activeSpecialImageTab)
  }else if(activeAdminSection==='arcaneSystem'){
   window.aleaArcaneSystem?.renderAdmin?.()
+ }else if(activeAdminSection==='paperDollWorkshop'){
+  await window.aleaPaperDollWorkshop?.mount?.()
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
@@ -1344,6 +1347,37 @@ async function openAdminSection(key='overview'){
  }
  window.scrollTo({top:0,behavior:'smooth'})
 }
+
+/* Isolated, read-only data bridge for the portrait workshop. It returns only
+   existing image URLs and display labels; it never mutates combatant records. */
+window.aleaPaperDollWorkshopData=async function(){
+ if(!activeUser()?.admin)throw new Error('Administratörsbehörighet krävs.');
+ const records=[],warnings=[];
+ const add=(kind,id,name,src,subtitle='')=>records.push({kind,id:String(id||name),name:String(name||'Namnlös'),src:String(src||''),subtitle:String(subtitle||'')});
+ for(const c of Array.isArray(chars)?chars:[]){
+  const name=c?.identity?.namn||'Namnlös rollperson',src=getPortraitSrc(c)||combatIconCachedUrl(c?.combatIconPath)||'';
+  add(c?.ownerId==='SLP'?'character-npc':'character',c?._dbId||c?.id,name,src,[c?.identity?.ras,c?.identity?.yrke].filter(Boolean).join(' · '));
+ }
+ const campaignActors=Array.isArray(campaignNpcs)?campaignNpcs:[];
+ for(const n of campaignActors){
+  let src='';try{src=n?.image_path?await getNpcPortraitUrl(n.image_path):''}catch(_){ }
+  add('campaign-npc',n?.id,n?.name,src,n?.title||n?.race||'Kampanj-SLP');
+ }
+ let globalNpcs=[];
+ try{globalNpcs=await dbJson('global_npcs?select=id,name,title,race,profession,image_path&active=eq.true&order=name.asc')}catch(error){warnings.push('Permanenta SLP kunde inte läsas: '+String(error?.message||error));console.warn('Permanenta SLP kunde inte läsas i Dockfabriken',error)}
+ for(const n of Array.isArray(globalNpcs)?globalNpcs:[]){
+  let src='';try{src=n?.image_path?await getNpcPortraitUrl(n.image_path):''}catch(_){ }
+  add('global-npc',n?.id,n?.name,src,[n?.race,n?.profession].filter(Boolean).join(' · ')||n?.title||'Permanent SLP');
+ }
+ for(const m of Array.isArray(campaignMonsters)?campaignMonsters:[]){
+  let src='';try{src=m?.image_path?await getNpcPortraitUrl(m.image_path):''}catch(_){ }
+  const label=[m?.kind,m?.type,m?.category].filter(Boolean).join(' ').toLowerCase();
+  add(/monster|odjur|varelse/.test(label)?'monster':'enemy',m?.id,m?.name,src,m?.description||m?.kind||m?.type||'Kampanjfiende');
+ }
+ let systemAssets={assets:[],systemArt:{}};
+ try{systemAssets=await window.aleaArcanePaperDollAssets?.load?.({dbJson,baseUrl:SUPABASE_URL})||systemAssets}catch(error){systemAssets.error=String(error?.message||error)}
+ return {records,systemAssets,warnings,userId:activeUser()?.id||'shared'};
+};
 async function openAdmin(){if(!activeUser()?.admin)return;
  window.gimliMountAdmin?.();window.bilboMountLibrary?.();
  editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleSocialStands(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
