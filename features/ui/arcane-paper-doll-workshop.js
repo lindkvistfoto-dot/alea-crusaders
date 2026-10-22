@@ -118,6 +118,10 @@
   const query='combatant_battle_poses?select=id,publication_status,image_path,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey);
   const existing=await dbJson(query);
   if(existing?.[0]?.publication_status==='published')throw new Error('Posen är publicerad och kan inte skrivas över av ett utkast.');
+  if(existing?.[0]?.id){
+   const inFlight=await dbJson('hermes_web_jobs?select=id,state&pose_id=eq.'+encodeURIComponent(existing[0].id)+'&state=in.(queued,archiving,archived,optimizing,publishing)&limit=1');
+   if(inFlight?.length)throw new Error('HERMES behandlar redan den här posen. Vänta tills leveransen är klar innan du sparar igen.');
+  }
   const staged=cutoutFile?await stageCutout(record,poseKey):existing?.[0]?.staging_path;
   if(!staged)throw new Error('Välj en cutout innan du sparar posen.');
   const row={combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
