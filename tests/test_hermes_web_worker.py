@@ -105,6 +105,23 @@ class WorkerTests(unittest.TestCase):
   with patch.object(worker,"fetch",side_effect=fake_fetch):
    self.assertEqual(worker.find_archived_original("job-sha.png",worker.digest(original)),"existing")
 
+ def test_ambiguous_archive_fails_closed(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  with patch.object(worker,"fetch",return_value=b'{"files":[{"id":"one"},{"id":"two"}]}'):
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_AMBIGUOUS"):
+    worker.find_archived_original("duplicate.png","a"*64)
+
+ def test_corrupt_orphan_archive_fails_closed(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "alt=media" in url:return b"bad bytes"
+   return b'{"files":[{"id":"one"}]}'
+  with patch.object(worker,"fetch",side_effect=fake_fetch):
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):
+    worker.find_archived_original("original.png","a"*64)
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
