@@ -50,8 +50,8 @@
 .apdw-stand-settings label{display:flex;align-items:center;gap:8px;flex:1 1 170px}.apdw-stand-settings input{min-width:70px;flex:1}.apdw-stand-settings output{min-width:38px;text-align:right}
 
 /* ARES desktop-first three-panel Dockfabriken */
-@media(min-width:1100px){
- #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:minmax(220px,.8fr) minmax(420px,2fr) minmax(280px,1fr);gap:14px;align-items:stretch}
+@media(min-width:900px){
+ #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:minmax(170px,.8fr) minmax(300px,2fr) minmax(220px,1fr);gap:14px;align-items:stretch}
  #arcanePaperDollWorkshopMount .apdw-left-panel{grid-column:1;grid-row:1}
  #arcanePaperDollWorkshopMount .apdw-workbench{grid-column:2;grid-row:1}
  #arcanePaperDollWorkshopMount .apdw-controls{grid-column:3;grid-row:1;display:block}
@@ -64,7 +64,7 @@
 #arcanePaperDollWorkshopMount .apdw-left-panel .apdw-profile-row{flex-wrap:wrap}
 #arcanePaperDollWorkshopMount .apdw-left-panel .apdw-profile-row>*{min-width:0;flex:1 1 100%}
 #arcanePaperDollWorkshopMount .apdw-controls .apdw-base-picker,#arcanePaperDollWorkshopMount .apdw-controls .apdw-base-scale,#arcanePaperDollWorkshopMount .apdw-controls .apdw-stand-settings{margin-bottom:14px}
-@media(max-width:1099px){
+@media(max-width:899px){
  #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:minmax(0,1fr)}
  #arcanePaperDollWorkshopMount .apdw-workbench{order:1}
  #arcanePaperDollWorkshopMount .apdw-controls{order:2}
