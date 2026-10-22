@@ -108,3 +108,7 @@
 #arcanePaperDollWorkshopMount .apdw-cutout-controls label{display:grid;gap:4px}
 #arcanePaperDollWorkshopMount .apdw-cutout-controls input[type=range]{width:100%}
 #arcanePaperDollWorkshopMount .apdw-base-only-mode .apdw-cutout{display:none}
+
+/* Cutout-only workshop: no synthetic hex artwork or obsolete portrait/stand. */
+#arcanePaperDollWorkshopMount .apdw-base-unavailable{position:absolute;z-index:2;left:10%;right:10%;bottom:18%;padding:12px;border:1px solid #9c7c4e;border-radius:8px;background:#201912e8;color:#f0d6a5;text-align:center;font-size:13px}
+#arcanePaperDollWorkshopMount .apdw-base-unavailable[hidden]{display:none!important}
