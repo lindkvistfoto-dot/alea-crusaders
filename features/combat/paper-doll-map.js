@@ -89,7 +89,7 @@
   if(selected.mode==='classic')return classic;
   // One base occupies the same hex as the classic marker; no hit geometry changes.
   // SCALE STANDARD: fit the visible High Angle base footprint to the map hex.
-  const unit=g.size/42,baseWidth=108,baseHeight=71,baseY=9;
+  const unit=g.size/42,baseWidth=94,baseHeight=62,baseY=9;
   const standHeight=99,standWidth=66,standBottom=baseY-7;
   const standTop=standBottom-standHeight;
   const poseScale=selected.mode==='battle-pose'&&published?Math.max(.2,Math.min(1.5,Number(cutout.scale??65)/65)):1;
