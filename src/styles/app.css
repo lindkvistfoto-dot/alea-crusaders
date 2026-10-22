@@ -7787,3 +7787,9 @@ body:has(#home:not(.hidden)) #aleaSoundboard{display:none!important}
 @media(min-width:900px){
  #admin .adminpage:has(#adminPaperDollWorkshop:not(.hidden)){max-width:1500px;width:100%;margin-inline:auto;box-sizing:border-box}
 }
+
+/* ARES: use exactly the combat view's desktop outer and inner containers. */
+@media(min-width:1024px){
+ main:has(> #admin:not(.hidden) #adminPaperDollWorkshop:not(.hidden)){max-width:1600px}
+ #admin .adminpage:has(#adminPaperDollWorkshop:not(.hidden)){max-width:1550px;width:100%;padding:12px 8px;margin-inline:auto;box-sizing:border-box}
+}
