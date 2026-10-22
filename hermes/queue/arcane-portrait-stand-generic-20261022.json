@@ -1,0 +1,15 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-portrait-stand-generic",
+      "target_id": "d6ad2f3e-70a6-4c2a-89be-9b02b9fd27e8",
+      "drive_file_id": "1oS6dbtgG8g-6iAdrFriPTCq0JCwfjN5f",
+      "archive_file_id": "1Jzzx85cyxseoIQbR1DTaSa3zDbc17QKj",
+      "source_sha256": "16d75e1f816cbe95cbd4fe85573dde29f157ff04ace0c4934426e84219db6e7d",
+      "visual_approved": true
+    }
+  ]
+}
