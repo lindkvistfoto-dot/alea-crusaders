@@ -89,6 +89,6 @@ describe('Android DocumentsProvider skill-art upload',()=>{
   expect(css).toContain('position:fixed;z-index:11000');
   expect(js).toContain("if(input)input.value='';");
   expect(html).toContain('admin-art.js?v=0.35.261');
-  expect(html).toContain('admin-art.css?v=0.35.261');
+  expect(html).toContain('admin-art.css?v=0.35.267');
  });
 });

@@ -22,6 +22,7 @@ function harness({ward=0,armor=5,before=11}={}){
   combatProtectionValue(){return {points:ward,names:ward?['Beskyddare']:[]}},
   combatRollDice:async()=>({rolls:[{value:3}]}),
   combatNumber:(v,fallback=0)=>v==null?fallback:Number(v),
+  combatHideMagicResultPopup:()=>{},
   dbJson:async(path,options)=>{const payload=JSON.parse(options.body);writes.push({path,payload});
    return path.startsWith('combatants?')?[{current_kp:payload.current_kp,status:payload.status||'active'}]:[]},
   escAttr:x=>String(x),combatOutcomeMeta:outcome=>({icon:'★',label:outcome}),

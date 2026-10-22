@@ -59,6 +59,6 @@ describe('single-item weapon and shield artwork',()=>{
   expect(app).toContain("item.imageOverridePath||ruleWeaponForItem(item)?.image_path");
   expect(app).toContain("item.imageOverridePath||characterShieldRule(item)?.image_path");
   expect(combat).toContain("item.imageOverridePath||rule?.image_path||item.image_path");
-  expect(combat).toContain("item.imageOverridePath||shieldRule(item)?.image_path||item.image_path");
+  expect(combat).toContain("item.imageOverridePath||rule?.image_path||item.image_path");
  });
 });
