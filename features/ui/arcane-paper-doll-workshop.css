@@ -48,3 +48,25 @@
 .apdw-stand-placeholder{transform:translate(var(--stand-x,0%),var(--stand-y,0%)) scale(var(--stand-scale,.65)) rotate(var(--stand-tilt,0deg));transform-origin:50% 80%}
 .apdw-stand-settings{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 12px;padding:12px;border:1px solid #8c7046;border-radius:10px;color:#ead8b4;background:#211a14}
 .apdw-stand-settings label{display:flex;align-items:center;gap:8px;flex:1 1 170px}.apdw-stand-settings input{min-width:70px;flex:1}.apdw-stand-settings output{min-width:38px;text-align:right}
+
+/* ARES desktop-first three-panel Dockfabriken */
+@media(min-width:900px){
+ #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:minmax(170px,.8fr) minmax(300px,2fr) minmax(220px,1fr);gap:14px;align-items:stretch}
+ #arcanePaperDollWorkshopMount .apdw-left-panel{grid-column:1;grid-row:1}
+ #arcanePaperDollWorkshopMount .apdw-workbench{grid-column:2;grid-row:1}
+ #arcanePaperDollWorkshopMount .apdw-controls{grid-column:3;grid-row:1;display:block}
+ #arcanePaperDollWorkshopMount .apdw-stage{aspect-ratio:1 / 1.2}
+ #arcanePaperDollWorkshopMount .apdw-stage-clip{min-height:560px}
+}
+#arcanePaperDollWorkshopMount .apdw-left-panel{min-width:0;border:1px solid rgba(190,151,93,.35);border-radius:12px;background:linear-gradient(145deg,#211a14,#15110e);padding:14px}
+#arcanePaperDollWorkshopMount .apdw-left-panel h3,#arcanePaperDollWorkshopMount .apdw-controls h3{margin:0 0 14px;color:#ead8b4}
+#arcanePaperDollWorkshopMount .apdw-left-panel .apdw-profile-box{min-width:0}
+#arcanePaperDollWorkshopMount .apdw-left-panel .apdw-profile-row{flex-wrap:wrap}
+#arcanePaperDollWorkshopMount .apdw-left-panel .apdw-profile-row>*{min-width:0;flex:1 1 100%}
+#arcanePaperDollWorkshopMount .apdw-controls .apdw-base-picker,#arcanePaperDollWorkshopMount .apdw-controls .apdw-base-scale,#arcanePaperDollWorkshopMount .apdw-controls .apdw-stand-settings{margin-bottom:14px}
+@media(max-width:899px){
+ #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:minmax(0,1fr)}
+ #arcanePaperDollWorkshopMount .apdw-workbench{order:1}
+ #arcanePaperDollWorkshopMount .apdw-controls{order:2}
+ #arcanePaperDollWorkshopMount .apdw-left-panel{order:3}
+}
