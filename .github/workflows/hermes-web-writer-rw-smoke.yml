@@ -53,12 +53,23 @@ jobs:
               with urllib.request.urlopen(urllib.request.Request(url,data=data,headers=h,method=method),timeout=30) as r:return r.read()
           file_id=None
           try:
+              info=json.loads(api('https://www.googleapis.com/drive/v3/files/'+folder+'?fields=id,name,mimeType,capabilities(canAddChildren),driveId'))
+              print('HERMES_FOLDER_CAPABILITIES',json.dumps({'canAddChildren':info.get('capabilities',{}).get('canAddChildren'),'sharedDrive':bool(info.get('driveId'))}))
               result=json.loads(api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,parents','POST',body,{'Content-Type':'multipart/related; boundary='+boundary}))
               file_id=result['id']
               if folder not in result.get('parents',[]):raise RuntimeError('WRONG_ARCHIVE_FOLDER')
               actual=api('https://www.googleapis.com/drive/v3/files/'+file_id+'?alt=media')
               if hashlib.sha256(actual).digest()!=hashlib.sha256(payload).digest():raise RuntimeError('READBACK_HASH_MISMATCH')
               print('HERMES_ARCHIVE_WRITE_AND_SHA256_READBACK_OK')
+          except urllib.error.HTTPError as error:
+              detail=error.read(4096).decode('utf-8','replace')
+              try:
+                  parsed=json.loads(detail)
+                  summary=[{'reason':item.get('reason'),'message':item.get('message')} for item in parsed.get('error',{}).get('errors',[])]
+                  print('HERMES_DRIVE_ERROR',error.code,json.dumps(summary or {'message':parsed.get('error',{}).get('message')}))
+              except ValueError:
+                  print('HERMES_DRIVE_ERROR',error.code,'Non-JSON response')
+              raise
           finally:
               if file_id:
                   api('https://www.googleapis.com/drive/v3/files/'+file_id,'DELETE')
