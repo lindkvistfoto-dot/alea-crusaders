@@ -1,0 +1,53 @@
+name: HERMES OAuth Drive diagnostic
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  oauth-drive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify OAuth and archive roundtrip
+        env:
+          CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          FOLDER_ID: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+        run: |
+          python - <<'PY'
+          import os,json,urllib.request,urllib.parse,hashlib,uuid
+          required=["CLIENT_ID","CLIENT_SECRET","REFRESH_TOKEN","FOLDER_ID"]
+          missing=[key for key in required if not os.environ.get(key)]
+          if missing:raise SystemExit("MISSING_CONFIG:"+",".join(missing))
+          data=urllib.parse.urlencode({"client_id":os.environ["CLIENT_ID"],"client_secret":os.environ["CLIENT_SECRET"],"refresh_token":os.environ["REFRESH_TOKEN"],"grant_type":"refresh_token"}).encode()
+          try:
+           req=urllib.request.Request("https://oauth2.googleapis.com/token",data=data,method="POST")
+           with urllib.request.urlopen(req,timeout=20) as r:token=json.load(r)["access_token"]
+          except Exception as e:raise SystemExit("OAUTH_REFRESH_FAILED:"+type(e).__name__)
+          print("OAUTH_REFRESH_OK")
+          headers={"Authorization":"Bearer "+token}
+          folder=os.environ["FOLDER_ID"]
+          try:
+           req=urllib.request.Request("https://www.googleapis.com/drive/v3/files/"+urllib.parse.quote(folder,safe="")+"?fields=id,mimeType,capabilities(canAddChildren)",headers=headers)
+           with urllib.request.urlopen(req,timeout=20) as r:meta=json.load(r)
+           if meta.get("mimeType")!="application/vnd.google-apps.folder" or not meta.get("capabilities",{}).get("canAddChildren"):raise ValueError("FOLDER_NOT_WRITABLE")
+          except Exception as e:raise SystemExit("DRIVE_FOLDER_ACCESS_FAILED:"+type(e).__name__)
+          print("DRIVE_FOLDER_WRITE_OK")
+          original=b"HERMES-OAUTH-DIAGNOSTIC-"+uuid.uuid4().hex.encode()
+          boundary="hermes41diagnostic"
+          name="HERMES-OAUTH-DIAGNOSTIC-"+uuid.uuid4().hex+".txt"
+          metadata=json.dumps({"name":name,"parents":[folder]}).encode()
+          body=b"--"+boundary.encode()+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+metadata+b"\r\n--"+boundary.encode()+b"\r\nContent-Type: text/plain\r\n\r\n"+original+b"\r\n--"+boundary.encode()+b"--\r\n"
+          try:
+           req=urllib.request.Request("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,parents",data=body,headers={**headers,"Content-Type":"multipart/related; boundary="+boundary},method="POST")
+           with urllib.request.urlopen(req,timeout=30) as r:created=json.load(r)
+           ident=created["id"]
+           print("DRIVE_UPLOAD_OK")
+           req=urllib.request.Request("https://www.googleapis.com/drive/v3/files/"+ident+"?alt=media",headers=headers)
+           with urllib.request.urlopen(req,timeout=30) as r:readback=r.read()
+           if hashlib.sha256(readback).digest()!=hashlib.sha256(original).digest():raise ValueError("SHA256_MISMATCH")
+           print("DRIVE_READBACK_SHA256_OK")
+           print("DIAGNOSTIC_FILE_ID",ident)
+          except Exception as e:raise SystemExit("DRIVE_ROUNDTRIP_FAILED:"+type(e).__name__)
+          PY
