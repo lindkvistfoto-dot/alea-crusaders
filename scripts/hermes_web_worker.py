@@ -13,7 +13,16 @@ from PIL import Image
 
 SUPA=os.environ["SUPABASE_URL"].rstrip("/")
 KEY=os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-TOKEN=os.environ["GOOGLE_ACCESS_TOKEN"]
+def user_drive_token():
+ client=os.environ["HERMES_OAUTH_CLIENT_ID"]
+ secret=os.environ["HERMES_OAUTH_CLIENT_SECRET"]
+ refresh=os.environ["HERMES_OAUTH_REFRESH_TOKEN"]
+ import urllib.parse
+ body=urllib.parse.urlencode({"client_id":client,"client_secret":secret,"refresh_token":refresh,"grant_type":"refresh_token"}).encode()
+ req=urllib.request.Request("https://oauth2.googleapis.com/token",data=body,headers={"Content-Type":"application/x-www-form-urlencoded"},method="POST")
+ with urllib.request.urlopen(req,timeout=25) as response:
+  return json.load(response)["access_token"]
+TOKEN=user_drive_token()
 FOLDER=os.environ["HERMES_WEB_ARCHIVE_FOLDER_ID"]
 if not all((KEY,TOKEN,FOLDER)): raise RuntimeError("HERMES_WORKER_CONFIG_MISSING")
 BASE={"apikey":KEY,"Authorization":"Bearer "+KEY}
