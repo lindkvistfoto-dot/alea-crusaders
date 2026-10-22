@@ -42,3 +42,9 @@
 /* Keep every baseplate grounded at the bottom of the mounting stage. */
 .apdw-base{inset:auto 0 0;width:100%;height:100%;transform:scale(var(--base-scale,.7));transform-origin:50% 100%}
 .apdw-base-placeholder{transform:scale(var(--base-scale,.7));transform-origin:50% 100%}
+
+/* First interchangeable Battle Pose: portrait stand, mounted above the base. */
+.apdw-stand{height:98%;transform:translate(calc(-50% + var(--stand-x,0%)),calc(-50% + var(--stand-y,0%))) scale(var(--stand-scale,.65)) rotate(var(--stand-tilt,0deg));transform-origin:50% 80%}
+.apdw-stand-placeholder{transform:translate(var(--stand-x,0%),var(--stand-y,0%)) scale(var(--stand-scale,.65)) rotate(var(--stand-tilt,0deg));transform-origin:50% 80%}
+.apdw-stand-settings{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 12px;padding:12px;border:1px solid #8c7046;border-radius:10px;color:#ead8b4;background:#211a14}
+.apdw-stand-settings label{display:flex;align-items:center;gap:8px;flex:1 1 170px}.apdw-stand-settings input{min-width:70px;flex:1}.apdw-stand-settings output{min-width:38px;text-align:right}

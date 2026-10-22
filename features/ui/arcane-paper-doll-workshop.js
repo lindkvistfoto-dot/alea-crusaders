@@ -4,7 +4,7 @@
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory',key:'arcane-paper-doll-hexagon-base',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
- let baseOnly=true,baseScale=70,showAnchor=false;
+ let baseOnly=false,baseScale=70,showAnchor=false,standScale=65,standX=0,standY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
  const $=id=>document.getElementById(id);
@@ -28,8 +28,9 @@
    '<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite">'+escape(statusText())+'</p>'+ 
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
    '<div class="apdw-base-scale"><label for="apdwBaseScale">Basens skala</label><input id="apdwBaseScale" type="range" min="40" max="100" value="'+baseScale+'"><output id="apdwBaseScaleOut">'+baseScale+'%</output><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
+   '<div class="apdw-stand-settings"><b>Montera porträttstolpe</b><label>Storlek <input id="apdwStandScale" type="range" min="30" max="120" value="'+standScale+'"><output id="apdwStandScaleOut">'+standScale+'%</output></label><label>Sidled <input id="apdwStandX" type="range" min="-40" max="40" value="'+standX+'"><output id="apdwStandXOut">'+standX+'%</output></label><label>Höjd <input id="apdwStandY" type="range" min="-60" max="40" value="'+standY+'"><output id="apdwStandYOut">'+standY+'%</output></label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Hexagon → porträtt → stolpram</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
-   '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--base-scale:'+baseScale/100+';--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
+   '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--stand-scale:'+standScale/100+';--stand-x:'+standX+'%;--stand-y:'+standY+'%;--base-scale:'+baseScale/100+';--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
    '<div class="apdw-placeholder apdw-base-placeholder" aria-hidden="true"><div class="apdw-placeholder-hex"></div><span>BRONZE IVORY<br>HEXAGON</span></div><img class="apdw-base" alt="Bronze Ivory-hexagon" hidden>'+ 
    '<span class="apdw-anchor" id="apdwAnchor" '+(showAnchor?'':'hidden')+' aria-label="Monteringspunkt"></span><div class="apdw-shadow" aria-hidden="true"></div><div class="apdw-portrait-window"><div class="apdw-portrait-mask" id="apdwPortraitMask"><span class="apdw-initials">✦</span><img id="apdwPortrait" alt="" hidden></div></div>'+ 
    '<div class="apdw-placeholder apdw-stand-placeholder" aria-hidden="true"><div class="apdw-stand-arch"></div><div class="apdw-stand-post"></div><div class="apdw-stand-foot"></div></div><img class="apdw-stand" alt="Arcane Portrait Stand" hidden>'+ 
@@ -42,6 +43,7 @@
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
+  for(const [id,key,unit] of [['apdwStandScale','standScale','%'],['apdwStandX','standX','%'],['apdwStandY','standY','%']]){$(id)?.addEventListener('input',e=>{const v=Number(e.target.value);if(key==='standScale')standScale=v;else if(key==='standX')standX=v;else standY=v;$(id+'Out').textContent=v+unit;const stage=$('apdwStage');if(stage)stage.style.setProperty(key==='standScale'?'--stand-scale':key==='standX'?'--stand-x':'--stand-y',key==='standScale'?v/100:v+'%')})}
   $('apdwBaseScale')?.addEventListener('input',e=>{baseScale=Number(e.target.value);$('apdwBaseScaleOut').textContent=baseScale+'%';$('apdwStage')?.style.setProperty('--base-scale',baseScale/100)});
   $('apdwShowAnchor')?.addEventListener('change',e=>{showAnchor=e.target.checked;const anchor=$('apdwAnchor');if(anchor)anchor.hidden=!showAnchor});
   $('apdwBaseOnly')?.addEventListener('change',event=>{baseOnly=event.target.checked;applyBaseMode()});
