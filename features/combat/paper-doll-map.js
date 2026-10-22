@@ -52,8 +52,8 @@
    const item=(source?.weapons||[]).find(w=>String(w.equipId||w.id)===String(armed?.itemId||''));
    const hasShield=hands.some(h=>h.kind==='shield');
    const cls=String(item?.weaponClass||item?.skillId||'').toLowerCase();
-   const family=/svard|sword/.test(cls)?'sword':/dolk|dolkar/.test(cls)?'dagger':/yx/.test(cls)?'axe':/spjut/.test(cls)?'spear':/stav/.test(cls)?'staff':/pilbag|bow/.test(cls)?'bow':/armborst/.test(cls)?'crossbow':null;
-   if(family)requested=family+(hasShield&&['sword','dagger','axe','spear'].includes(family)?'_shield':'');
+   const family=/enhandsvard|enhands_svard/.test(cls)?'one_handed_sword':/dolk|dolkar/.test(cls)?'dagger':/yx/.test(cls)?'axe':/spjut/.test(cls)?'spear':/stav/.test(cls)?'staff':/pilbag|bow/.test(cls)?'bow':/armborst/.test(cls)?'crossbow':null;
+   if(family)requested=family+(hasShield&&['one_handed_sword','dagger','axe','spear'].includes(family)?'_shield':'');
   }
   for(const key of [requested,'standard']){
    for(const kind of aliases){const row=poseRows.get(kind+':'+id+':'+key);if(row)return row}
