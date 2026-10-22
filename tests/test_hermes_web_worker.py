@@ -18,7 +18,7 @@ def load_worker():
  return module
 
 def png():
- image=Image.new("RGBA",(16,16),(40,50,60,0))
+ image=Image.new("RGBA",(64,64),(40,50,60,0))
  out=io.BytesIO();image.save(out,format="PNG")
  return out.getvalue()
 
