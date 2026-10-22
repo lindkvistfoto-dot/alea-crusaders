@@ -20,6 +20,7 @@ import urllib.request
 from pathlib import Path
 
 from PIL import Image
+from hermes_system_assets import system_asset, validate_system_image
 
 REPO = "lindkvistfoto-dot/alea-crusaders"
 FOLDER = "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
@@ -118,11 +119,13 @@ def google_file(file_id: str) -> bytes:
     return drive_file(file_id, FOLDER)
 
 
-KINDS = {"spell", "spell-cutout", "symbol", "skill", "skill-illustration",
+KINDS = {"system-asset", "spell", "spell-cutout", "symbol", "skill", "skill-illustration",
          "skill-illustration-wide", "spell-illustration", "spell-illustration-wide"}
 
 
-def archive_folder(kind: str, folders: dict) -> str:
+def archive_folder(kind: str, folders: dict, target_key: str = '') -> str:
+    if kind == 'system-asset':
+        return system_asset(target_key)['archive_folder_id']
     group, profile = {
         "spell": ("spell_types", "icon"), "symbol": ("spell_types", "icon"),
         "spell-cutout": ("spell_types", "cutout"),
@@ -180,6 +183,8 @@ def validate_batch_item(item: dict) -> None:
         raise ValueError("PINNED_SOURCE_SHA256_REQUIRED")
     if item["visual_approved"] is not True:
         raise ValueError("VISUAL_APPROVAL_REQUIRED")
+    if item['kind'] == 'system-asset' and item['target_id'] != system_asset(item['target_key'])['id']:
+        raise ValueError('SYSTEM_ASSET_TARGET_ID_MISMATCH')
 
 
 def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
@@ -220,7 +225,7 @@ def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
                 raise ValueError("ARCHIVE_COPY_REQUIRED_USE_CONNECTED_DRIVE")
             if archive_id == item["drive_file_id"]:
                 raise ValueError("ARCHIVE_MUST_BE_SEPARATE_FROM_INBOX")
-            archived = drive_file(archive_id, archive_folder(item["kind"], folders))
+            archived = drive_file(archive_id, archive_folder(item["kind"], folders, item['target_key']))
             if len(archived) != len(raw) or hashlib.sha256(archived).hexdigest() != item["source_sha256"]:
                 raise ValueError("DRIVE_ARCHIVE_SHA256_MISMATCH")
             result["archive_verified"] = True
@@ -305,7 +310,9 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         image.load()
         if image.format != "PNG":
             raise ValueError("BAD_PNG_FORMAT")
-        if kind == "ui":
+        if kind == 'system-asset':
+            validate_system_image(image, target_key)
+        elif kind == "ui":
             if target_key in CODEX_UI_TARGETS:
                 if not (100 <= image.width <= 4096 and 40 <= image.height <= 4096 and image.width * image.height <= 16_000_000):
                     raise ValueError("CODEX_UI_DIMENSIONS_INVALID")

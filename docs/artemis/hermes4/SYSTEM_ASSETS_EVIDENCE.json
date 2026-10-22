@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-22",
+  "published": false,
+  "items": [
+    {
+      "key": "arcane-paper-doll-hexagon-base",
+      "original_size": [
+        1220,
+        811
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "archive_byte_identical": true,
+      "schema": 1,
+      "kind": "system-asset",
+      "target_key": "arcane-paper-doll-hexagon-base",
+      "source_path": "drive://1_B9T0X7jCCj47nyjl5D1u29CLR11tyw0",
+      "source_sha256": "5110e8857b893971f9de080a9f0d5c5b9097dffc1770432b8448be86edf711df",
+      "source_bytes": 1999051,
+      "app_file": "system-asset/arcane-paper-doll-hexagon-base/466d693ea041fed307bc1ea1e96cbf810615340fc4605d6eac20ebb011ac02bf.webp",
+      "app_sha256": "466d693ea041fed307bc1ea1e96cbf810615340fc4605d6eac20ebb011ac02bf",
+      "app_bytes": 333968,
+      "width": 1220,
+      "height": 811,
+      "alpha_preserved": true,
+      "webp_quality": 90
+    },
+    {
+      "key": "arcane-portrait-stand",
+      "original_size": [
+        1145,
+        1374
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "archive_byte_identical": true,
+      "schema": 1,
+      "kind": "system-asset",
+      "target_key": "arcane-portrait-stand",
+      "source_path": "drive://1B05VBDjT61RkMQ0cZs5dApMYqK6ia4Bw",
+      "source_sha256": "b6b9682bdc3e94965b6ff2e95baf450ebdbd079e9a24f0340bcfc41bd469ca40",
+      "source_bytes": 988812,
+      "app_file": "system-asset/arcane-portrait-stand/a14fa022f1c341a921afc29e6c98ae2dba919e91d39a43593b8c9c0d520e7d3d.webp",
+      "app_sha256": "a14fa022f1c341a921afc29e6c98ae2dba919e91d39a43593b8c9c0d520e7d3d",
+      "app_bytes": 189638,
+      "width": 1067,
+      "height": 1280,
+      "alpha_preserved": true,
+      "webp_quality": 90
+    }
+  ]
+}

@@ -14,10 +14,11 @@ import re
 from pathlib import Path
 
 from PIL import Image
+from hermes_system_assets import PROFILE, validate_system_image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(system-asset|spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -56,7 +57,7 @@ def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Pat
             else abs(original.width / original.height - 16 / 9) / (16 / 9) <= 0.003)):
             raise ValueError(f"{relative}: expected landscape near 16:9 (0.3% tolerance)")
         min_edge = 1024 if kind == "spell-cutout" else EDGE
-        if not wide and (original.width != original.height or not min_edge <= original.width <= 4096):
+        if kind != 'system-asset' and not wide and (original.width != original.height or not min_edge <= original.width <= 4096):
             raise ValueError(f"{relative}: expected square 640–4096 px")
         if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration"):
             if original.mode not in ("RGB", "RGBA"):
@@ -72,7 +73,14 @@ def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Pat
         else:
             if original.mode != "RGBA":
                 raise ValueError(f"{relative}: expected RGBA PNG")
-            image = original.resize((EDGE, EDGE), Image.Resampling.LANCZOS)
+            if kind == 'system-asset':
+                profile = validate_system_image(original, key)
+                image = original.copy()
+                image.thumbnail((PROFILE['max_edge'], PROFILE['max_edge']), Image.Resampling.LANCZOS)
+                if list(image.size) != profile['display_size']:
+                    raise ValueError('SYSTEM_ASSET_DISPLAY_DIMENSIONS')
+            else:
+                image = original.resize((EDGE, EDGE), Image.Resampling.LANCZOS)
             low, high = image.getchannel("A").getextrema()
             if low == 255 or high == 0:
                 raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")

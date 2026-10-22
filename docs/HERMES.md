@@ -49,6 +49,7 @@ Det äldre formatet kan behandla flera explicita köfiler i samma push; varje fi
 | spell-illustration | rule_spells.spell_key | illustration_path | alea-spell-art |
 | spell-illustration-wide | rule_spells.spell_key | illustration_wide_path | alea-spell-art |
 | spell-cutout | rule_spells.spell_key | cutout_path | alea-spell-art |
+| system-asset | arcane_system_assets.asset_key (två fasta nycklar) | asset_path + WebP-metadata | alea-hermes-public |
 
 Befintliga dimensioner, transparenskrav och privata respektive publika buckets återanvänds. Ikoner och cutouts är 640×640 WebP; illustrationer behåller sin etablerade profil. Skill WIDE är nära 16:9, spell WIDE tillåter 1,25–2,4. Cutouts ersätter inte annan befintlig cutout. Inga regler, RLS-policys eller andra bildfält ändras som bieffekt.
 
@@ -72,3 +73,7 @@ Administrationen har en egen vy **Animationer · HERMES**, med ett register i `p
 Fält per händelse: `asset_path`, `enabled`, `speed`, `scale`, `opacity`, `offset_x`, `offset_y`, `blend_mode` (Screen, Lighten, Normal). `melee.attack` har **2,5×** som startvärde. Animationerna för attack, träff, miss, parering, fummel och avståndsattack är kopplade till stridens relevanta händelser. Magihändelser finns i registret för kommande integration.
 
 Animationer är dekorativa och får inte styra spelregler eller blockera tärningsslag. Befintliga SVG-effekter är fallback; reducerad-rörelse-inställning respekteras. Bortkoppling raderar inte den ursprungliga videofilen.
+
+## Arcane Paper Doll-systemresurser
+
+Den avgränsade `system-asset`-profilen använder HERMES 4.0-batch, befintliga jobb och publicerare. Den bevarar proportioner och alfa för de två arkiverade originalen; det äldre UI-intaget är fortsatt stängt. Se [verifiering, migration och exakt Workshop-handoff](artemis/hermes4/SYSTEM_ASSETS.md).
