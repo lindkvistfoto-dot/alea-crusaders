@@ -1,5 +1,6 @@
 name: HERMES 4.1 – Web intake delivery
 # OAuth/Drive roundtrip and two real Standard deliveries verified; scheduled intake enabled.
+# Manual recovery trigger: re-run queued HERMES deliveries (2026-10-22).
 on:
   schedule:
     - cron: '*/5 * * * *'
