@@ -21,11 +21,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
-      - name: Run all nine individually and report each outcome
+      - name: Run eleven isolated tests and report each outcome
         shell: bash
         run: |
           failed=0
-          for test in test_digest_stable test_no_job_claim_if_oauth_fails test_archive_reused_and_verified test_corrupt_archive_never_published test_recover_already_published_pose test_recover_orphaned_drive_file test_ambiguous_archive_fails_closed test_corrupt_orphan_archive_fails_closed test_corrupt_image_never_archived test_replacement_keeps_old_pose_until_verified; do
+          for test in test_digest_stable test_no_job_claim_if_oauth_fails test_archive_reused_and_verified test_corrupt_archive_never_published test_recover_already_published_pose test_recover_orphaned_drive_file test_ambiguous_archive_fails_closed test_corrupt_orphan_archive_fails_closed test_corrupt_image_never_archived test_replacement_keeps_old_pose_until_verified test_failed_replacement_does_not_modify_active_pose; do
             echo "::group::$test"
             if python -m unittest discover -s tests -p test_hermes_web_worker.py -k "$test" -v; then
               echo "PASS $test"
