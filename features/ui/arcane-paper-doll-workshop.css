@@ -70,3 +70,15 @@
  #arcanePaperDollWorkshopMount .apdw-controls{order:2}
  #arcanePaperDollWorkshopMount .apdw-left-panel{order:3}
 }
+
+/* ARES: use full available desktop width with three equal panels. */
+@media(min-width:900px){
+ #adminPaperDollWorkshop{box-sizing:border-box;width:calc(100vw - 32px);max-width:none;margin-left:calc(50% - 50vw + 16px);margin-right:0}
+ #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+ #arcanePaperDollWorkshopMount .apdw-stage-clip{min-height:620px;display:flex;align-items:stretch;justify-content:center}
+ #arcanePaperDollWorkshopMount .apdw-stage{width:100%;height:620px;aspect-ratio:auto;flex:none;transform:scale(var(--zoom,1));transform-origin:50% 100%;overflow:visible}
+}
+/* The image is bottom aligned and scales from the floor, not its midpoint. */
+#arcanePaperDollWorkshopMount .apdw-base{inset:auto 0 0;width:100%;height:auto;max-height:100%;object-fit:contain;object-position:center bottom;transform:scale(var(--base-scale,.35));transform-origin:50% 100%}
+#arcanePaperDollWorkshopMount .apdw-base-placeholder{transform:scale(var(--base-scale,.35));transform-origin:50% 100%}
+#arcanePaperDollWorkshopMount .apdw-anchor{top:auto;bottom:4%;transform:translate(-50%,50%)}
