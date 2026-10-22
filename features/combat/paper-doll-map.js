@@ -26,12 +26,12 @@
  function loadPublishedPoses(){
   if(poseLoading||typeof dbJson!=='function')return;
   poseLoading=true;
-  dbJson('combatant_battle_poses?select=combatant_type,combatant_id,pose_key,image_path,base_key,mounting_profile&pose_key=eq.standard&publication_status=eq.published&is_active=eq.true')
+  dbJson('combatant_battle_poses?select=combatant_type,combatant_id,pose_key,image_path,base_key,mounting_profile&publication_status=eq.published&is_active=eq.true')
    .then(rows=>{
     const next=new Map();
     for(const row of Array.isArray(rows)?rows:[]){
      if(!row.image_path||!/^hermes\/[a-z0-9/_-]+\/[a-f0-9]{64}\.webp$/.test(row.image_path))continue;
-     next.set(row.combatant_type+':'+row.combatant_id,row);
+     next.set(row.combatant_type+':'+row.combatant_id+':'+row.pose_key,row);
     }
     poseRows=next;
     if(typeof renderCombat==='function')renderCombat();
@@ -43,7 +43,21 @@
   const id=String(actor?.source_id||'');
   if(!id)return null;
   const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
-  for(const kind of aliases){const row=poseRows.get(kind+':'+id);if(row)return row}
+  let requested='standard';
+  if(type==='character'&&typeof chars!=='undefined'){
+   const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
+   const eq=source?.currentEquipment||{};
+   const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
+   const armed=hands.find(h=>h.kind==='weapon');
+   const item=(source?.weapons||[]).find(w=>String(w.equipId||w.id)===String(armed?.itemId||''));
+   const hasShield=hands.some(h=>h.kind==='shield');
+   const cls=String(item?.weaponClass||item?.skillId||'').toLowerCase();
+   const family=/svard|sword/.test(cls)?'sword':/dolk|dolkar/.test(cls)?'dagger':/yx/.test(cls)?'axe':/spjut/.test(cls)?'spear':/stav/.test(cls)?'staff':/pilbag|bow/.test(cls)?'bow':/armborst/.test(cls)?'crossbow':null;
+   if(family)requested=family+(hasShield&&['sword','dagger','axe','spear'].includes(family)?'_shield':'');
+  }
+  for(const key of [requested,'standard']){
+   for(const kind of aliases){const row=poseRows.get(kind+':'+id+':'+key);if(row)return row}
+  }
   return null;
  }
  function portrait(actor){
