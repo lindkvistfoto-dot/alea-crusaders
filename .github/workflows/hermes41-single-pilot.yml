@@ -1,0 +1,32 @@
+name: HERMES 4.1 single-job live pilot
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hermes-web-intake-worker
+  cancel-in-progress: false
+jobs:
+  deliver-one:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/hermes41-recovery-tests
+          sparse-checkout: |
+            scripts/hermes_web_worker.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.0.0
+      - run: python -m py_compile scripts/hermes_web_worker.py
+      - name: Deliver queued HERMES image
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          HERMES_WEB_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+        run: python scripts/hermes_web_worker.py
