@@ -13,11 +13,11 @@ jobs:
   deliver-one:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Retry after granting service_role SELECT and UPDATE on combatant_battle_poses.
+    # Lyra Standard delivery using verified worker from main.
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: fix/hermes41-recovery-tests
+          ref: main
           sparse-checkout: |
             scripts/hermes_web_worker.py
       - uses: actions/setup-python@v5
