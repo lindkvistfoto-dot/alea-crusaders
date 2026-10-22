@@ -63,4 +63,13 @@ class WorkerTests(unittest.TestCase):
   self.assertTrue(any(row.get("publication_status")=="published" for _,row in calls))
   self.assertTrue(any(row.get("state")=="published" for _,row in calls))
 
+
+ def test_corrupt_image_never_archived(self):
+  worker=self.worker
+  pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
+  job={"id":"job","pose_id":"pose","source_path":pose["staging_path"]}
+  with patch.object(worker,"rest",return_value=[pose]),patch.object(worker,"storage_download",return_value=b"invalid-image"*30),patch.object(worker,"archive") as archive:
+   with self.assertRaises(Exception):worker.run(job)
+   archive.assert_not_called()
+
 if __name__=="__main__":unittest.main()
