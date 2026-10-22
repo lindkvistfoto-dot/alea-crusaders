@@ -94,7 +94,8 @@
   const poseScale=selected.mode==='battle-pose'&&published?Math.max(.2,Math.min(1.5,Number(cutout.scale??65)/65)):1;
   const poseX=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.x??0)))*.4:0;
   const poseY=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.y??0)))*.4:0;
-  // SCALE STANDARD V1.1: one-hex base size is global, never per-combatant.\n  const baseScale=1;
+  // SCALE STANDARD V1.1: one-hex base size is global, never per-combatant.
+  const baseScale=1;
   const artWidth=standWidth*poseScale,artHeight=standHeight*poseScale;
   const actorId=String(actor?.id||'unknown').replace(/[^a-zA-Z0-9_-]/g,'_');
   const clip='aresPortrait_'+actorId;
