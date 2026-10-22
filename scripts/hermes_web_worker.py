@@ -84,7 +84,8 @@ def run(job):
  except urllib.error.HTTPError as e:
   if e.code!=409:raise
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
- updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})\n if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
+ updated=rest("combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)","PATCH",{"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True})
+ if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
  patch("hermes_web_jobs",ident,{"state":"published","output_path":path,"completed_at":datetime.now(timezone.utc).isoformat()})
  print("HERMES_DELIVERED",ident)
 
