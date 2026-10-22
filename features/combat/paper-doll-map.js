@@ -72,9 +72,10 @@
   const unit=g.size/42,baseWidth=73,baseHeight=48,baseY=9;
   const standHeight=99,standWidth=66,standBottom=baseY-7;
   const standTop=standBottom-standHeight;
-  const poseScale=selected.mode==='battle-pose'&&published?Math.max(.2,Math.min(1.5,Number(cutout.scale||65)/65)):1;
-  const poseX=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.x||0)))*.4:0;
-  const poseY=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.y||0)))*.4:0;
+  const poseScale=selected.mode==='battle-pose'&&published?Math.max(.2,Math.min(1.5,Number(cutout.scale??65)/65)):1;
+  const poseX=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.x??0)))*.4:0;
+  const poseY=selected.mode==='battle-pose'&&published?Math.max(-80,Math.min(80,Number(cutout.y??0)))*.4:0;
+  const baseScale=published?Math.max(.2,Math.min(1.5,Number(baseProfile.scale??35)/35)):1;
   const artWidth=standWidth*poseScale,artHeight=standHeight*poseScale;
   const actorId=String(actor?.id||'unknown').replace(/[^a-zA-Z0-9_-]/g,'_');
   const clip='aresPortrait_'+actorId;
@@ -86,7 +87,7 @@
   const portraitY=standTop+standHeight*(165/1536);
   const portraitW=standWidth*(454/1024),portraitH=standHeight*(443/1536);
   const overlay='<g class="combat-paper-doll-universal'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+unit.toFixed(4)+')" pointer-events="none" aria-hidden="true">'+
-   '<image href="'+esc(selected.baseUrl)+'" x="'+(-baseWidth/2)+'" y="'+(baseY-baseHeight*.63)+'" width="'+baseWidth+'" height="'+baseHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
+   '<image href="'+esc(selected.baseUrl)+'" x="'+(-baseWidth*baseScale/2)+'" y="'+(baseY-baseHeight*.63*baseScale)+'" width="'+(baseWidth*baseScale)+'" height="'+(baseHeight*baseScale)+'" preserveAspectRatio="xMidYMid meet"/>'+
    (isStand&&selected.portraitUrl?'<defs><clipPath id="'+clip+'"><ellipse cx="'+(portraitX+portraitW/2)+'" cy="'+(portraitY+portraitH/2)+'" rx="'+(portraitW/2)+'" ry="'+(portraitH/2)+'"/></clipPath></defs>'+
     '<image href="'+esc(selected.portraitUrl)+'" x="'+portraitX+'" y="'+portraitY+'" width="'+portraitW+'" height="'+portraitH+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clip+')"/>':'')+
    '<image href="'+esc(art)+'" x="'+(-artWidth/2+poseX)+'" y="'+(standBottom-artHeight-poseY)+'" width="'+artWidth+'" height="'+artHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
