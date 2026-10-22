@@ -25,6 +25,7 @@ function preview(editing=true){
   ensureEquipmentState:()=>{},
   $:name=>els[name],
   weaponMasterOptions:item=>'<option value="master" selected>'+item.name+'</option>',
+  ruleWeaponSkillOptions:selected=>'<option value=""'+(selected?'':' selected')+'>— Ingen färdighet —</option><option value="sword"'+(selected==='sword'?' selected':'')+'>Övriga svärd</option>',
   weaponLinkedFvHtml:item=>'<div class="skillnum"><span class="calculated-value">'+item.fv+'</span></div>',
   weaponLinkedErfHtml:item=>'<div class="skillnum"><span class="calculated-value">'+item.erf+'</span></div>',
   characterEquipmentEditField:(label,input,more='')=>'<label class="character-equip-field '+more+'"><span>'+label+'</span>'+input+'</label>',
@@ -42,7 +43,7 @@ describe('mobile weapon editing',()=>{
   expect(html).not.toContain('class="weapon-row"');
   expect(html).toContain('Vapentyp ur grundtabellen');
   expect(html).toContain('Vapennamn');
-  for(const label of ['FV','Skada','BV','Vapenlängd','Räckvidd','BEP','ERF']){
+  for(const label of ['Vapenslag','FV','Skada','BV','Vapenlängd','Räckvidd','BEP','ERF']){
    expect(html).toContain('<span>'+label+'</span>');
   }
   expect(html).toContain('Dolk');
@@ -54,6 +55,7 @@ describe('mobile weapon editing',()=>{
   const html=preview();
   for(const handler of [
    'setCharacterWeaponMaster(0,this.value)',
+   "setWeapon(0, 'weaponClass', this.value)",
    "setWeapon(0,'name',this.value)",
    "setWeapon(0,'damage',this.value)",
    "setWeapon(0,'bv',this.value)",
@@ -72,6 +74,7 @@ describe('mobile weapon editing',()=>{
   expect(html).toContain('class="weapon-head"');
   expect((html.match(/class="weapon-row"/g)||[])).toHaveLength(2);
   expect(html).not.toContain('weapon-edit-row');
+  expect(html).not.toContain('Vapenslag');
   expect(html).toContain('1T4+1');
  });
  test('CSS makes edit cards narrow-screen friendly without changing normal tables',()=>{

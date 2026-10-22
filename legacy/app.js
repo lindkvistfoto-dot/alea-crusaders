@@ -491,6 +491,7 @@ function setCharacterWeaponMaster(i,value){
   let rule=ruleWeapons.find(r=>r.id===value);
   if(rule){
    copyRuleWeaponToInstance(w,rule);
+   w.weaponClass=rule.weapon_class||'';
    if(rule.category==='thrown'&&rule.projectile_key&&previousTypeId!==rule.id){
     current.projectiles=current.projectiles||[];
     let existing=current.projectiles.find(p=>characterProjectileKey(p)===rule.projectile_key);
@@ -499,9 +500,9 @@ function setCharacterWeaponMaster(i,value){
    }
   }
  }else if(value==='__custom__'){
-  w.weaponTypeId='';w.weapon_id='';w.weaponCategory=w.weaponCategory||'melee';w.skillId='';w.skillName=''
+  w.weaponTypeId='';w.weapon_id='';w.weaponCategory=w.weaponCategory||'melee';w.skillId='';w.skillName='';w.weaponClass=''
  }else{
-  w.weaponTypeId='';w.weapon_id='';w.skillId='';w.skillName=''
+  w.weaponTypeId='';w.weapon_id='';w.skillId='';w.skillName='';w.weaponClass=''
  }
  save();renderWeapons();refreshTotalBep()
 }
@@ -815,6 +816,7 @@ function editRuleWeapon(id=''){
    '<label>Projektiltyp<select id="rwProjectileKey"><option value="">— Välj projektil —</option>'+ruleProjectileTypes.map(p=>'<option value="'+escAttr(p.projectile_key)+'" '+(p.projectile_key===r?.projectile_key?'selected':'')+'>'+escAttr(p.name)+'</option>').join('')+'</select></label>'+
    '<div class="weapon-projectile-preview wide" id="rwProjectilePreview" aria-live="polite"></div>'+ 
    '<label>Färdighet<select id="rwSkillId">'+ruleWeaponSkillOptions(r?.skill_id||'')+'</select></label>'+
+   '<label>Vapenslag<select id="rwWeaponClassId">'+ruleWeaponSkillOptions(r?.weapon_class||'')+'</select></label>'+
    '<label>Grepp<select id="rwHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
    '<label>STY-grupp<input id="rwStrengthGroup" type="number" min="0" step="1" value="'+escAttr(r?.strength_group??0)+'"></label>'+
    '<label>Skada<input id="rwDamage" value="'+escAttr(r?.damage||'')+'" placeholder="t.ex. 1T8+1"></label>'+
@@ -858,6 +860,7 @@ async function saveRuleWeapon(id=''){
    icon_key:$('rwIconKey')?.value||'generic',
    category,
    skill_id:skillId,
+   weapon_class:$('rwWeaponClassId')?.value||'',
    projectile_key:projectileKey,
    handling:$('rwHandling')?.value||'1H',
    strength_group:ruleWeaponNumberValue('rwStrengthGroup',{integer:true}),
@@ -1816,6 +1819,7 @@ function renderWeapons(){
  $('weapontable').innerHTML=editing?
   ws.map((x,i)=>'<div class="character-equip-edit-row weapon-edit-row">'+
    characterEquipmentEditField('Vapentyp ur grundtabellen','<select aria-label="Vapentyp ur grundtabellen" onchange="setCharacterWeaponMaster('+i+',this.value)">'+weaponMasterOptions(x)+'</select>','wide')+
+   characterEquipmentEditField('Vapenslag','<select aria-label="Vapenslag" onchange="setWeapon('+i+', \'weaponClass\', this.value)">'+ruleWeaponSkillOptions(x.weaponClass||'')+'</select>')+
    characterEquipmentEditField('Vapennamn','<input value="'+escAttr(x.name||'')+'" onchange="setWeapon('+i+',\'name\',this.value)" aria-label="Vapennamn">','wide')+
    characterEquipmentEditField('FV',weaponLinkedFvHtml(x,i,true))+
    characterEquipmentEditField('Skada','<input value="'+escAttr(x.damage??'')+'" onchange="setWeapon('+i+',\'damage\',this.value)" aria-label="Skada">')+
@@ -2348,11 +2352,13 @@ function weaponInstanceNum(v){if(v===null||v===undefined||v==='')return null;let
 function openWeaponInstanceEditor(scope,index){
  let w=weaponInstanceByScope(scope,index);if(!w)return;weaponInstanceEditTarget={scope,index};
  let rule=ruleWeaponForItem(w),cat=w.weaponCategory||rule?.category||'melee',handling=w.handling||rule?.handling||'1H',sg=w.strengthGroup??rule?.strength_group??'';
+ const weaponClassField=scope==='character'?'<label>Vapenslag<select id="wiWeaponClass">'+ruleWeaponSkillOptions(w.weaponClass||'')+'</select></label>':'';
  $('skillModalTitle').textContent='Vapendata · '+(w.name||rule?.name||'Vapen');
  $('skillModalBody').innerHTML='<div class="weapon-instance-editor"><div class="rule-editor-grid">'+
   '<label class="wide">Namn<input id="wiName" value="'+escAttr(w.name||'')+'"></label>'+
   '<label>Kategori<select id="wiCategory"><option value="melee" '+(cat==='melee'?'selected':'')+'>Närstrid</option><option value="projectile" '+(cat==='projectile'?'selected':'')+'>Projektil</option><option value="thrown" '+(cat==='thrown'?'selected':'')+'>Kastvapen</option></select></label>'+
   '<label>Fattning<select id="wiHandling"><option value="1H" '+(handling==='1H'?'selected':'')+'>1H</option><option value="1-2H" '+(handling==='1-2H'?'selected':'')+'>1–2H</option><option value="2H" '+(handling==='2H'?'selected':'')+'>2H</option></select></label>'+
+  weaponClassField+
   '<label>STY-grupp<input id="wiStrength" type="number" min="0" step="1" value="'+escAttr(sg)+'"></label>'+
   '<label>Skada<input id="wiDamage" value="'+escAttr(w.damage||'')+'"></label>'+
   '<label>Vapenlängd<input id="wiLength" type="number" min="0" step="1" value="'+escAttr(w.length??rule?.weapon_length??'')+'"></label>'+
@@ -2372,7 +2378,7 @@ function saveWeaponInstanceEditor(){
  w.length=weaponInstanceNum($('wiLength')?.value);w.bep=weaponInstanceNum($('wiBep')?.value);w.weight=w.bep;
  w.bv=weaponInstanceNum($('wiBv')?.value);w.weaponType=$('wiType')?.value.trim()||'';w.price=weaponInstanceNum($('wiPrice')?.value);
  w.range=$('wiRange')?.value.trim()||'';w.reloadRounds=weaponInstanceNum($('wiReload')?.value);
- if(t.scope==='character'){save();renderWeapons();refreshTotalBep()}else renderAdminNpcWeapons();
+ if(t.scope==='character'){const weaponClass=$('wiWeaponClass');if(weaponClass)w.weaponClass=weaponClass.value;save();renderWeapons();refreshTotalBep()}else renderAdminNpcWeapons();
  closeSkillInfo()
 }
 function showWeaponInfo(i){
