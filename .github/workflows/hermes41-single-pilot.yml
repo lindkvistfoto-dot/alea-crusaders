@@ -13,7 +13,7 @@ jobs:
   deliver-one:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Retry after granting service_role SELECT and UPDATE on hermes_web_jobs.
+    # Retry after granting service_role SELECT and UPDATE on combatant_battle_poses.
     steps:
       - uses: actions/checkout@v4
         with:
