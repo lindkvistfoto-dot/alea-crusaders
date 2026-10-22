@@ -124,6 +124,45 @@ class WorkerTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):
     worker.find_archived_original("original.png","a"*64)
 
+
+ def test_replacement_keeps_old_pose_until_verified(self):
+  worker=self.worker
+  original=png()
+  pose_id="00000000-0000-0000-0000-000000000004"
+  staged="battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png"
+  old_path="hermes/battle-pose-cutout/"+pose_id+"/old.webp"
+  pose={"staging_path":"old-staging.png","publication_status":"published","image_path":old_path,
+        "combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard",
+        "pending_staging_path":staged,"pending_base_key":"new-high-angle",
+        "pending_mounting_profile":{"schema":1,"cutout":{"scale":65,"x":0,"y":8}}}
+  job={"id":"00000000-0000-0000-0000-000000000003","pose_id":pose_id,"source_path":staged,"archive_drive_file_id":"verified-drive"}
+  calls=[]
+  output=[None]
+  def fake_rest(path,method="GET",data=None):
+   if method=="GET":return [pose]
+   calls.append((path,data))
+   return [data]
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "fields=id,parents" in url:return b'{"parents":["test-folder"]}'
+   if "alt=media" in url:return original
+   if method=="POST" and "/storage/v1/object/alea-hermes-public/" in url:
+    output[0]=body
+    return b'{}'
+   raise AssertionError(url)
+  def fake_download(bucket,path):
+   if bucket=="alea-battle-pose-staging":return original
+   if bucket=="alea-hermes-public":return output[0]
+   raise AssertionError(bucket)
+  worker.FOLDER="test-folder"
+  with patch.object(worker,"rest",side_effect=fake_rest),patch.object(worker,"fetch",side_effect=fake_fetch),patch.object(worker,"storage_download",side_effect=fake_download):
+   worker.run(job)
+  pose_updates=[(path,data) for path,data in calls if path.startswith("combatant_battle_poses")]
+  self.assertEqual(len(pose_updates),1)
+  self.assertEqual(pose_updates[0][1]["base_key"],"new-high-angle")
+  self.assertEqual(pose_updates[0][1]["pending_staging_path"],None)
+  self.assertNotEqual(pose_updates[0][1]["image_path"],old_path)
+  self.assertTrue(any(data.get("state")=="published" for _,data in calls))
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
