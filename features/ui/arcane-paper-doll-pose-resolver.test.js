@@ -1,20 +1,25 @@
 import {describe,it,expect} from 'vitest';
-import {resolveBattlePose,poseFamily,POSES} from './pose-resolver.js';
-describe('Arcane Paper Doll pose resolver',()=>{
- it('matches Astrid by class and shield, not item name or hand',()=>{
-  expect(resolveBattlePose({weaponClass:'ovriga_svard',hasShield:true,handling:'1-2H'},['standard','sword_shield']).poseId).toBe('sword_shield');
+import './arcane-paper-doll-pose-resolver.js';
+const {POSES,poseFamily,fromCharacter,resolve}=globalThis.aleaBattlePoseCatalog;
+describe('Sisyfos: Swedish battle poses',()=>{
+ it('covers all 18 classes including unarmed and compatible shield variants',()=>{
+  expect(POSES.filter(p=>p.id!=='standard'&&!p.id.endsWith('_shield'))).toHaveLength(18);
+  expect(POSES.some(p=>p.id==='stavar_shield')).toBe(false);
+  expect(POSES.some(p=>p.id==='enhandssvard_shield')).toBe(true);
  });
- it('uses Standard when specialist pose missing',()=>{
-  expect(resolveBattlePose({weaponClass:'pilbagar'},['standard']).poseId).toBe('standard');
+ it('reads equipped weapon independent of left/right hand',()=>{
+  const character={currentEquipment:{leftHand:{kind:'weapon',itemId:'w',hands:1},rightHand:{kind:'shield',itemId:'s'}},weapons:[{equipId:'w',name:'Dödsbringaren',weaponClass:'enhandssvard',handling:'1-2H'}]};
+  expect(resolve(fromCharacter(character),['standard','enhandssvard_shield']).poseId).toBe('enhandssvard_shield');
  });
- it('never selects another combatant pose',()=>{
-  expect(resolveBattlePose({weaponClass:'dolkar',hasShield:true},['standard','dagger']).poseId).toBe('dagger');
+ it('keeps other swords distinct from one-handed swords',()=>{
+  expect(poseFamily('ovriga_svard')).toBe('ovriga_svard');
+  expect(resolve({weaponClass:'ovriga_svard',hasShield:true,handling:'1-2H',grip:'1H'},['ovriga_svard_shield']).match).toBe('exact');
  });
- it('selects two handed when explicitly gripped',()=>{
-  expect(resolveBattlePose({weaponClass:'ovriga_svard',grip:'2H'},['two_handed_sword']).poseId).toBe('two_handed_sword');
+ it('does not offer a shield pose for pure two-hand weapons',()=>{
+  expect(resolve({weaponClass:'stavar',hasShield:true,handling:'2H'},['stavar']).poseId).toBe('stavar');
  });
- it('preserves Swedish catalog and unknown fallback',()=>{
-  expect(POSES.find(x=>x.id==='sword_shield').label).toBe('Svärd och sköld');
-  expect(poseFamily('not-defined')).toBeNull();
+ it('falls back safely to the combatant standard pose',()=>{
+  expect(resolve({weaponClass:'pilbagar'},['standard']).poseId).toBe('standard');
+  expect(resolve({weaponClass:'pilbagar'},[]).poseId).toBeNull();
  });
 });
