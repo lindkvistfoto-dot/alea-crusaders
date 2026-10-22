@@ -4,7 +4,7 @@
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory (original)',key:'arcane-paper-doll-hexagon-base',available:true},{id:'pointed-high',label:'1 hex · Spetsig · High Angle',key:'arcane-bronze-ivory-pointed-hex-high-angle',available:true},{id:'pointed-low',label:'1 hex · Spetsig · Low Angle',key:'arcane-bronze-ivory-pointed-hex-low-angle',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
- let baseOnly=false,baseScale=35,showAnchor=false,standScale=65,standX=0,standY=0,baseId='single',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
+ const BASE_STANDARD_LEGACY=35;\n let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
  const $=id=>document.getElementById(id);
@@ -28,7 +28,7 @@
   const mount=$('arcanePaperDollWorkshopMount');if(!mount)return;
   mount.innerHTML='<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite" hidden>'+escape(statusText())+'</p>'+ 
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.id===baseId?'selected':'')+' '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
-   '<div class="apdw-base-scale"><label for="apdwBaseScale">Basens skala</label><input id="apdwBaseScale" type="range" min="20" max="100" value="'+baseScale+'"><output id="apdwBaseScaleOut">'+baseScale+'%</output><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
+   '<div class="apdw-base-scale"><label>Basens standardstorlek (låst)</label><output id="apdwBaseScaleOut">100%</output><small>100% motsvarar tidigare standardstorlek. Kartzoom påverkar bas och figur tillsammans.</small><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Basplatta → cutout</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
    '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--stand-scale:'+standScale/100+';--stand-x:'+standX+'%;--stand-y:'+standY+'%;--base-scale:'+baseScale/100+';--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
    '<p id="apdwBaseUnavailable" class="apdw-base-unavailable" hidden>Basen är ännu inte publicerad via HERMES. Ladda den som lokal PNG/WebP för att förhandsvisa.</p><img class="apdw-base" alt="Arcane basplatta" hidden>'+ 
@@ -60,7 +60,7 @@
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
-  $('apdwBaseScale')?.addEventListener('input',e=>{baseScale=Number(e.target.value);$('apdwBaseScaleOut').textContent=baseScale+'%';$('apdwStage')?.style.setProperty('--base-scale',baseScale/100)});
+
   $('apdwShowAnchor')?.addEventListener('change',e=>{showAnchor=e.target.checked;const anchor=$('apdwAnchor');if(anchor)anchor.hidden=!showAnchor});
   $('apdwBaseSelect')?.addEventListener('change',e=>{baseId=e.target.value;applyAssets()});
   $('apdwCutoutFile')?.addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!['image/png','image/webp'].includes(file.type)){setStatus('Välj PNG eller WebP.','error');return}if(cutoutUrl)URL.revokeObjectURL(cutoutUrl);cutoutFile=file;cutoutUrl=URL.createObjectURL(file);applyCutout()});
@@ -131,7 +131,7 @@
   if(!staged)throw new Error('Välj en cutout innan du sparar posen.');
   const poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
   if(!poseName)throw new Error('Ogiltigt Battle Pose-val.');
-  const mounting={schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:baseScale}};
+  const mounting={schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:BASE_STANDARD_LEGACY}};
   const row=replacing
    ?{pending_staging_path:staged,pending_base_key:currentBase().key,pending_mounting_profile:mounting,updated_at:new Date().toISOString()}
    :{combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
@@ -155,10 +155,10 @@
   const {record,poseKey}=poseSelection();
   const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
   const item=rows?.[0];if(!item)throw new Error('Ingen sparad profil finns för denna pose.');
-  const p=item.mounting_profile||{},c=p.cutout||p,b=p.base||{};
+  const p=item.mounting_profile||{},c=p.cutout||p;
   if(![c.scale,c.x,c.y].every(Number.isFinite))throw new Error('Profilen saknar giltiga monteringsvärden.');
   cutoutScale=Math.max(20,Math.min(150,c.scale));cutoutX=Math.max(-80,Math.min(80,c.x));cutoutY=Math.max(-80,Math.min(80,c.y));
-  if(Number.isFinite(b.scale))baseScale=Math.max(20,Math.min(100,b.scale));
+  // Legacy base scale is intentionally ignored: the base is globally locked.
   const base=BASES.find(x=>x.key===item.base_key);if(base)baseId=base.id;
   cutoutFile=null;
   if(item.staging_path&&typeof authFetch==='function'&&typeof supabaseSession!=='undefined'&&supabaseSession?.access_token){
