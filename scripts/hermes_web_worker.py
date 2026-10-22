@@ -35,7 +35,16 @@ def fetch(url,method="GET",body=None,headers=None,limit=14000000):
 
 def rest(path,method="GET",data=None):
  headers={**BASE,"Content-Type":"application/json","Prefer":"return=representation"}
- raw=fetch(SUPA+"/rest/v1/"+path,method,json.dumps(data).encode() if data is not None else None,headers)
+ try:
+  raw=fetch(SUPA+"/rest/v1/"+path,method,json.dumps(data).encode() if data is not None else None,headers)
+ except urllib.error.HTTPError as error:
+  try:
+   info=json.loads(error.read(2048))
+   code=str(info.get("code","unknown"))[:40]
+   message=str(info.get("message","unknown"))[:160]
+  except (ValueError,UnicodeError):
+   code="unparseable";message="response unavailable"
+  raise RuntimeError("SUPABASE_REST_ERROR status="+str(error.code)+" code="+code+" message="+message) from None
  return json.loads(raw) if raw else []
 
 def digest(data):return hashlib.sha256(data).hexdigest()
