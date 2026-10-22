@@ -137,7 +137,7 @@
   let saved;
   try{
    const rows=existing?.[0]?.id
-    ?await dbJson('combatant_battle_poses?id=eq.'+encodeURIComponent(existing[0].id)+(replacing?'&publication_status=eq.published&pending_staging_path=is.null':''),{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)})
+    ?await dbJson('combatant_battle_poses?id=eq.'+encodeURIComponent(existing[0].id)+(replacing?'&publication_status=eq.published&'+(existing[0].pending_staging_path?'pending_staging_path=eq.'+encodeURIComponent(existing[0].pending_staging_path):'pending_staging_path=is.null'):''),{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)})
     :await dbJson('combatant_battle_poses',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)});
    saved=rows?.[0];
   }catch(error){throw new Error('Cutouten finns i säker mellanlagring men poseposten kunde inte sparas: '+error.message)}
