@@ -1,5 +1,8 @@
 name: HERMES 4.1 single-job live pilot
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/hermes41-single-pilot.yml']
   workflow_dispatch:
 permissions:
   contents: read
