@@ -19,6 +19,7 @@ jobs:
             tests
             features/combat
             features/material
+            features/ui
             supabase
             config
       - uses: actions/setup-python@v5

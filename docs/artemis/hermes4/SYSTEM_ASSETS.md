@@ -38,9 +38,10 @@ Faktisk kompatibilitetskontroll mot `features/battle-art/contracts.js` på BENGA
 
 - HERMES Python: **20/20** (16 befintliga + 4 systemresursfall), verklig Pillow-konvertering, arkivhash/delfel, dimensioner, faktisk alfa och pixeljämförelse.
 - Sex riktade Vitest-filer: **27/27**, inklusive publicerare, read-only-adapter, migration och riktiga PostgreSQL-roller/RLS/CHECK/CAS via versionslåst PGlite (endast testberoende).
-- Full Vitest: main **1285 godkända / 29 fel**, gren **1293 godkända / samma 29 fel**. Inga nya fel; exakta namngivna basfel jämförda maskinellt.
+- Full Vitest: main **1285 godkända / 29 fel**, gren **1293 godkända / samma 29 fel**. Inga nya fel; exakta namngivna basfel jämförda maskinellt i [testbevis](SYSTEM_ASSETS_TESTS.json).
 - Standardbygge: **exit 139/segmentation fault på både oförändrad main och gren**. Detta är ett kvarstående basfel, inte ett godkänt bygge.
-- `git diff --check` godkänt. MINOTAURUS CI kör även de nya testerna. Full CI kan fortsatt vara röd på grund av ovanstående basfel.
+- Deno-typkontroll av publiceraren godkänd. `vite build --minify=false` godkänt.
+- `git diff --check` och MINOTAURUS-originalguard godkända. MINOTAURUS CI kör även de nya testerna. Full CI kan fortsatt vara röd på grund av ovanstående basfel.
 
 Produktions-Supabase kontrollerades skrivskyddat: `hermes_jobs` och `hermes_job_events` har RLS; `system-asset` och det nya registret finns ännu inte där. Migrationens nya RLS och grants testades lokalt, inte i produktion. Aktuell Supabase RLS-dokumentation hämtades genom anslutningen; changelog-filen blockerades av miljöns nätpolicy (HTTP 403).
 
