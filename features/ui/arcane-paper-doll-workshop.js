@@ -30,19 +30,16 @@
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.id===baseId?'selected':'')+' '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
    '<div class="apdw-base-upload"><label for="apdwBaseFile">Lokal förhandsvisning av vald bas (PNG/WebP)</label><input id="apdwBaseFile" type="file" accept="image/png,image/webp"><small>Förhandsvisningen publicerar inte bilden till HERMES.</small></div>'+ 
    '<div class="apdw-base-scale"><label for="apdwBaseScale">Basens skala</label><input id="apdwBaseScale" type="range" min="20" max="100" value="'+baseScale+'"><output id="apdwBaseScaleOut">'+baseScale+'%</output><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
-   '<div class="apdw-stand-settings"><b>Montera porträttstolpe</b><label>Storlek <input id="apdwStandScale" type="range" min="30" max="120" value="'+standScale+'"><output id="apdwStandScaleOut">'+standScale+'%</output></label><label>Sidled <input id="apdwStandX" type="range" min="-40" max="40" value="'+standX+'"><output id="apdwStandXOut">'+standX+'%</output></label><label>Höjd <input id="apdwStandY" type="range" min="-60" max="40" value="'+standY+'"><output id="apdwStandYOut">'+standY+'%</output></label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Hexagon → porträtt → stolpram</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
    '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--stand-scale:'+standScale/100+';--stand-x:'+standX+'%;--stand-y:'+standY+'%;--base-scale:'+baseScale/100+';--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
-   '<div class="apdw-placeholder apdw-base-placeholder" aria-hidden="true"><div class="apdw-placeholder-hex"></div><span>BRONZE IVORY<br>HEXAGON</span></div><img class="apdw-base" alt="Bronze Ivory-hexagon" hidden>'+ 
-   '<span class="apdw-anchor" id="apdwAnchor" '+(showAnchor?'':'hidden')+' aria-label="Monteringspunkt"></span><div class="apdw-shadow" aria-hidden="true"></div><div class="apdw-portrait-window"><div class="apdw-portrait-mask" id="apdwPortraitMask"><span class="apdw-initials">✦</span><img id="apdwPortrait" alt="" hidden></div></div>'+ 
+   '<p id="apdwBaseUnavailable" class="apdw-base-unavailable" hidden>Basen är ännu inte publicerad via HERMES. Ladda den som lokal PNG/WebP för att förhandsvisa.</p><img class="apdw-base" alt="Arcane basplatta" hidden>'+ 
+   '<span class="apdw-anchor" id="apdwAnchor" '+(showAnchor?'':'hidden')+' aria-label="Monteringspunkt"></span>'+ 
    '<img id="apdwCutout" class="apdw-cutout" alt="Cutout-förhandsvisning" hidden>'+ 
-   '<div class="apdw-placeholder apdw-stand-placeholder" aria-hidden="true"><div class="apdw-stand-arch"></div><div class="apdw-stand-post"></div><div class="apdw-stand-foot"></div></div><img class="apdw-stand" alt="Arcane Portrait Stand" hidden>'+ 
    '</div></div></div>'+ 
-   '<div class="apdw-controls"><div class="apdw-cutout-controls"><b>Cutout – provmontering</b><label for="apdwCutoutFile">Välj transparent PNG/WebP</label><input id="apdwCutoutFile" type="file" accept="image/png,image/webp"><label>Storlek <input id="apdwCutoutScale" type="range" min="20" max="150" value="'+cutoutScale+'"><output id="apdwCutoutScaleOut">'+cutoutScale+'%</output></label><label>Sidled <input id="apdwCutoutX" type="range" min="-80" max="80" value="'+cutoutX+'"><output id="apdwCutoutXOut">'+cutoutX+'%</output></label><label>Höjd <input id="apdwCutoutY" type="range" min="-80" max="80" value="'+cutoutY+'"><output id="apdwCutoutYOut">'+cutoutY+'%</output></label><button type="button" data-action="clear-cutout" class="btn">Ta bort cutout</button><small>Endast lokal förhandsvisning. Ingen publicering.</small></div><div class="apdw-control-group"><label for="apdwPortraitSelect">Porträtt</label><select id="apdwPortraitSelect"><option value="">Välj kombattant…</option>'+makeOptions()+'</select><p id="apdwPortraitStatus" class="apdw-help" role="status">Välj rollperson, SLP, fiende eller monster. Porträttet följer inte med i monteringsprofilen.</p></div>'+ 
-   '<div class="apdw-control-grid">'+control('scale','Skala','%')+control('x','Horisontell position','%')+control('y','Vertikal position','%')+control('perspective','Perspektiv','°')+control('tilt','Stolpens lutning','°')+control('mask','Maskning','%')+control('shadow','Kontaktskugga','px')+'</div>'+ 
+   '<div class="apdw-controls"><div class="apdw-cutout-controls"><b>Cutout – provmontering</b><label for="apdwCutoutFile">Välj transparent PNG/WebP</label><input id="apdwCutoutFile" type="file" accept="image/png,image/webp"><label>Storlek <input id="apdwCutoutScale" type="range" min="20" max="150" value="'+cutoutScale+'"><output id="apdwCutoutScaleOut">'+cutoutScale+'%</output></label><label>Sidled <input id="apdwCutoutX" type="range" min="-80" max="80" value="'+cutoutX+'"><output id="apdwCutoutXOut">'+cutoutX+'%</output></label><label>Höjd <input id="apdwCutoutY" type="range" min="-80" max="80" value="'+cutoutY+'"><output id="apdwCutoutYOut">'+cutoutY+'%</output></label><button type="button" data-action="clear-cutout" class="btn">Ta bort cutout</button><small>Endast lokal förhandsvisning. Ingen publicering.</small></div>   '<div class="apdw-control-grid"></div>'+ 
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
-  arrangeWorkspace();bind();applyAssets();applyPortrait();applyBaseMode();
+  arrangeWorkspace();bind();applyAssets();applyBaseMode();
  }
  function arrangeWorkspace(){
   const layout=document.querySelector('#arcanePaperDollWorkshopMount .apdw-layout');
@@ -56,13 +53,12 @@
   const picker=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-picker');
   const upload=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-upload');
   const scale=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-scale');
-  const stand=document.querySelector('#arcanePaperDollWorkshopMount .apdw-stand-settings');
+  
   const title=document.createElement('h3');title.textContent='Bilder & inställningar';controls.prepend(title);
-  for(const element of [picker,upload,scale,stand].filter(Boolean))controls.insertBefore(element,controls.querySelector('.apdw-control-group'));
+  for(const element of [picker,upload,scale].filter(Boolean))controls.insertBefore(element,controls.querySelector('.apdw-cutout-controls'));
  }
  function control(key,label,unit){return '<label class="apdw-range" for="apdw-'+key+'"><span>'+label+' <output id="apdw-'+key+'Out">'+values[key]+unit+'</output></span><input id="apdw-'+key+'" type="range" min="'+min(key)+'" max="'+max(key)+'" step="1" value="'+values[key]+'" data-value="'+key+'"></label>'}
  function bind(){
-  for(const [id,key,unit] of [['apdwStandScale','standScale','%'],['apdwStandX','standX','%'],['apdwStandY','standY','%']]){$(id)?.addEventListener('input',e=>{const v=Number(e.target.value);if(key==='standScale')standScale=v;else if(key==='standX')standX=v;else standY=v;$(id+'Out').textContent=v+unit;const stage=$('apdwStage');if(stage)stage.style.setProperty(key==='standScale'?'--stand-scale':key==='standX'?'--stand-x':'--stand-y',key==='standScale'?v/100:v+'%')})}
   $('apdwBaseScale')?.addEventListener('input',e=>{baseScale=Number(e.target.value);$('apdwBaseScaleOut').textContent=baseScale+'%';$('apdwStage')?.style.setProperty('--base-scale',baseScale/100)});
   $('apdwShowAnchor')?.addEventListener('change',e=>{showAnchor=e.target.checked;const anchor=$('apdwAnchor');if(anchor)anchor.hidden=!showAnchor});
   $('apdwBaseSelect')?.addEventListener('change',e=>{baseId=e.target.value;applyAssets()});
@@ -70,8 +66,8 @@
   $('apdwCutoutFile')?.addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!['image/png','image/webp'].includes(file.type)){setStatus('Välj PNG eller WebP.','error');return}if(cutoutUrl)URL.revokeObjectURL(cutoutUrl);cutoutUrl=URL.createObjectURL(file);applyCutout()});
   for(const [id,key] of [['apdwCutoutScale','cutoutScale'],['apdwCutoutX','cutoutX'],['apdwCutoutY','cutoutY']])$(id)?.addEventListener('input',e=>{const n=Number(e.target.value);if(key==='cutoutScale')cutoutScale=n;else if(key==='cutoutX')cutoutX=n;else cutoutY=n;$(id+'Out').textContent=n+'%';applyCutout()});
   $('apdwBaseOnly')?.addEventListener('change',event=>{baseOnly=event.target.checked;applyBaseMode()});
-  $('apdwPortraitSelect')?.addEventListener('change',e=>{selected=e.target.value;applyPortrait()});
-  $('apdwPortraitSelect')?.addEventListener('input',()=>{});
+
+
   document.querySelectorAll('#arcanePaperDollWorkshopMount [data-value]').forEach(input=>input.addEventListener('input',()=>{values[input.dataset.value]=Number(input.value);$('apdw-'+input.dataset.value+'Out').value=input.value+({scale:'%',x:'%',y:'%',perspective:'°',tilt:'°',mask:'%',shadow:'px'}[input.dataset.value]);applyValues()}));
   $('apdwProfileSelect')?.addEventListener('change',e=>{if($('apdwProfileName'))$('apdwProfileName').value=e.target.value});
   $('apdwImportFile')?.addEventListener('change',e=>importFile(e.target.files?.[0]));
@@ -81,15 +77,12 @@
  function applyBaseMode(){const stage=$('apdwStage');if(stage)stage.classList.toggle('apdw-base-only-mode',baseOnly);applyCutout()}
  function applyAssets(){
   const bi=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base');
-  const bp=document.querySelector('#arcanePaperDollWorkshopMount .apdw-base-placeholder');
+  const bp=$('apdwBaseUnavailable');
   const url=currentBaseUrl();
   if(!bi)return;
   bi.onload=()=>{bi.hidden=false;if(bp)bp.hidden=true;const e=$('apdwResourceStatus');if(e)e.textContent='Bas laddad: '+currentBase().label+' · '+bi.naturalWidth+' × '+bi.naturalHeight};
   bi.onerror=()=>{bi.hidden=true;if(bp)bp.hidden=false;const e=$('apdwResourceStatus');if(e)e.textContent='Basen kunde inte laddas. Välj en lokal PNG eller invänta HERMES-publicering.'};
   if(url){bi.hidden=true;bi.src=url}else{bi.removeAttribute('src');bi.hidden=true;if(bp)bp.hidden=false;const e=$('apdwResourceStatus');if(e)e.textContent='Basen väntar på HERMES-publicering. Du kan förhandsvisa via filväljaren.'}
-  const si=document.querySelector('#arcanePaperDollWorkshopMount .apdw-stand'),sp=document.querySelector('#arcanePaperDollWorkshopMount .apdw-stand-placeholder');
-  const stand=asset('arcane-portrait-stand-generic')||asset('arcane-portrait-stand');
-  if(si&&stand){si.onload=()=>{si.hidden=false;if(sp)sp.hidden=true};si.onerror=()=>{si.hidden=true;if(sp)sp.hidden=false};si.src=stand.src}
   applyCutout();
  }
  function applyCutout(){
@@ -99,7 +92,6 @@
   img.style.width=cutoutScale+'%';img.style.left='calc(50% + '+cutoutX+'%)';img.style.bottom='calc(10% + '+cutoutY+'%)';
  }
 
- function applyPortrait(){const img=$('apdwPortrait'),initial=document.querySelector('#arcanePaperDollWorkshopMount .apdw-initials'),r=activeRecord(),status=$('apdwPortraitStatus');if(!img)return;img.onload=()=>{img.hidden=false;if(initial)initial.hidden=true;if(status)status.textContent=(kinds[r?.kind]||'Porträtt')+' · '+(r?.name||'')};img.onerror=()=>{img.hidden=true;if(initial)initial.hidden=false;if(status)status.textContent=r?.src?'Porträttet gick inte att läsa; välj en annan bild eller kontrollera bildåtkomsten.':'Valt register saknar porträtt. Du kan fortsätta kalibrera och spara profilen.'};if(r?.src){img.src=r.src;img.alt='Porträtt av '+r.name}else{img.removeAttribute('src');img.hidden=true;if(initial)initial.hidden=false;if(status)status.textContent='Välj ett registrerat porträtt. Monteringsprofiler fungerar även utan vald person.'}const token=$('apdwMapToken');if(token){token.style.backgroundImage=r?.src?'url("'+r.src.replace(/["\\]/g,'')+'")':'none';token.textContent=r?.src?'':'✦'}}
  function setStatus(message,type=''){const el=$('apdwActionStatus');if(el){el.textContent=message;el.dataset.state=type}}
  function snapshot(name){return {schema:VERSION,assetKey:'arcane-paper-doll-mounting-profile',name,parameters:{...values}}}
  function applyProfile(profile){if(!profileValid(profile))throw new Error('Profilen har fel format eller värden.');values={...profile.parameters};document.querySelectorAll('#arcanePaperDollWorkshopMount [data-value]').forEach(input=>{input.value=values[input.dataset.value];$('apdw-'+input.dataset.value+'Out').value=input.value+({scale:'%',x:'%',y:'%',perspective:'°',tilt:'°',mask:'%',shadow:'px'}[input.dataset.value])});applyValues()}
