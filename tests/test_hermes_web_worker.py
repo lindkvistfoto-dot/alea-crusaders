@@ -77,6 +77,24 @@ class WorkerTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):worker.run(job)
    archive.assert_not_called()
 
+
+ def test_recover_already_published_pose(self):
+  worker=self.worker
+  pose_id="00000000-0000-0000-0000-000000000004"
+  content=b"verified-webp"
+  image_path="hermes/battle-pose-cutout/"+pose_id+"/"+worker.digest(content)+".webp"
+  pose={"staging_path":"staging.png","publication_status":"published","image_path":image_path}
+  job={"id":"job","pose_id":pose_id,"source_path":"staging.png"}
+  calls=[]
+  def fake_rest(path,method="GET",data=None):
+   if method=="GET":return [pose]
+   calls.append(data)
+   return [data]
+  with patch.object(worker,"rest",side_effect=fake_rest),patch.object(worker,"storage_download",return_value=content),patch.object(worker,"archive") as archive:
+   worker.run(job)
+   archive.assert_not_called()
+  self.assertEqual(calls[0]["state"],"published")
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
