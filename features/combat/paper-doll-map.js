@@ -43,20 +43,22 @@
   const id=String(actor?.source_id||'');
   if(!id)return null;
   const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
-  let requested='standard';
+  const available=new Set();
+  for(const kind of aliases){
+   for(const key of root.aleaBattlePoseCatalog?.POSES||[]){
+    if(poseRows.has(kind+':'+id+':'+key.id))available.add(key.id);
+   }
+  }
+  let equipment={};
   if(type==='character'&&typeof chars!=='undefined'){
    const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
-   const eq=source?.currentEquipment||{};
-   const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
-   const armed=hands.find(h=>h.kind==='weapon');
-   const item=(source?.weapons||[]).find(w=>String(w.equipId||w.id)===String(armed?.itemId||''));
-   const hasShield=hands.some(h=>h.kind==='shield');
-   const cls=String(item?.weaponClass||item?.skillId||'').toLowerCase();
-   const family=/enhandsvard|enhands_svard/.test(cls)?'one_handed_sword':/dolk|dolkar/.test(cls)?'dagger':/yx/.test(cls)?'axe':/spjut/.test(cls)?'spear':/stav/.test(cls)?'staff':/pilbag|bow/.test(cls)?'bow':/armborst/.test(cls)?'crossbow':null;
-   if(family)requested=family+(hasShield&&['one_handed_sword','dagger','axe','spear'].includes(family)?'_shield':'');
+   equipment=root.aleaBattlePoseCatalog?.fromCharacter(source)||{};
   }
-  for(const key of [requested,'standard']){
-   for(const kind of aliases){const row=poseRows.get(kind+':'+id+':'+key);if(row)return row}
+  const match=root.aleaBattlePoseCatalog?.resolve(equipment,[...available]);
+  if(!match?.poseId)return null;
+  for(const kind of aliases){
+   const row=poseRows.get(kind+':'+id+':'+match.poseId);
+   if(row)return row;
   }
   return null;
  }
