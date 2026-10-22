@@ -119,7 +119,7 @@
   const existing=await dbJson(query);
   const replacing=existing?.[0]?.publication_status==='published';
   if(replacing){
-   if(existing[0].pending_staging_path)throw new Error('En ersättning väntar redan på HERMES. Vänta tills den har levererats.');
+
    if(!cutoutFile)throw new Error('Välj en ny cutout innan du ersätter den publicerade posen.');
    if(!root.confirm('Ersätt '+record.name+' · '+poseKey+'? Den befintliga bilden fortsätter visas tills HERMES verifierat den nya.'))return;
   }
