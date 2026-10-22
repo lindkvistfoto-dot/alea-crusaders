@@ -44,7 +44,7 @@ jobs:
         with:
           deno-version: v2.x
       - name: Typecheck publisher
-        run: deno check --node-modules-dir=auto scripts/hermes2_publish.ts
+        run: deno check --no-config --no-lock --node-modules-dir=none scripts/hermes2_publish.ts
 
       - id: google
         name: Authenticate as read-only HERMES Drive service account
