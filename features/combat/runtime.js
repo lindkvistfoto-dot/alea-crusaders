@@ -5018,7 +5018,9 @@ function renderCombatMap(){
    const miniature=combatPlayerMiniatureSvg(c,cell,g,selected+turn+targetClass+planningClass);
    visual=miniature||('<circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text>')
   }
-  if(typeof window!=='undefined'&&window.aleaAstridPaperDoll)
+  if(typeof window!=='undefined'&&window.aleaCombatPaperDollMap)
+   visual=window.aleaCombatPaperDollMap.render(visual,c,cell,g,selected+turn+targetClass+planningClass);
+  else if(typeof window!=='undefined'&&window.aleaAstridPaperDoll)
    visual=window.aleaAstridPaperDoll.render(visual,c,cell,g,selected+turn+targetClass+planningClass);
   const footprintVisual=footprint.length>1?points.map(p=>'<polygon class="combat-footprint-hex" points="'+combatHexPoints(p.x,p.y,g.size*.94)+'" fill="'+(side==='hero'?'#4fa86d':side==='enemy'?'#cb5e52':'#739ec0')+'" fill-opacity="'+(isPlanning?'.4':'.24')+'" stroke="'+(attack?'#f5cb69':side==='hero'?'#79d9a0':side==='enemy'?'#ff9a86':'#9bc9e3')+'" stroke-width="'+(selected||turn?'3':'1.8')+'"/>').join(''):'';
   // Turmarkeringen ligger UTANFÖR lagfärgad porträttram och fungerar även

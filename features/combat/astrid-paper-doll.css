@@ -40,3 +40,9 @@
 .combat-paper-doll.selected .combat-paper-doll-ring{stroke:#ffd06f;stroke-width:3}
 .combat-paper-doll.attack-target .combat-paper-doll-ring{stroke:#e1493f;stroke-width:3}
 .combat-paper-doll.movement-planning .combat-paper-doll-ring{stroke:#71ff91;stroke-width:3}
+
+/* ARES universal miniature: visual only, legacy hit area retained. */
+.combat-paper-doll-universal,.combat-paper-doll-universal image{pointer-events:none}
+.combat-paper-doll-universal-ring{fill:none;stroke:#53c67b;stroke-width:1.4;vector-effect:non-scaling-stroke}
+.combat-paper-doll-universal.selected .combat-paper-doll-universal-ring{stroke:#ffd06f;stroke-width:2.5}
+.combat-paper-doll-universal.attack-target .combat-paper-doll-universal-ring{stroke:#e1493f;stroke-width:2.5}
