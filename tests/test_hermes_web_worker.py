@@ -23,7 +23,9 @@ def png():
  return out.getvalue()
 
 class WorkerTests(unittest.TestCase):
- def setUp(self):self.worker=load_worker()
+ def setUp(self):
+  self.worker=load_worker()
+  self.worker.TOKEN="offline-test-token"
  def test_digest_stable(self):
   self.assertEqual(self.worker.digest(b"hello"),"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
  def test_no_job_claim_if_oauth_fails(self):
@@ -62,5 +64,72 @@ class WorkerTests(unittest.TestCase):
    archive.assert_not_called()
   self.assertTrue(any(row.get("publication_status")=="published" for _,row in calls))
   self.assertTrue(any(row.get("state")=="published" for _,row in calls))
+
+
+ def test_corrupt_archive_never_published(self):
+  worker=self.worker
+  pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
+  job={"id":"job","pose_id":"pose","source_path":pose["staging_path"],"archive_drive_file_id":"existing"}
+  worker.FOLDER="test-folder"
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "fields=id,parents" in url:return b'{"parents":["test-folder"]}'
+   if "alt=media" in url:return b"corrupted"
+   raise AssertionError(url)
+  with patch.object(worker,"rest",return_value=[pose]),patch.object(worker,"storage_download",return_value=png()),patch.object(worker,"fetch",side_effect=fake_fetch),patch.object(worker,"archive") as archive:
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):worker.run(job)
+   archive.assert_not_called()
+
+
+ def test_recover_already_published_pose(self):
+  worker=self.worker
+  pose_id="00000000-0000-0000-0000-000000000004"
+  content=b"verified-webp"
+  image_path="hermes/battle-pose-cutout/"+pose_id+"/"+worker.digest(content)+".webp"
+  pose={"staging_path":"staging.png","publication_status":"published","image_path":image_path}
+  job={"id":"job","pose_id":pose_id,"source_path":"staging.png"}
+  calls=[]
+  def fake_rest(path,method="GET",data=None):
+   if method=="GET":return [pose]
+   calls.append(data)
+   return [data]
+  with patch.object(worker,"rest",side_effect=fake_rest),patch.object(worker,"storage_download",return_value=content),patch.object(worker,"archive") as archive:
+   worker.run(job)
+   archive.assert_not_called()
+  self.assertEqual(calls[0]["state"],"published")
+
+ def test_recover_orphaned_drive_file(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  original=png()
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "alt=media" in url:return original
+   return b'{"files":[{"id":"existing"}]}'
+  with patch.object(worker,"fetch",side_effect=fake_fetch):
+   self.assertEqual(worker.find_archived_original("job-sha.png",worker.digest(original)),"existing")
+
+ def test_ambiguous_archive_fails_closed(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  with patch.object(worker,"fetch",return_value=b'{"files":[{"id":"one"},{"id":"two"}]}'):
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_AMBIGUOUS"):
+    worker.find_archived_original("duplicate.png","a"*64)
+
+ def test_corrupt_orphan_archive_fails_closed(self):
+  worker=self.worker
+  worker.FOLDER="test-folder"
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "alt=media" in url:return b"bad bytes"
+   return b'{"files":[{"id":"one"}]}'
+  with patch.object(worker,"fetch",side_effect=fake_fetch):
+   with self.assertRaisesRegex(ValueError,"ARCHIVE_HASH_MISMATCH"):
+    worker.find_archived_original("original.png","a"*64)
+
+ def test_corrupt_image_never_archived(self):
+  worker=self.worker
+  pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
+  job={"id":"job","pose_id":"pose","source_path":pose["staging_path"]}
+  with patch.object(worker,"rest",return_value=[pose]),patch.object(worker,"storage_download",return_value=b"invalid-image"*30),patch.object(worker,"archive") as archive:
+   with self.assertRaises(Exception):worker.run(job)
+   archive.assert_not_called()
 
 if __name__=="__main__":unittest.main()
