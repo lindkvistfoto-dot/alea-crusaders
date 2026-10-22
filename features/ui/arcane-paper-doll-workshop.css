@@ -95,3 +95,9 @@
  #adminPaperDollWorkshop{max-width:none;width:100%;margin:0;box-sizing:border-box}
  #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* Workshop follows the same desktop width token as navigation and combat. */
+@media(min-width:900px){
+ #adminPaperDollWorkshop{max-width:none;width:100%;margin:0;box-sizing:border-box}
+ #arcanePaperDollWorkshopMount .apdw-layout{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
