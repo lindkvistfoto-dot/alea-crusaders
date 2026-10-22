@@ -13,7 +13,7 @@ jobs:
   deliver-one:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    # Retry with sanitized PostgREST error diagnostics from recovery branch.
+    # Retry after service-role-only invoker RPC permission fix.
     steps:
       - uses: actions/checkout@v4
         with:
