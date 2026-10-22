@@ -1,0 +1,172 @@
+{
+  "operation": "BENGALI",
+  "date": "2026-10-21",
+  "baselineCommit": "64346c8f3ac0f6b9f02ad0684a0a1ec403008f22",
+  "command": "npm test -- --reporter=json --outputFile=<temporary-report.json>",
+  "baseline": {
+    "passed": 1285,
+    "failed": 29,
+    "files": 206
+  },
+  "branch": {
+    "passed": 1429,
+    "failed": 29,
+    "files": 209
+  },
+  "newContractTests": 144,
+  "newRegressions": [],
+  "existingFailures": [
+    {
+      "file": "arcane-carousel-v01.test.js",
+      "test": "ARCANE CAROUSEL V01 — independent transparent image trough busts the entire top-level module and stylesheet chain",
+      "error": "AssertionError: expected '/* Frodo v0.34.85 — explicit show-now…' to contain 'arcane-gallery.js?v=0.35.239&morph=3&…'"
+    },
+    {
+      "file": "architecture.test.js",
+      "test": "application architecture smoke checks GM can select, play and reset a combat scene",
+      "error": "AssertionError: expected '<!doctype html><html lang=\"sv\"><head>…' to contain './features/combat/runtime.js?v=0.35.2…'"
+    },
+    {
+      "file": "architecture.test.js",
+      "test": "application architecture smoke checks Värdshus is a player-facing service checkout",
+      "error": "AssertionError: expected '/* Värdshus */\\n.inn-nav{white-space:…' to contain '.inn-open #dayNavBtn'"
+    },
+    {
+      "file": "character-equipment-image-overrides.test.js",
+      "test": "single-item weapon and shield artwork uses override before register art on character equipment and combat HUD",
+      "error": "AssertionError: expected 'const COMBAT_PHASE_LABELS={initiative…' to contain 'item.imageOverridePath||shieldRule(it…'"
+    },
+    {
+      "file": "character-round-backgrounds.test.js",
+      "test": "Character-specific round artwork chooses stable per-combatant fallback at scene creation only",
+      "error": "AssertionError: expected 'const COMBAT_PHASE_LABELS={initiative…' to contain 'state:{...(row.state||{}),round_backg…'"
+    },
+    {
+      "file": "combat-active-turn-highlight.test.js",
+      "test": "Aktiv kombatants tydliga turmarkering markerar aktuell tur i turordningen utan att ändra andras rader",
+      "error": "ReferenceError: combatChosenAction is not defined"
+    },
+    {
+      "file": "combat-ammunition-master.test.js",
+      "test": "Ammo registry / range weapon linkage GM can choose if projectile recovery is possible, with 80-90 % chance, once per shot",
+      "error": "AssertionError: expected 'const COMBAT_PHASE_LABELS={initiative…' to contain 'Avsluta strid & sammanfatta'"
+    },
+    {
+      "file": "combat-dice-proportions.test.js",
+      "test": "Combat DiceBox presentation refreshes affected module and CSS cache paths without altering the dice tray",
+      "error": "AssertionError: expected 'import \"./features/dice/dice3d.js?v=0…' to contain 'features/dice/dice3d.js?v=0.35.239'"
+    },
+    {
+      "file": "combat-finish-summary.test.js",
+      "test": "Stop combat and after-action report the GM has a stop control in the battle header, not buried in ammunition settings",
+      "error": "AssertionError: expected '<!doctype html><html lang=\"sv\"><head>…' to contain 'id=\"combatStopBtn\"'"
+    },
+    {
+      "file": "combat-map-portrait-hex.test.js",
+      "test": "Porträtt i hexagonkartan fiende visar sitt riktiga porträtt i en rödmarkerad hexagon",
+      "error": "ReferenceError: combatMiniatureVisual is not defined"
+    },
+    {
+      "file": "combat-map-portrait-hex.test.js",
+      "test": "Porträtt i hexagonkartan SLP visar registrerat porträtt i blåmarkerad hexagon",
+      "error": "ReferenceError: combatMiniatureVisual is not defined"
+    },
+    {
+      "file": "combat-map-portrait-hex.test.js",
+      "test": "Porträtt i hexagonkartan spelarens befintliga porträtt är fortfarande grönt",
+      "error": "ReferenceError: combatMiniatureVisual is not defined"
+    },
+    {
+      "file": "combat-map-portrait-hex.test.js",
+      "test": "Porträtt i hexagonkartan saknat SLP-porträtt återgår till befintlig kartmarkör",
+      "error": "ReferenceError: combatMiniatureVisual is not defined"
+    },
+    {
+      "file": "combat-map-portrait-hex.test.js",
+      "test": "Porträtt i hexagonkartan mapparen återanvänder samma porträtthämtare som turordningen",
+      "error": "AssertionError: expected 'function combatPlayerMiniatureSvg(com…' to contain 'combatRowPortraitUrl(combatant)'"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender SLP visar registrerat porträtt från bildcachen",
+      "error": "evalmachine.<anonymous>:98"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender fiender och monster visar samma lagrade bild som i administration",
+      "error": "evalmachine.<anonymous>:98"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender om bilden inte förladdats hämtas den och turordningen ritas om",
+      "error": "evalmachine.<anonymous>:98"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender saknat porträtt visar initialer, medan rollpersonens bild är oförändrad",
+      "error": "evalmachine.<anonymous>:98"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender porträtt fungerar utan förladdat SLP-/fienderegister",
+      "error": "evalmachine.<anonymous>:98"
+    },
+    {
+      "file": "combat-order-portraits.test.js",
+      "test": "Porträtt i turordning – SLP och fiender ny strid sparar bildsökvägarna i kombatanternas state",
+      "error": "AssertionError: expected 'const COMBAT_PHASE_LABELS={initiative…' to contain '&select=id,name,image_path,attributes…'"
+    },
+    {
+      "file": "combat-parry-drawer.test.js",
+      "test": "Responsive parry reaction outside the attack panel offers no drawer if no legal reaction is pending and preserves Expert rules",
+      "error": "ReferenceError: combatMovementPlanningActor is not defined"
+    },
+    {
+      "file": "combat-perfect-armor.test.js",
+      "test": "Perfect hit penetrates armor v0.35.32 perfect Kastspjut hits for 7 without the 5-point ring mail, and flags bypass in event log",
+      "error": "ReferenceError: combatHideMagicResultPopup is not defined"
+    },
+    {
+      "file": "combat-perfect-armor.test.js",
+      "test": "Perfect hit penetrates armor v0.35.32 a special strike has maximum damage but does NOT bypass armor",
+      "error": "ReferenceError: combatHideMagicResultPopup is not defined"
+    },
+    {
+      "file": "combat-perfect-armor.test.js",
+      "test": "Perfect hit penetrates armor v0.35.32 ordinary strike subtracts armor, but wards still apply to perfect strikes",
+      "error": "ReferenceError: combatHideMagicResultPopup is not defined"
+    },
+    {
+      "file": "goose08-arcane-mechanics.test.js",
+      "test": "GOOSE 08 – non-destructive arcane mechanism layers keeps the original three HERMES sprites and role-gated shared gallery",
+      "error": "AssertionError: expected '<!doctype html><html lang=\"sv\"><head>…' to contain 'library.js?v=0.35.239&morph=2&goose=10'"
+    },
+    {
+      "file": "material-live-preview.test.js",
+      "test": "Frodo — GM preview of currently shared material mount code authorizes SL before selecting an active picture and offers full-size viewer",
+      "error": "AssertionError: expected '/* Frodo v0.34.85 — explicit show-now…' to contain 'preview.set(activeRow?.asset_kind===\\…'"
+    },
+    {
+      "file": "material-native-pages-bootstrap.test.js",
+      "test": "GitHub Pages native material bootstrap loads material independently of the dice-box module entry",
+      "error": "AssertionError: expected '<!doctype html><html lang=\"sv\"><head>…' to contain '<script type=\"module\" src=\"./features…'"
+    },
+    {
+      "file": "section-help-ui.test.js",
+      "test": "Shared section information component keeps each provision on one horizontal row and moves guidance behind the help icon",
+      "error": "AssertionError: expected 137674 to be less than -1"
+    },
+    {
+      "file": "skill-art-android-picker.test.js",
+      "test": "Android DocumentsProvider skill-art upload shows uploaded file feedback atop the editor with cache-busted assets",
+      "error": "AssertionError: expected '<!doctype html><html lang=\"sv\"><head>…' to contain 'admin-art.css?v=0.35.261'"
+    }
+  ],
+  "build": {
+    "command": "npm run build",
+    "baselineExit": 139,
+    "branchExit": 139,
+    "baselineMethod": "Original HEAD index.html restored temporarily; new scripts unreferenced. Original index restored in finally.",
+    "result": "Vite 8 transforms 96 modules, then Segmentation fault in both runs."
+  }
+}
