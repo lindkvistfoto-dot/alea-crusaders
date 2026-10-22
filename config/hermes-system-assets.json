@@ -42,6 +42,32 @@
         1280
       ],
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-bronze-ivory-pointed-hex-high-angle": {
+      "id": "b8131d52-a0c8-46a1-9bb8-9f6225b8c0a1",
+      "label": "Arcane Bronze Ivory – Pointed Hex High Angle",
+      "source_size": [
+        1312,
+        1199
+      ],
+      "display_size": [
+        1280,
+        1170
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa"
+    },
+    "arcane-bronze-ivory-pointed-hex-low-angle": {
+      "id": "39c5d2f1-7a65-47f0-bd21-5ce7d61d81e3",
+      "label": "Arcane Bronze Ivory – Pointed Hex Low Angle",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "display_size": [
+        1280,
+        853
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa"
     }
   }
 }
