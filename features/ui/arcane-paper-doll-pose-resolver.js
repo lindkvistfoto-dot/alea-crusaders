@@ -1,45 +1,47 @@
-/* OPERATION ARCANE PAPER DOLL — pure equipment-to-pose resolver.
- * Visual only: never changes equipment, rules or combat state.
- * Character-specific asset lookup is deliberately left to the caller.
- */
-export const POSES=Object.freeze([
-  ['standard','Standard Front'],['one_handed_sword','Enhandsvärd'],['one_handed_sword_shield','Enhandsvärd och sköld'],
-  ['two_handed_sword','Tvåhandssvärd'],['dagger','Dolk'],['dagger_shield','Dolk och sköld'],
-  ['axe','Yxa'],['axe_shield','Yxa och sköld'],['two_handed_axe','Tvåhandsyxa'],
-  ['spear','Spjut'],['spear_shield','Spjut och sköld'],['staff','Stav'],
-  ['bow','Pilbåge'],['crossbow','Armborst'],['sling','Slunga'],
-  ['club','Klubba'],['club_shield','Klubba och sköld'],['unarmed','Obeväpnad']
-].map(([id,label])=>Object.freeze({id,label})));
-export const POSE_IDS=Object.freeze(POSES.map(p=>p.id));
-const CLASS_FAMILY=Object.freeze({
-  enhandsvard:'one_handed_sword',enhands_svard:'one_handed_sword',ovriga_svard:'one_handed_sword',tva_hands_svard:'two_handed_sword',
-  dolkar:'dagger',dolk:'dagger',enhandsyxor:'axe',yxor:'axe',tvahandsyxor:'two_handed_axe',
-  spjut:'spear',stavar:'staff',stav:'staff',pilbagar:'bow',armborst:'crossbow',
-  slungor:'sling',klubbor:'club',stridshammare:'club'
-});
-const TWO_HANDED=new Set(['two_handed_sword','two_handed_axe','bow','crossbow','staff']);
-const SHIELDABLE=new Set(['one_handed_sword','dagger','axe','spear','club']);
-const norm=x=>String(x??'').trim().toLowerCase().replace(/[åä]/g,'a').replace(/ö/g,'o').replace(/[ -]+/g,'_');
-export function poseFamily(weaponClass){
-  const key=norm(weaponClass);
-  return CLASS_FAMILY[key]||null;
+/* SISYFOS — Swedish pose catalog and equipment resolver. Visual only. */
+(function(root){
+'use strict';
+const families=[
+ ['enhandssvard','Enhandsvärd',true],['ovriga_svard','Övriga svärd',true],
+ ['dolkar','Dolkar',true],['yxor','Yxor',true],['klubbor_hammare','Klubbor och hammare',true],
+ ['slagor_gissel','Slagor och gissel',true],['spjut','Spjut',true],
+ ['stangvapen','Stångvapen',false],['stavar','Stavar',false],['pilbagar','Pilbågar',false],
+ ['armborst','Armborst',false],['slungor','Slungor',true],['kastvapen','Kastvapen',true],
+ ['bola','Bola',true],['piskor','Piskor',true],['blasror','Blåsrör',false],
+ ['lasso','Lasso',false],['slagsmal','Slagsmål',false]
+];
+const normalize=x=>String(x??'').trim().toLowerCase().replace(/å/g,'a').replace(/ä/g,'a').replace(/ö/g,'o').replace(/[ -]+/g,'_');
+const catalog=[{id:'standard',label:'Standard Front'}];
+for(const [id,label,shieldable] of families){
+ catalog.push({id,label});
+ if(shieldable)catalog.push({id:id+'_shield',label:label+' och sköld'});
 }
-/** Input: {weaponClass,hasShield,handling,grip}; availablePoseIds are this combatant's uploaded poses. */
-export function resolveBattlePose(equipment={},availablePoseIds=[]){
-  const available=new Set(availablePoseIds);
-  const family=poseFamily(equipment.weaponClass);
-  const shield=!!equipment.hasShield;
-  const grip=String(equipment.grip||'').toUpperCase();
-  const handling=String(equipment.handling||'').toUpperCase();
-  let wanted=family||'standard';
-  if(family==='one_handed_sword' && (grip==='2H'||(handling==='2H'&&!shield)))wanted='two_handed_sword';
-  if(family==='axe' && (grip==='2H'||(handling==='2H'&&!shield)))wanted='two_handed_axe';
-  if(shield&&SHIELDABLE.has(wanted))wanted+='_shield';
-  const candidates=[wanted];
-  if(wanted.endsWith('_shield'))candidates.push(wanted.slice(0,-7));
-  if(wanted==='two_handed_sword')candidates.push('one_handed_sword');
-  if(wanted==='two_handed_axe')candidates.push('axe');
-  candidates.push('standard');
-  const selected=candidates.find(id=>available.has(id))||null;
-  return Object.freeze({requestedPoseId:wanted,poseId:selected,match:selected===wanted?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown_weapon_class'});
+const POSES=Object.freeze(catalog.map(p=>Object.freeze(p)));
+const ALIASES=Object.freeze({enhandsvard:'enhandssvard',enhands_svard:'enhandssvard',dolk:'dolkar',stav:'stavar',pilbage:'pilbagar',yxa:'yxor',klubbor:'klubbor_hammare'});
+const shieldable=new Set(families.filter(f=>f[2]).map(f=>f[0]));
+const valid=new Set(families.map(f=>f[0]));
+function poseFamily(cls){const key=normalize(cls);return ALIASES[key]|| (valid.has(key)?key:null)}
+function fromCharacter(character){
+ const eq=character?.currentEquipment||character?.data?.currentEquipment||{};
+ const weapons=character?.weapons||character?.data?.weapons||[];
+ const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
+ const equipped=hands.find(h=>h.kind==='weapon');
+ const item=weapons.find(w=>String(w.equipId||w.id)===String(equipped?.itemId||''));
+ return {weaponClass:item?.weaponClass||item?.skillId||null,handling:item?.handling||'',grip:equipped?.hands===2?'2H':equipped?.hands===1?'1H':'',hasShield:hands.some(h=>h.kind==='shield'),hasWeapon:!!equipped};
 }
+function resolve(equipment={},availablePoseIds=[]){
+ const available=new Set(availablePoseIds);
+ const family=poseFamily(equipment.weaponClass);
+ const handling=String(equipment.handling||'').toUpperCase();
+ const grip=String(equipment.grip||'').toUpperCase();
+ const twoHanded=handling==='2H'||(handling==='1-2H'&&grip==='2H');
+ const shield=!!equipment.hasShield&&!twoHanded;
+ const requested=family?(shield&&shieldable.has(family)?family+'_shield':family):'standard';
+ const candidates=[requested];
+ if(requested.endsWith('_shield'))candidates.push(family);
+ candidates.push('standard');
+ const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
+ return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
+}
+root.aleaBattlePoseCatalog=Object.freeze({POSES,poseFamily,fromCharacter,resolve});
+})(globalThis);
