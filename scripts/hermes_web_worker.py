@@ -48,9 +48,7 @@ def archive(data,name,mime):
  boundary="hermes41archive"
  b=boundary.encode()
  metadata=json.dumps({"name":name,"parents":[FOLDER]}).encode()
- payload=b"--"+b+b"\r
-Content-Type: application/json; charset=UTF-8\r\n\r\n"+metadata+b"\r\n--"+b+b"\r
-Content-Type: "+mime.encode()+b"\r\n\r\n"+data+b"\r\n--"+b+b"--\r\n"
+ payload=b"--"+b+b"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+metadata+b"\r\n--"+b+b"\r\nContent-Type: "+mime.encode()+b"\r\n\r\n"+data+b"\r\n--"+b+b"--\r\n"
  result=fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,parents","POST",payload,{"Authorization":"Bearer "+TOKEN,"Content-Type":"multipart/related; boundary="+boundary})
  ident=json.loads(result)["id"]
  meta=json.loads(fetch("https://www.googleapis.com/drive/v3/files/"+ident+"?fields=id,parents",headers={"Authorization":"Bearer "+TOKEN}))
