@@ -4,8 +4,8 @@
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory (original)',key:'arcane-paper-doll-hexagon-base',available:true},{id:'pointed-high',label:'1 hex · Spetsig · High Angle',key:'arcane-bronze-ivory-pointed-hex-high-angle',available:true},{id:'pointed-low',label:'1 hex · Spetsig · Low Angle',key:'arcane-bronze-ivory-pointed-hex-low-angle',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
- const BASE_STANDARD_LEGACY=35, BASE_STANDARD_PERCENT=100;
- let baseOnly=false,baseScale=BASE_STANDARD_PERCENT,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
+ const BASE_STANDARD_LEGACY=35;
+ let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
  const $=id=>document.getElementById(id);
@@ -154,7 +154,7 @@
   const {record,poseKey}=poseSelection();
   const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
   const item=rows?.[0];if(!item)throw new Error('Ingen sparad profil finns för denna pose.');
-  const p=item.mounting_profile||{},c=p.cutout||p,b=p.base||{};
+  const p=item.mounting_profile||{},c=p.cutout||p;
   if(![c.scale,c.x,c.y].every(Number.isFinite))throw new Error('Profilen saknar giltiga monteringsvärden.');
   cutoutScale=Math.max(20,Math.min(150,c.scale));cutoutX=Math.max(-80,Math.min(80,c.x));cutoutY=Math.max(-80,Math.min(80,c.y));
   // Legacy base scale is intentionally ignored: the base is globally locked.
