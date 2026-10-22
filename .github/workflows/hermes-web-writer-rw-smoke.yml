@@ -1,0 +1,66 @@
+name: HERMES 4.1 – Archive writer read/write smoke test
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-web-writer-rw-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  archive-read-write:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Validate isolated archive configuration
+        env:
+          WRITER: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
+          FOLDER: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+        run: |
+          test "$WRITER" = "hermes-archive-writer@alea-hermes.iam.gserviceaccount.com"
+          test "$FOLDER" = "1a_YuFpuD3RBfmNSWKrWJGgT28vnSNzsg"
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: ${{ vars.HERMES_WEB_WRITER_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive
+          create_credentials_file: false
+      - name: Create, verify, and delete temporary marker
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          FOLDER: ${{ vars.HERMES_WEB_ARCHIVE_FOLDER_ID }}
+          RUN_ID: ${{ github.run_id }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,urllib.request,urllib.error
+          token=os.environ['GOOGLE_ACCESS_TOKEN']
+          folder=os.environ['FOLDER']
+          payload=('HERMES 4.1 archive writer smoke test '+os.environ['RUN_ID']+'\n').encode()
+          boundary='hermes_smoke_boundary'
+          metadata=json.dumps({'name':'hermes41-smoke-'+os.environ['RUN_ID']+'.txt','parents':[folder],'mimeType':'text/plain'}).encode()
+          body=(('--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n').encode()+metadata+
+                ('\r\n--'+boundary+'\r\nContent-Type: text/plain\r\n\r\n').encode()+payload+
+                ('\r\n--'+boundary+'--\r\n').encode())
+          def api(url,method='GET',data=None,headers=None):
+              h={'Authorization':'Bearer '+token,**(headers or {})}
+              with urllib.request.urlopen(urllib.request.Request(url,data=data,headers=h,method=method),timeout=30) as r:return r.read()
+          file_id=None
+          try:
+              result=json.loads(api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,parents','POST',body,{'Content-Type':'multipart/related; boundary='+boundary}))
+              file_id=result['id']
+              if folder not in result.get('parents',[]):raise RuntimeError('WRONG_ARCHIVE_FOLDER')
+              actual=api('https://www.googleapis.com/drive/v3/files/'+file_id+'?alt=media')
+              if hashlib.sha256(actual).digest()!=hashlib.sha256(payload).digest():raise RuntimeError('READBACK_HASH_MISMATCH')
+              print('HERMES_ARCHIVE_WRITE_AND_SHA256_READBACK_OK')
+          finally:
+              if file_id:
+                  api('https://www.googleapis.com/drive/v3/files/'+file_id,'DELETE')
+                  print('HERMES_SMOKE_FILE_DELETED')
+          PY
