@@ -163,6 +163,32 @@ class WorkerTests(unittest.TestCase):
   self.assertNotEqual(pose_updates[0][1]["image_path"],old_path)
   self.assertTrue(any(data.get("state")=="published" for _,data in calls))
 
+
+ def test_failed_replacement_does_not_modify_active_pose(self):
+  worker=self.worker
+  original=png()
+  pose_id="00000000-0000-0000-0000-000000000004"
+  staged="battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png"
+  pose={"staging_path":"old.png","publication_status":"published","image_path":"old.webp",
+        "combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard",
+        "pending_staging_path":staged,"pending_base_key":"new-high-angle","pending_mounting_profile":{"schema":1}}
+  job={"id":"job","pose_id":pose_id,"source_path":staged,"archive_drive_file_id":"drive-existing"}
+  pose_updates=[]
+  def fake_rest(path,method="GET",data=None):
+   if method=="GET":return [pose]
+   if path.startswith("combatant_battle_poses"):pose_updates.append(data)
+   return [data]
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "fields=id,parents" in url:return b'{"parents":["test-folder"]}'
+   if "alt=media" in url:return original
+   if method=="POST":return b'{}'
+   raise AssertionError(url)
+  worker.FOLDER="test-folder"
+  with patch.object(worker,"rest",side_effect=fake_rest),patch.object(worker,"fetch",side_effect=fake_fetch),patch.object(worker,"storage_download",side_effect=lambda bucket,path:original if bucket=="alea-battle-pose-staging" else b"invalid-public-readback"):
+   with self.assertRaisesRegex(ValueError,"PUBLIC_HASH_MISMATCH"):worker.run(job)
+  self.assertEqual(pose_updates,[])
+  self.assertEqual(pose["image_path"],"old.webp")
+
  def test_corrupt_image_never_archived(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
