@@ -19,3 +19,8 @@
 @media(max-width:900px){.apdw-layout{grid-template-columns:1fr}.apdw-stage{width:100%}.apdw-controls{grid-template-columns:1fr 1fr}.apdw-control-group,.apdw-control-grid,.apdw-profile-box,.apdw-actions,#apdwActionStatus{grid-column:1/-1}}
 @media(max-width:560px){#adminPaperDollWorkshop{padding:10px}.apdw-head{align-items:flex-start}.apdw-badge{font-size:9px}.apdw-layout{gap:10px}.apdw-workbench,.apdw-controls{padding:10px}.apdw-stage-clip{min-height:220px}.apdw-preview-top{align-items:flex-start;flex-direction:column}.apdw-zoom{width:100%;justify-content:flex-start;flex-wrap:wrap}.apdw-control-grid{grid-template-columns:1fr}.apdw-controls{grid-template-columns:1fr}.apdw-control-group,.apdw-control-grid,.apdw-profile-box,.apdw-actions,#apdwActionStatus{grid-column:1}.apdw-profile-row>*{flex:1 1 100%}.apdw-profile-row button{min-height:40px}}
 @media(prefers-reduced-motion:reduce){.apdw-stage,.apdw-portrait-window{transition:none}}
+
+/* Hidden placeholders must stay hidden despite their display:grid/flex rules. */
+#arcanePaperDollWorkshopMount .apdw-placeholder[hidden],
+#arcanePaperDollWorkshopMount .apdw-base[hidden],
+#arcanePaperDollWorkshopMount .apdw-stand[hidden]{display:none!important}
