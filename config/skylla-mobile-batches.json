@@ -1,0 +1,10 @@
+{
+  "schema": "skylla-mobile-catalog/v1",
+  "batches": {
+    "SKYLLA-BATCH-001": {
+      "manifest_path": "docs/skylla/fast-lane-2/SKYLLA_BATCH_001.json",
+      "manifest_sha256": "638c68cc4e4e2b6e01d986abef009bfac22499ef7a95746146cfdfdf038da090",
+      "receipts_path": "docs/skylla/fast-lane-2/evidence/SOURCE_READBACK_RECEIPTS.json"
+    }
+  }
+}

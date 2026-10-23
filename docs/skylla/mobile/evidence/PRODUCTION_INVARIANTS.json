@@ -1,0 +1,41 @@
+{
+  "schema": "skylla-mobile-invariants/v1",
+  "before": {
+    "source_objects": 514,
+    "source_bytes": 1487414822,
+    "source_fingerprint": "b4bb8b8bc0baabe6d8deee6c3d6a25f8",
+    "hermes_jobs_fingerprint": "0e25c04807fdcc332304dca30aa9ef0e",
+    "spells_fingerprint": "b7170e1eb0dd0713e4e86d844d16f152",
+    "skills_fingerprint": "d2145e22e60c9c1b8c44a795313922c4",
+    "symbols_fingerprint": "0cd9674fd7c76a37f5f17048504e5b9c",
+    "job_statuses": {
+      "active": 502,
+      "failed": 17
+    }
+  },
+  "after": {
+    "source_objects": 514,
+    "source_bytes": 1487414822,
+    "source_fingerprint": "b4bb8b8bc0baabe6d8deee6c3d6a25f8",
+    "hermes_jobs_fingerprint": "0e25c04807fdcc332304dca30aa9ef0e",
+    "spells_fingerprint": "b7170e1eb0dd0713e4e86d844d16f152",
+    "skills_fingerprint": "d2145e22e60c9c1b8c44a795313922c4",
+    "symbols_fingerprint": "0cd9674fd7c76a37f5f17048504e5b9c",
+    "job_statuses": {
+      "active": 502,
+      "failed": 17
+    }
+  },
+  "source_changed": false,
+  "registry_changed": false,
+  "hermes_jobs_changed": false,
+  "deleted_objects": 0,
+  "freed_object_bytes": 0,
+  "database_references_changed": [],
+  "hermes_v2": {
+    "version": 8,
+    "bundle_sha256": "ecb00dd50723399e02ad4e5c32bf5128077abedf7a58f374436507ca647c20d9",
+    "unchanged": true
+  },
+  "comparison": "MD5 is only a before/after state-change fingerprint; original byte integrity uses SHA-256."
+}
