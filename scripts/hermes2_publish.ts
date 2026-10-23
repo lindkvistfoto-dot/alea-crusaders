@@ -83,9 +83,10 @@ function checkAsset(a:any,archiveRequired=false){
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.kind==='system-asset'){
   const profile=maybeSystemAssetProfile(a.target_key);
+  const validSystemKey=/^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key);
   const validUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(a.target_id||"");
   const validDimensions=Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=1&&a.width<=1280&&a.height>=1&&a.height<=1280;
-  if(!archiveRequired||!expected||a.app_file!==out||!validUuid||!validDimensions||a.alpha_preserved!==true||
+  if(!archiveRequired||!expected||a.app_file!==out||!validSystemKey||!validUuid||!validDimensions||a.alpha_preserved!==true||
     (profile&&(a.target_id!==profile.id||a.width!==profile.display_size[0]||a.height!==profile.display_size[1])))
    throw Error('INVALID_SYSTEM_ASSET_METADATA');
   return {table:'arcane_system_assets',field:'asset_key',sourcePath:a.source_path,
