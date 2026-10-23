@@ -1,0 +1,114 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "frammana-skicka-bort-elementar-jord",
+      "target_id": "1e9035e1-44db-455d-a510-553be3ed4a83",
+      "drive_file_id": "12oNAZIXdHb61L3FXGVlKlu-pfAgd8Gsm",
+      "archive_file_id": "1PgOECHnr-M3oMnsCW_2Z8tl3G2WF8msf",
+      "source_sha256": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "frammana-skicka-bort-elementar-luft",
+      "target_id": "9d4628af-9aa1-440d-946a-4aed28eb2caa",
+      "drive_file_id": "1zV8J5X-awIPLhCvQ-ecwL6wvtWk6JN8X",
+      "archive_file_id": "1TLj82s_mjm0A43ZQijBiNXeGx8Xb2SE0",
+      "source_sha256": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "frammana-skicka-bort-elementar-vatten",
+      "target_id": "d3145a34-d95c-4631-a8cf-395b73e6aece",
+      "drive_file_id": "1Y2Xr5MRJNCxEurRdkqdHL2hXCCY3Tbdy",
+      "archive_file_id": "1pu-pKrsJcq0GbhCU8tlE7qDSqPxBWe6D",
+      "source_sha256": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "frost",
+      "target_id": "f30feb8f-7a61-40ca-af41-95a0a3fd81ae",
+      "drive_file_id": "1rO7pwpGOv3y9NvmNJVYasY-sCOFljWPn",
+      "archive_file_id": "1zhMLOjLEIKLsH2TJWkzSpnBOoA3sZtDT",
+      "source_sha256": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "gasmoln",
+      "target_id": "8a9e979b-c86f-48d9-ab1d-e74f5425db94",
+      "drive_file_id": "11tPc_TIbhlB2KPUcCRfLTTukOkY-4r3_",
+      "archive_file_id": "1BcPVKoU_5sOdejGNnyrVVTVUzSW7VTE7",
+      "source_sha256": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "hava-forstening",
+      "target_id": "708ea7ff-0cc7-4563-b528-4e9c194c8ae2",
+      "drive_file_id": "1WU8VwZS9Gh5Dh8_YNcdIcaOPpTNZqywt",
+      "archive_file_id": "12u_y1w-xOcil0AixQhskyFQM9Ir2wg1J",
+      "source_sha256": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "hjarnblank",
+      "target_id": "ea4887d6-f6a9-46ac-bc9f-05064f1f747d",
+      "drive_file_id": "1gb4jI1JWgTpVWGJhhcK3dAmepO52IpgE",
+      "archive_file_id": "1iD1lTgbUrj85ajUfb6dVQlOBfY3_Lc45",
+      "source_sha256": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "horsel",
+      "target_id": "b0bebee1-3014-4172-b01a-7f22d8738384",
+      "drive_file_id": "1q79YXWA3OYFgtD-Ke3gg_qCSixqvr2Ed",
+      "archive_file_id": "13fRNXYMh8JGUBSk1NEZm3EvEDJIVfvmb",
+      "source_sha256": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "illusion",
+      "target_id": "c094e4ec-286b-47fa-8d30-7f2350e86535",
+      "drive_file_id": "1zz8Pu9H37LdL-FPAssOf7kkDoQ3MYmOV",
+      "archive_file_id": "1S1mScNtMnYy0IMfT4jy5Pf2UAHy4otcY",
+      "source_sha256": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "jordvag",
+      "target_id": "a60a963d-ccc1-4dc6-8d27-d25eaad7776a",
+      "drive_file_id": "1JX3PSmYf76JGLB9Y1qyeyQRBXrgpMTw-",
+      "archive_file_id": "1u_fxxOBCDMhg1ZIbzO-GFSquZsYsl5St",
+      "source_sha256": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "koldvag",
+      "target_id": "32972520-d0b3-4a70-bb4a-a6c26983f13a",
+      "drive_file_id": "1US048I8E7S8OFP8w5ejvCaEPOX5vTA67",
+      "archive_file_id": "1N0R57oqTKvCgn-nqWvIMIk_s3NrVYevp",
+      "source_sha256": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "kontrollera-andar",
+      "target_id": "5a69bc6d-4044-4a5b-bb29-6107353a6d86",
+      "drive_file_id": "1XqC_vN_vCf4ztk00Lu7sLt-e-DLbVINX",
+      "archive_file_id": "1E1AdLQkqFy0-Jcod-cRK2QkyTPYqf7rj",
+      "source_sha256": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa",
+      "visual_approved": true
+    }
+  ]
+}

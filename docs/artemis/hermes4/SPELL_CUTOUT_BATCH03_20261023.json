@@ -1,0 +1,1239 @@
+{
+  "schema": 1,
+  "batch": "20261023-batch03",
+  "status": "READY_TO_PUBLISH",
+  "authorization": "User authorized all remaining cutouts without batch approval.",
+  "binary_readbacks": [
+    {
+      "key": "frammana-skicka-bort-elementar-jord",
+      "kind": "inbox",
+      "sha256": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde",
+      "bytes": 2894464,
+      "verified": true
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-jord",
+      "kind": "archive",
+      "sha256": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde",
+      "bytes": 2894464,
+      "verified": true
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-luft",
+      "kind": "inbox",
+      "sha256": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea",
+      "bytes": 1933800,
+      "verified": true
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-luft",
+      "kind": "archive",
+      "sha256": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea",
+      "bytes": 1933800,
+      "verified": true
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-vatten",
+      "kind": "inbox",
+      "sha256": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805",
+      "bytes": 2199097,
+      "verified": true
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-vatten",
+      "kind": "archive",
+      "sha256": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805",
+      "bytes": 2199097,
+      "verified": true
+    },
+    {
+      "key": "frost",
+      "kind": "inbox",
+      "sha256": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313",
+      "bytes": 2265796,
+      "verified": true
+    },
+    {
+      "key": "frost",
+      "kind": "archive",
+      "sha256": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313",
+      "bytes": 2265796,
+      "verified": true
+    },
+    {
+      "key": "gasmoln",
+      "kind": "inbox",
+      "sha256": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd",
+      "bytes": 2511000,
+      "verified": true
+    },
+    {
+      "key": "gasmoln",
+      "kind": "archive",
+      "sha256": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd",
+      "bytes": 2511000,
+      "verified": true
+    },
+    {
+      "key": "hava-forstening",
+      "kind": "inbox",
+      "sha256": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93",
+      "bytes": 2168495,
+      "verified": true
+    },
+    {
+      "key": "hava-forstening",
+      "kind": "archive",
+      "sha256": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93",
+      "bytes": 2168495,
+      "verified": true
+    },
+    {
+      "key": "hjarnblank",
+      "kind": "inbox",
+      "sha256": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75",
+      "bytes": 2259317,
+      "verified": true
+    },
+    {
+      "key": "hjarnblank",
+      "kind": "archive",
+      "sha256": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75",
+      "bytes": 2259317,
+      "verified": true
+    },
+    {
+      "key": "horsel",
+      "kind": "inbox",
+      "sha256": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb",
+      "bytes": 1682689,
+      "verified": true
+    },
+    {
+      "key": "horsel",
+      "kind": "archive",
+      "sha256": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb",
+      "bytes": 1682689,
+      "verified": true
+    },
+    {
+      "key": "illusion",
+      "kind": "inbox",
+      "sha256": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e",
+      "bytes": 1589196,
+      "verified": true
+    },
+    {
+      "key": "illusion",
+      "kind": "archive",
+      "sha256": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e",
+      "bytes": 1589196,
+      "verified": true
+    },
+    {
+      "key": "jordvag",
+      "kind": "inbox",
+      "sha256": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83",
+      "bytes": 3117136,
+      "verified": true
+    },
+    {
+      "key": "jordvag",
+      "kind": "archive",
+      "sha256": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83",
+      "bytes": 3117136,
+      "verified": true
+    },
+    {
+      "key": "koldvag",
+      "kind": "inbox",
+      "sha256": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc",
+      "bytes": 2953684,
+      "verified": true
+    },
+    {
+      "key": "koldvag",
+      "kind": "archive",
+      "sha256": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc",
+      "bytes": 2953684,
+      "verified": true
+    },
+    {
+      "key": "kontrollera-andar",
+      "kind": "inbox",
+      "sha256": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa",
+      "bytes": 2926428,
+      "verified": true
+    },
+    {
+      "key": "kontrollera-andar",
+      "kind": "archive",
+      "sha256": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa",
+      "bytes": 2926428,
+      "verified": true
+    }
+  ],
+  "notes": [
+    "Water elemental WIDE original not mapped; icon and square used.",
+    "Gasmoln generated human figure matches primary icon; initial textual bird misidentification corrected by visual inspection.",
+    "Horsel and illusion regenerated with complete motif within image bounds."
+  ],
+  "records": [
+    {
+      "key": "frammana-skicka-bort-elementar-jord",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/frammana-skicka-bort-elementar-jord-cutout.png",
+      "source_sha256": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde",
+      "source_bytes": 2894464,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.36320647929814387,
+      "alpha_bbox_over_32": [
+        44,
+        63,
+        1216,
+        1204
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "frammana-skicka-bort-elementar-jord",
+        "source_path": "drive://PENDING-frammana-skicka-bort-elementar-jord",
+        "source_sha256": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde",
+        "source_bytes": 2894464,
+        "app_file": "spell-cutout/frammana-skicka-bort-elementar-jord/d707b3131674acd9dc9f793b1bf0d7d3837c6d31e624bda8c068b99ebeeb2562.webp",
+        "app_sha256": "d707b3131674acd9dc9f793b1bf0d7d3837c6d31e624bda8c068b99ebeeb2562",
+        "app_bytes": 244406,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "1e9035e1-44db-455d-a510-553be3ed4a83",
+        "spell_key": "frammana-skicka-bort-elementar-jord",
+        "name": "FRAMMANA/SKICKA BORT ELEMENTAR – JORD (F)",
+        "icon_path": "hermes/spell/frammana-skicka-bort-elementar-jord/67c154708f1da784d0c620553fe1ace9a785a0dde22f9266a1b8914fa5f6b480.webp",
+        "illustration_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/e9910d30-9c1a-442e-8bc3-d1b8de7c8111.webp",
+        "illustration_wide_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/a5a68191-15a8-49fc-8364-9926f0734ffd.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "12oNAZIXdHb61L3FXGVlKlu-pfAgd8Gsm",
+          "title": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde.png",
+          "file_name": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/12oNAZIXdHb61L3FXGVlKlu-pfAgd8Gsm/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "12oNAZIXdHb61L3FXGVlKlu-pfAgd8Gsm",
+            "title": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde.png",
+            "file_name": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/12oNAZIXdHb61L3FXGVlKlu-pfAgd8Gsm/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1PgOECHnr-M3oMnsCW_2Z8tl3G2WF8msf",
+          "title": "d69d08e52202eeccc2a79f62462cb604f69ddb46ad8a6089a2591997038eefde.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1PgOECHnr-M3oMnsCW_2Z8tl3G2WF8msf/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/1e9035e1-44db-455d-a510-553be3ed4a83/d707b313-1674-4cd9-9c9f-793b1bf0d7d3.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-luft",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/frammana-skicka-bort-elementar-luft-cutout.png",
+      "source_sha256": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea",
+      "source_bytes": 1933800,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4828351508029171,
+      "alpha_bbox_over_32": [
+        111,
+        51,
+        1189,
+        1225
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "frammana-skicka-bort-elementar-luft",
+        "source_path": "drive://PENDING-frammana-skicka-bort-elementar-luft",
+        "source_sha256": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea",
+        "source_bytes": 1933800,
+        "app_file": "spell-cutout/frammana-skicka-bort-elementar-luft/c8df4da6414297fc9074f8e4b0bc2e6fdfc8277e379038b558f80c4d31308d49.webp",
+        "app_sha256": "c8df4da6414297fc9074f8e4b0bc2e6fdfc8277e379038b558f80c4d31308d49",
+        "app_bytes": 188690,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9d4628af-9aa1-440d-946a-4aed28eb2caa",
+        "spell_key": "frammana-skicka-bort-elementar-luft",
+        "name": "FRAMMANA/SKICKA BORT ELEMENTAR – LUFT (F)",
+        "icon_path": "hermes/spell/frammana-skicka-bort-elementar-luft/ad7c345d7255c3fd0b8df1636403b6e5c153245b2ca64d437fba3f9a1e244f75.webp",
+        "illustration_path": "spell/9d4628af-9aa1-440d-946a-4aed28eb2caa/6d147fda-86cc-44ea-831d-eb7a51ab80e4.webp",
+        "illustration_wide_path": "spell/9d4628af-9aa1-440d-946a-4aed28eb2caa/0cd9c8cf-7a0b-40a4-9580-f0299608fd78.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1zV8J5X-awIPLhCvQ-ecwL6wvtWk6JN8X",
+          "title": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea.png",
+          "file_name": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1zV8J5X-awIPLhCvQ-ecwL6wvtWk6JN8X/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1zV8J5X-awIPLhCvQ-ecwL6wvtWk6JN8X",
+            "title": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea.png",
+            "file_name": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1zV8J5X-awIPLhCvQ-ecwL6wvtWk6JN8X/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1TLj82s_mjm0A43ZQijBiNXeGx8Xb2SE0",
+          "title": "dc176691f8647f050f152b2797d5bb29c63a81b07c55ac593ed5402cd5b780ea.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1TLj82s_mjm0A43ZQijBiNXeGx8Xb2SE0/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9d4628af-9aa1-440d-946a-4aed28eb2caa/c8df4da6-4142-47fc-9074-f8e4b0bc2e6f.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "frammana-skicka-bort-elementar-vatten",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/frammana-skicka-bort-elementar-vatten-cutout.png",
+      "source_sha256": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805",
+      "source_bytes": 2199097,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4805623599378321,
+      "alpha_bbox_over_32": [
+        76,
+        31,
+        1227,
+        1232
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "frammana-skicka-bort-elementar-vatten",
+        "source_path": "drive://PENDING-frammana-skicka-bort-elementar-vatten",
+        "source_sha256": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805",
+        "source_bytes": 2199097,
+        "app_file": "spell-cutout/frammana-skicka-bort-elementar-vatten/91aeff13a1a5c6a0273bdb25c98a72184e20b35815f6195e9423157919918c7a.webp",
+        "app_sha256": "91aeff13a1a5c6a0273bdb25c98a72184e20b35815f6195e9423157919918c7a",
+        "app_bytes": 228384,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "d3145a34-d95c-4631-a8cf-395b73e6aece",
+        "spell_key": "frammana-skicka-bort-elementar-vatten",
+        "name": "FRAMMANA/SKICKA BORT ELEMENTAR – VATTEN (F)",
+        "icon_path": "hermes/spell/frammana-skicka-bort-elementar-vatten/665f7393a34adaf5b85ffb779145d1a396c4c27f0a10057bc2865d423a83b487.webp",
+        "illustration_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/1811894b-70c1-4e47-a8e8-0ef52cc311fe.webp",
+        "illustration_wide_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/0bc6fc93-e63f-4377-9850-384ff201cc78.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1Y2Xr5MRJNCxEurRdkqdHL2hXCCY3Tbdy",
+          "title": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805.png",
+          "file_name": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1Y2Xr5MRJNCxEurRdkqdHL2hXCCY3Tbdy/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1Y2Xr5MRJNCxEurRdkqdHL2hXCCY3Tbdy",
+            "title": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805.png",
+            "file_name": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1Y2Xr5MRJNCxEurRdkqdHL2hXCCY3Tbdy/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1pu-pKrsJcq0GbhCU8tlE7qDSqPxBWe6D",
+          "title": "465d3e1a56b97f2e5bf3d5efafce5b68501f4105b50710f4461329207339f805.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1pu-pKrsJcq0GbhCU8tlE7qDSqPxBWe6D/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/d3145a34-d95c-4631-a8cf-395b73e6aece/91aeff13-a1a5-46a0-a73b-db25c98a7218.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "frost",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/frost-cutout.png",
+      "source_sha256": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313",
+      "source_bytes": 2265796,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4316560213059835,
+      "alpha_bbox_over_32": [
+        32,
+        16,
+        1219,
+        1224
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "frost",
+        "source_path": "drive://PENDING-frost",
+        "source_sha256": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313",
+        "source_bytes": 2265796,
+        "app_file": "spell-cutout/frost/1280de65cf3b510c81c233ec34ef2d94ebe0a575b3f979bb98bcdb49967ad627.webp",
+        "app_sha256": "1280de65cf3b510c81c233ec34ef2d94ebe0a575b3f979bb98bcdb49967ad627",
+        "app_bytes": 225172,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "f30feb8f-7a61-40ca-af41-95a0a3fd81ae",
+        "spell_key": "frost",
+        "name": "FROST (F)",
+        "icon_path": null,
+        "illustration_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/a8a3014c-9d77-4c58-837f-55c679a6f044.webp",
+        "illustration_wide_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/c7af52cb-3e84-4bcc-9409-7e80612ef899.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1rO7pwpGOv3y9NvmNJVYasY-sCOFljWPn",
+          "title": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313.png",
+          "file_name": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1rO7pwpGOv3y9NvmNJVYasY-sCOFljWPn/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1rO7pwpGOv3y9NvmNJVYasY-sCOFljWPn",
+            "title": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313.png",
+            "file_name": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1rO7pwpGOv3y9NvmNJVYasY-sCOFljWPn/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1zhMLOjLEIKLsH2TJWkzSpnBOoA3sZtDT",
+          "title": "5aabe26973725f9ac4a16a709516fc2ebe84613242c2d12db0385a196c554313.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1zhMLOjLEIKLsH2TJWkzSpnBOoA3sZtDT/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/f30feb8f-7a61-40ca-af41-95a0a3fd81ae/1280de65-cf3b-410c-81c2-33ec34ef2d94.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "gasmoln",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/gasmoln-cutout.png",
+      "source_sha256": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd",
+      "source_bytes": 2511000,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3656395229046954,
+      "alpha_bbox_over_32": [
+        43,
+        65,
+        1222,
+        1207
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "gasmoln",
+        "source_path": "drive://PENDING-gasmoln",
+        "source_sha256": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd",
+        "source_bytes": 2511000,
+        "app_file": "spell-cutout/gasmoln/71cb5b5edcff6a506370e1d72fe58cb5aec75bb42f75630dc0e0f656744b2d21.webp",
+        "app_sha256": "71cb5b5edcff6a506370e1d72fe58cb5aec75bb42f75630dc0e0f656744b2d21",
+        "app_bytes": 199606,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "8a9e979b-c86f-48d9-ab1d-e74f5425db94",
+        "spell_key": "gasmoln",
+        "name": "GASMOLN (F)",
+        "icon_path": "hermes/spell/gasmoln/898e7c25cb21e061b2707b120f8e61a3757fcd0c4ed0a021e8c4cb70c627ad6b.webp",
+        "illustration_path": "spell/8a9e979b-c86f-48d9-ab1d-e74f5425db94/cb8733f9-59df-4447-84cd-5764d767eb91.webp",
+        "illustration_wide_path": "spell/8a9e979b-c86f-48d9-ab1d-e74f5425db94/24c71314-ef48-486f-9d3c-d659fbacc444.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "11tPc_TIbhlB2KPUcCRfLTTukOkY-4r3_",
+          "title": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd.png",
+          "file_name": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/11tPc_TIbhlB2KPUcCRfLTTukOkY-4r3_/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "11tPc_TIbhlB2KPUcCRfLTTukOkY-4r3_",
+            "title": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd.png",
+            "file_name": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/11tPc_TIbhlB2KPUcCRfLTTukOkY-4r3_/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1BcPVKoU_5sOdejGNnyrVVTVUzSW7VTE7",
+          "title": "76419d737d3ec84e580c1917817efed1f0e7576a2dd99c1a43311829576e06cd.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1BcPVKoU_5sOdejGNnyrVVTVUzSW7VTE7/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/8a9e979b-c86f-48d9-ab1d-e74f5425db94/71cb5b5e-dcff-4a50-a370-e1d72fe58cb5.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "hava-forstening",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/hava-forstening-cutout.png",
+      "source_sha256": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93",
+      "source_bytes": 2168495,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.46796026240750493,
+      "alpha_bbox_over_32": [
+        217,
+        45,
+        1106,
+        1221
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "hava-forstening",
+        "source_path": "drive://PENDING-hava-forstening",
+        "source_sha256": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93",
+        "source_bytes": 2168495,
+        "app_file": "spell-cutout/hava-forstening/ad2d91e3a9d0155951871a1fa0798b0fb35ef3bc9288d9c2a1ce5589f8296f50.webp",
+        "app_sha256": "ad2d91e3a9d0155951871a1fa0798b0fb35ef3bc9288d9c2a1ce5589f8296f50",
+        "app_bytes": 169046,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "708ea7ff-0cc7-4563-b528-4e9c194c8ae2",
+        "spell_key": "hava-forstening",
+        "name": "HÄVA FÖRSTENING (F, R)",
+        "icon_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/a5729e0e-3444-4260-8a85-f9d9dbb11274.webp",
+        "illustration_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/f4765430-7568-4522-9f31-9727ff561514.webp",
+        "illustration_wide_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/0d4f1f7c-c0df-4a5a-beb1-288bf63a9021.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1WU8VwZS9Gh5Dh8_YNcdIcaOPpTNZqywt",
+          "title": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93.png",
+          "file_name": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1WU8VwZS9Gh5Dh8_YNcdIcaOPpTNZqywt/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1WU8VwZS9Gh5Dh8_YNcdIcaOPpTNZqywt",
+            "title": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93.png",
+            "file_name": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1WU8VwZS9Gh5Dh8_YNcdIcaOPpTNZqywt/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "12u_y1w-xOcil0AixQhskyFQM9Ir2wg1J",
+          "title": "6c70f766afa9b3322dd77afdb11e580fb990c1cea5b7f3e5464f5895d3fc5b93.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/12u_y1w-xOcil0AixQhskyFQM9Ir2wg1J/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/708ea7ff-0cc7-4563-b528-4e9c194c8ae2/ad2d91e3-a9d0-4559-9187-1a1fa0798b0f.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "hjarnblank",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/hjarnblank-cutout.png",
+      "source_sha256": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75",
+      "source_bytes": 2259317,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4749083634125185,
+      "alpha_bbox_over_32": [
+        65,
+        128,
+        1224,
+        1185
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "hjarnblank",
+        "source_path": "drive://PENDING-hjarnblank",
+        "source_sha256": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75",
+        "source_bytes": 2259317,
+        "app_file": "spell-cutout/hjarnblank/27913a35b43e6058a95307072dd74b33548616d548cd237e214855f48dfaeeb1.webp",
+        "app_sha256": "27913a35b43e6058a95307072dd74b33548616d548cd237e214855f48dfaeeb1",
+        "app_bytes": 190784,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "ea4887d6-f6a9-46ac-bc9f-05064f1f747d",
+        "spell_key": "hjarnblank",
+        "name": "HJÄRNBLANK",
+        "icon_path": "hermes/spell/hjarnblank/e82d59ddc4b256dca594a731916b416e31e24ba831824b9e4ab89c4372f7f0ca.webp",
+        "illustration_path": "spell/ea4887d6-f6a9-46ac-bc9f-05064f1f747d/77820681-79b6-4aa7-8e9d-d826b0d5ba6b.webp",
+        "illustration_wide_path": "spell/ea4887d6-f6a9-46ac-bc9f-05064f1f747d/d7758b69-bf2b-4159-a50a-bb7f3a8cffee.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1gb4jI1JWgTpVWGJhhcK3dAmepO52IpgE",
+          "title": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75.png",
+          "file_name": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1gb4jI1JWgTpVWGJhhcK3dAmepO52IpgE/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1gb4jI1JWgTpVWGJhhcK3dAmepO52IpgE",
+            "title": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75.png",
+            "file_name": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1gb4jI1JWgTpVWGJhhcK3dAmepO52IpgE/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1iD1lTgbUrj85ajUfb6dVQlOBfY3_Lc45",
+          "title": "deff3fd1fded04b7be14458d3f3ac98f589af2a039d02267fb8cd9dd5c1afe75.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1iD1lTgbUrj85ajUfb6dVQlOBfY3_Lc45/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/ea4887d6-f6a9-46ac-bc9f-05064f1f747d/27913a35-b43e-4058-a953-07072dd74b33.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "horsel",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/horsel-cutout.png",
+      "source_sha256": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb",
+      "source_bytes": 1682689,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5962260479384629,
+      "alpha_bbox_over_32": [
+        77,
+        151,
+        1178,
+        1102
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "horsel",
+        "source_path": "drive://PENDING-horsel",
+        "source_sha256": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb",
+        "source_bytes": 1682689,
+        "app_file": "spell-cutout/horsel/855bcfa32a85115bf1486e1b5ebe788d27d23937c5608b18bb0ffa5857db465b.webp",
+        "app_sha256": "855bcfa32a85115bf1486e1b5ebe788d27d23937c5608b18bb0ffa5857db465b",
+        "app_bytes": 147482,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "b0bebee1-3014-4172-b01a-7f22d8738384",
+        "spell_key": "horsel",
+        "name": "HÖRSEL",
+        "icon_path": "hermes/spell/horsel/f1b0205c628acfa341e374c1fd75229578bf7cc24275ab26e7e54f0a644fab4e.webp",
+        "illustration_path": "spell/b0bebee1-3014-4172-b01a-7f22d8738384/cb65c576-fd07-46ad-882f-0d9ce6376f2a.webp",
+        "illustration_wide_path": "spell/b0bebee1-3014-4172-b01a-7f22d8738384/7c45f7f5-320e-46b2-b234-c4fad6f3770e.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1q79YXWA3OYFgtD-Ke3gg_qCSixqvr2Ed",
+          "title": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb.png",
+          "file_name": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1q79YXWA3OYFgtD-Ke3gg_qCSixqvr2Ed/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1q79YXWA3OYFgtD-Ke3gg_qCSixqvr2Ed",
+            "title": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb.png",
+            "file_name": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1q79YXWA3OYFgtD-Ke3gg_qCSixqvr2Ed/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "13fRNXYMh8JGUBSk1NEZm3EvEDJIVfvmb",
+          "title": "801126f1aeaa59bdba5bcd8a8ce93add82b20da4627c55ad6758c23f5426becb.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/13fRNXYMh8JGUBSk1NEZm3EvEDJIVfvmb/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/b0bebee1-3014-4172-b01a-7f22d8738384/855bcfa3-2a85-415b-b148-6e1b5ebe788d.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "illusion",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/illusion-cutout.png",
+      "source_sha256": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e",
+      "source_bytes": 1589196,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.591762500349758,
+      "alpha_bbox_over_32": [
+        122,
+        62,
+        1130,
+        1161
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "illusion",
+        "source_path": "drive://PENDING-illusion",
+        "source_sha256": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e",
+        "source_bytes": 1589196,
+        "app_file": "spell-cutout/illusion/940ad3d01aff6c1a0318ff898ce511616f87db1c17a85aba1ffcd05f324b4250.webp",
+        "app_sha256": "940ad3d01aff6c1a0318ff898ce511616f87db1c17a85aba1ffcd05f324b4250",
+        "app_bytes": 157508,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "c094e4ec-286b-47fa-8d30-7f2350e86535",
+        "spell_key": "illusion",
+        "name": "ILLUSION (F)",
+        "icon_path": "hermes/spell/illusion/3acb440bac275cba686ce0fb20347b902ceac201c1cdbc74605942f8bed674ec.webp",
+        "illustration_path": "spell/c094e4ec-286b-47fa-8d30-7f2350e86535/9e167dd4-7971-4ead-ae48-2232cdbf2636.webp",
+        "illustration_wide_path": "spell/c094e4ec-286b-47fa-8d30-7f2350e86535/f7d926b0-43a5-4133-98c3-ef07d830ae6e.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1zz8Pu9H37LdL-FPAssOf7kkDoQ3MYmOV",
+          "title": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e.png",
+          "file_name": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1zz8Pu9H37LdL-FPAssOf7kkDoQ3MYmOV/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1zz8Pu9H37LdL-FPAssOf7kkDoQ3MYmOV",
+            "title": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e.png",
+            "file_name": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1zz8Pu9H37LdL-FPAssOf7kkDoQ3MYmOV/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1S1mScNtMnYy0IMfT4jy5Pf2UAHy4otcY",
+          "title": "71d5a882e593105c50ee62ce8938b524a6e268803948aa245a7a16b5ba98c58e.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1S1mScNtMnYy0IMfT4jy5Pf2UAHy4otcY/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/c094e4ec-286b-47fa-8d30-7f2350e86535/940ad3d0-1aff-4c1a-8318-ff898ce51161.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "jordvag",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/jordvag-cutout.png",
+      "source_sha256": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83",
+      "source_bytes": 3117136,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.33035466729750285,
+      "alpha_bbox_over_32": [
+        52,
+        39,
+        1232,
+        1227
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "jordvag",
+        "source_path": "drive://PENDING-jordvag",
+        "source_sha256": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83",
+        "source_bytes": 3117136,
+        "app_file": "spell-cutout/jordvag/2c689c0108570adfa577f9fa495827180ecb3fecdc85176e07b56d531da84a5b.webp",
+        "app_sha256": "2c689c0108570adfa577f9fa495827180ecb3fecdc85176e07b56d531da84a5b",
+        "app_bytes": 241358,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "a60a963d-ccc1-4dc6-8d27-d25eaad7776a",
+        "spell_key": "jordvag",
+        "name": "JORDVÄG",
+        "icon_path": "hermes/spell/jordvag/a5bb67756b4579326fd3680f4c9b71b775409e13085871d019b054400b29b6bf.webp",
+        "illustration_path": "spell/a60a963d-ccc1-4dc6-8d27-d25eaad7776a/a742ed9e-5781-4060-b863-36de3119e21c.webp",
+        "illustration_wide_path": "spell/a60a963d-ccc1-4dc6-8d27-d25eaad7776a/91ec4d5f-d84b-4651-8918-c09cd6dc27bc.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1JX3PSmYf76JGLB9Y1qyeyQRBXrgpMTw-",
+          "title": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83.png",
+          "file_name": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1JX3PSmYf76JGLB9Y1qyeyQRBXrgpMTw-/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1JX3PSmYf76JGLB9Y1qyeyQRBXrgpMTw-",
+            "title": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83.png",
+            "file_name": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1JX3PSmYf76JGLB9Y1qyeyQRBXrgpMTw-/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1u_fxxOBCDMhg1ZIbzO-GFSquZsYsl5St",
+          "title": "13d0d0204012b7eb7ea4b19ecb1502f5f3801549a14f6073debb1ad4024b8e83.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1u_fxxOBCDMhg1ZIbzO-GFSquZsYsl5St/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/a60a963d-ccc1-4dc6-8d27-d25eaad7776a/2c689c01-0857-4adf-a577-f9fa49582718.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "koldvag",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/koldvag-cutout.png",
+      "source_sha256": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc",
+      "source_bytes": 2953684,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3194447624062331,
+      "alpha_bbox_over_32": [
+        26,
+        40,
+        1216,
+        1210
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "koldvag",
+        "source_path": "drive://PENDING-koldvag",
+        "source_sha256": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc",
+        "source_bytes": 2953684,
+        "app_file": "spell-cutout/koldvag/f7c190f42336bd1771a276ae05d1a0baedda2a46150b68d4f8b9452b401f699a.webp",
+        "app_sha256": "f7c190f42336bd1771a276ae05d1a0baedda2a46150b68d4f8b9452b401f699a",
+        "app_bytes": 263578,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "32972520-d0b3-4a70-bb4a-a6c26983f13a",
+        "spell_key": "koldvag",
+        "name": "KÖLDVÄG",
+        "icon_path": "hermes/spell/koldvag/87087949ba5795991beef0050aedec429a12c9b55c867458c032822637fa11ac.webp",
+        "illustration_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/0d01082d-0525-4da8-93b3-939ba165ae5d.webp",
+        "illustration_wide_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/56638200-34fc-402b-b05a-62590aefbeab.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1US048I8E7S8OFP8w5ejvCaEPOX5vTA67",
+          "title": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc.png",
+          "file_name": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1US048I8E7S8OFP8w5ejvCaEPOX5vTA67/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1US048I8E7S8OFP8w5ejvCaEPOX5vTA67",
+            "title": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc.png",
+            "file_name": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1US048I8E7S8OFP8w5ejvCaEPOX5vTA67/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1N0R57oqTKvCgn-nqWvIMIk_s3NrVYevp",
+          "title": "92d19b001a19a2085076a91065125cfa6baf0b9f373c5ff582e56e9cb5712acc.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1N0R57oqTKvCgn-nqWvIMIk_s3NrVYevp/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/32972520-d0b3-4a70-bb4a-a6c26983f13a/f7c190f4-2336-4d17-b1a2-76ae05d1a0ba.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "kontrollera-andar",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/kontrollera-andar-cutout.png",
+      "source_sha256": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa",
+      "source_bytes": 2926428,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3139268535264506,
+      "alpha_bbox_over_32": [
+        67,
+        35,
+        1216,
+        1218
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "kontrollera-andar",
+        "source_path": "drive://PENDING-kontrollera-andar",
+        "source_sha256": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa",
+        "source_bytes": 2926428,
+        "app_file": "spell-cutout/kontrollera-andar/9278b91c043869cb7e75e5c2de7eccef1cd79044c76723fc128e8530213794d2.webp",
+        "app_sha256": "9278b91c043869cb7e75e5c2de7eccef1cd79044c76723fc128e8530213794d2",
+        "app_bytes": 230420,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "5a69bc6d-4044-4a5b-bb29-6107353a6d86",
+        "spell_key": "kontrollera-andar",
+        "name": "KONTROLLERA ANDAR",
+        "icon_path": "hermes/spell/kontrollera-andar/74912624b1a904a407872460dd89dd917596f3389998a14fa20a4f81f193953d.webp",
+        "illustration_path": "spell/5a69bc6d-4044-4a5b-bb29-6107353a6d86/f33cc8dc-37f8-4fdf-a07c-0eb65143153b.webp",
+        "illustration_wide_path": "spell/5a69bc6d-4044-4a5b-bb29-6107353a6d86/27c93066-a854-450d-9a19-5afc396a6be9.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1XqC_vN_vCf4ztk00Lu7sLt-e-DLbVINX",
+          "title": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa.png",
+          "file_name": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1XqC_vN_vCf4ztk00Lu7sLt-e-DLbVINX/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1XqC_vN_vCf4ztk00Lu7sLt-e-DLbVINX",
+            "title": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa.png",
+            "file_name": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1XqC_vN_vCf4ztk00Lu7sLt-e-DLbVINX/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1E1AdLQkqFy0-Jcod-cRK2QkyTPYqf7rj",
+          "title": "b65c1861d3db14b12a5100edf91571da1961e9c2540346e18380a79bd6fe93fa.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1E1AdLQkqFy0-Jcod-cRK2QkyTPYqf7rj/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/5a69bc6d-4044-4a5b-bb29-6107353a6d86/9278b91c-0438-49cb-be75-e5c2de7eccef.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    }
+  ]
+}
