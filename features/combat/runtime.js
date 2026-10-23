@@ -6277,8 +6277,8 @@ function combatTurnPanelHtml(){
  const roundCharacter=actor?.source_type==='character'&&typeof chars!=='undefined'?
   (chars||[]).find(c=>String(c._dbId||'')===String(actor.source_id||'')):null;
  const canAdjustRound=!!actor&&(canManage||(!!roundCharacter&&typeof canEditCharacter==='function'&&canEditCharacter(roundCharacter)));
- const roundAdjustButton=canAdjustRound?
-  '<button type="button" class="combat-round-adjust-button" aria-label="Justera rundbakgrund" title="Flytta rundbakgrund" onclick="window.aleaRoundGallery?.openFocusEditor?.()">⌖</button>':'';
+ // Background positioning remains available through the round gallery editor.
+ const roundAdjustButton='';
  const lastUndo=activeCombat?.settings?.turn_undo_last;
  const undoButton=canManage
   ?'<button type="button" class="combat-turn-undo-btn" title="Ångra senaste drag" aria-label="Ångra senaste drag" onclick="window.undoLastCombatTurn?.(event)" '+(!lastUndo?'disabled':'')+'>↶</button>'
