@@ -71,3 +71,8 @@
  stroke-width:3.5!important;
 }
 @media (prefers-reduced-motion:reduce){#combatPage .combat-map-svg .combat-hex.yellow-brick-road{animation:none!important}}
+
+/* ICARUS V1 – disposable wing placeholder, no permanent badge design. */
+#combatPage .combat-flight-status circle{fill:#242f39;fill-opacity:.94;stroke:#b7dff1;stroke-width:1.4}
+#combatPage .combat-flight-status path{stroke:#e1f6ff;stroke-width:2}
+#combatPage .combat-flight-status{pointer-events:none}
