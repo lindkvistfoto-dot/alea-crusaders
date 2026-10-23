@@ -82,7 +82,7 @@ function checkAsset(a:any,archiveRequired=false){
  const expected=/^drive:\/\/[A-Za-z0-9_-]{10,160}$/.test(a.source_path||"");
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.kind==='system-asset'){
-  const profile=systemAssetProfile(a.target_key);
+  const profile=maybeSystemAssetProfile(a.target_key);
   if(!archiveRequired||!expected||a.app_file!==out||a.target_id!==profile.id||
     a.width!==profile.display_size[0]||a.height!==profile.display_size[1]||a.alpha_preserved!==true)
    throw Error('INVALID_SYSTEM_ASSET_METADATA');
