@@ -40,7 +40,7 @@ it('applies the real migration and enforces publication constraints, RLS and col
   const update=`update arcane_system_assets set asset_path='${path}',app_sha256='${sha}',app_bytes=1234,width=${profile.display_size[0]},height=${profile.display_size[1]},alpha_preserved=true where asset_key='${key}' and asset_path is null returning id`;
   expect((await db.query(update)).rows).toHaveLength(1);
   expect((await db.query(update)).rows).toHaveLength(0); // CAS cannot overwrite an active pointer.
-  await expect(db.exec("update arcane_system_assets set width=640 where asset_path is not null")).rejects.toThrow(/arcane_system_asset_publication/);
+  await expect(db.exec("update arcane_system_assets set width=0 where asset_path is not null")).rejects.toThrow(/arcane_system_asset_publication/);
   await expect(db.exec("update arcane_system_assets set alpha_preserved=false where asset_path is not null")).rejects.toThrow(/arcane_system_asset_publication/);
   await db.exec('reset role; set role authenticated');
   expect((await db.query('select asset_path from arcane_system_assets')).rows).toEqual([{asset_path:path}]);
