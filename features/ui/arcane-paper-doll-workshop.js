@@ -171,6 +171,46 @@
  function handleAction(action){try{if(action==='save-pose'){savePose().catch(error=>setStatus(error.message,'error'));return}if(action==='load-pose'){loadPose().catch(error=>setStatus(error.message,'error'));return}if(action==='clear-cutout'){if(cutoutUrl)URL.revokeObjectURL(cutoutUrl);cutoutUrl='';cutoutFile=null;applyCutout();setStatus('Cutout borttagen från förhandsvisningen.');return}if(action==='reset'){values={...DEFAULT};applyProfile(snapshot('Återställ'));handleZoom('reset');setStatus('Reglagen och zoomen återställda.');return}if(action==='save'){const name=$('apdwProfileName')?.value.trim();if(!name)throw new Error('Ange ett namn på monteringsprofilen.');profiles[name]=snapshot(name);saveStore();render();if($('apdwProfileSelect'))$('apdwProfileSelect').value=name;if($('apdwProfileName'))$('apdwProfileName').value=name;setStatus('Profilen “'+name+'” sparades och kan användas med valfritt porträtt.');return}if(action==='load'){const name=$('apdwProfileSelect')?.value;if(!name||!profiles[name])throw new Error('Välj en sparad profil först.');applyProfile(profiles[name]);$('apdwProfileName').value=name;setStatus('Profilen “'+name+'” återlästes.');return}if(action==='delete'){const name=$('apdwProfileSelect')?.value;if(!name||!profiles[name])throw new Error('Välj en sparad profil först.');delete profiles[name];saveStore();render();setStatus('Profilen togs bort.');return}if(action==='export'){const name=$('apdwProfileSelect')?.value||$('apdwProfileName')?.value.trim()||'monteringsprofil';const profile=profiles[name]||snapshot(name);download(name+'.json',JSON.stringify(profile,null,2));setStatus('JSON-profil exporterad.');return}if(action==='import'){$('apdwImportFile')?.click()}}catch(error){setStatus(error.message,'error')}}
  function download(name,text){const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name.replace(/[^\p{L}\p{N}._-]+/gu,'_');a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  async function importFile(file){if(!file)return;try{const data=JSON.parse(await file.text()),items=Array.isArray(data)?data:[data];if(!items.length||items.some(x=>!profileValid(x)))throw new Error('JSON innehåller en ogiltig monteringsprofil.');for(const profile of items){const name=String(profile.name||'Importerad profil').trim().slice(0,60)||'Importerad profil';profiles[name]={...profile,name};}profiles=normalizeProfiles(profiles);saveStore();render();setStatus(items.length===1?'Monteringsprofil importerad.':items.length+' monteringsprofiler importerade.')}catch(error){setStatus(error.message||'JSON-filen kunde inte läsas.','error')}finally{const input=$('apdwImportFile');if(input)input.value=''}}
- async function mount(){if(!isAdmin())return;profiles=normalizeProfiles(safeRead());const provider=root.aleaPaperDollWorkshopData;if(typeof provider!=='function'){setStatus('Appens porträttregister är inte tillgängligt.');return}const mountPoint=$('arcanePaperDollWorkshopMount');if(!mountPoint)return;mountPoint.innerHTML='<p class="apdw-status">Läser porträttregister och HERMES-resurser…</p>';try{const data=await provider();records=Array.isArray(data.records)?data.records.filter(x=>x&&x.id):[];resources=data.systemAssets||{assets:[],systemArt:{}};root.aleaPaperDollWorkshopUser=data.userId||'shared';profiles=normalizeProfiles(safeRead());if(!records.some(x=>x.id===selected))selected='';render();if(data.warnings?.length)setStatus(data.warnings.join(' '),'error')}catch(error){records=[];resources={assets:[],systemArt:{}};render();setStatus('Porträttlistan kunde inte läsas: '+(error.message||error),'error')}}
+ let mountRequest=0;
+ const LOAD_TIMEOUT_MS=10000;
+ function loadingMessage(message){
+  const mountPoint=$('arcanePaperDollWorkshopMount');
+  if(!mountPoint)return;
+  mountPoint.innerHTML='<p class="apdw-status" role="status">'+escape(message)+'</p>'+
+   '<button type="button" id="apdwRetryLoad">Försök igen</button>';
+  $('apdwRetryLoad')?.addEventListener('click',()=>{void mount()});
+ }
+ async function mount(){
+  if(!isAdmin())return;
+  const request=++mountRequest;
+  profiles=normalizeProfiles(safeRead());
+  const provider=root.aleaPaperDollWorkshopData;
+  if(typeof provider!=='function'){
+   loadingMessage('Appens porträttregister är inte tillgängligt.');
+   return;
+  }
+  const mountPoint=$('arcanePaperDollWorkshopMount');
+  if(!mountPoint)return;
+  mountPoint.innerHTML='<p class="apdw-status" role="status">Läser porträttregister och HERMES-resurser…</p>';
+  let timeout;
+  try{
+   const data=await Promise.race([
+    Promise.resolve().then(()=>provider()),
+    new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('Laddningen tog mer än 10 sekunder.')),LOAD_TIMEOUT_MS)})
+   ]);
+   if(request!==mountRequest)return;
+   records=Array.isArray(data?.records)?data.records.filter(x=>x&&x.id):[];
+   resources=data?.systemAssets||{assets:[],systemArt:{}};
+   root.aleaPaperDollWorkshopUser=data?.userId||'shared';
+   profiles=normalizeProfiles(safeRead());
+   if(!records.some(x=>x.id===selected))selected='';
+   render();
+   if(data?.warnings?.length)setStatus(data.warnings.join(' '),'error');
+  }catch(error){
+   if(request!==mountRequest)return;
+   loadingMessage('Dockfabriken kunde inte laddas: '+(error?.message||'Okänt fel.')+' Försök igen.');
+  }finally{clearTimeout(timeout)}
+ }
+
  root.aleaPaperDollWorkshop=Object.freeze({mount,profileValid,normalizeProfiles,applyValues});
 })(globalThis);
