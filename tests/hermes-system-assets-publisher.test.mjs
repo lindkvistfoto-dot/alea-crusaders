@@ -35,7 +35,8 @@ it('rejects wrong keys, UUID, dimensions, alpha or missing batch archive before 
 });
 
 it('auto-registers an unknown valid system key and resumes without duplicate upload',async()=>{
- const a={...assets()[0],target_key:'arcane-future-double-base',target_id:'00000000-0000-4000-8000-000000000099',width:1280,height:768};
+ const key='arcane-future-double-base';
+ const a={...assets()[0],target_key:key,target_id:'00000000-0000-4000-8000-000000000099',app_file:`system-asset/${key}/${sha}.webp`,width:1280,height:768};
  const state=database({systemRows:[]});
  const first=await run(state,{assets:[a]});expect(first.error).toBeUndefined();
  expect(first.report.items[0].status).toBe('active');
