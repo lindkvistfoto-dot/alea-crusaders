@@ -4957,6 +4957,10 @@ function renderCombatMap(){
  const reachable=planningActor?combatReachableHexes(planningActor):new Map();
  const originKey=planningActor?((Number(planningActor.q)||0)+','+(Number(planningActor.r)||0)):'';
  const previewKey=planningActor&&combatMovementPlan?Number(combatMovementPlan.q)+','+Number(combatMovementPlan.r):'';
+ // YELLOW BRICK ROAD: highlight the exact costed path used for movement commit.
+ const previewRoute=planningActor&&combatMovementPlan&&previewKey!==originKey
+  ?combatMovementHexPath(planningActor,combatMovementPlan.q,combatMovementPlan.r):null;
+ const roadKeys=new Set((previewRoute?.path||[]).map(step=>step.q+','+step.r));
  const attackTargets=combatCurrentAttackTargets();
  const areaMode=combatAreaPlacementActive&&combatCanManage();
   const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
@@ -4979,6 +4983,7 @@ function renderCombatMap(){
    cls.push(combatDestinationKeepsAction(actor,moveCost)?'move-action-kept':'move-action-spent')
   }
   if(cell.key===originKey)cls.push('move-origin');
+  if(roadKeys.has(cell.key))cls.push('yellow-brick-road');
   const reachText=moveCost!=null
    ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
