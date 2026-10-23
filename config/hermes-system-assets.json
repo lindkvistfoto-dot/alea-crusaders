@@ -3,6 +3,7 @@
   "kind": "system-asset",
   "bucket": "alea-hermes-public",
   "max_edge": 1280,
+  "default_archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
   "assets": {
     "arcane-paper-doll-hexagon-base": {
       "id": "2ab9aa61-4b89-4d7f-8905-19ce644d9121",
