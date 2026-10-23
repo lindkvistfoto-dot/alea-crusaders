@@ -115,7 +115,7 @@
 
 /* Strictly layered mounting: the base remains visible beneath the figure. */
 #arcanePaperDollWorkshopMount .apdw-base{z-index:1!important}
-#arcanePaperDollWorkshopMount .apdw-cutout{z-index:5!important;max-height:85%;width:auto;object-fit:contain;pointer-events:none}
+#arcanePaperDollWorkshopMount .apdw-cutout{z-index:5!important;max-height:none;width:auto;object-fit:contain;pointer-events:none}
 #arcanePaperDollWorkshopMount .apdw-cutout-controls{background:#201a13}
 
 #arcanePaperDollWorkshopMount .apdw-pose-admin{display:grid;gap:10px;padding:14px;margin:12px 0;border:1px solid #927246;border-radius:10px;background:#201a14}
