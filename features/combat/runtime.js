@@ -3512,6 +3512,17 @@ function combatAttackWeaponOptions(combatant,mode='auto'){
   seen.add(key);return true
  })
 }
+function combatShieldSkillFv(combatant,shield){
+ const character=combatCharacterSource(combatant);
+ if(character&&typeof window!=='undefined'&&window.aleaSkillResolver){
+  const skillId=String(shield?.skill_id||shield?.skillId||'skoldar');
+  const resolved=window.aleaSkillResolver.resolve(character,skillId,typeof ruleSkills!=='undefined'?ruleSkills:[]);
+  return resolved.fv;
+ }
+ // Preserve explicit FV for NPC/monster snapshots, which have no character sheet.
+ const fv=combatNumber(shield?.fv,null);
+ return fv!=null&&fv>0?fv:null;
+}
 function combatParryOptions(combatant){
  const profile=combatAttackProfile(combatant),out=[],seen=new Set();
  const add=(option)=>{
@@ -3531,7 +3542,7 @@ function combatParryOptions(combatant){
    kind:'shield',
    key:'shield:'+(shield.equipId||shield.id||shield.name||'shield'),
    name:shield.name||'Sköld',
-   fv:combatNumber(shield.fv,null),
+   fv:combatShieldSkillFv(combatant,shield),
    abs:combatNumber(shield.abs??shield.protection,0),
    item:shield
   })

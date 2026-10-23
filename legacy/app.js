@@ -312,22 +312,14 @@ function characterWeaponSkill(item,c=current){
  let id=weaponSkillId(item);return id?(c?.skills||[]).find(sk=>sk.skillId===id)||null:null
 }
 function characterWeaponSkillTarget(item,c=current){
- let skillId=weaponSkillId(item),rule=skillId?(ruleSkills||[]).find(r=>r.id===skillId)||null:null,skill=characterWeaponSkill(item,c);
- let skillName=rule?.name||skill?.name||item?.skillName||skillId||'';
+ const skillId=weaponSkillId(item);
  if(skillId){
-  let explicit=Number(skill?.fv);
-  if(Number.isFinite(explicit)&&explicit>0)return{fv:explicit,skillId,skillName,source:'FV',linked:true,skill};
-  let bc=String(rule?.bc??'').trim().toUpperCase();
-  if(bc&&bc!=='0'&&bc!=='—'&&bc!=='NONE'){
-   let names={STY:'Styrka',FYS:'Fysik',STO:'Storlek',SMI:'Smidighet',INT:'Intelligens',PSY:'Psykisk kraft',KAR:'Karisma'};
-   let baseKey=names[bc]||Object.keys(c?.base||{}).find(k=>k.toLocaleUpperCase('sv-SE')===bc)||null;
-   let baseChance=Number(baseKey?c?.base?.[baseKey]?.g:null);
-   if(Number.isFinite(baseChance)&&baseChance>0)return{fv:baseChance,skillId,skillName,source:'BC '+bc,linked:true,skill}
-  }
-  return{fv:null,skillId,skillName,source:'FV',linked:true,skill}
+  const resolved=window.aleaSkillResolver?.resolve(c,skillId,ruleSkills||[]);
+  if(resolved)return {...resolved,linked:true};
+  return {fv:null,skillId,skillName:skillId,source:'unavailable',linked:true,skill:null};
  }
- let legacy=(item?.fv===null||item?.fv===undefined||item?.fv==='')?null:Number(item.fv);
- return{fv:Number.isFinite(legacy)?legacy:null,skillId:'',skillName:'',source:'Vapen-FV',linked:false,skill:null}
+ const legacy=(item?.fv===null||item?.fv===undefined||item?.fv==='')?null:Number(item.fv);
+ return {fv:Number.isFinite(legacy)?legacy:null,skillId:'',skillName:'',source:'Vapen-FV',linked:false,skill:null};
 }
 function characterWeaponFv(item,c=current){return characterWeaponSkillTarget(item,c).fv}
 function characterWeaponErfItem(item,c=current){return characterWeaponSkill(item,c)||item}
