@@ -6272,6 +6272,30 @@ function combatTurnVitalPercent(current,maximum){
 }
 const combatOrnateFrameCorners = '<span class="combat-ornate-corners" aria-hidden="true"><i class="combat-ornate-corner tl"></i><i class="combat-ornate-corner tr"></i><i class="combat-ornate-corner br"></i><i class="combat-ornate-corner bl"></i></span>';
 const combatRoundArtLayer='<span class="combat-round-artwork" aria-hidden="true"><img class="combat-round-artwork-image" src="./assets/combat/round-hero-battle-pilot.avif" alt="" loading="eager" decoding="async" onerror="window.aleaRoundGallery?.fallbackImage?.(this)"></span>';
+// Mounted mode UI pilot: independent of equipment and animal inventory.
+function combatMountMode(actor){
+ if(!actor)return 'walk';
+ try{return localStorage.getItem('alea-combat-mount:'+String(activeCombat?.id||'')+':'+String(actor.id))==='mounted'?'mounted':'walk'}catch{return 'walk'}
+}
+function combatSetMountMode(actorId,mode){
+ if(mode!=='walk'&&mode!=='mounted')return;
+ const actor=combatActiveActor();
+ if(!actor||String(actor.id)!==String(actorId))return;
+ try{localStorage.setItem('alea-combat-mount:'+String(activeCombat?.id||'')+':'+String(actor.id),mode)}catch{}
+ document.querySelectorAll('.combat-mount-toggle button').forEach(button=>{
+  const selected=button.dataset.mountMode===mode;
+  button.classList.toggle('selected',selected);
+  button.setAttribute('aria-pressed',String(selected));
+ });
+}
+window.combatSetMountMode=combatSetMountMode;
+function combatMountToggleHtml(actor){
+ const mode=combatMountMode(actor);
+ return '<div class="combat-mount-toggle" role="group" aria-label="Förflyttningssätt">'+
+  [['walk','🚶','Gående'],['mounted','🐎','Beriden']].map(([key,glyph,label])=>
+   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\''+escAttr(actor.id)+'\',\''+key+'\')">'+glyph+'</button>').join('')+
+ '</div>';
+}
 function combatTurnPanelHtml(){
  const actor=combatActiveActor(),canManage=combatCanManage(),state=combatTurnActionState(actor);
  const roundCharacter=actor?.source_type==='character'&&typeof chars!=='undefined'?
@@ -6307,7 +6331,7 @@ function combatTurnPanelHtml(){
  const psyCurrent=actor.current_psy==null?'—':actor.current_psy,psyMax=actor.max_psy==null?'—':actor.max_psy;
  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
   '<div class="combat-turn-actor">'+
-   combatTurnPortraitHtml(actor)+
+   combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><div class="combat-vital-meter"><i class="combat-vital-fill move" style="width:'+combatTurnVitalPercent(remaining,maximum)+'%"></i></div></div>'+
@@ -6995,3 +7019,11 @@ window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.class
 window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
 
 /* v0.33.82 — never allow the active combatant to be an attack target */
+
+
+/* Arcane mounted mode: icon-only controls left of the active hex portrait. */
+.combat-turn-actor{position:relative}
+.combat-mount-toggle{display:flex;flex-direction:column;gap:5px;align-self:center;flex:none;padding:5px;border:1px solid #997647;border-radius:12px;background:#102c42;box-shadow:inset 0 0 10px #081521}
+.combat-mount-toggle button{width:38px;height:38px;display:grid;place-items:center;background:#183449;color:#e6c78d;border:1px solid #58718a;border-radius:9px;font-size:22px;line-height:1;cursor:pointer;touch-action:manipulation}
+.combat-mount-toggle button.selected{background:#285577;border-color:#e2b66b;box-shadow:0 0 0 2px #a77a3d,0 0 9px #3887d2}
+.combat-mount-toggle button:focus-visible{outline:2px solid #f4d99b;outline-offset:3px}
