@@ -4997,6 +4997,12 @@ function renderCombatMap(){
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
  }).join('');
+ // Visual guide only: the exact server-validated route, never a straight shortcut.
+ const roadPoints=previewRoute&&planningActor
+  ?[{q:Number(planningActor.q)||0,r:Number(planningActor.r)||0},...previewRoute.path]
+   .map(step=>byCoord.get(step.q+','+step.r)).filter(Boolean):[];
+ const roadLine=roadPoints.length>1
+  ?'<polyline class="yellow-brick-road-line" points="'+roadPoints.map(p=>p.x+','+p.y).join(' ')+'" fill="none" pointer-events="none" aria-hidden="true"/>':'';
  const areasOverlay=cells.map(cell=>{
   const areas=combatAreasForHex(cell.q,cell.r);
   const preview=combatAreaDraftCenter&&cell.q===combatAreaDraftCenter.q&&cell.r===combatAreaDraftCenter.r;
@@ -5064,7 +5070,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+areasOverlay+tokens+movementHitTargets+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+roadLine+areasOverlay+tokens+movementHitTargets+'</svg>'
 }
 
 // Stridsdeltagare bär sitt porträtts lagringssökväg i state. Den är
