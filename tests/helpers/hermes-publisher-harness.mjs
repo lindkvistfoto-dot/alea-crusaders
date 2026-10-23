@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 import {createHash, webcrypto} from 'node:crypto';
 import vm from 'node:vm';
-import {assertSpellCutoutWritable, systemAssetProfile} from '../../scripts/hermes2_asset_profiles.ts';
+import {assertSpellCutoutWritable, maybeSystemAssetProfile, systemAssetLabel} from '../../scripts/hermes2_asset_profiles.ts';
 
 const code = stripTypeScriptTypes(readFileSync(new URL('../../scripts/hermes2_publish.ts', import.meta.url), 'utf8').replace(/^import .*;\n/gm, ''));
 const raw = new Uint8Array(Buffer.from('verified converter WebP bytes'));
@@ -84,7 +84,7 @@ async function run(state, {assets=Array.from({length:5},(_,i)=>asset(i)), mode='
   let report;
   const manifest = {schema:2,publication_mode:mode,archive_required:true,assets};
   const env={SUPABASE_URL:'https://storage.test',SUPABASE_SERVICE_ROLE_KEY:'test-secret',GITHUB_REPOSITORY:'lindkvistfoto-dot/alea-crusaders',GITHUB_REF:'refs/heads/main',GITHUB_RUN_ID:'12345678',GITHUB_SHA:'b'.repeat(40),HERMES_REPORT_PATH:'output/publisher-report.json'};
-  const context={Uint8Array,ArrayBuffer,Blob,TextEncoder,crypto:webcrypto,Date,assertSpellCutoutWritable,systemAssetProfile,
+  const context={Uint8Array,ArrayBuffer,Blob,TextEncoder,crypto:webcrypto,Date,assertSpellCutoutWritable,maybeSystemAssetProfile,systemAssetLabel,
     createClient(){state.calls.clients++;return state.db},
     Deno:{env:{get:key=>env[key]},args:['manifest','output'],readTextFile:async()=>JSON.stringify(manifest),readFile:async()=>raw,
       writeTextFile:async(path,text)=>{expect(path).toBe('output/publisher-report.json');report=JSON.parse(text)}},
