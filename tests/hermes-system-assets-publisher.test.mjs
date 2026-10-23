@@ -49,3 +49,17 @@ it('corrupt upload or post-activation read failure cannot leave a published poin
   for(const row of rows().slice(1))expect(state.targets.get(row.id).asset_path).toBeTruthy();
  }
 });
+
+it('registers a missing validated system row and resumes without duplicate registration or WebP upload',async()=>{
+ const a=assets()[0],state=database({systemRows:[]});
+ const first=await run(state,{assets:[a]});
+ expect(first.error).toBeUndefined();
+ expect(first.report.items[0].status).toBe('active');
+ expect(state.calls.registrations).toEqual([{id:a.target_id,asset_key:a.target_key,label:profiles.assets[a.target_key].label}]);
+ expect(state.targets.get(a.target_id).asset_path).toBe('hermes/'+a.app_file);
+ const retry=await run(state,{assets:[a]});
+ expect(retry.error).toBeUndefined();
+ expect(retry.report.items[0].status).toBe('already_active');
+ expect(state.calls.registrations).toHaveLength(1);
+ expect(state.calls.uploads).toHaveLength(1);
+});
