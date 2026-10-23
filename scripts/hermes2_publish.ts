@@ -83,8 +83,10 @@ function checkAsset(a:any,archiveRequired=false){
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.kind==='system-asset'){
   const profile=maybeSystemAssetProfile(a.target_key);
-  if(!archiveRequired||!expected||a.app_file!==out||a.target_id!==profile.id||
-    a.width!==profile.display_size[0]||a.height!==profile.display_size[1]||a.alpha_preserved!==true)
+  const validUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(a.target_id||"");
+  const validDimensions=Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=1&&a.width<=1280&&a.height>=1&&a.height<=1280;
+  if(!archiveRequired||!expected||a.app_file!==out||!validUuid||!validDimensions||a.alpha_preserved!==true||
+    (profile&&(a.target_id!==profile.id||a.width!==profile.display_size[0]||a.height!==profile.display_size[1]))
    throw Error('INVALID_SYSTEM_ASSET_METADATA');
   return {table:'arcane_system_assets',field:'asset_key',sourcePath:a.source_path,
    appPath:'hermes/'+out,assetField:'asset_path' as const};
@@ -118,11 +120,10 @@ async function publish(a:any){
  let {data:target,error:targetError}=await lookupTarget();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
  if(!target&&system){
-  // Register the empty pointer only after archive/source verification. A unique
-  // race is resolved by readback, and the profile's immutable UUID is enforced.
-  const profile=systemAssetProfile(a.target_key);
+  // Register the empty pointer only after source and archive verification.
+  // A unique race is resolved by readback; UUID identity is pinned in the queue.
   const {error:registerError}=await db.from("arcane_system_assets").insert({
-   id:profile.id,asset_key:a.target_key,label:profile.label
+   id:a.target_id,asset_key:a.target_key,label:systemAssetLabel(a.target_key)
   });
   if(registerError&&registerError.code!=="23505")throw Error("TARGET_REGISTER "+registerError.message);
   ({data:target,error:targetError}=await lookupTarget());
