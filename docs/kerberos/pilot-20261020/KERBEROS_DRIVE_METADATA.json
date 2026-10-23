@@ -1,0 +1,196 @@
+{
+  "observed_at": "2026-10-20T11:05:09.624840+00:00",
+  "scope": "five source IDs and five target folders; metadata only does not establish write permission",
+  "results": [
+    {
+      "id": "1GHgNkHN0KHuSM4T3hnUq5lOjN_2iID9b",
+      "title": "ARCANE_IVORY_varseblivning_recovery_20261020.png",
+      "mime_type": "image/png",
+      "size": "2721849",
+      "url": null,
+      "file_or_folder": "file",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1_pNuKW3HLBI9_DwuVrOPVOFbVitEYCx1",
+      "title": "arcane-cutout-pilot-v1-20261019-antimagi.png",
+      "mime_type": "image/png",
+      "size": "2453778",
+      "url": null,
+      "file_or_folder": "file",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1odFegBa_8HHRHv1TjRxMocXeBFHK8gop",
+      "title": "spell-illustration-wide-varseblivning-20261018-1402.png",
+      "mime_type": "image/png",
+      "size": "3027933",
+      "url": null,
+      "file_or_folder": "file",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1cGkeaiVuoV9QNopNaaMUK4KD3oh0kTd4",
+      "title": "administrationsjuridik.png",
+      "mime_type": "image/png",
+      "size": "3021435",
+      "url": null,
+      "file_or_folder": "file",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1HBkgpvdGeTtV6WVNruSgDQdVYMTjvxfj",
+      "title": "WIDE_AKROBATIK_PORTRAIT_MASTER_20261018.png",
+      "mime_type": "image/png",
+      "size": "2974937",
+      "url": null,
+      "file_or_folder": "file",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS",
+      "title": "01 – Ikon ARCANE IVORY",
+      "mime_type": "application/vnd.google-apps.folder",
+      "size": null,
+      "url": null,
+      "file_or_folder": "folder",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1T8C-vfuCcOSL6NImzwtn5Sp3vS5g5S6I"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of",
+      "title": "02 – Cutout ARCANE",
+      "mime_type": "application/vnd.google-apps.folder",
+      "size": null,
+      "url": null,
+      "file_or_folder": "folder",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1T8C-vfuCcOSL6NImzwtn5Sp3vS5g5S6I"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA",
+      "title": "04 – Illustration Wide",
+      "mime_type": "application/vnd.google-apps.folder",
+      "size": null,
+      "url": null,
+      "file_or_folder": "folder",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1T8C-vfuCcOSL6NImzwtn5Sp3vS5g5S6I"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1vBo5rwRlM9c2zQSjDEQylwxDJuWldHC_",
+      "title": "01 – Ikon",
+      "mime_type": "application/vnd.google-apps.folder",
+      "size": null,
+      "url": null,
+      "file_or_folder": "folder",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1Z163zYNQBpBTcVPFtTmyjaOYGmG02_cO"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    },
+    {
+      "id": "1jleYq8PcdaVhHkqzAJ3gbdr0-xTFCaPm",
+      "title": "03 – Illustration Wide",
+      "mime_type": "application/vnd.google-apps.folder",
+      "size": null,
+      "url": null,
+      "file_or_folder": "folder",
+      "created_time": null,
+      "modified_time": null,
+      "parent_ids": [
+        "1Z163zYNQBpBTcVPFtTmyjaOYGmG02_cO"
+      ],
+      "drive_id": null,
+      "current_user_can_share": null,
+      "has_augmented_permissions": null,
+      "shared": null,
+      "permissions": null,
+      "source_visibility_status": "access_not_verified"
+    }
+  ]
+}
