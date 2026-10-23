@@ -65,6 +65,40 @@
   $('apdwShowAnchor')?.addEventListener('change',e=>{showAnchor=e.target.checked;const anchor=$('apdwAnchor');if(anchor)anchor.hidden=!showAnchor});
   $('apdwBaseSelect')?.addEventListener('change',e=>{baseId=e.target.value;applyAssets()});
   $('apdwCutoutFile')?.addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(!['image/png','image/webp'].includes(file.type)){setStatus('Välj PNG eller WebP.','error');return}if(cutoutUrl)URL.revokeObjectURL(cutoutUrl);cutoutFile=file;cutoutUrl=URL.createObjectURL(file);applyCutout()});
+  const mobileControls=document.createElement('div');
+  mobileControls.className='apdw-mobile-calibration';
+  mobileControls.innerHTML='<p>Mobiljustering: dra figuren med fingret eller använd knapparna.</p>'+[['cutoutScale','Storlek',20,150],['cutoutX','Sidled',-80,80],['cutoutY','Höjd',-80,80]].map(([key,label,min,max])=>'<label class="apdw-mobile-field">'+label+' <button type="button" data-calibrate="'+key+'" data-step="-1" aria-label="Minska '+label+'">−</button><input type="number" inputmode="numeric" data-calibrate-input="'+key+'" min="'+min+'" max="'+max+'" step="1" aria-label="'+label+' i procent"><button type="button" data-calibrate="'+key+'" data-step="1" aria-label="Öka '+label+'">+</button><span>%</span></label>').join('');
+  $('apdwCutoutFile')?.closest('.apdw-cutout-controls')?.append(mobileControls);
+  const bounds={cutoutScale:[20,150],cutoutX:[-80,80],cutoutY:[-80,80]};
+  function updateCalibration(key,value){
+   const [min,max]=bounds[key];const n=Math.max(min,Math.min(max,Math.round(Number(value))));
+   if(!Number.isFinite(n))return;
+   if(key==='cutoutScale')cutoutScale=n;else if(key==='cutoutX')cutoutX=n;else cutoutY=n;
+   const slider=$({cutoutScale:'apdwCutoutScale',cutoutX:'apdwCutoutX',cutoutY:'apdwCutoutY'}[key]);
+   if(slider)slider.value=n;
+   const output=$(slider?.id+'Out');if(output)output.textContent=n+'%';
+   const numeric=mobileControls.querySelector('[data-calibrate-input="'+key+'"]');if(numeric)numeric.value=n;
+   applyCutout();
+  }
+  for(const key of Object.keys(bounds))updateCalibration(key,({cutoutScale,cutoutX,cutoutY})[key]);
+  mobileControls.addEventListener('click',event=>{const button=event.target.closest('[data-calibrate]');if(!button)return;const key=button.dataset.calibrate;updateCalibration(key,({cutoutScale,cutoutX,cutoutY})[key]+Number(button.dataset.step))});
+  mobileControls.addEventListener('change',event=>{const key=event.target.dataset.calibrateInput;if(key)updateCalibration(key,event.target.value)});
+  const cutout=$('apdwCutout');let drag=null;
+  cutout?.addEventListener('pointerdown',event=>{
+   if(!matchMedia('(pointer:coarse)').matches||baseOnly||!cutoutUrl)return;
+   drag={id:event.pointerId,x:event.clientX,y:event.clientY,originalX:cutoutX,originalY:cutoutY};
+   cutout.setPointerCapture(event.pointerId);event.preventDefault();
+  });
+  cutout?.addEventListener('pointermove',event=>{
+   if(!drag||drag.id!==event.pointerId)return;
+   const stage=$('apdwStage');if(!stage)return;
+   const rect=stage.getBoundingClientRect();
+   updateCalibration('cutoutX',drag.originalX+(event.clientX-drag.x)/rect.width*100);
+   updateCalibration('cutoutY',drag.originalY-(event.clientY-drag.y)/rect.height*100);
+   event.preventDefault();
+  });
+  const stopDrag=()=>{drag=null};
+  cutout?.addEventListener('pointerup',stopDrag);cutout?.addEventListener('pointercancel',stopDrag);
   for(const [id,key] of [['apdwCutoutScale','cutoutScale'],['apdwCutoutX','cutoutX'],['apdwCutoutY','cutoutY']])$(id)?.addEventListener('input',e=>{const n=Number(e.target.value);if(key==='cutoutScale')cutoutScale=n;else if(key==='cutoutX')cutoutX=n;else cutoutY=n;$(id+'Out').textContent=n+'%';applyCutout()});
   $('apdwBaseOnly')?.addEventListener('change',event=>{baseOnly=event.target.checked;applyBaseMode()});
 
