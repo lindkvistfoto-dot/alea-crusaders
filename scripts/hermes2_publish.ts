@@ -114,9 +114,21 @@ async function publish(a:any){
  const system=a.kind==='system-asset';
  const systemFields=['asset_path','app_sha256','app_bytes','width','height','alpha_preserved'] as const;
  const targetFields=system?'id,asset_key,'+systemFields.join(','):table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
- const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
+ const lookupTarget=()=>db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
+ let {data:target,error:targetError}=await lookupTarget();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
- if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
+ if(!target&&system){
+  // Register the empty pointer only after archive/source verification. A unique
+  // race is resolved by readback, and the profile's immutable UUID is enforced.
+  const profile=systemAssetProfile(a.target_key);
+  const {error:registerError}=await db.from("arcane_system_assets").insert({
+   id:profile.id,asset_key:a.target_key,label:profile.label
+  });
+  if(registerError&&registerError.code!=="23505")throw Error("TARGET_REGISTER "+registerError.message);
+  ({data:target,error:targetError}=await lookupTarget());
+  if(targetError)throw Error("TARGET_READ_AFTER_REGISTER "+targetError.message);
+ }
+ if(!target)throw Error(system?"TARGET_REGISTRATION_CONFLICT "+a.target_key:"TARGET_NOT_FOUND "+a.target_key);
  if(a.target_id!==undefined&&target.id!==a.target_id)throw Error("TARGET_ID_MISMATCH "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
