@@ -6291,9 +6291,13 @@ function combatSetMountMode(actorId,mode){
 window.combatSetMountMode=combatSetMountMode;
 function combatMountToggleHtml(actor){
  const mode=combatMountMode(actor);
+ const icons={
+  walk:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="m11 8-3 5 4 2 1 5m-2-12 5 3 3 1m-7 3-4 6m4-13-3 4"/></svg>',
+  mounted:'<svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M6 24v-9l4-5 7-1 5 3 3-4 3 2-2 5-3 3v6h-3v-6l-4-2-4 2v6h-3v-7l-1 1v6H6Zm17-14 2-5 2 1-1 5Z"/></svg>'
+ };
  return '<div class="combat-mount-toggle" role="group" aria-label="Förflyttningssätt">'+
-  [['walk','🚶','Gående'],['mounted','🐎','Beriden']].map(([key,glyph,label])=>
-   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\''+escAttr(actor.id)+'\',\''+key+'\')">'+glyph+'</button>').join('')+
+  [['walk','Gående'],['mounted','Beriden']].map(([key,label])=>
+   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\\''+escAttr(actor.id)+'\\',\\''+key+'\\')">'+icons[key]+'</button>').join('')+
  '</div>';
 }
 function combatTurnPanelHtml(){
@@ -6331,7 +6335,7 @@ function combatTurnPanelHtml(){
  const psyCurrent=actor.current_psy==null?'—':actor.current_psy,psyMax=actor.max_psy==null?'—':actor.max_psy;
  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
   '<div class="combat-turn-actor">'+
-   combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+
+   '<div class="combat-mount-portrait-group">'+combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+'</div>'+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><div class="combat-vital-meter"><i class="combat-vital-fill move" style="width:'+combatTurnVitalPercent(remaining,maximum)+'%"></i></div></div>'+
