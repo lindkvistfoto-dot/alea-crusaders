@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import hermes_drive_intake as intake
-from hermes_system_assets import PROFILE
+from hermes_system_assets import PROFILE, validate_system_image
 
 
 def png(size, high=255, mode='RGBA'):
@@ -83,7 +83,10 @@ class SystemAssets(unittest.TestCase):
         item = dict(self.items[0], target_key='arcane-future-double-base',
                     target_id='00000000-0000-4000-8000-000000000001')
         intake.validate_batch_item(item)
-        profile = intake.validate_png(png((1500, 900)), 'system-asset', item['target_key'])
+        raw = png((1500, 900))
+        self.assertEqual(intake.validate_png(raw, 'system-asset', item['target_key']), hashlib.sha256(raw).hexdigest())
+        with Image.open(io.BytesIO(raw)) as image:
+            profile = validate_system_image(image, item['target_key'])
         self.assertEqual(profile['source_size'], [1500, 900])
         self.assertEqual(profile['display_size'], [1280, 768])
         self.assertEqual(profile['archive_folder_id'], PROFILE['default_archive_folder_id'])
