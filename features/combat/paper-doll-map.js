@@ -107,12 +107,17 @@
   const portraitX=-standWidth/2+standWidth*(285/1024);
   const portraitY=standTop+standHeight*(165/1536);
   const portraitW=standWidth*(454/1024),portraitH=standHeight*(443/1536);
+  // BASE AURA V1: optional presentation layer; gold takes priority over allegiance.
+  const allegiance=actor?.side==='enemies'?'enemy':actor?.side==='neutral'?'npc':actor?.side==='heroes'?'hero':'npc';
+  const auraClass=/\\b(?:selected|turn)\\b/.test(stateClasses)?'gold':allegiance;
+  const aura='<ellipse class="combat-base-aura combat-base-aura--'+auraClass+'" cx="0" cy="13" rx="42" ry="11"/>';
   const overlay='<g class="combat-paper-doll-universal'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+unit.toFixed(4)+')" pointer-events="none" aria-hidden="true">'+
+   aura+
    '<image href="'+esc(selected.baseUrl)+'" x="'+(-baseWidth*baseScale/2)+'" y="'+(baseY-baseHeight*.63*baseScale)+'" width="'+(baseWidth*baseScale)+'" height="'+(baseHeight*baseScale)+'" preserveAspectRatio="xMidYMid meet"/>'+
    (isStand&&selected.portraitUrl?'<defs><clipPath id="'+clip+'"><ellipse cx="'+(portraitX+portraitW/2)+'" cy="'+(portraitY+portraitH/2)+'" rx="'+(portraitW/2)+'" ry="'+(portraitH/2)+'"/></clipPath></defs>'+
     '<image href="'+esc(selected.portraitUrl)+'" x="'+portraitX+'" y="'+portraitY+'" width="'+portraitW+'" height="'+portraitH+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clip+')"/>':'')+
    '<image href="'+esc(art)+'" x="'+(-artWidth/2+poseX)+'" y="'+(standBottom-artHeight-poseY)+'" width="'+artWidth+'" height="'+artHeight+'" preserveAspectRatio="xMidYMid meet"/>'+
-   '<polygon points="'+combatHexPoints(0,0,39)+'" class="combat-paper-doll-universal-ring"/>'+
+
    '</g>';
   return '<g class="combat-paper-doll-classic">'+classic+'</g>'+overlay;
  }
