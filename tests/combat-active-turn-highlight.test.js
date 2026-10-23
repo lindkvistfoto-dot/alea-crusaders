@@ -41,6 +41,7 @@ function mapFor(rows,activeId){
   combatSelectedTargetId:null,
   combatIsMovementPlanning:()=>false,
   combatIsActiveTurn:c=>c.id===activeId,
+  combatIsFlying:()=>false,
   combatHexPoints:(x,y,size)=>x+','+y+','+size,
   combatPlayerMiniatureSvg:()=>'<g class="test-miniature"></g>',
   combatMiniatureDefs:()=>'<defs></defs>',
