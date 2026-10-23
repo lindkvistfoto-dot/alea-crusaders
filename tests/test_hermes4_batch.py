@@ -138,9 +138,14 @@ class Hermes4Batch(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     intake.batch_request(self.batch(items))
             fetch.assert_not_called()
-        with tempfile.TemporaryDirectory() as output:
+        # Pin the rejected context instead of inheriting a trusted main push in CI.
+        with tempfile.TemporaryDirectory() as output, patch.dict(os.environ, {
+            'GITHUB_REPOSITORY': intake.REPO,
+            'GITHUB_REF': 'refs/heads/untrusted-test',
+        }), patch.object(intake, 'google_file') as fetch:
             with self.assertRaisesRegex(ValueError, 'UNTRUSTED_GITHUB_CONTEXT'):
                 intake.run('hermes/queue/five.json', Path(output))
+            fetch.assert_not_called()
 
     def test_verify_mode_has_no_archive_or_webp_writes(self):
         with tempfile.TemporaryDirectory() as output, patch.object(intake, 'drive_file') as archive:

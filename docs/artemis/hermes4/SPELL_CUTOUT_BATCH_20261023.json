@@ -2,7 +2,7 @@
   "schema": 1,
   "operation": "OPERATION ARCANE SPELL CUTOUTS",
   "batch": "20261023-five",
-  "status": "READY_TO_PUBLISH_AWAITING_MERGE_APPROVAL",
+  "status": "COMPLETE",
   "generation_tool": "image_gen built-in",
   "source_reference_priority": [
     "icon",
@@ -16,7 +16,7 @@
       "spell_key": "animera-dod",
       "spell_id": "ebe29d23-750e-4527-8c48-897e79a84d2b",
       "name": "ANIMERA DÖD (R)",
-      "status": "READY_TO_PUBLISH",
+      "status": "COMPLETE",
       "source_sha256": "7e51dc25d5c444f529c8824d681865562fc783029a83fb34e19ad7e851831fe1",
       "source_bytes": 2557171,
       "width": 1254,
@@ -40,7 +40,10 @@
         "recommended_y": 90,
         "recommended_scale": 125,
         "current_database_scale": 160,
-        "placement_applied": false
+        "placement_applied": true,
+        "final_x": 50,
+        "final_y": 90,
+        "final_scale": 125
       },
       "generation_attempts": 1,
       "generator": "image_gen built-in",
@@ -74,7 +77,7 @@
       },
       "expected_storage_bucket": "alea-spell-art",
       "expected_storage_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/998cde67-7e10-4f89-a751-613b8c09cd6b.webp",
-      "storage_published": false,
+      "storage_published": true,
       "baseline": {
         "id": "ebe29d23-750e-4527-8c48-897e79a84d2b",
         "spell_key": "animera-dod",
@@ -86,13 +89,19 @@
         "cutout_x": 50,
         "cutout_y": 90,
         "cutout_scale": 160
-      }
+      },
+      "published_storage_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/998cde67-7e10-4f89-a751-613b8c09cd6b.webp",
+      "publication_run_id": 39936373802,
+      "storage_and_delivery_sha_verified_by_hermes": true,
+      "admin_field_binding_verified": true,
+      "other_image_fields_unchanged": true,
+      "live_admin_visual_checked": false
     },
     {
       "spell_key": "aura",
       "spell_id": "98e60263-9e0b-4cc8-859c-ebfb70e18fb4",
       "name": "AURA",
-      "status": "READY_TO_PUBLISH",
+      "status": "COMPLETE",
       "source_sha256": "e10fce3c175c8a19202e87832e2e0aa00bef344319c7a2f8d7def4ff13f9a201",
       "source_bytes": 1925859,
       "width": 1254,
@@ -116,7 +125,10 @@
         "recommended_y": 90,
         "recommended_scale": 125,
         "current_database_scale": 160,
-        "placement_applied": false
+        "placement_applied": true,
+        "final_x": 50,
+        "final_y": 90,
+        "final_scale": 125
       },
       "generation_attempts": 3,
       "generator": "image_gen built-in",
@@ -150,7 +162,7 @@
       },
       "expected_storage_bucket": "alea-spell-art",
       "expected_storage_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/274be9e6-ee12-4d6e-9e18-cef057b88256.webp",
-      "storage_published": false,
+      "storage_published": true,
       "baseline": {
         "id": "98e60263-9e0b-4cc8-859c-ebfb70e18fb4",
         "spell_key": "aura",
@@ -162,13 +174,19 @@
         "cutout_x": 50,
         "cutout_y": 90,
         "cutout_scale": 160
-      }
+      },
+      "published_storage_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/274be9e6-ee12-4d6e-9e18-cef057b88256.webp",
+      "publication_run_id": 39936373802,
+      "storage_and_delivery_sha_verified_by_hermes": true,
+      "admin_field_binding_verified": true,
+      "other_image_fields_unchanged": true,
+      "live_admin_visual_checked": false
     },
     {
       "spell_key": "avbild",
       "spell_id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
       "name": "AVBILD (F)",
-      "status": "READY_TO_PUBLISH",
+      "status": "COMPLETE",
       "source_sha256": "4e7fa675a6d8ee2f561a564a597f2c3aaf28d358a88799f267ba3a2d2a4a0293",
       "source_bytes": 2296786,
       "width": 1254,
@@ -192,7 +210,10 @@
         "recommended_y": 90,
         "recommended_scale": 125,
         "current_database_scale": 160,
-        "placement_applied": false
+        "placement_applied": true,
+        "final_x": 50,
+        "final_y": 90,
+        "final_scale": 125
       },
       "generation_attempts": 1,
       "generator": "image_gen built-in",
@@ -226,7 +247,7 @@
       },
       "expected_storage_bucket": "alea-spell-art",
       "expected_storage_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/a1497ffd-1f3e-483e-b861-3bf690abebd2.webp",
-      "storage_published": false,
+      "storage_published": true,
       "baseline": {
         "id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
         "spell_key": "avbild",
@@ -238,13 +259,19 @@
         "cutout_x": 50,
         "cutout_y": 90,
         "cutout_scale": 160
-      }
+      },
+      "published_storage_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/a1497ffd-1f3e-483e-b861-3bf690abebd2.webp",
+      "publication_run_id": 39936373802,
+      "storage_and_delivery_sha_verified_by_hermes": true,
+      "admin_field_binding_verified": true,
+      "other_image_fields_unchanged": true,
+      "live_admin_visual_checked": false
     },
     {
       "spell_key": "balans",
       "spell_id": "1af70dd4-8073-4629-9752-163701513d11",
       "name": "BALANS",
-      "status": "READY_TO_PUBLISH",
+      "status": "COMPLETE",
       "source_sha256": "366da6b71155036f7bdb4dba086cc94315994d04e6a6861d6fddc350e6c160e8",
       "source_bytes": 2252739,
       "width": 1254,
@@ -268,7 +295,10 @@
         "recommended_y": 90,
         "recommended_scale": 125,
         "current_database_scale": 160,
-        "placement_applied": false
+        "placement_applied": true,
+        "final_x": 50,
+        "final_y": 90,
+        "final_scale": 125
       },
       "generation_attempts": 1,
       "generator": "image_gen built-in",
@@ -302,7 +332,7 @@
       },
       "expected_storage_bucket": "alea-spell-art",
       "expected_storage_path": "spell/1af70dd4-8073-4629-9752-163701513d11/89b21f6b-4519-40f0-8876-675b84c4344c.webp",
-      "storage_published": false,
+      "storage_published": true,
       "baseline": {
         "id": "1af70dd4-8073-4629-9752-163701513d11",
         "spell_key": "balans",
@@ -314,13 +344,19 @@
         "cutout_x": 50,
         "cutout_y": 90,
         "cutout_scale": 160
-      }
+      },
+      "published_storage_path": "spell/1af70dd4-8073-4629-9752-163701513d11/89b21f6b-4519-40f0-8876-675b84c4344c.webp",
+      "publication_run_id": 39936373802,
+      "storage_and_delivery_sha_verified_by_hermes": true,
+      "admin_field_binding_verified": true,
+      "other_image_fields_unchanged": true,
+      "live_admin_visual_checked": false
     },
     {
       "spell_key": "distraktion",
       "spell_id": "8ecc5bb2-e099-4def-b503-b7e6fc9685d4",
       "name": "DISTRAKTION (K)",
-      "status": "READY_TO_PUBLISH",
+      "status": "COMPLETE",
       "source_sha256": "d721fe2a4a11b8faa9136c5b5b19a645a0aacc217870c97dbcaf658653ad912c",
       "source_bytes": 2862964,
       "width": 1254,
@@ -344,7 +380,10 @@
         "recommended_y": 90,
         "recommended_scale": 125,
         "current_database_scale": 160,
-        "placement_applied": false
+        "placement_applied": true,
+        "final_x": 50,
+        "final_y": 90,
+        "final_scale": 125
       },
       "generation_attempts": 1,
       "generator": "image_gen built-in",
@@ -378,7 +417,7 @@
       },
       "expected_storage_bucket": "alea-spell-art",
       "expected_storage_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/44b7d99a-4fdf-4373-b35e-055f515b95b6.webp",
-      "storage_published": false,
+      "storage_published": true,
       "baseline": {
         "id": "8ecc5bb2-e099-4def-b503-b7e6fc9685d4",
         "spell_key": "distraktion",
@@ -390,26 +429,46 @@
         "cutout_x": 50,
         "cutout_y": 90,
         "cutout_scale": 160
-      }
+      },
+      "published_storage_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/44b7d99a-4fdf-4373-b35e-055f515b95b6.webp",
+      "publication_run_id": 39936373802,
+      "storage_and_delivery_sha_verified_by_hermes": true,
+      "admin_field_binding_verified": true,
+      "other_image_fields_unchanged": true,
+      "live_admin_visual_checked": false
     }
   ],
   "tests": {
-    "existing_cutout_profile": "3 tests (run with PYTHONPATH=scripts)",
+    "existing_cutout_profile": "PASS 3 tests",
     "five_actual_sources": "PASS HERMES validate_png",
     "five_actual_webp_derivatives": "PASS HERMES prepare_bytes; actual resized alpha bytes match",
     "drive_roundtrip": "10/10 SHA-256 and size matches",
-    "publication_ci": "PENDING PR CI; main-only publication runs after approved merge"
+    "publication_ci": "PASS HERMES 39936373802 and CI 39936373796",
+    "hermes_batch": "PASS 16 local tests before merge",
+    "post_merge_guard": "Failure in environment-dependent test; explicit rejected ref fix prepared separately. Production source unchanged."
   },
   "post_merge_steps": [
-    "Allow exactly one push-triggered HERMES Drive workflow; no duplicate dispatch.",
-    "Verify five ACTIVE jobs, expected paths, delivered WebP SHA-256 and unchanged icon/square/wide fields.",
-    "For only these five rows, after successful activation, compare-and-set cutout_scale 160 to 125 while matching exact cutout_path; preserve x50/y90.",
-    "Read back exact DB rows and confirm source bucket remains empty.",
-    "Stop after these five; no batch 2 without approval."
+    "DONE: one push-triggered HERMES publication, five ACTIVE jobs and delivered SHA checks.",
+    "DONE: five exact DB references, icon/square/wide unchanged.",
+    "DONE: targeted scale160 ->125 with transactional compare-and-set; x50/y90 preserved.",
+    "DONE: source bucket empty after publication.",
+    "STOP G7: no new images or batch 2 without express approval."
   ],
   "notes": [
     "No original PNG or WebP is added to GitHub. Original bytes live in existing Drive Inbox and archive.",
     "Local WebP is validation output only: Actions re-creates WebP from checksum-pinned archived original.",
-    "No claim of Storage publication, admin visual verification or COMPLETE before post-merge checks."
-  ]
+    "Live admin UI was not inspected. Database path, actual delivery, alpha and code binding verified without Alea login as requested."
+  ],
+  "merge_commit": "ef720bef266d006a20865aa17db90ced7bb833b1",
+  "publication": {
+    "run_id": 39936373802,
+    "job_id": 120356811651,
+    "conclusion": "success",
+    "succeeded": 5,
+    "failed": 0,
+    "source_bucket_empty": true,
+    "publication_elapsed_seconds": 14.065,
+    "batch_elapsed_seconds": 31.698
+  },
+  "verification_mode": "Supabase database/storage + successful HERMES hash readbacks + source admin binding + local actual-frame visual QA. No live Alea UI inspection."
 }
