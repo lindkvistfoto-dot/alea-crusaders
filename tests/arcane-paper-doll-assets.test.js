@@ -11,7 +11,7 @@ const rows=()=>Object.entries(profiles.assets).map(([key,def])=>({id:def.id,asse
 
 it('maps all registered stable keys to immutable BENGALI/Workshop asset references without archive provenance',()=>{
  const api=adapter(),result=api.toWorkshop(rows(),'https://example.supabase.co');
- expect(api.keys).toEqual(Object.keys(profiles.assets));
+ expect(result.assets).toHaveLength(Object.keys(profiles.assets).length);
  for(const ref of result.assets){
   expect(ref.status).toBe('active');expect(ref.verified).toBe(true);
   expect(ref.bucket).toBe('alea-hermes-public');expect(ref.layouts).toEqual([]);
@@ -23,7 +23,7 @@ it('maps all registered stable keys to immutable BENGALI/Workshop asset referenc
 it('fails closed for missing, malformed, foreign, or partially activated rows',()=>{
  const api=adapter();
  for(const patch of [{asset_path:null},{asset_path:'https://evil.test/a.webp'},{asset_path:'../a.webp'},
-  {width:640},{app_sha256:'bad'},{alpha_preserved:false},{id:rows()[1].id},{app_bytes:500001}]){
+  {width:0},{width:4097},{height:0},{app_sha256:'bad'},{alpha_preserved:false},{id:'not-a-uuid'},{app_bytes:500001}]){
   const result=api.toWorkshop([{...rows()[0],...patch}],'https://example.supabase.co');
   expect(result.assets).toEqual([]);expect(result.systemArt).toEqual({});
  }
@@ -39,4 +39,13 @@ it('uses only injected authenticated dbJson and does not cache rows across calls
  expect(calls[0]).not.toMatch(/hermes_jobs|source|archive/);
  expect((await api.load({baseUrl:'https://example.supabase.co',dbJson:async()=>[]})).assets).toEqual([]);
  await expect(api.load({baseUrl:'https://example.supabase.co',dbJson:async()=>{throw Error('denied')}})).rejects.toThrow('denied');
+});
+
+it('accepts a newly registered system asset without editing the frontend allowlist',()=>{
+ const api=adapter(),key='arcane-bronze-ivory-future-triple-hex';
+ const row={...rows()[0],id:'d8275cf9-4715-42d4-99c7-384ccb647c60',asset_key:key,width:1280,height:733,
+  asset_path:`hermes/system-asset/${key}/${'a'.repeat(64)}.webp`};
+ const result=api.toWorkshop([row],'https://example.supabase.co');
+ expect(result.assets).toHaveLength(1);expect(result.systemArt[key]).toBe(row.id);
+ expect(()=>api.toWorkshop([row,{...row,asset_key:'arcane-other-asset',asset_path:`hermes/system-asset/arcane-other-asset/${'a'.repeat(64)}.webp`}],'https://example.supabase.co')).toThrow('DUPLICATE');
 });

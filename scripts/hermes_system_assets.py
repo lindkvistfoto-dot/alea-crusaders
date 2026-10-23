@@ -1,4 +1,4 @@
-"""The two approved system masters; no generic UI-upload or rule-table target."""
+"""Metadata-driven HERMES system asset registry with strict validation."""
 import json
 from pathlib import Path
 

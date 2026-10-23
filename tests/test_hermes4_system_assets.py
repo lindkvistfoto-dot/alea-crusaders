@@ -72,6 +72,13 @@ class SystemAssets(unittest.TestCase):
             report = json.loads(Path(output, 'intake-report.json').read_text())
             self.assertEqual(report['items'][0]['error'], 'DRIVE_ARCHIVE_SHA256_MISMATCH')
 
+    def test_registry_is_metadata_driven(self):
+        self.assertGreaterEqual(len(PROFILE['assets']), 5)
+        for key, item in PROFILE['assets'].items():
+            self.assertTrue(item['id'])
+            self.assertTrue(item['archive_folder_id'])
+            self.assertEqual(len(item['source_size']), 2)
+
     def test_allowlist_and_pinned_id_fail_before_fetch(self):
         for key, target_id in [('unknown', self.items[0]['target_id']),
                                (self.items[0]['target_key'], self.items[1]['target_id'])]:
