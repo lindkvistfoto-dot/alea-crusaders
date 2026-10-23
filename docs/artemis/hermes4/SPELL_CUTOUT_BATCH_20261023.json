@@ -1,0 +1,415 @@
+{
+  "schema": 1,
+  "operation": "OPERATION ARCANE SPELL CUTOUTS",
+  "batch": "20261023-five",
+  "status": "READY_TO_PUBLISH_AWAITING_MERGE_APPROVAL",
+  "generation_tool": "image_gen built-in",
+  "source_reference_priority": [
+    "icon",
+    "square",
+    "wide"
+  ],
+  "common_production_brief": "Premium photorealistic cinematic high-fantasy magical cutout; square PNG >=1024, true RGBA alpha, fine gradients, no scene/background/frame/plaque/text/watermark. Icon is controlling identity, square and wide only support material/light. Central readable silhouette, controlled protrusion through existing gold frame. Separate image per spell.",
+  "queue_path": "hermes/queue/arcane-spell-cutouts-five-20261023.json",
+  "records": [
+    {
+      "spell_key": "animera-dod",
+      "spell_id": "ebe29d23-750e-4527-8c48-897e79a84d2b",
+      "name": "ANIMERA DÖD (R)",
+      "status": "READY_TO_PUBLISH",
+      "source_sha256": "7e51dc25d5c444f529c8824d681865562fc783029a83fb34e19ad7e851831fe1",
+      "source_bytes": 2557171,
+      "width": 1254,
+      "height": 1254,
+      "format": "PNG",
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_preserved_in_webp": true,
+      "inbox_file_id": "1dNbxahivPxkhd-Ie6akUN7XeDJ1efEUc",
+      "archive_file_id": "1CqeowNSVAojWmUOCgDV5yCwVq4AvzwvL",
+      "archive_url": "https://drive.google.com/file/d/1CqeowNSVAojWmUOCgDV5yCwVq4AvzwvL/view?usp=drivesdk",
+      "inbox_and_archive_readback_sha_verified": true,
+      "technical_qa": "PASS",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "source_frame": "assets/combat/frames/duel-focus-frame.png",
+        "recommended_x": 50,
+        "recommended_y": 90,
+        "recommended_scale": 125,
+        "current_database_scale": 160,
+        "placement_applied": false
+      },
+      "generation_attempts": 1,
+      "generator": "image_gen built-in",
+      "production_brief": "Raised skeletal claw and reanimated bone torso with cyan eyes, cyan/violet energy and floating earth fragments. No armor, caster or scenery.",
+      "references": {
+        "primary_icon": "hermes/spell/animera-dod/7b053cb7960dd108c8ee94bd9973550a17c8330af2d95231446a575140c31ecb.webp",
+        "secondary_square": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/a393999f-7246-4931-a451-20e2946ed74e.webp",
+        "tertiary_wide": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/1e07c039-3546-4591-b1df-d28ba4b0cef3.webp",
+        "inspection_order": [
+          "primary_icon",
+          "secondary_square",
+          "tertiary_wide"
+        ],
+        "wide_visually_inspected": false,
+        "wide_limitation": "Storage path exists; no verified mapping to archived original was available, so it was not used as visual input."
+      },
+      "webp_local_validation": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "animera-dod",
+        "source_path": "drive://1CqeowNSVAojWmUOCgDV5yCwVq4AvzwvL",
+        "source_sha256": "7e51dc25d5c444f529c8824d681865562fc783029a83fb34e19ad7e851831fe1",
+        "source_bytes": 2557171,
+        "app_file": "spell-cutout/animera-dod/998cde677e10bf892751613b8c09cd6b83e4a71667ac86acded874f670d2009c.webp",
+        "app_sha256": "998cde677e10bf892751613b8c09cd6b83e4a71667ac86acded874f670d2009c",
+        "app_bytes": 216252,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "expected_storage_bucket": "alea-spell-art",
+      "expected_storage_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/998cde67-7e10-4f89-a751-613b8c09cd6b.webp",
+      "storage_published": false,
+      "baseline": {
+        "id": "ebe29d23-750e-4527-8c48-897e79a84d2b",
+        "spell_key": "animera-dod",
+        "name": "ANIMERA DÖD (R)",
+        "icon_path": "hermes/spell/animera-dod/7b053cb7960dd108c8ee94bd9973550a17c8330af2d95231446a575140c31ecb.webp",
+        "illustration_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/a393999f-7246-4931-a451-20e2946ed74e.webp",
+        "illustration_wide_path": "spell/ebe29d23-750e-4527-8c48-897e79a84d2b/1e07c039-3546-4591-b1df-d28ba4b0cef3.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      }
+    },
+    {
+      "spell_key": "aura",
+      "spell_id": "98e60263-9e0b-4cc8-859c-ebfb70e18fb4",
+      "name": "AURA",
+      "status": "READY_TO_PUBLISH",
+      "source_sha256": "e10fce3c175c8a19202e87832e2e0aa00bef344319c7a2f8d7def4ff13f9a201",
+      "source_bytes": 1925859,
+      "width": 1254,
+      "height": 1254,
+      "format": "PNG",
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "alpha_preserved_in_webp": true,
+      "inbox_file_id": "1eUCPOIcHswcLJgenvRLXLCIHPy5UxOgd",
+      "archive_file_id": "1sq3sZ-55S8ZkHEMyepG8wTMSiov0wLbw",
+      "archive_url": "https://drive.google.com/file/d/1sq3sZ-55S8ZkHEMyepG8wTMSiov0wLbw/view?usp=drivesdk",
+      "inbox_and_archive_readback_sha_verified": true,
+      "technical_qa": "PASS",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "source_frame": "assets/combat/frames/duel-focus-frame.png",
+        "recommended_x": 50,
+        "recommended_y": 90,
+        "recommended_scale": 125,
+        "current_database_scale": 160,
+        "placement_applied": false
+      },
+      "generation_attempts": 3,
+      "generator": "image_gen built-in",
+      "production_brief": "Golden faceless heroic bust, wavy gold hair, ivory cloak over violet fabric, luminous chest clasp and fine gold energy orbits. Final version removes tall rays to avoid clipping.",
+      "references": {
+        "primary_icon": "hermes/spell/aura/f38649cd80251ca9fd76a764d701f2751f91fb427a08313d2fcc8f3aa40c4a38.webp",
+        "secondary_square": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/a219fae1-c558-473c-a19e-a57938bf12e0.webp",
+        "tertiary_wide": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/ab1774d8-bf94-4400-ae74-83af940d01b2.webp",
+        "inspection_order": [
+          "primary_icon",
+          "secondary_square",
+          "tertiary_wide"
+        ],
+        "wide_visually_inspected": true,
+        "wide_limitation": null
+      },
+      "webp_local_validation": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "aura",
+        "source_path": "drive://1sq3sZ-55S8ZkHEMyepG8wTMSiov0wLbw",
+        "source_sha256": "e10fce3c175c8a19202e87832e2e0aa00bef344319c7a2f8d7def4ff13f9a201",
+        "source_bytes": 1925859,
+        "app_file": "spell-cutout/aura/274be9e6ee122d6e9e18cef057b88256d87933d856c66a51e997b8f47be669f5.webp",
+        "app_sha256": "274be9e6ee122d6e9e18cef057b88256d87933d856c66a51e997b8f47be669f5",
+        "app_bytes": 144010,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "expected_storage_bucket": "alea-spell-art",
+      "expected_storage_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/274be9e6-ee12-4d6e-9e18-cef057b88256.webp",
+      "storage_published": false,
+      "baseline": {
+        "id": "98e60263-9e0b-4cc8-859c-ebfb70e18fb4",
+        "spell_key": "aura",
+        "name": "AURA",
+        "icon_path": "hermes/spell/aura/f38649cd80251ca9fd76a764d701f2751f91fb427a08313d2fcc8f3aa40c4a38.webp",
+        "illustration_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/a219fae1-c558-473c-a19e-a57938bf12e0.webp",
+        "illustration_wide_path": "spell/98e60263-9e0b-4cc8-859c-ebfb70e18fb4/ab1774d8-bf94-4400-ae74-83af940d01b2.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      }
+    },
+    {
+      "spell_key": "avbild",
+      "spell_id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
+      "name": "AVBILD (F)",
+      "status": "READY_TO_PUBLISH",
+      "source_sha256": "4e7fa675a6d8ee2f561a564a597f2c3aaf28d358a88799f267ba3a2d2a4a0293",
+      "source_bytes": 2296786,
+      "width": 1254,
+      "height": 1254,
+      "format": "PNG",
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_preserved_in_webp": true,
+      "inbox_file_id": "1TBFYi5XHatzi88EQO2ZoE7teLda7Yb_h",
+      "archive_file_id": "1VBu8iqqcdC4P79-Y8p0eoWIKzDS-yIAy",
+      "archive_url": "https://drive.google.com/file/d/1VBu8iqqcdC4P79-Y8p0eoWIKzDS-yIAy/view?usp=drivesdk",
+      "inbox_and_archive_readback_sha_verified": true,
+      "technical_qa": "PASS",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "source_frame": "assets/combat/frames/duel-focus-frame.png",
+        "recommended_x": 50,
+        "recommended_y": 90,
+        "recommended_scale": 125,
+        "current_database_scale": 160,
+        "placement_applied": false
+      },
+      "generation_attempts": 1,
+      "generator": "image_gen built-in",
+      "production_brief": "Spectral iridescent stag with branching antlers, lifting foreleg, golden filament edges, blue/violet/white translucent body dissolving into prismatic shards. No statue or caster.",
+      "references": {
+        "primary_icon": "hermes/spell/avbild/06b68a8068c0daf7b64a0531b3dabc386547542e7b64e9b908b3a17f8883c958.webp",
+        "secondary_square": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/955767c6-242b-4444-bc89-088c3dfe0873.webp",
+        "tertiary_wide": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/77c64bd9-5786-4882-9364-a4810adfa9da.webp",
+        "inspection_order": [
+          "primary_icon",
+          "secondary_square",
+          "tertiary_wide"
+        ],
+        "wide_visually_inspected": true,
+        "wide_limitation": null
+      },
+      "webp_local_validation": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "avbild",
+        "source_path": "drive://1VBu8iqqcdC4P79-Y8p0eoWIKzDS-yIAy",
+        "source_sha256": "4e7fa675a6d8ee2f561a564a597f2c3aaf28d358a88799f267ba3a2d2a4a0293",
+        "source_bytes": 2296786,
+        "app_file": "spell-cutout/avbild/a1497ffd1f3ed83e78613bf690abebd2c94dd26a7b52c99560d43dab6b3d61f2.webp",
+        "app_sha256": "a1497ffd1f3ed83e78613bf690abebd2c94dd26a7b52c99560d43dab6b3d61f2",
+        "app_bytes": 235596,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "expected_storage_bucket": "alea-spell-art",
+      "expected_storage_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/a1497ffd-1f3e-483e-b861-3bf690abebd2.webp",
+      "storage_published": false,
+      "baseline": {
+        "id": "539e581e-ad0b-44e1-8622-22b65d118eb3",
+        "spell_key": "avbild",
+        "name": "AVBILD (F)",
+        "icon_path": "hermes/spell/avbild/06b68a8068c0daf7b64a0531b3dabc386547542e7b64e9b908b3a17f8883c958.webp",
+        "illustration_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/955767c6-242b-4444-bc89-088c3dfe0873.webp",
+        "illustration_wide_path": "spell/539e581e-ad0b-44e1-8622-22b65d118eb3/77c64bd9-5786-4882-9364-a4810adfa9da.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      }
+    },
+    {
+      "spell_key": "balans",
+      "spell_id": "1af70dd4-8073-4629-9752-163701513d11",
+      "name": "BALANS",
+      "status": "READY_TO_PUBLISH",
+      "source_sha256": "366da6b71155036f7bdb4dba086cc94315994d04e6a6861d6fddc350e6c160e8",
+      "source_bytes": 2252739,
+      "width": 1254,
+      "height": 1254,
+      "format": "PNG",
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_preserved_in_webp": true,
+      "inbox_file_id": "1uHfyNsyv_bk0GJ2od_HFUT2jhROvf2To",
+      "archive_file_id": "1r-dW8DICMzxfRN3n36xZVBQo962MoTRH",
+      "archive_url": "https://drive.google.com/file/d/1r-dW8DICMzxfRN3n36xZVBQo962MoTRH/view?usp=drivesdk",
+      "inbox_and_archive_readback_sha_verified": true,
+      "technical_qa": "PASS",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "source_frame": "assets/combat/frames/duel-focus-frame.png",
+        "recommended_x": 50,
+        "recommended_y": 90,
+        "recommended_scale": 125,
+        "current_database_scale": 160,
+        "placement_applied": false
+      },
+      "generation_attempts": 1,
+      "generator": "image_gen built-in",
+      "production_brief": "Adult woman with arms extended balancing barefoot on a silver filament, emerald-and-gold dress, flowing emerald energy and a fine golden waist orbit.",
+      "references": {
+        "primary_icon": "hermes/spell/balans/da92f98b9eecd8f208e0488a3bc6599da09c8959e5a771d728c738f8510baa50.webp",
+        "secondary_square": "spell/1af70dd4-8073-4629-9752-163701513d11/8f55cd92-83c3-45ec-b460-ef6a8db4db7f.webp",
+        "tertiary_wide": "spell/1af70dd4-8073-4629-9752-163701513d11/24d225f9-939c-4610-818a-f3a492716cfa.webp",
+        "inspection_order": [
+          "primary_icon",
+          "secondary_square",
+          "tertiary_wide"
+        ],
+        "wide_visually_inspected": false,
+        "wide_limitation": "Storage path exists; no verified mapping to archived original was available, so it was not used as visual input."
+      },
+      "webp_local_validation": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "balans",
+        "source_path": "drive://1r-dW8DICMzxfRN3n36xZVBQo962MoTRH",
+        "source_sha256": "366da6b71155036f7bdb4dba086cc94315994d04e6a6861d6fddc350e6c160e8",
+        "source_bytes": 2252739,
+        "app_file": "spell-cutout/balans/89b21f6b451980f08876675b84c4344c568af21f367e1ab49b7c23de7ee6f9c4.webp",
+        "app_sha256": "89b21f6b451980f08876675b84c4344c568af21f367e1ab49b7c23de7ee6f9c4",
+        "app_bytes": 208560,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "expected_storage_bucket": "alea-spell-art",
+      "expected_storage_path": "spell/1af70dd4-8073-4629-9752-163701513d11/89b21f6b-4519-40f0-8876-675b84c4344c.webp",
+      "storage_published": false,
+      "baseline": {
+        "id": "1af70dd4-8073-4629-9752-163701513d11",
+        "spell_key": "balans",
+        "name": "BALANS",
+        "icon_path": "hermes/spell/balans/da92f98b9eecd8f208e0488a3bc6599da09c8959e5a771d728c738f8510baa50.webp",
+        "illustration_path": "spell/1af70dd4-8073-4629-9752-163701513d11/8f55cd92-83c3-45ec-b460-ef6a8db4db7f.webp",
+        "illustration_wide_path": "spell/1af70dd4-8073-4629-9752-163701513d11/24d225f9-939c-4610-818a-f3a492716cfa.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      }
+    },
+    {
+      "spell_key": "distraktion",
+      "spell_id": "8ecc5bb2-e099-4def-b503-b7e6fc9685d4",
+      "name": "DISTRAKTION (K)",
+      "status": "READY_TO_PUBLISH",
+      "source_sha256": "d721fe2a4a11b8faa9136c5b5b19a645a0aacc217870c97dbcaf658653ad912c",
+      "source_bytes": 2862964,
+      "width": 1254,
+      "height": 1254,
+      "format": "PNG",
+      "mode": "RGBA",
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "alpha_preserved_in_webp": true,
+      "inbox_file_id": "1Ih--MvpaRlZ2KQYMvb6QxZ5unf3lDrMz",
+      "archive_file_id": "1m8VgM-UGjy5YzWMZ78rnvttRgKuIWjXe",
+      "archive_url": "https://drive.google.com/file/d/1m8VgM-UGjy5YzWMZ78rnvttRgKuIWjXe/view?usp=drivesdk",
+      "inbox_and_archive_readback_sha_verified": true,
+      "technical_qa": "PASS",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "source_frame": "assets/combat/frames/duel-focus-frame.png",
+        "recommended_x": 50,
+        "recommended_y": 90,
+        "recommended_scale": 125,
+        "current_database_scale": 160,
+        "placement_applied": false
+      },
+      "generation_attempts": 1,
+      "generator": "image_gen built-in",
+      "production_brief": "Three profiles: female elf, blond man and auburn-bearded dwarf, all looking upper-right toward the same point, with violet/cyan attention ribbons.",
+      "references": {
+        "primary_icon": "hermes/spell/distraktion/547c6dddda7ef3d430ae76a24b343b33c49c659722130fd40057ce3ff73d2048.webp",
+        "secondary_square": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/97a0bd9e-36e8-4e01-87d2-d1ccd0685ff8.webp",
+        "tertiary_wide": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/849c08c7-897b-466d-86f4-8b4a3e198722.webp",
+        "inspection_order": [
+          "primary_icon",
+          "secondary_square",
+          "tertiary_wide"
+        ],
+        "wide_visually_inspected": false,
+        "wide_limitation": "Storage path exists; no verified mapping to archived original was available, so it was not used as visual input."
+      },
+      "webp_local_validation": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "distraktion",
+        "source_path": "drive://1m8VgM-UGjy5YzWMZ78rnvttRgKuIWjXe",
+        "source_sha256": "d721fe2a4a11b8faa9136c5b5b19a645a0aacc217870c97dbcaf658653ad912c",
+        "source_bytes": 2862964,
+        "app_file": "spell-cutout/distraktion/44b7d99a4fdf5373b35e055f515b95b6345e6de988555cb614de870d8a5a70bd.webp",
+        "app_sha256": "44b7d99a4fdf5373b35e055f515b95b6345e6de988555cb614de870d8a5a70bd",
+        "app_bytes": 216454,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "expected_storage_bucket": "alea-spell-art",
+      "expected_storage_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/44b7d99a-4fdf-4373-b35e-055f515b95b6.webp",
+      "storage_published": false,
+      "baseline": {
+        "id": "8ecc5bb2-e099-4def-b503-b7e6fc9685d4",
+        "spell_key": "distraktion",
+        "name": "DISTRAKTION (K)",
+        "icon_path": "hermes/spell/distraktion/547c6dddda7ef3d430ae76a24b343b33c49c659722130fd40057ce3ff73d2048.webp",
+        "illustration_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/97a0bd9e-36e8-4e01-87d2-d1ccd0685ff8.webp",
+        "illustration_wide_path": "spell/8ecc5bb2-e099-4def-b503-b7e6fc9685d4/849c08c7-897b-466d-86f4-8b4a3e198722.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      }
+    }
+  ],
+  "tests": {
+    "existing_cutout_profile": "3 tests (run with PYTHONPATH=scripts)",
+    "five_actual_sources": "PASS HERMES validate_png",
+    "five_actual_webp_derivatives": "PASS HERMES prepare_bytes; actual resized alpha bytes match",
+    "drive_roundtrip": "10/10 SHA-256 and size matches",
+    "publication_ci": "PENDING PR CI; main-only publication runs after approved merge"
+  },
+  "post_merge_steps": [
+    "Allow exactly one push-triggered HERMES Drive workflow; no duplicate dispatch.",
+    "Verify five ACTIVE jobs, expected paths, delivered WebP SHA-256 and unchanged icon/square/wide fields.",
+    "For only these five rows, after successful activation, compare-and-set cutout_scale 160 to 125 while matching exact cutout_path; preserve x50/y90.",
+    "Read back exact DB rows and confirm source bucket remains empty.",
+    "Stop after these five; no batch 2 without approval."
+  ],
+  "notes": [
+    "No original PNG or WebP is added to GitHub. Original bytes live in existing Drive Inbox and archive.",
+    "Local WebP is validation output only: Actions re-creates WebP from checksum-pinned archived original.",
+    "No claim of Storage publication, admin visual verification or COMPLETE before post-merge checks."
+  ]
+}
