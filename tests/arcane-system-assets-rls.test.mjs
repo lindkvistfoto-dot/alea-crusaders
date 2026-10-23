@@ -5,6 +5,7 @@ import profiles from '../config/hermes-system-assets.json';
 const migrations=[
  '20261022043725_arcane_paper_doll_system_assets.sql',
  '20261022220000_extend_arcane_system_assets.sql',
+ '20261023173000_dynamic_system_asset_constraints.sql',
 ].map(name=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
 
 it('applies the real migration and enforces publication constraints, RLS and column grants in PostgreSQL',async()=>{
@@ -15,6 +16,8 @@ it('applies the real migration and enforces publication constraints, RLS and col
    insert into public.hermes_jobs values('spell');`);
   for(const migration of migrations)await db.exec(migration);
   const rows=(await db.query('select * from arcane_system_assets order by asset_key')).rows;
+  await db.exec("insert into arcane_system_assets(id,asset_key,label) values('d8275cf9-4715-42d4-99c7-384ccb647c60','arcane-bronze-ivory-double-hex-side-high-angle','Double Hex')");
+  await expect(db.exec("insert into arcane_system_assets(id,asset_key,label) values(gen_random_uuid(),'invalid key','Bad')")).rejects.toThrow();
   expect(rows).toHaveLength(Object.keys(profiles.assets).length);
   expect(rows.map(x=>x.id)).toEqual(Object.entries(profiles.assets)
    .sort(([a],[b])=>a.localeCompare(b)).map(([,asset])=>asset.id));
@@ -29,7 +32,7 @@ it('applies the real migration and enforces publication constraints, RLS and col
   await db.exec('reset role; set role anon');
   await expect(db.query('select * from arcane_system_assets')).rejects.toThrow(/permission denied/);
   await db.exec('reset role; set role service_role');
-  expect((await db.query('select * from arcane_system_assets')).rows).toHaveLength(Object.keys(profiles.assets).length);
+  expect((await db.query('select * from arcane_system_assets')).rows).toHaveLength(Object.keys(profiles.assets).length+1);
   await expect(db.exec("update arcane_system_assets set label='changed'")).rejects.toThrow(/permission denied/);
   await expect(db.exec('delete from arcane_system_assets')).rejects.toThrow(/permission denied/);
   await expect(db.exec("update arcane_system_assets set asset_path='evil.webp'")).rejects.toThrow(/arcane_system_asset_publication/);
