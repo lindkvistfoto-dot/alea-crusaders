@@ -46,3 +46,13 @@
 .combat-paper-doll-universal-ring{fill:none;stroke:#53c67b;stroke-width:1.4;vector-effect:non-scaling-stroke}
 .combat-paper-doll-universal.selected .combat-paper-doll-universal-ring{stroke:#ffd06f;stroke-width:2.5}
 .combat-paper-doll-universal.attack-target .combat-paper-doll-universal-ring{stroke:#e1493f;stroke-width:2.5}
+
+/* ARCANE BASE AURA V1 – removable visual-only layer.
+   Disable all effects with --arcane-aura-opacity:0 on .combat-map-svg.
+   Adjust radius/offset here without changing hex geometry or combat state. */
+.combat-map-svg{--arcane-aura-opacity:.58;--arcane-aura-radius:11px}
+.combat-base-aura{opacity:var(--arcane-aura-opacity);fill:#48d77d;filter:blur(5px);pointer-events:none}
+.combat-base-aura--npc{fill:#57aaff}
+.combat-base-aura--enemy{fill:#ed5656}
+.combat-base-aura--gold{fill:#ffd06b;opacity:calc(var(--arcane-aura-opacity) * 1.4);filter:blur(6px)}
+@media (prefers-reduced-motion:reduce){.combat-base-aura{animation:none!important}}
