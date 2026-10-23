@@ -1,0 +1,15 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-bronze-ivory-double-hex-side-high-angle",
+      "target_id": "d8275cf9-4715-42d4-99c7-384ccb647c60",
+      "drive_file_id": "13Bc_nGJA8MMMQJFov1bxlmh3rkm42Crm",
+      "archive_file_id": "1mpsP117ldV5sp3kfSHsXwF7CX4f9aT7U",
+      "source_sha256": "ce6c97880ac0addc6dec16dadd7267855382fd491acc57023662c01f0dd338d0",
+      "visual_approved": true
+    }
+  ]
+}
