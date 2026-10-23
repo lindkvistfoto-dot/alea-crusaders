@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "batch": "20261023-batch05",
-  "status": "READY_TO_PUBLISH",
+  "status": "COMPLETE",
   "authorization": "User authorized all remaining cutouts without batch approval.",
   "binary_readbacks": [
     {
@@ -258,9 +258,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "0438bd30-46ec-44f6-836d-db768b86c04c",
+        "spell_key": "morker-illusionism",
+        "icon_path": null,
+        "illustration_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/bb2a97cb-91c6-4efd-9d09-56ac022954d2.webp",
+        "illustration_wide_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/0b436356-4973-443a-bd20-ec126addb766.webp",
+        "cutout_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/3a2c4fd7-5f36-4b82-8b99-5d83af02a0ec.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+        "app_sha256": "3a2c4fd75f368b820b995d83af02a0ec4f294f673b6be0c6dac54f9a34e17f08",
+        "source_bytes": 2369498,
+        "app_bytes": 190762,
+        "source_path": "drive://1SA_l1U5mPLEXvarKV1CM6EjiM6G8CDhv",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"b387a12e915dd984969ebdae2d9ebd9c\"",
+          "size": 190762,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:50:58.000Z",
+          "contentLength": 190762,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "morkersyn",
@@ -346,9 +375,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "a681539d-42a0-4674-92f5-6815491c3427",
+        "spell_key": "morkersyn",
+        "icon_path": "hermes/spell/morkersyn/d371ce433d6307d316c779c9e9b07ae521ea0641878baa5f919efb69e8853e9a.webp",
+        "illustration_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/9d9f1112-3644-4bd6-9e4f-86385a53d954.webp",
+        "illustration_wide_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/6dca8bbc-4a87-415e-9bc3-3588bb143978.webp",
+        "cutout_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/a8015656-9b4c-4483-8f92-324816f24380.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+        "app_sha256": "a80156569b4c84834f92324816f2438083acc639fad6fb3f4158e9292b1b97a4",
+        "source_bytes": 1655834,
+        "app_bytes": 141788,
+        "source_path": "drive://1jUZyRIoN_NNYGsKK6zHQ9WpzVJ6VNOUE",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"9ee38854028c4bf15a8bcba22ee2c350\"",
+          "size": 141788,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:50:58.000Z",
+          "contentLength": 141788,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "morkervag",
@@ -434,9 +492,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "89385567-6b18-4496-b1d7-0813f064b34c",
+        "spell_key": "morkervag",
+        "icon_path": "hermes/spell/morkervag/f321efcd2028d1f4862a4e336f065f2b493f99ffe68ad1c917fc8dfc467e18f0.webp",
+        "illustration_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/2da76561-b75d-4f11-b794-2cfa8b9fae73.webp",
+        "illustration_wide_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/18c31ab7-c1aa-4602-8c59-7215eeb8dfc5.webp",
+        "cutout_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/d0f999d7-c4d5-464d-b080-252212c2554a.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+        "app_sha256": "d0f999d7c4d5b64d3080252212c2554ac3f651527adfbacdd70cb931bf4435ca",
+        "source_bytes": 2239532,
+        "app_bytes": 163660,
+        "source_path": "drive://1qih2VnblXjuKWFqFv2W1mYOxx9vpfE9h",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"8752191025214de1a7e7fd97f707d536\"",
+          "size": 163660,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:50:58.000Z",
+          "contentLength": 163660,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "motstandskraft",
@@ -522,9 +609,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+        "spell_key": "motstandskraft",
+        "icon_path": null,
+        "illustration_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/bfcd0842-2727-48b6-a31c-9474f8245251.webp",
+        "illustration_wide_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/943d9e22-6676-4935-8cc9-77db0510f9cf.webp",
+        "cutout_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/aac3c217-3e78-4bea-b52d-115dadb1a2b2.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+        "app_sha256": "aac3c2173e788beaf52d115dadb1a2b2ac6c2c9f41c125ed2fdcc93cd9c9cd1f",
+        "source_bytes": 2297605,
+        "app_bytes": 216750,
+        "source_path": "drive://1v2KFEBaHQGjORMiisVlWW7uLE3b7Vxpm",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"6e9e2ebb5ca7f88439bcda7e11b6a7db\"",
+          "size": 216750,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:04.000Z",
+          "contentLength": 216750,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "ogonmatt",
@@ -610,9 +726,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "012717d7-26c8-4923-8a2d-ac72d14252dc",
+        "spell_key": "ogonmatt",
+        "icon_path": "hermes/spell/ogonmatt/0120abc1d131920f3800a68fc6672afb220365a97dbcdd5d7f6d374535ac2347.webp",
+        "illustration_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/77a0baf8-6ab1-44ea-8574-95ab90a612cb.webp",
+        "illustration_wide_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/ea4ef3de-d05f-4880-a166-bc06548854ff.webp",
+        "cutout_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/22e2db96-6180-4d79-b23b-2c5ad50700ce.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+        "app_sha256": "22e2db966180bd79723b2c5ad50700cecf9fb827d7433d943ee14350de94bc65",
+        "source_bytes": 2047848,
+        "app_bytes": 176154,
+        "source_path": "drive://1XAZICruXggiR8VIVsJy4jnA7BCr1aImM",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"4bba1709d255e2f8e50f997057bb3c35\"",
+          "size": 176154,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:04.000Z",
+          "contentLength": 176154,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "oka",
@@ -698,9 +843,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "dbc35cbc-b8e1-4528-92e3-371d2cd1536f",
+        "spell_key": "oka",
+        "icon_path": "hermes/spell/oka/e3ac249f27ae47a2c4717d45f9edc2b3e42a5937832ba6a212eec1283adaf2e2.webp",
+        "illustration_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/3f4a3bde-6c90-4d2f-8c99-86b813d3ec4b.webp",
+        "illustration_wide_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/0235a853-031e-4a92-a0cd-c37b3415f6c6.webp",
+        "cutout_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/861bf242-564b-46bd-8769-670160663bdb.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+        "app_sha256": "861bf242564bf6bd8769670160663bdb914833794839d95c4d92ab5d70f874e7",
+        "source_bytes": 2055712,
+        "app_bytes": 165028,
+        "source_path": "drive://1QnRIcO_3lG4YQDbZhR0ijTvji3mVleK6",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"fc356b9f8906a06756f57abc25b8be31\"",
+          "size": 165028,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:04.000Z",
+          "contentLength": 165028,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "oppna",
@@ -786,9 +960,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "d7748d2d-f9e5-4c9e-b0a0-35b908785f51",
+        "spell_key": "oppna",
+        "icon_path": "hermes/spell/oppna/1aa3260ac8d13f52e3808394df028a98aeaec2dd34628f0f7b590773e9f015ce.webp",
+        "illustration_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/82fc4228-430f-45c7-80b9-4cdc56c00574.webp",
+        "illustration_wide_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/155a7c8a-d28e-4ef3-806a-d85ab1d9cc9d.webp",
+        "cutout_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/78cfa9ba-1d36-4648-a0c0-368a61779912.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+        "app_sha256": "78cfa9ba1d36f64820c0368a617799122ee2d999ed44ded6e8d7e1cb301ce4e2",
+        "source_bytes": 2259026,
+        "app_bytes": 187916,
+        "source_path": "drive://1Tifd9yIu5mhkKzgwIZfHP46L1FFLhIGt",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"051a14ef4e8f9a7aadfa824d2e807d93\"",
+          "size": 187916,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:09.000Z",
+          "contentLength": 187916,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "oradd",
@@ -874,9 +1077,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "c648413f-2ed6-4d00-8a21-039db74ee429",
+        "spell_key": "oradd",
+        "icon_path": "hermes/spell/oradd/d1e4318c1ea7be8c041d9f1b5cb49156e335b9786083a7107f00343718f11fbb.webp",
+        "illustration_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/649dd3f6-ffd4-4b3a-8343-9a7369317dec.webp",
+        "illustration_wide_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/e377cffb-6f03-4c38-82ba-36ab4f1bb45b.webp",
+        "cutout_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/d45a7910-5407-4fd5-8068-779a85cc7dfd.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+        "app_sha256": "d45a791054079fd50068779a85cc7dfd9179cc103f678ce323b2977327b351b6",
+        "source_bytes": 2941773,
+        "app_bytes": 233474,
+        "source_path": "drive://1kggCE7_Yv1zreeFcumGsTUNSLLkjke9v",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"881d74c42fd52e0984983486dd358181\"",
+          "size": 233474,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:09.000Z",
+          "contentLength": 233474,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "orientering",
@@ -962,9 +1194,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "9e9b12f7-9cac-43ed-82cf-15953a5e7053",
+        "spell_key": "orientering",
+        "icon_path": "hermes/spell/orientering/4317e5ae6a4b78259d942066e8d3fe0001b4bd3dba66ddb8243caaee7c7bcf31.webp",
+        "illustration_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/1fcc53b3-4917-4f04-8c88-38a23f28827a.webp",
+        "illustration_wide_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/d0c35e11-6fe9-400b-bb80-c13998dc144f.webp",
+        "cutout_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/dd3926fd-0bd5-4da4-a2c0-bb9c3fdc9fbc.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+        "app_sha256": "dd3926fd0bd5eda4e2c0bb9c3fdc9fbcc2b8c53aa0a9c0f4252fc2187f977a4c",
+        "source_bytes": 2106389,
+        "app_bytes": 193978,
+        "source_path": "drive://1SEyVrgBA2p-y2UbvP-uX5-UflFX8Q7XX",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"9c19b8e7b6e89ca95a0a8a5d8775c562\"",
+          "size": 193978,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:09.000Z",
+          "contentLength": 193978,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "osynlighet",
@@ -1050,9 +1311,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "e72abdf8-c016-4b1e-9674-eee97923bc40",
+        "spell_key": "osynlighet",
+        "icon_path": "hermes/spell/osynlighet/d41d791ce596064f5b05972f8ad0ec65668acaeacb651502ff9d84911a54d8f7.webp",
+        "illustration_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/6266ca88-ab3f-4e5e-89b1-ab4788b5048d.webp",
+        "illustration_wide_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/248ad1c7-77c0-4709-aeea-acac8ea222ab.webp",
+        "cutout_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/6bb19d05-c8e1-4f20-bd90-db1457b1e2dc.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+        "app_sha256": "6bb19d05c8e1cf20bd90db1457b1e2dcf3a5e45972c961c7218accce4a02dda0",
+        "source_bytes": 1888371,
+        "app_bytes": 174186,
+        "source_path": "drive://1idXOY3f6ik8LWvKhhBKEQJbsj6VAfcKI",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"a1995c952caec0939f9ab8e39303006c\"",
+          "size": 174186,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:14.000Z",
+          "contentLength": 174186,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "panik",
@@ -1138,9 +1428,38 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "4f270898-01cc-4a2c-ba00-a13187262882",
+        "spell_key": "panik",
+        "icon_path": "hermes/spell/panik/e30c83dd61272f0aa4e16e34031d5d1d69b38fab4d1f460839d06df4622e411c.webp",
+        "illustration_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/2d83019e-42b8-44b7-bc0c-3570e6969d88.webp",
+        "illustration_wide_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/5cce6a7d-e495-4143-bc48-7d324ce1d512.webp",
+        "cutout_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/8336dcd4-b97a-45fc-8beb-26789b0d870d.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+        "app_sha256": "8336dcd4b97a65fccbeb26789b0d870d5e83050b9df73cbb1dfd73e7cb9b64f0",
+        "source_bytes": 2162962,
+        "app_bytes": 195528,
+        "source_path": "drive://1O28UXJnJgD2dBj_vZTD14-pb2nn-oEHF",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"743068de76db0d0d377a3d26b3289f07\"",
+          "size": 195528,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:14.000Z",
+          "contentLength": 195528,
+          "httpStatusCode": 200
+        }
+      }
     },
     {
       "key": "paralysering",
@@ -1226,9 +1545,47 @@
         "x": 50,
         "y": 90,
         "scale": 125,
-        "live_ui_inspected": false
+        "live_ui_inspected": false,
+        "placement_applied": true,
+        "final_database_scale": 125
       },
-      "status": "READY_TO_PUBLISH"
+      "status": "COMPLETE",
+      "live_verification": {
+        "id": "3c3e2221-29e0-4de2-87be-2611c97140ea",
+        "spell_key": "paralysering",
+        "icon_path": "hermes/spell/paralysering/6947c101ce4045516a492680fe7ed7302844413b67b971a1dc6a7868170f8ef3.webp",
+        "illustration_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/22654c62-f3e5-4878-8ee7-0c783efa55d0.webp",
+        "illustration_wide_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/ca68bee0-3286-4302-b0fc-893f26969572.webp",
+        "cutout_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/c79b0ad3-c302-49a2-9f88-04da8ff488d3.webp",
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160,
+        "status": "active",
+        "source_sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+        "app_sha256": "c79b0ad3c30239a21f8804da8ff488d3411ad6efac6ca88d1f22e88c7e2c1fd3",
+        "source_bytes": 1593386,
+        "app_bytes": 153046,
+        "source_path": "drive://15Vpr3eNt-jtngNjKTsvDS_cZgchr5EJJ",
+        "github_run_id": "39956327860",
+        "metadata": {
+          "eTag": "\"ec27b65278ba4cbe89b30cc7b30d01db\"",
+          "size": 153046,
+          "mimetype": "image/webp",
+          "cacheControl": "max-age=31536000",
+          "lastModified": "2026-10-23T12:51:15.000Z",
+          "contentLength": 153046,
+          "httpStatusCode": 200
+        }
+      }
     }
-  ]
+  ],
+  "github_commit": "d98d35be74f4851ed0562847fbe7b83fed0bca5b",
+  "github_run_id": 39956327860,
+  "publication": {
+    "succeeded": 12,
+    "failed": 0,
+    "source_bucket_empty": true,
+    "ci": "success",
+    "guard": "success"
+  }
 }

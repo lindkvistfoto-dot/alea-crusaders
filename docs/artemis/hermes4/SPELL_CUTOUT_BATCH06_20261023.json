@@ -1,0 +1,2050 @@
+{
+  "schema": 1,
+  "batch": "20261023-batch06",
+  "status": "READY_TO_PUBLISH",
+  "authorization": "User authorized all remaining cutouts without batch approval.",
+  "binary_readbacks": [
+    {
+      "key": "radsla",
+      "kind": "inbox",
+      "sha256": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783",
+      "bytes": 2628052,
+      "verified": true
+    },
+    {
+      "key": "radsla",
+      "kind": "archive",
+      "sha256": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783",
+      "bytes": 2628052,
+      "verified": true
+    },
+    {
+      "key": "regnstopp",
+      "kind": "inbox",
+      "sha256": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47",
+      "bytes": 2263509,
+      "verified": true
+    },
+    {
+      "key": "regnstopp",
+      "kind": "archive",
+      "sha256": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47",
+      "bytes": 2263509,
+      "verified": true
+    },
+    {
+      "key": "skanthorsel",
+      "kind": "inbox",
+      "sha256": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042",
+      "bytes": 1914112,
+      "verified": true
+    },
+    {
+      "key": "skanthorsel",
+      "kind": "archive",
+      "sha256": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042",
+      "bytes": 1914112,
+      "verified": true
+    },
+    {
+      "key": "sannsyn",
+      "kind": "inbox",
+      "sha256": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61",
+      "bytes": 2795190,
+      "verified": true
+    },
+    {
+      "key": "sannsyn",
+      "kind": "archive",
+      "sha256": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61",
+      "bytes": 2795190,
+      "verified": true
+    },
+    {
+      "key": "sinnesmask",
+      "kind": "inbox",
+      "sha256": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e",
+      "bytes": 2355213,
+      "verified": true
+    },
+    {
+      "key": "sinnesmask",
+      "kind": "archive",
+      "sha256": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e",
+      "bytes": 2355213,
+      "verified": true
+    },
+    {
+      "key": "smartta",
+      "kind": "inbox",
+      "sha256": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3",
+      "bytes": 2491790,
+      "verified": true
+    },
+    {
+      "key": "smartta",
+      "kind": "archive",
+      "sha256": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3",
+      "bytes": 2491790,
+      "verified": true
+    },
+    {
+      "key": "snabbhet",
+      "kind": "inbox",
+      "sha256": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b",
+      "bytes": 1918508,
+      "verified": true
+    },
+    {
+      "key": "snabbhet",
+      "kind": "archive",
+      "sha256": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b",
+      "bytes": 1918508,
+      "verified": true
+    },
+    {
+      "key": "snubbla",
+      "kind": "inbox",
+      "sha256": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992",
+      "bytes": 2190261,
+      "verified": true
+    },
+    {
+      "key": "snubbla",
+      "kind": "archive",
+      "sha256": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992",
+      "bytes": 2190261,
+      "verified": true
+    },
+    {
+      "key": "sparlos",
+      "kind": "inbox",
+      "sha256": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70",
+      "bytes": 1920018,
+      "verified": true
+    },
+    {
+      "key": "sparlos",
+      "kind": "archive",
+      "sha256": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70",
+      "bytes": 1920018,
+      "verified": true
+    },
+    {
+      "key": "sprang",
+      "kind": "inbox",
+      "sha256": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5",
+      "bytes": 2019542,
+      "verified": true
+    },
+    {
+      "key": "sprang",
+      "kind": "archive",
+      "sha256": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5",
+      "bytes": 2019542,
+      "verified": true
+    },
+    {
+      "key": "stenvagg",
+      "kind": "inbox",
+      "sha256": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4",
+      "bytes": 1899547,
+      "verified": true
+    },
+    {
+      "key": "stenvagg",
+      "kind": "archive",
+      "sha256": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4",
+      "bytes": 1899547,
+      "verified": true
+    },
+    {
+      "key": "syn",
+      "kind": "inbox",
+      "sha256": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd",
+      "bytes": 2153638,
+      "verified": true
+    },
+    {
+      "key": "syn",
+      "kind": "archive",
+      "sha256": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd",
+      "bytes": 2153638,
+      "verified": true
+    },
+    {
+      "key": "tala-med-varelse",
+      "kind": "inbox",
+      "sha256": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99",
+      "bytes": 2737513,
+      "verified": true
+    },
+    {
+      "key": "tala-med-varelse",
+      "kind": "archive",
+      "sha256": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99",
+      "bytes": 2737513,
+      "verified": true
+    },
+    {
+      "key": "terror",
+      "kind": "inbox",
+      "sha256": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d",
+      "bytes": 2541781,
+      "verified": true
+    },
+    {
+      "key": "terror",
+      "kind": "archive",
+      "sha256": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d",
+      "bytes": 2541781,
+      "verified": true
+    },
+    {
+      "key": "tillkalla-varelse",
+      "kind": "inbox",
+      "sha256": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8",
+      "bytes": 1663800,
+      "verified": true
+    },
+    {
+      "key": "tillkalla-varelse",
+      "kind": "archive",
+      "sha256": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8",
+      "bytes": 1663800,
+      "verified": true
+    },
+    {
+      "key": "tystnad",
+      "kind": "inbox",
+      "sha256": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3",
+      "bytes": 2200820,
+      "verified": true
+    },
+    {
+      "key": "tystnad",
+      "kind": "archive",
+      "sha256": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3",
+      "bytes": 2200820,
+      "verified": true
+    },
+    {
+      "key": "vaderforutsagelse",
+      "kind": "inbox",
+      "sha256": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c",
+      "bytes": 2113341,
+      "verified": true
+    },
+    {
+      "key": "vaderforutsagelse",
+      "kind": "archive",
+      "sha256": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c",
+      "bytes": 2113341,
+      "verified": true
+    },
+    {
+      "key": "vaderkontroll",
+      "kind": "inbox",
+      "sha256": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c",
+      "bytes": 2173214,
+      "verified": true
+    },
+    {
+      "key": "vaderkontroll",
+      "kind": "archive",
+      "sha256": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c",
+      "bytes": 2173214,
+      "verified": true
+    },
+    {
+      "key": "vapenvag",
+      "kind": "inbox",
+      "sha256": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e",
+      "bytes": 2412723,
+      "verified": true
+    },
+    {
+      "key": "vapenvag",
+      "kind": "archive",
+      "sha256": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e",
+      "bytes": 2412723,
+      "verified": true
+    },
+    {
+      "key": "voodoo-ritual",
+      "kind": "inbox",
+      "sha256": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435",
+      "bytes": 2277691,
+      "verified": true
+    },
+    {
+      "key": "voodoo-ritual",
+      "kind": "archive",
+      "sha256": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435",
+      "bytes": 2277691,
+      "verified": true
+    }
+  ],
+  "records": [
+    {
+      "key": "radsla",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/radsla-cutout.png",
+      "source_sha256": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783",
+      "source_bytes": 2628052,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.40080418895578807,
+      "alpha_bbox_over_32": [
+        65,
+        64,
+        1201,
+        1199
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "radsla",
+        "source_path": "drive://PENDING-radsla",
+        "source_sha256": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783",
+        "source_bytes": 2628052,
+        "app_file": "spell-cutout/radsla/88725df12ca5833243434f4de13b908b3a79a320e6fdc4609e4c3f1f8a7908ad.webp",
+        "app_sha256": "88725df12ca5833243434f4de13b908b3a79a320e6fdc4609e4c3f1f8a7908ad",
+        "app_bytes": 204834,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "7bd45836-8ea1-4bfe-b5f3-8101b5f849af",
+        "spell_key": "radsla",
+        "name": "RÄDSLA (K)",
+        "icon_path": "hermes/spell/radsla/038e8e50ab00e3305bce37957c4493714777965bd0e76ae6a65949fd170acf69.webp",
+        "illustration_path": "spell/7bd45836-8ea1-4bfe-b5f3-8101b5f849af/7834c7b5-448a-4afd-b086-40ff83132273.webp",
+        "illustration_wide_path": "spell/7bd45836-8ea1-4bfe-b5f3-8101b5f849af/1818a573-b704-4c87-9d02-d02882ecf60e.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1Nr-OogV-0P1p23qeRDwqCH51aYbUg-0k",
+          "title": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783.png",
+          "file_name": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1Nr-OogV-0P1p23qeRDwqCH51aYbUg-0k/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1Nr-OogV-0P1p23qeRDwqCH51aYbUg-0k",
+            "title": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783.png",
+            "file_name": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1Nr-OogV-0P1p23qeRDwqCH51aYbUg-0k/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1vZ21YDC_88hvLZ21qQZqYgZB1dBJry5h",
+          "title": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1vZ21YDC_88hvLZ21qQZqYgZB1dBJry5h/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/7bd45836-8ea1-4bfe-b5f3-8101b5f849af/88725df1-2ca5-4332-8343-4f4de13b908b.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "regnstopp",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/regnstopp-cutout.png",
+      "source_sha256": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47",
+      "source_bytes": 2263509,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3763274904675056,
+      "alpha_bbox_over_32": [
+        31,
+        50,
+        1212,
+        1211
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "regnstopp",
+        "source_path": "drive://PENDING-regnstopp",
+        "source_sha256": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47",
+        "source_bytes": 2263509,
+        "app_file": "spell-cutout/regnstopp/dabff081f986a9c5aa5f0b20150d5fd175d6eba3df47ee8f6f1048a5ac64bd6e.webp",
+        "app_sha256": "dabff081f986a9c5aa5f0b20150d5fd175d6eba3df47ee8f6f1048a5ac64bd6e",
+        "app_bytes": 189624,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9108d6a2-3bc6-4abb-9541-551fd18847e8",
+        "spell_key": "regnstopp",
+        "name": "REGNSTOPP",
+        "icon_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/de9b923e-8859-464f-bf16-87825b1d859d.webp",
+        "illustration_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/3b3b0467-e6d3-48b9-ad3d-758ea26133a0.webp",
+        "illustration_wide_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/c47e593b-847d-441e-8735-feed2562614f.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "12WBQCN5QCJsICDWnY1VPcoZ3U3muXDi0",
+          "title": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47.png",
+          "file_name": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/12WBQCN5QCJsICDWnY1VPcoZ3U3muXDi0/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "12WBQCN5QCJsICDWnY1VPcoZ3U3muXDi0",
+            "title": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47.png",
+            "file_name": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/12WBQCN5QCJsICDWnY1VPcoZ3U3muXDi0/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1QzE8IvBBoNc1fWM-tleakV9bcBlZVGDU",
+          "title": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1QzE8IvBBoNc1fWM-tleakV9bcBlZVGDU/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9108d6a2-3bc6-4abb-9541-551fd18847e8/dabff081-f986-49c5-aa5f-0b20150d5fd1.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "skanthorsel",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/skanthorsel-cutout.png",
+      "source_sha256": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042",
+      "source_bytes": 1914112,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5515295233879973,
+      "alpha_bbox_over_32": [
+        43,
+        243,
+        1238,
+        1053
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "skanthorsel",
+        "source_path": "drive://PENDING-skanthorsel",
+        "source_sha256": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042",
+        "source_bytes": 1914112,
+        "app_file": "spell-cutout/skanthorsel/706f6afc3339481df708b845500ea4b467709ee4ed05c6d907eeca74f1554614.webp",
+        "app_sha256": "706f6afc3339481df708b845500ea4b467709ee4ed05c6d907eeca74f1554614",
+        "app_bytes": 166628,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "54b365bd-a344-4cd6-8133-aaa4e033fc7d",
+        "spell_key": "skanthorsel",
+        "name": "SANNHÖRSEL",
+        "icon_path": null,
+        "illustration_path": "spell/54b365bd-a344-4cd6-8133-aaa4e033fc7d/328cfbbc-73d4-4f38-9332-510ffe916de4.webp",
+        "illustration_wide_path": "spell/54b365bd-a344-4cd6-8133-aaa4e033fc7d/817ed728-27cb-48a9-80f7-218b1151455b.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1lKKlmavjxzBJ4p3XJS2GDsjtPNKHJVaw",
+          "title": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042.png",
+          "file_name": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1lKKlmavjxzBJ4p3XJS2GDsjtPNKHJVaw/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1lKKlmavjxzBJ4p3XJS2GDsjtPNKHJVaw",
+            "title": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042.png",
+            "file_name": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1lKKlmavjxzBJ4p3XJS2GDsjtPNKHJVaw/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1NyT3VlkpUdtOtByOcPx88bCGO5dbMZWU",
+          "title": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1NyT3VlkpUdtOtByOcPx88bCGO5dbMZWU/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/54b365bd-a344-4cd6-8133-aaa4e033fc7d/706f6afc-3339-481d-b708-b845500ea4b4.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "sannsyn",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/sannsyn-cutout.png",
+      "source_sha256": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61",
+      "source_bytes": 2795190,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3456289156994269,
+      "alpha_bbox_over_32": [
+        56,
+        64,
+        1197,
+        1200
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "sannsyn",
+        "source_path": "drive://PENDING-sannsyn",
+        "source_sha256": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61",
+        "source_bytes": 2795190,
+        "app_file": "spell-cutout/sannsyn/def80971035c192fbd664dad9b36fb4070bc7816ed2435c413e9ded352ea921c.webp",
+        "app_sha256": "def80971035c192fbd664dad9b36fb4070bc7816ed2435c413e9ded352ea921c",
+        "app_bytes": 233582,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "e4aa1ce6-6ec6-4269-963a-e4e6b724276a",
+        "spell_key": "sannsyn",
+        "name": "SANNSYN",
+        "icon_path": "hermes/spell/sannsyn/bee2be45cbd563e4ac71e142fc2d2f0a47966ecfae56c4660c4bb80070e14208.webp",
+        "illustration_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/30266d57-b266-4ee6-9e68-c86167099200.webp",
+        "illustration_wide_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/600c6a9b-1a69-409c-b807-b00673579bd5.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1ZXv_DHWbO76uWp2RyjD5n0sldDJpTfWB",
+          "title": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61.png",
+          "file_name": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1ZXv_DHWbO76uWp2RyjD5n0sldDJpTfWB/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1ZXv_DHWbO76uWp2RyjD5n0sldDJpTfWB",
+            "title": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61.png",
+            "file_name": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1ZXv_DHWbO76uWp2RyjD5n0sldDJpTfWB/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "19ckxsRIweO0vYOlUzT26_M9jIWq4wdYi",
+          "title": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/19ckxsRIweO0vYOlUzT26_M9jIWq4wdYi/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/e4aa1ce6-6ec6-4269-963a-e4e6b724276a/def80971-035c-492f-bd66-4dad9b36fb40.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "sinnesmask",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/sinnesmask-cutout.png",
+      "source_sha256": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e",
+      "source_bytes": 2355213,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4251301735562627,
+      "alpha_bbox_over_32": [
+        125,
+        48,
+        1179,
+        1218
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "sinnesmask",
+        "source_path": "drive://PENDING-sinnesmask",
+        "source_sha256": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e",
+        "source_bytes": 2355213,
+        "app_file": "spell-cutout/sinnesmask/2f02346ff0e8f0fa903adfeb4d06b92990c8d0963ff4c20e67e5c3176d752001.webp",
+        "app_sha256": "2f02346ff0e8f0fa903adfeb4d06b92990c8d0963ff4c20e67e5c3176d752001",
+        "app_bytes": 178152,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9bc53fb0-c26f-458d-aeb0-b7398b492f40",
+        "spell_key": "sinnesmask",
+        "name": "SINNESMASK",
+        "icon_path": "hermes/spell/sinnesmask/e3285f6425dff08a701dfd0122fc66c560772dd6c2e2b2e6cee0c844d5f574ba.webp",
+        "illustration_path": "spell/9bc53fb0-c26f-458d-aeb0-b7398b492f40/ac7d2cb4-9c28-4e2e-8c35-be83b08a2916.webp",
+        "illustration_wide_path": "spell/9bc53fb0-c26f-458d-aeb0-b7398b492f40/434136e1-51f0-488d-8c02-02a60140f5d1.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1GbWVc_A_h1BOut8CTDC4Hg6hnPwX4FFq",
+          "title": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e.png",
+          "file_name": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1GbWVc_A_h1BOut8CTDC4Hg6hnPwX4FFq/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1GbWVc_A_h1BOut8CTDC4Hg6hnPwX4FFq",
+            "title": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e.png",
+            "file_name": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1GbWVc_A_h1BOut8CTDC4Hg6hnPwX4FFq/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1dA9PvlRRJfk9shIVW_HbV1cHEfbZFbxS",
+          "title": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1dA9PvlRRJfk9shIVW_HbV1cHEfbZFbxS/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9bc53fb0-c26f-458d-aeb0-b7398b492f40/2f02346f-f0e8-40fa-903a-dfeb4d06b929.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "smartta",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/smartta-cutout.png",
+      "source_sha256": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3",
+      "source_bytes": 2491790,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4328382032360879,
+      "alpha_bbox_over_32": [
+        96,
+        59,
+        1172,
+        1206
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "smartta",
+        "source_path": "drive://PENDING-smartta",
+        "source_sha256": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3",
+        "source_bytes": 2491790,
+        "app_file": "spell-cutout/smartta/a61c123ffff48a952ceb9d2424eb7833b6d55f8ba8a60bff2955325d6e4b9619.webp",
+        "app_sha256": "a61c123ffff48a952ceb9d2424eb7833b6d55f8ba8a60bff2955325d6e4b9619",
+        "app_bytes": 217088,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1",
+        "spell_key": "smartta",
+        "name": "SMÄRTA",
+        "icon_path": "hermes/spell/smartta/2db2b1e8a262c33857c653cee382f779c44514c235560d0cac8d2237784132e1.webp",
+        "illustration_path": "spell/5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1/d8b2e6ca-5612-4735-a0ca-f74fccb6e018.webp",
+        "illustration_wide_path": "spell/5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1/dd261bbe-6cdc-473a-9c4d-54f2a16074c3.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1q0T_ZslG6JJJ9z4apQDlbDOB1kKUDpT5",
+          "title": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3.png",
+          "file_name": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1q0T_ZslG6JJJ9z4apQDlbDOB1kKUDpT5/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1q0T_ZslG6JJJ9z4apQDlbDOB1kKUDpT5",
+            "title": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3.png",
+            "file_name": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1q0T_ZslG6JJJ9z4apQDlbDOB1kKUDpT5/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1N_CBXEpMy_VRuq0ZgO-uoaZpps170fsL",
+          "title": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1N_CBXEpMy_VRuq0ZgO-uoaZpps170fsL/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1/a61c123f-fff4-4a95-aceb-9d2424eb7833.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "snabbhet",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/snabbhet-cutout.png",
+      "source_sha256": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b",
+      "source_bytes": 1918508,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5441013000821613,
+      "alpha_bbox_over_32": [
+        63,
+        207,
+        1204,
+        1067
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "snabbhet",
+        "source_path": "drive://PENDING-snabbhet",
+        "source_sha256": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b",
+        "source_bytes": 1918508,
+        "app_file": "spell-cutout/snabbhet/b71f3854ced204bcf28bb9907c55a5e73991b6a22eb0c8629008c5e6c185af2e.webp",
+        "app_sha256": "b71f3854ced204bcf28bb9907c55a5e73991b6a22eb0c8629008c5e6c185af2e",
+        "app_bytes": 159864,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "82d55374-6bc0-4488-8a2c-cad8dc406006",
+        "spell_key": "snabbhet",
+        "name": "SNABBHET",
+        "icon_path": "hermes/spell/snabbhet/973828b226dad2ae49c1ade0de6a0272cdb9ed5d59afdca7c7b32616bc85ea38.webp",
+        "illustration_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/4c256a26-9a1f-4dc9-86b6-f4f1519cc86f.webp",
+        "illustration_wide_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/09e270e2-472b-425e-a664-2d9e5349c879.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1nxbJSMiazgauzT5hZLG5bDW_s4Wxn0mY",
+          "title": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b.png",
+          "file_name": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1nxbJSMiazgauzT5hZLG5bDW_s4Wxn0mY/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1nxbJSMiazgauzT5hZLG5bDW_s4Wxn0mY",
+            "title": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b.png",
+            "file_name": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1nxbJSMiazgauzT5hZLG5bDW_s4Wxn0mY/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "11ESXbwEOr3tlWePi4BACeiVZt1E3oedI",
+          "title": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/11ESXbwEOr3tlWePi4BACeiVZt1E3oedI/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/82d55374-6bc0-4488-8a2c-cad8dc406006/b71f3854-ced2-44bc-b28b-b9907c55a5e7.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "snubbla",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/snubbla-cutout.png",
+      "source_sha256": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992",
+      "source_bytes": 2190261,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.47438309053771155,
+      "alpha_bbox_over_32": [
+        75,
+        116,
+        1223,
+        1130
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "snubbla",
+        "source_path": "drive://PENDING-snubbla",
+        "source_sha256": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992",
+        "source_bytes": 2190261,
+        "app_file": "spell-cutout/snubbla/10c0200d3d07f4008bcf936b266e5f86d43aac012f37460b9bd4703bc8f4a9b0.webp",
+        "app_sha256": "10c0200d3d07f4008bcf936b266e5f86d43aac012f37460b9bd4703bc8f4a9b0",
+        "app_bytes": 175494,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "ec7e654d-042e-4def-b550-6b0cba0fb6f2",
+        "spell_key": "snubbla",
+        "name": "SNUBBLA (K)",
+        "icon_path": "hermes/spell/snubbla/ff3aab3d2dd6471b0ac2c19019fa59ec960405f8df80790dcd5be2256ffe0f32.webp",
+        "illustration_path": "spell/ec7e654d-042e-4def-b550-6b0cba0fb6f2/737c1267-fbbf-4aa2-97f2-707d8657c0ba.webp",
+        "illustration_wide_path": "spell/ec7e654d-042e-4def-b550-6b0cba0fb6f2/dc363f9e-b9d9-4322-bf17-e97060b5b716.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1pI8cDRcz7DlUbUXFPuGXUHtc8vfoSi7a",
+          "title": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992.png",
+          "file_name": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1pI8cDRcz7DlUbUXFPuGXUHtc8vfoSi7a/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1pI8cDRcz7DlUbUXFPuGXUHtc8vfoSi7a",
+            "title": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992.png",
+            "file_name": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1pI8cDRcz7DlUbUXFPuGXUHtc8vfoSi7a/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1AhrIyJ_KBg5wKK6WNmb4VAF-9koW84Db",
+          "title": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1AhrIyJ_KBg5wKK6WNmb4VAF-9koW84Db/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/ec7e654d-042e-4def-b550-6b0cba0fb6f2/10c0200d-3d07-4400-8bcf-936b266e5f86.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "sparlos",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/sparlos-cutout.png",
+      "source_sha256": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70",
+      "source_bytes": 1920018,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5441846060707808,
+      "alpha_bbox_over_32": [
+        115,
+        82,
+        1183,
+        1178
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "sparlos",
+        "source_path": "drive://PENDING-sparlos",
+        "source_sha256": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70",
+        "source_bytes": 1920018,
+        "app_file": "spell-cutout/sparlos/9a15fc303ce2f8e6097b8883ae14c2a3af689eb13866367462ad747d96d61a0c.webp",
+        "app_sha256": "9a15fc303ce2f8e6097b8883ae14c2a3af689eb13866367462ad747d96d61a0c",
+        "app_bytes": 160656,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "78c31001-110d-4876-99c2-98281885e8a0",
+        "spell_key": "sparlos",
+        "name": "SPÅRLÖS",
+        "icon_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/16e618dc-8645-427a-bce9-238397110634.webp",
+        "illustration_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/ea04f1ca-d010-49d1-847b-c0cb847cc260.webp",
+        "illustration_wide_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/d34d761a-857c-43eb-91ba-d952d24f26a6.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1KDgw-vm5l-VwPwtvE_OXOaLszK9ppopC",
+          "title": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70.png",
+          "file_name": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1KDgw-vm5l-VwPwtvE_OXOaLszK9ppopC/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1KDgw-vm5l-VwPwtvE_OXOaLszK9ppopC",
+            "title": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70.png",
+            "file_name": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1KDgw-vm5l-VwPwtvE_OXOaLszK9ppopC/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1eYQT4uvhqSqzNojM_qat9ql3NIh3_OEP",
+          "title": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1eYQT4uvhqSqzNojM_qat9ql3NIh3_OEP/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/78c31001-110d-4876-99c2-98281885e8a0/9a15fc30-3ce2-48e6-897b-8883ae14c2a3.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "sprang",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/sprang-cutout.png",
+      "source_sha256": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5",
+      "source_bytes": 2019542,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.48822905458513616,
+      "alpha_bbox_over_32": [
+        47,
+        163,
+        1211,
+        1132
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "sprang",
+        "source_path": "drive://PENDING-sprang",
+        "source_sha256": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5",
+        "source_bytes": 2019542,
+        "app_file": "spell-cutout/sprang/319427bdf3241b9f5ea2b688da23d9aa2a890fc42b42cb3ac88f99ccc781de5e.webp",
+        "app_sha256": "319427bdf3241b9f5ea2b688da23d9aa2a890fc42b42cb3ac88f99ccc781de5e",
+        "app_bytes": 180610,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "d5eb1354-eaa5-4941-829b-639eff69ce7f",
+        "spell_key": "sprang",
+        "name": "SPRÅNG (K)",
+        "icon_path": "hermes/spell/sprang/7e8ed07321843cd96c49890ddadacd43b2cc6e0ca8ad55f0e3f9d56deecc60f6.webp",
+        "illustration_path": "spell/d5eb1354-eaa5-4941-829b-639eff69ce7f/9610f9e1-ee95-4356-b49a-0eab78d20dd9.webp",
+        "illustration_wide_path": "spell/d5eb1354-eaa5-4941-829b-639eff69ce7f/cbe38ee3-8315-4a5c-a96c-a471e941a3ef.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1xP5YJasgl-K7rklAfxH2GQ3A3o1W0hYi",
+          "title": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5.png",
+          "file_name": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1xP5YJasgl-K7rklAfxH2GQ3A3o1W0hYi/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1xP5YJasgl-K7rklAfxH2GQ3A3o1W0hYi",
+            "title": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5.png",
+            "file_name": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1xP5YJasgl-K7rklAfxH2GQ3A3o1W0hYi/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1tL2O3h2Gs4MDtI7H67srBhObSojLoVm2",
+          "title": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1tL2O3h2Gs4MDtI7H67srBhObSojLoVm2/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/d5eb1354-eaa5-4941-829b-639eff69ce7f/319427bd-f324-4b9f-9ea2-b688da23d9aa.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "stenvagg",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/stenvagg-cutout.png",
+      "source_sha256": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4",
+      "source_bytes": 1899547,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5516974072123908,
+      "alpha_bbox_over_32": [
+        156,
+        144,
+        1122,
+        1117
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "stenvagg",
+        "source_path": "drive://PENDING-stenvagg",
+        "source_sha256": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4",
+        "source_bytes": 1899547,
+        "app_file": "spell-cutout/stenvagg/ed20fd0cffb5b045880a7f9c847fb395bec75786cb3ec58659d05eaa5ebe830b.webp",
+        "app_sha256": "ed20fd0cffb5b045880a7f9c847fb395bec75786cb3ec58659d05eaa5ebe830b",
+        "app_bytes": 151334,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "3cf3092b-35dd-4ac1-95b4-efe4149533b8",
+        "spell_key": "stenvagg",
+        "name": "STENVÄGG (F)",
+        "icon_path": null,
+        "illustration_path": "spell/3cf3092b-35dd-4ac1-95b4-efe4149533b8/eff1f39d-fc50-4597-a75c-d67517a28a50.webp",
+        "illustration_wide_path": "spell/3cf3092b-35dd-4ac1-95b4-efe4149533b8/f828545b-dbec-43dc-8a53-68e794cf1480.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1VTfDErGyXz2n57x5_qRkkwc8Hruow04e",
+          "title": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4.png",
+          "file_name": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1VTfDErGyXz2n57x5_qRkkwc8Hruow04e/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1VTfDErGyXz2n57x5_qRkkwc8Hruow04e",
+            "title": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4.png",
+            "file_name": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1VTfDErGyXz2n57x5_qRkkwc8Hruow04e/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1xiAvwyS2-EO60lR9bG0Yzj6mqUTWiSA-",
+          "title": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1xiAvwyS2-EO60lR9bG0Yzj6mqUTWiSA-/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/3cf3092b-35dd-4ac1-95b4-efe4149533b8/ed20fd0c-ffb5-4045-880a-7f9c847fb395.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "syn",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/syn-cutout.png",
+      "source_sha256": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd",
+      "source_bytes": 2153638,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "transparent_fraction": 0.47615350177677046,
+      "alpha_bbox_over_32": [
+        79,
+        62,
+        1180,
+        1169
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "syn",
+        "source_path": "drive://PENDING-syn",
+        "source_sha256": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd",
+        "source_bytes": 2153638,
+        "app_file": "spell-cutout/syn/9fde92772ad294efc59b57fb61d00de265e16544393eda1bd06588ffbfb38be3.webp",
+        "app_sha256": "9fde92772ad294efc59b57fb61d00de265e16544393eda1bd06588ffbfb38be3",
+        "app_bytes": 182590,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "7128fef3-dd66-48e0-bf78-e04e043efe8b",
+        "spell_key": "syn",
+        "name": "SYN",
+        "icon_path": "hermes/spell/syn/b27181767964bc7d9368adee35ce5f54d64ea0eaa4e8ce7241ebddb1e08b355a.webp",
+        "illustration_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/6bf2e0b3-cf15-4a22-9c84-3b75c11b9c19.webp",
+        "illustration_wide_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/29f5b731-aa17-4693-9c7c-2b67f0e19feb.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "183DGtlRYbj45jeVsLT9-XxxUw7Q9DrLB",
+          "title": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd.png",
+          "file_name": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/183DGtlRYbj45jeVsLT9-XxxUw7Q9DrLB/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "183DGtlRYbj45jeVsLT9-XxxUw7Q9DrLB",
+            "title": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd.png",
+            "file_name": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/183DGtlRYbj45jeVsLT9-XxxUw7Q9DrLB/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1kynCh1KpkEmYWW0hBgl-MQQ4rcb6tcxI",
+          "title": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1kynCh1KpkEmYWW0hBgl-MQQ4rcb6tcxI/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/7128fef3-dd66-48e0-bf78-e04e043efe8b/9fde9277-2ad2-44ef-859b-57fb61d00de2.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "tala-med-varelse",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/tala-med-varelse-cutout.png",
+      "source_sha256": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99",
+      "source_bytes": 2737513,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.36830277084621077,
+      "alpha_bbox_over_32": [
+        84,
+        56,
+        1198,
+        1193
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "tala-med-varelse",
+        "source_path": "drive://PENDING-tala-med-varelse",
+        "source_sha256": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99",
+        "source_bytes": 2737513,
+        "app_file": "spell-cutout/tala-med-varelse/e4542f9e7b7469bec87d9c4d5036f669cdb982e36dd4028632fccde5efab8190.webp",
+        "app_sha256": "e4542f9e7b7469bec87d9c4d5036f669cdb982e36dd4028632fccde5efab8190",
+        "app_bytes": 237146,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "a8ab5aca-9298-4f68-8561-3cd5cd38cd1c",
+        "spell_key": "tala-med-varelse",
+        "name": "TALA MED VARELSE",
+        "icon_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/c3e88fb1-d7fb-4b50-a509-2ec70c216786.webp",
+        "illustration_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/129ac489-2657-40fe-aa09-d7b3d242a382.webp",
+        "illustration_wide_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/d08d66dc-8ec2-4346-a660-4a4851277ea8.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1718EkfsLVhXLYSqXfR187isPeLG0SASN",
+          "title": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99.png",
+          "file_name": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1718EkfsLVhXLYSqXfR187isPeLG0SASN/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1718EkfsLVhXLYSqXfR187isPeLG0SASN",
+            "title": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99.png",
+            "file_name": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1718EkfsLVhXLYSqXfR187isPeLG0SASN/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1vJf36MaY1c-P-OGeoIjtkTQcp6BRW4iE",
+          "title": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1vJf36MaY1c-P-OGeoIjtkTQcp6BRW4iE/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/a8ab5aca-9298-4f68-8561-3cd5cd38cd1c/e4542f9e-7b74-49be-887d-9c4d5036f669.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "terror",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/terror-cutout.png",
+      "source_sha256": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d",
+      "source_bytes": 2541781,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4260211024879874,
+      "alpha_bbox_over_32": [
+        31,
+        99,
+        1223,
+        1161
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "terror",
+        "source_path": "drive://PENDING-terror",
+        "source_sha256": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d",
+        "source_bytes": 2541781,
+        "app_file": "spell-cutout/terror/52d8c15e3546f0bd221637cdc1ab5424499f32fa946e99e2b22b2eca2769dc69.webp",
+        "app_sha256": "52d8c15e3546f0bd221637cdc1ab5424499f32fa946e99e2b22b2eca2769dc69",
+        "app_bytes": 198142,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "215459ca-3928-439a-a83c-66c200755d80",
+        "spell_key": "terror",
+        "name": "TERROR",
+        "icon_path": "hermes/spell/terror/b635038a753e90154d72c872c0f2d7e68b3405dcbd9f4e1290c90992b71e4cc3.webp",
+        "illustration_path": "spell/215459ca-3928-439a-a83c-66c200755d80/d4a60abc-0c59-4028-8c4c-9a7c8a9c5966.webp",
+        "illustration_wide_path": "spell/215459ca-3928-439a-a83c-66c200755d80/ddcab8e8-b483-47b2-991d-5780975339fe.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1N7vbr0FzzTuabr6u_Hx6fk_ptmUic02K",
+          "title": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d.png",
+          "file_name": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1N7vbr0FzzTuabr6u_Hx6fk_ptmUic02K/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1N7vbr0FzzTuabr6u_Hx6fk_ptmUic02K",
+            "title": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d.png",
+            "file_name": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1N7vbr0FzzTuabr6u_Hx6fk_ptmUic02K/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1tzrUwMmSEcr15kynvrtvG060hrWNvbHl",
+          "title": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1tzrUwMmSEcr15kynvrtvG060hrWNvbHl/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/215459ca-3928-439a-a83c-66c200755d80/52d8c15e-3546-40bd-a216-37cdc1ab5424.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "tillkalla-varelse",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/tillkalla-varelse-cutout.png",
+      "source_sha256": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8",
+      "source_bytes": 1663800,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.597238438273442,
+      "alpha_bbox_over_32": [
+        132,
+        214,
+        1168,
+        1066
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "tillkalla-varelse",
+        "source_path": "drive://PENDING-tillkalla-varelse",
+        "source_sha256": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8",
+        "source_bytes": 1663800,
+        "app_file": "spell-cutout/tillkalla-varelse/a52fe26658b55534bcaa8c4dafaeeafe6abbde7e170737aac5bdfd7ee9e7fac8.webp",
+        "app_sha256": "a52fe26658b55534bcaa8c4dafaeeafe6abbde7e170737aac5bdfd7ee9e7fac8",
+        "app_bytes": 140736,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "f836aa38-1427-4d11-be99-8e115be746b0",
+        "spell_key": "tillkalla-varelse",
+        "name": "TILLKALLA VARELSE",
+        "icon_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/c6994ff5-7ca9-445c-a863-c3d6906db600.webp",
+        "illustration_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/1c375ef9-716f-4e40-9c38-8fbe14b428b2.webp",
+        "illustration_wide_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/f03b3ffa-f91c-4c49-9e34-e5c4203b7d1a.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1HcJq1GC3sEzwvnDfaY424RYvO4jZn4JU",
+          "title": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8.png",
+          "file_name": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1HcJq1GC3sEzwvnDfaY424RYvO4jZn4JU/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1HcJq1GC3sEzwvnDfaY424RYvO4jZn4JU",
+            "title": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8.png",
+            "file_name": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1HcJq1GC3sEzwvnDfaY424RYvO4jZn4JU/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "17rXBSoYkB_yoBI2bH3_cBAe2e-IYClQx",
+          "title": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/17rXBSoYkB_yoBI2bH3_cBAe2e-IYClQx/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/f836aa38-1427-4d11-be99-8e115be746b0/a52fe266-58b5-4534-bcaa-8c4dafaeeafe.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "tystnad",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/tystnad-cutout.png",
+      "source_sha256": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3",
+      "source_bytes": 2200820,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3615944130298197,
+      "alpha_bbox_over_32": [
+        60,
+        56,
+        1201,
+        1170
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "tystnad",
+        "source_path": "drive://PENDING-tystnad",
+        "source_sha256": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3",
+        "source_bytes": 2200820,
+        "app_file": "spell-cutout/tystnad/ae00ccd50a3eb2bbf5a98873e162440e54777c32b1c096b9ab81f409767120f8.webp",
+        "app_sha256": "ae00ccd50a3eb2bbf5a98873e162440e54777c32b1c096b9ab81f409767120f8",
+        "app_bytes": 181362,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "0e68f3f5-7b27-41b2-bc2d-1442979565e0",
+        "spell_key": "tystnad",
+        "name": "TYSTNAD (F)",
+        "icon_path": "hermes/spell/tystnad/8091dcfb739743d97582fe67ff1748dadbc1ad0dd2ca9ee6d4d9d6638789dd5a.webp",
+        "illustration_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/735b0af8-0d0c-4bf0-996d-b028670df3da.webp",
+        "illustration_wide_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/c7e93d55-2cf4-4b26-a437-8bed8f6cf596.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1AYjHe40Vf5p7K7Rcy8KFOxvNR7KUCktY",
+          "title": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3.png",
+          "file_name": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1AYjHe40Vf5p7K7Rcy8KFOxvNR7KUCktY/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1AYjHe40Vf5p7K7Rcy8KFOxvNR7KUCktY",
+            "title": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3.png",
+            "file_name": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1AYjHe40Vf5p7K7Rcy8KFOxvNR7KUCktY/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "12Tt6vMb2CO99gB3vJlXH6Tcn0fJ8kpNU",
+          "title": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/12Tt6vMb2CO99gB3vJlXH6Tcn0fJ8kpNU/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/0e68f3f5-7b27-41b2-bc2d-1442979565e0/ae00ccd5-0a3e-42bb-b5a9-8873e162440e.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "vaderforutsagelse",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/vaderforutsagelse-cutout.png",
+      "source_sha256": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c",
+      "source_bytes": 2113341,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.48352385603707687,
+      "alpha_bbox_over_32": [
+        50,
+        49,
+        1226,
+        1180
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "vaderforutsagelse",
+        "source_path": "drive://PENDING-vaderforutsagelse",
+        "source_sha256": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c",
+        "source_bytes": 2113341,
+        "app_file": "spell-cutout/vaderforutsagelse/29afff863614cbf3a7060a6330daa9b3c90365badc3cbb8c76f6f0c16901624b.webp",
+        "app_sha256": "29afff863614cbf3a7060a6330daa9b3c90365badc3cbb8c76f6f0c16901624b",
+        "app_bytes": 176508,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "4e059a95-ebe6-4178-a772-063aaf8c01f5",
+        "spell_key": "vaderforutsagelse",
+        "name": "VÄDERFÖRUTSÄGELSE",
+        "icon_path": "assets/spells/arcane-ivory/vaderforutsagelse.webp",
+        "illustration_path": "spell/4e059a95-ebe6-4178-a772-063aaf8c01f5/a793ca87-70c8-4ffb-aae7-c6d416592a6b.webp",
+        "illustration_wide_path": "spell/4e059a95-ebe6-4178-a772-063aaf8c01f5/1984adc3-bcbf-4c48-a56a-ea8fb7c13d4a.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1lPEcTD5SJNxn8vUtQnSUFOFI07WBxNmn",
+          "title": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c.png",
+          "file_name": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1lPEcTD5SJNxn8vUtQnSUFOFI07WBxNmn/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1lPEcTD5SJNxn8vUtQnSUFOFI07WBxNmn",
+            "title": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c.png",
+            "file_name": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1lPEcTD5SJNxn8vUtQnSUFOFI07WBxNmn/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1P53jnwSwt1DS-GhiCbBTrHhzg9QtpcBF",
+          "title": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1P53jnwSwt1DS-GhiCbBTrHhzg9QtpcBF/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/4e059a95-ebe6-4178-a772-063aaf8c01f5/29afff86-3614-4bf3-a706-0a6330daa9b3.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "vaderkontroll",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/vaderkontroll-cutout.png",
+      "source_sha256": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c",
+      "source_bytes": 2173214,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4797928924093618,
+      "alpha_bbox_over_32": [
+        92,
+        66,
+        1187,
+        1172
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "vaderkontroll",
+        "source_path": "drive://PENDING-vaderkontroll",
+        "source_sha256": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c",
+        "source_bytes": 2173214,
+        "app_file": "spell-cutout/vaderkontroll/f59151f7eb7df1af8b45dcc9a8e3e9e1d861c1c4766ff687ab48b341fb557c0c.webp",
+        "app_sha256": "f59151f7eb7df1af8b45dcc9a8e3e9e1d861c1c4766ff687ab48b341fb557c0c",
+        "app_bytes": 189514,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "dd69c120-c125-4d02-819d-03b34c6038d5",
+        "spell_key": "vaderkontroll",
+        "name": "VÄDERKONTROLL (R)",
+        "icon_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/10ec5adb-f282-48ea-b681-dcc3f6081f2e.webp",
+        "illustration_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/6a1ab652-c8de-4d21-8181-e59e6cf7e504.webp",
+        "illustration_wide_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/960cc287-550a-48e9-9f0f-d6f89184e33e.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1FRbjeZPBWLc67hF43AJfMOdkEulevQ2-",
+          "title": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c.png",
+          "file_name": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1FRbjeZPBWLc67hF43AJfMOdkEulevQ2-/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1FRbjeZPBWLc67hF43AJfMOdkEulevQ2-",
+            "title": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c.png",
+            "file_name": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1FRbjeZPBWLc67hF43AJfMOdkEulevQ2-/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1yGPAm2Sj-Qiq1LMe8x9bAOOdLzIyfs9b",
+          "title": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1yGPAm2Sj-Qiq1LMe8x9bAOOdLzIyfs9b/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/dd69c120-c125-4d02-819d-03b34c6038d5/f59151f7-eb7d-41af-8b45-dcc9a8e3e9e1.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "vapenvag",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/vapenvag-cutout.png",
+      "source_sha256": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e",
+      "source_bytes": 2412723,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4097001238779128,
+      "alpha_bbox_over_32": [
+        100,
+        75,
+        1171,
+        1184
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "vapenvag",
+        "source_path": "drive://PENDING-vapenvag",
+        "source_sha256": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e",
+        "source_bytes": 2412723,
+        "app_file": "spell-cutout/vapenvag/41b3e8dd89456efd5393f785319a9e3d8adb5fdd80078d9f6a4af187aca9bbf2.webp",
+        "app_sha256": "41b3e8dd89456efd5393f785319a9e3d8adb5fdd80078d9f6a4af187aca9bbf2",
+        "app_bytes": 218836,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "4cad4cda-2d4d-4837-beb1-6a4c9aad1171",
+        "spell_key": "vapenvag",
+        "name": "VATTENVÄG",
+        "icon_path": null,
+        "illustration_path": "spell/4cad4cda-2d4d-4837-beb1-6a4c9aad1171/f7be7b81-0694-4b34-aedc-7dbb47b1258c.webp",
+        "illustration_wide_path": "spell/4cad4cda-2d4d-4837-beb1-6a4c9aad1171/951d65a8-3ae4-467c-80ed-fb86762ab7a4.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1oPS0mO3IH7dAzT8c3QO59CtJ231URQYa",
+          "title": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e.png",
+          "file_name": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1oPS0mO3IH7dAzT8c3QO59CtJ231URQYa/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1oPS0mO3IH7dAzT8c3QO59CtJ231URQYa",
+            "title": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e.png",
+            "file_name": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1oPS0mO3IH7dAzT8c3QO59CtJ231URQYa/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1jNLx7eC-lFWuz8CprY4UeieG9v2qPG11",
+          "title": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1jNLx7eC-lFWuz8CprY4UeieG9v2qPG11/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/4cad4cda-2d4d-4837-beb1-6a4c9aad1171/41b3e8dd-8945-4efd-9393-f785319a9e3d.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "voodoo-ritual",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/voodoo-ritual-cutout.png",
+      "source_sha256": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435",
+      "source_bytes": 2277691,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "transparent_fraction": 0.4374098578329251,
+      "alpha_bbox_over_32": [
+        83,
+        138,
+        1226,
+        1136
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "voodoo-ritual",
+        "source_path": "drive://PENDING-voodoo-ritual",
+        "source_sha256": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435",
+        "source_bytes": 2277691,
+        "app_file": "spell-cutout/voodoo-ritual/8b27f5aeb946c83e135a47061ed5911ba79572b69c6994106eb00a1745cc120a.webp",
+        "app_sha256": "8b27f5aeb946c83e135a47061ed5911ba79572b69c6994106eb00a1745cc120a",
+        "app_bytes": 180632,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d",
+        "spell_key": "voodoo-ritual",
+        "name": "VOODOORITUAL (K, F)",
+        "icon_path": "hermes/spell/voodoo-ritual/26544bccd9528c7535edd058d580352a7230452009e0435f312749e32825a70f.webp",
+        "illustration_path": "spell/9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d/03a5508c-54aa-41a0-ac80-42e3a7c0aacf.webp",
+        "illustration_wide_path": "spell/9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d/15c7bb8e-6514-4114-af43-fb94012ca329.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1lUjnmB28JjnOKAN15GuXe8aCELI6ISMF",
+          "title": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435.png",
+          "file_name": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1lUjnmB28JjnOKAN15GuXe8aCELI6ISMF/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1lUjnmB28JjnOKAN15GuXe8aCELI6ISMF",
+            "title": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435.png",
+            "file_name": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1lUjnmB28JjnOKAN15GuXe8aCELI6ISMF/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1LZgrYVy6U3XEmBwxHLN3OJWJPqkU0WHw",
+          "title": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1LZgrYVy6U3XEmBwxHLN3OJWJPqkU0WHw/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d/8b27f5ae-b946-483e-935a-47061ed5911b.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    }
+  ]
+}

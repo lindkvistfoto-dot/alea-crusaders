@@ -1,0 +1,186 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "radsla",
+      "target_id": "7bd45836-8ea1-4bfe-b5f3-8101b5f849af",
+      "drive_file_id": "1Nr-OogV-0P1p23qeRDwqCH51aYbUg-0k",
+      "archive_file_id": "1vZ21YDC_88hvLZ21qQZqYgZB1dBJry5h",
+      "source_sha256": "eedcf31ee0980dbf74f37116b686752ccd0a76c4c3e3af8976dbcab08c2ec783",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "regnstopp",
+      "target_id": "9108d6a2-3bc6-4abb-9541-551fd18847e8",
+      "drive_file_id": "12WBQCN5QCJsICDWnY1VPcoZ3U3muXDi0",
+      "archive_file_id": "1QzE8IvBBoNc1fWM-tleakV9bcBlZVGDU",
+      "source_sha256": "4a2b0177c2d0715b4666b5ed494a5bc7c4238bf087af695b729ea3ec27c80b47",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "skanthorsel",
+      "target_id": "54b365bd-a344-4cd6-8133-aaa4e033fc7d",
+      "drive_file_id": "1lKKlmavjxzBJ4p3XJS2GDsjtPNKHJVaw",
+      "archive_file_id": "1NyT3VlkpUdtOtByOcPx88bCGO5dbMZWU",
+      "source_sha256": "e0c17efacfccb329ac9cb59130a89d8a261c2f2220d093387118702777f38042",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "sannsyn",
+      "target_id": "e4aa1ce6-6ec6-4269-963a-e4e6b724276a",
+      "drive_file_id": "1ZXv_DHWbO76uWp2RyjD5n0sldDJpTfWB",
+      "archive_file_id": "19ckxsRIweO0vYOlUzT26_M9jIWq4wdYi",
+      "source_sha256": "7e890382e41d82ad754eda1af7b192b73c9479e4d5189c8237a2a91f5ec58a61",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "sinnesmask",
+      "target_id": "9bc53fb0-c26f-458d-aeb0-b7398b492f40",
+      "drive_file_id": "1GbWVc_A_h1BOut8CTDC4Hg6hnPwX4FFq",
+      "archive_file_id": "1dA9PvlRRJfk9shIVW_HbV1cHEfbZFbxS",
+      "source_sha256": "20dc8de93991e84a36101620db51bccbf160305b99974cddc2733734f09f246e",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "smartta",
+      "target_id": "5d3ae2e1-bd53-43f1-847a-c3ad3c2a03a1",
+      "drive_file_id": "1q0T_ZslG6JJJ9z4apQDlbDOB1kKUDpT5",
+      "archive_file_id": "1N_CBXEpMy_VRuq0ZgO-uoaZpps170fsL",
+      "source_sha256": "519635ccabc15c4879523eb658ec8cd6c6eeda94b945aa27ddc07556b52ec9c3",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "snabbhet",
+      "target_id": "82d55374-6bc0-4488-8a2c-cad8dc406006",
+      "drive_file_id": "1nxbJSMiazgauzT5hZLG5bDW_s4Wxn0mY",
+      "archive_file_id": "11ESXbwEOr3tlWePi4BACeiVZt1E3oedI",
+      "source_sha256": "71d457ee92c77013cd3467c37656e55ef291b991a809ba0b19edd7cda6d09b1b",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "snubbla",
+      "target_id": "ec7e654d-042e-4def-b550-6b0cba0fb6f2",
+      "drive_file_id": "1pI8cDRcz7DlUbUXFPuGXUHtc8vfoSi7a",
+      "archive_file_id": "1AhrIyJ_KBg5wKK6WNmb4VAF-9koW84Db",
+      "source_sha256": "7f2acb8f32d6e5c6c0940014fe2d3bee24a2fdc8afa001aebbce6719b8e6e992",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "sparlos",
+      "target_id": "78c31001-110d-4876-99c2-98281885e8a0",
+      "drive_file_id": "1KDgw-vm5l-VwPwtvE_OXOaLszK9ppopC",
+      "archive_file_id": "1eYQT4uvhqSqzNojM_qat9ql3NIh3_OEP",
+      "source_sha256": "6f1c087e4a0fa7f9c7f34f51a11a88840b4db3f5c7f586b19ae9fabf778c3a70",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "sprang",
+      "target_id": "d5eb1354-eaa5-4941-829b-639eff69ce7f",
+      "drive_file_id": "1xP5YJasgl-K7rklAfxH2GQ3A3o1W0hYi",
+      "archive_file_id": "1tL2O3h2Gs4MDtI7H67srBhObSojLoVm2",
+      "source_sha256": "71d5e3e6a936e4a0efd0c8417ccb9dda5566d34b359956951402fa3818a5e8c5",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "stenvagg",
+      "target_id": "3cf3092b-35dd-4ac1-95b4-efe4149533b8",
+      "drive_file_id": "1VTfDErGyXz2n57x5_qRkkwc8Hruow04e",
+      "archive_file_id": "1xiAvwyS2-EO60lR9bG0Yzj6mqUTWiSA-",
+      "source_sha256": "ac3066cfefbf29cf9b877717da2447d9d92a758ef38de8273db40cc333137ef4",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "syn",
+      "target_id": "7128fef3-dd66-48e0-bf78-e04e043efe8b",
+      "drive_file_id": "183DGtlRYbj45jeVsLT9-XxxUw7Q9DrLB",
+      "archive_file_id": "1kynCh1KpkEmYWW0hBgl-MQQ4rcb6tcxI",
+      "source_sha256": "508cb6ae70baf135fe178ca7d2b6cd7e315805ef3821c3e2422655f6246208cd",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "tala-med-varelse",
+      "target_id": "a8ab5aca-9298-4f68-8561-3cd5cd38cd1c",
+      "drive_file_id": "1718EkfsLVhXLYSqXfR187isPeLG0SASN",
+      "archive_file_id": "1vJf36MaY1c-P-OGeoIjtkTQcp6BRW4iE",
+      "source_sha256": "ec1e4dbfcb4c85c1e1f4cf1cc16c493a7d3d7a7f9b31b887d8fe228598ccae99",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "terror",
+      "target_id": "215459ca-3928-439a-a83c-66c200755d80",
+      "drive_file_id": "1N7vbr0FzzTuabr6u_Hx6fk_ptmUic02K",
+      "archive_file_id": "1tzrUwMmSEcr15kynvrtvG060hrWNvbHl",
+      "source_sha256": "fd1f85c99380d555b7241c4d6cb82d9060faea81587080c2afcf179a82fc203d",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "tillkalla-varelse",
+      "target_id": "f836aa38-1427-4d11-be99-8e115be746b0",
+      "drive_file_id": "1HcJq1GC3sEzwvnDfaY424RYvO4jZn4JU",
+      "archive_file_id": "17rXBSoYkB_yoBI2bH3_cBAe2e-IYClQx",
+      "source_sha256": "eac71d58328c8258122c422dfee849034f2061c0a2d111e9afd98ec7f68a8ea8",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "tystnad",
+      "target_id": "0e68f3f5-7b27-41b2-bc2d-1442979565e0",
+      "drive_file_id": "1AYjHe40Vf5p7K7Rcy8KFOxvNR7KUCktY",
+      "archive_file_id": "12Tt6vMb2CO99gB3vJlXH6Tcn0fJ8kpNU",
+      "source_sha256": "3c2b516b8573931b3ee08865affb0ecf744ffe10af6a68ec260e38adfb189ca3",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "vaderforutsagelse",
+      "target_id": "4e059a95-ebe6-4178-a772-063aaf8c01f5",
+      "drive_file_id": "1lPEcTD5SJNxn8vUtQnSUFOFI07WBxNmn",
+      "archive_file_id": "1P53jnwSwt1DS-GhiCbBTrHhzg9QtpcBF",
+      "source_sha256": "c77eca18e87c4c2df7f34656cf2210da94c9d7ff6b9599d37715e763c5a55f4c",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "vaderkontroll",
+      "target_id": "dd69c120-c125-4d02-819d-03b34c6038d5",
+      "drive_file_id": "1FRbjeZPBWLc67hF43AJfMOdkEulevQ2-",
+      "archive_file_id": "1yGPAm2Sj-Qiq1LMe8x9bAOOdLzIyfs9b",
+      "source_sha256": "548a36ac10344793aded27f020e892493a3b631b40b8bfa905ac68359818965c",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "vapenvag",
+      "target_id": "4cad4cda-2d4d-4837-beb1-6a4c9aad1171",
+      "drive_file_id": "1oPS0mO3IH7dAzT8c3QO59CtJ231URQYa",
+      "archive_file_id": "1jNLx7eC-lFWuz8CprY4UeieG9v2qPG11",
+      "source_sha256": "d19a3f568b2f12b5ac7349b6d8e8d27dc53cc78ccd378c5f8a46ed386e7c303e",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "voodoo-ritual",
+      "target_id": "9adcc2c0-f164-4cf5-98fb-3a6b4a1f916d",
+      "drive_file_id": "1lUjnmB28JjnOKAN15GuXe8aCELI6ISMF",
+      "archive_file_id": "1LZgrYVy6U3XEmBwxHLN3OJWJPqkU0WHw",
+      "source_sha256": "123134681d69e40629536e3891a896e8ff18f2d8cf48d29e3f8f21d49efb8435",
+      "visual_approved": true
+    }
+  ]
+}
