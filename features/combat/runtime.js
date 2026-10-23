@@ -6282,6 +6282,7 @@ function combatSetMountMode(actorId,mode){
  const actor=combatActiveActor();
  if(!actor||String(actor.id)!==String(actorId))return;
  try{localStorage.setItem('alea-combat-mount:'+String(activeCombat?.id||'')+':'+String(actor.id),mode)}catch{}
+ document.querySelectorAll('.combat-mount-toggle').forEach(toggle=>{toggle.classList.toggle('is-mounted',mode==='mounted');toggle.classList.toggle('is-walking',mode==='walk')});
  document.querySelectorAll('.combat-mount-toggle button').forEach(button=>{
   const selected=button.dataset.mountMode===mode;
   button.classList.toggle('selected',selected);
@@ -6295,9 +6296,10 @@ function combatMountToggleHtml(actor){
   walk:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="m11 8-3 5 4 2 1 5m-2-12 5 3 3 1m-7 3-4 6m4-13-3 4"/></svg>',
   mounted:'<svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><path d="M6 24v-9l4-5 7-1 5 3 3-4 3 2-2 5-3 3v6h-3v-6l-4-2-4 2v6h-3v-7l-1 1v6H6Zm17-14 2-5 2 1-1 5Z"/></svg>'
  };
- return '<div class="combat-mount-toggle" role="group" aria-label="Förflyttningssätt">'+
+ return '<div class="combat-mount-toggle arcane-mount-switch '+(mode==='mounted'?'is-mounted':'is-walking')+'" role="group" aria-label="Förflyttningssätt">'+
   [['walk','Gående'],['mounted','Beriden']].map(([key,label])=>
    '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\\''+escAttr(actor.id)+'\\',\\''+key+'\\')">'+icons[key]+'</button>').join('')+
+  '<span class="arcane-mount-switch-lever" aria-hidden="true"><i></i></span>'+
  '</div>';
 }
 function combatTurnPanelHtml(){
