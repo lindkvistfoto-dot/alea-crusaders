@@ -109,7 +109,7 @@
   const portraitW=standWidth*(454/1024),portraitH=standHeight*(443/1536);
   // BASE AURA V1: optional presentation layer; gold takes priority over allegiance.
   const allegiance=actor?.side==='enemies'?'enemy':actor?.side==='neutral'?'npc':actor?.side==='heroes'?'hero':'npc';
-  const auraClass=/\\b(?:selected|turn)\\b/.test(stateClasses)?'gold':allegiance;
+  const auraClass=/\b(?:selected|active-turn)\b/.test(stateClasses)?'gold':allegiance;
   const aura='<ellipse class="combat-base-aura combat-base-aura--'+auraClass+'" cx="0" cy="13" rx="42" ry="11"/>';
   const overlay='<g class="combat-paper-doll-universal'+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+unit.toFixed(4)+')" pointer-events="none" aria-hidden="true">'+
    aura+
