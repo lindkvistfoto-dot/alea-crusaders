@@ -35,7 +35,7 @@ describe('Hit targets for mouse doubleclick after movement preview',()=>{
   expect(html).not.toContain('data-q="0"');
   expect(html).not.toContain('data-q="3"');
   // SVG paint order: destination hit targets must be appended after miniatures.
-  expect(combat).toContain("+terrain+areasOverlay+tokens+movementHitTargets+'</svg>'");
+  expect(combat).toContain("+terrain+roadLine+areasOverlay+tokens+movementHitTargets+'</svg>'");
  });
  it('does not allow occupied hexes or create targets outside movement mode',()=>{
   expect(htmlFixture()(new Set(['1,0']))).not.toContain('data-q="1"');
