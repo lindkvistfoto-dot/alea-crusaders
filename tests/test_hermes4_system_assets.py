@@ -79,8 +79,17 @@ class SystemAssets(unittest.TestCase):
             self.assertTrue(item['archive_folder_id'])
             self.assertEqual(len(item['source_size']), 2)
 
-    def test_allowlist_and_pinned_id_fail_before_fetch(self):
-        for key, target_id in [('unknown', self.items[0]['target_id']),
+    def test_new_system_assets_need_no_per_key_allowlist(self):
+        item = dict(self.items[0], target_key='arcane-future-double-base',
+                    target_id='00000000-0000-4000-8000-000000000001')
+        intake.validate_batch_item(item)
+        profile = intake.validate_png(png((1500, 900)), 'system-asset', item['target_key'])
+        self.assertEqual(profile['source_size'], [1500, 900])
+        self.assertEqual(profile['display_size'], [1280, 768])
+        self.assertEqual(profile['archive_folder_id'], PROFILE['default_archive_folder_id'])
+
+    def test_invalid_key_or_known_profile_identity_still_fails_before_fetch(self):
+        for key, target_id in [('arcane--invalid', self.items[0]['target_id']),
                                (self.items[0]['target_key'], self.items[1]['target_id'])]:
             with self.assertRaises(ValueError):
                 intake.validate_batch_item(dict(self.items[0], target_key=key, target_id=target_id))
