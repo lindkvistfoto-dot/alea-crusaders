@@ -203,3 +203,13 @@
  #combatPage .combat-mount-portrait-group .combat-mount-toggle button{width:25px;height:25px}
  #combatPage .combat-mount-portrait-group .combat-mount-toggle svg{width:17px;height:17px}
 }
+
+
+/* ARCANE MOUNTED SWITCH: engraved bronze icons and an animated mechanical lever. */
+#combatPage .arcane-mount-switch{position:relative;isolation:isolate;gap:3px;padding:4px 7px 4px 4px;border:2px ridge #b78b4c;background:linear-gradient(115deg,#35271d,#132e40 42%,#1b2631 75%,#6e4a28);box-shadow:inset 0 1px 4px #d8a35b66,0 2px 6px #0009}
+#combatPage .arcane-mount-switch button{position:relative;z-index:1;color:#bd8c4b!important;background:linear-gradient(#273746,#10202d)!important;border:1px solid #755b39!important;box-shadow:inset 0 1px 3px #050d14!important;transition:color .15s,box-shadow .15s}
+#combatPage .arcane-mount-switch button.selected{color:#f4d69a!important;box-shadow:inset 0 0 7px #a46a27,0 0 0 1px #d3a55c!important}
+#combatPage .arcane-mount-switch-lever{position:absolute;z-index:2;right:-5px;top:17%;width:8px;height:34%;border:1px solid #e1b66b;border-radius:5px;background:linear-gradient(90deg,#4b2c15,#edc47c 45%,#69401c);box-shadow:1px 2px 4px #000b;pointer-events:none;transition:transform .2s ease}
+#combatPage .arcane-mount-switch.is-mounted .arcane-mount-switch-lever{transform:translateY(110%)}
+#combatPage .arcane-mount-switch-lever i{position:absolute;left:-3px;top:35%;width:12px;height:12px;border-radius:50%;border:1px solid #e7c27f;background:radial-gradient(circle at 35% 30%,#f7e0a8,#a36d2c 75%)}
+@media(prefers-reduced-motion:reduce){#combatPage .arcane-mount-switch-lever{transition:none}}
