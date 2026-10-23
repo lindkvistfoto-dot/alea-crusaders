@@ -56,3 +56,18 @@
 .combat-base-aura--enemy{fill:#ed5656}
 .combat-base-aura--gold{fill:#ffd06b;opacity:calc(var(--arcane-aura-opacity) * 1.4);filter:blur(6px)}
 @media (prefers-reduced-motion:reduce){.combat-base-aura{animation:none!important}}
+
+/* OPERATION YELLOW BRICK ROAD – preview only; easy visual calibration. */
+#combatPage .combat-map-svg .combat-hex.yellow-brick-road{
+ fill:#fff1b5!important;
+ fill-opacity:.38!important;
+ stroke:#ffe5a0!important;
+ stroke-opacity:.98!important;
+ stroke-width:2.5!important;
+ filter:drop-shadow(0 0 5px rgba(255,230,151,.85));
+}
+#combatPage .combat-map-svg .combat-hex.yellow-brick-road.move-preview{
+ fill-opacity:.57!important;
+ stroke-width:3.5!important;
+}
+@media (prefers-reduced-motion:reduce){#combatPage .combat-map-svg .combat-hex.yellow-brick-road{animation:none!important}}
