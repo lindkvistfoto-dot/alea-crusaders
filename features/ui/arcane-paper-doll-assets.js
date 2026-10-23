@@ -7,6 +7,7 @@
   'arcane-portrait-stand':Object.freeze({id:'8aa5641c-f0d2-4f80-bf25-ff616dc2cdce',width:1067,height:1280}),
   'arcane-portrait-stand-generic':Object.freeze({id:'d6ad2f3e-70a6-4c2a-89be-9b02b9fd27e8',width:853,height:1280}),
   'arcane-bronze-ivory-pointed-hex-high-angle':Object.freeze({id:'b8131d52-a0c8-46a1-9bb8-9f6225b8c0a1',width:1280,height:1170}),
+  'arcane-bronze-ivory-double-hex-side-high-angle':Object.freeze({id:'d8275cf9-4715-42d4-99c7-384ccb647c60',width:1280,height:733}),
   'arcane-bronze-ivory-pointed-hex-low-angle':Object.freeze({id:'39c5d2f1-7a65-47f0-bd21-5ce7d61d81e3',width:1280,height:853})
  });
  const BUCKET='alea-hermes-public';
