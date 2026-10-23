@@ -1356,29 +1356,27 @@ async function openAdminSection(key='overview'){
 window.aleaPaperDollWorkshopData=async function(){
  if(!activeUser()?.admin)throw new Error('Administratörsbehörighet krävs.');
  const records=[],warnings=[];
- const add=(kind,id,name,src,subtitle='')=>records.push({kind,id:String(id||name),name:String(name||'Namnlös'),src:String(src||''),subtitle:String(subtitle||'')});
+ // The workshop only needs identities. Portraits belong to the combat-map stand resolver.
+ const add=(kind,id,name,subtitle='')=>records.push({kind,id:String(id||name),name:String(name||'Namnlös'),subtitle:String(subtitle||'')});
  for(const c of Array.isArray(chars)?chars:[]){
-  const name=c?.identity?.namn||'Namnlös rollperson',src=getPortraitSrc(c)||combatIconCachedUrl(c?.combatIconPath)||'';
-  add(c?.ownerId==='SLP'?'character-npc':'character',c?._dbId||c?.id,name,src,[c?.identity?.ras,c?.identity?.yrke].filter(Boolean).join(' · '));
+  add(c?.ownerId==='SLP'?'character-npc':'character',c?._dbId||c?.id,c?.identity?.namn||'Namnlös rollperson',[c?.identity?.ras,c?.identity?.yrke].filter(Boolean).join(' · '));
  }
- const campaignActors=Array.isArray(campaignNpcs)?campaignNpcs:[];
- for(const n of campaignActors){
-  let src='';try{src=n?.image_path?await getNpcPortraitUrl(n.image_path):''}catch(_){ }
-  add('campaign-npc',n?.id,n?.name,src,n?.title||n?.race||'Kampanj-SLP');
+ for(const n of Array.isArray(campaignNpcs)?campaignNpcs:[]){
+  add('campaign-npc',n?.id,n?.name,n?.title||n?.race||'Kampanj-SLP');
  }
  let globalNpcs=[];
- try{globalNpcs=await dbJson('global_npcs?select=id,name,title,race,profession,image_path&active=eq.true&order=name.asc')}catch(error){warnings.push('Permanenta SLP kunde inte läsas: '+String(error?.message||error));console.warn('Permanenta SLP kunde inte läsas i Dockfabriken',error)}
+ try{globalNpcs=await dbJson('global_npcs?select=id,name,title,race,profession&active=eq.true&order=name.asc')}
+ catch(error){warnings.push('Permanenta SLP kunde inte läsas: '+String(error?.message||error));console.warn('Permanenta SLP kunde inte läsas i Dockfabriken',error)}
  for(const n of Array.isArray(globalNpcs)?globalNpcs:[]){
-  let src='';try{src=n?.image_path?await getNpcPortraitUrl(n.image_path):''}catch(_){ }
-  add('global-npc',n?.id,n?.name,src,[n?.race,n?.profession].filter(Boolean).join(' · ')||n?.title||'Permanent SLP');
+  add('global-npc',n?.id,n?.name,[n?.race,n?.profession].filter(Boolean).join(' · ')||n?.title||'Permanent SLP');
  }
  for(const m of Array.isArray(campaignMonsters)?campaignMonsters:[]){
-  let src='';try{src=m?.image_path?await getNpcPortraitUrl(m.image_path):''}catch(_){ }
   const label=[m?.kind,m?.type,m?.category].filter(Boolean).join(' ').toLowerCase();
-  add(/monster|odjur|varelse/.test(label)?'monster':'enemy',m?.id,m?.name,src,m?.description||m?.kind||m?.type||'Kampanjfiende');
+  add(/monster|odjur|varelse/.test(label)?'monster':'enemy',m?.id,m?.name,m?.description||m?.kind||m?.type||'Kampanjfiende');
  }
  let systemAssets={assets:[],systemArt:{}};
- try{systemAssets=await window.aleaArcanePaperDollAssets?.load?.({dbJson,baseUrl:SUPABASE_URL})||systemAssets}catch(error){systemAssets.error=String(error?.message||error)}
+ try{systemAssets=await window.aleaArcanePaperDollAssets?.load?.({dbJson,baseUrl:SUPABASE_URL})||systemAssets}
+ catch(error){systemAssets.error=String(error?.message||error)}
  return {records,systemAssets,warnings,userId:activeUser()?.id||'shared'};
 };
 async function openAdmin(){if(!activeUser()?.admin)return;
