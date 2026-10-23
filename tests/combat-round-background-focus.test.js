@@ -70,7 +70,8 @@ describe('Justera utsnittet i Runda',()=>{
   expect(gallery).toContain('syncCharacterToCentral(character)');
   expect(gallery).toContain('updated.round_background_focus=focus');
   expect(gallery).toContain("dbJson('combatants?id=eq.'");
-  expect(runtime).toContain('class="combat-round-adjust-button"');
+  expect(runtime).not.toContain('class="combat-round-adjust-button"');
+  expect(gallery).toContain('openFocusEditor');
   expect(runtime).toContain('round_background_focus:stats.round_background_focus||null');
  });
 });
