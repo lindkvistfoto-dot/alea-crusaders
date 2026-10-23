@@ -6298,7 +6298,7 @@ function combatMountToggleHtml(actor){
  };
  return '<div class="combat-mount-toggle arcane-mount-switch '+(mode==='mounted'?'is-mounted':'is-walking')+'" role="group" aria-label="Förflyttningssätt">'+
   [['walk','Gående'],['mounted','Beriden']].map(([key,label])=>
-   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\\''+escAttr(actor.id)+'\\',\\''+key+'\\')">'+icons[key]+'</button>').join('')+
+   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode('+JSON.stringify(String(actor.id)).replace(/"/g,'&quot;')+','+JSON.stringify(key).replace(/"/g,'&quot;')+')">'+icons[key]+'</button>').join('')+
   '<span class="arcane-mount-switch-lever" aria-hidden="true"><i></i></span>'+
  '</div>';
 }
