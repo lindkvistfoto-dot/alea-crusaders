@@ -76,3 +76,24 @@
 #combatPage .combat-flight-status circle{fill:#242f39;fill-opacity:.94;stroke:#b7dff1;stroke-width:1.4}
 #combatPage .combat-flight-status path{stroke:#e1f6ff;stroke-width:2}
 #combatPage .combat-flight-status{pointer-events:none}
+
+/* YELLOW BRICK ROAD V1.1 – tune these presentation values independently. */
+#combatPage .combat-map-svg .combat-hex.move-reachable.move-action-kept:not(.yellow-brick-road){
+ fill-opacity:.18;stroke-opacity:.56;stroke-width:1.8;
+}
+/* Farther reachable cells cost the action: keep them visible, not anonymous. */
+#combatPage .combat-map-svg .combat-hex.move-reachable.move-action-spent:not(.yellow-brick-road){
+ fill:#9dc6a2;fill-opacity:.19;stroke:#c3ddb4;stroke-opacity:.82;stroke-width:2.2;
+}
+#combatPage .combat-map-svg .combat-hex.yellow-brick-road{
+ fill:#fff3cb!important;fill-opacity:.48!important;
+ stroke:#fff0b3!important;stroke-opacity:1!important;stroke-width:3!important;
+ filter:drop-shadow(0 0 5px rgba(255,232,161,.85));
+}
+#combatPage .combat-map-svg .combat-hex.yellow-brick-road.move-preview{
+ fill-opacity:.65!important;stroke:#fff9db!important;stroke-width:4!important;
+}
+#combatPage .combat-map-svg .yellow-brick-road-line{
+ stroke:#fff5c9;stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round;
+ stroke-dasharray:5 5;filter:drop-shadow(0 0 4px rgba(255,225,137,.95));
+}
