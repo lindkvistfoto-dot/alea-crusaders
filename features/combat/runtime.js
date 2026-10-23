@@ -5049,7 +5049,13 @@ function renderCombatMap(){
    ?'<g class="combat-active-turn-badge" transform="translate('+(cell.x+g.size*.57)+' '+(cell.y-g.size*.67)+') scale('+(g.size/42).toFixed(3)+')">'+
     '<rect x="-18" y="-10" width="36" height="18" rx="6"/><text x="0" y="0" text-anchor="middle">TUR</text></g>'
    :'';
-  return '<g class="combat-token-group'+(turn?' active-turn':'')+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+turnHalo+visual+turnBadge+'<title>'+escAttr(c.name_snapshot)+(turn?' · på tur':'')+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
+  // ICARUS V1: presentation-only placeholder for existing flight capability.
+  // Uses the same effect/innate-flight resolver as movement rules.
+  const flightBadge=!defeated&&combatIsFlying(c)
+   ?'<g class="combat-flight-status" transform="translate('+(cell.x+g.size*.57)+' '+(cell.y-g.size*.35)+') scale('+(g.size/42).toFixed(3)+')" pointer-events="none" aria-label="Flygande">'+
+    '<circle r="12"/><path d="M -8 5 Q -2 -11 9 -7 Q 6 2 -5 7 M -5 7 L 5 -4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'+ 
+    '<title>Flygande</title></g>':'';
+  return '<g class="combat-token-group'+(turn?' active-turn':'')+planningClass+(defeated?' defeated':'')+'" data-token-id="'+escAttr(c.id)+'" onclick="combatTokenClick(event,\''+c.id+'\')" '+(isPlanning&&!defeated?'onpointerdown="combatMovementDragStart(event,\''+c.id+'\')"':'')+'>'+footprintVisual+turnHalo+visual+turnBadge+flightBadge+'<title>'+escAttr(c.name_snapshot)+(turn?' · på tur':'')+' · '+footprint.length+' hex'+targetTitle+(defeated?' · nedkämpad':'')+(isPlanning?' · dra för att planera förflyttning':'')+'</title></g>'
  }).join('');
  // Invisible click layer ABOVE miniatures; ensures the preview cannot swallow
  // the second click while planning a desktop double-click movement.
