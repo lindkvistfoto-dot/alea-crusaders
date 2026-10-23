@@ -1,0 +1,114 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "morker-illusionism",
+      "target_id": "0438bd30-46ec-44f6-836d-db768b86c04c",
+      "drive_file_id": "1tgmw0X798eHKSrSSIXmpfEhg3CVajfpE",
+      "archive_file_id": "1SA_l1U5mPLEXvarKV1CM6EjiM6G8CDhv",
+      "source_sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "morkersyn",
+      "target_id": "a681539d-42a0-4674-92f5-6815491c3427",
+      "drive_file_id": "1hhPiRy70aZnQGWRC8GUUfZ6GrGWbIGP9",
+      "archive_file_id": "1jUZyRIoN_NNYGsKK6zHQ9WpzVJ6VNOUE",
+      "source_sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "morkervag",
+      "target_id": "89385567-6b18-4496-b1d7-0813f064b34c",
+      "drive_file_id": "1-tdmhESBPYeXV5LLwuUctFbwhRlHeKCZ",
+      "archive_file_id": "1qih2VnblXjuKWFqFv2W1mYOxx9vpfE9h",
+      "source_sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "motstandskraft",
+      "target_id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+      "drive_file_id": "1EYMCQFejqDK4RPrvcjvSPesHEvj51bAk",
+      "archive_file_id": "1v2KFEBaHQGjORMiisVlWW7uLE3b7Vxpm",
+      "source_sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "ogonmatt",
+      "target_id": "012717d7-26c8-4923-8a2d-ac72d14252dc",
+      "drive_file_id": "1VFGn632DLzeC06eyW9LPH9TuDA3zZW7O",
+      "archive_file_id": "1XAZICruXggiR8VIVsJy4jnA7BCr1aImM",
+      "source_sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "oka",
+      "target_id": "dbc35cbc-b8e1-4528-92e3-371d2cd1536f",
+      "drive_file_id": "1udonYPwreQHu2c5bxSuA9fGUNayMZDlD",
+      "archive_file_id": "1QnRIcO_3lG4YQDbZhR0ijTvji3mVleK6",
+      "source_sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "oppna",
+      "target_id": "d7748d2d-f9e5-4c9e-b0a0-35b908785f51",
+      "drive_file_id": "1F6VjQF4ry7uzi09iQbr-aAwqfXuqzfE6",
+      "archive_file_id": "1Tifd9yIu5mhkKzgwIZfHP46L1FFLhIGt",
+      "source_sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "oradd",
+      "target_id": "c648413f-2ed6-4d00-8a21-039db74ee429",
+      "drive_file_id": "1WyKy5G5_HltCyN2lS4O6nAiTwMPAYn5j",
+      "archive_file_id": "1kggCE7_Yv1zreeFcumGsTUNSLLkjke9v",
+      "source_sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "orientering",
+      "target_id": "9e9b12f7-9cac-43ed-82cf-15953a5e7053",
+      "drive_file_id": "1dCuArtngnjKyJBkE-OTe50vWps6ETUco",
+      "archive_file_id": "1SEyVrgBA2p-y2UbvP-uX5-UflFX8Q7XX",
+      "source_sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "osynlighet",
+      "target_id": "e72abdf8-c016-4b1e-9674-eee97923bc40",
+      "drive_file_id": "1tC0ctt_a7an3dcAOmv7iaBAlUStSLl8K",
+      "archive_file_id": "1idXOY3f6ik8LWvKhhBKEQJbsj6VAfcKI",
+      "source_sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "panik",
+      "target_id": "4f270898-01cc-4a2c-ba00-a13187262882",
+      "drive_file_id": "1WMoHCxzXNVWMBH5Zwaf9-FDq7sPGXBbB",
+      "archive_file_id": "1O28UXJnJgD2dBj_vZTD14-pb2nn-oEHF",
+      "source_sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "paralysering",
+      "target_id": "3c3e2221-29e0-4de2-87be-2611c97140ea",
+      "drive_file_id": "1RkMTlVFe3ZhK2qo6K4HEql7eBzGIN8_c",
+      "archive_file_id": "15Vpr3eNt-jtngNjKTsvDS_cZgchr5EJJ",
+      "source_sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+      "visual_approved": true
+    }
+  ]
+}

@@ -1,0 +1,1234 @@
+{
+  "schema": 1,
+  "batch": "20261023-batch05",
+  "status": "READY_TO_PUBLISH",
+  "authorization": "User authorized all remaining cutouts without batch approval.",
+  "binary_readbacks": [
+    {
+      "key": "morker-illusionism",
+      "kind": "inbox",
+      "sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+      "bytes": 2369498,
+      "verified": true
+    },
+    {
+      "key": "morker-illusionism",
+      "kind": "archive",
+      "sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+      "bytes": 2369498,
+      "verified": true
+    },
+    {
+      "key": "morkersyn",
+      "kind": "inbox",
+      "sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+      "bytes": 1655834,
+      "verified": true
+    },
+    {
+      "key": "morkersyn",
+      "kind": "archive",
+      "sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+      "bytes": 1655834,
+      "verified": true
+    },
+    {
+      "key": "morkervag",
+      "kind": "inbox",
+      "sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+      "bytes": 2239532,
+      "verified": true
+    },
+    {
+      "key": "morkervag",
+      "kind": "archive",
+      "sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+      "bytes": 2239532,
+      "verified": true
+    },
+    {
+      "key": "motstandskraft",
+      "kind": "inbox",
+      "sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+      "bytes": 2297605,
+      "verified": true
+    },
+    {
+      "key": "motstandskraft",
+      "kind": "archive",
+      "sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+      "bytes": 2297605,
+      "verified": true
+    },
+    {
+      "key": "ogonmatt",
+      "kind": "inbox",
+      "sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+      "bytes": 2047848,
+      "verified": true
+    },
+    {
+      "key": "ogonmatt",
+      "kind": "archive",
+      "sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+      "bytes": 2047848,
+      "verified": true
+    },
+    {
+      "key": "oka",
+      "kind": "inbox",
+      "sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+      "bytes": 2055712,
+      "verified": true
+    },
+    {
+      "key": "oka",
+      "kind": "archive",
+      "sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+      "bytes": 2055712,
+      "verified": true
+    },
+    {
+      "key": "oppna",
+      "kind": "inbox",
+      "sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+      "bytes": 2259026,
+      "verified": true
+    },
+    {
+      "key": "oppna",
+      "kind": "archive",
+      "sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+      "bytes": 2259026,
+      "verified": true
+    },
+    {
+      "key": "oradd",
+      "kind": "inbox",
+      "sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+      "bytes": 2941773,
+      "verified": true
+    },
+    {
+      "key": "oradd",
+      "kind": "archive",
+      "sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+      "bytes": 2941773,
+      "verified": true
+    },
+    {
+      "key": "orientering",
+      "kind": "inbox",
+      "sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+      "bytes": 2106389,
+      "verified": true
+    },
+    {
+      "key": "orientering",
+      "kind": "archive",
+      "sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+      "bytes": 2106389,
+      "verified": true
+    },
+    {
+      "key": "osynlighet",
+      "kind": "inbox",
+      "sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+      "bytes": 1888371,
+      "verified": true
+    },
+    {
+      "key": "osynlighet",
+      "kind": "archive",
+      "sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+      "bytes": 1888371,
+      "verified": true
+    },
+    {
+      "key": "panik",
+      "kind": "inbox",
+      "sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+      "bytes": 2162962,
+      "verified": true
+    },
+    {
+      "key": "panik",
+      "kind": "archive",
+      "sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+      "bytes": 2162962,
+      "verified": true
+    },
+    {
+      "key": "paralysering",
+      "kind": "inbox",
+      "sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+      "bytes": 1593386,
+      "verified": true
+    },
+    {
+      "key": "paralysering",
+      "kind": "archive",
+      "sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+      "bytes": 1593386,
+      "verified": true
+    }
+  ],
+  "records": [
+    {
+      "key": "morker-illusionism",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/morker-illusionism-cutout.png",
+      "source_sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+      "source_bytes": 2369498,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4014610980110854,
+      "alpha_bbox_over_32": [
+        49,
+        40,
+        1220,
+        1219
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "morker-illusionism",
+        "source_path": "drive://PENDING-morker-illusionism",
+        "source_sha256": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f",
+        "source_bytes": 2369498,
+        "app_file": "spell-cutout/morker-illusionism/3a2c4fd75f368b820b995d83af02a0ec4f294f673b6be0c6dac54f9a34e17f08.webp",
+        "app_sha256": "3a2c4fd75f368b820b995d83af02a0ec4f294f673b6be0c6dac54f9a34e17f08",
+        "app_bytes": 190762,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "0438bd30-46ec-44f6-836d-db768b86c04c",
+        "spell_key": "morker-illusionism",
+        "name": "MÖRKER (F)",
+        "icon_path": null,
+        "illustration_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/bb2a97cb-91c6-4efd-9d09-56ac022954d2.webp",
+        "illustration_wide_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/0b436356-4973-443a-bd20-ec126addb766.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1tgmw0X798eHKSrSSIXmpfEhg3CVajfpE",
+          "title": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f.png",
+          "file_name": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1tgmw0X798eHKSrSSIXmpfEhg3CVajfpE/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1tgmw0X798eHKSrSSIXmpfEhg3CVajfpE",
+            "title": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f.png",
+            "file_name": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1tgmw0X798eHKSrSSIXmpfEhg3CVajfpE/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1SA_l1U5mPLEXvarKV1CM6EjiM6G8CDhv",
+          "title": "cf2ce8ed688dc25b76fa6620eb95620988bcd871e77a5321d87320e84b3e1a5f.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1SA_l1U5mPLEXvarKV1CM6EjiM6G8CDhv/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/0438bd30-46ec-44f6-836d-db768b86c04c/3a2c4fd7-5f36-4b82-8b99-5d83af02a0ec.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "morkersyn",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/morkersyn-cutout.png",
+      "source_sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+      "source_bytes": 1655834,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "transparent_fraction": 0.5482068226968756,
+      "alpha_bbox_over_32": [
+        42,
+        245,
+        1223,
+        1014
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "morkersyn",
+        "source_path": "drive://PENDING-morkersyn",
+        "source_sha256": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c",
+        "source_bytes": 1655834,
+        "app_file": "spell-cutout/morkersyn/a80156569b4c84834f92324816f2438083acc639fad6fb3f4158e9292b1b97a4.webp",
+        "app_sha256": "a80156569b4c84834f92324816f2438083acc639fad6fb3f4158e9292b1b97a4",
+        "app_bytes": 141788,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "a681539d-42a0-4674-92f5-6815491c3427",
+        "spell_key": "morkersyn",
+        "name": "MÖRKERSYN",
+        "icon_path": "hermes/spell/morkersyn/d371ce433d6307d316c779c9e9b07ae521ea0641878baa5f919efb69e8853e9a.webp",
+        "illustration_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/9d9f1112-3644-4bd6-9e4f-86385a53d954.webp",
+        "illustration_wide_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/6dca8bbc-4a87-415e-9bc3-3588bb143978.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1hhPiRy70aZnQGWRC8GUUfZ6GrGWbIGP9",
+          "title": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c.png",
+          "file_name": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1hhPiRy70aZnQGWRC8GUUfZ6GrGWbIGP9/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1hhPiRy70aZnQGWRC8GUUfZ6GrGWbIGP9",
+            "title": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c.png",
+            "file_name": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1hhPiRy70aZnQGWRC8GUUfZ6GrGWbIGP9/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1jUZyRIoN_NNYGsKK6zHQ9WpzVJ6VNOUE",
+          "title": "2c6f25689dd4b6a8ed00645002722a1912cdf90d7cc2caf54f741beaedf3034c.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1jUZyRIoN_NNYGsKK6zHQ9WpzVJ6VNOUE/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/a681539d-42a0-4674-92f5-6815491c3427/a8015656-9b4c-4483-8f92-324816f24380.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "morkervag",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/morkervag-cutout.png",
+      "source_sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+      "source_bytes": 2239532,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.45895240493578443,
+      "alpha_bbox_over_32": [
+        54,
+        91,
+        1196,
+        1193
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "morkervag",
+        "source_path": "drive://PENDING-morkervag",
+        "source_sha256": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa",
+        "source_bytes": 2239532,
+        "app_file": "spell-cutout/morkervag/d0f999d7c4d5b64d3080252212c2554ac3f651527adfbacdd70cb931bf4435ca.webp",
+        "app_sha256": "d0f999d7c4d5b64d3080252212c2554ac3f651527adfbacdd70cb931bf4435ca",
+        "app_bytes": 163660,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "89385567-6b18-4496-b1d7-0813f064b34c",
+        "spell_key": "morkervag",
+        "name": "MÖRKERVÄG",
+        "icon_path": "hermes/spell/morkervag/f321efcd2028d1f4862a4e336f065f2b493f99ffe68ad1c917fc8dfc467e18f0.webp",
+        "illustration_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/2da76561-b75d-4f11-b794-2cfa8b9fae73.webp",
+        "illustration_wide_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/18c31ab7-c1aa-4602-8c59-7215eeb8dfc5.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1-tdmhESBPYeXV5LLwuUctFbwhRlHeKCZ",
+          "title": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa.png",
+          "file_name": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1-tdmhESBPYeXV5LLwuUctFbwhRlHeKCZ/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1-tdmhESBPYeXV5LLwuUctFbwhRlHeKCZ",
+            "title": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa.png",
+            "file_name": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1-tdmhESBPYeXV5LLwuUctFbwhRlHeKCZ/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1qih2VnblXjuKWFqFv2W1mYOxx9vpfE9h",
+          "title": "79a58ac4a8180b30fa8ddef5e9dff7e1197121dc010754dc217b6fdaa44500fa.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1qih2VnblXjuKWFqFv2W1mYOxx9vpfE9h/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/89385567-6b18-4496-b1d7-0813f064b34c/d0f999d7-c4d5-464d-b080-252212c2554a.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "motstandskraft",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/motstandskraft-cutout.png",
+      "source_sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+      "source_bytes": 2297605,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4121070946177972,
+      "alpha_bbox_over_32": [
+        75,
+        83,
+        1205,
+        1175
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "motstandskraft",
+        "source_path": "drive://PENDING-motstandskraft",
+        "source_sha256": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4",
+        "source_bytes": 2297605,
+        "app_file": "spell-cutout/motstandskraft/aac3c2173e788beaf52d115dadb1a2b2ac6c2c9f41c125ed2fdcc93cd9c9cd1f.webp",
+        "app_sha256": "aac3c2173e788beaf52d115dadb1a2b2ac6c2c9f41c125ed2fdcc93cd9c9cd1f",
+        "app_bytes": 216750,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "2f356179-f2f8-4a9f-922c-e2975f0edc77",
+        "spell_key": "motstandskraft",
+        "name": "MOTSTÅNDSKRAFT",
+        "icon_path": null,
+        "illustration_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/bfcd0842-2727-48b6-a31c-9474f8245251.webp",
+        "illustration_wide_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/943d9e22-6676-4935-8cc9-77db0510f9cf.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1EYMCQFejqDK4RPrvcjvSPesHEvj51bAk",
+          "title": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4.png",
+          "file_name": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1EYMCQFejqDK4RPrvcjvSPesHEvj51bAk/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1EYMCQFejqDK4RPrvcjvSPesHEvj51bAk",
+            "title": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4.png",
+            "file_name": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1EYMCQFejqDK4RPrvcjvSPesHEvj51bAk/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1v2KFEBaHQGjORMiisVlWW7uLE3b7Vxpm",
+          "title": "47c23d280a4d095ee963ebbfea12fbeb896c82aec48cb92d93b48e757e782da4.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1v2KFEBaHQGjORMiisVlWW7uLE3b7Vxpm/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/2f356179-f2f8-4a9f-922c-e2975f0edc77/aac3c217-3e78-4bea-b52d-115dadb1a2b2.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "ogonmatt",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/ogonmatt-cutout.png",
+      "source_sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+      "source_bytes": 2047848,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5009138221805056,
+      "alpha_bbox_over_32": [
+        81,
+        125,
+        1219,
+        1123
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "ogonmatt",
+        "source_path": "drive://PENDING-ogonmatt",
+        "source_sha256": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35",
+        "source_bytes": 2047848,
+        "app_file": "spell-cutout/ogonmatt/22e2db966180bd79723b2c5ad50700cecf9fb827d7433d943ee14350de94bc65.webp",
+        "app_sha256": "22e2db966180bd79723b2c5ad50700cecf9fb827d7433d943ee14350de94bc65",
+        "app_bytes": 176154,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "012717d7-26c8-4923-8a2d-ac72d14252dc",
+        "spell_key": "ogonmatt",
+        "name": "ÖGONMÅTT",
+        "icon_path": "hermes/spell/ogonmatt/0120abc1d131920f3800a68fc6672afb220365a97dbcdd5d7f6d374535ac2347.webp",
+        "illustration_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/77a0baf8-6ab1-44ea-8574-95ab90a612cb.webp",
+        "illustration_wide_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/ea4ef3de-d05f-4880-a166-bc06548854ff.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1VFGn632DLzeC06eyW9LPH9TuDA3zZW7O",
+          "title": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35.png",
+          "file_name": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1VFGn632DLzeC06eyW9LPH9TuDA3zZW7O/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1VFGn632DLzeC06eyW9LPH9TuDA3zZW7O",
+            "title": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35.png",
+            "file_name": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1VFGn632DLzeC06eyW9LPH9TuDA3zZW7O/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1XAZICruXggiR8VIVsJy4jnA7BCr1aImM",
+          "title": "3835e18db4b7a5d55588455ad37fce7e2f8d86e80de95595a60531e51e65ae35.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1XAZICruXggiR8VIVsJy4jnA7BCr1aImM/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/012717d7-26c8-4923-8a2d-ac72d14252dc/22e2db96-6180-4d79-b23b-2c5ad50700ce.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "oka",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/oka-cutout.png",
+      "source_sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+      "source_bytes": 2055712,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "transparent_fraction": 0.48601286091842627,
+      "alpha_bbox_over_32": [
+        112,
+        24,
+        1156,
+        1238
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "oka",
+        "source_path": "drive://PENDING-oka",
+        "source_sha256": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8",
+        "source_bytes": 2055712,
+        "app_file": "spell-cutout/oka/861bf242564bf6bd8769670160663bdb914833794839d95c4d92ab5d70f874e7.webp",
+        "app_sha256": "861bf242564bf6bd8769670160663bdb914833794839d95c4d92ab5d70f874e7",
+        "app_bytes": 165028,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "dbc35cbc-b8e1-4528-92e3-371d2cd1536f",
+        "spell_key": "oka",
+        "name": "ÖKA",
+        "icon_path": "hermes/spell/oka/e3ac249f27ae47a2c4717d45f9edc2b3e42a5937832ba6a212eec1283adaf2e2.webp",
+        "illustration_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/3f4a3bde-6c90-4d2f-8c99-86b813d3ec4b.webp",
+        "illustration_wide_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/0235a853-031e-4a92-a0cd-c37b3415f6c6.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1udonYPwreQHu2c5bxSuA9fGUNayMZDlD",
+          "title": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8.png",
+          "file_name": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1udonYPwreQHu2c5bxSuA9fGUNayMZDlD/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1udonYPwreQHu2c5bxSuA9fGUNayMZDlD",
+            "title": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8.png",
+            "file_name": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1udonYPwreQHu2c5bxSuA9fGUNayMZDlD/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1QnRIcO_3lG4YQDbZhR0ijTvji3mVleK6",
+          "title": "97b4256c1cc327940e8866a9e072c3e87ae002749f78cfc6641cfb4c1598b3d8.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1QnRIcO_3lG4YQDbZhR0ijTvji3mVleK6/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/dbc35cbc-b8e1-4528-92e3-371d2cd1536f/861bf242-564b-46bd-8769-670160663bdb.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "oppna",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/oppna-cutout.png",
+      "source_sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+      "source_bytes": 2259026,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4360807775564764,
+      "alpha_bbox_over_32": [
+        68,
+        100,
+        1218,
+        1156
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "oppna",
+        "source_path": "drive://PENDING-oppna",
+        "source_sha256": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714",
+        "source_bytes": 2259026,
+        "app_file": "spell-cutout/oppna/78cfa9ba1d36f64820c0368a617799122ee2d999ed44ded6e8d7e1cb301ce4e2.webp",
+        "app_sha256": "78cfa9ba1d36f64820c0368a617799122ee2d999ed44ded6e8d7e1cb301ce4e2",
+        "app_bytes": 187916,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "d7748d2d-f9e5-4c9e-b0a0-35b908785f51",
+        "spell_key": "oppna",
+        "name": "ÖPPNA (F)",
+        "icon_path": "hermes/spell/oppna/1aa3260ac8d13f52e3808394df028a98aeaec2dd34628f0f7b590773e9f015ce.webp",
+        "illustration_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/82fc4228-430f-45c7-80b9-4cdc56c00574.webp",
+        "illustration_wide_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/155a7c8a-d28e-4ef3-806a-d85ab1d9cc9d.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1F6VjQF4ry7uzi09iQbr-aAwqfXuqzfE6",
+          "title": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714.png",
+          "file_name": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1F6VjQF4ry7uzi09iQbr-aAwqfXuqzfE6/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1F6VjQF4ry7uzi09iQbr-aAwqfXuqzfE6",
+            "title": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714.png",
+            "file_name": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1F6VjQF4ry7uzi09iQbr-aAwqfXuqzfE6/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1Tifd9yIu5mhkKzgwIZfHP46L1FFLhIGt",
+          "title": "1ddd5f8f087844502dbe1ebb7e34edface29050f2604d83480a7cbc731087714.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1Tifd9yIu5mhkKzgwIZfHP46L1FFLhIGt/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/d7748d2d-f9e5-4c9e-b0a0-35b908785f51/78cfa9ba-1d36-4648-a0c0-368a61779912.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "oradd",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/oradd-cutout.png",
+      "source_sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+      "source_bytes": 2941773,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3192393590907819,
+      "alpha_bbox_over_32": [
+        35,
+        50,
+        1223,
+        1207
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "oradd",
+        "source_path": "drive://PENDING-oradd",
+        "source_sha256": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759",
+        "source_bytes": 2941773,
+        "app_file": "spell-cutout/oradd/d45a791054079fd50068779a85cc7dfd9179cc103f678ce323b2977327b351b6.webp",
+        "app_sha256": "d45a791054079fd50068779a85cc7dfd9179cc103f678ce323b2977327b351b6",
+        "app_bytes": 233474,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "c648413f-2ed6-4d00-8a21-039db74ee429",
+        "spell_key": "oradd",
+        "name": "ORÄDD",
+        "icon_path": "hermes/spell/oradd/d1e4318c1ea7be8c041d9f1b5cb49156e335b9786083a7107f00343718f11fbb.webp",
+        "illustration_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/649dd3f6-ffd4-4b3a-8343-9a7369317dec.webp",
+        "illustration_wide_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/e377cffb-6f03-4c38-82ba-36ab4f1bb45b.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1WyKy5G5_HltCyN2lS4O6nAiTwMPAYn5j",
+          "title": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759.png",
+          "file_name": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1WyKy5G5_HltCyN2lS4O6nAiTwMPAYn5j/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1WyKy5G5_HltCyN2lS4O6nAiTwMPAYn5j",
+            "title": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759.png",
+            "file_name": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1WyKy5G5_HltCyN2lS4O6nAiTwMPAYn5j/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1kggCE7_Yv1zreeFcumGsTUNSLLkjke9v",
+          "title": "fbc3ec7565858ac484d71be2a4204e3bf1ff314e65684c739c1eb14ed8fe4759.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1kggCE7_Yv1zreeFcumGsTUNSLLkjke9v/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/c648413f-2ed6-4d00-8a21-039db74ee429/d45a7910-5407-4fd5-8068-779a85cc7dfd.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "orientering",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/orientering-cutout.png",
+      "source_sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+      "source_bytes": 2106389,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.42171971541148073,
+      "alpha_bbox_over_32": [
+        119,
+        55,
+        1145,
+        1219
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "orientering",
+        "source_path": "drive://PENDING-orientering",
+        "source_sha256": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381",
+        "source_bytes": 2106389,
+        "app_file": "spell-cutout/orientering/dd3926fd0bd5eda4e2c0bb9c3fdc9fbcc2b8c53aa0a9c0f4252fc2187f977a4c.webp",
+        "app_sha256": "dd3926fd0bd5eda4e2c0bb9c3fdc9fbcc2b8c53aa0a9c0f4252fc2187f977a4c",
+        "app_bytes": 193978,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9e9b12f7-9cac-43ed-82cf-15953a5e7053",
+        "spell_key": "orientering",
+        "name": "ORIENTERING",
+        "icon_path": "hermes/spell/orientering/4317e5ae6a4b78259d942066e8d3fe0001b4bd3dba66ddb8243caaee7c7bcf31.webp",
+        "illustration_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/1fcc53b3-4917-4f04-8c88-38a23f28827a.webp",
+        "illustration_wide_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/d0c35e11-6fe9-400b-bb80-c13998dc144f.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1dCuArtngnjKyJBkE-OTe50vWps6ETUco",
+          "title": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381.png",
+          "file_name": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1dCuArtngnjKyJBkE-OTe50vWps6ETUco/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1dCuArtngnjKyJBkE-OTe50vWps6ETUco",
+            "title": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381.png",
+            "file_name": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1dCuArtngnjKyJBkE-OTe50vWps6ETUco/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1SEyVrgBA2p-y2UbvP-uX5-UflFX8Q7XX",
+          "title": "0b9db1c1c37ad77f5076fba23d113a73d7b5cc8e71eb4c78e466fe8dc70c7381.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1SEyVrgBA2p-y2UbvP-uX5-UflFX8Q7XX/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9e9b12f7-9cac-43ed-82cf-15953a5e7053/dd3926fd-0bd5-4da4-a2c0-bb9c3fdc9fbc.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "osynlighet",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/osynlighet-cutout.png",
+      "source_sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+      "source_bytes": 1888371,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5595580585507556,
+      "alpha_bbox_over_32": [
+        153,
+        77,
+        1101,
+        1207
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "osynlighet",
+        "source_path": "drive://PENDING-osynlighet",
+        "source_sha256": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c",
+        "source_bytes": 1888371,
+        "app_file": "spell-cutout/osynlighet/6bb19d05c8e1cf20bd90db1457b1e2dcf3a5e45972c961c7218accce4a02dda0.webp",
+        "app_sha256": "6bb19d05c8e1cf20bd90db1457b1e2dcf3a5e45972c961c7218accce4a02dda0",
+        "app_bytes": 174186,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "e72abdf8-c016-4b1e-9674-eee97923bc40",
+        "spell_key": "osynlighet",
+        "name": "OSYNLIGHET",
+        "icon_path": "hermes/spell/osynlighet/d41d791ce596064f5b05972f8ad0ec65668acaeacb651502ff9d84911a54d8f7.webp",
+        "illustration_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/6266ca88-ab3f-4e5e-89b1-ab4788b5048d.webp",
+        "illustration_wide_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/248ad1c7-77c0-4709-aeea-acac8ea222ab.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1tC0ctt_a7an3dcAOmv7iaBAlUStSLl8K",
+          "title": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c.png",
+          "file_name": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1tC0ctt_a7an3dcAOmv7iaBAlUStSLl8K/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1tC0ctt_a7an3dcAOmv7iaBAlUStSLl8K",
+            "title": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c.png",
+            "file_name": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1tC0ctt_a7an3dcAOmv7iaBAlUStSLl8K/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1idXOY3f6ik8LWvKhhBKEQJbsj6VAfcKI",
+          "title": "7f57a20f5d2a7f812f60d605665f4b55fe965bb8cd98c376c7c4bdce6b3de69c.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1idXOY3f6ik8LWvKhhBKEQJbsj6VAfcKI/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/e72abdf8-c016-4b1e-9674-eee97923bc40/6bb19d05-c8e1-4f20-bd90-db1457b1e2dc.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "panik",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/panik-cutout.png",
+      "source_sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+      "source_bytes": 2162962,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.45885320085773373,
+      "alpha_bbox_over_32": [
+        77,
+        107,
+        1193,
+        1160
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "panik",
+        "source_path": "drive://PENDING-panik",
+        "source_sha256": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178",
+        "source_bytes": 2162962,
+        "app_file": "spell-cutout/panik/8336dcd4b97a65fccbeb26789b0d870d5e83050b9df73cbb1dfd73e7cb9b64f0.webp",
+        "app_sha256": "8336dcd4b97a65fccbeb26789b0d870d5e83050b9df73cbb1dfd73e7cb9b64f0",
+        "app_bytes": 195528,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "4f270898-01cc-4a2c-ba00-a13187262882",
+        "spell_key": "panik",
+        "name": "PANIK",
+        "icon_path": "hermes/spell/panik/e30c83dd61272f0aa4e16e34031d5d1d69b38fab4d1f460839d06df4622e411c.webp",
+        "illustration_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/2d83019e-42b8-44b7-bc0c-3570e6969d88.webp",
+        "illustration_wide_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/5cce6a7d-e495-4143-bc48-7d324ce1d512.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1WMoHCxzXNVWMBH5Zwaf9-FDq7sPGXBbB",
+          "title": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178.png",
+          "file_name": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1WMoHCxzXNVWMBH5Zwaf9-FDq7sPGXBbB/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1WMoHCxzXNVWMBH5Zwaf9-FDq7sPGXBbB",
+            "title": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178.png",
+            "file_name": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1WMoHCxzXNVWMBH5Zwaf9-FDq7sPGXBbB/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1O28UXJnJgD2dBj_vZTD14-pb2nn-oEHF",
+          "title": "d1ed9016eb432184eb5c8f671407e96c76c92e2916711714ff6915cc354be178.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1O28UXJnJgD2dBj_vZTD14-pb2nn-oEHF/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/4f270898-01cc-4a2c-ba00-a13187262882/8336dcd4-b97a-45fc-8beb-26789b0d870d.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "paralysering",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/paralysering-cutout.png",
+      "source_sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+      "source_bytes": 1593386,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5959494211823599,
+      "alpha_bbox_over_32": [
+        240,
+        65,
+        1035,
+        1210
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "paralysering",
+        "source_path": "drive://PENDING-paralysering",
+        "source_sha256": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7",
+        "source_bytes": 1593386,
+        "app_file": "spell-cutout/paralysering/c79b0ad3c30239a21f8804da8ff488d3411ad6efac6ca88d1f22e88c7e2c1fd3.webp",
+        "app_sha256": "c79b0ad3c30239a21f8804da8ff488d3411ad6efac6ca88d1f22e88c7e2c1fd3",
+        "app_bytes": 153046,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "3c3e2221-29e0-4de2-87be-2611c97140ea",
+        "spell_key": "paralysering",
+        "name": "PARALYSERING",
+        "icon_path": "hermes/spell/paralysering/6947c101ce4045516a492680fe7ed7302844413b67b971a1dc6a7868170f8ef3.webp",
+        "illustration_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/22654c62-f3e5-4878-8ee7-0c783efa55d0.webp",
+        "illustration_wide_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/ca68bee0-3286-4302-b0fc-893f26969572.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1RkMTlVFe3ZhK2qo6K4HEql7eBzGIN8_c",
+          "title": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7.png",
+          "file_name": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1RkMTlVFe3ZhK2qo6K4HEql7eBzGIN8_c/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1RkMTlVFe3ZhK2qo6K4HEql7eBzGIN8_c",
+            "title": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7.png",
+            "file_name": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1RkMTlVFe3ZhK2qo6K4HEql7eBzGIN8_c/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "15Vpr3eNt-jtngNjKTsvDS_cZgchr5EJJ",
+          "title": "026e899ce534e62a12c12dfe3a8d465fb9304b956ef11f6c590c7a4387824fa7.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/15Vpr3eNt-jtngNjKTsvDS_cZgchr5EJJ/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/3c3e2221-29e0-4de2-87be-2611c97140ea/c79b0ad3-c302-49a2-9f88-04da8ff488d3.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    }
+  ]
+}
