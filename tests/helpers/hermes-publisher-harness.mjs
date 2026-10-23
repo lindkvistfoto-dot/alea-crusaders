@@ -19,7 +19,7 @@ function database({failId, corruptId, postReadFailureId, occupiedId, sourceNonem
   const targets = new Map(Array.from({length:5}, (_,i)=>[id(i), {id:id(i),spell_key:`test-${i}`,cutout_path:occupiedId===id(i)?'existing.webp':null,icon_path:'icon.webp',illustration_path:'square.webp'}]));
   if(systemRows){targets.clear();for(const row of systemRows)targets.set(row.id,{...row})}
   const jobs = new Map(), storage = new Map();
-  const calls = {uploads:[], targetWrites:[], sourceChecks:0, clients:0, deliveries:0};
+  const calls = {uploads:[], targetWrites:[], registrations:[], sourceChecks:0, clients:0, deliveries:0};
   let readFailurePending = !!postReadFailureId;
   const db = {
     from(table) {
@@ -29,6 +29,14 @@ function database({failId, corruptId, postReadFailureId, occupiedId, sourceNonem
       const execute = async () => {
         if (table==='hermes_job_events') return {data:null,error:null};
         const rows = [...(table==='hermes_jobs'?jobs:targets).values()].filter(matches);
+        if (operation==='insert' && table==='arcane_system_assets') {
+          calls.registrations.push({...body});
+          const duplicate=[...targets.values()].some(row=>row.id===body.id||row.asset_key===body.asset_key);
+          if(duplicate)return {data:null,error:{code:'23505',message:'duplicate system asset identity'}};
+          const row={asset_path:null,app_sha256:null,app_bytes:null,width:null,height:null,alpha_preserved:null,...body};
+          targets.set(row.id,row);
+          return {data:[{...row}],error:null};
+        }
         if (operation==='insert') {
           const row = {...body,id:'job-'+jobs.size}; jobs.set(row.id,row);
           return {data:[{...row}],error:null};
