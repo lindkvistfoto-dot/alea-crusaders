@@ -3,6 +3,8 @@ import json
 import re
 from pathlib import Path
 
+from PIL import Image
+
 PROFILE = json.loads((Path(__file__).resolve().parents[1] / 'config/hermes-system-assets.json').read_text())
 KEY = re.compile(r'^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$')
 
@@ -37,6 +39,6 @@ def validate_system_image(image, key):
         raise ValueError('SYSTEM_ASSET_REQUIRES_TRUE_ALPHA')
     if profile['display_size'] is None:
         display = image.copy()
-        display.thumbnail((PROFILE['max_edge'], PROFILE['max_edge']), image.Resampling.LANCZOS)
+        display.thumbnail((PROFILE['max_edge'], PROFILE['max_edge']), Image.Resampling.LANCZOS)
         profile = {**profile, 'source_size': list(image.size), 'display_size': list(display.size)}
     return profile
