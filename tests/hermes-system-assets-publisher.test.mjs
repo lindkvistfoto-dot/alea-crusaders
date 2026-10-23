@@ -28,10 +28,21 @@ it('activates all configured system pointers through existing jobs, public Stora
 });
 
 it('rejects wrong keys, UUID, dimensions, alpha or missing batch archive before upload',async()=>{
- for(const patch of [{target_key:'other'},{target_id:rows()[1].id},{width:640},{alpha_preserved:false},{archive_verified:false}]){
+ for(const patch of [{target_key:'arcane--invalid'},{target_id:'not-a-uuid'},{target_id:rows()[1].id},{width:640},{alpha_preserved:false},{archive_verified:false}]){
   const state=database({systemRows:rows()});const a={...assets()[0],...patch};
   const result=await run(state,{assets:[a]});expect(result.error).toBeDefined();expect(state.calls.uploads).toEqual([]);
  }
+});
+
+it('auto-registers an unknown valid system key and resumes without duplicate upload',async()=>{
+ const a={...assets()[0],target_key:'arcane-future-double-base',target_id:'00000000-0000-4000-8000-000000000099',width:1280,height:768};
+ const state=database({systemRows:[]});
+ const first=await run(state,{assets:[a]});expect(first.error).toBeUndefined();
+ expect(first.report.items[0].status).toBe('active');
+ expect(state.calls.registrations).toEqual([{id:a.target_id,asset_key:a.target_key,label:'Future Double Base'}]);
+ const retry=await run(state,{assets:[a]});expect(retry.error).toBeUndefined();
+ expect(retry.report.items[0].status).toBe('already_active');
+ expect(state.calls.registrations).toHaveLength(1);expect(state.calls.uploads).toHaveLength(1);
 });
 
 it('pilot stores WebP without creating jobs or making rows visible',async()=>{
