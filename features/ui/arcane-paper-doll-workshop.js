@@ -4,7 +4,7 @@
  'use strict';
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory (original)',key:'arcane-paper-doll-hexagon-base',available:true},{id:'pointed-high',label:'1 hex · Spetsig · High Angle',key:'arcane-bronze-ivory-pointed-hex-high-angle',available:true},{id:'pointed-low',label:'1 hex · Spetsig · Low Angle',key:'arcane-bronze-ivory-pointed-hex-low-angle',available:true},{id:'double',label:'2 hex · Kommande',available:false},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
- const BASE_STANDARD_LEGACY=35;
+ const BASE_STANDARD_LEGACY=42;
  let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
@@ -29,7 +29,7 @@
   const mount=$('arcanePaperDollWorkshopMount');if(!mount)return;
   mount.innerHTML='<p id="apdwResourceStatus" class="apdw-status" role="status" aria-live="polite" hidden>'+escape(statusText())+'</p>'+ 
    '<div class="apdw-base-picker"><label for="apdwBaseSelect">Basplatta</label><select id="apdwBaseSelect">'+BASES.map(b=>'<option value="'+b.id+'" '+(b.id===baseId?'selected':'')+' '+(b.available?'':'disabled')+'>'+b.label+'</option>').join('')+'</select><label><input type="checkbox" id="apdwBaseOnly" '+(baseOnly?'checked':'')+'> Visa endast basplatta</label></div>'+ 
-   '<div class="apdw-base-scale"><label>Basens standardstorlek (låst)</label><output id="apdwBaseScaleOut">100%</output><small>100% motsvarar tidigare standardstorlek. Kartzoom påverkar bas och figur tillsammans.</small><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
+   '<div class="apdw-base-scale"><label>Basens standardstorlek (låst)</label><output id="apdwBaseScaleOut">120%</output><small>120% av tidigare standardstorlek. Kartzoom påverkar bas och figur tillsammans.</small><label><input id="apdwShowAnchor" type="checkbox" '+(showAnchor?'checked':'')+'> Visa fästpunkt</label></div>'+ 
    '<div class="apdw-layout"><div class="apdw-workbench"><div class="apdw-preview-top"><div><b>Monteringsbänk</b><small>Basplatta → cutout</small></div><div class="apdw-zoom"><button type="button" data-zoom="-">−</button><span id="apdwZoomLabel">'+zoom+'%</span><button type="button" data-zoom="+">+</button><button type="button" data-zoom="reset">Återställ zoom</button></div></div>'+ 
    '<div class="apdw-stage-clip"><div class="apdw-stage" id="apdwStage" style="--stand-scale:'+standScale/100+';--stand-x:'+standX+'%;--stand-y:'+standY+'%;--base-scale:'+(BASE_STANDARD_LEGACY/100)+';--zoom:'+zoom/100+';--p-scale:'+values.scale/100+';--p-x:'+values.x+'%;--p-y:'+values.y+'%;--p-perspective:'+values.perspective+'deg;--stand-tilt:'+values.tilt+'deg;--mask:'+values.mask+'%;--contact-shadow:'+values.shadow+'px">'+ 
    '<p id="apdwBaseUnavailable" class="apdw-base-unavailable" hidden>Basen är ännu inte publicerad via HERMES. Ladda den som lokal PNG/WebP för att förhandsvisa.</p><img class="apdw-base" alt="Arcane basplatta" hidden>'+ 
