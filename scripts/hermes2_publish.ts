@@ -5,7 +5,7 @@
  * Only activates image after source/app/URL checksums and DB CAS succeed.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
-import { assertSpellCutoutWritable, systemAssetProfile } from "./hermes2_asset_profiles.ts";
+import { assertSpellCutoutWritable, maybeSystemAssetProfile, systemAssetLabel } from "./hermes2_asset_profiles.ts";
 
 const url=Deno.env.get("SUPABASE_URL")||"";
 const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
