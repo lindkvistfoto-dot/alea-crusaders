@@ -6,6 +6,7 @@ const migrations=[
  '20261022043725_arcane_paper_doll_system_assets.sql',
  '20261022220000_extend_arcane_system_assets.sql',
  '20261023173000_dynamic_system_asset_constraints.sql',
+ '20261023190000_hermes_system_asset_registration.sql',
 ].map(name=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
 
 it('applies the real migration and enforces publication constraints, RLS and column grants in PostgreSQL',async()=>{
@@ -35,6 +36,8 @@ it('applies the real migration and enforces publication constraints, RLS and col
   await expect(db.exec("update arcane_system_assets set label='changed'")).rejects.toThrow(/permission denied/);
   await expect(db.exec('delete from arcane_system_assets')).rejects.toThrow(/permission denied/);
   await expect(db.exec("update arcane_system_assets set asset_path='evil.webp'")).rejects.toThrow(/arcane_system_asset_publication/);
+  await db.exec("insert into arcane_system_assets(id,asset_key,label) values('11111111-1111-4111-8111-111111111111','arcane-hermes-regression-probe','Regression Probe')");
+  await expect(db.exec("update arcane_system_assets set label='changed' where asset_key='arcane-hermes-regression-probe'")).rejects.toThrow(/permission denied/);
   const key='arcane-paper-doll-hexagon-base',profile=profiles.assets[key],sha='a'.repeat(64),path=`hermes/system-asset/${key}/${sha}.webp`;
   const update=`update arcane_system_assets set asset_path='${path}',app_sha256='${sha}',app_bytes=1234,width=${profile.display_size[0]},height=${profile.display_size[1]},alpha_preserved=true where asset_key='${key}' and asset_path is null returning id`;
   expect((await db.query(update)).rows).toHaveLength(1);
