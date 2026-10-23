@@ -1,0 +1,114 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "spell-cutout",
+      "target_key": "dodshand",
+      "target_id": "0240dee6-77c8-4101-9ac0-ca613b4094b6",
+      "drive_file_id": "1ig23dqMGMLSwAsZuYh7HGFOFjMIV9BgA",
+      "archive_file_id": "1E-fYypPydHk6sz6MzF8bpGQvlreUGWvL",
+      "source_sha256": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "fata-morgana",
+      "target_id": "4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a",
+      "drive_file_id": "1ZamzhzzoErh0vRpYgAn_iziZEkQeVz_X",
+      "archive_file_id": "1KnH4taz31XUdIZEQYb2B5S7lTfu45PRH",
+      "source_sha256": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "finna-vatten",
+      "target_id": "a4d13efa-10ed-4ed6-8eeb-0261a5759af7",
+      "drive_file_id": "1NncupB4U2Oz5fvtHGxxuiNGJQ21PGfqL",
+      "archive_file_id": "1TNV0LZBaspIpUONBYMKtHio1zPTkm1jc",
+      "source_sha256": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "forbanna-vapen",
+      "target_id": "b605ff92-a1f3-450d-92f4-7bf5204dd693",
+      "drive_file_id": "1e4uaXamJYl2pWEMRSTvm1XkbSg3NZah0",
+      "archive_file_id": "1S-1xCcybrc1TnNzGDJtopbBye7Y81W48",
+      "source_sha256": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "forrollad-somn",
+      "target_id": "7af538ef-677f-4cc2-835d-8ca712c20c5d",
+      "drive_file_id": "1S6zwzhiZcZMdy3-bCE3X6BFhXIZy-61Y",
+      "archive_file_id": "16q3ZzYIU5w60MWx0zQypXlKC-02lCyUL",
+      "source_sha256": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "aterfinnande",
+      "target_id": "af9c53e1-ce24-4686-8bd5-5aa1bcd4b756",
+      "drive_file_id": "1HaL9HNj44ZYyBaoZiAg8omFvVH76nvko",
+      "archive_file_id": "1M0Gwf182HqnfxgDSAQxTVF-oDLOylJNf",
+      "source_sha256": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "aterfinnande-med-studs",
+      "target_id": "30dbf8d5-9edc-4090-9eae-1eaa186c44e2",
+      "drive_file_id": "13Kvz1DdgKjEs-D0LwpoqKmJo3WimV_AX",
+      "archive_file_id": "1TrBkC9rS8IHEwNlXEBddIlZw7H-ohZyk",
+      "source_sha256": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "atervinna",
+      "target_id": "52b3cfd6-3b77-498a-8add-3163e3a8e092",
+      "drive_file_id": "1A9_6pXTtpuGNxoJoiXEmJpWOrO1RtfMH",
+      "archive_file_id": "1KGEaAOJp8-5M0Amyl7a35e_9xc-LQlXg",
+      "source_sha256": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "besudla",
+      "target_id": "6c23b6dd-df00-4e47-8930-3b4b2732cebb",
+      "drive_file_id": "1RL2Esl014NKORszp1BOip2oGjR-x0tSU",
+      "archive_file_id": "1KzzWOWIxc9TZHOuvCiYDHQ49p9AhudyW",
+      "source_sha256": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "blidhet",
+      "target_id": "15f752a6-cd4f-43ff-9281-64f4ec4de1e0",
+      "drive_file_id": "18Ogrtxa_3UJ0-gODB7jm89ctiQU9_xFm",
+      "archive_file_id": "1hyJLHvXOXdOx88i7HpaOtqGJxH1sSs-e",
+      "source_sha256": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "forsegla",
+      "target_id": "9a2f01bf-d59e-4895-afe8-20e74f8825d0",
+      "drive_file_id": "1KD75ovh1h1-ulluhFHfjrA2B4iD2VRqz",
+      "archive_file_id": "19GIyfEC0_k1encU8OVn-_PkUVjtWMQtg",
+      "source_sha256": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f",
+      "visual_approved": true
+    },
+    {
+      "kind": "spell-cutout",
+      "target_key": "forvirra",
+      "target_id": "4dde471e-abb0-485c-84e2-345e655bc58e",
+      "drive_file_id": "12mItt7mGIBwA_e0n8rm3DciQoz0_RNd4",
+      "archive_file_id": "1ewrBRHpXT6W4JSKd-oeGJ-PSke3j-ROM",
+      "source_sha256": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f",
+      "visual_approved": true
+    }
+  ]
+}

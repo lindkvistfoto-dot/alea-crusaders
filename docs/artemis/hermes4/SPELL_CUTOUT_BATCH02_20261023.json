@@ -1,0 +1,1238 @@
+{
+  "schema": 1,
+  "batch": "20261023-batch02",
+  "status": "READY_TO_PUBLISH",
+  "authorization": "User explicitly authorized all remaining cutouts without batch approval.",
+  "records": [
+    {
+      "key": "dodshand",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/dodshand-cutout.png",
+      "source_sha256": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5",
+      "source_bytes": 2542911,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4029612417298139,
+      "alpha_bbox_over_32": [
+        58,
+        34,
+        1208,
+        1223
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "dodshand",
+        "source_path": "drive://PENDING-dodshand",
+        "source_sha256": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5",
+        "source_bytes": 2542911,
+        "app_file": "spell-cutout/dodshand/cff7f58d46120b7b2ad2cd58bcc1670a94810a5b41edcdcdb595ca069ac85023.webp",
+        "app_sha256": "cff7f58d46120b7b2ad2cd58bcc1670a94810a5b41edcdcdb595ca069ac85023",
+        "app_bytes": 210582,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "0240dee6-77c8-4101-9ac0-ca613b4094b6",
+        "spell_key": "dodshand",
+        "name": "DÖDSHAND (F)",
+        "icon_path": "hermes/spell/dodshand/58186a01f1abc1ac2a1ed1609e72e5b93a31ce5695d26c7f7afafb34385eaf94.webp",
+        "illustration_path": "spell/0240dee6-77c8-4101-9ac0-ca613b4094b6/ce2e0f05-0956-48d4-9d76-5ece7d911eea.webp",
+        "illustration_wide_path": "spell/0240dee6-77c8-4101-9ac0-ca613b4094b6/2ad9b59d-417e-43ed-9c71-b8dc854ba121.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1ig23dqMGMLSwAsZuYh7HGFOFjMIV9BgA",
+          "title": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5.png",
+          "file_name": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1ig23dqMGMLSwAsZuYh7HGFOFjMIV9BgA/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1ig23dqMGMLSwAsZuYh7HGFOFjMIV9BgA",
+            "title": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5.png",
+            "file_name": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1ig23dqMGMLSwAsZuYh7HGFOFjMIV9BgA/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1E-fYypPydHk6sz6MzF8bpGQvlreUGWvL",
+          "title": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1E-fYypPydHk6sz6MzF8bpGQvlreUGWvL/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/0240dee6-77c8-4101-9ac0-ca613b4094b6/cff7f58d-4612-4b7b-aad2-cd58bcc1670a.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "fata-morgana",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/fata-morgana-cutout.png",
+      "source_sha256": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68",
+      "source_bytes": 2316836,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "transparent_fraction": 0.39749229896547955,
+      "alpha_bbox_over_32": [
+        45,
+        8,
+        1227,
+        1246
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "fata-morgana",
+        "source_path": "drive://PENDING-fata-morgana",
+        "source_sha256": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68",
+        "source_bytes": 2316836,
+        "app_file": "spell-cutout/fata-morgana/fae559229b3cbe61297e46a3e062aa12299613123f2c2172debfabe2221b5b30.webp",
+        "app_sha256": "fae559229b3cbe61297e46a3e062aa12299613123f2c2172debfabe2221b5b30",
+        "app_bytes": 203390,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a",
+        "spell_key": "fata-morgana",
+        "name": "FATA MORGANA (STOR ILLUSION) (F, R)",
+        "icon_path": "hermes/spell/fata-morgana/79534d885068f31157b9cbdcafa24f3a228b1f5aa998d057e1b68a752318292d.webp",
+        "illustration_path": "spell/4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a/04204a64-cd40-4691-a73b-9ade6c8ab171.webp",
+        "illustration_wide_path": "spell/4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a/3b101ac8-a057-4964-847c-a6b5ba03f9fe.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1ZamzhzzoErh0vRpYgAn_iziZEkQeVz_X",
+          "title": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68.png",
+          "file_name": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1ZamzhzzoErh0vRpYgAn_iziZEkQeVz_X/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1ZamzhzzoErh0vRpYgAn_iziZEkQeVz_X",
+            "title": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68.png",
+            "file_name": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1ZamzhzzoErh0vRpYgAn_iziZEkQeVz_X/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1KnH4taz31XUdIZEQYb2B5S7lTfu45PRH",
+          "title": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1KnH4taz31XUdIZEQYb2B5S7lTfu45PRH/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/4a3c5f0d-17e4-4f8d-b4c7-7dea10d2567a/fae55922-9b3c-4e61-a97e-46a3e062aa12.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "finna-vatten",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/finna-vatten-cutout.png",
+      "source_sha256": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2",
+      "source_bytes": 1490864,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.6421212884320414,
+      "alpha_bbox_over_32": [
+        91,
+        87,
+        1164,
+        1175
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "finna-vatten",
+        "source_path": "drive://PENDING-finna-vatten",
+        "source_sha256": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2",
+        "source_bytes": 1490864,
+        "app_file": "spell-cutout/finna-vatten/1272e7700db243cdd597c3e588d0daeb407d7f6b4853c57f33a1c80c6cc7fd2e.webp",
+        "app_sha256": "1272e7700db243cdd597c3e588d0daeb407d7f6b4853c57f33a1c80c6cc7fd2e",
+        "app_bytes": 145878,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "a4d13efa-10ed-4ed6-8eeb-0261a5759af7",
+        "spell_key": "finna-vatten",
+        "name": "FINNA VATTEN",
+        "icon_path": "assets/spells/arcane-ivory/finna-vatten.webp",
+        "illustration_path": "spell/a4d13efa-10ed-4ed6-8eeb-0261a5759af7/0614fb41-1d00-4aee-bbd0-190d0b31ba04.webp",
+        "illustration_wide_path": "spell/a4d13efa-10ed-4ed6-8eeb-0261a5759af7/8385ed2d-6f41-493e-a60d-946b6a15ff0b.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1NncupB4U2Oz5fvtHGxxuiNGJQ21PGfqL",
+          "title": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2.png",
+          "file_name": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1NncupB4U2Oz5fvtHGxxuiNGJQ21PGfqL/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1NncupB4U2Oz5fvtHGxxuiNGJQ21PGfqL",
+            "title": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2.png",
+            "file_name": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1NncupB4U2Oz5fvtHGxxuiNGJQ21PGfqL/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1TNV0LZBaspIpUONBYMKtHio1zPTkm1jc",
+          "title": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1TNV0LZBaspIpUONBYMKtHio1zPTkm1jc/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/a4d13efa-10ed-4ed6-8eeb-0261a5759af7/1272e770-0db2-43cd-9597-c3e588d0daeb.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "forbanna-vapen",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/forbanna-vapen-cutout.png",
+      "source_sha256": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a",
+      "source_bytes": 2422781,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4809235645297091,
+      "alpha_bbox_over_32": [
+        113,
+        7,
+        1160,
+        1246
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "forbanna-vapen",
+        "source_path": "drive://PENDING-forbanna-vapen",
+        "source_sha256": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a",
+        "source_bytes": 2422781,
+        "app_file": "spell-cutout/forbanna-vapen/66a0b747c27d8986ae902f54296b2c375adad25d1757d58ca800efb70d22a806.webp",
+        "app_sha256": "66a0b747c27d8986ae902f54296b2c375adad25d1757d58ca800efb70d22a806",
+        "app_bytes": 188914,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "b605ff92-a1f3-450d-92f4-7bf5204dd693",
+        "spell_key": "forbanna-vapen",
+        "name": "FÖRBANNA VAPEN",
+        "icon_path": "hermes/spell/forbanna-vapen/f073ec50a635926daaea80afbb4580e0dad85f6871e41f73c9cbd64d24e4de30.webp",
+        "illustration_path": "spell/b605ff92-a1f3-450d-92f4-7bf5204dd693/3bf83cb5-ec85-4a30-9ea6-b69ec603fa32.webp",
+        "illustration_wide_path": "spell/b605ff92-a1f3-450d-92f4-7bf5204dd693/8cb80834-c64b-4248-9c79-a579dd4fc275.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1e4uaXamJYl2pWEMRSTvm1XkbSg3NZah0",
+          "title": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a.png",
+          "file_name": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1e4uaXamJYl2pWEMRSTvm1XkbSg3NZah0/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1e4uaXamJYl2pWEMRSTvm1XkbSg3NZah0",
+            "title": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a.png",
+            "file_name": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1e4uaXamJYl2pWEMRSTvm1XkbSg3NZah0/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1S-1xCcybrc1TnNzGDJtopbBye7Y81W48",
+          "title": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1S-1xCcybrc1TnNzGDJtopbBye7Y81W48/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/b605ff92-a1f3-450d-92f4-7bf5204dd693/66a0b747-c27d-4986-ae90-2f54296b2c37.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "forrollad-somn",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/forrollad-somn-cutout.png",
+      "source_sha256": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66",
+      "source_bytes": 2518678,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3547436083321251,
+      "alpha_bbox_over_32": [
+        63,
+        30,
+        1215,
+        1231
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "forrollad-somn",
+        "source_path": "drive://PENDING-forrollad-somn",
+        "source_sha256": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66",
+        "source_bytes": 2518678,
+        "app_file": "spell-cutout/forrollad-somn/076138d10c6ffbb4c3360f85b6c5163b3c1492f9b19a6c2e904519fad6a04865.webp",
+        "app_sha256": "076138d10c6ffbb4c3360f85b6c5163b3c1492f9b19a6c2e904519fad6a04865",
+        "app_bytes": 202480,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "7af538ef-677f-4cc2-835d-8ca712c20c5d",
+        "spell_key": "forrollad-somn",
+        "name": "FÖRROLLAD SÖMN",
+        "icon_path": "hermes/spell/forrollad-somn/9d4312c0602f48bc9451c7aabc252355c581c38b04db40f042254e943bb03f5f.webp",
+        "illustration_path": "spell/7af538ef-677f-4cc2-835d-8ca712c20c5d/ca5df9df-f1a9-40c4-aebf-1f78481f19b9.webp",
+        "illustration_wide_path": "spell/7af538ef-677f-4cc2-835d-8ca712c20c5d/5eef1be6-3f3c-4077-bad0-796001cfdd12.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1S6zwzhiZcZMdy3-bCE3X6BFhXIZy-61Y",
+          "title": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66.png",
+          "file_name": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1S6zwzhiZcZMdy3-bCE3X6BFhXIZy-61Y/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1S6zwzhiZcZMdy3-bCE3X6BFhXIZy-61Y",
+            "title": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66.png",
+            "file_name": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1S6zwzhiZcZMdy3-bCE3X6BFhXIZy-61Y/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "16q3ZzYIU5w60MWx0zQypXlKC-02lCyUL",
+          "title": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/16q3ZzYIU5w60MWx0zQypXlKC-02lCyUL/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/7af538ef-677f-4cc2-835d-8ca712c20c5d/076138d1-0c6f-4bb4-8336-0f85b6c5163b.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "aterfinnande",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/aterfinnande-cutout.png",
+      "source_sha256": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77",
+      "source_bytes": 2323795,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.44375573921028466,
+      "alpha_bbox_over_32": [
+        87,
+        0,
+        1171,
+        1252
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "aterfinnande",
+        "source_path": "drive://PENDING-aterfinnande",
+        "source_sha256": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77",
+        "source_bytes": 2323795,
+        "app_file": "spell-cutout/aterfinnande/75be69284dc4be107ee06219bf0f9fcacf8a92c03539dc608e5b98a63ba9372a.webp",
+        "app_sha256": "75be69284dc4be107ee06219bf0f9fcacf8a92c03539dc608e5b98a63ba9372a",
+        "app_bytes": 190434,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "af9c53e1-ce24-4686-8bd5-5aa1bcd4b756",
+        "spell_key": "aterfinnande",
+        "name": "ÅTERVÄNDO",
+        "icon_path": "hermes/spell/aterfinnande/beb6552ccb366b8aa200309cbf997f0e683ae5d1d4196376c3b97b0d3a83e033.webp",
+        "illustration_path": "spell/af9c53e1-ce24-4686-8bd5-5aa1bcd4b756/1bb65443-bcd0-451f-8bff-e70048d87174.webp",
+        "illustration_wide_path": "spell/af9c53e1-ce24-4686-8bd5-5aa1bcd4b756/58025f8d-a6d0-4fb6-9fd3-ba3879697f65.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1HaL9HNj44ZYyBaoZiAg8omFvVH76nvko",
+          "title": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77.png",
+          "file_name": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1HaL9HNj44ZYyBaoZiAg8omFvVH76nvko/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1HaL9HNj44ZYyBaoZiAg8omFvVH76nvko",
+            "title": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77.png",
+            "file_name": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1HaL9HNj44ZYyBaoZiAg8omFvVH76nvko/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1M0Gwf182HqnfxgDSAQxTVF-oDLOylJNf",
+          "title": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1M0Gwf182HqnfxgDSAQxTVF-oDLOylJNf/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/af9c53e1-ce24-4686-8bd5-5aa1bcd4b756/75be6928-4dc4-4e10-bee0-6219bf0f9fca.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "aterfinnande-med-studs",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/aterfinnande-med-studs-cutout.png",
+      "source_sha256": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12",
+      "source_bytes": 1888119,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.5494805776221037,
+      "alpha_bbox_over_32": [
+        72,
+        74,
+        1185,
+        1166
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "aterfinnande-med-studs",
+        "source_path": "drive://PENDING-aterfinnande-med-studs",
+        "source_sha256": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12",
+        "source_bytes": 1888119,
+        "app_file": "spell-cutout/aterfinnande-med-studs/c10550e4bb904f0ac226543f0a1586945dbd8528f6464bae59450773abdf5234.webp",
+        "app_sha256": "c10550e4bb904f0ac226543f0a1586945dbd8528f6464bae59450773abdf5234",
+        "app_bytes": 164484,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "30dbf8d5-9edc-4090-9eae-1eaa186c44e2",
+        "spell_key": "aterfinnande-med-studs",
+        "name": "ÅTERVÄNDO MED STUDS",
+        "icon_path": "hermes/spell/aterfinnande-med-studs/6cbde9d7a64fdf4cd237dfc2e2025baa066482eb2ce505b1f3081b9a6e020b5e.webp",
+        "illustration_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/dc65fc33-1e85-4136-99d2-bea49e49a0e1.webp",
+        "illustration_wide_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/77d55b04-2ad1-4152-a39e-9a9ceac57a58.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "13Kvz1DdgKjEs-D0LwpoqKmJo3WimV_AX",
+          "title": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12.png",
+          "file_name": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/13Kvz1DdgKjEs-D0LwpoqKmJo3WimV_AX/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "13Kvz1DdgKjEs-D0LwpoqKmJo3WimV_AX",
+            "title": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12.png",
+            "file_name": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/13Kvz1DdgKjEs-D0LwpoqKmJo3WimV_AX/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1TrBkC9rS8IHEwNlXEBddIlZw7H-ohZyk",
+          "title": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1TrBkC9rS8IHEwNlXEBddIlZw7H-ohZyk/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/30dbf8d5-9edc-4090-9eae-1eaa186c44e2/c10550e4-bb90-4f0a-8226-543f0a158694.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "atervinna",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/atervinna-cutout.png",
+      "source_sha256": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a",
+      "source_bytes": 2735136,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3207420465038194,
+      "alpha_bbox_over_32": [
+        44,
+        40,
+        1228,
+        1202
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "atervinna",
+        "source_path": "drive://PENDING-atervinna",
+        "source_sha256": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a",
+        "source_bytes": 2735136,
+        "app_file": "spell-cutout/atervinna/8e5a8139081c9ff55c30fdabaf5e25f48876a84c9dd4068e7053533757ff80a3.webp",
+        "app_sha256": "8e5a8139081c9ff55c30fdabaf5e25f48876a84c9dd4068e7053533757ff80a3",
+        "app_bytes": 234400,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "52b3cfd6-3b77-498a-8add-3163e3a8e092",
+        "spell_key": "atervinna",
+        "name": "ÅTERVINNA",
+        "icon_path": "hermes/spell/atervinna/7bca2999b3888923ae26e974594779aeef4ba3b8b77f84423842adcb51274764.webp",
+        "illustration_path": "spell/52b3cfd6-3b77-498a-8add-3163e3a8e092/3da1d5f2-a029-4915-b027-c143a8db1898.webp",
+        "illustration_wide_path": "spell/52b3cfd6-3b77-498a-8add-3163e3a8e092/63b049d9-3d5f-491f-a866-12552930b483.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1A9_6pXTtpuGNxoJoiXEmJpWOrO1RtfMH",
+          "title": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a.png",
+          "file_name": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1A9_6pXTtpuGNxoJoiXEmJpWOrO1RtfMH/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1A9_6pXTtpuGNxoJoiXEmJpWOrO1RtfMH",
+            "title": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a.png",
+            "file_name": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1A9_6pXTtpuGNxoJoiXEmJpWOrO1RtfMH/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1KGEaAOJp8-5M0Amyl7a35e_9xc-LQlXg",
+          "title": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1KGEaAOJp8-5M0Amyl7a35e_9xc-LQlXg/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/52b3cfd6-3b77-498a-8add-3163e3a8e092/8e5a8139-081c-4ff5-9c30-fdabaf5e25f4.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "besudla",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/besudla-cutout.png",
+      "source_sha256": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686",
+      "source_bytes": 2301754,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.4375974552882133,
+      "alpha_bbox_over_32": [
+        90,
+        48,
+        1152,
+        1217
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "besudla",
+        "source_path": "drive://PENDING-besudla",
+        "source_sha256": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686",
+        "source_bytes": 2301754,
+        "app_file": "spell-cutout/besudla/9547bebc6e2a01192acb1e98e6c1e0d2098ac9930ab1b55a3b84e5cc2c4c655e.webp",
+        "app_sha256": "9547bebc6e2a01192acb1e98e6c1e0d2098ac9930ab1b55a3b84e5cc2c4c655e",
+        "app_bytes": 204518,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "6c23b6dd-df00-4e47-8930-3b4b2732cebb",
+        "spell_key": "besudla",
+        "name": "BESUDLA",
+        "icon_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/67e2d68e-a423-458b-ac07-3f65bca7039b.webp",
+        "illustration_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/3b0ff270-c41b-42c5-8323-425bc1beff90.webp",
+        "illustration_wide_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/727e182a-d1af-499d-b201-9fae804ff902.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1RL2Esl014NKORszp1BOip2oGjR-x0tSU",
+          "title": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686.png",
+          "file_name": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1RL2Esl014NKORszp1BOip2oGjR-x0tSU/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1RL2Esl014NKORszp1BOip2oGjR-x0tSU",
+            "title": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686.png",
+            "file_name": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1RL2Esl014NKORszp1BOip2oGjR-x0tSU/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1KzzWOWIxc9TZHOuvCiYDHQ49p9AhudyW",
+          "title": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1KzzWOWIxc9TZHOuvCiYDHQ49p9AhudyW/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/6c23b6dd-df00-4e47-8930-3b4b2732cebb/9547bebc-6e2a-4119-aacb-1e98e6c1e0d2.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "blidhet",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/blidhet-cutout.png",
+      "source_sha256": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d",
+      "source_bytes": 2486080,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.44631596753228586,
+      "alpha_bbox_over_32": [
+        153,
+        30,
+        1209,
+        1213
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "blidhet",
+        "source_path": "drive://PENDING-blidhet",
+        "source_sha256": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d",
+        "source_bytes": 2486080,
+        "app_file": "spell-cutout/blidhet/25ad6b64e5bfbdfa3a7cf24fac578f31d95b440f2b88ea550f3ca80328dc9d38.webp",
+        "app_sha256": "25ad6b64e5bfbdfa3a7cf24fac578f31d95b440f2b88ea550f3ca80328dc9d38",
+        "app_bytes": 181874,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "15f752a6-cd4f-43ff-9281-64f4ec4de1e0",
+        "spell_key": "blidhet",
+        "name": "BLIDHET",
+        "icon_path": "hermes/spell/blidhet/93f778c768f43528d9a9e50cbf519b633825ec25c85f58342df29da89e6782d8.webp",
+        "illustration_path": "spell/15f752a6-cd4f-43ff-9281-64f4ec4de1e0/dfd6cbae-9854-4956-a4f2-fedfb0d1dea9.webp",
+        "illustration_wide_path": "spell/15f752a6-cd4f-43ff-9281-64f4ec4de1e0/e952922d-4a9e-4a4e-9c14-0278e15de59a.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "18Ogrtxa_3UJ0-gODB7jm89ctiQU9_xFm",
+          "title": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d.png",
+          "file_name": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/18Ogrtxa_3UJ0-gODB7jm89ctiQU9_xFm/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "18Ogrtxa_3UJ0-gODB7jm89ctiQU9_xFm",
+            "title": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d.png",
+            "file_name": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/18Ogrtxa_3UJ0-gODB7jm89ctiQU9_xFm/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1hyJLHvXOXdOx88i7HpaOtqGJxH1sSs-e",
+          "title": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1hyJLHvXOXdOx88i7HpaOtqGJxH1sSs-e/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/15f752a6-cd4f-43ff-9281-64f4ec4de1e0/25ad6b64-e5bf-4dfa-ba7c-f24fac578f31.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "forsegla",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/forsegla-cutout.png",
+      "source_sha256": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f",
+      "source_bytes": 2478033,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.3680566684218157,
+      "alpha_bbox_over_32": [
+        87,
+        42,
+        1204,
+        1237
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "forsegla",
+        "source_path": "drive://PENDING-forsegla",
+        "source_sha256": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f",
+        "source_bytes": 2478033,
+        "app_file": "spell-cutout/forsegla/66608016526394811584279c0546a806565bd44a555ac3e9ff3376f75968e7ef.webp",
+        "app_sha256": "66608016526394811584279c0546a806565bd44a555ac3e9ff3376f75968e7ef",
+        "app_bytes": 196514,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "9a2f01bf-d59e-4895-afe8-20e74f8825d0",
+        "spell_key": "forsegla",
+        "name": "FÖRSEGLA (F)",
+        "icon_path": "hermes/spell/forsegla/534f0cc7927f163b54efea0bcdb9388e752aea91fdb1c34b72451f2963e98eff.webp",
+        "illustration_path": "spell/9a2f01bf-d59e-4895-afe8-20e74f8825d0/2b14fbb4-f9d7-4caa-8b8e-2576f690d604.webp",
+        "illustration_wide_path": "spell/9a2f01bf-d59e-4895-afe8-20e74f8825d0/47273eb8-8071-46d3-9c84-a2225ab35afd.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "1KD75ovh1h1-ulluhFHfjrA2B4iD2VRqz",
+          "title": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f.png",
+          "file_name": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/1KD75ovh1h1-ulluhFHfjrA2B4iD2VRqz/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "1KD75ovh1h1-ulluhFHfjrA2B4iD2VRqz",
+            "title": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f.png",
+            "file_name": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/1KD75ovh1h1-ulluhFHfjrA2B4iD2VRqz/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "19GIyfEC0_k1encU8OVn-_PkUVjtWMQtg",
+          "title": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/19GIyfEC0_k1encU8OVn-_PkUVjtWMQtg/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/9a2f01bf-d59e-4895-afe8-20e74f8825d0/66608016-5263-4481-9584-279c0546a806.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    },
+    {
+      "key": "forvirra",
+      "original_path": "/workspace/scratch/06cdd7d671f0/spell-production/forvirra-cutout.png",
+      "source_sha256": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f",
+      "source_bytes": 3065411,
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "transparent_fraction": 0.34057841064892186,
+      "alpha_bbox_over_32": [
+        66,
+        55,
+        1209,
+        1187
+      ],
+      "webp": {
+        "schema": 1,
+        "kind": "spell-cutout",
+        "target_key": "forvirra",
+        "source_path": "drive://PENDING-forvirra",
+        "source_sha256": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f",
+        "source_bytes": 3065411,
+        "app_file": "spell-cutout/forvirra/693576cef45a0754c0f190f119f015c81396f704cbfd849e2aa35abaccc861a2.webp",
+        "app_sha256": "693576cef45a0754c0f190f119f015c81396f704cbfd849e2aa35abaccc861a2",
+        "app_bytes": 277714,
+        "width": 640,
+        "height": 640,
+        "alpha_preserved": true,
+        "webp_quality": 90
+      },
+      "technical_qa": "PASS",
+      "baseline": {
+        "id": "4dde471e-abb0-485c-84e2-345e655bc58e",
+        "spell_key": "forvirra",
+        "name": "FÖRVIRRA",
+        "icon_path": "hermes/spell/forvirra/271fa336854821f58f9e0124fdcff6bf715a754ed7afb45270ad252aca40b23b.webp",
+        "illustration_path": "spell/4dde471e-abb0-485c-84e2-345e655bc58e/61d88473-8d04-4dfc-a505-f820b1b33326.webp",
+        "illustration_wide_path": "spell/4dde471e-abb0-485c-84e2-345e655bc58e/63b03560-e297-446d-8a7d-1f9dceebd617.webp",
+        "cutout_path": null,
+        "cutout_x": 50,
+        "cutout_y": 90,
+        "cutout_scale": 160
+      },
+      "drive": {
+        "inbox": {
+          "accepted_input": "file_uri",
+          "success": true,
+          "id": "12mItt7mGIBwA_e0n8rm3DciQoz0_RNd4",
+          "title": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f.png",
+          "file_name": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f.png",
+          "mime_type": "image/png",
+          "url": "https://drive.google.com/file/d/12mItt7mGIBwA_e0n8rm3DciQoz0_RNd4/view?usp=drivesdk",
+          "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp",
+          "structuredContent": {
+            "accepted_input": "file_uri",
+            "success": true,
+            "id": "12mItt7mGIBwA_e0n8rm3DciQoz0_RNd4",
+            "title": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f.png",
+            "file_name": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f.png",
+            "mime_type": "image/png",
+            "url": "https://drive.google.com/file/d/12mItt7mGIBwA_e0n8rm3DciQoz0_RNd4/view?usp=drivesdk",
+            "parent_id": "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
+          }
+        },
+        "archive": {
+          "success": true,
+          "id": "1ewrBRHpXT6W4JSKd-oeGJ-PSke3j-ROM",
+          "title": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f.png",
+          "mimeType": "image/png",
+          "url": "https://drive.google.com/file/d/1ewrBRHpXT6W4JSKd-oeGJ-PSke3j-ROM/view?usp=drivesdk",
+          "made_private": false
+        }
+      },
+      "expected_storage_path": "spell/4dde471e-abb0-485c-84e2-345e655bc58e/693576ce-f45a-4754-80f1-90f119f015c8.webp",
+      "visual_qa": "PASS",
+      "frame_qa": {
+        "x": 50,
+        "y": 90,
+        "scale": 125,
+        "live_ui_inspected": false
+      },
+      "status": "READY_TO_PUBLISH"
+    }
+  ],
+  "binary_readbacks": [
+    {
+      "key": "dodshand",
+      "kind": "inbox",
+      "sha256": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5",
+      "bytes": 2542911,
+      "verified": true
+    },
+    {
+      "key": "dodshand",
+      "kind": "archive",
+      "sha256": "67c464c0284fa66b1f8bdef56cacb17792d78bb87ecb7c89ebd222f2f15865a5",
+      "bytes": 2542911,
+      "verified": true
+    },
+    {
+      "key": "fata-morgana",
+      "kind": "inbox",
+      "sha256": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68",
+      "bytes": 2316836,
+      "verified": true
+    },
+    {
+      "key": "fata-morgana",
+      "kind": "archive",
+      "sha256": "7e39eb96483d2603360609933c590d4ed59133aea7d319dc1b1dd550f0c95c68",
+      "bytes": 2316836,
+      "verified": true
+    },
+    {
+      "key": "finna-vatten",
+      "kind": "inbox",
+      "sha256": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2",
+      "bytes": 1490864,
+      "verified": true
+    },
+    {
+      "key": "finna-vatten",
+      "kind": "archive",
+      "sha256": "12a261e9019e0654cad1884f80c6d5c03b389f28aecfb2c174f89e467eb02ea2",
+      "bytes": 1490864,
+      "verified": true
+    },
+    {
+      "key": "forbanna-vapen",
+      "kind": "inbox",
+      "sha256": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a",
+      "bytes": 2422781,
+      "verified": true
+    },
+    {
+      "key": "forbanna-vapen",
+      "kind": "archive",
+      "sha256": "01b150acd9777ee5a80556597c8caf7b382fe49fa48091375f8f360a8549109a",
+      "bytes": 2422781,
+      "verified": true
+    },
+    {
+      "key": "forrollad-somn",
+      "kind": "inbox",
+      "sha256": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66",
+      "bytes": 2518678,
+      "verified": true
+    },
+    {
+      "key": "forrollad-somn",
+      "kind": "archive",
+      "sha256": "f9e21529ad14236273f225fb8f4c4426fcac3ceee088fd986c1ccb102447ad66",
+      "bytes": 2518678,
+      "verified": true
+    },
+    {
+      "key": "aterfinnande",
+      "kind": "inbox",
+      "sha256": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77",
+      "bytes": 2323795,
+      "verified": true
+    },
+    {
+      "key": "aterfinnande",
+      "kind": "archive",
+      "sha256": "d8e4f4fdb87f2947f6449ba28bd9664a5344633c6497432ceaf530ba40baea77",
+      "bytes": 2323795,
+      "verified": true
+    },
+    {
+      "key": "aterfinnande-med-studs",
+      "kind": "inbox",
+      "sha256": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12",
+      "bytes": 1888119,
+      "verified": true
+    },
+    {
+      "key": "aterfinnande-med-studs",
+      "kind": "archive",
+      "sha256": "49c3f86c633c28d01cecf58fb68170616ac7bdb8e8e7efd747937fe062cc8d12",
+      "bytes": 1888119,
+      "verified": true
+    },
+    {
+      "key": "atervinna",
+      "kind": "inbox",
+      "sha256": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a",
+      "bytes": 2735136,
+      "verified": true
+    },
+    {
+      "key": "atervinna",
+      "kind": "archive",
+      "sha256": "d4f77d83ee3728c1e576cd2ae4b48f7e67b0104603d3ddc790d09781a9c19c8a",
+      "bytes": 2735136,
+      "verified": true
+    },
+    {
+      "key": "besudla",
+      "kind": "inbox",
+      "sha256": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686",
+      "bytes": 2301754,
+      "verified": true
+    },
+    {
+      "key": "besudla",
+      "kind": "archive",
+      "sha256": "84449635624da3e407b4241050181069ff6ed03398a6537eb40a6afd3ce94686",
+      "bytes": 2301754,
+      "verified": true
+    },
+    {
+      "key": "blidhet",
+      "kind": "inbox",
+      "sha256": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d",
+      "bytes": 2486080,
+      "verified": true
+    },
+    {
+      "key": "blidhet",
+      "kind": "archive",
+      "sha256": "c3e92ad935c6c52f1d977d1a9f8b1fdd9f9ef23c2521d2b24c7d88ad3c3e759d",
+      "bytes": 2486080,
+      "verified": true
+    },
+    {
+      "key": "forsegla",
+      "kind": "inbox",
+      "sha256": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f",
+      "bytes": 2478033,
+      "verified": true
+    },
+    {
+      "key": "forsegla",
+      "kind": "archive",
+      "sha256": "1b7f55f62bba6aaa4678f3383ad4342041408faaa0fd3945e454ffdcff33249f",
+      "bytes": 2478033,
+      "verified": true
+    },
+    {
+      "key": "forvirra",
+      "kind": "inbox",
+      "sha256": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f",
+      "bytes": 3065411,
+      "verified": true
+    },
+    {
+      "key": "forvirra",
+      "kind": "archive",
+      "sha256": "3fd9dfe6b0b90578dc0901dbd3d894a1605013f845238e1f1659a2d9ad8a542f",
+      "bytes": 3065411,
+      "verified": true
+    }
+  ],
+  "notes": [
+    "Icon priority enforced; Blidhet icon differs from illustrations and controls selected motif.",
+    "No original image bytes committed. Existing Hermes runtime reused."
+  ]
+}
