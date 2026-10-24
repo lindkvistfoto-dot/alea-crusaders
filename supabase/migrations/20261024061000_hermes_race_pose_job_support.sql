@@ -27,14 +27,12 @@ with check (
  and (
    (pose_id is not null and exists (
      select 1 from public.combatant_battle_poses p
-     where p.id = pose_id and p.staging_path = source_path
-       and p.publication_status in ('draft','queued')
+     where p.id = pose_id and ((p.staging_path = source_path and p.publication_status in ('draft','queued')) or (p.pending_staging_path = source_path and p.publication_status = 'published'))
    ))
    or
    (race_pose_id is not null and exists (
      select 1 from public.race_battle_poses p
-     where p.id = race_pose_id and p.staging_path = source_path
-       and p.publication_status in ('draft','queued')
+     where p.id = race_pose_id and ((p.staging_path = source_path and p.publication_status in ('draft','queued')) or (p.pending_staging_path = source_path and p.publication_status = 'published'))
    ))
  )
 );
