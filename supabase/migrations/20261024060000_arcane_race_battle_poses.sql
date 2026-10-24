@@ -16,6 +16,7 @@ create table if not exists public.race_battle_poses (
  pending_base_key text,
  pending_mounting_profile jsonb,
  publication_status text not null default 'draft' check (publication_status in ('draft','pending','published','failed')),
+ constraint race_pose_published_asset check (publication_status <> 'published' or (image_path is not null and length(image_path)>0)),
  created_at timestamptz not null default now(),
  updated_at timestamptz not null default now(),
  unique (race_id,gender_variant,pose_key)
