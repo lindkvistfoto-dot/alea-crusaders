@@ -12,11 +12,14 @@ async function main(){
   '--remote-allow-origins=*','--remote-debugging-port='+port,
   '--user-data-dir=/tmp/alea-arcane-role-'+process.pid,
   '--window-size=850,950','about:blank'
- ],{stdio:'ignore'});
+ ],{stdio:['ignore','ignore','pipe']});
+ let chromeStderr='';
+ browser.stderr?.on('data',chunk=>{chromeStderr=(chromeStderr+String(chunk)).slice(-5000)});
  let ws;
  try{
   let page;
-  for(let i=0;i<90;i++){
+  for(let i=0;i<300;i++){
+   if(browser.exitCode!==null)throw Error('CHROME_EXITED '+browser.exitCode+' '+chromeStderr);
    try{
     const response=await fetch('http://127.0.0.1:'+port+'/json/list');
     if(response.ok){
@@ -27,7 +30,7 @@ async function main(){
    }catch(_){}
    await delay(100);
   }
-  if(!page)throw Error('CHROME_NOT_READY');
+  if(!page)throw Error('CHROME_NOT_READY after 30s; '+chromeStderr);
   ws=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{
    const timeout=setTimeout(()=>reject(Error('CHROME_WS_TIMEOUT')),6000);
