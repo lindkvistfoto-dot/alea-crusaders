@@ -94,6 +94,15 @@ class WorkerTests(unittest.TestCase):
   self.assertTrue(published[0][0].startswith("race_battle_poses?"))
   self.assertTrue(published[0][1]["image_path"].startswith("hermes/race-battle-pose-cutout/"+pose_id+"/"))
 
+ def test_race_pose_rejects_wrong_gender_staging_path(self):
+  worker=self.worker
+  staged="race-battle-pose/manniska/male/standard/00000000-0000-0000-0000-000000000002.png"
+  pose={"race_id":"manniska","gender_variant":"female","pose_key":"standard","staging_path":staged,"publication_status":"draft"}
+  job={"id":"job","race_pose_id":"00000000-0000-0000-0000-000000000004","pose_id":None,"source_path":staged}
+  with patch.object(worker,"rest",return_value=[pose]),patch.object(worker,"storage_download") as download,patch.object(worker,"archive") as archive:
+   with self.assertRaisesRegex(ValueError,"BAD_STAGING_PATH"):worker.run(job)
+   download.assert_not_called();archive.assert_not_called()
+
  def test_corrupt_archive_never_published(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
