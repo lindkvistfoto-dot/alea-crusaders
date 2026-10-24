@@ -258,7 +258,7 @@ html.alea-route-restoring body::after{
     <button class="admin-nav-card" onclick="openAdminSection('paperDollWorkshop')"><span class="admin-nav-icon">♙</span><span class="admin-nav-copy"><b>Arcane Paper Doll · Dockfabriken</b><small>Montera porträtt i stolpe och hexagon</small></span></button><button class="admin-nav-card" onclick="openAdminSection('arcaneSystem')"><span class="admin-nav-icon">✥</span><span class="admin-nav-copy"><b>ARCANE · Systembibliotek</b><small>Återanvändbara ramar, knappar och ikoner</small></span></button><button class="admin-nav-card" onclick="openAdminSection('specialImages')"><span class="admin-nav-icon">▧</span><span class="admin-nav-copy"><b>Specialbilder</b><small>Rundbakgrunder och träffområden</small></span></button>
      
   </div>
-  <div class="admin-overview-intro admin-overview-secondary"><h3>Regler</h3></div>
+  <div class="admin-card-grid"><button class="admin-nav-card" type="button" onclick="window.openArcaneHonorsAdmin()"><span class="admin-nav-icon">🏅</span><span class="admin-nav-copy"><b>ARCANE HONORS</b><small>Utmärkelser, medaljer och mottagare</small></span></button></div><div class="admin-overview-intro admin-overview-secondary"><h3>Regler</h3></div>
   <div class="admin-card-grid">
     <button class="admin-nav-card compact" onclick="openAdminSection('skills')"><span class="admin-nav-icon">✦</span><span class="admin-nav-copy"><b>Färdigheter</b><small>Centralt färdighetsregister</small></span><span id="adminCountSkills" class="admin-nav-count">0</span></button>
     <button class="admin-nav-card compact" onclick="openAdminSection('spells')"><span class="admin-nav-icon">✧</span><span class="admin-nav-copy"><b>Besvärjelser</b><small>Expert: magiskolor och besvärjelser</small></span><span id="adminCountSpells" class="admin-nav-count">0</span></button>
@@ -282,7 +282,7 @@ html.alea-route-restoring body::after{
   <div id="adminOverviewVersion" class="admin-overview-version">Version v0.35.239</div>
 </section>
 
-<section id="adminPaperDollWorkshop" class="adminbox admin-detail hidden" data-admin-section="paperDollWorkshop"><div id="arcanePaperDollWorkshopMount"></div></section>
+<section id="adminHonors" class="adminbox admin-detail hidden" data-admin-section="honors"><div id="arcaneHonorsMount"></div></section><section id="adminPaperDollWorkshop" class="adminbox admin-detail hidden" data-admin-section="paperDollWorkshop"><div id="arcanePaperDollWorkshopMount"></div></section>
 <section class="adminbox admin-detail hidden" data-admin-section="events">
   <div class="adminsectionhead"><h2>Händelser</h2><button class="smallbtn" onclick="editCampaignEvent()">+ Lägg till händelse</button></div>
   <div id="adminEventTable" class="admin-event-list"></div>
@@ -498,4 +498,4 @@ html.alea-route-restoring body::after{
 <script type="module" src="./features/map/sync-ui.js?v=0.35.239"></script>
 <script type="module" src="./features/audio/board.js?v=0.35.239"></script>
 <script type="module" src="./src/main.js?v=0.35.239"></script>
-<script type="module" src="./features/journal/journal.js?v=0.35.239"></script><script type="module" src="./features/day/sync-ui.js?v=0.35.239"></script></body></html>
+<script type="module" src="./features/journal/journal.js?v=0.35.239"></script><script type="module" src="./features/day/sync-ui.js?v=0.35.239"></script><script type="module" src="./features/honors/honors-entry.js?v=1"></script></body></html>
