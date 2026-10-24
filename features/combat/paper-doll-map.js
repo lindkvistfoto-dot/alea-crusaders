@@ -3,7 +3,7 @@
  'use strict';
  const resolver=root.aleaCombatPaperDollResolver;
  const STANDARD_BASE='arcane-bronze-ivory-pointed-hex-high-angle';
- let assets={},loading=false,ready=false,poseRows=new Map(),poseLoading=false;
+ let assets={},loading=false,ready=false,poseRows=new Map(),poseLoading=false,racePoseRows=new Map(),races=[];
  const failed=new Set(),checked=new Set();
  function load(){
   if(loading||ready||!resolver||!root.aleaArcanePaperDollAssets||typeof dbJson!=='function'||typeof SUPABASE_URL==='undefined')return;
@@ -20,6 +20,7 @@
    assets=Object.fromEntries(rows.filter(Boolean));
    ready=true;
    loadPublishedPoses();
+   loadPublishedRacePoses();
    if(typeof renderCombat==='function')renderCombat();
   }).catch(err=>{console.warn('ARES systembilder kunde inte laddas',err)})
     .finally(()=>{loading=false});
@@ -39,30 +40,56 @@
    }).catch(error=>console.warn('ARES published poses unavailable; using classic fallback',error))
     .finally(()=>{poseLoading=false});
  }
+ function loadPublishedRacePoses(){
+  if(typeof dbJson!=='function')return;
+  Promise.all([
+   dbJson('rule_races?select=id,name'),
+   dbJson('race_battle_poses?select=race_id,gender_variant,pose_key,image_path,base_key,mounting_profile,is_active,publication_status&publication_status=eq.published&is_active=eq.true')
+  ]).then(([raceList,rows])=>{
+   races=Array.isArray(raceList)?raceList:[];
+   racePoseRows=new Map();
+   for(const row of Array.isArray(rows)?rows:[]){
+    if(!row.image_path||!row.image_path.startsWith('hermes/race-battle-pose-cutout/')||!row.image_path.endsWith('.webp'))continue;
+    const key=row.race_id+':'+row.gender_variant+':'+row.pose_key;
+    racePoseRows.set(key,row);
+   }
+   if(typeof renderCombat==='function')renderCombat();
+  }).catch(error=>console.warn('ARES race poses unavailable; retaining own/portrait fallback',error));
+ }
  function publishedPose(actor){
   const type=String(actor?.source_type||'');
   const id=String(actor?.source_id||'');
   if(!id)return null;
   const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
-  const available=new Set();
-  for(const kind of aliases){
-   for(const key of root.aleaBattlePoseCatalog?.POSES||[]){
-    if(poseRows.has(kind+':'+id+':'+key.id))available.add(key.id);
-   }
-  }
   let equipment={};
   if(type==='character'&&typeof chars!=='undefined'){
    const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
    equipment=root.aleaBattlePoseCatalog?.fromCharacter(source)||{};
   }
   if(type!=='character')equipment=root.aleaBattlePoseCatalog?.fromCombatant(actor)||{};
-  const match=root.aleaBattlePoseCatalog?.resolve(equipment,[...available]);
-  if(!match?.poseId)return null;
-  for(const kind of aliases){
-   const row=poseRows.get(kind+':'+id+':'+match.poseId);
-   if(row)return row;
+  const catalog=root.aleaBattlePoseCatalog;
+  const requested=catalog?.resolve(equipment,[])?.requestedPoseId;
+  // Resolve across all aliases by priority, not by whichever alias appears first.
+  for(const key of [...new Set([requested,'standard'])]){
+   for(const kind of aliases){
+    const row=poseRows.get(kind+':'+id+':'+key);
+    if(row)return row;
+   }
   }
-  return null;
+  return inheritedPose(actor,equipment,aliases,id);
+ }
+ function inheritedPose(actor,equipment,aliases,id){
+  const catalog=root.aleaBattlePoseCatalog;
+  if(!catalog?.resolveHierarchy||actor?.source_type==='character')return null;
+  const own=[];
+  for(const kind of aliases)for(const p of catalog.POSES||[]){const row=poseRows.get(kind+':'+id+':'+p.id);if(row)own.push(row)}
+  const state=actor?.state||{};
+  const profile=state.attack_profile||{};
+  const raceId=catalog.raceIdFor({race_id:actor?.race_id||state.race_id||profile.race_id,race:actor?.race||state.race||profile.race||profile.attributes?.race||state.attributes?.race},races);
+  if(!raceId)return null;
+  const inherited=[];
+  for(const row of racePoseRows.values())if(row.race_id===raceId)inherited.push(row);
+  return catalog.resolveHierarchy({actorType:actor?.source_type==='monster'?'monster':'npc',equipment,ownPoses:own,racePoses:inherited,gender:actor?.gender||state.gender||profile.gender||profile.attributes?.gender||state.attributes?.gender}).pose;
  }
  function portrait(actor){
   if(typeof combatRowPortraitUrl!=='function')return '';
