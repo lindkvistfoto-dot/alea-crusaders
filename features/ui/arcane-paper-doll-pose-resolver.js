@@ -58,5 +58,25 @@ function resolve(equipment={},availablePoseIds=[]){
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
 }
-root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,fromCombatant,resolve});
+// Resolve pose inheritance by ownership, never by copying image assets.
+// Player characters intentionally do not inherit racial poses.
+function resolveHierarchy({actorType='character',equipment={},ownPoses=[],racePoses=[],gender='neutral'}={}){
+ const requested=resolve(equipment,[]).requestedPoseId;
+ const npcKinds=new Set(['npc','enemy','monster','character-npc','slp']);
+ const isNpc=npcKinds.has(String(actorType).toLowerCase());
+ const genderKey=normalize(gender);
+ const matches=(poses,key,variant)=>poses.find(p=>p&&p.pose_key===key&&p.is_active!==false&&(!variant||normalize(p.gender_variant||'neutral')===variant));
+ const own=matches(ownPoses,requested)||matches(ownPoses,'standard');
+ if(own)return Object.freeze({pose:own,source:'own',requestedPoseId:requested});
+ if(isNpc){
+  for(const key of [...new Set([requested,'standard'])]){
+   for(const variant of [...new Set([genderKey,'neutral'])]){
+    const pose=matches(racePoses,key,variant);
+    if(pose)return Object.freeze({pose,source:'race',requestedPoseId:requested});
+   }
+  }
+ }
+ return Object.freeze({pose:null,source:'portrait-stand',requestedPoseId:requested});
+}
+root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,fromCombatant,resolve,resolveHierarchy});
 })(globalThis);
