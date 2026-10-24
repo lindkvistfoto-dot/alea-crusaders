@@ -11,7 +11,11 @@ create table if not exists public.race_battle_poses (
  is_active boolean not null default true,
  source_drive_file_id text,
  source_sha256 text,
- publication_status text not null default 'pending',
+ staging_path text,
+ pending_staging_path text,
+ pending_base_key text,
+ pending_mounting_profile jsonb,
+ publication_status text not null default 'draft' check (publication_status in ('draft','pending','published','failed')),
  created_at timestamptz not null default now(),
  updated_at timestamptz not null default now(),
  unique (race_id,gender_variant,pose_key)
