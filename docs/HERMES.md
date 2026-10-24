@@ -15,6 +15,18 @@ Se [HERMES 4.0: manifest, arkivsteg och femfilspilot](artemis/hermes4/README.md)
 
 ## Intag och publicering
 
+### Promotion och produktionsgrind
+
+Manifest under `hermes/system-assets/` beskriver ett system-asset men startar inte en publicering. Endast en ny, granskad `schema=4`-begäran i `hermes/queue/<job-id>.json` startar HERMES-intaget. `mode=pilot` verifierar en pilotfil utan att aktivera appens bildpekare. Använd `mode=publish` först när den uttryckliga publiceringsgrinden är passerad.
+
+Före en `publish`-begäran ska produktionsdatabasen kontrolleras separat:
+
+- Bekräfta att migreringen som behövs för system-assetens nyckel, dimensioner och alfaegenskaper finns i produktionsmigrationernas tillämpade lista.
+- Bekräfta att de aktiva constraintsen motsvarar den avsedda profilen. För det opaka troférummet ska undantaget gälla enbart `arcane-trophy-room-v2.2`, 1280×720 och `alpha_preserved=false`.
+- Vid saknad migration eller schemaavvikelse: stoppa och låt den ordinarie, behöriga databasprocessen rätta/tillämpa migrationen. Lägg inte databasbehörigheter eller migrationscredentials på HERMES-jobbet.
+
+Köbegäran ska gå via den befintliga `main`-grinden. HERMES-jobbet använder fortsatt befintlig read-only Drive-identitet och befintlig Supabase-secret; denna process lägger inte till roller, grants, secrets eller triggers.
+
 1. Lägg det godkända originalet i befintlig HERMES Inbox. Behåll Drive-originalet och dess arkivkopia. Läs verkligt Drive-ID och SHA-256; gissa inte mål eller hash.
 2. Skapa en unik `hermes/queue/<job-id>.json` med explicit mål och fastlåst källhash. Köfilen är en startorder, aldrig bildbytes, Base64 eller credentials.
 3. `hermes-drive-intake.yml` använder befintlig read-only Google WIF och befintlig Supabase-secret `HERMES_SUPABASE_SERVICE_ROLE_KEY`. Checkout är blobless och sparse; inga GitHub-original hämtas.
