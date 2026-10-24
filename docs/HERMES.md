@@ -15,7 +15,7 @@ Se [HERMES 4.0: manifest, arkivsteg och femfilspilot](artemis/hermes4/README.md)
 
 ## Intag och publicering
 
-## Promotion och produktionsgrind
+### Promotion och produktionsgrind
 
 Manifest under `hermes/system-assets/` beskriver ett system-asset men startar inte en publicering. Endast en ny, granskad `schema=4`-begäran i `hermes/queue/<job-id>.json` startar HERMES-intaget. `mode=pilot` verifierar en pilotfil utan att aktivera appens bildpekare. Använd `mode=publish` först när den uttryckliga publiceringsgrinden är passerad.
 
