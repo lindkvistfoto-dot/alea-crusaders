@@ -59,8 +59,8 @@ describe('Rundans utrustning använder riktiga masterbilder',()=>{
   expect(html).not.toContain('armor/old.webp');
   expect(html).not.toContain('./assets/weapon-icons/');
   expect(html).not.toContain('./assets/armor-icons/');
-  expect(html).toContain('Vänster hand');
-  expect(html).toContain('Höger hand');
+  expect(html).toContain('Huvudhand');
+  expect(html).toContain('Sköldarm');
  });
  it('lets a twohand weapon fill exactly two hand slots with one horizontal image',()=>{
   const {combatant,render}=setup();
@@ -110,7 +110,7 @@ describe('Rundans utrustning använder riktiga masterbilder',()=>{
   const html=render();
   expect(html).toContain('projectile/arrow.webp');
   expect(html).toContain('weapon/axe.webp');
-  expect(html).toContain('>9 / 2</b>');
+  expect(html).toContain('>2 / 9</b>');
   expect(html).not.toContain('>11</b>');
  });
  it('indicates zero stock in red and does not show unrelated ammo for a melee loadout',()=>{

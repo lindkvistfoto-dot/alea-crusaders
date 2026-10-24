@@ -6215,8 +6215,8 @@ function combatTurnEquipmentHtml(combatant){
    // The upper-right source quadrant contains the weapon head in Narsil art.
    // Crop it consistently before the two-handed 45-degree presentation.
    hands=imageTile('weapon','Båda händerna',item,item.imageOverridePath||rule?.image_path||item.image_path,true,null,'top-right');
-  }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
- }else hands=hand('leftHand','Vänster hand')+hand('rightHand','Höger hand');
+  }else hands=hand('rightHand','Huvudhand')+hand('leftHand','Sköldarm');
+ }else hands=hand('rightHand','Huvudhand')+hand('leftHand','Sköldarm');
  // Older NPCs/enemies may have no selected hand slots at all.
  // In that case only display armor; never invent a loadout for the HUD.
  const torsoRef=eq.torso||eq.body;
