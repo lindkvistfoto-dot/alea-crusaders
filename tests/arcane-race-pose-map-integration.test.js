@@ -13,3 +13,11 @@ it('requires verified race pose storage paths',()=>{
  expect(source).toContain('race-battle-pose-cutout');
  expect(source).toContain('racePoseRows=new Map()');
 });
+
+it('equipment pose across aliases precedes a standard pose on another alias',()=>{
+ const begin=source.indexOf('function publishedPose(actor)');
+ const end=source.indexOf('function inheritedPose(',begin);
+ const code=source.slice(begin,end);
+ expect(code.indexOf("for(const key of [...new Set([requested,'standard'])])")).toBeGreaterThan(0);
+ expect(code.indexOf('for(const kind of aliases)',code.indexOf('for(const key of'))).toBeGreaterThan(0);
+});
