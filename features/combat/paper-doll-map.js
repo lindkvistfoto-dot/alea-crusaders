@@ -104,6 +104,8 @@
  }
  function esc(value){return String(value||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
  function render(classic,actor,cell,g,stateClasses=''){
+  // Preserve the combat engine's defeated skull/base instead of drawing an upright paper doll.
+  if(actor?.status==='dead')return classic;
   if(!ready){load();return classic}
   if(typeof combatFootprintShape!=='function')return classic;
   const published=publishedPose(actor);
