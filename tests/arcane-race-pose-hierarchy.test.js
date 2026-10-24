@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../features/ui/arcane-paper-doll-pose-resolver.js',import.meta.url),'utf8');
 const context={};vm.runInNewContext(source,context);
 const {resolveHierarchy}=context.aleaBattlePoseCatalog;
-const pose=(key,gender_variant='neutral')=>({pose_key:key,gender_variant,is_active:true});
+const pose=(key,gender_variant='neutral')=>({pose_key:key,gender_variant,is_active:true,publication_status:'published',image_path:'hermes/test.webp'});
 const equipment={weaponClass:'enhandssvard',grip:'1H',hasWeapon:true,hasShield:true};
 it('players never inherit race poses',()=>{
  const result=resolveHierarchy({actorType:'character',equipment,racePoses:[pose('enhandssvard_shield')]});
@@ -21,4 +21,9 @@ it('race equipment pose outranks race battle pose, matching gender first',()=>{
 it('never falls back to wrong gender',()=>{
  const result=resolveHierarchy({actorType:'enemy',gender:'male',equipment,racePoses:[pose('standard','female')]});
  expect(result.source).toBe('portrait-stand');
+});
+
+it('staged and unpublished poses never override a valid fallback',()=>{
+ const result=resolveHierarchy({actorType:'npc',equipment,ownPoses:[{...pose('enhandssvard_shield'),publication_status:'pending'}],racePoses:[pose('standard','neutral')]});
+ expect(result.source).toBe('race');expect(result.pose.pose_key).toBe('standard');
 });
