@@ -27,3 +27,15 @@ it('staged and unpublished poses never override a valid fallback',()=>{
  const result=resolveHierarchy({actorType:'npc',equipment,ownPoses:[{...pose('enhandssvard_shield'),publication_status:'pending'}],racePoses:[pose('standard','neutral')]});
  expect(result.source).toBe('race');expect(result.pose.pose_key).toBe('standard');
 });
+
+it('maps a legacy Swedish race name to a stable race ID',()=>{
+ const races=[{id:'manniska',name:'Människa'},{id:'skogsalv',name:'Skogsalv'}];
+ expect(context.aleaBattlePoseCatalog.raceIdFor({race:'Människa'},races)).toBe('manniska');
+ expect(context.aleaBattlePoseCatalog.raceIdFor({race_id:'skogsalv'},races)).toBe('skogsalv');
+ expect(context.aleaBattlePoseCatalog.raceIdFor({race:'Okänd'},races)).toBe(null);
+});
+it('filters race poses at the data source',()=>{
+ const query=context.aleaBattlePoseCatalog.racePoseQuery('manniska');
+ expect(query).toContain('race_id=eq.manniska');
+ expect(query).toContain('publication_status=eq.published');
+});
