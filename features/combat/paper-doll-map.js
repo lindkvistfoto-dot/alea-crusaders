@@ -61,23 +61,20 @@
   const id=String(actor?.source_id||'');
   if(!id)return null;
   const aliases=type==='npc'?['campaign-npc','global-npc','character-npc']:type==='character'?['character','character-npc']:type==='monster'?['monster','enemy']:[type];
-  const available=new Set();
-  for(const kind of aliases){
-   for(const key of root.aleaBattlePoseCatalog?.POSES||[]){
-    if(poseRows.has(kind+':'+id+':'+key.id))available.add(key.id);
-   }
-  }
   let equipment={};
   if(type==='character'&&typeof chars!=='undefined'){
    const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
    equipment=root.aleaBattlePoseCatalog?.fromCharacter(source)||{};
   }
   if(type!=='character')equipment=root.aleaBattlePoseCatalog?.fromCombatant(actor)||{};
-  const match=root.aleaBattlePoseCatalog?.resolve(equipment,[...available]);
-  if(!match?.poseId)return inheritedPose(actor,equipment,aliases,id);
-  for(const kind of aliases){
-   const row=poseRows.get(kind+':'+id+':'+match.poseId);
-   if(row)return row;
+  const catalog=root.aleaBattlePoseCatalog;
+  const requested=catalog?.resolve(equipment,[])?.requestedPoseId;
+  // Resolve across all aliases by priority, not by whichever alias appears first.
+  for(const key of [...new Set([requested,'standard'])]){
+   for(const kind of aliases){
+    const row=poseRows.get(kind+':'+id+':'+key);
+    if(row)return row;
+   }
   }
   return inheritedPose(actor,equipment,aliases,id);
  }
