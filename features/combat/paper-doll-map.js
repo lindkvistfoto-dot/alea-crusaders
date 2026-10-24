@@ -49,7 +49,7 @@
    races=Array.isArray(raceList)?raceList:[];
    racePoseRows=new Map();
    for(const row of Array.isArray(rows)?rows:[]){
-    if(!row.image_path||!new RegExp('^hermes/race-battle-pose-cutout/[0-9a-f-]{36}/[a-f0-9]{64}[.]webp
+    if(!row.image_path||!row.image_path.startsWith('hermes/race-battle-pose-cutout/')||!row.image_path.endsWith('.webp'))continue;
     const key=row.race_id+':'+row.gender_variant+':'+row.pose_key;
     racePoseRows.set(key,row);
    }
