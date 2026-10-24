@@ -28,7 +28,7 @@ describe('Round equipment leather backdrop',()=>{
   expect(css).toContain('text-shadow');
   expect(css).toContain('@media(max-width:760px)');
   expect(css).toContain('@media(max-width:420px)');
-  expect(runtime).toContain("'<div class=\"combat-turn-stats\">'+combatTurnEquipmentHtml(actor)");
+  expect(runtime).toContain("'<div class=\"combat-turn-stats\"><div class=\"combat-equipment-mount\">'+combatMountToggleHtml(actor)+'</div>'+combatTurnEquipmentHtml(actor)");
  });
  it('loads background styles only after the existing round and desktop styles',()=>{
   const reference='features/combat/equipment-background.css?v=';

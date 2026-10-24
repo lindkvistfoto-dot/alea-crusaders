@@ -287,3 +287,19 @@
   width:76px;transform:translate(-25%,-50%);
  }
 }
+
+/* ARCANE mounted switch: parked outside the equipment frame on its left.
+   Availability rules remain unchanged until mount inventory is integrated. */
+#combatPage .combat-turn-panel .combat-turn-stats{position:relative;overflow:visible}
+#combatPage .combat-turn-panel .combat-equipment-mount{
+ position:absolute;left:0;top:50%;transform:translate(-68%,-50%);
+ z-index:7;overflow:visible;pointer-events:none;
+}
+#combatPage .combat-turn-panel .combat-equipment-mount .arcane-mount-switch{
+ position:relative;left:auto;top:auto;transform:none;
+ width:clamp(100px,10vw,150px);max-width:none;pointer-events:auto;
+}
+@media(max-width:699px){
+ #combatPage .combat-turn-panel .combat-equipment-mount{transform:translate(-28%,-50%)}
+ #combatPage .combat-turn-panel .combat-equipment-mount .arcane-mount-switch{width:76px}
+}
