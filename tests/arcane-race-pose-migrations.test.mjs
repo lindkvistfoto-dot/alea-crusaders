@@ -6,7 +6,7 @@ const jobs=readFileSync(new URL('../supabase/migrations/20261024061000_hermes_ra
 it('creates race pose catalog and preserves exactly-one-owner HERMES job constraints',async()=>{
  const db=new PGlite();
  try{
-  await db.exec('create role anon; create role authenticated; create schema private; create function private.is_admin() returns boolean language sql as $ select current_setting(\'app.test_admin\',true)=\'yes\' $;');
+  await db.exec('create role anon; create role authenticated; create schema private; create function private.is_admin() returns boolean language sql as $ select false $;');
   await db.exec('create table public.rule_races(id text primary key); insert into public.rule_races values (\'manniska\');');
   await db.exec('create table public.combatant_battle_poses(id uuid primary key,staging_path text,publication_status text,pending_staging_path text);');
   await db.exec('create table public.hermes_web_jobs(id uuid primary key default gen_random_uuid(),pose_id uuid not null references public.combatant_battle_poses(id),race_pose_id uuid,asset_kind text not null,source_path text not null,requested_by uuid, state text not null default \'queued\',attempts integer not null default 0,archive_drive_file_id text,output_path text,error_code text,completed_at timestamptz,source_sha256 text);');
