@@ -49,6 +49,17 @@
   const target=Math.sqrt(3)*(opts.size||1),maxSpacingError=Math.max(0,...centerDistances.map(d=>Math.abs(d/target-1)));
   return {valid:g.check.valid&&maxWidthError<=.01+precision&&maxHeightError<=.01+precision&&maxSpacingError<=.01+precision,count:g.cells.length,sharedPairs,outerEdges,maxWidthError,maxHeightError,maxSpacingError,projectedHexWidth:base.width,projectedHexHeight:base.height,transparentExport:true};
  }
+ function manifest(rows,opts={}){
+  const g=geometry(rows,opts),qa=audit(rows,opts);
+  if(!qa.valid)throw new Error('Geometry QA failed: asset export blocked');
+  const camera={...g.camera};
+  return {schema:'arcane-hexagonia-v1',status:'geometry-prototype',formation:rows.join('-'),hex_count:qa.count,
+   camera:{projection:'orthographic',elevation_degrees:camera.elevationDegrees,azimuth_degrees:camera.azimuthDegrees,scale:camera.scale,calibrated:false},
+   axial_centers:g.cells.map(c=>({q:c.q,r:c.r})),projected_centers:g.faces.map(f=>({x:f.center.x,y:f.center.y})),
+   qa:{valid:qa.valid,shared_edges:qa.sharedPairs,outer_edges:qa.outerEdges,max_width_error:qa.maxWidthError,max_height_error:qa.maxHeightError,max_spacing_error:qa.maxSpacingError},
+   alpha:{format:'SVG',background:'none',raster_rgba_verified:false},
+   release_ready:false};
+ }
  function svg(rows,opts={}){
   const g=geometry(rows,opts),padding=opts.padding??0.5,wallHeight=(opts.size||1)*(g.camera.wallHeight??0.2);
   const edges=new Map();
@@ -81,5 +92,5 @@
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' hex formation">'+wallArt+faces+'</svg>';
  }
 
- root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,svg});
+ root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,manifest,svg});
 })(globalThis);
