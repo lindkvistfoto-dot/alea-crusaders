@@ -1,6 +1,5 @@
 import { validateHonorDefinition } from './honors-domain.js';
 import { createHonorImageResolver } from './honors-image-resolver.js';
-import './honors-admin.css';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const labels = {adventure:'Äventyr',campaign:'Kampanj',achievement:'Prestation',honor:'Hedersutmärkelse'};
 const fields = d => `<label>Namn<input name="name" required maxlength="160" value="${esc(d?.name)}"></label>
