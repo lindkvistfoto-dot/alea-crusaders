@@ -15,7 +15,7 @@ export function renderHonorsAdmin(root, { definitions = [], grants = [], charact
           <h3>Ny utmärkelse</h3>
           <label>Namn <input name="name" required maxlength="160"></label>
           <label>Typ <select name="type">${Object.entries(labels).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
-          <label>Beskrivning <textarea name="description"></textarea></label>
+          <label>Äventyrs-ID (för äventyrsmedalj) <input name="adventure_id"></label><label>Kampanj-ID (för kampanjmedalj) <input name="campaign_id"></label><label>Beskrivning <textarea name="description"></textarea></label>
           <label>Villkor <textarea name="requirement_text"></textarea></label>
           <label>Synlighet <select name="visibility"><option value="public">Öppen</option><option value="silhouette">Dold silhuett</option><option value="secret">Hemlig</option></select></label>
           <label>Tilldelning <select name="grant_mode"><option value="manual">Manuell</option><option value="automatic">Automatisk</option><option value="both">Båda</option></select></label>
