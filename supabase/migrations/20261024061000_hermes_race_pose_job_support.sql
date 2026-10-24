@@ -9,8 +9,8 @@ alter table public.hermes_web_jobs add constraint hermes_web_jobs_asset_kind_che
  (race_pose_id is not null and asset_kind='race-battle-pose-cutout'));
 alter table public.hermes_web_jobs drop constraint if exists hermes_web_jobs_source_path_check;
 alter table public.hermes_web_jobs add constraint hermes_web_jobs_source_path_check check (
- (pose_id is not null and source_path ~ '^battle-pose/[a-z0-9_-]+/[0-9a-f-]{36}/[a-z0-9_]+/[0-9a-f-]{36}\\.(png|webp)$') or
- (race_pose_id is not null and source_path ~ '^race-battle-pose/[a-z0-9_-]+/(male|female|neutral)/[a-z0-9_]+/[0-9a-f-]{36}\\.(png|webp)$'));
+ (pose_id is not null and source_path ~ '^battle-pose/[a-z0-9_-]+/[0-9a-f-]{36}/[a-z0-9_]+/[0-9a-f-]{36}[.](png|webp)$') or
+ (race_pose_id is not null and source_path ~ '^race-battle-pose/[a-z0-9_-]+/(male|female|neutral)/[a-z0-9_]+/[0-9a-f-]{36}[.](png|webp)$'));
 create unique index if not exists hermes_web_jobs_race_pose_source_unique on public.hermes_web_jobs(race_pose_id,source_path) where race_pose_id is not null;
 
 -- Administrative race-pose jobs must match the staged asset and its owner.
