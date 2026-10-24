@@ -1,0 +1,15 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-trophy-room-v2.2",
+      "target_id": "af406969-b1c6-58e7-8ea8-4bf3173c9b4e",
+      "drive_file_id": "12ofanzxIPTAiTPSEzYJZ_GRxo_hUFmT-",
+      "archive_file_id": "1PQtMpj5u507Kyt6W6fJLiQqoA49ecv__",
+      "source_sha256": "dabe7b84aa5622580fd5056a6386b6bdb1f135a05c05e29a66ed4f8c11ee3d6b",
+      "visual_approved": true
+    }
+  ]
+}
