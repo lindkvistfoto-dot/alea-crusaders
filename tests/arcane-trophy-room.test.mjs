@@ -20,3 +20,8 @@ describe('ARCANE Trophy Room V2.2',()=>{
   expect(sql).toContain("asset_key = 'arcane-trophy-room-v2.2'");expect(prep).toContain('opaque_scene');
  });
 });
+
+describe('Trophy room image-first controls',()=>{
+ it('renders scene before zoom and character selector',()=>{const html=read('index.html');const start=html.indexOf('<section id="trophyRoomPage"');const end=html.indexOf('</section>',start);const room=html.slice(start,end);expect(room.indexOf('id="trophyRoomViewport"')).toBeLessThan(room.indexOf('class="trophy-room-toolbar"'));expect(room.indexOf('class="trophy-room-toolbar"')).toBeLessThan(room.indexOf('id="trophyRoomCharacter"'));expect(room).not.toContain('ARCANE · SYSTEM VIEW');expect(room).not.toContain('← Tillbaka');});
+ it('uses shared eligible roster and exposes selection event',()=>{const js=read('features/trophy-room/room.js');expect(js).toContain('shopEligibleBuyers');expect(js).toContain('alea:trophy-character-change');});
+});
