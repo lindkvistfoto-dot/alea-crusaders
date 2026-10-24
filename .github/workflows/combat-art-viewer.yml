@@ -38,6 +38,10 @@ jobs:
         run: npx vitest run tests/combat-art-viewer.test.js tests/cryptex-icon-crop.test.js tests/cryptex-mobile-layout.test.js
       - name: Production build
         run: npm run build
+      - name: Install Chromium for visual smoke tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
       - name: Desktop and mobile Chromium smoke
         shell: bash
         run: |
@@ -49,7 +53,9 @@ jobs:
             if curl -fsS http://127.0.0.1:4173/tests/fixtures/combat-art-viewer-desktop.html >/dev/null; then break; fi
             sleep 1
           done
-          CHROME_BIN="$(command -v google-chrome || command -v chromium)" node scripts/combat_art_viewer_visual.cjs
+          CHROME_BIN="$(command -v chromium-browser || command -v chromium || command -v google-chrome || true)"
+          if [ -z "$CHROME_BIN" ]; then echo "Chromium executable missing" >&2; exit 1; fi
+          CHROME_BIN="$CHROME_BIN" node scripts/combat_art_viewer_visual.cjs
       - name: Save review screenshots
         if: always()
         uses: actions/upload-artifact@v4
