@@ -5,7 +5,7 @@
  const VERSION=1, STORE='alea.arcane-paper-doll-workshop.v1';
  const BASES=Object.freeze([{id:'single',label:'1 hex · Bronze Ivory (original)',key:'arcane-paper-doll-hexagon-base',available:true},{id:'pointed-high',label:'1 hex · Spetsig · High Angle',key:'arcane-bronze-ivory-pointed-hex-high-angle',available:true},{id:'pointed-low',label:'1 hex · Spetsig · Low Angle',key:'arcane-bronze-ivory-pointed-hex-low-angle',available:true},{id:'double',label:'2 hex · Sidled · High Angle',key:'arcane-bronze-ivory-double-hex-side-high-angle',available:true},{id:'triple',label:'3 hex · Kommande',available:false},{id:'five',label:'5 hex · Kommande',available:false},{id:'seven',label:'7 hex · Kommande',available:false}]);
  const BASE_STANDARD_LEGACY=42;
- let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=65,cutoutX=0,cutoutY=0;
+ let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=70,cutoutX=0,cutoutY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
  const $=id=>document.getElementById(id);
