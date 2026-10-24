@@ -4,12 +4,35 @@
  const SQRT3=Math.sqrt(3);
  const DEFAULT_CAMERA=Object.freeze({elevationDegrees:55,azimuthDegrees:0,scale:1,wallHeight:0.20});
  const PATTERNS=Object.freeze({'single':[1],'double':[2],'triple-compact':[1,2],'quad-diamond':[1,2,1],'six-wedge':[1,2,3],'six-long':[1,2,2,1],'seven-compact':[2,3,2],'nine-diamond':[1,2,3,2,1]});
- function fromRows(rows){
-  if(!Array.isArray(rows)||!rows.length||rows.some(n=>!Number.isInteger(n)||n<1||n>20))throw new Error('Invalid hex row pattern');
+ function fromRows(rows,options={}){
+  if(!Array.isArray(rows)||!rows.length||rows.length>20||rows.some(n=>!Number.isInteger(n)||n<1||n>20))throw new Error('Invalid hex row pattern');
+  const offsets=options.offsets;
+  if(offsets!==undefined&&(!Array.isArray(offsets)||offsets.length!==rows.length||offsets.some(n=>!Number.isInteger(n)||Math.abs(n)>40)))throw new Error('Invalid row offsets');
   const cells=[];
-  rows.forEach((n,r)=>{const start=-Math.floor((n+r)/2);for(let i=0;i<n;i++)cells.push({q:start+i,r})});
+  rows.forEach((n,r)=>{const start=-Math.floor((n+r)/2)+(offsets?.[r]||0);for(let i=0;i<n;i++)cells.push({q:start+i,r})});
   return cells;
  }
+ function buildRows(rows,options={}){
+  const raw=fromRows(rows,options),check=validate(raw);
+  return {cells:raw,rows:rows.slice(),offsets:options.offsets?.slice()||rows.map(()=>0),check};
+ }
+ function autoAlign(rows){
+  fromRows(rows);
+  const offsets=[0];let previous=fromRows([rows[0]]);
+  for(let r=1;r<rows.length;r++){
+   let best=null;
+   for(let shift=-rows[r]-rows[r-1]-2;shift<=rows[r]+rows[r-1]+2;shift++){
+    const candidate=fromRows(rows.slice(0,r+1),{offsets:[...offsets,shift]}).filter(c=>c.r===r);
+    const contacts=candidate.reduce((sum,c)=>sum+previous.filter(p=>neighbors(c).some(n=>n.q===p.q&&n.r===p.r)).length,0);
+    const center=Math.abs(candidate.reduce((sum,c)=>sum+c.q+c.r/2,0)/candidate.length);
+    const score=contacts*100-center;
+    if(best===null||score>best.score)best={score,shift,candidate};
+   }
+   offsets.push(best.shift);previous=best.candidate;
+  }
+  return buildRows(rows,{offsets});
+ }
+
  function rotate({q,r},steps=0){let x=q,z=r,y=-x-z;for(let i=0;i<((steps%6)+6)%6;i++){[x,y,z]=[-z,-x,-y]}return {q:x,r:z}}
  function reflect({q,r}){return {q:-q-r,r}}
  function transform(cells,{steps=0,mirror=false}={}){return cells.map(c=>rotate(mirror?reflect(c):c,steps))}
@@ -29,7 +52,7 @@
  }
  function corners(c,size=1){const center=world(c,size);return Array.from({length:6},(_,i)=>{const a=(i*60-90)*Math.PI/180;return {x:center.x+size*Math.cos(a),y:center.y+size*Math.sin(a)}})}
  function geometry(rows,opts={}){
-  const cells=transform(fromRows(rows),opts),check=validate(cells);if(!check.valid)throw new Error('Disconnected formation');
+  const cells=transform(fromRows(rows,opts),opts),check=validate(cells);if(!check.valid)throw new Error('Disconnected formation');
   const size=opts.size||1,camera={...DEFAULT_CAMERA,...opts.camera};
   const faces=cells.map(c=>({cell:c,center:project(world(c,size),camera),points:corners(c,size).map(p=>project(p,camera))}));
   const bounds=faces.flatMap(f=>f.points).reduce((a,p)=>({minX:Math.min(a.minX,p.x),maxX:Math.max(a.maxX,p.x),minY:Math.min(a.minY,p.y),maxY:Math.max(a.maxY,p.y)}),{minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity});
@@ -92,5 +115,5 @@
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' hex formation">'+wallArt+faces+'</svg>';
  }
 
- root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,manifest,svg});
+ root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,buildRows,autoAlign,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,manifest,svg});
 })(globalThis);
