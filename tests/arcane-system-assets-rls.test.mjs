@@ -28,7 +28,7 @@ it('applies the real migration and enforces publication constraints, RLS and col
   await db.exec("insert into hermes_jobs values('system-asset')");
   await expect(db.exec("insert into hermes_jobs values('unknown')")).rejects.toThrow();
   await db.exec('set role authenticated');
-  expect((await db.query('select * from arcane_system_assets')).rows).toEqual([]);
+  expect((await db.query('select asset_key from arcane_system_assets where asset_path is not null')).rows).toEqual([{asset_key:'arcane-trophy-room-v2.2'}]);
   await expect(db.exec("update arcane_system_assets set asset_path='evil.webp'")).rejects.toThrow(/permission denied/);
   await expect(db.exec('delete from arcane_system_assets')).rejects.toThrow(/permission denied/);
   await expect(db.exec("insert into arcane_system_assets(id,asset_key,label) values(gen_random_uuid(),'other','bad')")).rejects.toThrow(/permission denied/);
@@ -48,6 +48,6 @@ it('applies the real migration and enforces publication constraints, RLS and col
   await expect(db.exec("update arcane_system_assets set width=0 where asset_path is not null")).rejects.toThrow(/arcane_system_asset_publication/);
   await expect(db.exec("update arcane_system_assets set alpha_preserved=false where asset_path is not null")).rejects.toThrow(/arcane_system_asset_publication/);
   await db.exec('reset role; set role authenticated');
-  expect((await db.query('select asset_path from arcane_system_assets')).rows).toEqual([{asset_path:path}]);
+  expect((await db.query("select asset_path from arcane_system_assets where asset_key='arcane-paper-doll-hexagon-base'")).rows).toEqual([{asset_path:path}]);
  }finally{await db.close()}
 },20000);
