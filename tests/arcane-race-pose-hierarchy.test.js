@@ -39,3 +39,8 @@ it('filters race poses at the data source',()=>{
  expect(query).toContain('race_id=eq.manniska');
  expect(query).toContain('publication_status=eq.published');
 });
+
+it('Swedish gender labels select the correct racial variant',()=>{
+ const result=resolveHierarchy({actorType:'npc',gender:'Kvinna',equipment,racePoses:[pose('enhandssvard_shield','male'),pose('enhandssvard_shield','female')]});
+ expect(result.source).toBe('race');expect(result.pose.gender_variant).toBe('female');
+});
