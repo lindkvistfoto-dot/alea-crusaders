@@ -9,6 +9,7 @@ describe('Arcane Geometry Engine',()=>{
  it('all six rotations preserve grid positions and adjacency',()=>{const original=e.fromRows([1,2,3,2,1]);for(let steps=0;steps<6;steps++){const rotated=e.transform(original,{steps});expect(e.validate(rotated).valid).toBe(true);expect(rotated).toHaveLength(9)}expect(JSON.stringify(e.transform(original,{steps:6}))).toBe(JSON.stringify(original))});
  it('reflection preserves connectivity',()=>{expect(e.validate(e.transform(e.fromRows([1,2,3]),{mirror:true})).valid).toBe(true)});
  it('orthographic projection preserves projected hex size at all depths',()=>{const g=e.geometry([1,2,3,2,1]);const size=f=>({width:Math.max(...f.points.map(p=>p.x))-Math.min(...f.points.map(p=>p.x)),height:Math.max(...f.points.map(p=>p.y))-Math.min(...f.points.map(p=>p.y))});const first=size(g.faces[0]);for(const face of g.faces){const d=size(face);expect(d.width).toBeCloseTo(first.width,10);expect(d.height).toBeCloseTo(first.height,10)}});
- it('SVG exports without any painted background',()=>{const svg=e.svg([1,2,1]);expect(svg).toContain('<svg');expect(svg).not.toMatch(/<rect|checkerboard|background-color/);expect((svg.match(/<polygon/g)||[])).toHaveLength(4)});
+ it('SVG exports without any painted background',()=>{const svg=e.svg([1,2,1]);expect(svg).toContain('<svg');expect(svg).not.toMatch(/<rect|checkerboard|background-color/);expect((svg.match(/<circle/g)||[])).toHaveLength(4)});
+ it('renders 3D side walls only at outer boundaries',()=>{const svg=e.svg([1,2,1]);expect((svg.match(/<polygon/g)||[]).length).toBeGreaterThan(4);expect(svg).toContain('#806039')});
  it('rejects disconnected formations',()=>{expect(e.validate([{q:0,r:0},{q:4,r:4}]).valid).toBe(false)});
 });
