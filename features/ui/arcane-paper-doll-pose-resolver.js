@@ -31,6 +31,16 @@ function fromCharacter(character){
  const item=weapons.find(w=>String(w.equipId||w.id)===String(equipped?.itemId||''));
  return {weaponClass:item?.weaponClass||item?.skillId||null,handling:item?.handling||'',grip:equipped?.hands===2?'2H':equipped?.hands===1?'1H':'',hasShield:hands.some(h=>h.kind==='shield'),hasWeapon:!!equipped};
 }
+// The combat snapshot is authoritative for NPCs, enemies and monsters.
+function fromCombatant(actor,weaponClasses={}){
+ const profile=actor?.state?.attack_profile||{};
+ const eq=profile.currentEquipment||{};
+ const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
+ const equipped=hands.find(hand=>hand.kind==='weapon');
+ const item=(profile.weapons||[]).find(weapon=>String(weapon.equipId||weapon.id||weapon.weapon_id||'')===String(equipped?.itemId||''));
+ const cls=item?.weaponClass||item?.weapon_class||item?.skillId||weaponClasses[String(item?.weapon_id||item?.weaponTypeId||'')]||null;
+ return {weaponClass:cls,handling:item?.handling||'',grip:equipped?.hands===2?'2H':equipped?.hands===1?'1H':'',hasShield:hands.some(hand=>hand.kind==='shield'),hasWeapon:!!equipped};
+}
 function resolve(equipment={},availablePoseIds=[]){
  const available=new Set(availablePoseIds);
  const family=poseFamily(equipment.weaponClass);
@@ -43,5 +53,5 @@ function resolve(equipment={},availablePoseIds=[]){
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
 }
-root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,resolve});
+root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,fromCombatant,resolve});
 })(globalThis);
