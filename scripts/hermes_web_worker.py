@@ -78,8 +78,9 @@ def find_archived_original(name, expected_sha):
  return ident
 
 def run(job):
- ident=job["id"];pose_id=job["pose_id"];source_path=job["source_path"]
- rows=rest("combatant_battle_poses?select=*&id=eq."+pose_id)
+ ident=job["id"];race_owned=bool(job.get("race_pose_id"));pose_id=job["race_pose_id"] if race_owned else job["pose_id"];source_path=job["source_path"]
+ pose_table="race_battle_poses" if race_owned else "combatant_battle_poses"
+ rows=rest(pose_table+"?select=*&id=eq."+pose_id)
  if len(rows)!=1:raise ValueError("POSE_NOT_FOUND")
  pose=rows[0]
  replacement=(pose["publication_status"]=="published" and pose.get("pending_staging_path")==source_path)
@@ -88,7 +89,7 @@ def run(job):
  if pose["publication_status"]=="published" and not replacement:
   published_path=pose.get("image_path") or ""
   if job.get("output_path") and job["output_path"]!=published_path:raise ValueError("PUBLISHED_JOB_MISMATCH")
-  if not published_path.startswith("hermes/battle-pose-cutout/"+pose_id+"/"):
+  if not published_path.startswith("hermes/"+("race-battle-pose-cutout" if race_owned else "battle-pose-cutout")+"/"+pose_id+"/"):
    raise ValueError("POSE_PUBLISHED_PATH_MISMATCH")
   expected_hash=published_path.rsplit("/",1)[-1].removesuffix(".webp")
   if len(expected_hash)!=64 or digest(storage_download("alea-hermes-public",published_path))!=expected_hash:
@@ -124,7 +125,7 @@ def run(job):
  img.thumbnail((1280,1280),Image.Resampling.LANCZOS)
  out=io.BytesIO();img.save(out,format="WEBP",quality=85,method=6)
  data=out.getvalue();webp_sha=digest(data)
- path="hermes/battle-pose-cutout/"+pose_id+"/"+webp_sha+".webp"
+ path="hermes/"+("race-battle-pose-cutout" if race_owned else "battle-pose-cutout")+"/"+pose_id+"/"+webp_sha+".webp"
  publishing=patch("hermes_web_jobs",ident,{"state":"publishing"})
  if len(publishing)!=1:raise ValueError("PUBLISHING_STATE_UPDATE_FAILED")
  try:
@@ -133,13 +134,13 @@ def run(job):
   if e.code!=409:raise
  if digest(storage_download("alea-hermes-public",path))!=webp_sha:raise ValueError("PUBLIC_HASH_MISMATCH")
  if replacement:
-  update_filter="combatant_battle_poses?id=eq."+pose_id+"&pending_staging_path=eq."+source_path+"&publication_status=eq.published"
+  update_filter=pose_table+"?id=eq."+pose_id+"&pending_staging_path=eq."+source_path+"&publication_status=eq.published"
   values={"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,
           "staging_path":source_path,"base_key":pose["pending_base_key"],
           "mounting_profile":pose["pending_mounting_profile"],
           "pending_staging_path":None,"pending_base_key":None,"pending_mounting_profile":None}
  else:
-  update_filter="combatant_battle_poses?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)"
+  update_filter=pose_table+"?id=eq."+pose_id+"&staging_path=eq."+source_path+"&publication_status=in.(draft,queued)"
   values={"image_path":path,"source_drive_file_id":drive_id,"source_sha256":sha,"publication_status":"published","is_active":True}
  updated=rest(update_filter,"PATCH",values)
  if len(updated)!=1:raise ValueError("POSE_CHANGED_DURING_PUBLICATION")
