@@ -25,6 +25,7 @@
     combatNavBtn:()=>visible('combatPage'),
     mapNavBtn:()=>visible('mapPage'),
     diceNavBtn:()=>visible('dicePage'),
+    trophyRoomNavBtn:()=>visible('trophyRoomPage'),
     journalNavBtn:()=>visible('journalPage'),
     adminNavBtn:()=>visible('admin'),
     landingHomeNavBtn:()=>visible('landing')
@@ -33,7 +34,7 @@
   const routes={
     aleaBannerHomeLink:'landing',landingHomeNavBtn:'landing',
     landingCharactersNavBtn:'home',materialNavBtn:'legolasPanel',
-    combatNavBtn:'combatPage',mapNavBtn:'mapPage',diceNavBtn:'dicePage',
+    combatNavBtn:'combatPage',mapNavBtn:'mapPage',diceNavBtn:'dicePage',trophyRoomNavBtn:'trophyRoomPage',
     shopNavBtn:'shopPage',alchemyNavBtn:'shopPage',innNavBtn:'innPage',
     academyNavBtn:'academyPage',journalNavBtn:'journalPage',adminNavBtn:'admin'
   };
@@ -43,7 +44,7 @@
     if(lastNavigation&&current[lastNavigation]?.())return lastNavigation;
     return ['journalNavBtn','adminNavBtn','academyNavBtn','innNavBtn',
       'alchemyNavBtn','shopNavBtn','combatNavBtn','mapNavBtn','diceNavBtn',
-      'landingCharactersNavBtn','landingHomeNavBtn'].find(id=>current[id]())||'';
+      'trophyRoomNavBtn','landingCharactersNavBtn','landingHomeNavBtn'].find(id=>current[id]())||'';
   }
 
   function refresh(){

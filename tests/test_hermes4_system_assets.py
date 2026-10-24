@@ -27,7 +27,7 @@ class SystemAssets(unittest.TestCase):
     def setUp(self):
         self.items, self.sources = [], {}
         for i, (key, profile) in enumerate(PROFILE['assets'].items()):
-            raw = png(tuple(profile['source_size']), 254 if i == 0 else 255)
+            raw = png(tuple(profile['source_size']), 254 if i == 0 else 255, 'RGB' if profile.get('alpha_required', True) is False else 'RGBA')
             self.sources['inbox-system-'+str(i)] = raw
             self.sources['archive-system-'+str(i)] = raw
             self.items.append(dict(kind='system-asset', target_key=key, target_id=profile['id'],
@@ -52,13 +52,16 @@ class SystemAssets(unittest.TestCase):
             for a in first:
                 profile = PROFILE['assets'][a['target_key']]
                 self.assertTrue(a['archive_verified'])
-                self.assertTrue(a['alpha_preserved'])
+                self.assertEqual(a['alpha_preserved'], PROFILE['assets'][a['target_key']].get('alpha_required', True))
                 self.assertLessEqual(a['app_bytes'], 500000)
                 with Image.open(io.BytesIO(self.sources['inbox-system-'+str(a['batch_index'])])) as original:
                     original.thumbnail((1280, 1280), Image.Resampling.LANCZOS)
                     with Image.open(Path(output, a['app_file'])) as webp:
                         self.assertEqual(list(webp.size), profile['display_size'])
-                        self.assertEqual(webp.getchannel('A').tobytes(), original.getchannel('A').tobytes())
+                        if profile.get('alpha_required', True):
+                            self.assertEqual(webp.getchannel('A').tobytes(), original.getchannel('A').tobytes())
+                        else:
+                            self.assertEqual(webp.mode, 'RGB')
             self.assertFalse(list(Path(output).rglob('*.png')))
 
     def test_bad_archive_is_isolated_and_cannot_become_publication_input(self):

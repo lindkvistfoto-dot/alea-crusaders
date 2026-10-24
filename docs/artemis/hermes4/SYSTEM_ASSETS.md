@@ -4,7 +4,7 @@
 
 ## Slutligt stöd
 
-`system-asset` är en snäv HERMES 4.0-batchprofil för två stabila nycklar. Befintlig `hermes_drive_intake.py`, `hermes2_prepare.py`, `hermes2_publish.ts`, `hermes_jobs`, Actions/WIF och display-bucket `alea-hermes-public` återanvänds. Det äldre stoppade UI-intaget öppnas inte.
+`system-asset` är en HERMES 4.0-batchprofil för registrerade nycklar. `arcane-trophy-room-v2.2` har ett exakt undantag för den låsta opaka 16:9-scenen. Befintlig `hermes_drive_intake.py`, `hermes2_prepare.py`, `hermes2_publish.ts`, `hermes_jobs`, Actions/WIF och display-bucket `alea-hermes-public` återanvänds. Det äldre stoppade UI-intaget öppnas inte.
 
 | Nyckel | Original/arkiv SHA-256 | Arkivfil | WebP |
 |---|---|---|---|
@@ -54,3 +54,9 @@ Produktions-Supabase kontrollerades skrivskyddat: `hermes_jobs` och `hermes_job_
 5. Koppla den injicerbara adaptern ovan till den faktiska Workshop-versionens manifest/preview. Workshop/BENGALI är inte mergad i denna main-bas och det finns ingen Workshop-vy här att aktivera. Verifiera laddning, transparent preview och bildfelsfallback där. Kartvisning kräver dessutom separat visuell kalibrering av bas/stand och porträttöppning.
 
 Kodstödet är komplett för de två systembilderna. Slutlig drift- och Workshop-visning ska inte beskrivas som verifierad före steg 2–5.
+
+## ARCANE Trophy Room V2.2
+
+Issue #246 lägger till arcane-trophy-room-v2.2 som en separat HERMES systemresurs. Originalet är RGB, 1672×941 och ligger i Drive Inbox; SHA-256-pinnad arkivkopia finns i det konfigurerade SYSTEM ASSETS/BASES-arkivet. Derivatan är proportionell 1280×720 WebP, utan beskärning, alfakanal eller GitHub-original. Manifestet ligger i hermes/system-assets/arcane-trophy-room-v2.2.json; det är inte en aktiv hermes/queue-order.
+
+Production Storage- och DB-publicering väntar på den granskade main-branch HERMES-körningen efter merge. Inga produktionspekare ändras i denna PR.

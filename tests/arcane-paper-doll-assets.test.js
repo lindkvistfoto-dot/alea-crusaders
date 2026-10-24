@@ -5,7 +5,7 @@ import profiles from '../config/hermes-system-assets.json';
 const script=readFileSync(new URL('../features/ui/arcane-paper-doll-assets.js',import.meta.url),'utf8');
 function adapter(){const ctx={URL};vm.runInNewContext(script,ctx);return ctx.aleaArcanePaperDollAssets}
 const rows=()=>Object.entries(profiles.assets).map(([key,def])=>({id:def.id,asset_key:key,
- width:def.display_size[0],height:def.display_size[1],alpha_preserved:true,
+ width:def.display_size[0],height:def.display_size[1],alpha_preserved:key==='arcane-trophy-room-v2.2'?false:true,
  app_bytes:1234,app_sha256:'a'.repeat(64),asset_path:`hermes/system-asset/${key}/${'a'.repeat(64)}.webp`,
  source_path:'drive://must-not-leak'}));
 

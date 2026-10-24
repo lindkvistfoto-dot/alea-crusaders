@@ -18,7 +18,7 @@ from hermes_system_assets import PROFILE, validate_system_image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(system-asset|spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(system-asset|spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/(arcane-trophy-room-v2[.]2|[a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -71,20 +71,25 @@ def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Pat
                 image.thumbnail((2560, 1440), Image.Resampling.LANCZOS)
             required_alpha = None
         else:
-            if original.mode != "RGBA":
-                raise ValueError(f"{relative}: expected RGBA PNG")
-            if kind == 'system-asset':
+            opaque_scene = kind == "system-asset" and key == "arcane-trophy-room-v2.2"
+            expected_mode = "RGB" if opaque_scene else "RGBA"
+            if original.mode != expected_mode:
+                raise ValueError(f"{relative}: expected {expected_mode} PNG")
+            if kind == "system-asset":
                 profile = validate_system_image(original, key)
-                image = original.copy()
+                image = original.convert("RGB") if opaque_scene else original.copy()
                 image.thumbnail((PROFILE['max_edge'], PROFILE['max_edge']), Image.Resampling.LANCZOS)
                 if list(image.size) != profile['display_size']:
-                    raise ValueError('SYSTEM_ASSET_DISPLAY_DIMENSIONS')
+                    raise ValueError("SYSTEM_ASSET_DISPLAY_DIMENSIONS")
             else:
                 image = original.resize((EDGE, EDGE), Image.Resampling.LANCZOS)
-            low, high = image.getchannel("A").getextrema()
-            if low == 255 or high == 0:
-                raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")
-            required_alpha = image.getchannel("A").tobytes()
+            if opaque_scene:
+                required_alpha = None
+            else:
+                low, high = image.getchannel("A").getextrema()
+                if low == 255 or high == 0:
+                    raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")
+                required_alpha = image.getchannel("A").tobytes()
     max_webp = 524_288 if kind == 'spell-illustration-wide' else MAX_WEBP  # Match the database cap exactly.
     webp = None
     quality_used = None

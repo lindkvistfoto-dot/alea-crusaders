@@ -17,12 +17,13 @@ const destinations=[
  ['combatNavBtn','openCombat()','combatPage'],
  ['mapNavBtn','openMap()','mapPage'],
  ['diceNavBtn','openDice()','dicePage'],
+ ['trophyRoomNavBtn','openTrophyRoom()','trophyRoomPage'],
  ['adminNavBtn','openAdmin()','admin']
 ];
 function setup(){
  const map=new Map(),listeners={};
  const pageIds=['landing','home','view','shopPage','innPage','academyPage',
-  'combatPage','mapPage','dicePage','journalPage','admin','legolasPanel','legolasViewer'];
+  'combatPage','mapPage','dicePage','trophyRoomPage','journalPage','admin','legolasPanel','legolasViewer'];
  const navIds=[...destinations.map(x=>x[0]),'materialNavBtn','journalNavBtn'];
  function el(id){
   if(map.has(id))return map.get(id);
@@ -100,13 +101,13 @@ describe('Unified navigation and banner self-test',()=>{
  it.each([
   ['landingHomeNavBtn','landing'],['landingCharactersNavBtn','home'],
   ['shopNavBtn','shopPage'],['innNavBtn','innPage'],['academyNavBtn','academyPage'],
-  ['combatNavBtn','combatPage'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage'],
+  ['combatNavBtn','combatPage'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage'],['trophyRoomNavBtn','trophyRoomPage'],
   ['journalNavBtn','journalPage'],['adminNavBtn','admin']
  ])('selects exactly the %s shortcut when %s is displayed',async(id,page)=>{
   const app=setup();app.show(page);app.click(id);await Promise.resolve();
   expect(app.el(id).attributes['aria-current']).toBe('page');
   for(const other of ['landingHomeNavBtn','landingCharactersNavBtn','shopNavBtn','alchemyNavBtn',
-    'innNavBtn','academyNavBtn','combatNavBtn','mapNavBtn','diceNavBtn','journalNavBtn','adminNavBtn']){
+    'innNavBtn','academyNavBtn','combatNavBtn','mapNavBtn','diceNavBtn','trophyRoomNavBtn','journalNavBtn','adminNavBtn']){
    if(other!==id)expect(app.el(other).attributes['aria-current']).toBe('false');
   }
  });
@@ -165,7 +166,7 @@ describe('Material navigation never blocks other destinations',()=>{
       ['shopNavBtn','shopPage'],['alchemyNavBtn','shopPage'],['innNavBtn','innPage'],
       ['academyNavBtn','academyPage'],['combatNavBtn','combatPage'],
       ['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],
-      ['diceNavBtn','dicePage'],['aleaBannerHomeLink','landing']
+      ['diceNavBtn','dicePage'],['trophyRoomNavBtn','trophyRoomPage'],['aleaBannerHomeLink','landing']
     ]){
       const app=setup();
       app.show('home');app.show('legolasPanel');app.click('materialNavBtn');

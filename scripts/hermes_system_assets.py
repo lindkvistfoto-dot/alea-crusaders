@@ -7,10 +7,11 @@ from PIL import Image
 
 PROFILE = json.loads((Path(__file__).resolve().parents[1] / 'config/hermes-system-assets.json').read_text())
 KEY = re.compile(r'^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$')
+OPAQUE_SCENE_KEY = 'arcane-trophy-room-v2.2'
 
 
 def system_asset(key):
-    if not isinstance(key, str) or not KEY.fullmatch(key):
+    if not isinstance(key, str) or (not KEY.fullmatch(key) and key != OPAQUE_SCENE_KEY):
         raise ValueError('INVALID_SYSTEM_ASSET_KEY')
     known = PROFILE['assets'].get(key)
     if known is not None:
@@ -28,15 +29,17 @@ def system_asset(key):
 
 def validate_system_image(image, key):
     profile = system_asset(key)
-    if image.mode != 'RGBA':
-        raise ValueError('SYSTEM_ASSET_REQUIRES_RGBA')
+    opaque_scene = key == OPAQUE_SCENE_KEY
+    if image.mode != ('RGB' if opaque_scene else 'RGBA'):
+        raise ValueError('SYSTEM_ASSET_REQUIRES_RGB' if opaque_scene else 'SYSTEM_ASSET_REQUIRES_RGBA')
     if not (1 <= image.width <= 4096 and 1 <= image.height <= 4096):
         raise ValueError('SYSTEM_ASSET_DIMENSIONS')
     if profile['source_size'] is not None and list(image.size) != profile['source_size']:
         raise ValueError('SYSTEM_ASSET_SOURCE_DIMENSIONS')
-    low, high = image.getchannel('A').getextrema()
-    if low != 0 or high < 240:
-        raise ValueError('SYSTEM_ASSET_REQUIRES_TRUE_ALPHA')
+    if not opaque_scene:
+        low, high = image.getchannel('A').getextrema()
+        if low != 0 or high < 240:
+            raise ValueError('SYSTEM_ASSET_REQUIRES_TRUE_ALPHA')
     if profile['display_size'] is None:
         display = image.copy()
         display.thumbnail((PROFILE['max_edge'], PROFILE['max_edge']), Image.Resampling.LANCZOS)
