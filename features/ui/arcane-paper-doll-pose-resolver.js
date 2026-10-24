@@ -37,7 +37,7 @@ function fromCombatant(actor,weaponClasses={}){
  const eq=profile.currentEquipment||{};
  const hands=[eq.rightHand,eq.leftHand].filter(Boolean);
  const equipped=hands.find(hand=>hand.kind==='weapon');
- const item=(profile.weapons||[]).find(weapon=>String(weapon.equipId||weapon.id||weapon.weapon_id||'')===String(equipped?.itemId||''));
+ const item=equipped?(profile.weapons||[]).find(weapon=>String(weapon.equipId||weapon.id||weapon.weapon_id||'')===String(equipped.itemId||'')):null;
  const name=String(item?.name||'').toLowerCase();
  const inferred=/svärd|sword/.test(name)?'enhandssvard':/dolk|dagger/.test(name)?'dolkar':/yxa|axe/.test(name)?'yxor':/spjut|spear/.test(name)?'spjut':null;
  const cls=item?.weaponClass||item?.weapon_class||item?.skillId||weaponClasses[String(item?.weapon_id||item?.weaponTypeId||'')]||inferred;
