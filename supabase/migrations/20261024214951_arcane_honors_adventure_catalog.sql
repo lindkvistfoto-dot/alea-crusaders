@@ -1,0 +1,53 @@
+-- Seed the existing individual adventure-medal catalog as draft definitions.
+-- Draft status keeps the entries admin-only; this does not grant any medals.
+-- Each image_asset_id is a stable HERMES asset_key. Add the matching published
+-- record to arcane_system_assets when Charlie publishes that medal image.
+do $$
+begin
+  if not exists (select 1 from public.profiles where is_admin=true) then
+    raise exception 'ARCANE HONORS catalog seed requires an administrator profile';
+  end if;
+end $$;
+
+with catalog(name,type,description,requirement_text,visibility,grant_mode,status,adventure_id,image_asset_id) as (
+  values
+('Tvillingbergen', 'adventure', 'Utgiven 1982.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'tvillingbergen', 'arcane-adventure-medal-tvillingbergen-v1'),
+('Spindelkonungens pyramid', 'adventure', 'Utgiven 1983.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'spindelkonungens-pyramid', 'arcane-adventure-medal-spindelkonungens-pyramid-v1'),
+('Dimön', 'adventure', 'Utgiven 1984.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'dimon', 'arcane-adventure-medal-dimon-v1'),
+('Havets vargar', 'adventure', 'Utgiven 1985.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'havets-vargar', 'arcane-adventure-medal-havets-vargar-v1'),
+('Döda skogen', 'adventure', 'Utgiven 1985.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'doda-skogen', 'arcane-adventure-medal-doda-skogen-v1'),
+('Maktens portar', 'adventure', 'Utgiven 1985.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'maktens-portar', 'arcane-adventure-medal-maktens-portar-v1'),
+('Mörkrets hjärta', 'adventure', 'Utgiven 1986.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'morkrets-hjarta', 'arcane-adventure-medal-morkrets-hjarta-v1'),
+('Svart duell', 'adventure', 'Utgiven 1986.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'svart-duell', 'arcane-adventure-medal-svart-duell-v1'),
+('Skönheten och Odjuret', 'adventure', 'Utgiven 1986.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'skonheten-och-odjuret', 'arcane-adventure-medal-skonheten-och-odjuret-v1'),
+('Rösten från forntiden', 'adventure', 'Utgiven 1986.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'rosten-fran-forntiden', 'arcane-adventure-medal-rosten-fran-forntiden-v1'),
+('Novastenen', 'adventure', 'Utgiven 1987.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'novastenen', 'arcane-adventure-medal-novastenen-v1'),
+('Jeraz', 'adventure', 'Utgiven 1987.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'jeraz', 'arcane-adventure-medal-jeraz-v1'),
+('Svavelvinter', 'adventure', 'Utgiven 1987.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'svavelvinter', 'arcane-adventure-medal-svavelvinter-v1'),
+('Marsklandet', 'adventure', 'Utgiven 1988.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'marsklandet', 'arcane-adventure-medal-marsklandet-v1'),
+('Djupets fasor', 'adventure', 'Utgiven 1989.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'djupets-fasor', 'arcane-adventure-medal-djupets-fasor-v1'),
+('Shoguns vrede', 'adventure', 'Utgiven 1989.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'shoguns-vrede', 'arcane-adventure-medal-shoguns-vrede-v1'),
+('Dödens väg', 'adventure', 'Utgiven 1989.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'dodens-vag', 'arcane-adventure-medal-dodens-vag-v1'),
+('Barbia', 'adventure', 'Utgiven 1989.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'barbia', 'arcane-adventure-medal-barbia-v1'),
+('Magilre', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'magilre', 'arcane-adventure-medal-magilre-v1'),
+('Enhörningshornet', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'enhorningshornet', 'arcane-adventure-medal-enhorningshornet-v1'),
+('Oraklets fyra ögon', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'oraklets-fyra-ogon', 'arcane-adventure-medal-oraklets-fyra-ogon-v1'),
+('Handelsfursten', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'handelsfursten', 'arcane-adventure-medal-handelsfursten-v1'),
+('Tempelherren', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'tempelherren', 'arcane-adventure-medal-tempelherren-v1'),
+('Demonprinsen', 'adventure', 'Utgiven 1990.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'demonprinsen', 'arcane-adventure-medal-demonprinsen-v1'),
+('Helvetesfortet', 'adventure', 'Utgiven 1991.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'helvetesfortet', 'arcane-adventure-medal-helvetesfortet-v1'),
+('Melindors återkomst', 'adventure', 'Utgiven 1991.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'melindors-aterkomst', 'arcane-adventure-medal-melindors-aterkomst-v1'),
+('Slutstriden (Nidländska reningen)', 'adventure', 'Utgiven 1991.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'slutstriden-nidlandska-reningen', 'arcane-adventure-medal-slutstriden-nidlandska-reningen-v1'),
+('Kristalltjuren', 'adventure', 'Utgiven 1992.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'kristalltjuren', 'arcane-adventure-medal-kristalltjuren-v1'),
+('Den femte konfluxen', 'adventure', 'Utgiven 1994.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'den-femte-konfluxen', 'arcane-adventure-medal-den-femte-konfluxen-v1'),
+('Månhjärtat V2', 'adventure', 'Egenproducerat äventyr.', 'Avsluta äventyret.', 'public', 'manual', 'draft', 'manhjartat-v2', 'arcane-adventure-medal-manhjartat-v2-v1')
+)
+insert into public.honor_definitions
+  (name,type,description,requirement_text,visibility,grant_mode,status,adventure_id,image_asset_id,created_by)
+select c.name,c.type,c.description,c.requirement_text,c.visibility,c.grant_mode,c.status,c.adventure_id,c.image_asset_id,
+       (select p.id from public.profiles p where p.is_admin=true order by p.created_at asc limit 1)
+from catalog c
+where not exists (
+  select 1 from public.honor_definitions h
+  where h.type='adventure' and h.adventure_id=c.adventure_id
+);
