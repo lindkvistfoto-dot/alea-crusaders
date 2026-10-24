@@ -49,9 +49,9 @@ Det äldre formatet kan behandla flera explicita köfiler i samma push; varje fi
 | spell-illustration | rule_spells.spell_key | illustration_path | alea-spell-art |
 | spell-illustration-wide | rule_spells.spell_key | illustration_wide_path | alea-spell-art |
 | spell-cutout | rule_spells.spell_key | cutout_path | alea-spell-art |
-| system-asset | arcane_system_assets.asset_key (två fasta nycklar) | asset_path + WebP-metadata | alea-hermes-public |
+| system-asset | arcane_system_assets.asset_key (profilerad registry) | asset_path + WebP-metadata | alea-hermes-public |
 
-Befintliga dimensioner, transparenskrav och privata respektive publika buckets återanvänds. Ikoner och cutouts är 640×640 WebP; illustrationer behåller sin etablerade profil. Skill WIDE är nära 16:9, spell WIDE tillåter 1,25–2,4. Cutouts ersätter inte annan befintlig cutout. Inga regler, RLS-policys eller andra bildfält ändras som bieffekt.
+Befintliga dimensioner, transparenskrav och privata respektive publika buckets återanvänds. arcane-trophy-room-v2.2 är en exakt nyckelprofil för den låsta, opaka RGB-rumsbilden: proportionell 1280×720 WebP, utan beskärning eller alfakanal. Undantaget gäller enbart den nyckeln. Ikoner och cutouts är 640×640 WebP; illustrationer behåller sin etablerade profil. Skill WIDE är nära 16:9, spell WIDE tillåter 1,25–2,4. Cutouts ersätter inte annan befintlig cutout. Inga regler, RLS-policys eller andra bildfält ändras som bieffekt.
 
 ## Stängda äldre vägar
 

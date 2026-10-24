@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "kind": "system-asset",
+  "target_key": "arcane-trophy-room-v2.2",
+  "target_id": "af406969-b1c6-58e7-8ea8-4bf3173c9b4e",
+  "drive_file_id": "12ofanzxIPTAiTPSEzYJZ_GRxo_hUFmT-",
+  "archive_file_id": "1PQtMpj5u507Kyt6W6fJLiQqoA49ecv__",
+  "source_sha256": "dabe7b84aa5622580fd5056a6386b6bdb1f135a05c05e29a66ed4f8c11ee3d6b",
+  "visual_approved": true,
+  "mode": "pilot",
+  "archive_verified": true,
+  "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
+  "expected_app_sha256": "c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55",
+  "expected_app_file": "system-asset/arcane-trophy-room-v2.2/c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55.webp",
+  "expected_dimensions": [
+    1280,
+    720
+  ],
+  "alpha_preserved": false,
+  "source_bytes": 2682029,
+  "archive_sha256": "dabe7b84aa5622580fd5056a6386b6bdb1f135a05c05e29a66ed4f8c11ee3d6b",
+  "publication_status": "pending-reviewed-main-action"
+}

@@ -82,6 +82,21 @@
         733
       ],
       "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa"
+    },
+    "arcane-trophy-room-v2.2": {
+      "id": "af406969-b1c6-58e7-8ea8-4bf3173c9b4e",
+      "label": "Arcane Trophy Room V2.2",
+      "source_size": [
+        1672,
+        941
+      ],
+      "display_size": [
+        1280,
+        720
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
+      "alpha_required": false,
+      "aspect_ratio": "16:9"
     }
   }
 }

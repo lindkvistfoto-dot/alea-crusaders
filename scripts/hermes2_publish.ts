@@ -74,7 +74,7 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any,archiveRequired=false){
- if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")||
+ if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")&&!(a.kind==="system-asset"&&a.target_key==="arcane-trophy-room-v2.2"))||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  if(archiveRequired&&(a.archive_verified!==true||a.source_path!=="drive://"+a.archive_file_id||
@@ -83,10 +83,11 @@ function checkAsset(a:any,archiveRequired=false){
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.kind==='system-asset'){
   const profile=maybeSystemAssetProfile(a.target_key);
-  const validSystemKey=/^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key);
+  const opaqueScene=a.target_key==="arcane-trophy-room-v2.2";
+  const validSystemKey=/^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key)||opaqueScene;
   const validUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(a.target_id||"");
   const validDimensions=Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=1&&a.width<=1280&&a.height>=1&&a.height<=1280;
-  if(!archiveRequired||!expected||a.app_file!==out||!validSystemKey||!validUuid||!validDimensions||a.alpha_preserved!==true||
+  if(!archiveRequired||!expected||a.app_file!==out||!validSystemKey||!validUuid||!validDimensions||a.alpha_preserved!==!opaqueScene||
     (profile&&(a.target_id!==profile.id||a.width!==profile.display_size[0]||a.height!==profile.display_size[1])))
    throw Error('INVALID_SYSTEM_ASSET_METADATA');
   return {table:'arcane_system_assets',field:'asset_key',sourcePath:a.source_path,
@@ -134,7 +135,7 @@ async function publish(a:any){
  if(a.target_id!==undefined&&target.id!==a.target_id)throw Error("TARGET_ID_MISMATCH "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
- const activationFields=system?{asset_path:appPath,app_sha256:a.app_sha256,app_bytes:app.length,width:a.width,height:a.height,alpha_preserved:true}:{[assetField]:appPath};
+ const activationFields=system?{asset_path:appPath,app_sha256:a.app_sha256,app_bytes:app.length,width:a.width,height:a.height,alpha_preserved:a.alpha_preserved}:{[assetField]:appPath};
  const previousFields=system?Object.fromEntries(systemFields.map(field=>[field,target[field]])):{[assetField]:target[assetField]};
  const metadataMatches=(row:ArtTarget)=>!system||systemFields.every(field=>row?.[field]===(activationFields as Record<string,unknown>)[field]);
  if(manifest.publication_mode==="pilot"){

@@ -8,7 +8,7 @@ const assets=()=>rows().map((row,i)=>({kind:'system-asset',target_key:row.asset_
  batch_index:i,archive_verified:true,archive_file_id:'archive-system-'+i,source_path:'drive://archive-system-'+i,
  source_sha256:String(i+1).repeat(64),source_bytes:1024,app_sha256:sha,
  app_file:`system-asset/${row.asset_key}/${sha}.webp`,app_bytes:raw.length,
- width:profiles.assets[row.asset_key].display_size[0],height:profiles.assets[row.asset_key].display_size[1],alpha_preserved:true}));
+ width:profiles.assets[row.asset_key].display_size[0],height:profiles.assets[row.asset_key].display_size[1],alpha_preserved:row.asset_key==='arcane-trophy-room-v2.2'?false:true}));
 
 it('activates all configured system pointers through existing jobs, public Storage readback and idempotent retry',async()=>{
  const state=database({systemRows:rows()});const input=assets();
@@ -19,7 +19,7 @@ it('activates all configured system pointers through existing jobs, public Stora
  expect(state.calls.uploads.every(x=>x.bucket==='alea-hermes-public'&&!x.upsert)).toBe(true);
  for(const a of input){const row=state.targets.get(a.target_id);
   expect(row.asset_path).toBe('hermes/'+a.app_file);expect(row.app_sha256).toBe(sha);
-  expect(row.width).toBe(a.width);expect(row.alpha_preserved).toBe(true);
+  expect(row.width).toBe(a.width);expect(row.alpha_preserved).toBe(a.alpha_preserved);
  }
  const retry=await run(state,{assets:input});expect(retry.error).toBeUndefined();
  expect(retry.report.items.every(x=>x.status==='already_active')).toBe(true);

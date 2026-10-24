@@ -26,6 +26,7 @@ REPO = "lindkvistfoto-dot/alea-crusaders"
 FOLDER = "1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp"
 FILE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 KEY_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+OPAQUE_SYSTEM_KEY = "arcane-trophy-room-v2.2"
 QUEUE_PATTERN = re.compile(r"^hermes/queue/[a-z0-9][a-z0-9-]{0,99}\.json$")
 MAX_BYTES = 8_388_608
 UI_TARGETS = {"arcane-mechanism-link", "arcane-mechanism-chamber", "arcane-gallery-overlay",
@@ -175,7 +176,7 @@ def validate_batch_item(item: dict) -> None:
         raise ValueError("INVALID_BATCH_ITEM")
     if not isinstance(item["kind"], str) or item["kind"] not in KINDS:
         raise ValueError("INVALID_HERMES_KIND")
-    if not isinstance(item["target_key"], str) or not KEY_PATTERN.fullmatch(item["target_key"]):
+    if not isinstance(item["target_key"], str) or (not KEY_PATTERN.fullmatch(item["target_key"]) and not (item["kind"] == "system-asset" and item["target_key"] == OPAQUE_SYSTEM_KEY)):
         raise ValueError("INVALID_TARGET_KEY")
     if not isinstance(item["target_id"], str) or not re.fullmatch(r"[a-z0-9_-]{1,80}", item["target_id"]):
         raise ValueError("PINNED_TARGET_ID_REQUIRED")
