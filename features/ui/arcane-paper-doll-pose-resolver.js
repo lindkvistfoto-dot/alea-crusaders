@@ -47,12 +47,13 @@ function resolve(equipment={},availablePoseIds=[]){
  const available=new Set(availablePoseIds);
  const rawFamily=poseFamily(equipment.weaponClass);
  // One-handed swords share the same visual pose, regardless of skill group.
- const family=rawFamily==='ovriga_svard'?'enhandssvard':rawFamily;
+ const family=rawFamily;
  const handling=String(equipment.handling||'').toUpperCase();
  const grip=String(equipment.grip||'').toUpperCase();
  const twoHanded=grip==='2H'||(grip!=='1H'&&handling==='2H');
+ const visualFamily=family==='ovriga_svard'&&!twoHanded?'enhandssvard':family;
  const shield=!!equipment.hasShield&&!twoHanded;
- const requested=family?(shield&&shieldable.has(family)?family+'_shield':family):equipment.hasWeapon===false?'slagsmal':'standard';
+ const requested=visualFamily?(shield&&shieldable.has(visualFamily)?visualFamily+'_shield':visualFamily):equipment.hasWeapon===false?'slagsmal':'standard';
  const candidates=[requested,'standard'];
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
