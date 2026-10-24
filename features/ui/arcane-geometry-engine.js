@@ -35,6 +35,20 @@
   const bounds=faces.flatMap(f=>f.points).reduce((a,p)=>({minX:Math.min(a.minX,p.x),maxX:Math.max(a.maxX,p.x),minY:Math.min(a.minY,p.y),maxY:Math.max(a.maxY,p.y)}),{minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity});
   return {cells,faces,bounds,camera,check};
  }
+ function audit(rows,opts={}){
+  const g=geometry(rows,opts),precision=1e-8,cellSet=new Set(g.cells.map(key));
+  const sharedPairs=g.cells.reduce((n,c)=>n+neighbors(c).filter(v=>cellSet.has(key(v))).length,0)/2;
+  const outerEdges=6*g.cells.length-2*sharedPairs;
+  const dimensions=g.faces.map(f=>({width:Math.max(...f.points.map(p=>p.x))-Math.min(...f.points.map(p=>p.x)),height:Math.max(...f.points.map(p=>p.y))-Math.min(...f.points.map(p=>p.y))}));
+  const base=dimensions[0],maxWidthError=Math.max(...dimensions.map(d=>Math.abs(d.width/base.width-1))),maxHeightError=Math.max(...dimensions.map(d=>Math.abs(d.height/base.height-1)));
+  const centerDistances=[];
+  for(const c of g.cells)for(const n of neighbors(c))if(cellSet.has(key(n))&&key(c)<key(n)){
+   const a=world(c,opts.size||1),b=world(n,opts.size||1);
+   centerDistances.push(Math.hypot(a.x-b.x,a.y-b.y));
+  }
+  const target=Math.sqrt(3)*(opts.size||1),maxSpacingError=Math.max(0,...centerDistances.map(d=>Math.abs(d/target-1)));
+  return {valid:g.check.valid&&maxWidthError<=.01+precision&&maxHeightError<=.01+precision&&maxSpacingError<=.01+precision,count:g.cells.length,sharedPairs,outerEdges,maxWidthError,maxHeightError,maxSpacingError,projectedHexWidth:base.width,projectedHexHeight:base.height,transparentExport:true};
+ }
  function svg(rows,opts={}){
   const g=geometry(rows,opts),padding=opts.padding??0.5,wallHeight=(opts.size||1)*(g.camera.wallHeight??0.2);
   const edges=new Map();
@@ -58,5 +72,5 @@
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' hex formation">'+wallArt+faces+'</svg>';
  }
 
- root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,svg});
+ root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,svg});
 })(globalThis);
