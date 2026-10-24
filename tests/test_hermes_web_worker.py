@@ -66,6 +66,34 @@ class WorkerTests(unittest.TestCase):
   self.assertTrue(any(row.get("state")=="published" for _,row in calls))
 
 
+ def test_race_pose_archive_reused_and_published(self):
+  worker=self.worker;original=png();worker.FOLDER="test-folder"
+  pose_id="00000000-0000-0000-0000-000000000004"
+  staged="race-battle-pose/manniska/female/standard/00000000-0000-0000-0000-000000000002.png"
+  pose={"race_id":"manniska","gender_variant":"female","pose_key":"standard","staging_path":staged,"publication_status":"draft"}
+  job={"id":"00000000-0000-0000-0000-000000000003","race_pose_id":pose_id,"pose_id":None,"source_path":staged,"archive_drive_file_id":"verified-drive"}
+  calls=[];webp=[None]
+  def fake_rest(path,method="GET",data=None):
+   if method=="GET":
+    self.assertTrue(path.startswith("race_battle_poses?"));return [pose]
+   calls.append((path,data));return [data]
+  def fake_fetch(url,method="GET",body=None,headers=None,limit=14000000):
+   if "fields=id,parents" in url:return b'{"parents":["test-folder"]}'
+   if "alt=media" in url:return original
+   if method=="POST" and "/storage/v1/object/alea-hermes-public/" in url:
+    webp[0]=body;return b'{}'
+   raise AssertionError(url)
+  def fake_download(bucket,path):
+   if bucket=="alea-battle-pose-staging":return original
+   if bucket=="alea-hermes-public":return webp[0]
+   raise AssertionError(bucket)
+  with patch.object(worker,"rest",side_effect=fake_rest),patch.object(worker,"fetch",side_effect=fake_fetch),patch.object(worker,"storage_download",side_effect=fake_download),patch.object(worker,"archive") as archive:
+   worker.run(job);archive.assert_not_called()
+  published=[(path,data) for path,data in calls if data.get("publication_status")=="published"]
+  self.assertEqual(len(published),1)
+  self.assertTrue(published[0][0].startswith("race_battle_poses?"))
+  self.assertTrue(published[0][1]["image_path"].startswith("hermes/race-battle-pose-cutout/"+pose_id+"/"))
+
  def test_corrupt_archive_never_published(self):
   worker=self.worker
   pose={"staging_path":"battle-pose/character/00000000-0000-0000-0000-000000000001/standard/00000000-0000-0000-0000-000000000002.png","publication_status":"draft","combatant_type":"character","combatant_id":"00000000-0000-0000-0000-000000000001","pose_key":"standard"}
