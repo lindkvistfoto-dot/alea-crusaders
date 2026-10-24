@@ -4131,18 +4131,6 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  let a=campaignMapAreas.find(function(x){return x.id===areaId});if(!a)return;
  if(!canManageCampaignMaps()&&a.status==='unknown')return;
  mapSelectedAreaId=a.id;renderMapPanel();
- // Keep the gallery beside the selected location's description for the GM.
- // Players retain the original shared-images panel and visibility filtering.
- let galleryPanel=$('mapLocationImagesPanel'),infoPanel=$('mapLocationPanel');
- if(galleryPanel&&infoPanel){
-  if(canManageCampaignMaps()){
-   infoPanel.appendChild(galleryPanel);
-   galleryPanel.classList.remove('empty');
-  }else{
-   let workarea=document.querySelector('#mapPage .mapworkarea');
-   if(workarea&&galleryPanel.parentElement!==workarea)workarea.insertBefore(galleryPanel,workarea.firstChild);
-  }
- }
  let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent=a.name||'Plats';
  let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-loading">Laddar delade bilder…</div>'}
  let p=$('mapLocationPanel');if(!p)return;
@@ -4165,6 +4153,18 @@ async function openMapLocationInfoByArea(areaId,keepToken){
   let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'';
   let editBtn=canManageCampaignMaps()?'<button class="btn" type="button" onclick="editLocationContent(\''+a.location_id+'\')">✎ Redigera innehåll</button>':'';
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(canManageCampaignMaps()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(canManageCampaignMaps()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div>':'');
+  // The location panel is rewritten above. Move the gallery only AFTER that rewrite,
+  // otherwise innerHTML destroys its DOM node and the gallery cannot render.
+  let galleryPanel=$('mapLocationImagesPanel'),infoPanel=$('mapLocationPanel');
+  if(galleryPanel&&infoPanel){
+   if(canManageCampaignMaps()){
+    infoPanel.appendChild(galleryPanel);
+    galleryPanel.classList.remove('empty');
+   }else{
+    let workarea=document.querySelector('#mapPage .mapworkarea');
+    if(workarea&&galleryPanel.parentElement!==workarea)workarea.insertBefore(galleryPanel,workarea.firstChild);
+   }
+  }
   await renderMapLocationPhotos(assets);
  }catch(e){
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div><div class="map-location-empty">Kunde inte läsa platsinformationen: '+escAttr(e.message||'okänt fel')+'</div>';
