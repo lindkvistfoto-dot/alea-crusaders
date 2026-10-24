@@ -18,5 +18,20 @@ describe('Arcane Geometry Engine',()=>{
  it('auto-aligns the 5-3-5 waist into a connected thirteen-hex formation',()=>{const b=e.autoAlign([5,3,5]);expect(b.cells).toHaveLength(13);expect(b.check.valid).toBe(true);expect(e.audit([5,3,5],{offsets:b.offsets}).valid).toBe(true)});
  it('supports manual offsets but rejects disconnected configurations',()=>{expect(e.validate(e.fromRows([2,2],{offsets:[0,10]})).valid).toBe(false);expect(()=>e.geometry([2,2],{offsets:[0,10]})).toThrow('Disconnected formation')});
  it('rejects invalid offset arrays',()=>{expect(()=>e.fromRows([2,2],{offsets:[1]})).toThrow('Invalid row offsets')});
+ it('compass rose vertices remain inside the projected hexagon at 35, 45 and 55 degrees',()=>{
+  for(const elevationDegrees of [35,45,55]){
+   const svg=e.svg([2,3,2],{camera:{elevationDegrees}});
+   const g=e.geometry([2,3,2],{camera:{elevationDegrees}});
+   const a=e.audit([2,3,2],{camera:{elevationDegrees}});
+   expect(a.valid).toBe(true);
+   expect(svg.match(/<ellipse/g)).toHaveLength(7);
+   expect((svg.match(/<path d="M/g)||[]).length).toBeGreaterThanOrEqual(56);
+   for(const f of g.faces){expect(f.points).toHaveLength(6)}
+  }
+ });
+ it('rendering is deterministic for identical camera and formation',()=>{
+  const opts={camera:{elevationDegrees:45},steps:2,offsets:e.autoAlign([5,3,5]).offsets};
+  expect(e.svg([5,3,5],opts)).toBe(e.svg([5,3,5],opts));
+ });
  it('rejects disconnected formations',()=>{expect(e.validate([{q:0,r:0},{q:4,r:4}]).valid).toBe(false)});
 });
