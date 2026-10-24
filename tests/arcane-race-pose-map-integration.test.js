@@ -21,3 +21,8 @@ it('equipment pose across aliases precedes a standard pose on another alias',()=
  expect(code.indexOf("for(const key of [...new Set([requested,'standard'])])")).toBeGreaterThan(0);
  expect(code.indexOf('for(const kind of aliases)',code.indexOf('for(const key of'))).toBeGreaterThan(0);
 });
+
+it('supports combat snapshots that store race and gender in attack profile attributes',()=>{
+ expect(source).toContain('profile.attributes?.race');
+ expect(source).toContain('profile.attributes?.gender');
+});
