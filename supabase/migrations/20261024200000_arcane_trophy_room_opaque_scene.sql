@@ -1,8 +1,10 @@
 -- Permit the exact locked opaque 16:9 Trophy Room system scene.
 -- Existing row security and publication privileges remain unchanged.
 alter table public.arcane_system_assets
-  drop constraint arcane_system_assets_asset_key_check,
-  drop constraint arcane_system_asset_publication;
+  drop constraint if exists arcane_system_assets_asset_key_check,
+  drop constraint if exists arcane_system_asset_key_format,
+  drop constraint if exists arcane_system_asset_identity,
+  drop constraint if exists arcane_system_asset_publication;
 
 alter table public.arcane_system_assets
   add constraint arcane_system_assets_asset_key_check
