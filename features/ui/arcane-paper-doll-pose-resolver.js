@@ -45,10 +45,12 @@ function fromCombatant(actor,weaponClasses={}){
 }
 function resolve(equipment={},availablePoseIds=[]){
  const available=new Set(availablePoseIds);
- const family=poseFamily(equipment.weaponClass);
+ const rawFamily=poseFamily(equipment.weaponClass);
+ // One-handed swords share the same visual pose, regardless of skill group.
+ const family=rawFamily==='ovriga_svard'?'enhandssvard':rawFamily;
  const handling=String(equipment.handling||'').toUpperCase();
  const grip=String(equipment.grip||'').toUpperCase();
- const twoHanded=handling==='2H'||(handling==='1-2H'&&grip==='2H');
+ const twoHanded=grip==='2H'||(grip!=='1H'&&handling==='2H');
  const shield=!!equipment.hasShield&&!twoHanded;
  const requested=family?(shield&&shieldable.has(family)?family+'_shield':family):equipment.hasWeapon===false?'slagsmal':'standard';
  const candidates=[requested,'standard'];
