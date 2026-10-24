@@ -107,6 +107,13 @@ async function loadProfile(){if(!supabaseSession?.user?.id)return null;const aut
 function dbHeaders(extra={}){return {'Authorization':'Bearer '+supabaseSession.access_token,'Prefer':'return=representation',...extra}}
 function cleanCharacterForDb(c){let d=JSON.parse(JSON.stringify(c));delete d._dbId;delete d._persistedOwnerId;delete d._combatIconUrl;delete d.combatIconPath;delete d.roundBackgroundPath;return d}
 async function dbJson(path,options={}){let r=await authFetch('/rest/v1/'+path,{...options,headers:dbHeaders(options.headers||{})});let text=await r.text(),data=text?JSON.parse(text):null;if(!r.ok)throw new Error((data&&data.message)||('Databasfel '+r.status));return data}
+// ARCANE HONORS: authenticated bridge; database RLS remains authoritative.
+window.aleaHonorsContext = () => ({
+  userId: supabaseSession?.user?.id || null,
+  campaignId: centralCampaignId || null,
+  isAdmin: !!activeUser()?.admin,
+  dbJson: (path,options) => dbJson(path,options)
+});
 const RULE_REGISTRY_DEFS={
  skills:{label:'Färdigheter',table:'rule_skills',countId:'adminCountSkills',section:'skills',load:()=>loadRuleSkills(),render:()=>renderAdminSkills(),count:()=>ruleSkills.length},
  spells:{label:'Besvärjelser',table:'rule_spells',countId:'adminCountSpells',section:'spells',load:()=>loadRuleMagicRegistry(),render:()=>{renderAdminSpells();renderAdminMagicSchools()},count:()=>ruleSpells.length},
