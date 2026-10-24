@@ -58,6 +58,21 @@ function resolve(equipment={},availablePoseIds=[]){
  const selected=[...new Set(candidates)].find(key=>available.has(key))||null;
  return Object.freeze({requestedPoseId:requested,poseId:selected,match:selected===requested?'exact':selected?'fallback':'missing',reason:family?'equipment':'unknown-or-unarmed',twoHanded});
 }
+// Normalize legacy text race names to rule_races IDs before fetching inherited poses.
+// Exact IDs are preferred; aliases are only for established spelling variations.
+function raceIdFor(actor={},races=[]){
+ const raw=actor.race_id||actor.raceId||actor.race||actor.data?.race_id||actor.data?.race||'';
+ const normalized=normalize(raw).replace(/_/g,'');
+ if(!normalized)return null;
+ const found=races.find(r=>normalize(r.id).replace(/_/g,'')===normalized)
+  ||races.find(r=>normalize(r.name).replace(/_/g,'')===normalized);
+ return found?.id||null;
+}
+// Fetch only the race's own published variants; paging/filtering stays in the database.
+function racePoseQuery(raceId){
+ if(!raceId)return null;
+ return 'race_battle_poses?select=id,race_id,gender_variant,pose_key,image_path,base_key,mounting_profile,is_active,publication_status&race_id=eq.'+encodeURIComponent(raceId)+'&is_active=eq.true&publication_status=eq.published';
+}
 // Resolve pose inheritance by ownership, never by copying image assets.
 // Player characters intentionally do not inherit racial poses.
 function resolveHierarchy({actorType='character',equipment={},ownPoses=[],racePoses=[],gender='neutral'}={}){
@@ -78,5 +93,5 @@ function resolveHierarchy({actorType='character',equipment={},ownPoses=[],racePo
  }
  return Object.freeze({pose:null,source:'portrait-stand',requestedPoseId:requested});
 }
-root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,fromCombatant,resolve,resolveHierarchy});
+root.aleaBattlePoseCatalog=Object.freeze({POSES,POSE_KEYS,POSE_NAMES,poseFamily,fromCharacter,fromCombatant,resolve,resolveHierarchy,raceIdFor,racePoseQuery});
 })(globalThis);
