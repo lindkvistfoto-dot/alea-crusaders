@@ -66,9 +66,18 @@
   const bounds=all.reduce((a,p)=>({minX:Math.min(a.minX,p.x),maxX:Math.max(a.maxX,p.x),minY:Math.min(a.minY,p.y),maxY:Math.max(a.maxY,p.y)}),{minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity});
   const w=bounds.maxX-bounds.minX+padding*2,h=bounds.maxY-bounds.minY+padding*2;
   const points=pts=>pts.map(p=>(p.x-bounds.minX+padding).toFixed(4)+','+(p.y-bounds.minY+padding).toFixed(4)).join(' ');
-  const wallArt=walls.map((p,i)=>'<polygon points="'+points(p)+'" fill="'+(i%2?'#806039':'#9d7845')+'" stroke="#694827" stroke-width="0.025"/>').join('');
-  const faces=g.faces.map(f=>{const x=f.center.x-bounds.minX+padding,y=f.center.y-bounds.minY+padding;
-   return '<g><polygon points="'+points(f.points)+'" fill="#eee0bd" stroke="#89602e" stroke-width="0.055"/><circle cx="'+x.toFixed(4)+'" cy="'+y.toFixed(4)+'" r="0.22" fill="none" stroke="#a57a3c" stroke-width="0.035"/><path d="M '+x.toFixed(4)+' '+(y-.17).toFixed(4)+' L '+(x+.06).toFixed(4)+' '+y.toFixed(4)+' L '+x.toFixed(4)+' '+(y+.17).toFixed(4)+' L '+(x-.06).toFixed(4)+' '+y.toFixed(4)+' Z" fill="#ad8242"/></g>'}).join('');
+  const palette={ivory:'#f4ead5',marble:'#e8dcc1',bronze:'#99713c',gold:'#d7ad61',engraving:'#78552e',dark:'#543c23'};
+  const wallArt=walls.map((p,i)=>'<polygon points="'+points(p)+'" fill="'+(i%2?'#806039':'#a47b43')+'" stroke="'+palette.dark+'" stroke-width="0.035"/>').join('');
+  const faces=g.faces.map(f=>{
+   const cx=f.center.x-bounds.minX+padding,cy=f.center.y-bounds.minY+padding;
+   const poly=f.points.map(p=>({x:p.x-bounds.minX+padding,y:p.y-bounds.minY+padding}));
+   const inner=poly.map(p=>({x:cx+(p.x-cx)*.81,y:cy+(p.y-cy)*.81}));
+   const ring=poly.map(p=>({x:cx+(p.x-cx)*.91,y:cy+(p.y-cy)*.91}));
+   const path=(pts)=>pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(4)+' '+p.y.toFixed(4)).join(' ')+' Z';
+   const petals=Array.from({length:8},(_,i)=>{const a=i*Math.PI/4,b=a+Math.PI/8,r=.35*(opts.size||1),r2=.12*(opts.size||1);return '<path d="M '+cx.toFixed(4)+' '+cy.toFixed(4)+' L '+(cx+Math.sin(a)*r).toFixed(4)+' '+(cy-Math.cos(a)*r*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+' L '+(cx+Math.sin(b)*r2).toFixed(4)+' '+(cy-Math.cos(b)*r2).toFixed(4)+' Z" fill="'+(i%2?palette.gold:palette.engraving)+'"/>'}).join('');
+   const rivets=poly.map(p=>'<circle cx="'+(cx+(p.x-cx)*.94).toFixed(4)+'" cy="'+(cy+(p.y-cy)*.94).toFixed(4)+'" r=".052" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".013"/>').join('');
+   return '<g><path d="'+path(poly)+'" fill="'+palette.bronze+'" stroke="'+palette.dark+'" stroke-width=".055"/><path d="'+path(ring)+'" fill="'+palette.gold+'" stroke="'+palette.engraving+'" stroke-width=".024"/><path d="'+path(inner)+'" fill="'+palette.ivory+'" stroke="'+palette.bronze+'" stroke-width=".035"/><ellipse cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" rx=".39" ry="'+(.39*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+'" fill="none" stroke="'+palette.engraving+'" stroke-width=".027"/>'+petals+'<circle cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" r=".067" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".018"/>'+rivets+'</g>';
+  }).join('');
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' hex formation">'+wallArt+faces+'</svg>';
  }
 
