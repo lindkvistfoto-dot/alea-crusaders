@@ -55,6 +55,7 @@
    const source=(chars||[]).find(c=>String(c?._dbId||c?.id||'')===id);
    equipment=root.aleaBattlePoseCatalog?.fromCharacter(source)||{};
   }
+  if(type!=='character')equipment=root.aleaBattlePoseCatalog?.fromCombatant(actor)||{};
   const match=root.aleaBattlePoseCatalog?.resolve(equipment,[...available]);
   if(!match?.poseId)return null;
   for(const kind of aliases){
