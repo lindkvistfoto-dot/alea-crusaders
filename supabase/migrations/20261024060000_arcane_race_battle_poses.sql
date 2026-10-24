@@ -29,3 +29,9 @@ revoke all on public.race_battle_poses from anon,authenticated;
 -- Combat clients may read published active rasposes, never staging or unpublished rows.
 grant select (id,race_id,gender_variant,pose_key,image_path,base_key,mounting_profile,is_active,publication_status) on public.race_battle_poses to authenticated;
 create policy race_pose_published_read on public.race_battle_poses for select to authenticated using (is_active and publication_status='published' and image_path is not null);
+
+-- Administrative editing uses the same private.is_admin gate as combatant poses.
+grant insert,update,select on public.race_battle_poses to authenticated;
+create policy race_pose_admin_select on public.race_battle_poses for select to authenticated using ((select private.is_admin()));
+create policy race_pose_admin_insert on public.race_battle_poses for insert to authenticated with check ((select private.is_admin()));
+create policy race_pose_admin_update on public.race_battle_poses for update to authenticated using ((select private.is_admin())) with check ((select private.is_admin()));
