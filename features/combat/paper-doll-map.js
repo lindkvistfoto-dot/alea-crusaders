@@ -84,11 +84,12 @@
   const own=[];
   for(const kind of aliases)for(const p of catalog.POSES||[]){const row=poseRows.get(kind+':'+id+':'+p.id);if(row)own.push(row)}
   const state=actor?.state||{};
-  const raceId=catalog.raceIdFor({race_id:actor?.race_id||state.race_id,race:actor?.race||state.race||state.attack_profile?.race},races);
+  const profile=state.attack_profile||{};
+  const raceId=catalog.raceIdFor({race_id:actor?.race_id||state.race_id||profile.race_id,race:actor?.race||state.race||profile.race||profile.attributes?.race||state.attributes?.race},races);
   if(!raceId)return null;
   const inherited=[];
   for(const row of racePoseRows.values())if(row.race_id===raceId)inherited.push(row);
-  return catalog.resolveHierarchy({actorType:actor?.source_type==='monster'?'monster':'npc',equipment,ownPoses:own,racePoses:inherited,gender:actor?.gender||state.gender||state.attack_profile?.gender}).pose;
+  return catalog.resolveHierarchy({actorType:actor?.source_type==='monster'?'monster':'npc',equipment,ownPoses:own,racePoses:inherited,gender:actor?.gender||state.gender||profile.gender||profile.attributes?.gender||state.attributes?.gender}).pose;
  }
  function portrait(actor){
   if(typeof combatRowPortraitUrl!=='function')return '';
