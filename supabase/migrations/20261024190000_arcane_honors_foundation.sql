@@ -9,6 +9,7 @@ create table if not exists public.honor_definitions (
  grant_mode text not null default 'manual' check (grant_mode in ('manual','automatic','both')),
  status text not null default 'draft' check (status in ('draft','active','inactive')),
  campaign_id uuid references public.campaigns(id) on delete restrict,
+ adventure_id text,
  image_asset_id text,
  created_by uuid not null references auth.users(id),
  created_at timestamptz not null default now(),
