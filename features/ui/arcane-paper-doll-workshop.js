@@ -8,6 +8,7 @@
  let baseOnly=false,showAnchor=false,standScale=65,standX=0,standY=0,baseId='pointed-high',localBases={},cutoutUrl='',cutoutFile=null,cutoutScale=70,cutoutX=0,cutoutY=0;
  const DEFAULT=Object.freeze({scale:100,x:0,y:0,perspective:0,tilt:0,mask:0,shadow:18});
  let records=[],resources={assets:[],systemArt:{}},selected='',profiles={},values={...DEFAULT},zoom=70;
+ let raceCatalog=[],selectedRace='',selectedGender='neutral';
  const $=id=>document.getElementById(id);
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const kinds={character:'Rollperson', 'character-npc':'Rollperson · SLP', 'campaign-npc':'Kampanj-SLP','global-npc':'Permanent SLP',enemy:'Fiende',monster:'Monster'};
@@ -38,10 +39,11 @@
    '</div></div></div>'+ 
    '<div class="apdw-controls"><div class="apdw-cutout-controls"><b>Montera figur på vald bas</b><p class="apdw-help">Basen ligger kvar underst. Figuren placeras i ett separat transparent lager ovanpå.</p><label for="apdwCutoutFile">Ladda upp FIGUR / CUTOUT (PNG/WebP)</label><input id="apdwCutoutFile" type="file" accept="image/png,image/webp"><label>Storlek <input id="apdwCutoutScale" type="range" min="20" max="150" value="'+cutoutScale+'"><output id="apdwCutoutScaleOut">'+cutoutScale+'%</output></label><label>Sidled <input id="apdwCutoutX" type="range" min="-80" max="80" value="'+cutoutX+'"><output id="apdwCutoutXOut">'+cutoutX+'%</output></label><label>Höjd <input id="apdwCutoutY" type="range" min="-80" max="80" value="'+cutoutY+'"><output id="apdwCutoutYOut">'+cutoutY+'%</output></label><button type="button" data-action="clear-cutout" class="btn">Ta bort cutout</button><small>Endast lokal förhandsvisning. Ingen publicering.</small></div>'+ 
    '<div class="apdw-control-grid"></div>'+ 
+   '<section class="apdw-pose-admin"><h3>Grundrasposer – förberedelse</h3><label>Grundras <select id="apdwRaceSelect"><option value="">Välj grundras…</option>'+raceCatalog.map(r=>'<option value="'+escape(r.id)+'" '+(r.id===selectedRace?'selected':'')+'>'+escape(r.name)+'</option>').join('')+'</select></label><label>Könsvariant <select id="apdwRaceGender"><option value="neutral" '+(selectedGender==='neutral'?'selected':'')+'>Könsneutral</option><option value="male" '+(selectedGender==='male'?'selected':'')+'>Man</option><option value="female" '+(selectedGender==='female'?'selected':'')+'>Kvinna</option></select></label><p class="apdw-help">Rasposer publiceras ännu inte från Dockverkstaden. Valen förbereder kommande HERMES-anslutning och påverkar inte befintliga kombattantposer.</p></section>'+ 
    '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Spara och leverera via HERMES</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Sparar cutout och monteringsprofil samt skapar ett leveransjobb hos HERMES. Posen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
-  arrangeWorkspace();bind();applyAssets();applyBaseMode();
+  arrangeWorkspace();bind();$('apdwRaceSelect')?.addEventListener('change',e=>{selectedRace=e.target.value});$('apdwRaceGender')?.addEventListener('change',e=>{selectedGender=e.target.value});applyAssets();applyBaseMode();
  }
  function arrangeWorkspace(){
   const layout=document.querySelector('#arcanePaperDollWorkshopMount .apdw-layout');
@@ -234,6 +236,9 @@
    ]);
    if(request!==mountRequest)return;
    records=Array.isArray(data?.records)?data.records.filter(x=>x&&x.id):[];
+   // Read-only race catalog: no race pose writes until HERMES/RLS integration is complete.
+   try{raceCatalog=typeof dbJson==='function'?await dbJson('rule_races?select=id,name&order=sort_order.asc'):[]}catch(_){raceCatalog=[]}
+   if(!raceCatalog.some(r=>r.id===selectedRace))selectedRace='';
    resources=data?.systemAssets||{assets:[],systemArt:{}};
    root.aleaPaperDollWorkshopUser=data?.userId||'shared';
    profiles=normalizeProfiles(safeRead());
