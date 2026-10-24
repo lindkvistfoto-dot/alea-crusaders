@@ -6382,7 +6382,7 @@ function combatTurnPanelHtml(){
  const psyCurrent=actor.current_psy==null?'—':actor.current_psy,psyMax=actor.max_psy==null?'—':actor.max_psy;
  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
   '<div class="combat-turn-actor">'+
-   '<div class="combat-mount-portrait-group">'+combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+'</div>'+
+   '<div class="combat-mount-portrait-group">'+combatTurnPortraitHtml(actor)+'</div>'+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><div class="combat-vital-meter"><i class="combat-vital-fill move" style="width:'+combatTurnVitalPercent(remaining,maximum)+'%"></i></div></div>'+
@@ -6397,7 +6397,7 @@ function combatTurnPanelHtml(){
     '<div class="combat-row-tool combat-turn-action-tool end-tool"><button type="button" class="combat-row-tool-btn combat-row-end" title="Avsluta drag" aria-label="Avsluta drag" onclick="endCombatTurn(event,\''+actor.id+'\')" '+(!canEnd?'disabled':'')+'><img class="combat-row-tool-icon" src="./assets/combat-actions/end-round.svg?v=0.33.79" alt="" aria-hidden="true"></button></div>'+
    '</div>'+
   '</div>'+
-  '<div class="combat-turn-stats">'+combatTurnEquipmentHtml(actor)+'</div>'+
+  '<div class="combat-turn-stats"><div class="combat-equipment-mount">'+combatMountToggleHtml(actor)+'</div>'+combatTurnEquipmentHtml(actor)+'</div>'+
  '</div>'
 }
 // KROKODIL: strongest matching ward protects from matching damage kind.
