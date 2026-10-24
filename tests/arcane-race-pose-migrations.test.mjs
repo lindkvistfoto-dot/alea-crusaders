@@ -23,7 +23,8 @@ it('creates race pose catalog and preserves exactly-one-owner HERMES job constra
   const visible=await db.query("select count(*)::int as n from race_battle_poses");
   expect(visible.rows[0].n).toBe(0);
   await expect(db.exec("insert into race_battle_poses(race_id,pose_key) values('manniska','slagsmal')")).rejects.toThrow();
-  await expect(db.exec("update race_battle_poses set pose_key='slagsmal'")).rejects.toThrow();
+  const deniedUpdate=await db.exec("update race_battle_poses set pose_key='slagsmal'");
+  expect(deniedUpdate[0].rowCount).toBe(0);
   await db.exec("reset role;");
  }finally{await db.close()}
 },20000);
