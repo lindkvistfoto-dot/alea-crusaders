@@ -3927,6 +3927,18 @@ function openMapStatusMenu(e,a){
  let x=Math.min(window.innerWidth-menu.offsetWidth-12,Math.max(12,e.clientX+10)),y=Math.min(window.innerHeight-menu.offsetHeight-12,Math.max(12,e.clientY+10));menu.style.left=x+'px';menu.style.top=y+'px';
 }
 function closeMapStatusMenu(){$('mapStatusMenu')?.classList.add('hidden')}
+// Dismiss the transient status menu when interacting anywhere outside it.
+// Keep the selected location detail panel open.
+document.addEventListener('pointerdown',function(event){
+ const menu=$('mapStatusMenu');
+ if(!menu||menu.classList.contains('hidden'))return;
+ if(event.target?.closest?.('#mapStatusMenu'))return;
+ // Map pointer handling already closes/reopens the menu for polygon selection.
+ closeMapStatusMenu();
+});
+document.addEventListener('keydown',function(event){
+ if(event.key==='Escape')closeMapStatusMenu();
+});
 async function setMapLocationStatus(locationId,status){
  if(!locationId||!['unknown','unexplored','explored'].includes(status)||!canManageCampaignMaps())return;
  try{
