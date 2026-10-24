@@ -183,8 +183,12 @@ def validate_batch_item(item: dict) -> None:
         raise ValueError("PINNED_SOURCE_SHA256_REQUIRED")
     if item["visual_approved"] is not True:
         raise ValueError("VISUAL_APPROVAL_REQUIRED")
-    if item['kind'] == 'system-asset' and item['target_id'] != system_asset(item['target_key'])['id']:
-        raise ValueError('SYSTEM_ASSET_TARGET_ID_MISMATCH')
+    if item['kind'] == 'system-asset':
+        if not re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}', item['target_id']):
+            raise ValueError('SYSTEM_ASSET_UUID_REQUIRED')
+        profile_id = system_asset(item['target_key'])['id']
+        if profile_id is not None and item['target_id'] != profile_id:
+            raise ValueError('SYSTEM_ASSET_TARGET_ID_MISMATCH')
 
 
 def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:

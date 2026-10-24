@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 import {createHash, webcrypto} from 'node:crypto';
 import vm from 'node:vm';
-import {assertSpellCutoutWritable, systemAssetProfile} from '../../scripts/hermes2_asset_profiles.ts';
+import {assertSpellCutoutWritable, maybeSystemAssetProfile, systemAssetLabel} from '../../scripts/hermes2_asset_profiles.ts';
 
 const code = stripTypeScriptTypes(readFileSync(new URL('../../scripts/hermes2_publish.ts', import.meta.url), 'utf8').replace(/^import .*;\n/gm, ''));
 const raw = new Uint8Array(Buffer.from('verified converter WebP bytes'));
@@ -19,7 +19,7 @@ function database({failId, corruptId, postReadFailureId, occupiedId, sourceNonem
   const targets = new Map(Array.from({length:5}, (_,i)=>[id(i), {id:id(i),spell_key:`test-${i}`,cutout_path:occupiedId===id(i)?'existing.webp':null,icon_path:'icon.webp',illustration_path:'square.webp'}]));
   if(systemRows){targets.clear();for(const row of systemRows)targets.set(row.id,{...row})}
   const jobs = new Map(), storage = new Map();
-  const calls = {uploads:[], targetWrites:[], sourceChecks:0, clients:0, deliveries:0};
+  const calls = {uploads:[], targetWrites:[], registrations:[], sourceChecks:0, clients:0, deliveries:0};
   let readFailurePending = !!postReadFailureId;
   const db = {
     from(table) {
@@ -29,6 +29,14 @@ function database({failId, corruptId, postReadFailureId, occupiedId, sourceNonem
       const execute = async () => {
         if (table==='hermes_job_events') return {data:null,error:null};
         const rows = [...(table==='hermes_jobs'?jobs:targets).values()].filter(matches);
+        if (operation==='insert' && table==='arcane_system_assets') {
+          calls.registrations.push({...body});
+          const duplicate=[...targets.values()].some(row=>row.id===body.id||row.asset_key===body.asset_key);
+          if(duplicate)return {data:null,error:{code:'23505',message:'duplicate system asset identity'}};
+          const row={asset_path:null,app_sha256:null,app_bytes:null,width:null,height:null,alpha_preserved:null,...body};
+          targets.set(row.id,row);
+          return {data:[{...row}],error:null};
+        }
         if (operation==='insert') {
           const row = {...body,id:'job-'+jobs.size}; jobs.set(row.id,row);
           return {data:[{...row}],error:null};
@@ -76,7 +84,7 @@ async function run(state, {assets=Array.from({length:5},(_,i)=>asset(i)), mode='
   let report;
   const manifest = {schema:2,publication_mode:mode,archive_required:true,assets};
   const env={SUPABASE_URL:'https://storage.test',SUPABASE_SERVICE_ROLE_KEY:'test-secret',GITHUB_REPOSITORY:'lindkvistfoto-dot/alea-crusaders',GITHUB_REF:'refs/heads/main',GITHUB_RUN_ID:'12345678',GITHUB_SHA:'b'.repeat(40),HERMES_REPORT_PATH:'output/publisher-report.json'};
-  const context={Uint8Array,ArrayBuffer,Blob,TextEncoder,crypto:webcrypto,Date,assertSpellCutoutWritable,systemAssetProfile,
+  const context={Uint8Array,ArrayBuffer,Blob,TextEncoder,crypto:webcrypto,Date,assertSpellCutoutWritable,maybeSystemAssetProfile,systemAssetLabel,
     createClient(){state.calls.clients++;return state.db},
     Deno:{env:{get:key=>env[key]},args:['manifest','output'],readTextFile:async()=>JSON.stringify(manifest),readFile:async()=>raw,
       writeTextFile:async(path,text)=>{expect(path).toBe('output/publisher-report.json');report=JSON.parse(text)}},

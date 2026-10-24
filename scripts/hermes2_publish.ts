@@ -5,7 +5,7 @@
  * Only activates image after source/app/URL checksums and DB CAS succeed.
  */
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
-import { assertSpellCutoutWritable, systemAssetProfile } from "./hermes2_asset_profiles.ts";
+import { assertSpellCutoutWritable, maybeSystemAssetProfile, systemAssetLabel } from "./hermes2_asset_profiles.ts";
 
 const url=Deno.env.get("SUPABASE_URL")||"";
 const secret=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
@@ -82,9 +82,12 @@ function checkAsset(a:any,archiveRequired=false){
  const expected=/^drive:\/\/[A-Za-z0-9_-]{10,160}$/.test(a.source_path||"");
  const out=`${a.kind}/${a.target_key}/${a.app_sha256}.webp`;
  if(a.kind==='system-asset'){
-  const profile=systemAssetProfile(a.target_key);
-  if(!archiveRequired||!expected||a.app_file!==out||a.target_id!==profile.id||
-    a.width!==profile.display_size[0]||a.height!==profile.display_size[1]||a.alpha_preserved!==true)
+  const profile=maybeSystemAssetProfile(a.target_key);
+  const validSystemKey=/^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key);
+  const validUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(a.target_id||"");
+  const validDimensions=Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=1&&a.width<=1280&&a.height>=1&&a.height<=1280;
+  if(!archiveRequired||!expected||a.app_file!==out||!validSystemKey||!validUuid||!validDimensions||a.alpha_preserved!==true||
+    (profile&&(a.target_id!==profile.id||a.width!==profile.display_size[0]||a.height!==profile.display_size[1])))
    throw Error('INVALID_SYSTEM_ASSET_METADATA');
   return {table:'arcane_system_assets',field:'asset_key',sourcePath:a.source_path,
    appPath:'hermes/'+out,assetField:'asset_path' as const};
@@ -114,9 +117,20 @@ async function publish(a:any){
  const system=a.kind==='system-asset';
  const systemFields=['asset_path','app_sha256','app_bytes','width','height','alpha_preserved'] as const;
  const targetFields=system?'id,asset_key,'+systemFields.join(','):table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
- const {data:target,error:targetError}=await db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
+ const lookupTarget=()=>db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
+ let {data:target,error:targetError}=await lookupTarget();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
- if(!target)throw Error("TARGET_NOT_FOUND "+a.target_key);
+ if(!target&&system){
+  // Register the empty pointer only after source and archive verification.
+  // A unique race is resolved by readback; UUID identity is pinned in the queue.
+  const {error:registerError}=await db.from("arcane_system_assets").insert({
+   id:a.target_id,asset_key:a.target_key,label:systemAssetLabel(a.target_key)
+  });
+  if(registerError&&registerError.code!=="23505")throw Error("TARGET_REGISTER "+registerError.message);
+  ({data:target,error:targetError}=await lookupTarget());
+  if(targetError)throw Error("TARGET_READ_AFTER_REGISTER "+targetError.message);
+ }
+ if(!target)throw Error(system?"TARGET_REGISTRATION_CONFLICT "+a.target_key:"TARGET_NOT_FOUND "+a.target_key);
  if(a.target_id!==undefined&&target.id!==a.target_id)throw Error("TARGET_ID_MISMATCH "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
  const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
