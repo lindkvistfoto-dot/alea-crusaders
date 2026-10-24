@@ -4131,6 +4131,18 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  let a=campaignMapAreas.find(function(x){return x.id===areaId});if(!a)return;
  if(!canManageCampaignMaps()&&a.status==='unknown')return;
  mapSelectedAreaId=a.id;renderMapPanel();
+ // Keep the gallery beside the selected location's description for the GM.
+ // Players retain the original shared-images panel and visibility filtering.
+ let galleryPanel=$('mapLocationImagesPanel'),infoPanel=$('mapLocationPanel');
+ if(galleryPanel&&infoPanel){
+  if(canManageCampaignMaps()){
+   infoPanel.appendChild(galleryPanel);
+   galleryPanel.classList.remove('empty');
+  }else{
+   let workarea=document.querySelector('#mapPage .mapworkarea');
+   if(workarea&&galleryPanel.parentElement!==workarea)workarea.insertBefore(galleryPanel,workarea.firstChild);
+  }
+ }
  let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent=a.name||'Plats';
  let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-loading">Laddar delade bilder…</div>'}
  let p=$('mapLocationPanel');if(!p)return;
