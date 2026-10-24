@@ -3,7 +3,6 @@
 alter table public.arcane_system_assets
   drop constraint if exists arcane_system_assets_asset_key_check,
   drop constraint if exists arcane_system_asset_key_format,
-  drop constraint if exists arcane_system_asset_identity,
   drop constraint if exists arcane_system_asset_publication;
 
 alter table public.arcane_system_assets
