@@ -399,3 +399,39 @@
     background-position:center,center,60% 30%;
   }
 }
+
+/* ARCANE COMBAT – responsive round header pilot.
+   Presentation only: preserve all action/state mechanics. */
+.combat-turn-panel .combat-turn-action-status{display:none!important}
+.combat-turn-panel .combat-turn-head{
+  grid-template-rows:auto;
+  min-height:54px;
+}
+.combat-turn-panel .combat-turn-undo-btn{grid-row:1}
+.combat-turn-panel .combat-turn-actor:not(.empty){
+  grid-template-columns:clamp(60px,17%,86px) minmax(0,1fr);
+  grid-template-areas:"portrait identity" "vitals vitals" "actions actions";
+  align-items:center;
+}
+.combat-turn-panel .combat-turn-portrait{
+  width:clamp(60px,100%,82px);
+  height:auto;
+  min-height:60px;
+  aspect-ratio:1;
+  border:2px solid #b98b4f;
+  border-radius:50%;
+  overflow:hidden;
+  background:radial-gradient(circle,#39291c,#120d0a);
+  box-shadow:0 0 0 3px #392316,0 2px 12px #0009;
+}
+.combat-turn-panel .combat-turn-portrait img{width:100%;height:100%;object-fit:cover}
+.combat-turn-panel .combat-turn-identity{align-self:center;z-index:2}
+.combat-turn-panel .combat-turn-vitals>div{padding-block:5px}
+@media(min-width:700px){
+ .combat-turn-panel .combat-turn-actor:not(.empty){grid-template-columns:82px minmax(0,1fr)}
+ .combat-turn-panel .combat-turn-vitals{max-width:94%;margin-inline:auto;width:100%}
+}
+@media(max-width:600px){
+ .combat-turn-panel .combat-turn-actor:not(.empty){grid-template-columns:64px minmax(0,1fr)}
+ .combat-turn-panel .combat-turn-portrait{width:62px;min-height:62px}
+}

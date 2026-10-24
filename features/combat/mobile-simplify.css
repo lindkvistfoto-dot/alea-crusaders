@@ -259,3 +259,31 @@
 @media(prefers-reduced-motion:reduce){
  #combatPage .arcane-mount-switch .arcane-mount-rotor{transition:none}
 }
+
+/* ARCANE ROUND PILOT: mounted switch is a frame-mounted ornament, not an
+   inline sibling competing with the active portrait/name for grid width. */
+#combatPage .combat-turn-panel .combat-turn-actor:not(.empty){position:relative;overflow:visible}
+#combatPage .combat-turn-panel .combat-mount-portrait-group{
+ grid-area:portrait;grid-column:1;grid-row:1;
+ position:relative;display:block;min-width:0;overflow:visible;
+ align-self:center;z-index:4;
+}
+#combatPage .combat-turn-panel .combat-mount-portrait-group .combat-turn-portrait{
+ display:block;margin-left:auto;max-width:100%;
+}
+#combatPage .combat-turn-panel .combat-mount-portrait-group .arcane-mount-switch{
+ position:absolute;left:0;top:50%;transform:translate(-62%,-50%);
+ width:clamp(104px,10vw,160px);max-width:none;z-index:5;
+}
+#combatPage .combat-turn-panel .combat-turn-identity{grid-column:2;grid-row:1;min-width:0}
+#combatPage .combat-turn-panel .combat-turn-vitals{position:relative;z-index:1}
+@media(max-width:699px){
+ #combatPage .combat-turn-panel .combat-mount-portrait-group .arcane-mount-switch{
+  width:clamp(74px,16vw,112px);transform:translate(-43%,-50%);
+ }
+}
+@media(max-width:420px){
+ #combatPage .combat-turn-panel .combat-mount-portrait-group .arcane-mount-switch{
+  width:76px;transform:translate(-25%,-50%);
+ }
+}
