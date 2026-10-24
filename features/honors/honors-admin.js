@@ -1,4 +1,5 @@
 import { validateHonorDefinition } from './honors-domain.js';
+import { createHonorImageResolver } from './honors-image-resolver.js';
 import './honors-admin.css';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const labels = {adventure:'Äventyr',campaign:'Kampanj',achievement:'Prestation',honor:'Hedersutmärkelse'};
@@ -11,9 +12,10 @@ const fields = d => `<label>Namn<input name="name" required maxlength="160" valu
 <label>Synlighet<select name="visibility">${[['public','Öppen'],['silhouette','Dold silhuett'],['secret','Hemlig']].map(([k,v])=>`<option value="${k}" ${(d?.visibility||'public')===k?'selected':''}>${v}</option>`).join('')}</select></label>
 <label>Tilldelning<select name="grant_mode">${[['manual','Manuell'],['automatic','Automatisk'],['both','Båda']].map(([k,v])=>`<option value="${k}" ${(d?.grant_mode||'manual')===k?'selected':''}>${v}</option>`).join('')}</select></label>
 <label>Bildresurs-ID (HERMES)<input name="image_asset_id" value="${esc(d?.image_asset_id)}"></label>`;
-export function renderHonorsAdmin(root, { definitions = [], grants = [], characters = [], onSave, onGrant, resolveImage } = {}) {
+export function renderHonorsAdmin(root, { definitions = [], grants = [], characters = [], onSave, onGrant, resolveImage, imageAssets = [] } = {}) {
  if (!root) throw new Error('Missing root');
  let selected='',editing=null,query='',tab='awards';
+ const imageFor = typeof resolveImage==='function' ? resolveImage : createHonorImageResolver(imageAssets);
  const count=id=>grants.filter(g=>String(g.honor_id)===String(id)&&!g.revoked_at).length;
  function draw(){
   root.innerHTML=`<section class="arcane-honors-admin" aria-label="Arcane Honors administration">
@@ -26,7 +28,7 @@ export function renderHonorsAdmin(root, { definitions = [], grants = [], charact
   <div class="honors-editor" data-editor hidden><div class="honors-editor-card"><header><h3 data-editor-title>Medalj</h3><button type="button" data-close aria-label="Stäng redigering">×</button></header><form data-honor-form><div class="honors-editor-fields" data-fields></div><footer><button type="button" data-cancel>Avbryt</button><button type="submit">Spara utmärkelse</button></footer></form></div></div><p role="status" data-status></p></section>`;
   const list=root.querySelector('[data-awards]');
   function refresh(){list.replaceChildren();const matches=definitions.filter(d=>[d.name,labels[d.type]].join(' ').toLocaleLowerCase('sv').includes(query.toLocaleLowerCase('sv')));if(!matches.length){const row=list.insertRow();const cell=row.insertCell();cell.colSpan=4;cell.textContent='Inga utmärkelser';return}
-   for(const d of matches){const row=list.insertRow();const medal=row.insertCell();medal.className='honors-medal-cell';const thumb=document.createElement('span');thumb.className='honors-medal-thumb';const url=typeof resolveImage==='function'?resolveImage(d):null;if(url&&/^https:\/\//.test(url)){const img=document.createElement('img');img.src=url;img.alt='';img.loading='lazy';thumb.append(img)}else thumb.textContent='✦';medal.append(thumb);const name=document.createElement('strong');name.textContent=d.name;medal.append(name);row.insertCell().textContent=labels[d.type]||d.type;const total=row.insertCell();total.textContent=String(count(d.id));total.className='honors-total';const action=row.insertCell();const edit=document.createElement('button');edit.type='button';edit.className='honors-edit';edit.textContent='Redigera';edit.addEventListener('click',()=>openEditor(d));action.append(edit)}
+   for(const d of matches){const row=list.insertRow();const medal=row.insertCell();medal.className='honors-medal-cell';const thumb=document.createElement('span');thumb.className='honors-medal-thumb';const url=imageFor(d);if(url&&/^https:\/\//.test(url)){const img=document.createElement('img');img.src=url;img.alt='';img.loading='lazy';thumb.append(img)}else thumb.textContent='✦';medal.append(thumb);const name=document.createElement('strong');name.textContent=d.name;medal.append(name);row.insertCell().textContent=labels[d.type]||d.type;const total=row.insertCell();total.textContent=String(count(d.id));total.className='honors-total';const action=row.insertCell();const edit=document.createElement('button');edit.type='button';edit.className='honors-edit';edit.textContent='Redigera';edit.addEventListener('click',()=>openEditor(d));action.append(edit)}
   }
   refresh();
   root.querySelector('[data-search]').addEventListener('input',e=>{query=e.target.value;refresh()});
