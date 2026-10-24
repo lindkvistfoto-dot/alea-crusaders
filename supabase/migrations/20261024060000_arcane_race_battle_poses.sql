@@ -25,3 +25,7 @@ create index if not exists race_battle_poses_lookup on public.race_battle_poses(
 alter table public.race_battle_poses enable row level security;
 -- No broad client write access; publishing is handled through the existing privileged pipeline.
 revoke all on public.race_battle_poses from anon,authenticated;
+
+-- Combat clients may read published active rasposes, never staging or unpublished rows.
+grant select (id,race_id,gender_variant,pose_key,image_path,base_key,mounting_profile,is_active,publication_status) on public.race_battle_poses to authenticated;
+create policy race_pose_published_read on public.race_battle_poses for select to authenticated using (is_active and publication_status='published' and image_path is not null);
