@@ -17,6 +17,10 @@ describe('Universal Pose Resolver',()=>{
   const c=catalog(),actor={state:{attack_profile:{weapons:[{equipId:'w',weaponClass:'enhandssvard',handling:'1-2H'}],currentEquipment:{leftHand:{kind:'shield'},rightHand:{kind:'weapon',hands:2,itemId:'w'}}}}};
   expect(c.resolve(c.fromCombatant(actor),['standard','enhandssvard','enhandssvard_shield']).poseId).toBe('enhandssvard');
  });
+ it('prefers right-hand weapon when both hands carry weapons',()=>{
+  const c=catalog(),actor={state:{attack_profile:{weapons:[{equipId:'left',name:'Dolk'},{equipId:'right',name:'Kortsvärd'}],currentEquipment:{leftHand:{kind:'weapon',hands:1,itemId:'left'},rightHand:{kind:'weapon',hands:1,itemId:'right'}}}}};
+  expect(c.resolve(c.fromCombatant(actor),['standard','enhandssvard','dolkar']).poseId).toBe('enhandssvard');
+ });
  it('is wired to combat map for non-characters',()=>{
   expect(mapSource).toContain("fromCombatant(actor)");
  });
