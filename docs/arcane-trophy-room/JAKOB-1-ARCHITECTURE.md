@@ -12,11 +12,12 @@ Status: design and architecture only; no scene enabled. JAKOB 2 starts only afte
 - Admin is the #admin section, with adminOverview cards and admin-detail sections in index.html.
 
 ### Locked art direction
-Photorealistic physical medieval hall, ivory/bronze/stone, torches, realistic worn metal and short military medal ribbons. No game-like candy-colored badges or permanently visible UI grids. Character seen from behind when a suitable existing asset supports it; do not mirror/reinvent the character's identity or equipment.
+Photorealistic physical medieval hall, ivory/bronze/stone, torches, realistic worn metal and short military medal ribbons. No game-like candy-colored badges or permanently visible UI grids. Character stands in the foreground FACING THE VIEWER, using exactly the same figureImages.base source as Current Equipment. Do not mirror/reinvent the character's identity or equipment.
 
 ### Space and camera
 - Three physical walls: left = in-game automated rewards; center = adventure medals; right = GM-granted honors.
-- Overview camera: all three walls and character visible.
+- Overview camera: all three walls and the front-facing character visible in the foreground. Position character low enough not to obscure central adventure medals.
+- On wall zoom, smoothly fade out the foreground character as the camera travels toward the selected wall; reverse fade on return. Character remains an independent layer, never baked into the room art.
 - Each wall has its own camera target and zoomed wall texture / higher-resolution art; smooth ~700–1000ms transitions with easing and restrained parallax.
 - All interactive medal anchors are separate DOM objects, never baked into scene art.
 - Reduced-motion and low-end fallback: instantaneous navigation, static lighting, no particles.
@@ -25,7 +26,7 @@ Photorealistic physical medieval hall, ivory/bronze/stone, torches, realistic wo
 ### Rendering architecture
 Layer 0: room master background without medals or character.
 Layer 1: optional wall-specific high-resolution backgrounds.
-Layer 2: separate character figureImages.base cutout (must respect its original perspective and source).
+Layer 2: front-facing character figureImages.base cutout, foreground with floor contact shadow and restrained torch rim light. Opacity transitions during wall navigation; must respect original perspective and source.
 Layer 3: medal anchor layout mapped in normalized coordinates per wall, with depth transforms.
 Layer 4: real-alpha medal images via HERMES stable resource identifiers.
 Layer 5: optional torch flicker, dust, lighting and ambient audio.
