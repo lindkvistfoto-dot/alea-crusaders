@@ -6282,18 +6282,69 @@ function combatSetMountMode(actorId,mode){
  const actor=combatActiveActor();
  if(!actor||String(actor.id)!==String(actorId))return;
  try{localStorage.setItem('alea-combat-mount:'+String(activeCombat?.id||'')+':'+String(actor.id),mode)}catch{}
- document.querySelectorAll('.combat-mount-toggle button').forEach(button=>{
-  const selected=button.dataset.mountMode===mode;
-  button.classList.toggle('selected',selected);
-  button.setAttribute('aria-pressed',String(selected));
+ document.querySelectorAll('.arcane-mount-switch').forEach(toggle=>{
+  toggle.classList.toggle('is-mounted',mode==='mounted');
+  toggle.classList.toggle('is-walking',mode==='walk');
+  toggle.querySelectorAll('[data-gem-slot]').forEach(gem=>{
+   const lit=(gem.dataset.gemSlot==='upper')===(mode==='walk');
+   gem.src='./assets/arcane-mounted-switch/gem-'+(lit?'on':'off')+'.webp';
+  });
+  toggle.querySelectorAll('[data-mount-mode]').forEach(button=>
+   button.setAttribute('aria-pressed',String(button.dataset.mountMode===mode)));
+  const drag=toggle.querySelector('.arcane-mount-drag');if(drag)drag.setAttribute('aria-valuenow',mode==='mounted'?'1':'0');
  });
 }
 window.combatSetMountMode=combatSetMountMode;
+// V5: one immutable panel-space pivot, shared by both pointer angles.
+const ARCANE_MOUNTED_SWITCH=Object.freeze({
+ upper:{x:3.39,y:25.6,width:29},
+ lower:{x:3.22,y:57.17,width:29},
+ pointer:{width:37,pivotX:73.48,pivotY:49.04,hubX:83.8876,hubY:48.24},
+ angles:{walk:43,mounted:-51}
+});
+function combatMountPointerStart(event,actorId){
+ if(event.button!==undefined&&event.button!==0)return;
+ const target=event.currentTarget;
+ const switchEl=target.closest('.arcane-mount-switch');
+ if(!switchEl)return;
+ event.preventDefault();
+ target.setPointerCapture?.(event.pointerId);
+ target.dataset.dragActor=String(actorId);
+ target.dataset.dragging='true';
+}
+function combatMountPointerMove(event){
+ const target=event.currentTarget;
+ if(target.dataset.dragging!=='true')return;
+ const rect=target.closest('.arcane-mount-switch')?.getBoundingClientRect();
+ if(!rect)return;
+ const hubY=rect.top+rect.height*ARCANE_MOUNTED_SWITCH.pointer.hubY/100;
+ const mode=event.clientY<hubY?'walk':'mounted';
+ combatSetMountMode(target.dataset.dragActor,mode);
+}
+function combatMountPointerEnd(event){
+ const target=event.currentTarget;
+ target.dataset.dragging='false';
+ if(target.hasPointerCapture?.(event.pointerId))target.releasePointerCapture(event.pointerId);
+}
+window.combatMountPointerStart=combatMountPointerStart;
+window.combatMountPointerMove=combatMountPointerMove;
+window.combatMountPointerEnd=combatMountPointerEnd;
 function combatMountToggleHtml(actor){
- const mode=combatMountMode(actor);
- return '<div class="combat-mount-toggle" role="group" aria-label="Förflyttningssätt">'+
-  [['walk','🚶','Gående'],['mounted','🐎','Beriden']].map(([key,glyph,label])=>
-   '<button type="button" data-mount-mode="'+key+'" class="'+(mode===key?'selected':'')+'" aria-label="'+label+'" title="'+label+'" aria-pressed="'+(mode===key)+'" onclick="combatSetMountMode(\''+escAttr(actor.id)+'\',\''+key+'\')">'+glyph+'</button>').join('')+
+ const mode=combatMountMode(actor),mounted=mode==='mounted';
+ const path='./assets/arcane-mounted-switch/';
+ const gem=(slot,lit)=>{
+  const p=ARCANE_MOUNTED_SWITCH[slot];
+  return '<img class="arcane-mount-gem" data-gem-slot="'+slot+'" src="'+path+'gem-'+(lit?'on':'off')+'.webp" alt="" aria-hidden="true" style="left:'+p.x+'%;top:'+p.y+'%;width:'+p.width+'%">';
+ };
+ const actorId=JSON.stringify(String(actor.id)).replace(/"/g,'&quot;');
+ const action=(key)=>'combatSetMountMode('+actorId+','+JSON.stringify(key).replace(/"/g,'&quot;')+')';
+ return '<div class="combat-mount-toggle arcane-mount-switch '+(mounted?'is-mounted':'is-walking')+'" role="group" aria-label="Förflyttningssätt">'+
+  '<img class="arcane-mount-panel" src="'+path+'panel.webp" alt="" aria-hidden="true">'+
+  gem('upper',!mounted)+gem('lower',mounted)+
+  '<span class="arcane-mount-rotor" aria-hidden="true"><img class="arcane-mount-pointer" src="'+path+'pointer.webp" alt=""></span>'+
+  '<button type="button" class="arcane-mount-choice upper" data-mount-mode="walk" aria-label="Gående" title="Gående" aria-pressed="'+(!mounted)+'" onclick="'+action('walk')+'"></button>'+
+  '<button type="button" class="arcane-mount-choice lower" data-mount-mode="mounted" aria-label="Beriden" title="Beriden" aria-pressed="'+mounted+'" onclick="'+action('mounted')+'"></button>'+
+  '<span class="arcane-mount-drag" role="slider" tabindex="0" aria-label="Vrid mounted-visaren" aria-valuemin="0" aria-valuemax="1" aria-valuenow="'+(mounted?'1':'0')+'" onpointerdown="combatMountPointerStart(event,'+actorId+')" onpointermove="combatMountPointerMove(event)" onpointerup="combatMountPointerEnd(event)" onpointercancel="combatMountPointerEnd(event)" onkeydown="if(event.key===&#39;ArrowUp&#39;||event.key===&#39;Home&#39;){combatSetMountMode('+actorId+',&#39;walk&#39;);event.preventDefault()}else if(event.key===&#39;ArrowDown&#39;||event.key===&#39;End&#39;){combatSetMountMode('+actorId+',&#39;mounted&#39;);event.preventDefault()}"></span>'+
  '</div>';
 }
 function combatTurnPanelHtml(){
@@ -6331,7 +6382,7 @@ function combatTurnPanelHtml(){
  const psyCurrent=actor.current_psy==null?'—':actor.current_psy,psyMax=actor.max_psy==null?'—':actor.max_psy;
  return '<div class="combat-topbar combat-turn-panel">'+combatOrnateFrameCorners+combatRoundArtLayer+head+
   '<div class="combat-turn-actor">'+
-   combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+
+   '<div class="combat-mount-portrait-group">'+combatMountToggleHtml(actor)+combatTurnPortraitHtml(actor)+'</div>'+
    '<div class="combat-turn-identity"><span>AKTIV KOMBATTANT</span><b>'+escAttr(actor.name_snapshot)+'</b>'+(actor.state?.summoner_id?'<small>Styrs av '+escAttr(combatSummonerName(actor))+'</small>':'')+(combatMentalStatusLabel(actor)?'<small>'+escAttr(combatMentalStatusLabel(actor))+'</small>':'')+'</div>'+
    '<div class="combat-turn-vitals">'+
     '<div><span>Förflyttning</span><b>'+spent+'/'+maximum+'</b><div class="combat-vital-meter"><i class="combat-vital-fill move" style="width:'+combatTurnVitalPercent(remaining,maximum)+'%"></i></div></div>'+

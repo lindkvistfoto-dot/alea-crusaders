@@ -190,3 +190,72 @@
 .combat-mount-toggle button{width:38px;height:38px;display:grid;place-items:center;background:#183449;color:#e6c78d;border:1px solid #58718a;border-radius:9px;font-size:22px;line-height:1;cursor:pointer;touch-action:manipulation}
 .combat-mount-toggle button.selected{background:#285577;border-color:#e2b66b;box-shadow:0 0 0 2px #a77a3d,0 0 9px #3887d2}
 .combat-mount-toggle button:focus-visible{outline:2px solid #f4d99b;outline-offset:3px}
+
+
+/* Keep the two mounted-mode controls anchored to the hex portrait, not in a new grid row. */
+#combatPage .combat-mount-portrait-group{display:flex;align-items:center;gap:6px;grid-column:1;grid-row:1;min-width:0;align-self:center}
+#combatPage .combat-mount-portrait-group .combat-mount-toggle{gap:3px;padding:3px;border-radius:9px}
+#combatPage .combat-mount-portrait-group .combat-mount-toggle button{width:29px;height:29px;border-radius:6px;font-size:inherit}
+#combatPage .combat-mount-portrait-group .combat-mount-toggle svg{width:19px;height:19px;display:block}
+#combatPage .combat-turn-actor>.combat-mount-portrait-group+.combat-turn-identity{grid-column:2;grid-row:1}
+@media(max-width:600px){
+ #combatPage .combat-mount-portrait-group{gap:4px}
+ #combatPage .combat-mount-portrait-group .combat-mount-toggle button{width:25px;height:25px}
+ #combatPage .combat-mount-portrait-group .combat-mount-toggle svg{width:17px;height:17px}
+}
+
+
+/* ARCANE MOUNTED SWITCH: engraved bronze icons and an animated mechanical lever. */
+#combatPage .arcane-mount-switch{position:relative;isolation:isolate;gap:3px;padding:4px 7px 4px 4px;border:2px ridge #b78b4c;background:linear-gradient(115deg,#35271d,#132e40 42%,#1b2631 75%,#6e4a28);box-shadow:inset 0 1px 4px #d8a35b66,0 2px 6px #0009}
+#combatPage .arcane-mount-switch button{position:relative;z-index:1;color:#bd8c4b!important;background:linear-gradient(#273746,#10202d)!important;border:1px solid #755b39!important;box-shadow:inset 0 1px 3px #050d14!important;transition:color .15s,box-shadow .15s}
+#combatPage .arcane-mount-switch button.selected{color:#f4d69a!important;box-shadow:inset 0 0 7px #a46a27,0 0 0 1px #d3a55c!important}
+#combatPage .arcane-mount-switch-lever{position:absolute;z-index:2;right:-5px;top:17%;width:8px;height:34%;border:1px solid #e1b66b;border-radius:5px;background:linear-gradient(90deg,#4b2c15,#edc47c 45%,#69401c);box-shadow:1px 2px 4px #000b;pointer-events:none;transition:transform .2s ease}
+#combatPage .arcane-mount-switch.is-mounted .arcane-mount-switch-lever{transform:translateY(110%)}
+#combatPage .arcane-mount-switch-lever i{position:absolute;left:-3px;top:35%;width:12px;height:12px;border-radius:50%;border:1px solid #e7c27f;background:radial-gradient(circle at 35% 30%,#f7e0a8,#a36d2c 75%)}
+@media(prefers-reduced-motion:reduce){#combatPage .arcane-mount-switch-lever{transition:none}}
+
+
+/* ARCANE MOUNTED SWITCH V5: four real WebP assets; shared, immovable axle. */
+#combatPage .combat-mount-portrait-group .arcane-mount-switch{
+ position:relative;display:block;flex:none;width:72px;height:auto;aspect-ratio:646 / 998;
+ padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;
+ isolation:isolate;touch-action:pan-y;
+}
+#combatPage .arcane-mount-switch .arcane-mount-panel{
+ display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;
+}
+#combatPage .arcane-mount-switch .arcane-mount-gem{
+ position:absolute;height:auto;pointer-events:none;z-index:1;
+}
+#combatPage .arcane-mount-switch .arcane-mount-rotor{
+ position:absolute;left:83.8876%;top:48.24%;width:100%;height:100%;
+ transform-origin:0 0;transform:rotate(43deg);transition:transform .32s cubic-bezier(.22,1.12,.35,1);
+ pointer-events:none;z-index:2;
+}
+#combatPage .arcane-mount-switch.is-mounted .arcane-mount-rotor{transform:rotate(-51deg)}
+#combatPage .arcane-mount-switch .arcane-mount-pointer{
+ position:absolute;left:0;top:0;width:37%;height:auto;max-width:none;
+ transform:translate(-73.48%,-49.04%);pointer-events:none;
+}
+#combatPage .arcane-mount-switch .arcane-mount-choice{
+ position:absolute;left:9%;width:50%;height:39%;padding:0;border:0;border-radius:45%;
+ background:transparent!important;box-shadow:none!important;z-index:3;
+ color:transparent!important;cursor:pointer;touch-action:manipulation;
+}
+#combatPage .arcane-mount-switch .arcane-mount-choice.upper{top:8%}
+#combatPage .arcane-mount-switch .arcane-mount-choice.lower{top:53%}
+#combatPage .arcane-mount-switch .arcane-mount-drag{
+ position:absolute;left:59%;top:27%;width:48%;height:45%;z-index:4;cursor:grab;
+ touch-action:none;background:transparent;border-radius:50%;
+}
+#combatPage .arcane-mount-switch .arcane-mount-drag:active{cursor:grabbing}
+#combatPage .arcane-mount-switch .arcane-mount-choice:focus-visible,
+#combatPage .arcane-mount-switch .arcane-mount-drag:focus-visible{
+ outline:2px solid #f9d98a;outline-offset:2px;
+}
+@media(max-width:600px){
+ #combatPage .combat-mount-portrait-group .arcane-mount-switch{width:56px}
+}
+@media(prefers-reduced-motion:reduce){
+ #combatPage .arcane-mount-switch .arcane-mount-rotor{transition:none}
+}

@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "name": "arcane-mounted-switch-v5",
+  "source": "Arcane Pointer Switch Master V3",
+  "status": "source-images-in-drive-inbox-not-yet-published",
+  "assets": {
+    "panel": "1yvx-gYC0xTZBm52YLlrSbDh8l-M0P6pd",
+    "pointer": "1hfpChGB1PHtNEeZWCgBIZCSke605bs7i",
+    "gem_on": "1aJalFx814o135ZhBzPFTORYO7-z5puLc",
+    "gem_off": "1Hh7jlyYtEyikzVKELoQL8QCLOvFqC7bG"
+  },
+  "panel": {
+    "width": 646,
+    "height": 998
+  },
+  "positions": {
+    "upper": {
+      "x": 3.39,
+      "y": 25.6,
+      "scale": 29
+    },
+    "lower": {
+      "x": 3.22,
+      "y": 57.17,
+      "scale": 29
+    }
+  },
+  "pointer": {
+    "scale": 37,
+    "source_pivot": {
+      "x": 73.48,
+      "y": 49.04
+    },
+    "fixed_hub": true,
+    "angles": {
+      "walk": 43,
+      "mounted": -51
+    }
+  },
+  "default_mode": "walk",
+  "note": "Use a single stationary panel-space pivot; compose arrow via translate(hub) rotate(angle) translate(-sourcePivot). Gem images swap on/off per slot; no glow overlay."
+}
