@@ -10,7 +10,7 @@ it('creates race pose catalog and preserves exactly-one-owner HERMES job constra
   await db.exec('create table public.rule_races(id text primary key); insert into public.rule_races values (\'manniska\');');
   await db.exec('create table public.combatant_battle_poses(id uuid primary key,staging_path text,publication_status text,pending_staging_path text);');
   await db.exec('create table public.hermes_web_jobs(id uuid primary key default gen_random_uuid(),pose_id uuid not null references public.combatant_battle_poses(id),race_pose_id uuid,asset_kind text not null,source_path text not null,requested_by uuid, state text not null default \'queued\',attempts integer not null default 0,archive_drive_file_id text,output_path text,error_code text,completed_at timestamptz,source_sha256 text);');
-  await db.exec('create schema auth; create function auth.uid() returns uuid language sql as $ select null::uuid $;');
+  await db.exec('create schema auth; create function auth.uid() returns uuid language sql as \'select null::uuid\';');
   await db.exec(race);
   await db.exec(jobs);
   const result=await db.query("select conname from pg_constraint where conrelid='hermes_web_jobs'::regclass and conname='hermes_web_jobs_pose_owner_check'");
