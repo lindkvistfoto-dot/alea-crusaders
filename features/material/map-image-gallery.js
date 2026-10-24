@@ -16,7 +16,8 @@
       '&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
       '&select=id,image_id,is_primary,sort_order,caption,player_visible&order=sort_order.asc'
     );
-    const visible = (links || []).filter(link => link.player_visible === true);
+    // GM map gallery includes hidden images; player visibility is only for sharing.
+    const visible = links || [];
     if (!visible.length) return [];
     const ids = [...new Set(visible.map(link => link.image_id))];
     const images = await dbJson(
@@ -60,7 +61,7 @@
     if (!originalGallery) return;
     const selectedArea = campaignMapAreas.find(area => area.id === mapSelectedAreaId);
     if (!selectedArea?.location_id || !centralCampaignId) {
-      return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
+      return originalRender?.((legacyAssets || []));
     }
     const selectedId = selectedArea.id;
     const stillCurrent = () =>
@@ -74,7 +75,7 @@
     } catch (error) {
       // Preserve the old map gallery if a migration/network/database issue occurs.
       console.warn('Kunde inte läsa det nya kampanjbildbiblioteket:', error);
-      if (stillCurrent()) return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
+      if (stillCurrent()) return originalRender?.((legacyAssets || []));
       return;
     }
     if (!stillCurrent()) return;
@@ -82,7 +83,6 @@
       (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path
     ));
     const remaining = (legacyAssets || [])
-      .filter(image => image.player_visible === true)
       .filter(image => {
         const key = 'campaign-location-assets/' + image.storage_path;
         if (unique.has(key)) return false;
@@ -93,7 +93,7 @@
     const combined = [...linkedImages, ...remaining];
     if (!combined.length) {
       originalGallery.innerHTML =
-        '<div class="map-location-empty">Inga bilder har delats för den här platsen.</div>';
+        '<div class="map-location-empty">Inga bilder är kopplade till den här platsen.</div>';
       return;
     }
     const main = combined[0];
