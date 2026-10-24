@@ -65,7 +65,7 @@ function resolveHierarchy({actorType='character',equipment={},ownPoses=[],racePo
  const npcKinds=new Set(['npc','enemy','monster','character-npc','slp']);
  const isNpc=npcKinds.has(String(actorType).toLowerCase());
  const genderKey=normalize(gender);
- const matches=(poses,key,variant)=>poses.find(p=>p&&p.pose_key===key&&p.is_active!==false&&(!variant||normalize(p.gender_variant||'neutral')===variant));
+ const matches=(poses,key,variant)=>poses.find(p=>p&&p.pose_key===key&&p.is_active!==false&&(!p.publication_status||p.publication_status==='published')&&!!p.image_path&&(!variant||normalize(p.gender_variant||'neutral')===variant));
  const own=matches(ownPoses,requested)||matches(ownPoses,'standard');
  if(own)return Object.freeze({pose:own,source:'own',requestedPoseId:requested});
  if(isNpc){
