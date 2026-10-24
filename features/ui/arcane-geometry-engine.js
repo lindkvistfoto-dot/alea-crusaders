@@ -101,14 +101,24 @@
   const w=bounds.maxX-bounds.minX+padding*2,h=bounds.maxY-bounds.minY+padding*2;
   const points=pts=>pts.map(p=>(p.x-bounds.minX+padding).toFixed(4)+','+(p.y-bounds.minY+padding).toFixed(4)).join(' ');
   const palette={ivory:'#f4ead5',marble:'#e8dcc1',bronze:'#99713c',gold:'#d7ad61',engraving:'#78552e',dark:'#543c23'};
-  const wallArt=walls.map((p,i)=>'<polygon points="'+points(p)+'" fill="'+(i%2?'#806039':'#a47b43')+'" stroke="'+palette.dark+'" stroke-width="0.035"/>').join('');
+  const wallArt=walls.filter(p=>p[1].y>=p[0].y-1e-8).map((p,i)=>'<polygon points="'+points(p)+'" fill="'+(i%2?'#806039':'#a47b43')+'" stroke="'+palette.dark+'" stroke-width="0.035"/>').join('');
   const faces=g.faces.map(f=>{
    const cx=f.center.x-bounds.minX+padding,cy=f.center.y-bounds.minY+padding;
    const poly=f.points.map(p=>({x:p.x-bounds.minX+padding,y:p.y-bounds.minY+padding}));
    const inner=poly.map(p=>({x:cx+(p.x-cx)*.81,y:cy+(p.y-cy)*.81}));
    const ring=poly.map(p=>({x:cx+(p.x-cx)*.91,y:cy+(p.y-cy)*.91}));
    const path=(pts)=>pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(4)+' '+p.y.toFixed(4)).join(' ')+' Z';
-   const petals=Array.from({length:8},(_,i)=>{const a=i*Math.PI/4,b=a+Math.PI/8,r=.35*(opts.size||1),r2=.12*(opts.size||1);return '<path d="M '+cx.toFixed(4)+' '+cy.toFixed(4)+' L '+(cx+Math.sin(a)*r).toFixed(4)+' '+(cy-Math.cos(a)*r*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+' L '+(cx+Math.sin(b)*r2).toFixed(4)+' '+(cy-Math.cos(b)*r2).toFixed(4)+' Z" fill="'+(i%2?palette.gold:palette.engraving)+'"/>'}).join('');
+   // All compass artwork is drawn in the same orthographic projection as its tile.
+   // Both the long and short points must use the same elevation factor.
+   const elevScale=Math.sin((g.camera.elevationDegrees??55)*Math.PI/180);
+   const radius=(opts.size||1);
+   const petals=Array.from({length:8},(_,i)=>{
+    const a=i*Math.PI/4,b=a+Math.PI/8;
+    const tip={x:cx+Math.sin(a)*.49*radius,y:cy-Math.cos(a)*.49*radius*elevScale};
+    const left={x:cx+Math.sin(b)*.12*radius,y:cy-Math.cos(b)*.12*radius*elevScale};
+    const right={x:cx+Math.sin(b-Math.PI/4)*.12*radius,y:cy-Math.cos(b-Math.PI/4)*.12*radius*elevScale};
+    return '<path d="M '+tip.x.toFixed(4)+' '+tip.y.toFixed(4)+' L '+left.x.toFixed(4)+' '+left.y.toFixed(4)+' L '+right.x.toFixed(4)+' '+right.y.toFixed(4)+' Z" fill="'+(i%2?palette.gold:palette.engraving)+'" stroke="'+palette.dark+'" stroke-width=".007"/>';
+   }).join('');
    const rivets=poly.map(p=>'<circle cx="'+(cx+(p.x-cx)*.94).toFixed(4)+'" cy="'+(cy+(p.y-cy)*.94).toFixed(4)+'" r=".052" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".013"/>').join('');
    return '<g><path d="'+path(poly)+'" fill="'+palette.bronze+'" stroke="'+palette.dark+'" stroke-width=".055"/><path d="'+path(ring)+'" fill="'+palette.gold+'" stroke="'+palette.engraving+'" stroke-width=".024"/><path d="'+path(inner)+'" fill="'+palette.ivory+'" stroke="'+palette.bronze+'" stroke-width=".035"/><ellipse cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" rx=".39" ry="'+(.39*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+'" fill="none" stroke="'+palette.engraving+'" stroke-width=".027"/>'+petals+'<circle cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" r=".067" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".018"/>'+rivets+'</g>';
   }).join('');
