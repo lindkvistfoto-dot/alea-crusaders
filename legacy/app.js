@@ -3393,6 +3393,7 @@ async function viewCampaignMap(id,reset=true){
   try{url=await getMapImageUrl(map)}catch(e){throw new Error('Kartbild: '+e.message)}
   try{areas=await loadCampaignMapAreas(map.id)}catch(e){throw new Error('Polygoner/platskopplingar: '+e.message)}
   setCampaignMapData({...map,image_url:url},areas);
+  void loadMapCategoryMarkers(map.id);
   renderMapLibraryControls();
   if(reset)requestAnimationFrame(resetMapView);
  }catch(e){console.error('Kunde inte öppna karta',e);alert('Kunde inte öppna kartan: '+e.message)}
@@ -4010,6 +4011,35 @@ function closeMap(){closeMapStatusMenu();
  else if(mapReturn==='admin'&&activeUser()?.admin){$('admin').classList.remove('hidden')}
  else{$('home').classList.remove('hidden');renderCards()}
 }
+// GM-only category summaries. One marker per category per location.
+let mapCategoryMarkerMap=new Map(),mapCategoryMarkerRequest=0;
+async function loadMapCategoryMarkers(mapId){
+ const request=++mapCategoryMarkerRequest;
+ mapCategoryMarkerMap=new Map();
+ if(!canManageCampaignMaps()||!centralCampaignId||!mapId)return;
+ try{
+  const types=[['enemy','campaign_location_monster_links'],['person','campaign_location_npc_links'],['event','campaign_location_event_links']];
+  const results=await Promise.all(types.map(async ([type,table])=>({type,rows:await dbJson(table+'?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=location_id')})));
+  if(request!==mapCategoryMarkerRequest||activeCampaignMap?.id!==mapId)return;
+  const valid=new Set(campaignMapAreas.map(a=>a.location_id).filter(Boolean));
+  for(const {type,rows} of results)for(const row of rows||[]){
+   if(!valid.has(row.location_id))continue;
+   if(!mapCategoryMarkerMap.has(row.location_id))mapCategoryMarkerMap.set(row.location_id,new Set());
+   mapCategoryMarkerMap.get(row.location_id).add(type);
+  }
+  renderMapPanel();
+ }catch(error){console.warn('SL-markörer kunde inte läsas:',error)}
+}
+function mapCategoryMarkerSvg(a){
+ if(!canManageCampaignMaps()||!a.location_id)return '';
+ const types=mapCategoryMarkerMap.get(a.location_id);if(!types?.size)return '';
+ let points=a.shape_type==='rect'?[[Number(a.shape_data?.x)||0,Number(a.shape_data?.y)||0],[Number(a.shape_data?.x||0)+Number(a.shape_data?.width||0),Number(a.shape_data?.y)||0]]:(a.shape_data?.points||[]).map(p=>Array.isArray(p)?p:String(p).split(',').map(Number));
+ if(!points.length)return '';
+ const cx=points.reduce((n,p)=>n+Number(p[0]||0),0)/points.length;
+ const cy=points.reduce((n,p)=>n+Number(p[1]||0),0)/points.length;
+ const icons={enemy:'☠',person:'♟',event:'✦'};
+ return [...types].map((type,i)=>'<g class="map-category-marker" transform="translate('+(cx+(i-(types.size-1)/2)*27)+','+cy+')"><circle r="12" fill="#241a13" stroke="#d4ac65" stroke-width="2"/><text text-anchor="middle" y="5" font-size="17" fill="#f8e8c9">'+icons[type]+'</text></g>').join('');
+}
 function setCampaignMapData(map,areas=[]){activeCampaignMap=map||null;campaignMapAreas=Array.isArray(areas)?areas:[];renderMapPanel();if(activeCampaignMap)requestAnimationFrame(resetMapView)}
 function renderMapPanel(){
  let img=$('mapImage'),overlay=$('mapOverlay'),placeholder=$('mapPlaceholder'),subtitle=$('mapSubtitle'),status=$('mapStatusText');
@@ -4023,7 +4053,8 @@ function renderMapPanel(){
  let maskId='fogMask_'+String(activeCampaignMap.id||'map').replace(/[^a-zA-Z0-9_-]/g,'');
  let maskShapes=campaignMapAreas.map(a=>mapFogMaskShape(a)).join('');
  let hitShapes=campaignMapAreas.map(a=>mapAreaHitSvg(a)).join('');
- overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
+ let categoryShapes=canManageCampaignMaps()?campaignMapAreas.map(mapCategoryMarkerSvg).join(''):'';
+ overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}${categoryShapes}`;
  renderMapLibraryControls();applyMapTransform();
 }
 function mapShapeTag(a,attrs=''){
