@@ -26,7 +26,7 @@ function poseFamily(cls){const key=normalize(cls);return ALIASES[key]|| (valid.h
 function fromCharacter(character){
  const eq=character?.currentEquipment||character?.data?.currentEquipment||{};
  const weapons=character?.weapons||character?.data?.weapons||[];
- const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
+ const hands=[eq.rightHand,eq.leftHand].filter(Boolean);
  const equipped=hands.find(h=>h.kind==='weapon');
  const item=weapons.find(w=>String(w.equipId||w.id)===String(equipped?.itemId||''));
  return {weaponClass:item?.weaponClass||item?.skillId||null,handling:item?.handling||'',grip:equipped?.hands===2?'2H':equipped?.hands===1?'1H':'',hasShield:hands.some(h=>h.kind==='shield'),hasWeapon:!!equipped};
@@ -35,7 +35,7 @@ function fromCharacter(character){
 function fromCombatant(actor,weaponClasses={}){
  const profile=actor?.state?.attack_profile||{};
  const eq=profile.currentEquipment||{};
- const hands=[eq.leftHand,eq.rightHand].filter(Boolean);
+ const hands=[eq.rightHand,eq.leftHand].filter(Boolean);
  const equipped=hands.find(hand=>hand.kind==='weapon');
  const item=(profile.weapons||[]).find(weapon=>String(weapon.equipId||weapon.id||weapon.weapon_id||'')===String(equipped?.itemId||''));
  const name=String(item?.name||'').toLowerCase();
