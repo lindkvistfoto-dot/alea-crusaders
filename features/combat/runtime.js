@@ -5052,7 +5052,7 @@ function renderCombatMap(){
     '<polygon class="combat-active-turn-outline" points="'+combatHexPoints(cell.x,cell.y,g.size*.88)+'"/>'
    :'';
   const turnBadge=turn&&!defeated
-   ?'<g class="combat-active-turn-badge" transform="translate('+(cell.x+g.size*.57)+' '+(cell.y-g.size*.67)+') scale('+(g.size/42).toFixed(3)+')">'+
+   ?'<g class="combat-active-turn-badge" transform="translate('+(cell.x)+' '+(cell.y+g.size*.70)+') scale('+(g.size/42).toFixed(3)+')">'+
     '<rect x="-18" y="-10" width="36" height="18" rx="6"/><text x="0" y="0" text-anchor="middle">TUR</text></g>'
    :'';
   // ICARUS V1: presentation-only placeholder for existing flight capability.
