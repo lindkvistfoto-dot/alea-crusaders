@@ -19,63 +19,8 @@
  function src(path){return LEGACY.test(path)?'./'+path:SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+path}
  function editSymbol(row){
   if(typeof activeUser==='function'&&!activeUser()?.admin)return;
-  const editor=document.getElementById('adminEditor');
-  const title=document.getElementById('adminEditorTitle');
-  const body=document.getElementById('adminEditorBody');
-  if(!editor||!title||!body)return;
-  title.textContent='Redigera symbol · '+(row.name||row.symbol_key);
-  body.replaceChildren();
-  const form=document.createElement('form');
-  form.className='rule-editor-grid spell-rule-editor';
-  const fields=[['name','Namn','text'],['school_value','Skolvärde','number'],['range_text','Räckvidd','text'],['duration_text','Varaktighet','text'],['effect_per_eg','Effekt per effektgrad','textarea'],['resistance_text','Motstånd / särskilda regler','textarea'],['description','Beskrivning','textarea'],['psy_cost_text','PSY / effektgrad','text'],['target_text','Mål / område','text'],['notes','Noteringar','textarea'],['source_label','Källa','text']];
-  for(const [key,label,type] of fields){
-   const wrap=document.createElement('label');wrap.textContent=label;
-   const input=document.createElement(type==='textarea'?'textarea':'input');
-   if(type!=='textarea')input.type=type;
-   input.name=key;input.value=row[key]??'';wrap.appendChild(input);form.appendChild(wrap);
-  }
-  const art=document.createElement('section');
-  art.className='spell-art-editor';
-  const artTitle=document.createElement('h3');artTitle.textContent='Symbolbilder · HERMES 4.0';
-  const artInfo=document.createElement('p');artInfo.className='muted';
-  artInfo.textContent='Bildfälten är reserverade för HERMES 4.0. Direktuppladdning till Supabase är avstängd tills publiceringskedjan är verifierad.';
-  art.append(artTitle,artInfo);
-  const imageFields=[['icon_path','Ikon'],['effect_image_path','Effektbild'],['cutout_path','Cutout'],['illustration_path','Illustration 1:1'],['illustration_wide_path','Illustration wide']];
-  for(const [key,label] of imageFields){
-   const field=document.createElement('div');field.className='spell-art-status';
-   const heading=document.createElement('strong');heading.textContent=label;
-   field.appendChild(heading);
-   const path=String(row[key]||'');
-   const note=document.createElement('p');note.textContent=path?'Registrerad bildreferens: '+path:'Ingen bild registrerad';
-   note.title='Bilder aktiveras först efter verifierad HERMES-publicering';
-   field.appendChild(note);
-   if(key==='icon_path'&&valid(path,String(row.symbol_key||''))){
-    const image=document.createElement('img');image.alt='Aktuell symbolikon';image.loading='lazy';image.width=96;image.height=96;
-    image.src=src(path);field.appendChild(image);
-   }
-   art.appendChild(field);
-  }
-  const guide=document.createElement('p');guide.className='muted';
-  guide.textContent='HERMES-bildbyte: lägg originalet i Drive Inbox och registrera verifierad fil-ID och SHA-256 i en godkänd HERMES-köorder. Ingen direktuppladdning eller aktivering sker från admin.';
-  art.appendChild(guide);
-  const actions=document.createElement('div');actions.className='rule-editor-actions';
-  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='Avbryt';cancel.addEventListener('click',()=>editor.classList.add('hidden'));
-  const save=document.createElement('button');save.type='submit';save.className='btn primary';save.textContent='Spara';
-  actions.append(cancel,save);form.appendChild(actions);
-  form.addEventListener('submit',async event=>{
-   event.preventDefault();
-   if(typeof activeUser==='function'&&!activeUser()?.admin)return;
-   const payload={};
-   for(const [key,,type] of fields)payload[key]=type==='number'?Number(form.elements.namedItem(key).value):form.elements.namedItem(key).value.trim();
-   if(!payload.name){alert('Namn måste anges.');return}
-   save.disabled=true;
-   try{
-    await dbJson('rule_magic_symbols?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});
-    editor.classList.add('hidden');lastLoaded=0;await render();
-   }catch(error){alert('Kunde inte spara symbolen: '+(error?.message||error))}
-   finally{save.disabled=false}
-  });
-  body.append(form,art);editor.classList.remove('hidden');
+  if(typeof window.editRuleSpell==='function'){window.editRuleSpell(String(row.id),'symbol',row);return}
+  alert('Den gemensamma besvärjelseeditorn är inte tillgänglig.');
  }
  async function render(){
   if(!visible()||pending||Date.now()-lastLoaded<60000)return;
