@@ -1,0 +1,276 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-den-femte-konfluxen-v1",
+      "target_id": "bd61cc70-d3d0-46bb-a846-c3bfbfdc051a",
+      "drive_file_id": "1T0GkstnRZtLMan_592-rCxWVlZSMY3ka",
+      "archive_file_id": "1kF7jKfBMR8pLEIJYd042jtVXHkF6DZk0",
+      "source_sha256": "1df9d6fe0b6fc5e36fcce3d94ae65839891ddd3e6d4018374abab6b07f5d90ba",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-kristalltjuren-v1",
+      "target_id": "1a7869a6-da87-4f9f-b727-9550aa298c88",
+      "drive_file_id": "15vKoEvEMczpPe3OJ6PyUcVOD3yljrfMh",
+      "archive_file_id": "1iSpwE4slcISvkedpwkmQWFCHOQPlzxEX",
+      "source_sha256": "ad19a16a7c382ac2aaee104eed041924a8c17de4542fc22087443ccd12b575c2",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-demonprinsen-v1",
+      "target_id": "21caf557-e21d-4ed6-a1c4-806a30796de3",
+      "drive_file_id": "1mJith1Ppbglt1qfTgc8bo2E8Iv-Wnitd",
+      "archive_file_id": "1NciUG7dZQtEKLleeMoCF2TQTwWXRMYCr",
+      "source_sha256": "3b522a3520984a5bfd6f408cc1d5f92827c3cb83acc106b0609d4101da3132b3",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-slutstriden-nidlandska-reningen-v1",
+      "target_id": "36f7dde0-1b1d-4801-850c-d601373fa418",
+      "drive_file_id": "1zA45gWxsN3NlQBnwlv7Mn8tGX_ktBnU6",
+      "archive_file_id": "1ESQ4dFSZIL9Nks6ToKaoEhg4s2egCcNk",
+      "source_sha256": "5a8aa5620b3c48a8fe917d1ba889f488d79d6386747bb8939b4dc67de640e9a8",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-melindors-aterkomst-v1",
+      "target_id": "5c18f305-e052-481e-a908-5a2332613652",
+      "drive_file_id": "1CYaRTpc69e8-kaR3OIsXNY7kSfV1ZXrK",
+      "archive_file_id": "1y8MQkcGjbRvFxpK85-n_H21QnNcO4R_n",
+      "source_sha256": "238f7cf4672ef6c6ff32defdb881294020e63068e7b000f038d393eda7e395a4",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-helvetesfortet-v1",
+      "target_id": "ea09b5a3-9a81-4a39-b05b-12c105230d4e",
+      "drive_file_id": "10eABBk7-HGUqFopU6CrnfjfjJFPrWaMs",
+      "archive_file_id": "1CI5UpxZ3XxPHULOZLMd_kDgr-G-t67M9",
+      "source_sha256": "ada50292106ef1953695ca8c9b845c1e776307604cff01a6c79021dd2db50a86",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-tempelherren-v1",
+      "target_id": "b01a5757-a33c-4af8-a1ef-c37fa6521a20",
+      "drive_file_id": "1WWws8Wl2ii7xklypVO0fgV77yrNgKqXy",
+      "archive_file_id": "1O6SPgJzvVEbiSEmKyNDQhZgg7VUlOxlQ",
+      "source_sha256": "cde79bc6bd5bfb5ee9048dc08ca1ceed1c4fffcd63677c5ce2ec32b6f276b643",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-handelsfursten-v1",
+      "target_id": "ab8f12cc-8b25-485e-bdeb-602c522fe7e1",
+      "drive_file_id": "1aEkGgmjmnjxqya8hm_wMJYUtZfwGojUe",
+      "archive_file_id": "1XKoI0vQH0kvIuQ_z32Ca_W_MMPYEI9LC",
+      "source_sha256": "909a41e6f463b3a0208eaba1cf42693b342f34280dc766c2c90cea6566550a34",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-oraklets-fyra-ogon-v1",
+      "target_id": "65e78adf-02d5-434e-b488-872aa68b92b5",
+      "drive_file_id": "1hlxplJNlyNuKKkz1P8fA75lW_JGgqmu3",
+      "archive_file_id": "1Q2ZPpgQmx3Z3wWFG6oIIi3WcjtbiEeGN",
+      "source_sha256": "4c0fca50f14225a57af9d0d6c0b9407d9c46ccf69560f470728cfff8b7652092",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-magilre-v1",
+      "target_id": "fab13a50-4cf4-4cc5-b893-55da54acc753",
+      "drive_file_id": "1iySArAxpGXYSuvkHcrajBFMkrNTb08RX",
+      "archive_file_id": "1mPOx2wVnRAFykz1OS84h6P9Ew7y1_oWd",
+      "source_sha256": "08bb341c9f9ddeab2b37520de72eb2e4e155dd4f0c77f31ce837905fa2554949",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-enhorningshornet-v1",
+      "target_id": "8f1386c7-566d-4841-a12b-ac8322d5259e",
+      "drive_file_id": "11J5MLfpZeNpVVFsOtSMVicnunLrBy1KJ",
+      "archive_file_id": "1cxRKNstCy9GgDzlgUm_byIZZi6Cv65SS",
+      "source_sha256": "37447e1871ff999e2b13063813ff8bd1753213566990b471f6074676b1287dc4",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-barbia-v1",
+      "target_id": "6b562f10-6912-4f46-a8ae-e0fb6971f0a7",
+      "drive_file_id": "1XBzNygMQUOBQIS7V6KGxLPQaQ5oc3-rJ",
+      "archive_file_id": "13iaRbpDTwDIj_BFV1D7OVZpagw_EmTxd",
+      "source_sha256": "f41e5cc9e8dad7316c96dc49546aaadfb51249d222fc4c04834cc19cf4f3b915",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-shoguns-vrede-v1",
+      "target_id": "5e17cffa-9f50-4b6f-a507-397f46d8b127",
+      "drive_file_id": "1LeySCcLosqrhz3FigaDfu7YAS_y17BrB",
+      "archive_file_id": "1_mGjm4lTCtYaJhkt9qZEMgUb-WNn3bEk",
+      "source_sha256": "4aa083a4bf60f93e2a97b41f6b8c807228f7dba88b95cd3d9e084974d4c83ccc",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-dodens-vag-v1",
+      "target_id": "9bde6427-e605-46b9-8e2e-80ecb7ea1eb5",
+      "drive_file_id": "1w46lVk7DvZ3YGYlNE3IJfkIOE2-WEjTw",
+      "archive_file_id": "1Lj4RyAp7NpvJzifi6mDa6sn3B3ME9jWf",
+      "source_sha256": "4e9243ff258771d8c7eb29223c943972eb9ea82aa332afd95f1a293aa060bd0d",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-djupets-fasor-v1",
+      "target_id": "f9746146-bb56-40f3-933b-fb780352eb5c",
+      "drive_file_id": "1UKGr7D_qQhiX6UVsE6DqfGdUDR_v-TEf",
+      "archive_file_id": "1DQ-nBBgDhmhSTwS4Li4NEuHJ8JKwPIpO",
+      "source_sha256": "d75b7619bf54508504a99445d4dcc453d7792b1eb947bbe8671f6a5b0f180826",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-jeraz-v1",
+      "target_id": "ea17c252-4686-498d-a876-c0b9ebc1fa97",
+      "drive_file_id": "1NP1k5Hah0KXSxjx-7Yl4myi4QyOT8EPT",
+      "archive_file_id": "1PJh4TBDHBAqcbQtLt9UShUJol3Afbqu6",
+      "source_sha256": "1a4f568e594444abc4e47d7debd0d9aacf7824037028a61140b1ca70638cdb0f",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-marsklandet-v1",
+      "target_id": "b00de9c6-0b9e-4e4b-8d62-5f3c9906e1d8",
+      "drive_file_id": "1Ejo9InvpVkxtlVk28v5bvbzCfuhcCZ1s",
+      "archive_file_id": "1fu2ais3sZLNK7cy9_GwB1gmCwyw1gG4x",
+      "source_sha256": "bb918312b6820fd5b3d879b7d85a31fc02a5b9cfb9fdcacd5bdcb0404d9d1fb8",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-novastenen-v1",
+      "target_id": "fa86296d-1d53-4bf8-9379-00e78323a4f1",
+      "drive_file_id": "1Aplm546F4IzviSnPecticpTd_YRuKVqa",
+      "archive_file_id": "1WtdHaQ5PJDBd4-BIuugIuPmXSR6sqrm0",
+      "source_sha256": "21223517df0bef655d155d473da9c78b5f07b9111b4d2bef2349c7a06705a0eb",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-rosten-fran-forntiden-v1",
+      "target_id": "f4f4211b-732a-48e2-a870-8cf603b45893",
+      "drive_file_id": "1kKPU7xOeDnJXwbs9Juxp6VCmD9aX7zRt",
+      "archive_file_id": "1lzKdBOg-zQFYABLmp6x6NRQll8e-C-Cq",
+      "source_sha256": "e09f57f3f93b943eb0b17d15d88f3e2aae441234b3f39c1e788c1c96b0423fc7",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-skonheten-och-odjuret-v1",
+      "target_id": "e0f33289-750d-41cf-bd1c-71a633ea2db2",
+      "drive_file_id": "1-M3qGeHo-xkdp65zizGcYY5fiU1BDLyG",
+      "archive_file_id": "1ZXTqsW8srvh19Rtzz25wyzPb71orQ3BT",
+      "source_sha256": "1b25f33cfd155aa202e74ad29f7acb402f492b39985ffb351a7199164bd6dc70",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-svart-duell-v1",
+      "target_id": "fa5d96b7-2efc-4e67-a607-0ac1aefa14b5",
+      "drive_file_id": "18Uv3F49iY15N1uQRNt2TWzJsVzc6soEe",
+      "archive_file_id": "1q4v4Oknv_JRDdsHoqOcfUFGWk6sV2gry",
+      "source_sha256": "c08a38acc1d30492ba23e3beb7f0ff79b389b5128c6aeace2598f4976bb97ccf",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-tvillingbergen-v1",
+      "target_id": "53b6fd68-f9b4-49f0-8a4c-e53af6d39cf2",
+      "drive_file_id": "1cUpVsCqT1-pylwwz9-Dq-nfE6uxWvs-g",
+      "archive_file_id": "1_N8-HjY2_FE6g44ZLL46CFHVbpp7xuai",
+      "source_sha256": "85cd62be48f7e3066d95a856179b493f444ab1a9bae54cf3c41dc106080a2f3e",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-havets-vargar-v1",
+      "target_id": "68a0fc2a-2004-4641-a6c8-46055c89d461",
+      "drive_file_id": "1c6J_78xErwHrzaxxqLn1pQxf43m5t5Rz",
+      "archive_file_id": "1-UGGZ7aeu-TV9iRevsk8ACa9RVZutC76",
+      "source_sha256": "fca4b3a7a4dc811cfe2682d7e43225971de0f894603dc1cea7f46f331254abcf",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-morkrets-hjarta-v1",
+      "target_id": "6b64546a-e1d9-4ce1-8f9b-23982d241dd5",
+      "drive_file_id": "1sxn2GdrBfF_KPa2zj5J97FVpy40M3bVR",
+      "archive_file_id": "1BPiNRMA0w83Dv0XGik14c-aBAOgw82Ev",
+      "source_sha256": "263c981ee0605eaa753f7a8e46b6e6006224141a467d42039e1d833fa8ad01fa",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-maktens-portar-v1",
+      "target_id": "5949269f-ded8-4209-a7dc-49d8b59ed832",
+      "drive_file_id": "1p-Aj596WQOAM1WJkPwQl8cn0V_n8auch",
+      "archive_file_id": "1AX3E0IlumGleQeYjI3lKiBsQAeryW1qA",
+      "source_sha256": "8f4c82525ccca4aa20038fcbf1732d5b5ef05353f1dedad32cd0e5c3fb9a54ac",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-doda-skogen-v1",
+      "target_id": "48fa4e37-8807-4869-bea8-4bc7649a76b7",
+      "drive_file_id": "1RYIjzUgI60gVTQxwIh2DpMOM-GVkZQG1",
+      "archive_file_id": "1ZysX3dhkHT5Z_gLcgxL5602QuDDkAhBE",
+      "source_sha256": "27a1b0f6de29a12c1d799b4184f84ffb1978f80e97125171ffa90fcd1b1ce671",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-dimon-v1",
+      "target_id": "15753d0a-faf1-4874-9a4f-5651883f1f9c",
+      "drive_file_id": "1DvmvoLRJiDalsWrQkmeTXO1qb4_YYFEs",
+      "archive_file_id": "1ziqqDz0sH2lNkkE1bPY_z0JhNtoFcjs4",
+      "source_sha256": "cd2fafb1f3bed768592e38d86c51c1be0b123c92c46b8d485d6f749fbefc8723",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-manhjartat-v2-v1",
+      "target_id": "b254d72f-2fab-4967-b6ea-90acff056c0c",
+      "drive_file_id": "19elGFox4BhMTy4xkA4BcmvE8J5fSUyd0",
+      "archive_file_id": "1PkPunLd142UBjNvHcRM0UcUqk9L4c7bN",
+      "source_sha256": "5e3fb83c8681098e5a91df9d32bff677339b0926f18995cd79020d0939ea54ef",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-svavelvinter-v1",
+      "target_id": "3e6cb45f-f383-44f8-a9b9-5c48694461e5",
+      "drive_file_id": "1geB6k9az9A0OIlf_Ip9zirsm_HsqY9hT",
+      "archive_file_id": "1uuARLVA44-djLd_VN_LNHHDIUAsKecLB",
+      "source_sha256": "60ed92e0b5cf4f879938b9545d19f87c3f12da0e00cebbac2cb888104350be47",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-adventure-medal-spindelkonungens-pyramid-v1",
+      "target_id": "36a5bed0-0f87-4d0d-8db5-d4b97ba0ce56",
+      "drive_file_id": "1JQRn9WM1elKTopiIiEK0dgA9YRv-ItLt",
+      "archive_file_id": "1cdVANGm46wlMP_bHmnd5VYrFBB8ioSQs",
+      "source_sha256": "5525e7777217d7403fec094f2f9786b75ae7ca3cd28a19d2f38a1d3c1203bd9c",
+      "visual_approved": true
+    }
+  ]
+}
