@@ -63,7 +63,7 @@
   if(['icon','cutout'].includes(type)&&!['image/png','image/webp'].includes(file.type))throw Error('Ikon och cutout behöver en transparent PNG- eller WebP-bild.');
   const bitmap=await createImageBitmap(file);
   try{
-   if(bitmap.width>4096||bitmap.height>4096)throw Error('Bilden får vara högst 4096 × 4096 pixlar.');
+   if(bitmap.width>4096||bitmap.height>4096)throw Error('Bilden får vara högst 4096 × 4096 pixlar.');\n   const minEdge=type==='cutout'?1024:640;\n   if(bitmap.width<minEdge||bitmap.height<minEdge)throw Error('Bilden måste vara minst '+minEdge+' pixlar.');
    if(type==='illustration-wide'){
     if(Math.abs(bitmap.width/bitmap.height-16/9)/(16/9)>0.003)throw Error('Illustration Wide måste ha formatet 16:9.');
    }else if(bitmap.width!==bitmap.height)throw Error('Den här bildtypen måste vara kvadratisk.');
@@ -110,7 +110,7 @@
   const box=el('div','hermes-upload-controls');
   const select=el('select','hermes-image-type');select.setAttribute('aria-label','Bildtyp för '+row.name);
   for(const [value,label] of IMAGE_TYPES){const option=el('option','',label);option.value=value;select.appendChild(option)}
-  const input=el('input','hermes-image-file');input.type='file';input.accept='image/png,image/jpeg,image/webp';input.setAttribute('aria-label','Välj bild för '+row.name);
+  const input=el('input','hermes-image-file');input.type='file';input.accept='image/png';input.setAttribute('aria-label','Välj bild för '+row.name);
   const button=el('button','smallbtn','Spara bild');button.type='button';
   const lineStatus=el('small','hermes-upload-status','');
   button.addEventListener('click',async()=>{
