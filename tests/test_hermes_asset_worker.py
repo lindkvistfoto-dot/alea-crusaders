@@ -72,7 +72,7 @@ class AssetWorkerTests(unittest.TestCase):
         def ensure(token,job,parent,archive=False):
             calls.append("archive" if archive else "inbox")
             return "archive-id" if archive else "inbox-id"
-        def patch(job,values):
+        def fake_patch(job,values):
             calls.append(values.get("state","metadata"))
             job.update(values)
             return values
@@ -80,7 +80,7 @@ class AssetWorkerTests(unittest.TestCase):
         def publish(job,token,source):calls.append("publish")
         with patch.object(self.w,"storage_download",return_value=self.source), \
              patch.object(self.w,"ensure_drive_original",side_effect=ensure), \
-             patch.object(self.w,"patch_job",side_effect=patch), \
+             patch.object(self.w,"patch_job",side_effect=fake_patch), \
              patch.object(self.w,"verify_drive_file",side_effect=verify), \
              patch.object(self.w,"publish",side_effect=publish):
             self.w.process(self.job,self.token)
