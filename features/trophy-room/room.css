@@ -10,3 +10,7 @@
 
 /* ARCANE HONORS scene preview. Relief artwork is independent of the circular frame and may overhang. */
 .trophy-room-honor-preview{position:absolute;right:9%;top:22%;z-index:8;width:clamp(110px,15%,220px);display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;color:#f2dfbd;background:#17120ee8;border:1px solid #c39b5e;border-radius:10px;text-align:center;pointer-events:auto}.trophy-room-honor-preview[hidden]{display:none}.trophy-room-honor-preview-art{position:relative;width:100%;aspect-ratio:2/3;display:grid;place-items:center;overflow:visible}.trophy-room-honor-preview-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;overflow:visible}.trophy-room-honor-frame{z-index:1;pointer-events:none}.trophy-room-honor-relief{z-index:2;transform:scale(1.14);pointer-events:none}.trophy-room-honor-relief-label{position:relative;z-index:3;max-width:75%;padding:8px;background:#21180ee8;border:1px dashed #d2b77f;border-radius:50%;font-size:.72rem}.trophy-room-honor-preview-close{font-size:.75rem;padding:6px 8px}
+
+/* JAKOB 3C: user-calibrated front wall bounds, 1280x720 reference. */
+.trophy-room-medal-wall{left:40.73%;top:27.69%;width:19.31%;height:32.77%;transform:translate(var(--pan-x,0px),var(--pan-y,0px)) scale(var(--zoom,1));transform-origin:center center}
+@media(max-width:700px){.trophy-room-medal-wall{left:40.73%;top:27.69%;width:19.31%;height:32.77%}}
