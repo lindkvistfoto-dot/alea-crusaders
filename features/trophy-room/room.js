@@ -1,4 +1,50 @@
-(function(root){'use strict';const KEY='arcane-trophy-room-v2.2',URL='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/arcane-trophy-room-v2.2/c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55.webp';let scale=1,x=0,y=0,drag=null;const byId=id=>document.getElementById(id);function page(){return byId('trophyRoomPage')||document.querySelector('.trophy-room-page')}function viewport(){return byId('trophyRoomViewport')}function image(){return byId('trophyRoomImage')}function draw(){const v=viewport();if(!v)return;v.style.setProperty('--hero-progress',String(Math.max(0,Math.min(1,(scale-1)/1.25))));v.style.setProperty('--zoom',String(scale));v.style.setProperty('--pan-x',x+'px');v.style.setProperty('--pan-y',y+'px');const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%'}function reset(){viewport()?.classList.add('trophy-room-cinematic');scale=1;x=0;y=0;draw()}function focusWall(){const v=viewport();if(!v)return;v.classList.add('trophy-room-cinematic');scale=2.25;x=-(.50385-.5)*v.clientWidth*scale;y=-(.44075-.5)*v.clientHeight*scale;draw()}function zoom(delta){scale=Math.max(1,Math.min(4,scale+delta));draw()}function availableCharacters(){try{if(typeof root.shopEligibleBuyers==='function')return root.shopEligibleBuyers()||[];if(typeof shopEligibleBuyers==='function')return shopEligibleBuyers()||[]}catch(e){console.warn('Trophy character roster unavailable',e)}return []}
+(function(root){'use strict';const KEY='arcane-trophy-room-v2.2',URL='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/arcane-trophy-room-v2.2/c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55.webp';let scale=1,x=0,y=0,drag=null;const byId=id=>document.getElementById(id);function page(){return byId('trophyRoomPage')||document.querySelector('.trophy-room-page')}function viewport(){return byId('trophyRoomViewport')}function image(){return byId('trophyRoomImage')}/* JAKOB 3H: one animation clock drives both the wall camera and hero. */
+let cameraFrame=0,cameraMotion=null;
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function draw(){
+ const v=viewport();if(!v)return;
+ const scene=byId('trophyRoomScene'),hero=byId('trophyRoomCharacterLayer');
+ const progress=clamp((scale-1)/1.25,0,1);
+ v.style.setProperty('--pan-x',x+'px');v.style.setProperty('--pan-y',y+'px');v.style.setProperty('--zoom',String(scale));
+ if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+ if(hero){
+  const width=v.clientWidth,height=v.clientHeight;
+  const heroWidth=width*.30;
+  const moveX=-heroWidth*.5-progress*width*.29;
+  const moveY=progress*height*.22;
+  const heroScale=1+progress*1.05;
+  hero.style.transform='translate3d('+moveX+'px,'+moveY+'px,0) scale('+heroScale+')';
+ }
+ const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%';
+}
+function cancelCamera(){if(cameraFrame)cancelAnimationFrame(cameraFrame);cameraFrame=0;cameraMotion=null}
+function animateCamera(target,duration=2500){
+ cancelCamera();
+ const reduce=root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+ if(reduce||duration<=0){scale=target.scale;x=target.x;y=target.y;draw();return}
+ const start={scale,x,y};const started=performance.now();
+ cameraMotion={start,target,started,duration};
+ function tick(now){
+  const t=clamp((now-started)/duration,0,1),k=ease(t);
+  scale=start.scale+(target.scale-start.scale)*k;
+  x=start.x+(target.x-start.x)*k;
+  y=start.y+(target.y-start.y)*k;
+  draw();
+  if(t<1)cameraFrame=requestAnimationFrame(tick);else{cameraFrame=0;cameraMotion=null}
+ }
+ cameraFrame=requestAnimationFrame(tick);
+}
+function reset(){animateCamera({scale:1,x:0,y:0})}
+function focusWall(){
+ const v=viewport();if(!v)return;
+ const targetScale=2.25;
+ // Center the user-calibrated wall midpoint in the camera viewport.
+ const wallX=.4073+.1931/2,wallY=.2769+.3277/2;
+ animateCamera({scale:targetScale,x:(.5-wallX)*v.clientWidth*targetScale,y:(.5-wallY)*v.clientHeight*targetScale});
+}
+function zoom(delta){cancelCamera();scale=clamp(scale+delta,1,4);draw()}
+function availableCharacters(){try{if(typeof root.shopEligibleBuyers==='function')return root.shopEligibleBuyers()||[];if(typeof shopEligibleBuyers==='function')return shopEligibleBuyers()||[]}catch(e){console.warn('Trophy character roster unavailable',e)}return []}
 function renderCharacter(){const layer=byId('trophyRoomCharacterLayer'),cutout=byId('trophyRoomCharacterCutout'),picker=byId('trophyRoomCharacter');if(!layer||!cutout||!picker)return;const character=availableCharacters().find(c=>String(c.id)===picker.value);/* Uploaded Rollperson > Bilder > Helfigur (rustning); no synthesized equipment. */const images=character?.figureImages||character?.data?.figureImages;const src=images?.armored||'';const valid=typeof src==='string'&&src.startsWith('data:image/')&&/^data:image\/(?:png|jpeg|webp);base64,/i.test(src);layer.hidden=!valid;if(valid){cutout.src=src;cutout.alt=(character?.identity?.namn||character?.name||'Rollperson')+' i rustning'}else{cutout.removeAttribute('src');cutout.alt=''} }
 const MEDAL_BASE='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/';
 let medalSequence=0;
@@ -41,7 +87,7 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}for(const element of [background,wall])if(element.parentElement!==scene)scene.append(element)}
-function open(){const p=page();if(!p)return;ensureScene();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals()}function close(){document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(scale<1.5)focusWall()});v.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.12:-.12)},{passive:false});v.addEventListener('pointerdown',e=>{drag={x:e.clientX-x,y:e.clientY-y};v.setPointerCapture(e.pointerId)});v.addEventListener('pointermove',e=>{if(!drag)return;x=e.clientX-drag.x;y=e.clientY-drag.y;draw()});for(const name of ['pointerup','pointercancel'])v.addEventListener(name,()=>{drag=null});v.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='+'||e.key==='=')zoom(.15);if(e.key==='-')zoom(-.15);if(e.key==='0')reset()})}const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'})}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
+function open(){const p=page();if(!p)return;ensureScene();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(scale<1.5)focusWall()});v.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.12:-.12)},{passive:false});v.addEventListener('pointerdown',e=>{cancelCamera();drag={x:e.clientX-x,y:e.clientY-y};v.setPointerCapture(e.pointerId)});v.addEventListener('pointermove',e=>{if(!drag)return;x=e.clientX-drag.x;y=e.clientY-drag.y;draw()});for(const name of ['pointerup','pointercancel'])v.addEventListener(name,()=>{drag=null});v.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='+'||e.key==='=')zoom(.15);if(e.key==='-')zoom(-.15);if(e.key==='0')reset()})}const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'})}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
  const actor=root.activeUser?.();
  if(!(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm'))return;
  open();
