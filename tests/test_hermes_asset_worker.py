@@ -143,4 +143,56 @@ class AssetWorkerTests(unittest.TestCase):
         self.assertIsNone(values["lease_token"])
         self.assertEqual(self.job["source_path"],"hermes-assets/test/source")
 
+    def test_storage_upload_failure_preserves_previous_pointer(self):
+        webp=b"deterministic webp bytes"
+        self.job.update({"archive_drive_file_id":"archive-id","inbox_drive_file_id":"inbox-id"})
+        with patch.object(self.w,"pointer",return_value={"symbol_key":self.job["target_key"],"icon_path":"old.webp"}), \
+             patch.object(self.w,"optimized_webp",return_value=(webp,640,640)), \
+             patch.object(self.w,"patch_job") as patch_job, \
+             patch.object(self.w,"request",side_effect=OSError("temporary storage failure")), \
+             patch.object(self.w,"storage_download") as download, \
+             patch.object(self.w,"rest") as rest:
+            with self.assertRaisesRegex(OSError,"temporary storage failure"):
+                self.w.publish(self.job,self.token,self.source)
+            download.assert_not_called()
+            rest.assert_not_called()
+        self.assertEqual(patch_job.call_args.args[1]["state"],"publishing")
+
+    def test_webp_readback_hash_failure_preserves_previous_pointer(self):
+        webp=b"deterministic webp bytes"
+        self.job.update({"archive_drive_file_id":"archive-id","inbox_drive_file_id":"inbox-id"})
+        with patch.object(self.w,"pointer",return_value={"symbol_key":self.job["target_key"],"icon_path":"old.webp"}), \
+             patch.object(self.w,"optimized_webp",return_value=(webp,640,640)), \
+             patch.object(self.w,"patch_job") as patch_job, \
+             patch.object(self.w,"request"), \
+             patch.object(self.w,"storage_download",return_value=b"wrong bytes"), \
+             patch.object(self.w,"rest") as rest:
+            with self.assertRaisesRegex(ValueError,"PUBLIC_READBACK_MISMATCH"):
+                self.w.publish(self.job,self.token,self.source)
+            rest.assert_not_called()
+        self.assertEqual(patch_job.call_args.args[1]["state"],"publishing")
+
+    def test_activation_happens_after_verified_storage_readback(self):
+        webp=b"deterministic webp bytes"
+        active={"path":"old.webp"};patch_states=[]
+        self.job.update({"archive_drive_file_id":"archive-id","inbox_drive_file_id":"inbox-id"})
+        def fake_rest(path,method="GET",data=None):
+            if method=="PATCH":
+                self.assertEqual(active["path"],"old.webp")
+                active["path"]=data["icon_path"]
+                return [{"id":self.job["target_id"]}]
+            raise AssertionError("Unexpected REST request")
+        def fake_patch(job,values):
+            patch_states.append(values["state"])
+            job.update(values)
+        with patch.object(self.w,"pointer",side_effect=lambda job:{"symbol_key":self.job["target_key"],"icon_path":active["path"]}), \
+             patch.object(self.w,"optimized_webp",return_value=(webp,640,640)), \
+             patch.object(self.w,"patch_job",side_effect=fake_patch), \
+             patch.object(self.w,"request"), \
+             patch.object(self.w,"storage_download",side_effect=lambda *args:(self.assertEqual(active["path"],"old.webp"),webp)[1]), \
+             patch.object(self.w,"rest",side_effect=fake_rest):
+            self.w.publish(self.job,self.token,self.source)
+        self.assertTrue(active["path"].endswith(".webp"))
+        self.assertEqual(patch_states,["publishing","published"])
+
 if __name__=="__main__":unittest.main()
