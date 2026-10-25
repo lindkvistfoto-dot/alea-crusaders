@@ -180,7 +180,7 @@ class AssetWorkerTests(unittest.TestCase):
         self.assertEqual(ensure_calls,[False,True,False,True])
         verify.assert_not_called()
         self.assertEqual(self.job["archive_drive_file_id"],"archive-id")
-        self.assertEqual([p.get("state") for p in patches],["inboxed","archived"])
+        self.assertEqual([p.get("state") for p in patches],["inboxed","inboxed","archived"])
 
     def test_storage_upload_failure_preserves_previous_pointer(self):
         webp=b"deterministic webp bytes"
