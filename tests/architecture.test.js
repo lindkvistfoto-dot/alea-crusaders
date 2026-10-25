@@ -115,7 +115,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatEffectAttributeDelta(combatant,attribute)");
     expect(combat).toContain("def.modifiers?.type!=='attribute_delta'");
     expect(combat).toContain("type==='attribute_delta'?{attribute,points_per_eg:pointsPerEg}");
-    expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttributeHtml(c)");
+    expect(combat).toContain("combatantEffectsHtml(c)+combatEffectAttribuµ¨¥zºè¯
+â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
+â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^teHtml(c)");
   });
 
   test("combat effect registry persists and renders status effects", () => {
@@ -214,7 +216,8 @@ describe("application architecture smoke checks", () => {
     )(rules.combatMagicCastingRules, () => ({}));
     expect(preflight({current_psy:3},{name:"BLIXT",fv:10,school_fv:5,damage_text:'1T6 per EG'},2).valid).toBe(true);
     expect(preflight({current_psy:1},{name:"BLIXT",fv:10,school_fv:5,damage_text:'1T6 per EG'},2).errors).toContain("OtillrÃ¤cklig PSY");
-    expect(preflight({current_psy:20},{name:"BLIXT",fv:10,school_fv:2,damage_text:'1T6 per EG'},3).errors).toContain("EG Ã¶verstiger FV i magiskolan");
+    expect(preflight({current_psy:20},{name:"BLIXT",fv:10,school_fv:2,damage_text:'1Tµ¨¥zºè¯
+â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^6 per EG'},3).errors).toContain("EG Ã¶verstiger FV i magiskolan");
   });
 
   test("elf races use the two-hour ERF rest rule", () => {
@@ -458,7 +461,8 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("â€” VÃ¤lj vapen â€”");
     expect(legacy).toContain("function npcShieldOptions");
     expect(legacy).toContain("â€” Ingen skÃ¶ld â€”");
-    expect(legacy).toContain("adminNpcDraft.skills.push({skill_id:'',name:'',fv:10})");
+    expect(legacy).µ¨¥zºè¯
+â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^toContain("adminNpcDraft.skills.push({skill_id:'',name:'',fv:10})");
     expect(legacy).toContain("adminNpcDraft.weapons.push({equipId:crypto.randomUUID(),weapon_id:'',name:'',fv:10");
     expect(legacy).toContain("fv:fv==null?10:fv");
     expect(legacy).toContain("VÃ¤lj utrustning och vilken hand som hÃ¥ller den.");
@@ -763,7 +767,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("await combatRollAndApplyInitiative(combatId,{roundNumber:round})");
     expect(combat).toContain("if(index===0)combatFadeInitiativeDice()");
     expect(combat).toContain("combatShowDiceHost");
-    expect(combat).toContain("duration:780");
+    expeµ¨¥Â¸­yêë¢°k¢G§¦*^ct(combat).toContain("duration:780");
     expect(combat).toContain("offset:.94");
     expect(combat).toContain("setTimeout(()=>transferOne(0),reduced?700:3000)");
     expect(combat).toContain("data-combatant-id");
@@ -1061,7 +1065,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("slot_key:'primary'");
     expect(combat).toContain("action_type:def.type");
     expect(combat).toContain("status:def.type==='parry'?'reserved':'planned'");
-    expect(combat).toContain("combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null)");
+    expect(combat).toContain("preserveSelectedTarget&&!activeSpellResolved&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null)");
     expect(combat).toContain("function combatRowActionMenuHtml(combatant)");
     expect(combat).toContain("combatPlayerMiniatureKind");
     expect(combat).toContain("combatMiniatureWarrior");

@@ -6,7 +6,7 @@ it('renders a non-interactive guide using actual route hex centers',()=>{
  expect(js).toContain('...previewRoute.path');
  expect(js).toContain("byCoord.get(step.q+','+step.r)");
  expect(js).toContain('class="yellow-brick-road-line"');
- expect(js).toContain('terrain+roadLine+areasOverlay+tokens');
+ expect(js).toContain('terrain+roadLine+areasOverlay+magicTargetOverlay+tokens');
  expect(css).toContain('.yellow-brick-road-line');
 });
 it('distinguishes far reachable cells from the highlighted route',()=>{

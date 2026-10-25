@@ -1,4 +1,4 @@
-/* Alea Crusaders v0.35.199 â€“ locked magic-carousel MVP.
+µ¨¥Â¸­yêë¢°k¢G§¦*^/* Alea Crusaders v0.35.199 â€“ locked magic-carousel MVP.
  * UI-only selector. The existing Expert preparation, cast and dice code
  * remains authoritative. No spell is cast by clicking a carousel tile. */
 const COMBAT_MAGIC_CAROUSEL_MAX=12;
@@ -515,7 +515,7 @@ async function combatCancelPreparedSpell(actorId){
    method:'PATCH',headers:{Prefer:'return=minimal'},
    body:JSON.stringify({status:'cancelled',updated_at:new Date().toISOString()})
   });
-  combatSelectedTargetId=null;combatMobileMagicTargetPickerOpen=false;
+  combatSelectedTargetId=null;combatMagicHexHover=null;combatMobileMagicTargetPickerOpen=false;
   combatCloseRowActionMenu();
   await loadActiveCombat(null,{preserveSelectedTarget:false});
   const current=combatants.find(row=>String(row.id)===String(actorId));
