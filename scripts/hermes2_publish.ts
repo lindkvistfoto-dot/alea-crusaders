@@ -169,6 +169,7 @@ async function publish(a:any){
  // Retries may proceed only when the target already points at this exact
  // deterministic, content-derived asset path.
  if(a.kind==="spell-cutout")assertSpellCutoutWritable(target.cutout_path,appPath);
+ if(a.kind==="symbol-cutout")assertSpellCutoutWritable(target.cutout_path,appPath);
  const jobBody={kind:a.kind,target_key:a.target_key,source_sha256:a.source_sha256,app_sha256:a.app_sha256,
   source_path:sourcePath,app_path:appPath,source_bytes:a.source_bytes,app_bytes:app.length,
   github_blob_sha:null,github_commit_sha:ghSha,origin:"github_actions",
