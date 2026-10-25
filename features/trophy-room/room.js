@@ -12,12 +12,12 @@ function draw(){clampCamera();
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
   const heroWidth=width*.30;
-  const moveX=-heroWidth*.5-progress*width*.29;
-  const moveY=progress*height*.38;
+  const moveX=-heroWidth*.5-progress*width*.36;
+  const moveY=progress*height*.66;
   const heroScale=1+progress*1.45;
   hero.style.transform='translate3d('+moveX+'px,'+moveY+'px,0) scale('+heroScale+')';
  }
- const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%';const back=byId('trophyRoomBackButton');if(back)back.hidden=scale<=1.01;
+ const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%';
 }
 function cancelCamera(){if(cameraFrame)cancelAnimationFrame(cameraFrame);cameraFrame=0;cameraMotion=null}
 function animateCamera(target,duration=2500){
@@ -37,7 +37,6 @@ function animateCamera(target,duration=2500){
  cameraFrame=requestAnimationFrame(tick);
 }
 function reset(){animateCamera({scale:1,x:0,y:0})}
-function ensureBackButton(){const v=viewport();if(!v)return;let button=byId('trophyRoomBackButton');if(!button){button=document.createElement('button');button.id='trophyRoomBackButton';button.type='button';button.className='trophy-room-back-button';button.textContent='← Tillbaka';button.setAttribute('aria-label','Återgå till helbild');button.addEventListener('click',e=>{e.stopPropagation();reset()});v.append(button)}return button}
 function focusWall(){
  const v=viewport();if(!v)return;
  const targetScale=2.25;
@@ -45,7 +44,7 @@ function focusWall(){
  const wallX=.4073+.1931/2,wallY=.2769+.3277/2;
  animateCamera({scale:targetScale,x:(.5-wallX)*v.clientWidth*targetScale,y:(.5-wallY)*v.clientHeight*targetScale});
 }
-function zoom(delta){cancelCamera();scale=clamp(scale+delta,1,4);draw()}
+function zoom(delta){if(delta>0&&scale<1.5)focusWall();else if(delta<0&&scale>1.5)reset()}
 function availableCharacters(){try{if(typeof root.shopEligibleBuyers==='function')return root.shopEligibleBuyers()||[];if(typeof shopEligibleBuyers==='function')return shopEligibleBuyers()||[]}catch(e){console.warn('Trophy character roster unavailable',e)}return []}
 function renderCharacter(){const layer=byId('trophyRoomCharacterLayer'),cutout=byId('trophyRoomCharacterCutout'),picker=byId('trophyRoomCharacter');if(!layer||!cutout||!picker)return;const character=availableCharacters().find(c=>String(c.id)===picker.value);/* Uploaded Rollperson > Bilder > Helfigur (rustning); no synthesized equipment. */const images=character?.figureImages||character?.data?.figureImages;const src=images?.armored||'';const valid=typeof src==='string'&&src.startsWith('data:image/')&&/^data:image\/(?:png|jpeg|webp);base64,/i.test(src);layer.hidden=!valid;if(valid){cutout.src=src;cutout.alt=(character?.identity?.namn||character?.name||'Rollperson')+' i rustning'}else{cutout.removeAttribute('src');cutout.alt=''} }
 const MEDAL_BASE='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/';
@@ -89,7 +88,12 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}for(const element of [background,wall])if(element.parentElement!==scene)scene.append(element)}
-function open(){const p=page();if(!p)return;ensureScene();ensureBackButton();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();ensureBackButton();const v=viewport();if(v){v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(suppressClick){suppressClick=false;return}if(cameraMotion)return;if(scale<1.5)focusWall()});v.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.12:-.12)},{passive:false});v.addEventListener('pointerdown',e=>{if(e.target.closest('button,select'))return;if(cameraMotion)return;drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,originX:x,originY:y,moved:false};v.setPointerCapture(e.pointerId)});v.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;if(Math.hypot(dx,dy)>8)drag.moved=true;if(!drag.moved||scale<=1)return;x=drag.originX+dx;y=drag.originY+dy;draw()});for(const name of ['pointerup','pointercancel','lostpointercapture'])v.addEventListener(name,e=>{if(!drag||e.pointerId!==drag.id)return;if(drag.moved){suppressClick=true;root.setTimeout(()=>{suppressClick=false},0)}drag=null});v.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='+'||e.key==='=')zoom(.15);if(e.key==='-')zoom(-.15);if(e.key==='0')reset()})}const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'})}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
+function open(){const p=page();if(!p)return;ensureScene();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
+ v.setAttribute('aria-label','Troférum. Tryck för att närma dig medaljväggen. Centrera återgår till helbild.');
+ v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion)return;if(scale<1.5)focusWall()});
+ v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='0')reset()});
+}
+const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'})}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
  const actor=root.activeUser?.();
  if(!(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm'))return;
  open();
