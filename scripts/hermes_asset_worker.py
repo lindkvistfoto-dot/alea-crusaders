@@ -119,32 +119,19 @@ def image_mime(data):
     if len(data)>12 and data[:4]==b"RIFF" and data[8:12]==b"WEBP":return "image/webp"
     raise ValueError("INVALID_IMAGE_SIGNATURE")
 
-def optimized_webp(source,image_type):
-    try:
-        im=Image.open(io.BytesIO(source));im.load()
-    except (UnidentifiedImageError,OSError,ValueError):
-        raise ValueError("INVALID_IMAGE") from None
-    fmt=(im.format or "").upper()
-    if fmt not in ("PNG","JPEG","WEBP") or im.width<1 or im.height<1 or im.width>4096 or im.height>4096:
-        raise ValueError("INVALID_IMAGE_DIMENSIONS")
-    wide=image_type=="illustration-wide"
-    if wide:
-        if abs((im.width/im.height)-(16/9))/(16/9)>0.003:raise ValueError("WIDE_IMAGE_MUST_BE_16_9")
-        im=im.convert("RGB").resize((1280,720),Image.Resampling.LANCZOS)
-    else:
-        if im.width!=im.height:raise ValueError("SQUARE_IMAGE_REQUIRED")
-        if image_type in ("icon","cutout"):
-            if "A" not in im.getbands():raise ValueError("TRANSPARENT_IMAGE_REQUIRED")
-            if image_type=="cutout" and im.getchannel("A").getextrema()[0] != 0:
-                raise ValueError("CUTOUT_NEEDS_TRANSPARENT_PIXELS")
-            im=im.convert("RGBA").resize((640,640),Image.Resampling.LANCZOS)
-        else:
-            bg=Image.new("RGB",im.size,(255,255,255))
-            if "A" in im.getbands():bg.paste(im.convert("RGBA"),mask=im.getchannel("A"))
-            else:bg.paste(im.convert("RGB"))
-            im=bg.resize((640,640),Image.Resampling.LANCZOS)
-    out=io.BytesIO();im.save(out,format="WEBP",quality=85,method=6)
-    return out.getvalue(),im.width,im.height
+def optimized_webp(source,image_type,target_key):
+    """Use the canonical HERMES PNG profile and optimizer for all symbol art."""
+    from hermes2_prepare import prepare_bytes
+    import tempfile
+    raw_sha=digest(source)
+    with tempfile.TemporaryDirectory(prefix="hermes-symbol-") as directory:
+        output=Path(directory)
+        manifest=prepare_bytes(source,KIND[image_type],target_key,raw_sha,output,
+                              "drive://"+("A"*10))
+        data=(output/manifest["app_file"]).read_bytes()
+        if digest(data)!=manifest["app_sha256"]:
+            raise ValueError("PREPARED_WEBP_SHA256_MISMATCH")
+        return data,manifest["width"],manifest["height"]
 
 def pointer(job):
     rows=rest("rule_magic_symbols?select=id,symbol_key,"+",".join(FIELD.values())+"&id=eq."+job["target_id"])
@@ -166,7 +153,7 @@ def publish(job,token,source):
         patch_job(job,{"state":"published","completed_at":datetime.now(timezone.utc).isoformat(),"error_code":None,"lease_token":None,"lease_until":None})
         return
     if current!=previous:raise ValueError("TARGET_CHANGED_DURING_PUBLICATION")
-    webp,width,height=optimized_webp(source,job["image_type"])
+    webp,width,height=optimized_webp(source,job["image_type"],job["target_key"])
     app_sha=digest(webp);kind=KIND[job["image_type"]]
     path="hermes/"+kind+"/"+job["target_key"]+"/"+app_sha+".webp"
     patch_job(job,{"state":"publishing","output_path":path,"app_sha256":app_sha,"error_code":None})
