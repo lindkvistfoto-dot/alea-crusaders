@@ -66,4 +66,6 @@ describe('BESKYDDARE · höjd förenklad till hexringar',()=>{
  test('the UI describes the map projection without a cube height control',()=>{
   expect(runtime).toContain('Varje extra EG lägger till en ring. Höjd visas inte på kartan.');
   expect(runtime).not.toContain('Kubens sida = EG + 2 rutor');
-  expect(runtime).toContain(
+  expect(runtime).toContain("shape:'hex_radius'");
+ });
+});
