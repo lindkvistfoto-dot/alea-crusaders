@@ -18,3 +18,11 @@
 /* JAKOB 3D: real awards only; calibrated wall geometry remains unchanged. */
 .trophy-room-medal-wall{grid-template-columns:repeat(var(--medal-columns,6),minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(0,1fr);align-content:start}
 .trophy-room-medal-slot{background:none;box-shadow:none;border-radius:0;aspect-ratio:1}
+
+/* JAKOB 3E: camera zoom keeps wall art aligned with the original scene. */
+.trophy-room-scene{position:absolute;inset:0;transform:translate(var(--pan-x,0px),var(--pan-y,0px)) scale(var(--zoom,1));transform-origin:50% 50%;pointer-events:none}
+.trophy-room-scene .trophy-room-background{transform:none;transition:none}
+.trophy-room-scene .trophy-room-medal-wall{transform:none;transition:none}
+.trophy-room-character-layer{left:calc(50% - var(--hero-progress,0)*29%);opacity:calc(1 - var(--hero-progress,0)*.12);transform:translateX(-50%) translate(calc(var(--pan-x,0px)*(1 - var(--hero-progress,0))),calc(var(--pan-y,0px)*(1 - var(--hero-progress,0)))) scale(calc(1 + (var(--zoom,1) - 1)*(1 - var(--hero-progress,0))));transition:left .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1),opacity .55s}
+@media(prefers-reduced-motion:no-preference){.trophy-room-scene{transition:transform .55s cubic-bezier(.22,1,.36,1)}}
+@media(prefers-reduced-motion:reduce){.trophy-room-scene,.trophy-room-character-layer{transition:none}}
