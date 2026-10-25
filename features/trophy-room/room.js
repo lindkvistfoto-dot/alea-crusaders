@@ -91,7 +91,7 @@ function ensureMedalDialog(){
  const close=makeElement('button','arcane-medal-display-close','×');
  close.type='button';close.setAttribute('aria-label','Stäng medaljvisning');
  close.addEventListener('click',()=>dialog.close());
- dialog.append(frame,close);
+ dialog.append(close,frame);
  dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
  dialog.addEventListener('close',()=>{medalDialogReturnFocus?.focus?.();medalDialogReturnFocus=null});
  document.body.append(dialog);medalDialog=dialog;return dialog;
