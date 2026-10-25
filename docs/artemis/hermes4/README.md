@@ -1,12 +1,12 @@
 # HERMES 4.0 — en batch genom den befintliga kedjan
 
-Kedjan är **bild → Inbox → bildkontroll → permanent Drive-arkiv → WebP → Supabase → Alea**. Codex gör Drive-arkivsteget med den befintliga anslutna användaridentiteten. Därefter kör en enda Actions-körning hela den befintliga intags-, konverterings- och publiceringskoden för alla objekt. Ingen ny publicerare, databas, tjänst eller originalbucket används.
+Kedjan är **bild → Inbox → bildkontroll → permanent Drive-arkiv → WebP → Supabase → Alea**. Work kör Drive-arkivsteget med den befintliga anslutna Google Drive-identiteten. Därefter kör en enda Actions-körning hela den befintliga intags-, konverterings- och publiceringskoden för alla objekt. Ingen ny publicerare, databas, tjänst eller originalbucket används.
 
 ## Varför arkivkopieringen använder Drive-anslutningen
 
 `hermes-transfer@alea-hermes.iam.gserviceaccount.com` har redan fungerande read-only WIF på `main`. `files.copy` kräver ett skrivande OAuth-scope; `drive.readonly` kan inte kopiera. CHIMAIRA-mapparna ligger dessutom i användarens My Drive. Google anger att servicekonton saknar lagringskvot för ägda filer; att enbart begära ett bredare scope löser inte det problemet.
 
-Behåll därför WIF-konfiguration, read-only-scope och Supabase-secret oförändrade. Använd den redan anslutna Drive-identiteten för server-side `copy_file`; ge samma befintliga HERMES-konto läsrätt till de nya arkivfilerna om de inte redan är läsbara för kontot. Ingen ägaröverföring, automatisk flytt/radering, ny nyckel, delegation eller generell skrivrätt för servicekontot behövs. Codex gör detta arbete; användaren behöver inte ladda ned eller flytta bilder manuellt.
+Behåll därför WIF-konfiguration, read-only-scope och Supabase-secret oförändrade. Använd den redan anslutna Drive-identiteten för server-side `copy_file`; ge samma befintliga HERMES-konto läsrätt till de nya arkivfilerna om de inte redan är läsbara för kontot. Ingen ägaröverföring, automatisk flytt/radering, ny nyckel, delegation eller generell skrivrätt för servicekontot behövs. Work utför detta steg i den befintliga HERMES-batchen; originalen flyttas eller laddas inte ned manuellt.
 
 Detta är två behörighetssteg inom samma batchuppdrag, med **en** publicerings-Action. Actions hävdar inte att den gjort en kopia: rapporten visar det faktiska arkiv-ID som den själv har läst och verifierat.
 
@@ -16,7 +16,7 @@ Källor: [Drive files.copy](https://developers.google.com/workspace/drive/api/re
 
 Work ska leverera fem godkända original i Inbox `1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp`, med exakt besvärjelse-ID, `spell_key`, Inbox-fil-ID, SHA-256 och bildtyp. Visuell granskning ska bekräfta rätt motiv, ingen bakgrundsplatta och ett helt synligt, obeskuret motiv. Verklig alfa, format, storlek och dimensioner verifieras också maskinellt. En alfakanal ensam bevisar inte motivets visuella kvalitet.
 
-Efter arkivsteget normaliserar Codex till följande lilla JSON-köfil. `items` innehåller 1–100 objekt; femfilspiloten innehåller exakt de fem nya godkända bilderna. Exemplet nedan visar ett objekts fält, med tydliga platshållare; filen får inte läggas i kön ofylld.
+Efter arkivsteget normaliserar Work till följande lilla JSON-köfil. `items` innehåller 1–100 objekt; femfilspiloten innehåller exakt de fem nya godkända bilderna. Exemplet nedan visar ett objekts fält, med tydliga platshållare; filen får inte läggas i kön ofylld.
 
 ```json
 {
@@ -36,9 +36,9 @@ Efter arkivsteget normaliserar Codex till följande lilla JSON-köfil. `items` i
 }
 ```
 
-Work-formatet `schema_version: "1.0"` med `records` stöds också när Codex uttryckligen lägger till `mode`. `image_type`, `spell_key`, `spell_id`, `inbox_file_id`, `sha256` och `quality_status: "approved"` mappas till motsvarande batchfält. `archive_file_id` används om det finns; det tidigare Work-formatets separata `drive_file_id` tolkas som arkiv-ID när `inbox_file_id` också finns. Ett Inbox-ID utan arkiv-ID är underlag för arkivsteget och får inte publiceras innan det kompletterats. Inget läge gissas till `publish`.
+Work-formatet `schema_version: "1.0"` med `records` stöds också när Work uttryckligen lägger till `mode`. `image_type`, `spell_key`, `spell_id`, `inbox_file_id`, `sha256` och `quality_status: "approved"` mappas till motsvarande batchfält. `archive_file_id` används om det finns; det tidigare Work-formatets separata `drive_file_id` tolkas som arkiv-ID när `inbox_file_id` också finns. Ett Inbox-ID utan arkiv-ID är underlag för arkivsteget och får inte publiceras innan det kompletterats. Inget läge gissas till `publish`.
 
-## Arkivsteg som Codex utför före köläggning
+## Arkivsteg som Work utför före köläggning
 
 1. Läs Work-manifestets faktiska bytes och verifiera att det gäller de fem nya godkända objekten. Återanvänd inte tidigare HYDRA-bilder som ersättning. Läs tillbaka besvärjelsernas ID, nycklar och aktuella `cutout_path`; välj inga nya besvärjelser.
 2. Läs varje Inbox-original via Drive-anslutningen. Använd `hermes_drive_intake.validate_png` och SHA-256 på faktiska bytes. Cutout-original ska vara kvadratiska RGBA-PNG, 1024–4096 px, högst 8 MiB och ha helt transparenta pixlar. Behåll originalbytes enbart tillfälligt utanför checkout och radera den lokala tillfälliga kopian efter kontroll. Originalet i Inbox lämnas kvar.
