@@ -13,8 +13,8 @@ draw();
 const bounds={left:31,top:24,width:38,height:27};
 function renderBounds(){Object.assign(wall.style,{left:bounds.left+'%',top:bounds.top+'%',width:bounds.width+'%',height:bounds.height+'%'});document.getElementById('coords').textContent=JSON.stringify({reference:'1280x720',columns:6,rows:5,...Object.fromEntries(Object.entries(bounds).map(([k,v])=>[k,Number(v.toFixed(2))]))})}
 let editing=null;
-wall.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();const r=wall.getBoundingClientRect();editing={resize:e.clientX>r.right-35&&e.clientY>r.bottom-35,sx:e.clientX,sy:e.clientY,initial:{...bounds}};wall.setPointerCapture(e.pointerId)});
+wall.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();e.stopPropagation();const r=wall.getBoundingClientRect();editing={resize:e.clientX>r.right-35&&e.clientY>r.bottom-35,sx:e.clientX,sy:e.clientY,initial:{...bounds}};wall.setPointerCapture(e.pointerId)});
 wall.addEventListener('pointermove',e=>{if(!editing)return;const rect=scene.getBoundingClientRect(),factor=zoom||1;const dx=(e.clientX-editing.sx)/(rect.width*factor)*100,dy=(e.clientY-editing.sy)/(rect.height*factor)*100;const b=editing.initial;if(editing.resize){bounds.width=Math.max(10,Math.min(100-b.left,b.width+dx));bounds.height=Math.max(10,Math.min(100-b.top,b.height+dy))}else{bounds.left=Math.max(0,Math.min(100-b.width,b.left+dx));bounds.top=Math.max(0,Math.min(100-b.height,b.top+dy))}renderBounds()});
-for(const type of ['pointerup','pointercancel'])wall.addEventListener(type,()=>editing=null);
+for(const type of ['pointerup','pointercancel','lostpointercapture'])wall.addEventListener(type,()=>editing=null);
 document.getElementById('send').addEventListener('click',async()=>{const value=document.getElementById('coords').textContent;try{await navigator.clipboard.writeText(value);document.getElementById('send').textContent='Kopierat – klistra in i ChatGPT'}catch{document.getElementById('send').textContent='Kopiera koordinaterna nedan'}});
 renderBounds();
