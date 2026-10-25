@@ -37,6 +37,13 @@ describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
   expect(snapshot.spells.every(row=>row.id&&row.name&&row.school_id&&row.target_type)).toBe(true);
  });
 
+ it('records current completeness gaps as an auditable snapshot baseline',()=>{
+  const blank=field=>snapshot.spells.filter(row=>!String(row[field]||'').trim()).length;
+  expect(blank('target_text')).toBe(84);
+  expect(blank('effect_per_eg')).toBe(88);
+  expect(blank('resistance_text')).toBe(90);
+ });
+
  it.each(snapshot.spells)('$spell_key — profile and cast preflight',spell=>{
   const registered={...spell,fv:100,school_fv:100};
   const profile=api.profile(registered),rule=api.rule(registered);
