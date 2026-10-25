@@ -60,6 +60,9 @@ Deno.serve(async req=>{
   if(sniff(raw)!==contentType)return fail(415,"IMAGE_CONTENT_MISMATCH","Filinnehållet stämmer inte med bildformatet.");
   const actualSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",raw)));
   if(actualSha!==expectedSha)return fail(422,"SHA256_MISMATCH","Bilden ändrades under uppladdningen. Försök igen.");
+  const same=await admin.from("hermes_asset_jobs").select("id,state,source_sha256").eq("target_type","symbol").eq("target_id",targetId).eq("image_type",imageType).eq("source_sha256",actualSha).maybeSingle();
+  if(same.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
+  if(same.data)return json({ok:true,job_id:same.data.id,status:same.data.state,received:true},202);
   const path="hermes-assets/"+id+"/"+actualSha;
   const upload=await admin.storage.from("alea-hermes-source").upload(path,raw,{contentType,upsert:false,cacheControl:"0"});
   if(upload.error){
