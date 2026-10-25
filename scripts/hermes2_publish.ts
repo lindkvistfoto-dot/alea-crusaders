@@ -117,6 +117,7 @@ function checkAsset(a:any,archiveRequired=false){
 type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null; asset_path?:string|null; app_sha256?:string|null; app_bytes?:number|null; width?:number|null; height?:number|null; alpha_preserved?:boolean|null};
 async function publish(a:any){
  const {table,field,sourcePath,appPath:declaredAppPath,assetField}=checkAsset(a,manifest.archive_required===true);
+ const symbolArt=["symbol-effect","symbol-cutout","symbol-illustration","symbol-illustration-wide"].includes(a.kind);
  const app=new Uint8Array(await Deno.readFile(outputRoot+"/"+a.app_file));
  if(!Number.isInteger(a.source_bytes)||a.source_bytes<100||a.source_bytes>8388608||app.length!==a.app_bytes||app.length>((a.kind==="spell-illustration-wide"||a.kind==="symbol-illustration-wide")?524288:500000))throw Error("FILE_SIZE_MISMATCH");
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
