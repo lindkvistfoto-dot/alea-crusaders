@@ -127,6 +127,15 @@ class AssetWorkerTests(unittest.TestCase):
             patch_job.assert_called_once()
             self.assertEqual(patch_job.call_args.args[1]["state"],"published")
 
+    def test_permanent_integrity_failure_becomes_terminal(self):
+        values={}
+        def fake_patch(job,data):values.update(data);return data
+        with patch.object(self.w,"patch_job",side_effect=fake_patch):
+            self.w.fail_job(self.job,ValueError("STAGING_SHA256_MISMATCH"))
+        self.assertEqual(values["state"],"failed")
+        self.assertEqual(values["attempts"],12)
+        self.assertEqual(values["error_code"],"STAGING_SHA256_MISMATCH")
+
     def test_retry_backoff_is_bounded_and_keeps_original_fields(self):
         values={}
         def fake_patch(job,data):values.update(data);return data
