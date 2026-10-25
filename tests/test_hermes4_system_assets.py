@@ -36,7 +36,7 @@ class SystemAssets(unittest.TestCase):
 
     def execute(self, output):
         def archived(file_id, folder):
-            key = self.items[int(file_id[-1])]['target_key']
+            key = self.items[int(file_id.rsplit('-', 1)[1])]['target_key']
             self.assertEqual(folder, PROFILE['assets'][key]['archive_folder_id'])
             return self.sources[file_id]
         with patch.object(intake, 'google_file', side_effect=self.sources.__getitem__), \
