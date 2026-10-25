@@ -55,6 +55,9 @@
    }
    art.appendChild(field);
   }
+  const guide=document.createElement('p');guide.className='muted';
+  guide.textContent='HERMES-bildbyte: lägg originalet i Drive Inbox och registrera verifierad fil-ID och SHA-256 i en godkänd HERMES-köorder. Ingen direktuppladdning eller aktivering sker från admin.';
+  art.appendChild(guide);
   const actions=document.createElement('div');actions.className='rule-editor-actions';
   const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='Avbryt';cancel.addEventListener('click',()=>editor.classList.add('hidden'));
   const save=document.createElement('button');save.type='submit';save.className='btn primary';save.textContent='Spara';
