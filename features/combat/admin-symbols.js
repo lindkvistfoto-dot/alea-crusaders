@@ -63,7 +63,8 @@
   if(['icon','cutout'].includes(type)&&!['image/png','image/webp'].includes(file.type))throw Error('Ikon och cutout behöver en transparent PNG- eller WebP-bild.');
   const bitmap=await createImageBitmap(file);
   try{
-   if(bitmap.width>4096||bitmap.height>4096)throw Error('Bilden får vara högst 4096 × 4096 pixlar.');\n   const minEdge=type==='cutout'?1024:640;\n   if(bitmap.width<minEdge||bitmap.height<minEdge)throw Error('Bilden måste vara minst '+minEdge+' pixlar.');
+   if(bitmap.width>4096||bitmap.height>4096)throw Error('Bilden får vara högst 4096 × 4096 pixlar.');
+   const minEdge=type==='cutout'?1024:640;\n   if(bitmap.width<minEdge||bitmap.height<minEdge)throw Error('Bilden måste vara minst '+minEdge+' pixlar.');
    if(type==='illustration-wide'){
     if(Math.abs(bitmap.width/bitmap.height-16/9)/(16/9)>0.003)throw Error('Illustration Wide måste ha formatet 16:9.');
    }else if(bitmap.width!==bitmap.height)throw Error('Den här bildtypen måste vara kvadratisk.');
