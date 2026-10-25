@@ -71,8 +71,8 @@ describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
  });
 
  it('expands explicit damage per EG without applying damage to any combatant',()=>{
-  expect(api.damage({damage_text:'1T6 per EG'},1)).toMatchObject({qty:1,sides:6});
-  expect(api.damage({damage_text:'1T6 per EG'},4)).toMatchObject({qty:4,sides:6});
+  expect(api.damage({damage_text:'1T6 per EG'},1)).toBe('1T6');
+  expect(api.damage({damage_text:'1T6 per EG'},4)).toBe('4T6');
   expect(api.damage({damage_text:'Gift (special)'},2)).toBeNull();
   expect(api.damage({damage_text:'Special'},2)).toBeNull();
  });
