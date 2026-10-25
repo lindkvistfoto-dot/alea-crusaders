@@ -23,7 +23,9 @@ async function renderMedals(){
   if(seq!==medalSequence)return;
   const active=new Set((Array.isArray(grants)?grants:[]).map(g=>String(g.honor_id)));
   const assetMap=new Map((Array.isArray(assets)?assets:[]).map(a=>[a.asset_key,a]));
-  const awarded=(Array.isArray(definitions)?definitions:[]).filter(d=>active.has(String(d.id))&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).map(d=>({name:d.name,url:medalUrl(assetMap.get(d.image_asset_id))})).filter(d=>d.url);
+  const actor=root.activeUser?.();
+  const canPreviewDrafts=Boolean(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm');
+  const awarded=(Array.isArray(definitions)?definitions:[]).filter(d=>active.has(String(d.id))&&d.visibility==='public'&&(d.status==='active'||(canPreviewDrafts&&d.status==='draft'))).sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).map(d=>({name:d.name,url:medalUrl(assetMap.get(d.image_asset_id))})).filter(d=>d.url);
   // Only granted medals are rendered; no fixed capacity or empty placeholders.
   wall.style.setProperty('--medal-columns',String(Math.min(6,Math.max(1,awarded.length))));
   for(let i=0;i<awarded.length;i++){
