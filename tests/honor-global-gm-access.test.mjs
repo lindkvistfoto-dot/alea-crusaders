@@ -14,6 +14,7 @@ it('lets campaign GMs manage only the global Laurel/Sir Robin records and their 
    create table public.campaign_members(user_id uuid,campaign_id uuid,role text);
    create table public.honor_definitions(id uuid primary key,name text not null,campaign_id uuid,status text not null);
    create table public.honor_relief_variants(id uuid primary key,honor_id uuid not null references public.honor_definitions(id),name text,status text);
+   grant select on public.campaign_members to authenticated;
    grant select,update on public.honor_definitions to authenticated;
    grant select,insert,update on public.honor_relief_variants to authenticated;
    insert into public.campaign_members values('11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','gm');
