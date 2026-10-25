@@ -17,6 +17,20 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const KEY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const TYPES = new Set(["icon","effect","cutout","illustration","illustration-wide"]);
 function hex(bytes:Uint8Array){return [...bytes].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function readBounded(req:Request,max:number){
+  const reader=req.body?.getReader();
+  if(!reader)throw new Error("EMPTY_BODY");
+  const chunks:Uint8Array[]=[];let total=0;
+  while(true){
+    const part=await reader.read();if(part.done)break;
+    total+=part.value.byteLength;
+    if(total>max){await reader.cancel();throw new Error("IMAGE_TOO_LARGE")}
+    chunks.push(part.value);
+  }
+  const out=new Uint8Array(total);let offset=0;
+  for(const chunk of chunks){out.set(chunk,offset);offset+=chunk.byteLength}
+  return out;
+}
 function sniff(bytes:Uint8Array){
   if(bytes.length>=8&&[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v))return "image/png";
   if(bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return "image/jpeg";
@@ -55,8 +69,14 @@ Deno.serve(async req=>{
   const field=({icon:"icon_path",effect:"effect_image_path",cutout:"cutout_path",illustration:"illustration_path","illustration-wide":"illustration_wide_path"} as Record<string,string>)[imageType];
   const contentType=(req.headers.get("content-type")||"").split(";")[0].toLowerCase();
   if(!["image/png","image/jpeg","image/webp"].includes(contentType))return fail(415,"UNSUPPORTED_IMAGE_TYPE","Välj PNG, JPEG eller WebP.");
-  const raw=new Uint8Array(await req.arrayBuffer());
-  if(raw.length<100||raw.length>8388608)return fail(413,"IMAGE_SIZE_INVALID","Bilden måste vara mellan 100 byte och 8 MiB.");
+  if(["icon","cutout"].includes(imageType)&&!["image/png","image/webp"].includes(contentType))
+    return fail(415,"TRANSPARENCY_FORMAT_REQUIRED","Ikon och cutout behöver transparent PNG eller WebP.");
+  let raw:Uint8Array;
+  try{raw=await readBounded(req,8388608)}catch(e){
+    if(String(e).includes("IMAGE_TOO_LARGE"))return fail(413,"IMAGE_SIZE_INVALID","Bilden får vara högst 8 MiB.");
+    return fail(400,"EMPTY_IMAGE","Bilden saknas eller kunde inte läsas.");
+  }
+  if(raw.length<100)return fail(413,"IMAGE_SIZE_INVALID","Bilden måste vara minst 100 byte.");
   if(sniff(raw)!==contentType)return fail(415,"IMAGE_CONTENT_MISMATCH","Filinnehållet stämmer inte med bildformatet.");
   const actualSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",raw)));
   if(actualSha!==expectedSha)return fail(422,"SHA256_MISMATCH","Bilden ändrades under uppladdningen. Försök igen.");
