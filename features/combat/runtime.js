@@ -4025,6 +4025,11 @@ function combatBeskyddareStoredSideCells(parameters){
  const side=Number(parameters?.cube_side_cells??parameters?.cube_dimensions_cells?.x);
  if(Number.isSafeInteger(side)&&side>=3)return side;
  if(Array.isArray(parameters?.cube_axes))return parameters.cube_axes.length+3;
+ const legacy=parameters?.cube_dimensions_m;
+ if(legacy&&[legacy.x,legacy.y,legacy.z].every(v=>Number.isFinite(Number(v))&&Number(v)>=3)){
+  const converted=Math.round((Number(legacy.x)+Number(legacy.y)+Number(legacy.z))/3);
+  if(converted>=3)return converted
+ }
  return 3
 }
 function combatBeskyddareAreaParameters(data,sourceActionId){
@@ -7295,8 +7300,4 @@ if(typeof window!=='undefined'&&typeof window.addEventListener==='function')
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
-window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
-window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
-
-/* v0.33.82 — never allow the active combatant to be an attack target */
-
+window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.clas

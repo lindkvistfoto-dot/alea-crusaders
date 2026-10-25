@@ -54,6 +54,7 @@ describe('BESKYDDARE · höjd förenklad till hexringar',()=>{
   expect(api.side(area.parameters)).toBe(3);
   expect(api.contains(area,{q:1,r:1})).toBe(true);
   expect(api.contains(area,{q:2,r:0})).toBe(false);
+  expect(api.side({cube_dimensions_m:{x:6,y:3,z:3}})).toBe(4);
  });
  test('magic crossing the new zone boundary is checked both ways',()=>{
   const area=ward(1),api=setup([area]);
@@ -65,6 +66,4 @@ describe('BESKYDDARE · höjd förenklad till hexringar',()=>{
  test('the UI describes the map projection without a cube height control',()=>{
   expect(runtime).toContain('Varje extra EG lägger till en ring. Höjd visas inte på kartan.');
   expect(runtime).not.toContain('Kubens sida = EG + 2 rutor');
-  expect(runtime).toContain("shape:'hex_radius'");
- });
-});
+  expect(runtime).toContain(
