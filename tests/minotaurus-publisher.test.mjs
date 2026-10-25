@@ -77,6 +77,26 @@ it('fails closed on legacy manifests, path traversal, and non-main contexts',asy
  }
 });
 
+
+it('routes all five symbol image types through the shared HERMES publisher',async()=>{
+ const profiles=[
+  ['symbol','symbol/stopp',640,640,true,'icon_path'],
+  ['symbol-effect','symbol-effect/stopp',640,640,false,'effect_image_path'],
+  ['symbol-cutout','symbol-cutout/stopp',640,640,true,'cutout_path'],
+  ['symbol-illustration','symbol-illustration/stopp',640,640,false,'illustration_path'],
+  ['symbol-illustration-wide','symbol-illustration-wide/stopp',1280,720,false,'illustration_wide_path']
+ ];
+ for(const [kind,file,width,height,alpha,field] of profiles){
+  const entry={...asset,kind,target_key:'stopp',app_file:file+'/'+sha+'.webp',width,height,alpha_preserved:alpha};
+  const {calls,error,target}=await run({entry});
+  expect(error,kind).toBeUndefined();
+  expect(calls.uploads).toHaveLength(1);
+  expect(calls.uploads[0]).toMatchObject({bucket:'alea-hermes-public',path:'hermes/minotaurus-pilot/'+file+'/'+sha+'.webp',mime:'image/webp',upsert:false});
+  expect(target.icon_path).toBe('unchanged.webp');
+  expect(calls.writes).toEqual([]);
+ }
+});
+
 it('legacy endpoint rejects original upload/import/retry before Storage or GitHub access',async()=>{
  const edge=stripTypeScriptTypes(readFileSync(new URL('../supabase/functions/hermes-v2/index.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,''));
  let handler;

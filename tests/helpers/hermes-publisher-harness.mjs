@@ -88,7 +88,7 @@ async function run(state, {assets=Array.from({length:5},(_,i)=>asset(i)), mode='
     createClient(){state.calls.clients++;return state.db},
     Deno:{env:{get:key=>env[key]},args:['manifest','output'],readTextFile:async()=>JSON.stringify(manifest),readFile:async()=>raw,
       writeTextFile:async(path,text)=>{expect(path).toBe('output/publisher-report.json');report=JSON.parse(text)}},
-    console:{log(){},error(){}},
+    console:{log(){},error(...args){console.error('[hermes-test]',...args)}},
     fetch:async url=>{state.calls.deliveries++;return new Response(state.storage.get(new URL(url).pathname.slice(1)))}
   };
   let error;

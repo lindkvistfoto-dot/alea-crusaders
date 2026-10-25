@@ -17,13 +17,18 @@
    (HERMES.test(path)&&path.split('/')[2]===key);
  }
  function src(path){return LEGACY.test(path)?'./'+path:SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+path}
+ function editSymbol(row){
+  if(typeof activeUser==='function'&&!activeUser()?.admin)return;
+  if(typeof window.editRuleSpell==='function'){window.editRuleSpell(String(row.id),'symbol',row);return}
+  alert('Den gemensamma besvärjelseeditorn är inte tillgänglig.');
+ }
  async function render(){
   if(!visible()||pending||Date.now()-lastLoaded<60000)return;
   if(typeof dbJson!=='function')return;
   pending=true;
   if(status)status.textContent='Laddar magiska symboler…';
   try{
-   const rows=await dbJson('rule_magic_symbols?select=id,symbol_key,name,school_value,icon_path&order=sort_order.asc,name.asc');
+   const rows=await dbJson('rule_magic_symbols?select=*&order=sort_order.asc,name.asc');
    if(!Array.isArray(rows))throw Error('Ogiltigt registersvar');
    host.replaceChildren();
    let loaded=0,failed=0;
@@ -36,7 +41,7 @@
     const text=document.createElement('div');text.className='admin-symbol-text';
     const title=document.createElement('strong');title.textContent=row.name||key;
     const school=document.createElement('small');school.textContent='Skolvärde '+(row.school_value??'—');
-    text.append(title,school);
+    const edit=document.createElement('button');edit.type='button';edit.className='smallbtn';edit.textContent='✎ Redigera';edit.setAttribute('aria-label','Redigera '+(row.name||key));edit.addEventListener('click',()=>editSymbol(row));text.append(title,school,edit);
     const state=document.createElement('span');state.className='admin-symbol-state';state.textContent=hasPath?'Laddar…':'Ingen ikon';
     art.appendChild(placeholder);line.append(art,text,state);host.appendChild(line);
     if(hasPath){

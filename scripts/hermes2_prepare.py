@@ -18,7 +18,7 @@ from hermes_system_assets import PROFILE, validate_system_image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "assets" / "hermes" / "originals"
-PATH_PATTERN = re.compile(r"^(system-asset|spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration)/(arcane-trophy-room-v2[.]2|[a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
+PATH_PATTERN = re.compile(r"^(system-asset|spell|spell-cutout|symbol|skill|skill-illustration|skill-illustration-wide|spell-illustration-wide|spell-illustration|symbol-effect|symbol-cutout|symbol-illustration|symbol-illustration-wide)/(arcane-trophy-room-v2[.]2|[a-z0-9]+(?:-[a-z0-9]+)*)/([a-f0-9]{64})[.]png$")
 QUALITIES = (90, 87, 84, 80, 76)
 EDGE = 640
 MAX_SOURCE = 8_388_608
@@ -50,16 +50,16 @@ def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Pat
     with Image.open(io.BytesIO(raw)) as original:
         if original.format != "PNG":
             raise ValueError(f"{relative}: expected PNG")
-        wide = kind in ("skill-illustration-wide", "spell-illustration-wide")
-        spell_wide = kind == "spell-illustration-wide"
+        wide = kind in ("skill-illustration-wide", "spell-illustration-wide", "symbol-illustration-wide")
+        spell_wide = kind in ("spell-illustration-wide", "symbol-illustration-wide")
         if wide and not (640 <= original.width <= 4096 and 360 <= original.height <= 4096 and (
             1.25 <= original.width / original.height <= 2.4 if spell_wide
             else abs(original.width / original.height - 16 / 9) / (16 / 9) <= 0.003)):
             raise ValueError(f"{relative}: expected landscape near 16:9 (0.3% tolerance)")
-        min_edge = 1024 if kind == "spell-cutout" else EDGE
+        min_edge = 1024 if kind in ("spell-cutout", "symbol-cutout") else EDGE
         if kind != 'system-asset' and not wide and (original.width != original.height or not min_edge <= original.width <= 4096):
             raise ValueError(f"{relative}: expected square 640–4096 px")
-        if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration"):
+        if kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "symbol-illustration", "symbol-illustration-wide", "symbol-effect"):
             if original.mode not in ("RGB", "RGBA"):
                 raise ValueError(f"{relative}: expected RGB or opaque RGBA illustration")
             if original.mode == "RGBA" and original.getchannel("A").getextrema() != (255, 255):
@@ -90,7 +90,7 @@ def prepare_bytes(raw: bytes, kind: str, key: str, digest: str, output_root: Pat
                 if low == 255 or high == 0:
                     raise ValueError(f"{relative}: missing actual alpha transparency or visible pixels")
                 required_alpha = image.getchannel("A").tobytes()
-    max_webp = 524_288 if kind == 'spell-illustration-wide' else MAX_WEBP  # Match the database cap exactly.
+    max_webp = 524_288 if kind in ('spell-illustration-wide', 'symbol-illustration-wide') else MAX_WEBP  # Match the database cap exactly.
     webp = None
     quality_used = None
     for quality in QUALITIES:
