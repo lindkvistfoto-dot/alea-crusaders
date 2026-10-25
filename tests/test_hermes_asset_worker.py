@@ -42,26 +42,29 @@ class AssetWorkerTests(unittest.TestCase):
         self.assertEqual(self.w.image_mime(b"RIFF"+b"x"*4+b"WEBP"+b"x"*20),"image/webp")
         with self.assertRaisesRegex(ValueError,"INVALID_IMAGE_SIGNATURE"):self.w.image_mime(b"not an image")
 
-    def test_webp_preparation_uses_canonical_hermes_profile(self):
-        captured={}
+    def test_all_five_symbol_types_use_canonical_hermes_profile(self):
+        captured=[]
         output=b"RIFF"+b"\\x00\\x00\\x00\\x00"+b"WEBP"+b"test"
         def prepare(raw,kind,key,sha,output_root,source_path):
-            captured.update(raw=raw,kind=kind,key=key,sha=sha,source_path=source_path)
+            captured.append((kind,key,sha,source_path))
             relative=pathlib.Path(kind)/key/(hashlib.sha256(output).hexdigest()+".webp")
             target=output_root/relative
             target.parent.mkdir(parents=True,exist_ok=True)
             target.write_bytes(output)
             return {"app_file":relative.as_posix(),"app_sha256":hashlib.sha256(output).hexdigest(),
                     "width":640,"height":640}
+        expected={"icon":"symbol","effect":"symbol-effect","cutout":"symbol-cutout",
+                  "illustration":"symbol-illustration","illustration-wide":"symbol-illustration-wide"}
         with patch("hermes2_prepare.prepare_bytes",side_effect=prepare):
-            data,width,height=self.w.optimized_webp(self.source,"icon","sigill-kraft")
-        self.assertEqual(data,output)
-        self.assertEqual((width,height),(640,640))
-        self.assertEqual(captured["raw"],self.source)
-        self.assertEqual(captured["kind"],"symbol")
-        self.assertEqual(captured["key"],"sigill-kraft")
-        self.assertEqual(captured["sha"],hashlib.sha256(self.source).hexdigest())
-        self.assertTrue(captured["source_path"].startswith("drive://"))
+            for image_type,kind in expected.items():
+                with self.subTest(image_type=image_type):
+                    data,width,height=self.w.optimized_webp(self.source,image_type,"sigill-kraft")
+                    self.assertEqual(data,output)
+                    self.assertEqual((width,height),(640,640))
+                    self.assertEqual(captured[-1][0],kind)
+                    self.assertEqual(captured[-1][1],"sigill-kraft")
+                    self.assertEqual(captured[-1][2],hashlib.sha256(self.source).hexdigest())
+                    self.assertTrue(captured[-1][3].startswith("drive://"))
 
     def test_drive_pipeline_is_ordered_and_archive_precedes_publish(self):
         calls=[]
@@ -142,6 +145,41 @@ class AssetWorkerTests(unittest.TestCase):
         self.assertGreater(values["next_attempt_at"],"")
         self.assertIsNone(values["lease_token"])
         self.assertEqual(self.job["source_path"],"hermes-assets/test/source")
+
+    def test_webp_profile_failure_does_not_upload_or_change_pointer(self):
+        self.job.update({"archive_drive_file_id":"archive-id","inbox_drive_file_id":"inbox-id"})
+        with patch.object(self.w,"pointer",return_value={"symbol_key":self.job["target_key"],"icon_path":"old.webp"}), \
+             patch.object(self.w,"optimized_webp",side_effect=ValueError("symbol/icon profile invalid")), \
+             patch.object(self.w,"request") as upload, \
+             patch.object(self.w,"rest") as rest, \
+             patch.object(self.w,"patch_job") as patch_job:
+            with self.assertRaisesRegex(ValueError,"profile invalid"):
+                self.w.publish(self.job,self.token,self.source)
+            upload.assert_not_called()
+            rest.assert_not_called()
+            patch_job.assert_not_called()
+
+    def test_process_recovers_after_temporary_archive_failure(self):
+        ensure_calls=[];published=[];patches=[]
+        def ensure(token,job,parent,archive=False):
+            ensure_calls.append(archive)
+            if archive and ensure_calls.count(True)==1:raise OSError("Drive temporarily unavailable")
+            return "archive-id" if archive else "inbox-id"
+        def fake_patch(job,values):
+            patches.append(values.copy());job.update(values);return values
+        with patch.object(self.w,"storage_download",return_value=self.source), \
+             patch.object(self.w,"ensure_drive_original",side_effect=ensure), \
+             patch.object(self.w,"verify_drive_file") as verify, \
+             patch.object(self.w,"patch_job",side_effect=fake_patch), \
+             patch.object(self.w,"publish",side_effect=lambda *args:published.append("published")):
+            with self.assertRaisesRegex(OSError,"Drive temporarily unavailable"):
+                self.w.process(self.job,self.token)
+            self.assertEqual(self.job["inbox_drive_file_id"],"inbox-id")
+            self.w.process(self.job,self.token)
+        self.assertIn("published",published)
+        verify.assert_called_once_with(self.token,"inbox-id",self.w.INBOX,self.job["source_sha256"])
+        self.assertEqual(self.job["archive_drive_file_id"],"archive-id")
+        self.assertEqual([p.get("state") for p in patches],["inboxed","archived"])
 
     def test_storage_upload_failure_preserves_previous_pointer(self):
         webp=b"deterministic webp bytes"
