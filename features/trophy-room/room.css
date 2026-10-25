@@ -51,3 +51,10 @@
 }
 @media(max-width:700px){.trophy-room-character-layer{height:calc(55% + var(--hero-progress,0)*83%);width:calc(34% + var(--hero-progress,0)*18%)}}
 @media(prefers-reduced-motion:reduce){.trophy-room-viewport.trophy-room-cinematic .trophy-room-scene,.trophy-room-character-layer{transition:none}}
+
+/* JAKOB 3H: requestAnimationFrame owns movement; no competing CSS transitions. */
+.trophy-room-viewport .trophy-room-scene,
+.trophy-room-viewport.trophy-room-cinematic .trophy-room-scene{transition:none!important;will-change:transform}
+.trophy-room-viewport .trophy-room-character-layer{left:50%;bottom:8%;width:30%;height:54%;transform-origin:center bottom;transition:none!important;will-change:transform}
+@media(max-width:700px){.trophy-room-viewport .trophy-room-character-layer{width:30%;height:54%}}
+@media(prefers-reduced-motion:reduce){.trophy-room-viewport .trophy-room-scene,.trophy-room-viewport .trophy-room-character-layer{will-change:auto}}
