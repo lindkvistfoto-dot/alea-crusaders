@@ -47,6 +47,7 @@
    field.appendChild(heading);
    const path=String(row[key]||'');
    const note=document.createElement('p');note.textContent=path?'Registrerad bildreferens: '+path:'Ingen bild registrerad';
+   note.title='Bilder aktiveras först efter verifierad HERMES-publicering';
    field.appendChild(note);
    if(key==='icon_path'&&valid(path,String(row.symbol_key||''))){
     const image=document.createElement('img');image.alt='Aktuell symbolikon';image.loading='lazy';image.width=96;image.height=96;
