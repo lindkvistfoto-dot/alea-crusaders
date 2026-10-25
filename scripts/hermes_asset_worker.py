@@ -114,8 +114,8 @@ def ensure_drive_original(token,job,parent,archive=False):
     return ident
 
 def image_mime(data):
-    if data.startswith(b"\\x89PNG\\r\\n\\x1a\\n"):return "image/png"
-    if data.startswith(b"\\xff\\xd8\\xff"):return "image/jpeg"
+    if data.startswith(bytes.fromhex("89504e470d0a1a0a")):return "image/png"
+    if data.startswith(bytes.fromhex("ffd8ff")):return "image/jpeg"
     if len(data)>12 and data[:4]==b"RIFF" and data[8:12]==b"WEBP":return "image/webp"
     raise ValueError("INVALID_IMAGE_SIGNATURE")
 
