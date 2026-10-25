@@ -17,13 +17,49 @@
    (HERMES.test(path)&&path.split('/')[2]===key);
  }
  function src(path){return LEGACY.test(path)?'./'+path:SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+path}
+ function editSymbol(row){
+  if(typeof activeUser==='function'&&!activeUser()?.admin)return;
+  const editor=document.getElementById('adminEditor');
+  const title=document.getElementById('adminEditorTitle');
+  const body=document.getElementById('adminEditorBody');
+  if(!editor||!title||!body)return;
+  title.textContent='Redigera symbol · '+(row.name||row.symbol_key);
+  body.replaceChildren();
+  const form=document.createElement('form');
+  form.className='rule-editor-grid spell-rule-editor';
+  const fields=[['name','Namn','text'],['school_value','Skolvärde','number'],['range_text','Räckvidd','text'],['duration_text','Varaktighet','text'],['notes','Noteringar','textarea'],['source_label','Källa','text']];
+  for(const [key,label,type] of fields){
+   const wrap=document.createElement('label');wrap.textContent=label;
+   const input=document.createElement(type==='textarea'?'textarea':'input');
+   if(type!=='textarea')input.type=type;
+   input.name=key;input.value=row[key]??'';wrap.appendChild(input);form.appendChild(wrap);
+  }
+  const actions=document.createElement('div');actions.className='rule-editor-actions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='Avbryt';cancel.addEventListener('click',()=>editor.classList.add('hidden'));
+  const save=document.createElement('button');save.type='submit';save.className='btn primary';save.textContent='Spara';
+  actions.append(cancel,save);form.appendChild(actions);
+  form.addEventListener('submit',async event=>{
+   event.preventDefault();
+   if(typeof activeUser==='function'&&!activeUser()?.admin)return;
+   const payload={};
+   for(const [key,,type] of fields)payload[key]=type==='number'?Number(form.elements.namedItem(key).value):form.elements.namedItem(key).value.trim();
+   if(!payload.name){alert('Namn måste anges.');return}
+   save.disabled=true;
+   try{
+    await dbJson('rule_magic_symbols?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});
+    editor.classList.add('hidden');lastLoaded=0;await render();
+   }catch(error){alert('Kunde inte spara symbolen: '+(error?.message||error))}
+   finally{save.disabled=false}
+  });
+  body.appendChild(form);editor.classList.remove('hidden');
+ }
  async function render(){
   if(!visible()||pending||Date.now()-lastLoaded<60000)return;
   if(typeof dbJson!=='function')return;
   pending=true;
   if(status)status.textContent='Laddar magiska symboler…';
   try{
-   const rows=await dbJson('rule_magic_symbols?select=id,symbol_key,name,school_value,icon_path&order=sort_order.asc,name.asc');
+   const rows=await dbJson('rule_magic_symbols?select=*&order=sort_order.asc,name.asc');
    if(!Array.isArray(rows))throw Error('Ogiltigt registersvar');
    host.replaceChildren();
    let loaded=0,failed=0;
@@ -36,7 +72,7 @@
     const text=document.createElement('div');text.className='admin-symbol-text';
     const title=document.createElement('strong');title.textContent=row.name||key;
     const school=document.createElement('small');school.textContent='Skolvärde '+(row.school_value??'—');
-    text.append(title,school);
+    const edit=document.createElement('button');edit.type='button';edit.className='smallbtn';edit.textContent='✎ Redigera';edit.setAttribute('aria-label','Redigera '+(row.name||key));edit.addEventListener('click',()=>editSymbol(row));text.append(title,school,edit);
     const state=document.createElement('span');state.className='admin-symbol-state';state.textContent=hasPath?'Laddar…':'Ingen ikon';
     art.appendChild(placeholder);line.append(art,text,state);host.appendChild(line);
     if(hasPath){
