@@ -29,6 +29,10 @@ De tomma fälten är datakompletteringsfynd, men kan inte automatiskt likställa
 - Kastningsprofilen kodar 1 PSY per EG, −2 CL per EG efter första och ett SR till upplösning för icke-kvicka besvärjelser. Koden anger också att normala besvärjelser löses nästa SR och K-besvärjelser omedelbart. Regeljämförelsen för dessa punkter behöver knytas till tillgänglig boktext innan de godkänns som korrekt implementerade.
 - Hela, antidispel, samtidiga effekter, avslut/återställning samt fullständiga avstånds- och områdesgränser har inte validerats mot alla 91 besvärjelser i denna delrapport.
 
+## Regelunderlagets tillgänglighet
+
+Library-sökningen gav ingen verifierbar DoD Expert/Magiboken-fil. Den publikt hittade informationen var sekundär eller om en annan utgåva och används därför inte som auktoritativ regelkontroll. Runtime-kommentarer hänvisar till Expert Magiboken s. 3–5 för kastningskostnad och timing; hänvisningen har inte kunnat verifieras mot själva boken här. Behandla därför de uppgifterna som kodens avsikt, inte som godkänd regelkälla.
+
 ## Automatiserad svit
 
 `tests/arcane-spellforge.test.js` använder endast lokal Vitest och en JSON-ögonblicksbild. Den innehåller ingen Supabase-client, fetch eller skrivfunktion. Den parametriserar varje registrerad besvärjelse genom effektprofil och kastningskontroll vid giltig EG, otillräcklig PSY och ogiltig EG; därutöver testar den CL/PSY-skalning, kvick/normal upplösning, FV-gräns, skadeformel, helning, Beskyddare och manuell fallback.
