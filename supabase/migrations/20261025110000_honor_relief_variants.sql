@@ -90,17 +90,17 @@ create policy honor_definitions_admin_delete on public.honor_definitions
 
 -- Existing Sir Robin stays draft/manual with all existing grants untouched.
 update public.honor_definitions set category = 'award'
-where lower(name) = 'sir robin award' and category <> 'award';
+where lower(name) in ('sir robin','sir robin award') and category <> 'award';
 
 -- Register the shared badge frame family in the existing Honors catalogue.
 insert into public.honor_definitions
   (name,type,description,requirement_text,visibility,grant_mode,status,category,
-   tier_criteria,badge_frame_assets,frame_family,created_by)
+   tier_criteria,badge_frame_assets,frame_family,image_asset_id,created_by)
 select 'ARCANE LAUREL BADGE','honor',
        'Gemensam lagerkransram i brons, silver eller guld med separat relief.',
        '', 'public','manual','draft','badge','{}'::jsonb,
        '{"bronze":"arcane-laurel-badge-bronze","silver":"arcane-laurel-badge-silver","gold":"arcane-laurel-badge-gold"}'::jsonb,
-       'arcane-laurel-badge', p.id
+       'arcane-laurel-badge','arcane-laurel-badge-bronze', p.id
 from public.profiles p
 where p.is_admin = true
   and not exists (select 1 from public.honor_definitions where name = 'ARCANE LAUREL BADGE')
@@ -112,7 +112,7 @@ insert into public.honor_relief_variants (honor_id,name,material,status,allow_ov
 select d.id,v.name,v.material,'draft',true,d.created_by
 from public.honor_definitions d
 cross join (values ('Emalj','enamel'),('Metallrelief','metal'),('Snidat trä','wood')) as v(name,material)
-where lower(d.name) = 'sir robin award'
+where lower(d.name) in ('sir robin','sir robin award')
 on conflict (honor_id,name) do nothing;
 
 -- Drafts remain admin/GM-only. No player policy is introduced by this migration.
