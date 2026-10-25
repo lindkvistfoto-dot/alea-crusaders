@@ -96,7 +96,7 @@
   const properties=[row.kvick?'Kvick (K)':null,row.fysisk?'Fysisk (F)':null,row.ritual?'Ritual (R)':null].filter(Boolean).join(', ')||'—';
   body.innerHTML='<div class="spell-codex-hero" data-spell-codex-hero><div class="spell-codex-hero-fallback">BESVÄRJELSE ILLUSTRATION WIDE saknas</div></div>'+
    '<div class="spell-codex-stats">'+stat('Magiskola',school?.name||'—')+stat('Skolvärde',row.school_value)+stat('Räckvidd',row.range_text)+stat('Varaktighet',row.duration_text)+'</div>'+
-   '<div class="spell-codex-facts">'+stat('PSY / EG',row.psy_cost_text)+stat('Mål / område',row.target_text)+stat('Typ',properties)+'</div>'+
+   '<div class="spell-codex-facts">'+stat('PSY / EG',row.psy_cost_text)+stat('Mål',({combatant:'Kombattant',hexagon:'Hexagon',other:'Övrig'})[row.target_type]||'Övrig')+stat('Måldetalj',row.target_text)+stat('Typ',properties)+'</div>'+
    paragraph('Beskrivning',row.description||'Ingen beskrivning är inlagd.')+
    paragraph('Effekt per effektgrad',row.effect_per_eg)+
    paragraph('Motstånd / särskilda regler',row.resistance_text)+
