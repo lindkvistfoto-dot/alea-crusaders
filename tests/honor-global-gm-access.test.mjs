@@ -25,6 +25,7 @@ it('lets campaign GMs manage only the global Laurel/Sir Robin records and their 
    insert into public.honor_relief_variants values
     ('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','laurel relief','draft'),
     ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003','other relief','draft');
+   alter table public.honor_definitions enable row level security;
    alter table public.honor_relief_variants enable row level security;`);
   await db.exec(migration);
   await db.exec(`set role authenticated;
