@@ -49,6 +49,20 @@ Deno.serve(async req=>{
   const {data:profile,error:profileError}=await actor.from("profiles").select("id,is_admin").eq("id",user.id).maybeSingle();
   if(profileError)return fail(503,"ADMIN_LOOKUP_FAILED","Administratörsrättigheten kunde inte verifieras. Försök igen.");
   if(!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Endast administratörer får ta emot bilder.");
+  if((req.headers.get("content-type")||"").includes("application/json")){
+    let body:any;try{body=await req.json()}catch{return fail(400,"BAD_ACTION","Begäran kunde inte läsas.")}
+    if(body?.action!=="retry"||!UUID.test(String(body?.job_id||"")))return fail(400,"BAD_ACTION","Försök igen kräver ett giltigt jobb-ID.");
+    const job=await admin.from("hermes_asset_jobs").select("id,state,attempts,inbox_drive_file_id,archive_drive_file_id").eq("id",body.job_id).maybeSingle();
+    if(job.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
+    if(!job.data)return fail(404,"JOB_NOT_FOUND","Jobbet hittades inte.");
+    if(job.data.state!=="failed"||Number(job.data.attempts)<12)return fail(409,"JOB_NOT_RETRYABLE","Jobbet väntar redan på automatisk körning eller är inte misslyckat.");
+    const nextState=job.data.archive_drive_file_id?"archived":job.data.inbox_drive_file_id?"inboxed":"received";
+    const retried=await admin.from("hermes_asset_jobs").update({state:nextState,attempts:0,next_attempt_at:new Date().toISOString(),lease_token:null,lease_until:null,error_code:null,updated_at:new Date().toISOString()})
+      .eq("id",body.job_id).eq("state","failed").gte("attempts",12).select("id,state").maybeSingle();
+    if(retried.error)return fail(503,"JOB_RETRY_FAILED","Jobbet kunde inte köas om. Försök igen.");
+    if(!retried.data)return fail(409,"JOB_CHANGED","Jobbet ändrades samtidigt. Ladda om statusen.");
+    return json({ok:true,job_id:retried.data.id,status:retried.data.state},202);
+  }
   const id=req.headers.get("x-hermes-idempotency-key")||"";
   const targetId=req.headers.get("x-hermes-target-id")||"";
   const targetKey=req.headers.get("x-hermes-target-key")||"";
