@@ -121,7 +121,7 @@ def google_file(file_id: str) -> bytes:
 
 
 KINDS = {"system-asset", "spell", "spell-cutout", "symbol", "skill", "skill-illustration",
-         "skill-illustration-wide", "spell-illustration", "spell-illustration-wide"}
+         "skill-illustration-wide", "spell-illustration", "spell-illustration-wide", "symbol-cutout", "symbol-illustration", "symbol-illustration-wide"}
 
 
 def archive_folder(kind: str, folders: dict, target_key: str = '') -> str:
@@ -130,6 +130,9 @@ def archive_folder(kind: str, folders: dict, target_key: str = '') -> str:
     group, profile = {
         "spell": ("spell_types", "icon"), "symbol": ("spell_types", "icon"),
         "spell-cutout": ("spell_types", "cutout"),
+        "symbol-cutout": ("spell_types", "cutout"),
+        "symbol-illustration": ("spell_types", "square"),
+        "symbol-illustration-wide": ("spell_types", "wide"),
         "spell-illustration": ("spell_types", "square"),
         "spell-illustration-wide": ("spell_types", "wide"),
         "skill": ("skill_types", "icon"), "skill-illustration": ("skill_types", "square"),
@@ -217,7 +220,7 @@ def run_batch(request: dict, output_root: Path, workers: int = 3) -> dict:
             raw = google_file(item["drive_file_id"])
             if validate_png(raw, item["kind"], item["target_key"]) != item["source_sha256"]:
                 raise ValueError("DRIVE_SOURCE_SHA256_MISMATCH")
-            if item["kind"] == "spell-cutout":
+            if item["kind"] in ("spell-cutout", "symbol-cutout"):
                 with Image.open(io.BytesIO(raw)) as image:
                     if image.getchannel("A").getextrema()[0] != 0:
                         raise ValueError("CUTOUT_REQUIRES_FULLY_TRANSPARENT_PIXELS")
@@ -357,11 +360,11 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
                 image.mode == "RGBA" and image.getchannel("A").getextrema() != (255, 255)
             ):
                 raise ValueError("UI_OPAQUE_SOURCE_REQUIRED")
-        elif kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration"):
+        elif kind in ("skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "symbol-illustration", "symbol-illustration-wide"):
             if image.mode not in ("RGB", "RGBA"):
                 raise ValueError("ILLUSTRATION_REQUIRES_RGB_OR_OPAQUE_RGBA")
             if kind in ("skill-illustration-wide", "spell-illustration-wide"):
-                ratio_ok = (1.25 <= image.width / image.height <= 2.4) if kind == "spell-illustration-wide" else (abs(image.width / image.height - 16 / 9) / (16 / 9) <= 0.003)
+                ratio_ok = (1.25 <= image.width / image.height <= 2.4) if kind in ("spell-illustration-wide", "symbol-illustration-wide") else (abs(image.width / image.height - 16 / 9) / (16 / 9) <= 0.003)
                 if not (640 <= image.width <= 4096 and 360 <= image.height <= 4096 and ratio_ok):
                     raise ValueError("WIDE_REQUIRES_LANDSCAPE_NEAR_16_9")
             elif not (image.width == image.height and 640 <= image.width <= 4096):
@@ -371,7 +374,7 @@ def validate_png(data: bytes, kind: str = "spell", target_key: str = "") -> str:
         else:
             if image.mode != "RGBA":
                 raise ValueError("NOT_RGBA_PNG")
-            min_edge = 1024 if kind == "spell-cutout" else 640
+            min_edge = 1024 if kind in ("spell-cutout", "symbol-cutout") else 640
             if not (image.width == image.height and min_edge <= image.width <= 4096):
                 raise ValueError("BAD_PNG_DIMENSIONS")
             alpha_min, alpha_max = image.getchannel("A").getextrema()
@@ -402,7 +405,7 @@ def run(request_path: str, output_root: Path | None = None, workers: int = 3) ->
                         for extra in (set(), {"source_sha256"})]
     ):
         raise ValueError("INVALID_QUEUE_SCHEMA")
-    if request["schema"] != 1 or request["kind"] not in ("spell", "spell-cutout", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "ui"):
+    if request["schema"] != 1 or request["kind"] not in ("spell", "spell-cutout", "symbol", "skill", "skill-illustration", "skill-illustration-wide", "spell-illustration-wide", "spell-illustration", "symbol-cutout", "symbol-illustration", "symbol-illustration-wide", "ui"):
         raise ValueError("INVALID_HERMES_KIND")
     if not isinstance(request["target_key"], str) or not KEY_PATTERN.fullmatch(request["target_key"]):
         raise ValueError("INVALID_TARGET_KEY")
