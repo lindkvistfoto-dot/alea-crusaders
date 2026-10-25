@@ -6,11 +6,13 @@ import json
 import os
 import re
 import time
+import sys
+from pathlib import Path
 import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
-from PIL import Image, UnidentifiedImageError
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 SUPA=os.environ["SUPABASE_URL"].rstrip("/")
 SERVICE_KEY=os.environ["SUPABASE_SERVICE_ROLE_KEY"]
