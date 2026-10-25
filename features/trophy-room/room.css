@@ -14,3 +14,7 @@
 /* JAKOB 3C: user-calibrated front wall bounds, 1280x720 reference. */
 .trophy-room-medal-wall{left:40.73%;top:27.69%;width:19.31%;height:32.77%;transform:translate(var(--pan-x,0px),var(--pan-y,0px)) scale(var(--zoom,1));transform-origin:center center}
 @media(max-width:700px){.trophy-room-medal-wall{left:40.73%;top:27.69%;width:19.31%;height:32.77%}}
+
+/* JAKOB 3D: real awards only; calibrated wall geometry remains unchanged. */
+.trophy-room-medal-wall{grid-template-columns:repeat(var(--medal-columns,6),minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(0,1fr);align-content:start}
+.trophy-room-medal-slot{background:none;box-shadow:none;border-radius:0;aspect-ratio:1}

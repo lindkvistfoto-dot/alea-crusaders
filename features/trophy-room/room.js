@@ -12,7 +12,7 @@ async function renderMedals(){
  if(!wall||!picker)return;
  const seq=++medalSequence;wall.replaceChildren();wall.hidden=true;
  const character=availableCharacters().find(c=>String(c.id)===picker.value);
- const dbId=character?._dbId||character?.dbId||character?.id;
+ const dbId=character?._dbId||character?.dbId||character?.data?.id||character?.id;
  if(!dbId||typeof root.dbJson!=='function')return;
  try{
   const [grants,definitions,assets]=await Promise.all([
@@ -23,9 +23,10 @@ async function renderMedals(){
   if(seq!==medalSequence)return;
   const active=new Set((Array.isArray(grants)?grants:[]).map(g=>String(g.honor_id)));
   const assetMap=new Map((Array.isArray(assets)?assets:[]).map(a=>[a.asset_key,a]));
-  const awarded=(Array.isArray(definitions)?definitions:[]).filter(d=>active.has(String(d.id))&&d.status==='active'&&d.visibility==='public').map(d=>({name:d.name,url:medalUrl(assetMap.get(d.image_asset_id))})).filter(d=>d.url).slice(0,30);
-  // Thirty permanent positions; no placeholder medals masquerading as awards.
-  for(let i=0;i<30;i++){
+  const awarded=(Array.isArray(definitions)?definitions:[]).filter(d=>active.has(String(d.id))&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).map(d=>({name:d.name,url:medalUrl(assetMap.get(d.image_asset_id))})).filter(d=>d.url);
+  // Only granted medals are rendered; no fixed capacity or empty placeholders.
+  wall.style.setProperty('--medal-columns',String(Math.min(6,Math.max(1,awarded.length))));
+  for(let i=0;i<awarded.length;i++){
    const slot=document.createElement('span');slot.className='trophy-room-medal-slot';
    const medal=awarded[i];
    if(medal){const img=document.createElement('img');img.src=medal.url;img.alt=medal.name;img.loading='lazy';slot.append(img);slot.title=medal.name}
