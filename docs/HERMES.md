@@ -55,6 +55,10 @@ Det äldre formatet kan behandla flera explicita köfiler i samma push; varje fi
 |---|---|---|---|
 | spell | rule_spells.spell_key | icon_path | alea-hermes-public |
 | symbol | rule_magic_symbols.symbol_key | icon_path | alea-hermes-public |
+| symbol-effect | rule_magic_symbols.symbol_key | effect_image_path | alea-hermes-public |
+| symbol-cutout | rule_magic_symbols.symbol_key | cutout_path | alea-hermes-public |
+| symbol-illustration | rule_magic_symbols.symbol_key | illustration_path | alea-hermes-public |
+| symbol-illustration-wide | rule_magic_symbols.symbol_key | illustration_wide_path | alea-hermes-public |
 | skill | rule_skills.id (bindestreck → understreck) | icon_path | alea-hermes-public |
 | skill-illustration | rule_skills.id | illustration_path | alea-skill-art |
 | skill-illustration-wide | rule_skills.id | illustration_wide_path | alea-skill-art |
