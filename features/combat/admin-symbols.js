@@ -40,12 +40,17 @@
   const artInfo=document.createElement('p');artInfo.className='muted';
   artInfo.textContent='Bildfälten är reserverade för HERMES 4.0. Direktuppladdning till Supabase är avstängd tills publiceringskedjan är verifierad.';
   art.append(artTitle,artInfo);
-  for(const [key,label] of [['icon_path','Ikon'],['effect_image_path','Effektbild'],['cutout_path','Cutout'],['illustration_path','Illustration 1:1'],['illustration_wide_path','Illustration wide']]){
+  const imageFields=[['icon_path','Ikon'],['effect_image_path','Effektbild'],['cutout_path','Cutout'],['illustration_path','Illustration 1:1'],['illustration_wide_path','Illustration wide']];
+  for(const [key,label] of imageFields){
    const field=document.createElement('div');field.className='spell-art-status';
-   field.textContent=label+': '+(row[key]?'Registrerad':'Saknas');
-   if(key==='icon_path'&&valid(String(row[key]||''),String(row.symbol_key||''))){
+   const heading=document.createElement('strong');heading.textContent=label;
+   field.appendChild(heading);
+   const path=String(row[key]||'');
+   const note=document.createElement('p');note.textContent=path?'Registrerad bildreferens: '+path:'Ingen bild registrerad';
+   field.appendChild(note);
+   if(key==='icon_path'&&valid(path,String(row.symbol_key||''))){
     const image=document.createElement('img');image.alt='Aktuell symbolikon';image.loading='lazy';image.width=96;image.height=96;
-    image.src=src(row[key]);field.appendChild(image);
+    image.src=src(path);field.appendChild(image);
    }
    art.appendChild(field);
   }
