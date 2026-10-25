@@ -200,7 +200,7 @@ def process(job,token):
 def fail_job(job,error):
     attempts=int(job.get("attempts",1))
     delay=min(3600,30*(2**min(max(attempts-1,0),7)))
-    code=re.sub(r"[^A-Z0-9_]+","_",str(error).upper())[:64] or "WORKER_ERROR"
+    code=re.sub(r"[^A-Z0-9_]+","_",type(error).__name__.upper())[:64] or "WORKER_ERROR"
     try:
         patch_job(job,{"state":"failed","error_code":code,
             "next_attempt_at":(datetime.now(timezone.utc)+timedelta(seconds=delay)).isoformat(),
