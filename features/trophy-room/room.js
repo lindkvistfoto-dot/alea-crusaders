@@ -10,7 +10,7 @@ function draw(){
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
   const heroWidth=width*.30;
-  const moveX=-heroWidth*.5-progress*width*.405;
+  const moveX=-heroWidth*.5-progress*width*.29;
   const moveY=progress*height*.22;
   const heroScale=1+progress*1.05;
   hero.style.transform='translate3d('+moveX+'px,'+moveY+'px,0) scale('+heroScale+')';
