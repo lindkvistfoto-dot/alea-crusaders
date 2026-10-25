@@ -1,0 +1,33 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-laurel-badge-bronze",
+      "target_id": "37677d5f-2f1e-5f42-9570-9fcfba465c61",
+      "drive_file_id": "14Hqn4kHdALmLi50ixJQmo8yZnz5gK6am",
+      "archive_file_id": "1ratDw6f8n3OQZfqkPQSdfY5mFxnASf92",
+      "source_sha256": "c35cb3e4eddf45e5fbeab7270b21e96706a2713861b8a861132de85b84d0884a",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-laurel-badge-silver",
+      "target_id": "a0ce5596-3563-5ca3-a573-c1328aeded01",
+      "drive_file_id": "1PSVQFhATc0fIdHjQ6WVm5_5r5kAhYaz5",
+      "archive_file_id": "1gD91NM2_hC3GUtRo_hGstXN4CbTl-zBv",
+      "source_sha256": "b548b05900e5436784968644c7ea8a58333069fe9a1e1348c0e2abe917e20d35",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-laurel-badge-gold",
+      "target_id": "357a16f7-de64-5e7f-abad-a453f759f60b",
+      "drive_file_id": "1hllT6aVjwCOfziATlvUPJQodw6DIX7nj",
+      "archive_file_id": "1AvZxCM7UlPcN3LA0IE5a_2pwzezl0DuO",
+      "source_sha256": "3fcf138b5578db604ee8f5886ccc13cab2ce72f2e8236912ac62eadb1a8bf27e",
+      "visual_approved": true
+    }
+  ]
+}
