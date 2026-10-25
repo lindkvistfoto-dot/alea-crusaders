@@ -135,7 +135,7 @@ def optimized_webp(source,image_type):
         if im.width!=im.height:raise ValueError("SQUARE_IMAGE_REQUIRED")
         if image_type in ("icon","cutout"):
             if "A" not in im.getbands():raise ValueError("TRANSPARENT_IMAGE_REQUIRED")
-            if image_type=="cutout" and not any(a==0 for a in im.getchannel("A").getdata()):
+            if image_type=="cutout" and im.getchannel("A").getextrema()[0] != 0:
                 raise ValueError("CUTOUT_NEEDS_TRANSPARENT_PIXELS")
             im=im.convert("RGBA").resize((640,640),Image.Resampling.LANCZOS)
         else:
