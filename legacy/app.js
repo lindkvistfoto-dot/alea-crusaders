@@ -584,6 +584,7 @@ const SPELL_TARGET_TYPES=[['combatant','Kombattant'],['hexagon','Hexagon'],['oth
 function spellTargetLabel(type){return SPELL_TARGET_TYPES.find(([value])=>value===String(type||'other'))?.[1]||'Övrig'}
 function spellTargetOptions(selected='other'){return SPELL_TARGET_TYPES.map(([value,label])=>'<option value="'+value+'" '+(String(selected||'other')===value?'selected':'')+'>'+label+'</option>').join('')}
 function renderAdminSpells(){
+ const spellTargetLabel=type=>({combatant:'Kombattant',hexagon:'Hexagon',other:'Övrig'})[String(type||'other')]||'Övrig';
  let el=$('adminSpellTable'),st=$('adminSpellStatus');if(!el)return;
  if(!ruleSpellsLoaded){el.innerHTML='';if(st)st.textContent='Besvärjelseregistret kunde inte läsas.';return}
  let manuallyTested=0;
