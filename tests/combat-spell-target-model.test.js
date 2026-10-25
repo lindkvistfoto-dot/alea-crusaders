@@ -13,7 +13,7 @@ function portion(start,end){
 describe('magiska målmodellen',()=>{
  it('keeps the three registered target categories and uses center-only when radius is not explicit',()=>{
   const helper=portion('function combatSpellTargetType(', 'function combatMagicCastingRules(');
-  const ctx={};runInNewContext(helper+'this.type=combatSpellTargetType;this.radius=combatSpellRadiusHexes;',ctx);
+  const ctx={};runInNewContext(helper+'this.type=combatSpellTargetType;this.radius=combatSpellRadiusHexes;this.ruleRadius=combatSpellRuleAreaRadius;',ctx);
   expect(ctx.type({target_type:'combatant'})).toBe('combatant');
   expect(ctx.type({target_type:'hexagon'})).toBe('hexagon');
   expect(ctx.type({target_type:'other'})).toBe('other');
@@ -21,6 +21,10 @@ describe('magiska målmodellen',()=>{
   expect(ctx.radius({effect_grade:3,target_text:'Ingen radie angiven'})).toBe(0);
   expect(ctx.radius({effect_grade:3,target_text:'Radie Sx2 rutor'})).toBe(6);
   expect(ctx.radius({effect_grade:3,target_text:'Radie 2 hex'})).toBe(2);
+  expect(ctx.ruleRadius({spell_name:'ELD (F)',effect_grade:3})).toBe(0);
+  expect(ctx.ruleRadius({spell_name:'FROST (F)',effect_grade:3})).toBe(0);
+  expect(ctx.ruleRadius({spell_name:'MÖRKER (F)',effect_grade:1})).toBe(2);
+  expect(ctx.ruleRadius({spell_name:'BESKYDDARE',effect_grade:3})).toBe(3);
  });
 
  it('parses only explicit reach and leaves unknown reach to the GM',()=>{

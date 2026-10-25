@@ -60,7 +60,7 @@ describe('Klickbara magikontroller i strid',()=>{
  });
  it('giltiga skademål omfattar andra kombattanter men aldrig kastaren',()=>{
   const a={...prepared,source_data:{...prepared.source_data,effect_grade:1}};
-  const ctx=load('function combatFireballTargets(', '// BESKYDDARE:',{
+  const ctx=load('function combatFireballTargets(', '// BESKYDDARE map abstraction:',{
    combatants:[caster,ally,enemy,{id:'dead',status:'dead',visible_to_players:true}],
    combatActiveActor:()=>caster,combatChosenAction:()=>a,
    combatSpellRangeHexes:()=>10,combatFootprintDistance:()=>2,

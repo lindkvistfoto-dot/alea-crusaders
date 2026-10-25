@@ -2205,8 +2205,21 @@ function combatSpellRadiusHexes(data){
  return Number.isSafeInteger(value)&&value>=0?Math.min(15,perGrade?value*eg:value):0
 }
 function combatSpellRadiusScalesWithGrade(data){
+ const name=String(data?.spell_name||data?.name||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
+ if(name==='BESKYDDARE')return true;
  return /S\s*[x×*]\s*\d+[^\n]*\b(?:hex|rutor?)\b/i.test([data?.effect_per_eg,data?.target_text].filter(Boolean).join(' '))||
   /(?:radie|radius|område|area)[^\n]*\bper\s*EG\b/i.test([data?.effect_per_eg,data?.target_text].filter(Boolean).join(' '))
+}
+// Rulebook area sizes are projected onto the map as hex rings. Heights and
+// sub-hex dimensions stay in the spell description for the GM; they do not
+// change the tactical footprint.
+function combatSpellRuleAreaRadius(data){
+ const name=String(data?.spell_name||data?.name||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
+ const eg=Math.max(1,Math.floor(Number(data?.effect_grade)||1));
+ if(name==='MÖRKER')return 2; // 6 m diameter on the standard 1.5 m hex grid.
+ if(name==='BESKYDDARE')return eg; // base footprint plus one outward ring per added EG.
+ if(name==='ELD'||name==='FROST')return 0; // one impact hex per sphere; no larger map footprint is specified.
+ return combatSpellRadiusHexes(data)
 }
 // Expert Magiboken pp. 3–5: one PSY per EG, -2 CL per EG beyond the first.
 // Normal spells resolve next SR; K spells are immediate. No invented per-EG casting rounds.
@@ -2661,7 +2674,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   spell_image_path:combatSpellArtPath(spell.effect_image_path!==undefined?spell.effect_image_path:spell.image_path)||null,
   spell_image_focus_x:combatSpellArtNumber(spell.effect_focus_x??spell.image_focus_x,50),
   spell_image_focus_y:combatSpellArtNumber(spell.effect_focus_y??spell.image_focus_y,50),
-  damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',effect_per_eg:spell.effect_per_eg||'',target_text:spell.target_text||'',target_type:targetType,spell_target:null,area_center:null,area_radius:typeof combatSpellRadiusHexes==='function'?combatSpellRadiusHexes({effect_grade:grade,effect_per_eg:spell.effect_per_eg,target_text:spell.target_text}):0,target_mode:null,attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+  damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',effect_per_eg:spell.effect_per_eg||'',target_text:spell.target_text||'',target_type:targetType,spell_target:null,area_center:null,area_radius:typeof combatSpellRuleAreaRadius==='function'?combatSpellRuleAreaRadius({spell_name:spell.name,effect_grade:grade,effect_per_eg:spell.effect_per_eg,target_text:spell.target_text}):0,target_mode:null,attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
  action.source_data=sourceData;combatSelectedTargetId=null;combatMagicHexHover=null;renderCombat()
 }
@@ -2687,7 +2700,7 @@ async function stepCombatSpellEffect(combatantId,delta){
  // already established ready_round; only the cost/CL and target allocations change.
  const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(action.source_data):action.source_data.target_type;
  const scaleRadius=targetType==='hexagon'&&typeof combatSpellRadiusScalesWithGrade==='function'&&combatSpellRadiusScalesWithGrade(action.source_data);
- const updatedRadius=scaleRadius?combatSpellRadiusHexes({...action.source_data,effect_grade:effect,area_radius:null}):action.source_data.area_radius;
+ const updatedRadius=scaleRadius?combatSpellRuleAreaRadius({...action.source_data,effect_grade:effect,area_radius:null}):action.source_data.area_radius;
  const sourceData={...action.source_data,effect_grade:effect,
   magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,
   psy_cost:check?.psy_cost??effect,target_allocations:[],
@@ -3995,39 +4008,38 @@ function combatFireballTargets(actor=combatActiveActor(),action=combatChosenActi
  }
  return out
 }
-// BESKYDDARE: (EG + 2)^3 grid cells; on the 2D hex map the footprint is (EG + 2)^2 hexes.
+// BESKYDDARE map abstraction: EG 1 is center + adjacent ring; every added
+// EG expands the footprint by one ring. Vertical height is not simulated.
 function combatBeskyddareSideCells(data){
  const eg=Number(data?.effect_grade);
- return Number.isSafeInteger(eg)&&eg>=1?eg+2:3
+ return Number.isSafeInteger(eg)&&eg>=1?eg:1
 }
 function combatBeskyddareDimensions(data){
- const side=combatBeskyddareSideCells(data);
- return {x:side,y:side,z:side}
+ const radius=combatBeskyddareSideCells(data);
+ return {radius,hexes:1+3*radius*(radius+1)}
 }
 function combatBeskyddareStoredSideCells(parameters){
+ const radius=Number(parameters?.radius_hexes);
+ if(Number.isSafeInteger(radius)&&radius>=1)return radius;
+ // Already placed legacy cubes retain their saved footprint until recast.
  const side=Number(parameters?.cube_side_cells??parameters?.cube_dimensions_cells?.x);
  if(Number.isSafeInteger(side)&&side>=3)return side;
- // Old placed wards used a +3 m/EG axis model. Keep their EG while correcting all sides.
  if(Array.isArray(parameters?.cube_axes))return parameters.cube_axes.length+3;
- const legacy=parameters?.cube_dimensions_m;
- if(legacy&&[legacy.x,legacy.y,legacy.z].every(v=>Number.isFinite(Number(v))&&Number(v)>=3)){
-  const converted=(Number(legacy.x)+Number(legacy.y)+Number(legacy.z))/3;
-  if(Number.isSafeInteger(converted)&&converted>=3)return converted
- }
  return 3
 }
 function combatBeskyddareAreaParameters(data,sourceActionId){
- const side=combatBeskyddareSideCells(data);
- return {shape:'cube',cube_side_cells:side,cube_dimensions_cells:{x:side,y:side,z:side},
-  effect_grade:side-2,barrier_eg:1,blocks_magic_both_directions:true,
+ const radius=combatBeskyddareSideCells(data);
+ return {shape:'hex_radius',radius_hexes:radius,
+  effect_grade:radius,barrier_eg:1,blocks_magic_both_directions:true,
   object_passage:'ENERGISTRÅLE EG 1 – SL avgör skadan',damage_on_enter:0,
   damage_on_stay:0,damage_on_exit:0,source_action_id:sourceActionId}
 }
 function combatIsBeskyddareArea(area){
- return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&area.parameters?.shape==='cube'
+ return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&['cube','hex_radius'].includes(area.parameters?.shape)
 }
 function combatBeskyddareContains(area,point){
  if(!combatIsBeskyddareArea(area)||!point)return false;
+ if(area.parameters?.shape==='hex_radius')return combatAxialDistance({q:Number(area.center_q),r:Number(area.center_r)},point)<=combatBeskyddareStoredSideCells(area.parameters);
  const side=combatBeskyddareStoredSideCells(area.parameters);
  const dq=Number(point.q)-Number(area.center_q),dr=Number(point.r)-Number(area.center_r);
  if(!Number.isInteger(dq)||!Number.isInteger(dr))return false;
@@ -4099,7 +4111,7 @@ async function combatSetMagicTargetHex(actorId,q,r){
   else {combatMagicHexHover={q:center.q,r:center.r,invalid:true};renderCombat()}
   return
  }
- const radius=data.magic_binding?.cube?0:combatSpellRadiusHexes(data);
+ const radius=data.magic_binding?.cube?combatSpellRuleAreaRadius(data):combatSpellRadiusHexes(data);
  const spellTarget={type:'hexagon',map_id:String(combatActiveSceneId()||('combat:'+activeCombat.id)),
   coordinates:{q:center.q,r:center.r},center:{q:center.q,r:center.r},radius,
   range_unresolved:status.unresolved===true};
@@ -4234,9 +4246,9 @@ function combatMagicTargetChooserHtml(actor,action){
   if(action.source_data.magic_binding.cube){
    const d=combatBeskyddareDimensions(action.source_data);
    const confirmed=action.source_data.beskyddare_ritual_confirmed===true;
-   return '<div class="combat-spell-choice"><b>Beskyddare · magisk kub</b>'+
-    '<small>Kubens sida = EG + 2 rutor. EG 1 ger 3 × 3 × 3 rutor.</small>'+
-    '<small>Storlek: '+d.x+' × '+d.y+' × '+d.z+' rutor · permanent · skyddar mot magi i båda riktningarna.</small>'+
+   return '<div class="combat-spell-choice"><b>Beskyddare · magisk skyddszon</b>'+
+    '<small>Kartmodell: EG 1 täcker centrumhexagonen och de sex angränsande. Varje extra EG lägger till en ring. Höjd visas inte på kartan.</small>'+
+    '<small>Skyddszon: radie '+d.radius+' · '+d.hexes+' hexagoner · permanent · magi prövas mot Antimagi EG 1 vid gränsen.</small>'+
     '<small>Välj centrum på magikerns hex eller en intilliggande hex (beröring).</small>'+
     '<small>Ritual med nio stenar. SL bekräftar förberedelsen innan kastet.</small>'+
     '<button type="button" class="btn" onclick="combatConfirmBeskyddareRitual(\''+actor.id+'\')">'+(confirmed?'✓ Ritual bekräftad':'SL: Bekräfta ritual')+'</button>'+
@@ -5197,8 +5209,8 @@ function renderCombatMap(){
    codes.some(x=>x==='area_fire')?'#fa7045':
    codes.some(x=>x==='area_poison')?'#70c97b':
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
-  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' '+Array(3).fill(combatBeskyddareStoredSideCells(area.parameters)).join('×')+' rutor':name}).join(', ');
-  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares kub':names||'Valt centrum')+'</title></polygon>'
+  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' · radie '+combatBeskyddareStoredSideCells(area.parameters):name}).join(', ');
+  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares skyddszon':names||'Valt centrum')+'</title></polygon>'
  }).join('');
  const targetData=spellHexMode?currentMagic.source_data:null;
  const targetCenter=targetData?.spell_target?.center||targetData?.area_center||null;
@@ -5745,7 +5757,7 @@ function combatSpellResultHtml(action){
  let note;
  if(result.awaiting_antimagic)note='Kastet lyckades. Målet kan fortfarande reagera med Antimagi.';
  else if(result.antimagic?.reflected)note='Antimagi har reflekterat besvärjelsen. SL avgör eventuell återverkan.';
- else if(result.blocked_by_beskyddare)note='Beskyddares kub stoppade magin vid gränsen. Besvärjelsen trängde inte igenom.';
+ else if(result.blocked_by_beskyddare)note='Beskyddares skyddszon stoppade magin vid gränsen. Besvärjelsen trängde inte igenom.';
  else if(result.blocked_target_ids?.length)note='Beskyddare stoppade magin mot vissa mål. Övriga mål påverkas normalt.';
  else if(!success)note='Besvärjelsen misslyckades. Ingen magisk effekt tilldelas.';
  else if(result.resisted)note='Besvärjelsen lyckades, men målet stod emot effekten.';
