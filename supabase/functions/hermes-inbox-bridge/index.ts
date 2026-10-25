@@ -92,7 +92,7 @@ Deno.serve(async req=>{
   }
   if(raw.length<100)return fail(413,"IMAGE_SIZE_INVALID","Bilden måste vara minst 100 byte.");
   if(sniff(raw)!==contentType)return fail(415,"IMAGE_CONTENT_MISMATCH","Filinnehållet stämmer inte med bildformatet.");
-  const actualSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",raw)));
+  const actualSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",raw.buffer as ArrayBuffer)));
   if(actualSha!==expectedSha)return fail(422,"SHA256_MISMATCH","Bilden ändrades under uppladdningen. Försök igen.");
   const same=await admin.from("hermes_asset_jobs").select("id,state,source_sha256").eq("target_type","symbol").eq("target_id",targetId).eq("image_type",imageType).eq("source_sha256",actualSha).maybeSingle();
   if(same.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
@@ -109,7 +109,7 @@ Deno.serve(async req=>{
   const row={
     id,idempotency_key:id,target_type:"symbol",target_id:targetId,target_key:targetKey,image_type:imageType,
     source_bucket:"alea-hermes-source",source_path:path,source_sha256:actualSha,source_bytes:raw.length,
-    previous_path:target[field]||null,requested_by:user.id
+    previous_path:(target as Record<string,unknown>)[field]||null,requested_by:user.id
   };
   const inserted=await admin.from("hermes_asset_jobs").insert(row).select("id,state").single();
   if(inserted.error){
