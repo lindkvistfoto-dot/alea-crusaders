@@ -74,7 +74,7 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any,archiveRequired=false){
- if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration"].includes(a.kind)||(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")&&!(a.kind==="system-asset"&&a.target_key==="arcane-trophy-room-v2.2"))||
+ if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration","symbol-cutout","symbol-illustration","symbol-illustration-wide"].includes(a.kind)||(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")&&!(a.kind==="system-asset"&&a.target_key==="arcane-trophy-room-v2.2"))||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  if(archiveRequired&&(a.archive_verified!==true||a.source_path!=="drive://"+a.archive_file_id||
@@ -96,18 +96,22 @@ function checkAsset(a:any,archiveRequired=false){
  const spellWide=a.kind==="spell-illustration-wide";
  const spellSquare=a.kind==="spell-illustration";
  const spellCutout=a.kind==="spell-cutout";
+ const symbolCutout=a.kind==="symbol-cutout";
+ const symbolWide=a.kind==="symbol-illustration-wide";
+ const symbolSquare=a.kind==="symbol-illustration";
+ const symbolArt=symbolCutout||symbolWide||symbolSquare;
  const spellArt=spellWide||spellSquare||spellCutout;
- const wide=a.kind==="skill-illustration-wide"||spellWide;
- const illustration=a.kind==="skill-illustration"||wide||spellSquare;
+ const wide=a.kind==="skill-illustration-wide"||spellWide||symbolWide;
+ const illustration=a.kind==="skill-illustration"||wide||spellSquare||symbolSquare;
  const expectsAlpha=!illustration;
- const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" = spellCutout?"cutout_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
- const validDimensions=spellWide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
+ const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" = (spellCutout||symbolCutout)?"cutout_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
+ const validDimensions=(spellWide||symbolWide)?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
  if(!expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
- const skill=a.kind==="skill"||(illustration&&!spellArt);
- return {table:a.kind==="symbol"?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
-  field:a.kind==="symbol"?"symbol_key":skill?"id":"spell_key", sourcePath:a.source_path,
-  appPath:spellArt?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
+ const skill=a.kind==="skill"||(illustration&&!spellArt&&!symbolArt);
+ return {table:(a.kind==="symbol"||symbolArt)?"rule_magic_symbols":skill?"rule_skills":"rule_spells",
+  field:(a.kind==="symbol"||symbolArt)?"symbol_key":skill?"id":"spell_key", sourcePath:a.source_path,
+  appPath:symbolArt?"hermes/"+out:spellArt?"spell/TARGET_UUID/"+illustrationUuid(a.app_sha256)+".webp":illustration?"skill/"+a.target_key.replaceAll("-","_")+(wide?"/illustration_wide/":"/illustration/")+illustrationUuid(a.app_sha256)+".webp":"hermes/"+a.kind+"/"+a.target_key+"/"+a.app_sha256+".webp", assetField};
 }
 type ArtTarget = {id:string; icon_path:string|null; illustration_path?:string|null; effect_image_path?:string|null; cutout_path?:string|null; illustration_wide_path?:string|null; asset_path?:string|null; app_sha256?:string|null; app_bytes?:number|null; width?:number|null; height?:number|null; alpha_preserved?:boolean|null};
 async function publish(a:any){
@@ -117,7 +121,7 @@ async function publish(a:any){
  if(await digest("SHA-256",app)!==a.app_sha256)throw Error("APP_SHA_MISMATCH");
  const system=a.kind==='system-asset';
  const systemFields=['asset_path','app_sha256','app_bytes','width','height','alpha_preserved'] as const;
- const targetFields=system?'id,asset_key,'+systemFields.join(','):table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path";
+ const targetFields=system?'id,asset_key,'+systemFields.join(','):table==="rule_skills"?"id,icon_path,illustration_path,illustration_wide_path":table==="rule_spells"?"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path":"id,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path";
  const lookupTarget=()=>db.from(table).select(targetFields).eq(field,(a.kind==="skill"||a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?a.target_key.replaceAll("-","_"):a.target_key).returns<ArtTarget[]>().maybeSingle();
  let {data:target,error:targetError}=await lookupTarget();
  if(targetError)throw Error("TARGET_READ "+targetError.message);
@@ -134,7 +138,7 @@ async function publish(a:any){
  if(!target)throw Error(system?"TARGET_REGISTRATION_CONFLICT "+a.target_key:"TARGET_NOT_FOUND "+a.target_key);
  if(a.target_id!==undefined&&target.id!==a.target_id)throw Error("TARGET_ID_MISMATCH "+a.target_key);
  const appPath=declaredAppPath.replace("TARGET_UUID",target.id);
- const appBucket=(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
+ const appBucket=symbolArt?"alea-hermes-public":(a.kind==="spell-cutout"||a.kind==="spell-illustration-wide"||a.kind==="spell-illustration")?"alea-spell-art":(a.kind==="skill-illustration"||a.kind==="skill-illustration-wide")?"alea-skill-art":"alea-hermes-public";
  const activationFields=system?{asset_path:appPath,app_sha256:a.app_sha256,app_bytes:app.length,width:a.width,height:a.height,alpha_preserved:a.alpha_preserved}:{[assetField]:appPath};
  const previousFields=system?Object.fromEntries(systemFields.map(field=>[field,target[field]])):{[assetField]:target[assetField]};
  const metadataMatches=(row:ArtTarget)=>!system||systemFields.every(field=>row?.[field]===(activationFields as Record<string,unknown>)[field]);
