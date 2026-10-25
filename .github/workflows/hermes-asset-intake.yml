@@ -1,0 +1,65 @@
+name: HERMES asset intake
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/hermes-asset-intake.yml'
+      - 'scripts/hermes_asset_worker.py'
+      - 'supabase/migrations/*hermes_asset_inbox_bridge.sql'
+      - 'supabase/functions/hermes-inbox-bridge/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hermes-asset-intake
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            tests
+            config
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.3.0
+      - name: Compile HERMES worker
+        run: python -m py_compile scripts/hermes_asset_worker.py
+      - name: Offline regression tests
+        run: python -m unittest discover -s tests -p test_hermes_asset_worker.py -v
+      - name: Require existing HERMES runtime configuration
+        env:
+          OAUTH_CLIENT: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          OAUTH_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          OAUTH_REFRESH: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          SERVICE: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          test -n "$OAUTH_CLIENT" || { echo "::error::Existing HERMES OAuth client missing"; exit 1; }
+          test -n "$OAUTH_SECRET" || { echo "::error::Existing HERMES OAuth secret missing"; exit 1; }
+          test -n "$OAUTH_REFRESH" || { echo "::error::Existing HERMES OAuth refresh missing"; exit 1; }
+          test -n "$SERVICE" || { echo "::error::Existing HERMES service secret missing"; exit 1; }
+      - name: Process queued HERMES symbol images
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          HERMES_WEB_INBOX_FOLDER_ID: '1qyNO8FWuxNup50L1oTWTWsCVQ6L3_gdp'
+          HERMES_SYMBOL_ICON_ARCHIVE_FOLDER_ID: '10O5G2reR1Ll0s7wGQPSY8_6Nq4IMOBjS'
+          HERMES_SYMBOL_SQUARE_ARCHIVE_FOLDER_ID: '1OZg41rqMKVATKnPFCg6enbVrrwc_2CIZ'
+          HERMES_SYMBOL_CUTOUT_ARCHIVE_FOLDER_ID: '1FrKbSXLq1hp7eE6J6O-lrKeK3Vj5n-of'
+          HERMES_SYMBOL_WIDE_ARCHIVE_FOLDER_ID: '1TkOcnqUimRZRbqmCvjXh4vt07XfecpkA'
+        run: python scripts/hermes_asset_worker.py

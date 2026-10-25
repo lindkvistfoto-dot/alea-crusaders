@@ -3,7 +3,11 @@ on:
   pull_request:
     paths:
       - 'scripts/hermes_web_worker.py'
+      - 'scripts/hermes_asset_worker.py'
       - 'tests/test_hermes_web_worker.py'
+      - 'tests/test_hermes_asset_worker.py'
+      - 'supabase/functions/hermes-inbox-bridge/**'
+      - 'supabase/migrations/*hermes_asset_inbox_bridge.sql'
       - '.github/workflows/hermes-web-tests.yml'
   workflow_dispatch:
 permissions:
@@ -19,3 +23,9 @@ jobs:
       - run: python -m pip install Pillow==12.0.0
       - run: python -m py_compile scripts/hermes_web_worker.py
       - run: python -m unittest discover -s tests -p test_hermes_web_worker.py -v
+      - run: python -m py_compile scripts/hermes_asset_worker.py
+      - run: python -m unittest discover -s tests -p test_hermes_asset_worker.py -v
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check --no-config --no-lock --node-modules-dir=none supabase/functions/hermes-inbox-bridge/index.ts

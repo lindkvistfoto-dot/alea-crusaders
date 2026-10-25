@@ -1,0 +1,122 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+
+const URL_BASE = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const admin = createClient(URL_BASE, SERVICE_KEY, {auth:{persistSession:false}});
+const headers = {
+  "access-control-allow-origin":"*",
+  "access-control-allow-methods":"POST,OPTIONS",
+  "access-control-allow-headers":"authorization,apikey,content-type,x-hermes-idempotency-key,x-hermes-target-id,x-hermes-target-key,x-hermes-image-type,x-hermes-sha256",
+  "content-type":"application/json"
+};
+const json = (value:unknown,status=200) => new Response(JSON.stringify(value),{status,headers});
+const fail = (status:number,code:string,message:string) => json({error:code,message},status);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const KEY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const TYPES = new Set(["icon","effect","cutout","illustration","illustration-wide"]);
+function hex(bytes:Uint8Array){return [...bytes].map(x=>x.toString(16).padStart(2,"0")).join("")}
+async function readBounded(req:Request,max:number){
+  const reader=req.body?.getReader();
+  if(!reader)throw new Error("EMPTY_BODY");
+  const chunks:Uint8Array[]=[];let total=0;
+  while(true){
+    const part=await reader.read();if(part.done)break;
+    total+=part.value.byteLength;
+    if(total>max){await reader.cancel();throw new Error("IMAGE_TOO_LARGE")}
+    chunks.push(part.value);
+  }
+  const out=new Uint8Array(total);let offset=0;
+  for(const chunk of chunks){out.set(chunk,offset);offset+=chunk.byteLength}
+  return out;
+}
+function sniff(bytes:Uint8Array){
+  if(bytes.length>=8&&[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v))return "image/png";
+  if(bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255)return "image/jpeg";
+  if(bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&String.fromCharCode(...bytes.slice(8,12))==="WEBP")return "image/webp";
+  return "";
+}
+Deno.serve(async req=>{
+  if(req.method==="OPTIONS")return new Response(null,{status:204,headers});
+  if(req.method!=="POST")return fail(405,"METHOD_NOT_ALLOWED","Vain POST är tillåten.");
+  const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
+  if(!jwt)return fail(401,"UNAUTHORIZED","Inloggningen saknas.");
+  const auth=createClient(URL_BASE,ANON_KEY,{auth:{persistSession:false}});
+  const {data:{user},error:authError}=await auth.auth.getUser(jwt);
+  if(authError||!user)return fail(401,"UNAUTHORIZED","Inloggningen har gått ut. Logga in igen.");
+  const actor=createClient(URL_BASE,ANON_KEY,{global:{headers:{Authorization:"Bearer "+jwt}},auth:{persistSession:false}});
+  const {data:profile,error:profileError}=await actor.from("profiles").select("id,is_admin").eq("id",user.id).maybeSingle();
+  if(profileError)return fail(503,"ADMIN_LOOKUP_FAILED","Administratörsrättigheten kunde inte verifieras. Försök igen.");
+  if(!profile?.is_admin)return fail(403,"ADMIN_REQUIRED","Endast administratörer får ta emot bilder.");
+  if((req.headers.get("content-type")||"").includes("application/json")){
+    let body:any;try{body=await req.json()}catch{return fail(400,"BAD_ACTION","Begäran kunde inte läsas.")}
+    if(body?.action!=="retry"||!UUID.test(String(body?.job_id||"")))return fail(400,"BAD_ACTION","Försök igen kräver ett giltigt jobb-ID.");
+    const job=await admin.from("hermes_asset_jobs").select("id,state,attempts,inbox_drive_file_id,archive_drive_file_id").eq("id",body.job_id).maybeSingle();
+    if(job.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
+    if(!job.data)return fail(404,"JOB_NOT_FOUND","Jobbet hittades inte.");
+    if(job.data.state!=="failed"||Number(job.data.attempts)<12)return fail(409,"JOB_NOT_RETRYABLE","Jobbet väntar redan på automatisk körning eller är inte misslyckat.");
+    const nextState=job.data.archive_drive_file_id?"archived":job.data.inbox_drive_file_id?"inboxed":"received";
+    const retried=await admin.from("hermes_asset_jobs").update({state:nextState,attempts:0,next_attempt_at:new Date().toISOString(),lease_token:null,lease_until:null,error_code:null,updated_at:new Date().toISOString()})
+      .eq("id",body.job_id).eq("state","failed").gte("attempts",12).select("id,state").maybeSingle();
+    if(retried.error)return fail(503,"JOB_RETRY_FAILED","Jobbet kunde inte köas om. Försök igen.");
+    if(!retried.data)return fail(409,"JOB_CHANGED","Jobbet ändrades samtidigt. Ladda om statusen.");
+    return json({ok:true,job_id:retried.data.id,status:retried.data.state},202);
+  }
+  const id=req.headers.get("x-hermes-idempotency-key")||"";
+  const targetId=req.headers.get("x-hermes-target-id")||"";
+  const targetKey=req.headers.get("x-hermes-target-key")||"";
+  const imageType=req.headers.get("x-hermes-image-type")||"";
+  const expectedSha=(req.headers.get("x-hermes-sha256")||"").toLowerCase();
+  if(!UUID.test(id)||!UUID.test(targetId)||!KEY.test(targetKey)||!TYPES.has(imageType)||!/^[a-f0-9]{64}$/.test(expectedSha))
+    return fail(400,"BAD_IMAGE_REQUEST","Bildinformationen är ogiltiga. Välj bilden på nytt.");
+  const existing=await admin.from("hermes_asset_jobs").select("id,idempotency_key,target_id,target_key,image_type,source_sha256,state").eq("idempotency_key",id).maybeSingle();
+  if(existing.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
+  if(existing.data){
+    const j=existing.data;
+    if(j.target_id!==targetId||j.target_key!==targetKey||j.image_type!==imageType||j.source_sha256!==expectedSha)
+      return fail(409,"IDEMPOTENCY_CONFLICT","Uppladdningsförsöket används redan för en annan bild.");
+    return json({ok:true,job_id:j.id,status:j.state,received:true},202);
+  }
+  const {data:target,error:targetError}=await admin.from("rule_magic_symbols").select("id,symbol_key,icon_path,effect_image_path,cutout_path,illustration_path,illustration_wide_path").eq("id",targetId).eq("symbol_key",targetKey).maybeSingle();
+  if(targetError||!target)return fail(404,"SYMBOL_NOT_FOUND","Symbolen hittades inte. Ladda om administrationen.");
+  const field=({icon:"icon_path",effect:"effect_image_path",cutout:"cutout_path",illustration:"illustration_path","illustration-wide":"illustration_wide_path"} as Record<string,string>)[imageType];
+  const contentType=(req.headers.get("content-type")||"").split(";")[0].toLowerCase();
+  if(contentType!=="image/png")return fail(415,"UNSUPPORTED_IMAGE_TYPE","HERMES-original ska vara PNG. Exportera bilden som PNG och försök igen.");
+  if(["icon","cutout"].includes(imageType)&&!["image/png","image/webp"].includes(contentType))
+    return fail(415,"TRANSPARENCY_FORMAT_REQUIRED","Ikon och cutout behöver transparent PNG eller WebP.");
+  let raw:Uint8Array;
+  try{raw=await readBounded(req,8388608)}catch(e){
+    if(String(e).includes("IMAGE_TOO_LARGE"))return fail(413,"IMAGE_SIZE_INVALID","Bilden får vara högst 8 MiB.");
+    return fail(400,"EMPTY_IMAGE","Bilden saknas eller kunde inte läsas.");
+  }
+  if(raw.length<100)return fail(413,"IMAGE_SIZE_INVALID","Bilden måste vara minst 100 byte.");
+  if(sniff(raw)!==contentType)return fail(415,"IMAGE_CONTENT_MISMATCH","Filinnehållet stämmer inte med bildformatet.");
+  const actualSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",raw.buffer as ArrayBuffer)));
+  if(actualSha!==expectedSha)return fail(422,"SHA256_MISMATCH","Bilden ändrades under uppladdningen. Försök igen.");
+  const same=await admin.from("hermes_asset_jobs").select("id,state,source_sha256").eq("target_type","symbol").eq("target_id",targetId).eq("image_type",imageType).eq("source_sha256",actualSha).maybeSingle();
+  if(same.error)return fail(503,"JOB_LOOKUP_FAILED","Jobbstatus kunde inte läsas. Försök igen.");
+  if(same.data)return json({ok:true,job_id:same.data.id,status:same.data.state,received:true},202);
+  const path="hermes-assets/"+id+"/"+actualSha;
+  const upload=await admin.storage.from("alea-hermes-source").upload(path,raw,{contentType,upsert:false,cacheControl:"0"});
+  if(upload.error){
+    const prior=await admin.storage.from("alea-hermes-source").download(path);
+    if(prior.error)return fail(503,"STAGING_WRITE_FAILED","Originalet kunde inte säkras. Ingen bild har aktiverats.");
+    const priorBytes=new Uint8Array(await prior.data.arrayBuffer());
+    const priorSha=hex(new Uint8Array(await crypto.subtle.digest("SHA-256",priorBytes)));
+    if(priorSha!==actualSha)return fail(409,"STAGING_CONFLICT","Ett annat original använder redan detta jobb-ID.");
+  }
+  const row={
+    id,idempotency_key:id,target_type:"symbol",target_id:targetId,target_key:targetKey,image_type:imageType,
+    source_bucket:"alea-hermes-source",source_path:path,source_sha256:actualSha,source_bytes:raw.length,
+    previous_path:(target as Record<string,unknown>)[field]||null,requested_by:user.id
+  };
+  const inserted=await admin.from("hermes_asset_jobs").insert(row).select("id,state").single();
+  if(inserted.error){
+    const duplicate=await admin.from("hermes_asset_jobs").select("id,target_id,target_key,image_type,source_sha256,state").eq("idempotency_key",id).maybeSingle();
+    if(duplicate.data&&duplicate.data.target_id===targetId&&duplicate.data.target_key===targetKey&&duplicate.data.image_type===imageType&&duplicate.data.source_sha256===actualSha)
+      return json({ok:true,job_id:duplicate.data.id,status:duplicate.data.state,received:true},202);
+    return fail(503,"JOB_CREATE_FAILED","Originalet är mellanlagrat men jobbkvittot kunde inte skapas. Försök igen med samma uppladdning.");
+  }
+  return json({ok:true,job_id:inserted.data.id,status:"received",received:true},202);
+});
