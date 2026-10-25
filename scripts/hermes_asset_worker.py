@@ -199,8 +199,18 @@ def process(job,token):
 
 def fail_job(job,error):
     attempts=int(job.get("attempts",1))
+    permanent={
+        "INVALID_IMAGE_SIGNATURE","INVALID_IMAGE","INVALID_IMAGE_DIMENSIONS",
+        "SQUARE_IMAGE_REQUIRED","WIDE_IMAGE_MUST_BE_16_9","TRANSPARENT_IMAGE_REQUIRED",
+        "CUTOUT_NEEDS_TRANSPARENT_PIXELS","STAGING_SHA256_MISMATCH","DRIVE_SHA256_MISMATCH",
+        "DRIVE_WRONG_FOLDER","ARCHIVE_WRONG_FOLDER","TARGET_NOT_FOUND",
+        "TARGET_CHANGED_DURING_PUBLICATION","ACTIVATION_READBACK_MISMATCH",
+        "PUBLIC_READBACK_MISMATCH","RESPONSE_TOO_LARGE","INBOX_ARCHIVE_ORDER_VIOLATION"
+    }
+    message=str(error)
+    code=message if message in permanent else type(error).__name__.upper()
+    if message in permanent:attempts=12
     delay=min(3600,30*(2**min(max(attempts-1,0),7)))
-    code=re.sub(r"[^A-Z0-9_]+","_",type(error).__name__.upper())[:64] or "WORKER_ERROR"
     try:
         patch_job(job,{"state":"failed","error_code":code,
             "next_attempt_at":(datetime.now(timezone.utc)+timedelta(seconds=delay)).isoformat(),
