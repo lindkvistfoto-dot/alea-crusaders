@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { validateHonorDefinition, publicHonorProjection, grantHonor, revokeHonor, activeGrant } from './honors-domain.js';
+import { validateHonorDefinition, publicHonorProjection, grantHonor, revokeHonor, activeGrant, honorCategory } from './honors-domain.js';
 const medal = { id:'m1', name:'Spindelkonungens pyramid', type:'adventure', adventure_id:'a1', visibility:'public', grant_mode:'manual', status:'active' };
 describe('Arcane Honors domain', () => {
-  it('validates medal definitions', () => {
+  it('validates medal definitions and supports quick draft registration', () => {
     expect(validateHonorDefinition(medal)).toEqual([]);
     expect(validateHonorDefinition({ ...medal, adventure_id:'' })).toContain('adventure_id required');
+    const draft={name:'Nytt hedersmärke',type:'honor',category:'badge',status:'draft',grant_mode:'manual',visibility:'public'};
+    expect(validateHonorDefinition(draft)).toEqual([]);
+    expect(honorCategory({type:'adventure'})).toBe('medal');
+  });
+  it('requires drafts to stay manual and not player visible', () => {
+    expect(validateHonorDefinition({name:'Draft',type:'honor',category:'award',status:'draft',grant_mode:'automatic',visibility:'public'})).toContain('drafts must be manual');
+    expect(publicHonorProjection({ ...medal, status:'draft' })).toBeNull();
   });
   it('does not reveal secret awards', () => {
     expect(publicHonorProjection({ ...medal, visibility:'secret' })).toBeNull();
