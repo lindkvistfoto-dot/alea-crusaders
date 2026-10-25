@@ -42,30 +42,26 @@ class AssetWorkerTests(unittest.TestCase):
         self.assertEqual(self.w.image_mime(b"RIFF"+b"x"*4+b"WEBP"+b"x"*20),"image/webp")
         with self.assertRaisesRegex(ValueError,"INVALID_IMAGE_SIGNATURE"):self.w.image_mime(b"not an image")
 
-    def test_square_profiles_convert_to_expected_webp_size(self):
-        for kind in ("icon","effect","cutout","illustration"):
-            with self.subTest(kind=kind):
-                data,width,height=self.w.optimized_webp(self.source,kind)
-                self.assertEqual((width,height),(640,640))
-                self.assertTrue(data.startswith(b"RIFF") and data[8:12]==b"WEBP")
-
-    def test_wide_profile_requires_16_by_9_and_outputs_1280_by_720(self):
-        source=png(size=(1600,900),color=(255,255,255,255))
-        data,width,height=self.w.optimized_webp(source,"illustration-wide")
-        self.assertEqual((width,height),(1280,720))
-        self.assertEqual(data[8:12],b"WEBP")
-        with self.assertRaisesRegex(ValueError,"WIDE_IMAGE_MUST_BE_16_9"):
-            self.w.optimized_webp(png(size=(640,640),color=(255,255,255,255)),"illustration-wide")
-
-    def test_cutout_requires_alpha_and_fully_transparent_pixels(self):
-        with self.assertRaisesRegex(ValueError,"TRANSPARENT_IMAGE_REQUIRED"):
-            self.w.optimized_webp(png(mode="RGB",color=(1,2,3)),"cutout")
-        with self.assertRaisesRegex(ValueError,"CUTOUT_NEEDS_TRANSPARENT_PIXELS"):
-            self.w.optimized_webp(png(color=(1,2,3,255)),"cutout")
-
-    def test_square_profile_rejects_rectangle(self):
-        with self.assertRaisesRegex(ValueError,"SQUARE_IMAGE_REQUIRED"):
-            self.w.optimized_webp(png(size=(640,480)),"effect")
+    def test_webp_preparation_uses_canonical_hermes_profile(self):
+        captured={}
+        output=b"RIFF"+b"\\x00\\x00\\x00\\x00"+b"WEBP"+b"test"
+        def prepare(raw,kind,key,sha,output_root,source_path):
+            captured.update(raw=raw,kind=kind,key=key,sha=sha,source_path=source_path)
+            relative=pathlib.Path(kind)/key/(hashlib.sha256(output).hexdigest()+".webp")
+            target=output_root/relative
+            target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes(output)
+            return {"app_file":relative.as_posix(),"app_sha256":hashlib.sha256(output).hexdigest(),
+                    "width":640,"height":640}
+        with patch("hermes2_prepare.prepare_bytes",side_effect=prepare):
+            data,width,height=self.w.optimized_webp(self.source,"icon","sigill-kraft")
+        self.assertEqual(data,output)
+        self.assertEqual((width,height),(640,640))
+        self.assertEqual(captured["raw"],self.source)
+        self.assertEqual(captured["kind"],"symbol")
+        self.assertEqual(captured["key"],"sigill-kraft")
+        self.assertEqual(captured["sha"],hashlib.sha256(self.source).hexdigest())
+        self.assertTrue(captured["source_path"].startswith("drive://"))
 
     def test_drive_pipeline_is_ordered_and_archive_precedes_publish(self):
         calls=[]
