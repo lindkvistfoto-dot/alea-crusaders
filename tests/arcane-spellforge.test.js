@@ -19,7 +19,7 @@ const magicFunctions=[
  portion('combatMagicCastingRules','\nfunction combatMagicCastPreflight'),
  portion('combatMagicCastPreflight','\n// Casting mechanics'),
  portion('combatMagicBinding','\nfunction combatMagicDamageFormula'),
- portion('combatMagicDamageFormula','\nfunction combatIsSummoningSpellName')
+ portion('combatMagicDamageFormula','\n\n/* FALK:')
 ];
 const scope={};
 runInNewContext(effectProfileSource+'\n'+magicFunctions.join('\n')+
