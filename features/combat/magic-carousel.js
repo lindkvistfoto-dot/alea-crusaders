@@ -1,4 +1,4 @@
-µ¨¥Â¸­yêë¢°k¢G§¦*^/* Alea Crusaders v0.35.199 â€“ locked magic-carousel MVP.
+/* Alea Crusaders v0.35.199 â€“ locked magic-carousel MVP.
  * UI-only selector. The existing Expert preparation, cast and dice code
  * remains authoritative. No spell is cast by clicking a carousel tile. */
 const COMBAT_MAGIC_CAROUSEL_MAX=12;

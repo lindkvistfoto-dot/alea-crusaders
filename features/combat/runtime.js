@@ -1,5 +1,4 @@
-µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^const COMBAT_PHASE_LABELS={initiative:'Initiativ',declaration:'Deklaration',movement:'RÃ¶relse',magic:'Magi',quick:'Snabba handlingar',normal:'Normal slagvÃ¤xling',new_contact:'Ny nÃ¤rstridskontakt',late:'Sena handlingar',effects:'BesvÃ¤rjelseeffekter',round_end:'Rundslut',reaction:'Reaktion'};
+const COMBAT_PHASE_LABELS={initiative:'Initiativ',declaration:'Deklaration',movement:'RÃ¶relse',magic:'Magi',quick:'Snabba handlingar',normal:'Normal slagvÃ¤xling',new_contact:'Ny nÃ¤rstridskontakt',late:'Sena handlingar',effects:'BesvÃ¤rjelseeffekter',round_end:'Rundslut',reaction:'Reaktion'};
 function combatPhaseLabel(p){return COMBAT_PHASE_LABELS[p]||String(p||'â€”')}
 function combatSideLabel(s){return s==='heroes'?'HjÃ¤ltar':s==='enemies'?'Fiender':'Neutral'}
 function combatStatusLabel(s){return s==='setup'?'FÃ¶rberedelse':s==='active'?'PÃ¥gÃ¥r':s==='paused'?'Pausad':s==='completed'?'Avslutad':String(s||'â€”')}
@@ -118,8 +117,7 @@ async function combatRollDice(specs,label='Slag'){
  if(combatDiceBusy)return null;
  combatHideInitiativeLegend();
  const clean=(Array.isArray(specs)?specs:[]).map(spec=>({
-  qty:Math.max(1,Math.min(20µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^,Math.floor(Number(spec?.qty)||1))),
+  qty:Math.max(1,Math.min(20,Math.floor(Number(spec?.qty)||1))),
   sides:[3,4,6,8,10,20,100].includes(Number(spec?.sides))?Number(spec.sides):6
  }));
  if(!clean.length)return null;
@@ -312,8 +310,7 @@ function renderCombatGmControls(){
  const scene=combatSceneFromId(combatSelectedSceneId);
  const previewing=combatSceneSelectionIsPreview();
  host.innerHTML='<div class="combat-gm-control-copy"><span>SL Â· STRIDSSCEN</span><small>'+(previewing?'FÃ¶rhandsvisning: '+escAttr(scene?.name||'vald scen')+' Â· FÃ¶rbered aktiverar scenen efter bekrÃ¤ftelse.':'PÃ¥gÃ¥ende strid Ã¥terupptas automatiskt Â· Play startar vald scen med nytt initiativ Â· Reset Ã¥terstÃ¤ller aktiv scen utan nytt initiativ')+'</small></div>'+
-  '<seleµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ct id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
+  '<select id="combatScenePicker" onchange="selectCombatScene(this.value)" '+(combatSceneBusy?'disabled':'')+'>'+
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
   '<button type="button" class="btn" onclick="prepareCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>âš™ FÃ¶rbered</button>'+
@@ -395,8 +392,7 @@ function combatSourceStats(sceneCombatant,sources){
   Array.isArray(source?.armor)?source.armor:(source?.armor&&typeof source.armor==='object'?[source.armor]:[]);
  const attackProfile={
   weapons:Array.isArray(data.weapons)?data.weapons:(Array.isArray(source?.weapons)?source.weapons:[]),
-  equipment:Array.isArray(data.equipment)?data.equipmenµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^t:[],
+  equipment:Array.isArray(data.equipment)?data.equipment:[],
   currentEquipment:data.currentEquipment&&typeof data.currentEquipment==='object'?data.currentEquipment:null,
   shields:sourceShields,armor:sourceArmor,projectiles:Array.isArray(data.projectiles)?data.projectiles:[],
   damage_bonus:derived.Skadebonus??derived.skadebonus??null,
@@ -487,8 +483,7 @@ async function combatHydrateFigureIdentity(){
 }
 async function combatDeleteRuntime(combatId){
  if(!combatId)return;
- await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId)µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^,{method:'DELETE',headers:{'Prefer':'return=minimal'}})
+ await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{method:'DELETE',headers:{'Prefer':'return=minimal'}})
 }
 function combatRollD10(){
  try{
@@ -624,8 +619,7 @@ function combatInitiativeTransferToOrder(initiative){
   flyer.classList.add('combat-initiative-flyer');
   flyer.classList.remove('departing');
   Object.assign(flyer.style,{
-   position:'fiµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^xed',
+   position:'fixed',
    left:from.left+'px',
    top:from.top+'px',
    width:from.width+'px',
@@ -734,8 +728,7 @@ function combatCaptureInitiativeForReset(){
   const key=String(row.source_instance_key||'');
   const rank=combatNumber(row.state?.initiative_rank,null);
   const roll=combatNumber(row.state?.initiative_roll,null);
-  consµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^t total=combatNumber(row.state?.initiative_total,null);
+  const total=combatNumber(row.state?.initiative_total,null);
   if(!key||rank==null)return null;
   return{
    key,rank,roll,total,
@@ -837,9 +830,7 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
    movement_mode:row.movement_mode||'free',sight_mode:row.sight_mode||'clear',
    movement_cost:Number(row.movement_cost)||1,notes:row.notes||''
   }));
-  if(hexRows.lengthµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^)await dbJson('combat_hexes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(hexRows)});
+  if(hexRows.length)await dbJson('combat_hexes',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(hexRows)});
 
   if(startActorId){
    await dbJson('combat_instances?id=eq.'+encodeURIComponent(instanceId),{
@@ -949,8 +940,7 @@ async function combatRuntimeMapRecord(){
  try{
   let rows=await dbJson('campaign_maps?id=eq.'+encodeURIComponent(activeCombat.map_id)+'&select=id,name,image_path,width,height&limit=1');
   map=rows?.[0]||null;
-  if(map&&Array.isArray(campaignMaps)&&!caµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^mpaignMaps.some(row=>String(row.id)===String(map.id)))campaignMaps.push(map);
+  if(map&&Array.isArray(campaignMaps)&&!campaignMaps.some(row=>String(row.id)===String(map.id)))campaignMaps.push(map);
   return map
  }catch(error){
   console.warn('Kunde inte lÃ¤sa stridskartans kartpost',error);
@@ -1057,8 +1047,7 @@ function combatRuntimeHexCells(){
    if(x<-g.size||x>g.width+g.size||y<-g.size||y>g.height+g.size)continue;
    const key=q+','+r,terrain=terrainByKey.get(key)||null;
    const areaTerrain=combatAreaTerrainForHex(q,r);
-   const baseMovement=terrain?.movement_mode||'free',baseSight=teµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^rrain?.sight_mode||'clear';
+   const baseMovement=terrain?.movement_mode||'free',baseSight=terrain?.sight_mode||'clear';
    const movement_mode=baseMovement==='blocked'||areaTerrain.movement==='blocked'?'blocked':
     baseMovement==='difficult'||areaTerrain.movement==='difficult'?'difficult':'free';
    const sight_mode=baseSight==='blocked'||areaTerrain.sight==='blocked'?'blocked':
@@ -1172,8 +1161,7 @@ function combatPendingParryOpportunity(){
   if(Number(attack.round_number)!==round||!combatSuccessfulMeleeAttack(attack))continue;
   if(!attack.target_combatant_id||attack.result?.hit_resolved===true||attack.result?.parry_decision)return null;
   const defender=combatants.find(row=>String(row.id)===String(attack.target_combatant_id));
-  const attacker=combatants.find(rµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ow=>String(row.id)===String(attack.combatant_id));
+  const attacker=combatants.find(row=>String(row.id)===String(attack.combatant_id));
   if(!defender||!attacker||['dead','removed'].includes(defender.status))return null;
   if(!combatCanParryAttack(defender))return null;
   return{attack,defender,attacker,options:combatParryOptions(defender)}
@@ -1316,8 +1304,7 @@ async function combatResolveAntimagic(actionId,mageId=null,targetId=null,eg=1){
     const die=Number(throwResult?.rolls?.[0]?.value);if(!Number.isInteger(die)||die<1||die>20)throw new Error('Ogiltigt motstÃ¥ndsslag.');
     resistance=combatAntimagicEgResistance(snapshot.effect_grade,eg,die)
    }
-   antimagic={mage_id:mage.id,target_id:String(targetId),effect_grade:eg,sµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^uccess:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,psy_cost:cost,resistance,reflected:rolled.success&&!!resistance&&!resistance.penetrates};
+   antimagic={mage_id:mage.id,target_id:String(targetId),effect_grade:eg,success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,psy_cost:cost,resistance,reflected:rolled.success&&!!resistance&&!resistance.penetrates};
    const erf=await combatAwardSpellErf(mage,{source_data:{spell_name:spell.name,spell_id:spell.rule_id}},rolled.outcome);if(erf)antimagic.erf=erf;
    await dbJson('combat_actions?id=eq.'+encodeURIComponent(reactionId),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'resolved',result:antimagic,updated_at:new Date().toISOString()})});
    await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:'reaction',actor_id:mage.id,target_id:caster.id,event_type:'antimagic',message:mage.name_snapshot+' kastar Antimagi Â· '+combatOutcomeLabel(rolled.outcome)+(resistance?(resistance.penetrates?' Â· magin gÃ¥r igenom':' Â· magin studsar tillbaka'):''),details:antimagic,player_visible:true})});
@@ -1402,8 +1389,7 @@ async function chooseCombatParry(defenderId,attackActionId,parryKey=''){
    phase:'reaction',actor_id:defender.id,target_id:attacker.id,event_type:'parry',
    message:defender.name_snapshot+' parerar med '+option.name+' Â· '+combatOutcomeLabel(rolled.outcome)+
     (rolled.success?' Â· attacken stoppas':' Â· pareringen misslyckas'+(attackResult.hit_location?' Â· trÃ¤ff '+attackResult.hit_location.label:'')),
-   details:parryResult,playµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^er_visible:true
+   details:parryResult,player_visible:true
   })});
   // Parry and resulting damage already appear in the attack panel.
   combatHideMagicResultPopup();
@@ -1532,8 +1518,7 @@ async function combatApplyFumbleEntries(actor,action,weapon,entries){
    broken.add(key);effect.applied=true;applied.push(effect.effect_type);continue
   }
   if(entry.effect_type==='drop_weapon'&&key){
-   dropped.add(key);effect.applied=true;applµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥ied.push(effect.effect_type);continue
+   dropped.add(key);effect.applied=true;applied.push(effect.effect_type);continue
   }
   if(entry.effect_type==='prone'){
    state.prone=true;effect.applied=true;applied.push(effect.effect_type);continue
@@ -1643,9 +1628,7 @@ function combatShowOutcomeOverlay(outcome,context=''){
  host.classList.add('show','outcome-show',meta.cls)
 }
 // Spell results are presented in the magic panel, never in the floating dice readout.
-function combatHideMazºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^gicResultPopup(){
+function combatHideMagicResultPopup(){
  const host=$('combatDiceReadout');
  if(host)host.classList.remove('show','outcome-show','mobile-damage-detail','success','fail','special','perfect','fumble');
 }
@@ -1755,8 +1738,7 @@ function combatAttackResultHtml(action){
  const result=action.result,outcome=result.outcome,full=result.full_damage===true,meta=combatOutcomeMeta(outcome),hasHit=!!result.hit_location?.label;
  return '<div class="combat-attack-result '+escAttr(outcome)+(hasHit?' has-hit-camera':'')+'">'+
   '<div class="combat-attack-result-main">'+
-   '<div class="combat-attack-result-headµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ing"><span>Attackslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
+   '<div class="combat-attack-result-heading"><span>Attackslag</span><b><i class="combat-result-icon" aria-hidden="true">'+meta.icon+'</i>'+escAttr(meta.label)+'</b></div>'+
    '<div class="combat-attack-result-rolls"><span>T20 <b>'+result.roll+'</b> mot FV <b>'+result.fv+'</b></span>'+
     (result.confirmation_roll!=null?'<span>Kontrollslag <b>'+result.confirmation_roll+'</b></span>':'')+
    '</div>'+
@@ -2010,9 +1992,7 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  if(attackMode==='melee'&&rolled.outcome==='perfect')window.aleaAnimations?.play('melee.perfect',{target});
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
-  success,outcome,roll:rolled.roll,confirmation_roll:rolleµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^d.confirmation_roll,fv,
+  success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
   weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',attack_mode:attackMode,
   full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
   rule_engine:'expert_skill',
@@ -2118,8 +2098,7 @@ function combatAttackExecutionHtml(target){
    (ammoKey?'Slut pÃ¥ ammunition. LÃ¤gg till '+escAttr((typeof ruleProjectileFromKey==='function'?ruleProjectileFromKey(ammoKey)?.name:null)||ammoKey)+' under Vapen â†’ Projektiler.':'Vapnet saknar projektiltyp i grundregistret.')+
    '</span></div>';
  const fv=combatAttackFv(weapon,actor);
- if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+esµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^cAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slÃ¥s Ã¤nnu.</span></div>';
+ if(fv==null)return '<div class="combat-attack-execute disabled"><b>'+escAttr(weapon.name||'Vapen')+'</b><span>Vapnet saknar FV och kan inte slÃ¥s Ã¤nnu.</span></div>';
  return '<div class="combat-attack-execute">'+
   '<div><span>Valt mÃ¥l Â· '+(info.mode==='melee'?'NÃ¤rstrid':'AvstÃ¥nd')+'</span><b>'+escAttr(target.name_snapshot)+'</b><small>'+escAttr(weapon.name||'Vapen')+' Â· FV '+fv+' Â· '+info.distance+' hex</small></div>'+
   '<button type="button" class="btn combat-attack-roll-btn" onclick="rollCombatAttack(\''+actor.id+'\',\''+target.id+'\')">ðŸŽ² SlÃ¥ attack 1T20</button>'+
@@ -2175,8 +2154,7 @@ function combatAttackWeaponChooserHtml(combatant,action,def){
  '</div></div>'
 }
 const COMBAT_SPELL_EFFECTS={"FÃ–RROLLAD SÃ–MN":{"category":"indirect","effect":"sleep","target":"creature"},"MÃ–RKER (F)":{"category":"indirect","effect":"darkness","target":"area"},"DIMMA":{"category":"indirect","effect":"obscured","target":"area"},"PARALYSERING":{"category":"indirect","effect":"paralyzed","target":"creature"},"FÃ–RVIRRA":{"category":"indirect","effect":"confused","target":"creature"},"PANIK":{"category":"indirect","effect":"panic","target":"creature"},"RÃ„DSLA (K)":{"category":"indirect","effect":"fear","target":"creature"},"TERROR":{"category":"indirect","effect":"terror","target":"creature"},"SMÃ„RTA":{"category":"indirect","effect":"pain","target":"creature"},"LÃ…NGSAMHET":{"category":"indirect","effect":"slow","target":"creature"},"SNUBBLA (K)":{"category":"indirect","effect":"prone","target":"creature"},"DISTRAKTION (K)":{"category":"indirect","effect":"distracted","target":"creature"},"BLIDHET":{"category":"indirect","effect":"pacified","target":"creature"},"KONTROLLERA VARELSE":{"category":"indirect","effect":"controlled","target":"creature"},"STENVÃ„GG (F)":{"category":"indirect","effect":"wall","target":"area"},"OSYNLIGHET":{"category":"indirect","effect":"invisible","target":"creature"},"ILLUSION (F)":{"category":"indirect","effect":"illusion","target":"area"},"FATA MORGANA (STOR ILLUSION) (F, R)":{"category":"indirect","effect":"illusion","target":"area"},"SNABBHET":{"category":"support","effect":"haste","target":"creature"},"MOTSTÃ…NDSKRAFT":{"category":"support","effect":"resistance","target":"creature"},"ANTIMAGI":{"category":"support","effect":"antimagic","target":"creature"},"SKINGRA":{"category":"support","effect":"dispel","target":"creature"},"HELA":{"category":"support","effect":"heal","target":"creature"},"ORÃ„DD":{"category":"support","effect":"fear_resistance","target":"creature"},"MÃ–RKERSYN":{"category":"support","effect":"darkvision","target":"creature"}};
-function combµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^atSpellEffectProfile(spell){const name=String(spell?.name||'').toUpperCase().trim();return COMBAT_SPELL_EFFECTS[name]||{category:spell?.attack_magic?'direct':'none',effect:spell?.attack_magic?'damage':null,target:spell?.attack_magic?'creature':null}}
+function combatSpellEffectProfile(spell){const name=String(spell?.name||'').toUpperCase().trim();return COMBAT_SPELL_EFFECTS[name]||{category:spell?.attack_magic?'direct':'none',effect:spell?.attack_magic?'damage':null,target:spell?.attack_magic?'creature':null}}
 // Reusable summon profiles are campaign-independent; a cast creates a combat instance.
 // Expert scaling formulas are deliberately data-driven, never guessed.
 const COMBAT_SUMMON_TEMPLATES={
@@ -2258,9 +2236,110 @@ function combatMagicBinding(spell){
  'PARALYSERING':'condition_paralysis','FÃ–RVIRRA':'condition_confusion',
  'PANIK':'condition_panic','RÃ„DSLA':'condition_fear','KONTROLLERA VARELSE':'condition_control'};
  if(name==='HELA')return {kind:'heal',supported:true,requires_resistance:false,manual_amount:true};
- if(name==='BESKYDDARE')return {kind:'area',code:'area_beskyddare',supported:true,ritual:true,cube:true,requires_resµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÖ—7Fæ6S¦fÇ6WÓ°¢–b‡7VÆÃòç&—GVÃÓÓ×G'VWÇÂõÂ…µâ•Ò¥Æ%%Æ%µâ•Ò¥Â’ö’çFW7B…7G&–ær‡7VÆÃòææÖWÇÂrr’’¢&WGW&â¶¶–æC¢vÖçVÂrÇ7W÷'FVC§G'VRÇ&—GVÃ§G'VRÇ&V6öã¢u&—GVÂ+r4Âf|;g"F–Bö6‚VffV·BwÓ°¢–b†æÖSÓÓÒ|9d´wÇÆæÖSÓÓÒtÔ”å4´r—&WGW&â¶¶–æC¢w7FGW2rÆ6öFS¦æÖSÓÓÒ|9d´sòw7VÆÅöö¶s¢w7VÆÅöÖ–ç6¶rÇ7W÷'FVC§G'VRÇ&WV—&W5÷&W6—7Fæ6S¦æÖSÓÓÒtÔ”å4´rÆGG&–'WFU÷7VÆÃ§G'VWÓ°¢–b†VffV7G5¶æÖUÒ—&WGW&â¶¶–æC¢w7FGW2rÆ6öFS¦VffV7G5¶æÖUÒÇ7W÷'FVC§G'VRÇ&WV—&W5÷&W6—7Fæ6S¦VffV7G5¶æÖUÒÓÒw7VÆÅöfÇ–vwÓ°¢–b†æÖSÓÓÒtD”ÔÔr—&WGW&â¶¶–æC¢v&VrÆ6öFS¢v&VöförrÇ7W÷'FVC§G'VRÇ&WV—&W5÷&W6—7Fæ6S¦fÇ6WÓ°¢–b…²tTÄBrÂt$Ä•…BrÂtTäU$t•5E,8TÄRrÂte$õ5BuÒæ–æ6ÇVFW2†æÖR’b`¢õåÇ2¥ÆBµEÆBµÇ2·W%Ç2´TuÇ2¢Bö’çFW7B…7G&–ær‡7VÆÃòæFÖvU÷FW‡GÇÂrr’’¢&WGW&â¶¶–æC¢vFÖvRrÇ7W÷'FVC§G'VRÇ&WV—&W5÷&W6—7Fæ6S¦fÇ6WÓ°¢&WGW&â¶¶–æC¢vÖçVÂrÇ7W÷'FVC§G'VRÇ&V6öã¢u4Âf|;g"VffV·FVâwÓ°§Ð¦gVæ7F–öâ6öÖ&DÖv–4FÖvTf÷&×VÆ‡7VÆÂÆVsÓ—°¢6öç7BÖF6ƒÒõåÇ2¢…ÆB²•B…ÆB²•Ç2·W%Ç2´TuÇ2¢Bö’æW†V2…7G&–ær‡7VÆÃòæFÖvU÷FW‡GÇÂrr’“°¢–b‚ÖF6‚—&WGW&âçVÆÃ°¢6öç7BF–6SÔçVÖ&W"†ÖF6…³Ò’¤çVÖ&W"†Vr’Ç6–FW3ÔçVÖ&W"†ÖF6…³%Ò“°¢&WGW&âçVÖ&W"æ—56fT–çFVvW"†F–6R’bfF–6SãÓbfF–6SÃÓCbe³2ÃBÃbÃ‚ÃÃ#ÃÒæ–æ6ÇVFW2‡6–FW2“öF–6R²uBr·6–FW3¦çVÆÀ§Ð ¢ò¢dÄ³¢W‡W'BU$bf÷"7VÆÇ2W6W2F†R6†&VBöæ6R×W"×&W7Bv&B%2â¢ð¦gVæ7F–öâ6öÖ&E7VÆÄW&eF&vWB†7F÷"Æ7F–öâ—°¢6öç7B6†&7FW#Ö6öÖ&D6†&7FW%6÷W&6R†7F÷"“°¢6öç7BFFÖ6†&7FW#òæFFbgG—Vöb6†&7FW"æFFÓÓÒvö&¦V7Bsö6†&7FW"æFF¦6†&7FW#°¢6öç7B7VÆÇ3Ô'&’æ—4'&’†FFòç7VÆÇ2“öFFç7VÆÇ3¥µÓ°¢6öç7BvçFVD–CÕ7G&–ær†7F–öãòç6÷W&6UöFFòç7VÆÅö–GÇÂrr“°¢6öç7BvçFVDæÖSÕ7G&–ær†7F–öãòç6÷W&6UöFFòç7VÆÅöæÖWÇÂrr’çFôÆö6ÆUWW$66R‚w7br’ç&WÆ6R‚õÇ2¥Â…µâ•Ò¥Â’örÂrr’çG&–Ò‚“°¢6öç7B—FVÓ×7VÆÇ2æf–æB‡7VÆÃÓà¢‡vçFVD–Bbe·7VÆÃòæ–BÇ7VÆÃòç'VÆUö–EÒç6öÖR†–CÓæ–BÖçVÆÂbe7G&–ær†–B“ÓÓ×vçFVD–B’—ÇÀ¢7G&–ær‡7VÆÃòææÖWÇÂrr’çFôÆö6ÆUWW$66R‚w7br’ç&WÆ6R‚õÇ2¥Â…µâ•Ò¥Â’örÂrr’çG&–Ò‚“ÓÓ×vçFVDæÖP¢—ÇÆçVÆÃ°¢&WGW&â¶—FVÕö¶W“¥7G&–ær†—FVÓòæ–GÇÆ—FVÓòææÖWÇÂrr’Æ—FV×Ó°§Ð¦7–æ2gVæ7F–öâ6öÖ&Dv&E7VÆÄW&b†7F÷"Æ7F–öâÆ÷WF6öÖR—°¢–b†7F–öãòç6÷W&6UöFFòæ—FVÕöÖv–2—&WGW&âçVÆÃ°¢–b†7F÷#òç6÷W&6U÷G—RÓÒv6†&7FW"wÇÂ6öÖ&D÷WF6öÖTV&ç4W&b†÷WF6öÖR—ÇÂ7F÷"ç6÷W&6Uö–B—&WGW&âçVÆÃ°¢6öç7B¶—FVÕö¶W“¦—FVÔ¶W’Æ—FV×ÓÖ6öÖ&E7VÆÄW&eF&vWB†7F÷"Æ7F–öâ“°¢–b‚—FVÔ¶W’—&WGW&âçVÆÃ°¢G'—°¢ÆWBÖ÷VçCÖçVÆÂÆW&e&öÆÃÖçVÆÃ°¢–b†÷WF6öÖSÓÓÒwW&fV7Br—°¢6öç7B&öÆÃÖv—B6öÖ&E&öÆÄF–6R…··G“£Ç6–FW3£7ÕÒÂ†7F–öâç6÷W&6UöFFòç7VÆÅöæÖWÇÂtÖv’r’²r+rU$bC2³r“°¢W&e&öÆÃÔçVÖ&W"‡&öÆÃòç&öÆÇ3òå³ÓòçfÇVR“°¢–b‚çVÖ&W"æ—4–çFVvW"†W&e&öÆÂ’—F‡&÷ræWrW'&÷"‚tU$b×6ÆvWBvb–ævWBv–ÇF–wBC2×&W7VÇFBâr“°¢Ö÷VçCÖW&e&öÆÂ³¢Ð¢–b‡G—Vöbv&D6†&7FW$W&d—FVÒÓÒvgVæ7F–öâr—F‡&÷ræWrW'&÷"‚tU$b×&VvVÆÖ÷F÷&â:G"–çFRF–ÆÆ|:FævÆ–râr“°¢6öç7Bv&FVCÖv—Bv&D6†&7FW$W&d—FVÒ†7F÷"ç6÷W&6Uö–BÂw7VÆÇ2rÆ—FVÔ¶W’Æ÷WF6öÖRÇ¶Ö÷VçGÒ“°¢–b†—FVÒbdçVÖ&W"æ—4f–æ—FR„çVÖ&W"†v&FVCòææWuöW&b’’–—FVÒæW&cÔçVÖ&W"†v&FVBææWuöW&b“°¢G'—¶–b‡G—Vöb6†'2ÓÒwVæFVf–æVBr–Æö6Å7F÷&vRç6WD—FVÒ‚vFöEö6†'5÷c6rÄ¥4ôâç7G&–æv–g’†6†'2’—Ö6F6‚…öW'&÷"—·Ð¢&WGW&â¶v&FVC¤çVÖ&W"†v&FVCòæv&FVB—ÇÆÖ÷VçGÇÃÀ¢æWuöW&c¤çVÖ&W"†v&FVCòææWuöW&b’ÆW&e÷&öÆÃ¦W&e&öÆÂÆ—FVÕöw&÷W¢w7VÆÇ2rÆ—FVÕö¶W“¦—FVÔ¶W’Ç&V6öã¦÷WF6öÖWÓ°¢Ö6F6‚†W'&÷"—°¢6öç7BÖW76vSÕ7G&–ær†W'&÷#òæÖW76vWÇÆW'&÷'ÇÂrr“°¢–b‚÷&VFâF¬:FæBU$gÇ&VFââ¤U$bö’çFW7B†ÖW76vR’¢&WGW&â¶v&FVC£ÆÆö6¶VC§G'VRÇ&V6öã¦÷WF6öÖRÆÖW76vS¢tU$b&VFâW&Œ:VÆÆWBVæFW"·GVVÆÂf–Æ÷W&–öBâwÓ°¢–b‚öç’FrÖVBf–ÆÆ¶â–çFRF¬:Fæ2FVææFrö’çFW7B†ÖW76vR’¢&WGW&â¶v&FVC£ÆÆö6¶VC§G'VRÇ&V6öã¦÷WF6öÖRÆÖW76vS¢uF–ÆÇ,:F6¶Æ–rf–Æ·,:Gg2l;g"ç’U$b×W&–öBâwÓ°¢6öç6öÆRçv&â‚tU$bg,:Vâ&W7l:G&¦VÇ6R·VæFR–çFR&Vv—7G&W&2rÆW'&÷"“°¢&WGW&â¶v&FVC£ÆW'&÷#§G'VRÇ&V6öã¦÷WF6öÖRÆÖW76vS¦ÖW76vWÇÂtU$b·VæFR–çFR&Vv—7G&W&2âwÓ°¢Ð§Ð¢ò¢ÄT¤ôã¢6öçfW'BfW&–f–VBW‡W'B5"GW&F–öç2öæÇ’â†÷W'2æBÖ–çWFW2&VÖ–à¢4ÂÖ6öçG&öÆÆVB6òVffV7G2Fòæ÷BW‡—&Rv†–ÆR6W76–öâ—2W6VBâ¢ð¦gVæ7F–öâ6öÖ&E7VÆÅ'VÆTGW&F–öå&÷VæG2†7F–öâ—°¢6öç7BFW‡CÕ7G&–ær†7F–öãòç6÷W&6UöFFòæGW&F–öå÷FW‡GÇÂrr’çG&–Ò‚“°¢6öç7BÖF6ƒÒõå5Ç2¥·Œ9r¥ÕÇ2¢…ÆB²•Ç2¥5"Bö’æW†V2‡FW‡B“°¢–b‚ÖF6‚—&WGW&âçVÆÃ°¢6öç7BVsÔçVÖ&W"†7F–öãòç6÷W&6UöFFòæVffV7Eöw&FR’Æf7F÷#ÔçVÖ&W"†ÖF6…³Ò’Ç&÷VæG3ÖVr¦f7F÷#°¢&WGW&âçVÖ&W"æ—56fT–çFVvW"†Vr’bfVsãÓbdçVÖ&W"æ—56fT–çFVvW"‡&÷VæG2’bg&÷VæG3ãÓbg&÷VæG3ÃÓ““““÷&÷VæG3¦çVÆÀ§Ð¦gVæ7F–öâ6öÖ&E7VÆÄGW&F–öå&÷VæG2†7F–öâ—°¢6öç7B7W7FöÓÖ7F–öãòç6÷W&6UöFFòæVffV7EöGW&F–öå÷&÷VæG3°¢–b†7W7FöÒÖçVÆÂ—°¢6öç7BfÇVSÔçVÖ&W"†7W7FöÒ“°¢–b„çVÖ&W"æ—56fT–çFVvW"‡fÇVR’bgfÇVSãÓbgfÇVSÃÓ“““’—&WGW&âfÇVP¢Ð¢&WGW&â6öÖ&E7VÆÅ'VÆTGW&F–öå&÷VæG2†7F–öâ§Ð¦gVæ7F–öâ6öÖ&DÖv–57”6÷7B†÷WF6öÖRÆVr—°¢&WGW&â²w7V66W72rÂw7V6–ÂrÂwW&fV7BuÒæ–æ6ÇVFW2†÷WF6öÖR“ó ¢÷WF6öÖSÓÓÒwW&fV7BsôÖF‚æÖ‚ƒÄÖF‚æ6V–Â†Vró"’“¦Vp§Ð¦gVæ7F–öâ6öÖ&E7VÆÄ7GVÅ7”6÷7B†7F–öâÆ÷WF6öÖRÆVr—°¢6öç7B6÷W&6SÖ7F–öãòç6÷W&6UöFFòæ—FVÕöÖv–3°¢&WGW&â6÷W&6Rbg6÷W&6Rç7•÷6÷W&6RÓÒwvV&W"só¦6öÖ&DÖv–57”6÷7B†÷WF6öÖRÆVr§Ð¢ò¢×VÇF—Æ–W"&WVG2F—67&WFR&W7VÇG2Âæ÷BTrÂ4ÂÂ5’÷"67F–ærF–ÖRà¢WfW'’—FVÒ7F—fF–öâ&VÖ–ç2ôäR7F–öâæBôäR67F–ær&öÆÂâ¢ð¦gVæ7F–öâ6öÖ&D—FVÔÖv–4×VÇF—Æ–W"†7F–öâ—°¢6öç7BãÔçVÖ&W"†7F–öãòç6÷W&6UöFFòæ—FVÕöÖv–3òæVffV7Eö×VÇF—Æ–W#óó“°¢–b‚çVÖ&W"æ—56fT–çFVvW"†â—ÇÆãÃÇÆãã—F‡&÷ræWrW'&÷"‚töv–ÇF–r×VÇF—Æ–¶F÷"âr“°¢&WGW&âà§Ð¦gVæ7F–öâ6öÖ&D—FVÔÖv–4WFöÖFVD6÷VçB†7F–öâ—°¢6öç7BãÖ6öÖ&D—FVÔÖv–4×VÇF—Æ–W"†7F–öâ“°¢–b†ãã#—F‡&÷ræWrW'&÷"‚tWFöÖF—6¶W&Wæ–æv"7L;fFW"Œ;fw7B#VffV·FW"W"¶7Bâ8FæG&×VÇF—Æ–¶F÷&âVÆÆW"Ì:WB4Â†çFW&WFfÆÆWBâr“°¢&WGW&âà§Ð¦7–æ2gVæ7F–öâ6öÖ&E&V6÷&D—FVÔÖv–5W6R†7F÷"Æ7F–öâ—°¢6öç7B6÷W&6SÖ7F–öãòç6÷W&6UöFFòæ—FVÕöÖv–3°¢–b‚6÷W&6R—&WGW&ã°¢6öç7BÖöFVÃ×G—Vöbv–æF÷rÓÒwVæFVf–æVBs÷v–æF÷ræÆVÖv–46öæf–wW&F÷#¦çVÆÃ°¢–b‚ÖöFVÃòæÖ&µW6VB—F‡&÷ræWrW'&÷"‚tl;g&VÜ:VÇ6Öv–ç2&VvVÆÖöFVÆÂ6¶æ2âr“°¢6öç7B6†&7FW#×G—Vöb6†'2ÓÒwVæFVf–æVBsò†6†'7ÇÅµÒ’æf–æB†3Óå7G&–ær†2åöF$–GÇÆ2æ–B“ÓÓÕ7G&–ær†7F÷"ç6÷W&6Uö–B’“¦çVÆÃ°¢–b‚6†&7FW"—F‡&÷ræWrW'&÷"‚u&öÆÇW'6öæVç2l;g&VÜ:VÂÜ:W7FRÆFF2–ææâÖv–â¶âçl:FæF0k¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^.');
+ if(name==='BESKYDDARE')return {kind:'area',code:'area_beskyddare',supported:true,ritual:true,cube:true,requires_resistance:false};
+ if(spell?.ritual===true||/\([^)]*\bR\b[^)]*\)/i.test(String(spell?.name||'')))
+  return {kind:'manual',supported:true,ritual:true,reason:'Ritual Â· SL avgÃ¶r tid och effekt'};
+ if(name==='Ã–KA'||name==='MINSKA')return {kind:'status',code:name==='Ã–KA'?'spell_oka':'spell_minska',supported:true,requires_resistance:name==='MINSKA',attribute_spell:true};
+ if(effects[name])return {kind:'status',code:effects[name],supported:true,requires_resistance:effects[name]!=='spell_flyga'};
+ if(name==='DIMMA')return {kind:'area',code:'area_fog',supported:true,requires_resistance:false};
+ if(['ELD','BLIXT','ENERGISTRÃ…LE','FROST'].includes(name)&&
+  /^\s*\d+T\d+\s+per\s+EG\s*$/i.test(String(spell?.damage_text||'')))
+  return {kind:'damage',supported:true,requires_resistance:false};
+ return {kind:'manual',supported:true,reason:'SL avgÃ¶r effekten'};
+}
+function combatMagicDamageFormula(spell,eg=1){
+ const match=/^\s*(\d+)T(\d+)\s+per\s+EG\s*$/i.exec(String(spell?.damage_text||''));
+ if(!match)return null;
+ const dice=Number(match[1])*Number(eg),sides=Number(match[2]);
+ return Number.isSafeInteger(dice)&&dice>=1&&dice<=40&&[3,4,6,8,10,20,100].includes(sides)?dice+'T'+sides:null
+}
+
+/* FALK: Expert ERF for spells uses the shared once-per-rest award RPC. */
+function combatSpellErfTarget(actor,action){
+ const character=combatCharacterSource(actor);
+ const data=character?.data&&typeof character.data==='object'?character.data:character;
+ const spells=Array.isArray(data?.spells)?data.spells:[];
+ const wantedId=String(action?.source_data?.spell_id||'');
+ const wantedName=String(action?.source_data?.spell_name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim();
+ const item=spells.find(spell=>
+  (wantedId&&[spell?.id,spell?.rule_id].some(id=>id!=null&&String(id)===wantedId))||
+  String(spell?.name||'').toLocaleUpperCase('sv').replace(/\s*\([^)]*\)/g,'').trim()===wantedName
+ )||null;
+ return {item_key:String(item?.id||item?.name||''),item};
+}
+async function combatAwardSpellErf(actor,action,outcome){
+ if(action?.source_data?.item_magic)return null;
+ if(actor?.source_type!=='character'||!combatOutcomeEarnsErf(outcome)||!actor.source_id)return null;
+ const {item_key:itemKey,item}=combatSpellErfTarget(actor,action);
+ if(!itemKey)return null;
+ try{
+  let amount=null,erfRoll=null;
+  if(outcome==='perfect'){
+   const roll=await combatRollDice([{qty:1,sides:3}],(action.source_data?.spell_name||'Magi')+' Â· ERF 1T3+1');
+   erfRoll=Number(roll?.rolls?.[0]?.value);
+   if(!Number.isInteger(erfRoll))throw new Error('ERF-slaget gav inget giltigt T3-resultat.');
+   amount=erfRoll+1
+  }
+  if(typeof awardCharacterErfItem!=='function')throw new Error('ERF-regelmotorn Ã¤r inte tillgÃ¤nglig.');
+  const awarded=await awardCharacterErfItem(actor.source_id,'spells',itemKey,outcome,{amount});
+  if(item&&Number.isFinite(Number(awarded?.new_erf)))item.erf=Number(awarded.new_erf);
+  try{if(typeof chars!=='undefined')localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(_error){}
+  return {awarded:Number(awarded?.awarded)||amount||1,
+   new_erf:Number(awarded?.new_erf),erf_roll:erfRoll,item_group:'spells',item_key:itemKey,reason:outcome};
+ }catch(error){
+  const message=String(error?.message||error||'');
+  if(/redan tjÃ¤nat ERF|redan.*ERF/i.test(message))
+   return {awarded:0,locked:true,reason:outcome,message:'ERF redan erhÃ¥llet under aktuell viloperiod.'};
+  if(/ny dag med vila|kan inte tjÃ¤nas denna dag/i.test(message))
+   return {awarded:0,locked:true,reason:outcome,message:'TillrÃ¤cklig vila krÃ¤vs fÃ¶r ny ERF-period.'};
+  console.warn('ERF frÃ¥n besvÃ¤rjelse kunde inte registreras',error);
+  return {awarded:0,error:true,reason:outcome,message:message||'ERF kunde inte registreras.'};
+ }
+}
+/* LEJON: convert verified Expert SR durations only. Hours and minutes remain
+   SL-controlled so effects do not expire while a session is paused. */
+function combatSpellRuleDurationRounds(action){
+ const text=String(action?.source_data?.duration_text||'').trim();
+ const match=/^S\s*[xÃ—*]\s*(\d+)\s*SR$/i.exec(text);
+ if(!match)return null;
+ const eg=Number(action?.source_data?.effect_grade),factor=Number(match[1]),rounds=eg*factor;
+ return Number.isSafeInteger(eg)&&eg>=1&&Number.isSafeInteger(rounds)&&rounds>=1&&rounds<=9999?rounds:null
+}
+function combatSpellDurationRounds(action){
+ const custom=action?.source_data?.effect_duration_rounds;
+ if(custom!=null){
+  const value=Number(custom);
+  if(Number.isSafeInteger(value)&&value>=1&&value<=9999)return value
+ }
+ return combatSpellRuleDurationRounds(action)
+}
+function combatMagicPsyCost(outcome,eg){
+ return !['success','special','perfect'].includes(outcome)?1:
+  outcome==='perfect'?Math.max(1,Math.ceil(eg/2)):eg
+}
+function combatSpellActualPsyCost(action,outcome,eg){
+ const source=action?.source_data?.item_magic;
+ return source&&source.psy_source!=='wearer'?0:combatMagicPsyCost(outcome,eg)
+}
+/* A multiplier repeats discrete results, not EG, CL, PSY or casting time.
+   Every item activation remains ONE action and ONE casting roll. */
+function combatItemMagicMultiplier(action){
+ const n=Number(action?.source_data?.item_magic?.effect_multiplier??1);
+ if(!Number.isSafeInteger(n)||n<1||n>1000)throw new Error('Ogiltig multiplikator.');
+ return n
+}
+function combatItemMagicAutomatedCount(action){
+ const n=combatItemMagicMultiplier(action);
+ if(n>20)throw new Error('Automatiska upprepningar stÃ¶der hÃ¶gst 20 effekter per kast. Ã„ndra multiplikatorn eller lÃ¥t SL hantera utfallet.');
+ return n
+}
+async function combatRecordItemMagicUse(actor,action){
+ const source=action?.source_data?.item_magic;
+ if(!source)return;
+ const model=typeof window!=='undefined'?window.aleaMagicConfigurator:null;
+ if(!model?.markUsed)throw new Error('FÃ¶remÃ¥lsmagins regelmodell saknas.');
+ const character=typeof chars!=='undefined'?(chars||[]).find(c=>String(c._dbId||c.id)===String(actor.source_id)):null;
+ if(!character)throw new Error('Rollpersonens fÃ¶remÃ¥l mÃ¥ste laddas innan magin kan anvÃ¤ndas.');
  const inventory=character[source.group],item=Array.isArray(inventory)?inventory.find(x=>String(x.equipId)===String(source.item_id)):null;
  const power=item?.magicPowers?.find(p=>String(p.id)===String(source.power_id));
  if(!power||(item?.isMagical!==true&&item?.magic?.enabled!==true))throw new Error('Det magiska fÃ¶remÃ¥let eller dess fÃ¶rmÃ¥ga finns inte lÃ¤ngre.');
@@ -2357,8 +2436,7 @@ function combatSpellArtworkForAction(action){
   [master.icon_path,master.icon_focus_x,master.icon_focus_y,master.icon_zoom],
   [master.image_path,master.image_focus_x,master.image_focus_y,100]
  ]:[
-  [data.spell_effect_imagµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^e_path,data.spell_effect_focus_x,data.spell_effect_focus_y,data.spell_effect_zoom],
+  [data.spell_effect_image_path,data.spell_effect_focus_x,data.spell_effect_focus_y,data.spell_effect_zoom],
   [data.spell_icon_path,data.spell_icon_focus_x,data.spell_icon_focus_y,data.spell_icon_zoom],
   [data.spell_image_path,data.spell_image_focus_x,data.spell_image_focus_y,100]
  ];
@@ -2524,9 +2602,7 @@ async function combatMagicButton(event,combatantId){
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolving',updated_at:new Date().toISOString()})});
      if(!Array.isArray(claimed)||claimed.length!==1)throw new Error('BesvÃ¤rjelsen Ã¤r redan under behandling.');
-     action.status='resolving';await combatCastStatusSpell(combatant,target,action)µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^
+     action.status='resolving';await combatCastStatusSpell(combatant,target,action)
     }catch(error){alert('BesvÃ¤rjelsen kunde inte slutfÃ¶ras: '+error.message);await loadActiveCombat(null,{preserveSelectedTarget:true})}
     return
    }
@@ -2677,8 +2753,7 @@ function combatCloseRowActionMenu(){
  combatActionMenuId=null;combatActionMenuKind=null
 }
 async function combatCancelPlannedAttack(combatant,action){
- if(!combatant||!action||action.µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^status!=='planned')return;
+ if(!combatant||!action||action.status!=='planned')return;
  combatSelectedTargetId=null;
  combatCloseRowActionMenu();
  try{
@@ -2795,8 +2870,7 @@ async function endCombatTurn(event,combatantId){
  if(!order.length)return;
  const currentIndex=Math.max(0,order.indexOf(String(actor.id)));
  const nextIndex=currentIndex+1;
- const newRound=nextIndex>=order.lenµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^gth;
+ const newRound=nextIndex>=order.length;
  const currentRound=Number(activeCombat.round_number)||1;
  const nextActorId=newRound?null:order[nextIndex];
  const round=currentRound+(newRound?1:0);
@@ -2888,8 +2962,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
  }catch(e){console.error('Kunde inte lÃ¤sa strid',e);activeCombat=null}
  renderCombat();renderCombatGmControls();return activeCombat
 }
-// Spelarnas stridsvy fÃ¶ljer SL:s Play/Reset utan att visa µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^dolda, fÃ¶rberedda scener.
+// Spelarnas stridsvy fÃ¶ljer SL:s Play/Reset utan att visa dolda, fÃ¶rberedda scener.
 let combatPlayerSyncTimer=null,combatPlayerSyncBusy=false;
 async function combatPollPlayerView(){
  if(combatCanManage()||!supabaseSession?.user?.id||!centralCampaignId||
@@ -2991,8 +3064,7 @@ function combatPlayerMiniatureKind(combatant){
 function combatMiniatureDefs(){
  return '<defs>'+
   '<linearGradient id="miniMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f2f3"/><stop offset=".45" stop-color="#8e989e"/><stop offset="1" stop-color="#444d52"/></linearGradient>'+
-  '<linearGradient id="miniBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#315c8e"/><stop offset="1" stop-color="#142e50"/></linearGradient>'µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^+
+  '<linearGradient id="miniBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#315c8e"/><stop offset="1" stop-color="#142e50"/></linearGradient>'+
   '<linearGradient id="miniGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#557c43"/><stop offset="1" stop-color="#223a25"/></linearGradient>'+
   '<linearGradient id="miniLeather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9d6d3e"/><stop offset="1" stop-color="#4f301f"/></linearGradient>'+
   '<radialGradient id="miniMagic"><stop offset="0" stop-color="#d8fbff"/><stop offset=".35" stop-color="#59d9ff"/><stop offset="1" stop-color="#2775d8" stop-opacity=".15"/></radialGradient>'+
@@ -3062,8 +3134,7 @@ function combatPlayerMiniatureSvg(combatant,cell,g,stateClasses=''){
   const kind=combatPlayerMiniatureKind(combatant);if(!kind)return '';
   const figure=kind==='warrior'?combatMiniatureWarrior():kind==='wizard'?combatMiniatureWizard():combatMiniatureDuck();
   return '<g class="combat-miniature '+kind+stateClasses+'" transform="translate('+cell.x+' '+cell.y+') scale('+scale.toFixed(3)+')">'+
-   '<ellipse claµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ss="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
+   '<ellipse class="combat-mini-shadow" cx="0" cy="9" rx="23" ry="8"/>'+
    '<ellipse class="combat-mini-base" cx="0" cy="7" rx="21" ry="7"/>'+
    '<ellipse class="combat-mini-base-ring" cx="0" cy="7" rx="21" ry="7"/>'+
    figure+
@@ -3177,9 +3248,7 @@ function combatSvgPoint(event,svg){
  return point.matrixTransform(matrix.inverse())
 }
 function combatNearestRuntimeCell(point){
- if(!point)return nullµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^;
+ if(!point)return null;
  let best=null,bestDistance=Infinity;
  for(const cell of combatRuntimeHexCells()){
   const dx=cell.x-point.x,dy=cell.y-point.y,d=dx*dx+dy*dy;
@@ -3310,7 +3379,7 @@ function combatHasLineOfSight(actor,target){
    const cell=terrain.get(line[i].q+','+line[i].r);
    if(combatTerrainIsWall(cell))return false;
    if(cell?.sight_mode==='blocked'&&!flight.ignore_terrain)return false;
-   if(cell?.sight_mode===µ¨¥'obscuring'&&!combatIgnoresSightObstacle(actor,cell))return false
+   if(cell?.sight_mode==='obscuring'&&!combatIgnoresSightObstacle(actor,cell))return false
   }
   return true
  }))
@@ -3397,8 +3466,7 @@ function combatWeaponProjectileKey(weapon){
  const rule=typeof ruleWeaponForItem==='function'?ruleWeaponForItem(weapon):null;
  return String(rule?.projectile_key||weapon.projectileKey||weapon.projectile_key||'');
 }
-functiozºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^n combatAmmoStock(combatant,key){
+function combatAmmoStock(combatant,key){
  if(!key)return null;
  const profile=combatAttackProfile(combatant);
  const stocks=Array.isArray(profile.projectiles)?profile.projectiles:[];
@@ -3495,8 +3563,7 @@ async function combatFinishAndRecover(){
  }
 }
 function combatAttackWeaponOptions(combatant,mode='auto'){
- const wµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^eapons=combatAvailableWeapons(combatant,mode),seen=new Set();
+ const weapons=combatAvailableWeapons(combatant,mode),seen=new Set();
  return weapons.filter(weapon=>{
   const key=combatWeaponKey(weapon);
   if(!key||seen.has(key))return false;
@@ -3632,9 +3699,7 @@ function combatArmorAbsorption(combatant){
  return{absorption,names:[...new Set(names)]}
 }
 async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null,ignoreArmor=false){
- const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^._unarmed?'1T3':'');
+ const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetÃ¤rning.');
  const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
  let weaponValue=Number(weaponSpec.modifier)||0,bonusValue=Number(bonusSpec.modifier)||0;
@@ -3735,8 +3800,7 @@ function combatDamageResultHtml(damage,spellDamage=false){
    '<div class="combat-damage-col"><span>Rustning</span><b>'+armor+'</b><small>'+escAttr(armorText)+'</small></div>'+
    (ward?'<i class="combat-damage-op">âˆ’</i><div class="combat-damage-col"><span>Skydd</span><b>'+ward+'</b><small>'+escAttr((damage.protection_names||[]).join(', ')||'Effekt')+'</small></div>':'')+
    '<i class="combat-damage-op">=</i>'+
-   '<div class="combat-damage-µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^col total"><span>Totalt</span><b>'+net+'</b><small>KP skada</small></div>'+
+   '<div class="combat-damage-col total"><span>Totalt</span><b>'+net+'</b><small>KP skada</small></div>'+
   '</div>'+
   '<div class="combat-damage-kp"><span>KP</span><b>'+damage.kp_before+' âˆ’ '+net+' = '+damage.kp_after+(damage.defeated?' Â· NEDKÃ„MPAD':'')+'</b></div>'+
  '</div>'
@@ -3851,8 +3915,7 @@ function combatAttackRangeHexes(combatant,mode,weapon=null){
  return 0
 }
 function combatAttackTargetInfo(actor,target,weapon,preferredMode='auto'){
- if(!actor||!target||!weapon)µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^return null;
+ if(!actor||!target||!weapon)return null;
  if(String(target.id)===String(actor.id)||target.visible_to_players===false)return null;
  if(!combatCanTargetHostile(actor,target))return null;
  const distance=combatFootprintDistance(actor,target);
@@ -3960,8 +4023,7 @@ function combatBeskyddareAreaParameters(data,sourceActionId){
   object_passage:'ENERGISTRÃ…LE EG 1 â€“ SL avgÃ¶r skadan',damage_on_enter:0,
   damage_on_stay:0,damage_on_exit:0,source_action_id:sourceActionId}
 }
-function combatIsBeskyddareAµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^rea(area){
+function combatIsBeskyddareArea(area){
  return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&area.parameters?.shape==='cube'
 }
 function combatBeskyddareContains(area,point){
@@ -4057,8 +4119,7 @@ async function combatSetMagicTargets(actorId,targets){
  const total=Math.max(1,Number(action.source_data.effect_grade)||1);
  const valid=combatFireballTargets();
  if(!Array.isArray(targets)||!targets.length||targets.some(t=>!Number.isInteger(t.eg)||t.eg<1||!valid.has(String(t.target_id)))||
-  new Set(targets.map(t=>String(t.target_id))).size!==targets.length||targets.µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^reduce((sum,t)=>sum+t.eg,0)!==total){
+  new Set(targets.map(t=>String(t.target_id))).size!==targets.length||targets.reduce((sum,t)=>sum+t.eg,0)!==total){
   throw new Error('FÃ¶rdela hela effektgraden mellan unika mÃ¥l inom rÃ¤ckvidd.');
  }
  const sourceData={...action.source_data,target_allocations:targets};
@@ -4145,8 +4206,7 @@ function combatMagicTargetChooserHtml(actor,action){
  if(action.source_data.magic_binding?.kind==='heal'){
   const targets=combatSpellEffectTargets(actor,action);
   const alone=!targets.some(row=>String(row.id)!==String(actor.id));
-  return '<div class="combµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^at-spell-choice"><b>HELA Â· '+(alone?'helar dig sjÃ¤lv':'vÃ¤lj mÃ¥l')+'</b>'+
+  return '<div class="combat-spell-choice"><b>HELA Â· '+(alone?'helar dig sjÃ¤lv':'vÃ¤lj mÃ¥l')+'</b>'+
    '<small>'+(alone?'Ingen annan inom berÃ¶ringsavstÃ¥nd â€“ '+escAttr(actor.name_snapshot)+' blir automatiskt mÃ¥l. Tryck âœ¦ fÃ¶r att kasta.':'BerÃ¶ring Â· vÃ¤lj dig sjÃ¤lv eller en kombatant inom rÃ¤ckvidd pÃ¥ kartan, raden eller hÃ¤r. Tryck sedan âœ¦ igen.')+'</small>'+
    targets.map(target=>'<button type="button" class="combat-weapon-choice-btn'+
     (String(combatSelectedTargetId)===String(target.id)?' active':'')+
@@ -4202,7 +4262,7 @@ function combatMagicTargetChooserHtml(actor,action){
    candidates.map(target=>'<button type="button" class="combat-weapon-choice-btn'+(String(combatSelectedTargetId)===String(target.id)?' active':'')+'" onclick="combatSelectedTargetId=&quot;'+target.id+'&quot;;renderCombat()">'+escAttr(target.name_snapshot)+'</button>').join('')+
    (action.source_data.magic_binding?.requires_resistance&&candidates.some(c=>String(c.id)===String(combatSelectedTargetId))?
     '<div class="combat-spell-effect"><span>SL avgÃ¶r mÃ¥lets motstÃ¥nd (regeldetaljer saknas)</span>'+
-    ['affected','resisted'].map(decision=>'<button type="button" class="combat-weapon-choice-btn'+(action.source_data.resistance_decision===decision&&action.source_data.resistance_target_id===String(combatSelectedTargetId)?' active':'')+'" onclick="combatSetMagicResistance(\''+actor.id+'\',\''+combatSelectedTargetId+'\',\''+decision+'\')">'+(decision==='resisted'?'MotstÃ¥nd lyckades':'MotstÃ¥nd misslyckades')+'</button>').join('µ¨¥')+'</div>':'')+'</div>'
+    ['affected','resisted'].map(decision=>'<button type="button" class="combat-weapon-choice-btn'+(action.source_data.resistance_decision===decision&&action.source_data.resistance_target_id===String(combatSelectedTargetId)?' active':'')+'" onclick="combatSetMagicResistance(\''+actor.id+'\',\''+combatSelectedTargetId+'\',\''+decision+'\')">'+(decision==='resisted'?'MotstÃ¥nd lyckades':'MotstÃ¥nd misslyckades')+'</button>').join('')+'</div>':'')+'</div>'
  }
  return '<div class="combat-spell-choice"><b>MÃ¥l i kast-SR Â· EG '+spent+'/'+total+'</b><small>VÃ¤lj fiender och fÃ¶rdela effektgrad innan kastet.</small>'+
  candidates.map(id=>{const target=combatants.find(c=>String(c.id)===id),assigned=allocations.find(t=>String(t.target_id)===id);
@@ -4278,9 +4338,7 @@ async function combatCastManualSpell(actor,action,target=null){
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
   actor_id:actor.id,target_id:target?.id||null,event_type:healing?'spell_heal':'spell_manual',
-  message:actor.name_snapshot+' kastar '+spellName+(target?zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^' pÃ¥ '+target.name_snapshot:data.spell_target?.center?' pÃ¥ hex '+data.spell_target.center.q+','+data.spell_target.center.r:'')+' Â· '+combatOutcomeLabel(rolled.outcome)+
+  message:actor.name_snapshot+' kastar '+spellName+(target?' pÃ¥ '+target.name_snapshot:data.spell_target?.center?' pÃ¥ hex '+data.spell_target.center.q+','+data.spell_target.center.r:'')+' Â· '+combatOutcomeLabel(rolled.outcome)+
    (rolled.success?(result.blocked_by_beskyddare?' Â· Beskyddare stoppar magin':healing?' Â· invÃ¤ntar lÃ¤kning i resultatkortet':' Â· SL avgÃ¶r effekten'):' Â· ingen automatisk effekt'),
   details:result,player_visible:true
  })});
@@ -4368,8 +4426,7 @@ async function combatCastStatusSpell(actor,target,action){
  const cost=combatSpellActualPsyCost(action,rolled.outcome,eg);
  const round=Number(activeCombat.round_number)||1;
  await combatPayForSpell(actor,cost,action);
- const erf=await combatAwardSpellErf(aµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ctor,action,rolled.outcome);
+ const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
  const resisted=rolled.success&&action.source_data.magic_binding.requires_resistance&&action.source_data.resistance_decision==='resisted';
  const result={success:rolled.success,outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,spell_name:spellName,target_id:target.id,resisted,manual_resistance:action.source_data.magic_binding.requires_resistance};
  if(erf)result.erf=erf;
@@ -4430,8 +4487,7 @@ async function combatCastAreaSpell(actor,action){
   parameters:combatBeskyddareAreaParameters(data,action.id)}:null;
  const selectedAreaCells=binding.cube?combatRuntimeHexCells().filter(cell=>combatBeskyddareContains(cubeAreaForTarget,cell)):combatMagicAreaCells(center,radius);
  const combatantsInSelectedArea=combatants.filter(row=>!['dead','removed'].includes(row.status)&&
-  combatFootprintCelµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ls(row).some(cell=>binding.cube?combatBeskyddareContains(cubeAreaForTarget,cell):selectedAreaCells.some(area=>area.key===combatFootprintKey(cell))));
+  combatFootprintCells(row).some(cell=>binding.cube?combatBeskyddareContains(cubeAreaForTarget,cell):selectedAreaCells.some(area=>area.key===combatFootprintKey(cell))));
  const round=Number(activeCombat.round_number)||1,result={success:rolled.success,
   outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
   effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,target_type:targetType,spell_target:selection||null,
@@ -4512,8 +4568,7 @@ async function combatResolveTestFireball(actor,target,action){
   }
   if(result.blocked_target_ids.length===targets.length)result.blocked_by_beskyddare=true;
   const accepted=targets.filter(t=>!result.blocked_target_ids.includes(String(t.target_id)));
-  if(accepted.length&&await combatDeferFµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^orAntimagic(actor,action,result,accepted.map(t=>t.target_id),'damage'))return;
+  if(accepted.length&&await combatDeferForAntimagic(actor,action,result,accepted.map(t=>t.target_id),'damage'))return;
   for(const allocation of accepted){
    const victim=combatants.find(c=>String(c.id)===String(allocation.target_id));
    if(!victim)throw new Error('MÃ¥let saknas vid kastet.');
@@ -4609,8 +4664,7 @@ function combatReachableHexes(combatant){
  const out=new Map(),predecessors=new Map();
  out.predecessors=predecessors;
  if(!combatant||combatCannotMove(combatant)||activeCombat?.phase!=='movement')return out;
- const startQ=Number(coµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^mbatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
+ const startQ=Number(combatant.q)||0,startR=Number(combatant.r)||0,startKey=startQ+','+startR;
  const budget=combatMovementAllowance(combatant),flight=combatFlightCapabilities(combatant);
  if(!cellByKey.has(startKey))return out;
  const frontier=[{key:startKey,cost:0}];
@@ -4866,8 +4920,7 @@ function combatMapCombatantCenters(g=combatMapViewGeometry()){
  }).filter(Boolean)
 }
 function combatMapFitCombatants(){
- const svg=document.querySelector(µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^'#combatPage .combat-map-svg'),g=combatMapViewGeometry();
+ const svg=document.querySelector('#combatPage .combat-map-svg'),g=combatMapViewGeometry();
  if(!svg||!g)return;
  const points=combatMapCombatantCenters(g);
  if(!points.length){combatMapResetView();return}
@@ -4980,9 +5033,7 @@ function combatMapPointerMove(event){
    combatMapView.y-=panDy*(view.height/rect.height);
    combatMapEnsureView(g)
   }
-  combatMapPinch.lastCenterX=centerX;combatMapPinch.lµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^astCenterY=centerY;
+  combatMapPinch.lastCenterX=centerX;combatMapPinch.lastCenterY=centerY;
   combatMapZoomAt(centerX,centerY,combatMapPinch.zoom*(distance/combatMapPinch.distance));
   combatMapSuppressClickUntil=Date.now()+450;
   return
@@ -5084,8 +5135,7 @@ function renderCombatMap(){
  }
  combatMapEnsureView(g);
  const mapView=combatMapViewBox(g);
- const cells=combatRuntimeHexCells(),byCoord=newµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ Map(cells.map(cell=>[cell.key,cell]));
+ const cells=combatRuntimeHexCells(),byCoord=new Map(cells.map(cell=>[cell.key,cell]));
  const actor=combatActiveActor(),planningActor=combatMovementPlanningActor();
  const reachable=planningActor?combatReachableHexes(planningActor):new Map();
  const originKey=planningActor?((Number(planningActor.q)||0)+','+(Number(planningActor.r)||0)):'';
@@ -5155,8 +5205,7 @@ function renderCombatMap(){
  const magicTargetOverlay=targetData?combatMagicHexTargetOverlayHtml(cells,actor,currentMagic,targetCenter):'';
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
-  const displayQ=isPlanning&&combatMovementPlan?Number(combµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^atMovementPlan.q):Number(c.q)||0;
+  const displayQ=isPlanning&&combatMovementPlan?Number(combatMovementPlan.q):Number(c.q)||0;
   const displayR=isPlanning&&combatMovementPlan?Number(combatMovementPlan.r):Number(c.r)||0;
   const key=displayQ+','+displayR;
   let cell=byCoord.get(key);
@@ -5214,8 +5263,7 @@ function renderCombatMap(){
 // Stridsdeltagare bÃ¤r sitt portrÃ¤tts lagringssÃ¶kvÃ¤g i state. Den Ã¤r
 // lÃ¤sbar fÃ¶r synliga kombatanter Ã¤ven nÃ¤r fiendens masterregister Ã¤r SL-dolt.
 const combatNpcPortraitRequests=new Map();
-function combatNpµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^cPortraitSrc(path){
+function combatNpcPortraitSrc(path){
  const key=String(path||'').trim();
  if(!key||typeof npcPortraitCachedUrl!=='function')return '';
  const cached=npcPortraitCachedUrl(key);
@@ -5401,9 +5449,7 @@ function combatNpcQuickEditorHtml(c){
  return '<section class="combat-detail-section combat-npc-editor"><h3>SL Â· Snabbredigering</h3>'+
   '<p class="combat-detail-empty">GÃ¤ller bara den hÃ¤r striden â€“ original-SLP pÃ¥verkas inte.</p>'+
   '<form id="combatNpcQuickForm" onsubmit="combatSaveNpcQuickEdit(event,\''+c.id+'\')">'+
-  '<label class="combat-npc-edit-name"><span>Namn</span>µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^<input name="name" maxlength="100" required value="'+escAttr(c.name_snapshot)+'"></label>'+
+  '<label class="combat-npc-edit-name"><span>Namn</span><input name="name" maxlength="100" required value="'+escAttr(c.name_snapshot)+'"></label>'+
   '<div class="combat-npc-edit-grid">'+
    field('current_kp','KP nu',c.current_kp)+field('max_kp','KP max',c.max_kp,1)+
    field('current_psy','PSY nu',c.current_psy)+field('max_psy','PSY max',c.max_psy)+
@@ -5480,8 +5526,7 @@ function combatNpcEditParse(form,c){
  const shieldFv=Number(fieldValue('shield_fv')??oldShield?.fv??10);
  const shieldBv=Number(fieldValue('shield_bv')??oldShield?.bv??0);
  if(shieldName&&(!Number.isInteger(shieldFv)||shieldFv<0||shieldFv>100||
-   !Number.isInteger(shieldBv)||shieldBv<0||shieldBv>999))throw Error('Ogiltigt FV ellµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^er BV fÃ¶r skÃ¶ld.');
+   !Number.isInteger(shieldBv)||shieldBv<0||shieldBv>999))throw Error('Ogiltigt FV eller BV fÃ¶r skÃ¶ld.');
  const shields=shieldName?[{...(oldShield||{}),equipId:oldShield?.equipId||'npc-shield-0',
   name:shieldName,fv:shieldFv,bv:shieldBv,hand:shieldHand}]:[];
  const occupied=new Set();
@@ -5568,8 +5613,7 @@ function combatantDetailsPopupHtml(){
       '<div class="combat-detail-effects">'+(effects.length?combatantEffectsHtml(c)+combatEffectAttributeHtml(c):'<p class="combat-detail-empty">Inga aktiva effekter.</p>')+'</div>'+
     '</section>'+
     '<section class="combat-detail-section"><h3>Utrustning</h3>'+
-      '<dµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^iv class="combat-detail-equipment">'+combatTurnEquipmentHtml(c)+'</div>'+
+      '<div class="combat-detail-equipment">'+combatTurnEquipmentHtml(c)+'</div>'+
       '<p><strong>Vapen:</strong> '+itemList(profile.weapons)+'</p>'+
       (['npc','monster'].includes(c.source_type)?'<p><strong>Ambidextri:</strong> '+(profile.ambidextrous?'Ja â€“ sjÃ¤lvstÃ¤ndiga vapen':'Nej')+'</p>':'')+
       (profile.spells?.length?'<p><strong>BesvÃ¤rjelser:</strong> '+itemList(profile.spells)+'</p>':'')+
@@ -5721,9 +5765,7 @@ function combatSpellResultHtml(action){
       ' data-focus-x="'+artX+'" data-focus-y="'+artY+'" data-zoom="'+artZoom+'" aria-hidden="true"><img alt="" hidden></div>':'')+
     '<div class="combat-spell-effect-label"><span aria-hidden="true">âœ¦</span> EFFEKT</div>'+ 
    '<div class="combat-spell-outcome-note">'+escAttr(note)+'</div>'+
-   (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA Â· '+escAttr(resultµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'â€”')+'</b>'+
+   (result.healing_target_id?'<div class="combat-spell-heal-result"><b>HELA Â· '+escAttr(result.target_name||combatants.find(c=>String(c.id)===String(result.healing_target_id))?.name_snapshot||'â€”')+'</b>'+
     (result.healing_applied?'<div class="combat-heal-total">+'+escAttr(result.healing_restored??0)+' KP Ã¥terstÃ¤llda</div>'+
       '<span>LÃ¤kningsvÃ¤rde '+escAttr(result.healing_amount??'â€”')+' KP Â· '+escAttr(result.kp_before??'â€”')+' â†’ '+escAttr(result.kp_after??'â€”')+' / '+escAttr(result.kp_max??'â€”')+' KP</span>':
      result.healing_pending&&combatCanManage()?'<label>Ã…terstÃ¤ll KP (SL) <input id="combatHealAmount-'+escAttr(action.id)+'" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="Antal KP"></label>'+
@@ -5793,8 +5835,7 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
  const shortName=rawName==='ELD'?'Eld':rawName;
  const spellHeading=preparing&&data.spell_prepared?{name:shortName,eg}:null;
  const preparationCard='<div class="combat-mini-side combat-duelist-card defender combat-magic-preparation">'+
-  '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Timglas: 1 SR fÃ¶rberedµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^else. FÃ¶rsta mÃ¶jliga kast: '+escAttr(firstCastLabel)+'">'+
+  '<div class="combat-duelist-portrait combat-preparation-portrait" role="img" aria-label="Timglas: 1 SR fÃ¶rberedelse. FÃ¶rsta mÃ¶jliga kast: '+escAttr(firstCastLabel)+'">'+
    '<span class="combat-preparation-hourglass" aria-hidden="true">'+
     '<img src="./assets/combat/frames/preparation-hourglass-1sr.webp" width="300" height="400" alt="" decoding="async">'+
    '</span>'+
@@ -5962,9 +6003,7 @@ function combatSpellCastPanelHtml(){
    (data.resistance_target_id!==String(target.id)||
     !['resisted','affected'].includes(data.resistance_decision)))||
   (kind==='area'&&data.magic_binding?.cube&&data.beskyddare_ritual_confirmed!==true)||
-  (tµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^µ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^ypeof combatActionMenuKind!=='undefined'&&combatActionMenuKind==='magic'&&
+  (typeof combatActionMenuKind!=='undefined'&&combatActionMenuKind==='magic'&&
    typeof combatActionMenuId!=='undefined'&&String(combatActionMenuId||'')===String(actor.id)));
  let label='Vald besvÃ¤rjelse',detail='',state='selected',instruction='';
  if(resolved){
@@ -6053,8 +6092,7 @@ function combatDefenseReactionHtml(pending){
    option?.item||null;
   return {id,item,option};
  });
- // Mirµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^rors the Runda equipment artwork: personal override, master and crop.
+ // Mirrors the Runda equipment artwork: personal override, master and crop.
  const equipmentArt=(option,kind,displayItem=undefined)=>{
   const item=displayItem===undefined?(option?.item||null):displayItem;
   const master=item?(kind==='shield'
@@ -6140,8 +6178,7 @@ function combatSubmitDefenseChoice(button,kind,defenderId,attackActionId,parryKe
     String(pending.defender.id)!==String(defenderId)||
     String(pending.attack.id)!==String(attackActionId)||
     (kind!=='parry'&&kind!=='take-hit')||
-    (kind==='parry'&&!pending.options.some(option=>String(option.key)===String(parryKey))))retµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^urn;
+    (kind==='parry'&&!pending.options.some(option=>String(option.key)===String(parryKey))))return;
  combatDefenseChoiceBusy=true;
  const drawer=button?.closest?.('.combat-defense-drawer')||null;
  // Retain the original disabled equipment slots if the roll fails.
@@ -6248,8 +6285,7 @@ function combatAttackPanelHtml(){
    '<div class="combat-mini-duel combat-illustrated-duel">'+
     combatMiniParticipantHtml('ATTACKERAR',pending.attacker,'')+
     '<div class="combat-mini-arrow">â†’</div>'+
-    combatDuelCenterHtml('weapon',attackWeapon,typeof combatActionWeapon==='function'?combatActionWeapon(pending.attacker,attack,'autoµ¨¥zºè¯
-â¶)à²Ö§uªÝ¢ëiºÐk¢G§¦*^'):null)+
+    combatDuelCenterHtml('weapon',attackWeapon,typeof combatActionWeapon==='function'?combatActionWeapon(pending.attacker,attack,'auto'):null)+
     '<div class="combat-mini-arrow" aria-hidden="true">â†’</div>'+
     combatMiniParticipantHtml('FÃ–RSVARAR',pending.defender,optionText)+
    '</div>'+
@@ -6333,7 +6369,7 @@ function combatTurnActionState(combatant){
  return{key:'none',label:'Redo'}
 }
 /* Real master artwork for the active combatant: equipped weapons, shield,
-   chest armor and the ammunition for currently equipped ranged weapons only. */µ¨¥Â¸­yêë¢°k¢G§¦*^
+   chest armor and the ammunition for currently equipped ranged weapons only. */
 function combatTurnEquipmentHtml(combatant){
  const profile=combatAttackProfile(combatant),eq=profile.currentEquipment||{};
  const weapons=Array.isArray(profile.weapons)?profile.weapons:[];
@@ -6975,7 +7011,7 @@ async function combatApplyEffect(){
 }
 async function combatRemoveEffect(id){
  if(!combatCanManage())return;
- try{await dbJson('combatant_effects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({stµ¨¥Â¸­yêë¢°k¢G§¦*^atus:'removed',updated_at:new Date().toISOString()})});await combatLoadEffects();renderCombat()}catch(e){alert(e.message)}
+ try{await dbJson('combatant_effects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'removed',updated_at:new Date().toISOString()})});await combatLoadEffects();renderCombat()}catch(e){alert(e.message)}
 }
 function combatGmIsReserve(c){return c?.state?.in_reserve===true}
 function combatGmPlacementHtml(){
