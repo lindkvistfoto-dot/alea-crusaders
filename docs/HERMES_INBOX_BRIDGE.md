@@ -17,7 +17,7 @@ The existing battle-pose worker remains unchanged. Its production jobs use priva
 ## Security and boundaries
 
 - The browser sends the user's session token and the existing publishable key. It never receives a service-role key, Drive OAuth token or GitHub secret.
-- The Edge Function checks the same signed-in user's admin profile before accepting an upload or retry.
+- The Edge Function checks the same signed-in user's admin profile before accepting an upload or retry. The bridge accepts PNG originals only, matching the existing private bucket policy and canonical HERMES profiles.
 - Originals stay in the existing private staging bucket and are not added to Git.
 - The worker reuses the existing HERMES OAuth and Supabase Actions secrets. It does not change service-account WIF or its trust.
 - The Drive Inbox and archive IDs are existing repository configuration. The worker fails closed if it cannot verify the expected folder and bytes.
@@ -45,7 +45,7 @@ The staging original is retained after publication so a failed or interrupted ru
 | Illustration 1:1 | `symbol-illustration` | `illustration_path` | Square illustration |
 | Illustration Wide 16:9 | `symbol-illustration-wide` | `illustration_wide_path` | Wide illustration |
 
-Square profiles produce 640×640 WebP; wide produces 1280×720 WebP. Icons and cutouts preserve transparency. Cutouts require fully transparent pixels. Wide sources must be 16:9.
+Sources must be PNG and 640–4096 px square, except cutouts must be at least 1024 px; wide sources must be 16:9 and within the canonical HERMES bounds. Square profiles produce 640×640 WebP; wide produces a bounded landscape WebP. Icons and cutouts preserve transparency, while effect and illustration sources must be opaque. Cutouts require fully transparent pixels.
 
 ## Verification boundary
 
