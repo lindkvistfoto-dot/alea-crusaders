@@ -43,13 +43,8 @@ drop policy if exists hermes_asset_jobs_admin_read on public.hermes_asset_jobs;
 create policy hermes_asset_jobs_admin_read on public.hermes_asset_jobs
   for select to authenticated using ((select private.is_admin()));
 
--- Reuse the existing private originals bucket. Widen only accepted source MIME types;
--- authorization remains server-side and bucket privacy is unchanged.
-update storage.buckets
-set allowed_mime_types = array['image/png','image/jpeg','image/webp'],
-    file_size_limit = 8388608,
-    public = false
-where id = 'alea-hermes-source';
+-- The existing alea-hermes-source bucket is already private, PNG-only and capped at 8 MiB.
+-- Keep its current policy unchanged; the Edge Function also enforces PNG and the same limit.
 
 -- Atomic worker claim; SECURITY INVOKER keeps service_role privileges and RLS semantics.
 create or replace function public.hermes_claim_asset_jobs(batch_size integer default 3)
