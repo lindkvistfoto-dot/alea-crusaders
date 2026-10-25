@@ -100,7 +100,7 @@ select 'ARCANE LAUREL BADGE','honor',
        'Gemensam lagerkransram i brons, silver eller guld med separat relief.',
        '', 'public','manual','draft','badge','{}'::jsonb,
        '{"bronze":"arcane-laurel-badge-bronze","silver":"arcane-laurel-badge-silver","gold":"arcane-laurel-badge-gold"}'::jsonb,
-       'arcane-laurel-badge','arcane-laurel-badge-bronze', p.id
+       'arcane_laurel_badge','arcane-laurel-badge-bronze', p.id
 from public.profiles p
 where p.is_admin = true
   and not exists (select 1 from public.honor_definitions where name = 'ARCANE LAUREL BADGE')
