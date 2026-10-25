@@ -35,7 +35,23 @@
    const type=IMAGE_TYPES.find(x=>x[0]===job.image_type)?.[1]||job.image_type;
    const title=el('strong','',job.target_key+' · '+type+' · '+humanJob(job));
    const detail=el('small','',job.state==='failed'?(job.error_code?('Tekniskt fel: '+job.error_code+' · automatisk återkörning planerad'):'Automatisk återkörning planerad'):('Jobb-ID '+job.id));
-   line.append(title,detail);pane.appendChild(line);
+   line.append(title,detail);
+   if(job.state==='failed'&&Number(job.attempts)>=12){
+    const retry=el('button','smallbtn','Försök igen');retry.type='button';
+    retry.addEventListener('click',async()=>{
+     retry.disabled=true;detail.textContent='Köar om jobbet…';
+     try{
+      const token=await freshSupabaseAccessToken();
+      const response=await fetch(SUPABASE_URL+'/functions/v1/hermes-inbox-bridge',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'retry',job_id:job.id})});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok||!result.ok)throw Error(result.message||'Jobbet kunde inte köas om.');
+      detail.textContent='Jobbet har köats om. HERMES försöker igen automatiskt.';
+      await poll();
+     }catch(error){detail.textContent=error?.message||'Återförsöket misslyckades.';retry.disabled=false}
+    });
+    line.appendChild(retry);
+   }
+   pane.appendChild(line);
   }
  }
  async function poll(){
