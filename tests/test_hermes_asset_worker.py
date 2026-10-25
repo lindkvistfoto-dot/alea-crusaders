@@ -177,7 +177,7 @@ class AssetWorkerTests(unittest.TestCase):
             self.assertEqual(self.job["inbox_drive_file_id"],"inbox-id")
             self.w.process(self.job,self.token)
         self.assertIn("published",published)
-        verify.assert_called_once_with(self.token,"inbox-id",self.w.INBOX,self.job["source_sha256"])
+        self.assertEqual(ensure_calls,[False,True,False,True])\n        verify.assert_not_called()
         self.assertEqual(self.job["archive_drive_file_id"],"archive-id")
         self.assertEqual([p.get("state") for p in patches],["inboxed","archived"])
 
