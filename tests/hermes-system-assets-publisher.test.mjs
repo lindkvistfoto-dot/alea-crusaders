@@ -6,7 +6,7 @@ const rows=()=>Object.entries(profiles.assets).map(([key,def])=>({id:def.id,asse
  asset_path:null,app_sha256:null,app_bytes:null,width:null,height:null,alpha_preserved:null}));
 const assets=()=>rows().map((row,i)=>({kind:'system-asset',target_key:row.asset_key,target_id:row.id,
  batch_index:i,archive_verified:true,archive_file_id:'archive-system-'+i,source_path:'drive://archive-system-'+i,
- source_sha256:String(i+1).repeat(64),source_bytes:1024,app_sha256:sha,
+ source_sha256:(i+1).toString(16).padStart(64,'0'),source_bytes:1024,app_sha256:sha,
  app_file:`system-asset/${row.asset_key}/${sha}.webp`,app_bytes:raw.length,
  width:profiles.assets[row.asset_key].display_size[0],height:profiles.assets[row.asset_key].display_size[1],alpha_preserved:row.asset_key==='arcane-trophy-room-v2.2'?false:true}));
 

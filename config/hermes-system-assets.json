@@ -97,6 +97,396 @@
       "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
       "alpha_required": false,
       "aspect_ratio": "16:9"
+    },
+    "arcane-adventure-medal-den-femte-konfluxen-v1": {
+      "id": "bd61cc70-d3d0-46bb-a846-c3bfbfdc051a",
+      "label": "ARCANE Adventure Medal — Den femte konfluxen",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-kristalltjuren-v1": {
+      "id": "1a7869a6-da87-4f9f-b727-9550aa298c88",
+      "label": "ARCANE Adventure Medal — Kristalltjuren",
+      "source_size": [
+        1262,
+        1343
+      ],
+      "display_size": [
+        1203,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-demonprinsen-v1": {
+      "id": "21caf557-e21d-4ed6-a1c4-806a30796de3",
+      "label": "ARCANE Adventure Medal — Demonprinsen",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-slutstriden-nidlandska-reningen-v1": {
+      "id": "36f7dde0-1b1d-4801-850c-d601373fa418",
+      "label": "ARCANE Adventure Medal — Slutstriden (Nidländska reningen)",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-melindors-aterkomst-v1": {
+      "id": "5c18f305-e052-481e-a908-5a2332613652",
+      "label": "ARCANE Adventure Medal — Melindors återkomst",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-helvetesfortet-v1": {
+      "id": "ea09b5a3-9a81-4a39-b05b-12c105230d4e",
+      "label": "ARCANE Adventure Medal — Helvetesfortet",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-tempelherren-v1": {
+      "id": "b01a5757-a33c-4af8-a1ef-c37fa6521a20",
+      "label": "ARCANE Adventure Medal — Tempelherren",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-handelsfursten-v1": {
+      "id": "ab8f12cc-8b25-485e-bdeb-602c522fe7e1",
+      "label": "ARCANE Adventure Medal — Handelsfursten",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-oraklets-fyra-ogon-v1": {
+      "id": "65e78adf-02d5-434e-b488-872aa68b92b5",
+      "label": "ARCANE Adventure Medal — Oraklets fyra ögon",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-magilre-v1": {
+      "id": "fab13a50-4cf4-4cc5-b893-55da54acc753",
+      "label": "ARCANE Adventure Medal — Magilre",
+      "source_size": [
+        1263,
+        1343
+      ],
+      "display_size": [
+        1204,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-enhorningshornet-v1": {
+      "id": "8f1386c7-566d-4841-a12b-ac8322d5259e",
+      "label": "ARCANE Adventure Medal — Enhörningshornet",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-barbia-v1": {
+      "id": "6b562f10-6912-4f46-a8ae-e0fb6971f0a7",
+      "label": "ARCANE Adventure Medal — Barbia",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-shoguns-vrede-v1": {
+      "id": "5e17cffa-9f50-4b6f-a507-397f46d8b127",
+      "label": "ARCANE Adventure Medal — Shoguns vrede",
+      "source_size": [
+        1312,
+        1199
+      ],
+      "display_size": [
+        1280,
+        1170
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-dodens-vag-v1": {
+      "id": "9bde6427-e605-46b9-8e2e-80ecb7ea1eb5",
+      "label": "ARCANE Adventure Medal — Dödens väg",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-djupets-fasor-v1": {
+      "id": "f9746146-bb56-40f3-933b-fb780352eb5c",
+      "label": "ARCANE Adventure Medal — Djupets fasor",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-jeraz-v1": {
+      "id": "ea17c252-4686-498d-a876-c0b9ebc1fa97",
+      "label": "ARCANE Adventure Medal — Jeraz",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-marsklandet-v1": {
+      "id": "b00de9c6-0b9e-4e4b-8d62-5f3c9906e1d8",
+      "label": "ARCANE Adventure Medal — Marsklandet",
+      "source_size": [
+        1263,
+        1343
+      ],
+      "display_size": [
+        1204,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-novastenen-v1": {
+      "id": "fa86296d-1d53-4bf8-9379-00e78323a4f1",
+      "label": "ARCANE Adventure Medal — Novastenen",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-rosten-fran-forntiden-v1": {
+      "id": "f4f4211b-732a-48e2-a870-8cf603b45893",
+      "label": "ARCANE Adventure Medal — Rösten från forntiden",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-skonheten-och-odjuret-v1": {
+      "id": "e0f33289-750d-41cf-bd1c-71a633ea2db2",
+      "label": "ARCANE Adventure Medal — Skönheten och Odjuret",
+      "source_size": [
+        1072,
+        1584
+      ],
+      "display_size": [
+        866,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-svart-duell-v1": {
+      "id": "fa5d96b7-2efc-4e67-a607-0ac1aefa14b5",
+      "label": "ARCANE Adventure Medal — Svart duell",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-tvillingbergen-v1": {
+      "id": "53b6fd68-f9b4-49f0-8a4c-e53af6d39cf2",
+      "label": "ARCANE Adventure Medal — Tvillingbergen",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-havets-vargar-v1": {
+      "id": "68a0fc2a-2004-4641-a6c8-46055c89d461",
+      "label": "ARCANE Adventure Medal — Havets vargar",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-morkrets-hjarta-v1": {
+      "id": "6b64546a-e1d9-4ce1-8f9b-23982d241dd5",
+      "label": "ARCANE Adventure Medal — Mörkrets hjärta",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-maktens-portar-v1": {
+      "id": "5949269f-ded8-4209-a7dc-49d8b59ed832",
+      "label": "ARCANE Adventure Medal — Maktens portar",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-doda-skogen-v1": {
+      "id": "48fa4e37-8807-4869-bea8-4bc7649a76b7",
+      "label": "ARCANE Adventure Medal — Döda skogen",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-dimon-v1": {
+      "id": "15753d0a-faf1-4874-9a4f-5651883f1f9c",
+      "label": "ARCANE Adventure Medal — Dimön",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-manhjartat-v2-v1": {
+      "id": "b254d72f-2fab-4967-b6ea-90acff056c0c",
+      "label": "ARCANE Adventure Medal — Månhjärtat V2",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-svavelvinter-v1": {
+      "id": "3e6cb45f-f383-44f8-a9b9-5c48694461e5",
+      "label": "ARCANE Adventure Medal — Svavelvinter",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "display_size": [
+        853,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-adventure-medal-spindelkonungens-pyramid-v1": {
+      "id": "36a5bed0-0f87-4d0d-8db5-d4b97ba0ce56",
+      "label": "ARCANE Adventure Medal — Spindelkonungens pyramid",
+      "source_size": [
+        1214,
+        1295
+      ],
+      "display_size": [
+        1200,
+        1280
+      ],
+      "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
     }
   }
 }
