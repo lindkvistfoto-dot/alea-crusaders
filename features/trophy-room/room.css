@@ -108,3 +108,31 @@
  .arcane-medal-display-close{position:sticky;top:8px;float:right;margin-bottom:-48px;margin-right:10px}
 }
 @media(prefers-reduced-motion:reduce){.trophy-room-medal-trigger img,.trophy-room-medal-trigger::after{transition:none}}
+
+
+/* JAKOB 4B: feather-and-ink typography on parchment.
+   Use freely available webfonts until a licensed Quill Ink Handy font is supplied. */
+.arcane-medal-display-story{
+ font-family:"IM Fell English",Georgia,serif;
+ font-style:normal;
+ font-size:clamp(13px,1.7vw,19px);
+ line-height:1.52;
+ color:#422b1e;
+ text-shadow:.18px .18px .25px #5b3b2430;
+}
+.arcane-medal-display-title{
+ font-family:"Caveat","Segoe Print",cursive;
+ font-weight:600;
+ font-size:clamp(25px,3.5vw,45px);
+ line-height:1.05;
+ letter-spacing:-.012em;
+ color:#472919;
+ text-shadow:.25px .3px .45px #5e331b40;
+}
+.arcane-medal-display-type{font-family:"IM Fell English",Georgia,serif;font-style:italic;letter-spacing:.07em}
+.arcane-medal-display-description{font-family:"IM Fell English",Georgia,serif;font-style:italic;line-height:1.5}
+.arcane-medal-display-date{font-family:"Caveat","Segoe Print",cursive;font-size:1.32em;font-weight:600}
+@media(max-width:650px){
+ .arcane-medal-display-story{font-size:clamp(15px,3.9vw,19px)}
+ .arcane-medal-display-title{font-size:clamp(29px,7vw,40px)}
+}
