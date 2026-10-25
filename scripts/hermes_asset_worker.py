@@ -212,7 +212,7 @@ def fail_job(job,error):
     if message in permanent:attempts=12
     delay=min(3600,30*(2**min(max(attempts-1,0),7)))
     try:
-        patch_job(job,{"state":"failed","error_code":code,
+        patch_job(job,{"state":"failed","attempts":attempts,"error_code":code,
             "next_attempt_at":(datetime.now(timezone.utc)+timedelta(seconds=delay)).isoformat(),
             "lease_token":None,"lease_until":None})
     except Exception:
