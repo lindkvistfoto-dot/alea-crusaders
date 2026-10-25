@@ -60,7 +60,7 @@ const DISPLAY_FRAME_KEY='arcane-medal-display-frame-v1';
 let medalDialog=null,medalDialogReturnFocus=null;
 function medalFrameUrl(asset){
  const path=asset?.asset_path;
- if(typeof path!=='string'||!/^hermes\\/system-asset\\/arcane-medal-display-frame-v1\\/[a-f0-9]{64}\\.webp$/.test(path))return null;
+ if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-medal-display-frame-v1\/[a-f0-9]{64}\.webp$/.test(path))return null;
  return MEDAL_BASE+path;
 }
 function formatGrantDate(value){
