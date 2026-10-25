@@ -94,10 +94,10 @@ class AssetWorkerTests(unittest.TestCase):
         def ensure(token,job,parent,archive=False):
             if archive:raise OSError("temporary drive failure")
             return "inbox-id"
-        def patch(job,values):job.update(values);calls.append(values)
+        def fake_patch(job,values):job.update(values);calls.append(values)
         with patch.object(self.w,"storage_download",return_value=self.source), \
              patch.object(self.w,"ensure_drive_original",side_effect=ensure), \
-             patch.object(self.w,"patch_job",side_effect=patch), \
+             patch.object(self.w,"patch_job",side_effect=fake_patch), \
              patch.object(self.w,"publish") as publish:
             with self.assertRaisesRegex(OSError,"temporary drive failure"):self.w.process(self.job,self.token)
             publish.assert_not_called()
@@ -129,8 +129,8 @@ class AssetWorkerTests(unittest.TestCase):
 
     def test_retry_backoff_is_bounded_and_keeps_original_fields(self):
         values={}
-        def patch(job,data):values.update(data);return data
-        with patch.object(self.w,"patch_job",side_effect=patch):
+        def fake_patch(job,data):values.update(data);return data
+        with patch.object(self.w,"patch_job",side_effect=fake_patch):
             self.w.fail_job(self.job,TimeoutError("temporary"))
         self.assertEqual(values["state"],"failed")
         self.assertEqual(values["error_code"],"TIMEOUTERROR")
