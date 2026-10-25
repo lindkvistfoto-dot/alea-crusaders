@@ -74,7 +74,7 @@ function illustrationUuid(sha:string){
  return value.slice(0,8)+"-"+value.slice(8,12)+"-"+value.slice(12,16)+"-"+value.slice(16,20)+"-"+value.slice(20,32);
 }
 function checkAsset(a:any,archiveRequired=false){
- if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration","symbol-cutout","symbol-illustration","symbol-illustration-wide"].includes(a.kind)||(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")&&!(a.kind==="system-asset"&&a.target_key==="arcane-trophy-room-v2.2"))||
+ if(!a||!["system-asset","spell","spell-cutout","symbol","skill","skill-illustration","skill-illustration-wide","spell-illustration-wide","spell-illustration","symbol-cutout","symbol-illustration","symbol-illustration-wide","symbol-effect"].includes(a.kind)||(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(a.target_key||"")&&!(a.kind==="system-asset"&&a.target_key==="arcane-trophy-room-v2.2"))||
   !/^[a-f0-9]{64}$/.test(a.source_sha256||"")||!/^[a-f0-9]{64}$/.test(a.app_sha256||""))
   throw Error("INVALID_ASSET_METADATA");
  if(archiveRequired&&(a.archive_verified!==true||a.source_path!=="drive://"+a.archive_file_id||
@@ -99,12 +99,13 @@ function checkAsset(a:any,archiveRequired=false){
  const symbolCutout=a.kind==="symbol-cutout";
  const symbolWide=a.kind==="symbol-illustration-wide";
  const symbolSquare=a.kind==="symbol-illustration";
- const symbolArt=symbolCutout||symbolWide||symbolSquare;
+ const symbolEffect=a.kind==="symbol-effect";
+ const symbolArt=symbolCutout||symbolWide||symbolSquare||symbolEffect;
  const spellArt=spellWide||spellSquare||spellCutout;
  const wide=a.kind==="skill-illustration-wide"||spellWide||symbolWide;
  const illustration=a.kind==="skill-illustration"||wide||spellSquare||symbolSquare;
  const expectsAlpha=!illustration;
- const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" = (spellCutout||symbolCutout)?"cutout_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
+ const assetField: "icon_path" | "illustration_path" | "illustration_wide_path" | "cutout_path" | "effect_image_path" = (spellCutout||symbolCutout)?"cutout_path":symbolEffect?"effect_image_path":wide?"illustration_wide_path":illustration?"illustration_path":"icon_path";
  const validDimensions=(spellWide||symbolWide)?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&a.width/a.height>=1.25&&a.width/a.height<=2.4:wide?Number.isInteger(a.width)&&Number.isInteger(a.height)&&a.width>=640&&a.width<=2560&&a.height>=360&&a.height<=1440&&Math.abs(a.width/a.height-16/9)/(16/9)<=0.003:a.width===640&&a.height===640;
  if(!expected||a.app_file!==out||!validDimensions||a.alpha_preserved!==expectsAlpha)
   throw Error("IMMUTABLE_ASSET_PATH_MISMATCH");
