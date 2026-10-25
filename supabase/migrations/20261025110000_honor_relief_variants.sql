@@ -8,7 +8,7 @@ alter table public.honor_definitions alter column category set default 'award';
 alter table public.honor_definitions alter column category set not null;
 alter table public.honor_definitions add column if not exists tier_criteria jsonb not null default '{}'::jsonb;
 alter table public.honor_definitions add column if not exists badge_frame_assets jsonb not null default '{}'::jsonb;
-do $
+do $$
 begin
   if not exists (select 1 from pg_constraint where conname = 'honor_definitions_category_check') then
     alter table public.honor_definitions add constraint honor_definitions_category_check
@@ -22,7 +22,7 @@ begin
     alter table public.honor_definitions add constraint honor_definitions_badge_frames_object
       check (jsonb_typeof(badge_frame_assets) = 'object');
   end if;
-end $;
+end $$;
 alter table public.honor_definitions add column if not exists frame_family text;
 alter table public.honor_definitions add column if not exists preview_variant_id uuid;
 alter table public.honor_definitions add column if not exists published_variant_id uuid;
