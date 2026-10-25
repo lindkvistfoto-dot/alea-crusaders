@@ -172,6 +172,7 @@ let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null
 let combatMovementLastClick=null,combatMovementCommitting=false,combatMapLastPointerType='mouse';
 let combatActionMenuId=null,combatActionMenuKind=null;
 let combatMapView={zoom:1,x:0,y:0},combatMapPan=null,combatMapPointers=new Map(),combatMapPinch=null,combatMapSuppressClickUntil=0,combatMapViewKey='';
+let combatMagicHexHover=null;
 let combatMapPreset='large',combatMapPresetActorKey='';
 
 function combatSceneFromId(id){
@@ -2182,7 +2183,46 @@ function combatIsSummoningSpell(spell){
 const COMBAT_MAGIC_CATEGORIES=['direct','indirect','support','summon','none'];
 function combatMagicRuleProfile(spell){
  const known=combatSpellEffectProfile(spell),summon=combatIsSummoningSpell(spell);
- return {category:summon?'summon':known.category,effect:summon?'summon':known.effect,target:summon?'hex':known.target,range_text:spell?.range_text||'',duration_text:spell?.duration_text||'',psy_cost_text:spell?.psy_cost_text||'',damage_text:spell?.damage_text||'',resistance_text:spell?.resistance_text||'',effect_per_eg:spell?.effect_per_eg||''}
+ return {category:summon?'summon':known.category,effect:summon?'summon':known.effect,target_type:['combatant','hexagon','other'].includes(spell?.target_type)?spell.target_type:'other',target:summon?'hex':known.target,range_text:spell?.range_text||'',duration_text:spell?.duration_text||'',psy_cost_text:spell?.psy_cost_text||'',damage_text:spell?.damage_text||'',resistance_text:spell?.resistance_text||'',effect_per_eg:spell?.effect_per_eg||'',target_text:spell?.target_text||''}
+}
+function combatSpellTargetType(data){
+ const value=data?.target_type||data?.magic_rule?.target_type;
+ if(['combatant','hexagon','other'].includes(value))return value;
+ // Compatibility for actions prepared before target_type was introduced.
+ if(data?.magic_binding?.kind==='area')return 'hexagon';
+ if(['damage','status','heal'].includes(data?.magic_binding?.kind))return 'combatant';
+ return 'other'
+}
+function combatSpellRadiusHexes(data){
+ if(data?.area_radius!=null&&Number.isInteger(Number(data.area_radius))&&Number(data.area_radius)>=0)
+  return Math.min(15,Number(data.area_radius));
+ const eg=Math.max(1,Math.floor(Number(data?.effect_grade)||1));
+ const text=[data?.effect_per_eg,data?.target_text].filter(Boolean).join(' ');
+ const match=/(?:radie|radius|område|area)\s*:?\s*(?:S\s*[x×*]\s*(\d+)|(\d+))\s*(?:hex(?:agon(?:er)?)?|rutor?)?/i.exec(text);
+ if(!match)return 0; // No explicit area rule means center hex only.
+ const value=Number(match[1]||match[2]);
+ const perGrade=match[1]||/\bper\s*EG\b/i.test(text);
+ return Number.isSafeInteger(value)&&value>=0?Math.min(15,perGrade?value*eg:value):0
+}
+function combatSpellRadiusScalesWithGrade(data){
+ const name=String(data?.spell_name||data?.name||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
+ if(name==='BESKYDDARE')return true;
+ return /S\s*[x×*]\s*\d+[^\n]*\b(?:hex|rutor?)\b/i.test([data?.effect_per_eg,data?.target_text].filter(Boolean).join(' '))||
+  /(?:radie|radius|område|area)[^\n]*\bper\s*EG\b/i.test([data?.effect_per_eg,data?.target_text].filter(Boolean).join(' '))
+}
+// Rulebook area sizes are projected onto the map as hex rings. Heights and
+// sub-hex dimensions stay in the spell description for the GM; they do not
+// change the tactical footprint.
+function combatSpellRuleAreaRadius(data){
+ const name=String(data?.spell_name||data?.name||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
+ const eg=Math.max(1,Math.floor(Number(data?.effect_grade)||1));
+ if(name==='MÖRKER'){
+  const hexMeters=Number(typeof activeCombat!=='undefined'?activeCombat?.settings?.hex_m:null)||1.5;
+  return Math.max(0,Math.min(15,Math.ceil(3/hexMeters))) // 6 m diameter / 2 / map cell spacing.
+ }
+ if(name==='BESKYDDARE')return eg; // base footprint plus one outward ring per added EG.
+ if(name==='ELD'||name==='FROST')return 0; // one impact hex per sphere; no larger map footprint is specified.
+ return combatSpellRadiusHexes(data)
 }
 // Expert Magiboken pp. 3–5: one PSY per EG, -2 CL per EG beyond the first.
 // Normal spells resolve next SR; K spells are immediate. No invented per-EG casting rounds.
@@ -2362,7 +2402,7 @@ function combatSpellOptions(combatant){
  const learned=spells.map(spell=>{
   const rule=registry.find(row=>(spell?.rule_id&&String(row.id)===String(spell.rule_id))||
    String(row.name||'').localeCompare(String(spell?.name||''),'sv',{sensitivity:'base'})===0);
-  return rule?{...rule,...spell,rule_id:rule.id,
+  return rule?{...rule,...spell,rule_id:rule.id,target_type:['combatant','hexagon','other'].includes(rule.target_type)?rule.target_type:spell.target_type||'other',
    image_path:rule.image_path||null,image_focus_x:rule.image_focus_x??80,image_focus_y:rule.image_focus_y??78,
    icon_path:rule.icon_path??null,icon_focus_x:rule.icon_focus_x??50,icon_focus_y:rule.icon_focus_y??50,icon_zoom:rule.icon_zoom??120,
    effect_image_path:rule.effect_image_path??null,effect_focus_x:rule.effect_focus_x??50,effect_focus_y:rule.effect_focus_y??50,effect_zoom:rule.effect_zoom??120,
@@ -2532,11 +2572,21 @@ async function combatMagicButton(event,combatantId){
     if(!source?.item_spell?.ready){alert(source?.item_spell?.unavailable_reason||'Föremålet kan inte längre aktiveras.');return}
    }
    if((Number(activeCombat?.round_number)||1)<(Number(data.ready_round)||1)){alert('Besvärjelsen förbereds. Klar i SR '+data.ready_round+'.');return}
-   const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action);
-   if(data.magic_binding?.kind==='manual'||data.magic_binding?.kind==='heal'){
+   const targetId=String(combatSelectedTargetId||''),statusSpell=combatSupportedStatusSpell(action),targetType=combatSpellTargetType(data);
+   if(targetType==='hexagon'&&!data.spell_target?.center){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+   if(targetType==='hexagon'){
+    const selection=data.spell_target,center=selection?.center||data.area_center;
+    if(!center||String(selection?.map_id||'')!==String(combatActiveSceneId()||('combat:'+activeCombat.id))||!combatMagicHexRangeStatus(combatant,action,center).valid){
+     alert('Centrumhexagonen måste väljas igen och vara inom räckvidd.');combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return
+    }
+   }
+   if(data.magic_binding?.kind==='manual'||data.magic_binding?.kind==='heal'||targetType==='other'||
+    (targetType==='hexagon'&&data.magic_binding?.kind!=='area')||
+    (targetType==='combatant'&&data.magic_binding?.kind==='area')){
     const healing=data.magic_binding?.kind==='heal';
-    const target=healing?combatHealingTarget(combatant,action,targetId):null;
-    if(healing&&!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
+    const target=targetType==='combatant'?(healing?combatHealingTarget(combatant,action,targetId):
+     combatSpellEffectTargets(combatant,action).find(row=>String(row.id)===targetId)):null;
+    if(targetType==='combatant'&&!target){combatActionMenuId=String(combatantId);combatActionMenuKind='magic';renderCombat();return}
     try{
      const claimed=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.planned&select=id',{
       method:'PATCH',headers:{'Prefer':'return=representation'},
@@ -2580,7 +2630,7 @@ async function combatMagicButton(event,combatantId){
   const currentRound=Number(activeCombat?.round_number)||1;
   const sourceData={...data,casting_spell:true,spell_locked:true,
    preparation_round:currentRound,ready_round:currentRound+(castRules.quick?0:1),
-   test_fireball:data.magic_binding?.kind==='damage'};
+   test_fireball:data.magic_binding?.kind==='damage',spell_target_type:targetType};
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
   action.source_data=sourceData;combatCloseRowActionMenu();combatSelectedTargetId=null;renderCombat();return
  }
@@ -2607,6 +2657,7 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   preflight.valid=preflight.errors.length===0
  }
  if(!preflight.valid){alert(preflight.errors.join(' · '));return}
+ const targetType=['combatant','hexagon','other'].includes(spell.target_type)?spell.target_type:'other';
  const sourceData={...(action.source_data||{}),magic_rule:preflight.rule,magic_casting:preflight.casting,psy_cost:preflight.psy_cost,spell_key:combatSpellKey(spell),spell_id:spell.rule_id||null,spell_name:spell.name,spell_fv:Number(spell.fv)||0,spell_description:spell.description||'',
   // Art snapshots remain as a fallback; the live spell master controls UI.
   spell_icon_path:combatSpellArtPath(spell.icon_path!==undefined?spell.icon_path:spell.image_path)||null,
@@ -2626,9 +2677,9 @@ async function chooseCombatPreparedSpell(combatantId,spellKey){
   spell_image_path:combatSpellArtPath(spell.effect_image_path!==undefined?spell.effect_image_path:spell.image_path)||null,
   spell_image_focus_x:combatSpellArtNumber(spell.effect_focus_x??spell.image_focus_x,50),
   spell_image_focus_y:combatSpellArtNumber(spell.effect_focus_y??spell.image_focus_y,50),
-  damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
+  damage_text:spell.damage_text||'',range_text:spell.range_text||'',duration_text:spell.duration_text||'',effect_per_eg:spell.effect_per_eg||'',target_text:spell.target_text||'',target_type:targetType,spell_target:null,area_center:null,area_radius:typeof combatSpellRuleAreaRadius==='function'?combatSpellRuleAreaRadius({spell_name:spell.name,effect_grade:grade,effect_per_eg:spell.effect_per_eg,target_text:spell.target_text}):0,target_mode:null,attack_magic:spell.attack_magic===true,combat_effect:preflight.rule,effect_grade:grade,item_magic:item?{group:item.group,item_id:item.item_id,power_id:item.power_id,psy_source:item.psy_source,effect_multiplier:item.effect_multiplier,recharge_rule:item.recharge_rule,item_name:item.item_name,battery:item.battery===true,battery_spell_id:item.battery_spell_id}:null,spell_prepared:true,casting_spell:false,test_fireball:false,magic_binding:combatMagicBinding(spell)};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})});
- action.source_data=sourceData;renderCombat()
+ action.source_data=sourceData;combatSelectedTargetId=null;combatMagicHexHover=null;renderCombat()
 }
 async function selectCombatPreparedSpell(combatantId,spellKey){
  try{await chooseCombatPreparedSpell(combatantId,spellKey)}
@@ -2650,9 +2701,13 @@ async function stepCombatSpellEffect(combatantId,delta){
  if(check&&!check.valid){alert(check.errors.join(' · '));return}
  // EG is adjustable until the actual casting roll. This never moves the
  // already established ready_round; only the cost/CL and target allocations change.
+ const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(action.source_data):action.source_data.target_type;
+ const scaleRadius=targetType==='hexagon'&&typeof combatSpellRadiusScalesWithGrade==='function'&&combatSpellRadiusScalesWithGrade(action.source_data);
+ const updatedRadius=scaleRadius?combatSpellRuleAreaRadius({...action.source_data,effect_grade:effect,area_radius:null}):action.source_data.area_radius;
  const sourceData={...action.source_data,effect_grade:effect,
   magic_casting:spell?combatMagicCastingRules(spell,effect):action.source_data?.magic_casting,
-  psy_cost:check?.psy_cost??effect,target_allocations:[]};
+  psy_cost:check?.psy_cost??effect,target_allocations:[],
+  ...(scaleRadius?{area_radius:updatedRadius,spell_target:action.source_data.spell_target?{...action.source_data.spell_target,radius:updatedRadius}:null}:{})};
  combatSpellEffectUpdating=true;
  try{
   await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
@@ -2911,8 +2966,10 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
    await combatLoadAmmoSpends();
    await combatExpireElapsedEffects();
    const selectedTargetStillExists=selectedTargetBeforeLoad==null||combatants.some(row=>String(row.id)===String(selectedTargetBeforeLoad));
+   const activeSpellResolved=combatActions.some(row=>String(row.combatant_id)===String(activeCombat.active_actor_id||'')&&
+    row.status==='resolved'&&row.source_data?.action_key==='spell_cast');
    if(combatGmPlacementId&&!combatants.some(row=>String(row.id)===String(combatGmPlacementId)))combatGmPlacementId=null;
-   combatSelectedTargetId=preserveSelectedTarget&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null);
+   combatSelectedTargetId=preserveSelectedTarget&&!activeSpellResolved&&selectedTargetStillExists?selectedTargetBeforeLoad:(activeCombat.active_actor_id||null);
    if(combatMovementPlan&&String(combatMovementPlan.combatantId)!==String(activeCombat.active_actor_id||''))combatMovementPlan=null;
    if(combatActionMenuId&&String(combatActionMenuId)!==String(activeCombat.active_actor_id||''))combatCloseRowActionMenu();
    await loadCombatRuntimeBackground()
@@ -2972,7 +3029,9 @@ function selectCombatTarget(id){
  if(combatActionMenuId&&String(combatActionMenuId)!==String(id||''))combatActionMenuId=null;
  const actor=combatActiveActor(),action=combatChosenAction(actor),def=combatActionDefinition(action);
  if(actor&&(def?.type==='attack'||action?.source_data?.test_fireball===true||
-  (action?.source_data?.casting_spell===true&&['damage','status','heal'].includes(action.source_data?.magic_binding?.kind)))&&action?.status==='planned'){
+  (action?.source_data?.casting_spell===true&&
+   (typeof combatSpellTargetType==='function'?combatSpellTargetType(action.source_data):
+    (action.source_data?.target_type||(['damage','status','heal'].includes(action.source_data?.magic_binding?.kind)?'combatant':'other')))==='combatant'))&&action?.status==='planned'){
   if(id&&String(id)===String(actor.id)&&(def?.type==='attack'||action?.source_data?.test_fireball===true||
    (action?.source_data?.casting_spell===true&&action.source_data.magic_binding?.kind==='damage'))){
    combatSelectedTargetId=null;
@@ -2980,7 +3039,8 @@ function selectCombatTarget(id){
    return
   }
   if(id){
-   const targets=combatCurrentAttackTargets();
+   const targets=action?.source_data?.casting_spell===true&&typeof combatMagicTargetCandidates==='function'
+    ?combatMagicTargetCandidates(actor,action):combatCurrentAttackTargets();
    if(!targets.has(String(id))){
     combatSelectedTargetId=null;
     renderCombat();
@@ -2994,7 +3054,17 @@ function selectCombatTarget(id){
    }
   }
  }
- combatSelectedTargetId=id||null;renderCombat()
+ combatSelectedTargetId=id||null;
+ if(actor&&action?.status==='planned'&&action.source_data?.casting_spell===true&&
+  (typeof combatSpellTargetType==='function'?combatSpellTargetType(action.source_data):action.source_data.target_type)==='combatant'){
+  const target=id&&combatMagicTargetCandidates(actor,action).has(String(id))?combatants.find(row=>String(row.id)===String(id)):null;
+  const sourceData={...action.source_data,spell_target:target?{type:'combatant',combatant_id:String(target.id),name:target.name_snapshot||''}:null};
+  action.source_data=sourceData;
+  if(typeof dbJson==='function')void dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+  }).catch(error=>console.warn('Kunde inte spara magimålet',error));
+ }
+ renderCombat()
 }
 function combatTokenInitials(name){let a=String(name||'?').trim().split(/\s+/).filter(Boolean);return(a.length>1?(a[0][0]+a[a.length-1][0]):a[0]?.slice(0,2)||'?').toUpperCase()}
 function combatPlayerMiniatureKind(combatant){
@@ -3239,6 +3309,10 @@ function combatMovementDragEnd(event){
 }
 function combatTokenClick(event,combatantId){
  if(Date.now()<combatMovementSuppressClickUntil||Date.now()<combatMapSuppressClickUntil){event?.stopPropagation?.();return}
+ const actor=combatActiveActor(),action=actor&&combatChosenAction(actor),target=combatants.find(row=>String(row.id)===String(combatantId));
+ if(action?.status==='planned'&&action.source_data?.casting_spell===true&&(typeof combatSpellTargetType==='function'?combatSpellTargetType(action.source_data):action.source_data.target_type)==='hexagon'&&target){
+  event?.stopPropagation?.();void combatSetMagicTargetHex(actor.id,target.q,target.r);return
+ }
  selectCombatTarget(combatantId)
 }
 function combatMovementHasUsedMoreThanHalf(combatant){
@@ -3890,6 +3964,35 @@ function combatSpellRangeHexes(actor,action){
  if(scaled)return eg*Number(scaled[1]);
  return Math.max(1,combatWeaponRangeHexes({range:text||'30 m'},actor)||20)
 }
+function combatSpellExplicitRangeHexes(actor,action){
+ const text=String(action?.source_data?.range_text||'').trim();
+ if(/berör|kontakt|touch/i.test(text))return 1;
+ const eg=Math.max(1,Math.floor(Number(action?.source_data?.effect_grade)||1));
+ let match=/^S\s*[x×*]\s*(\d+)\s*rutor?$/i.exec(text);
+ if(match)return eg*Number(match[1]);
+ match=/^(?:STY|SMI)\s*[x×*]\s*(\d+(?:[.,]\d+)?)\s*rutor?$/i.exec(text);
+ if(match){
+  const profile=combatAttackProfile(actor),base=/^STY/i.test(text)?profile.sty:profile.smi;
+  return Math.max(0,Math.floor(combatNumber(base,0)*Number(match[1].replace(',','.'))))
+ }
+ match=/^(\d+(?:[.,]\d+)?)\s*rutor?$/i.exec(text);
+ if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))));
+ match=/^(\d+(?:[.,]\d+)?)\s*m\.?$/i.exec(text);
+ if(match)return Math.max(0,Math.floor(Number(match[1].replace(',','.'))/Math.max(.1,combatNumber(activeCombat?.settings?.hex_m,1.5))));
+ return null
+}
+function combatMagicHexRangeStatus(actor,action,center){
+ const selection=action?.source_data?.spell_target;
+ const mapId=String(combatActiveSceneId()||('combat:'+activeCombat?.id));
+ if(selection?.map_id&&String(selection.map_id)!==mapId)return {valid:false,unresolved:false,range:null,distance:null,reason:'Stridskartan har ändrats.'};
+ if(typeof combatRuntimeHexCells==='function'&&!combatRuntimeHexCells().some(cell=>cell.q===Number(center?.q)&&cell.r===Number(center?.r)))
+  return {valid:false,unresolved:false,range:null,distance:null,reason:'Centrumhexagonen finns inte på den aktuella kartan.'};
+ const range=combatSpellExplicitRangeHexes(actor,action);
+ if(range==null)return {valid:combatCanManage(),unresolved:true,range:null,distance:combatAxialDistance(actor,center)};
+ const distance=combatFootprintDistance(actor,center);
+ const valid=distance<=range&&combatHasLineOfSight(actor,center);
+ return {valid,unresolved:false,range,distance,reason:distance>range?'Centrumhexagonen ligger utanför räckvidden.':'Ingen fri sikt till centrumhexagonen.'}
+}
 function combatFireballTargets(actor=combatActiveActor(),action=combatChosenAction(actor)){
  if(!actor||action?.status!=='planned'||action?.source_data?.casting_spell!==true||action?.source_data?.magic_binding?.kind!=='damage')return new Map();
  const out=new Map(),range=combatSpellRangeHexes(actor,action);
@@ -3908,39 +4011,43 @@ function combatFireballTargets(actor=combatActiveActor(),action=combatChosenActi
  }
  return out
 }
-// BESKYDDARE: (EG + 2)^3 grid cells; on the 2D hex map the footprint is (EG + 2)^2 hexes.
+// BESKYDDARE map abstraction: EG 1 is center + adjacent ring; every added
+// EG expands the footprint by one ring. Vertical height is not simulated.
 function combatBeskyddareSideCells(data){
  const eg=Number(data?.effect_grade);
- return Number.isSafeInteger(eg)&&eg>=1?eg+2:3
+ return Number.isSafeInteger(eg)&&eg>=1?eg:1
 }
 function combatBeskyddareDimensions(data){
- const side=combatBeskyddareSideCells(data);
- return {x:side,y:side,z:side}
+ const radius=combatBeskyddareSideCells(data);
+ return {radius,hexes:1+3*radius*(radius+1)}
 }
 function combatBeskyddareStoredSideCells(parameters){
+ const radius=Number(parameters?.radius_hexes);
+ if(Number.isSafeInteger(radius)&&radius>=1)return radius;
+ // Already placed legacy cubes retain their saved footprint until recast.
  const side=Number(parameters?.cube_side_cells??parameters?.cube_dimensions_cells?.x);
  if(Number.isSafeInteger(side)&&side>=3)return side;
- // Old placed wards used a +3 m/EG axis model. Keep their EG while correcting all sides.
  if(Array.isArray(parameters?.cube_axes))return parameters.cube_axes.length+3;
  const legacy=parameters?.cube_dimensions_m;
  if(legacy&&[legacy.x,legacy.y,legacy.z].every(v=>Number.isFinite(Number(v))&&Number(v)>=3)){
-  const converted=(Number(legacy.x)+Number(legacy.y)+Number(legacy.z))/3;
-  if(Number.isSafeInteger(converted)&&converted>=3)return converted
+  const converted=Math.round((Number(legacy.x)+Number(legacy.y)+Number(legacy.z))/3);
+  if(converted>=3)return converted
  }
  return 3
 }
 function combatBeskyddareAreaParameters(data,sourceActionId){
- const side=combatBeskyddareSideCells(data);
- return {shape:'cube',cube_side_cells:side,cube_dimensions_cells:{x:side,y:side,z:side},
-  effect_grade:side-2,barrier_eg:1,blocks_magic_both_directions:true,
+ const radius=combatBeskyddareSideCells(data);
+ return {shape:'hex_radius',radius_hexes:radius,
+  effect_grade:radius,barrier_eg:1,blocks_magic_both_directions:true,
   object_passage:'ENERGISTRÅLE EG 1 – SL avgör skadan',damage_on_enter:0,
   damage_on_stay:0,damage_on_exit:0,source_action_id:sourceActionId}
 }
 function combatIsBeskyddareArea(area){
- return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&area.parameters?.shape==='cube'
+ return !!area&&combatEffectDefinition({effect_id:area.effect_id})?.code==='area_beskyddare'&&['cube','hex_radius'].includes(area.parameters?.shape)
 }
 function combatBeskyddareContains(area,point){
  if(!combatIsBeskyddareArea(area)||!point)return false;
+ if(area.parameters?.shape==='hex_radius')return combatAxialDistance({q:Number(area.center_q),r:Number(area.center_r)},point)<=combatBeskyddareStoredSideCells(area.parameters);
  const side=combatBeskyddareStoredSideCells(area.parameters);
  const dq=Number(point.q)-Number(area.center_q),dr=Number(point.r)-Number(area.center_r);
  if(!Number.isInteger(dq)||!Number.isInteger(dr))return false;
@@ -3999,6 +4106,30 @@ async function combatSetMagicAreaCenter(actorId,q,r,radius=0){
  });
  action.source_data=sourceData;renderCombat()
 }
+async function combatSetMagicTargetHex(actorId,q,r){
+ const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
+ const data=action?.source_data||{};
+ if(!actor||!action||action.status!=='planned'||data.casting_spell!==true||
+  combatSpellTargetType(data)!=='hexagon'||!combatIsActiveTurn(actor)||combatCannotAct(actor))return;
+ const center={q:Number(q),r:Number(r)},cells=combatRuntimeHexCells();
+ if(!Number.isInteger(center.q)||!Number.isInteger(center.r)||!cells.some(cell=>cell.q===center.q&&cell.r===center.r))return;
+ const status=combatMagicHexRangeStatus(actor,action,center);
+ if(!status.valid){
+  if(status.unresolved)alert('Räckvidden kan inte tolkas automatiskt. SL kan bedöma målet manuellt.');
+  else {combatMagicHexHover={q:center.q,r:center.r,invalid:true};renderCombat()}
+  return
+ }
+ const radius=data.magic_binding?.cube?combatSpellRuleAreaRadius(data):combatSpellRadiusHexes(data);
+ const spellTarget={type:'hexagon',map_id:String(combatActiveSceneId()||('combat:'+activeCombat.id)),
+  coordinates:{q:center.q,r:center.r},center:{q:center.q,r:center.r},radius,
+  range_unresolved:status.unresolved===true};
+ const sourceData={...data,target_type:'hexagon',spell_target:spellTarget,area_center:center,area_radius:radius,target_mode:'hex_area'};
+ await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&status=eq.planned',{
+  method:'PATCH',headers:{'Prefer':'return=minimal'},
+  body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+ });
+ action.source_data=sourceData;combatMagicHexHover=null;renderCombat()
+}
 function combatMagicTargetAllocations(action){
  return Array.isArray(action?.source_data?.target_allocations)?action.source_data.target_allocations:[]
 }
@@ -4050,7 +4181,7 @@ async function combatSetMagicAreaRadius(actorId,delta){
  const actor=combatants.find(row=>String(row.id)===String(actorId)),action=combatChosenAction(actor);
  if(!actor||action?.status!=='planned'||action.source_data?.magic_binding?.kind!=='area')return;
  const radius=Math.max(0,Math.min(15,Number(action.source_data.area_radius||0)+Number(delta||0)));
- const sourceData={...action.source_data,area_radius:radius,area_center:null};
+ const sourceData={...action.source_data,area_radius:radius,area_center:null,spell_target:null};
  await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id),{
   method:'PATCH',headers:{'Prefer':'return=minimal'},
   body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
@@ -4123,9 +4254,9 @@ function combatMagicTargetChooserHtml(actor,action){
   if(action.source_data.magic_binding.cube){
    const d=combatBeskyddareDimensions(action.source_data);
    const confirmed=action.source_data.beskyddare_ritual_confirmed===true;
-   return '<div class="combat-spell-choice"><b>Beskyddare · magisk kub</b>'+
-    '<small>Kubens sida = EG + 2 rutor. EG 1 ger 3 × 3 × 3 rutor.</small>'+
-    '<small>Storlek: '+d.x+' × '+d.y+' × '+d.z+' rutor · permanent · skyddar mot magi i båda riktningarna.</small>'+
+   return '<div class="combat-spell-choice"><b>Beskyddare · magisk skyddszon</b>'+
+    '<small>Kartmodell: EG 1 täcker centrumhexagonen och de sex angränsande. Varje extra EG lägger till en ring. Höjd visas inte på kartan.</small>'+
+    '<small>Skyddszon: radie '+d.radius+' · '+d.hexes+' hexagoner · permanent · magi prövas mot Antimagi EG 1 vid gränsen.</small>'+
     '<small>Välj centrum på magikerns hex eller en intilliggande hex (beröring).</small>'+
     '<small>Ritual med nio stenar. SL bekräftar förberedelsen innan kastet.</small>'+
     '<button type="button" class="btn" onclick="combatConfirmBeskyddareRitual(\''+actor.id+'\')">'+(confirmed?'✓ Ritual bekräftad':'SL: Bekräfta ritual')+'</button>'+
@@ -4185,10 +4316,19 @@ function combatSpellEffectTargets(actor,action){
 }
 async function combatCastManualSpell(actor,action,target=null){
  if(combatCannotAct(actor))throw new Error('Kombatanten kan inte kasta besvärjelser under detta tillstånd.');
- const data=action?.source_data||{},healing=data.magic_binding?.kind==='heal';
- if(!healing&&data.magic_binding?.kind!=='manual')throw new Error('Endast besvärjelser med SL-styrd effekt kan hanteras manuellt.');
+ const data=action?.source_data||{},targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):(data.target_type||data.magic_rule?.target_type||(data.magic_binding?.kind==='area'?'hexagon':['damage','status','heal'].includes(data.magic_binding?.kind)?'combatant':'other'));
+ const healing=data.magic_binding?.kind==='heal'&&targetType==='combatant';
+ if(!healing&&data.magic_binding?.kind!=='manual'&&data.magic_binding?.kind!=='area'&&targetType==='combatant')throw new Error('Besvärjelsen kräver en kombattant som mål.');
+ if(targetType==='hexagon'){
+  const center=data.spell_target?.center||data.area_center;
+  const mapId=String(combatActiveSceneId()||('combat:'+activeCombat.id));
+  if(!center||String(data.spell_target?.map_id||'')!==mapId||!combatMagicHexRangeStatus(actor,action,center).valid)
+   throw new Error('Centrumhexagonen saknas, har ändrats eller ligger utanför tillåten räckvidd.');
+ }
  if(healing&&(!target||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id))))
   throw new Error('HELA kräver ett giltigt mål inom beröringsavstånd.');
+ if(targetType==='combatant'&&!healing&&(!target||!combatSpellEffectTargets(actor,action).some(row=>String(row.id)===String(target.id))))
+  throw new Error('Besvärjelsen kräver ett giltigt kombattantmål inom räckvidd.');
  const spellName=data.spell_name||'Besvärjelse',eg=Math.max(1,Number(data.effect_grade)||1);
  const fv=Math.max(1,(Number(data.spell_fv)||10)-2*(eg-1));
  (typeof window!=='undefined'?window.aleaAudio:null)?.play('magic.cast');
@@ -4200,6 +4340,8 @@ async function combatCastManualSpell(actor,action,target=null){
   confirmation_roll:rolled.confirmation_roll,fv,effect_grade:eg,psy_cost:cost,
   spell_name:spellName,manual_effect:true,effect_applied:false,
   target_id:target?.id||null,target_name:target?.name_snapshot||null,
+  target_type:targetType,spell_target:data.spell_target||null,area_center:data.spell_target?.center||data.area_center||null,
+  area_radius:Number(data.spell_target?.radius??data.area_radius)||0,
   healing_target_id:healing?target.id:null,healing_applied:false,
   healing_pending:healing&&rolled.success,healing_amount:null,healing_restored:null,
   gm_resolution_required:rolled.success,ritual:data.magic_binding.ritual===true};
@@ -4216,7 +4358,7 @@ async function combatCastManualSpell(actor,action,target=null){
  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:round,phase:'magic',
   actor_id:actor.id,target_id:target?.id||null,event_type:healing?'spell_heal':'spell_manual',
-  message:actor.name_snapshot+' kastar '+spellName+(target?' på '+target.name_snapshot:'')+' · '+combatOutcomeLabel(rolled.outcome)+
+  message:actor.name_snapshot+' kastar '+spellName+(target?' på '+target.name_snapshot:data.spell_target?.center?' på hex '+data.spell_target.center.q+','+data.spell_target.center.r:'')+' · '+combatOutcomeLabel(rolled.outcome)+
    (rolled.success?(result.blocked_by_beskyddare?' · Beskyddare stoppar magin':healing?' · inväntar läkning i resultatkortet':' · SL avgör effekten'):' · ingen automatisk effekt'),
   details:result,player_visible:true
  })});
@@ -4341,10 +4483,17 @@ async function combatCastAreaSpell(actor,action){
  if(combatCannotAct(actor))throw new Error('Kan inte kasta under detta tillstånd.');
  const data=action.source_data||{},binding=data.magic_binding;
  const center=data.area_center,radius=Number(data.area_radius??0),eg=Math.max(1,Number(data.effect_grade)||1);
+ const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):(data.target_type||data.magic_rule?.target_type||(data.magic_binding?.kind==='area'?'hexagon':['damage','status','heal'].includes(data.magic_binding?.kind)?'combatant':'other')),selection=data.spell_target;
  if(binding?.kind!=='area'||!binding.supported||!center||
   !Number.isInteger(radius)||radius<0||radius>15||
   !combatRuntimeHexCells().some(c=>c.q===Number(center.q)&&c.r===Number(center.r)))
-  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.'); if(combatFootprintDistance(actor,center)>combatSpellRangeHexes(actor,action)||!combatHasLineOfSight(actor,center))
+  throw new Error('Välj en giltig centrumhex och radie för besvärjelsen.');
+ if(data.target_type==='hexagon'||selection){
+  const mapId=String(typeof combatActiveSceneId==='function'?combatActiveSceneId()||('combat:'+activeCombat.id):activeCombat?.settings?.scene_id||activeCombat?.id||'');
+  if(selection&&String(selection.map_id||'')!==mapId)throw new Error('Stridskartan ändrades efter att målet valdes. Välj centrum igen.');
+  const status=typeof combatMagicHexRangeStatus==='function'?combatMagicHexRangeStatus(actor,action,center):null;
+  if(status&&!status.valid)throw new Error('Områdets centrum är inte längre inom tolkad räckvidd och fri sikt.');
+ }else if(combatFootprintDistance(actor,center)>combatSpellRangeHexes(actor,action)||!combatHasLineOfSight(actor,center))
   throw new Error('Områdets centrum är inte längre inom räckvidd och fri sikt.');
 
  const effect=combatEffectRegistry.find(row=>row.code===binding.code&&row.active);
@@ -4354,9 +4503,17 @@ async function combatCastAreaSpell(actor,action){
  const rolled=await combatExpertRoll(data.spell_name+' · '+actor.name_snapshot,fv),cost=combatSpellActualPsyCost(action,rolled.outcome,eg);
  await combatPayForSpell(actor,cost,action);
  const erf=await combatAwardSpellErf(actor,action,rolled.outcome);
+ const cubeAreaForTarget=binding.cube?{effect_id:effect.id,center_q:center.q,center_r:center.r,
+  parameters:combatBeskyddareAreaParameters(data,action.id)}:null;
+ const selectedAreaCells=binding.cube?combatRuntimeHexCells().filter(cell=>combatBeskyddareContains(cubeAreaForTarget,cell)):combatMagicAreaCells(center,radius);
+ const combatantsInSelectedArea=combatants.filter(row=>!['dead','removed'].includes(row.status)&&
+  combatFootprintCells(row).some(cell=>binding.cube?combatBeskyddareContains(cubeAreaForTarget,cell):selectedAreaCells.some(area=>area.key===combatFootprintKey(cell))));
  const round=Number(activeCombat.round_number)||1,result={success:rolled.success,
   outcome:rolled.outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
-  effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,area_center:center,area_radius:radius};
+  effect_grade:eg,psy_cost:cost,spell_name:data.spell_name,target_type:targetType,spell_target:selection||null,
+  area_center:center,area_radius:radius,
+  area_hexes:selectedAreaCells.map(cell=>({q:cell.q,r:cell.r})),
+  combatants_in_area:combatantsInSelectedArea.map(row=>row.id)};
  if(erf)result.erf=erf;
  if(typeof combatHideMagicResultPopup==='function')combatHideMagicResultPopup();
  (typeof window!=='undefined'?window.aleaAudio:null)?.spellResult(data.spell_name,rolled.outcome);
@@ -4869,6 +5026,16 @@ function combatMapPointerDown(event){
 }
 function combatMapPointerMove(event){
  if(combatMovementDrag){combatMovementDragMove(event);return}
+ const hoverActor=typeof combatActiveActor==='function'?combatActiveActor():null,hoverAction=hoverActor&&combatChosenAction(hoverActor);
+ if(typeof combatSpellTargetType==='function'&&(event.pointerType||combatMapLastPointerType)==='mouse'&&hoverAction?.status==='planned'&&
+  hoverAction.source_data?.casting_spell===true&&combatSpellTargetType(hoverAction.source_data)==='hexagon'){
+  const polygon=event.target?.closest?.('polygon.combat-hex');
+  let cell=polygon?{q:Number(polygon.dataset.q),r:Number(polygon.dataset.r)}:null;
+  if(!cell){const point=combatSvgPoint(event,event.currentTarget);cell=point?combatNearestRuntimeCell(point):null}
+  if(cell&&(!combatMagicHexHover||cell.q!==combatMagicHexHover.q||cell.r!==combatMagicHexHover.r)){
+   combatMagicHexHover=cell;combatMapUpdateMagicHexHover()
+  }
+ }
  const tracked=combatMapPointers.get(event.pointerId);
  if(!tracked)return;
  combatMapPointers.set(event.pointerId,{x:event.clientX,y:event.clientY,pointerType:tracked.pointerType||event.pointerType||'mouse'});
@@ -4942,6 +5109,42 @@ function combatMovementHitTargetsHtml(cells,reachable,planningActor,originKey,g)
    cell.q+','+cell.r+')" points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+
    '"><title>Förflytta till '+cell.q+','+cell.r+' · dubbelklicka för att genomföra</title></polygon>').join('')
 }
+function combatMagicHexTargetOverlayPolygons(cells,actor,action,center,radius,preview=false){
+ if(!center)return '';
+ const status=combatMagicHexRangeStatus(actor,action,center),g=combatRuntimeGeometry();
+ if(!g)return '';
+ const affected=new Set(combatMagicAreaCells(center,radius).map(cell=>cell.key));
+ return cells.filter(cell=>affected.has(cell.key)).map(cell=>{
+  const isCenter=cell.q===Number(center.q)&&cell.r===Number(center.r);
+  const cls=preview?'spell-hex-hover'+(!status.valid?' invalid':''):isCenter?'spell-hex-center'+(!status.valid?' invalid':''):'spell-hex-area'+(!status.valid?' invalid':'');
+  const title=(preview?'Förhandsvisning · ':'')+(isCenter?'Centrumhexagon':'Effektområde')+' '+cell.q+','+cell.r+
+   (status.unresolved?' · SL bedömer räckvidden':status.range!=null?' · '+status.distance+'/'+status.range+' hex':'');
+  return '<polygon class="'+cls+'" pointer-events="none" fill="'+(isCenter?'#e4b74e':'#cda951')+'" fill-opacity="'+(isCenter?'.10':'.11')+'" stroke="'+(isCenter?'#ffd56c':'#dfbd6c')+'" stroke-opacity="'+(isCenter?'.96':'.56')+'" stroke-width="'+(isCenter?'3.2':'1.35')+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.92)+'"><title>'+escAttr(title)+'</title></polygon>'
+ }).join('')
+}
+function combatMagicHexTargetOverlayHtml(cells,actor,action,center){
+ const data=action?.source_data||{},radius=Number(data.spell_target?.radius??data.area_radius??combatSpellRadiusHexes(data))||0;
+ const hover=combatMagicHexHover&&!(center&&combatMagicHexHover.q===Number(center.q)&&combatMagicHexHover.r===Number(center.r))?combatMagicHexHover:null;
+ return '<g id="combatMagicHexOverlay" aria-hidden="true">'+
+  combatMagicHexTargetOverlayPolygons(cells,actor,action,center,radius,false)+
+  (hover?combatMagicHexTargetOverlayPolygons(cells,actor,action,hover,radius,true):'')+'</g>'
+}
+function combatMapUpdateMagicHexHover(){
+ const layer=document.querySelector('#combatPage .combat-map-svg #combatMagicHexOverlay');if(!layer)return;
+ const actor=combatActiveActor(),action=actor&&combatChosenAction(actor);
+ if(!actor||action?.status!=='planned'||action.source_data?.casting_spell!==true||combatSpellTargetType(action.source_data)!=='hexagon'){
+  layer.innerHTML='';return
+ }
+ const data=action.source_data,center=data.spell_target?.center||data.area_center||null;
+ const radius=Number(data.spell_target?.radius??data.area_radius??combatSpellRadiusHexes(data))||0;
+ const hover=combatMagicHexHover&&!(center&&combatMagicHexHover.q===Number(center.q)&&combatMagicHexHover.r===Number(center.r))?combatMagicHexHover:null;
+ const cells=combatRuntimeHexCells();
+ layer.innerHTML=combatMagicHexTargetOverlayPolygons(cells,actor,action,center,radius,false)+
+  (hover?combatMagicHexTargetOverlayPolygons(cells,actor,action,hover,radius,true):'')
+}
+function combatMapPointerLeave(event){
+ if(event?.pointerType!=='touch'){combatMagicHexHover=null;combatMapUpdateMagicHexHover()}
+}
 function renderCombatMap(){
  const g=combatRuntimeGeometry();
  if(!g){
@@ -4965,7 +5168,8 @@ function renderCombatMap(){
  const areaMode=combatAreaPlacementActive&&combatCanManage();
   const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
  const currentMagic=actor&&combatChosenAction(actor);
- const spellAreaMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&currentMagic.source_data.magic_binding?.kind==='area';
+ const spellHexMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&combatSpellTargetType(currentMagic.source_data)==='hexagon';
+ const spellAreaMode=spellHexMode&&currentMagic.source_data?.magic_binding?.kind==='area';
  const cubePreview=spellAreaMode&&currentMagic.source_data?.magic_binding?.cube&&currentMagic.source_data?.area_center?
    {center_q:currentMagic.source_data.area_center.q,center_r:currentMagic.source_data.area_center.r,
     effect_id:combatEffectRegistry.find(d=>d.code==='area_beskyddare'&&d.active)?.id,
@@ -4991,8 +5195,8 @@ function renderCombatMap(){
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
   if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked'&&combatFootprintCanStand(combatants.find(c=>String(c.id)===String(combatGmPlacementId)),cell.q,cell.r))cls.push('gm-placement-hex');
-   const clickable=gmPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
+   const clickable=gmPlaceMode||spellHexMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':spellHexMode?'onclick="combatSetMagicTargetHex(\''+actor.id+'\','+cell.q+','+cell.r+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
@@ -5013,9 +5217,12 @@ function renderCombatMap(){
    codes.some(x=>x==='area_fire')?'#fa7045':
    codes.some(x=>x==='area_poison')?'#70c97b':
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
-  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' '+Array(3).fill(combatBeskyddareStoredSideCells(area.parameters)).join('×')+' rutor':name}).join(', ');
-  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares kub':names||'Valt centrum')+'</title></polygon>'
+  const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' · radie '+combatBeskyddareStoredSideCells(area.parameters):name}).join(', ');
+  return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares skyddszon':names||'Valt centrum')+'</title></polygon>'
  }).join('');
+ const targetData=spellHexMode?currentMagic.source_data:null;
+ const targetCenter=targetData?.spell_target?.center||targetData?.area_center||null;
+ const magicTargetOverlay=targetData?combatMagicHexTargetOverlayHtml(cells,actor,currentMagic,targetCenter):'';
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
   const displayQ=isPlanning&&combatMovementPlan?Number(combatMovementPlan.q):Number(c.q)||0;
@@ -5065,12 +5272,12 @@ function renderCombatMap(){
  }).join('');
  // Invisible click layer ABOVE miniatures; ensures the preview cannot swallow
  // the second click while planning a desktop double-click movement.
- const movementHitTargets=planningActor&&!gmPlaceMode&&!spellAreaMode&&!areaMode
+ const movementHitTargets=planningActor&&!gmPlaceMode&&!spellHexMode&&!areaMode
   ?combatMovementHitTargetsHtml(cells,reachable,planningActor,originKey,g):'';
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+roadLine+areasOverlay+tokens+movementHitTargets+'</svg>'
+ return '<svg class="combat-map-svg'+(spellHexMode?' spell-hex-targeting ':'')+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerleave="combatMapPointerLeave(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+roadLine+areasOverlay+magicTargetOverlay+tokens+movementHitTargets+'</svg>'
 }
 
 // Stridsdeltagare bär sitt porträtts lagringssökväg i state. Den är
@@ -5558,7 +5765,7 @@ function combatSpellResultHtml(action){
  let note;
  if(result.awaiting_antimagic)note='Kastet lyckades. Målet kan fortfarande reagera med Antimagi.';
  else if(result.antimagic?.reflected)note='Antimagi har reflekterat besvärjelsen. SL avgör eventuell återverkan.';
- else if(result.blocked_by_beskyddare)note='Beskyddares kub stoppade magin vid gränsen. Besvärjelsen trängde inte igenom.';
+ else if(result.blocked_by_beskyddare)note='Beskyddares skyddszon stoppade magin vid gränsen. Besvärjelsen trängde inte igenom.';
  else if(result.blocked_target_ids?.length)note='Beskyddare stoppade magin mot vissa mål. Övriga mål påverkas normalt.';
  else if(!success)note='Besvärjelsen misslyckades. Ingen magisk effekt tilldelas.';
  else if(result.resisted)note='Besvärjelsen lyckades, men målet stod emot effekten.';
@@ -5679,13 +5886,19 @@ function combatMagicHeaderHtml(actor,target,data,canChooseTarget=false,artwork=n
 }
 function combatMagicTargetIsReady(actor,action){
  const data=action?.source_data||{};
+ const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):
+  (data.target_type||data.magic_rule?.target_type||(['damage','status','heal'].includes(data.magic_binding?.kind)?'combatant':'other'));
  return !!actor&&action?.status==='planned'&&data.casting_spell===true&&
-  ['damage','status','heal'].includes(data.magic_binding?.kind)&&
+  targetType==='combatant'&&
+  ['damage','status','heal','manual','area'].includes(data.magic_binding?.kind)&&
   (Number(activeCombat?.round_number)||1)>=(Number(data.ready_round)||1)&&
   combatIsActiveTurn(actor)&&!combatCannotAct(actor)
 }
 function combatMagicTargetCandidates(actor,action){
  const kind=action?.source_data?.magic_binding?.kind;
+ const data=action?.source_data||{},targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):
+  (data.target_type||data.magic_rule?.target_type||(['damage','status','heal'].includes(kind)?'combatant':'other'));
+ if(targetType!=='combatant')return new Map();
  if(!combatMagicTargetIsReady(actor,action))return new Map();
  if(kind==='damage')return combatFireballTargets(actor,action);
  return new Map(combatSpellEffectTargets(actor,action).map(target=>[
@@ -5703,13 +5916,23 @@ function combatChooseMagicTarget(id){
  if(!combatMagicTargetCandidates(actor,action).has(String(id)))return;
  combatMobileMagicTargetPickerOpen=false;
  combatSelectedTargetId=String(id);
+ if(action?.source_data&&typeof dbJson==='function'){
+  const target=combatants.find(row=>String(row.id)===String(id));
+  const sourceData={...action.source_data,target_type:'combatant',spell_target:{type:'combatant',combatant_id:String(id),name:target?.name_snapshot||''}};
+  action.source_data=sourceData;
+  void dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&status=eq.planned',{
+   method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({source_data:sourceData,updated_at:new Date().toISOString()})
+  }).catch(error=>console.warn('Kunde inte spara magimålet',error));
+ }
  combatCloseRowActionMenu();
  renderCombat()
 }
 function combatMagicTargetPickerHtml(actor,action){
  const data=action?.source_data||{},kind=data.magic_binding?.kind;
+ const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):
+  (data.target_type||data.magic_rule?.target_type||(['damage','status','heal'].includes(kind)?'combatant':'other'));
  if(!actor||action?.status!=='planned'||data.casting_spell!==true||
-  !['damage','status','heal'].includes(kind))return '';
+  !['damage','status','heal','manual','area'].includes(kind)||targetType!=='combatant')return '';
  const currentRound=Number(activeCombat?.round_number)||1,readyRound=Number(data.ready_round)||currentRound;
  // During preparation, keep the entire target picker hidden.
  if(currentRound<readyRound)return '';
@@ -5744,15 +5967,20 @@ function combatMagicStatusHtml(label,detail,state){
 function combatMagicConfirmHtml(actor,action,casting,readyRound,currentRound){
  if(action?.status!=='planned'||!combatIsActiveTurn(actor))return '';
  const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
+ const targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):(data.target_type||data.magic_rule?.target_type||(data.magic_binding?.kind==='area'?'hexagon':['damage','status','heal'].includes(data.magic_binding?.kind)?'combatant':'other')),hexCenter=data.spell_target?.center||data.area_center;
  const waiting=casting&&currentRound<readyRound;
  const selected=String(combatSelectedTargetId||'');
  const candidates=casting&&!waiting?combatMagicTargetCandidates(actor,action):new Map();
  const validTarget=candidates.has(selected);
+ const combatantTargetReady=targetType!=='combatant'||validTarget;
  const healing=kind==='heal'&&casting&&!waiting&&
   typeof combatHealingTarget==='function'&&!!combatHealingTarget(actor,action,selected);
  const area=kind==='area'&&!!data.area_center&&
   (!data.magic_binding?.cube||data.beskyddare_ritual_confirmed===true);
- const ready=!waiting&&(!casting||kind==='manual'||area||healing||
+ const hexReady=targetType!=='hexagon'||!!hexCenter&&
+  (typeof combatMagicHexRangeStatus!=='function'||combatMagicHexRangeStatus(actor,action,hexCenter).valid);
+ const ready=!waiting&&(!casting||targetType==='other'||kind==='manual'&&hexReady&&combatantTargetReady||area&&targetType!=='combatant'&&hexReady||
+  targetType==='hexagon'&&kind!=='area'&&hexReady||targetType==='combatant'&&combatantTargetReady||healing||
   (['damage','status'].includes(kind)&&validTarget));
  const caption=!casting?(data.magic_casting?.quick?'Starta kvick besvärjelse':'Förbered besvärjelse'):
   waiting?'Klar i SR '+readyRound:'✦ Bekräfta kast';
@@ -5772,7 +6000,7 @@ function combatSpellCastPanelHtml(){
  if(!action||String(action.combatant_id)!==String(actor.id)||
     combatActionDefinition(action)?.key!=='spell_cast'||
     !action.source_data?.spell_prepared)return '';
- const data=action.source_data||{},kind=data.magic_binding?.kind||'manual';
+ const data=action.source_data||{},kind=data.magic_binding?.kind||'manual',targetType=typeof combatSpellTargetType==='function'?combatSpellTargetType(data):(data.target_type||data.magic_rule?.target_type||(data.magic_binding?.kind==='area'?'hexagon':['damage','status','heal'].includes(data.magic_binding?.kind)?'combatant':'other'));
  const casting=data.casting_spell===true,resolved=action.status==='resolved';
  // Use snapshotted artwork, or recover the master image for older prepared casts.
  // Keep the spell artwork for the center frame, never as a full-panel background.
@@ -5816,6 +6044,15 @@ function combatSpellCastPanelHtml(){
  }else if(kind==='area'&&data.magic_binding?.cube&&!data.beskyddare_ritual_confirmed){
   label='Väntar på SL';detail='Ritualen måste bekräftas';state='preparing';
   instruction='SL bekräftar ritualen innan besvärjelsen kastas.';
+ }else if(targetType==='hexagon'&&!(data.spell_target?.center||data.area_center)){
+  label='Välj centrumhex';detail='Kartan visar besvärjelsens räckvidd';state='target';
+  instruction='Peka på kartan för förhandsvisning och tryck på en hexagon för att välja centrum.';
+ }else if(targetType==='hexagon'&&typeof combatMagicHexRangeStatus==='function'&&!combatMagicHexRangeStatus(actor,action,data.spell_target?.center||data.area_center).valid){
+  label='Ogiltigt centrum';detail='Räckvidd eller fri sikt har ändrats';state='target';
+  instruction='Välj en giltig centrumhexagon igen.';
+ }else if(targetType==='combatant'&&typeof combatMagicTargetCandidates==='function'&&!combatMagicTargetCandidates(actor,action).has(targetId)){
+  label='Välj kombattant';detail='Klar för färdighetsslag';state='target';
+  instruction='Välj en giltig kombattant på kartan eller i turordningen.';
  }else if(kind==='area'&&!data.area_center){
   label='Välj område';detail='Välj centrum på kartan';state='target';
   instruction='Välj ett centrum på kartan.';

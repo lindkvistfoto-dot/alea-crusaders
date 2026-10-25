@@ -3211,6 +3211,19 @@ body:not(.editing) #skilltable .skill-roll-btn{
  cursor:grab;
 }
 .combat-map-svg.zoomed:active{cursor:grabbing}
+.combat-map-svg.spell-hex-targeting{cursor:crosshair}
+.combat-map-svg .spell-hex-area,
+.combat-map-svg .spell-hex-hover,
+.combat-map-svg .spell-hex-center{
+ filter:drop-shadow(0 0 2px rgba(244,198,91,.42));
+ transition:fill-opacity .13s ease,stroke-opacity .13s ease,stroke-width .13s ease;
+}
+.combat-map-svg .spell-hex-hover{fill-opacity:.085!important;stroke-opacity:.66!important;stroke-width:2!important}
+.combat-map-svg .spell-hex-hover.invalid,
+.combat-map-svg .spell-hex-center.invalid{fill:#b95743!important;stroke:#ff9274!important;stroke-opacity:.9!important}
+.combat-map-svg .spell-hex-center{fill-opacity:.15!important;animation:combatSpellHexPulse 2.8s ease-in-out infinite}
+@keyframes combatSpellHexPulse{0%,100%{filter:drop-shadow(0 0 2px rgba(244,198,91,.5))}50%{filter:drop-shadow(0 0 6px rgba(244,198,91,.72))}}
+@media(prefers-reduced-motion:reduce){.combat-map-svg .spell-hex-center{animation:none}}
 .combat-token-group{cursor:pointer}
 .combat-token-group.movement-planning{cursor:grab}
 @media(max-width:700px){

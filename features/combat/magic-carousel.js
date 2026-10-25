@@ -515,7 +515,7 @@ async function combatCancelPreparedSpell(actorId){
    method:'PATCH',headers:{Prefer:'return=minimal'},
    body:JSON.stringify({status:'cancelled',updated_at:new Date().toISOString()})
   });
-  combatSelectedTargetId=null;combatMobileMagicTargetPickerOpen=false;
+  combatSelectedTargetId=null;combatMagicHexHover=null;combatMobileMagicTargetPickerOpen=false;
   combatCloseRowActionMenu();
   await loadActiveCombat(null,{preserveSelectedTarget:false});
   const current=combatants.find(row=>String(row.id)===String(actorId));

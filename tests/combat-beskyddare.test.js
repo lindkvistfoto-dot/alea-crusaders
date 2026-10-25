@@ -11,6 +11,7 @@ const logic=code('function combatBeskyddareSideCells(', 'function combatMagicAre
 function harness(){
  const env={activeCombat:{round_number:8},
   combatAreaEffects:[],combatEffectDefinition:({effect_id})=>effect_id==='ward'?{code:'area_beskyddare',active:true,target_type:'area'}:null,
+  combatAxialDistance:(a,b)=>Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r)),
   combatAreaActive:row=>row.status==='active',
   combatHexLine:(a,b)=>{
    const distance=Math.abs(Number(b.q)-Number(a.q)),line=[];
@@ -27,21 +28,22 @@ function harness(){
  env.combatAreaEffects.push(area);
  return {env,area,api:env.api}
 }
-describe('BESKYDDARE · permanent kubisk spärr i båda riktningar',()=>{
- test('Kubens sidlängd är EG + 2 rutor, i alla tre dimensioner',()=>{
+describe('BESKYDDARE · permanent hexringzon med spärr i båda riktningar',()=>{
+ test('radie ökar en hexring per effektgrad och sparas som kartabstraktion',()=>{
   const {api}=harness();
-  expect(api.combatBeskyddareDimensions({effect_grade:1})).toEqual({x:3,y:3,z:3});
-  expect(api.combatBeskyddareDimensions({effect_grade:4})).toEqual({x:6,y:6,z:6});
-  expect(api.combatBeskyddareDimensions({effect_grade:3})).toEqual({x:5,y:5,z:5});
+  expect(api.combatBeskyddareDimensions({effect_grade:1})).toEqual({radius:1,hexes:7});
+  expect(api.combatBeskyddareDimensions({effect_grade:4})).toEqual({radius:4,hexes:61});
+  expect(api.combatBeskyddareDimensions({effect_grade:3})).toEqual({radius:3,hexes:37});
   const params=api.combatBeskyddareAreaParameters({effect_grade:2},'a');
-  expect(params.cube_dimensions_cells).toEqual({x:4,y:4,z:4});
+  expect(params).toMatchObject({shape:'hex_radius',radius_hexes:2,effect_grade:2});
   expect(params.barrier_eg).toBe(1);
   expect(params.blocks_magic_both_directions).toBe(true);
  });
  test('barriären stoppar passage från insida till utsida och omvänt, men inte magi inuti',()=>{
   const {api,area}=harness();
   expect(api.combatBeskyddareContains(area,{q:0,r:0})).toBe(true);
-  expect(api.combatBeskyddareContains(area,{q:4,r:0})).toBe(false);
+  expect(api.combatBeskyddareContains(area,{q:1,r:0})).toBe(true);
+  expect(api.combatBeskyddareContains(area,{q:2,r:0})).toBe(false);
   expect(api.combatBeskyddareCrossings({q:0,r:0},{q:4,r:0})).toHaveLength(1);
   expect(api.combatBeskyddareCrossings({q:4,r:0},{q:0,r:0})).toHaveLength(1);
   expect(api.combatBeskyddareCrossings({q:-4,r:0},{q:4,r:0})).toHaveLength(1);
@@ -64,8 +66,9 @@ describe('BESKYDDARE · permanent kubisk spärr i båda riktningar',()=>{
    kind:'area',cube:true,code:'area_beskyddare',ritual:true,supported:true
   })
  });
- test('området visas som kub med dess tre mått',()=>{
+ test('området visas som en förenklad hexring på kartan',()=>{
   expect(rt).toContain("const shape=combatIsBeskyddareArea(a)");
   expect(rt).toContain("codes.some(x=>x==='area_beskyddare')");
+  expect(rt).toContain('Beskyddares skyddszon');
  });
 });
