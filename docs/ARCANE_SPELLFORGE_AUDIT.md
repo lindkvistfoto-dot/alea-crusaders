@@ -47,6 +47,38 @@ Library-sökningen gav ingen verifierbar DoD Expert/Magiboken-fil. Den publikt h
 - Inte täckt i körd simulering ännu: faktiska tärningsresultat/perfekt/misslyckande, målval, hexgeometri, områdesgränser, avstånd, förberedelse/avbrottslivscykel, antiframes, samtidiga effekter, verkan över tid och återställning. Skälet är att sviten ännu inte körts och dessa fall kräver mer av runtime-kontraktet eller isolerad test-double-data.
 - Drakar och Demoner Expert-jämförelse: inte fullföljd. Ingen säker slutsats dras om enskilda saknade regler eftersom verifierbart regelunderlag inte har bifogats eller hämtats in i denna kontroll.
 
+## Fynd med reproduktionssteg
+
+### SF-DATA-001 — kärnfält saknas i registerdefinitioner
+
+- **Klassificering:** P2 · datafel/ofullständig definition.
+- **Förväntat beteende:** Varje besvärjelse har tillämpliga mål- och effektuppgifter. Motståndsregeln anges om sådan finns; annars dokumenteras att motstånd inte gäller eller att regeln är oklar.
+- **Faktiskt beteende:** Av 91 rader saknar 84 `target_text`, 88 `effect_per_eg` och 90 `resistance_text`. Beskrivning finns på samtliga rader. Skolreferenser och måltyper är giltiga.
+- **Reproducerbart testfall:** Läs-only SQL: `select count(*) filter(where btrim(target_text)=''), count(*) filter(where btrim(effect_per_eg)=''), count(*) filter(where btrim(resistance_text)='') from public.rule_spells;` För spell-specifika exempel: `select spell_key,name,target_text,effect_per_eg,resistance_text from public.rule_spells where btrim(effect_per_eg)='';`
+- **Sannolik grundorsak:** Fälten har inte fyllts för majoriteten av raderna, medan innehållet huvudsakligen ligger i beskrivning/anteckningar eller är avsett för SL.
+- **Föreslagen åtgärd:** Jämför per rad mot kontrollerad Expert-källa; registrera tydligt tillämplighet/oklarhet. Ingen produktionsändring i denna operation.
+- **Prioritet:** P2, datakomplettering styrd av källkontroll.
+
+### SF-CODE-001 — generisk manuell fallback gör automationens omfattning oklar
+
+- **Klassificering:** P2 · saknad funktionalitet eller avsiktlig SL-lösning (designfråga).
+- **Förväntat beteende:** Besvärjelsens verifierade effekt ska antingen kunna hanteras av kod eller uttryckligen markeras som avsiktligt manuell SL-lösning.
+- **Faktiskt beteende:** `combatMagicBinding` returnerar `kind:'manual', supported:true` för omappade namn. Kastslingan kan därmed fortsätta trots att ingen automatisk effekt tillämpas. Besvärjelser som FINNA VATTEN visar samma generiska fallback. `supported:true` anger inte att hela effekten är automatiserad.
+- **Reproducerbart testfall:** I Vitest-kontekst, anropa `combatMagicBinding({name:'FINNA VATTEN'})`; kontrollera `kind === 'manual'` och `supported === true`. Inga kampanj- eller stridsrader krävs.
+- **Sannolik grundorsak:** Automatisk effektbindning är begränsad till utpekade spell-profiler; okända effekter är avsiktligt reserverade för SL.
+- **Föreslagen åtgärd:** Lägg till ett explicit automationsläge per besvärjelse (automatisk, manuell SL, blockerad av oklar regel) efter design-/källgenomgång. Utöka därefter sviten med verkanstest för respektive vald automationsnivå.
+- **Prioritet:** P2 tills avsikten är fastställd; höjs till P1 för spells som beslutas behöva automation men inte kan användas korrekt.
+
+### SF-RULE-001 — Expert-regelkälla kunde inte verifieras
+
+- **Klassificering:** P3 · regeloklarhet/underlagslucka.
+- **Förväntat beteende:** Varje förväntat resultat bygger på tillgänglig, identifierad Expert-regeltext.
+- **Faktiskt beteende:** Ingen regelbok hittades i Library-sökningen. Koden kommenterar kastningskostnad/timing med en hänvisning till Expert Magiboken s. 3–5, men själva källan kunde inte granskas. Därför har lyckat/misslyckat/perfekt resultat, flera mål, räckvidd/area, varaktighet och interaktioner inte bedömts mot en auktoritativ text.
+- **Reproducerbart testfall:** Upprepa Library-sökningen på “Drakar och Demoner Expert magiboken besvärjelser”; ingen verifierbar regelkälla returneras.
+- **Sannolik grundorsak:** Regelunderlaget är inte tillgängligt i projektets anslutna filer.
+- **Föreslagen åtgärd:** Tillför relevant, tillåten regelreferens eller sidangivna utdrag till arbetsflödet; håll oklara delar markerade tills dess.
+- **Prioritet:** P3 som underlagslucka; blockerar regelriktiga acceptanskriterier.
+
 ## Felklassificering och prioriterad åtgärdslista
 
 1. **P1 · Saknad funktionalitet / kod och regelverifiering:** Effektdefinition saknas eller körs manuellt för flertalet spells. Inventera varje binding mot verifierat Expert-underlag innan automation byggs.
