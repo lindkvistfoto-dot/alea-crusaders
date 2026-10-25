@@ -82,7 +82,7 @@ Deno.serve(async req=>{
   if(targetError||!target)return fail(404,"SYMBOL_NOT_FOUND","Symbolen hittades inte. Ladda om administrationen.");
   const field=({icon:"icon_path",effect:"effect_image_path",cutout:"cutout_path",illustration:"illustration_path","illustration-wide":"illustration_wide_path"} as Record<string,string>)[imageType];
   const contentType=(req.headers.get("content-type")||"").split(";")[0].toLowerCase();
-  if(!["image/png","image/jpeg","image/webp"].includes(contentType))return fail(415,"UNSUPPORTED_IMAGE_TYPE","Välj PNG, JPEG eller WebP.");
+  if(contentType!=="image/png")return fail(415,"UNSUPPORTED_IMAGE_TYPE","HERMES-original ska vara PNG. Exportera bilden som PNG och försök igen.");
   if(["icon","cutout"].includes(imageType)&&!["image/png","image/webp"].includes(contentType))
     return fail(415,"TRANSPARENCY_FORMAT_REQUIRED","Ikon och cutout behöver transparent PNG eller WebP.");
   let raw:Uint8Array;
