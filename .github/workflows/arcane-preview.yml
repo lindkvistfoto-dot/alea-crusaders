@@ -1,0 +1,32 @@
+name: ARCANE PREVIEW — PR validation
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Build isolated PR snapshot
+        run: npm run build
+      - name: Upload preview build
+        uses: actions/upload-artifact@v4
+        with:
+          name: arcane-preview-pr-${{ github.event.pull_request.number || github.run_number }}
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
