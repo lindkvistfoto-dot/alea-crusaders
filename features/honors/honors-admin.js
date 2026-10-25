@@ -195,7 +195,7 @@ export function renderHonorsAdmin(root, options = {}) {
       const value=data['frame_'+metal]; delete data['frame_'+metal];
       if (value) data.badge_frame_assets[metal]=value;
     }
-    data.frame_family = data.category === 'badge' ? 'arcane-laurel-badge' : null;
+    data.frame_family = data.category === 'badge' ? 'arcane_laurel_badge' : null;
     data.grant_mode = data.status === 'draft' ? 'manual' : data.grant_mode;
     if (editing) data.id=editing.id;
     const errors=validateHonorDefinition(data);
