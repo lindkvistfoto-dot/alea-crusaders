@@ -43,6 +43,10 @@
   for(const [key,label] of [['icon_path','Ikon'],['effect_image_path','Effektbild'],['cutout_path','Cutout'],['illustration_path','Illustration 1:1'],['illustration_wide_path','Illustration wide']]){
    const field=document.createElement('div');field.className='spell-art-status';
    field.textContent=label+': '+(row[key]?'Registrerad':'Saknas');
+   if(key==='icon_path'&&valid(String(row[key]||''),String(row.symbol_key||''))){
+    const image=document.createElement('img');image.alt='Aktuell symbolikon';image.loading='lazy';image.width=96;image.height=96;
+    image.src=src(row[key]);field.appendChild(image);
+   }
    art.appendChild(field);
   }
   const actions=document.createElement('div');actions.className='rule-editor-actions';
