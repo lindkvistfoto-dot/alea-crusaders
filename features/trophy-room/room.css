@@ -63,3 +63,9 @@
 .trophy-room-back-button{position:absolute;left:12px;top:12px;z-index:10;pointer-events:auto;min-height:44px;padding:8px 14px;border:1px solid #c49b5e;border-radius:9px;background:#1c1510e8;color:#f1dab0;font:600 14px Georgia,serif;box-shadow:0 3px 12px #0008}
 .trophy-room-back-button[hidden]{display:none}
 .trophy-room-back-button:focus-visible{outline:2px solid #f0d18e;outline-offset:2px}
+
+/* JAKOB: predefined camera positions only; Centrera is the return action. */
+#trophyRoomPage .trophy-room-toolbar button[aria-label="Zooma ut"],
+#trophyRoomPage .trophy-room-toolbar button[aria-label="Zooma in"],
+#trophyRoomPage #trophyRoomZoomValue{display:none}
+#trophyRoomPage .trophy-room-toolbar{justify-content:center}
