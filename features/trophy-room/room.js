@@ -6,6 +6,7 @@ function draw(){
  const v=viewport();if(!v)return;
  const scene=byId('trophyRoomScene'),hero=byId('trophyRoomCharacterLayer');
  const progress=clamp((scale-1)/1.25,0,1);
+ v.style.setProperty('--pan-x',x+'px');v.style.setProperty('--pan-y',y+'px');v.style.setProperty('--zoom',String(scale));
  if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
