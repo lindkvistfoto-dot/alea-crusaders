@@ -195,8 +195,8 @@ def fail_job(job,error):
         "PUBLIC_READBACK_MISMATCH","RESPONSE_TOO_LARGE","INBOX_ARCHIVE_ORDER_VIOLATION"
     }
     message=str(error)
-    code=message if message in permanent else type(error).__name__.upper()
-    if message in permanent:attempts=12
+    code=message if message in permanent else ("IMAGE_PROFILE_INVALID" if isinstance(error,ValueError) else type(error).__name__.upper())
+    if message in permanent or isinstance(error,ValueError):attempts=12
     delay=min(3600,30*(2**min(max(attempts-1,0),7)))
     try:
         patch_job(job,{"state":"failed","attempts":attempts,"error_code":code,
