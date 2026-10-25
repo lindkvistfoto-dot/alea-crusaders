@@ -18,6 +18,7 @@ export default defineConfig({
   plugins: [
     copyStaticTree("alea-copy-legacy", "legacy", "legacy"),
     copyStaticTree("alea-copy-features", "features", "features"),
+    copyStaticTree("alea-copy-preview", "preview", "preview"),
     copyStaticTree("alea-copy-dice-assets", "alea-dicebox-assets-v1.1.4", "alea-dicebox-assets-v1.1.4"),
     copyStaticTree("alea-copy-committed-round-art", "assets/combat/round", "assets/combat/round"),
     copyStaticTree("alea-copy-arcane-system-art", "assets/arcane/system", "assets/arcane/system"),
