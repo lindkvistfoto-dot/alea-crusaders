@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "purpose": "HERMES medal publication preflight only; NOT an executable queue",
-  "status": "inbox-archive-metadata-verified-awaiting-binary-sha256",
+  "status": "verified-ready-for-hermes-queue",
   "items": [
     {
       "asset_key": "arcane-adventure-medal-den-femte-konfluxen-v1",
@@ -10,11 +10,13 @@
       "archive_filename": "DEN_FEMTE_KONFLUXEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2482908,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "1df9d6fe0b6fc5e36fcce3d94ae65839891ddd3e6d4018374abab6b07f5d90ba",
       "inbox_file_id": "1T0GkstnRZtLMan_592-rCxWVlZSMY3ka",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2482908,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-kristalltjuren-v1",
@@ -23,11 +25,13 @@
       "archive_filename": "KRISTALLTJUREN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2170610,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "ad19a16a7c382ac2aaee104eed041924a8c17de4542fc22087443ccd12b575c2",
       "inbox_file_id": "15vKoEvEMczpPe3OJ6PyUcVOD3yljrfMh",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2170610,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-demonprinsen-v1",
@@ -36,11 +40,13 @@
       "archive_filename": "DEMONPRINSEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2673633,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "3b522a3520984a5bfd6f408cc1d5f92827c3cb83acc106b0609d4101da3132b3",
       "inbox_file_id": "1mJith1Ppbglt1qfTgc8bo2E8Iv-Wnitd",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2673633,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-slutstriden-nidlandska-reningen-v1",
@@ -49,11 +55,13 @@
       "archive_filename": "NIDLAND_SLUTSTRIDEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2637359,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "5a8aa5620b3c48a8fe917d1ba889f488d79d6386747bb8939b4dc67de640e9a8",
       "inbox_file_id": "1zA45gWxsN3NlQBnwlv7Mn8tGX_ktBnU6",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2637359,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-melindors-aterkomst-v1",
@@ -62,11 +70,13 @@
       "archive_filename": "MELINDORS_ATERKOMST_MEDAL_V1_MASTER.png",
       "archive_bytes": 2477376,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "238f7cf4672ef6c6ff32defdb881294020e63068e7b000f038d393eda7e395a4",
       "inbox_file_id": "1CYaRTpc69e8-kaR3OIsXNY7kSfV1ZXrK",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2477376,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-helvetesfortet-v1",
@@ -75,11 +85,13 @@
       "archive_filename": "HELVETESFORTET_MEDAL_V1_MASTER.png",
       "archive_bytes": 2605821,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "ada50292106ef1953695ca8c9b845c1e776307604cff01a6c79021dd2db50a86",
       "inbox_file_id": "10eABBk7-HGUqFopU6CrnfjfjJFPrWaMs",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2605821,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-tempelherren-v1",
@@ -88,11 +100,13 @@
       "archive_filename": "TEMPELHERRAN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2526306,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "cde79bc6bd5bfb5ee9048dc08ca1ceed1c4fffcd63677c5ce2ec32b6f276b643",
       "inbox_file_id": "1WWws8Wl2ii7xklypVO0fgV77yrNgKqXy",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2526306,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-handelsfursten-v1",
@@ -101,11 +115,13 @@
       "archive_filename": "HANDELSFURSTEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2512730,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "909a41e6f463b3a0208eaba1cf42693b342f34280dc766c2c90cea6566550a34",
       "inbox_file_id": "1aEkGgmjmnjxqya8hm_wMJYUtZfwGojUe",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2512730,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-oraklets-fyra-ogon-v1",
@@ -114,11 +130,13 @@
       "archive_filename": "ORAKLETS_FYRA_OGON_MEDAL_V1_MASTER.png",
       "archive_bytes": 2742389,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "4c0fca50f14225a57af9d0d6c0b9407d9c46ccf69560f470728cfff8b7652092",
       "inbox_file_id": "1hlxplJNlyNuKKkz1P8fA75lW_JGgqmu3",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2742389,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-magilre-v1",
@@ -127,11 +145,13 @@
       "archive_filename": "MAGILRE_MEDAL_V1_MASTER.png",
       "archive_bytes": 2692903,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "08bb341c9f9ddeab2b37520de72eb2e4e155dd4f0c77f31ce837905fa2554949",
       "inbox_file_id": "1iySArAxpGXYSuvkHcrajBFMkrNTb08RX",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2692903,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-enhorningshornet-v1",
@@ -140,11 +160,13 @@
       "archive_filename": "ENHORNINGSHORNET_MEDAL_V1_MASTER.png",
       "archive_bytes": 2895605,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "37447e1871ff999e2b13063813ff8bd1753213566990b471f6074676b1287dc4",
       "inbox_file_id": "11J5MLfpZeNpVVFsOtSMVicnunLrBy1KJ",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2895605,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-barbia-v1",
@@ -153,11 +175,13 @@
       "archive_filename": "BARBIA_MEDAL_V1_MASTER.png",
       "archive_bytes": 2564968,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "f41e5cc9e8dad7316c96dc49546aaadfb51249d222fc4c04834cc19cf4f3b915",
       "inbox_file_id": "1XBzNygMQUOBQIS7V6KGxLPQaQ5oc3-rJ",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2564968,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-shoguns-vrede-v1",
@@ -166,11 +190,13 @@
       "archive_filename": "SHOGUNS_VREDE_MEDAL_V1_MASTER.png",
       "archive_bytes": 2593589,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "4aa083a4bf60f93e2a97b41f6b8c807228f7dba88b95cd3d9e084974d4c83ccc",
       "inbox_file_id": "1LeySCcLosqrhz3FigaDfu7YAS_y17BrB",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2593589,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-dodens-vag-v1",
@@ -179,11 +205,13 @@
       "archive_filename": "DODENS_VAG_MEDAL_V1_MASTER.png",
       "archive_bytes": 3059663,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "4e9243ff258771d8c7eb29223c943972eb9ea82aa332afd95f1a293aa060bd0d",
       "inbox_file_id": "1w46lVk7DvZ3YGYlNE3IJfkIOE2-WEjTw",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3059663,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-djupets-fasor-v1",
@@ -192,11 +220,13 @@
       "archive_filename": "DJUPETS_FASOR_MEDAL_V1_MASTER.png",
       "archive_bytes": 2974548,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "d75b7619bf54508504a99445d4dcc453d7792b1eb947bbe8671f6a5b0f180826",
       "inbox_file_id": "1UKGr7D_qQhiX6UVsE6DqfGdUDR_v-TEf",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2974548,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-jeraz-v1",
@@ -205,11 +235,13 @@
       "archive_filename": "JERAZ_MEDAL_V1_MASTER.png",
       "archive_bytes": 2883530,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "1a4f568e594444abc4e47d7debd0d9aacf7824037028a61140b1ca70638cdb0f",
       "inbox_file_id": "1NP1k5Hah0KXSxjx-7Yl4myi4QyOT8EPT",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2883530,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-marsklandet-v1",
@@ -218,11 +250,13 @@
       "archive_filename": "MARSKLANDET_MEDAL_V1_MASTER.png",
       "archive_bytes": 2721742,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "bb918312b6820fd5b3d879b7d85a31fc02a5b9cfb9fdcacd5bdcb0404d9d1fb8",
       "inbox_file_id": "1Ejo9InvpVkxtlVk28v5bvbzCfuhcCZ1s",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2721742,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-novastenen-v1",
@@ -231,11 +265,13 @@
       "archive_filename": "NOVASTENEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 3217050,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "21223517df0bef655d155d473da9c78b5f07b9111b4d2bef2349c7a06705a0eb",
       "inbox_file_id": "1Aplm546F4IzviSnPecticpTd_YRuKVqa",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3217050,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-rosten-fran-forntiden-v1",
@@ -244,11 +280,13 @@
       "archive_filename": "ROSTEN_FRAN_FORNTIDEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2687205,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "e09f57f3f93b943eb0b17d15d88f3e2aae441234b3f39c1e788c1c96b0423fc7",
       "inbox_file_id": "1kKPU7xOeDnJXwbs9Juxp6VCmD9aX7zRt",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2687205,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-skonheten-och-odjuret-v1",
@@ -257,11 +295,13 @@
       "archive_filename": "SKONHETEN_ODJUREN_MEDAL_V1_MASTER.png",
       "archive_bytes": 2557320,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "1b25f33cfd155aa202e74ad29f7acb402f492b39985ffb351a7199164bd6dc70",
       "inbox_file_id": "1-M3qGeHo-xkdp65zizGcYY5fiU1BDLyG",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2557320,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-svart-duell-v1",
@@ -270,11 +310,13 @@
       "archive_filename": "SVART_DUELL_MEDAL_V1_MASTER.png",
       "archive_bytes": 2683824,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "c08a38acc1d30492ba23e3beb7f0ff79b389b5128c6aeace2598f4976bb97ccf",
       "inbox_file_id": "18Uv3F49iY15N1uQRNt2TWzJsVzc6soEe",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2683824,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-tvillingbergen-v1",
@@ -283,11 +325,13 @@
       "archive_filename": "TVILLINGBERGEN_MEDAL_V1_MASTER.png",
       "archive_bytes": 3017499,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "85cd62be48f7e3066d95a856179b493f444ab1a9bae54cf3c41dc106080a2f3e",
       "inbox_file_id": "1cUpVsCqT1-pylwwz9-Dq-nfE6uxWvs-g",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3017499,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-havets-vargar-v1",
@@ -296,11 +340,13 @@
       "archive_filename": "HAVETS_VARGAR_MEDAL_V1_MASTER.png",
       "archive_bytes": 2915821,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "fca4b3a7a4dc811cfe2682d7e43225971de0f894603dc1cea7f46f331254abcf",
       "inbox_file_id": "1c6J_78xErwHrzaxxqLn1pQxf43m5t5Rz",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2915821,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-morkrets-hjarta-v1",
@@ -309,11 +355,13 @@
       "archive_filename": "arcane-adventure-medals_morkrets-hjarta_master.png",
       "archive_bytes": 2741230,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "263c981ee0605eaa753f7a8e46b6e6006224141a467d42039e1d833fa8ad01fa",
       "inbox_file_id": "1sxn2GdrBfF_KPa2zj5J97FVpy40M3bVR",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2741230,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-maktens-portar-v1",
@@ -322,11 +370,13 @@
       "archive_filename": "arcane-adventure-medals_maktens-portar_master.png",
       "archive_bytes": 3065198,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "8f4c82525ccca4aa20038fcbf1732d5b5ef05353f1dedad32cd0e5c3fb9a54ac",
       "inbox_file_id": "1p-Aj596WQOAM1WJkPwQl8cn0V_n8auch",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3065198,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-doda-skogen-v1",
@@ -335,11 +385,13 @@
       "archive_filename": "arcane-adventure-medals_doda-skogen_master.png",
       "archive_bytes": 2943801,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "27a1b0f6de29a12c1d799b4184f84ffb1978f80e97125171ffa90fcd1b1ce671",
       "inbox_file_id": "1RYIjzUgI60gVTQxwIh2DpMOM-GVkZQG1",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2943801,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-dimon-v1",
@@ -348,11 +400,13 @@
       "archive_filename": "arcane-adventure-medals_dimon-v2_master.png",
       "archive_bytes": 3055318,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "cd2fafb1f3bed768592e38d86c51c1be0b123c92c46b8d485d6f749fbefc8723",
       "inbox_file_id": "1DvmvoLRJiDalsWrQkmeTXO1qb4_YYFEs",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3055318,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-manhjartat-v2-v1",
@@ -361,11 +415,13 @@
       "archive_filename": "arcane-adventure-medals_manhjartat-v2_master.png",
       "archive_bytes": 3179482,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "5e3fb83c8681098e5a91df9d32bff677339b0926f18995cd79020d0939ea54ef",
       "inbox_file_id": "19elGFox4BhMTy4xkA4BcmvE8J5fSUyd0",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3179482,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-svavelvinter-v1",
@@ -374,11 +430,13 @@
       "archive_filename": "arcane-adventure-medals_svavelvinter_master.png",
       "archive_bytes": 3026591,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "60ed92e0b5cf4f879938b9545d19f87c3f12da0e00cebbac2cb888104350be47",
       "inbox_file_id": "1geB6k9az9A0OIlf_Ip9zirsm_HsqY9hT",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 3026591,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     },
     {
       "asset_key": "arcane-adventure-medal-spindelkonungens-pyramid-v1",
@@ -387,13 +445,20 @@
       "archive_filename": "arcane-adventure-medals_spindelkonungens-pyramid_master.png",
       "archive_bytes": 2041750,
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-",
-      "source_sha256": null,
+      "source_sha256": "5525e7777217d7403fec094f2f9786b75ae7ca3cd28a19d2f38a1d3c1203bd9c",
       "inbox_file_id": "1JQRn9WM1elKTopiIiEK0dgA9YRv-ItLt",
-      "ready_for_publish": false,
+      "ready_for_publish": true,
       "inbox_bytes": 2041750,
-      "size_matches": true
+      "size_matches": true,
+      "sha256_matches": true,
+      "image_verified": true
     }
   ],
   "metadata_verified_count": 30,
-  "binary_sha256_verified_count": 0
+  "binary_sha256_verified_count": 30,
+  "validation": {
+    "archive_inbox_binary_identical": 30,
+    "png_rgba_true_alpha": 30,
+    "source_dimensions_match_profiles": 30
+  }
 }
