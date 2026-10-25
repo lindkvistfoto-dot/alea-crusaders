@@ -69,3 +69,42 @@
 #trophyRoomPage .trophy-room-toolbar button[aria-label="Zooma in"],
 #trophyRoomPage #trophyRoomZoomValue{display:none}
 #trophyRoomPage .trophy-room-toolbar{justify-content:center}
+
+
+/* JAKOB 4A: medal interaction. The approved trophy room remains unchanged. */
+.trophy-room-scene .trophy-room-medal-wall{pointer-events:auto}
+.trophy-room-medal-slot{position:relative;overflow:visible}
+.trophy-room-medal-trigger{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;min-width:0;min-height:0;padding:0;border:0;background:transparent;cursor:pointer;pointer-events:auto;outline-offset:3px}
+.trophy-room-medal-trigger img{max-width:100%;max-height:100%;object-fit:contain;transition:filter .25s ease}
+.trophy-room-medal-trigger:hover img,.trophy-room-medal-trigger:focus-visible img{filter:drop-shadow(0 0 4px #ffe2a4) drop-shadow(0 0 9px #c68c32)}
+.trophy-room-medal-trigger:focus-visible{outline:2px solid #f3d59b}
+.trophy-room-medal-trigger::after{content:attr(data-name);position:absolute;z-index:5;left:50%;top:100%;transform:translateX(-50%) translateY(-3px);opacity:0;pointer-events:none;white-space:nowrap;max-width:220px;padding:4px 8px;border:1px solid #b78b4e;border-radius:6px;background:#24180fee;color:#f5dfb7;font:600 clamp(9px,1.5vw,14px) Georgia,serif;text-shadow:0 1px 2px #000;transition:opacity .18s,transform .18s}
+.trophy-room-medal-trigger:hover::after,.trophy-room-medal-trigger:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(3px)}
+/* Frame has a 3:2 source ratio; left/right panels each occupy half. */
+.arcane-medal-dialog{position:fixed;inset:0;margin:auto;padding:0;width:min(96vw,1080px,calc(92dvh * 1.5));max-width:96vw;max-height:94dvh;overflow:auto;border:0;background:transparent;color:#38251a;box-shadow:none}
+.arcane-medal-dialog::backdrop{background:#070504d9;backdrop-filter:blur(5px)}
+.arcane-medal-display{position:relative;display:grid;grid-template-columns:1fr 1fr;width:100%;aspect-ratio:3/2;background-image:var(--medal-frame-image,linear-gradient(125deg,#4b3422,#9e7845 50%,#4b3422));background-size:100% 100%;background-position:center;background-repeat:no-repeat;filter:drop-shadow(0 15px 22px #000b)}
+.arcane-medal-display-cushion,.arcane-medal-display-parchment{position:relative;min-width:0;min-height:0}
+.arcane-medal-display-cushion{display:flex;align-items:center;justify-content:center;padding:21% 16%}
+.arcane-medal-display-image{position:relative;z-index:1;width:72%;max-height:75%;object-fit:contain;filter:drop-shadow(0 8px 9px #0009)}
+.arcane-medal-display-parchment{display:flex;align-items:center;justify-content:center;padding:23% 11% 22%}
+.arcane-medal-display-story{width:100%;max-height:100%;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;text-align:center;color:#392516;font-family:"Palatino Linotype","Book Antiqua",Georgia,serif;font-size:clamp(12px,1.6vw,18px);font-style:italic;line-height:1.42;text-shadow:0 .3px .4px #5b3b241e}
+.arcane-medal-display-title{margin:0 0 .4em;color:#4b291a;font-family:"URW Chancery L","Apple Chancery","Segoe Script","Palatino Linotype",Georgia,cursive;font-weight:600;font-size:clamp(18px,2.65vw,34px);line-height:1.1}
+.arcane-medal-display-type{font-size:.8em;letter-spacing:.12em;text-transform:uppercase;margin:.25em 0 1em}
+.arcane-medal-display-description{margin:.7em 0;white-space:pre-line}
+.arcane-medal-display-reason{margin:.8em 0;font-size:.85em}
+.arcane-medal-display-date{margin:1.2em 0 0;padding-top:.7em;border-top:1px solid #6e4b3066;font-size:.88em}
+.arcane-medal-display-close{position:absolute;z-index:20;right:3%;top:4%;width:clamp(36px,4vw,48px);height:clamp(36px,4vw,48px);border:2px solid #b98c4c;border-radius:50%;background:#25170ee8;color:#f0d5a0;font:32px/1 Georgia,serif;cursor:pointer;box-shadow:0 2px 8px #0009}
+.arcane-medal-display-close:hover,.arcane-medal-display-close:focus-visible{background:#4c2d1a;outline:2px solid #eac584;outline-offset:2px}
+@media(max-width:650px){
+ .arcane-medal-dialog{width:min(96vw,420px);max-height:95dvh}
+ .arcane-medal-display{display:flex;flex-direction:column;aspect-ratio:auto;background-image:none;filter:none;gap:0}
+ .arcane-medal-display-cushion,.arcane-medal-display-parchment{flex:none;width:100%;aspect-ratio:3/4;background-image:var(--medal-frame-image,linear-gradient(140deg,#583c29,#ad824f));background-size:200% 100%;background-repeat:no-repeat}
+ .arcane-medal-display-cushion{background-position:left center;padding:21% 17%}
+ .arcane-medal-display-parchment{background-position:right center;padding:23% 13% 20%}
+ .arcane-medal-display-image{width:74%;max-height:72%}
+ .arcane-medal-display-story{font-size:clamp(14px,3.8vw,18px);max-height:100%}
+ .arcane-medal-display-title{font-size:clamp(24px,6vw,30px)}
+ .arcane-medal-display-close{position:sticky;top:8px;float:right;margin-bottom:-48px;margin-right:10px}
+}
+@media(prefers-reduced-motion:reduce){.trophy-room-medal-trigger img,.trophy-room-medal-trigger::after{transition:none}}
