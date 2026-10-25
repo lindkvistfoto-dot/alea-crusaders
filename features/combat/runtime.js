@@ -2216,7 +2216,10 @@ function combatSpellRadiusScalesWithGrade(data){
 function combatSpellRuleAreaRadius(data){
  const name=String(data?.spell_name||data?.name||'').toLocaleUpperCase('sv-SE').replace(/\s*\([^)]*\)/g,'').trim();
  const eg=Math.max(1,Math.floor(Number(data?.effect_grade)||1));
- if(name==='MÖRKER')return 2; // 6 m diameter on the standard 1.5 m hex grid.
+ if(name==='MÖRKER'){
+  const hexMeters=Number(typeof activeCombat!=='undefined'?activeCombat?.settings?.hex_m:null)||1.5;
+  return Math.max(0,Math.min(15,Math.ceil(3/hexMeters))) // 6 m diameter / 2 / map cell spacing.
+ }
  if(name==='BESKYDDARE')return eg; // base footprint plus one outward ring per added EG.
  if(name==='ELD'||name==='FROST')return 0; // one impact hex per sphere; no larger map footprint is specified.
  return combatSpellRadiusHexes(data)
@@ -7300,4 +7303,8 @@ if(typeof window!=='undefined'&&typeof window.addEventListener==='function')
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
 window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
-window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.clas
+window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
+window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
+
+/* v0.33.82 — never allow the active combatant to be an attack target */
+

@@ -24,6 +24,8 @@ describe('magiska målmodellen',()=>{
   expect(ctx.ruleRadius({spell_name:'ELD (F)',effect_grade:3})).toBe(0);
   expect(ctx.ruleRadius({spell_name:'FROST (F)',effect_grade:3})).toBe(0);
   expect(ctx.ruleRadius({spell_name:'MÖRKER (F)',effect_grade:1})).toBe(2);
+  ctx.activeCombat={settings:{hex_m:3}};
+  expect(ctx.ruleRadius({spell_name:'MÖRKER (F)',effect_grade:1})).toBe(1);
   expect(ctx.ruleRadius({spell_name:'BESKYDDARE',effect_grade:3})).toBe(3);
  });
 
