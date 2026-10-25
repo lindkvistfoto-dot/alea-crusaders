@@ -26,3 +26,12 @@
 .trophy-room-character-layer{left:calc(50% - var(--hero-progress,0)*29%);opacity:calc(1 - var(--hero-progress,0)*.12);transform:translateX(-50%) translate(calc(var(--pan-x,0px)*(1 - var(--hero-progress,0))),calc(var(--pan-y,0px)*(1 - var(--hero-progress,0)))) scale(calc(1 + (var(--zoom,1) - 1)*(1 - var(--hero-progress,0))));transition:left .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1),opacity .55s}
 @media(prefers-reduced-motion:no-preference){.trophy-room-scene{transition:transform .55s cubic-bezier(.22,1,.36,1)}}
 @media(prefers-reduced-motion:reduce){.trophy-room-scene,.trophy-room-character-layer{transition:none}}
+
+/* JAKOB 3F: independent hero layer. No camera scale or pan on the hero. */
+.trophy-room-character-layer{
+ left:calc(50% - var(--hero-progress,0)*29%);
+ transform:translateX(-50%) scale(calc(1 - var(--hero-progress,0)*.12));
+ transform-origin:center bottom;
+ transition:left .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1),opacity .85s;
+}
+@media(prefers-reduced-motion:reduce){.trophy-room-character-layer{transition:none}}
