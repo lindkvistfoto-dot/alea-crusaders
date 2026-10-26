@@ -16,14 +16,14 @@ export function createHermesCore({archiveOriginal, convertToWebP, publishWebP, g
     const published = await publishWebP({target, webp, archiveId: archive.id});
     if (!published?.key) throw new Error('WebP publication not verified');
     // The adapter must compare expected revision atomically and refuse stale writes.
-    return setTarget({target, expectedRevision: current.revision, key: published.key});
+    return setTarget({target, expectedRevision: current.revision, expectedKey: current.key ?? null, key: published.key});
   }
   async function remove({target}) {
     if (!target) throw new Error('Image target is required');
     const current = await getTarget(target);
     if (!current) throw new Error('Unknown image target');
     // Detach only; original and published objects are never deleted.
-    return setTarget({target, expectedRevision: current.revision, key: null});
+    return setTarget({target, expectedRevision: current.revision, expectedKey: current.key ?? null, key: null});
   }
   return {add: put, replace: put, remove};
 }
