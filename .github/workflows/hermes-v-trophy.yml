@@ -65,8 +65,9 @@ jobs:
           set -euo pipefail
           output="$RUNNER_TEMP/hermes-v"
           mkdir -p "$output"
-          python scripts/hermes_v_trophy.py --color "$HERMES_V_COLOR" --mode "$HERMES_V_MODE" --output "$output/request.json"
-          python scripts/hermes_drive_intake.py "$output/request.json" --output "$output/result"
+          mkdir -p hermes/queue
+          python scripts/hermes_v_trophy.py --color "$HERMES_V_COLOR" --mode "$HERMES_V_MODE" --output "hermes/queue/phoenix-trophy-request.json"
+          python scripts/hermes_drive_intake.py "hermes/queue/phoenix-trophy-request.json" --output "$output/result"
           if [ -f "$output/result/manifest.json" ]; then
             if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
               echo "::error::HERMES V cannot publish: service credential missing"; exit 1
