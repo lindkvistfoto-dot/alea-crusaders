@@ -1,0 +1,6 @@
+project_id = "alea-crusaders"
+
+[functions.hermes-alea]
+verify_jwt = true
+entrypoint = "./functions/hermes-alea/index.ts"
+static_files = ["./functions/hermes-alea/magick.wasm"]
