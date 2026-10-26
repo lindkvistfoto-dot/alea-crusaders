@@ -20,14 +20,15 @@ const magicFunctions=[
  portion('combatMagicCastPreflight','\n// Casting mechanics'),
  portion('combatMagicBinding','\nfunction combatMagicDamageFormula'),
  portion('combatMagicDamageFormula','\n\n/* FALK:'),
- portion('combatMagicPsyCost','\nfunction combatSpellActualPsyCost')
+ portion('combatMagicPsyCost','\nfunction combatSpellActualPsyCost'),
+ portion('combatSpendMagicPsy','\nfunction combatItemSpellSources')
 ];
-const scope={};
+const scope={activeCombat:{id:'isolated-combat'},dbJson:async(_path,options)=>[{current_psy:JSON.parse(options.body).current_psy}]};
 runInNewContext(effectProfileSource+'\n'+magicFunctions.join('\n')+
  '\nthis.api={profile:combatSpellEffectProfile,rule:combatMagicRuleProfile,'+
  'casting:combatMagicCastingRules,preflight:combatMagicCastPreflight,'+
  'binding:combatMagicBinding,damage:combatMagicDamageFormula,summon:combatIsSummoningSpell,'+
- 'psyCost:combatMagicPsyCost};',scope);
+ 'psyCost:combatMagicPsyCost,payPsy:combatSpendMagicPsy};',scope);
 const api=scope.api;
 
 describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
@@ -74,6 +75,13 @@ describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
   expect(api.psyCost('perfect',3)).toBe(1);
   expect(api.psyCost('perfect',5)).toBe(2);
   expect(api.psyCost('perfect',1)).toBe(1);
+ });
+
+ it('marks a magician dead after spending the last PSY point (Expert p. 5)',async()=>{
+  const mage={id:'isolated-mage',current_psy:1,status:'active'};
+  await api.payPsy(mage,1);
+  expect(mage.current_psy).toBe(0);
+  expect(mage.status).toBe('dead');
  });
 
  it('charges the full successful PSY cost after a fumbled spell',()=>{
