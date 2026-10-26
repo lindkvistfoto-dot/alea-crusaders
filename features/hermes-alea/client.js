@@ -1,23 +1,22 @@
 import {resolveImageProfile} from './profiles.js';
 export const DISPLAY_BUCKET='hermes-alea-display';
 export const SOURCE_BUCKET='hermes-alea-originals';
-const LIMIT=12_000_000;
 const uuid=/^[a-f0-9-]{36}$/i;
 export const managedKey=value=>/^hermes-alea:[a-f0-9-]{36}$/i.test(String(value||''));
 async function hash(blob){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
  const limits=resolveImageProfile({...profile,requireAlpha:requireAlpha||profile.requireAlpha===true});
  if(!file||!limits.allowedMimeTypes.includes(file.type))throw Error('Välj en statisk PNG-, JPEG- eller WebP-bild.');
- if(!file.size||file.size>limits.maxBytes)throw Error('Bilden får vara högst 12 MB.');
+ if(!file.size||file.size>limits.maxBytes)throw Error('Bilden överskrider bildprofilens storleksgräns.');
  const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});
  try{
-  if(!bitmap.width||!bitmap.height||bitmap.width>limits.maxWidth||bitmap.height>limits.maxHeight||bitmap.width*bitmap.height>limits.maxPixels)throw Error('Bilden får vara högst 2048 × 2048 pixlar. Förbered storleken före uppladdning.');
+  if(!bitmap.width||!bitmap.height||bitmap.width>limits.maxWidth||bitmap.height>limits.maxHeight||bitmap.width*bitmap.height>limits.maxPixels)throw Error('Bilden överskrider bildprofilens dimensionsgräns.');
   const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('Webbläsaren kan inte konvertera bilden.');
   ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-  if(limits.requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Reliefen behöver äkta transparent bakgrund.');
+  if(limits.requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Bildprofilen kräver äkta transparent bakgrund.');
   const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
-  if(!output||output.type!=='image/webp'||output.size>LIMIT)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
+  if(!output||output.type!=='image/webp'||output.size>limits.maxBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
   const check=await createImageBitmap(output);try{if(check.width!==bitmap.width||check.height!==bitmap.height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
   return output;
  }finally{bitmap.close();}
