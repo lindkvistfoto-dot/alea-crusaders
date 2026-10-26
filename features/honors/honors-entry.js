@@ -96,7 +96,7 @@ window.openArcaneHonorsAdmin = async () => {
       assetRows.push(...managed);
     }
     const applyImageResult=async(kind,target,file)=>{
-      const result=file?await client.upload({targetKind:kind,target,file}):await client.remove({targetKind:kind,target});
+      const result=file?await client.upload({targetKind:kind,target,file,profile:{requireAlpha:kind==='relief'}}):await client.remove({targetKind:kind,target});
       // Apply the committed pointer first. A signing/readback failure must not pretend activation failed.
       target.image_asset_id=result.state==='removed'?null:'hermes-alea:'+result.id;
       target.image_revision=result.result_revision;
