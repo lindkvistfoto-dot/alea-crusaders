@@ -97,9 +97,9 @@ Testsviten på grenen använder en fryst, skrivskyddad JSON-kopia, ingen Supabas
 
 Befintliga Vitest-filer i projektet omfattar bland annat målval, SR1/SR2, antimagi, manuella effekter, resultatkort och förberedelse-UI. Källgranskning av testfilerna hittade riktade testfall för dessa gränssnitt och vissa isolerade upplösningar.
 
-**Körning ej bekräftad:** GitHub-connectorn kan läsa och skriva grenen men ger inte i sig en Node/Vitest-körmiljö. Ingen körning av den nya sviten eller fullständiga `npm test` har bekräftats här. De nya regressionsfallen ska därför betraktas som tillagda men ej körda.
+**Körning:** [GitHub Actions CI #40253814291](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/40253814291) körde `npm run check`. Vitest körde 237 testfiler: 1 661 test godkändes och 3 nya Expert-regressionstest misslyckades, samtliga i `tests/arcane-spellforge.test.js` (perfekt udda EG, fummel, död vid 0 PSY). De tre röda testen är avsiktliga diagnoser av aktuella regelavvikelser; inga mekanikfixar har gjorts. `npm run check` avbryter vid testfel, så byggsteget kördes inte.
 
-**Inte simulerat ännu:** tärningsutfall genom fulla UI-kast, rollpersonens faktiska dödsövergång vid 0 PSY, Snedtändningstabell, självuppoffrande kast, samtliga 91 effekters fulla regelresultat, mål/hexgeometri för varje spell, alla avstånds- och områdesgränser, avbrott genom skada, samtidiga effekter, avslut/återställning samt effekter utanför strid. Dessa kräver fler isolerade test-doubles eller en lokal/CI-körning och, för spell-specifika förväntningar, sidvis fältmappning från Expert s. 8–37. Inga utfall hävdas för dessa fall.
+**Inte simulerat ännu:** tärningsutfall genom fulla UI-kast, Snedtändningstabellens följder, självuppoffrande kast, samtliga 91 effekters fulla regelresultat, mål/hexgeometri för varje besvärjelse, alla avstånds- och områdesgränser, avbrott genom skada, samtidiga effekter, avslut/återställning samt effekter utanför strid. Befintliga testsamlingar täcker delar av UI, målval, antimagi och resultatkort, men körningen är inte en end-to-end-simulering av dessa regler. För spell-specifika förväntningar behövs en sidvis fältmappning från Expert s. 8–37. Inga utfall hävdas för ej täckta scenarier.
 
 ## Rekommenderad ordning
 
