@@ -24,6 +24,18 @@ class HermesVTrophyTest(unittest.TestCase):
             keys.add(item["target_id"])
         self.assertEqual(len(keys), 3)
 
+    def test_all_supported_kinds(self):
+        base=module.request("red")["items"][0]
+        for kind in module.KINDS:
+            item={**base,"kind":kind}
+            self.assertEqual(module.build_request(item)["items"][0]["kind"],kind)
+
+    def test_rejects_unapproved_or_unarchived(self):
+        base=module.request("red")["items"][0]
+        for changes in ({"visual_approved":False},{"archive_file_id":base["drive_file_id"]},{"source_sha256":"0"}):
+            with self.assertRaises(ValueError):
+                module.build_request({**base,**changes})
+
     def test_rejects_unapproved_color_and_mode(self):
         for color, mode in (("purple", "publish"), ("red", "unsafe")):
             with self.assertRaises(ValueError):
