@@ -3,6 +3,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 const sql=readFileSync(new URL('../supabase/migrations/20261026092330_hermes_alea_isolated_pilot.sql',import.meta.url),'utf8');
+const adapterSql=readFileSync(new URL('../supabase/migrations/20261026172000_hermes_alea_target_adapter_boundary.sql',import.meta.url),'utf8');
 const cleanupSql=readFileSync(new URL('../supabase/migrations/20261026093615_hermes_alea_cleanup_reservations.sql',import.meta.url),'utf8');
 const user='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',target='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 let db;
@@ -27,6 +28,7 @@ beforeEach(async()=>{
  insert into honor_definitions(id,name,category) values('${target}','Pilot','medal');`);
  await db.exec(sql);
  await db.exec(cleanupSql);
+ await db.exec(adapterSql);
  await db.exec(`update private.hermes_alea_settings set enabled=true;set role authenticated;set request.jwt.claim.sub='${user}';`);
 },20000);
 afterEach(async()=>db?.close());
