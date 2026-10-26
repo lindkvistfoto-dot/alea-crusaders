@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "assets": {
+    "red": {
+      "key": "arcane-medal-display-red",
+      "target_id": "a81d1d67-fbe7-53c8-a1f1-e90d5acd54e0",
+      "inbox_id": "15bWiTN5jU_oiqZNzy_EGuVL-mcNzrtli",
+      "archive_id": "1KChVIXaTsMSpLWrnzkYgkQ8xr-v9jWJl",
+      "sha256": "a4ab4afa8899f2be70b7d4afc7d216e3e2004f6f7c144e00764aa221579f8d0a"
+    },
+    "green": {
+      "key": "arcane-medal-display-green",
+      "target_id": "05652a3d-3478-5b66-a68d-ab6ba5fb9ab5",
+      "inbox_id": "1Jmj3QloSUeZS8os23ERaZgN6Zzud3DZJ",
+      "archive_id": "1RaD6X-L34__OL6WoBpuoReBJzdrDqDc3",
+      "sha256": "04cafa72c2a8ce4608f1262551ef1bab72ba5883726b8c5f714ef5f3f70d190f"
+    },
+    "blue": {
+      "key": "arcane-medal-display-blue",
+      "target_id": "10073f63-8faf-51b5-bb11-547abf3c064a",
+      "inbox_id": "1O2cdzLDUnCyrqQd_mF82xwL8G-RIZiJx",
+      "archive_id": "1jCPmKgB_LRxlLuIHMGJ9Yb1HV-LmjNxy",
+      "sha256": "9575b4aa983856b61287c8cf2372d5d562a3d07de89765bf0cdc3346c435b2b4"
+    }
+  }
+}
