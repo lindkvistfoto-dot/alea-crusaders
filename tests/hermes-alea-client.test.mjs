@@ -56,3 +56,30 @@ it('rejects unregistered ALEA image target before RPC or storage',async()=>{
  await expect(h.client.remove({targetKind:'character_portrait',target})).rejects.toThrow(/Okänd bildplats/);
  expect(h.calls).toEqual([]);
 });
+
+it('adapter alpha requirement cannot be disabled by caller profile',async()=>{
+ let passed;
+ const client=createHermesAleaClient({
+  storage:null,
+  targetPolicies:{relief:{requireAlpha:true}},
+  convert:async(_file,options)=>{passed=options;throw Error('TEST_STOP');},
+  rpc:async()=>{throw Error('RPC_NOT_EXPECTED');},
+  request:async()=>{throw Error('REQUEST_NOT_EXPECTED');}
+ });
+ await expect(client.upload({targetKind:'relief',target,file:new Blob(['x'],{type:'image/png'}),profile:{requireAlpha:false}})).rejects.toThrow('TEST_STOP');
+ expect(passed.requireAlpha).toBe(true);
+});
+it('caller cannot widen adapter size or accepted MIME types',async()=>{
+ const h=harness();
+ await expect(h.client.upload({targetKind:'definition',target,file:new Blob(['1234'],{type:'image/png'}),profile:{maxBytes:2}})).rejects.toThrow(/bildprofilen/);
+ expect(h.calls).toEqual([]);
+ const calls=[];
+ const client=createHermesAleaClient({
+  storage:null,targetPolicies:{definition:{allowedMimeTypes:['image/png']}},
+  convert:async()=>{calls.push('convert');throw Error('SHOULD_NOT_CONVERT');},
+  rpc:async()=>{calls.push('rpc');throw Error('SHOULD_NOT_RPC');},
+  request:async()=>{calls.push('request');throw Error('SHOULD_NOT_REQUEST');}
+ });
+ await expect(client.upload({targetKind:'definition',target,file:new Blob(['jpeg'],{type:'image/jpeg'}),profile:{allowedMimeTypes:['image/jpeg']}})).rejects.toThrow(/bildformat/);
+ expect(calls).toEqual([]);
+});
