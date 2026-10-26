@@ -45,7 +45,15 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
  }
  async function upload({targetKind,target,file,profile={}}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
-  const limits=resolveImageProfile({...targetPolicies[targetKind],...profile,requireAlpha:targetPolicies[targetKind]?.requireAlpha===true||profile.requireAlpha===true});
+  const policy=resolveImageProfile(targetPolicies[targetKind]);
+  const limits=resolveImageProfile({...policy,...profile,
+    maxBytes:Math.min(policy.maxBytes,profile.maxBytes??policy.maxBytes),
+    maxWidth:Math.min(policy.maxWidth,profile.maxWidth??policy.maxWidth),
+    maxHeight:Math.min(policy.maxHeight,profile.maxHeight??policy.maxHeight),
+    maxPixels:Math.min(policy.maxPixels,profile.maxPixels??policy.maxPixels),
+    requireAlpha:policy.requireAlpha||profile.requireAlpha===true,
+    allowedMimeTypes:(profile.allowedMimeTypes??policy.allowedMimeTypes).filter(type=>policy.allowedMimeTypes.includes(type))
+  });
   if(!file||!limits.allowedMimeTypes.includes(file.type)||!file.size||file.size>limits.maxBytes)
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
   const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
