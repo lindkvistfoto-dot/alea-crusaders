@@ -42,9 +42,9 @@ Statisk inventering av `combatMagicBinding` mot 91 registerposter ger följande 
 | Effektbinding med automatisk stridsupplösning | 15 | 4 attackformler, 7 tillstånd, 2 attributbesvärjelser, Dimma och Beskyddare |
 | HELA | 1 | Kast och målval finns; läkningen kräver fortfarande SL:s angivna belopp/resultatkort |
 | Ritual, SL-styrd | 4 | Kastflöde finns, men ritualtid och effektupplösning är manuella |
-| Övrig manuell effekt | 67 | `combatMagicBinding` ger generell manuell hantering; effekten ändrar inte automatiskt stridsvärden |
+| Övrig manuell effekt | 71 | `combatMagicBinding` ger generell manuell hantering; effekten ändrar inte automatiskt stridsvärden |
 
-Totalt går alltså 71/91 poster till en manuell effektväg (ritualerna inräknade). Detta säger inte att de är obrukbara i bordsspel, men de har inte en automatiserad regelupplösning i stridsmotorn. `supported: true` på standardvägen betyder att SL kan slutföra kastet, inte att effekten är implementerad. Av de sex raderna med `attack_magic=true` har fyra en automatisk skadeformel; GASMOLN och DÖDSHAND saknar automatisk effekt och kräver SL.
+Totalt går alltså 75/91 poster till en manuell effektväg: 71 vanliga manuella effekter och 4 ritualer. Tillsammans med 15 automatiska effektbindingar och en delvis automatiserad HELA summerar tabellen till 91. Detta säger inte att de är obrukbara i bordsspel, men de har inte en automatiserad regelupplösning i stridsmotorn. `supported: true` på standardvägen betyder att SL kan slutföra kastet, inte att effekten är implementerad. Av de sex raderna med `attack_magic=true` har fyra en automatisk skadeformel; GASMOLN och DÖDSHAND saknar automatisk effekt och kräver SL.
 
 Per-besvärjelse-testen anropar profil och preflight på en fryst registerrad, men sätter FV och skol-FV till 100 och kastar med 100 PSY. De provar därför grundgränssnittet för alla 91 namn och några generiska förutsättningar; de validerar inte faktisk FV-inlärning, besvärjelsens effekt, målgeometri, räckvidd, varaktighet eller regeltext. Testraden med “3/3 preflight” ska läsas som tre syntetiska preflightfall godkända, inte tre besvärjelseeffekter godkända. Felen för perfekt, fummel och 0 PSY är systemgemensamma regressionstest, inte separata effekttest för varje spell.
 
