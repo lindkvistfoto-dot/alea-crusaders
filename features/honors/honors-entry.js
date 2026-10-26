@@ -96,7 +96,7 @@ window.openArcaneHonorsAdmin = async () => {
       }
       assetRows.push(...managed);
     }
-    const applyImageResult=async(kind,target,file)=>{
+    const applyImageResult=async(kind,target,file,onStatus)=>{
       const result=file?await client.upload({targetKind:kind,target,file,onStatus:stage=>{
         const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp bilden…',verifying:'Kontrollerar bilden…',activating:'Sparar bildkopplingen…'};
         if(labels[stage]) onStatus?.(stage);
@@ -193,7 +193,7 @@ window.openArcaneHonorsAdmin = async () => {
       variants:Array.isArray(variants)?variants:[],
       resolveImage:imageResolver,
       imagePilotEnabled:pilotEnabled,
-      onUploadImage:(kind,target,file)=>applyImageResult(kind,target,file),
+      onUploadImage:(kind,target,file,onStatus)=>applyImageResult(kind,target,file,onStatus),
       onRemoveImage:(kind,target)=>applyImageResult(kind,target,null),
       onSave:save,
       onDelete:removeDraft,
