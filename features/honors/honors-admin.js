@@ -291,16 +291,31 @@ export function renderHonorsAdmin(root, options = {}) {
       delete data.image_file;
       data.name='Relief '+data.material+' '+crypto.randomUUID().slice(0,8);
       data.honor_id=definition.id; data.allow_overhang=data.allow_overhang === 'on';
+      let row;
       try {
-        const saved=await onSaveVariant(data); const row=Array.isArray(saved)?saved[0]:saved;
+        const saved=await onSaveVariant(data); row=Array.isArray(saved)?saved[0]:saved;
         if (!row?.id) throw Error('Reliefvarianten kunde inte sparas.');
         variants.push(row);
         draw(); openEditor(definition);
-        if (!imagePilot || !options.onUploadImage) { notice('Varianten sparades, men HERMES ALEA-uppladdning är inte aktiverad.'); return; }
         const uploaded=await options.onUploadImage('relief',row,file);
         Object.assign(row,uploaded);
         draw(); openEditor(definition); notice('Relief och bild sparade via HERMES ALEA. Arkivering sker i bakgrunden.');
-      } catch (error) { notice(error.message || 'Kunde inte lägga till reliefvarianten.'); }
+      } catch (error) {
+        let message=error.message || 'Kunde inte lägga till reliefvarianten.';
+        if (row?.id && !row.image_asset_id) {
+          try {
+            if (typeof options.onDeleteEmptyVariant !== 'function') throw Error('Återställning saknas');
+            await options.onDeleteEmptyVariant(row);
+            const index=variants.findIndex(v=>String(v.id)===String(row.id));
+            if (index>=0) variants.splice(index,1);
+            draw(); openEditor(definition);
+            message+=' Den tomma varianten har återställts.';
+          } catch (rollbackError) {
+            message+=' En tom variant kan finnas kvar; öppna registret igen innan du försöker på nytt.';
+          }
+        }
+        notice(message);
+      }
     });
     root.querySelectorAll('[data-preview-variant]').forEach(button => button.addEventListener('click', async () => {
       try {

@@ -139,6 +139,10 @@ window.openArcaneHonorsAdmin = async () => {
       const payload={...data,image_asset_id:String(data.image_asset_id||'').trim()||null,created_by:user.id};
       return window.dbJson('honor_relief_variants',{method:'POST',body:JSON.stringify(payload)});
     };
+    const deleteEmptyVariant=async variant=>{
+      if (!variant?.id || variant.image_asset_id) throw Error('Endast tomma reliefvarianter får återställas.');
+      return window.dbJson('honor_relief_variants?id=eq.'+encodeURIComponent(variant.id)+'&image_asset_id=is.null',{method:'DELETE'});
+    };
     const previewVariant=async (definition,variantId)=>{
       const variant=variants.find(v=>String(v.id)===String(variantId));
       if(!variant||String(variant.honor_id)!==String(definition.id)||variant.status==='archived') throw Error('Ogiltig förhandsvisningsvariant.');
@@ -190,6 +194,7 @@ window.openArcaneHonorsAdmin = async () => {
       onSave:save,
       onDelete:removeDraft,
       onSaveVariant:saveVariant,
+      onDeleteEmptyVariant:deleteEmptyVariant,
       onPreviewVariant:previewVariant,
       onPublishVariant:publishVariant,
       onArchiveVariant:archiveVariant,
