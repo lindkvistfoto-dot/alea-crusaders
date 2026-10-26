@@ -138,9 +138,9 @@ export function renderHonorsAdmin(root, options = {}) {
     const reliefUrl = preview ? assetImage(preview.image_asset_id) : null;
     return '<section class="honors-variant-library"><h4>Permanent reliefbibliotek</h4><p>Varianter bevaras separat. Förhandsvisning ändrar inte publicerad variant.</p>' +
       '<div class="honors-variant-list">' + rows + '</div>' +
-      '<form data-variant-form class="honors-variant-form"><label>Namn<input name="name" required maxlength="160"></label>' +
-        '<label>Material<select name="material">' + Object.entries(materials).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
-        '<label>HERMES asset key (valfritt tills publicering)<input name="image_asset_id" maxlength="160" placeholder="ex. sir-robin-enamel"></label>' +
+      '<form data-variant-form class="honors-variant-form">' +
+        '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
+        '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required></label><small>HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. Äkta transparens krävs.</small>' +
         '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt relief att sticka utanför monteringscirkeln</label>' +
         '<button type="submit">Lägg till variant</button></form>' +
       '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i troférummet"><span>Förhandsvisning · bronsram</span><div class="honors-preview-art">' +
@@ -285,11 +285,20 @@ export function renderHonorsAdmin(root, options = {}) {
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
       const data=formData(event.currentTarget);
+      const file=event.currentTarget.elements.namedItem('image_file')?.files?.[0];
+      if (!file) { notice('Välj en bildfil.'); return; }
+      delete data.image_file;
+      data.name='Relief '+data.material+' '+crypto.randomUUID().slice(0,8);
       data.honor_id=definition.id; data.allow_overhang=data.allow_overhang === 'on';
       try {
         const saved=await onSaveVariant(data); const row=Array.isArray(saved)?saved[0]:saved;
-        if (row) variants.push(row);
-        definition && draw(); openEditor(definition); notice('Reliefvariant tillagd i biblioteket.');
+        if (!row?.id) throw Error('Reliefvarianten kunde inte sparas.');
+        variants.push(row);
+        draw(); openEditor(definition);
+        if (!imagePilot || !options.onUploadImage) { notice('Varianten sparades, men HERMES ALEA-uppladdning är inte aktiverad.'); return; }
+        const uploaded=await options.onUploadImage('relief',row,file);
+        Object.assign(row,uploaded);
+        draw(); openEditor(definition); notice('Relief och bild sparade via HERMES ALEA. Arkivering sker i bakgrunden.');
       } catch (error) { notice(error.message || 'Kunde inte lägga till reliefvarianten.'); }
     });
     root.querySelectorAll('[data-preview-variant]').forEach(button => button.addEventListener('click', async () => {
