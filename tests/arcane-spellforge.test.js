@@ -19,13 +19,15 @@ const magicFunctions=[
  portion('combatMagicCastingRules','\nfunction combatMagicCastPreflight'),
  portion('combatMagicCastPreflight','\n// Casting mechanics'),
  portion('combatMagicBinding','\nfunction combatMagicDamageFormula'),
- portion('combatMagicDamageFormula','\n\n/* FALK:')
+ portion('combatMagicDamageFormula','\n\n/* FALK:'),
+ portion('combatMagicPsyCost','\nfunction combatSpellActualPsyCost')
 ];
 const scope={};
 runInNewContext(effectProfileSource+'\n'+magicFunctions.join('\n')+
  '\nthis.api={profile:combatSpellEffectProfile,rule:combatMagicRuleProfile,'+
  'casting:combatMagicCastingRules,preflight:combatMagicCastPreflight,'+
- 'binding:combatMagicBinding,damage:combatMagicDamageFormula,summon:combatIsSummoningSpell};',scope);
+ 'binding:combatMagicBinding,damage:combatMagicDamageFormula,summon:combatIsSummoningSpell,'+
+ 'psyCost:combatMagicPsyCost};',scope);
 const api=scope.api;
 
 describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
@@ -62,6 +64,16 @@ describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
   const invalidGrade=api.preflight({current_psy:100},registered,0);
   expect(invalidGrade.valid).toBe(false);
   expect(invalidGrade.errors).toContain('Ogiltig effektgrad');
+ });
+
+ it('matches Expert p. 4 PSY costs for failure, perfect success, and fumble',()=>{
+  // Expert: ordinary failure loses 1 PSY; perfect uses half (round in the
+  // magician's favor, minimum 1); a fumble loses the full successful cost.
+  expect(api.psyCost('fail',3)).toBe(1);
+  expect(api.psyCost('perfect',3)).toBe(1);
+  expect(api.psyCost('perfect',5)).toBe(2);
+  expect(api.psyCost('perfect',1)).toBe(1);
+  expect(api.psyCost('fumble',3)).toBe(3);
  });
 
  it('scales PSY, casting penalty, and normal versus quick resolution deterministically',()=>{
