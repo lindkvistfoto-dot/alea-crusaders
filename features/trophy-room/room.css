@@ -136,3 +136,8 @@
  .arcane-medal-display-story{font-size:clamp(15px,3.9vw,19px)}
  .arcane-medal-display-title{font-size:clamp(29px,7vw,40px)}
 }
+
+/* Medal interactions unlock only after the wall camera has completed its move. */
+.trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger{pointer-events:none;cursor:default}
+.trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger img{filter:none!important}
+.trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger::after{opacity:0!important}

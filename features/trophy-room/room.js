@@ -3,6 +3,8 @@ let cameraFrame=0,cameraMotion=null,suppressClick=false;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function clampCamera(){const v=viewport();if(!v)return;const maxX=Math.max(0,(scale-1)*v.clientWidth/2),maxY=Math.max(0,(scale-1)*v.clientHeight/2);x=clamp(x,-maxX,maxX);y=clamp(y,-maxY,maxY);if(scale<=1){x=0;y=0}}
+function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
+function updateMedalInteraction(){const ready=medalInteractionReady();const v=viewport();if(v)v.classList.toggle('trophy-room-medals-active',ready);for(const button of document.querySelectorAll('#trophyRoomMedalWall .trophy-room-medal-trigger')){button.disabled=!ready;button.tabIndex=ready?0:-1}}
 function draw(){clampCamera();
  const v=viewport();if(!v)return;
  const scene=byId('trophyRoomScene'),hero=byId('trophyRoomCharacterLayer');
@@ -17,13 +19,13 @@ function draw(){clampCamera();
   const heroScale=1+progress*1.45;
   hero.style.transform='translate3d('+moveX+'px,'+moveY+'px,0) scale('+heroScale+')';
  }
- const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%';
+ const out=byId('trophyRoomZoomValue');if(out)out.value=Math.round(scale*100)+'%';updateMedalInteraction();
 }
 function cancelCamera(){if(cameraFrame)cancelAnimationFrame(cameraFrame);cameraFrame=0;cameraMotion=null}
 function animateCamera(target,duration=2500){
  cancelCamera();
  const reduce=root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
- if(reduce||duration<=0){scale=target.scale;x=target.x;y=target.y;draw();return}
+ if(reduce||duration<=0){scale=target.scale;x=target.x;y=target.y;draw();updateMedalInteraction();return}
  const start={scale,x,y};const started=performance.now();
  cameraMotion={start,target,started,duration};
  function tick(now){
@@ -32,7 +34,7 @@ function animateCamera(target,duration=2500){
   x=start.x+(target.x-start.x)*k;
   y=start.y+(target.y-start.y)*k;
   draw();
-  if(t<1)cameraFrame=requestAnimationFrame(tick);else{cameraFrame=0;cameraMotion=null}
+  if(t<1)cameraFrame=requestAnimationFrame(tick);else{cameraFrame=0;cameraMotion=null;updateMedalInteraction()}
  }
  cameraFrame=requestAnimationFrame(tick);
 }
@@ -135,10 +137,10 @@ async function renderMedals(){
   for(let i=0;i<awarded.length;i++){
    const slot=document.createElement('span');slot.className='trophy-room-medal-slot';
    const medal=awarded[i];
-   if(medal){const trigger=makeElement('button','trophy-room-medal-trigger');trigger.type='button';trigger.setAttribute('aria-label','Visa medaljen '+medal.name);trigger.dataset.name=medal.name;const img=document.createElement('img');img.src=medal.url;img.alt='';img.loading='lazy';trigger.append(img);trigger.addEventListener('click',e=>{e.stopPropagation();void showMedalDetail(medal,trigger)});slot.append(trigger)}
+   if(medal){const trigger=makeElement('button','trophy-room-medal-trigger');trigger.type='button';trigger.setAttribute('aria-label','Visa medaljen '+medal.name);trigger.dataset.name=medal.name;const img=document.createElement('img');img.src=medal.url;img.alt='';img.loading='lazy';trigger.append(img);trigger.disabled=true;trigger.tabIndex=-1;trigger.addEventListener('click',e=>{e.stopPropagation();if(!medalInteractionReady())return;void showMedalDetail(medal,trigger)});slot.append(trigger)}
    wall.append(slot);
   }
-  wall.hidden=false;
+  wall.hidden=false;updateMedalInteraction();
  }catch(error){
   if(seq!==medalSequence)return;
   console.warn('Trophy medal wall unavailable',error);
