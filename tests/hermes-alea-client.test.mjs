@@ -33,3 +33,19 @@ it('accepts only the dedicated signed display path while preserving old image re
  expect(verifiedHonorImageUrl({...asset,hermes_alea_signed_path:'https://evil.test/image.webp'})).toBeNull();
  expect(verifiedHonorImageUrl({asset_path:'hermes/system-asset/test/a.webp'})).toContain('/object/public/alea-hermes-public/');
 });
+
+it('rejects invalid output from an injected converter before creating a job',async()=>{
+ const calls=[];
+ const client=createHermesAleaClient({
+  storage:null,convert:async()=>new Blob(['not webp'],{type:'image/png'}),
+  rpc:async name=>{calls.push(name);throw Error('unexpected rpc');},
+  request:async()=>{throw Error('unexpected request');}
+ });
+ await expect(client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow(/giltig WebP/);
+ expect(calls).toEqual([]);
+});
+it('rejects profile violations before creating an upload intent',async()=>{
+ const h=harness();
+ await expect(h.client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),profile:{allowedMimeTypes:['image/jpeg']}})).rejects.toThrow(/bildprofilen/);
+ expect(h.calls).toEqual([]);
+});
