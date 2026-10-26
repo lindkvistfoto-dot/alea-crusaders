@@ -18,3 +18,9 @@ The three original PNGs are already in HERMES Inbox; independent copies are in t
 **Scope:** this pilot handles only the three approved medal display frames. Existing spell, skill and battle-pose HERMES pipelines remain untouched. The central medal popup uses the red system asset after publication; other walls will use blue/green when implemented.
 
 **Do not merge until CI and workflow review pass.** A successful CI is not evidence that the live HERMES V run has published an image.
+
+## HERMES V universal intake
+
+The workflow now accepts every asset kind already implemented by the HERMES publisher: system assets, spell/skill icons and illustrations, cutouts, and symbols. The operator supplies kind, target key/ID, Inbox Drive ID, independent archive ID, original SHA-256, visual approval, and verify/publish. The three trophy frames remain pinned presets in the adapter for regression tests.
+
+**Scope is no longer limited to trophy images.** Existing destination schemas and target registrations still apply; a new domain (such as honor relief variants) requires its own verified target adapter, not a fake system-asset record. Never bypass alpha, archive, permissions, or CAS checks. The workflow is manual and requires an approved archive copy before publishing.
