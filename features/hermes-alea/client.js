@@ -21,7 +21,8 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
   return output;
  }finally{bitmap.close();}
 }
-export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage}){
+export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={}}){
+ const allowedTargets=new Set(Object.keys(targetPolicies));
  const attempts=new Map();
  async function json(path,options={}){
   const r=await request(path,options);const text=await r.text();const data=text?JSON.parse(text):null;
@@ -43,8 +44,8 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   return id;
  }
  async function upload({targetKind,target,file,profile={}}){
-  if(!uuid.test(target?.id)||!['definition','relief'].includes(targetKind))throw Error('Spara posten innan du lägger till en bild.');
-  const limits=resolveImageProfile(profile);
+  if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
+  const limits=resolveImageProfile({...targetPolicies[targetKind],...profile});
   if(!file||!limits.allowedMimeTypes.includes(file.type)||!file.size||file.size>limits.maxBytes)
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
   const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
@@ -62,6 +63,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   return rpc('hermes_alea_finalize',{job_id:job.id});
  }
  async function remove({targetKind,target}){
+  if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Okänd bildplats.');
   const request={target_kind:targetKind,target_id:target.id,expected_revision:Number(target.image_revision||0),operation:'REMOVE',idempotency_key:idempotency(['remove',targetKind,target.id,target.image_revision||0].join(':'))};
   return rpc('hermes_alea_remove',{request});
  }
