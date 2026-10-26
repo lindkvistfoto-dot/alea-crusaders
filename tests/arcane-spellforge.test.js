@@ -66,13 +66,17 @@ describe('Arcane Spellforge — isolated registry and casting simulations',()=>{
   expect(invalidGrade.errors).toContain('Ogiltig effektgrad');
  });
 
- it('matches Expert p. 4 PSY costs for failure, perfect success, and fumble',()=>{
-  // Expert: ordinary failure loses 1 PSY; perfect uses half (round in the
-  // magician's favor, minimum 1); a fumble loses the full successful cost.
+ it('charges 1 PSY for an ordinary failed spell',()=>{
   expect(api.psyCost('fail',3)).toBe(1);
+ });
+
+ it('rounds perfect spell cost in the magician\'s favor, with minimum 1',()=>{
   expect(api.psyCost('perfect',3)).toBe(1);
   expect(api.psyCost('perfect',5)).toBe(2);
   expect(api.psyCost('perfect',1)).toBe(1);
+ });
+
+ it('charges the full successful PSY cost after a fumbled spell',()=>{
   expect(api.psyCost('fumble',3)).toBe(3);
  });
 
