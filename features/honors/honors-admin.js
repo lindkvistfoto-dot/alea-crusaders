@@ -32,11 +32,55 @@ export function renderHonorsAdmin(root, options = {}) {
   let category = 'medal';
   let statusFilter = 'all';
   let tab = 'catalog';
+  let imageBusy=false;
+  const imagePilot=options.imagePilotEnabled===true;
 
   const count = id => grants.filter(g => String(g.honor_id) === String(id) && !g.revoked_at).length;
   const variantsFor = id => variants.filter(v => String(v.honor_id) === String(id));
   const publishedAsset = key => imageAssets.find(a => a?.asset_key === key && a.asset_path);
   const assetImage = key => imageFor({ image_asset_id:key });
+
+  function imageControls(kind,row){
+    if(!imagePilot||!row)return '';
+    const currentImage=assetImage(row.image_asset_id);
+    return '<fieldset class="honors-image-controls" data-image-controls data-kind="'+kind+'" data-id="'+esc(row.id)+'"><legend>Bild</legend>'+
+      (currentImage?'<img class="honors-image-current" src="'+esc(currentImage)+'" alt="Aktuell bild">':'<span>'+(row.image_asset_id?'Förhandsvisning saknas':'Ingen bild')+'</span>')+
+      '<label>'+ (row.image_asset_id?'Byt bild':'Lägg till bild')+'<input data-image-upload type="file" accept="image/png,image/jpeg,image/webp"></label>'+
+      '<small>PNG, JPEG eller WebP. Högst 12 MB och 2048 × 2048 pixlar. Förbered beskärning och bakgrund före uppladdning.'+(kind==='relief'?' Relief behöver äkta transparens.':'')+'</small>'+
+      (row.image_asset_id?'<button type="button" data-image-remove>Ta bort bild</button>':'')+
+      '<button type="button" data-image-retry hidden>Försök igen</button><p role="status" aria-live="polite" data-image-status></p></fieldset>';
+  }
+  function bindImages(){
+    root.querySelectorAll('[data-image-controls]').forEach(panel=>{
+      const kind=panel.dataset.kind;
+      const row=kind==='definition'?definitions.find(d=>String(d.id)===panel.dataset.id):variants.find(v=>String(v.id)===panel.dataset.id);
+      let retryFile;
+      async function run(file){
+        if(imageBusy||!row)return;
+        if(!file&&!root.ownerDocument.defaultView.confirm('Ta bort bildkopplingen? Originalarkivet behålls.'))return;
+        retryFile=file;
+        panel.querySelector('[data-image-retry]').hidden=true;
+        imageBusy=true;
+        const editor=root.querySelector('[data-editor]');
+        const controls=[...editor.querySelectorAll('button,input,select,textarea')];
+        const disabled=controls.map(el=>el.disabled);controls.forEach(el=>el.disabled=true);
+        const status=panel.querySelector('[data-image-status]');status.textContent=file?'Laddar upp och kontrollerar bilden…':'Tar bort bildkopplingen…';
+        try{
+          const result=file?await options.onUploadImage(kind,row,file):await options.onRemoveImage(kind,row);
+          Object.assign(row,result);imageBusy=false;draw();openEditor(editing);
+          const updatedPanel=[...root.querySelectorAll('[data-image-controls]')].find(el=>el.dataset.kind===kind&&el.dataset.id===String(row.id));
+          if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
+          notice(row.image_preview_pending?'Bilden är sparad, men förhandsvisningen kunde inte hämtas. Öppna registret igen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.');
+        }catch(error){
+          panel.querySelector('[data-image-retry]').hidden=false;
+          status.textContent='Kunde inte slutföra bildändringen: '+(error.message||'okänt fel')+'. Vid samtidig ändring: stäng och öppna registret igen.';
+        }finally{imageBusy=false;controls.forEach((el,index)=>el.disabled=disabled[index]);}
+      }
+      panel.querySelector('[data-image-upload]').addEventListener('change',event=>{const file=event.target.files?.[0];if(file)void run(file);});
+      panel.querySelector('[data-image-retry]').addEventListener('click',()=>void run(retryFile));
+      panel.querySelector('[data-image-remove]')?.addEventListener('click',()=>void run(null));
+    });
+  }
 
   function buildFields(definition) {
     const d = definition || {};
@@ -56,7 +100,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<fieldset class="honors-tiers honors-wide"><legend>Kriterier per nivå (valfritt)</legend>' +
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
-      '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id" value="' + esc(d.image_asset_id) + '"></label>' +
+      '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id"' + (imagePilot ? ' readonly' : '') + ' value="' + esc(d.image_asset_id) + '"></label>' +
       '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ARCANE LAUREL-ramar</legend>' +
         ['bronze','silver','gold'].map(metal => {
           const key = frame[metal] || frameKeys[metal];
@@ -82,7 +126,7 @@ export function renderHonorsAdmin(root, options = {}) {
         (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span class="honors-variant-placeholder" aria-hidden="true">✦</span>') +
         '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Förhandsvisning vald' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
         '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · överhäng tillåtet' : '') + '</small></div>' +
-        '<div class="honors-variant-actions">' +
+        imageControls('relief',v) + '<div class="honors-variant-actions">' +
           '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>' +
           (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
           (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
@@ -122,7 +166,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '</div>' +
       '<div data-panel="recipients"' + (tab !== 'recipients' ? ' hidden' : '') + '><label>Utmärkelse<select data-honor-select><option value="">Välj utmärkelse</option>' + definitions.map(d => '<option value="' + esc(d.id) + '"' + (String(selected) === String(d.id) ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select></label><ul data-recipients></ul>' +
         '<form data-grant-form><label>Rollperson<select name="characterId" required>' + characters.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('') + '</select></label><label>Motivering<textarea name="reason"></textarea></label><button type="submit">Tilldela manuellt</button></form></div>' +
-      '<div class="honors-editor" data-editor hidden><div class="honors-editor-card"><header><h3 data-editor-title>Utmärkelse</h3><button type="button" data-close aria-label="Stäng redigering">×</button></header><form data-honor-form><div class="honors-editor-fields" data-fields></div><footer><button type="button" data-cancel>Avbryt</button><button type="submit">Spara post</button></footer></form><div data-variants></div></div></div>' +
+      '<div class="honors-editor" data-editor hidden><div class="honors-editor-card"><header><h3 data-editor-title>Utmärkelse</h3><button type="button" data-close aria-label="Stäng redigering">×</button></header><div data-definition-image></div><form data-honor-form><div class="honors-editor-fields" data-fields></div><footer><button type="button" data-cancel>Avbryt</button><button type="submit">Spara post</button></footer></form><div data-variants></div></div></div>' +
       '<p role="status" aria-live="polite" data-notice></p></section>';
 
     const list = root.querySelector('[data-list]');
@@ -161,7 +205,7 @@ export function renderHonorsAdmin(root, options = {}) {
     if (honorSelect) { honorSelect.addEventListener('change', recipients); recipients(); }
     const grantForm = root.querySelector('[data-grant-form]');
     if (grantForm) grantForm.addEventListener('submit', grantSubmit);
-    const close = () => { root.querySelector('[data-editor]').hidden = true; editing = null; };
+    const close = () => { if(imageBusy)return; root.querySelector('[data-editor]').hidden = true; editing = null; };
     root.querySelector('[data-close]').addEventListener('click', close);
     root.querySelector('[data-cancel]').addEventListener('click', close);
     root.querySelector('[data-honor-form]').addEventListener('submit', saveSubmit);
@@ -172,7 +216,9 @@ export function renderHonorsAdmin(root, options = {}) {
     editing = definition || null;
     root.querySelector('[data-editor-title]').textContent = definition ? 'Redigera post' : 'Ny ' + categories[category].toLocaleLowerCase('sv');
     root.querySelector('[data-fields]').innerHTML = buildFields(definition);
+    root.querySelector('[data-definition-image]').innerHTML = imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
     root.querySelector('[data-variants]').innerHTML = renderVariantPanel(definition);
+    bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
     const cat = root.querySelector('[data-fields] [name="category"]');
     cat.addEventListener('change', () => { if (cat.value === 'medal') root.querySelector('[name="type"]').value = 'adventure'; else root.querySelector('[name="type"]').value = 'honor'; });
@@ -206,7 +252,7 @@ export function renderHonorsAdmin(root, options = {}) {
       if (!saved) throw Error('Databasen returnerade ingen sparad post.');
       if (editing) Object.assign(editing,saved); else definitions.push(saved);
       draw(); notice('Post sparad som ' + (saved.status === 'draft' ? 'utkast.' : 'aktiv.'));
-      if (saved.category === 'badge' || getCategory(saved) === 'badge') openEditor(saved);
+      if (imagePilot || saved.category === 'badge' || getCategory(saved) === 'badge') openEditor(saved);
     } catch (error) { notice(error.message || 'Kunde inte spara posten.'); }
   }
   async function grantSubmit(event) {

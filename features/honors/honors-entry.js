@@ -1,5 +1,20 @@
+import { createHermesAleaClient } from '../hermes-alea/client.js';
 import { renderHonorsAdmin } from './honors-admin.js';
-import { createHonorImageResolver } from './honors-image-resolver.js';
+import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-resolver.js';
+function browserImageClient(){
+  return createHermesAleaClient({
+    rpc:(name,args)=>window.dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)}),
+    request:(path,options={})=>window.authFetch(path,{...options,headers:{Authorization:'Bearer session',...(options.headers||{})}})
+  });
+}
+window.aleaHermesAleaImages={
+  resolve:verifiedHonorImageUrl,
+  loadAssets:async()=>{
+    const client=browserImageClient();
+    try{await client.capabilities();}catch{return [];}
+    return client.loadAssets(window.dbJson);
+  }
+};
 let instance;
 let openSequence=0;
 
@@ -65,13 +80,40 @@ window.openArcaneHonorsAdmin = async () => {
       window.dbJson('honor_relief_variants?select='+variantFields+'&order=created_at.asc')
     ]);
     if(sequence!==openSequence) return;
+    const client=browserImageClient();
+    let pilotEnabled=false, pilotInstalled=false;
+    try{const cap=await client.capabilities();pilotInstalled=true;pilotEnabled=Boolean(cap?.enabled);}catch{/* Not installed or disabled: existing interface remains available. */}
     const assetRows=Array.isArray(imageAssets)?imageAssets:[];
-    const imageResolver=createHonorImageResolver(assetRows);
+    if(pilotInstalled){
+      const [defs,reliefs,managed]=await Promise.all([
+        window.dbJson('honor_definitions?select=id,image_revision'),
+        window.dbJson('honor_relief_variants?select=id,image_revision'),
+        client.loadAssets(window.dbJson)
+      ]);
+      for(const row of [...(definitions||[]),...(variants||[])]){
+        const revision=[...defs,...reliefs].find(r=>r.id===row.id);row.image_revision=revision?.image_revision||0;
+      }
+      assetRows.push(...managed);
+    }
+    const applyImageResult=async(kind,target,file)=>{
+      const result=file?await client.upload({targetKind:kind,target,file}):await client.remove({targetKind:kind,target});
+      // Apply the committed pointer first. A signing/readback failure must not pretend activation failed.
+      target.image_asset_id=result.state==='removed'?null:'hermes-alea:'+result.id;
+      target.image_revision=result.result_revision;
+      delete target.image_preview_pending;
+      let managed=[];
+      try{managed=await client.loadAssets(window.dbJson);}catch{target.image_preview_pending=true;}
+      for(const row of managed){const index=assetRows.findIndex(a=>a.asset_key===row.asset_key);if(index<0)assetRows.push(row);else assetRows[index]=row;}
+      window.dispatchEvent(new CustomEvent('hermes-alea:image-change'));
+      return target;
+    };
+    const imageResolver=definition=>createHonorImageResolver(assetRows)(definition);
 
     const save=async data=>{
       const payload={...data};
       const id=payload.id;
       delete payload.id;
+      if(pilotEnabled && id)delete payload.image_asset_id;
       for(const key of ['campaign_id','adventure_id','image_asset_id']){
         if(payload[key]==='') payload[key]=null;
       }
@@ -105,7 +147,7 @@ window.openArcaneHonorsAdmin = async () => {
     const publishVariant=async (definition,variant)=>{
       if(String(variant.honor_id)!==String(definition.id)) throw Error('Reliefvarianten tillhör en annan utmärkelse.');
       const asset=assetRows.find(row=>row.asset_key===variant.image_asset_id&&row.asset_path&&row.alpha_preserved===true);
-      if(!asset) throw Error('HERMES-asset saknar publicerad transparensverifiering.');
+      if(!asset) throw Error('Bilden saknar publicerad transparensverifiering.');
       const updated=await window.dbJson('honor_relief_variants?id=eq.'+encodeURIComponent(variant.id),{
         method:'PATCH',body:JSON.stringify({status:'published',updated_at:new Date().toISOString()})
       });
@@ -142,6 +184,9 @@ window.openArcaneHonorsAdmin = async () => {
       imageAssets:assetRows,
       variants:Array.isArray(variants)?variants:[],
       resolveImage:imageResolver,
+      imagePilotEnabled:pilotEnabled,
+      onUploadImage:(kind,target,file)=>applyImageResult(kind,target,file),
+      onRemoveImage:(kind,target)=>applyImageResult(kind,target,null),
       onSave:save,
       onDelete:removeDraft,
       onSaveVariant:saveVariant,

@@ -52,6 +52,7 @@ function renderCharacter(){const layer=byId('trophyRoomCharacterLayer'),cutout=b
 const MEDAL_BASE='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/';
 let medalSequence=0;
 function medalUrl(asset){
+ if(asset?.asset_key?.startsWith('hermes-alea:'))return root.aleaHermesAleaImages?.resolve(asset)||null;
  const path=asset?.asset_path;
  if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-adventure-medal-[a-z0-9-]+\/[a-f0-9]{64}\.webp$/.test(path))return null;
  return MEDAL_BASE+path;
@@ -123,14 +124,15 @@ async function renderMedals(){
  const dbId=character?._dbId||character?.dbId||character?.data?.id||character?.id;
  if(!dbId||typeof root.dbJson!=='function')return;
  try{
-  const [grants,definitions,assets]=await Promise.all([
+  const [grants,definitions,assets,managedAssets]=await Promise.all([
    root.dbJson('honor_grants?select=honor_id,character_id,revoked_at,granted_at,reason&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
    root.dbJson('honor_definitions?select=id,name,description,image_asset_id,status,visibility&type=eq.adventure'),
-   root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-adventure-medal-*')
+   root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-adventure-medal-*'),
+   root.aleaHermesAleaImages?.loadAssets?.()||[]
   ]);
   if(seq!==medalSequence)return;
   const active=new Map((Array.isArray(grants)?grants:[]).map(g=>[String(g.honor_id),g]));
-  const assetMap=new Map((Array.isArray(assets)?assets:[]).map(a=>[a.asset_key,a]));
+  const assetMap=new Map([...(Array.isArray(assets)?assets:[]),...(managedAssets||[])].map(a=>[a.asset_key,a]));
   const awarded=(Array.isArray(definitions)?definitions:[]).filter(d=>active.has(String(d.id))&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).map(d=>({name:d.name,description:d.description||'',grantedAt:active.get(String(d.id))?.granted_at,reason:active.get(String(d.id))?.reason||'',url:medalUrl(assetMap.get(d.image_asset_id))})).filter(d=>d.url);
   // Only granted medals are rendered; no fixed capacity or empty placeholders.
   wall.style.setProperty('--medal-columns',String(Math.min(6,Math.max(1,awarded.length))));
@@ -170,5 +172,6 @@ const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=b
  const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='trophy-room-honor-preview-close';closeButton.textContent='Tillbaka till ARCANE HONORS';
  closeButton.addEventListener('click',()=>{layer.hidden=true;root.openArcaneHonorsAdmin?.()});layer.append(closeButton);layer.hidden=false;
 }
+root.addEventListener('hermes-alea:image-change',()=>{void renderMedals()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
 root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset})})(window);
