@@ -1,13 +1,37 @@
-name: HERMES V – Troférum (PHOENIX pilot)
+name: HERMES V – Bildpublicering (PHOENIX)
 
 on:
   workflow_dispatch:
     inputs:
-      color:
-        description: 'Choose the approved trophy display'
+      kind:
+        description: 'Image category (existing HERMES kinds)'
         required: true
         type: choice
-        options: [red, green, blue]
+        options: [system-asset, spell, spell-cutout, symbol, skill, skill-illustration, skill-illustration-wide, spell-illustration, spell-illustration-wide]
+      target_key:
+        description: 'Destination key in Alea'
+        required: true
+        type: string
+      target_id:
+        description: 'Existing target UUID (or approved system asset UUID)'
+        required: true
+        type: string
+      inbox_id:
+        description: 'Google Drive Inbox original file ID'
+        required: true
+        type: string
+      archive_id:
+        description: 'Independent verified original archive file ID'
+        required: true
+        type: string
+      sha256:
+        description: 'SHA-256 of original PNG'
+        required: true
+        type: string
+      approved:
+        description: 'I confirm the image was visually approved'
+        required: true
+        type: boolean
       mode:
         description: 'verify checks source; publish activates after all integrity checks'
         required: true
@@ -20,11 +44,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: hermes-v-trophy-${{ inputs.color }}
+  group: hermes-v-${{ inputs.kind }}-${{ inputs.target_key }}
   cancel-in-progress: false
 
 jobs:
-  trophy:
+  image:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -53,12 +77,18 @@ jobs:
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/drive.readonly
           create_credentials_file: false
-      - name: Verify and publish one approved trophy image
+      - name: Verify and publish one approved image
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
-          HERMES_V_COLOR: ${{ inputs.color }}
+          HERMES_V_KIND: ${{ inputs.kind }}
+          HERMES_V_KEY: ${{ inputs.target_key }}
+          HERMES_V_TARGET_ID: ${{ inputs.target_id }}
+          HERMES_V_INBOX_ID: ${{ inputs.inbox_id }}
+          HERMES_V_ARCHIVE_ID: ${{ inputs.archive_id }}
+          HERMES_V_SHA256: ${{ inputs.sha256 }}
+          HERMES_V_APPROVED: ${{ inputs.approved }}
           HERMES_V_MODE: ${{ inputs.mode }}
         shell: bash
         run: |
@@ -66,8 +96,9 @@ jobs:
           output="$RUNNER_TEMP/hermes-v"
           mkdir -p "$output"
           mkdir -p hermes/queue
-          python scripts/hermes_v_trophy.py --color "$HERMES_V_COLOR" --mode "$HERMES_V_MODE" --output "hermes/queue/phoenix-trophy-request.json"
-          python scripts/hermes_drive_intake.py "hermes/queue/phoenix-trophy-request.json" --output "$output/result"
+          if [ "$HERMES_V_APPROVED" != "true" ]; then echo "::error::Visual approval required"; exit 1; fi
+          python scripts/hermes_v_trophy.py --kind "$HERMES_V_KIND" --target-key "$HERMES_V_KEY" --target-id "$HERMES_V_TARGET_ID" --inbox-id "$HERMES_V_INBOX_ID" --archive-id "$HERMES_V_ARCHIVE_ID" --sha256 "$HERMES_V_SHA256" --approved --mode "$HERMES_V_MODE" --output "hermes/queue/phoenix-image-request.json"
+          python scripts/hermes_drive_intake.py "hermes/queue/phoenix-image-request.json" --output "$output/result"
           if [ -f "$output/result/manifest.json" ]; then
             if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
               echo "::error::HERMES V cannot publish: service credential missing"; exit 1
@@ -79,7 +110,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hermes-v-trophy-${{ inputs.color }}-${{ inputs.mode }}
+          name: hermes-v-${{ inputs.kind }}-${{ inputs.mode }}
           path: ${{ runner.temp }}/hermes-v/**/*.json
           if-no-files-found: ignore
           retention-days: 30
