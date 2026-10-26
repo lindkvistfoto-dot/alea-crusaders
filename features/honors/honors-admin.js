@@ -140,9 +140,9 @@ export function renderHonorsAdmin(root, options = {}) {
       '<div class="honors-variant-list">' + rows + '</div>' +
       '<form data-variant-form class="honors-variant-form">' +
         '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
-        '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required></label><small>HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. Äkta transparens krävs.</small>' +
+        '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
         '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt relief att sticka utanför monteringscirkeln</label>' +
-        '<button type="submit">Lägg till variant</button></form>' +
+        '<button type="submit"'+(!imagePilot?' disabled':'')+'>Lägg till variant</button></form>' +
       '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i troférummet"><span>Förhandsvisning · bronsram</span><div class="honors-preview-art">' +
         (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL bronsram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
@@ -284,6 +284,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const form=root.querySelector('[data-variant-form]');
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
+      if (!imagePilot || !options.onUploadImage) { notice('HERMES ALEA är inte tillgänglig. Ingen variant har skapats.'); return; }
       const data=formData(event.currentTarget);
       const file=event.currentTarget.elements.namedItem('image_file')?.files?.[0];
       if (!file) { notice('Välj en bildfil.'); return; }
