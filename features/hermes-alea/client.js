@@ -1,0 +1,74 @@
+export const DISPLAY_BUCKET='hermes-alea-display';
+export const SOURCE_BUCKET='hermes-alea-originals';
+const LIMIT=12_000_000;
+const uuid=/^[a-f0-9-]{36}$/i;
+export const managedKey=value=>/^hermes-alea:[a-f0-9-]{36}$/i.test(String(value||''));
+async function hash(blob){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');}
+export async function convertToWebP(file,{requireAlpha=false}={}){
+ if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('Välj en statisk PNG-, JPEG- eller WebP-bild.');
+ if(!file.size||file.size>LIMIT)throw Error('Bilden får vara högst 12 MB.');
+ const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});
+ try{
+  if(!bitmap.width||!bitmap.height||bitmap.width>2048||bitmap.height>2048||bitmap.width*bitmap.height>4194304)throw Error('Bilden får vara högst 2048 × 2048 pixlar. Förbered storleken före uppladdning.');
+  const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('Webbläsaren kan inte konvertera bilden.');
+  ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  if(requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Reliefen behöver äkta transparent bakgrund.');
+  const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
+  if(!output||output.type!=='image/webp'||output.size>LIMIT)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
+  const check=await createImageBitmap(output);try{if(check.width!==bitmap.width||check.height!==bitmap.height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
+  return output;
+ }finally{bitmap.close();}
+}
+export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage}){
+ const attempts=new Map();
+ async function json(path,options={}){
+  const r=await request(path,options);const text=await r.text();const data=text?JSON.parse(text):null;
+  if(!r.ok)throw Error(data?.error||data?.message||'Bildöverföringen misslyckades ('+r.status+').');return data;
+ }
+ async function uploadBlob(bucket,path,blob){
+  const r=await request('/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{'Content-Type':blob.type,'x-upsert':'false'},body:blob});
+  if(r.ok)return;
+  // An earlier upload may have succeeded with a lost response. Verification checks full bytes.
+  if(r.status===409)return;
+  if(r.status===400){const data=await r.json().catch(()=>null);if(data?.statusCode==='409'||data?.error==='Duplicate')return;}
+  throw Error('Bilden kunde inte laddas upp. Försök igen; tidigare bild finns kvar.');
+ }
+ function idempotency(fingerprint){
+  const key='hermes-alea:'+fingerprint;
+  let id=attempts.get(key);
+  try{id=id||storage?.getItem(key);}catch{}
+  if(!id){id=crypto.randomUUID();attempts.set(key,id);try{storage?.setItem(key,id);}catch{}}
+  return id;
+ }
+ async function upload({targetKind,target,file}){
+  if(!uuid.test(target?.id)||!['definition','relief'].includes(targetKind))throw Error('Spara posten innan du lägger till en bild.');
+  const webp=await convert(file,{requireAlpha:targetKind==='relief'});
+  const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
+  const expected_revision=Number(target.image_revision||0);
+  const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:target.image_asset_id?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
+  meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
+  const job=await rpc('hermes_alea_begin',{request:meta});
+  if(job.state==='activated')return job;
+  await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
+  await uploadBlob(SOURCE_BUCKET,job.source_path,file);
+  await json('/functions/v1/hermes-alea',{method:'POST',body:JSON.stringify({job_id:job.id})});
+  return rpc('hermes_alea_finalize',{job_id:job.id});
+ }
+ async function remove({targetKind,target}){
+  const request={target_kind:targetKind,target_id:target.id,expected_revision:Number(target.image_revision||0),operation:'REMOVE',idempotency_key:idempotency(['remove',targetKind,target.id,target.image_revision||0].join(':'))};
+  return rpc('hermes_alea_remove',{request});
+ }
+ async function loadAssets(dbJson){
+  const rows=await dbJson('hermes_alea_assets?select=*');
+  return Promise.all((rows||[]).map(async row=>{
+   if(!/^trophy\/[a-f0-9-]{36}\.webp$/i.test(row.asset_path))throw Error('Ogiltig bildsökväg.');
+   const data=await json('/storage/v1/object/sign/'+DISPLAY_BUCKET+'/'+row.asset_path,{method:'POST',body:JSON.stringify({expiresIn:3600})});
+   const path=data?.signedURL||data?.signedUrl;
+   // Only the known project origin is added by the resolver, never caller-selected URL origins.
+   if(typeof path!=='string'||!path.startsWith('/object/sign/'+DISPLAY_BUCKET+'/'))throw Error('Ogiltig signerad bildadress.');
+   return {...row,hermes_alea_signed_path:path};
+  }));
+ }
+ return {upload,remove,loadAssets,capabilities:()=>rpc('hermes_alea_capabilities',{})};
+}

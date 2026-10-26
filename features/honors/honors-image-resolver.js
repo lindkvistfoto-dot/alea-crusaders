@@ -8,6 +8,11 @@ const PUBLIC_BASE='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/pu
 export function verifiedHonorImageUrl(record){
   if(!record) return null;
   if(record.publication_status && record.publication_status!=='published') return null;
+  if(typeof record.asset_key==='string' && record.asset_key.startsWith('hermes-alea:')){
+    const path=record.hermes_alea_signed_path;
+    if(typeof path!=='string'||!/^\/object\/sign\/hermes-alea-display\/trophy\/[a-f0-9-]{36}\.webp\?token=[A-Za-z0-9_.-]+$/.test(path))return null;
+    return 'https://wbmosmkirsitkonejzpg.supabase.co/storage/v1'+path;
+  }
 
   let value=record.public_url||record.optimized_public_url;
   if(!value && typeof record.asset_path==='string'){
