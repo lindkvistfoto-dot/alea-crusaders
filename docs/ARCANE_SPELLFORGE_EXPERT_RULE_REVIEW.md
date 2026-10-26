@@ -91,6 +91,16 @@ Aktuell skrivskyddad kontroll av 91 rader:
 
 Markeringarna (K)/(R) finns i namnen och kastningskoden läser markörerna där. Det gör inte de fristående registerflaggorna korrekta: UI, minnesregler eller framtida kod som läser endast `kvick`/`ritual` kan ge annat resultat. **Datafynd, P2:** normalisera dessa flaggor mot s. 4–5 först efter att varje markering har verifierats. De tomma mål-, effekt- och motståndsfälten ska inte fyllas genom gissning. Beskrivning finns på alla rader, men den räcker inte i sig som maskinläsbar effektdefinition.
 
+### SF-DATA-002 — K/R-markeringarna stämmer inte med registerflaggorna
+
+- **Klassificering:** datafel · ofullständig definition.
+- **Prioritet:** P2.
+- **Förväntat beteende:** Sex Expert-namn med (K) ska representeras som kvicka och fyra med (R) som ritualer, så separata registerkonsumenter får samma metadata som källnamnen (Expert s. 4–5).
+- **Faktiskt beteende:** Alla 91 rader har `kvick=false`; sex K-markerade namn finns. Endast BESKYDDARE har `ritual=true`; fyra R-markerade namn har `ritual=false`. Runtime känner igen namnmarkörerna i kastprofilen, men det gör inte den fristående registerflaggan korrekt.
+- **Reproducerbart testfall:** Läs-only SQL: `select name, kvick, ritual from public.rule_spells where name ~ '\\(.*[KR].*\\)';` och jämför med Expert s. 4–5. Noll rader har `kvick=true`; bara BESKYDDARE har `ritual=true`.
+- **Sannolik grundorsak:** Namnmarkörerna importerades men booleska fält uppdaterades inte, eller flaggorna har annan äldre betydelse.
+- **Åtgärd:** Fastställ flaggornas avsedda kontrakt, normalisera dem mot Expert-källan och lägg till dataregressionstest. Rör inte produktionsrader inom denna diagnostiska operation.
+
 ## Simuleringsstatus och täckning
 
 Testsviten på grenen använder en fryst, skrivskyddad JSON-kopia, ingen Supabase-klient och inga kampanj-/rollpersonsskrivningar. Den parametriserar register- och preflightkontroller för 91/91 besvärjelser. En kompletterad regressionstestsats kodar nu Experts kostnadsregler för misslyckande, perfekt och fummel; två förväntade assertioner blottlägger de kända avvikelserna (perfekt udda EG och fummel).
