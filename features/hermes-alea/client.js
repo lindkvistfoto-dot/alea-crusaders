@@ -44,7 +44,12 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
  }
  async function upload({targetKind,target,file,profile={}}){
   if(!uuid.test(target?.id)||!['definition','relief'].includes(targetKind))throw Error('Spara posten innan du lägger till en bild.');
-  const webp=await convert(file,{profile,requireAlpha:profile.requireAlpha===true});
+  const limits=resolveImageProfile(profile);
+  if(!file||!limits.allowedMimeTypes.includes(file.type)||!file.size||file.size>limits.maxBytes)
+    throw Error('Bilden uppfyller inte den valda bildprofilen.');
+  const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
+  if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxBytes)
+    throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
   const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
   const expected_revision=Number(target.image_revision||0);
   const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:target.image_asset_id?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
