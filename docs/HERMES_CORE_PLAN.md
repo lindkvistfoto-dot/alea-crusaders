@@ -67,9 +67,11 @@ HERMES CORE ska bli den normala vägen för nya bildåtgärder från ChatGPT, Wo
 
 ## Kanalernas arbetsflöde
 
-CORE ska använda de redan anslutna Drive-, GitHub- och Supabase-anslutningarna. Drive Inbox tar emot originalet; den befintliga Alea-arkivprocessen arkiverar originalet och kontrollerar återläsning. En separat, avgränsad CORE-körning bereder WebP och använder samma hermes_alea_jobs-livscykel, privata buckets, image_revision och målpekare som Alea. Den ska inte skriva målpekaren direkt eller använda en parallell tillgångskatalog.
+CORE ska använda den befintliga HERMES 4-kedjan för OpenAI-kanalerna: Drive Inbox → verifierat originalarkiv → befintlig WebP-beredning → befintlig Supabase-publicerare. Inga nya databaser, buckets, Edge-funktioner, WASM-komponenter eller Supabase-brancher införs.
 
-Jobbstarten får bara komma från en behörig CORE-kanalåtgärd. Ett explicit mål-ID, aktuell revision och idempotent jobbnyckel binds till begäran. Befintlig revisionskontroll gör att samtidiga Alea- och Core-ändringar inte skriver över varandra. Den fullständiga kanalvägen och behörighetsgränsen ska finnas i koden och verifieras innan livepiloten.
+Den enda nya kopplingen som behöver byggas är en tunn HERMES 4-adapter från ett explicit Troférumsmål till samma image_asset_id som HERMES ALEA använder. Den ska återanvända HERMES 4:s kö, jobbspårning, hashverifiering, WebP-publicering och etablerade compare-and-set-mönster. Mål-ID, bildrevision och materialvariant binds till ordern. ALEA:s webbflöde och dess hermes_alea_jobs förblir oförändrade; båda vägarna arbetar mot samma utmärkelse-/reliefposter och aktiva bildpekare.
+
+CORE tar emot kanalens fil och skapar en explicit, idempotent HERMES 4-order först efter att originalet lagts i Inbox och arkivkopian verifierats. En misslyckad beredning/publicering lämnar den tidigare aktiva pekaren orörd. REMOVE kopplar bort den valda bildplatsen utan att radera arkivoriginal eller publicerad fil. Fysisk rensning ingår inte.
 
 ## Avgränsning
 
