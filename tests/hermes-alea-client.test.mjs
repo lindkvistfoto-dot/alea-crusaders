@@ -83,3 +83,26 @@ it('caller cannot widen adapter size or accepted MIME types',async()=>{
  await expect(client.upload({targetKind:'definition',target,file:new Blob(['jpeg'],{type:'image/jpeg'}),profile:{allowedMimeTypes:['image/jpeg']}})).rejects.toThrow(/bildformat/);
  expect(calls).toEqual([]);
 });
+
+it('reports progress and completes only after verification and finalize',async()=>{
+ const h=harness();const stages=[];
+ await h.client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),onStatus:s=>stages.push(s)});
+ expect(stages).toEqual(['preparing','uploading','verifying','activating','completed']);
+});
+it('verification timeout never finalizes or reports completion',async()=>{
+ const calls=[];const stages=[];
+ const client=createHermesAleaClient({
+  storage:null,targetPolicies:{definition:{}},convert:async()=>new Blob(['webp'],{type:'image/webp'}),
+  rpc:async(name)=>{calls.push(name);return {id:target.id,state:'uploading',source_path:'user/job/original',output_path:'trophy/job.webp'};},
+  request:async(path,options={})=>{
+   calls.push(path);
+   if(path.includes('/functions/v1/hermes-alea'))return new Promise((resolve,reject)=>{
+    options.signal.addEventListener('abort',()=>reject(Object.assign(new Error('aborted'),{name:'AbortError'})),{once:true});
+   });
+   return Response.json({ok:true});
+  }
+ });
+ await expect(client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),verificationTimeoutMs:5,onStatus:s=>stages.push(s)})).rejects.toThrow(/tog för lång tid/);
+ expect(calls).not.toContain('hermes_alea_finalize');
+ expect(stages).not.toContain('completed');
+});
