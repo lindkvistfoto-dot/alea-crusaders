@@ -58,11 +58,11 @@ function medalUrl(asset){
 }
 
 /* JAKOB 4A: the medal stays a separate asset; the display frame is a HERMES system asset. */
-const DISPLAY_FRAME_KEY='arcane-medal-display-frame-v1';
+const DISPLAY_FRAME_KEY='arcane-medal-display-red'; // Midwall; left=blue, right=green in later wall navigation.
 let medalDialog=null,medalDialogReturnFocus=null;
 function medalFrameUrl(asset){
  const path=asset?.asset_path;
- if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-medal-display-frame-v1\/[a-f0-9]{64}\.webp$/.test(path))return null;
+ if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-medal-display-(?:red|green|blue)\/[a-f0-9]{64}\.webp$/.test(path))return null;
  return MEDAL_BASE+path;
 }
 function formatGrantDate(value){
