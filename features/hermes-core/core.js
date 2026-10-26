@@ -6,17 +6,22 @@ export function createHermesCore({archiveOriginal, convertToWebP, publishWebP, g
   }
   async function put({target, file}) {
     if (!target || !file || !file.size) throw new Error('Image and target are required');
-    // Archive first: never activate an image whose original was not preserved.
-    const archive = await archiveOriginal(file);
-    if (!archive?.id || archive.verified !== true) throw new Error('Original archive not verified');
     const webp = await convertToWebP(file);
     if (!webp || webp.type !== 'image/webp' || !webp.size) throw new Error('Invalid WebP');
     const current = await getTarget(target);
     if (!current) throw new Error('Unknown image target');
-    const published = await publishWebP({target, webp, archiveId: archive.id});
+    const published = await publishWebP({target, webp});
     if (!published?.key || published.verified !== true) throw new Error('WebP publication not verified');
     // The adapter must compare expected revision atomically and refuse stale writes.
-    return setTarget({target, expectedRevision: current.revision, expectedKey: current.key ?? null, key: published.key});
+    const activated = await setTarget({target, expectedRevision: current.revision, expectedKey: current.key ?? null, key: published.key});
+    let archive;
+    try {
+      const receipt = await archiveOriginal(file);
+      archive = receipt?.id && receipt.verified === true ? {status:'archived', id:receipt.id} : {status:'pending'};
+    } catch (error) {
+      archive = {status:'pending', error:String(error?.message || error)};
+    }
+    return {activation:activated, archive};
   }
   async function remove({target}) {
     if (!target) throw new Error('Image target is required');
