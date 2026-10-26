@@ -8,13 +8,13 @@ export function createHermesCore({archiveOriginal, convertToWebP, publishWebP, g
     if (!target || !file || !file.size) throw new Error('Image and target are required');
     // Archive first: never activate an image whose original was not preserved.
     const archive = await archiveOriginal(file);
-    if (!archive?.id) throw new Error('Original archive not verified');
+    if (!archive?.id || archive.verified !== true) throw new Error('Original archive not verified');
     const webp = await convertToWebP(file);
     if (!webp || webp.type !== 'image/webp' || !webp.size) throw new Error('Invalid WebP');
     const current = await getTarget(target);
     if (!current) throw new Error('Unknown image target');
     const published = await publishWebP({target, webp, archiveId: archive.id});
-    if (!published?.key) throw new Error('WebP publication not verified');
+    if (!published?.key || published.verified !== true) throw new Error('WebP publication not verified');
     // The adapter must compare expected revision atomically and refuse stale writes.
     return setTarget({target, expectedRevision: current.revision, expectedKey: current.key ?? null, key: published.key});
   }
