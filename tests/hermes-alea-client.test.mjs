@@ -4,7 +4,7 @@ import {verifiedHonorImageUrl} from '../features/honors/honors-image-resolver.js
 const target={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',image_revision:0,image_asset_id:null};
 function harness(fail=''){
  const calls=[];let meta;
- const client=createHermesAleaClient({storage:null,convert:async()=>new Blob(['webp'],{type:'image/webp'}),rpc:async(name,args)=>{
+ const client=createHermesAleaClient({storage:null,targetPolicies:{definition:{},relief:{requireAlpha:true}},convert:async()=>new Blob(['webp'],{type:'image/webp'}),rpc:async(name,args)=>{
   calls.push(name);
   if(name==='hermes_alea_begin'){meta=args.request;return {id:target.id,state:'uploading',source_path:'user/job/original',output_path:'trophy/job.webp'};}
   if(name==='hermes_alea_finalize')return {id:target.id,state:'activated',result_revision:1};
@@ -37,7 +37,7 @@ it('accepts only the dedicated signed display path while preserving old image re
 it('rejects invalid output from an injected converter before creating a job',async()=>{
  const calls=[];
  const client=createHermesAleaClient({
-  storage:null,convert:async()=>new Blob(['not webp'],{type:'image/png'}),
+  storage:null,targetPolicies:{definition:{},relief:{requireAlpha:true}},convert:async()=>new Blob(['not webp'],{type:'image/png'}),
   rpc:async name=>{calls.push(name);throw Error('unexpected rpc');},
   request:async()=>{throw Error('unexpected request');}
  });
@@ -47,5 +47,12 @@ it('rejects invalid output from an injected converter before creating a job',asy
 it('rejects profile violations before creating an upload intent',async()=>{
  const h=harness();
  await expect(h.client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),profile:{allowedMimeTypes:['image/jpeg']}})).rejects.toThrow(/bildprofilen/);
+ expect(h.calls).toEqual([]);
+});
+
+it('rejects unregistered ALEA image target before RPC or storage',async()=>{
+ const h=harness();
+ await expect(h.client.upload({targetKind:'character_portrait',target,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow(/Spara posten/);
+ await expect(h.client.remove({targetKind:'character_portrait',target})).rejects.toThrow(/Okänd bildplats/);
  expect(h.calls).toEqual([]);
 });
