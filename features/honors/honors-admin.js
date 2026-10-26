@@ -297,7 +297,10 @@ export function renderHonorsAdmin(root, options = {}) {
         if (!row?.id) throw Error('Reliefvarianten kunde inte sparas.');
         variants.push(row);
         draw(); openEditor(definition);
-        const uploaded=await options.onUploadImage('relief',row,file);
+        const uploaded=await options.onUploadImage('relief',row,file,stage=>{
+          const messages={preparing:'Förbereder bilden…',uploading:'Laddar upp bilden…',verifying:'Kontrollerar bilden…',activating:'Sparar bildkopplingen…'};
+          if(messages[stage])notice(messages[stage]);
+        });
         Object.assign(row,uploaded);
         draw(); openEditor(definition); notice('Relief och bild sparade via HERMES ALEA. Arkivering sker i bakgrunden.');
       } catch (error) {

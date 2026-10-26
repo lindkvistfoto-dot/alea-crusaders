@@ -3,6 +3,7 @@ import { renderHonorsAdmin } from './honors-admin.js';
 import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-resolver.js';
 function browserImageClient(){
   return createHermesAleaClient({
+    targetPolicies:{definition:{requireAlpha:false},relief:{requireAlpha:true}},
     rpc:(name,args)=>window.dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)}),
     request:(path,options={})=>window.authFetch(path,{...options,headers:{Authorization:'Bearer session',...(options.headers||{})}})
   });
@@ -96,7 +97,10 @@ window.openArcaneHonorsAdmin = async () => {
       assetRows.push(...managed);
     }
     const applyImageResult=async(kind,target,file)=>{
-      const result=file?await client.upload({targetKind:kind,target,file}):await client.remove({targetKind:kind,target});
+      const result=file?await client.upload({targetKind:kind,target,file,onStatus:stage=>{
+        const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp bilden…',verifying:'Kontrollerar bilden…',activating:'Sparar bildkopplingen…'};
+        if(labels[stage]) onStatus?.(stage);
+      }}):await client.remove({targetKind:kind,target});
       // Apply the committed pointer first. A signing/readback failure must not pretend activation failed.
       target.image_asset_id=result.state==='removed'?null:'hermes-alea:'+result.id;
       target.image_revision=result.result_revision;
