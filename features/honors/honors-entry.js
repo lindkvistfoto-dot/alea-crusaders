@@ -136,7 +136,7 @@ window.openArcaneHonorsAdmin = async () => {
       return window.dbJson('honor_definitions?id=eq.'+encodeURIComponent(definition.id)+'&status=eq.draft',{method:'DELETE'});
     };
     const saveVariant=async data=>{
-      const payload={...data,created_by:user.id};
+      const payload={...data,image_asset_id:String(data.image_asset_id||'').trim()||null,created_by:user.id};
       return window.dbJson('honor_relief_variants',{method:'POST',body:JSON.stringify(payload)});
     };
     const previewVariant=async (definition,variantId)=>{
