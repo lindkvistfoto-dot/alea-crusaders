@@ -8,7 +8,7 @@ export function createDriveOriginalArchive({uploadFile, getFile}) {
     const uploaded = await uploadFile(file);
     if (!uploaded?.id) throw new Error('Drive upload failed');
     const metadata = await getFile(uploaded.id);
-    if (metadata?.id !== uploaded.id || metadata?.size !== file.size ||
+    if (metadata?.id !== uploaded.id || Number(metadata?.size) !== file.size ||
         metadata?.trashed === true) throw new Error('Drive archive verification failed');
     return {id:uploaded.id, verified:true};
   };
