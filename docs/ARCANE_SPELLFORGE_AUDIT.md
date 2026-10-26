@@ -5,7 +5,7 @@
 **Ärende:** [#297](https://github.com/lindkvistfoto-dot/alea-crusaders/issues/297)  
 **Gren:** `test/arcane-spellforge-simulation`  
 **Registeruttag:** 2026-10-25 från Supabase `wbmosmkirsitkonejzpg.public.rule_spells`  
-**Omfattning:** skrivskyddad diagnos. Ingen magiregel, produktionsrad eller spelmekanik har ändrats.
+**Omfattning:** skrivskyddad diagnos. Ingen magiregel, produktionsrad eller spelmekanik har ändrats. Se även [Expertregelgranskningen](ARCANE_SPELLFORGE_EXPERT_RULE_REVIEW.md), som tillför bokunderlag och korrigerar den ursprungliga källstatusen.
 
 ## Sammanfattning av registerkontroll
 
@@ -31,7 +31,7 @@ De tomma fälten är datakompletteringsfynd, men kan inte automatiskt likställa
 
 ## Regelunderlagets tillgänglighet
 
-Library-sökningen gav ingen verifierbar DoD Expert/Magiboken-fil. Den publikt hittade informationen var sekundär eller om en annan utgåva och används därför inte som auktoritativ regelkontroll. Runtime-kommentarer hänvisar till Expert Magiboken s. 3–5 för kastningskostnad och timing; hänvisningen har inte kunnat verifieras mot själva boken här. Behandla därför de uppgifterna som kodens avsikt, inte som godkänd regelkälla.
+Regelbilderna har nu verifierats: *Drakar och Demoner Expert, Magi*, s. 2–37. S. 40–47 tillhör den separata svarta grundboken. Sidorna 3–5 ger primärkälla för centrala kastningsregler; verifierade skillnader redovisas i [Expertregelgranskningen](ARCANE_SPELLFORGE_EXPERT_RULE_REVIEW.md). En komplett rad-för-rad korsreferens mellan samtliga 91 registerdefinitioner och s. 8–37 återstår.
 
 ## Automatiserad svit
 
@@ -45,7 +45,7 @@ Library-sökningen gav ingen verifierbar DoD Expert/Magiboken-fil. Den publikt h
 - Kastningspreflight: varje rad får 3 fall (EG 1, PSY 0, EG 0).
 - Explicita stridskontroller: 7 grupper av deterministiska tester.
 - Inte täckt i körd simulering ännu: faktiska tärningsresultat/perfekt/misslyckande, målval, hexgeometri, områdesgränser, avstånd, förberedelse/avbrottslivscykel, antiframes, samtidiga effekter, verkan över tid och återställning. Skälet är att sviten ännu inte körts och dessa fall kräver mer av runtime-kontraktet eller isolerad test-double-data.
-- Drakar och Demoner Expert-jämförelse: inte fullföljd. Ingen säker slutsats dras om enskilda saknade regler eftersom verifierbart regelunderlag inte har bifogats eller hämtats in i denna kontroll.
+- Expertjämförelse: grundläggande kastningsregler på s. 3–5 är nu verifierade. Fullständig spell-för-spell jämförelse mot s. 8–37 återstår; registerluckor har därför inte fyllts med antaganden. S. 40–47 används inte som Expert-underlag.
 
 ## Fynd med reproduktionssteg
 
