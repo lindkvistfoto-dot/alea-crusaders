@@ -33,6 +33,21 @@ De tomma fälten är datakompletteringsfynd, men kan inte automatiskt likställa
 
 Regelbilderna har nu verifierats: *Drakar och Demoner Expert, Magi*, s. 2–37. S. 40–47 tillhör den separata svarta grundboken. Sidorna 3–5 ger primärkälla för centrala kastningsregler; verifierade skillnader redovisas i [Expertregelgranskningen](ARCANE_SPELLFORGE_EXPERT_RULE_REVIEW.md). En komplett rad-för-rad korsreferens mellan samtliga 91 registerdefinitioner och s. 8–37 återstår.
 
+## Effektimplementation och testernas faktiska omfattning
+
+Statisk inventering av `combatMagicBinding` mot 91 registerposter ger följande bild:
+
+| Upplösningssätt i runtime | Antal registerposter | Tolkning |
+|---|---:|---|
+| Effektbinding med automatisk stridsupplösning | 15 | 4 attackformler, 7 tillstånd, 2 attributbesvärjelser, Dimma och Beskyddare |
+| HELA | 1 | Kast och målval finns; läkningen kräver fortfarande SL:s angivna belopp/resultatkort |
+| Ritual, SL-styrd | 4 | Kastflöde finns, men ritualtid och effektupplösning är manuella |
+| Övrig manuell effekt | 67 | `combatMagicBinding` ger generell manuell hantering; effekten ändrar inte automatiskt stridsvärden |
+
+Totalt går alltså 71/91 poster till en manuell effektväg (ritualerna inräknade). Detta säger inte att de är obrukbara i bordsspel, men de har inte en automatiserad regelupplösning i stridsmotorn. `supported: true` på standardvägen betyder att SL kan slutföra kastet, inte att effekten är implementerad. Av de sex raderna med `attack_magic=true` har fyra en automatisk skadeformel; GASMOLN och DÖDSHAND saknar automatisk effekt och kräver SL.
+
+Per-besvärjelse-testen anropar profil och preflight på en fryst registerrad, men sätter FV och skol-FV till 100 och kastar med 100 PSY. De provar därför grundgränssnittet för alla 91 namn och några generiska förutsättningar; de validerar inte faktisk FV-inlärning, besvärjelsens effekt, målgeometri, räckvidd, varaktighet eller regeltext. Testraden med “3/3 preflight” ska läsas som tre syntetiska preflightfall godkända, inte tre besvärjelseeffekter godkända. Felen för perfekt, fummel och 0 PSY är systemgemensamma regressionstest, inte separata effekttest för varje spell.
+
 ## Automatiserad svit
 
 `tests/arcane-spellforge.test.js` använder endast lokal Vitest och en JSON-ögonblicksbild. Den innehåller ingen Supabase-client, fetch eller skrivfunktion. Den parametriserar varje registrerad besvärjelse genom effektprofil och kastningskontroll vid giltig EG, otillräcklig PSY och ogiltig EG; därutöver testar den CL/PSY-skalning, kvick/normal upplösning, FV-gräns, skadeformel, helning, Beskyddare och manuell fallback.
