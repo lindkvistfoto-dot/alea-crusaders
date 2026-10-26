@@ -84,6 +84,7 @@ export function renderHonorsAdmin(root, options = {}) {
         '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Förhandsvisning vald' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
         '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · överhäng tillåtet' : '') + '</small></div>' +
         '<div class="honors-variant-actions">' +
+          (['enamel','metal','wood'].includes(v.material) ? '<label><input type="radio" name="published_material_variant" value="' + esc(v.id) + '"' + (isPublished ? ' checked' : '') + (v.image_asset_id && publishedAsset(v.image_asset_id) && v.status !== 'archived' ? '' : ' disabled') + '> Använd ' + esc(materials[v.material]) + '</label>' : '') +
           '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>' +
           (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
           (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
@@ -253,6 +254,16 @@ export function renderHonorsAdmin(root, options = {}) {
         await onPreviewVariant(definition,button.dataset.previewVariant);
         definition.preview_variant_id=button.dataset.previewVariant; draw(); openEditor(definition); notice('Förhandsvisningsvariant vald; publicerad variant oförändrad.');
       } catch(error) { notice(error.message || 'Kunde inte välja förhandsvisning.'); }
+    }));
+    root.querySelectorAll('input[name="published_material_variant"]').forEach(radio => radio.addEventListener('change', async () => {
+      if (!radio.checked) return;
+      try {
+        const variant=variants.find(v=>String(v.id)===radio.value);
+        if (!variant || !publishedAsset(variant.image_asset_id)) throw Error('Varianten saknar verifierad HERMES-publicering.');
+        await onPublishVariant(definition,variant);
+        definition.published_variant_id=variant.id; variant.status='published';
+        draw(); openEditor(definition); notice('Aktivt material: ' + (materials[variant.material] || variant.material) + '.');
+      } catch(error) { draw(); openEditor(definition); notice(error.message || 'Kunde inte välja material.'); }
     }));
     root.querySelectorAll('[data-publish-variant]').forEach(button => button.addEventListener('click', async () => {
       try {
