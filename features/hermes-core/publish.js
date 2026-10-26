@@ -1,15 +1,16 @@
-// HERMES CORE WebP publisher. Binary upload and metadata read use existing
-// Supabase Storage adapters; no WASM, Edge Function, or HERMES 4 queue.
-export function createWebPPublisher({upload,stat,bucket='hermes-alea-display'}) {
- if(typeof upload!=='function'||typeof stat!=='function') throw new TypeError('Storage adapters required');
- return async function publishWebP({target,webp}) {
+// HERMES CORE WebP publisher. Supabase Storage upload is binary.
+// Asset registration must use the existing ALEA image resolver contract.
+export function createWebPPublisher({reserveAsset,upload,stat,bucket='hermes-alea-display'}) {
+ for(const [name,fn] of Object.entries({reserveAsset,upload,stat}))
+  if(typeof fn!=='function') throw new TypeError('Missing publisher adapter: '+name);
+ return async function publishWebP({target,webp,archive}) {
   if(!target||webp?.type!=='image/webp'||!webp.size) throw new Error('Invalid WebP publication');
-  const id=crypto.randomUUID();
-  const path='core/'+id+'.webp';
-  await upload({bucket,path,blob:webp,upsert:false});
-  const info=await stat({bucket,path});
-  if(Number(info?.size)!==webp.size || info?.mimeType!=='image/webp')
+  const asset=await reserveAsset({target,archive,bytes:webp.size,mimeType:'image/webp'});
+  if(!asset?.key||!asset?.path) throw new Error('Image asset reservation failed');
+  await upload({bucket,path:asset.path,blob:webp,upsert:false});
+  const info=await stat({bucket,path:asset.path});
+  if(Number(info?.size)!==webp.size||info?.mimeType!=='image/webp')
    throw new Error('WebP publication not verified');
-  return {key:bucket+'/'+path,verified:true};
+  return {key:asset.key,verified:true};
  };
 }
