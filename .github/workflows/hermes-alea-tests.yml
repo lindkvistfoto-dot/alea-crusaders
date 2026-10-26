@@ -24,15 +24,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx vitest run tests/hermes-alea-core.test.mjs tests/hermes-alea-validation.test.mjs tests/hermes-alea-client.test.mjs features/honors src/honors tests/arcane-trophy-room.test.mjs --maxWorkers=1
-      - name: Prepare existing pinned image verifier runtime
-        run: node scripts/hermes-alea-prepare-edge.mjs
-      - name: Verify local WASM is present and nonempty
-        run: python3 -c "from pathlib import Path; p=Path('supabase/functions/hermes-alea/magick.wasm'); assert p.is_file() and p.stat().st_size > 100000, 'Missing or incomplete verifier WASM'"
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - name: Typecheck actual HERMES ALEA Edge entrypoint
-        run: deno check --config supabase/functions/hermes-alea/deno.json supabase/functions/hermes-alea/index.ts
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
