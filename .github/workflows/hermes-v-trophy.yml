@@ -32,6 +32,15 @@ on:
         description: 'I confirm the image was visually approved'
         required: true
         type: boolean
+      honor_id:
+        description: 'Optional badge/award UUID to attach the published image'
+        required: false
+        type: string
+      honor_material:
+        description: 'Relief material when honor_id is provided'
+        required: false
+        type: choice
+        options: ['', enamel, metal, wood]
       mode:
         description: 'verify checks source; publish activates after all integrity checks'
         required: true
@@ -90,6 +99,8 @@ jobs:
           HERMES_V_SHA256: ${{ inputs.sha256 }}
           HERMES_V_APPROVED: ${{ inputs.approved }}
           HERMES_V_MODE: ${{ inputs.mode }}
+          HERMES_V_HONOR_ID: ${{ inputs.honor_id }}
+          HERMES_V_HONOR_MATERIAL: ${{ inputs.honor_material }}
         shell: bash
         run: |
           set -euo pipefail
@@ -106,6 +117,10 @@ jobs:
             HERMES_REPORT_PATH="$output/result/publisher-report.json" deno run --no-config --no-lock --allow-env --allow-net --allow-read="$output/result" --allow-write="$output/result" --node-modules-dir=none scripts/hermes2_publish.ts "$output/result/manifest.json" "$output/result"
           fi
           python scripts/hermes_drive_intake.py --finalize --output "$output/result"
+          if [ "$HERMES_V_MODE" = "publish" ] && [ -n "$HERMES_V_HONOR_ID" ]; then
+            if [ "$HERMES_V_KIND" != "system-asset" ] || [ -z "$HERMES_V_HONOR_MATERIAL" ]; then echo "::error::Honor variant requires system-asset and material"; exit 1; fi
+            deno run --no-config --no-lock --allow-env --allow-net --node-modules-dir=none scripts/hermes_v_link_honor.ts "$HERMES_V_HONOR_ID" "$HERMES_V_HONOR_MATERIAL" "$HERMES_V_KEY"
+          fi
       - name: Preserve auditable result and retry instructions
         if: always()
         uses: actions/upload-artifact@v4
