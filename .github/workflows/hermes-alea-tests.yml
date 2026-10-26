@@ -1,0 +1,32 @@
+name: HERMES ALEA offline acceptance
+on:
+  pull_request:
+    paths:
+      - 'features/hermes-alea/**'
+      - 'features/honors/**'
+      - 'features/trophy-room/**'
+      - 'supabase/**'
+      - 'scripts/hermes*'
+      - 'tests/*hermes*'
+      - '.github/workflows/hermes-alea*.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run tests/hermes-alea-core.test.mjs tests/hermes-alea-validation.test.mjs tests/hermes-alea-client.test.mjs features/honors src/honors tests/arcane-trophy-room.test.mjs --maxWorkers=1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.0.0
+      - run: python -m unittest discover -s tests -p 'test_hermes_alea_worker.py' -v
+      - run: python -m unittest discover -s tests -p 'test_hermes_web_worker.py' -v

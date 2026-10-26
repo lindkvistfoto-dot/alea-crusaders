@@ -3,6 +3,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 const sql=readFileSync(new URL('../supabase/migrations/20261026092330_hermes_alea_isolated_pilot.sql',import.meta.url),'utf8');
+const cleanupSql=readFileSync(new URL('../supabase/migrations/20261026093615_hermes_alea_cleanup_reservations.sql',import.meta.url),'utf8');
 const user='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',target='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 let db;
 beforeEach(async()=>{
@@ -25,6 +26,7 @@ beforeEach(async()=>{
  grant select,insert,update,delete on honor_definitions,honor_relief_variants to authenticated;
  insert into honor_definitions(id,name,category) values('${target}','Pilot','medal');`);
  await db.exec(sql);
+ await db.exec(cleanupSql);
  await db.exec(`update private.hermes_alea_settings set enabled=true;set role authenticated;set request.jwt.claim.sub='${user}';`);
 },20000);
 afterEach(async()=>db?.close());
@@ -98,4 +100,54 @@ it('defaults disabled and enforces upload quota',async()=>{
  await expect(rpc('hermes_alea_begin',req())).rejects.toThrow('DISABLED');
  await db.exec('reset role;update private.hermes_alea_settings set enabled=true,max_pending=1;set role authenticated;');
  await rpc('hermes_alea_begin',req());await expect(rpc('hermes_alea_begin',req())).rejects.toThrow('QUOTA');
+});
+it('cleanup is gated and reservation blocks re-linking, including interrupted acknowledgements',async()=>{
+ const j=await rpc('hermes_alea_begin',req());await ready(j);await finish(j);
+ await rpc('hermes_alea_remove',req({operation:'REMOVE',expected_revision:1}));
+ await db.exec(`reset role;update hermes_alea_jobs set archive_state='verified',archive_drive_id='drive',archive_verified_at=now()-interval '8 days' where id='${j.id}';update hermes_alea_jobs set detached_at=now()-interval '31 days' where operation='REMOVE';set role service_role;`);
+ await expect(db.query("select hermes_alea_cleanup($1,'output','reserve')",[j.id])).rejects.toThrow('CLEANUP_NOT_APPROVED');
+ await db.exec('reset role;update private.hermes_alea_settings set cleanup_enabled=true;set role service_role;');
+ await db.query("select hermes_alea_cleanup($1,'output','reserve')",[j.id]);
+ await expect(db.query('update honor_definitions set image_asset_id=$1 where id=$2',['hermes-alea:'+j.id,target])).rejects.toThrow('IMAGE_RESERVED_OR_MISSING');
+ // A restart repeats the reservation instead of releasing it.
+ await db.query("select hermes_alea_cleanup($1,'output','reserve')",[j.id]);
+ await db.query("select hermes_alea_cleanup($1,'output','ack')",[j.id]);
+ await db.query("select hermes_alea_cleanup($1,'output','ack')",[j.id]);
+ expect((await db.query('select output_deleted_at from hermes_alea_jobs where id=$1',[j.id])).rows[0].output_deleted_at).toBeTruthy();
+});
+it('shared active references block output cleanup and latest detach restarts the clock',async()=>{
+ const j=await rpc('hermes_alea_begin',req());await ready(j);await finish(j);
+ await rpc('hermes_alea_remove',req({operation:'REMOVE',expected_revision:1}));
+ await db.exec(`reset role;insert into honor_relief_variants(honor_id,image_asset_id) values('${target}',null);update honor_relief_variants set image_asset_id='hermes-alea:${j.id}';
+ update hermes_alea_jobs set archive_state='verified',archive_drive_id='drive',archive_verified_at=now()-interval '8 days' where id='${j.id}';
+ update hermes_alea_jobs set detached_at=now()-interval '31 days' where operation='REMOVE';set role service_role;`);
+ expect((await db.query('select output_candidate from hermes_alea_cleanup_report where id=$1',[j.id])).rows[0].output_candidate).toBe(false);
+});
+it('legacy A to B to A changes increment revision and reject an old intent',async()=>{
+ await db.exec("update honor_definitions set image_asset_id='A';");
+ const j=await rpc('hermes_alea_begin',req({operation:'REPLACE',expected_revision:1}));await ready(j);
+ await db.exec("update honor_definitions set image_asset_id='B';update honor_definitions set image_asset_id='A';");
+ await expect(finish(j)).rejects.toThrow('IMAGE_REVISION_CONFLICT');
+});
+it('incomplete Storage pair cannot activate even with a trusted receipt',async()=>{
+ const j=await rpc('hermes_alea_begin',req());await ready(j);
+ await db.exec(`reset role;delete from storage.objects where bucket_id='hermes-alea-originals';set role authenticated;`);
+ await expect(finish(j)).rejects.toThrow('UPLOAD_INCOMPLETE');
+ expect((await db.query('select image_asset_id from honor_definitions')).rows[0].image_asset_id).toBeNull();
+});
+it('persists one Drive intent per job under a live lease',async()=>{
+ const j=await rpc('hermes_alea_begin',req());await ready(j);await finish(j);await db.exec('reset role;set role service_role;');
+ const claim=(await db.query('select * from hermes_alea_claim(1)')).rows[0];
+ const first=(await db.query('select hermes_alea_archive_intent($1,$2,$3) as id',[j.id,claim.lease_token,'fixed-drive-id-001'])).rows[0].id;
+ const second=(await db.query('select hermes_alea_archive_intent($1,$2,$3) as id',[j.id,claim.lease_token,'different-drive-id'])).rows[0].id;
+ expect(second).toBe(first);
+ await expect(db.query('select hermes_alea_archive_result($1,$2,$3,null)',[j.id,claim.lease_token,'different-drive-id'])).rejects.toThrow('STALE_LEASE');
+ await db.query('select hermes_alea_archive_result($1,$2,$3,null)',[j.id,claim.lease_token,first]);
+ expect((await db.query('select archive_state from hermes_alea_jobs where id=$1',[j.id])).rows[0].archive_state).toBe('verified');
+});
+it('matches campaign GM scope without granting access to other global records',async()=>{
+ await db.exec(`reset role;insert into campaign_members values('${other}','cccccccc-cccc-4ccc-8ccc-cccccccccccc','gm');update honor_definitions set campaign_id='cccccccc-cccc-4ccc-8ccc-cccccccccccc';set role authenticated;set request.jwt.claim.sub='${other}';`);
+ const j=await rpc('hermes_alea_begin',req());expect(j.requested_by).toBe(other);
+ await db.exec('reset role;update honor_definitions set campaign_id=null;set role authenticated;');
+ await expect(rpc('hermes_alea_begin',req())).rejects.toThrow('FORBIDDEN');
 });
