@@ -3,6 +3,7 @@ import {createHermesCore} from '../features/hermes-core/core.js';
 function setup(fail) {
  const calls=[];
  const core=createHermesCore({
+  retainOriginal:async()=>{calls.push('retain');if(fail==='retain')throw Error('Retention unavailable');return {id:'stored-original',verified:true};},
   archiveOriginal:async()=>{calls.push('archive');if(fail==='archive')throw Error('Drive unavailable');return {id:'drive-id',verified:true};},
   convertToWebP:async()=>{calls.push('convert');return new Blob(['webp'],{type:'image/webp'});},
   getTarget:async()=>{calls.push('read');return {revision:2,key:'old'};},
@@ -15,12 +16,17 @@ describe('HERMES CORE lifecycle',()=>{
  it('activates then archives',async()=>{
   const {core,calls}=setup();const result=await core.add({target:'badge',file:new Blob(['source'])});
   expect(result.activation.key).toBe('new');expect(result.archive.status).toBe('archived');
-  expect(calls).toEqual(['convert','read','publish','link','archive']);
+  expect(calls).toEqual(['retain','convert','read','publish','link','archive']);
  });
  it('archive failure does not roll back active image',async()=>{
   const {core,calls}=setup('archive');const result=await core.replace({target:'badge',file:new Blob(['source'])});
   expect(result.activation.key).toBe('new');expect(result.archive.status).toBe('pending');
   expect(calls).toEqual(['convert','read','publish','link','archive']);
+ });
+ it('retention failure prevents activation',async()=>{
+  const {core,calls}=setup('retain');
+  await expect(core.add({target:'badge',file:new Blob(['source'])})).rejects.toThrow('Retention unavailable');
+  expect(calls).toEqual(['retain']);
  });
  it('publication failure leaves image unchanged',async()=>{
   const {core,calls}=setup('publish');
