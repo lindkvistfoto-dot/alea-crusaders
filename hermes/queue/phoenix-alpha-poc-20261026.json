@@ -1,0 +1,15 @@
+{
+  "schema": 4,
+  "mode": "pilot",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-laurel-badge-bronze",
+      "target_id": "37677d5f-2f1e-5f42-9570-9fcfba465c61",
+      "drive_file_id": "10m1B3moVAdtcUBtR9aKgBtRu6N-YDiQe",
+      "archive_file_id": "1ZqVfj2rP1JGUfi7VCkLxCIICj1lnT1N_",
+      "source_sha256": "28562ad8f6959b9fa6b6fcdd0322a5917bf81e271932d1357d421cde37ecd0f8",
+      "visual_approved": true
+    }
+  ]
+}
