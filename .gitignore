@@ -15,3 +15,7 @@ __pycache__/
 # MINOTAURUS: originals stay in Google Drive, never in this working tree
 /assets/hermes/originals/
 /hermes/quarantine/
+
+# Reproducible Edge dependency, prepared from pinned npm lockfile before deploy.
+/supabase/functions/hermes-alea/magick.wasm
+/supabase/.temp/

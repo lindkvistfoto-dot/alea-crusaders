@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11",
+    "@imagemagick/magick-wasm": "0.0.45",
     "vite": "8.0.0",
     "vitest": "4.1.0"
   }
