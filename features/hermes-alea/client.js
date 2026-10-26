@@ -43,7 +43,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   if(!id){id=crypto.randomUUID();attempts.set(key,id);try{storage?.setItem(key,id);}catch{}}
   return id;
  }
- async function upload({targetKind,target,file,profile={}}){
+ async function upload({targetKind,target,file,profile={},onStatus=()=>{},verificationTimeoutMs=30000}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
   const policy=resolveImageProfile(targetPolicies[targetKind]);
   const limits=resolveImageProfile({...policy,...profile,
@@ -56,6 +56,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   });
   if(!file||!limits.allowedMimeTypes.includes(file.type)||!file.size||file.size>limits.maxBytes)
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
+  onStatus('preparing');
   const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
   if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxBytes)
     throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
@@ -65,10 +66,22 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
   const job=await rpc('hermes_alea_begin',{request:meta});
   if(job.state==='activated')return job;
+  onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
   await uploadBlob(SOURCE_BUCKET,job.source_path,file);
-  await json('/functions/v1/hermes-alea',{method:'POST',body:JSON.stringify({job_id:job.id})});
-  return rpc('hermes_alea_finalize',{job_id:job.id});
+  onStatus('verifying');
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),verificationTimeoutMs);
+  try {
+    await json('/functions/v1/hermes-alea',{method:'POST',body:JSON.stringify({job_id:job.id}),signal:controller.signal});
+  } catch(error) {
+    if(controller.signal.aborted)throw Error('Bildkontrollen tog för lång tid. Bilden är inte bekräftad; försök igen. Din tidigare bild finns kvar.');
+    throw error;
+  } finally { clearTimeout(timer); }
+  onStatus('activating');
+  const result=await rpc('hermes_alea_finalize',{job_id:job.id});
+  onStatus('completed');
+  return result;
  }
  async function remove({targetKind,target}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Okänd bildplats.');
