@@ -37,15 +37,15 @@ Regelbilderna har nu verifierats: *Drakar och Demoner Expert, Magi*, s. 2–37. 
 
 `tests/arcane-spellforge.test.js` använder endast lokal Vitest och en JSON-ögonblicksbild. Den innehåller ingen Supabase-client, fetch eller skrivfunktion. Den parametriserar varje registrerad besvärjelse genom effektprofil och kastningskontroll vid giltig EG, otillräcklig PSY och ogiltig EG; därutöver testar den CL/PSY-skalning, kvick/normal upplösning, FV-gräns, skadeformel, helning, Beskyddare och manuell fallback.
 
-**Körning:** ej utförd från den här Work-sessionen. GitHub-connectorn kan skapa branchfiler men ger inte en körmiljö för `npm test`; ingen CI-körning har bekräftats. Markeringarna “Ej körd” i matrisen är avsiktliga. Kör från repo-checkout med `npm test -- tests/arcane-spellforge.test.js` när testgrenen körs i GitHub CI eller repositoryns vanliga miljö.
+**Körning:** [GitHub Actions CI #40253814291](https://github.com/lindkvistfoto-dot/alea-crusaders/actions/runs/40253814291) körde hela projektets `npm run check`. Vitest körde 237 testfiler: 1 661 tester godkändes och 3 Expert-regressionstest misslyckades (udda EG vid perfekt, fummel, död vid 0 PSY). Byggsteget kördes inte eftersom `npm run check` avbryts vid testfel. Testerna använder fixture och mocks; inga kampanjer, rollpersoner eller produktionsrader ändrades.
 
 ### Täckning
 
-- Registerrader: 91/91 finns i fryst fixture och kommer att testas parametervist.
-- Kastningspreflight: varje rad får 3 fall (EG 1, PSY 0, EG 0).
-- Explicita stridskontroller: 7 grupper av deterministiska tester.
-- Inte täckt i körd simulering ännu: faktiska tärningsresultat/perfekt/misslyckande, målval, hexgeometri, områdesgränser, avstånd, förberedelse/avbrottslivscykel, antiframes, samtidiga effekter, verkan över tid och återställning. Skälet är att sviten ännu inte körts och dessa fall kräver mer av runtime-kontraktet eller isolerad test-double-data.
-- Expertjämförelse: grundläggande kastningsregler på s. 3–5 är nu verifierade. Fullständig spell-för-spell jämförelse mot s. 8–37 återstår; registerluckor har därför inte fyllts med antaganden. S. 40–47 används inte som Expert-underlag.
+- Registerrader: 91/91 fixtureposter testade separat; alla 91 profil-/preflight-fall godkändes i CI. Varje fall kontrollerar tre preflightlägen: EG 1 med PSY, otillräcklig PSY och EG 0.
+- Utfallsregler: vanligt misslyckande godkänns; perfekt udda EG, fummel-kostnad och död vid 0 PSY misslyckas mot Expert s. 4–5.
+- Hela projektet: 236/237 testfiler godkändes, totalt 1 661/1 664 tester. Alla tre kända fel ligger i nya Spellforge-regressionstest.
+- Inte täckt ännu: fulla tärningskast genom UI, Snedtändningstabellens följder, självuppoffrande kast, målval/hexgeometri och områdesgränser per besvärjelse, avståndsgränser, avbrott genom skada, simultana effekter, varaktighet/återställning samt effekter utanför strid. Befintliga tester träffar delar av målval, SR1/SR2, antimagi, resultatkort och manuell upplösning, men är inte en full end-to-end-regelsimulering.
+- Expertjämförelse: s. 3–5 kastningsregler verifierade; full spell-för-spell korsreferens mellan s. 8–37 och alla 91 registerrader återstår. Saknade värden fylls inte genom antaganden. S. 40–47 används inte som Expert-underlag.
 
 ## Fynd med reproduktionssteg
 
@@ -94,94 +94,94 @@ Statuskolumnen beskriver statisk kodinventering, inte ett godkänt funktionstest
 
 | Besvärjelse | Planerade fall | Godkända | Fel | Saknad data | Status |
 |---|---|---|---|---|---|
-| ANTIMAGI | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| SKINGRA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| VARSEBLIVNING | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| BESKYDDARE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 0/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FINNA VATTEN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| RENA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SPÅRLÖS | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MINSKA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 1/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| ÖKA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 1/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| VÄDERFÖRUTSÄGELSE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| VINDKONTROLL | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FÖRÄNDRA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| HELA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| REGNSTART | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| REGNSTOPP | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| DIMMA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| SNABBVÄX | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| HÄVA FÖRSTENING (F, R) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| VÄDERKONTROLL (R) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| TILLKALLA VARELSE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| TALA MED VARELSE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| KONTROLLERA VARELSE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FÖRBANNA VAPEN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ÖPPNA (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FRAMMANA/SKICKA BORT ELEMENTAR – LUFT (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FRAMMANA/SKICKA BORT ELEMENTAR – JORD (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FRAMMANA/SKICKA BORT ELEMENTAR – VATTEN (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| VATTENVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| JORDVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| LUFTVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| LJUSVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MÖRKERVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| KÖLDVÄG | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ÅTERVINNA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ORIENTERING | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SPRÅNG (K) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MOTSTÅNDSKRAFT | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| BALANS | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| HJÄRNBLANK | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| HÖRSEL | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SNABBHET | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| LÅNGSAMHET | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| LUNGFILTER | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FLYGA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| LYFT | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MÖRKERSYN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ÖGONMÅTT | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| OSYNLIGHET | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SYN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SANNSYN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SANNHÖRSEL | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| TELEPORTERA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MAGISK SYN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| MINNE | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ORÄDD | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ÅTERVÄNDO | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ÅTERVÄNDO MED STUDS | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SINNESMASK | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| AVBILD (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| DISTRAKTION (K) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| STENVÄGG (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| GASMOLN (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| BLIXT (F, K) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| ENERGISTRÅLE (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| ELD (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FÖRSEGLA (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FROST (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| MÖRKER (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SNUBBLA (K) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FÖRVIRRA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| FÖRROLLAD SÖMN | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| TYSTNAD (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ILLUSION (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| AURA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| FATA MORGANA (STOR ILLUSION) (F, R) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| BESUDLA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| PARALYSERING | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| KONTROLLERA LÄGRE ODÖD | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| RÄDSLA (K) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| BLIDHET | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| TALA MED DÖD | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| ANIMERA DÖD (R) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| PANIK | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · körning väntar |
-| KONTROLLERA ANDAR | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| SMÄRTA | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| TERROR | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| DÖDSHAND (F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| KONTROLLERA HÖGRE ODÖD | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| VOODOORITUAL (K, F) | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
-| LIVSUTTÖMNING | Snapshot + profil + preflight × 3 | Ej körd | Ej körd | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · körning väntar |
+| ANTIMAGI | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| SKINGRA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| VARSEBLIVNING | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| BESKYDDARE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 0/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FINNA VATTEN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| RENA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SPÅRLÖS | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MINSKA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 1/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| ÖKA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 1/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| VÄDERFÖRUTSÄGELSE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| VINDKONTROLL | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FÖRÄNDRA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| HELA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| REGNSTART | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| REGNSTOPP | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| DIMMA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| SNABBVÄX | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| HÄVA FÖRSTENING (F, R) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| VÄDERKONTROLL (R) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| TILLKALLA VARELSE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| TALA MED VARELSE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| KONTROLLERA VARELSE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FÖRBANNA VAPEN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ÖPPNA (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FRAMMANA/SKICKA BORT ELEMENTAR – ELD (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FRAMMANA/SKICKA BORT ELEMENTAR – LUFT (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FRAMMANA/SKICKA BORT ELEMENTAR – JORD (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FRAMMANA/SKICKA BORT ELEMENTAR – VATTEN (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 2/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| VATTENVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| JORDVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| LUFTVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| LJUSVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MÖRKERVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| KÖLDVÄG | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ÅTERVINNA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ORIENTERING | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SPRÅNG (K) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MOTSTÅNDSKRAFT | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| BALANS | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| HJÄRNBLANK | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| HÖRSEL | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SNABBHET | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| LÅNGSAMHET | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| LUNGFILTER | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FLYGA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| LYFT | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MÖRKERSYN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ÖGONMÅTT | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| OSYNLIGHET | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SYN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SANNSYN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SANNHÖRSEL | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| TELEPORTERA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MAGISK SYN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| MINNE | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ORÄDD | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ÅTERVÄNDO | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ÅTERVÄNDO MED STUDS | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SINNESMASK | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| AVBILD (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| DISTRAKTION (K) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| STENVÄGG (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| GASMOLN (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| BLIXT (F, K) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| ENERGISTRÅLE (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| ELD (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FÖRSEGLA (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FROST (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| MÖRKER (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SNUBBLA (K) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FÖRVIRRA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| FÖRROLLAD SÖMN | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| TYSTNAD (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ILLUSION (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| AURA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| FATA MORGANA (STOR ILLUSION) (F, R) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| BESUDLA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| PARALYSERING | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| KONTROLLERA LÄGRE ODÖD | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| RÄDSLA (K) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| BLIDHET | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| TALA MED DÖD | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| ANIMERA DÖD (R) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| PANIK | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Partiell automatisering · effekt ej verifierad |
+| KONTROLLERA ANDAR | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| SMÄRTA | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| TERROR | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| DÖDSHAND (F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| KONTROLLERA HÖGRE ODÖD | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| VOODOORITUAL (K, F) | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
+| LIVSUTTÖMNING | Snapshot + profil + preflight × 3 (CI) | 3/3 preflight | Globala PSY-fynd; effekten ej testad | 3/3 mål/effekt/motståndsfält tomma | Manuell SL-effekt · effekt ej verifierad |
