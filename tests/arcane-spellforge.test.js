@@ -6,7 +6,8 @@ const snapshot=JSON.parse(readFileSync(new URL('./fixtures/arcane-spell-registry
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 
 function portion(name,next){
- const a=runtime.indexOf('function '+name+'(');
+ let a=runtime.indexOf('async function '+name+'(');
+ if(a<0)a=runtime.indexOf('function '+name+'(');
  const b=runtime.indexOf(next,a);
  if(a<0||b<0)throw Error('Missing runtime function '+name);
  return runtime.slice(a,b);
