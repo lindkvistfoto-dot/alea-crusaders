@@ -53,6 +53,24 @@ Ingen ny generell bildmotor, generell tillgångsdatabas, automatisk gallring, ar
 4. Granska PR/CI och kör den avgränsade piloten med faktiska Drive- och Supabase-anslutningar.
 5. Utöka först efter godkänd Troférumspilot.
 
+
+## Successiv övergång från OpenAI-kanalerna
+
+HERMES CORE ska bli den normala vägen för nya bildåtgärder från ChatGPT, Work och Codex. Övergången sker per bildtyp och arbetsflöde, efter att den föregående delen har fungerat i Troférummet:
+
+1. **Troférumspilot:** kör CREATE, REPLACE och REMOVE mot ett isolerat testmål. Kontrollera att Alea och Core ser samma aktiva bild och att ett misslyckat byte lämnar föregående bild aktiv.
+2. **Kanalbyte:** använd CORE för nästa riktiga uppladdning, byte eller bortkoppling i den pilotade bildtypen. Befintliga bilder och deras länkar lämnas orörda.
+3. **Nästa bildtyp:** lägg till en typ i taget med dess befintliga bildprofil och mål. Utöka inte en åtgärd till andra tabeller eller fält.
+4. **Övertagande:** när en typ fungerar från alla tre kanalerna och fortfarande visas korrekt i Alea, låt CORE ta nya bildåtgärder för den typen. Alea fortsätter hantera webbens bildåtgärder.
+
+Övergången gäller framtida hantering. Den gör ingen massmigrering och tar inte bort gamla uppladdningsvägar förrän deras användning har inventerats och den berörda typen är verifierad. Städning/rensning och fysisk radering är fortsatt utanför V1.
+
+## Kanalernas arbetsflöde
+
+CORE ska använda de redan anslutna Drive-, GitHub- och Supabase-anslutningarna. Drive Inbox tar emot originalet; den befintliga Alea-arkivprocessen arkiverar originalet och kontrollerar återläsning. En separat, avgränsad CORE-körning bereder WebP och använder samma hermes_alea_jobs-livscykel, privata buckets, image_revision och målpekare som Alea. Den ska inte skriva målpekaren direkt eller använda en parallell tillgångskatalog.
+
+Jobbstarten får bara komma från en behörig CORE-kanalåtgärd. Ett explicit mål-ID, aktuell revision och idempotent jobbnyckel binds till begäran. Befintlig revisionskontroll gör att samtidiga Alea- och Core-ändringar inte skriver över varandra. Den fullständiga kanalvägen och behörighetsgränsen ska finnas i koden och verifieras innan livepiloten.
+
 ## Avgränsning
 
 Två implementationer får finnas, men de ska dela produktens bildsemantik, målposter och aktiva val. CORE ska inte bli en oberoende katalog eller ett separat Troférum. Den exakta bryggan mellan CORE:s publicerade fil och ALEA:s befintliga bildreferens fastställs i implementationen, innan några befintliga referenser ändras.
