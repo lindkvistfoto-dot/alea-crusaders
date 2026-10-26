@@ -3,6 +3,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 const sql=readFileSync(new URL('../supabase/migrations/20261026092330_hermes_alea_isolated_pilot.sql',import.meta.url),'utf8');
+const directSql=readFileSync(new URL('../supabase/migrations/20261026190000_hermes_alea_direct_storage_finalize.sql',import.meta.url),'utf8');
 const adapterSql=readFileSync(new URL('../supabase/migrations/20261026172000_hermes_alea_target_adapter_boundary.sql',import.meta.url),'utf8');
 const cleanupSql=readFileSync(new URL('../supabase/migrations/20261026093615_hermes_alea_cleanup_reservations.sql',import.meta.url),'utf8');
 const user='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',target='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -29,20 +30,21 @@ beforeEach(async()=>{
  await db.exec(sql);
  await db.exec(cleanupSql);
  await db.exec(adapterSql);
+ await db.exec(directSql);
  await db.exec(`update private.hermes_alea_settings set enabled=true;set role authenticated;set request.jwt.claim.sub='${user}';`);
 },20000);
 afterEach(async()=>db?.close());
 const rpc=async(name,arg)=> (await db.query(`select public.${name}($1::jsonb) as result`,[JSON.stringify(arg)])).rows[0].result;
 const req=(extra={})=>({target_kind:'definition',target_id:target,operation:'CREATE',expected_revision:0,idempotency_key:randomUUID(),source_sha256:'a'.repeat(64),output_sha256:'b'.repeat(64),source_mime:'image/png',source_bytes:100,output_bytes:80,...extra});
 async function ready(j){
- await db.exec(`reset role;insert into storage.objects(bucket_id,name) values('hermes-alea-originals','${j.source_path}'),('hermes-alea-display','${j.output_path}');set role service_role;`);
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name,metadata) values('hermes-alea-originals','${j.source_path}',jsonb_build_object('size',${j.source_bytes},'mimetype','${j.source_mime}')),('hermes-alea-display','${j.output_path}',jsonb_build_object('size',${j.output_bytes},'mimetype','image/webp'));set role service_role;`);
  await db.query('select public.hermes_alea_verify($1,$2::jsonb)',[j.id,JSON.stringify({...j,width:32,height:32,alpha_preserved:true})]);
  await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${user}';`);
 }
 const finish=async j=>(await db.query('select public.hermes_alea_finalize($1) as result',[j.id])).rows[0].result;
 it('activates and queues atomically, retries return same job and revision',async()=>{
  const r=req(),j=await rpc('hermes_alea_begin',r);expect((await rpc('hermes_alea_begin',r)).id).toBe(j.id);
- await expect(finish(j)).rejects.toThrow('UPLOAD_NOT_VERIFIED');
+ await expect(finish(j)).rejects.toThrow('UPLOAD_INCOMPLETE');
  expect((await db.query('select image_asset_id from honor_definitions')).rows[0].image_asset_id).toBeNull();
  await ready(j);const done=await finish(j);expect(done.archive_state).toBe('queued');expect(done.result_revision).toBe(1);expect((await finish(j)).id).toBe(j.id);
  expect((await db.query('select image_asset_id from honor_definitions')).rows[0].image_asset_id).toBe('hermes-alea:'+j.id);
@@ -152,4 +154,13 @@ it('matches campaign GM scope without granting access to other global records',a
  const j=await rpc('hermes_alea_begin',req());expect(j.requested_by).toBe(other);
  await db.exec('reset role;update honor_definitions set campaign_id=null;set role authenticated;');
  await expect(rpc('hermes_alea_begin',req())).rejects.toThrow('FORBIDDEN');
+});
+
+it('rejects wrong storage metadata without requiring WASM verification',async()=>{
+ const j=await rpc('hermes_alea_begin',req());
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name,metadata) values
+ ('hermes-alea-originals','${j.source_path}',jsonb_build_object('size',100,'mimetype','image/png')),
+ ('hermes-alea-display','${j.output_path}',jsonb_build_object('size',81,'mimetype','image/webp'));
+ set role authenticated;set request.jwt.claim.sub='${user}';`);
+ await expect(finish(j)).rejects.toThrow('UPLOAD_METADATA_MISMATCH');
 });
