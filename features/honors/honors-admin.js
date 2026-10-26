@@ -9,7 +9,7 @@ const frameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-b
 const asArray = value => Array.isArray(value) ? value : [];
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
-const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || frameKeys[metal];
+const frameFor = (definition, metal) => definition?.frame_family === 'none' ? null : (definition?.badge_frame_assets?.[metal] || frameKeys[metal]);
 
 export function renderHonorsAdmin(root, options = {}) {
   if (!root) throw new Error('Missing root');
@@ -57,7 +57,8 @@ export function renderHonorsAdmin(root, options = {}) {
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
       '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id" value="' + esc(d.image_asset_id) + '"></label>' +
-      '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ARCANE LAUREL-ramar</legend>' +
+      '<fieldset class="honors-frames honors-wide"><legend>Ram för badges och utmärkelser</legend>' +
+        '<label>Ramtyp<select name="frame_family"><option value="none"' + (d.frame_family === 'none' ? ' selected' : '') + '>Ingen ram – visa motivet ensamt</option><option value="arcane_laurel_badge"' + (d.frame_family !== 'none' ? ' selected' : '') + '>ARCANE LAUREL – lagerkrans</option></select></label>' +
         ['bronze','silver','gold'].map(metal => {
           const key = frame[metal] || frameKeys[metal];
           const asset = publishedAsset(key);
@@ -83,6 +84,7 @@ export function renderHonorsAdmin(root, options = {}) {
         '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Förhandsvisning vald' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
         '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · överhäng tillåtet' : '') + '</small></div>' +
         '<div class="honors-variant-actions">' +
+          (['enamel','metal','wood'].includes(v.material) ? '<label><input type="radio" name="published_material_variant" value="' + esc(v.id) + '"' + (isPublished ? ' checked' : '') + (v.image_asset_id && publishedAsset(v.image_asset_id) && v.status !== 'archived' ? '' : ' disabled') + '> Använd ' + esc(materials[v.material]) + '</label>' : '') +
           '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>' +
           (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
           (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
@@ -90,7 +92,8 @@ export function renderHonorsAdmin(root, options = {}) {
     }).join('') : '<p class="honors-help">Inga reliefvarianter registrerade.</p>';
     const preview = own.find(v => String(v.id) === selectedPreview);
     const metal = 'bronze';
-    const frameUrl = assetImage(frameFor(definition, metal));
+    const frameKey = frameFor(definition, metal);
+    const frameUrl = frameKey ? assetImage(frameKey) : null;
     const reliefUrl = preview ? assetImage(preview.image_asset_id) : null;
     return '<section class="honors-variant-library"><h4>Permanent reliefbibliotek</h4><p>Varianter bevaras separat. Förhandsvisning ändrar inte publicerad variant.</p>' +
       '<div class="honors-variant-list">' + rows + '</div>' +
@@ -100,7 +103,7 @@ export function renderHonorsAdmin(root, options = {}) {
         '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt relief att sticka utanför monteringscirkeln</label>' +
         '<button type="submit">Lägg till variant</button></form>' +
       '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i troférummet"><span>Förhandsvisning · bronsram</span><div class="honors-preview-art">' +
-        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL bronsram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
+        (definition.frame_family === 'none' ? '' : frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL bronsram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
       '</div><button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
   }
@@ -195,7 +198,7 @@ export function renderHonorsAdmin(root, options = {}) {
       const value=data['frame_'+metal]; delete data['frame_'+metal];
       if (value) data.badge_frame_assets[metal]=value;
     }
-    data.frame_family = data.category === 'badge' ? 'arcane_laurel_badge' : null;
+    data.frame_family = ['none','arcane_laurel_badge'].includes(data.frame_family) ? data.frame_family : 'arcane_laurel_badge';
     data.grant_mode = data.status === 'draft' ? 'manual' : data.grant_mode;
     if (editing) data.id=editing.id;
     const errors=validateHonorDefinition(data);
@@ -252,6 +255,16 @@ export function renderHonorsAdmin(root, options = {}) {
         definition.preview_variant_id=button.dataset.previewVariant; draw(); openEditor(definition); notice('Förhandsvisningsvariant vald; publicerad variant oförändrad.');
       } catch(error) { notice(error.message || 'Kunde inte välja förhandsvisning.'); }
     }));
+    root.querySelectorAll('input[name="published_material_variant"]').forEach(radio => radio.addEventListener('change', async () => {
+      if (!radio.checked) return;
+      try {
+        const variant=variants.find(v=>String(v.id)===radio.value);
+        if (!variant || !publishedAsset(variant.image_asset_id)) throw Error('Varianten saknar verifierad HERMES-publicering.');
+        await onPublishVariant(definition,variant);
+        definition.published_variant_id=variant.id; variant.status='published';
+        draw(); openEditor(definition); notice('Aktivt material: ' + (materials[variant.material] || variant.material) + '.');
+      } catch(error) { draw(); openEditor(definition); notice(error.message || 'Kunde inte välja material.'); }
+    }));
     root.querySelectorAll('[data-publish-variant]').forEach(button => button.addEventListener('click', async () => {
       try {
         const variant=variants.find(v=>String(v.id)===button.dataset.publishVariant);
@@ -275,7 +288,7 @@ export function renderHonorsAdmin(root, options = {}) {
       const variant=variants.find(v=>String(v.id)===String(definition.preview_variant_id));
       if (!variant) return;
       root.dispatchEvent(new CustomEvent('arcane-honors:preview',{bubbles:true,detail:{
-        honorName:definition.name,variantName:variant.name,frameUrl:assetImage(frameFor(definition,'bronze')),
+        honorName:definition.name,variantName:variant.name,frameUrl:frameFor(definition,'bronze') ? assetImage(frameFor(definition,'bronze')) : null,
         reliefUrl:assetImage(variant.image_asset_id),allowOverhang:variant.allow_overhang !== false
       }}));
       notice('Förhandsvisning öppnad i troférummet.');
