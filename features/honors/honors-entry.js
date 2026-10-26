@@ -1,4 +1,4 @@
-import { createHermesAleaClient } from '../hermes-alea/client.js';
+import { createHermesAleaClient } from '../hermes-alea/client.js?v=direct-storage-315';
 import { renderHonorsAdmin } from './honors-admin.js';
 import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-resolver.js';
 function browserImageClient(){
