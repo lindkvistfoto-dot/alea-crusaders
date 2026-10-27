@@ -23,7 +23,7 @@ export function createHermesCore({archiveOriginal, retainOriginal, queueArchiveR
   if (!current) throw new Error('Unknown image target');
   const published=await publishWebP({target,webp,archive});
   if (!published?.key || published.verified!==true) throw new Error('WebP publication not verified');
-  const activation=await setTarget({target,expectedRevision:current.revision,expectedKey:current.key??null,key:published.key});
+  const activation=await setTarget({target,expectedRevision:current.revision,expectedKey:current.key??null,key:published.key,metadata:published.metadata});
   return {activation,archive};
  }
  async function remove({target}) {
