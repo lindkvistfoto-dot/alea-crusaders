@@ -11,6 +11,6 @@ export function createWebPPublisher({reserveAsset,upload,stat,bucket='hermes-ale
   const info=await stat({bucket,path:asset.path});
   if(Number(info?.size)!==webp.size||info?.mimeType!=='image/webp')
    throw new Error('WebP publication not verified');
-  return {key:asset.key,verified:true};
+  return {key:asset.key,verified:true,metadata:asset.metadata??null};
  };
 }
