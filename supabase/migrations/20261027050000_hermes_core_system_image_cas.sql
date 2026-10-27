@@ -37,7 +37,31 @@ begin
   raise exception 'IMAGE_REVISION_CONFLICT' using errcode='40001';
  end if;
  if p_new_path is not null then
-  if p_new_path !~ '^trophy/[a-f0-9-]{36}[.]webp$' then raise exception 'INVALID_IMAGE_PATH'; end if;
+  if p_new_path !~ ('^hermes/system-asset/' || p_asset_key || '/[a-f0-9]{64}[.]webp
+  select metadata into m from storage.objects
+   where bucket_id='alea-hermes-public' and name=p_new_path;
+  if m is null or m->>'mimetype' is distinct from 'image/webp'
+    or p_bytes is null or p_bytes<1 or p_bytes>12000000
+    or coalesce((m->>'size')::bigint,-1)<>p_bytes
+    or p_sha256 !~ '^[a-f0-9]{64}$'
+    or p_width is null or p_width not between 1 and 2048
+    or p_height is null or p_height not between 1 and 2048
+    or p_alpha_preserved is null
+   then raise exception 'IMAGE_METADATA_MISMATCH'; end if;
+ end if;
+ update public.arcane_system_assets
+ set asset_path=p_new_path, app_sha256=case when p_new_path is null then null else p_sha256 end,
+ app_bytes=case when p_new_path is null then null else p_bytes end,
+ width=case when p_new_path is null then null else p_width end,
+ height=case when p_new_path is null then null else p_height end,
+ alpha_preserved=case when p_new_path is null then null else p_alpha_preserved end,
+ image_revision=image_revision+1
+ where id=a.id returning * into a;
+ return jsonb_build_object('key',a.asset_path,'revision',a.image_revision);
+end $$;
+revoke all on function public.hermes_core_system_image_set(text,bigint,text,text,text,integer,integer,integer,boolean) from public,anon;
+grant execute on function public.hermes_core_system_image_set(text,bigint,text,text,text,integer,integer,integer,boolean) to authenticated;
+) then raise exception 'INVALID_IMAGE_PATH'; end if;
   select metadata into m from storage.objects
    where bucket_id='hermes-alea-display' and name=p_new_path;
   if m is null or m->>'mimetype' is distinct from 'image/webp'
