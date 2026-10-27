@@ -14,6 +14,22 @@ function setup(fail) {
  return {core,calls};
 }
 describe('HERMES CORE lifecycle',()=>{
+ it('creates a previously unknown system asset without calling replace',async()=>{
+  const calls=[];
+  const core=createHermesCore({
+   archiveOriginal:async()=>({id:'drive',verified:true}),
+   retainOriginal:async()=>{throw Error('unexpected fallback');},
+   queueArchiveRetry:async()=>{throw Error('unexpected retry');},
+   convertToWebP:async()=>new Blob(['webp'],{type:'image/webp'}),
+   getTarget:async()=>null,
+   publishWebP:async()=>({key:'system-path',verified:true,metadata:{sha256:'a'.repeat(64)}}),
+   setTarget:async()=>{calls.push('replace');},
+   createTarget:async args=>{calls.push('create');return args;}
+  });
+  const result=await core.add({target:{kind:'system',id:'new-badge'},file:new Blob(['original'])});
+  expect(calls).toEqual(['create']);
+  expect(result.activation.key).toBe('system-path');
+ });
  it('archives in Drive first, then publishes and activates',async()=>{
   const {core,calls}=setup();const result=await core.add({target:'badge',file:new Blob(['source'])});
   expect(result.archive.status).toBe('archived');
