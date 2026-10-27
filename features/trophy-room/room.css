@@ -141,3 +141,15 @@
 .trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger{pointer-events:none;cursor:default}
 .trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger img{filter:none!important}
 .trophy-room-viewport:not(.trophy-room-medals-active) .trophy-room-medal-trigger::after{opacity:0!important}
+
+/* Match the trophy-room scene width to the navigation bar's 1280px desktop width. */
+#trophyRoomPage .trophy-room-page{
+ width:min(1280px,calc(100vw - 2 * clamp(10px,2vw,24px)));
+ max-width:none;
+ position:relative;
+ left:50%;
+ transform:translateX(-50%);
+}
+@media(max-width:700px){
+ #trophyRoomPage .trophy-room-page{width:calc(100vw - 16px)}
+}
