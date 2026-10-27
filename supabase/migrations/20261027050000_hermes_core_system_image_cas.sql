@@ -37,7 +37,7 @@ begin
   raise exception 'IMAGE_REVISION_CONFLICT' using errcode='40001';
  end if;
  if p_new_path is not null then
-  if p_new_path !~ '^trophy/[a-f0-9-]{36}[.]webp then raise exception 'INVALID_IMAGE_PATH'; end if;
+  if p_new_path !~ '^trophy/[a-f0-9-]{36}[.]webp
   select metadata into m from storage.objects
    where bucket_id='hermes-alea-display' and name=p_new_path;
   if m is null or m->>'mimetype' is distinct from 'image/webp'
