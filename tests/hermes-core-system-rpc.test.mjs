@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {createSystemImageRpcAdapter} from '../features/hermes-core/system-rpc.js';
-const path='trophy/00000000-0000-4000-8000-000000000001.webp';
+const path='hermes/system-asset/arcane-lion-badge-gold/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp';
 describe('HERMES CORE system image RPC',()=>{
  it('uses existing asset key and forwards verified metadata',async()=>{
   const calls=[];
