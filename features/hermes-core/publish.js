@@ -1,6 +1,7 @@
 import {inspectCoreWebP} from './image-metadata.js';
-// HERMES CORE WebP publisher: existing ALEA Storage contracts, no WASM.
-export function createWebPPublisher({reserveAsset,upload,stat,bucket='hermes-alea-display'}) {
+// HERMES CORE WebP publisher: uses the ALEA public asset bucket for shared
+// developer images. User-owned Honors uploads stay in HERMES ALEA.
+export function createWebPPublisher({reserveAsset,upload,stat,bucket='alea-hermes-public'}) {
  for(const [name,fn] of Object.entries({reserveAsset,upload,stat}))
   if(typeof fn!=='function') throw new TypeError('Missing publisher adapter: '+name);
  return async function publishWebP({target,webp,archive}) {

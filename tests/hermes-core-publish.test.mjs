@@ -3,16 +3,16 @@ vi.mock('../features/hermes-core/image-metadata.js',()=>({inspectCoreWebP:async 
 import {createWebPPublisher} from '../features/hermes-core/publish.js';
 const webp=new Blob(['webp'],{type:'image/webp'});
 describe('HERMES CORE Supabase publisher',()=>{
- it('uses reserved ALEA key and verifies binary upload before returning success',async()=>{
+ it('uses the developer asset bucket and verifies binary upload before returning success',async()=>{
   const calls=[];
   const publish=createWebPPublisher({
-   reserveAsset:async()=>({key:'hermes-alea:00000000-0000-4000-8000-000000000001',path:'trophy/00000000-0000-4000-8000-000000000001.webp'}),
-   upload:async({blob,upsert})=>{calls.push('upload');expect(blob).toBe(webp);expect(upsert).toBe(false);},
-   stat:async()=>{calls.push('stat');return {size:String(webp.size),mimeType:'image/webp'};}
+   reserveAsset:async()=>({key:'developer-image',path:'hermes/developer-image.webp'}),
+   upload:async({blob,upsert,bucket})=>{calls.push('upload');expect(bucket).toBe('alea-hermes-public');expect(blob).toBe(webp);expect(upsert).toBe(false);},
+   stat:async({bucket})=>{calls.push('stat');expect(bucket).toBe('alea-hermes-public');return {size:String(webp.size),mimeType:'image/webp'};}
   });
   const result=await publish({target:{id:'target'},webp});
   expect(result.verified).toBe(true);
-  expect(result.key).toMatch(/^hermes-alea:/);
+  expect(result.key).toBe('developer-image');
   expect(calls).toEqual(['upload','stat']);
  });
  it('routes system images to existing ALEA public bucket',async()=>{
