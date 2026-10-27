@@ -1,4 +1,5 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
+vi.mock('../features/hermes-core/image-metadata.js',()=>({inspectCoreWebP:async webp=>({sha256:'a'.repeat(64),bytes:webp.size,width:1,height:1,alphaPreserved:true})}));
 import {createWebPPublisher} from '../features/hermes-core/publish.js';
 const webp=new Blob(['webp'],{type:'image/webp'});
 describe('HERMES CORE Supabase publisher',()=>{
