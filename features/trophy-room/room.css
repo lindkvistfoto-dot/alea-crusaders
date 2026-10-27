@@ -153,3 +153,33 @@
 @media(max-width:700px){
  #trophyRoomPage .trophy-room-page{width:calc(100vw - 16px)}
 }
+
+/* Keep the medal artwork out of filter/composited hover layers: the wall is already zoomed. */
+.trophy-room-medal-wall{filter:none}
+.trophy-room-medal-wall .trophy-room-medal-trigger img{
+ filter:none;
+ transition:none;
+}
+.trophy-room-medal-wall .trophy-room-medal-trigger:hover img,
+.trophy-room-medal-wall .trophy-room-medal-trigger:focus-visible img{filter:none}
+.trophy-room-medal-wall .trophy-room-medal-trigger:hover,
+.trophy-room-medal-wall .trophy-room-medal-trigger:focus-visible{
+ background:radial-gradient(ellipse,#ffe2a42e 0%,transparent 72%);
+}
+
+/* Let the page itself match the navigation bar width without transforming the scene wrapper. */
+main:has(> #trophyRoomPage:not(.hidden)){
+ width:min(1280px,calc(100vw - 2 * clamp(10px,2vw,24px)));
+ max-width:none;
+ padding:0;
+}
+#trophyRoomPage .trophy-room-page{
+ width:100%;
+ max-width:none;
+ position:static;
+ left:auto;
+ transform:none;
+}
+@media(max-width:700px){
+ main:has(> #trophyRoomPage:not(.hidden)){width:calc(100vw - 16px)}
+}
