@@ -8,8 +8,8 @@ import {createSystemImageCreator} from './system-create.js';
 // Publish an original already archived in Drive. No duplicate archive upload.
 // A trusted caller supplies its existing authenticated Drive download and
 // Supabase client. Activation happens only after verified Storage publication.
-export function createArchivedSystemPublisher({supabase,downloadOriginal}) {
- if(typeof downloadOriginal!=='function'||typeof supabase?.rpc!=='function')
+export function createArchivedSystemPublisher({supabase,downloadOriginal,convertToWebP=convertCoreImageToWebP}) {
+ if(typeof downloadOriginal!=='function'||typeof convertToWebP!=='function'||typeof supabase?.rpc!=='function')
   throw new TypeError('Authenticated Drive download and Supabase RPC required');
  const storage=createCoreStorageTransport({supabase});
  const publishWebP=createWebPPublisher({
@@ -30,7 +30,8 @@ export function createArchivedSystemPublisher({supabase,downloadOriginal}) {
   const original=await downloadOriginal(driveFileId);
   if(!original?.size||!['image/png','image/jpeg','image/webp'].includes(original.type))
    throw new Error('Drive original unavailable');
-  const webp=await convertCoreImageToWebP(original);
+  // A verified WebP original can be published unchanged; no lossy recompression.
+  const webp=original.type==='image/webp'?original:await convertToWebP(original);
   const target={kind:'system',id:assetKey,label};
   const current=await system.readSystem(assetKey);
   const published=await publishWebP({target,webp,archive:{status:'archived',id:driveFileId}});
