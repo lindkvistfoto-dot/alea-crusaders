@@ -1,6 +1,6 @@
 // HERMES CORE: isolated image lifecycle; no WASM and no HERMES 4 workflow.
 // Drive is primary. Existing private Supabase storage is fallback for failed archives.
-export function createHermesCore({archiveOriginal, retainOriginal, queueArchiveRetry, convertToWebP, publishWebP, getTarget, setTarget}) {
+export function createHermesCore({archiveOriginal, retainOriginal, queueArchiveRetry, convertToWebP, publishWebP, getTarget, setTarget, createTarget}) {
  for (const [name,fn] of Object.entries({archiveOriginal,retainOriginal,queueArchiveRetry,convertToWebP,publishWebP,getTarget,setTarget}))
   if (typeof fn !== 'function') throw new TypeError('Missing HERMES CORE adapter: '+name);
  async function put({target,file}) {
@@ -20,10 +20,12 @@ export function createHermesCore({archiveOriginal, retainOriginal, queueArchiveR
   const webp=await convertToWebP(file);
   if (!webp || webp.type!=='image/webp' || !webp.size) throw new Error('Invalid WebP');
   const current=await getTarget(target);
-  if (!current) throw new Error('Unknown image target');
+  if (!current && typeof createTarget !== 'function') throw new Error('CREATE adapter required for new image target');
   const published=await publishWebP({target,webp,archive});
   if (!published?.key || published.verified!==true) throw new Error('WebP publication not verified');
-  const activation=await setTarget({target,expectedRevision:current.revision,expectedKey:current.key??null,key:published.key,metadata:published.metadata});
+  const activation=current
+   ? await setTarget({target,expectedRevision:current.revision,expectedKey:current.key??null,key:published.key,metadata:published.metadata})
+   : await createTarget({target,key:published.key,metadata:published.metadata});
   return {activation,archive};
  }
  async function remove({target}) {
