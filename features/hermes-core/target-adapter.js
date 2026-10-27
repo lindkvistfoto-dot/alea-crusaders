@@ -13,11 +13,11 @@ export function createTrophyTargetAdapter({readHonor,writeHonor,readSystem,write
   const kind=classify(target);
   return kind==='system' ? readSystem(target.id) : readHonor(kind,target.id);
  }
- async function setTarget({target,expectedRevision,expectedKey,key}) {
+ async function setTarget({target,expectedRevision,expectedKey,key,metadata}) {
   const kind=classify(target);
   if(!Number.isSafeInteger(expectedRevision)||expectedRevision<0)
    throw new Error('Invalid image revision');
-  const args={id:target.id,expectedRevision,expectedKey,key};
+  const args={id:target.id,expectedRevision,expectedKey,key,metadata};
   // These functions must reject stale revisions and unauthorized updates atomically.
   return kind==='system'?writeSystem(args):writeHonor({...args,kind});
  }
