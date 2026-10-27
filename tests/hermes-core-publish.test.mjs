@@ -14,6 +14,18 @@ describe('HERMES CORE Supabase publisher',()=>{
   expect(result.key).toMatch(/^hermes-alea:/);
   expect(calls).toEqual(['upload','stat']);
  });
+ it('routes system images to existing ALEA public bucket',async()=>{
+  const key='hermes/system-asset/arcane-lion-badge-gold/'+ 'a'.repeat(64)+'.webp';
+  const buckets=[];
+  const publish=createWebPPublisher({
+   reserveAsset:async()=>({key,path:key,metadata:{sha256:'a'.repeat(64),bytes:webp.size,width:1,height:1,alphaPreserved:true}}),
+   upload:async({bucket})=>{buckets.push(bucket);},
+   stat:async({bucket})=>{buckets.push(bucket);return {size:webp.size,mimeType:'image/webp'};}
+  });
+  const result=await publish({target:{kind:'system',id:'arcane-lion-badge-gold'},webp});
+  expect(buckets).toEqual(['alea-hermes-public','alea-hermes-public']);
+  expect(result.key).toBe(key);
+ });
  it('does not report success if storage metadata differs',async()=>{
   const publish=createWebPPublisher({
    reserveAsset:async()=>({key:'key',path:'trophy/a.webp'}),
