@@ -15,7 +15,7 @@ export function createSystemImageRpcAdapter({rpc}) {
    const data=key===null?{}:metadata;
    if(key!==null && (!data?.sha256||!data?.bytes||!data?.width||!data?.height||
       typeof data.alphaPreserved!=='boolean')) throw new Error('Verified image metadata required');
-   if(typeof id!=='string'||!/^[a-z0-9][a-z0-9_-]*$/.test(id))
+   if(typeof id!=='string'||!/^[a-z0-9][a-z0-9_.-]*$/.test(id))
     throw new Error('Invalid system asset key');
    if(key!==null && (typeof key!=='string' ||
       !key.startsWith('hermes/system-asset/'+id+'/') ||

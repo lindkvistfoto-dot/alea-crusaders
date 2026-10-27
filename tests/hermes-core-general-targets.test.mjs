@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {connectHermesCore} from '../features/hermes-core/connect.js';
 describe('CORE ALEA-wide target routing',()=>{
  const supabase={rpc:async()=>({data:null,error:null}),storage:{from:()=>({})}};
- const base={supabase,driveUpload:async()=>{},driveGet:async()=>{},queueArchiveRetry:async()=>{}};
+ const base={supabase,driveUpload:async()=>{},driveGet:async()=>{}};
  it('accepts authorized target adapters without restricting categories to Trophy Room',()=>{
   const core=connectHermesCore({...base,targets:{
    read:async target=>({revision:0,key:target.id}),

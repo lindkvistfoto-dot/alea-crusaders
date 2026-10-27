@@ -1,30 +1,17 @@
-# HERMES CORE – operational acceptance (Trophy Room)
+# HERMES CORE – developer publishing
 
-This is the acceptance contract, not a new feature roadmap. Do not mark CORE operational solely because CI passes.
+HERMES CORE handles developer image publishing from ChatGPT Work. HERMES ALEA remains the separate upload flow for web users; CORE does not use its temporary Storage bucket or archive worker.
 
-## Existing implemented pieces
-- Drive original archive adapter and verified Drive-file reuse.
-- Browser WebP conversion and existing WebP passthrough in publish-from-drive.
-- Authenticated Supabase Storage upload, readback SHA-256 and public URL SHA-256.
-- System image CREATE, READ, REPLACE and detach RPCs.
-- Isolated system-image path `hermes/system-asset/<asset_key>/<sha256>.webp`.
+## Publishing flow
 
-## Remaining integration before production acceptance
-1. **Host invocation**: expose `createArchivedSystemPublisher` to an authorized runtime with a real Drive binary downloader and authenticated Supabase client. Neither GitHub merge nor a browser import supplies these credentials automatically.
-2. **All Trophy Room targets**: wire honor_definitions and honor_relief_variants (including award, badge, medal and variant images) to existing authorized server-side image updates. Current publish-from-drive targets system images only; do not silently redirect other categories to system assets.
-3. **Drive fallback**: verify the private-original handoff matches the existing HERMES ALEA worker job schema and that retry succeeds after Drive failure. Do not introduce a second worker.
-4. **Frame image fidelity**: browser canvas encoding with quality 0.92 is not guaranteed lossless. For approved frames, use an already prepared lossless WebP or a verified lossless encoder and compare visual/alpha results.
-5. **Actual ALEA rendering**: verify the Trophy Room reads the new asset key and displays the intended frame, rather than only confirming a Storage object.
-6. **Real end-to-end run**: CREATE `arcane-lion-badge-gold` from archived original Drive file `1Qu2LyjKZxLNKXty5BJNk4VeD0htiQRdV`, then test REPLACE and DELETE with separate disposable assets.
+1. Put the original in the configured Google Drive Inbox.
+2. Put a separate copy of the same original in its Drive archive folder.
+3. Push a request JSON to `hermes/core/queue/` using the shape in that directory's README.
+4. GitHub Actions reads both Drive files with the existing read-only WIF service account, creates an optimized WebP, uploads it to `alea-hermes-public`, and creates or replaces the system-image entry in `arcane_system_assets`.
+5. The original remains in Drive. GitHub Actions keeps no durable image copy.
 
-## Acceptance evidence
-- Drive original ID and confirmed archive location.
-- SHA-256 and byte size for the actual published WebP.
-- Supabase bucket/path and successful readback.
-- Database image key and revision.
-- Visible image in Trophy Room.
-- Successful CREATE, REPLACE and DELETE tests; previous image preserved on failed publication.
-- No changes to existing Laurel badge frames.
+The workflow uses the existing `HERMES_SUPABASE_SERVICE_ROLE_KEY` only in its trusted runner. No new credential, database grant, migration, or workflow gate is required for this path.
 
-## Scope discipline
-No new functional restrictions, workers, or administrative flows without owner approval.
+## Current runtime scope
+
+The first developer publisher handles `arcane_system_assets`. The existing CORE target adapters remain available for subsequent target connections. The web-user HERMES ALEA caller and its scheduled Drive archive job remain independent and are not changed by this workflow.

@@ -1,22 +1,13 @@
-// HERMES CORE: isolated image lifecycle; no WASM and no HERMES 4 workflow.
-// Drive is primary. Existing private Supabase storage is fallback for failed archives.
-export function createHermesCore({archiveOriginal, retainOriginal, queueArchiveRetry, convertToWebP, publishWebP, getTarget, setTarget, createTarget}) {
- for (const [name,fn] of Object.entries({archiveOriginal,retainOriginal,queueArchiveRetry,convertToWebP,publishWebP,getTarget,setTarget}))
+// HERMES CORE: developer publishing lifecycle. Original archives live in Drive;
+// the web-user HERMES ALEA storage and worker are independent.
+export function createHermesCore({archiveOriginal, convertToWebP, publishWebP, getTarget, setTarget, createTarget}) {
+ for (const [name,fn] of Object.entries({archiveOriginal,convertToWebP,publishWebP,getTarget,setTarget}))
   if (typeof fn !== 'function') throw new TypeError('Missing HERMES CORE adapter: '+name);
  async function put({target,file}) {
   if (!target || !file?.size) throw new Error('Image and target are required');
-  let archive;
-  try {
-   const receipt=await archiveOriginal(file);
-   if (!receipt?.id || receipt.verified!==true) throw new Error('Drive archive not verified');
-   archive={status:'archived',id:receipt.id};
-  } catch (error) {
-   const retained=await retainOriginal(file);
-   if (!retained?.id || retained.verified!==true) throw new Error('Original not secured in Drive or private storage');
-   // Existing GitHub Actions archive process must recognize this fallback reference.
-   await queueArchiveRetry({originalId:retained.id,target});
-   archive={status:'pending',originalId:retained.id};
-  }
+  const receipt=await archiveOriginal(file);
+  if (!receipt?.id || receipt.verified!==true) throw new Error('Drive archive not verified');
+  const archive={status:'archived',id:receipt.id};
   const webp=await convertToWebP(file);
   if (!webp || webp.type!=='image/webp' || !webp.size) throw new Error('Invalid WebP');
   const current=await getTarget(target);

@@ -1,0 +1,71 @@
+name: HERMES CORE – Drive to Supabase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'hermes/core/queue/*.json'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          filter: blob:none
+          sparse-checkout: |
+            config/hermes-drive-folders.json
+            config/hermes-system-assets.json
+            features/hermes-core
+            hermes/core/queue
+            scripts/hermes_system_assets.py
+            scripts/hermes_core_prepare.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.3.0
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - id: google
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.readonly
+          create_credentials_file: false
+      - name: Prepare and publish changed CORE requests
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          HERMES_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git cat-file -e "${HERMES_BEFORE}^{commit}" 2>/dev/null; then
+            echo "::error::Push predecessor unavailable"; exit 1
+          fi
+          mapfile -t requests < <(git diff --name-only --diff-filter=AM "$HERMES_BEFORE" "$GITHUB_SHA" -- hermes/core/queue/)
+          if [ "${#requests[@]}" -eq 0 ]; then
+            echo "::error::No CORE queue request found"; exit 1
+          fi
+          for request in "${requests[@]}"; do
+            if [[ ! "$request" =~ ^hermes/core/queue/[a-z0-9][a-z0-9-]{0,99}\.json$ ]]; then
+              echo "::error::Invalid CORE queue path"; exit 1
+            fi
+            output="$RUNNER_TEMP/hermes-core/${request##*/}"
+            mkdir -p "$output"
+            python scripts/hermes_core_prepare.py "$request" --output "$output"
+            deno run --no-config --no-lock --node-modules-dir=none \
+              --allow-env --allow-net --allow-read="$output" \
+              scripts/hermes_core_publish.ts "$output"
+          done

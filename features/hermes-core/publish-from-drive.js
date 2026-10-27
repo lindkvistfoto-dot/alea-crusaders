@@ -24,7 +24,7 @@ export function createArchivedSystemPublisher({supabase,downloadOriginal,convert
  const createSystem=createSystemImageCreator({rpc});
  return async function publishArchivedSystem({driveFileId,assetKey,label}) {
   if(typeof driveFileId!=='string'||!driveFileId.trim()||
-     !/^[a-z0-9][a-z0-9_-]*$/.test(assetKey||'')||
+     !/^[a-z0-9][a-z0-9_.-]*$/.test(assetKey||'')||
      typeof label!=='string'||!label.trim())
    throw new Error('Drive file, asset key and label required');
   const original=await downloadOriginal(driveFileId);
