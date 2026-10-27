@@ -11,7 +11,7 @@ import {createCoreSystemTarget} from './create-target.js';
 
 // Single integration entrypoint. Callers supply their existing authenticated
 // Drive and Supabase connections; no new credentials, workers or WASM.
-export function connectHermesCore({supabase,driveUpload,driveGet,queueArchiveRetry}) {
+export function connectHermesCore({supabase,driveUpload,driveGet,queueArchiveRetry,targets={}}) {
  if(typeof driveUpload!=='function'||typeof driveGet!=='function'||
     typeof queueArchiveRetry!=='function'||typeof supabase?.rpc!=='function')
   throw new TypeError('Authenticated Drive, Supabase and archive retry adapters required');
@@ -27,19 +27,27 @@ export function connectHermesCore({supabase,driveUpload,driveGet,queueArchiveRet
  const createSystemImage=createSystemImageCreator({rpc});
  const createTarget=createCoreSystemTarget({createSystemImage});
  const publishWebP=createWebPPublisher({
-  reserveAsset:createCoreSystemReservation(),...storage
+  reserveAsset:async args=>args.target?.kind==='system'
+   ? createCoreSystemReservation()(args)
+   : await targets.reserveAsset?.(args),...storage
  });
  return createHermesCore({
   archiveOriginal,retainOriginal,queueArchiveRetry,
   convertToWebP:convertCoreImageToWebP,publishWebP,
   getTarget:async target=>{
-   if(target?.kind!=='system') throw new Error('Target adapter not yet connected');
-   return system.readSystem(target.id);
+   if(target?.kind==='system') return system.readSystem(target.id);
+   if(typeof targets.read!=='function') throw new Error('Target adapter not configured');
+   return targets.read(target);
   },
   setTarget:async({target,...rest})=>{
-   if(target?.kind!=='system') throw new Error('Target adapter not yet connected');
-   return system.writeSystem({id:target.id,...rest});
+   if(target?.kind==='system') return system.writeSystem({id:target.id,...rest});
+   if(typeof targets.write!=='function') throw new Error('Target adapter not configured');
+   return targets.write({target,...rest});
   },
-  createTarget
+  createTarget:async args=>args.target?.kind==='system'
+   ? createTarget(args)
+   : typeof targets.create==='function'
+    ? targets.create(args)
+    : Promise.reject(new Error('Target CREATE adapter not configured'))
  });
 }
