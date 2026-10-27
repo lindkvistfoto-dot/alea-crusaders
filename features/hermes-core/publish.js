@@ -7,6 +7,7 @@ export function createWebPPublisher({reserveAsset,upload,stat,bucket='hermes-ale
   if(!target||webp?.type!=='image/webp'||!webp.size) throw new Error('Invalid WebP publication');
   const asset=await reserveAsset({target,archive,bytes:webp.size,mimeType:'image/webp'});
   if(!asset?.key||!asset?.path) throw new Error('Image asset reservation failed');
+  if(target.kind==='system' && asset.key!==asset.path) throw new Error('System image key must equal its storage path');
   await upload({bucket,path:asset.path,blob:webp,upsert:false});
   const info=await stat({bucket,path:asset.path});
   if(Number(info?.size)!==webp.size||info?.mimeType!=='image/webp')
