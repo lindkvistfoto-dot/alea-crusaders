@@ -4,7 +4,9 @@
 export function createSharedArchiveJob({begin}) {
  if(typeof begin!=='function') throw new TypeError('Existing ALEA begin RPC required');
  return async function register({targetKind,targetId,revision,operation,sourceSha256,outputSha256,sourceMime,sourceBytes,outputBytes,idempotencyKey}) {
-  if(!['definition','relief'].includes(targetKind)) throw new Error('Unsupported shared archive target');
+  // This adapter only supports targets registered in the current ALEA RPC.
+  // Troferummet system assets require a reviewed server-side target adapter.
+  if(!['definition','relief'].includes(targetKind)) throw new Error('Target not yet registered in shared ALEA archive RPC');
   if(!['CREATE','REPLACE'].includes(operation)) throw new Error('Unsupported archive operation');
   if(!/^[a-f0-9]{64}$/.test(sourceSha256)||!/^[a-f0-9]{64}$/.test(outputSha256))
    throw new Error('Invalid image digests');
