@@ -40,6 +40,14 @@ describe('HERMES CORE publish existing Drive original',()=>{
   await publish({driveFileId:'drive-id',assetKey:'arcane-lion-badge-gold',label:'Badges – Guld'});
   expect(calls.at(-1)).toBe('hermes_core_system_image_set');
  });
+ it('failed publication does not activate any image target',async()=>{
+  calls.length=0;
+  const publish=createArchivedSystemPublisher({supabase:client(),downloadOriginal:async()=>original,
+   convertToWebP:async()=>{throw Error('WebP conversion failed');}});
+  await expect(publish({driveFileId:'drive-id',assetKey:'arcane-lion-badge-gold',label:'Gold'})).rejects.toThrow('WebP conversion failed');
+  expect(calls).not.toContain('hermes_core_system_image_create');
+  expect(calls).not.toContain('hermes_core_system_image_set');
+ });
  it('missing Drive file never activates',async()=>{
   calls.length=0;
   const publish=createArchivedSystemPublisher({supabase:client(),downloadOriginal:async()=>null});
