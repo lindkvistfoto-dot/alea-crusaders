@@ -1,0 +1,14 @@
+{
+  "schema": 4,
+  "mode": "verify",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-lion-badge-gold",
+      "target_id": "cb768e52-4624-4fb7-9590-786b960bce44",
+      "drive_file_id": "1Qu2LyjKZxLNKXty5BJNk4VeD0htiQRdV",
+      "source_sha256": "cb768e524624ffb75990786b960bce442840635f41b24bc0ea8bea9aa8443be4",
+      "visual_approved": true
+    }
+  ]
+}
