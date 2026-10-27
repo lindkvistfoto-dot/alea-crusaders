@@ -30,6 +30,6 @@ jobs:
           HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
           HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
           HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
-          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID }}
+          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
         # No execute-cleanup flag or approval environment: production deletion remains off.
         run: python scripts/hermes_alea_worker.py
