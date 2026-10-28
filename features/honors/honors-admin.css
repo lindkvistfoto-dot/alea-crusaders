@@ -73,3 +73,6 @@
   .honors-badge-tier{padding:7px}
   .honors-badge-tier span{font-size:.72rem}
 }
+
+.honors-badge-metric-note{margin:7px 0 0;color:#aa977a;font-size:.74rem;line-height:1.35}
+.honors-badge-edit-fields .honors-metric-placeholders{grid-column:1/-1}
