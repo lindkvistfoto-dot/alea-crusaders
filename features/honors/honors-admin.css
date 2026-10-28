@@ -31,3 +31,5 @@
   .honors-variant-row>div:nth-child(2){min-width:0}
   .honors-variant-row>.honors-image-controls{grid-column:1/-1}
 }
+
+.honors-metric-placeholders{grid-column:1/-1;display:grid;gap:10px;border:1px dashed #765b3e;border-radius:10px;padding:12px;color:#c9b896}.honors-metric-placeholders legend{color:#d9b77e;padding:0 6px}.honors-metric-placeholders>p{margin:0;font-size:.82rem}.honors-metric-placeholders>label{display:flex;flex-direction:column;gap:5px}.honors-metric-placeholders input:disabled,.honors-metric-placeholders select:disabled{opacity:.7;cursor:not-allowed}.honors-metric-thresholds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.honors-metric-thresholds label{display:flex;flex-direction:column;gap:5px;font-size:.88rem}@media(max-width:650px){.honors-metric-placeholders{grid-column:auto}.honors-metric-thresholds{grid-template-columns:1fr}}
