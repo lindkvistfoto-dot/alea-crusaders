@@ -204,7 +204,7 @@ export function renderHonorsAdmin(root, options = {}) {
   function selectedBadgeVariant(definition) {
     const own=variantsFor(definition.id).filter(v=>v.status!=='archived');
     const selectedId=definition.published_variant_id||definition.preview_variant_id;
-    return own.find(v=>String(v.id)===String(selectedId))||own[0]||null;
+    return own.find(v=>String(v.id)===String(selectedId))||null;
   }
   function renderBadgeCard(definition) {
     const variant=selectedBadgeVariant(definition);
@@ -243,7 +243,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<details class="honors-badge-variants"><summary>Bildvarianter ('+alternatives.length+')</summary>'+
         (variantRows?'<ul>'+variantRows+'</ul>':'<p>Inga bildvarianter registrerade.</p>')+
       '</details>'+
-      '<footer><span>'+count(definition.id)+' tilldelningar</span><button type="button" data-edit-badge="'+esc(definition.id)+'">Öppna post</button></footer>'+
+      '<footer><span>'+count(definition.id)+' tilldelningar</span><button type="button" data-edit-badge="'+esc(definition.id)+'">Redigera</button></footer>'+
     '</article>';
   }
 
