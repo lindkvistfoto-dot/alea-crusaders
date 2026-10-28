@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "label": "Sir Robin Award — Övrigt",
+  "target": {
+    "kind": "honor-relief",
+    "id": "446dbc5d-147e-4b40-9917-fde7791a72e5",
+    "material": "other"
+  },
+  "drive_file_id": "1fXGVkGQxRupm8feZejmWrBB9zblnvbzB",
+  "archive_file_id": "1_WiICzDJYLgj6peWOsQtAJnMUn6iErBX",
+  "source_sha256": "e6f5237cdd203291fa0eb58b25fb0dd247487cdb9db6184a9299bd5be52f6232"
+}
