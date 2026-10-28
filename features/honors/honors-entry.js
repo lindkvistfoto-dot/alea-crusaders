@@ -154,7 +154,7 @@ window.openArcaneHonorsAdmin = async () => {
     };
     const publishVariant=async (definition,variant)=>{
       if(String(variant.honor_id)!==String(definition.id)) throw Error('Reliefvarianten tillhör en annan utmärkelse.');
-      const asset=assetRows.find(row=>row.asset_key===variant.image_asset_id&&row.asset_path&&row.alpha_preserved===true);
+      const asset=assetRows.find(row=>row.asset_key===variant.image_asset_id&&row.asset_path&&(row.alpha_preserved===true||variant.allow_overhang===false));
       if(!asset) throw Error('Bilden saknar publicerad transparensverifiering.');
       const updated=await window.dbJson('honor_relief_variants?id=eq.'+encodeURIComponent(variant.id),{
         method:'PATCH',body:JSON.stringify({status:'published',updated_at:new Date().toISOString()})
