@@ -2,7 +2,7 @@
 
 ## Bilder: Protokoll HERMES
 
-**HERMES CORE är standard för bildpublicering från ChatGPT, Work och Codex.** Läs först [features/hermes-core/OPERATIONAL_ACCEPTANCE.md](features/hermes-core/OPERATIONAL_ACCEPTANCE.md) och [hermes/core/queue/README.md](hermes/core/queue/README.md). Läs Drive-mål ur konfigurationen; välj aldrig mappar på gissning. HERMES ALEA är det separata webbflödet.
+**HERMES CORE är standard för bildpublicering från ChatGPT, Work och Codex.** Börja med [HERMES CORE-manifestet](hermes/core/manifest.json). Om åtkomst är osäker, följ den icke-destruktiva [hälsokontrollen](hermes/core/healthcheck.md). Läs därefter [operativt kontrakt](features/hermes-core/OPERATIONAL_ACCEPTANCE.md) och [kökontrakt](hermes/core/queue/README.md). Läs Drive-mål ur konfigurationen; välj aldrig mappar på gissning. HERMES ALEA är det separata webbflödet.
 
 För äldre uttryckligen beställda HERMES 4-jobb ska [docs/HERMES.md](docs/HERMES.md) följas. Det är den gemensamma standarden för bildproduktion, äkta binärfilöverföring, optimering, publicering, metadata, kontroller och databaspekare.
 
