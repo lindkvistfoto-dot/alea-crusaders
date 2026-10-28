@@ -47,6 +47,7 @@ export function renderHonorsAdmin(root, options = {}) {
   let query = '';
   let category = 'badge';
   let statusFilter = 'all';
+  let expandedBadgeId = '';
   let tab = 'catalog';
   let imageBusy=false;
   const imagePilot=options.imagePilotEnabled===true;
@@ -190,12 +191,17 @@ export function renderHonorsAdmin(root, options = {}) {
     const frameFamilyLabel = isBadge ? 'ARCANE LION' : 'ARCANE LAUREL';
     const framePreviews = tiers.map(tier => {
       const frameUrl = assetImage(frameFor(definition,tier));
+      const reliefLayer = reliefUrl
+        ? (allowOverhang
+          ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">'
+          : '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '"></span>')
+        : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '';
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
         (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + frameFamilyLabel + ' ' + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
-        (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
+        reliefLayer +
       '</div></div>';
     }).join('');
-    return '<section class="honors-variant-library"><h4>Bildvarianter</h4><p>Den första badgebilden väljs automatiskt. Välj en annan bild här om du vill byta; samma val används i förhandsvisningen och för badgen.</p>' +
+    return '<section class="honors-variant-library' + (isBadge ? ' is-badge' : '') + '"><h4>Bildvarianter</h4><p>Den första badgebilden väljs automatiskt. Välj en annan bild här om du vill byta; samma val används i förhandsvisningen och för badgen.</p>' +
       '<div class="honors-variant-list">' + rows + '</div>' +
       '<form data-variant-form class="honors-variant-form">' +
         '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood','other'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
@@ -222,9 +228,13 @@ export function renderHonorsAdmin(root, options = {}) {
     const metals=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
     const frames=metals.map(([metal,label])=>{
       const frameUrl=assetImage(frameFor(definition,metal));
+      const reliefLayer=variantUrl
+        ? (variant?.allow_overhang===false
+          ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
+          : '<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">')
+        : '<span class="honors-preview-empty">Bild saknas</span>';
       return '<div class="honors-badge-frame"><span>'+label+'</span><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
-        (variantUrl?'<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">':'<span class="honors-preview-empty">Bild saknas</span>')+
-        (frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'')+
+        reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'')+
       '</div></div>';
     }).join('');
     const criteria=[['bronze','Brons'],['silver','Silver'],['gold','Guld']].map(([tier,label])=>
@@ -274,7 +284,28 @@ export function renderHonorsAdmin(root, options = {}) {
 
     if (category === 'badge') {
       const grid=root.querySelector('[data-badge-grid]');
-      grid.innerHTML=visible.map(renderBadgeCard).join('')||'<p class="honors-help">Inga badges matchar filtret.</p>';
+      const visibleIds=new Set(visible.map(d=>String(d.id)));
+      if(!visibleIds.has(String(expandedBadgeId))) expandedBadgeId='';
+      const rows=visible.map(definition=>{
+        const variant=selectedBadgeVariant(definition);
+        const thumb=variant?assetImage(variant.image_asset_id):null;
+        const isExpanded=String(definition.id)===String(expandedBadgeId);
+        const statusLabel={draft:'Utkast',active:'Aktiv',inactive:'Inaktiv'}[definition.status]||definition.status||'Utkast';
+        return '<tr class="honors-badge-row'+(isExpanded?' is-expanded':'')+'">'+
+          '<td><button type="button" class="honors-badge-row-toggle" data-expand-badge="'+esc(definition.id)+'" aria-expanded="'+isExpanded+'">'+
+            (thumb?'<img src="'+esc(thumb)+'" alt="">':'<span class="honors-badge-row-placeholder" aria-hidden="true">✦</span>')+
+            '<span>'+esc(definition.name)+'</span></button></td>'+
+          '<td><span class="honors-status honors-status-'+esc(definition.status||'draft')+'">'+esc(statusLabel)+'</span></td>'+
+          '<td>'+(variant?esc(variant.name):'Ingen bild')+'</td><td class="honors-total">'+count(definition.id)+'</td></tr>'+
+          (isExpanded?'<tr class="honors-badge-detail-row"><td colspan="4">'+renderBadgeCard(definition)+'</td></tr>':'');
+      }).join('');
+      grid.innerHTML='<div class="honors-table-wrap"><table class="honors-table honors-badge-table"><thead><tr><th>Badge</th><th>Status</th><th>Vald bild</th><th>Tilldelningar</th></tr></thead><tbody>'+
+        (rows||'<tr><td colspan="4" class="honors-help">Inga badges matchar filtret.</td></tr>')+'</tbody></table></div>';
+      grid.querySelectorAll('[data-expand-badge]').forEach(button=>button.addEventListener('click',()=>{
+        const id=button.dataset.expandBadge;
+        expandedBadgeId=String(expandedBadgeId)===String(id)?'':id;
+        draw();
+      }));
       grid.querySelectorAll('[data-edit-badge]').forEach(button=>button.addEventListener('click',()=>{
         const definition=definitions.find(d=>String(d.id)===button.dataset.editBadge);
         if(definition)openEditor(definition);
