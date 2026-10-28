@@ -1,5 +1,5 @@
 (function(root){'use strict';const KEY='arcane-trophy-room-v2.2',URL='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/arcane-trophy-room-v2.2/c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55.webp';let scale=1,x=0,y=0,drag=null;const byId=id=>document.getElementById(id);function page(){return byId('trophyRoomPage')||document.querySelector('.trophy-room-page')}function viewport(){return byId('trophyRoomViewport')}function image(){return byId('trophyRoomImage')}/* JAKOB 3H: one animation clock drives both the wall camera and hero. */
-let cameraFrame=0,cameraMotion=null,suppressClick=false,activeWall='center';
+let cameraFrame=0,cameraMotion=null,suppressClick=false;
 let heroPose={x:0,y:0,scale:1};
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
@@ -41,7 +41,7 @@ function animateCamera(target,duration=2500,nextHeroPose=null){
  }
  cameraFrame=requestAnimationFrame(tick);
 }
-function reset(){activeWall='center';animateCamera({scale:1,x:0,y:0},2500,{x:0,y:0,scale:1})}
+function reset(){animateCamera({scale:1,x:0,y:0},2500,{x:0,y:0,scale:1})}
 function focusWall(side='center'){
  const v=viewport();if(!v)return;
  const targetScale=2.25;
@@ -50,7 +50,7 @@ function focusWall(side='center'){
   left:{x:.22,y:.50,hero:{x:-.28,y:.66,scale:2.45}},
   right:{x:.78,y:.50,hero:{x:.28,y:.66,scale:2.45}}
  };
- const destination=targets[side]||targets.center;activeWall=side;
+ const destination=targets[side]||targets.center;
  animateCamera({scale:targetScale,x:(.5-destination.x)*v.clientWidth*targetScale,y:(.5-destination.y)*v.clientHeight*targetScale},2500,destination.hero);
 }
 function zoom(delta){if(delta>0&&scale<1.5)focusWall();else if(delta<0&&scale>1.5)reset()}
