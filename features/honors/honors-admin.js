@@ -69,12 +69,13 @@ export function renderHonorsAdmin(root, options = {}) {
 
   function imageControls(kind,row){
     if(!imagePilot||!row)return '';
+    const badgeVariant=kind==='relief'&&getCategory(definitions.find(d=>String(d.id)===String(row.honor_id)))==='badge';
     const currentImage=assetImage(row.image_asset_id);
     return '<fieldset class="honors-image-controls" data-image-controls data-kind="'+kind+'" data-id="'+esc(row.id)+'"><legend>Bild</legend>'+
       (currentImage?'<img class="honors-image-current" src="'+esc(currentImage)+'" alt="Aktuell bild">':'<span>'+(row.image_asset_id?'Förhandsvisning saknas':'Ingen bild')+'</span>')+
       '<label>'+ (row.image_asset_id?'Byt bild':'Lägg till bild')+'<input data-image-upload type="file" accept="image/png,image/jpeg,image/webp"></label>'+
       '<small>PNG, JPEG eller WebP. Högst 12 MB och 2048 × 2048 pixlar. Förbered beskärning och bakgrund före uppladdning.'+(kind==='relief'?(row.allow_overhang===false?' Basbild bakom ramen kan vara ogenomskinlig via HERMES CORE.':' Bild som sticker ut kräver äkta transparens.'):'')+'</small>'+
-      (row.image_asset_id?'<button type="button" data-image-remove>Ta bort bild</button>':'')+
+      (row.image_asset_id&&!badgeVariant?'<button type="button" data-image-remove>Ta bort bild</button>':'')+
       '<button type="button" data-image-retry hidden>Försök igen</button><p role="status" aria-live="polite" data-image-status></p></fieldset>';
   }
   function bindImages(){
@@ -468,6 +469,7 @@ export function renderHonorsAdmin(root, options = {}) {
         });
         Object.assign(row,uploaded);
         let autoSelected=false;
+        let selectionNotice='';
         if(isBadge){
           try{
             await carryBadgeFrame(row);
@@ -475,9 +477,9 @@ export function renderHonorsAdmin(root, options = {}) {
               await activateBadge(row);
               autoSelected=true;
             }
-          }catch(error){notice('Bilden sparades, men kunde inte väljas automatiskt: '+(error.message||'okänt fel'));}
+          }catch(error){selectionNotice='Bilden sparades, men kunde inte väljas automatiskt: '+(error.message||'okänt fel');}
         }
-        draw(); openEditor(definition); notice(autoSelected?'Första färdiga bilden är aktiv.':'Bildvarianten är sparad.');
+        draw(); openEditor(definition); notice(selectionNotice||(autoSelected?'Första färdiga bilden är aktiv.':'Bildvarianten är sparad.'));
       } catch (error) {
         let message=error.message || 'Kunde inte lägga till reliefvarianten.';
         if (row?.id && !row.image_asset_id) {
@@ -551,10 +553,11 @@ export function renderHonorsAdmin(root, options = {}) {
     if (previewButton) previewButton.addEventListener('click', () => {
       const variant=isBadge?activeBadgeVariant(definition):variants.find(v=>String(v.id)===String(definition.preview_variant_id));
       if (!variant) return;
+      const frameKey=isBadge?badgeFrameFor(definition,variant):selectedBadgeFrame(definition,variant);
       root.dispatchEvent(new CustomEvent('arcane-honors:preview',{bubbles:true,detail:{
         honorName:definition.name,variantName:variant.name,
-        frameUrls:{bronze:assetImage(badgeFrameFor(definition,variant)),silver:assetImage(badgeFrameFor(definition,variant)),gold:assetImage(badgeFrameFor(definition,variant))},
-        frameAssetKey:badgeFrameFor(definition,variant),starCounts:{bronze:1,silver:2,gold:3},reliefUrl:assetImage(variant.image_asset_id),allowOverhang:variant.allow_overhang !== false
+        frameUrls:{bronze:assetImage(frameKey),silver:assetImage(frameKey),gold:assetImage(frameKey)},
+        frameAssetKey:frameKey,starCounts:{bronze:1,silver:2,gold:3},reliefUrl:assetImage(variant.image_asset_id),allowOverhang:variant.allow_overhang !== false
       }}));
       notice('Förhandsvisning öppnad i troférummet.');
     });
