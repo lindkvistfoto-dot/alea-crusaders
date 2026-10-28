@@ -3643,6 +3643,7 @@ function combatArmorAbsorption(combatant){
  return{absorption,names:[...new Set(names)]}
 }
 async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null,ignoreArmor=false){
+ const damageRolls=[];
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
@@ -3677,7 +3678,6 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  // Magical protection wards remain effective and are accounted for separately.
  const effectiveArmor=ignoreArmor===true?0:armor.absorption;
  const net=Math.max(0,gross-effectiveArmor-ward.points);
- const damageRolls=[];
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
