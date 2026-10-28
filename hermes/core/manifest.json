@@ -1,0 +1,84 @@
+{
+  "manifest_version": 1,
+  "system": {
+    "id": "hermes-core",
+    "name": "HERMES CORE",
+    "project": "Alea Crusaders",
+    "purpose": "Publish image originals through the existing Drive-to-GitHub-Actions-to-Supabase pipeline.",
+    "repository": "lindkvistfoto-dot/alea-crusaders",
+    "default_branch": "main"
+  },
+  "discovery": {
+    "primary_skill": "hermes-core-publish",
+    "fallback_path": "hermes/core/manifest.json",
+    "fallback_url": "https://github.com/lindkvistfoto-dot/alea-crusaders/blob/main/hermes/core/manifest.json",
+    "raw_url": "https://raw.githubusercontent.com/lindkvistfoto-dot/alea-crusaders/main/hermes/core/manifest.json",
+    "agent_entrypoint": "AGENTS.md"
+  },
+  "contracts": {
+    "operational_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md",
+    "queue_and_request_schema": "hermes/core/queue/README.md",
+    "drive_folders": "config/hermes-drive-folders.json",
+    "system_assets": "config/hermes-system-assets.json",
+    "honor_image_resolver": "features/honors/honors-image-resolver.js"
+  },
+  "targets": {
+    "system": {
+      "request_schema": [1, 2],
+      "database_destination": "public.arcane_system_assets.asset_path",
+      "archive_rule": "Use assets[asset_key].archive_folder_id when set; otherwise default_archive_folder_id."
+    },
+    "honor-definition": {
+      "request_schema": [2],
+      "database_destination": "public.honor_definitions.image_asset_id",
+      "target_id": "Existing honor_definitions.id UUID",
+      "pointer_format": "image_asset_id stores the registered arcane_system_assets.asset_key as text."
+    },
+    "honor-relief": {
+      "request_schema": [2],
+      "database_destination": "public.honor_relief_variants.image_asset_id",
+      "target_id": "Existing honor_relief_variants.id UUID",
+      "materials": ["enamel", "metal", "wood", "stone", "other"],
+      "archive_rule": "Use folders.original_archive.",
+      "side_effects": "Attaching an image does not select the honor's published variant or change draft/active state."
+    }
+  },
+  "execution": {
+    "required_tools": {
+      "drive": ["search/list", "upload_file", "copy_file", "get_file_metadata"],
+      "github": ["fetch_file", "create_file", "fetch Actions runs/jobs/steps/logs"],
+      "local_file_access": "The exact original bytes must be available as a local file path for SHA-256 and Drive upload."
+    },
+    "sequence_contract": "Follow the exact sequence in features/hermes-core/OPERATIONAL_ACCEPTANCE.md; do not invent a parallel publisher.",
+    "queue_path": "hermes/core/queue/[a-z0-9][a-z0-9-]{0,99}.json",
+    "queue_trigger": "A push to main adding a matching JSON request starts the existing workflow.",
+    "workflow": ".github/workflows/hermes-core-publish.yml",
+    "workflow_owns": [
+      "Drive folder and original SHA-256 verification",
+      "Image optimization and WebP conversion",
+      "Supabase Storage upload",
+      "Storage and public-readback hash verification",
+      "Image registration and requested target attachment",
+      "Target readback with revision/pointer comparison"
+    ],
+    "success_evidence": [
+      "The HERMES CORE Actions run head_sha equals the request commit.",
+      "The workflow completed successfully and its job emitted HERMES_CORE_ACTIVE.",
+      "The published Storage path and intended database reference were read back.",
+      "The target resolves through features/honors/honors-image-resolver.js when the target is an honor."
+    ]
+  },
+  "healthcheck": {
+    "procedure": "hermes/core/healthcheck.md",
+    "non_destructive": true,
+    "test_publication_required": false
+  },
+  "failure_policy": [
+    "If a required tool, permission, folder, contract, or original file is unavailable, name that exact missing item and stop before submission.",
+    "Never guess a Drive folder, target UUID, system asset key, or alternate upload route.",
+    "Inspect the existing queue, commit, Drive files, run, job steps, and logs before retrying an ambiguous or failed request.",
+    "Preserve both Drive originals and never report Inbox receipt or a queue commit as publication success.",
+    "Do not create credentials, permissions, migrations, workflows, or another publication path for routine submissions."
+  ],
+  "secrets_policy": "Do not place tokens, private keys, service-account credentials, or image bytes in this manifest or GitHub queue requests."
+}
