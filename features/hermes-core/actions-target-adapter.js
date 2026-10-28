@@ -51,7 +51,8 @@ async function activate(target, expectedRevision, expectedKey,
       const {data: changed,error: updateError} = await db.from("arcane_system_assets")
         .update(dbMetadata(metadata)).eq("asset_key",registryKey).eq("image_revision",registered.image_revision)
         .select("id").maybeSingle();
-      if(updateError || !changed) throw new Error("REGISTRY_CONCURRENT_CHANGE");
+      if(updateError) throw updateError;
+      if(!changed) throw new Error("REGISTRY_CONCURRENT_CHANGE");
     }
     let update = db.from(honorTable).update({image_asset_id:registryKey})
       .eq("id",target.id).eq("image_revision",expectedRevision);
