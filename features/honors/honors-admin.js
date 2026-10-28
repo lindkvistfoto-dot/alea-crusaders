@@ -62,7 +62,7 @@ export function renderHonorsAdmin(root, options = {}) {
     return '<fieldset class="honors-image-controls" data-image-controls data-kind="'+kind+'" data-id="'+esc(row.id)+'"><legend>Bild</legend>'+
       (currentImage?'<img class="honors-image-current" src="'+esc(currentImage)+'" alt="Aktuell bild">':'<span>'+(row.image_asset_id?'Förhandsvisning saknas':'Ingen bild')+'</span>')+
       '<label>'+ (row.image_asset_id?'Byt bild':'Lägg till bild')+'<input data-image-upload type="file" accept="image/png,image/jpeg,image/webp"></label>'+
-      '<small>PNG, JPEG eller WebP. Högst 12 MB och 2048 × 2048 pixlar. Förbered beskärning och bakgrund före uppladdning.'+(kind==='relief'?' Relief behöver äkta transparens.':'')+'</small>'+
+      '<small>PNG, JPEG eller WebP. Högst 12 MB och 2048 × 2048 pixlar. Förbered beskärning och bakgrund före uppladdning.'+(kind==='relief'?(row.allow_overhang===false?' Basbild bakom ramen kan vara ogenomskinlig via HERMES CORE.':' Bild som sticker ut kräver äkta transparens.'):'')+'</small>'+
       (row.image_asset_id?'<button type="button" data-image-remove>Ta bort bild</button>':'')+
       '<button type="button" data-image-retry hidden>Försök igen</button><p role="status" aria-live="polite" data-image-status></p></fieldset>';
   }
