@@ -116,6 +116,19 @@ export function renderHonorsAdmin(root, options = {}) {
           '<label>Guld<input type="number" disabled placeholder="Tröskelvärde"></label>' +
         '</div></fieldset>'
       : '';
+    if (selectedCategory === 'badge') {
+      return '<div class="honors-basic-fields honors-badge-edit-fields">' +
+        '<label>Namn<input name="name" required maxlength="160" value="' + esc(d.name) + '"></label>' +
+        '<label>Status<select name="status">' + [['draft','Utkast'],['active','Aktiv'],['inactive','Inaktiv']].map(([key,label]) => '<option value="' + key + '"' + ((d.status || 'draft') === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
+        '<label class="honors-wide">Beskrivning<textarea name="description">' + esc(d.description) + '</textarea></label>' +
+        '<fieldset class="honors-metric-placeholders honors-wide"><legend>Karriärmått</legend>' +
+          '<p>Automatisk statistik är inte aktiverad ännu. Skriv tills vidare in kraven per nivå; de kontrolleras inte automatiskt.</p>' +
+          '<label>Statistikmått<select disabled><option selected>Kommer när statistikfunktionen är klar</option></select></label>' +
+          '<div class="honors-metric-thresholds">' +
+            ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
+          '</div></fieldset>' +
+      '</div>';
+    }
     return '<div class="honors-basic-fields">' +
       '<label>Namn<input name="name" required maxlength="160" value="' + esc(d.name) + '"></label>' +
       '<label>Kategori<select name="category">' + Object.entries(categories).map(([key,label]) => '<option value="' + key + '"' + (selectedCategory === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
@@ -315,9 +328,9 @@ export function renderHonorsAdmin(root, options = {}) {
     bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
     const cat = root.querySelector('[data-fields] [name="category"]');
-    cat.addEventListener('change', () => { if (cat.value === 'medal') root.querySelector('[name="type"]').value = 'adventure'; else root.querySelector('[name="type"]').value = 'honor'; });
+    if(cat) cat.addEventListener('change', () => { const type=root.querySelector('[name="type"]'); if(type) type.value=cat.value==='medal'?'adventure':'honor'; });
     const status = root.querySelector('[data-fields] [name="status"]');
-    status.addEventListener('change', () => { if (status.value === 'draft') root.querySelector('[name="grant_mode"]').value='manual'; });
+    if(status) status.addEventListener('change', () => { if (status.value === 'draft') { const grantMode=root.querySelector('[name="grant_mode"]'); if(grantMode) grantMode.value='manual'; } });
     root.querySelector('[data-fields] [name="name"]').focus();
     if (definition) bindVariantActions(definition);
   }
@@ -330,12 +343,23 @@ export function renderHonorsAdmin(root, options = {}) {
       const value=String(data['criteria_'+tier] || '').trim(); delete data['criteria_'+tier];
       if (value) data.tier_criteria[tier]=value;
     }
-    data.badge_frame_assets = {};
-    for (const metal of ['bronze','silver','gold']) {
-      const value=data['frame_'+metal]; delete data['frame_'+metal];
-      if (value) data.badge_frame_assets[metal]=value;
+    const badgeEditor=(editing?getCategory(editing):category)==='badge';
+    if(badgeEditor){
+      data.category='badge';
+      data.type=editing?.type||'honor';
+      data.visibility=editing?.visibility||'public';
+      data.grant_mode=editing?.grant_mode||'manual';
+      data.requirement_text=editing?.requirement_text||'';
+      data.badge_frame_assets=editing?.badge_frame_assets||{...frameKeys};
+      data.frame_family='arcane_lion_badge';
+    }else{
+      data.badge_frame_assets = {};
+      for (const metal of ['bronze','silver','gold']) {
+        const value=data['frame_'+metal]; delete data['frame_'+metal];
+        if (value) data.badge_frame_assets[metal]=value;
+      }
+      data.frame_family = data.category === 'badge' ? 'arcane_lion_badge' : null;
     }
-    data.frame_family = data.category === 'badge' ? 'arcane_lion_badge' : null;
     data.grant_mode = data.status === 'draft' ? 'manual' : data.grant_mode;
     if (editing) data.id=editing.id;
     const errors=validateHonorDefinition(data);
