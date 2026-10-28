@@ -1,12 +1,12 @@
 {
-  "schema": 2,
-  "label": "Perfektionisten – Emalj",
-  "target": {
-    "kind": "honor-relief",
-    "id": "c45228b1-c692-4a4c-9f15-4ed97da9b57c",
-    "material": "enamel"
-  },
-  "drive_file_id": "1G9gmHbZtrIEH7mQb-cXgRn1oi17dkLk_",
-  "archive_file_id": "1TTlxObS_k6EPFEbS-XtuYY5NcYJSWHxW",
-  "source_sha256": "7a110382fa9820367e424913d181f33745529e0a6558e80966b1bb286db8fc08"
+    "schema": 2,
+    "label": "Perfektionisten – Emalj",
+    "target": {
+        "kind": "honor-relief",
+        "id": "c45228b1-c692-4a4c-9f15-4ed97da9b57c",
+        "material": "enamel"
+    },
+    "drive_file_id": "1G9gmHbZtrIEH7mQb-cXgRn1oi17dkLk_",
+    "archive_file_id": "1TTlxObS_k6EPFEbS-XtuYY5NcYJSWHxW",
+    "source_sha256": "7a110382fa9820367e424913d181f33745529e0a6558e80966b1bb286db8fc08"
 }
