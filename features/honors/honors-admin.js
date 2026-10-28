@@ -405,6 +405,7 @@ export function renderHonorsAdmin(root, options = {}) {
     }
   }
   async function bindVariantActions(definition) {
+    const isBadge=getCategory(definition)==='badge';
     const form=root.querySelector('[data-variant-form]');
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
