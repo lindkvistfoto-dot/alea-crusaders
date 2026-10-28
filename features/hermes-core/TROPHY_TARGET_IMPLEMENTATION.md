@@ -25,9 +25,18 @@ Extend the existing developer GitHub Actions publisher (PR #331) to support the 
 - Honor: `Perfektionisten`, `honor_definitions.id = 6a67121d-67ee-4943-82a3-83a15334d815`.
 - Inbox original Drive ID: `1G9gmHbZtrIEH7mQb-cXgRn1oi17dkLk_`.
 - Archive original Drive ID: `1TTlxObS_k6EPFEbS-XtuYY5NcYJSWHxW`.
-- Original SHA-256 (local uploaded image): `7a110382fa9820367e424913d181f33745529e0a6558e80966b1bb286db8fc08`.
+- Original SHA-256: MUST be calculated from downloaded Inbox and archive bytes before creating the queue request; no unverified digest may be used.
 - Material: enamel.
 - IMPORTANT: select/confirm the intended existing `honor_relief_variants.id` before publishing. No blind update.
 
 ## Definition of done
 The same queue/publisher pipeline safely supports system, honor-definition and honor-relief targets; test suite passes; Perfektionisten is actually published, linked, and visible. A document or green unit tests alone are not completion.
+
+## Safe rollout and rollback (mandatory)
+- Ship the queue target parser and tests first, without modifying the production system publisher.
+- New schema-2 honor targets must be gated behind an explicit opt-in feature flag in the GitHub Actions publisher; **default OFF** until an end-to-end staging test is signed off. Schema-1 system publishing must remain unchanged.
+- Before any activation, record the target row ID, old image_asset_id, old image_revision, old published_variant_id (if relevant), and newly created image registry ID. Never log credentials.
+- On failed validation or publication, do not update the target pointer. Preserve Drive originals and any previously published WebP.
+- To roll back: disable the honor-target feature flag first, then restore the prior image pointer through a revision-checked, authorized operation. Do not delete original files, published WebP or image registry history.
+- Only after a verified Perfektionisten pilot should the honor target gate be enabled for routine production.
+- Do not merge the implementation solely because unit tests pass. A missing authenticated database schema inspection or a missing image registry contract is a blocker.
