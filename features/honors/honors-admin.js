@@ -45,7 +45,7 @@ export function renderHonorsAdmin(root, options = {}) {
   let selected = '';
   let editing = null;
   let query = '';
-  let category = 'medal';
+  let category = 'badge';
   let statusFilter = 'all';
   let tab = 'catalog';
   let imageBusy=false;
@@ -238,7 +238,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<header><div><span class="honors-eyebrow">BADGE</span><h3>'+esc(definition.name)+'</h3></div><span class="honors-status '+statusClass+'">'+esc(statusLabel)+'</span></header>'+
       '<p class="honors-badge-description">'+esc(definition.description||'Ingen beskrivning ännu.')+'</p>'+
       '<div class="honors-badge-frames" aria-label="Lion-ramar i brons, silver och guld">'+frames+'</div>'+
-      '<div class="honors-badge-tiers">'+criteria+'</div>'+
+      '<div class="honors-badge-tiers">'+criteria+'</div><p class="honors-badge-metric-note">Karriärmått kontrolleras manuellt tills statistikfunktionen finns.</p>'+
       '<div class="honors-badge-current"><strong>'+esc(selectedText)+'</strong><span>'+(variant?esc(variant.name)+' · '+esc(materials[variant.material]||variant.material):'Lägg till en variant när illustrationen är klar')+'</span></div>'+
       '<details class="honors-badge-variants"><summary>Bildvarianter ('+alternatives.length+')</summary>'+
         (variantRows?'<ul>'+variantRows+'</ul>':'<p>Inga bildvarianter registrerade.</p>')+
@@ -252,7 +252,7 @@ export function renderHonorsAdmin(root, options = {}) {
       (statusFilter === 'all' || d.status === statusFilter) &&
       (String(d.name || '') + ' ' + String(d.description || '') + ' ' + String(types[d.type] || d.type || '')).toLocaleLowerCase('sv').includes(query.toLocaleLowerCase('sv')));
     root.innerHTML = '<section class="arcane-honors-admin" aria-label="ARCANE HONORS administration">' +
-      '<header class="honors-top"><div><span class="honors-eyebrow">ARCANE · BRONZE & IVORY</span><h2>Honors-register</h2></div><button type="button" data-new>+ Ny post</button></header>' +
+      '<header class="honors-top"><div><span class="honors-eyebrow">ARCANE · BRONZE & IVORY</span><h2>Honors-register</h2></div><button type="button" data-new>' + (category === 'badge' ? '+ Ny badge' : '+ Ny post') + '</button></header>' +
       '<nav class="honors-tabs" aria-label="Honors-kategorier">' +
         Object.entries(categories).map(([key,label]) => '<button type="button" data-category="' + key + '" aria-pressed="' + (category === key) + '">' + label + ' <span class="honors-count">' + definitions.filter(d => getCategory(d) === key).length + '</span></button>').join('') +
         '<button type="button" data-tab="recipients" aria-pressed="' + (tab === 'recipients') + '">Mottagare</button>' +
