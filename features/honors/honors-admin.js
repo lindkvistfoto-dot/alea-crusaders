@@ -176,7 +176,7 @@ export function renderHonorsAdmin(root, options = {}) {
         imageControls('relief',v) + '<div class="honors-variant-actions">' +
           '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>' + (isBadge ? 'Välj aktiv förhandsvisning' : 'Förhandsvisa') + '</button>' +
           (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
-          (!isBadge && v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
+          (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">' + (isBadge?'Ta bort variant':'Arkivera') + '</button>' : '') +
         '</div></article>';
     }).join('') : '<p class="honors-help">Inga bildvarianter registrerade.</p>';
     const preview = own.find(v => String(v.id) === selectedPreview);
@@ -186,7 +186,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const framePreviews = tiers.map(tier => {
       const frameUrl = assetImage(frameFor(definition,tier));
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
-        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + frameFamilyLabel + ' ' + tierLabels[tier].toLowerCase() + 'ram'> : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
+        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + frameFamilyLabel + ' ' + tierLabels[tier].toLowerCase() + 'ram">'> : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
       '</div></div>';
     }).join('');
@@ -461,13 +461,14 @@ export function renderHonorsAdmin(root, options = {}) {
       } catch(error) { notice(error.message || 'Kunde inte välja publicerad variant.'); }
     }));
     root.querySelectorAll('[data-archive-variant]').forEach(button => button.addEventListener('click', async () => {
+      const variant=variants.find(v=>String(v.id)===button.dataset.archiveVariant);
+      if(isBadge&&!root.ownerDocument.defaultView.confirm('Ta bort "'+(variant?.name||'varianten')+'" från badgen? Originalbilden bevaras.'))return;
       try {
-        const variant=variants.find(v=>String(v.id)===button.dataset.archiveVariant);
         await onArchiveVariant(definition,variant);
         variant.status='archived';
         if (String(definition.preview_variant_id)===String(variant.id)) definition.preview_variant_id=null;
         if (String(definition.published_variant_id)===String(variant.id)) definition.published_variant_id=null;
-        draw(); openEditor(definition); notice('Varianten arkiverades och finns kvar i biblioteket.');
+        draw(); openEditor(definition); notice(isBadge?'Varianten togs bort från badgen. Originalbilden bevaras.':'Varianten arkiverades och finns kvar i biblioteket.');
       } catch(error) { notice(error.message || 'Kunde inte arkivera varianten.'); }
     }));
     const previewButton=root.querySelector('[data-trophy-preview]');
