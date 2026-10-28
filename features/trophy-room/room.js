@@ -173,7 +173,7 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
  layer.replaceChildren();
  const title=document.createElement('strong');title.textContent=detail.honorName||'ARCANE HONORS';layer.append(title);
  const previewGrid=document.createElement('div');previewGrid.className='trophy-room-honor-preview-grid';layer.append(previewGrid);
- const tiers=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
+ const tiers=[['bronze','Badge']];
  for(const [key,labelText] of tiers){
   const card=document.createElement('div');card.className='trophy-room-honor-preview-tier';
   const label=document.createElement('span');label.textContent=labelText;card.append(label);
