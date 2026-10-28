@@ -164,7 +164,7 @@ create policy chronicle_events_select
   using ((select private.is_admin()) or (select private.is_campaign_gm(campaign_id)));
 
 comment on table public.chronicle_events is
-  'Append-only, queryable Chronicle facts. Attack outcomes are inserted transactionally from resolved combat_actions; corrections reference prior rows.';
+  'Append-only Chronicle facts for combat and session activity. Type-specific details are stored with shared campaign and session context.';
 
 create or replace function private.capture_game_session_event()
 returns trigger language plpgsql security definer
@@ -253,7 +253,7 @@ begin
     ) values (
       v_campaign, v_session, v_type,
       'session-participant:' || v_session::text || ':' || v_character::text || ':' || gen_random_uuid()::text,
-      coalesce(v_left, v_joined, clock_timestamp()), 'verified_engine',
+      case when tg_op = 'DELETE' then clock_timestamp() else coalesce(v_left, v_joined, clock_timestamp()) end, 'verified_engine',
       jsonb_build_object('character_id', v_character, 'character_name', v_name,
         'participant_kind', v_kind, 'joined_at', v_joined, 'left_at', v_left)
     );
