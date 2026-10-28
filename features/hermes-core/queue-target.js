@@ -10,10 +10,11 @@ export function normalizeCoreQueueTarget(request) {
   return {kind:'system',id:request.asset_key,label:request.label};
  }
  if(request.schema!==2) throw new Error('UNSUPPORTED_CORE_SCHEMA');
- const target=request.target;
+ const target=request.target ? {...request.target} : null;
+ if(target?.kind==='honor-relief') target.material=({metal_relief:'metal',carved_wood:'wood'})[target.material] ?? target.material;
  if(!target||typeof target!=='object'||Array.isArray(target)) throw new Error('CORE_TARGET_REQUIRED');
  if(!CORE_TARGET_KINDS.includes(target.kind)) throw new Error('CORE_TARGET_KIND_UNSUPPORTED');
  if(typeof target.id!=='string'||!(target.kind==='system'?SYSTEM:UUID).test(target.id)) throw new Error('INVALID_CORE_TARGET_ID');
- if(target.kind==='honor-relief' && target.material!==undefined && !['enamel','metal_relief','carved_wood','other'].includes(target.material)) throw new Error('INVALID_RELIEF_MATERIAL');
+ if(target.kind==='honor-relief' && target.material!==undefined && !['enamel','metal','wood','stone','other'].includes(target.material)) throw new Error('INVALID_RELIEF_MATERIAL');
  return {kind:target.kind,id:target.id,label:request.label, ...(target.material?{material:target.material}:{})};
 }
