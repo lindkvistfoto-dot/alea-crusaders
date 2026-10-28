@@ -36,7 +36,7 @@ export function createReliefVariant({ name, material, imageAssetId = null, honor
 export function canPublishReliefVariant(variant, imageAssets = []) {
   if (!variant?.image_asset_id) return false;
   return imageAssets.some(asset => asset?.asset_key === variant.image_asset_id &&
-    typeof asset.asset_path === 'string' && asset.alpha_preserved === true);
+    typeof asset.asset_path === 'string' && (asset.alpha_preserved === true || variant.allow_overhang === false));
 }
 export function resolveBadgeComposition({ metal, variant, frameAssets = BADGE_FRAME_ASSET_KEYS }) {
   if (!BADGE_METALS.includes(metal)) throw new Error('Invalid badge metal');
