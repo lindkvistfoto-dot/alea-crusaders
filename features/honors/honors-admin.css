@@ -103,3 +103,5 @@
   .honors-badge-row-toggle>img,.honors-badge-row-placeholder{width:36px;height:36px;flex-basis:36px}
   .honors-badge-detail-row>td{padding:8px 0 12px}
 }
+
+.honors-badge-card .honors-preview-art{overflow:visible}
