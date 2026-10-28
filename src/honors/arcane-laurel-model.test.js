@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createHonorDraft, createReliefVariant, resolveBadgeComposition,
-  canPublishReliefVariant, playerVisibleHonors, BADGE_METALS, LAUREL_FRAME_ASSET_KEYS
+  canPublishReliefVariant, playerVisibleHonors, BADGE_METALS, BADGE_FRAME_ASSET_KEYS, LAUREL_FRAME_ASSET_KEYS
 } from './arcane-laurel-model.js';
 
 describe('ARCANE LAUREL BADGE model', () => {
@@ -22,7 +22,7 @@ describe('ARCANE LAUREL BADGE model', () => {
     expect(variant.status).toBe('draft');
     for (const metal of BADGE_METALS) {
       const composition = resolveBadgeComposition({ metal, variant });
-      expect(composition.frameAssetId).toBe(LAUREL_FRAME_ASSET_KEYS[metal]);
+      expect(composition.frameAssetId).toBe(BADGE_FRAME_ASSET_KEYS[metal]);
       expect(composition.reliefAssetId).toBe('sir-robin-wood');
       expect(composition.allowOverhang).toBe(true);
       expect(composition.mountingShape).toBe('circle');
