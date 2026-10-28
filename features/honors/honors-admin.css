@@ -33,3 +33,43 @@
 }
 
 .honors-metric-placeholders{grid-column:1/-1;display:grid;gap:10px;border:1px dashed #765b3e;border-radius:10px;padding:12px;color:#c9b896}.honors-metric-placeholders legend{color:#d9b77e;padding:0 6px}.honors-metric-placeholders>p{margin:0;font-size:.82rem}.honors-metric-placeholders>label{display:flex;flex-direction:column;gap:5px}.honors-metric-placeholders input:disabled,.honors-metric-placeholders select:disabled{opacity:.7;cursor:not-allowed}.honors-metric-thresholds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.honors-metric-thresholds label{display:flex;flex-direction:column;gap:5px;font-size:.88rem}@media(max-width:650px){.honors-metric-placeholders{grid-column:auto}.honors-metric-thresholds{grid-template-columns:1fr}}
+
+
+/* Badge overview: keep the key facts visible without opening the long general editor. */
+.honors-badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:14px;align-items:start}
+.honors-badge-card{min-width:0;padding:16px;border:1px solid #765b3e;border-radius:14px;background:linear-gradient(155deg,#2b2119,#1c1510);box-shadow:inset 0 0 0 1px #17110b}
+.honors-badge-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.honors-badge-card h3{margin:3px 0 0;color:#e3bf83;font-size:1.05rem;overflow-wrap:anywhere}
+.honors-badge-description{min-height:2.8em;margin:12px 0;color:#e7d9c2;line-height:1.45}
+.honors-badge-frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 14px}
+.honors-badge-frame{display:grid;justify-items:center;gap:5px;color:#d9b77e;font-size:.78rem}
+.honors-badge-card .honors-preview-art{width:min(100%,104px);aspect-ratio:1/1;background:radial-gradient(circle,#59452e,#20170f);border:1px solid #725735;border-radius:50%;overflow:hidden}
+.honors-badge-card .honors-preview-art img{object-fit:contain}
+.honors-badge-card .honors-preview-empty{z-index:1;font-size:.68rem}
+.honors-badge-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.honors-badge-tier{display:grid;align-content:start;gap:5px;min-width:0;padding:9px;border:1px solid #5d4933;border-radius:9px;background:#211912}
+.honors-badge-tier strong{color:#d9b77e;font-size:.8rem}
+.honors-badge-tier span{font-size:.78rem;line-height:1.35;overflow-wrap:anywhere}
+.honors-badge-current{display:grid;gap:3px;margin-top:12px;padding:9px 10px;border-left:3px solid #d5ae6b;background:#211912}
+.honors-badge-current strong{font-size:.8rem;color:#e5c278}
+.honors-badge-current span{font-size:.8rem;color:#ccb897}
+.honors-badge-variants{margin-top:10px;border-top:1px solid #54402f;padding-top:9px}
+.honors-badge-variants summary{cursor:pointer;color:#d9b77e;font-size:.85rem}
+.honors-badge-variants ul{display:grid;gap:7px;list-style:none;padding:8px 0 0;margin:0}
+.honors-badge-variants li{display:flex;align-items:center;gap:9px;min-width:0;padding:7px;border-radius:8px;background:#211912}
+.honors-badge-variants li img,.honors-badge-variant-empty{width:42px;height:42px;flex:0 0 42px;object-fit:contain;border-radius:6px;background:#30251b}
+.honors-badge-variant-empty{display:grid;place-items:center;color:#dfbd7d}
+.honors-badge-variants li>span:nth-child(2){display:grid;gap:3px;min-width:0}
+.honors-badge-variants li strong{overflow-wrap:anywhere}
+.honors-badge-variants li small{font-size:.75rem;color:#ccb897}
+.honors-badge-variants li em{margin-left:auto;color:#e5c278;font-size:.75rem;font-style:normal}
+.honors-badge-card>footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid #54402f;color:#ccb897;font-size:.78rem}
+.honors-badge-card>footer button{padding:7px 10px;font-size:.78rem}
+@media(max-width:600px){
+  .honors-badge-grid{grid-template-columns:minmax(0,1fr)}
+  .honors-badge-card{padding:12px}
+  .honors-badge-card .honors-preview-art{width:min(100%,82px)}
+  .honors-badge-tiers{gap:5px}
+  .honors-badge-tier{padding:7px}
+  .honors-badge-tier span{font-size:.72rem}
+}
