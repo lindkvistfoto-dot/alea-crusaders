@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "label": "It's just a flesh wound — Övrigt",
+  "target": {
+    "kind": "honor-relief",
+    "id": "454de9cb-ec82-414f-bec8-f49dc40bcf3a",
+    "material": "other"
+  },
+  "drive_file_id": "1napjKh5wYEXZ0Xozb7WUN5J0o4rxSRWU",
+  "archive_file_id": "1cvUJU_-p7WXk98k1z-nARcvC8OzLP4My",
+  "source_sha256": "e84abd95fbbc92c4bc43ddc4199d461b386ef032659895591e29c5925effaddb"
+}
