@@ -11,7 +11,7 @@ async function refreshActiveGameSession(){
  const rows=await dbJson('game_sessions?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=in.(active,paused)&select=id,campaign_id,title,session_date,status,started_at,ended_at,started_by,ended_by&order=started_at.desc&limit=1');
  activeGameSession=rows?.[0]||null;window.aleaCurrentGameSessionId=activeGameSession?.id||null;renderSessionButton();return activeGameSession
 }
-window.aleaGetActiveGameSessionId=async function(){try{return (await refreshActiveGameSession())?.id||null}catch(error){console.warn('Aktivt speltillfälle kunde inte läsas',error);return null}}
+window.aleaGetActiveGameSessionId=async function(){try{const session=await refreshActiveGameSession();return session?.status==='active'?session.id:null}catch(error){console.warn('Aktivt speltillfälle kunde inte läsas',error);return null}}
 function ensureSessionUi(){
  const clock=document.querySelector('.alea-clock');
  if(!clock)return;
@@ -55,7 +55,7 @@ async function openGameSessionPanel(){
 function closeGameSessionPanel(){$id('gameSessionModal')?.classList.add('hidden');document.body.classList.remove('game-session-open')}
 async function loadAndRenderSession(){
  ensureSessionUi();sessionUiBusy=true;renderSessionButton();const body=$id('gameSessionBody');if(body)body.innerHTML='<p class="game-session-muted">Laddar speltillfälle…</p>';
- try{const session=await refreshActiveGameSession();let participants=[];if(session)participants=await dbJson('game_session_participants?session_id=eq.'+encodeURIComponent(session.id)+'&select=session_id,character_id,character_name_snapshot,participant_kind,joined_at,left_at&left_at=is.null&order=character_name_snapshot.asc');renderSessionBody(session,participants)}
+ try{if(!centralCampaignId){if(body)body.innerHTML='<p class="game-session-muted">Logga in och välj en kampanj först.</p>';return}if(!gameSessionCanManage()){if(body)body.innerHTML='<p class="game-session-muted">Endast spelledaren kan hantera speltillfällen.</p>';return}const session=await refreshActiveGameSession();let participants=[];if(session)participants=await dbJson('game_session_participants?session_id=eq.'+encodeURIComponent(session.id)+'&select=session_id,character_id,character_name_snapshot,participant_kind,joined_at,left_at&left_at=is.null&order=character_name_snapshot.asc');renderSessionBody(session,participants)}
  catch(error){if(body)body.innerHTML='<p class="game-session-error">Kunde inte läsa speltillfället: '+sessionEsc(error.message)+'</p>'}
  finally{sessionUiBusy=false;renderSessionButton()}
 }
