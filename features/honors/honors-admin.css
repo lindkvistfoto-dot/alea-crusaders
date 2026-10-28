@@ -41,7 +41,7 @@
 .honors-badge-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .honors-badge-card h3{margin:3px 0 0;color:#e3bf83;font-size:1.05rem;overflow-wrap:anywhere}
 .honors-badge-description{min-height:2.8em;margin:12px 0;color:#e7d9c2;line-height:1.45}
-.honors-badge-frames{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 14px}
+.honors-badge-frames{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:10px 0 14px}
 .honors-badge-frame{display:grid;justify-items:center;gap:5px;color:#d9b77e;font-size:.78rem}
 .honors-badge-card .honors-preview-art{width:min(100%,104px);aspect-ratio:1/1;background:transparent;border:0;border-radius:0;overflow:visible}
 .honors-badge-card .honors-preview-art img{object-fit:contain}
