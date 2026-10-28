@@ -815,8 +815,9 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
  let instanceCreated=false;
  try{
   const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+  const sessionId=await window.aleaGetActiveGameSessionId?.()||null;
   await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
-   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
+   id:instanceId,campaign_id:centralCampaignId,session_id:sessionId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
    name:scene.name||'Strid',status:resetReady?'setup':'active',round_number:1,phase:'initiative',winning_side:null,
    initiative:pendingInitiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
   })});
@@ -1991,8 +1992,10 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  if(attackMode==='melee'&&rolled.outcome==='perfect')window.aleaAnimations?.play('melee.perfect',{target});
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
+  resolution_id:crypto.randomUUID(),
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
-  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',attack_mode:attackMode,
+  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',
+  weapon_class:combatWeaponCategory(weapon)||null,attack_mode:attackMode,
   full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
   rule_engine:'expert_skill',
   hit_resolved:!success,
@@ -3641,6 +3644,7 @@ function combatArmorAbsorption(combatant){
  return{absorption,names:[...new Set(names)]}
 }
 async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null,ignoreArmor=false){
+ const damageRolls=[];
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
@@ -3656,8 +3660,12 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
    const rolled=await combatRollDice(specs.map(({qty,sides})=>({qty,sides})),'Skada · '+actor.name_snapshot+' → '+target.name_snapshot);
    let rollIndex=0;
    for(const spec of specs){
-    let subtotal=0;
-    for(let i=0;i<spec.qty;i++)subtotal+=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
+    let subtotal=0;const faces=[];
+    for(let i=0;i<spec.qty;i++){
+     const face=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
+     faces.push(face);subtotal+=face
+    }
+    damageRolls.push({kind:spec.kind,qty:spec.qty,sides:spec.sides,faces});
     if(spec.kind==='weapon')weaponValue+=subtotal;
     else bonusValue+=subtotal
    }
@@ -3687,6 +3695,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  target.current_kp=Number(saved[0].current_kp);target.status=saved[0].status;
  const result={
   spell_damage:weapon?._spell_damage===true,
+  damage_rolls:damageRolls,
   weapon_formula:weaponSpec.formula,
   weapon_damage_value:weaponValue,
   damage_bonus:bonusSpec.formula||'Ingen',

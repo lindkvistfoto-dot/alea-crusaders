@@ -1,0 +1,24 @@
+.game-session-nav{white-space:nowrap;font-size:.82rem}
+.game-session-backdrop{position:fixed;inset:0;z-index:100050;background:rgba(12,8,6,.76);backdrop-filter:blur(7px);display:grid;place-items:center;padding:20px}
+.game-session-backdrop.hidden{display:none!important}
+.game-session-dialog{width:min(520px,100%);max-height:min(84vh,760px);overflow:auto;border:1px solid rgba(222,187,125,.56);border-radius:18px;background:linear-gradient(145deg,#261c13,#120f0c 72%);color:#f1e2c9;box-shadow:0 24px 80px #000b;padding:24px}
+.game-session-dialog>header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;border-bottom:1px solid #8e704544;padding-bottom:14px;margin-bottom:16px}
+.game-session-dialog h2{font:600 1.55rem/1.2 Georgia,serif;margin:5px 0 0;color:#f4e4c8}
+.game-session-eyebrow{font:600 .65rem/1 sans-serif;letter-spacing:.19em;color:#c9a86e}
+.game-session-close{border:0;background:transparent;color:#e9d6b6;font-size:1.8rem;line-height:1;cursor:pointer}
+.game-session-field{display:grid;gap:6px;margin:14px 0;color:#d9c6a6;font-size:.9rem}
+.game-session-field input{box-sizing:border-box;width:100%;border:1px solid #8e704577;border-radius:9px;background:#100d0b;color:#f5ead8;padding:11px 12px;font:inherit}
+.game-session-roster{border:1px solid #8e704544;border-radius:11px;margin:18px 0;padding:10px 13px 12px}
+.game-session-roster legend{padding:0 5px;color:#d5b77f;font-size:.86rem}
+.game-session-roster label{display:flex;align-items:center;gap:10px;padding:8px 3px;border-bottom:1px solid #8e704422;cursor:pointer}
+.game-session-roster label:last-of-type{border-bottom:0}
+.game-session-roster input{accent-color:#c79b54;width:17px;height:17px}
+.game-session-roster p,.game-session-muted{color:#bcae98;font-size:.9rem;line-height:1.5}
+.game-session-status{display:flex;align-items:center;justify-content:space-between;color:#c9aa72;font-size:.9rem}
+.game-session-title{font:600 1.2rem Georgia,serif;margin:.65rem 0}
+.game-session-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:16px}
+.game-session-action{margin-top:4px}
+.game-session-dialog .danger{border-color:#a9584d;color:#f0b5a9}
+.game-session-error{color:#ffb7aa}
+body.game-session-open{overflow:hidden}
+@media(max-width:700px){.game-session-backdrop{padding:10px;align-items:end}.game-session-dialog{max-height:88vh;border-radius:17px 17px 10px 10px;padding:19px}.game-session-nav{font-size:.74rem}}
