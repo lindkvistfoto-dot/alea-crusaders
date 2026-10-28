@@ -4,9 +4,24 @@ import { createHonorImageResolver } from './honors-image-resolver.js';
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const categories = { medal:'Medaljer', award:'Utmärkelser', badge:'Badges' };
 const types = { adventure:'Äventyr', campaign:'Kampanj', achievement:'Prestation', honor:'Hedersutmärkelse' };
-const materials = { enamel:'Emalj', metal:'Metallrelief', wood:'Snidat trä', stone:'Sten', other:'Annat' };
+const materials = { enamel:'Emalj', metal:'Metallrelief', wood:'Snidat trä', stone:'Sten (äldre variant)', other:'Övrigt' };
 const frameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-badge-silver', gold:'arcane-laurel-badge-gold' };
 const asArray = value => Array.isArray(value) ? value : [];
+
+async function assertSquareBadgeImage(file) {
+  if (typeof createImageBitmap !== 'function') {
+    throw new Error('Den här webbläsaren kan inte kontrollera bildens proportioner.');
+  }
+  const bitmap = await createImageBitmap(file);
+  try {
+    if (bitmap.width !== bitmap.height) {
+      throw new Error('Badgebilder måste vara kvadratiska (1:1).');
+    }
+  } finally {
+    bitmap.close?.();
+  }
+}
+
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
 const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || frameKeys[metal];
@@ -66,6 +81,7 @@ export function renderHonorsAdmin(root, options = {}) {
         const disabled=controls.map(el=>el.disabled);controls.forEach(el=>el.disabled=true);
         const status=panel.querySelector('[data-image-status]');status.textContent=file?'Laddar upp och kontrollerar bilden…':'Tar bort bildkopplingen…';
         try{
+          if(file&&kind==='relief'&&getCategory(definitions.find(d=>String(d.id)===String(row.honor_id)))==='badge') await assertSquareBadgeImage(file);
           const result=file?await options.onUploadImage(kind,row,file):await options.onRemoveImage(kind,row);
           Object.assign(row,result);imageBusy=false;draw();openEditor(editing);
           const updatedPanel=[...root.querySelectorAll('[data-image-controls]')].find(el=>el.dataset.kind===kind&&el.dataset.id===String(row.id));
@@ -86,6 +102,16 @@ export function renderHonorsAdmin(root, options = {}) {
     const d = definition || {};
     const selectedCategory = definition ? getCategory(d) : category;
     const frame = d.badge_frame_assets || {};
+    const badgeMetricPlaceholders = selectedCategory === 'badge'
+      ? '<fieldset class="honors-metric-placeholders honors-wide"><legend>Automatiska karriärmått</legend>' +
+        '<p>Platshållare för planerade karriärmått. Fälten är inte aktiva och sparas inte.</p>' +
+        '<label>Karriärmått<select disabled><option selected>Välj mått senare</option></select></label>' +
+        '<div class="honors-metric-thresholds">' +
+          '<label>Brons<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+          '<label>Silver<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+          '<label>Guld<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+        '</div></fieldset>'
+      : '';
     return '<div class="honors-basic-fields">' +
       '<label>Namn<input name="name" required maxlength="160" value="' + esc(d.name) + '"></label>' +
       '<label>Kategori<select name="category">' + Object.entries(categories).map(([key,label]) => '<option value="' + key + '"' + (selectedCategory === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
@@ -97,6 +123,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<label class="honors-wide">Villkor<textarea name="requirement_text">' + esc(d.requirement_text) + '</textarea></label>' +
       '<label>Synlighet<select name="visibility">' + [['public','Öppen'],['silhouette','Dold silhuett'],['secret','Hemlig']].map(([key,label]) => '<option value="' + key + '"' + ((d.visibility || 'public') === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
       '<label>Tilldelning<select name="grant_mode">' + [['manual','Manuell'],['automatic','Automatisk'],['both','Båda']].map(([key,label]) => '<option value="' + key + '"' + ((d.grant_mode || 'manual') === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select><small>Utkast sparas alltid med manuell tilldelning.</small></label>' +
+      badgeMetricPlaceholders +
       '<fieldset class="honors-tiers honors-wide"><legend>Kriterier per nivå (valfritt)</legend>' +
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
@@ -116,37 +143,44 @@ export function renderHonorsAdmin(root, options = {}) {
   function renderVariantPanel(definition) {
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
     const own = variantsFor(definition.id);
+    const isBadge = getCategory(definition) === 'badge';
     const selectedPreview = String(definition.preview_variant_id || '');
     const selectedPublished = String(definition.published_variant_id || '');
+    const tiers = isBadge ? ['bronze','silver','gold'] : ['bronze'];
+    const tierLabels = {bronze:'Brons',silver:'Silver',gold:'Guld'};
     const rows = own.length ? own.map(v => {
       const img = assetImage(v.image_asset_id);
       const isPreview = selectedPreview === String(v.id);
       const isPublished = selectedPublished === String(v.id);
       return '<article class="honors-variant-row' + (isPreview ? ' is-preview' : '') + '">' +
         (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span class="honors-variant-placeholder" aria-hidden="true">✦</span>') +
-        '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Förhandsvisning vald' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
-        '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · överhäng tillåtet' : '') + '</small></div>' +
+        '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Aktiv förhandsvisning' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
+        '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · bilden visas framför ramen' : ' · ramen visas framför bilden') + '</small></div>' +
         imageControls('relief',v) + '<div class="honors-variant-actions">' +
-          '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>' +
+          '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>' + (isBadge ? 'Välj aktiv förhandsvisning' : 'Förhandsvisa') + '</button>' +
           (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
-          (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
+          (!isBadge && v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">Arkivera</button>' : '') +
         '</div></article>';
-    }).join('') : '<p class="honors-help">Inga reliefvarianter registrerade.</p>';
+    }).join('') : '<p class="honors-help">Inga bildvarianter registrerade.</p>';
     const preview = own.find(v => String(v.id) === selectedPreview);
-    const metal = 'bronze';
-    const frameUrl = assetImage(frameFor(definition, metal));
+    const allowOverhang = preview?.allow_overhang !== false;
     const reliefUrl = preview ? assetImage(preview.image_asset_id) : null;
-    return '<section class="honors-variant-library"><h4>Permanent reliefbibliotek</h4><p>Varianter bevaras separat. Förhandsvisning ändrar inte publicerad variant.</p>' +
+    const framePreviews = tiers.map(tier => {
+      const frameUrl = assetImage(frameFor(definition,tier));
+      return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
+        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL ' + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
+        (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
+      '</div></div>';
+    }).join('');
+    return '<section class="honors-variant-library"><h4>Bildvarianter</h4><p>Den första badgebilden blir automatiskt aktiv för förhandsvisning. Publicering till spelarna kräver fortfarande ett separat val.</p>' +
       '<div class="honors-variant-list">' + rows + '</div>' +
       '<form data-variant-form class="honors-variant-form">' +
-        '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
-        '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
-        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt relief att sticka utanför monteringscirkeln</label>' +
+        '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood','other'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
+        '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. '+(isBadge?'Badgebilder måste vara kvadratiska (1:1). ':'')+'Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
+        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt bilden att sticka utanför ramen (3D-effekt)</label>' +
         '<button type="submit"'+(!imagePilot?' disabled':'')+'>Lägg till variant</button></form>' +
-      '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i troférummet"><span>Förhandsvisning · bronsram</span><div class="honors-preview-art">' +
-        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL bronsram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
-        (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
-      '</div><button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
+      '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i brons-, silver- och guldram"><span>Förhandsvisning · valda ramar</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
+      '<button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
   }
 
   function draw() {
@@ -288,6 +322,10 @@ export function renderHonorsAdmin(root, options = {}) {
       const data=formData(event.currentTarget);
       const file=event.currentTarget.elements.namedItem('image_file')?.files?.[0];
       if (!file) { notice('Välj en bildfil.'); return; }
+      if (getCategory(definition)==='badge') {
+        try { await assertSquareBadgeImage(file); }
+        catch(error) { notice(error.message); return; }
+      }
       delete data.image_file;
       data.name='Relief '+data.material+' '+crypto.randomUUID().slice(0,8);
       data.honor_id=definition.id; data.allow_overhang=data.allow_overhang === 'on';
@@ -302,7 +340,11 @@ export function renderHonorsAdmin(root, options = {}) {
           if(messages[stage])notice(messages[stage]);
         });
         Object.assign(row,uploaded);
-        draw(); openEditor(definition); notice('Relief och bild sparade via HERMES ALEA. Arkivering sker i bakgrunden.');
+        let autoSelected=false;
+        if(getCategory(definition)==='badge'&&!definition.preview_variant_id&&typeof options.onPreviewVariant==='function'){
+          try{await options.onPreviewVariant(definition,row.id);definition.preview_variant_id=row.id;autoSelected=true;}catch(error){notice('Bilden sparades, men kunde inte väljas som aktiv förhandsvisning: '+(error.message||'okänt fel'));}
+        }
+        draw(); openEditor(definition); notice(autoSelected?'Första bildvarianten sparad och vald som aktiv förhandsvisning.':'Bildvariant sparad via HERMES ALEA.');
       } catch (error) {
         let message=error.message || 'Kunde inte lägga till reliefvarianten.';
         if (row?.id && !row.image_asset_id) {
@@ -349,7 +391,8 @@ export function renderHonorsAdmin(root, options = {}) {
       const variant=variants.find(v=>String(v.id)===String(definition.preview_variant_id));
       if (!variant) return;
       root.dispatchEvent(new CustomEvent('arcane-honors:preview',{bubbles:true,detail:{
-        honorName:definition.name,variantName:variant.name,frameUrl:assetImage(frameFor(definition,'bronze')),
+        honorName:definition.name,variantName:variant.name,
+        frameUrls:{bronze:assetImage(frameFor(definition,'bronze')),silver:assetImage(frameFor(definition,'silver')),gold:assetImage(frameFor(definition,'gold'))},
         reliefUrl:assetImage(variant.image_asset_id),allowOverhang:variant.allow_overhang !== false
       }}));
       notice('Förhandsvisning öppnad i troférummet.');

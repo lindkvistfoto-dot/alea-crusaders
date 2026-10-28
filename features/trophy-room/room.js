@@ -172,10 +172,18 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
  if(!layer){layer=document.createElement('aside');layer.id='trophyRoomHonorPreview';layer.className='trophy-room-honor-preview';layer.setAttribute('aria-label','Honors-förhandsvisning');v.append(layer)}
  layer.replaceChildren();
  const title=document.createElement('strong');title.textContent=detail.honorName||'ARCANE HONORS';layer.append(title);
- const art=document.createElement('div');art.className='trophy-room-honor-preview-art';layer.append(art);
- if(detail.frameUrl){const frame=document.createElement('img');frame.className='trophy-room-honor-frame';frame.src=detail.frameUrl;frame.alt='';art.append(frame)}
- if(detail.reliefUrl){const relief=document.createElement('img');relief.className='trophy-room-honor-relief';relief.src=detail.reliefUrl;relief.alt=detail.variantName||'Relief';art.append(relief)}
- else{const label=document.createElement('span');label.className='trophy-room-honor-relief-label';label.textContent=(detail.variantName||'Relief')+' · bild väntar på HERMES';art.append(label)}
+ const previewGrid=document.createElement('div');previewGrid.className='trophy-room-honor-preview-grid';layer.append(previewGrid);
+ const tiers=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
+ for(const [key,labelText] of tiers){
+  const card=document.createElement('div');card.className='trophy-room-honor-preview-tier';
+  const label=document.createElement('span');label.textContent=labelText;card.append(label);
+  const art=document.createElement('div');art.className='trophy-room-honor-preview-art'+(detail.allowOverhang?' is-overhanging':'');card.append(art);
+  const frameUrl=detail.frameUrls?.[key]||(key==='bronze'?detail.frameUrl:null);
+  if(frameUrl){const frame=document.createElement('img');frame.className='trophy-room-honor-frame';frame.src=frameUrl;frame.alt='';art.append(frame)}
+  if(detail.reliefUrl){const relief=document.createElement('img');relief.className='trophy-room-honor-relief';relief.src=detail.reliefUrl;relief.alt=detail.variantName||'Relief';art.append(relief)}
+  else{const empty=document.createElement('span');empty.className='trophy-room-honor-relief-label';empty.textContent=(detail.variantName||'Relief')+' · bild väntar på HERMES';art.append(empty)}
+  previewGrid.append(card);
+ }
  const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='trophy-room-honor-preview-close';closeButton.textContent='Tillbaka till ARCANE HONORS';
  closeButton.addEventListener('click',()=>{layer.hidden=true;root.openArcaneHonorsAdmin?.()});layer.append(closeButton);layer.hidden=false;
 }
