@@ -1,6 +1,6 @@
 # Badges-admin – ARCANE LION (designspecifikation, ingen implementation)
 
-Status: **Förslag / inväntar HERMES CORE**. Denna specifikation ändrar inte applikation, bildpipeline, Supabase eller produktionsdata.
+Status: **Specifikation**. Badge-adminens bildvarianter och lagerordning implementeras separat i [PR #342](https://github.com/lindkvistfoto-dot/alea-crusaders/pull/342). Automatisk utvärdering av karriärmått återstår tills mätvärdesregister och händelsekällor är definierade.
 
 ## Troférummets tre väggar
 - Vänster: **Utmärkelser** – automatiska prestationer inom en strid eller session, brons/silver/guld; en ägd utmärkelse per typ och rollperson, separat historik över antal uppnåenden.
