@@ -159,7 +159,7 @@ export function renderHonorsAdmin(root, options = {}) {
 
   function renderVariantPanel(definition) {
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
-    const own = variantsFor(definition.id);
+    const own = variantsFor(definition.id).filter(v=>v.status!=='archived');
     const isBadge = getCategory(definition) === 'badge';
     const selectedPreview = String(definition.preview_variant_id || '');
     const selectedPublished = String(definition.published_variant_id || '');
