@@ -86,17 +86,12 @@ create index combat_history_target_race_zone_idx
 
 alter table public.combat_history_events enable row level security;
 revoke all on public.combat_history_events from anon, authenticated;
-grant select, insert on public.combat_history_events to authenticated;
+grant select on public.combat_history_events to authenticated;
 
 create policy combat_history_events_select
   on public.combat_history_events
   for select to authenticated
   using ((select private.is_admin()) or (select private.is_campaign_gm(campaign_id)));
-
-create policy combat_history_events_insert
-  on public.combat_history_events
-  for insert to authenticated
-  with check ((select private.is_admin()) or (select private.is_campaign_gm(campaign_id)));
 
 comment on table public.combat_history_events is
   'Append-only, queryable Chronicle facts. Attack outcomes are inserted transactionally from resolved combat_actions; corrections reference prior rows.';
@@ -104,6 +99,7 @@ comment on table public.combat_history_events is
 create or replace function private.capture_combat_attack_history()
 returns trigger
 language plpgsql
+security definer
 set search_path = pg_catalog, public
 as $function$
 declare
