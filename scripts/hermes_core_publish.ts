@@ -14,12 +14,18 @@ if (repository !== "lindkvistfoto-dot/alea-crusaders" || ref !== "refs/heads/mai
 if (!outputDir || !url || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
+const targetKind = prepared.target?.kind ?? "system";
+if (!["system","honor-definition","honor-relief"].includes(targetKind)) throw new Error("INVALID_CORE_TARGET");
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
 const source = new Blob([originalBytes], {type: prepared.source_mime});
 const webp = new Blob([webpBytes], {type: "image/webp"});
 const db = createClient(url, secret, {auth: {persistSession: false}});
-const reserveAsset = createCoreSystemReservation();
+const reserveSystem = createCoreSystemReservation();
+const honorTable = targetKind === "honor-definition" ? "honor_definitions" : "honor_relief_variants";
+const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
+  : "arcane-" + targetKind + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
+const reserveAsset = async ({metadata}: any) => reserveSystem({target:{kind:"system",id:registryKey},metadata});
 const bucket = "alea-hermes-public";
 
 function hex(bytes: Uint8Array) {
@@ -44,6 +50,13 @@ function dbMetadata(metadata: any) {
 }
 
 async function readTarget(target: any) {
+  if (targetKind !== "system") {
+    const {data,error} = await db.from(honorTable).select("id,image_asset_id,image_revision,material").eq("id",target.id).maybeSingle();
+    if(error) throw error;
+    if(!data) throw new Error("HONOR_TARGET_NOT_FOUND");
+    if(targetKind==="honor-relief" && prepared.target.material !== data.material) throw new Error("RELIEF_MATERIAL_MISMATCH");
+    return {key:data.image_asset_id??null,revision:Number(data.image_revision??0),row:data};
+  }
   const {data, error} = await db.from("arcane_system_assets")
     .select("id,asset_key,label,asset_path,app_sha256,app_bytes,width,height,alpha_preserved,image_revision")
     .eq("asset_key", target.id).maybeSingle();
@@ -85,6 +98,34 @@ async function publishWebP({target, webp: image}: any) {
 
 async function activate(target: any, expectedRevision: number, expectedKey: string | null,
                         metadata: any, create: boolean) {
+  if (targetKind !== "system") {
+    if (create) throw new Error("HONOR_TARGET_MUST_EXIST");
+    // Register the verified WebP as a normal system asset, then switch only the requested honor pointer.
+    const {data: existing,error: lookupError} = await db.from("arcane_system_assets").select("id,asset_key,asset_path,app_sha256,image_revision").eq("asset_key",registryKey).maybeSingle();
+    if(lookupError) throw lookupError;
+    if (!existing) {
+      const {error: insertError} = await db.from("arcane_system_assets").insert({
+        id:crypto.randomUUID(),asset_key:registryKey,label:prepared.label,...dbMetadata(metadata)
+      });
+      if(insertError && insertError.code!=="23505") throw insertError;
+    } else if(existing.asset_path!==metadata.path || existing.app_sha256!==metadata.sha256) {
+      const {data: changed,error: updateError} = await db.from("arcane_system_assets")
+        .update(dbMetadata(metadata)).eq("asset_key",registryKey).eq("image_revision",existing.image_revision)
+        .select("id").maybeSingle();
+      if(updateError || !changed) throw new Error("REGISTRY_CONCURRENT_CHANGE");
+    }
+    let update = db.from(honorTable).update({image_asset_id:registryKey})
+      .eq("id",target.id).eq("image_revision",expectedRevision);
+    update = expectedKey===null ? update.is("image_asset_id",null) : update.eq("image_asset_id",expectedKey);
+    const {data,error}=await update.select("image_asset_id,image_revision").maybeSingle();
+    if(error) throw error;
+    if(!data) {
+      const current=await readTarget(target);
+      if(current.key===registryKey) return {key:registryKey,revision:current.revision};
+      throw new Error("HONOR_TARGET_CONCURRENT_CHANGE");
+    }
+    return {key:data.image_asset_id,revision:Number(data.image_revision??0)};
+  }
   const values = dbMetadata(metadata);
   if (create) {
     const {error: insertError} = await db.from("arcane_system_assets").insert({
@@ -118,10 +159,10 @@ const core = createHermesCore({
     activate(target, 0, null, {...metadata, path: key}, true),
 });
 
-const target = {kind: "system", id: prepared.asset_key, label: prepared.label};
+const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label};
 const result = await core.add({target, file: source});
 console.log("HERMES_CORE_ACTIVE", JSON.stringify({
-  asset_key: prepared.asset_key,
+  asset_key: registryKey,
   archive_file_id: prepared.archive_file_id,
   path: result.activation.key,
   webp_sha256: prepared.webp_sha256,

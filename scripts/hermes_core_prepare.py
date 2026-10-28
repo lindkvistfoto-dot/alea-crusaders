@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSET_KEY = re.compile(r"^(?:arcane-[a-z0-9]+(?:-[a-z0-9]+)*|arcane-trophy-room-v2[.]2)$")
 DRIVE_ID = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
+UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 MAX_WEBP_BYTES = 500_000  # Existing arcane_system_assets publication limit.
 MAX_EDGE = 4096  # Existing arcane_system_assets dimension limit.
 
@@ -119,14 +120,24 @@ def main() -> None:
     args = parser.parse_args()
 
     request = json.loads(args.request.read_text(encoding="utf-8"))
-    required = {
-        "schema", "asset_key", "label", "drive_file_id", "archive_file_id",
-        "source_sha256",
-    }
-    if not isinstance(request, dict) or not required <= set(request) or request.get("schema") != 1:
+    if not isinstance(request, dict) or request.get("schema") not in (1, 2):
         raise ValueError("INVALID_CORE_REQUEST")
-    if not isinstance(request["asset_key"], str) or not ASSET_KEY.fullmatch(request["asset_key"]):
-        raise ValueError("INVALID_ASSET_KEY")
+    required = {"schema", "label", "drive_file_id", "archive_file_id", "source_sha256"}
+    if not required <= set(request):
+        raise ValueError("INVALID_CORE_REQUEST")
+    if request["schema"] == 1:
+        if not isinstance(request.get("asset_key"), str) or not ASSET_KEY.fullmatch(request["asset_key"]):
+            raise ValueError("INVALID_ASSET_KEY")
+        target = {"kind": "system", "id": request["asset_key"]}
+    else:
+        target = request.get("target")
+        if not isinstance(target, dict) or target.get("kind") not in ("system", "honor-definition", "honor-relief"):
+            raise ValueError("INVALID_CORE_TARGET")
+        ident = target.get("id")
+        if not isinstance(ident, str) or not (ASSET_KEY if target["kind"] == "system" else UUID).fullmatch(ident):
+            raise ValueError("INVALID_CORE_TARGET_ID")
+        if target["kind"] == "honor-relief" and target.get("material") not in ("enamel", "metal_relief", "carved_wood", "other"):
+            raise ValueError("INVALID_RELIEF_MATERIAL")
     if not isinstance(request["label"], str) or not request["label"].strip():
         raise ValueError("ASSET_LABEL_REQUIRED")
     if any(not isinstance(request[key], str) or not DRIVE_ID.fullmatch(request[key])
@@ -142,16 +153,16 @@ def main() -> None:
         raise RuntimeError("GOOGLE_ACCESS_TOKEN_MISSING")
     folders = json.loads((ROOT / "config/hermes-drive-folders.json").read_text(encoding="utf-8"))
     _, source = drive_file(request["drive_file_id"], folders["inbox_folder_id"], token)
-    archive_folder_id = system_asset(request["asset_key"])["archive_folder_id"]
+    archive_folder_id = (system_asset(target["id"])["archive_folder_id"] if target["kind"] == "system" else folders["folders"]["original_archive"])
     _, archive = drive_file(request["archive_file_id"], archive_folder_id, token)
     expected = request["source_sha256"]
     if digest(source) != expected or digest(archive) != expected:
         raise ValueError("DRIVE_SOURCE_OR_ARCHIVE_SHA256_MISMATCH")
 
-    result = {**request, "archive_folder_id": archive_folder_id, **prepare(source, args.output)}
+    result = {**request, "target": target, "archive_folder_id": archive_folder_id, **prepare(source, args.output)}
     (args.output / "prepared.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print("HERMES_CORE_PREPARED", json.dumps({
-        "asset_key": request["asset_key"], "source_sha256": expected,
+        "target": target, "source_sha256": expected,
         "webp_sha256": result["webp_sha256"], "webp_bytes": result["webp_bytes"],
         "archive_file_id": request["archive_file_id"],
     }))
