@@ -14,6 +14,15 @@ if (repository !== "lindkvistfoto-dot/alea-crusaders" || ref !== "refs/heads/mai
 if (!outputDir || !url || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
+// Schema-2 honor targets are deliberately fail-closed until their database
+// image-registry adapter and rollback contract are implemented and tested.
+// Never silently route a relief/definition into arcane_system_assets.
+if (prepared.target?.kind && prepared.target.kind !== "system") {
+  throw new Error("CORE_HONOR_TARGET_NOT_ENABLED");
+}
+if (prepared.target?.kind === "system" && prepared.target.id !== prepared.asset_key) {
+  if (prepared.schema !== 2) throw new Error("CORE_SYSTEM_TARGET_MISMATCH");
+}
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
 const source = new Blob([originalBytes], {type: prepared.source_mime});
@@ -118,7 +127,7 @@ const core = createHermesCore({
     activate(target, 0, null, {...metadata, path: key}, true),
 });
 
-const target = {kind: "system", id: prepared.asset_key, label: prepared.label};
+const target = {kind: "system", id: prepared.target?.id ?? prepared.asset_key, label: prepared.label};
 const result = await core.add({target, file: source});
 console.log("HERMES_CORE_ACTIVE", JSON.stringify({
   asset_key: prepared.asset_key,
