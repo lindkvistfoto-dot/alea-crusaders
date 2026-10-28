@@ -183,3 +183,7 @@ main:has(> #trophyRoomPage:not(.hidden)){
 @media(max-width:700px){
  main:has(> #trophyRoomPage:not(.hidden)){width:calc(100vw - 16px)}
 }
+
+
+/* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU texture. */
+.trophy-room-viewport > .trophy-room-medal-wall{transform:none;pointer-events:auto;filter:none}
