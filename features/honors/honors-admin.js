@@ -195,7 +195,7 @@ export function renderHonorsAdmin(root, options = {}) {
         (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
       '</div></div>';
     }).join('');
-    return '<section class="honors-variant-library"><h4>Bildvarianter</h4><p>Den första badgebilden blir automatiskt aktiv för förhandsvisning. Publicering till spelarna kräver fortfarande ett separat val.</p>' +
+    return '<section class="honors-variant-library"><h4>Bildvarianter</h4><p>Den första badgebilden väljs automatiskt. Välj en annan bild här om du vill byta; samma val används i förhandsvisningen och för badgen.</p>' +
       '<div class="honors-variant-list">' + rows + '</div>' +
       '<form data-variant-form class="honors-variant-form">' +
         '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood','other'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
