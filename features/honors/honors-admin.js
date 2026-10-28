@@ -188,6 +188,52 @@ export function renderHonorsAdmin(root, options = {}) {
       '<button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
   }
 
+  function selectedBadgeVariant(definition) {
+    const own=variantsFor(definition.id).filter(v=>v.status!=='archived');
+    const selectedId=definition.published_variant_id||definition.preview_variant_id;
+    return own.find(v=>String(v.id)===String(selectedId))||own[0]||null;
+  }
+  function renderBadgeCard(definition) {
+    const variant=selectedBadgeVariant(definition);
+    const variantUrl=variant?assetImage(variant.image_asset_id):null;
+    const statusLabel={draft:'Utkast',active:'Aktiv',inactive:'Inaktiv'}[definition.status]||definition.status||'Utkast';
+    const statusClass='honors-status-'+(definition.status||'draft');
+    const selectedText=variant
+      ? (definition.published_variant_id&&String(definition.published_variant_id)===String(variant.id)?'Vald variant':'Vald förhandsvisning')
+      : 'Ingen bildvariant vald';
+    const metals=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
+    const frames=metals.map(([metal,label])=>{
+      const frameUrl=assetImage(frameFor(definition,metal));
+      return '<div class="honors-badge-frame"><span>'+label+'</span><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
+        (variantUrl?'<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">':'<span class="honors-preview-empty">Bild saknas</span>')+
+        (frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'')+
+      '</div></div>';
+    }).join('');
+    const criteria=[['bronze','Brons'],['silver','Silver'],['gold','Guld']].map(([tier,label])=>
+      '<div class="honors-badge-tier"><strong>'+label+'</strong><span>'+esc(tierText(definition,tier)||'Inte definierat')+'</span></div>'
+    ).join('');
+    const alternatives=variantsFor(definition.id).filter(v=>v.status!=='archived');
+    const variantRows=alternatives.map(v=>{
+      const url=assetImage(v.image_asset_id);
+      const chosen=variant&&String(v.id)===String(variant.id);
+      const position=v.allow_overhang===false?'Bakom ramen':'Sticker ut framför ramen';
+      return '<li>'+(url?'<img src="'+esc(url)+'" alt="">':'<span class="honors-badge-variant-empty">✦</span>')+
+        '<span><strong>'+esc(v.name)+'</strong><small>'+esc(materials[v.material]||v.material)+' · '+position+'</small></span>'+
+        (chosen?'<em>Vald</em>':'')+'</li>';
+    }).join('');
+    return '<article class="honors-badge-card">'+
+      '<header><div><span class="honors-eyebrow">BADGE</span><h3>'+esc(definition.name)+'</h3></div><span class="honors-status '+statusClass+'">'+esc(statusLabel)+'</span></header>'+
+      '<p class="honors-badge-description">'+esc(definition.description||'Ingen beskrivning ännu.')+'</p>'+
+      '<div class="honors-badge-frames" aria-label="Lion-ramar i brons, silver och guld">'+frames+'</div>'+
+      '<div class="honors-badge-tiers">'+criteria+'</div>'+
+      '<div class="honors-badge-current"><strong>'+esc(selectedText)+'</strong><span>'+(variant?esc(variant.name)+' · '+esc(materials[variant.material]||variant.material):'Lägg till en variant när illustrationen är klar')+'</span></div>'+
+      '<details class="honors-badge-variants"><summary>Bildvarianter ('+alternatives.length+')</summary>'+
+        (variantRows?'<ul>'+variantRows+'</ul>':'<p>Inga bildvarianter registrerade.</p>')+
+      '</details>'+
+      '<footer><span>'+count(definition.id)+' tilldelningar</span><button type="button" data-edit-badge="'+esc(definition.id)+'">Öppna post</button></footer>'+
+    '</article>';
+  }
+
   function draw() {
     const visible = definitions.filter(d => getCategory(d) === category &&
       (statusFilter === 'all' || d.status === statusFilter) &&
@@ -201,15 +247,23 @@ export function renderHonorsAdmin(root, options = {}) {
       '<div data-panel="catalog"' + (tab !== 'catalog' ? ' hidden' : '') + '>' +
         '<div class="honors-filters"><label class="honors-search">Sök<input data-search type="search" placeholder="Namn, beskrivning eller typ" value="' + esc(query) + '"></label>' +
         '<label>Status<select data-status-filter><option value="all">Alla statusar</option><option value="draft"' + (statusFilter === 'draft' ? ' selected' : '') + '>Utkast</option><option value="active"' + (statusFilter === 'active' ? ' selected' : '') + '>Aktiv</option><option value="inactive"' + (statusFilter === 'inactive' ? ' selected' : '') + '>Inaktiv</option></select></label></div>' +
-        '<div class="honors-table-wrap"><table class="honors-table"><thead><tr><th>Namn</th><th>Typ</th><th>Status</th><th>Tilldelade</th><th>Åtgärder</th></tr></thead><tbody data-list></tbody></table></div>' +
+        (category === 'badge' ? '<div class="honors-badge-grid" data-badge-grid></div>' : '<div class="honors-table-wrap"><table class="honors-table"><thead><tr><th>Namn</th><th>Typ</th><th>Status</th><th>Tilldelade</th><th>Åtgärder</th></tr></thead><tbody data-list></tbody></table></div>') +
       '</div>' +
       '<div data-panel="recipients"' + (tab !== 'recipients' ? ' hidden' : '') + '><label>Utmärkelse<select data-honor-select><option value="">Välj utmärkelse</option>' + definitions.map(d => '<option value="' + esc(d.id) + '"' + (String(selected) === String(d.id) ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select></label><ul data-recipients></ul>' +
         '<form data-grant-form><label>Rollperson<select name="characterId" required>' + characters.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('') + '</select></label><label>Motivering<textarea name="reason"></textarea></label><button type="submit">Tilldela manuellt</button></form></div>' +
       '<div class="honors-editor" data-editor hidden><div class="honors-editor-card"><header><h3 data-editor-title>Utmärkelse</h3><button type="button" data-close aria-label="Stäng redigering">×</button></header><div data-definition-image></div><form data-honor-form><div class="honors-editor-fields" data-fields></div><footer><button type="button" data-cancel>Avbryt</button><button type="submit">Spara post</button></footer></form><div data-variants></div></div></div>' +
       '<p role="status" aria-live="polite" data-notice></p></section>';
 
-    const list = root.querySelector('[data-list]');
-    for (const d of visible) {
+    if (category === 'badge') {
+      const grid=root.querySelector('[data-badge-grid]');
+      grid.innerHTML=visible.map(renderBadgeCard).join('')||'<p class="honors-help">Inga badges matchar filtret.</p>';
+      grid.querySelectorAll('[data-edit-badge]').forEach(button=>button.addEventListener('click',()=>{
+        const definition=definitions.find(d=>String(d.id)===button.dataset.editBadge);
+        if(definition)openEditor(definition);
+      }));
+    } else {
+      const list = root.querySelector('[data-list]');
+      for (const d of visible) {
       const row = list.insertRow();
       const nameCell = row.insertCell(); nameCell.className = 'honors-name-cell';
       const thumb = document.createElement('span'); thumb.className = 'honors-medal-thumb';
@@ -233,7 +287,8 @@ export function renderHonorsAdmin(root, options = {}) {
         actions.append(del);
       }
     }
-    if (!visible.length) { const row = list.insertRow(); const cell = row.insertCell(); cell.colSpan = 5; cell.textContent = 'Inga poster matchar filtret.'; }
+      if (!visible.length) { const row = list.insertRow(); const cell = row.insertCell(); cell.colSpan = 5; cell.textContent = 'Inga poster matchar filtret.'; }
+    }
 
     root.querySelector('[data-search]').addEventListener('input', e => { query = e.target.value; draw(); const input=root.querySelector('[data-search]'); input.focus(); input.setSelectionRange(query.length,query.length); });
     root.querySelector('[data-status-filter]').addEventListener('change', e => { statusFilter = e.target.value; draw(); });
