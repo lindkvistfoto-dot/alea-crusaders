@@ -6,6 +6,11 @@ export const HONOR_CATEGORIES = Object.freeze(['medal', 'award', 'badge']);
 export const HONOR_STATUSES = Object.freeze(['draft', 'active', 'inactive']);
 export const BADGE_METALS = Object.freeze(['bronze', 'silver', 'gold']);
 export const RELIEF_MATERIALS = Object.freeze(['enamel', 'metal', 'wood', 'stone', 'other']);
+export const BADGE_FRAME_ASSET_KEYS = Object.freeze({
+  bronze: 'arcane-lion-badge-bronze',
+  silver: 'arcane-lion-badge-silver',
+  gold: 'arcane-lion-badge-gold',
+});
 export const LAUREL_FRAME_ASSET_KEYS = Object.freeze({
   bronze: 'arcane-laurel-badge-bronze',
   silver: 'arcane-laurel-badge-silver',
@@ -33,7 +38,7 @@ export function canPublishReliefVariant(variant, imageAssets = []) {
   return imageAssets.some(asset => asset?.asset_key === variant.image_asset_id &&
     typeof asset.asset_path === 'string' && asset.alpha_preserved === true);
 }
-export function resolveBadgeComposition({ metal, variant, frameAssets = LAUREL_FRAME_ASSET_KEYS }) {
+export function resolveBadgeComposition({ metal, variant, frameAssets = BADGE_FRAME_ASSET_KEYS }) {
   if (!BADGE_METALS.includes(metal)) throw new Error('Invalid badge metal');
   if (!variant) throw new Error('Missing relief variant');
   if (!frameAssets[metal]) throw new Error('Missing badge frame');
