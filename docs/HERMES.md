@@ -1,3 +1,7 @@
+# Aktuell standard: HERMES CORE
+
+För nya publiceringar från **ChatGPT, Work och Codex** används [HERMES CORE](../features/hermes-core/OPERATIONAL_ACCEPTANCE.md) och [CORE-kön](../hermes/core/queue/README.md). Drive Inbox → separat originalarkiv → Actions → WebP → Supabase → avsedd bildreferens → verifierad återläsning. HERMES ALEA är det oberoende webbflödet. Nedanstående dokumentation gäller den äldre HERMES 4-vägen och innebär inte att nya CORE-jobb ska skickas dit.
+
 # Protokoll HERMES 4.0 — MINOTAURUS / HYDRA
 
 Standard för nya bilder från och med Issue #128: **Google Drive → HERMES → WebP → Supabase**.

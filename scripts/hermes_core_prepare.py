@@ -133,10 +133,13 @@ def main() -> None:
         target = request.get("target")
         if not isinstance(target, dict) or target.get("kind") not in ("system", "honor-definition", "honor-relief"):
             raise ValueError("INVALID_CORE_TARGET")
+        target = dict(target)
+        if target["kind"] == "honor-relief":
+            target["material"] = {"metal_relief": "metal", "carved_wood": "wood"}.get(target.get("material"), target.get("material"))
         ident = target.get("id")
         if not isinstance(ident, str) or not (ASSET_KEY if target["kind"] == "system" else UUID).fullmatch(ident):
             raise ValueError("INVALID_CORE_TARGET_ID")
-        if target["kind"] == "honor-relief" and target.get("material") not in ("enamel", "metal_relief", "carved_wood", "other"):
+        if target["kind"] == "honor-relief" and target.get("material") not in ("enamel", "metal", "wood", "stone", "other"):
             raise ValueError("INVALID_RELIEF_MATERIAL")
     if not isinstance(request["label"], str) or not request["label"].strip():
         raise ValueError("ASSET_LABEL_REQUIRED")
