@@ -323,7 +323,8 @@ export function renderHonorsAdmin(root, options = {}) {
     editing = definition || null;
     root.querySelector('[data-editor-title]').textContent = definition ? 'Redigera post' : 'Ny ' + categories[category].toLocaleLowerCase('sv');
     root.querySelector('[data-fields]').innerHTML = buildFields(definition);
-    root.querySelector('[data-definition-image]').innerHTML = imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
+    const badgeEditor=definition?getCategory(definition)==='badge':category==='badge';
+    root.querySelector('[data-definition-image]').innerHTML = badgeEditor?'':imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
     root.querySelector('[data-variants]').innerHTML = renderVariantPanel(definition);
     bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
