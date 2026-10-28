@@ -105,3 +105,20 @@
 }
 
 .honors-badge-card .honors-preview-art{overflow:visible}
+
+/* Lion badge art uses a square frame with a landscape opening, not a round medallion. */
+.honors-badge-card .honors-preview-art{
+  width:min(100%,104px);
+  aspect-ratio:1/1;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  overflow:visible;
+}
+.honors-preview-window{
+  left:16%;
+  top:30%;
+  width:68%;
+  height:52%;
+  border-radius:0;
+}
