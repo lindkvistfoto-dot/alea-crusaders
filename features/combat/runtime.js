@@ -815,8 +815,9 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
  let instanceCreated=false;
  try{
   const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
+  const sessionId=await window.aleaGetActiveGameSessionId?.()||null;
   await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
-   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
+   id:instanceId,campaign_id:centralCampaignId,session_id:sessionId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
    name:scene.name||'Strid',status:resetReady?'setup':'active',round_number:1,phase:'initiative',winning_side:null,
    initiative:pendingInitiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
   })});
