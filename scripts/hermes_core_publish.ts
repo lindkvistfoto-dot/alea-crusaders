@@ -20,8 +20,9 @@ const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`
 if (prepared.target?.kind && prepared.target.kind !== "system") {
   throw new Error("CORE_HONOR_TARGET_NOT_ENABLED");
 }
-if (prepared.target?.kind === "system" && prepared.target.id !== prepared.asset_key) {
-  if (prepared.schema !== 2) throw new Error("CORE_SYSTEM_TARGET_MISMATCH");
+if (prepared.target?.kind === "system" && prepared.schema === 1 &&
+    prepared.target.id !== prepared.asset_key) {
+  throw new Error("CORE_SYSTEM_TARGET_MISMATCH");
 }
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
