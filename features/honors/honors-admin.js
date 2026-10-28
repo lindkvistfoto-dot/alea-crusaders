@@ -5,7 +5,8 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp
 const categories = { medal:'Medaljer', award:'Utmärkelser', badge:'Badges' };
 const types = { adventure:'Äventyr', campaign:'Kampanj', achievement:'Prestation', honor:'Hedersutmärkelse' };
 const materials = { enamel:'Emalj', metal:'Metallrelief', wood:'Snidat trä', stone:'Sten (äldre variant)', other:'Övrigt' };
-const frameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-badge-silver', gold:'arcane-laurel-badge-gold' };
+const frameKeys = { bronze:'arcane-lion-badge-bronze', silver:'arcane-lion-badge-silver', gold:'arcane-lion-badge-gold' };
+const laurelFrameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-badge-silver', gold:'arcane-laurel-badge-gold' };
 const asArray = value => Array.isArray(value) ? value : [];
 
 async function assertSquareBadgeImage(file) {
@@ -24,7 +25,7 @@ async function assertSquareBadgeImage(file) {
 
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
-const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || frameKeys[metal];
+const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || (getCategory(definition) === 'badge' ? frameKeys[metal] : laurelFrameKeys[metal]);
 
 export function renderHonorsAdmin(root, options = {}) {
   if (!root) throw new Error('Missing root');
@@ -102,6 +103,9 @@ export function renderHonorsAdmin(root, options = {}) {
     const d = definition || {};
     const selectedCategory = definition ? getCategory(d) : category;
     const frame = d.badge_frame_assets || {};
+    const categoryFrames = selectedCategory === 'badge' ? frameKeys : laurelFrameKeys;
+    const framePrefix = selectedCategory === 'badge' ? 'arcane-lion-badge-' : 'arcane-laurel-badge-';
+    const frameFamilyLabel = selectedCategory === 'badge' ? 'ARCANE LION' : 'ARCANE LAUREL';
     const badgeMetricPlaceholders = selectedCategory === 'badge'
       ? '<fieldset class="honors-metric-placeholders honors-wide"><legend>Automatiska karriärmått</legend>' +
         '<p>Platshållare för planerade karriärmått. Fälten är inte aktiva och sparas inte.</p>' +
@@ -128,12 +132,12 @@ export function renderHonorsAdmin(root, options = {}) {
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
       '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id"' + (imagePilot ? ' readonly' : '') + ' value="' + esc(d.image_asset_id) + '"></label>' +
-      '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ARCANE LAUREL-ramar</legend>' +
+      '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ' + frameFamilyLabel + '-ramar</legend>' +
         ['bronze','silver','gold'].map(metal => {
-          const key = frame[metal] || frameKeys[metal];
+          const key = frame[metal] || categoryFrames[metal];
           const asset = publishedAsset(key);
           return '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[metal]) +
-            '<select name="frame_' + metal + '">' + imageAssets.filter(a => String(a.asset_key || '').startsWith('arcane-laurel-badge-')).map(a => '<option value="' + esc(a.asset_key) + '"' + (a.asset_key === key ? ' selected' : '') + '>' + esc(a.label || a.asset_key) + (a.asset_path ? '' : ' · ej publicerad') + '</option>').join('') +
+            '<select name="frame_' + metal + '">' + imageAssets.filter(a => String(a.asset_key || '').startsWith(framePrefix)).map(a => '<option value="' + esc(a.asset_key) + '"' + (a.asset_key === key ? ' selected' : '') + '>' + esc(a.label || a.asset_key) + (a.asset_path ? '' : ' · ej publicerad') + '</option>').join('') +
             (!imageAssets.some(a => a.asset_key === key) ? '<option value="' + esc(key) + '" selected>' + esc(key) + ' · väntar på HERMES</option>' : '') +
             '</select><small>' + (asset ? 'HERMES-publicerad ram' : 'Väntar på HERMES-publicering') + '</small></label>';
         }).join('') +
@@ -165,10 +169,11 @@ export function renderHonorsAdmin(root, options = {}) {
     const preview = own.find(v => String(v.id) === selectedPreview);
     const allowOverhang = preview?.allow_overhang !== false;
     const reliefUrl = preview ? assetImage(preview.image_asset_id) : null;
+    const frameFamilyLabel = isBadge ? 'ARCANE LION' : 'ARCANE LAUREL';
     const framePreviews = tiers.map(tier => {
       const frameUrl = assetImage(frameFor(definition,tier));
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
-        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="ARCANE LAUREL ' + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
+        (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + (isBadge ? 'ARCANE LION ' : 'ARCANE LAUREL ') + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         (reliefUrl ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">' : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '') +
       '</div></div>';
     }).join('');
@@ -275,7 +280,7 @@ export function renderHonorsAdmin(root, options = {}) {
       const value=data['frame_'+metal]; delete data['frame_'+metal];
       if (value) data.badge_frame_assets[metal]=value;
     }
-    data.frame_family = data.category === 'badge' ? 'arcane_laurel_badge' : null;
+    data.frame_family = data.category === 'badge' ? 'arcane_lion_badge' : null;
     data.grant_mode = data.status === 'draft' ? 'manual' : data.grant_mode;
     if (editing) data.id=editing.id;
     const errors=validateHonorDefinition(data);
