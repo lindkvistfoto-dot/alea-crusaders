@@ -47,8 +47,8 @@ function focusWall(side='center'){
  const targetScale=2.25;
  const targets={
   center:{x:.4073+.1931/2,y:.2769+.3277/2,hero:{x:-.36,y:.66,scale:2.45}},
-  left:{x:.34,y:.50,hero:{x:-.32,y:.66,scale:2.45}},
-  right:{x:.66,y:.50,hero:{x:.32,y:.66,scale:2.45}}
+  left:{x:.34,y:.50,hero:{x:.32,y:.66,scale:2.45}},
+  right:{x:.66,y:.50,hero:{x:-.32,y:.66,scale:2.45}}
  };
  const destination=targets[side]||targets.center;
  animateCamera({scale:targetScale,x:(.5-destination.x)*v.clientWidth*targetScale,y:(.5-destination.y)*v.clientHeight*targetScale},2500,destination.hero);
