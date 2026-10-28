@@ -169,13 +169,18 @@ export function renderHonorsAdmin(root, options = {}) {
       const img = assetImage(v.image_asset_id);
       const isPreview = selectedPreview === String(v.id);
       const isPublished = selectedPublished === String(v.id);
-      return '<article class="honors-variant-row' + (isPreview ? ' is-preview' : '') + '">' +
+      const isSelected = isBadge ? (isPreview || isPublished) : isPreview;
+      const statusText = isBadge ? (isSelected ? 'Vald badgebild' : esc(v.status === 'archived' ? 'Arkiverad' : 'Alternativ bild')) :
+        (isPublished ? 'Publicerad vald' : isPreview ? 'Aktiv förhandsvisning' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast'));
+      return '<article class="honors-variant-row' + (isSelected ? ' is-preview' : '') + '">' +
         (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span class="honors-variant-placeholder" aria-hidden="true">✦</span>') +
-        '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + (isPublished ? 'Publicerad vald' : isPreview ? 'Aktiv förhandsvisning' : esc(v.status === 'archived' ? 'Arkiverad' : 'Utkast')) + '</span>' +
+        '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + statusText + '</span>' +
         '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · bilden visas framför ramen' : ' · ramen visas framför bilden') + '</small></div>' +
         imageControls('relief',v) + '<div class="honors-variant-actions">' +
-          '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>' + (isBadge ? 'Välj aktiv förhandsvisning' : 'Förhandsvisa') + '</button>' +
-          (v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
+          (isBadge
+            ? '<button type="button" data-select-badge-image="' + esc(v.id) + '"' + (!publishedAsset(v.image_asset_id) || isPublished ? ' disabled' : '') + '>' + (isPublished ? 'Vald bild' : 'Välj bild') + '</button>'
+            : '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>') +
+          (!isBadge && v.image_asset_id && publishedAsset(v.image_asset_id) ? '<button type="button" data-publish-variant="' + esc(v.id) + '">Välj publicerad</button>' : '') +
           (v.status !== 'archived' ? '<button type="button" data-archive-variant="' + esc(v.id) + '">' + (isBadge?'Ta bort variant':'Arkivera') + '</button>' : '') +
         '</div></article>';
     }).join('') : '<p class="honors-help">Inga bildvarianter registrerade.</p>';
@@ -203,7 +208,7 @@ export function renderHonorsAdmin(root, options = {}) {
 
   function selectedBadgeVariant(definition) {
     const own=variantsFor(definition.id).filter(v=>v.status!=='archived');
-    const selectedId=definition.published_variant_id||definition.preview_variant_id;
+    const selectedId=definition.status==='active'?(definition.published_variant_id||definition.preview_variant_id):(definition.preview_variant_id||definition.published_variant_id);
     return own.find(v=>String(v.id)===String(selectedId))||null;
   }
   function renderBadgeCard(definition) {
@@ -427,7 +432,16 @@ export function renderHonorsAdmin(root, options = {}) {
         Object.assign(row,uploaded);
         let autoSelected=false;
         if(getCategory(definition)==='badge'&&!definition.preview_variant_id&&typeof options.onPreviewVariant==='function'){
-          try{await options.onPreviewVariant(definition,row.id);definition.preview_variant_id=row.id;autoSelected=true;}catch(error){notice('Bilden sparades, men kunde inte väljas som aktiv förhandsvisning: '+(error.message||'okänt fel'));}
+          try{
+            await options.onPreviewVariant(definition,row.id);
+            definition.preview_variant_id=row.id;
+            if(publishedAsset(row.image_asset_id)&&typeof onPublishVariant==='function'){
+              await onPublishVariant(definition,row);
+              definition.published_variant_id=row.id;
+              row.status='published';
+            }
+            autoSelected=true;
+          }catch(error){notice('Bilden sparades, men kunde inte väljas automatiskt: '+(error.message||'okänt fel'));}
         }
         draw(); openEditor(definition); notice(autoSelected?'Första bildvarianten sparad och vald som aktiv förhandsvisning.':'Bildvariant sparad via HERMES ALEA.');
       } catch (error) {
@@ -447,6 +461,18 @@ export function renderHonorsAdmin(root, options = {}) {
         notice(message);
       }
     });
+    root.querySelectorAll('[data-select-badge-image]').forEach(button => button.addEventListener('click', async () => {
+      try {
+        const variant=variants.find(v=>String(v.id)===button.dataset.selectBadgeImage);
+        if(!variant||!publishedAsset(variant.image_asset_id)) throw Error('Välj en HERMES-publicerad bildvariant.');
+        await onPreviewVariant(definition,variant.id);
+        await onPublishVariant(definition,variant);
+        definition.preview_variant_id=variant.id;
+        definition.published_variant_id=variant.id;
+        variant.status='published';
+        draw(); openEditor(definition); notice('Badgebild vald. Samma variant används för förhandsvisning och spelarna.');
+      } catch(error) { notice(error.message || 'Kunde inte välja badgebild.'); }
+    }));
     root.querySelectorAll('[data-preview-variant]').forEach(button => button.addEventListener('click', async () => {
       try {
         await onPreviewVariant(definition,button.dataset.previewVariant);
