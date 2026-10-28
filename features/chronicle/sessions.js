@@ -26,7 +26,7 @@ function ensureSessionUi(){
 }
 function renderSessionButton(){
  const btn=$id('gameSessionBtn');if(!btn)return;
- btn.disabled=!centralCampaignId||!gameSessionCanManage()||sessionUiBusy;
+ btn.disabled=sessionUiBusy;
  btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Session':'🎲 Session · Pågår'):'🎲 Session';
  btn.title=activeGameSession?'Öppna aktivt speltillfälle':'Starta ett speltillfälle';
 }
