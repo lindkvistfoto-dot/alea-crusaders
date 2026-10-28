@@ -24,7 +24,7 @@ const db = createClient(url, secret, {auth: {persistSession: false}});
 const reserveSystem = createCoreSystemReservation();
 const honorTable = targetKind === "honor-definition" ? "honor_definitions" : "honor_relief_variants";
 const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
-  : "arcane-" + targetKind + "-" + prepared.target.id;
+  : "arcane-" + targetKind + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
 const reserveAsset = async ({metadata}: any) => reserveSystem({target:{kind:"system",id:registryKey},metadata});
 const bucket = "alea-hermes-public";
 
