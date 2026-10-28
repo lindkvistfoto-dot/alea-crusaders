@@ -1,0 +1,12 @@
+{
+  "schema": 2,
+  "label": "I'm not dead yet — Övrigt",
+  "target": {
+    "kind": "honor-relief",
+    "id": "eae54960-036a-4d59-a786-cb729c9e95c3",
+    "material": "other"
+  },
+  "drive_file_id": "1TJJaQ2r8lqk70qcgaSMCn8hgSfLgxaeE",
+  "archive_file_id": "1uyWW_PreJc2ztYNxegs-xf0rItaZmDS1",
+  "source_sha256": "9641a9433ea9cbd8f2195aecc16d3b9af1827deb0bd73db0cc26dfcc37a565fa"
+}
