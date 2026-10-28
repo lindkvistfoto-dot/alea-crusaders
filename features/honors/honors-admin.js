@@ -102,6 +102,16 @@ export function renderHonorsAdmin(root, options = {}) {
     const d = definition || {};
     const selectedCategory = definition ? getCategory(d) : category;
     const frame = d.badge_frame_assets || {};
+    const badgeMetricPlaceholders = selectedCategory === 'badge'
+      ? '<fieldset class="honors-metric-placeholders honors-wide"><legend>Automatiska karriärmått</legend>' +
+        '<p>Platshållare för planerade karriärmått. Fälten är inte aktiva och sparas inte.</p>' +
+        '<label>Karriärmått<select disabled><option selected>Välj mått senare</option></select></label>' +
+        '<div class="honors-metric-thresholds">' +
+          '<label>Brons<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+          '<label>Silver<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+          '<label>Guld<input type="number" disabled placeholder="Tröskelvärde"></label>' +
+        '</div></fieldset>'
+      : '';
     return '<div class="honors-basic-fields">' +
       '<label>Namn<input name="name" required maxlength="160" value="' + esc(d.name) + '"></label>' +
       '<label>Kategori<select name="category">' + Object.entries(categories).map(([key,label]) => '<option value="' + key + '"' + (selectedCategory === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
@@ -113,6 +123,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<label class="honors-wide">Villkor<textarea name="requirement_text">' + esc(d.requirement_text) + '</textarea></label>' +
       '<label>Synlighet<select name="visibility">' + [['public','Öppen'],['silhouette','Dold silhuett'],['secret','Hemlig']].map(([key,label]) => '<option value="' + key + '"' + ((d.visibility || 'public') === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select></label>' +
       '<label>Tilldelning<select name="grant_mode">' + [['manual','Manuell'],['automatic','Automatisk'],['both','Båda']].map(([key,label]) => '<option value="' + key + '"' + ((d.grant_mode || 'manual') === key ? ' selected' : '') + '>' + label + '</option>').join('') + '</select><small>Utkast sparas alltid med manuell tilldelning.</small></label>' +
+      badgeMetricPlaceholders +
       '<fieldset class="honors-tiers honors-wide"><legend>Kriterier per nivå (valfritt)</legend>' +
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
