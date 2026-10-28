@@ -1991,8 +1991,10 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
  if(attackMode==='melee'&&rolled.outcome==='perfect')window.aleaAnimations?.play('melee.perfect',{target});
  const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
  const result={
+  resolution_id:crypto.randomUUID(),
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
-  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',attack_mode:attackMode,
+  weapon_key:combatWeaponKey(weapon),weapon_name:weapon?.name||'Vapen',
+  weapon_class:combatWeaponCategory(weapon)||null,attack_mode:attackMode,
   full_damage:fullDamage,damage_mode:fullDamage?'full':'roll',
   rule_engine:'expert_skill',
   hit_resolved:!success,
@@ -3656,8 +3658,12 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
    const rolled=await combatRollDice(specs.map(({qty,sides})=>({qty,sides})),'Skada · '+actor.name_snapshot+' → '+target.name_snapshot);
    let rollIndex=0;
    for(const spec of specs){
-    let subtotal=0;
-    for(let i=0;i<spec.qty;i++)subtotal+=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
+    let subtotal=0;const faces=[];
+    for(let i=0;i<spec.qty;i++){
+     const face=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
+     faces.push(face);subtotal+=face
+    }
+    damageRolls.push({kind:spec.kind,qty:spec.qty,sides:spec.sides,faces});
     if(spec.kind==='weapon')weaponValue+=subtotal;
     else bonusValue+=subtotal
    }
@@ -3671,6 +3677,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  // Magical protection wards remain effective and are accounted for separately.
  const effectiveArmor=ignoreArmor===true?0:armor.absorption;
  const net=Math.max(0,gross-effectiveArmor-ward.points);
+ const damageRolls=[];
  const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
@@ -3687,6 +3694,7 @@ async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocat
  target.current_kp=Number(saved[0].current_kp);target.status=saved[0].status;
  const result={
   spell_damage:weapon?._spell_damage===true,
+  damage_rolls:damageRolls,
   weapon_formula:weaponSpec.formula,
   weapon_damage_value:weaponValue,
   damage_bonus:bonusSpec.formula||'Ingen',
