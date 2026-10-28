@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createHonorDraft, createReliefVariant, resolveBadgeComposition,
-  canPublishReliefVariant, playerVisibleHonors, BADGE_METALS, BADGE_FRAME_ASSET_KEYS
+  canPublishReliefVariant, playerVisibleHonors, BADGE_METALS
 } from './arcane-laurel-model.js';
 
 describe('ARCANE LAUREL BADGE model', () => {
@@ -15,17 +15,22 @@ describe('ARCANE LAUREL BADGE model', () => {
     expect(() => createHonorDraft({ name: ' ' })).toThrow();
     expect(() => createHonorDraft({ name: 'X', category: 'unknown' })).toThrow();
   });
-  it('keeps relief and frame independent for all three metals and allows overhang', () => {
-    const variant = createReliefVariant({
-      honorId: 'honor-id', name: 'Carved wood', material: 'wood', imageAssetId: 'sir-robin-wood'
-    });
+  it('keeps one selected frame for the relief and shows one, two, or three stars by tier', () => {
+    const variant = {
+      ...createReliefVariant({
+        honorId: 'honor-id', name: 'Carved wood', material: 'wood', imageAssetId: 'sir-robin-wood'
+      }),
+      id: 'variant-id',
+      frame_asset_id: 'arcane-badge-frame-ruby'
+    };
     expect(variant.status).toBe('draft');
     for (const metal of BADGE_METALS) {
       const composition = resolveBadgeComposition({ metal, variant });
-      expect(composition.frameAssetId).toBe(BADGE_FRAME_ASSET_KEYS[metal]);
+      expect(composition.frameAssetId).toBe('arcane-badge-frame-ruby');
+      expect(composition.stars).toBe(BADGE_METALS.indexOf(metal) + 1);
       expect(composition.reliefAssetId).toBe('sir-robin-wood');
       expect(composition.allowOverhang).toBe(true);
-      expect(composition.mountingShape).toBe('circle');
+      expect(composition.mountingShape).toBe('square');
     }
   });
   it('keeps an image-less concept as a draft but cannot publish it', () => {

@@ -147,6 +147,14 @@ window.openArcaneHonorsAdmin = async () => {
       if (!variant?.id || variant.image_asset_id) throw Error('Endast tomma reliefvarianter får återställas.');
       return window.dbJson('honor_relief_variants?id=eq.'+encodeURIComponent(variant.id)+'&image_asset_id=is.null',{method:'DELETE'});
     };
+    const selectBadgeFrame=async(definition,variantId,assetKey)=>{
+      const asset=assetRows.find(row=>row.asset_key===assetKey&&row.asset_path);
+      if(assetKey&&!asset)throw Error('Ramen saknar verifierad HERMES-publicering.');
+      const frames=Object.fromEntries(Object.entries(definition.badge_frame_assets||{}).filter(([key])=>!['bronze','silver','gold'].includes(key)));
+      if(assetKey)frames[variantId]=assetKey;else delete frames[variantId];
+      await patchDefinition(definition.id,{badge_frame_assets:frames});
+      definition.badge_frame_assets=frames;
+    };
     const previewVariant=async (definition,variantId)=>{
       const variant=variants.find(v=>String(v.id)===String(variantId));
       if(!variant||String(variant.honor_id)!==String(definition.id)||variant.status==='archived') throw Error('Ogiltig förhandsvisningsvariant.');
@@ -165,6 +173,10 @@ window.openArcaneHonorsAdmin = async () => {
     const archiveVariant=async (definition,variant)=>{
       if(!variant||variant.status==='archived') return;
       const pointers={};
+      if(getCategory(definition)==='badge'&&definition.badge_frame_assets?.[variant.id]){
+        const frames={...definition.badge_frame_assets};delete frames[variant.id];
+        pointers.badge_frame_assets=frames;definition.badge_frame_assets=frames;
+      }
       if(String(definition.preview_variant_id)===String(variant.id)) pointers.preview_variant_id=null;
       if(String(definition.published_variant_id)===String(variant.id)) pointers.published_variant_id=null;
       if(Object.keys(pointers).length) await patchDefinition(definition.id,pointers);
@@ -202,6 +214,7 @@ window.openArcaneHonorsAdmin = async () => {
       onPreviewVariant:previewVariant,
       onPublishVariant:publishVariant,
       onArchiveVariant:archiveVariant,
+      onSelectBadgeFrame:selectBadgeFrame,
       onGrant:grant
     });
   } catch(error) {
