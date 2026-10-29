@@ -1,41 +1,55 @@
 # Live/development split — implementation notes
 
-Status: preparation only. `main` and the live Supabase project remain unchanged.
+Status: in progress. Production data and the `main` branch have not been changed.
 
 ## Target
 
-- `main` remains the live release branch.
-- `development` starts at the same Git commit as `main` and becomes the working branch.
-- Live and development use separate Supabase projects, Auth user pools, databases, Storage and Edge Function deployments.
-- Create a one-time initial snapshot of the live database and any required Storage assets in development so both environments start alike. Review what is included, exclude credentials/secrets and anything not needed, verify the copy, then let the data diverge. There must be no ongoing sync from live to dev or from dev to live.
-- Promote code and reviewed database migrations from development to live. Do not sync runtime data back to live.
+- `main` remains the live release branch; `development` is where new work is prepared.
+- Live and development will use separate Supabase projects, Auth user pools, databases, Storage and Edge Function deployments.
+- Create a one-time initial copy of the needed live data and assets into development, verify it, then let the two environments diverge. There must be no ongoing data sync between them.
+- Promote code and reviewed database changes from development to live by pull request. Do not sync runtime data back to live.
 
-## Current inventory
+## Verified status
 
-- GitHub repository: public `lindkvistfoto-dot/alea-crusaders`; default branch is `main`. A new `development` branch has been created from `main`.
-- The current Pages site serves the live app from the repository. A `development` branch by itself does not create a separate Pages URL.
-- The frontend currently has a production Supabase endpoint configured directly in `legacy/app.js`. Do not publish development until configuration is environment-specific and fails closed if the development settings are missing.
-- Live and `/dev/` on the same hostname share browser `localStorage`. The current app stores local state and a Supabase session there. Add an environment prefix to every app-owned storage key before enabling the development route; otherwise dev can read or overwrite live browser state.
-- The repository contains 170 SQL migration files. The live database reports 171 applied migrations; only 115 names currently match, with 56 live-only and 55 repository-only names. Do not run the repo migration chain against either database until the mismatch is reconciled and a fresh-database baseline is verified.
-- Production Storage is already in use. Include required objects in the initial snapshot only after checking privacy, total quota and HERMES CORE asset handling. Do not make later two-way copies.
+- Repository: public `lindkvistfoto-dot/alea-crusaders`; GitHub Pages currently serves the live app. A development branch alone does not create a separate Pages URL.
+- Branch history has diverged: `main` has 16 commits not on `development`, and `development` has 34 not on `main`. The application and migration files were identical in the earlier comparison; development has additional operational and documentation files. Do not reset either branch to the other.
+- PR #354 added production-write guards to development workflows and was merged into `development` (commit `68ecf5115b1a563defe586a8b45d89278c5e1ea5`). It did not change `main`.
+- The production Supabase project is `wbmosmkirsitkonejzpg`. The new project `alea-crusaders-development` (`wkiuyklzzroavclnsxna`) is empty and paused. It has no tables, migrations or Edge Functions. No live data has been copied.
+- The frontend in `legacy/app.js` still hardcodes the production Supabase endpoint/key. Do not publish a development app until its configuration points only to the development project and fails closed if that configuration is missing.
+- Live and `/dev/` on one hostname would share browser `localStorage`. Prefix all app-owned storage keys by environment before enabling the development route so sessions and local state stay separate.
+- Migration history is not a safe replay source. The repository has 170 SQL migration files; production reported 171 applied. The last name comparison found 114 matching names, 56 repository-only and 57 live-only. There are duplicate migration version prefixes in the repository. Do not replay the old chain or mark migrations applied merely to silence drift.
+- Production contains data that matters, including the rules/spell/skill infrastructure and some character/NPC data. Keep the initial copy broad until a table-by-table inventory proves what can be excluded. Map discovery can be reviewed separately.
+
+## Free-plan constraint and initial copy
+
+Supabase's current “Restore to a new project” guide says that feature requires a paid plan and physical backups. It is not available for this Free-plan split. It also does not copy Storage objects or Edge Functions. Do not enable a paid plan or physical-backup add-on for this project.
+
+The no-upgrade path is a logical migration: capture the production schema and selected data, restore them into the empty development project, then separately transfer required Storage objects and configure Auth, API keys, and Edge Functions. Before running any import:
+
+1. Inventory production tables, views, functions, triggers, RLS policies, extensions and Storage buckets. Identify scheduled or external side-effect jobs and disable or omit them from the dev copy.
+2. Resolve the migration-history discrepancy by documenting the live schema as the baseline. Do not execute the old migration chain against the existing production database.
+3. Prepare a repeatable export/import procedure and a recoverable local copy. Keep passwords, service-role keys and database URLs out of Git and artifacts.
+4. Restore schema and data to the paused development project only after the procedure is reviewed. Verify important row counts, auth behavior, RLS, Storage references and app writes before making development available.
+5. Keep the development project paused between work sessions if practical, and confirm Supabase displays no non-zero charge before any operation that could incur one.
+
+A secure export/import may require Daniel to supply the production database password through a private local terminal or a one-time secret setup. Never paste it into chat, source files, logs, or a GitHub issue. If a workflow is used, it must be dry-run/report-first, target the development project explicitly, and never expose credentials in logs.
 
 ## Safe implementation order
 
-1. Keep `main` and the live project untouched while working in `development`.
-2. Daniel selects the Supabase organization for the new development project. Confirm the quoted cost before creating it if Supabase reports any non-zero charge.
-3. Reconcile the migration-history mismatch and choose a safe way to make development's initial database snapshot. Do not replay the repo's migration chain or mark migrations applied simply to silence drift. Record how the snapshot was taken so future dev databases can be rebuilt.
-4. Add environment-specific frontend configuration for development and live. The browser may contain only that project's URL and publishable key; never a service-role or secret key. If dev configuration is absent, block database access rather than falling back to live.
-5. Namespace all browser storage by environment and verify the two routes cannot read each other's session or local data.
-6. Prepare a GitHub Actions Pages deployment that publishes the current live build at `/` and development at `/dev/`. Review and manually switch the Pages source only after the workflow and both configurations are ready.
-7. Verify the initial snapshot, login, read/write, Storage and Edge Function boundaries in development. Confirm every endpoint points to the dev project. Auth identities/sessions need a separate check; do not assume that copying database rows also copies credentials or active sessions.
-8. Promote by pull request from `development` to `main`. Review migrations separately, take a manual production backup/export before any production schema change, and deploy production only after an explicit release decision.
-9. For a production hotfix, patch `main`, deploy it, then merge `main` back into `development`.
+1. Keep `main` and production untouched while work continues in `development`.
+2. Finish a table/schema/Storage/Auth inventory and choose the logical copy mechanism that works on Free without exposing credentials.
+3. Establish the live schema as a documented baseline; create a clean future migration strategy instead of replaying the mismatched history.
+4. Copy into the paused development project, then verify the copy before unpausing it.
+5. Add environment-specific frontend configuration. Browser code may contain only that project's URL and publishable key; never a service-role or secret key. Missing dev configuration must block database access rather than fall back to live.
+6. Namespace browser storage by environment and verify the two environments cannot read each other's session or local data.
+7. Prepare a GitHub Actions Pages deployment for live at `/` and development at `/dev/`. Switch Pages only after the workflow and both configurations are reviewed.
+8. Promote by pull request from `development` to `main`. Review database changes separately and take a recoverable production backup/export before any production schema change. A release to production still requires Daniel's explicit release decision.
+9. For production hotfixes, patch and deploy `main`, then merge the fix back into `development`.
 
-## Daniel's critical actions
+## Daniel's actions
 
-- Choose the Supabase organization for the development project. The connected account currently lists one organization named `Alea Crusaders`; confirm that this is where the project should live.
-- If Supabase quotes a non-zero price, approve or decline it before project creation.
-- At deployment time, approve switching GitHub Pages from its current source to the reviewed Actions workflow.
-- At each production release, approve the PR and any production migration/deployment.
+- For any command that needs a database password, enter it only in a private terminal or secret manager. Do not send it in chat.
+- If Supabase displays any non-zero price for an operation, stop; this plan assumes Free.
+- Approve production releases and production schema changes individually.
 
-No OAuth or service account is needed for Alea's normal email/password login. The development Supabase project has its own Auth users and sessions; the same email can be registered there with a separate password. Treat HERMES integrations as a separate scope if they need development publishing or Google Drive access.
+Normal Alea email/password login does not need OAuth or a shared service account. The two Supabase projects have separate Auth users and sessions; the same email can be registered in both with separate credentials. HERMES integrations that publish to Google Drive or GitHub are a separate service-account scope.
