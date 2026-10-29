@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   map-files:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
