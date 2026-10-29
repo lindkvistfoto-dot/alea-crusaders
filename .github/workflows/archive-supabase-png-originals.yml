@@ -1,0 +1,47 @@
+name: Archive Supabase PNG originals
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - ops/storage-cleanup/archive-png-originals-20261029.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-png-originals-archive-20261029
+  cancel-in-progress: false
+
+jobs:
+  archive-originals:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the scoped archive script
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          sparse-checkout: |
+            scripts/archive_supabase_png_originals.py
+      - name: Download and verify the 18 original PNG files
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          ARCHIVE_DIR: ${{ runner.temp }}/supabase-png-originals
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; exit 1
+          fi
+          python3 scripts/archive_supabase_png_originals.py
+      - name: Upload archive contents as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-png-originals-20261029
+          path: ${{ runner.temp }}/supabase-png-originals/
+          if-no-files-found: error
+          retention-days: 14
