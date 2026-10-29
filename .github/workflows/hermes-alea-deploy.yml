@@ -5,6 +5,7 @@ permissions:
   contents: read
 jobs:
   deploy:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

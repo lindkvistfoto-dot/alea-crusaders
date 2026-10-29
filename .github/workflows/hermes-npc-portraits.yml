@@ -49,7 +49,7 @@ jobs:
         shell: bash
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ github.ref == 'refs/heads/main' && secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY || '' }}
           HERMES_BEFORE: ${{ github.event.before }}
           HERMES_REQUEST_PATH: ${{ inputs.request_path }}
         run: |
