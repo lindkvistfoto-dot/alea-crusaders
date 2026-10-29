@@ -170,13 +170,18 @@ def normalize_objects(rows):
         owner_id = row.get("owner_id")
         if owner_id is not None and not OWNER_UUID.fullmatch(str(owner_id)):
             stop("OBJECT_OWNER_ID_INVALID")
+        cache_control = row.get("cache_control")
+        if cache_control is not None:
+            cache_control = str(cache_control).strip()
+            if cache_control.isdigit():
+                cache_control = "max-age=" + cache_control
         item = {
             "bucket_id": bucket_id,
             "name": name,
             "owner_id": str(owner_id) if owner_id is not None else None,
             "size_bytes": int(row.get("size_bytes") or 0),
             "mimetype": row.get("mimetype"),
-            "cache_control": row.get("cache_control"),
+            "cache_control": cache_control,
         }
         normalized[object_key(item)] = item
     if len(normalized) != len(rows):
