@@ -1,5 +1,8 @@
 project_id = "alea-crusaders"
 
+[db]
+major_version = 17
+
 [functions.hermes-alea]
 verify_jwt = true
 entrypoint = "./functions/hermes-alea/index.ts"
