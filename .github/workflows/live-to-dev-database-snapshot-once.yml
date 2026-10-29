@@ -1,0 +1,105 @@
+name: One-time live to development database snapshot
+
+on:
+  push:
+    branches:
+      - codex/dev-database-snapshot-once
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    if: github.actor == 'lindkvistfoto-dot' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/codex/dev-database-snapshot-once'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Validate live and development connection strings
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+          DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SOURCE_DATABASE_URL" || -z "$DEVELOPMENT_DATABASE_URL" ]]; then
+            echo "::error::A required database connection secret is missing."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          for name, raw, ref in [
+              ("live", os.environ["SOURCE_DATABASE_URL"], "wbmosmkirsitkonejzpg"),
+              ("development", os.environ["DEVELOPMENT_DATABASE_URL"], "wkiuyklzzroavclnsxna"),
+          ]:
+              url = urlparse(raw)
+              username = unquote(url.username or "")
+              direct = url.hostname == f"db.{ref}.supabase.co"
+              pooler = (
+                  url.hostname is not None
+                  and url.hostname.endswith(".pooler.supabase.com")
+                  and username == f"postgres.{ref}"
+              )
+              if url.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+                  print(f"::error::{name} connection does not match the expected Supabase project.")
+                  sys.exit(1)
+          print("Both database endpoints match their expected projects.")
+          PY
+
+      - name: Create and atomically restore snapshot
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+          DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/alea-dev-snapshot"
+          docker run --rm \
+            -e SOURCE_DATABASE_URL \
+            -e DEVELOPMENT_DATABASE_URL \
+            -v "$RUNNER_TEMP/alea-dev-snapshot:/snapshot" \
+            postgres:17 bash -euc '
+              set -o pipefail
+
+              target_state="$(psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt -c "SELECT current_setting('''server_version_num''')::int / 10000 || ''':''' || (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('''public''','''private''') AND c.relkind IN ('''r''','''p''','''v''','''m''','''f''')) || ''':''' || (SELECT count(*) FROM auth.users) || ''':''' || (SELECT count(*) FROM auth.identities);")"
+              if [[ "$target_state" != "17:0:0:0" ]]; then
+                echo "::error::Development must be PostgreSQL 17 with empty public/private schemas and no auth users. No import was attempted."
+                exit 1
+              fi
+
+              pg_dump --version
+              pg_dump --format=custom \
+                --schema=public --schema=private \
+                --dbname="$SOURCE_DATABASE_URL" \
+                --file=/snapshot/application.dump
+              pg_dump --format=custom --data-only \
+                --table=auth.users --table=auth.identities \
+                --dbname="$SOURCE_DATABASE_URL" \
+                --file=/snapshot/auth.dump
+
+              pg_restore --list /snapshot/application.dump >/dev/null
+              pg_restore --list /snapshot/auth.dump >/dev/null
+              pg_restore --file=/snapshot/auth.sql --data-only /snapshot/auth.dump
+              pg_restore --file=/snapshot/application.sql /snapshot/application.dump
+              cat /snapshot/auth.sql /snapshot/application.sql > /snapshot/combined.sql
+
+              psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 \
+                --single-transaction --file=/snapshot/combined.sql
+
+              psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt \
+                -c "SELECT '''Development snapshot committed; PostgreSQL ''' || current_setting('''server_version''') || ''': ''' || (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('''public''','''private''') AND c.relkind IN ('''r''','''p''')) || ''' tables.''';" \
+                >> "$GITHUB_STEP_SUMMARY"
+            '
+
+      - name: Confirm database is reachable after restore
+        shell: bash
+        env:
+          DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          docker run --rm -e DEVELOPMENT_DATABASE_URL postgres:17 \
+            psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt \
+              -c "SELECT current_setting('server_version') || ' — dev database responds after snapshot.'" \
+              >> "$GITHUB_STEP_SUMMARY"
