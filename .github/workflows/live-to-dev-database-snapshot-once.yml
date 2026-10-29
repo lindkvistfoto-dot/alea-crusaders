@@ -99,12 +99,31 @@ jobs:
                 --file=/snapshot/auth.dump
               pg_restore --list /snapshot/application.dump >/dev/null
               pg_restore --list /snapshot/auth.dump >/dev/null
-              pg_restore --file=/snapshot/auth.sql --data-only /snapshot/auth.dump
-              pg_restore --file=/snapshot/application.sql /snapshot/application.dump
-              cat /snapshot/auth.sql /snapshot/application.sql > /snapshot/combined.sql
-              psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 \
-                --single-transaction --file=/snapshot/combined.sql
+              pg_restore --no-owner --file=/snapshot/application.raw.sql /snapshot/application.dump
+              pg_restore --no-owner --data-only --file=/snapshot/auth.sql /snapshot/auth.dump
             '
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          path = Path("$RUNNER_TEMP/alea-dev-snapshot/application.raw.sql")
+          sql = path.read_text()
+          filtered, removed = re.subn(
+              r'^CREATE SCHEMA (?:IF NOT EXISTS )?"?public"?;\s*\n?',
+              '',
+              sql,
+              flags=re.MULTILINE | re.IGNORECASE,
+          )
+          if removed != 1:
+              raise SystemExit(f"Expected exactly one public-schema creation statement; found {removed}. Import stopped.")
+          path.with_name("application.sql").write_text(filtered)
+          auth_sql = path.with_name("auth.sql").read_text()
+          path.with_name("combined.sql").write_text(auth_sql + "\n" + filtered)
+          print("Prepared schema/data restore while preserving Supabase's existing public schema.")
+          PY
+          docker run --rm \
+            -e DEVELOPMENT_DATABASE_URL \
+            -v "$snapshot_dir:/snapshot" \
+            postgres:17 bash -euc 'psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 --single-transaction --file=/snapshot/combined.sql'
           echo "Live public/private schema, application data, and email-auth users imported to development in one transaction. No live data was modified." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Confirm development database after import
