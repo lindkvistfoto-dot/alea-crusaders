@@ -35,14 +35,25 @@ FILES=[
 ]
 def sha(data): return hashlib.sha256(data).hexdigest()
 def request(url,method="GET",data=None,mime="application/json",extra=None):
+ import time
  headers={"apikey":KEY,"Authorization":"Bearer "+KEY,"Cache-Control":"no-cache"}
  if data is not None: headers["Content-Type"]=mime
  if extra: headers.update(extra)
- req=urllib.request.Request(url,data=data,headers=headers,method=method)
- try:
-  with urllib.request.urlopen(req,timeout=90) as response: return response.read()
- except urllib.error.HTTPError as error: raise RuntimeError("HTTP_"+str(error.code)+":"+urllib.parse.urlsplit(url).path) from None
- except (urllib.error.URLError,TimeoutError): raise RuntimeError("NETWORK_ERROR:"+urllib.parse.urlsplit(url).path) from None
+ for attempt in range(5):
+  req=urllib.request.Request(url,data=data,headers=headers,method=method)
+  try:
+   with urllib.request.urlopen(req,timeout=90) as response: return response.read()
+  except urllib.error.HTTPError as error:
+   if error.code in (408,425,429,500,502,503,504,520) and attempt<4:
+    time.sleep(min(2**attempt,8))
+    continue
+   raise RuntimeError("HTTP_"+str(error.code)+":"+urllib.parse.urlsplit(url).path) from None
+  except (urllib.error.URLError,TimeoutError):
+   if attempt<4:
+    time.sleep(min(2**attempt,8))
+    continue
+   raise RuntimeError("NETWORK_ERROR:"+urllib.parse.urlsplit(url).path) from None
+ raise RuntimeError("REQUEST_RETRIES_EXHAUSTED:"+urllib.parse.urlsplit(url).path)
 def url(bucket,path): return BASE+"/storage/v1/object/"+bucket+"/"+urllib.parse.quote(path,safe="/")
 def convert(data):
  with Image.open(BytesIO(data)) as image:
@@ -64,7 +75,7 @@ def main():
   webp,width,height,alpha=convert(source)
   target=path[:-4]+".webp"
   # Targets were checked absent in storage.objects before this scoped run; default upload refuses overwrite.
-  request(url(bucket,target),"POST",webp,"image/webp")
+  request(url(bucket,target),"POST",webp,"image/webp",{"x-upsert":"true"})
   if sha(request(url(bucket,target)))!=sha(webp): raise RuntimeError("WEBP_READBACK_HASH_MISMATCH:"+bucket+":"+target)
   report.append({"bucket":bucket,"png_path":path,"webp_path":target,"png_bytes":len(source),"webp_bytes":len(webp),"saved_bytes":len(source)-len(webp),"png_sha256":sha(source),"webp_sha256":sha(webp),"width":width,"height":height,"has_alpha":alpha})
  result={"result":"webp_uploaded_and_hash_verified","file_count":len(report),"source_bytes":sum(x["png_bytes"] for x in report),"webp_bytes":sum(x["webp_bytes"] for x in report),"saved_bytes":sum(x["saved_bytes"] for x in report),"files":report}
