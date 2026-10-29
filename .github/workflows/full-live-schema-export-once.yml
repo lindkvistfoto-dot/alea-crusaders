@@ -1,0 +1,67 @@
+name: One-time full live schema export
+
+on:
+  push:
+    branches:
+      - codex/full-live-schema-export-once
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.actor == 'lindkvistfoto-dot' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/codex/full-live-schema-export-once'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify the source database URL
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SOURCE_DATABASE_URL" ]]; then
+            echo "::error::Missing ALEA_PRODUCTION_DATABASE_URL."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+          url = urlparse(os.environ["SOURCE_DATABASE_URL"])
+          username = unquote(url.username or "")
+          direct_live = url.hostname == "db.wbmosmkirsitkonejzpg.supabase.co"
+          pooler_live = (url.hostname is not None
+                         and url.hostname.endswith(".pooler.supabase.com")
+                         and username == "postgres.wbmosmkirsitkonejzpg")
+          if url.scheme not in {"postgres", "postgresql"} or not (direct_live or pooler_live):
+              print("::error::Unexpected source project; export stopped.")
+              sys.exit(1)
+          print("Live source verified; schema-only export.")
+          PY
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+
+      - name: Export public and private schema definitions
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase db dump \
+            --db-url "$SOURCE_DATABASE_URL" \
+            --schema public,private \
+            --file "$RUNNER_TEMP/alea-live-full-schema.sql"
+          test -s "$RUNNER_TEMP/alea-live-full-schema.sql"
+          echo "Public and private schema definitions exported; no table data was requested." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload schema artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alea-live-full-schema
+          path: ${{ runner.temp }}/alea-live-full-schema.sql
+          if-no-files-found: error
+          retention-days: 3
