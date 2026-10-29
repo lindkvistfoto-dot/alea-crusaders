@@ -218,16 +218,24 @@ def quote_ident(value):
     return '"' + str(value).replace('"', '""') + '"'
 
 
+def quote_role(value):
+    return "PUBLIC" if value.lower() == "public" else quote_ident(value)
+
+
 def policy_ddl(row):
     roles = row["roles"]
     if not roles:
         stop("STORAGE_POLICY_WITHOUT_ROLES")
+    if row["permissive"] not in {"PERMISSIVE", "RESTRICTIVE"}:
+        stop("STORAGE_POLICY_PERMISSIVENESS_INVALID")
+    if row["cmd"] not in {"ALL", "SELECT", "INSERT", "UPDATE", "DELETE"}:
+        stop("STORAGE_POLICY_COMMAND_INVALID")
     sql = (
         "CREATE POLICY " + quote_ident(row["policyname"])
         + " ON " + quote_ident("storage") + "." + quote_ident("objects")
         + " AS " + row["permissive"]
         + " FOR " + row["cmd"]
-        + " TO " + ", ".join(quote_ident(role) for role in roles)
+        + " TO " + ", ".join(quote_role(role) for role in roles)
     )
     if row["qual"] is not None:
         sql += " USING (" + row["qual"] + ")"
