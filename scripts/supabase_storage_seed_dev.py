@@ -22,6 +22,7 @@ TARGET_URL = f"https://{TARGET_REF}.supabase.co"
 CONFIRM_TEXT = "COPY LIVE STORAGE TO DEV"
 TIMEOUT_SECONDS = 120
 OWNER_UUID = re.compile(r"^[0-9a-fA-F-]{36}$")
+TEMP_POLICY_NAME = "codex_dev_storage_seed_owner_upload"
 
 OBJECTS_SQL = r"""
 SELECT COALESCE(json_agg(row_to_json(x)), '[]'::json)::text
@@ -218,6 +219,10 @@ def quote_ident(value):
     return '"' + str(value).replace('"', '""') + '"'
 
 
+def quote_literal(value):
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def quote_role(value):
     return "PUBLIC" if value.lower() == "public" else quote_ident(value)
 
@@ -340,6 +345,38 @@ def upload_object(target_url, target_key, row, data, bearer):
     )
 
 
+def install_temporary_owner_policy(target_db_url, rows):
+    clauses = []
+    for row in rows:
+        owner_id = row["owner_id"]
+        if not owner_id:
+            continue
+        clauses.append(
+            "(bucket_id = " + quote_literal(row["bucket_id"])
+            + " AND name = " + quote_literal(row["name"])
+            + " AND owner_id = " + quote_literal(owner_id) + "::uuid)"
+        )
+    if not clauses:
+        return False
+    statement = (
+        "CREATE POLICY " + quote_ident(TEMP_POLICY_NAME)
+        + " ON " + quote_ident("storage") + "." + quote_ident("objects")
+        + " AS PERMISSIVE FOR INSERT TO " + quote_ident("authenticated")
+        + " WITH CHECK ((SELECT auth.uid()) = owner_id AND ("
+        + " OR ".join(clauses) + "));"
+    )
+    psql(target_db_url, statement)
+    return True
+
+
+def remove_temporary_owner_policy(target_db_url):
+    psql(
+        target_db_url,
+        "DROP POLICY IF EXISTS " + quote_ident(TEMP_POLICY_NAME)
+        + " ON " + quote_ident("storage") + "." + quote_ident("objects") + ";",
+    )
+
+
 def ensure_policies(target_db_url, source_policies, target_policies):
     for key, row in target_policies.items():
         if key not in source_policies or row != source_policies[key]:
@@ -397,6 +434,12 @@ def run():
     target_objects = normalize_objects(psql_json(target_db_url, OBJECTS_SQL))
     source_policies = normalize_policies(psql_json(source_db_url, POLICIES_SQL))
     target_policies = normalize_policies(psql_json(target_db_url, POLICIES_SQL))
+    temp_policy_key = ("storage", "objects", TEMP_POLICY_NAME)
+    if temp_policy_key in source_policies:
+        stop("TEMPORARY_POLICY_NAME_CONFLICT")
+    # Clean up only this migration's reserved policy name after an interrupted prior run.
+    remove_temporary_owner_policy(target_db_url)
+    target_policies = normalize_policies(psql_json(target_db_url, POLICIES_SQL))
 
     if len(source_buckets) != 19 or len(source_objects) == 0:
         stop("LIVE_STORAGE_INVENTORY_UNEXPECTED")
@@ -428,7 +471,15 @@ def run():
     copied = 0
     skipped = 0
     total_bytes = 0
+    temporary_policy_installed = False
     try:
+        pending_owned = [
+            row for key, row in source_objects.items()
+            if key not in target_objects and row["owner_id"]
+        ]
+        temporary_policy_installed = install_temporary_owner_policy(
+            target_db_url, pending_owned
+        )
         for index, key in enumerate(sorted(source_objects), start=1):
             row = source_objects[key]
             source_bytes = download_object(SOURCE_URL, source_storage_key, row, bearer=source_storage_key)
@@ -466,6 +517,8 @@ def run():
     finally:
         for access_token in owner_sessions.values():
             sign_out_owner(TARGET_URL, target_storage_key, access_token)
+        if temporary_policy_installed:
+            remove_temporary_owner_policy(target_db_url)
 
     # Final metadata parity check. This queries Storage metadata only; no direct
     # writes to storage.objects are made.
