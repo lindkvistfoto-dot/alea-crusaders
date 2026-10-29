@@ -116,6 +116,14 @@ jobs:
           )
           if removed != 1:
               raise SystemExit(f"Expected exactly one public-schema creation statement; found {removed}. Import stopped.")
+          filtered, defaults_removed = re.subn(
+              r'^ALTER DEFAULT PRIVILEGES\b[^;]*;\s*\n?',
+              '',
+              filtered,
+              flags=re.MULTILINE | re.IGNORECASE,
+          )
+          if defaults_removed < 1:
+              raise SystemExit("Expected managed default-privilege statements; import stopped for review.")
           path.with_name("application.sql").write_text(filtered)
           auth_sql = path.with_name("auth.sql").read_text()
           path.with_name("combined.sql").write_text(auth_sql + "\n" + filtered)
