@@ -48,7 +48,7 @@ def stop(code):
     raise RuntimeError(code)
 
 
-def request_bytes(url, method, api_key, bearer=None, body=None, content_type=None, cache_control=None):
+def request_bytes(url, method, api_key, bearer=None, body=None, content_type=None, cache_control=None, extra_headers=None):
     headers = {"apikey": api_key}
     if bearer:
         headers["Authorization"] = "Bearer " + bearer
@@ -56,6 +56,8 @@ def request_bytes(url, method, api_key, bearer=None, body=None, content_type=Non
         headers["Content-Type"] = content_type
     if cache_control:
         headers["Cache-Control"] = cache_control
+    if extra_headers:
+        headers.update(extra_headers)
     data = body
     if method in {"POST", "PUT", "PATCH"} and data is None:
         data = b""
@@ -321,6 +323,7 @@ def upload_object(target_url, target_key, row, data, bearer):
         "POST", target_key, bearer=bearer, body=data,
         content_type=row["mimetype"] or "application/octet-stream",
         cache_control=cache_control,
+        extra_headers={"x-upsert": "false"},
     )
 
 
