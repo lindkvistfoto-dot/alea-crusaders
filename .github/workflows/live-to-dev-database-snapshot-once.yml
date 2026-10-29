@@ -103,9 +103,10 @@ jobs:
               pg_restore --no-owner --data-only --file=/snapshot/auth.sql /snapshot/auth.dump
             '
           python3 - <<'PY'
+          import os
           import re
           from pathlib import Path
-          path = Path("$RUNNER_TEMP/alea-dev-snapshot/application.raw.sql")
+          path = Path(os.environ["RUNNER_TEMP"]) / "alea-dev-snapshot" / "application.raw.sql"
           sql = path.read_text()
           filtered, removed = re.subn(
               r'^CREATE SCHEMA (?:IF NOT EXISTS )?"?public"?;\s*\n?',
