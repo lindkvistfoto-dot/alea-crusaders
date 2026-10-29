@@ -1,0 +1,71 @@
+name: One-time live-dev split preflight
+
+on:
+  push:
+    branches:
+      - codex/split-preflight
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-target:
+    if: github.actor == 'lindkvistfoto-dot' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/codex/split-preflight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate source and development connection secrets
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+          DEV_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SOURCE_DATABASE_URL" ]]; then
+            echo "::error::Missing ALEA_PRODUCTION_DATABASE_URL."
+            exit 1
+          fi
+          if [[ -z "$DEV_DATABASE_URL" ]]; then
+            echo "::error::Missing ALEA_DEVELOPMENT_DATABASE_URL."
+            exit 1
+          fi
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          cases = [
+              ("live", os.environ["SOURCE_DATABASE_URL"], "wbmosmkirsitkonejzpg"),
+              ("development", os.environ["DEV_DATABASE_URL"], "wkiuyklzzroavclnsxna"),
+          ]
+          for name, raw, ref in cases:
+              url = urlparse(raw)
+              username = unquote(url.username or "")
+              direct = url.hostname == f"db.{ref}.supabase.co"
+              pooler = (
+                  url.hostname is not None
+                  and url.hostname.endswith(".pooler.supabase.com")
+                  and username == f"postgres.{ref}"
+              )
+              if url.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+                  print(f"::error::{name} URL does not match the expected Supabase project.")
+                  sys.exit(1)
+          print("Both connection strings match the intended projects.")
+          PY
+
+      - name: Check development database is reachable and empty
+        shell: bash
+        env:
+          DEV_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if ! command -v psql >/dev/null 2>&1; then
+            echo "::error::psql is not installed on the runner."
+            exit 1
+          fi
+          result="$(psql "$DEV_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt -c "SELECT current_setting('server_version_num')::int / 10000 || ':' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname IN ('public','private') AND c.relkind IN ('r','p','v','m','f');")"
+          if [[ "$result" != 17:0 ]]; then
+            echo "::error::Development target is not empty or is not PostgreSQL 17. No changes were made."
+            exit 1
+          fi
+          echo "Development target is reachable, PostgreSQL 17, and has no public/private relations. No database changes were made." >> "$GITHUB_STEP_SUMMARY"
