@@ -1,0 +1,48 @@
+name: Remove verified orphan pose PNGs
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - ops/storage-cleanup/pose-staging-candidates-20261029.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pose-staging-png-cleanup
+  cancel-in-progress: false
+
+jobs:
+  delete-candidates:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out the scoped cleanup
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          sparse-checkout: |
+            scripts/cleanup_pose_png_candidates.py
+      - name: Delete and verify the three scoped PNG candidates
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          REPORT_DIR: ${{ runner.temp }}/pose-png-cleanup
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; exit 1
+          fi
+          python3 scripts/cleanup_pose_png_candidates.py
+      - name: Save deletion verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pose-staging-png-cleanup
+          path: ${{ runner.temp }}/pose-png-cleanup/
+          if-no-files-found: warn
+          retention-days: 14
