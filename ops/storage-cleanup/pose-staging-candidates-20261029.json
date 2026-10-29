@@ -1,0 +1,9 @@
+{
+  "task": "remove_verified_orphan_pose_png_candidates",
+  "bucket": "alea-battle-pose-staging",
+  "objects": [
+    "battle-pose/character-npc/d6310877-52e8-41c0-b2e5-bd81d5a50bbf/standard/76f2b738-8b5a-494e-99a4-49b889041992.png",
+    "battle-pose/character-npc/d6310877-52e8-41c0-b2e5-bd81d5a50bbf/standard/a05d1885-e890-4859-b226-06ca9d76ef7b.png",
+    "battle-pose/enemy/be8bb82b-3024-469d-aaa7-c838c2cd0124/standard/03272ddc-d167-4cf4-a96a-720b8444b793.png"
+  ]
+}
