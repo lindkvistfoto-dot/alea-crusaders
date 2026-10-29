@@ -232,7 +232,8 @@ def policy_ddl(row):
 def storage_url(base_url, bucket_id, path, route):
     bucket = urllib.parse.quote(bucket_id, safe="")
     object_path = "/".join(urllib.parse.quote(part, safe="") for part in path.split("/"))
-    return base_url + "/storage/v1/object/" + route + "/" + bucket + "/" + object_path
+    prefix = route + "/" if route else ""
+    return base_url + "/storage/v1/object/" + prefix + bucket + "/" + object_path
 
 
 def download_object(base_url, key, row):
@@ -308,9 +309,13 @@ def upload_object(target_url, target_key, row, data, bearer):
         stop("OBJECT_MIMETYPE_INVALID")
     cache_control = None
     if row["cache_control"] not in (None, ""):
-        if not str(row["cache_control"]).isdigit():
+        cache_value = str(row["cache_control"]).strip()
+        if cache_value.isdigit():
+            cache_control = "max-age=" + cache_value
+        elif cache_value == "no-cache" or re.fullmatch(r"max-age=\d+", cache_value):
+            cache_control = cache_value
+        else:
             stop("OBJECT_CACHE_CONTROL_INVALID")
-        cache_control = "max-age=" + str(row["cache_control"])
     request_bytes(
         storage_url(target_url, row["bucket_id"], row["name"], ""),
         "POST", target_key, bearer=bearer, body=data,
