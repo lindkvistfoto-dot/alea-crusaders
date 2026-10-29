@@ -78,6 +78,7 @@ jobs:
           baseline="$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -print -quit)"
           test -n "$baseline" && test -s "$baseline"
           cp "$baseline" "$RUNNER_TEMP/development-schema-baseline.sql"
+          basename "$baseline" > "$RUNNER_TEMP/development-schema-baseline-filename"
           echo "Schema-only baseline generated; development migration history remains unchanged until PR merge." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Archive old migrations and prepare reviewed development PR
@@ -95,9 +96,18 @@ jobs:
             exit 1
           fi
           mv "${files[@]}" "$legacy/"
-          version="$(date -u +%Y%m%d%H%M%S)"
-          cp "$RUNNER_TEMP/development-schema-baseline.sql" "$old/${version}_development_schema_baseline.sql"
-          cat > "$old/${version}_restore_auth_user_profile_trigger.sql" <<'SQL'
+          baseline_file="$(cat "$RUNNER_TEMP/development-schema-baseline-filename")"
+          baseline_version="${baseline_file%%_*}"
+          cp "$RUNNER_TEMP/development-schema-baseline.sql" "$old/$baseline_file"
+          trigger_version="$(python3 - "$baseline_version" <<'PY'
+          from datetime import datetime, timedelta, timezone
+          import sys
+          baseline = datetime.strptime(sys.argv[1], "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
+          now = datetime.now(timezone.utc).replace(microsecond=0)
+          print(max(now, baseline + timedelta(seconds=1)).strftime("%Y%m%d%H%M%S"))
+          PY
+          )"
+          cat > "$old/${trigger_version}_restore_auth_user_profile_trigger.sql" <<'SQL'
           DO $$
           BEGIN
             IF to_regprocedure('public.handle_new_user()') IS NULL THEN
@@ -120,6 +130,66 @@ jobs:
           END
           $$;
           SQL
+          cat > "$repo/.github/workflows/deploy-development-migrations.yml" <<'YAML'
+          name: Deploy development database migrations
+
+          on:
+            push:
+              branches:
+                - development
+              paths:
+                - supabase/migrations/**
+
+          permissions:
+            contents: read
+
+          concurrency:
+            group: alea-development-database-migrations
+            cancel-in-progress: false
+
+          jobs:
+            deploy:
+              if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+              runs-on: ubuntu-24.04
+              timeout-minutes: 20
+              steps:
+                - uses: actions/checkout@v4
+
+                - uses: supabase/setup-cli@v3
+                  with:
+                    version: 2.122.0
+
+                - name: Verify development target, register baseline, and deploy
+                  shell: bash
+                  env:
+                    DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+                  run: |
+                    set -euo pipefail
+                    [[ -n "$DEVELOPMENT_DATABASE_URL" ]] || { echo "::error::Missing ALEA_DEVELOPMENT_DATABASE_URL."; exit 1; }
+                    python3 - <<'PY'
+                    import os, sys
+                    from urllib.parse import unquote, urlparse
+                    u = urlparse(os.environ["DEVELOPMENT_DATABASE_URL"])
+                    username = unquote(u.username or "")
+                    direct = u.hostname == "db.wkiuyklzzroavclnsxna.supabase.co"
+                    pooler = bool(u.hostname and u.hostname.endswith(".pooler.supabase.com") and username == "postgres.wkiuyklzzroavclnsxna")
+                    if u.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+                        print("::error::Refusing to run migrations: target is not the development database.")
+                        sys.exit(1)
+                    PY
+                    baseline="$(find supabase/migrations -maxdepth 1 -type f -name '*_development_schema_baseline.sql' -print -quit)"
+                    test -n "$baseline"
+                    version="$(basename "$baseline" | cut -d_ -f1)"
+                    supabase migration repair "$version" --status applied --db-url "$DEVELOPMENT_DATABASE_URL"
+                    plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"
+                    printf '%s\n' "$plan"
+                    grep -q 'restore_auth_user_profile_trigger' <<< "$plan" || { echo "::error::Dry run did not show the expected auth trigger migration; no schema migration was pushed."; exit 1; }
+                    if grep -q 'development_schema_baseline' <<< "$plan"; then
+                      echo "::error::Baseline still appears pending after registration; no schema migration was pushed."
+                      exit 1
+                    fi
+                    supabase db push --db-url "$DEVELOPMENT_DATABASE_URL"
+          YAML
           cat > "$repo/docs/live-dev-split.md" <<'DOC'
           # Live/development split
 
