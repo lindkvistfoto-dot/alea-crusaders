@@ -48,28 +48,47 @@ jobs:
           print("Both database endpoints match their expected projects.")
           PY
 
-      - name: Create and atomically restore snapshot
+      - name: Verify development target is empty
+        shell: bash
+        env:
+          DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/target-preflight.sql" <<'SQL'
+          SELECT (current_setting('server_version_num')::int / 10000)::text
+            || ':' || (SELECT count(*)::text FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                       WHERE n.nspname IN ('public','private') AND c.relkind IN ('r','p','v','m','f'))
+            || ':' || (SELECT count(*)::text FROM auth.users)
+            || ':' || (SELECT count(*)::text FROM auth.identities);
+          SQL
+          docker run --rm \
+            -e DEVELOPMENT_DATABASE_URL \
+            -v "$RUNNER_TEMP:/snapshot" \
+            postgres:17 bash -euc 'psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt -f /snapshot/target-preflight.sql' \
+            > "$RUNNER_TEMP/target-state"
+          target_state="$(cat "$RUNNER_TEMP/target-state")"
+          if [[ "$target_state" != "17:0:0:0" ]]; then
+            echo "::error::Development must be PostgreSQL 17 with empty public/private schemas and no auth users. No import was attempted."
+            exit 1
+          fi
+          echo "Development target is empty and ready; no changes made." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dump and atomically import the live snapshot
         shell: bash
         env:
           SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
           DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/alea-dev-snapshot"
+          snapshot_dir="$RUNNER_TEMP/alea-dev-snapshot"
+          mkdir -p "$snapshot_dir"
+          trap 'rm -rf "$snapshot_dir"' EXIT
           docker run --rm \
             -e SOURCE_DATABASE_URL \
             -e DEVELOPMENT_DATABASE_URL \
-            -v "$RUNNER_TEMP/alea-dev-snapshot:/snapshot" \
+            -v "$snapshot_dir:/snapshot" \
             postgres:17 bash -euc '
               set -o pipefail
-
-              target_state="$(psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt -c "SELECT current_setting('''server_version_num''')::int / 10000 || ''':''' || (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('''public''','''private''') AND c.relkind IN ('''r''','''p''','''v''','''m''','''f''')) || ''':''' || (SELECT count(*) FROM auth.users) || ''':''' || (SELECT count(*) FROM auth.identities);")"
-              if [[ "$target_state" != "17:0:0:0" ]]; then
-                echo "::error::Development must be PostgreSQL 17 with empty public/private schemas and no auth users. No import was attempted."
-                exit 1
-              fi
-
-              pg_dump --version
               pg_dump --format=custom \
                 --schema=public --schema=private \
                 --dbname="$SOURCE_DATABASE_URL" \
@@ -78,28 +97,22 @@ jobs:
                 --table=auth.users --table=auth.identities \
                 --dbname="$SOURCE_DATABASE_URL" \
                 --file=/snapshot/auth.dump
-
               pg_restore --list /snapshot/application.dump >/dev/null
               pg_restore --list /snapshot/auth.dump >/dev/null
               pg_restore --file=/snapshot/auth.sql --data-only /snapshot/auth.dump
               pg_restore --file=/snapshot/application.sql /snapshot/application.dump
               cat /snapshot/auth.sql /snapshot/application.sql > /snapshot/combined.sql
-
               psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 \
                 --single-transaction --file=/snapshot/combined.sql
-
-              psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt \
-                -c "SELECT '''Development snapshot committed; PostgreSQL ''' || current_setting('''server_version''') || ''': ''' || (SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('''public''','''private''') AND c.relkind IN ('''r''','''p''')) || ''' tables.''';" \
-                >> "$GITHUB_STEP_SUMMARY"
             '
+          echo "Live public/private schema, application data, and email-auth users imported to development in one transaction. No live data was modified." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Confirm database is reachable after restore
+      - name: Confirm development database after import
         shell: bash
         env:
           DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
         run: |
           set -euo pipefail
           docker run --rm -e DEVELOPMENT_DATABASE_URL postgres:17 \
-            psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt \
-              -c "SELECT current_setting('server_version') || ' — dev database responds after snapshot.'" \
-              >> "$GITHUB_STEP_SUMMARY"
+            bash -euc 'psql "$DEVELOPMENT_DATABASE_URL" -X -v ON_ERROR_STOP=1 -qAt -c "SELECT current_setting('''server_version''') || ''' — dev database responds after snapshot.''';"' \
+            >> "$GITHUB_STEP_SUMMARY"
