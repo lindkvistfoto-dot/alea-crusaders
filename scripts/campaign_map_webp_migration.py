@@ -12,13 +12,13 @@ ARCHIVE_ID = os.environ.get("ARCHIVE_DRIVE_FILE_ID", "")
 GOOGLE_TOKEN = os.environ.get("GOOGLE_ACCESS_TOKEN", "")
 ARCHIVE_FOLDER = "1eYe8Vvvcd31UCVbJvfX3kkOuBS3ahqeC"
 MAPS = [
-    {"name":"Grottsystem","id":"bf8f0021-cb90-40c7-a262-00fc539c5208","png":"bf8f0021-cb90-40c7-a262-00fc539c5208/map.png"},
-    {"name":"Skelettbyn","id":"dca58a7b-217d-46bc-8526-1468fad1dd69","png":"dca58a7b-217d-46bc-8526-1468fad1dd69/map.png"},
-    {"name":"Testkarta","id":"eb1e1361-f4f3-4e5a-9054-233eab40e0f0","png":"eb1e1361-f4f3-4e5a-9054-233eab40e0f0/map.png"},
+    {"name":"Grottsystem","id":"bf8f0021-cb90-40c7-a262-00fc539c5208","png":"846e8089-24da-4825-af34-32903117152a/bf8f0021-cb90-40c7-a262-00fc539c5208/map.png"},
+    {"name":"Skelettbyn","id":"dca58a7b-217d-46bc-8526-1468fad1dd69","png":"846e8089-24da-4825-af34-32903117152a/dca58a7b-217d-46bc-8526-1468fad1dd69/map.png"},
+    {"name":"Testkarta","id":"eb1e1361-f4f3-4e5a-9054-233eab40e0f0","png":"846e8089-24da-4825-af34-32903117152a/eb1e1361-f4f3-4e5a-9054-233eab40e0f0/map.png"},
 ]
 ORPHANS = [
-    "2d51d0d7-5973-482e-aede-2e6c145f43b0/map.png",
-    "dec16fae-5c56-4e77-9b3f-be084e86878e/map.png",
+    "846e8089-24da-4825-af34-32903117152a/2d51d0d7-5973-482e-aede-2e6c145f43b0/map.png",
+    "846e8089-24da-4825-af34-32903117152a/dec16fae-5c56-4e77-9b3f-be084e86878e/map.png",
 ]
 TIMEOUT = 60
 
@@ -129,10 +129,10 @@ def apply():
     for m in MAPS:
         for material in m["materials"]:
             q = "id=eq." + urllib.parse.quote(str(material["id"]), safe="")
-            db_patch("campaign_materials", q, {"storage_path":m["webp_path"],
+            db_patch("campaign_materials", q + "&select=id,storage_path", {"storage_path":m["webp_path"],
                 "mime_type":"image/webp","file_size_bytes":len(m["webp"]),
                 "sha256":sha(m["webp"])})
-        db_patch("campaign_maps", "id=eq."+m["id"], {"image_path":m["webp_path"],
+        db_patch("campaign_maps", "id=eq."+m["id"]+"&select=id,image_path,width,height", {"image_path":m["webp_path"],
             "width":m["width"],"height":m["height"]})
     for m in MAPS:
         if storage_get(m["webp_path"]) != m["webp"]: raise RuntimeError("WEBP_READBACK_MISMATCH")
