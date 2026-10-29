@@ -1,0 +1,43 @@
+name: PNG Storage Audit (report only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: png-storage-audit
+  cancel-in-progress: false
+
+jobs:
+  inventory:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out development
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          sparse-checkout: |
+            scripts/storage_png_inventory.py
+      - name: Inventory Supabase Storage PNGs
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          REPORT_DIR: ${{ runner.temp }}/storage-png-report
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY repository secret"
+            exit 1
+          fi
+          python3 scripts/storage_png_inventory.py
+      - name: Upload inventory report
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-png-inventory
+          path: ${{ runner.temp }}/storage-png-report/
+          if-no-files-found: error
+          retention-days: 14
