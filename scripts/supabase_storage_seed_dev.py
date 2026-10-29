@@ -147,7 +147,7 @@ def normalize_bucket(row):
 
 
 def bucket_list(base_url, key):
-    rows = request_json(base_url + "/storage/v1/bucket", "GET", key, bearer=key)
+    rows = request_json(base_url + "/storage/v1/bucket", "GET", key)
     if not isinstance(rows, list):
         stop("BUCKET_LIST_RESPONSE_INVALID")
     normalized = [normalize_bucket(row) for row in rows]
@@ -254,7 +254,7 @@ def storage_url(base_url, bucket_id, path, route):
 def download_object(base_url, key, row):
     return request_bytes(
         storage_url(base_url, row["bucket_id"], row["name"], "authenticated"),
-        "GET", key, bearer=key,
+        "GET", key,
     )
 
 
@@ -284,7 +284,7 @@ def list_auth_users(target_database_url, owner_ids):
 def create_owner_session(target_url, target_key, owner_id, email):
     response = request_json(
         target_url + "/auth/v1/admin/generate_link",
-        "POST", target_key, bearer=target_key,
+        "POST", target_key,
         payload={"type": "magiclink", "email": email},
     )
     properties = response.get("properties", response) if isinstance(response, dict) else {}
@@ -316,7 +316,7 @@ def sign_out_owner(target_url, target_key, access_token):
 
 
 def target_object_auth(owner_id, target_key, owner_sessions):
-    return owner_sessions.get(owner_id) if owner_id else target_key
+    return owner_sessions.get(owner_id) if owner_id else None
 
 
 def upload_object(target_url, target_key, row, data, bearer):
@@ -371,7 +371,7 @@ def ensure_buckets(target_url, target_key, source_buckets, target_buckets):
         }
         request_json(
             target_url + "/storage/v1/bucket",
-            "POST", target_key, bearer=target_key, payload=payload,
+            "POST", target_key, payload=payload,
         )
         created += 1
     return created
@@ -381,8 +381,8 @@ def run():
     if os.environ.get("COPY_CONFIRMATION") != CONFIRM_TEXT:
         stop("COPY_CONFIRMATION_MISMATCH")
 
-    source_storage_key = api_key("SOURCE_STORAGE_SERVICE_ROLE_KEY")
-    target_storage_key = api_key("TARGET_STORAGE_SERVICE_ROLE_KEY")
+    source_storage_key = api_key("SOURCE_STORAGE_API_KEY")
+    target_storage_key = api_key("TARGET_STORAGE_API_KEY")
     source_db_url = api_key("SOURCE_DATABASE_URL")
     target_db_url = api_key("TARGET_DATABASE_URL")
     validate_db_url(source_db_url, SOURCE_REF)
