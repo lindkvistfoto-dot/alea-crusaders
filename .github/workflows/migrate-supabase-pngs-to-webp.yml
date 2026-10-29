@@ -1,4 +1,4 @@
-name: Replace archived Supabase PNGs with WebP
+name: Convert archived Supabase PNGs to WebP
 
 on:
   push:
@@ -16,12 +16,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  migrate:
+  convert:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - name: Check out the scoped migration script
+      - name: Check out the scoped conversion script
         uses: actions/checkout@v4
         with:
           ref: development
@@ -33,7 +33,7 @@ jobs:
           python-version: "3.12"
       - name: Install image conversion dependency
         run: python -m pip install --disable-pip-version-check Pillow==11.3.0
-      - name: Convert, update references, and remove archived PNGs
+      - name: Upload and verify WebP siblings
         env:
           SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
@@ -44,11 +44,11 @@ jobs:
             echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; exit 1
           fi
           python scripts/migrate_supabase_pngs_to_webp.py
-      - name: Save migration report
+      - name: Save conversion report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: supabase-png-webp-migration-report
+          name: supabase-png-webp-conversion-report
           path: ${{ runner.temp }}/png-webp-migration/
           if-no-files-found: warn
           retention-days: 14
