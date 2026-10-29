@@ -1,0 +1,60 @@
+name: Export live schema for development baseline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-public-schema:
+    if: github.actor == 'lindkvistfoto-dot' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify the source database URL
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$SOURCE_DATABASE_URL" ]]; then
+            echo "::error::Add the ALEA_PRODUCTION_DATABASE_URL repository secret before running this workflow."
+            exit 1
+          fi
+          if [[ "$SOURCE_DATABASE_URL" != *"wbmosmkirsitkonejzpg"* ]]; then
+            echo "::error::The URL does not identify the expected production project. Nothing was exported."
+            exit 1
+          fi
+          if [[ "$SOURCE_DATABASE_URL" == *"wkiuyklzzroavclnsxna"* ]]; then
+            echo "::error::The development project cannot be used as the export source."
+            exit 1
+          fi
+          echo "Source project verified. This workflow exports schema definitions only."
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Export public schema only
+        shell: bash
+        env:
+          SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase db dump \
+            --db-url "$SOURCE_DATABASE_URL" \
+            --schema public \
+            --file "$RUNNER_TEMP/alea-live-public-schema.sql"
+          test -s "$RUNNER_TEMP/alea-live-public-schema.sql"
+          echo "Export completed: public schema definitions only; no table data was requested." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload schema artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alea-live-public-schema
+          path: ${{ runner.temp }}/alea-live-public-schema.sql
+          if-no-files-found: error
+          retention-days: 3
