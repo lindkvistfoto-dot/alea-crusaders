@@ -32,8 +32,8 @@ jobs:
       - name: Copy and verify Storage
         env:
           COPY_CONFIRMATION: ${{ inputs.confirmation }}
-          SOURCE_STORAGE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
-          TARGET_STORAGE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SERVICE_ROLE_KEY }}
+          SOURCE_STORAGE_API_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          TARGET_STORAGE_API_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
           SOURCE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
           TARGET_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
         run: python3 scripts/supabase_storage_seed_dev.py
