@@ -62,7 +62,7 @@ def main():
  # Preflight each original and its WebP sibling before issuing any deletes.
  for bucket,path in FILES:
   png=request(object_url(bucket,path))
-  if not png.startswith(b"\\x89PNG\\r\\n\\x1a\\n"): raise RuntimeError("SOURCE_NOT_PNG:"+path)
+  if not png.startswith(b"\x89PNG\r\n\x1a\n"): raise RuntimeError("SOURCE_NOT_PNG:"+path)
   webp_path=path[:-4]+".webp"
   webp=request(object_url(bucket,webp_path))
   if not (webp.startswith(b"RIFF") and webp[8:12]==b"WEBP"): raise RuntimeError("WEBP_MISSING_OR_INVALID:"+bucket+":"+webp_path)
@@ -71,6 +71,6 @@ def main():
  for bucket,paths in grouped.items():
   request(BASE+"/storage/v1/object/"+bucket,"DELETE",json.dumps({"prefixes":paths}).encode("utf-8"))
  result={"result":"pngs_deleted_after_webp_preflight","archive_drive_file_id":ARCHIVE_ID,"deleted_count":len(report),"deleted_bytes":sum(x["size_bytes"] for x in report),"files":report}
- (OUT/"cleanup-report.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+ (OUT/"cleanup-report.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  print(json.dumps({k:result[k] for k in ("result","deleted_count","deleted_bytes","archive_drive_file_id")}))
 if __name__=="__main__": main()
