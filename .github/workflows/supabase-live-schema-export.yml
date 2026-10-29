@@ -22,15 +22,24 @@ jobs:
             echo "::error::Add the ALEA_PRODUCTION_DATABASE_URL repository secret before running this workflow."
             exit 1
           fi
-          if [[ "$SOURCE_DATABASE_URL" != *"wbmosmkirsitkonejzpg"* ]]; then
-            echo "::error::The URL does not identify the expected production project. Nothing was exported."
-            exit 1
-          fi
-          if [[ "$SOURCE_DATABASE_URL" == *"wkiuyklzzroavclnsxna"* ]]; then
-            echo "::error::The development project cannot be used as the export source."
-            exit 1
-          fi
-          echo "Source project verified. This workflow exports schema definitions only."
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          url = urlparse(os.environ["SOURCE_DATABASE_URL"])
+          username = unquote(url.username or "")
+          direct_host = "db.wbmosmkirsitkonejzpg.supabase.co"
+          pooler_host = url.hostname is not None and url.hostname.endswith(".pooler.supabase.com")
+          direct_live = url.hostname == direct_host
+          pooler_live = pooler_host and username == "postgres.wbmosmkirsitkonejzpg"
+
+          if url.scheme not in {"postgres", "postgresql"} or not (direct_live or pooler_live):
+              print("::error::Use a PostgreSQL connection string for the expected live project. Nothing was exported.")
+              sys.exit(1)
+
+          print("Source project verified. This workflow exports schema definitions only.")
+          PY
 
       - name: Check out repository
         uses: actions/checkout@v4
