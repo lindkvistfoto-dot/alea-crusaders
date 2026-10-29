@@ -362,7 +362,8 @@ def install_temporary_owner_policy(target_db_url, rows):
         "CREATE POLICY " + quote_ident(TEMP_POLICY_NAME)
         + " ON " + quote_ident("storage") + "." + quote_ident("objects")
         + " AS PERMISSIVE FOR INSERT TO " + quote_ident("authenticated")
-        + " WITH CHECK (" + " OR ".join(clauses) + ");"
+        + " WITH CHECK ((SELECT auth.uid()) = owner_id AND ("
+        + " OR ".join(clauses) + "));"
     )
     psql(target_db_url, statement)
     return True
