@@ -60,7 +60,7 @@ def main():
  report=[]
  for bucket,path in FILES:
   source=request(url(bucket,path))
-  if not source.startswith(b"\\x89PNG\\r\\n\\x1a\\n"): raise RuntimeError("SOURCE_NOT_PNG_MAGIC:"+path)
+  if not source.startswith(b"\x89PNG\r\n\x1a\n"): raise RuntimeError("SOURCE_NOT_PNG_MAGIC:"+path)
   webp,width,height,alpha=convert(source)
   target=path[:-4]+".webp"
   # Refuse to overwrite a pre-existing WebP, since that needs a separate content comparison.
@@ -74,6 +74,6 @@ def main():
   if sha(request(url(bucket,target)))!=sha(webp): raise RuntimeError("WEBP_READBACK_HASH_MISMATCH:"+bucket+":"+target)
   report.append({"bucket":bucket,"png_path":path,"webp_path":target,"png_bytes":len(source),"webp_bytes":len(webp),"saved_bytes":len(source)-len(webp),"png_sha256":sha(source),"webp_sha256":sha(webp),"width":width,"height":height,"has_alpha":alpha})
  result={"result":"webp_uploaded_and_hash_verified","file_count":len(report),"source_bytes":sum(x["png_bytes"] for x in report),"webp_bytes":sum(x["webp_bytes"] for x in report),"saved_bytes":sum(x["saved_bytes"] for x in report),"files":report}
- (OUT/"migration-report.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+ (OUT/"migration-report.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
  print(json.dumps({k:result[k] for k in ("result","file_count","source_bytes","webp_bytes","saved_bytes")}))
 if __name__=="__main__": main()
