@@ -1,0 +1,39 @@
+name: Seed development Supabase Storage from live
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type COPY LIVE STORAGE TO DEV to confirm this one-way copy
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-storage-seed-development
+  cancel-in-progress: false
+
+jobs:
+  copy-storage:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.actor == 'lindkvistfoto-dot' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out the guarded workflow
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client
+
+      - name: Copy and verify Storage
+        env:
+          COPY_CONFIRMATION: \${{ inputs.confirmation }}
+          SOURCE_STORAGE_SERVICE_ROLE_KEY: \${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          TARGET_STORAGE_SERVICE_ROLE_KEY: \${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SERVICE_ROLE_KEY }}
+          SOURCE_DATABASE_URL: \${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+          TARGET_DATABASE_URL: \${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: python3 scripts/supabase_storage_seed_dev.py
