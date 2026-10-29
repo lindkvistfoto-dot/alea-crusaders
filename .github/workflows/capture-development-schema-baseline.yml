@@ -1,0 +1,179 @@
+name: Capture development schema baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type CAPTURE DEVELOPMENT SCHEMA BASELINE to continue
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: alea-development-schema-baseline
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.actor == 'lindkvistfoto-dot' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out workflow
+        uses: actions/checkout@v4
+
+      - name: Validate confirmation and development database URL
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          TARGET_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          [[ "$CONFIRMATION" == "CAPTURE DEVELOPMENT SCHEMA BASELINE" ]] || { echo "::error::Confirmation text did not match."; exit 1; }
+          [[ -n "$TARGET_DATABASE_URL" ]] || { echo "::error::Add ALEA_DEVELOPMENT_DATABASE_URL as a repository secret."; exit 1; }
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import unquote, urlparse
+          u = urlparse(os.environ["TARGET_DATABASE_URL"])
+          username = unquote(u.username or "")
+          direct = u.hostname == "db.wkiuyklzzroavclnsxna.supabase.co"
+          pooler = bool(u.hostname and u.hostname.endswith(".pooler.supabase.com") and username == "postgres.wkiuyklzzroavclnsxna")
+          if u.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+              print("::error::The URL is not for the expected development database. No database was changed.")
+              sys.exit(1)
+          print("Development database target verified. Schema capture only; no data is exported.")
+          PY
+
+      - name: Check out development branch
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          path: development-worktree
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+
+      - name: Pull schema without changing remote migration history
+        shell: bash
+        env:
+          TARGET_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          clean="$RUNNER_TEMP/alea-development-baseline"
+          mkdir -p "$clean/supabase/migrations"
+          cat > "$clean/supabase/config.toml" <<'EOF'
+          project_id = "alea-crusaders-development"
+          [db]
+          major_version = 17
+          EOF
+          cd "$clean"
+          # Decline the CLI's optional migration-history update. The reviewed PR will
+          # record this baseline as applied only after it is merged into development.
+          printf 'n\n' | supabase db pull development_schema_baseline --db-url "$TARGET_DATABASE_URL"
+          baseline="$(find supabase/migrations -maxdepth 1 -type f -name '*.sql' -print -quit)"
+          test -n "$baseline" && test -s "$baseline"
+          cp "$baseline" "$RUNNER_TEMP/development-schema-baseline.sql"
+          echo "Schema-only baseline generated; development migration history remains unchanged until PR merge." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Archive old migrations and prepare reviewed development PR
+        shell: bash
+        run: |
+          set -euo pipefail
+          repo="$GITHUB_WORKSPACE/development-worktree"
+          old="$repo/supabase/migrations"
+          legacy="$repo/supabase/legacy-migrations/pre-baseline"
+          mkdir -p "$legacy"
+          shopt -s nullglob
+          files=("$old"/*.sql)
+          if (( ${#files[@]} == 0 )); then
+            echo "::error::Expected the existing migration chain, but found no active SQL migrations."
+            exit 1
+          fi
+          mv "${files[@]}" "$legacy/"
+          version="$(date -u +%Y%m%d%H%M%S)"
+          cp "$RUNNER_TEMP/development-schema-baseline.sql" "$old/${version}_development_schema_baseline.sql"
+          cat > "$old/${version}_restore_auth_user_profile_trigger.sql" <<'SQL'
+          DO $$
+          BEGIN
+            IF to_regprocedure('public.handle_new_user()') IS NULL THEN
+              RAISE EXCEPTION 'Expected public.handle_new_user() to exist before restoring the auth trigger';
+            END IF;
+            IF NOT EXISTS (
+              SELECT 1
+              FROM pg_trigger t
+              JOIN pg_class c ON c.oid = t.tgrelid
+              JOIN pg_namespace n ON n.oid = c.relnamespace
+              WHERE n.nspname = 'auth'
+                AND c.relname = 'users'
+                AND t.tgname = 'on_auth_user_created'
+                AND NOT t.tgisinternal
+            ) THEN
+              CREATE TRIGGER on_auth_user_created
+                AFTER INSERT ON auth.users
+                FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+            END IF;
+          END
+          $$;
+          SQL
+          cat > "$repo/docs/live-dev-split.md" <<'DOC'
+          # Live/development split
+
+          Status: initial development copy is in place; the two environments now diverge.
+
+          ## Environment boundary
+
+          - Supabase live: `wbmosmkirsitkonejzpg`; branch `main` is the live release line.
+          - Supabase development: `wkiuyklzzroavclnsxna`; branch `development` is the working line.
+          - The initial database and Storage copy is one-way, live to development. There is no ongoing data sync.
+          - Development changes must never target the live project by fallback. A production release requires a reviewed PR and Daniel's explicit release decision.
+          - Both projects remain on the Supabase Free plan.
+
+          ## Verified migration state
+
+          - The development database contains the copied application tables and data, but its Supabase migration ledger is empty.
+          - The repository's old migration chain diverged from live and contains duplicate version prefixes. It must not be replayed.
+          - This baseline workflow captures the current development schema only, keeps the old SQL files under `supabase/legacy-migrations/pre-baseline/`, and opens a PR to `development`.
+          - The workflow does not update the development migration ledger. After the PR is merged, the development deploy workflow records the baseline as applied, checks the pending migration plan, and applies the small missing auth profile trigger.
+          - Live database, migration history, and Storage are not changed by this process.
+
+          ## Day-to-day workflow
+
+          1. Develop application and database changes on `development`.
+          2. Put every future database change in a new timestamped file under `supabase/migrations/`.
+          3. Review the PR and development deployment result before promoting code to `main`.
+          4. Keep production data out of development after this initial copy; never sync development data back to live.
+
+          The frontend deployment split and environment-specific browser storage still need separate implementation before a public `/dev/` app is enabled.
+          DOC
+
+      - name: Open pull request into development
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ github.token }}
+          path: development-worktree
+          base: development
+          branch: automation/development-schema-baseline
+          delete-branch: true
+          title: Establish development schema baseline
+          body: |
+            This PR establishes a clean migration starting point for the copied development database.
+
+            - Adds a schema-only baseline captured from the development project.
+            - Archives the divergent historical migration chain without deleting it.
+            - Restores the missing `auth.users` profile-creation trigger idempotently.
+            - Adds a development-only migration deployment workflow and updates split status documentation.
+
+            The capture workflow did not change live or development schema/data. It deliberately left migration-history registration for the reviewed merge.
+
+      - name: Upload baseline for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: alea-development-schema-baseline
+          path: ${{ runner.temp }}/development-schema-baseline.sql
+          if-no-files-found: error
+          retention-days: 7
