@@ -1,0 +1,48 @@
+name: Remove archived PNG originals after WebP migration
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - ops/storage-cleanup/delete-archived-pngs-20261029.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delete-archived-png-originals-20261029
+  cancel-in-progress: false
+
+jobs:
+  delete-archived-pngs:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out the scoped deletion script
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          sparse-checkout: |
+            scripts/delete_archived_supabase_pngs.py
+      - name: Verify archives and WebP replacements, then delete scoped PNGs
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          CLEANUP_DIR: ${{ runner.temp }}/png-cleanup-report
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; exit 1
+          fi
+          python scripts/delete_archived_supabase_pngs.py
+      - name: Save cleanup report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archived-supabase-png-cleanup-report
+          path: ${{ runner.temp }}/png-cleanup-report/
+          if-no-files-found: warn
+          retention-days: 14
