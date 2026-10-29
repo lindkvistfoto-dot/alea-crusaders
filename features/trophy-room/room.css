@@ -187,3 +187,17 @@ main:has(> #trophyRoomPage:not(.hidden)){
 
 /* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU texture. */
 .trophy-room-viewport > .trophy-room-medal-wall{transform:none;pointer-events:auto;filter:none}
+
+/* LEJONHJARTA: mobile detail uses the LEFT HALF of the approved 3:2
+   HERMES panel as a portrait medal display; readable story follows below.
+   Desktop retains the complete two-panel artwork unchanged. */
+@media(max-width:650px){
+ .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:48px 0 0}
+ .arcane-medal-display{display:flex;flex-direction:column;aspect-ratio:auto;background:none;filter:none;gap:0}
+ .arcane-medal-display-cushion{flex:none;width:100%;aspect-ratio:3/4;min-height:0;padding:17% 13%;background-image:var(--medal-frame-image,linear-gradient(140deg,#583c29,#ad824f));background-size:200% 100%;background-position:left center;background-repeat:no-repeat}
+ .arcane-medal-display-image{width:76%;max-height:74%;object-fit:contain}
+ .arcane-medal-display-parchment{flex:none;width:100%;min-height:0;aspect-ratio:auto;display:block;padding:22px 24px 30px;background:#ead5ac;color:#422b1e;border:2px solid #b38a4f;box-sizing:border-box}
+ .arcane-medal-display-story{max-height:none;overflow:visible;font-size:clamp(15px,4vw,19px);line-height:1.5}
+ .arcane-medal-display-title{font-size:clamp(28px,7vw,38px);margin:0 0 12px}
+ .arcane-medal-display-close{position:absolute;top:2px;right:8px;float:none;margin:0;width:40px;height:40px;z-index:30}
+}
