@@ -1,0 +1,56 @@
+name: Campaign map WebP conversion
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Convert and upload WebP, or clean PNGs after database paths are updated
+        required: true
+        type: choice
+        options:
+          - convert
+          - cleanup
+
+permissions:
+  contents: read
+
+concurrency:
+  group: campaign-map-webp
+  cancel-in-progress: false
+
+jobs:
+  map-files:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: development
+          sparse-checkout: |
+            scripts/campaign_map_webp.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned WebP converter
+        run: python -m pip install Pillow==12.3.0
+      - name: Convert/upload WebP or clean old PNGs
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          MAP_PHASE: ${{ inputs.phase }}
+          MAP_OUTPUT_DIR: ${{ runner.temp }}/campaign-map-webp
+        run: |
+          set -euo pipefail
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Missing HERMES_SUPABASE_SERVICE_ROLE_KEY"; exit 1
+          fi
+          python scripts/campaign_map_webp.py
+      - name: Save conversion files and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-map-webp-${{ inputs.phase }}
+          path: ${{ runner.temp }}/campaign-map-webp/
+          if-no-files-found: warn
+          retention-days: 14
