@@ -146,8 +146,8 @@ def normalize_bucket(row):
     }
 
 
-def bucket_list(base_url, key):
-    rows = request_json(base_url + "/storage/v1/bucket", "GET", key)
+def bucket_list(base_url, key, bearer=None):
+    rows = request_json(base_url + "/storage/v1/bucket", "GET", key, bearer=bearer)
     if not isinstance(rows, list):
         stop("BUCKET_LIST_RESPONSE_INVALID")
     normalized = [normalize_bucket(row) for row in rows]
@@ -251,10 +251,10 @@ def storage_url(base_url, bucket_id, path, route):
     return base_url + "/storage/v1/object/" + prefix + bucket + "/" + object_path
 
 
-def download_object(base_url, key, row):
+def download_object(base_url, key, row, bearer=None):
     return request_bytes(
         storage_url(base_url, row["bucket_id"], row["name"], "authenticated"),
-        "GET", key,
+        "GET", key, bearer=bearer,
     )
 
 
@@ -391,7 +391,7 @@ def run():
         stop("SOURCE_AND_TARGET_DATABASES_MATCH")
 
     # Read-only inventory and complete preflight before any target writes.
-    source_buckets = bucket_list(SOURCE_URL, source_storage_key)
+    source_buckets = bucket_list(SOURCE_URL, source_storage_key, bearer=source_storage_key)
     target_buckets = bucket_list(TARGET_URL, target_storage_key)
     source_objects = normalize_objects(psql_json(source_db_url, OBJECTS_SQL))
     target_objects = normalize_objects(psql_json(target_db_url, OBJECTS_SQL))
@@ -416,7 +416,7 @@ def run():
     # Check a partial run's objects byte-for-byte before resuming.
     for key, target_row in target_objects.items():
         source_row = source_objects[key]
-        source_bytes = download_object(SOURCE_URL, source_storage_key, source_row)
+        source_bytes = download_object(SOURCE_URL, source_storage_key, source_row, bearer=source_storage_key)
         target_bytes = download_object(TARGET_URL, target_storage_key, target_row)
         if hashlib.sha256(source_bytes).digest() != hashlib.sha256(target_bytes).digest():
             stop("TARGET_OBJECT_CONTENT_CONFLICT")
@@ -431,7 +431,7 @@ def run():
     try:
         for index, key in enumerate(sorted(source_objects), start=1):
             row = source_objects[key]
-            source_bytes = download_object(SOURCE_URL, source_storage_key, row)
+            source_bytes = download_object(SOURCE_URL, source_storage_key, row, bearer=source_storage_key)
             if len(source_bytes) != row["size_bytes"]:
                 stop("SOURCE_OBJECT_SIZE_MISMATCH")
             expected_hash = hashlib.sha256(source_bytes).digest()
