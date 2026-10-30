@@ -22,7 +22,7 @@ function patchId(repo, sha) {
 }
 
 function commitsSince(repo, ref, base) {
-  return git(repo, ["rev-list", "--first-parent", "--no-merges", ref, "^" + base])
+  return git(repo, ["rev-list", "--first-parent", ref, "^" + base])
     .split("\n").filter(Boolean).map(sha => ({
       sha,
       message: git(repo, ["show", "-s", "--format=%s", sha]),
