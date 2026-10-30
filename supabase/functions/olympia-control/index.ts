@@ -128,7 +128,7 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const comments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + data.candidateIssue + "/comments?per_page=100");
   const report = (comments as any[]).find(comment => {
     const body = String(comment.body || "");
-    return body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") &&
+    return comment.user?.login === "github-actions[bot]" && body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") &&
       body.includes("- Verified DEV SHA: " + data.testedDevSha) &&
       body.includes("- Candidate tree SHA: " + data.candidateTreeSha);
   });
@@ -224,10 +224,14 @@ Deno.serve(async (req: Request) => {
       const finalBody = issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) +
         "\n\n## OLYMPIA LIVE release\n- Merge SHA: " + merged.sha +
         "\n- Status: LIVE deploy startad; OLYMPIA verifierar publicerad version.";
-      await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + approvalIssue.number, {
-        method: "PATCH",
-        body: JSON.stringify({ body: finalBody }),
-      });
+      try {
+        await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + approvalIssue.number, {
+          method: "PATCH",
+          body: JSON.stringify({ body: finalBody }),
+        });
+      } catch (_error) {
+        console.error("OLYMPIA LIVE merge succeeded but journal update failed", approvalIssue.number);
+      }
       return json({
         ok: true,
         message: "Slutgodkännandet sparades. Releaseförslaget är mergat till LIVE och Pages-deploy startar.",
