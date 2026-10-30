@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { buildReport } from "../scripts/olympia-release-guard.mjs";
 import { reconcileRelease } from "../scripts/olympia-release-guard-core.mjs";
 
 describe("OLYMPIA release reconciliation", () => {
+  it("loads the release runner module", () => {
+    expect(typeof buildReport).toBe("function");
+  });
+
+  it("keeps the inline OLYMPIA browser script syntactically valid", () => {
+    const html = readFileSync(new URL("../olympia/index.html", import.meta.url), "utf8");
+    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+    expect(scripts).toHaveLength(1);
+    expect(() => new Function(scripts[0][1])).not.toThrow();
+  });
+
   it("recognizes PR #375 as present in LIVE by equivalent patch despite a different merge SHA", () => {
     const result = reconcileRelease({
       developmentPrs: [{ number: 375, mergeSha: "dev-merge", patchId: "map-route-patch" }],
