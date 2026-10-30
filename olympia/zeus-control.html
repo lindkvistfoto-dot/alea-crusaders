@@ -83,12 +83,17 @@ var slots={direct:[],package:[],defer:[],fix:[]};
 try{
 var q=encodeURIComponent("repo:"+owner+"/"+repo+" is:issue in:title OLYMPIA");
 var data=await json("https://api.github.com/search/issues?q="+q+"&per_page=100");
-var rows=(data.items||[]).filter(function(i){return i.user&&i.user.login===owner&&/^\\[OLYMPIA (BESLUT|FIX|AVVAKTA)/i.test(i.title)});
+var rows=(data.items||[]).filter(function(i){
+var title=String(i.title||"").toUpperCase();
+return i.user&&i.user.login===owner&&(title.indexOf("[OLYMPIA BESLUT")===0||title.indexOf("[OLYMPIA FIX")===0||title.indexOf("[OLYMPIA AVVAKTA")===0);
+});
 var records=rows.map(function(i){
 var title=i.title.toLowerCase(),target=title.indexOf("pandoras")>=0?"direct":title.indexOf("paket")>=0?"package":title.indexOf("karon")>=0||title.indexOf("avvakta")>=0?"defer":"fix";
-var body=i.body||"",idMatch=body.match(/###\\s*Ärende-ID\\s*\\r?\\n+([^\\r\\n]+)/i),shaMatch=body.match(/###\\s*Testad DEV-commit(?: \\(full SHA\\))?\\s*\\r?\\n+([a-f0-9]{40})/i);
-var item=(queue&&queue.items||[]).find(function(x){return x.id===(idMatch||[])[1]?.trim()});
-var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&item.dev_sha&&shaMatch&&shaMatch[1]===item.dev_sha);
+var body=i.body||"";
+function fieldValue(label){var marker="### "+label,at=body.indexOf(marker);if(at<0)return "";var line=body.indexOf("\n",at);if(line<0)return "";var end=body.indexOf("\n",line+1);return body.slice(line+1,end<0?undefined:end).trim()}
+var item= (queue&&queue.items||[]).find(function(x){return x.id===fieldValue("Ärende-ID")});
+var testedSha=fieldValue("Testad DEV-commit (full SHA)");
+var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&item.dev_sha&&testedSha===item.dev_sha);
 slots[target].push({issue:i,exact:exact});
 return i;
 });
@@ -97,7 +102,7 @@ Object.keys(slots).forEach(function(k){
 var el=get(k+"-list"),arr=slots[k];
 el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact;
-return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class=\\\"small muted\\\">"+(stale?"Beslutet är inte giltigt för aktuell DEV-version. Ny provning krävs.":i.state==="open"?"Registrerat · inväntar teknisk kontroll":"Avslutat · bevarat i historik")+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"
+return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class=\\"small muted\\">"+(stale?"Beslutet är inte giltigt för aktuell DEV-version. Ny provning krävs.":i.state==="open"?"Registrerat · inväntar teknisk kontroll":"Avslutat · bevarat i historik")+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"
 }).join(""):"Inga beslut registrerade."
 });
 }catch(e){["direct-list","package-list","defer-list","fix-list"].forEach(function(id){get(id).innerHTML='<span class="status blocked">Beslutsdata OKÄND</span>'});}
