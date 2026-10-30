@@ -1,0 +1,39 @@
+{
+  "schema": "olympia-work-items/v1",
+  "active_queue_version": 1,
+  "baseline_id": "OLYMPIA-BASELINE-001",
+  "created_at": "2026-10-30T17:39:07.258Z",
+  "items": [
+    {
+      "id": "PILOT-001",
+      "sequence": 1,
+      "title": "Astrid – korrekt bildvisning i Troférummet",
+      "purpose": "Astrid ska visas naturligt och proportionerligt på oktagonpodiet på både mobil och dator.",
+      "expected_result": "Hela Astrid syns från huvud till fot, utan beskärning eller förvrängning. Figuren står rätt på podiet och mobilvyn använder tillgängligt skärmutrymme bättre.",
+      "status": "under_implementation",
+      "technical_status": "Ännu inte verifierad eller publicerad i DEV",
+      "ready_for_human_acceptance": false,
+      "dev_sha": null,
+      "pr_number": null,
+      "dev_url": "../?view=trophy-room",
+      "features": [
+        "features/trophy-room/room.js",
+        "features/trophy-room/room.css"
+      ],
+      "acceptance": {
+        "tested_dev_sha": null,
+        "decision": null,
+        "comment": null,
+        "record_issue": null,
+        "decided_at": null,
+        "release_group": null,
+        "live_status": "not_released"
+      },
+      "provenance": {
+        "source_issue": 379,
+        "environment_master": "ARCANE TROPHY ROOM V2.2",
+        "environment_asset": "hermes/system-assets/arcane-trophy-room-v2.2.json"
+      }
+    }
+  ]
+}

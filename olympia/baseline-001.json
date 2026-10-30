@@ -1,0 +1,783 @@
+{
+  "schema": "olympia-baseline/v1",
+  "baseline_id": "OLYMPIA-BASELINE-001",
+  "captured_at": "2026-10-30T17:39:07.258Z",
+  "captured_local": "2026-10-30 18:39:07 CET",
+  "repository": "lindkvistfoto-dot/alea-crusaders",
+  "refs": {
+    "development": {
+      "branch": "development",
+      "sha": "29b78803b38b50daa8294338b5fcd0f939153000",
+      "source": "GitHub refs API"
+    },
+    "live": {
+      "branch": "main",
+      "sha": "8bb6a11eeacd4ab1a263ec6d4cce4271aaf564a9",
+      "source": "GitHub refs API"
+    }
+  },
+  "pull_requests": {
+    "inventory_path": "olympia/history/pr-inventory-001.json",
+    "pages": 4,
+    "page_sizes": [
+      100,
+      100,
+      100,
+      54
+    ],
+    "complete": true,
+    "total": 354,
+    "open": 34,
+    "merged": 309,
+    "closed_unmerged": 11,
+    "all_records_in_inventory": true
+  },
+  "deployments": {
+    "github_pages_latest_runs": [],
+    "live_manifest_source_sha": "UNKNOWN: no successful public-manifest HTTP read was captured during this baseline",
+    "dev_manifest_source_sha": "UNKNOWN: no successful public-manifest HTTP read was captured during this baseline",
+    "verified_deployments": false
+  },
+  "release_history": {
+    "github_releases_count": 0,
+    "release_list_verified": true
+  },
+  "database": {
+    "live": {
+      "project_id": "wbmosmkirsitkonejzpg",
+      "name": "lindkvistfoto@gmail.com's Project",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.002",
+      "migration_count": 171,
+      "migrations": [
+        {
+          "version": "20261004103716",
+          "name": "reveal_entire_campaign_map"
+        },
+        {
+          "version": "20261004103855",
+          "name": "harden_reveal_campaign_map_security"
+        },
+        {
+          "version": "20261004104957",
+          "name": "location_asset_storage"
+        },
+        {
+          "version": "20261004105652",
+          "name": "reversible_reveal_entire_map"
+        },
+        {
+          "version": "20261004134020",
+          "name": "rule_armor_registry"
+        },
+        {
+          "version": "20261004135954",
+          "name": "rule_weapon_mechanics"
+        },
+        {
+          "version": "20261004142017",
+          "name": "rule_weapon_materials"
+        },
+        {
+          "version": "20261004144023",
+          "name": "campaign_day_weather_erf"
+        },
+        {
+          "version": "20261004144356",
+          "name": "harden_campaign_day_functions"
+        },
+        {
+          "version": "20261004145854",
+          "name": "skill_roll_erf_rewards"
+        },
+        {
+          "version": "20261004153907",
+          "name": "rest_hours_psy_and_race_erf_reset"
+        },
+        {
+          "version": "20261004160008",
+          "name": "base_chance_skill_erf"
+        },
+        {
+          "version": "20261004160354",
+          "name": "base_chance_skill_award_guard"
+        },
+        {
+          "version": "20261004210243",
+          "name": "event_combat_campaign_integrity"
+        },
+        {
+          "version": "20261004212344",
+          "name": "event_combat_scenes_v1"
+        },
+        {
+          "version": "20261004215011",
+          "name": "event_combat_scene_participants"
+        },
+        {
+          "version": "20261004225645",
+          "name": "promote_combat_scenes_to_campaign"
+        },
+        {
+          "version": "20261004230711",
+          "name": "combat_scene_unique_combatants"
+        },
+        {
+          "version": "20261005060119",
+          "name": "combat_scene_direct_backgrounds"
+        },
+        {
+          "version": "20261005070250",
+          "name": "rule_professions_registry"
+        },
+        {
+          "version": "20261005071548",
+          "name": "rule_races_registry"
+        },
+        {
+          "version": "20261005072319",
+          "name": "elf_rest_threshold_by_race_category"
+        },
+        {
+          "version": "20261005080104",
+          "name": "combat_scene_start_positions"
+        },
+        {
+          "version": "20261005104343",
+          "name": "combat_icon_assets"
+        },
+        {
+          "version": "20261005104816",
+          "name": "character_combat_icon_path"
+        },
+        {
+          "version": "20261005145625",
+          "name": "rule_race_attribute_rules"
+        },
+        {
+          "version": "20261005145741",
+          "name": "seed_new_race_attribute_rows"
+        },
+        {
+          "version": "20261005171018",
+          "name": "enemy_monster_admin_profiles"
+        },
+        {
+          "version": "20261005184111",
+          "name": "seed_rule_weapons_melee_master"
+        },
+        {
+          "version": "20261005185112",
+          "name": "complete_weapon_master_projectile_thrown"
+        },
+        {
+          "version": "20261005185623",
+          "name": "backfill_weapon_master_instances"
+        },
+        {
+          "version": "20261005192103",
+          "name": "targans_gille_shop_catalog"
+        },
+        {
+          "version": "20261005193225",
+          "name": "normalize_targans_catalog_labels"
+        },
+        {
+          "version": "20261007045327",
+          "name": "link_weapon_master_to_skills"
+        },
+        {
+          "version": "20261007045409",
+          "name": "migrate_character_weapon_fv_to_skills"
+        },
+        {
+          "version": "20261007050315",
+          "name": "enforce_weapon_skill_link"
+        },
+        {
+          "version": "20261007210549",
+          "name": "add_weapon_icon_key"
+        },
+        {
+          "version": "20261007212545",
+          "name": "expert_armor_shield_master"
+        },
+        {
+          "version": "20261007212613",
+          "name": "index_rule_shields_skill"
+        },
+        {
+          "version": "20261007220452",
+          "name": "armor_shield_svg_icons"
+        },
+        {
+          "version": "20261008002411",
+          "name": "add_expert_magic_school_and_spell_registry"
+        },
+        {
+          "version": "20261008005829",
+          "name": "grant_magic_registry_authenticated_access"
+        },
+        {
+          "version": "20261008010928",
+          "name": "add_attack_magic_to_rule_spells"
+        },
+        {
+          "version": "20261008011403",
+          "name": "add_spell_damage_and_refine_attack_magic"
+        },
+        {
+          "version": "20261008022452",
+          "name": "expert_spell_k_f_r_markers"
+        },
+        {
+          "version": "20261008022500",
+          "name": "correct_spell_markers_verified_pages"
+        },
+        {
+          "version": "20261008051049",
+          "name": "create_effect_registry_and_combatant_effects"
+        },
+        {
+          "version": "20261008051439",
+          "name": "spell_oka_minska_attribute_effect_parameters"
+        },
+        {
+          "version": "20261008054535",
+          "name": "varg_effect_metadata"
+        },
+        {
+          "version": "20261008054742",
+          "name": "lo_effect_expiry_timestamp"
+        },
+        {
+          "version": "20261008055117",
+          "name": "bjorn_incapacitation_effects"
+        },
+        {
+          "version": "20261008061015",
+          "name": "retire_oka_minska_from_expert_registries"
+        },
+        {
+          "version": "20261008061125",
+          "name": "purge_retired_spells_from_character_and_combat_snapshots"
+        },
+        {
+          "version": "20261008063517",
+          "name": "tiger_mental_conditions"
+        },
+        {
+          "version": "20261008064530",
+          "name": "crocodile_periodic_damage"
+        },
+        {
+          "version": "20261008065445",
+          "name": "haj_area_schema"
+        },
+        {
+          "version": "20261008065602",
+          "name": "haj_area_runtime"
+        },
+        {
+          "version": "20261008065925",
+          "name": "haj_undo_safety"
+        },
+        {
+          "version": "20261008070136",
+          "name": "haj_path_movement"
+        },
+        {
+          "version": "20261008093838",
+          "name": "add_npc_spells_for_magic_arena"
+        },
+        {
+          "version": "20261008154236",
+          "name": "gandalf_material_foundation_v1"
+        },
+        {
+          "version": "20261008155132",
+          "name": "gimli_material_storage_v1"
+        },
+        {
+          "version": "20261008162623",
+          "name": "bilbo_archive_guard"
+        },
+        {
+          "version": "20261008164340",
+          "name": "expert_skelett_race"
+        },
+        {
+          "version": "20261008165002",
+          "name": "seed_skelettvakt_enemy"
+        },
+        {
+          "version": "20261008165617",
+          "name": "seed_eldsalamander_summon_npc"
+        },
+        {
+          "version": "20261008170007",
+          "name": "eldsalamander_summon_unique"
+        },
+        {
+          "version": "20261008170810",
+          "name": "aragorn_legacy_material_links"
+        },
+        {
+          "version": "20261008173227",
+          "name": "frodo_presentation_command"
+        },
+        {
+          "version": "20261008174128",
+          "name": "sam_player_library_share"
+        },
+        {
+          "version": "20261008174937",
+          "name": "galadriel_material_realtime_signals"
+        },
+        {
+          "version": "20261008205848",
+          "name": "map_realtime_signals_v03495"
+        },
+        {
+          "version": "20261008214715",
+          "name": "elementar_npc_templates"
+        },
+        {
+          "version": "20261009052457",
+          "name": "food_provisions_day_advance"
+        },
+        {
+          "version": "20261009053127",
+          "name": "inn_meal_provisions_coverage"
+        },
+        {
+          "version": "20261009061238",
+          "name": "combat_ammunition_registry_v03513"
+        },
+        {
+          "version": "20261009061246",
+          "name": "combat_ammunition_recovery_v03513"
+        },
+        {
+          "version": "20261009061721",
+          "name": "fix_crossbow_legacy_ammo_v03513"
+        },
+        {
+          "version": "20261009104106",
+          "name": "combat_multihex_footprints_20261009"
+        },
+        {
+          "version": "20261009104532",
+          "name": "multihex_area_and_terrain_20261009"
+        },
+        {
+          "version": "20261009105852",
+          "name": "alea_sound_registry_v03522"
+        },
+        {
+          "version": "20261009110846",
+          "name": "alea_shared_audio_v03523"
+        },
+        {
+          "version": "20261009112839",
+          "name": "alea_location_ambience_v03524"
+        },
+        {
+          "version": "20261009120357",
+          "name": "alea_gandalf_sound_categories_v03526"
+        },
+        {
+          "version": "20261009120439",
+          "name": "alea_gandalf_sound_inventory_v03526"
+        },
+        {
+          "version": "20261009192045",
+          "name": "campaign_journal_realtime"
+        },
+        {
+          "version": "20261009192256",
+          "name": "journal_general_dice_events"
+        },
+        {
+          "version": "20261009194709",
+          "name": "add_realtime_campaign_time_of_day"
+        },
+        {
+          "version": "20261009205014",
+          "name": "seed_alchemy_potions_and_plants"
+        },
+        {
+          "version": "20261010060656",
+          "name": "add_rule_equipment_art_images_and_storage"
+        },
+        {
+          "version": "20261010073341",
+          "name": "armor_art_four_anatomical_slots"
+        },
+        {
+          "version": "20261010200221",
+          "name": "projectile_type_art"
+        },
+        {
+          "version": "20261010200404",
+          "name": "fix_projectile_art_storage_name"
+        },
+        {
+          "version": "20261010200858",
+          "name": "weapon_projectile_links"
+        },
+        {
+          "version": "20261010213804",
+          "name": "equipment_master_carry_art"
+        },
+        {
+          "version": "20261010222014",
+          "name": "combat_visible_npc_portraits"
+        },
+        {
+          "version": "20261010222044",
+          "name": "preserve_defeated_combatant_portraits"
+        },
+        {
+          "version": "20261010231011",
+          "name": "magic_artifacts_registry_v03583"
+        },
+        {
+          "version": "20261010234239",
+          "name": "magic_property_powers_v03584"
+        },
+        {
+          "version": "20261011005442",
+          "name": "magic_configurator_rules_v03586"
+        },
+        {
+          "version": "20261011013558",
+          "name": "character_item_art_owner_storage"
+        },
+        {
+          "version": "20261011074536",
+          "name": "character_water_provisions"
+        },
+        {
+          "version": "20261011131304",
+          "name": "magic_battery_property"
+        },
+        {
+          "version": "20261011151724",
+          "name": "academy_skill_category"
+        },
+        {
+          "version": "20261011223006",
+          "name": "round_background_gallery_v035124"
+        },
+        {
+          "version": "20261011224453",
+          "name": "character_round_background_v035125"
+        },
+        {
+          "version": "20261011225220",
+          "name": "restore_legacy_combat_round_images_v035126"
+        },
+        {
+          "version": "20261012043400",
+          "name": "character_round_live_sync_v035128"
+        },
+        {
+          "version": "20261012104031",
+          "name": "hit_figure_race_gender_registry"
+        },
+        {
+          "version": "20261012211650",
+          "name": "combat_equipment_crop_quadrant"
+        },
+        {
+          "version": "20261012221845",
+          "name": "spell_master_art"
+        },
+        {
+          "version": "20261012223307",
+          "name": "spell_dual_art_square_crop"
+        },
+        {
+          "version": "20261013234253",
+          "name": "spell_cutout_art_v035190"
+        },
+        {
+          "version": "20261015063300",
+          "name": "enable_pg_net_for_one_time_icon_transfer"
+        },
+        {
+          "version": "20261015064221",
+          "name": "arcane_ivory_repo_spell_icons"
+        },
+        {
+          "version": "20261015083344",
+          "name": "hermes_combat_animations"
+        },
+        {
+          "version": "20261015112824",
+          "name": "hermes_spell_animation_bindings"
+        },
+        {
+          "version": "20261015123519",
+          "name": "hermes_v2_animation_types"
+        },
+        {
+          "version": "20261015143521",
+          "name": "symbolism_icon_path_20261015"
+        },
+        {
+          "version": "20261015151058",
+          "name": "hermes_v2_job_queue_and_storage"
+        },
+        {
+          "version": "20261015152259",
+          "name": "hermes_v2_controlled_rollback_state"
+        },
+        {
+          "version": "20261015160032",
+          "name": "hermes_v2_server_permissions"
+        },
+        {
+          "version": "20261015160357",
+          "name": "hermes_v2_spell_icon_constraint"
+        },
+        {
+          "version": "20261015173546",
+          "name": "silveralv_round_gallery_static_art"
+        },
+        {
+          "version": "20261015184324",
+          "name": "hermes21_ci_job_identity"
+        },
+        {
+          "version": "20261016175756",
+          "name": "arcane_gallery_presentation_history"
+        },
+        {
+          "version": "20261017111127",
+          "name": "smart_polygon_atomic_shapes"
+        },
+        {
+          "version": "20261017115816",
+          "name": "skill_dual_art_admin"
+        },
+        {
+          "version": "20261017133058",
+          "name": "hermes_skill_icons"
+        },
+        {
+          "version": "20261017133403",
+          "name": "hermes_skill_service_role_icon_privileges"
+        },
+        {
+          "version": "20261017153821",
+          "name": "campaign_image_library"
+        },
+        {
+          "version": "20261017155217",
+          "name": "campaign_image_library_storage_read"
+        },
+        {
+          "version": "20261017212328",
+          "name": "allow_skill_illustration_hermes_jobs"
+        },
+        {
+          "version": "20261017213257",
+          "name": "grant_hermes_skill_illustration_update"
+        },
+        {
+          "version": "20261018014231",
+          "name": "skill_illustration_wide"
+        },
+        {
+          "version": "20261018091341",
+          "name": "hermes_skill_illustration_wide"
+        },
+        {
+          "version": "20261018092124",
+          "name": "hermes_wide_publisher_column_grant"
+        },
+        {
+          "version": "20261018094131",
+          "name": "spell_illustration_wide"
+        },
+        {
+          "version": "20261018102501",
+          "name": "spell_square_illustration"
+        },
+        {
+          "version": "20261019202532",
+          "name": "hermes_spell_cutout"
+        },
+        {
+          "version": "20261019214247",
+          "name": "global_npc_library_and_campaign_instancing"
+        },
+        {
+          "version": "20261019221711",
+          "name": "global_npc_portrait_access"
+        },
+        {
+          "version": "20261019222329",
+          "name": "global_npc_service_role_portrait_publisher"
+        },
+        {
+          "version": "20261022055403",
+          "name": "arcane_paper_doll_system_assets"
+        },
+        {
+          "version": "20261022100334",
+          "name": "generalize_arcane_system_asset_keys"
+        },
+        {
+          "version": "20261022100344",
+          "name": "generalize_arcane_system_asset_publication"
+        },
+        {
+          "version": "20261022210618",
+          "name": "add_weapon_class_to_rule_weapons"
+        },
+        {
+          "version": "20261024062510",
+          "name": "arcane_race_battle_poses"
+        },
+        {
+          "version": "20261024062512",
+          "name": "hermes_race_pose_job_support"
+        },
+        {
+          "version": "20261024163509",
+          "name": "arcane_honors_foundation"
+        },
+        {
+          "version": "20261024163525",
+          "name": "arcane_honors_gm_access"
+        },
+        {
+          "version": "20261024202243",
+          "name": "hermes_system_asset_registration"
+        },
+        {
+          "version": "20261024202246",
+          "name": "arcane_trophy_room_opaque_scene"
+        },
+        {
+          "version": "20261024202603",
+          "name": "hermes_system_asset_trophy_room_key"
+        },
+        {
+          "version": "20261024214951",
+          "name": "arcane_honors_adventure_catalog"
+        },
+        {
+          "version": "20261025031624",
+          "name": "extend_rule_magic_symbols_editor_fields_258"
+        },
+        {
+          "version": "20261025062527",
+          "name": "spell_target_types"
+        },
+        {
+          "version": "20261025130811",
+          "name": "hermes_system_asset_registration"
+        },
+        {
+          "version": "20261025135349",
+          "name": "honor_relief_variants"
+        },
+        {
+          "version": "20261025135439",
+          "name": "arcane_laurel_frame_family"
+        },
+        {
+          "version": "20261025152057",
+          "name": "honor_global_gm_access"
+        },
+        {
+          "version": "20261026140243",
+          "name": "hermes_alea_isolated_pilot"
+        },
+        {
+          "version": "20261026140259",
+          "name": "hermes_alea_cleanup_reservations"
+        },
+        {
+          "version": "20261026162718",
+          "name": "hermes_alea_target_adapter_boundary"
+        },
+        {
+          "version": "20261026180120",
+          "name": "hermes_alea_direct_storage_finalize"
+        },
+        {
+          "version": "20261027042234",
+          "name": "hermes_core_system_image_cas"
+        },
+        {
+          "version": "20261027053145",
+          "name": "hermes_core_system_image_create"
+        },
+        {
+          "version": "20261027202529",
+          "name": "hermes_alea_cleanup_report_service_role_read"
+        },
+        {
+          "version": "20261028061927",
+          "name": "hermes_core_honor_image_grants"
+        },
+        {
+          "version": "20261028162728",
+          "name": "allow_opaque_honor_relief_assets"
+        },
+        {
+          "version": "20261028191604",
+          "name": "badge_frame_library"
+        }
+      ]
+    },
+    "development": {
+      "project_id": "wkiuyklzzroavclnsxna",
+      "name": "alea-crusaders-development",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "migration_count": 2,
+      "migrations": [
+        {
+          "version": "20261030091654",
+          "name": "development_schema_baseline"
+        },
+        {
+          "version": "20261030091912",
+          "name": "restore_auth_user_profile_trigger"
+        }
+      ]
+    },
+    "reconciliation": "BLOCKED_UNKNOWN",
+    "finding": "LIVE has a 171-entry migration history while DEV has a 2-entry history consisting of a schema baseline and auth trigger restoration. These are not directly comparable as an ordinary pending-migration list; schema/data equivalence is unverified. No database was changed."
+  },
+  "known_open_work": {
+    "issue_379": "Open; process baseline and DEV/LIVE release controls",
+    "prior_release_guard_pr": 380,
+    "prior_guard_fix_pr": 381
+  },
+  "approvals": {
+    "zeus_product_acceptances": [],
+    "note": "No explicit, version-bound Zeus product acceptance was found in the captured issue #379 record or the PR inventory. PR reviews/merges are not treated as product acceptance."
+  },
+  "completeness": {
+    "github_pull_inventory": "Complete through REST pages returned at capture; all returned records preserved in the linked inventory.",
+    "commit_history": "OLYMPIA deployment workflow uses fetch-depth 100. Full ancestry comparison beyond the available history window is not claimed.",
+    "live_deployment": "UNKNOWN until a deployed manifest and HTTP smoke check match actual current branch SHAs.",
+    "old_unclassified_changes": "Preserved in the PR inventory and existing release reconciliation view; no old change is marked ready by this baseline."
+  },
+  "git_divergence": {
+    "compare_base": "main",
+    "compare_head": "development",
+    "status": "diverged",
+    "ahead_by_reported": 50,
+    "behind_by_reported": 30,
+    "commit_records_returned": 50,
+    "history_window_limit": "Existing Pages reconciliation checks out only 100 commits. This API response is one returned page; full commit enumeration is not claimed."
+  }
+}

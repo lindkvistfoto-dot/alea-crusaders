@@ -1,0 +1,24 @@
+name: OLYMPIA – Behöver rättas
+description: Skicka Zeus återkoppling på vanlig svenska till Hefaiastos.
+title: "[OLYMPIA FIX]"
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Ärende-ID
+      placeholder: PILOT-001
+    validations:
+      required: true
+  - type: input
+    id: tested_sha
+    attributes:
+      label: Testad DEV-commit (full SHA)
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Vad ska rättas?
+      description: Beskriv vad du såg och vad du förväntar dig, med egna ord.
+    validations:
+      required: true
