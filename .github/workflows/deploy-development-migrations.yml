@@ -1,0 +1,70 @@
+name: Deploy development database migrations
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - supabase/migrations/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: alea-development-database-migrations
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql-client
+
+      - name: Verify development target, register baseline, and deploy
+        shell: bash
+        env:
+          DEVELOPMENT_DATABASE_URL: ${{ secrets.ALEA_DEVELOPMENT_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          [[ -n "$DEVELOPMENT_DATABASE_URL" ]] || { echo "::error::Missing ALEA_DEVELOPMENT_DATABASE_URL."; exit 1; }
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import unquote, urlparse
+          u = urlparse(os.environ["DEVELOPMENT_DATABASE_URL"])
+          username = unquote(u.username or "")
+          direct = u.hostname == "db.wkiuyklzzroavclnsxna.supabase.co"
+          pooler = bool(u.hostname and u.hostname.endswith(".pooler.supabase.com") and username == "postgres.wkiuyklzzroavclnsxna")
+          if u.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+              print("::error::Refusing to run migrations: target is not the development database.")
+              sys.exit(1)
+          PY
+          baseline="$(find supabase/migrations -maxdepth 1 -type f -name '*_development_schema_baseline.sql' -print -quit)"
+          test -n "$baseline"
+          version="$(basename "$baseline" | cut -d_ -f1)"
+          history_table="$(psql "$DEVELOPMENT_DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT to_regclass('supabase_migrations.schema_migrations')")"
+          applied=false
+          if [[ "$history_table" == "supabase_migrations.schema_migrations" ]]; then
+            applied="$(psql "$DEVELOPMENT_DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '$version')")"
+          fi
+          if [[ "$applied" != "t" ]]; then
+            supabase migration repair "$version" --status applied --db-url "$DEVELOPMENT_DATABASE_URL"
+          fi
+          plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"
+          printf '%s\n' "$plan"
+          grep -q 'restore_auth_user_profile_trigger' <<< "$plan" || { echo "::error::Dry run did not show the expected auth trigger migration; no schema migration was pushed."; exit 1; }
+          if grep -q 'development_schema_baseline' <<< "$plan"; then
+            echo "::error::Baseline still appears pending after registration; no schema migration was pushed."
+            exit 1
+          fi
+          supabase db push --db-url "$DEVELOPMENT_DATABASE_URL"
