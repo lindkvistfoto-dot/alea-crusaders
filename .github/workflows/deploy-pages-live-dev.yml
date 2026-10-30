@@ -28,7 +28,7 @@ jobs:
         with:
           ref: main
           path: live
-          fetch-depth: 0
+          fetch-depth: 100
           persist-credentials: false
 
       - name: Check out development app
@@ -36,7 +36,7 @@ jobs:
         with:
           ref: development
           path: development
-          fetch-depth: 0
+          fetch-depth: 100
           persist-credentials: false
 
       - name: Assemble live root and development subpath
@@ -49,7 +49,7 @@ jobs:
           test -s _site/dev/index.html
 
       - name: Fetch both branch histories
-        run: git -C live fetch --no-tags origin +refs/heads/development:refs/remotes/origin/development
+        run: git -C live fetch --depth=100 --no-tags origin +refs/heads/development:refs/remotes/origin/development
 
       - name: Add source manifests and release reconciliation
         id: manifest
