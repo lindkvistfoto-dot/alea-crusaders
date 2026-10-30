@@ -164,8 +164,6 @@ try{
  set("guard-verified",!reportDataValid?"OKÄND":unresolved.length?"GRANSKNING KRÄVS":verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
  const badge=$("guard-updated");
  if(badge){badge.textContent=verified?"Verifierad "+time(deploys[0].updated_at):report.status==="ready"?"Status "+time(report.generated_at):"Okänd status";badge.className="pill "+(verified?"":"warn")}
- const pendingPrs=report.pending_prs||[];
- const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):unresolved.length?"Det finns "+unresolved.length+" PR-diffar som är delvisa eller okända; granska dem manuellt.":!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
  set("guard-ready",String(published.length+pendingPrs.length));
  set("guard-unknown-count",String(unresolved.length));
