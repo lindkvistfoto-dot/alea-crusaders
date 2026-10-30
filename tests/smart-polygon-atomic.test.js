@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const app=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
-const sql=readFileSync(new URL('../supabase/migrations/20261017130000_smart_polygon_atomic_shapes.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261017130000_smart_polygon_atomic_shapes.sql',import.meta.url),'utf8');
 describe('atomic shared-vertex persistence',()=>{
  it('saves all affected polygons through one RPC instead of sequential PATCH calls',()=>{
   const fragment=app.slice(app.indexOf('async function mapAreaNodeEnd()'),app.indexOf('async function showMapAreaHoles()'));

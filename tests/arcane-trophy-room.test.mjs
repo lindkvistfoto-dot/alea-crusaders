@@ -15,7 +15,7 @@ describe('ARCANE Trophy Room V2.2',()=>{
   expect(manifest.publication_status).toBe('pending-reviewed-main-action');
  });
  it('makes the opaque exception exact-key only',()=>{
-  const sql=read('supabase/migrations/20261024200000_arcane_trophy_room_opaque_scene.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261024200000_arcane_trophy_room_opaque_scene.sql');
   const prep=read('scripts/hermes2_prepare.py');
   expect(sql).toContain("asset_key = 'arcane-trophy-room-v2.2'");expect(prep).toContain('opaque_scene');
  });

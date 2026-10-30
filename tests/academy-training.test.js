@@ -7,7 +7,7 @@ const ui=read('features/academy/academy.js');
 const page=read('index.html');
 const admin=read('legacy/app.js');
 const css=read('features/academy/academy.css');
-const db=read('supabase/migrations/20261011173000_academy_skill_category.sql');
+const db=read('supabase/legacy-migrations/pre-baseline/20261011173000_academy_skill_category.sql');
 function model(){const x={window:{}};runInNewContext(source,x);return x.window.aleaAcademyRules}
 const skill={id:'sword',name:'Enhandssvärd',type:'STR',base_attribute:'SMI',cost:2,expert_category:'A'};
 function hero(fv=10,erf=3,bonusExp=0){

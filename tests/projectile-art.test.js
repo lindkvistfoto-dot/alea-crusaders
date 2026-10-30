@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const artSource=read('features/equipment/art.js');
 const app=read('legacy/app.js');
 const css=read('features/equipment/art.css');
-const migration=read('supabase/migrations/20261010212500_projectile_type_art.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261010212500_projectile_type_art.sql');
 const key='arrow';
 const uuid='f53b9568-81ec-4623-ac6d-dd452177a769';
 const imagePath='projectile/'+key+'/'+uuid+'.webp';

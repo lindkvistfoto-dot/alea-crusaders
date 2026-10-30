@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const app=read('legacy/app.js');
 const css=read('src/styles/app.css');
-const sql=read('supabase/migrations/20261011130000_character_water_provisions.sql');
+const sql=read('supabase/legacy-migrations/pre-baseline/20261011130000_character_water_provisions.sql');
 const begin=app.indexOf('/* v0.35.97 — Separate food and drinking-water stores');
 const end=app.indexOf('/* Inventory units remain in the character',begin);
 if(begin<0||end<begin)throw Error('Food/water panel not found');

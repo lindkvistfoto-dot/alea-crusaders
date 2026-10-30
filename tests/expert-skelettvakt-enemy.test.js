@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-const sql=readFileSync(new URL('../supabase/migrations/20261008_seed_skelettvakt_enemy.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_seed_skelettvakt_enemy.sql',import.meta.url),'utf8');
 describe('Skelettvakt – fiendemall Expert',()=>{
  it('tillhör Skelettbyn och skapar en återanvändbar fiende',()=>{
   expect(sql).toContain("name='Skelettbyns Hemlighet'");

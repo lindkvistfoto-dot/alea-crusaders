@@ -28,7 +28,7 @@ async function fixture(kind) {
  insert into honor_definitions(id) values ('6a67121d-67ee-4943-82a3-83a15334d815');
  insert into honor_relief_variants(id,honor_id,material) values ('c45228b1-c692-4a4c-9f15-4ed97da9b57c','6a67121d-67ee-4943-82a3-83a15334d815','enamel');
  `);
- await pg.exec(readFileSync(new URL('../supabase/migrations/20261028061810_hermes_core_honor_image_grants.sql',import.meta.url),'utf8'));
+ await pg.exec(readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261028061810_hermes_core_honor_image_grants.sql',import.meta.url),'utf8'));
  await pg.exec('set role service_role');
  const db={from(table) {
   let op='select',values,columns='*';const filters=[];

@@ -4,7 +4,7 @@ const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
 describe("Animism ÖKA/MINSKA Expert restore",()=>{
  test("the registry seed has the verified Expert rules",()=>{
-  const sql=read("supabase/migrations/20261015213500_restore_oka_minska_animism.sql");
+  const sql=read("supabase/legacy-migrations/pre-baseline/20261015213500_restore_oka_minska_animism.sql");
   expect(sql).toContain("'minska','MINSKA','animism',6,'Beröring','S/4 minuter'");
   expect(sql).toContain("'oka','ÖKA','animism',6,'Beröring','S/4 minuter'");
   expect(sql).toContain("sänkas under 1");

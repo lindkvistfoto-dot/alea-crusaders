@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const migration=read('supabase/migrations/20261008235700_elementar_four_master_spells.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261008235700_elementar_four_master_spells.sql');
 const runtime=read('features/combat/runtime.js');
 const original=read('tests/character-spell-master.test.js');
 describe('four independent elemental summoning spells',()=>{

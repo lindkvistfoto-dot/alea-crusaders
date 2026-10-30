@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const app=read('legacy/app.js');
 const runtime=read('features/combat/runtime.js');
-const migration=read('supabase/migrations/20261010221500_weapon_projectile_links.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261010221500_weapon_projectile_links.sql');
 const ammo=[
  {projectile_key:'arrow',name:'Pilar',image_path:'projectile/arrow/a.webp'},
  {projectile_key:'bolt',name:'Skäktor',image_path:'projectile/bolt/b.webp'},

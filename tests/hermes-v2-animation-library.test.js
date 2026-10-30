@@ -23,7 +23,7 @@ describe('HERMES V2 library',()=>{
   expect(s).toContain('combatPlaySpellAnimation(caster,victim,action)');
  });
  it('persists six types without changing existing event keys',()=>{
-  const sql=read('supabase/migrations/20261015152500_hermes_v2_animation_types.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261015152500_hermes_v2_animation_types.sql');
   for(const t of ['projectile','effect','attack','area','system','other'])expect(sql).toContain("'"+t+"'");
  });
 });
