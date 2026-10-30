@@ -139,6 +139,9 @@ try{
  ]);
  const runs=actionData.workflow_runs||[];
  const deploys=runs.filter(r=>(r.name||r.display_title||"").includes("Deploy Alea live and development to GitHub Pages")).slice(0,6);
+ const published=report.published_prs||[];
+ const pendingPrs=report.pending_prs||[];
+ const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  const manifestsOk=live.environment==="main"&&dev.environment==="development"&&live.source_sha===report.live?.sha&&dev.source_sha===report.development?.sha;
  const branchesCurrent=live.source_sha===mainHead.sha&&dev.source_sha===devHead.sha;
  const reportDataValid=report.status==="ready"&&typeof report.live?.sha==="string"&&typeof report.development?.sha==="string"&&["published_prs","pending_prs","partial_prs","unknown_prs","live_only_commits","development_only_commits"].every(key=>Array.isArray(report[key]))&&Array.isArray(report.database_changes?.waiting_for_live)&&Array.isArray(report.database_changes?.live_only);
@@ -164,7 +167,6 @@ try{
  const pendingPrs=report.pending_prs||[];
  const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):unresolved.length?"Det finns "+unresolved.length+" PR-diffar som är delvisa eller okända; granska dem manuellt.":!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
- const published=report.published_prs||[];
  set("guard-ready",String(published.length+pendingPrs.length));
  set("guard-unknown-count",String(unresolved.length));
  set("guard-published-count",String(published.length));
