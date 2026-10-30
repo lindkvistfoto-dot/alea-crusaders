@@ -84,7 +84,7 @@ describe("OLYMPIA release reconciliation", () => {
     const end = html.indexOf("\n}\n\nrefreshReleaseGuard();", start);
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
-    const functionSource = html.slice(start, end + 2).replace(/^async function refreshReleaseGuard\(\)/, "async function");
+    const functionSource = html.slice(start, end + 2).replace(/^async function refreshReleaseGuard\(\)/, "async function ()");
     const elements = new Map();
     const get = id => {
       if (!elements.has(id)) elements.set(id, { textContent: "", innerHTML: "", className: "" });
