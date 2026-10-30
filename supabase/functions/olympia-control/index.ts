@@ -43,7 +43,7 @@ async function githubToken() {
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-    body: JSON.stringify({ permissions: { issues: "write", contents: "read", pull_requests: "write" }, repository_ids: [1403008145] }),
+    body: JSON.stringify({ permissions: { issues: "write", contents: "write", pull_requests: "write" }, repository_ids: [1403008145] }),
   });
   if (!res.ok) throw new Error("GITHUB_APP_TOKEN_FAILED");
   const data = await res.json();
@@ -79,6 +79,32 @@ async function workItem(token: string, itemId: string) {
   const item = Array.isArray(queue.items) ? queue.items.find((x: any) => x.id === itemId) : null;
   if (!item) throw new Error("WORK_ITEM_NOT_FOUND");
   return item;
+}
+async function startCandidateRequest(token: string, issueNumber: number, item: any, data: any) {
+  const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+  const branch = "olympia/release-requests/decision-" + issueNumber;
+  await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/refs", {
+    method: "POST",
+    body: JSON.stringify({ ref: "refs/heads/" + branch, sha: ref.object.sha }),
+  });
+  const request = {
+    schema: "olympia-release-request/v1",
+    issueNumber,
+    itemId: item.id,
+    prNumber: item.pr_number,
+    testedDevSha: data.testedDevSha,
+    decision: data.decision,
+  };
+  const path = "olympia/release-requests/decision-" + issueNumber + ".json";
+  await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
+    method: "PUT",
+    body: JSON.stringify({
+      message: "olympia: start verified release candidate for " + item.id,
+      content: btoa(JSON.stringify(request)),
+      branch,
+    }),
+  });
+  return branch;
 }
 function issueBody(item: any, data: any, actor: string) {
   const decisionLabels: Record<string, string> = {
@@ -259,10 +285,27 @@ Deno.serve(async (req: Request) => {
       method: "POST",
       body: JSON.stringify({ title: title(item, data.decision), body: issueBody(item, data, user.email) }),
     });
+    let requestBranch: string | null = null;
+    let candidateStarted: boolean | null = null;
+    if (data.decision === "pandoras_ask" || data.decision === "release_package") {
+      try {
+        requestBranch = await startCandidateRequest(token, decisionIssue.number, item, data);
+        candidateStarted = true;
+      } catch (requestError) {
+        candidateStarted = false;
+        console.error("OLYMPIA decision saved but release candidate request did not start", decisionIssue.number);
+      }
+    }
     return json({
       ok: true,
-      message: "Beslutet sparades i GitHub. OLYMPIA är uppdaterat.",
+      message: candidateStarted === true
+        ? "Beslutet sparades. Den exakta releasekandidaten förbereds från LIVE."
+        : candidateStarted === false
+        ? "Beslutet sparades, men kandidatkontrollen kunde inte starta. OLYMPIA har registrerat ärendet."
+        : "Beslutet sparades i GitHub. OLYMPIA är uppdaterat.",
       issue: { number: decisionIssue.number, url: decisionIssue.html_url },
+      requestBranch,
+      candidateStarted,
       itemId: item.id,
       devSha: item.dev_sha,
       decision: data.decision,

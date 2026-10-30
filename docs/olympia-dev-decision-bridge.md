@@ -21,6 +21,6 @@ Configure these server-side secrets on the Supabase project `wkiuyklzzroavclnsxn
 - `OLYMPIA_GITHUB_INSTALLATION_ID`
 - `OLYMPIA_GITHUB_APP_PRIVATE_KEY`: PEM private key; never place this value in the repository, Pages output, or browser.
 
-The GitHub App must be installed on `lindkvistfoto-dot/alea-crusaders` and grant Issues read/write, Contents read, and Pull requests read/write. Pull request write is used only after Zeus separately approves an exact, tested candidate in OLYMPIA. Do not grant Actions, Deployments, Administration, or Contents write.
+The GitHub App must be installed on `lindkvistfoto-dot/alea-crusaders` and grant Issues read/write, Contents write, and Pull requests read/write. Contents write creates a single isolated OLYMPIA request branch for candidate preparation and merges a release PR only after authenticated Zeus approval. Pull request write is used only for that approval. Do not grant Actions, Deployments, or Administration.
 
 Deploy this folder to the DEV Supabase project with JWT verification enabled. The deployment workflow is triggered only by changes merged to `development` and targets the DEV project ref `wkiuyklzzroavclnsxna`. It requires the repository Actions secret `SUPABASE_ACCESS_TOKEN`.\n\nThe three `OLYMPIA_*` runtime values above must also be configured as Edge Function secrets in the DEV project before Zeus can submit decisions. The handler returns a clear 503 and performs no write while these are missing. Do not copy them into Pages, source files, or PR descriptions.
