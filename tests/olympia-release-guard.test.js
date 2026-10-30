@@ -112,8 +112,8 @@ describe("OLYMPIA release reconciliation", () => {
       if (url.endsWith("/commits/development")) return { sha: "dev-sha" };
       throw new Error("Unexpected URL " + url);
     };
-    const refresh = new Function("$", "fetchJSON", "esc", "time", "owner", "repo", "return (" + functionSource + ");")(
-      get, fetchJSON, String, () => "", "owner", "repo"
+    const refresh = new Function("$", "fetchJSON", "esc", "time", "owner", "repo", "api", "return (" + functionSource + ");")(
+      get, fetchJSON, String, () => "", "owner", "repo", "https://api.github.com/repos/owner/repo"
     );
     await refresh();
     expect(get("guard-summary").textContent).toContain("1 PR-diffar");
