@@ -141,7 +141,8 @@ try{
  const deploys=runs.filter(r=>(r.name||r.display_title||"").includes("Deploy Alea live and development to GitHub Pages")).slice(0,6);
  const manifestsOk=live.environment==="main"&&dev.environment==="development"&&live.source_sha===report.live?.sha&&dev.source_sha===report.development?.sha;
  const branchesCurrent=live.source_sha===mainHead.sha&&dev.source_sha===devHead.sha;
- const verified=report.status==="ready"&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
+ const reportDataValid=report.status==="ready"&&typeof report.live?.sha==="string"&&typeof report.development?.sha==="string"&&["published_prs","pending_prs","partial_prs","unknown_prs","live_only_commits","development_only_commits"].every(key=>Array.isArray(report[key]))&&Array.isArray(report.database_changes?.waiting_for_live)&&Array.isArray(report.database_changes?.live_only);
+ const verified=reportDataValid&&unresolved.length===0&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
  set("guard-live-sha",live.source_sha?.slice(0,7)||"okänd");
  set("guard-dev-sha",dev.source_sha?.slice(0,7)||"okänd");
  set("guard-rollback",live.source_sha?.slice(0,7)||"okänd");
@@ -157,7 +158,7 @@ try{
  ];
  db.innerHTML=dbRows.length?dbRows.map(x=>'<div class="incident"><span class="severity '+x.tone+'">'+x.label+'</span><div><strong>'+esc(x.name)+'</strong><small>'+x.note+'</small></div></div>').join(""):'<div class="empty">Inga Supabase-migrationsfiler avviker mellan grenarna.</div>';
 
- set("guard-verified",verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
+ set("guard-verified",!reportDataValid?"OKÄND":unresolved.length?"GRANSKNING KRÄVS":verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
  const badge=$("guard-updated");
  if(badge){badge.textContent=verified?"Verifierad "+time(deploys[0].updated_at):report.status==="ready"?"Status "+time(report.generated_at):"Okänd status";badge.className="pill "+(verified?"":"warn")}
  const pendingPrs=report.pending_prs||[];
