@@ -1,7 +1,7 @@
 /* Alea Crusaders v0.35.25 – GM soundboard + player audio synchronization. */
 import {createAudioRealtime} from './realtime.js?v=0.35.23';
-const AUDIO_URL='https://wbmosmkirsitkonejzpg.supabase.co';
-const AUDIO_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
+const AUDIO_URL='https://wkiuyklzzroavclnsxna.supabase.co';
+const AUDIO_KEY='sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et';
 const AMBIENCES=[
  ['ambience.rain','🌧 Regn'],['ambience.wind','🍃 Vind'],
  ['ambience.cave','🪨 Grotta'],['ambience.tavern','🍺 Värdshus'],
