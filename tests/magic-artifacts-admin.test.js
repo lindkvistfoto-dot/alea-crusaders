@@ -7,7 +7,7 @@ const source=read('features/equipment/magic-artifacts.js');
 const index=read('index.html');
 const legacy=read('legacy/app.js');
 const equip=read('features/equipment/catalog.js');
-const schema=read('supabase/migrations/20261011002000_magic_artifacts_registry.sql');
+const schema=read('supabase/legacy-migrations/pre-baseline/20261011002000_magic_artifacts_registry.sql');
 const css=read('features/equipment/magic-artifacts.css');
 
 function makeRegistry(admin=true){

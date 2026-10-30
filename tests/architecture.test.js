@@ -404,7 +404,7 @@ describe("application architecture smoke checks", () => {
     expect(runtime).toContain("function renderCombatMap");
   });
   test("additional race source data is versioned", () => {
-    const sql = read("supabase/migrations/20261005_additional_race_attribute_rules.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005_additional_race_attribute_rules.sql");
     expect(sql).toContain("('svartalf','STY','2T6+2',9)");
     expect(sql).toContain("('svartnisse','STO','1T2+1',3)");
     expect(sql).toContain("('skogsalv','SMI','3T6+3',14)");
@@ -501,7 +501,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("enemy and monster profile migration is versioned", () => {
-    const sql = read("supabase/migrations/20261005171018_enemy_monster_admin_profiles.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005171018_enemy_monster_admin_profiles.sql");
     expect(sql).toContain("actor_kind text not null default 'enemy'");
     expect(sql).toContain("attributes jsonb");
     expect(sql).toContain("skills jsonb");
@@ -542,7 +542,7 @@ describe("application architecture smoke checks", () => {
     const html = read("index.html");
     const legacy = read("legacy/app.js");
     const css = read("src/styles/app.css");
-    const sql = read("supabase/migrations/20261007232600_expert_armor_shield_master.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261007232600_expert_armor_shield_master.sql");
 
     expect(html).toContain("openAdminSection('armors')");
     expect(html).toContain("openAdminSection('shields')");
@@ -578,7 +578,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("master weapon icons are stored on rule_weapons and have local artwork", () => {
-    const sql = read("supabase/migrations/20261007224500_add_weapon_icon_key.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261007224500_add_weapon_icon_key.sql");
     const legacy = read("legacy/app.js");
     const notices = read("THIRD_PARTY_NOTICES.md");
     expect(sql).toContain("add column if not exists icon_key text");
@@ -593,7 +593,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("weapon master list seeds Expert melee weapon data", () => {
-    const sql = read("supabase/migrations/20261005184111_seed_rule_weapons_melee_master.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005184111_seed_rule_weapons_melee_master.sql");
     expect(sql).toContain("('melee','1H',1,'Dolk','1T4+1',0,0.5,9,'L',40");
     expect(sql).toContain("('melee','1-2H',1,'Kortspjut','1T6+1',2,2,11,'L',75");
     expect(sql).toContain("('melee','1-2H',4,'Morgonstjärna','2T8+2',1,3,11,'T',250");
@@ -623,9 +623,9 @@ describe("application architecture smoke checks", () => {
   test("weapon master links character FV and combat ERF to skills", () => {
     const legacy = read("legacy/app.js");
     const combat = read("features/combat/runtime.js");
-    const linkSql = read("supabase/migrations/20261007045327_link_weapon_master_to_skills.sql");
-    const migrateSql = read("supabase/migrations/20261007045409_migrate_character_weapon_fv_to_skills.sql");
-    const enforceSql = read("supabase/migrations/20261007050300_enforce_weapon_skill_link.sql");
+    const linkSql = read("supabase/legacy-migrations/pre-baseline/20261007045327_link_weapon_master_to_skills.sql");
+    const migrateSql = read("supabase/legacy-migrations/pre-baseline/20261007045409_migrate_character_weapon_fv_to_skills.sql");
+    const enforceSql = read("supabase/legacy-migrations/pre-baseline/20261007050300_enforce_weapon_skill_link.sql");
     expect(linkSql).toContain("add column if not exists skill_id text");
     expect(linkSql).toContain("when 'dagger'=any(tags) then 'dolkar'");
     expect(linkSql).toContain("when 'bow'=any(tags) then 'pilbagar'");
@@ -651,7 +651,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("weapon master includes projectile, thrown and campaign weapon data", () => {
-    const sql = read("supabase/migrations/20261005185112_complete_weapon_master_projectile_thrown.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005185112_complete_weapon_master_projectile_thrown.sql");
     expect(sql).toContain("('projectile','2H',2,'Kortbåge','1T6+1'");
     expect(sql).toContain("('projectile','2H',3,'Arbalest','3T6+3'");
     expect(sql).toContain("('thrown','1H',1,'Kastspjut','1T6+1'");
@@ -668,7 +668,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("legacy actor weapons are backfilled from master without replacing overrides", () => {
-    const sql = read("supabase/migrations/20261005185623_backfill_weapon_master_instances.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005185623_backfill_weapon_master_instances.sql");
     expect(sql).toContain("'weaponTypeId', r.id");
     expect(sql).toContain("coalesce(nullif(e.item->>'damage',''),r.damage)");
     expect(sql).toContain("when lower(e.item->>'name')='stav' then 'trästav'");
@@ -1301,7 +1301,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("Targans Gille catalogue is versioned without duplicating weapon masters", () => {
-    const sql = read("supabase/migrations/20261005213000_targans_gille_shop_catalog.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261005213000_targans_gille_shop_catalog.sql");
     expect(sql).toContain("create table if not exists public.rule_shop_items");
     expect(sql).toContain("Weapons are intentionally NOT duplicated here");
     expect(sql).toContain("insert into public.rule_shop_items");
@@ -1477,7 +1477,7 @@ describe("application architecture smoke checks", () => {
   });
 
   test("Värdshus catalogue includes lodging meals and services", () => {
-    const sql = read("supabase/migrations/20261006014500_inn_catalog.sql");
+    const sql = read("supabase/legacy-migrations/pre-baseline/20261006014500_inn_catalog.sql");
     expect(sql).toContain("create table if not exists public.rule_inn_items");
     expect(sql).toContain("'Svit'");
     expect(sql).toContain("'Enkelrum'");

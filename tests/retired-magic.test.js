@@ -41,12 +41,12 @@ describe('restored Expert Animism spells stay available',()=>{
   expect(app).toContain("if(isRetiredSpellName(name)){alert(");
  });
  test('historical retirement is superseded by a restoration migration',()=>{
-  const definitions=load('supabase/migrations/20261008070000_retire_oka_minska.sql');
-  const snapshots=load('supabase/migrations/20261008070100_purge_retired_spells_from_snapshots.sql');
+  const definitions=load('supabase/legacy-migrations/pre-baseline/20261008070000_retire_oka_minska.sql');
+  const snapshots=load('supabase/legacy-migrations/pre-baseline/20261008070100_purge_retired_spells_from_snapshots.sql');
   expect(definitions).toContain('DELETE FROM public.rule_spells');
   expect(definitions).toContain('DELETE FROM public.rule_effects');
   expect(snapshots).toContain('UPDATE public.characters');
   expect(snapshots).toContain('UPDATE public.combatants');
-  expect(load('supabase/migrations/20261015213500_restore_oka_minska_animism.sql')).toContain("('oka','ÖKA','animism',6");
+  expect(load('supabase/legacy-migrations/pre-baseline/20261015213500_restore_oka_minska_animism.sql')).toContain("('oka','ÖKA','animism',6");
  });
 });

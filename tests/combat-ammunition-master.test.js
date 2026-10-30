@@ -1,8 +1,8 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read=f=>readFileSync(new URL('../'+f,import.meta.url),'utf8');
-const registry=read('supabase/migrations/20261009120000_combat_ammunition_registry.sql');
-const recovery=read('supabase/migrations/20261009120100_combat_ammunition_recovery.sql');
+const registry=read('supabase/legacy-migrations/pre-baseline/20261009120000_combat_ammunition_registry.sql');
+const recovery=read('supabase/legacy-migrations/pre-baseline/20261009120100_combat_ammunition_recovery.sql');
 const runtime=read('features/combat/runtime.js');
 const app=read('legacy/app.js');
 const index=read('index.html');

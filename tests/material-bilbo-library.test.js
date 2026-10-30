@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const code=readFileSync(new URL('../features/material/library.js',import.meta.url),'utf8').replace(/^import .*?;\s*$/gm,'');
-const schema=readFileSync(new URL('../supabase/migrations/20261008_bilbo_archive_guard.sql',import.meta.url),'utf8');
+const schema=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_bilbo_archive_guard.sql',import.meta.url),'utf8');
 const campaign='123e4567-e89b-42d3-a456-426614174000';
 const material='123e4567-e89b-42d3-a456-426614174001';
 const row={id:material,campaign_id:campaign,title:'Skelettbyn',description:'En by i dimma',category:'location',

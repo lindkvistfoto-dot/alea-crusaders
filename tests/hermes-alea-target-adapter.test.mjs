@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {it,expect} from 'vitest';
-const sql=readFileSync(new URL('../supabase/migrations/20261026172000_hermes_alea_target_adapter_boundary.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261026172000_hermes_alea_target_adapter_boundary.sql',import.meta.url),'utf8');
 it('keeps target reads and writes behind explicit allowlisted adapters',()=>{
  expect(sql).toContain('private.hermes_alea_target_lock');
  expect(sql).toContain('private.hermes_alea_target_set');

@@ -8,7 +8,7 @@ const app=read('legacy/app.js');
 const shop=read('features/shop/store.js');
 const html=read('index.html');
 const style=read('features/equipment/catalog.css');
-const migration=read('supabase/migrations/20261010235000_equipment_master_carry_art.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261010235000_equipment_master_carry_art.sql');
 const id='f53b9568-81ec-4623-ac6d-dd452177a769';
 const master=[
  {id,item_key:'torch',name:'Fackla',category:'Äventyr',purchase_kind:'equipment',can_carry:true,image_path:'equipment/'+id+'/'+id+'.webp',bep:.25,price_amount:1,price_currency:'SM',quantity_per_purchase:1,active:true},

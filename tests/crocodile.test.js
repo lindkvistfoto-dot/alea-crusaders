@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const src=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
-const sql=readFileSync(new URL('../supabase/migrations/20261008103000_crocodile_periodic_damage.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008103000_crocodile_periodic_damage.sql',import.meta.url),'utf8');
 const ward={id:'ward',name:'Skyddsfält',active:true,modifiers:{type:'protection',damage_kind:'all'}};
 const poisonWard={id:'poison_ward',name:'Giftskydd',active:true,modifiers:{type:'protection',damage_kind:'poison'}};
 const fireWard={id:'fire_ward',name:'Eldskydd',active:true,modifiers:{type:'protection',damage_kind:'fire'}};

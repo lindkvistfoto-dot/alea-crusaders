@@ -2,7 +2,7 @@ import {it,expect} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 
-const migration=readFileSync(new URL('../supabase/migrations/20261025140000_honor_global_gm_access.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261025140000_honor_global_gm_access.sql',import.meta.url),'utf8');
 
 it('lets campaign GMs manage only the global Laurel/Sir Robin records and their reliefs',async()=>{
  const db=new PGlite();
