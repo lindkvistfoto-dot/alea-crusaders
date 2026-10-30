@@ -73,9 +73,9 @@ var items=(queue&&queue.items)||[],decisions=window.zeusDecisions||[];
 var readyItems=items.filter(function(i){return i.ready_for_human_acceptance});
 var lines=[];
 if(unknown)lines.push("Aktuell verifierad DEV/LIVE deploy-SHA saknas.");
-if(mismatch)lines.push("Supabase migrationer skiljer sig (LIVE "+db.live.migration_count+" · DEV "+db.development.migration_count");");
+if(mismatch)lines.push("Supabase migrationer skiljer sig (LIVE "+db.live.migration_count+" · DEV "+db.development.migration_count+")");
 if(!readyItems.length)lines.push("Inget ärende är tekniskt releaseklart.");
-b.innerHTML="<strong>"+(lines.length?"Release blockerad:":"Förhandskontroll krävs:")+"</strong> "+esc(lines.join(" "))+"<br><span class=\\"small\\">Teknisk status får inte ersätta Zeus provning. Okända databasskillnader blockerar release.</span>";
+b.innerHTML="<strong>"+(lines.length?"Release blockerad:":"Förhandskontroll krävs:")+"</strong> "+esc(lines.join(" "))+"<br><span class=\"small\">Teknisk status får inte ersätta Zeus provning. Okända databasskillnader blockerar release.</span>";
 }
 async function renderDecisions(){
 var slots={direct:[],package:[],defer:[],fix:[]};
@@ -88,7 +88,7 @@ var title=i.title.toLowerCase(),target=title.indexOf("pandoras")>=0?"direct":tit
 slots[target].push(i);
 });
 window.zeusDecisions=rows;
-Object.keys(slots).forEach(function(k){var el=get(k+"-list"),arr=slots[k];el.innerHTML=arr.length?arr.map(function(i){return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class=\\"small muted\\">Uppdaterad "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"}).join(""):"Inga beslut registrerade."});
+Object.keys(slots).forEach(function(k){var el=get(k+"-list"),arr=slots[k];el.innerHTML=arr.length?arr.map(function(i){return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class=\"small muted\">Uppdaterad "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"}).join(""):"Inga beslut registrerade."});
 }catch(e){["direct-list","package-list","defer-list","fix-list"].forEach(function(id){get(id).innerHTML='<span class="status blocked">Beslutsdata OKÄND</span>'});}
 }
 function renderHistory(){
