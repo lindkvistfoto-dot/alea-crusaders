@@ -137,7 +137,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: OLYMPIA-PILOT-001-LIVE-candidate
-          path: ${{ runner.temp }}/olympia-candidate
+          path: |
+            ${{ runner.temp }}/olympia-candidate/candidate.patch
+            ${{ runner.temp }}/olympia-candidate/source-files.txt
+            ${{ runner.temp }}/olympia-candidate/release-candidate.json
+            ${{ runner.temp }}/olympia-candidate/package
           retention-days: 30
           if-no-files-found: error
 
