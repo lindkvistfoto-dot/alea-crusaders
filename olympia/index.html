@@ -145,6 +145,7 @@ try{
  const manifestsOk=live.environment==="main"&&dev.environment==="development"&&live.source_sha===report.live?.sha&&dev.source_sha===report.development?.sha;
  const branchesCurrent=live.source_sha===mainHead.sha&&dev.source_sha===devHead.sha;
  const reportDataValid=report.status==="ready"&&typeof report.live?.sha==="string"&&typeof report.development?.sha==="string"&&["published_prs","pending_prs","partial_prs","unknown_prs","live_only_commits","development_only_commits"].every(key=>Array.isArray(report[key]))&&Array.isArray(report.database_changes?.waiting_for_live)&&Array.isArray(report.database_changes?.live_only);
+ if(!reportDataValid) throw new Error("Release status-rapporten saknar obligatoriska avstämningsdata");
  const verified=reportDataValid&&unresolved.length===0&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
  set("guard-live-sha",live.source_sha?.slice(0,7)||"okänd");
  set("guard-dev-sha",dev.source_sha?.slice(0,7)||"okänd");
