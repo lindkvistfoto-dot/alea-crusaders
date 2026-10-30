@@ -30,6 +30,7 @@ describe('Trophy room Astrid fit',()=>{
  it('centres the rendered figure from its responsive container dimensions',()=>{
   const room=read('features/trophy-room/room.js'),css=read('features/trophy-room/room.css');
   expect(room).toContain('hero.offsetWidth||width*.30');
+  expect(room).toContain("get('view')==='trophy-room'");
   expect(css).toContain('height:68%;width:40%;bottom:8%');
   expect(css).toContain('object-fit:contain');
   expect(room).toContain('options.find(o=>o.value&&/\\bastrid\\b/i.test(o.textContent||\'\'))');
