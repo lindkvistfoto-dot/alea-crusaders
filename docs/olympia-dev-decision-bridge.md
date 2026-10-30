@@ -23,4 +23,4 @@ Configure these server-side secrets on the Supabase project `wkiuyklzzroavclnsxn
 
 The GitHub App must be installed on `lindkvistfoto-dot/alea-crusaders` and grant only Issues read/write plus Contents read. Do not grant Actions, Deployments, Administration, or Contents write for this decision-only function.
 
-Deploy this folder to the DEV Supabase project with JWT verification enabled. The source of truth for deployment remains this repository and its development branch.
+Deploy this folder to the DEV Supabase project with JWT verification enabled. The deployment workflow is triggered only by changes merged to `development` and targets the DEV project ref `wkiuyklzzroavclnsxna`. It requires the repository Actions secret `SUPABASE_ACCESS_TOKEN`.\n\nThe three `OLYMPIA_*` runtime values above must also be configured as Edge Function secrets in the DEV project before Zeus can submit decisions. The handler returns a clear 503 and performs no write while these are missing. Do not copy them into Pages, source files, or PR descriptions.
