@@ -7,12 +7,26 @@
 <section class="panel"><div class="row"><h2>GitHub Actions – senaste körningar</h2><button id="refresh" type="button">Uppdatera</button></div><p id="live-state" class="muted" role="status">Hämtar körningar…</p><div id="runs"></div><p class="muted">Körresultat läses från GitHub. Endast tydligt namngivna och godkända DEV-arbetsflöden kan höja en grov milstolpsbedömning. Vanlig CI och orelaterade fel påverkar inte procenten.</p></section><section class="panel"><h2>Senaste framsteg</h2><p id="recent-progress">Läser…</p></section><section class="panel"><h2>Aktuellt arbete</h2><p class="note"><span id="current-work">Läser…</span></p><p><strong>Nästa steg:</strong> <span id="next-work">Läser…</span></p><p class="status">GitHub Actions läses automatiskt vid sidöppning och vid manuell uppdatering.</p><p><a href="https://github.com/lindkvistfoto-dot/alea-crusaders/actions" target="_blank" rel="noopener">Öppna GitHub Actions</a></p></section>
 <footer>OLYMPIA MINI v0.4 · Inga Supabase-nycklar · Ingen skrivåtkomst · Ingen påverkan på migreringen</footer>
 <script>
-async function progress(){
-try{
-const r=await fetch("./progress.json?x="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
-const p=await r.json();if(!Array.isArray(p.areas)||!p.areas.length)throw Error("Tom status");
-window.olympiaBaseline=p;renderProgress(p,window.olympiaRuns||[]);return;
-}catch(e){document.getElementById("progress-source").textContent="Statusfilen kunde inte laddas: "+e.message;document.getElementById("total-progress").textContent="—";}
+let baseline=null,latestRuns=[];
+function renderProgress(p,runs){
+const signals=[
+{index:2,pattern:/dev.*(migrat|database)|(migrat|database).*dev/i,min:80},
+{index:3,pattern:/dev.*(storage|bucket)|(storage|bucket).*dev/i,min:60},
+{index:4,pattern:/dev.*(pages|deploy|publish)|(pages|deploy|publish).*dev/i,min:60},
+{index:5,pattern:/dev.*(smoke|integration|e2e)|(smoke|integration|e2e).*dev/i,min:40}
+];
+const areas=p.areas.map(a=>({name:a.name,pct:Math.round(100*a.done/a.total),note:a.details,auto:false}));const matched=[];
+for(const sig of signals){const run=runs.find(x=>x.conclusion==="success"&&x.status==="completed"&&sig.pattern.test(x.name||"")&&x.created_at>="2026-10-29");if(run&&areas[sig.index].pct<sig.min){areas[sig.index].pct=sig.min;areas[sig.index].auto=true;matched.push(run.name);}}
+const total=Math.round(areas.reduce((n,a)=>n+a.pct,0)/areas.length);
+document.getElementById("total-progress").textContent=total+"%";document.getElementById("total-fill").style.width=total+"%";
+document.getElementById("progress-source").textContent="Grundbedömning "+p.updated_at+" · "+(matched.length?"nya DEV-signaler hittade":"inga nya DEV-milstolpar verifierade")+". Ungefärliga värden.";
+const root=document.getElementById("areas");root.replaceChildren();
+for(const a of areas){const div=document.createElement("div");div.className="item";const top=document.createElement("div");top.className="row";const b=document.createElement("strong");b.textContent=a.name;const v=document.createElement("span");v.textContent=a.pct+"%"+(a.auto?" ↗":"");top.append(b,v);const bar=document.createElement("div");bar.className="bar";const fill=document.createElement("div");fill.className="fill";fill.style.width=a.pct+"%";bar.append(fill);const sm=document.createElement("small");sm.textContent=a.note+(a.auto?" · GitHub-signal":"");div.append(top,bar,sm);root.append(div);}
+const relevant=runs.filter(x=>/dev|migrat|storage|deploy/i.test(x.name||"")).slice(0,4);
+document.getElementById("recent-progress").textContent=matched.length?matched.join(" · "):relevant.length?relevant.map(x=>x.name+": "+(x.conclusion||x.status)).join(" · "):"Ingen ny DEV-aktivitet identifierad";
+document.getElementById("current-work").textContent=p.current||"Ej rapporterat";document.getElementById("next-work").textContent=p.next||"Ej rapporterat";
+}
+async function progress(){try{const r=await fetch("./progress.json?x="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);const p=await r.json();if(!Array.isArray(p.areas)||!p.areas.length)throw Error("Tom status");baseline=p;renderProgress(p,latestRuns);}catch(e){document.getElementById("progress-source").textContent="Statusfilen kunde inte laddas: "+e.message;document.getElementById("total-progress").textContent="—";}}
 progress();
 </script><script>
 const api="https://api.github.com/repos/lindkvistfoto-dot/alea-crusaders/actions/runs?per_page=30";
@@ -23,7 +37,7 @@ statusEl.textContent="Hämtar körningar…";runsEl.replaceChildren();
 try{
 const response=await fetch(api,{headers:{"Accept":"application/vnd.github+json"},cache:"no-store"});
 if(!response.ok)throw Error("GitHub API svarade "+response.status);
-const data=await response.json(),allRuns=(data.workflow_runs||[]),runs=allRuns.slice(0,12);window.olympiaRuns=allRuns;if(window.olympiaBaseline)renderProgress(window.olympiaBaseline,allRuns);
+const data=await response.json(),allRuns=(data.workflow_runs||[]),runs=allRuns.slice(0,12);latestRuns=allRuns;if(baseline)renderProgress(baseline,allRuns);
 statusEl.textContent="Senast kontrollerad: "+new Date().toLocaleString("sv-SE")+". Visar "+runs.length+" senaste körningar.";
 if(!runs.length){runsEl.textContent="Inga körningar hittades.";return;}
 for(const run of runs){
