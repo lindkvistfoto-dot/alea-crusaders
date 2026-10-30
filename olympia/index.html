@@ -59,6 +59,33 @@
 <section class="panel" id="settings"><div class="panel-head"><h2 class="panel-title"><span class="ico">⚙</span> INSTÄLLNINGAR</h2></div><div class="missing">Den här första versionen är skrivskyddad. Inga tokens, service-role-nycklar eller databasrättigheter finns i sidan.</div></section>
 </div>
 <footer class="footer"><span>OLYMPIA DEV · Förhandsversion · Skrivskyddad</span><span class="data-source">Datakällor: GitHub REST API · Supabase-mätvärden visas först när säker backend finns</span></footer>
+<section class="panel" id="release-guard" style="margin-top:10px">
+<div class="panel-head"><h2 class="panel-title"><span class="ico">✧</span>RELEASE GUARD · DEV → LIVE</h2><span class="pill unknown" id="guard-updated">Läser avstämning…</span></div>
+<p class="metric-note" id="guard-summary">Källversioner, PR-status och driftsverifiering hämtas automatiskt.</p>
+<div class="stats-three" style="margin:10px 0">
+<div class="statbox"><strong id="guard-live-sha">—</strong><span>Faktiskt publicerad LIVE-SHA</span></div>
+<div class="statbox"><strong id="guard-dev-sha">—</strong><span>Faktiskt publicerad DEV-SHA</span></div>
+<div class="statbox"><strong id="guard-verified">—</strong><span>Verifiering</span></div>
+</div>
+<details style="margin-top:10px"><summary style="cursor:pointer;color:#e4c37e">Release preflight: CI, databasändringar och återställning</summary>
+<div class="stats-three" style="margin-top:9px"><div class="statbox"><strong id="guard-ci">—</strong><span>Befintlig CI för DEV-SHA</span></div><div class="statbox"><strong id="guard-db-count">—</strong><span>Databasmigreringar som väntar</span></div><div class="statbox"><strong id="guard-rollback">—</strong><span>Återställningsreferens LIVE</span></div></div>
+<div id="guard-db" class="incident-list" style="margin-top:8px"><div class="empty">Kontrollerar migrationsfiler…</div></div>
+<p class="metric-note">Före release: granska alla väntande ändringar och CI, kontrollera DEV/LIVE-konfiguration och använd föregående verifierade LIVE-SHA som återställningsreferens. Zeus godkänner genom att godkänna och merga release-PR till main. OLYMPIA startar eller mergar ingen LIVE-release.</p>
+</details>
+<div class="stats-three" style="grid-template-columns:repeat(4,minmax(0,1fr));margin:8px 0">
+<div class="statbox"><strong id="guard-ready">—</strong><span>Färdigt i DEV</span></div>
+<div class="statbox"><strong id="guard-published-count">—</strong><span>Patch bekräftad i LIVE</span></div>
+<div class="statbox"><strong id="guard-unverified-count">—</strong><span>Publicering ej verifierad</span></div>
+<div class="statbox"><strong id="guard-unknown-count">—</strong><span>Oklart / delvis</span></div>
+</div>
+<div><strong>Publicerat i LIVE · patchmatchning</strong><div id="guard-published" class="incident-list"><div class="empty">Kontrollerar PR-historik…</div></div></div>
+<div style="margin:8px 0"><strong>Delvis eller okänt · kräver granskning</strong><div id="guard-unknown" class="incident-list"><div class="empty">Kontrollerar patchtäckning…</div></div></div>
+<div class="lower" style="grid-template-columns:1fr 1fr">
+<div><strong>Väntar på LIVE</strong><div id="guard-pending" class="incident-list"><div class="empty">Läser PR- och patchavstämning…</div></div></div>
+<div><strong>LIVE-ändringar som saknas i DEV</strong><div id="guard-hotfixes" class="incident-list"><div class="empty">Kontrollerar grenarna…</div></div></div>
+</div>
+<details style="margin-top:12px"><summary style="cursor:pointer;color:#e4c37e">Senaste deployhistorik och verifieringsunderlag</summary><div id="guard-history" class="incident-list" style="margin-top:8px"><div class="empty">Hämtar Actions-historik…</div></div><p class="metric-note">Releasejournalen bygger på GitHub Actions, Git-commit SHA och patch-ID. En patchmatchning visar att motsvarande koddiff finns i LIVE; den ersätter inte funktionellt godkännande. Ingen release mergas från OLYMPIA.</p></details>
+</section>
 </main></div>
 <script>
 const owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/repos/"+owner+"/"+repo;
@@ -98,5 +125,64 @@ renderPR(document.querySelector(".tab.active")?.dataset.filter||"open")}
 async function fetchJSON(url){const r=await fetch(url,{headers:{"Accept":"application/vnd.github+json"},cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);return r.json()}
 async function refresh(){ $("last-refresh").textContent="Uppdaterar GitHub-data…";$("refresh").textContent="…";try{const [p,w,d,m,closed,cmp,release]=await Promise.all([fetchJSON(api+"/pulls?state=open&per_page=100"),fetchJSON(api+"/actions/runs?per_page=60"),fetchJSON(api+"/commits/development"),fetchJSON(api+"/commits/main"),fetchJSON(api+"/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100"),fetchJSON(api+"/compare/main...development?per_page=100"),fetchJSON(api+"/pulls?state=open&base=main&head=lindkvistfoto-dot:development&per_page=10")]);prs=p;runs=w.workflow_runs||[];closedDevPRs=closed;compareData=cmp;releasePRs=release;$("dev-commit").textContent="Senaste commit: "+esc(d.sha.slice(0,7))+" · "+ago(d.commit?.committer?.date);$("main-commit").textContent="Senaste commit: "+esc(m.sha.slice(0,7))+" · "+ago(m.commit?.committer?.date);renderRuns();renderRelease();$("last-refresh").textContent="Senast uppdaterad "+time(new Date().toISOString())+" · data direkt från GitHub";}catch(e){$("last-refresh").textContent="GitHub kunde inte läsas: "+e.message+" · prova uppdatera igen";if(!runs.length)$("pr-list").innerHTML='<div class="empty">GitHub-data är tillfälligt otillgänglig.</div>'}finally{$("refresh").textContent="↻";$("refresh").disabled=false}}
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");renderPR(t.dataset.filter)}));$("refresh").addEventListener("click",refresh);refresh();
+
+async function refreshReleaseGuard(){
+const set=(id,value)=>{const el=$(id);if(el)el.textContent=value};
+try{
+ const [report,live,dev,actionData,mainHead,devHead]=await Promise.all([
+  fetchJSON("./release-status.json?ts="+Date.now()),
+  fetchJSON("../../deployment-manifest.json?ts="+Date.now()),
+  fetchJSON("../deployment-manifest.json?ts="+Date.now()),
+  fetchJSON(api+"/actions/runs?per_page=60"),
+  fetchJSON(api+"/commits/main"),
+  fetchJSON(api+"/commits/development")
+ ]);
+ const runs=actionData.workflow_runs||[];
+ const deploys=runs.filter(r=>(r.name||r.display_title||"").includes("Deploy Alea live and development to GitHub Pages")).slice(0,6);
+ const manifestsOk=live.environment==="main"&&dev.environment==="development"&&live.source_sha===report.live?.sha&&dev.source_sha===report.development?.sha;
+ const branchesCurrent=live.source_sha===mainHead.sha&&dev.source_sha===devHead.sha;
+ const verified=report.status==="ready"&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
+ set("guard-live-sha",live.source_sha?.slice(0,7)||"okänd");
+ set("guard-dev-sha",dev.source_sha?.slice(0,7)||"okänd");
+ set("guard-rollback",live.source_sha?.slice(0,7)||"okänd");
+ const ci=runs.find(r=>(r.name||"")==="CI"&&r.head_sha===report.development?.sha);
+ set("guard-ci",ci?(ci.status==="completed"?(ci.conclusion||"okänt"):"KÖR"):"OKÄND");
+ const waitingMigrations=report.database_changes?.waiting_for_live||[];
+ set("guard-db-count",String(waitingMigrations.length));
+ const db=$("guard-db");
+ const liveMigrations=report.database_changes?.live_only||[];
+ const dbRows=[
+  ...waitingMigrations.map(name=>({name,label:"DEV",note:"Migration väntar på LIVE",tone:"sev-med"})),
+  ...liveMigrations.map(name=>({name,label:"LIVE",note:"Migration saknas i DEV",tone:"sev-high"}))
+ ];
+ db.innerHTML=dbRows.length?dbRows.map(x=>'<div class="incident"><span class="severity '+x.tone+'">'+x.label+'</span><div><strong>'+esc(x.name)+'</strong><small>'+x.note+'</small></div></div>').join(""):'<div class="empty">Inga Supabase-migrationsfiler avviker mellan grenarna.</div>';
+
+ set("guard-verified",verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
+ const badge=$("guard-updated");
+ if(badge){badge.textContent=verified?"Verifierad "+time(deploys[0].updated_at):report.status==="ready"?"Status "+time(report.generated_at):"Okänd status";badge.className="pill "+(verified?"":"warn")}
+ set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):unresolved.length?"Det finns "+unresolved.length+" PR-diffar som är delvisa eller okända; granska dem manuellt.":!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
+ const published=report.published_prs||[];
+ const pendingPrs=report.pending_prs||[];
+ const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
+ set("guard-ready",String(published.length+pendingPrs.length));
+ set("guard-unknown-count",String(unresolved.length));
+ set("guard-published-count",String(published.length));
+ set("guard-unverified-count",verified?"0":String(published.length));
+ const unresolvedList=$("guard-unknown");
+ unresolvedList.innerHTML=unresolved.length?unresolved.map(p=>'<article class="incident"><span class="severity sev-med">'+esc(p.reconciliation==="partial"?"DELVIS":"OKÄNT")+'</span><div><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><small>'+esc(p.reason||"Diffen behöver granskas")+'</small></div><a class="linkbtn" href="'+esc(p.url)+'" target="_blank" rel="noopener">PR ↗</a></article>').join(""):'<div class="empty">Inga delvisa eller okända PR-diffar.</div>';
+ const publishedList=$("guard-published");
+ publishedList.innerHTML=published.length?published.slice(0,8).map(p=>'<article class="incident"><span class="severity sev-low">LIVE</span><div><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><small>'+esc(p.reason||"Matchad via patch-ID")+' · '+esc((p.mergeSha||"").slice(0,7))+'</small></div><a class="linkbtn" href="'+esc(p.url)+'" target="_blank" rel="noopener">PR ↗</a></article>').join(""):'<div class="empty">Inga DEV-PR:ar identifierades som publicerade.</div>';
+ const pending=$("guard-pending"), hot=$("guard-hotfixes");
+ pending.innerHTML=report.status!=="ready"?'<div class="empty">Ingen säker slutsats. Kontrollera GitHub Actions-körningen.</div>':(report.pending_prs||[]).length?(report.pending_prs.map(p=>'<article class="incident"><span class="severity sev-med">DEV</span><div><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><small>Merge '+esc((p.mergeSha||"").slice(0,7))+' · '+esc(p.reason||"Väntar på LIVE")+'</small></div><a class="linkbtn" href="'+esc(p.url)+'" target="_blank" rel="noopener">PR ↗</a></article>').join("")):'<div class="empty">Inga PR-diffar väntar på LIVE.</div>';
+ hot.innerHTML=report.status!=="ready"?'<div class="empty">Grenavstämningen är inte tillgänglig.</div>':(report.live_only_commits||[]).length?(report.live_only_commits.map(c=>'<article class="incident"><span class="severity '+(c.reconciliation==="unknown"?"sev-med":"sev-high")+'">LIVE</span><div><strong>'+esc(c.message||c.sha.slice(0,7))+'</strong><small>'+esc(c.sha.slice(0,7))+' · '+esc(c.reconciliation)+'</small></div><a class="linkbtn" href="https://github.com/'+owner+'/'+repo+'/commit/'+esc(c.sha)+'" target="_blank" rel="noopener">Commit ↗</a></article>').join("")):'<div class="empty">Inga LIVE-ändringar saknas i DEV.</div>';
+ const hist=$("guard-history");
+ hist.innerHTML=deploys.length?deploys.map(r=>'<div class="incident"><span class="severity '+(r.conclusion==="success"?"sev-low":r.status==="completed"?"sev-high":"sev-med")+'">'+esc(r.conclusion||r.status||"OKÄNT")+'</span><div><strong>'+esc(r.display_title||r.name||"Pages deploy")+'</strong><small>'+esc(r.head_sha?.slice(0,7)||"SHA saknas")+' · '+time(r.updated_at)+'</small></div><a class="linkbtn" href="'+esc(r.html_url)+'" target="_blank" rel="noopener">Körning ↗</a></div>').join(""):'<div class="empty">Ingen Pages-deploy hittades i Actions-historiken.</div>';
+}catch(e){
+ set("guard-summary","Release Guard kunde inte läsa verifieringsunderlaget: "+e.message);
+ set("guard-verified","OKÄND");
+}
+}
+
+refreshReleaseGuard();
 </script>
 </body></html>
