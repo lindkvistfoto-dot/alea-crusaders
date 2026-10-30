@@ -101,6 +101,7 @@ describe("OLYMPIA release reconciliation", () => {
       partial_prs: [{ number: 404, reconciliation: "partial" }],
       unknown_prs: [],
       live_only_commits: [],
+      development_only_commits: [],
       database_changes: { waiting_for_live: [], live_only: [] }
     };
     const fetchJSON = async url => {
