@@ -1,0 +1,23 @@
+name: OLYMPIA – Till Karon
+description: Pausa ett ärende utan att det följer med i en release.
+title: "[OLYMPIA AVVAKTA: KARON]"
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Ärende-ID
+      placeholder: PILOT-001
+    validations:
+      required: true
+  - type: input
+    id: tested_sha
+    attributes:
+      label: Testad DEV-commit (full SHA), om ärendet har provats
+    validations:
+      required: false
+  - type: textarea
+    id: comment
+    attributes:
+      label: Varför ska det avvakta?
+    validations:
+      required: false

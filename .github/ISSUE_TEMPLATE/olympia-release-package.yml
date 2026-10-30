@@ -1,0 +1,30 @@
+name: OLYMPIA – Lägg i releasepaket
+description: Registrera Zeus acceptans och beslut om planerad release.
+title: "[OLYMPIA BESLUT: RELEASEPAKET]"
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Ärende-ID
+      placeholder: PILOT-001
+    validations:
+      required: true
+  - type: input
+    id: tested_sha
+    attributes:
+      label: Testad DEV-commit (full SHA)
+    validations:
+      required: true
+  - type: textarea
+    id: comment
+    attributes:
+      label: Zeus kommentar
+    validations:
+      required: false
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Mänsklig acceptans
+      options:
+        - label: Jag har provat angiven DEV-version och accepterar upplevelsen för ett planerat releasepaket.
+          required: true

@@ -1,0 +1,32 @@
+name: OLYMPIA – Öppna Pandoras ask
+description: Registrera Zeus mänskliga acceptans för förberedelse av direktrelease.
+title: "[OLYMPIA BESLUT: PANDORAS ASK]"
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Ärende-ID
+      placeholder: PILOT-001
+    validations:
+      required: true
+  - type: input
+    id: tested_sha
+    attributes:
+      label: Testad DEV-commit (full SHA)
+      description: Kopiera SHA från OLYMPIA-kortets Visa detaljer.
+    validations:
+      required: true
+  - type: textarea
+    id: comment
+    attributes:
+      label: Zeus kommentar
+      description: Kort svensk motivering eller observation.
+    validations:
+      required: false
+  - type: checkboxes
+    id: acceptance
+    attributes:
+      label: Mänsklig acceptans
+      options:
+        - label: Jag har provat angiven DEV-version och accepterar upplevelsen.
+          required: true
