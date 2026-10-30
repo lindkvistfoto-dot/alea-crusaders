@@ -131,7 +131,9 @@ try{
   fetchJSON("./release-status.json?ts="+Date.now()),
   fetchJSON("../../deployment-manifest.json?ts="+Date.now()),
   fetchJSON("../deployment-manifest.json?ts="+Date.now()),
-  fetchJSON(api+"/actions/runs?per_page=60")
+  fetchJSON(api+"/actions/runs?per_page=60"),
+  fetchJSON(api+"/commits/main"),
+  fetchJSON(api+"/commits/development")
  ]);
  const runs=actionData.workflow_runs||[];
  const deploys=runs.filter(r=>(r.name||r.display_title||"").includes("Deploy Alea live and development to GitHub Pages")).slice(0,6);
