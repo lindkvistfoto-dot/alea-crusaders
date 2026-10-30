@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
 const ALLOWED_ORIGIN = "https://lindkvistfoto-dot.github.io";
-const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix"]);
+const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix", "final_approval"]);
 const responseHeaders = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, apikey, content-type",
@@ -43,7 +43,7 @@ async function githubToken() {
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-    body: JSON.stringify({ permissions: { issues: "write", contents: "read" }, repository_ids: [1403008145] }),
+    body: JSON.stringify({ permissions: { issues: "write", contents: "read", pull_requests: "write" }, repository_ids: [1403008145] }),
   });
   if (!res.ok) throw new Error("GITHUB_APP_TOKEN_FAILED");
   const data = await res.json();
@@ -87,6 +87,7 @@ function issueBody(item: any, data: any, actor: string) {
     release_package: "RELEASEPAKET",
     karon: "TILL KARON",
     needs_fix: "BEHÖVER RÄTTAS",
+    final_approval: "SLUTGODKÄNNANDE LIVE",
   };
   const comment = String(data.comment || "").trim().slice(0, 2000);
   const acceptance = data.decision === "accept" || data.decision === "pandoras_ask" || data.decision === "release_package";
@@ -102,12 +103,48 @@ function issueBody(item: any, data: any, actor: string) {
     "- Registrerad: " + new Date().toISOString(),
     "- Mänsklig acceptans: " + (acceptance ? "Ja" : "Nej"),
     "- Releasegrupp: " + (data.releaseGroup || "Ingen"),
+    ...(data.decision === "final_approval" ? ["- Kandidatärende: #" + data.candidateIssue, "- Kandidat tree SHA: " + data.candidateTreeSha] : []),
     "",
     "### Zeus kommentar",
     comment || "Ingen kommentar angiven.",
     "",
     "Beslutet registrerades via OLYMPIA DEV Decision Bridge. GitHub är beständig beslutsjournal.",
   ].join("\n");
+}
+async function verifyCandidate(token: string, item: any, data: any) {
+  if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
+      typeof data.candidateTreeSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.candidateTreeSha)) {
+    throw new Error("CANDIDATE_INPUT_INVALID");
+  }
+  const appLogin = await appBotLogin();
+  const issue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + data.candidateIssue);
+  const decisionBody = String(issue.body || "");
+  if (issue.user?.login !== appLogin ||
+      !decisionBody.includes("- Ärende-ID: " + item.id) ||
+      !decisionBody.includes("- Testad DEV-commit (full SHA): " + data.testedDevSha) ||
+      !["- Beslut: PANDORAS ASK", "- Beslut: RELEASEPAKET"].some(value => decisionBody.includes(value))) {
+    throw new Error("CANDIDATE_DECISION_MISMATCH");
+  }
+  const comments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + data.candidateIssue + "/comments?per_page=100");
+  const report = (comments as any[]).find(comment => {
+    const body = String(comment.body || "");
+    return body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") &&
+      body.includes("- Verified DEV SHA: " + data.testedDevSha) &&
+      body.includes("- Candidate tree SHA: " + data.candidateTreeSha);
+  });
+  if (!report) throw new Error("CANDIDATE_NOT_READY");
+  const body = String(report.body || "");
+  const liveMatch = body.match(/- LIVE rollback baseline: ([0-9a-f]{40})/i);
+  const prMatch = body.match(/- Release PR: #(\d+)/);
+  if (!liveMatch || !prMatch) throw new Error("CANDIDATE_REPORT_INCOMPLETE");
+  const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
+  if (live.sha !== liveMatch[1]) throw new Error("LIVE_BASELINE_CHANGED");
+  const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1]);
+  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== "github-actions[bot]") throw new Error("RELEASE_PR_NOT_VALID");
+  if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
+  const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
+  if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
+  return { issue, pr, report, liveSha: live.sha };
 }
 function title(item: any, decision: string) {
   const label: Record<string, string> = {
@@ -116,6 +153,7 @@ function title(item: any, decision: string) {
     release_package: "RELEASEPAKET",
     karon: "AVVAKTA · TILL KARON",
     needs_fix: "BEHÖVER RÄTTAS",
+    final_approval: "LIVE APPROVAL",
   };
   return "[OLYMPIA " + label[decision] + "] " + item.id + " · " + item.title;
 }
@@ -155,6 +193,45 @@ Deno.serve(async (req: Request) => {
       return fail("DEV-versionen har ändrats eller är inte verifierad. Uppdatera OLYMPIA och prova igen.", 409);
     }
     if (item.pr_number !== 385 || item.id !== "PILOT-001") return fail("Pilotens PR-koppling kunde inte verifieras.", 409);
+
+    if (data.decision === "final_approval") {
+      let candidate;
+      try {
+        candidate = await verifyCandidate(token, item, data);
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "";
+        const messages: Record<string, string> = {
+          CANDIDATE_INPUT_INVALID: "Kandidatens ID eller SHA saknas.",
+          CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till detta Astrid-ärende.",
+          CANDIDATE_NOT_READY: "Releasekandidaten är inte verifierad. LIVE förblir oförändrat.",
+          CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
+          LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. Skapa en ny kandidat.",
+          RELEASE_PR_NOT_VALID: "Releaseförslaget är inte öppet och verifierat mot main.",
+          RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
+          CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
+        };
+        return fail(messages[code] || "Kandidaten kunde inte verifieras. LIVE förblir oförändrat.", 409);
+      }
+      const approvalIssue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
+        method: "POST",
+        body: JSON.stringify({ title: title(item, data.decision), body: issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) }),
+      });
+      const merged = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidate.pr.number + "/merge", {
+        method: "PUT",
+        body: JSON.stringify({ sha: candidate.pr.head.sha, merge_method: "squash" }),
+      });
+      if (!merged.merged) return fail("Slutgodkännandet sparades, men GitHub kunde inte merge:a releaseförslaget. LIVE ändrades inte.", 502);
+      return json({
+        ok: true,
+        message: "Slutgodkännandet sparades. Releaseförslaget är mergat till LIVE och Pages-deploy startar.",
+        issue: { number: approvalIssue.number, url: approvalIssue.html_url },
+        releasePr: { number: candidate.pr.number, url: candidate.pr.html_url },
+        mergeSha: merged.sha,
+        itemId: item.id,
+        devSha: item.dev_sha,
+        decision: data.decision,
+      });
+    }
 
     if (data.decision === "pandoras_ask" || data.decision === "release_package") {
       const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin()));
