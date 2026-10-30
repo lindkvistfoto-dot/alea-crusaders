@@ -221,6 +221,13 @@ Deno.serve(async (req: Request) => {
         body: JSON.stringify({ sha: candidate.pr.head.sha, merge_method: "squash" }),
       });
       if (!merged.merged) return fail("Slutgodkännandet sparades, men GitHub kunde inte merge:a releaseförslaget. LIVE ändrades inte.", 502);
+      const finalBody = issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) +
+        "\n\n## OLYMPIA LIVE release\n- Merge SHA: " + merged.sha +
+        "\n- Status: LIVE deploy startad; OLYMPIA verifierar publicerad version.";
+      await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + approvalIssue.number, {
+        method: "PATCH",
+        body: JSON.stringify({ body: finalBody }),
+      });
       return json({
         ok: true,
         message: "Slutgodkännandet sparades. Releaseförslaget är mergat till LIVE och Pages-deploy startar.",
