@@ -102,7 +102,7 @@ Object.keys(slots).forEach(function(k){
 var el=get(k+"-list"),arr=slots[k];
 el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact;
-return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class=\\"small muted\\">"+(stale?"Beslutet är inte giltigt för aktuell DEV-version. Ny provning krävs.":i.state==="open"?"Registrerat · inväntar teknisk kontroll":"Avslutat · bevarat i historik")+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"
+return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+"</a><br><span class='small muted'>"+(stale?"Beslutet är inte giltigt för aktuell DEV-version. Ny provning krävs.":i.state==="open"?"Registrerat · inväntar teknisk kontroll":"Avslutat · bevarat i historik")+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+"</span></p>"
 }).join(""):"Inga beslut registrerade."
 });
 }catch(e){["direct-list","package-list","defer-list","fix-list"].forEach(function(id){get(id).innerHTML='<span class="status blocked">Beslutsdata OKÄND</span>'});}
