@@ -3357,7 +3357,7 @@ async function getMapImageUrl(map){
  if(!validMapStoragePath(map.image_path))throw new Error('Kartbilden har en äldre eller ogiltig lagringssökväg: '+map.image_path);
  let cached=mapImageCache.get(map.image_path);
  if(cached?.url)return cached.url;
- let r=await mapStorageFetch('object/campaign-maps/'+encodeStoragePath(map.image_path),{method:'GET'});
+ let r=await mapStorageFetch('object/authenticated/campaign-maps/'+encodeStoragePath(map.image_path),{method:'GET'});
  if(!r.ok){
   let data=await r.json().catch(()=>null);
   throw new Error(data?.message||data?.error||('Kunde inte läsa kartbilden ('+r.status+').'));
