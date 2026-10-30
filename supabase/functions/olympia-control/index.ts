@@ -59,6 +59,19 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   if (!res.ok) throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
   return data;
 }
+async function appBotLogin() {
+  const appId = Deno.env.get("OLYMPIA_GITHUB_APP_ID");
+  const privateKey = Deno.env.get("OLYMPIA_GITHUB_APP_PRIVATE_KEY");
+  if (!appId || !privateKey) throw new Error("OLYMPIA_BACKEND_NOT_CONFIGURED");
+  const jwt = await appJwt(appId, privateKey);
+  const res = await fetch("https://api.github.com/app", {
+    headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28" },
+  });
+  if (!res.ok) throw new Error("GITHUB_APP_IDENTITY_FAILED");
+  const data = await res.json();
+  if (typeof data.slug !== "string") throw new Error("GITHUB_APP_IDENTITY_FAILED");
+  return data.slug + "[bot]";
+}
 async function workItem(token: string, itemId: string) {
   const data = await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/olympia/work-items.json?ref=development");
   if (typeof data.content !== "string") throw new Error("WORK_QUEUE_UNKNOWN");
@@ -144,7 +157,7 @@ Deno.serve(async (req: Request) => {
     if (item.pr_number !== 385 || item.id !== "PILOT-001") return fail("Pilotens PR-koppling kunde inte verifieras.", 409);
 
     if (data.decision === "pandoras_ask" || data.decision === "release_package") {
-      const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(OWNER));
+      const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin()));
       const accepted = (issues as any[]).some(i => {
         const body = String(i.body || "");
         return body.includes("- Beslut: ACCEPTANS") &&
