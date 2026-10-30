@@ -116,6 +116,7 @@ get("history-search").addEventListener("input",renderHistory);
 Promise.all([json("./baseline-001.json"),json("./work-items.json"),json("./history/pr-inventory-001.json")]).then(function(v){
 baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTrial();renderBlockers();renderHistory();
 }).catch(function(e){get("trial-list").innerHTML='<div class="empty">Arbetskön kunde inte verifieras. Status är OKÄND. '+esc(e.message)+'</div>';get("release-blockers").innerHTML="<strong>Release blockerad:</strong> OLYMPIA-underlaget kunde inte läsas.";});
+window.olympiaRefreshDecisions=renderDecisions;
 renderDecisions();
 })();
 </script>
@@ -130,7 +131,7 @@ async function syncAuth(){const {data}=await supabase.auth.getSession();const si
 document.getElementById("zeus-login").addEventListener("click",async()=>{const email=document.getElementById("zeus-email").value.trim(),password=document.getElementById("zeus-password").value;const {error}=await supabase.auth.signInWithPassword({email,password});if(error){say("Inloggningen misslyckades. Kontrollera e-post och lösenord.");return}say("Du är inloggad i ALEA DEV.",true);await syncAuth()});
 document.getElementById("zeus-logout").addEventListener("click",async()=>{await supabase.auth.signOut();say("Du har loggat ut.");await syncAuth()});
 document.addEventListener("click",async event=>{const button=event.target.closest("[data-decision]");if(!button)return;button.disabled=true;try{const {data}=await supabase.auth.getSession();if(!data.session){say("Logga in med ditt ALEA DEV-konto först.");return}const response=await fetch(endpoint,{method:"POST",headers:{"Authorization":"Bearer "+data.session.access_token,"apikey":key,"Content-Type":"application/json"},body:JSON.stringify({itemId:button.dataset.item,testedDevSha:button.dataset.sha,decision:button.dataset.decision})});const result=await response.json();if(!response.ok||!result.ok){say(result.message||"Beslutet kunde inte sparas.");return}say(result.message+" <a href='"+result.issue.url+"' target='_blank' rel='noopener'>Visa journalpost #"+result.issue.number+" ↗</a>",true);if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions()}catch(e){say("Beslutet kunde inte nå servern. Ingen skrivning bekräftades.")}finally{button.disabled=false}});
-window.olympiaRefreshDecisions=()=>{};
+
 supabase.auth.onAuthStateChange(()=>syncAuth());syncAuth();
 </script>
 </body>
