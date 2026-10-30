@@ -14,10 +14,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(baseline.approvals.zeus_product_acceptances).toEqual([]);
   });
 
-  it('starts a one-item queue without claiming the pilot is ready',()=>{
+  it('shows the verified Astrid pilot ready without claiming human approval',()=>{
     const queue=JSON.parse(read('olympia/work-items.json'));
     expect(queue.items.map(x=>x.id)).toEqual(['PILOT-001']);
-    expect(queue.items[0].ready_for_human_acceptance).toBe(false);
+    expect(queue.items[0].ready_for_human_acceptance).toBe(true);
+    expect(queue.items[0].pr_number).toBe(385);
+    expect(queue.items[0].dev_sha).toMatch(/^[a-f0-9]{40}$/);
     expect(queue.items[0].acceptance.decision).toBeNull();
   });
 
