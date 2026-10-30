@@ -104,6 +104,7 @@ export async function buildReport({ repo, liveRef = "main", developmentRef = "or
     pending_prs: result.pendingPrs,
     published_prs: result.publishedPrs,
     unknown_prs: result.unknownPrs,
+    partial_prs: result.partialPrs,
     live_only_commits: result.liveOnly,
     development_only_commits: result.devOnly
   };

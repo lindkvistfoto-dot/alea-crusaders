@@ -47,7 +47,7 @@
 <div class="chart-caption"><span>Actions · senaste körningar</span><span>Grön = godkänd · röd = fel</span></div><div class="mini-chart" aria-label="Visualisering av senaste workflow-resultat"><svg class="chart-svg" id="chart" viewBox="0 0 500 100" preserveAspectRatio="none" role="img" aria-label="Senaste workflow-resultat"></svg></div>
 </section>
 </div>
-<section class="panel" id="release-track" style="margin-top:10px"><div class="panel-head"><h2 class="panel-title"><span class="ico">✧</span> RELEASE RADAR · DEV → MAIN</h2><a class="linkbtn" href="https://github.com/lindkvistfoto-dot/alea-crusaders/compare/main...development?expand=1" target="_blank" rel="noopener">Jämför grenarna ↗</a></div><p id="release-summary" class="metric-note">Jämför main och development för att hitta DEV-ändringar som ännu inte nått MAIN…</p><div class="stats-three" style="margin:10px 0"><div class="statbox"><strong id="dev-ahead">—</strong><span>DEV-commits före MAIN</span></div><div class="statbox"><strong id="main-ahead">—</strong><span>MAIN-commits som saknas i DEV</span></div><div class="statbox"><strong id="pending-pr-count">—</strong><span>PR:ar mergade i DEV, ej i MAIN</span></div></div><div class="subtabs"><span class="tab active" style="cursor:default">Mergade i DEV · väntar på release</span><span class="tab" id="release-pr-state">Release-PR: kontrolleras…</span></div><div id="pending-dev-list" class="incident-list"><div class="empty">Läser grenjämförelse…</div></div><div id="map-example" class="missing" style="margin-top:10px"><strong>Kart-exemplet #375</strong><br>Kontrollerar om kod-PR:en är mergad i DEV och om den ingår i MAIN…</div><p class="metric-note" style="margin:10px 0 0">Kartfelet hade även en separat dataåtgärd i DEV. Den räknas inte som en kod-PR; live-data måste undersökas separat före eventuell release. OLYMPIA gör ingen merge eller databasändring.</p></section><div class="lower">
+<section class="panel" id="release-track" style="margin-top:10px"><div class="panel-head"><h2 class="panel-title"><span class="ico">✧</span> RELEASE STATUS</h2></div><p class="metric-note">Den tidigare Release Radar är avvecklad. Använd den auktoritativa Release Guard-avstämningen nedan för DEV, LIVE, väntande ändringar och avvikelser.</p></section><div class="lower">
 <section class="panel" id="incidents"><div class="panel-head"><h2 class="panel-title"><span class="ico red">⚠</span> FELRAPPORTER · 24 H</h2><a class="linkbtn" href="https://github.com/lindkvistfoto-dot/alea-crusaders/actions" target="_blank" rel="noopener">Visa loggar ↗</a></div><div class="incident-list" id="incident-list"><div class="empty">Läser felrapporter…</div></div></section>
 <section class="panel" id="users"><div class="panel-head"><h2 class="panel-title"><span class="ico">♙</span> ANVÄNDARE</h2></div><div class="missing"><strong>Data saknas.</strong><br>Användarantal, aktiva sessioner och aktivitet är inte tillgängliga utan en särskild, behörighetsstyrd mätkälla.</div></section>
 <section class="panel" id="storage"><div class="panel-head"><h2 class="panel-title"><span class="ico">▤</span> LAGRING & TRAFIK</h2></div><div class="stats-three"><div class="statbox"><strong>—</strong><span>Storage</span></div><div class="statbox"><strong>—</strong><span>API-trafik</span></div><div class="statbox"><strong>—</strong><span>Kostnader</span></div></div><div class="missing" style="margin-top:8px"><strong>Väntar på säker backendmätning.</strong> Inga uppskattade eller påhittade värden visas.</div></section>
@@ -123,7 +123,7 @@ const tl=$("timeline-list");tl.innerHTML=runs.slice(0,4).map(r=>'<div class="inc
 const points=runs.slice(0,24).reverse();if(points.length){const paths=points.map((r,i)=>{const x=8+i*(484/Math.max(1,points.length-1)),y=r.conclusion==="success"?27:r.conclusion==="failure"?77:r.status==="in_progress"?51:59;return (i?"L":"M")+x+" "+y}).join(" ");$("chart").innerHTML='<path d="'+paths+'" fill="none" stroke="#d8b66f" stroke-width="2.5"/>'+points.map((r,i)=>{const x=8+i*(484/Math.max(1,points.length-1)),y=r.conclusion==="success"?27:r.conclusion==="failure"?77:r.status==="in_progress"?51:59,color=r.conclusion==="success"?"#69c98e":r.conclusion==="failure"?"#ed6a61":"#e8b85b";return '<circle cx="'+x+'" cy="'+y+'" r="3.2" fill="'+color+'"/>'}).join("")}
 renderPR(document.querySelector(".tab.active")?.dataset.filter||"open")}
 async function fetchJSON(url){const r=await fetch(url,{headers:{"Accept":"application/vnd.github+json"},cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);return r.json()}
-async function refresh(){ $("last-refresh").textContent="Uppdaterar GitHub-data…";$("refresh").textContent="…";try{const [p,w,d,m,closed,cmp,release]=await Promise.all([fetchJSON(api+"/pulls?state=open&per_page=100"),fetchJSON(api+"/actions/runs?per_page=60"),fetchJSON(api+"/commits/development"),fetchJSON(api+"/commits/main"),fetchJSON(api+"/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100"),fetchJSON(api+"/compare/main...development?per_page=100"),fetchJSON(api+"/pulls?state=open&base=main&head=lindkvistfoto-dot:development&per_page=10")]);prs=p;runs=w.workflow_runs||[];closedDevPRs=closed;compareData=cmp;releasePRs=release;$("dev-commit").textContent="Senaste commit: "+esc(d.sha.slice(0,7))+" · "+ago(d.commit?.committer?.date);$("main-commit").textContent="Senaste commit: "+esc(m.sha.slice(0,7))+" · "+ago(m.commit?.committer?.date);renderRuns();renderRelease();$("last-refresh").textContent="Senast uppdaterad "+time(new Date().toISOString())+" · data direkt från GitHub";}catch(e){$("last-refresh").textContent="GitHub kunde inte läsas: "+e.message+" · prova uppdatera igen";if(!runs.length)$("pr-list").innerHTML='<div class="empty">GitHub-data är tillfälligt otillgänglig.</div>'}finally{$("refresh").textContent="↻";$("refresh").disabled=false}}
+async function refresh(){ $("last-refresh").textContent="Uppdaterar GitHub-data…";$("refresh").textContent="…";try{const [p,w,d,m,closed,cmp,release]=await Promise.all([fetchJSON(api+"/pulls?state=open&per_page=100"),fetchJSON(api+"/actions/runs?per_page=60"),fetchJSON(api+"/commits/development"),fetchJSON(api+"/commits/main"),fetchJSON(api+"/pulls?state=closed&base=development&sort=updated&direction=desc&per_page=100"),fetchJSON(api+"/compare/main...development?per_page=100"),fetchJSON(api+"/pulls?state=open&base=main&head=lindkvistfoto-dot:development&per_page=10")]);prs=p;runs=w.workflow_runs||[];closedDevPRs=closed;compareData=cmp;releasePRs=release;$("dev-commit").textContent="Senaste commit: "+esc(d.sha.slice(0,7))+" · "+ago(d.commit?.committer?.date);$("main-commit").textContent="Senaste commit: "+esc(m.sha.slice(0,7))+" · "+ago(m.commit?.committer?.date);renderRuns();$("last-refresh").textContent="Senast uppdaterad "+time(new Date().toISOString())+" · data direkt från GitHub";}catch(e){$("last-refresh").textContent="GitHub kunde inte läsas: "+e.message+" · prova uppdatera igen";if(!runs.length)$("pr-list").innerHTML='<div class="empty">GitHub-data är tillfälligt otillgänglig.</div>'}finally{$("refresh").textContent="↻";$("refresh").disabled=false}}
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");renderPR(t.dataset.filter)}));$("refresh").addEventListener("click",refresh);refresh();
 
 async function refreshReleaseGuard(){
@@ -139,9 +139,14 @@ try{
  ]);
  const runs=actionData.workflow_runs||[];
  const deploys=runs.filter(r=>(r.name||r.display_title||"").includes("Deploy Alea live and development to GitHub Pages")).slice(0,6);
+ const published=report.published_prs||[];
+ const pendingPrs=report.pending_prs||[];
+ const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  const manifestsOk=live.environment==="main"&&dev.environment==="development"&&live.source_sha===report.live?.sha&&dev.source_sha===report.development?.sha;
  const branchesCurrent=live.source_sha===mainHead.sha&&dev.source_sha===devHead.sha;
- const verified=report.status==="ready"&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
+ const reportDataValid=report.status==="ready"&&typeof report.live?.sha==="string"&&typeof report.development?.sha==="string"&&["published_prs","pending_prs","partial_prs","unknown_prs","live_only_commits","development_only_commits"].every(key=>Array.isArray(report[key]))&&Array.isArray(report.database_changes?.waiting_for_live)&&Array.isArray(report.database_changes?.live_only);
+ if(!reportDataValid) throw new Error("Release status-rapporten saknar obligatoriska avstämningsdata");
+ const verified=reportDataValid&&unresolved.length===0&&manifestsOk&&branchesCurrent&&deploys[0]?.status==="completed"&&deploys[0]?.conclusion==="success";
  set("guard-live-sha",live.source_sha?.slice(0,7)||"okänd");
  set("guard-dev-sha",dev.source_sha?.slice(0,7)||"okänd");
  set("guard-rollback",live.source_sha?.slice(0,7)||"okänd");
@@ -157,13 +162,10 @@ try{
  ];
  db.innerHTML=dbRows.length?dbRows.map(x=>'<div class="incident"><span class="severity '+x.tone+'">'+x.label+'</span><div><strong>'+esc(x.name)+'</strong><small>'+x.note+'</small></div></div>').join(""):'<div class="empty">Inga Supabase-migrationsfiler avviker mellan grenarna.</div>';
 
- set("guard-verified",verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
+ set("guard-verified",!reportDataValid?"OKÄND":unresolved.length?"GRANSKNING KRÄVS":verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
  const badge=$("guard-updated");
  if(badge){badge.textContent=verified?"Verifierad "+time(deploys[0].updated_at):report.status==="ready"?"Status "+time(report.generated_at):"Okänd status";badge.className="pill "+(verified?"":"warn")}
  set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):unresolved.length?"Det finns "+unresolved.length+" PR-diffar som är delvisa eller okända; granska dem manuellt.":!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
- const published=report.published_prs||[];
- const pendingPrs=report.pending_prs||[];
- const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  set("guard-ready",String(published.length+pendingPrs.length));
  set("guard-unknown-count",String(unresolved.length));
  set("guard-published-count",String(published.length));
@@ -178,8 +180,10 @@ try{
  const hist=$("guard-history");
  hist.innerHTML=deploys.length?deploys.map(r=>'<div class="incident"><span class="severity '+(r.conclusion==="success"?"sev-low":r.status==="completed"?"sev-high":"sev-med")+'">'+esc(r.conclusion||r.status||"OKÄNT")+'</span><div><strong>'+esc(r.display_title||r.name||"Pages deploy")+'</strong><small>'+esc(r.head_sha?.slice(0,7)||"SHA saknas")+' · '+time(r.updated_at)+'</small></div><a class="linkbtn" href="'+esc(r.html_url)+'" target="_blank" rel="noopener">Körning ↗</a></div>').join(""):'<div class="empty">Ingen Pages-deploy hittades i Actions-historiken.</div>';
 }catch(e){
- set("guard-summary","Release Guard kunde inte läsa verifieringsunderlaget: "+e.message);
- set("guard-verified","OKÄND");
+ for(const id of ["guard-live-sha","guard-dev-sha","guard-verified","guard-ci","guard-db-count","guard-rollback","guard-ready","guard-published-count","guard-unverified-count","guard-unknown-count"]) set(id,"OKÄND");
+ for(const id of ["guard-db","guard-published","guard-unknown","guard-pending","guard-hotfixes","guard-history"]) { const el=$(id); if(el) el.innerHTML='<div class="empty">Underlaget saknas — status är OKÄND.</div>'; }
+ const badge=$("guard-updated"); if(badge){badge.textContent="OKÄND";badge.className="pill warn";}
+ set("guard-summary","Release Guard kunde inte läsa verifieringsunderlaget: "+(e?.message||"okänt fel"));
 }
 }
 
