@@ -21,9 +21,39 @@ const encBytes = (bytes: Uint8Array) => {
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 };
+function der(tag: number, value: Uint8Array) {
+  const length = value.length;
+  const lengthBytes = length < 128
+    ? Uint8Array.of(length)
+    : (() => {
+        const bytes: number[] = [];
+        let rest = length;
+        while (rest > 0) {
+          bytes.unshift(rest & 255);
+          rest = Math.floor(rest / 256);
+        }
+        return Uint8Array.of(0x80 | bytes.length, ...bytes);
+      })();
+  return Uint8Array.of(tag, ...lengthBytes, ...value);
+}
+function joinBytes(...parts: Uint8Array[]) {
+  const result = new Uint8Array(parts.reduce((size, part) => size + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+  return result;
+}
 function pemBytes(pem: string) {
-  const base64 = pem.replace(/-----BEGIN [^-]+-----|-----END [^-]+-----|\s/g, "");
-  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const match = pem.match(/-----BEGIN ([^-]+)-----([\\s\\S]+?)-----END \\1-----/);
+  if (!match) throw new Error("GITHUB_APP_KEY_INVALID");
+  const derBytes = Uint8Array.from(atob(match[2].replace(/\\s/g, "")), c => c.charCodeAt(0));
+  if (match[1] === "PRIVATE KEY") return derBytes;
+  if (match[1] !== "RSA PRIVATE KEY") throw new Error("GITHUB_APP_KEY_INVALID");
+  // GitHub App downloads commonly use PKCS#1; WebCrypto imports PKCS#8.
+  const algorithm = der(0x30, Uint8Array.of(0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00));
+  return der(0x30, joinBytes(Uint8Array.of(0x02, 0x01, 0x00), algorithm, der(0x04, derBytes)));
 }
 async function appJwt(appId: string, privateKey: string) {
   const now = Math.floor(Date.now() / 1000);
@@ -242,6 +272,10 @@ Deno.serve(async (req: Request) => {
         method: "POST",
         body: JSON.stringify({ title: title(item, data.decision), body: issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) }),
       });
+      const liveBeforeMerge = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
+      if (liveBeforeMerge.sha !== candidate.liveSha) {
+        return fail("LIVE ändrades under slutgodkännandet. Skapa en ny kandidat; LIVE är oförändrat.", 409);
+      }
       const merged = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidate.pr.number + "/merge", {
         method: "PUT",
         body: JSON.stringify({ sha: candidate.pr.head.sha, merge_method: "squash" }),
