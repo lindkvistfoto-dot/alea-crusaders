@@ -1,0 +1,55 @@
+name: Deploy Alea live and development to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out live app
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: live
+          persist-credentials: false
+
+      - name: Check out development app
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          path: development
+          persist-credentials: false
+
+      - name: Assemble live root and development subpath
+        run: |
+          mkdir -p _site/dev
+          rsync -a --delete --exclude='.git' live/ _site/
+          rsync -a --delete --exclude='.git' development/ _site/dev/
+          touch _site/.nojekyll
+          test -s _site/index.html
+          test -s _site/dev/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
