@@ -75,6 +75,10 @@ export async function buildReport({ repo, liveRef = "main", developmentRef = "or
   const prs = mergedPrs.map(pr => {
     const sha = pr.merge_commit_sha;
     if (sha && !patchCache.has(sha)) patchCache.set(sha, patchId(repo, sha));
+    const parents = sha ? git(repo, ["show", "-s", "--format=%P", sha]).split(/\\s+/).filter(Boolean) : [];
+    const sourceCommits = parents.length > 1
+      ? git(repo, ["rev-list", "--no-merges", parents[0] + ".." + sha]).split("\\n").filter(Boolean)
+      : (sha ? [sha] : []);
     return {
       number: pr.number,
       title: pr.title,
@@ -83,7 +87,8 @@ export async function buildReport({ repo, liveRef = "main", developmentRef = "or
       head: pr.head?.ref || "",
       mergeSha: sha,
       inLiveHistory: sha ? (() => { try { git(repo, ["merge-base", "--is-ancestor", sha, liveRef]); return true; } catch { return false; } })() : false,
-      patchId: sha ? patchCache.get(sha) : null
+      patchId: sha ? patchCache.get(sha) : null,
+      patchIds: sourceCommits.map(commit => patchId(repo, commit)).filter(Boolean)
     };
   });
   const result = reconcileRelease({ developmentPrs: prs, liveCommits, developmentCommits });

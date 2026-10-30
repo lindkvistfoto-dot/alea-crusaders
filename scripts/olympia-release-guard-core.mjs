@@ -7,8 +7,12 @@ export function reconcileRelease({ developmentPrs = [], liveCommits = [], develo
   const prs = developmentPrs.map(pr => {
     if (!pr.mergeSha) return { ...pr, reconciliation: "unknown", reason: "Missing merge SHA" };
     if (pr.inLiveHistory || liveShas.has(pr.mergeSha)) return { ...pr, reconciliation: "published", reason: "Merge commit is in LIVE history" };
+    const sourcePatchIds = [...new Set((pr.patchIds || []).filter(Boolean))];
     if (pr.patchId && livePatches.has(pr.patchId)) return { ...pr, reconciliation: "published", reason: "Equivalent patch is in LIVE history" };
-    if (!pr.patchId) return { ...pr, reconciliation: "unknown", reason: "Could not calculate PR patch identity" };
+    if (sourcePatchIds.length && sourcePatchIds.every(id => livePatches.has(id))) return { ...pr, reconciliation: "published", reason: "Every PR commit has an equivalent patch in LIVE" };
+    const matchedParts = sourcePatchIds.filter(id => livePatches.has(id)).length;
+    if (matchedParts) return { ...pr, reconciliation: "partial", reason: matchedParts + " of " + sourcePatchIds.length + " PR commit patches found in LIVE" };
+    if (!pr.patchId && !sourcePatchIds.length) return { ...pr, reconciliation: "unknown", reason: "Could not calculate PR patch identity" };
     return { ...pr, reconciliation: "pending", reason: "No equivalent change found in LIVE history" };
   });
 
@@ -23,6 +27,7 @@ export function reconcileRelease({ developmentPrs = [], liveCommits = [], develo
     pendingPrs: prs.filter(pr => pr.reconciliation === "pending"),
     publishedPrs: prs.filter(pr => pr.reconciliation === "published"),
     unknownPrs: prs.filter(pr => pr.reconciliation === "unknown"),
+    partialPrs: prs.filter(pr => pr.reconciliation === "partial"),
     liveOnly,
     devOnly,
     prs

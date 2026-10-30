@@ -72,12 +72,14 @@
 <div id="guard-db" class="incident-list" style="margin-top:8px"><div class="empty">Kontrollerar migrationsfiler…</div></div>
 <p class="metric-note">Före release: granska alla väntande ändringar och CI, kontrollera DEV/LIVE-konfiguration och använd föregående verifierade LIVE-SHA som återställningsreferens. Zeus godkänner genom att godkänna och merga release-PR till main. OLYMPIA startar eller mergar ingen LIVE-release.</p>
 </details>
-<div class="stats-three" style="margin:8px 0">
+<div class="stats-three" style="grid-template-columns:repeat(4,minmax(0,1fr));margin:8px 0">
 <div class="statbox"><strong id="guard-ready">—</strong><span>Färdigt i DEV</span></div>
 <div class="statbox"><strong id="guard-published-count">—</strong><span>Patch bekräftad i LIVE</span></div>
 <div class="statbox"><strong id="guard-unverified-count">—</strong><span>Publicering ej verifierad</span></div>
+<div class="statbox"><strong id="guard-unknown-count">—</strong><span>Oklart / delvis</span></div>
 </div>
 <div><strong>Publicerat i LIVE · patchmatchning</strong><div id="guard-published" class="incident-list"><div class="empty">Kontrollerar PR-historik…</div></div></div>
+<div style="margin:8px 0"><strong>Delvis eller okänt · kräver granskning</strong><div id="guard-unknown" class="incident-list"><div class="empty">Kontrollerar patchtäckning…</div></div></div>
 <div class="lower" style="grid-template-columns:1fr 1fr">
 <div><strong>Väntar på LIVE</strong><div id="guard-pending" class="incident-list"><div class="empty">Läser PR- och patchavstämning…</div></div></div>
 <div><strong>LIVE-ändringar som saknas i DEV</strong><div id="guard-hotfixes" class="incident-list"><div class="empty">Kontrollerar grenarna…</div></div></div>
@@ -158,12 +160,16 @@ try{
  set("guard-verified",verified?"VERIFIERAD":!branchesCurrent?"BRANCH HAR NYARE SHA":manifestsOk?"PUBLICERAD · KONTROLLERAS":"AVVIKELSE");
  const badge=$("guard-updated");
  if(badge){badge.textContent=verified?"Verifierad "+time(deploys[0].updated_at):report.status==="ready"?"Status "+time(report.generated_at):"Okänd status";badge.className="pill "+(verified?"":"warn")}
- set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
+ set("guard-summary",report.status!=="ready"?"Avstämningen är okänd: "+(report.reason||"underlaget saknas"):unresolved.length?"Det finns "+unresolved.length+" PR-diffar som är delvisa eller okända; granska dem manuellt.":!branchesCurrent?"Grenens nuvarande SHA skiljer sig från den faktiskt publicerade versionen. En deploy väntar eller har inte verifierats.": "DEV "+report.development.sha.slice(0,7)+" · LIVE "+report.live.sha.slice(0,7)+" · "+report.reconciliation_method);
  const published=report.published_prs||[];
  const pendingPrs=report.pending_prs||[];
+ const unresolved=[...(report.partial_prs||[]),...(report.unknown_prs||[])];
  set("guard-ready",String(published.length+pendingPrs.length));
+ set("guard-unknown-count",String(unresolved.length));
  set("guard-published-count",String(published.length));
  set("guard-unverified-count",verified?"0":String(published.length));
+ const unresolvedList=$("guard-unknown");
+ unresolvedList.innerHTML=unresolved.length?unresolved.map(p=>'<article class="incident"><span class="severity sev-med">'+esc(p.reconciliation==="partial"?"DELVIS":"OKÄNT")+'</span><div><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><small>'+esc(p.reason||"Diffen behöver granskas")+'</small></div><a class="linkbtn" href="'+esc(p.url)+'" target="_blank" rel="noopener">PR ↗</a></article>').join(""):'<div class="empty">Inga delvisa eller okända PR-diffar.</div>';
  const publishedList=$("guard-published");
  publishedList.innerHTML=published.length?published.slice(0,8).map(p=>'<article class="incident"><span class="severity sev-low">LIVE</span><div><strong>#'+esc(p.number)+' · '+esc(p.title)+'</strong><small>'+esc(p.reason||"Matchad via patch-ID")+' · '+esc((p.mergeSha||"").slice(0,7))+'</small></div><a class="linkbtn" href="'+esc(p.url)+'" target="_blank" rel="noopener">PR ↗</a></article>').join(""):'<div class="empty">Inga DEV-PR:ar identifierades som publicerade.</div>';
  const pending=$("guard-pending"), hot=$("guard-hotfixes");

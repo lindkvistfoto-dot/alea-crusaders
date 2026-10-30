@@ -43,6 +43,24 @@ describe("OLYMPIA release reconciliation", () => {
     expect(result.liveOnly[0].reconciliation).toBe("missing-in-development");
   });
 
+  it("recognizes each commit of a multi-commit PR cherry-picked separately", () => {
+    const result = reconcileRelease({
+      developmentPrs: [{ number: 403, mergeSha: "merge-403", patchId: "combined-patch", patchIds: ["part-a", "part-b"] }],
+      liveCommits: [{ sha: "pick-a", patchId: "part-a" }, { sha: "pick-b", patchId: "part-b" }],
+      developmentCommits: [{ sha: "source-a", patchId: "part-a" }, { sha: "source-b", patchId: "part-b" }]
+    });
+    expect(result.publishedPrs.map(pr => pr.number)).toEqual([403]);
+  });
+
+  it("marks a partly cherry-picked PR as partial and keeps it visible", () => {
+    const result = reconcileRelease({
+      developmentPrs: [{ number: 404, mergeSha: "merge-404", patchId: "combined-patch", patchIds: ["part-a", "part-b"] }],
+      liveCommits: [{ sha: "pick-a", patchId: "part-a" }],
+      developmentCommits: [{ sha: "source-a", patchId: "part-a" }, { sha: "source-b", patchId: "part-b" }]
+    });
+    expect(result.partialPrs.map(pr => pr.number)).toEqual([404]);
+  });
+
   it("clears LIVE drift when the equivalent hotfix patch exists in DEV", () => {
     const result = reconcileRelease({
       liveCommits: [{ sha: "hotfix-live", patchId: "hotfix-patch" }],
