@@ -81,7 +81,7 @@ jobs:
           PR_MERGED="$(jq -r '.merged' <<< "$PR_JSON")"
           PR_BASE="$(jq -r '.base.ref' <<< "$PR_JSON")"
           PR_MERGE_SHA="$(jq -r '.merge_commit_sha' <<< "$PR_JSON")"
-          [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" == "$(jq -r '.testedSha' "$OUTPUT_DIR/request.json")" ]] || { echo "::error::PR #385 is not the exact merged DEV version approved by Zeus."; exit 1; }
+          [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" == "$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" ]] || { echo "::error::PR #385 is not the exact merged DEV version approved by Zeus."; exit 1; }
 
           git -C "$DEV_DIR" fetch --no-tags origin "refs/pull/385/head:refs/olympia/pr-385"
           git -C "$DEV_DIR" diff --binary "$PR_BASE_SHA...refs/olympia/pr-385" > "$OUTPUT_DIR/candidate.patch"
@@ -105,7 +105,7 @@ jobs:
           [[ -z "$DEPENDENCIES" ]] || { echo "::error::Candidate changes dependencies; dependency review is required."; exit 1; }
 
           echo "live_sha=$LIVE_SHA" >> "$GITHUB_OUTPUT"
-          echo "dev_sha=$(jq -r '.testedSha' "$OUTPUT_DIR/request.json")" >> "$GITHUB_OUTPUT"
+          echo "dev_sha=$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" >> "$GITHUB_OUTPUT"
           echo "candidate_tree=$(git -C "$OUTPUT_DIR/source" write-tree)" >> "$GITHUB_OUTPUT"
 
       - name: Test candidate against LIVE baseline
