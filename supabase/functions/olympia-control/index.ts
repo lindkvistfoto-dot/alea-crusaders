@@ -46,9 +46,9 @@ function joinBytes(...parts: Uint8Array[]) {
   return result;
 }
 function pemBytes(pem: string) {
-  const match = pem.match(/-----BEGIN ([^-]+)-----([\\s\\S]+?)-----END \\1-----/);
+  const match = pem.match(/-----BEGIN ([^-]+)-----([\s\S]+?)-----END \1-----/);
   if (!match) throw new Error("GITHUB_APP_KEY_INVALID");
-  const derBytes = Uint8Array.from(atob(match[2].replace(/\\s/g, "")), c => c.charCodeAt(0));
+  const derBytes = Uint8Array.from(atob(match[2].replace(/\s/g, "")), c => c.charCodeAt(0));
   if (match[1] === "PRIVATE KEY") return derBytes;
   if (match[1] !== "RSA PRIVATE KEY") throw new Error("GITHUB_APP_KEY_INVALID");
   // GitHub App downloads commonly use PKCS#1; WebCrypto imports PKCS#8.
