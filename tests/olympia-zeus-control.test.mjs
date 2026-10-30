@@ -28,9 +28,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('HISTORIK');
     expect(page).toContain('ready_for_human_acceptance');
     expect(page).toContain('github.com/"+owner+"/"+repo+"/issues/new');
-    const scripts=page.split('<script>')[1]?.split('</script>')||[];
-    expect(scripts).toHaveLength(1);
-    expect(()=>new Function(scripts[0][1])).not.toThrow();
+    const script=page.split('<script>')[1]?.split('</script>')[0]||'';
+    expect(script.length).toBeGreaterThan(0);
+    expect(()=>new Function(script)).not.toThrow();
   });
 
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
