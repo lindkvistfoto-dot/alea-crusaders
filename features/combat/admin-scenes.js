@@ -108,7 +108,7 @@ async function getCombatSceneBackgroundUrl(path){
  if(!path)return '';
  let cacheKey='combat-scene-maps:'+path,cached=mapImageCache.get(cacheKey);
  if(cached?.url)return cached.url;
- let r=await mapStorageFetch('object/combat-scene-maps/'+encodeStoragePath(path),{method:'GET'});
+ let r=await mapStorageFetch('object/authenticated/combat-scene-maps/'+encodeStoragePath(path),{method:'GET'});
  if(!r.ok){
   let data=await r.json().catch(()=>({}));
   throw new Error(data?.message||data?.error||('Kunde inte läsa stridsbilden ('+r.status+').'))
