@@ -6,8 +6,8 @@ const defaults=[
 {id:'evalin',icon:'🦆',identity:{namn:'Evalin Hugger',ras:'Humanoid anka',yrke:'',kon:'Kvinna',alder:'',langd:'120 cm',vikt:''},base:{Styrka:{v:10,g:''},Fysik:{v:12,g:''},Storlek:{v:8,g:''},Smidighet:{v:16,g:''},Intelligens:{v:13,g:''},'Psykisk kraft':{v:12,g:''},Karisma:{v:14,g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},skills:[{name:'',fv:'',erf:''}],languages:[{name:'',speak:'',readwrite:''}],live:{KP:11,KPmax:11,PSY:12,PSYmax:12,Mynt:51}}
 ];
 let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
-const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
-const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
+const SUPABASE_URL='https://wkiuyklzzroavclnsxna.supabase.co';
+const SUPABASE_KEY='sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et';
 window.aleaEquipmentArt?.configure(SUPABASE_URL);
 let supabaseSession=null,supabaseProfile=null;
 let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
