@@ -27,6 +27,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('ATT PUBLICERA');
     expect(page).toContain('HISTORIK');
     expect(page).toContain('ready_for_human_acceptance');
+    expect(page).toContain('testedSha===item.dev_sha');
     expect(page).toContain('github.com/"+owner+"/"+repo+"/issues/new');
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
