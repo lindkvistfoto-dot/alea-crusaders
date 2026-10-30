@@ -78,4 +78,46 @@ describe("OLYMPIA release reconciliation", () => {
     expect(result.unknownPrs[0].reconciliation).toBe("unknown");
     expect(result.pendingPrs).toHaveLength(0);
   });
+  it("runs the Release Guard refresh with partial and unknown categories before rendering the summary", async () => {
+    const html = readFileSync(new URL("../olympia/index.html", import.meta.url), "utf8");
+    const start = html.indexOf("async function refreshReleaseGuard()");
+    const end = html.indexOf("\n}\n\nrefreshReleaseGuard();", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const functionSource = html.slice(start, end + 2).replace(/^async function refreshReleaseGuard\(\)/, "async function");
+    const elements = new Map();
+    const get = id => {
+      if (!elements.has(id)) elements.set(id, { textContent: "", innerHTML: "", className: "" });
+      return elements.get(id);
+    };
+    const report = {
+      status: "ready",
+      generated_at: "2026-10-30T00:00:00Z",
+      live: { sha: "live-sha" },
+      development: { sha: "dev-sha" },
+      reconciliation_method: "patch identity",
+      published_prs: [],
+      pending_prs: [],
+      partial_prs: [{ number: 404, reconciliation: "partial" }],
+      unknown_prs: [],
+      live_only_commits: [],
+      database_changes: { waiting_for_live: [], live_only: [] }
+    };
+    const fetchJSON = async url => {
+      if (url.startsWith("./release-status.json")) return report;
+      if (url.startsWith("../../deployment-manifest.json")) return { environment: "main", source_sha: "live-sha" };
+      if (url.startsWith("../deployment-manifest.json")) return { environment: "development", source_sha: "dev-sha" };
+      if (url.includes("/actions/runs")) return { workflow_runs: [] };
+      if (url.endsWith("/commits/main")) return { sha: "live-sha" };
+      if (url.endsWith("/commits/development")) return { sha: "dev-sha" };
+      throw new Error("Unexpected URL " + url);
+    };
+    const refresh = new Function("$", "fetchJSON", "esc", "time", "owner", "repo", "return (" + functionSource + ");")(
+      get, fetchJSON, String, () => "", "owner", "repo"
+    );
+    await refresh();
+    expect(get("guard-summary").textContent).toContain("1 PR-diffar");
+    expect(get("guard-unknown-count").textContent).toBe("1");
+  });
+
 });
