@@ -25,3 +25,14 @@ describe('Trophy room image-first controls',()=>{
  it('renders scene before zoom and character selector',()=>{const html=read('index.html');const start=html.indexOf('<section id="trophyRoomPage"');const end=html.indexOf('</section>',start);const room=html.slice(start,end);expect(room.indexOf('id="trophyRoomViewport"')).toBeLessThan(room.indexOf('class="trophy-room-toolbar"'));expect(room.indexOf('class="trophy-room-toolbar"')).toBeLessThan(room.indexOf('id="trophyRoomCharacter"'));expect(room).not.toContain('ARCANE · SYSTEM VIEW');expect(room).not.toContain('← Tillbaka');});
  it('uses shared eligible roster and exposes selection event',()=>{const js=read('features/trophy-room/room.js');expect(js).toContain('shopEligibleBuyers');expect(js).toContain('alea:trophy-character-change');});
 });
+
+describe('Trophy room Astrid fit',()=>{
+ it('centres the rendered figure from its responsive container dimensions',()=>{
+  const room=read('features/trophy-room/room.js'),css=read('features/trophy-room/room.css');
+  expect(room).toContain('hero.offsetWidth||width*.30');
+  expect(room).toContain("get('view')==='trophy-room'");
+  expect(css).toContain('height:68%;width:40%;bottom:8%');
+  expect(css).toContain('object-fit:contain');
+  expect(room).toContain('options.find(o=>o.value&&/\\bastrid\\b/i.test(o.textContent||\'\'))');
+ });
+});
