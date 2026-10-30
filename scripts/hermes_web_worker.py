@@ -20,8 +20,19 @@ def user_drive_token():
  import urllib.parse
  body=urllib.parse.urlencode({"client_id":client,"client_secret":secret,"refresh_token":refresh,"grant_type":"refresh_token"}).encode()
  req=urllib.request.Request("https://oauth2.googleapis.com/token",data=body,headers={"Content-Type":"application/x-www-form-urlencoded"},method="POST")
- with urllib.request.urlopen(req,timeout=25) as response:
-  return json.load(response)["access_token"]
+ try:
+  with urllib.request.urlopen(req,timeout=25) as response:
+   return json.load(response)["access_token"]
+ except urllib.error.HTTPError as error:
+  code="unknown"
+  try:
+   info=json.loads(error.read(2048))
+   candidate=info.get("error") if isinstance(info,dict) else None
+   if isinstance(candidate,str) and candidate and len(candidate)<=40 and candidate.replace("_","").replace("-","").isalnum():
+    code=candidate
+  except (ValueError,UnicodeError):
+   pass
+  raise RuntimeError("GOOGLE_OAUTH_TOKEN_ERROR status="+str(error.code)+" code="+code) from None
 TOKEN=None
 FOLDER=os.environ.get("HERMES_WEB_ARCHIVE_FOLDER_ID","")
 BASE={"apikey":KEY,"Authorization":"Bearer "+KEY}
