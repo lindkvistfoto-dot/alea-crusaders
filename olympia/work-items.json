@@ -15,7 +15,7 @@
       "ready_for_human_acceptance": false,
       "dev_sha": null,
       "pr_number": null,
-      "dev_url": "../",
+      "dev_url": "../?view=trophy-room",
       "features": [
         "features/trophy-room/room.js",
         "features/trophy-room/room.css"
