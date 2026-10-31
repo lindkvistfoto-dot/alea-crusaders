@@ -197,7 +197,6 @@ if(check.result.releasePr)prMatch=[null,String(check.result.releasePr),String(ch
 if(check.result.candidateRunUrl)candidateRunMatch=[null,check.result.candidateRunUrl];
 }catch(e){candidateCheckUnknown=true}
 }
-var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
 var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified};
 slots[target].push(record);
