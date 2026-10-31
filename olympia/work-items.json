@@ -15,8 +15,11 @@
       "ready_for_human_acceptance": true,
       "dev_sha": "6f1270a72e7dcc1120e6bcfe0d0b8559934cab10",
       "pr_number": 385,
-      "release_source_prs": [385, 404],
-      "dev_url: "../?view=trophy-room",
+      "release_source_prs": [
+        385,
+        404
+      ],
+      "dev_url": "../?view=trophy-room",
       "features": [
         "features/trophy-room/room.js",
         "features/trophy-room/room.css"
