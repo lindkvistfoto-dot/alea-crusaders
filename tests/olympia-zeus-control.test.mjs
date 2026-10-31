@@ -144,6 +144,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
 
 
 describe('OLYMPIA LIVE decision semantics',()=>{
+  it('reuses an unchanged Astrid Pandora decision after OLYMPIA-only DEV changes',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('const previousTestedSha = previousBody.match');
+    expect(edge).toContain('hasAcceptedFeatureVersion(token, issues as any[], item, previousTestedSha)');
+    expect(edge).toContain('testedDevSha: previousTestedSha');
+    expect(edge).toContain('workflowBlobSha,');
+  });
   it('queues release-package decisions without starting a LIVE candidate',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     expect(edge).toContain('if (data.decision === "pandoras_ask") {');

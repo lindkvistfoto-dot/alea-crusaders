@@ -7,6 +7,7 @@ on:
     paths:
       - supabase/config.toml
       - supabase/functions/olympia-control/**
+      - supabase/functions/olympia-candidate-bridge/**
       - .github/workflows/deploy-olympia-control-dev.yml
 
 permissions:
@@ -33,3 +34,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: npx --yes supabase@2.81.3 functions deploy olympia-control --project-ref wkiuyklzzroavclnsxna
+      - name: Deploy isolated OLYMPIA candidate PR bridge to DEV
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npx --yes supabase@2.81.3 functions deploy olympia-candidate-bridge --project-ref wkiuyklzzroavclnsxna

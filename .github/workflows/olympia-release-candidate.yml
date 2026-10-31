@@ -14,9 +14,10 @@ on:
 permissions:
   contents: write
   issues: write
-  pull-requests: write
+  pull-requests: read
   checks: read
   statuses: read
+  id-token: write
 
 jobs:
   candidate:
@@ -68,7 +69,9 @@ jobs:
           ITEM_ID="$(jq -r '.itemId' "$OUTPUT_DIR/request.json")"
           TESTED_SHA="$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")"
           ATTEMPT="$(jq -r '.attempt // 1' "$OUTPUT_DIR/request.json")"
+          WORKFLOW_BLOB_SHA="$(jq -r '.workflowBlobSha // empty' "$OUTPUT_DIR/request.json")"
           [[ "$ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::The retry attempt is invalid."; exit 1; }
+          [[ "$WORKFLOW_BLOB_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The approved candidate workflow SHA is missing."; exit 1; }
           [[ "$DECISION" == "pandoras_ask" ]] || { echo "::error::Only a Pandoras Ask start order can create a single-item LIVE PR candidate."; exit 1; }
           [[ "$ITEM_ID" == "PILOT-001" && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to the exact Astrid pilot version."; exit 1; }
           ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
@@ -94,6 +97,7 @@ jobs:
 
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           echo "attempt=$ATTEMPT" >> "$GITHUB_OUTPUT"
+          echo "workflow_blob_sha=$WORKFLOW_BLOB_SHA" >> "$GITHUB_OUTPUT"
           echo "issue_created_at=$(jq -r '.created_at' <<< "$ISSUE_JSON")" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
           echo "source_pr_sha=$SOURCE_PR_SHA" >> "$GITHUB_OUTPUT"
@@ -189,45 +193,45 @@ jobs:
       - name: Open exact release pull request to main
         id: pull_request
         if: success()
-        uses: actions/github-script@v7
         env:
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et
+          ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
+          CANDIDATE_ATTEMPT: ${{ steps.candidate.outputs.attempt }}
+          WORKFLOW_BLOB_SHA: ${{ steps.candidate.outputs.workflow_blob_sha }}
           BRANCH: ${{ steps.release_pr.outputs.branch }}
           COMMIT: ${{ steps.release_pr.outputs.commit }}
           TREE: ${{ steps.release_pr.outputs.tree }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
-          ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
-          SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const existing = await github.rest.pulls.list({
-              owner, repo, state: "open", base: "main", head: owner + ":" + process.env.BRANCH
-            });
-            if (existing.data.length > 1) throw new Error("Multiple open release candidate PRs exist for this issue.");
-            let pr = existing.data[0];
-            if (!pr) {
-              const body = [
-                "## OLYMPIA release candidate · PILOT-001",
-                "",
-                "- Prepared from LIVE baseline: " + process.env.LIVE_SHA,
-                "- Source DEV PRs: #" + process.env.SOURCE_PRS.split(",").join(", #"),
-                "- Approved DEV test version: " + process.env.DEV_SHA,
-                "- Exact candidate tree: " + process.env.TREE,
-                "- Zeus decision journal: #" + process.env.ISSUE_NUMBER,
-                "- Tests: `npm run check` passed on the candidate.",
-                "- Database migrations: none included.",
-                "- Dependency changes: none included.",
-                "- This PR is not approved for LIVE until OLYMPIA final approval is recorded."
-              ].join("\n");
-              const created = await github.rest.pulls.create({
-                owner, repo, title: "release(PILOT-001): Astrid from verified LIVE candidate",
-                head: process.env.BRANCH, base: "main", body, draft: false
-              });
-              pr = created.data;
-            }
-            core.setOutput("number", String(pr.number));
-            core.setOutput("url", pr.html_url);
+        shell: bash
+        run: |
+          set -euo pipefail
+          OIDC_RESPONSE="$(curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=alea-olympia-candidate-pr")"
+          OIDC_TOKEN="$(jq -er '.value' <<< "$OIDC_RESPONSE")"
+          PAYLOAD="$(jq -n \
+            --argjson issueNumber "$ISSUE_NUMBER" \
+            --arg runId "$GITHUB_RUN_ID" \
+            --argjson runAttempt "$GITHUB_RUN_ATTEMPT" \
+            --argjson candidateAttempt "$CANDIDATE_ATTEMPT" \
+            --arg requestCommitSha "$GITHUB_SHA" \
+            --arg liveSha "$LIVE_SHA" \
+            --arg testedDevSha "$DEV_SHA" \
+            --arg candidateCommitSha "$COMMIT" \
+            --arg candidateTreeSha "$TREE" \
+            --arg candidateBranch "$BRANCH" \
+            --arg workflowBlobSha "$WORKFLOW_BLOB_SHA" \
+            '{issueNumber:$issueNumber,runId:$runId,runAttempt:$runAttempt,candidateAttempt:$candidateAttempt,requestCommitSha:$requestCommitSha,liveSha:$liveSha,testedDevSha:$testedDevSha,candidateCommitSha:$candidateCommitSha,candidateTreeSha:$candidateTreeSha,candidateBranch:$candidateBranch,workflowBlobSha:$workflowBlobSha}')"
+          RESPONSE="$(curl -fsS -X POST "https://wkiuyklzzroavclnsxna.supabase.co/functions/v1/olympia-candidate-bridge" \
+            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Content-Type: application/json" \
+            --data "$PAYLOAD")"
+          if [[ "$(jq -r '.ok // false' <<< "$RESPONSE")" != "true" ]]; then
+            echo "::error::$(jq -r '.message // "OLYMPIA could not create the release PR."' <<< "$RESPONSE")"
+            exit 1
+          fi
+          echo "number=$(jq -r '.pullRequest.number' <<< "$RESPONSE")" >> "$GITHUB_OUTPUT"
+          echo "url=$(jq -r '.pullRequest.url' <<< "$RESPONSE")" >> "$GITHUB_OUTPUT"
 
       - name: Wait for release PR CI and mergeability
         env:

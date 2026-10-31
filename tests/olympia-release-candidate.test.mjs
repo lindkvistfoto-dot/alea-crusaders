@@ -29,7 +29,14 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).toContain('GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"');
   expect(workflow).toContain('ATTEMPT="$(jq -r \'.attempt // 1\'');
   expect(workflow).toContain('push --force origin "HEAD:refs/heads/$BRANCH"');
-  expect(workflow).toContain('let pr = existing.data[0]');
+  expect(workflow).toContain('id-token: write');
+  expect(workflow).toContain('functions/v1/olympia-candidate-bridge');
+  expect(workflow).toContain('audience=alea-olympia-candidate-pr');
+  expect(workflow).toContain('CANDIDATE_ATTEMPT');
+  expect(workflow).not.toContain('github.rest.pulls.create');
+  const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+  expect(bridge).toContain('let pull = Array.isArray(existing) ? existing[0] : null');
+  expect(bridge).toContain('Zeus decision journal: #" + issueNumber');
   expect(workflow).toContain('SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}');
   expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
   expect(workflow).toContain('verified Astrid candidate from LIVE (attempt $ATTEMPT)');
@@ -44,7 +51,8 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
  });
  it('keeps candidate publication behind explicit final Zeus approval',()=>{
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
-  expect(workflow).toContain('This PR is not approved for LIVE until OLYMPIA final approval is recorded.');
+  const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+  expect(bridge).toContain('- This PR is not approved for LIVE until OLYMPIA final approval is recorded.');
   expect(workflow).toContain("publication:'NOT_PERFORMED'");
   expect(workflow).toContain('LIVE publication: NOT PERFORMED.');
  });

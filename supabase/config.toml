@@ -11,3 +11,9 @@ static_files = ["./functions/hermes-alea/magick.wasm"]
 [functions.olympia-control]
 verify_jwt = true
 entrypoint = "./functions/olympia-control/index.ts"
+
+# GitHub Actions calls this isolated OLYMPIA callback with a signed GitHub OIDC token.
+# The handler verifies the signature, audience, repository, workflow, ref, and exact candidate.
+[functions.olympia-candidate-bridge]
+verify_jwt = false
+entrypoint = "./functions/olympia-candidate-bridge/index.ts"

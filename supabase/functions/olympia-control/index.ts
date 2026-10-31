@@ -136,6 +136,9 @@ async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any
 }
 async function startCandidateRequest(token: string, issueNumber: number, item: any, data: any) {
   const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+  const workflow = await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/.github/workflows/olympia-release-candidate.yml?ref=development");
+  const workflowBlobSha = String(workflow.sha || "");
+  if (!/^[0-9a-f]{40}$/i.test(workflowBlobSha)) throw new Error("CANDIDATE_WORKFLOW_UNKNOWN");
   const branch = "olympia/release-requests/decision-" + issueNumber;
   let branchExists = false;
   try {
@@ -188,6 +191,7 @@ async function startCandidateRequest(token: string, issueNumber: number, item: a
     testedDevSha: data.testedDevSha,
     decision: data.decision,
     attempt,
+    workflowBlobSha,
   };
   await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/" + path, {
     method: "PUT",
@@ -405,15 +409,18 @@ Deno.serve(async (req: Request) => {
           const body = String(issue.body || "");
           return issue.user?.login === appLogin && !issue.pull_request &&
             body.includes("- Beslut: PANDORAS ASK") && body.includes("- Ärende-ID: " + item.id) &&
-            body.includes("- Testad DEV-commit (full SHA): " + data.testedDevSha);
+            /^[0-9a-f]{40}$/i.test(body.match(/- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})/i)?.[1] || "");
         }).sort((a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""));
         for (const previous of prior) {
+          const previousBody = String(previous.body || "");
+          const previousTestedSha = previousBody.match(/- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})/i)?.[1];
+          if (!previousTestedSha || !await hasAcceptedFeatureVersion(token, issues as any[], item, previousTestedSha)) continue;
           const comments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + previous.number + "/comments?per_page=100");
           const reports = (comments as any[]).filter(comment => {
             const body = String(comment.body || "");
             return comment.user?.login === "github-actions[bot]" &&
               body.includes("## OLYMPIA release candidate") &&
-              body.includes("- Verified DEV SHA: " + data.testedDevSha);
+              body.includes("- Verified DEV SHA: " + previousTestedSha);
           }).sort((a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""));
           const latest = reports[0];
           const baseline = String(latest?.body || "").match(/- LIVE rollback baseline: ([0-9a-f]{40})/i)?.[1];
@@ -431,7 +438,7 @@ Deno.serve(async (req: Request) => {
             });
           }
           try {
-            const requestBranch = await startCandidateRequest(token, previous.number, item, data);
+            const requestBranch = await startCandidateRequest(token, previous.number, item, { ...data, testedDevSha: previousTestedSha });
             return json({
               ok: true,
               message: "Pandoras ask återupptogs på samma beslut. Ingen dubblett av releaseförslaget skapas.",
