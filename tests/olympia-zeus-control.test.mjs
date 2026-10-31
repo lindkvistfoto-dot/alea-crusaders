@@ -110,7 +110,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   });
 
 
-  it('binds Zeus approval to current DEV while retaining the verified pilot source SHA',()=>{
+  it('preserves Zeus approval across unrelated DEV changes but requires feature-file freshness',()=>{
     const page=read('olympia/zeus-control.html');
     const edge=read('supabase/functions/olympia-control/index.ts');
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
@@ -118,6 +118,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
+    expect(edge).toContain('async function hasAcceptedFeatureVersion');
+    expect(edge).toContain('compare/\" + tested + \"...\" + currentSha');
+    expect(edge).toContain('protectedPaths.has(file.filename)');
+    expect(edge).toContain('Om Astrids bildvisningsfiler har ändrats sedan godkännandet');
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
