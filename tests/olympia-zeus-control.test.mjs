@@ -35,6 +35,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
     expect(()=>new Function(script)).not.toThrow();
+    expect(page).toContain("esc(item.expected_result)+'</p>'+links+");
+    expect(page).not.toContain("esc(item.expected_result)+'</p'>+links+");
   });
 
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
@@ -51,7 +53,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-pandora-final-gate-5"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-pandora-final-gate-6"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
