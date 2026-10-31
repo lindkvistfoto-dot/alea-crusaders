@@ -231,13 +231,17 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const report = (comments as any[])
     .filter(comment => {
       const body = String(comment.body || "");
-      return comment.user?.login === "github-actions[bot]" && body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") &&
-        body.includes("- Verified DEV SHA: " + data.testedDevSha) &&
-        body.includes("- Candidate tree SHA: " + data.candidateTreeSha);
+      return comment.user?.login === "github-actions[bot]" &&
+        body.includes("## OLYMPIA release candidate") &&
+        body.includes("- Verified DEV SHA: " + data.testedDevSha);
     })
     .sort((a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
   if (!report) throw new Error("CANDIDATE_NOT_READY");
   const body = String(report.body || "");
+  if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") ||
+      !body.includes("- Candidate tree SHA: " + data.candidateTreeSha)) {
+    throw new Error("CANDIDATE_NOT_READY");
+  }
   const liveMatch = body.match(/- LIVE rollback baseline: ([0-9a-f]{40})/i);
   const prMatch = body.match(/- Release PR: #(\d+)/);
   if (!liveMatch || !prMatch) throw new Error("CANDIDATE_REPORT_INCOMPLETE");
