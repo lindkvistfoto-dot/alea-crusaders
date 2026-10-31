@@ -67,6 +67,8 @@ jobs:
           DECISION="$(jq -r '.decision' "$OUTPUT_DIR/request.json")"
           ITEM_ID="$(jq -r '.itemId' "$OUTPUT_DIR/request.json")"
           TESTED_SHA="$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")"
+          ATTEMPT="$(jq -r '.attempt // 1' "$OUTPUT_DIR/request.json")"
+          [[ "$ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::The retry attempt is invalid."; exit 1; }
           [[ "$DECISION" == "pandoras_ask" ]] || { echo "::error::Only a Pandoras Ask start order can create a single-item LIVE PR candidate."; exit 1; }
           [[ "$ITEM_ID" == "PILOT-001" && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to the exact Astrid pilot version."; exit 1; }
           ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
@@ -91,6 +93,7 @@ jobs:
           fi
 
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "attempt=$ATTEMPT" >> "$GITHUB_OUTPUT"
           echo "issue_created_at=$(jq -r '.created_at' <<< "$ISSUE_JSON")" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
           echo "source_pr_sha=$SOURCE_PR_SHA" >> "$GITHUB_OUTPUT"
@@ -161,6 +164,7 @@ jobs:
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
           ISSUE_CREATED_AT: ${{ steps.candidate.outputs.issue_created_at }}
+          ATTEMPT: ${{ steps.candidate.outputs.attempt }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
           SOURCE_DIR: ${{ runner.temp }}/olympia-candidate/source
         run: |
@@ -169,12 +173,12 @@ jobs:
           git -C "$SOURCE_DIR" config user.name "github-actions[bot]"
           git -C "$SOURCE_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           export GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"
-          git -C "$SOURCE_DIR" commit -m "release(PILOT-001): verified Astrid candidate from LIVE"
+          git -C "$SOURCE_DIR" commit -m "release(PILOT-001): verified Astrid candidate from LIVE (attempt $ATTEMPT)"
           COMMIT="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           TREE="$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})"
           BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"
           AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          git -C "$SOURCE_DIR" -c http.extraheader="$AUTH" push origin "HEAD:refs/heads/$BRANCH"
+          git -C "$SOURCE_DIR" -c http.extraheader="$AUTH" push --force origin "HEAD:refs/heads/$BRANCH"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
           echo "tree=$TREE" >> "$GITHUB_OUTPUT"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -197,9 +201,9 @@ jobs:
             const existing = await github.rest.pulls.list({
               owner, repo, state: "open", base: "main", head: owner + ":" + process.env.BRANCH
             });
-            let pr = existing.data.find(item => item.head.sha === process.env.COMMIT);
+            if (existing.data.length > 1) throw new Error("Multiple open release candidate PRs exist for this issue.");
+            let pr = existing.data[0];
             if (!pr) {
-              if (existing.data.length) throw new Error("A different release candidate PR already exists for this issue.");
               const body = [
                 "## OLYMPIA release candidate · PILOT-001",
                 "",
