@@ -14,7 +14,7 @@ function draw(){clampCamera();
  if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';positionMedalWall(v);
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
-  const heroWidth=width*.30;
+  const heroWidth=hero.offsetWidth||width*.30;
   const moveX=-heroWidth*.5+heroPose.x*width;
   const moveY=heroPose.y*height;
   hero.style.transform='translate3d('+moveX+'px,'+moveY+'px,0) scale('+heroPose.scale+')';
@@ -189,4 +189,4 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
 }
 root.addEventListener('hermes-alea:image-change',()=>{void renderMedals()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
-root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset})})(window);
+root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});if(new URLSearchParams(root.location.search).get('view')==='trophy-room')open()})(window);
