@@ -239,7 +239,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await req.json();
-    if (!data || typeof data !== "object" || !DECISIONS.has(data.decision)) return fail("Ogiltigt beslut.", 400);
+    if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
+    if (data.action === "session_check") return json({ ok: true });
+    if (!DECISIONS.has(data.decision)) return fail("Ogiltigt beslut.", 400);
     if (typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
     if (typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) return fail("Testad DEV-version saknas eller är ogiltig.", 400);
 
