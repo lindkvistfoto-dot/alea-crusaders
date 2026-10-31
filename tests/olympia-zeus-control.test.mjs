@@ -117,6 +117,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('currentDevSha');
     expect(page).not.toContain('testedSha===item.dev_sha');
     expect(page).toContain('candidatePr.mergeable===true');
+    expect(page).toContain('statusesOk');
     expect(page).toContain('liveBranch.commit.sha===liveMatch[1]');
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
