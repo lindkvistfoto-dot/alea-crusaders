@@ -192,11 +192,27 @@ const feedback=document.getElementById("zeus-feedback");
 const authMessage=authBox.querySelector("strong");
 function say(message,ok=false){feedback.hidden=false;feedback.innerHTML="<strong>"+(ok?"Sparat:":"Information:")+"</strong> "+message}
 function setStatus(message){authMessage.textContent=message}
+function sessionBelongsToDev(session){
+ try{
+  const part=String(session?.access_token||"").split(".")[1];
+  if(!part)return false;
+  const normalized=part.replace(/-/g,"+").replace(/_/g,"/");
+  const payload=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,"=")),ch=>ch.charCodeAt(0))));
+  return payload.iss===url+"/auth/v1";
+ }catch(_){return false}
+}
 function storedSession(){
  try{
-  const session=JSON.parse(localStorage.getItem("alea_supabase_session")||"null");
-  return session&&typeof session.access_token==="string"?session:null;
- }catch(_){return null}
+  const scoped=JSON.parse(localStorage.getItem("alea_supabase_session_dev")||"null");
+  if(scoped&&sessionBelongsToDev(scoped))return scoped;
+  if(scoped)localStorage.removeItem("alea_supabase_session_dev");
+  const legacy=JSON.parse(localStorage.getItem("alea_supabase_session")||"null");
+  if(legacy&&sessionBelongsToDev(legacy)){
+   localStorage.setItem("alea_supabase_session_dev",JSON.stringify(legacy));
+   return legacy;
+  }
+ }catch(_){}
+ return null;
 }
 async function request(body,session){
  const controller=new AbortController();
@@ -244,8 +260,9 @@ async function syncAuth(){
  try{
   const {response,result}=await request({action:"session_check"},session);
   if(!response.ok||!result.ok){
-   setStatus(response.status===403?"ALEA-session hittades, men Zeus-behörighet saknas.":"ALEA-sessionen kunde inte verifieras.");
-   say(result.message||"Gå tillbaka till ALEA, logga in igen och öppna OLYMPIA från Admin.");
+   const wrongProject=response.status===401&&/invalid jwt/i.test(String(result.message||""));
+   setStatus(response.status===403?"ALEA-session hittades, men Zeus-behörighet saknas.":wrongProject?"ALEA-sessionen gäller inte DEV.":"ALEA-sessionen kunde inte verifieras.");
+   say(wrongProject?"Logga in i ALEA DEV och öppna OLYMPIA från Admin.":result.message||"Gå tillbaka till ALEA DEV, logga in igen och öppna OLYMPIA från Admin.");
    return;
   }
   window.olympiaAuthVerified=true;
