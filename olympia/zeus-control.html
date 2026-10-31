@@ -162,7 +162,7 @@ var body=i.body||"";
 function fieldValue(label){var prefix="- "+label+": ";var row=body.split("\n").find(function(line){return line.indexOf(prefix)===0});return row?row.slice(prefix.length).trim():""}
 var item=(queue&&queue.items||[]).find(function(x){return x.id===fieldValue("Ärende-ID")});
 var testedSha=fieldValue("Testad DEV-commit (full SHA)");
-var mergeMatch=body.match(/- Merge SHA: ([0-9a-f]{40})/i);var liveVerified=false;if(target==="live"&&mergeMatch){try{var liveManifest=await json("../../deployment-manifest.json?ts="+Date.now());liveVerified=liveManifest.environment==="main"&&liveManifest.source_sha===mergeMatch[1]}catch(e){liveVerified=false}}
+var mergeMatch=body.match(/- Merge SHA: ([0-9a-f]{40})/i);var liveVerified=false,deployedLiveSha="";if(target==="live"&&mergeMatch){try{var liveManifest=await json("../../deployment-manifest.json?ts="+Date.now());deployedLiveSha=String(liveManifest.source_sha||"");if(liveManifest.environment==="main"&&/^[a-f0-9]{40}$/i.test(deployedLiveSha)){var relation=await json(api+"/compare/"+mergeMatch[1]+"..."+deployedLiveSha);liveVerified=(relation.status==="identical"||relation.status==="ahead")&&!!relation.merge_base_commit&&String(relation.merge_base_commit.sha||"").toLowerCase()===mergeMatch[1].toLowerCase()}}catch(e){liveVerified=false}}
 var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&/^[0-9a-f]{40}$/i.test(testedSha)&&i.user&&i.user.type==="Bot");
 var candidate=null,candidateCheckUnknown=false;
 if((target==="direct"||target==="package")&&exact&&i.comments_url){
@@ -194,19 +194,22 @@ if(check.result.candidateRunUrl)candidateRunMatch=[null,check.result.candidateRu
 }catch(e){candidateCheckUnknown=true}
 }
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
-var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified};
+var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,deployedLiveSha:deployedLiveSha};
 slots[target].push(record);
 return i;
 }));
 if(renderId!==decisionRenderSequence)return;
+var superseded={};
+slots.live.forEach(function(liveRecord){var candidateRef=String(liveRecord.issue.body||"").match(/^- Kandidatärende: #(\\d+)/m);if(candidateRef)superseded["direct:"+candidateRef[1]]=liveRecord});
+slots.accept.forEach(function(acceptRecord){var newer=slots.live.filter(function(liveRecord){return liveRecord.itemId&&liveRecord.itemId===acceptRecord.itemId&&Date.parse(liveRecord.issue.created_at||"")>Date.parse(acceptRecord.issue.created_at||"")}).sort(function(a,b){return Date.parse(a.issue.created_at||"")-Date.parse(b.issue.created_at||"")}).pop();if(newer)superseded["accept:"+acceptRecord.issue.number]=newer});
 window.zeusDecisions=rows;
 Object.keys(slots).forEach(function(k){
 var el=get(k+"-list"),arr=slots[k];
 if(!el)return;
 el.innerHTML=arr.length?arr.map(function(record){
-var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact;
-var status=k==="live"?(record.liveVerified?"LIVE verifierad · "+esc(record.mergeSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad pilotversion. Ny provning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?"Kandidatstatus kunde inte hämtas. Slutgodkännande är låst; försök igen.":record.candidate&&!record.candidateReady?"Kandidaten väntar på verifierad releasekontroll.":record.candidate?"Kandidat skapad · väntar på kontroller":"Registrerat · väntar på kandidatkontroll";
-var finalButton=record.candidateReady?'<div class="actions"><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(record.itemId)+'" data-sha="'+esc(record.testedSha)+'" data-candidate-issue="'+i.number+'" data-tree-sha="'+esc(record.candidateTree)+'">Slutgodkänn publicering till LIVE</button><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
+var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact,supersededRecord=superseded[k+":"+i.number];
+var status=supersededRecord?(k==="direct"?"Övertaget av LIVE-godkännande #"+esc(supersededRecord.issue.number):"Äldre godkännande ersatt av LIVE-beslut #"+esc(supersededRecord.issue.number)):k==="live"?(record.liveVerified?"LIVE verifierad · release "+esc(record.mergeSha.slice(0,7))+" ingår i publicerad "+esc(record.deployedLiveSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad pilotversion. Ny provning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?"Kandidatstatus kunde inte hämtas. Slutgodkännande är låst; försök igen.":record.candidate&&!record.candidateReady?"Kandidaten väntar på verifierad releasekontroll.":record.candidate?"Kandidat skapad · väntar på kontroller":"Registrerat · väntar på kandidatkontroll";
+var finalButton=record.candidateReady&&!supersededRecord?'<div class="actions"><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(record.itemId)+'" data-sha="'+esc(record.testedSha)+'" data-candidate-issue="'+i.number+'" data-tree-sha="'+esc(record.candidateTree)+'">Slutgodkänn publicering till LIVE</button><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
 var runLink=record.candidateRunUrl?'<br><a class="small" href="'+esc(record.candidateRunUrl)+'" target="_blank" rel="noopener">Visa kandidatkontroll ↗</a>':'';
 return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton
 }).join(""):"Inga beslut registrerade."
