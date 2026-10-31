@@ -64,4 +64,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Aktuell GitHub-status OKÄND');
   });
 
+  it('lists current open GitHub PRs and checks selected PR CI and mergeability on demand',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('pulls?state=open&per_page=100');
+    expect(page).toContain('data-pr-status');
+    expect(page).toContain('/check-runs');
+    expect(page).toContain('pr.mergeable===true');
+    expect(page).toContain('Status är OKÄND');
+  });
+
 });
