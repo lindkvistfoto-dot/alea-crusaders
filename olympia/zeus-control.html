@@ -52,8 +52,17 @@ var baseline=null,queue=null,inventory=[];
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
 async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status+" "+url);return r.json()}
-function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
-refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill">DEV '+esc(baseline.refs.development.sha.slice(0,7))+'</span><span class="pill">LIVE '+esc(baseline.refs.live.sha.slice(0,7))+'</span><span class="pill">'+esc(baseline.pull_requests.open)+' öppna PR</span><span class="pill">'+esc(baseline.pull_requests.merged)+' mergade PR</span>'}
+async function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
+refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Hämtar aktuell GitHub-status…</span>';
+try{
+var result=await Promise.all([
+ json(api+"/branches/development"),
+ json(api+"/branches/main"),
+ json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:open")),
+ json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:merged"))
+]);
+refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill">DEV '+esc(result[0].commit.sha.slice(0,7))+'</span><span class="pill">LIVE '+esc(result[1].commit.sha.slice(0,7))+'</span><span class="pill">'+esc(result[2].total_count)+' öppna PR</span><span class="pill">'+esc(result[3].total_count)+' mergade PR</span>';
+}catch(_){refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Aktuell GitHub-status OKÄND</span>'}}
 function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issues/new?template="+encodeURIComponent(template)}
 function renderTrial(){
 var root=get("trial-list"),items=queue&&queue.items||[];

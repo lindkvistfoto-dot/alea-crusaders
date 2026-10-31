@@ -55,4 +55,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).not.toContain('signInWithOAuth');
   });
 
+  it('reads current branches and pull request counts from GitHub instead of the captured snapshot',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('api+"/branches/development"');
+    expect(page).toContain('api+"/branches/main"');
+    expect(page).toContain('is:pr is:open');
+    expect(page).toContain('is:pr is:merged');
+    expect(page).toContain('Aktuell GitHub-status OKÄND');
+  });
+
 });
