@@ -121,9 +121,7 @@ unknown=true;
 unknownMessage="Logga in i ALEA DEV för att verifiera publiceringsstatus.";
 }else{
 try{
-var session=storedSession();
-if(!session)throw new Error("ALEA-session saknas.");
-var check=await request({action:"deployment_check"},session);
+var check=await window.olympiaAuthenticatedRequest({action:"deployment_check"});
 if(requestId!==preflightRequestSequence)return;
 if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Serverkontrollen svarade inte.");
 var environments=check.result.environments||{},liveSha=environments.main&&environments.main.sha,devSha=environments.development&&environments.development.sha;
@@ -186,9 +184,7 @@ var candidateReady=false;
 var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
 if(candidate&&exact&&window.olympiaAuthVerified){
 try{
-var session=storedSession();
-if(!session)throw new Error("ALEA-session saknas.");
-var check=await request({action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha},session);
+var check=await window.olympiaAuthenticatedRequest({action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha});
 if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Kandidatkontrollen svarade inte.");
 candidateReady=check.result.ready===true;
 candidateBlocked=check.result.blocked===true;
@@ -295,6 +291,12 @@ async function verifyLive(sha){
  }
  say("Merge genomförd, men LIVE-deploy är ännu inte verifierad. Status visas som okänd tills manifestet matchar.");
 }
+window.olympiaAuthenticatedRequest=async function(payload){
+ if(!window.olympiaAuthVerified)throw new Error("ALEA-session och Zeus-behörighet saknas.");
+ const session=storedSession();
+ if(!session)throw new Error("ALEA-session saknas.");
+ return request(payload,session);
+};
 async function syncAuth(){
  window.olympiaAuthVerified=false;
  if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();

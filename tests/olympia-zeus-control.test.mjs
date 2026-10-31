@@ -75,7 +75,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-candidate-server-check-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-auth-bridge-2"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -83,6 +83,18 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).not.toContain('supabase.auth.setSession');
     expect(page).not.toContain('signInWithPassword');
     expect(page).not.toContain('signInWithOAuth');
+  });
+
+  it('routes deployment and candidate checks through the ALEA-authenticated bridge',()=>{
+    const page=read('olympia/zeus-control.html');
+    const outerScript=page.split('<script>')[1]?.split('</script>')[0]||'';
+    expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
+    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
+    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(outerScript).not.toContain('storedSession()');
+    const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+    expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
+    for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
   });
 
   it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
@@ -204,7 +216,7 @@ describe('OLYMPIA server-side deployment preflight',()=>{
     expect(edge).toContain('verifyPublishedManifest("main", liveSha)');
     expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
     expect(edge).toContain('? { contents: "read" }');
-    expect(block).toContain('request({action:"deployment_check"},session)');
+    expect(block).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
     expect(block).not.toContain('json(api+"/branches/main")');
     expect(block).not.toContain('json(api+"/branches/development")');
     expect(edge).toContain('data.action === "candidate_check"');
