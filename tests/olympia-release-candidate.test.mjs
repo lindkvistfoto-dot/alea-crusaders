@@ -13,6 +13,10 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
   expect(workflow).toContain('git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA"');
   expect(workflow).toContain('git -C "$SOURCE_DIR" add -A');
+  expect(workflow).toContain('EXPECTED_TREE: ${{ steps.candidate.outputs.candidate_tree }}');
+  expect(workflow).toContain('ACTUAL_TREE="$(git -C "$SOURCE_DIR" write-tree)"');
+  expect(workflow).toContain('git -C "$SOURCE_DIR" diff --quiet');
+  expect(workflow).not.toContain('git -C "$SOURCE_DIR" status --porcelain');
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
   expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
@@ -30,6 +34,13 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
   expect(workflow).toContain('verified Astrid candidate from LIVE (attempt $ATTEMPT)');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
+ });
+ it('retries the same decision from current DEV while preserving the request attempt',()=>{
+  const edge=read('supabase/functions/olympia-control/index.ts');
+  expect(edge).toContain('attempt = Math.max(1, Number(previous.attempt) || 1) + 1;');
+  expect(edge).toContain('method: "PATCH",');
+  expect(edge).toContain('body: JSON.stringify({ sha: ref.object.sha, force: true }),');
+  expect(edge).toContain('contents/" + path + "?ref=" + encodeURIComponent(branch)');
  });
  it('keeps candidate publication behind explicit final Zeus approval',()=>{
   const workflow=read('.github/workflows/olympia-release-candidate.yml');

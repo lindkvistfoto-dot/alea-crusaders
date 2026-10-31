@@ -168,6 +168,18 @@ async function startCandidateRequest(token: string, issueNumber: number, item: a
     }
     attempt = Math.max(1, Number(previous.attempt) || 1) + 1;
   }
+  if (branchExists) {
+    await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/refs/heads/" + encodeURIComponent(branch), {
+      method: "PATCH",
+      body: JSON.stringify({ sha: ref.object.sha, force: true }),
+    });
+    current = null;
+    try {
+      current = await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/" + path + "?ref=" + encodeURIComponent(branch));
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+    }
+  }
   const request = {
     schema: "olympia-release-request/v1",
     issueNumber,
