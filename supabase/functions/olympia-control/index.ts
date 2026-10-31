@@ -270,7 +270,7 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
   if (live.sha !== liveMatch[1]) throw new Error("LIVE_BASELINE_CHANGED");
   const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1]);
-  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== "github-actions[bot]" || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
+  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== appLogin || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");

@@ -75,6 +75,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });');
     expect(edge).toContain('githubToken(data.decision)');
     expect(edge).toContain('pr.mergeable !== true');
+    expect(edge).toContain('pr.user?.login !== appLogin');
+    expect(edge).toContain('const appLogin = await appBotLogin();');
     expect(edge).toContain('CANDIDATE_CHECKS_NOT_GREEN');
     expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
   });
