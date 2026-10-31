@@ -1231,6 +1231,7 @@ function renderOwner(){let el=$('ownerControl');if(!el)return;let value=current.
 let activeAdminSection='overview';
 const ADMIN_SECTION_META={
  overview:['Administration','Välj vad du vill administrera.'],
+ olympia:['OLYMPIA','Utveckling, provning och releasekontroll i ALEA.'],
  events:['Händelser','Fördefinierade händelser'],
  scenes:['Stridsscener','Kampanjens taktiska stridsscener'],
  people:['Personer','SLP och kampanjpersoner'],
