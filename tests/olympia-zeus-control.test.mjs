@@ -50,9 +50,22 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(page).toContain('supabase.auth.setSession');
+    expect(page).toContain('session_check');
+    expect(page).toContain('window.olympiaAuthVerified');
+    expect(page).not.toContain('type="module"');
+    expect(page).not.toContain('supabase.auth.setSession');
     expect(page).not.toContain('signInWithPassword');
     expect(page).not.toContain('signInWithOAuth');
+  });
+
+  it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(page).toContain('!!window.olympiaAuthVerified');
+    expect(page).toContain('request({action:"session_check"},session)');
+    expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
+    expect(edge).toContain('data.action === "session_check"');
+    expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
   });
 
   it('reads current branches and pull request counts from GitHub instead of the captured snapshot',()=>{
