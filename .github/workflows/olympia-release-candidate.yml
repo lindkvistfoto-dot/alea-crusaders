@@ -190,6 +190,7 @@ jobs:
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
+          SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
         with:
           script: |
             const { owner, repo } = context.repo;
