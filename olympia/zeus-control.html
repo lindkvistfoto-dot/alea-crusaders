@@ -298,6 +298,9 @@ document.addEventListener("click",async event=>{
   say(error&&error.name==="AbortError"?"Serverkontrollen tog för lång tid. Ingen skrivning bekräftades.":"Beslutet kunde inte nå servern. Ingen skrivning bekräftades.");
  }finally{button.disabled=false}
 });
+window.addEventListener("storage",event=>{
+ if(event.key==="alea:dev:alea_supabase_session_dev"||event.key==="alea:dev:alea_supabase_session")syncAuth();
+});
 syncAuth();
 })();
 </script>
