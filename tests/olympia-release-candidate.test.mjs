@@ -16,6 +16,11 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
   expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
+  expect(workflow).toContain('Wait for release PR CI and mergeability');
+  expect(workflow).toContain('checks: read');
+  expect(workflow).toContain('statuses: read');
+  expect(workflow).toContain('GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"');
+  expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
  });
  it('keeps candidate publication behind explicit final Zeus approval',()=>{
