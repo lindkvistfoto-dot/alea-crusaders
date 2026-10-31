@@ -36,3 +36,6 @@ For an existing relief variant use `target: {"kind":"honor-relief","id":"EXISTIN
 Honor originals use `folders.original_archive` in `config/hermes-drive-folders.json`. Both Drive IDs must be distinct, in the configured folders, with the same declared source hash. Never put folder IDs in a request.
 
 A green code CI is not proof of publication. Match the request commit to the CORE run; confirm `HERMES_CORE_ACTIVE`, its Storage path and the database image reference. Preserve prior images and originals when any step fails.
+
+
+DEV submissions use `hermes/core/queue/dev/<request>.json` and run only on `development` through `.github/workflows/hermes-core-publish-dev.yml`. The LIVE workflow remains restricted to `main` and its top-level queue. DEV requests carry optional `olympia_item_id`, `source_pr_number`, and `source_dev_sha` fields for traceability; image bytes and credentials remain outside GitHub.
