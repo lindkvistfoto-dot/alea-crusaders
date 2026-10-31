@@ -192,11 +192,11 @@ main:has(> #trophyRoomPage:not(.hidden)){
 
 /* PILOT-002: show the whole velvet frame on mobile, with the story below. */
 @media(max-width:650px){
- .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:44px 0 0;overscroll-behavior:contain}
+ .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:32px 0 0;overscroll-behavior:contain}
  .arcane-medal-display{display:flex;flex-direction:column;aspect-ratio:auto;background:none;filter:none;gap:0}
  .arcane-medal-display-cushion{box-sizing:border-box;flex:none;width:100%;aspect-ratio:3/2;min-height:0;padding:12% 10%;background-image:var(--medal-frame-image,linear-gradient(140deg,#583c29,#ad824f));background-size:100% 100%;background-position:center;background-repeat:no-repeat}
  .arcane-medal-display-image{width:58%;max-height:68%;object-fit:contain}
- .arcane-medal-display-parchment{box-sizing:border-box;flex:none;width:100%;min-height:0;aspect-ratio:auto;display:block;padding:22px 24px 30px;background:#ead5ac;color:#422b1e;border:2px solid #b38a4f;overflow-wrap:anywhere}
+ .arcane-medal-display-parchment{box-sizing:border-box;flex:none;width:100%;min-height:0;aspect-ratio:auto;display:block;padding:18px 24px 24px;background:#ead5ac;color:#422b1e;border:2px solid #b38a4f;overflow-wrap:anywhere}
  .arcane-medal-display-story{max-height:none;overflow:visible;font-size:clamp(15px,4vw,19px);line-height:1.5}
  .arcane-medal-display-title{font-size:clamp(28px,7vw,38px);margin:0 0 12px;overflow-wrap:anywhere}
  .arcane-medal-display-close{position:absolute;top:6px;right:8px;float:none;margin:0;width:32px;height:32px;z-index:30;font-size:21px}
