@@ -71,9 +71,13 @@ jobs:
           grep -Fq -- "- Testad DEV-commit (full SHA): $TESTED_SHA" <<< "$ISSUE_BODY"
           [[ "$DECISION" == "pandoras_ask" && "$ISSUE_BODY" == *"- Beslut: PANDORAS ASK"* || "$DECISION" == "release_package" && "$ISSUE_BODY" == *"- Beslut: RELEASEPAKET"* ]] || { echo "::error::The journal decision does not match its release request."; exit 1; }
           QUEUE="$DEV_DIR/olympia/work-items.json"
-          jq -e --arg item "$ITEM_ID" --arg sha "$TESTED_SHA" '.items[] | select(.id==$item and .ready_for_human_acceptance==true and .dev_sha==$sha and .pr_number==385)' "$QUEUE" >/dev/null || { echo "::error::The PILOT-001 queue no longer confirms this exact DEV version."; exit 1; }
+          SOURCE_PR_SHA="$(jq -r --arg item "$ITEM_ID" '.items[] | select(.id==$item and .ready_for_human_acceptance==true and .pr_number==385) | .dev_sha' "$QUEUE")"
+          [[ "$SOURCE_PR_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The PILOT-001 source merge SHA is not verified."; exit 1; }
+          CURRENT_DEV_SHA="$(git -C "$DEV_DIR" rev-parse HEAD)"
+          [[ "$CURRENT_DEV_SHA" == "$TESTED_SHA" ]] || { echo "::error::DEV changed after Zeus tested it. Refresh OLYMPIA and create a new decision."; exit 1; }
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
+          echo "source_pr_sha=$SOURCE_PR_SHA" >> "$GITHUB_OUTPUT"
 
           PR_JSON="$(gh api "repos/$REPOSITORY/pulls/385")"
           PR_BASE_SHA="$(jq -r '.base.sha' <<< "$PR_JSON")"
@@ -81,7 +85,7 @@ jobs:
           PR_MERGED="$(jq -r '.merged' <<< "$PR_JSON")"
           PR_BASE="$(jq -r '.base.ref' <<< "$PR_JSON")"
           PR_MERGE_SHA="$(jq -r '.merge_commit_sha' <<< "$PR_JSON")"
-          [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" == "$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" ]] || { echo "::error::PR #385 is not the exact merged DEV version approved by Zeus."; exit 1; }
+          [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" == "$SOURCE_PR_SHA" ]] || { echo "::error::PR #385 source merge no longer matches the verified OLYMPIA work item."; exit 1; }
 
           git -C "$DEV_DIR" fetch --no-tags origin "refs/pull/385/head:refs/olympia/pr-385"
           git -C "$DEV_DIR" diff --binary "$PR_BASE_SHA...refs/olympia/pr-385" > "$OUTPUT_DIR/candidate.patch"
