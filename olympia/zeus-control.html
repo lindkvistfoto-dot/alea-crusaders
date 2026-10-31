@@ -183,33 +183,19 @@ var reportReady=!!(candidate&&candidate.includes("READY_FOR_ZEUS_FINAL_APPROVAL"
 var candidateRunMatch=candidate&&candidate.match(/- Workflow run: (https:\/\/[^\s]+)/i);
 var liveMatch=candidate&&candidate.match(/- LIVE rollback baseline: ([0-9a-f]{40})/i);
 var candidateReady=false;
-if(reportReady&&treeMatch&&prMatch&&liveMatch){
+var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
+if(candidate&&exact&&window.olympiaAuthVerified){
 try{
-var fresh=await Promise.all([
-json(api+"/pulls/"+prMatch[1]),
-json(api+"/branches/main")
-]);
-var candidatePr=fresh[0],liveBranch=fresh[1];
-var headSha=String(candidatePr.head&&candidatePr.head.sha||"");
-if(headSha){
-var verified=await Promise.all([
-json(api+"/commits/"+encodeURIComponent(headSha)),
-json(api+"/commits/"+encodeURIComponent(headSha)+"/check-runs"),
-json(api+"/commits/"+encodeURIComponent(headSha)+"/status")
-]);
-var tree=verified[0].commit&&verified[0].commit.tree&&verified[0].commit.tree.sha;
-var runs=verified[1].check_runs||[];
-var checksOk=runs.length>0&&runs.every(function(c){return c.status==="completed"&&["success","neutral","skipped"].includes(c.conclusion)});
-var statusContexts=verified[2].statuses||[];
-var statusesOk=statusContexts.length===0||verified[2].state==="success";
-var changed=await json(api+"/pulls/"+prMatch[1]+"/files?per_page=100");
-var allowed=["features/trophy-room/room.css","features/trophy-room/room.js","tests/arcane-trophy-room.test.mjs"].sort();
-var paths=Array.isArray(changed)?changed.map(function(f){return f.filename}).sort():[];
-var exactScope=paths.length===allowed.length&&paths.every(function(path,index){return path===allowed[index]});
-candidateReady=window.olympiaReleasePreflightReady===true&&candidatePr.state==="open"&&candidatePr.base&&candidatePr.base.ref==="main"&&candidatePr.mergeable===true&&
-liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&candidatePr.base.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&statusesOk&&exactScope;
-}
-}catch(e){candidateReady=false;candidateCheckUnknown=true}
+var session=storedSession();
+if(!session)throw new Error("ALEA-session saknas.");
+var check=await request({action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha},session);
+if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Kandidatkontrollen svarade inte.");
+candidateReady=check.result.ready===true;
+candidateBlocked=check.result.blocked===true;
+if(check.result.candidateTreeSha)treeMatch=[check.result.candidateTreeSha];
+if(check.result.releasePr)prMatch=[null,String(check.result.releasePr),String(check.result.releaseUrl||"")];
+if(check.result.candidateRunUrl)candidateRunMatch=[null,check.result.candidateRunUrl];
+}catch(e){candidateCheckUnknown=true}
 }
 var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
