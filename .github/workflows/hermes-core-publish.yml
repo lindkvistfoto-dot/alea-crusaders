@@ -45,6 +45,7 @@ jobs:
       - name: Prepare and publish changed CORE requests
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          HERMES_TARGET_ENV: LIVE
           SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
           HERMES_BEFORE: ${{ github.event.before }}
