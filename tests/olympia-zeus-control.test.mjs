@@ -52,6 +52,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('exactScope');
     expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
     expect(edge).toContain('CANDIDATE_SCOPE_NOT_ALLOWED');
+    expect(edge).toContain('verifyPublishedManifest("main", live.sha)');
+    expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
+    expect(edge).toContain('pr.base?.sha !== live.sha');
+    expect(edge).toContain('DEPLOYMENT_MANIFEST_UNVERIFIED');
     expect(baseline.completeness.commit_history).toContain('100');
   });
   it('integrates OLYMPIA in ALEA admin and reuses the ALEA session',()=>{

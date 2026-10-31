@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
 const ALLOWED_ORIGIN = "https://lindkvistfoto-dot.github.io";
+const PAGES_BASE = ALLOWED_ORIGIN + "/alea-crusaders";
 const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix", "final_approval"]);
 const responseHeaders = {
   "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
@@ -235,6 +236,18 @@ function issueBody(item: any, data: any, actor: string) {
     "Beslutet registrerades via OLYMPIA DEV Decision Bridge. GitHub är beständig beslutsjournal.",
   ].join("\n");
 }
+async function verifyPublishedManifest(environment: "main" | "development", sourceSha: string) {
+  const path = environment === "main" ? "/deployment-manifest.json" : "/dev/deployment-manifest.json";
+  const response = await fetch(PAGES_BASE + path + "?ts=" + Date.now(), {
+    headers: { "Accept": "application/json", "Cache-Control": "no-cache" },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
+  const manifest = await response.json();
+  if (manifest.environment !== environment || manifest.source_sha !== sourceSha) {
+    throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
+  }
+}
 async function verifyCandidate(token: string, item: any, data: any) {
   if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
       typeof data.candidateTreeSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.candidateTreeSha)) {
@@ -269,8 +282,16 @@ async function verifyCandidate(token: string, item: any, data: any) {
   if (!liveMatch || !prMatch) throw new Error("CANDIDATE_REPORT_INCOMPLETE");
   const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
   if (live.sha !== liveMatch[1]) throw new Error("LIVE_BASELINE_CHANGED");
+  const development = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+  const developmentSha = String(development.object?.sha || "");
+  if (!/^[0-9a-f]{40}$/i.test(developmentSha)) throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
+  await Promise.all([
+    verifyPublishedManifest("main", live.sha),
+    verifyPublishedManifest("development", developmentSha),
+  ]);
   const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1]);
-  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== appLogin || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
+  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.base?.sha !== live.sha ||
+      pr.user?.login !== appLogin || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
@@ -366,6 +387,7 @@ Deno.serve(async (req: Request) => {
           CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända. LIVE förblir oförändrat.",
           RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
           CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
+          DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras. Slutgodkännandet spärrades; ingen ändring gjordes i LIVE.",
         };
         return fail(messages[code] || "Kandidaten kunde inte verifieras. LIVE förblir oförändrat.", 409);
       }
