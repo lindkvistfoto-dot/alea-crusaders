@@ -75,7 +75,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-candidate-server-check-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-auth-bridge-2"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -216,7 +216,7 @@ describe('OLYMPIA server-side deployment preflight',()=>{
     expect(edge).toContain('verifyPublishedManifest("main", liveSha)');
     expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
     expect(edge).toContain('? { contents: "read" }');
-    expect(block).toContain('request({action:"deployment_check"},session)');
+    expect(block).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
     expect(block).not.toContain('json(api+"/branches/main")');
     expect(block).not.toContain('json(api+"/branches/development")');
     expect(edge).toContain('data.action === "candidate_check"');
