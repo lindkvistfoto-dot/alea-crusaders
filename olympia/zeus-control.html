@@ -83,8 +83,8 @@ if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
 if(!prs.length){root.innerHTML='<div class="empty">Inga öppna pull requests.</div>';return}
 root.innerHTML=prs.map(function(pr){
 var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
-var feature=(String(pr.body||"").match(/(?:^|\\n)#+\\s*(?:förväntat resultat|expected result|syfte|summary)\\s*\\n([\\s\\S]*?)(?=\\n#+\\s|$)/i)||[])[1]||"";
-feature=feature.trim().replace(/\\s+/g," ").slice(0,360);
+var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];var feature=match[1]||"";
+feature=feature.trim().replace(/\s+/g," ").slice(0,360);
 var kind=pr.draft?"Draft":"Öppen";
 return '<article class="pr"><div class="n">#'+esc(n)+'</div><div><a href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">'+esc(pr.title)+'</a><div class="small muted">'+esc(kind)+' · '+esc(pr.head.ref)+' → '+esc(pr.base.ref)+'</div>'+(feature?'<div class="small muted">Att prova: '+esc(feature)+'</div>':'')+'<div class="small muted" id="pr-status-'+esc(n)+'">CI och mergebarhet: inte hämtade</div></div><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Uppdatera status</button></article>'
 }).join("");
