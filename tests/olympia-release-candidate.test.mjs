@@ -11,6 +11,9 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   expect(workflow).toContain('mapfile -t SOURCE_PRS');
   expect(workflow).toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
+  expect(workflow).toContain('git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA"');
+  expect(workflow).toContain('git -C "$SOURCE_DIR" add -A');
+  expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
   expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
