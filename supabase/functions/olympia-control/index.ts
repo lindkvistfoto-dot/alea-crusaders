@@ -245,10 +245,17 @@ Deno.serve(async (req: Request) => {
 
     const token = await githubToken();
     const item = await workItem(token, data.itemId);
-    if (!item.ready_for_human_acceptance || item.dev_sha !== data.testedDevSha) {
-      return fail("DEV-versionen har ändrats eller är inte verifierad. Uppdatera OLYMPIA och prova igen.", 409);
+    if (!item.ready_for_human_acceptance || !/^[0-9a-f]{40}$/i.test(item.dev_sha || "")) {
+      return fail("Pilotens källversion är inte verifierad. Ingen skrivning utfördes.", 409);
     }
     if (item.pr_number !== 385 || item.id !== "PILOT-001") return fail("Pilotens PR-koppling kunde inte verifieras.", 409);
+
+    if (data.decision !== "final_approval") {
+      const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+      if (ref.object?.sha !== data.testedDevSha) {
+        return fail("DEV har ändrats sedan sidan hämtades. Uppdatera OLYMPIA och prova igen.", 409);
+      }
+    }
 
     if (data.decision === "final_approval") {
       let candidate;
