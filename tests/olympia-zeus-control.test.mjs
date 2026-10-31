@@ -68,6 +68,19 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
   });
 
+  it('isolates DEV auth storage from the LIVE ALEA session',()=>{
+    const legacy=read('legacy/app.js');
+    const page=read('olympia/zeus-control.html');
+    expect(legacy).toContain("SUPABASE_SESSION_KEY='alea_supabase_session_dev'");
+    expect(legacy).toContain('function sessionBelongsToProject(session)');
+    expect(legacy).toContain('return payload.iss===SUPABASE_URL');
+    expect(legacy).toContain('function projectSession()');
+    expect(page).toContain('localStorage.getItem("alea_supabase_session_dev")');
+    expect(page).toContain('function sessionBelongsToDev(session)');
+    expect(page).toContain('return payload.iss===url+"/auth/v1"');
+    expect(page).toContain('ALEA-sessionen gäller inte DEV.');
+  });
+
   it('reads current branches and pull request counts from GitHub instead of the captured snapshot',()=>{
     const page=read('olympia/zeus-control.html');
     expect(page).toContain('api+"/branches/development"');
