@@ -41,8 +41,17 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
 
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
     const baseline=JSON.parse(read('olympia/baseline-001.json'));
-    expect(baseline.database.reconciliation).toBe('BLOCKED_UNKNOWN');
-    expect(baseline.deployments.verified_deployments).toBe(false);
+    expect(baseline.database.reconciliation).toBe('VERIFIED_CORE_SCHEMA_MATCH_WITH_ENVIRONMENT_DIFFERENCES');
+    expect(baseline.database.core_schema_audit.status).toBe('VERIFIED_CORE_SCHEMA_MATCH');
+    expect(baseline.database.core_schema_audit.environment_differences).toHaveLength(2);
+    expect(baseline.deployments.verification_policy).toContain('source_sha');
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(page).toContain('window.olympiaReleasePreflightReady===true');
+    expect(page).toContain('candidatePr.base.sha===liveMatch[1]');
+    expect(page).toContain('exactScope');
+    expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
+    expect(edge).toContain('CANDIDATE_SCOPE_NOT_ALLOWED');
     expect(baseline.completeness.commit_history).toContain('100');
   });
   it('integrates OLYMPIA in ALEA admin and reuses the ALEA session',()=>{

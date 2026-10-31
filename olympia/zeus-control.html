@@ -110,18 +110,36 @@ output.textContent="CI: "+checks+" · "+merge+(pr.mergeable_state?" · "+pr.merg
 }catch(_){output.textContent="CI eller mergebarhet kunde inte verifieras. Status är OKÄND."}
 finally{button.disabled=false}
 });
-function renderBlockers(){
+async function renderBlockers(){
 var b=get("release-blockers");
-if(!baseline){b.innerHTML="<strong>Blockerat:</strong> baslinjen kunde inte läsas. Release-status är OKÄND.";return}
-var db=baseline.database,unknown=baseline.deployments.live_manifest_source_sha.indexOf("UNKNOWN")===0||baseline.deployments.dev_manifest_source_sha.indexOf("UNKNOWN")===0;
-var mismatch=db.live.migration_count!==db.development.migration_count||db.reconciliation==="BLOCKED_UNKNOWN";
-var items=(queue&&queue.items)||[],decisions=window.zeusDecisions||[];
-var readyItems=items.filter(function(i){return i.ready_for_human_acceptance});
-var lines=[];
-if(unknown)lines.push("Aktuell verifierad DEV/LIVE deploy-SHA saknas.");
-if(mismatch)lines.push("Supabase migrationer skiljer sig (LIVE "+db.live.migration_count+" · DEV "+db.development.migration_count+")");
-if(!readyItems.length)lines.push("Inget ärende är tekniskt releaseklart.");
-b.innerHTML="<strong>"+(lines.length?"Release blockerad:":"Förhandskontroll krävs:")+"</strong> "+esc(lines.join(" "))+"<br><span class=\"small\">Teknisk status får inte ersätta Zeus provning. Okända databasskillnader blockerar release.</span>";
+window.olympiaReleasePreflightReady=false;
+if(!baseline){b.innerHTML="<strong>Release blockerad:</strong> baslinjen kunde inte läsas. Status är OKÄND.";return}
+var db=baseline.database||{},audit=db.core_schema_audit||{};
+var lines=[],info=[];
+try{
+var values=await Promise.all([
+json(new URL("../../deployment-manifest.json?ts="+Date.now(),location.href).href),
+json(new URL("../deployment-manifest.json?ts="+Date.now(),location.href).href),
+json(api+"/branches/main"),
+json(api+"/branches/development")
+]);
+var liveManifest=values[0],devManifest=values[1],liveBranch=values[2],devBranch=values[3];
+var liveOk=liveManifest.environment==="main"&&liveManifest.source_sha===liveBranch.commit.sha;
+var devOk=devManifest.environment==="development"&&devManifest.source_sha===devBranch.commit.sha;
+if(!liveOk)lines.push("LIVE-manifestet matchar inte aktuell main-branch.");
+if(!devOk)lines.push("DEV-manifestet matchar inte aktuell development-branch.");
+if(liveOk&&devOk)info.push("DEV och LIVE är verifierade mot aktuella GitHub-brancher.");
+}catch(_){lines.push("DEV/LIVE-manifest eller aktuell branch kunde inte verifieras.")}
+var schemaOk=audit.status==="VERIFIED_CORE_SCHEMA_MATCH";
+if(!schemaOk)lines.push("Kärnschemats likhet är inte verifierad.");
+if(schemaOk){
+info.push("Kärnschema verifierat: "+esc((audit.equal_categories||[]).join(", "))+".");
+if(db.live&&db.development&&db.live.migration_count!==db.development.migration_count)info.push("Migreringshistorik skiljer sig (LIVE "+db.live.migration_count+" · DEV "+db.development.migration_count+"); räknarna är inte jämförbara som väntande migreringar.");
+(audit.environment_differences||[]).forEach(function(x){info.push(esc(x))});
+}
+window.olympiaReleasePreflightReady=lines.length===0;
+b.innerHTML="<strong>"+(lines.length?"Release blockerad:":"Releasekontroll "+(window.olympiaReleasePreflightReady?"godkänd":"väntar")+":")+"</strong> "+esc(lines.join(" "))+(info.length?"<br><span class=\"small\">"+info.join(" ")+"</span>":"");
+if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
 }
 async function renderDecisions(){
 var slots={accept:[],direct:[],package:[],defer:[],fix:[],live:[]};
@@ -176,12 +194,16 @@ var runs=verified[1].check_runs||[];
 var checksOk=runs.length>0&&runs.every(function(c){return c.status==="completed"&&["success","neutral","skipped"].includes(c.conclusion)});
 var statusContexts=verified[2].statuses||[];
 var statusesOk=statusContexts.length===0||verified[2].state==="success";
-candidateReady=candidatePr.state==="open"&&candidatePr.base&&candidatePr.base.ref==="main"&&candidatePr.mergeable===true&&
-liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&statusesOk;
+var changed=await json(api+"/pulls/"+prMatch[1]+"/files?per_page=100");
+var allowed=["features/trophy-room/room.css","features/trophy-room/room.js","tests/arcane-trophy-room.test.mjs"].sort();
+var paths=Array.isArray(changed)?changed.map(function(f){return f.filename}).sort():[];
+var exactScope=paths.length===allowed.length&&paths.every(function(path,index){return path===allowed[index]});
+candidateReady=window.olympiaReleasePreflightReady===true&&candidatePr.state==="open"&&candidatePr.base&&candidatePr.base.ref==="main"&&candidatePr.mergeable===true&&
+liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&candidatePr.base.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&statusesOk&&exactScope;
 }
 }catch(e){candidateReady=false}
 }
-var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
+var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"))||!!candidate&&!candidateReady;
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
 var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified};
 slots[target].push(record);
