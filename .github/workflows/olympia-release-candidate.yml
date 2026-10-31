@@ -61,7 +61,7 @@ jobs:
           DECISION="$(jq -r '.decision' "$OUTPUT_DIR/request.json")"
           ITEM_ID="$(jq -r '.itemId' "$OUTPUT_DIR/request.json")"
           TESTED_SHA="$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")"
-          [[ "$DECISION" == "pandoras_ask" || "$DECISION" == "release_package" ]] || { echo "::error::Unsupported candidate decision."; exit 1; }
+          [[ "$DECISION" == "pandoras_ask" ]] || { echo "::error::Only a Pandoras Ask start order can create a single-item LIVE PR candidate."; exit 1; }
           [[ "$ITEM_ID" == "PILOT-001" && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to the exact Astrid pilot version."; exit 1; }
           ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
           [[ "$(jq -r '.user.type' <<< "$ISSUE_JSON")" == "Bot" ]] || { echo "::error::Decision was not created by the OLYMPIA server app."; exit 1; }
