@@ -91,7 +91,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
     expect(edge).toContain('data.action === "session_check"');
     expect(edge).toContain('async function githubToken(decision: string)');
-    expect(edge).toContain('const permissions: Record<string, string> = { issues: "write", contents: "write" };');
+    expect(edge).toContain('decision === "deployment_check"');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(edge).toContain(': { issues: "write", contents: "write" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });');
     expect(edge).toContain('githubToken(data.decision)');
     expect(edge).toContain('pr.mergeable !== true');
