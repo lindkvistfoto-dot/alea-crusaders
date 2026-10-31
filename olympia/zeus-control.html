@@ -50,6 +50,7 @@ var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
 var baseline=null,queue=null,inventory=[],currentDevSha=null;
+window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
 async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status+" "+url);return r.json()}
@@ -71,12 +72,13 @@ function renderTrial(){
 var root=get("trial-list"),items=queue&&queue.items||[];
 if(!items.length){root.innerHTML='<div class="empty">Kön är tom. Ingen historik har raderats.</div>';return}
 root.innerHTML=items.map(function(item){
-var ready=!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
+var ready=!!window.olympiaAuthVerified&&!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
 var status=ready?'<span class="status ready">Klar att prova</span>':'<span class="status">Pågår · inte klar att prova</span>';
 var links=ready?'<div class="actions"><a class="btn" href="'+esc(item.dev_url||"../")+'" target="_blank" rel="noopener">Öppna i DEV ↗</a><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn Astrid</button><button class="btn secondary" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Behöver rättas</button></div>':'<p class="small muted">Beslutsvalen låses upp när aktuell DEV-version har hämtats och ärendet är tekniskt verifierat.</p>';
 var sourceIssue='<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'">#'+esc(item.provenance.source_issue)+'</a>';
 return '<article class="card"><div class="label">'+esc(item.id)+' · PILOT</div><h2>'+esc(item.title)+'</h2>'+status+'<p><strong>Syfte:</strong> '+esc(item.purpose)+'</p><p><strong>Förväntat resultat:</strong> '+esc(item.expected_result)+'</p>'+links+'<details class="details"><summary>Visa detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte skapad")+' · Käll-PR SHA: '+esc(item.dev_sha||"inte verifierad")+' · Testad DEV SHA: '+esc(currentDevSha||"inte verifierad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Miljömaster: '+esc(item.provenance.environment_master)+' · Asset: '+esc(item.provenance.environment_asset)+'</p></details></article>'
 }).join("")}
+window.olympiaRefreshTrial=renderTrial;
 async function renderPullRequests(){
 var root=get("live-pr-list");
 try{
@@ -179,37 +181,107 @@ window.olympiaRefreshDecisions=renderDecisions;
 renderDecisions();
 })();
 </script>
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
-const url="https://wkiuyklzzroavclnsxna.supabase.co",key="sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et";
-const supabase=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+<script>
+(function(){
+"use strict";
+const url="https://wkiuyklzzroavclnsxna.supabase.co";
+const key="sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et";
 const endpoint=url+"/functions/v1/olympia-control";
-const authBox=document.getElementById("zeus-auth"),feedback=document.getElementById("zeus-feedback");
+const authBox=document.getElementById("zeus-auth");
+const feedback=document.getElementById("zeus-feedback");
+const authMessage=authBox.querySelector("strong");
 function say(message,ok=false){feedback.hidden=false;feedback.innerHTML="<strong>"+(ok?"Sparat:":"Information:")+"</strong> "+message}
-async function verifyLive(sha){for(let attempt=0;attempt<20;attempt++){try{const response=await fetch("../../deployment-manifest.json?ts="+Date.now(),{cache:"no-store"});if(response.ok){const manifest=await response.json();if(manifest.environment==="main"&&manifest.source_sha===sha){say("Astrid är verifierad i LIVE · "+sha.slice(0,7)+".",true);if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();return}}}catch(e){}await new Promise(resolve=>setTimeout(resolve,15000))}say("Merge genomförd, men LIVE-deploy är ännu inte verifierad. Status visas som okänd tills manifestet matchar.");}
-async function syncAuth(){
- const authMessage=authBox.querySelector("strong");
- let aleaSession=null;
- try{aleaSession=JSON.parse(localStorage.getItem("alea_supabase_session")||"null")}catch(_){}
- if(!aleaSession?.access_token||!aleaSession?.refresh_token){
-  await supabase.auth.signOut({scope:"local"}).catch(()=>{});
-  authMessage.textContent="Logga in i ALEA DEV och öppna OLYMPIA från Admin.";
-  return false;
- }
- const {error}=await supabase.auth.setSession({access_token:aleaSession.access_token,refresh_token:aleaSession.refresh_token});
- if(error){
-  authMessage.textContent="ALEA-sessionen kunde inte verifieras.";
-  say("Gå tillbaka till ALEA, logga in igen och öppna OLYMPIA från Admin.");
-  return false;
- }
- const {data}=await supabase.auth.getSession();
- if(!data.session){authMessage.textContent="Logga in i ALEA DEV och öppna OLYMPIA från Admin.";return false}
- authMessage.textContent="Inloggad med din ALEA DEV-session. Zeus-behörighet kontrolleras på servern.";
- return true;
+function setStatus(message){authMessage.textContent=message}
+function storedSession(){
+ try{
+  const session=JSON.parse(localStorage.getItem("alea_supabase_session")||"null");
+  return session&&typeof session.access_token==="string"?session:null;
+ }catch(_){return null}
 }
-document.addEventListener("click",async event=>{const button=event.target.closest("[data-decision]");if(!button)return;button.disabled=true;try{const {data}=await supabase.auth.getSession();if(!data.session){say("Logga in med ditt ALEA DEV-konto först.");return}const response=await fetch(endpoint,{method:"POST",headers:{"Authorization":"Bearer "+data.session.access_token,"apikey":key,"Content-Type":"application/json"},body:JSON.stringify({itemId:button.dataset.item,testedDevSha:button.dataset.sha,decision:button.dataset.decision,candidateIssue:button.dataset.candidateIssue?Number(button.dataset.candidateIssue):undefined,candidateTreeSha:button.dataset.treeSha})});const result=await response.json();if(!response.ok||!result.ok){say(result.message||"Beslutet kunde inte sparas.");return}say(result.message+" <a href='"+result.issue.url+"' target='_blank' rel='noopener'>Visa journalpost #"+result.issue.number+" ↗</a>",true);if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();if(result.decision==="final_approval"&&result.mergeSha)verifyLive(result.mergeSha)}catch(e){say("Beslutet kunde inte nå servern. Ingen skrivning bekräftades.")}finally{button.disabled=false}});
-
+async function request(body,session){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),12000);
+ try{
+  const response=await fetch(endpoint,{
+   method:"POST",
+   headers:{"Authorization":"Bearer "+session.access_token,"apikey":key,"Content-Type":"application/json"},
+   body:JSON.stringify(body),
+   signal:controller.signal
+  });
+  let result={};
+  try{result=await response.json()}catch(_){}
+  return {response,result};
+ }finally{clearTimeout(timeout)}
+}
+async function verifyLive(sha){
+ for(let attempt=0;attempt<20;attempt++){
+  try{
+   const response=await fetch("../../deployment-manifest.json?ts="+Date.now(),{cache:"no-store"});
+   if(response.ok){
+    const manifest=await response.json();
+    if(manifest.environment==="main"&&manifest.source_sha===sha){
+     say("Astrid är verifierad i LIVE · "+sha.slice(0,7)+".",true);
+     if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
+     return;
+    }
+   }
+  }catch(_){}
+  await new Promise(resolve=>setTimeout(resolve,15000));
+ }
+ say("Merge genomförd, men LIVE-deploy är ännu inte verifierad. Status visas som okänd tills manifestet matchar.");
+}
+async function syncAuth(){
+ window.olympiaAuthVerified=false;
+ if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();
+ setStatus("Läser ALEA-sessionen…");
+ const session=storedSession();
+ if(!session){
+  setStatus("Ingen ALEA-session hittades.");
+  say("Logga in i ALEA DEV och öppna OLYMPIA från Admin. Beslutsåtgärder är låsta.");
+  if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();
+  return;
+ }
+ try{
+  const {response,result}=await request({action:"session_check"},session);
+  if(!response.ok||!result.ok){
+   setStatus(response.status===403?"ALEA-session hittades, men Zeus-behörighet saknas.":"ALEA-sessionen kunde inte verifieras.");
+   say(result.message||"Gå tillbaka till ALEA, logga in igen och öppna OLYMPIA från Admin.");
+   return;
+  }
+  window.olympiaAuthVerified=true;
+  setStatus("ALEA-session och Zeus-behörighet verifierade.");
+ }catch(error){
+  setStatus(error&&error.name==="AbortError"?"Kontrollen tog för lång tid.":"ALEA-sessionen kunde inte kontrolleras.");
+  say("Kontrollera nätverket och ladda om OLYMPIA. Beslutsåtgärder förblir låsta.");
+ }finally{
+  if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();
+ }
+}
+document.addEventListener("click",async event=>{
+ const button=event.target.closest("[data-decision]");
+ if(!button)return;
+ if(!window.olympiaAuthVerified){say("Beslutsåtgärder är låsta tills ALEA-session och Zeus-behörighet verifierats.");return}
+ const session=storedSession();
+ if(!session){window.olympiaAuthVerified=false;if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();setStatus("Ingen ALEA-session hittades.");say("Logga in i ALEA DEV igen.");return}
+ button.disabled=true;
+ try{
+  const {response,result}=await request({
+   itemId:button.dataset.item,
+   testedDevSha:button.dataset.sha,
+   decision:button.dataset.decision,
+   candidateIssue:button.dataset.candidateIssue?Number(button.dataset.candidateIssue):undefined,
+   candidateTreeSha:button.dataset.treeSha
+  },session);
+  if(!response.ok||!result.ok){say(result.message||"Beslutet kunde inte sparas.");return}
+  say(result.message+" <a href='"+result.issue.url+"' target='_blank' rel='noopener'>Visa journalpost #"+result.issue.number+" ↗</a>",true);
+  if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
+  if(result.decision==="final_approval"&&result.mergeSha)verifyLive(result.mergeSha);
+ }catch(error){
+  say(error&&error.name==="AbortError"?"Serverkontrollen tog för lång tid. Ingen skrivning bekräftades.":"Beslutet kunde inte nå servern. Ingen skrivning bekräftades.");
+ }finally{button.disabled=false}
+});
 syncAuth();
+})();
 </script>
 </body>
 </html>
