@@ -42,4 +42,17 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(baseline.deployments.verified_deployments).toBe(false);
     expect(baseline.completeness.commit_history).toContain('100');
   });
+  it('integrates OLYMPIA in ALEA admin and reuses the ALEA session',()=>{
+    const app=read('index.html');
+    const legacy=read('legacy/app.js');
+    const page=read('olympia/zeus-control.html');
+    expect(app).toContain("openAdminSection('olympia')");
+    expect(app).toContain('data-admin-section="olympia"');
+    expect(legacy).toContain("olympia:['OLYMPIA'");
+    expect(page).toContain('localStorage.getItem("alea_supabase_session")');
+    expect(page).toContain('supabase.auth.setSession');
+    expect(page).not.toContain('signInWithPassword');
+    expect(page).not.toContain('signInWithOAuth');
+  });
+
 });
