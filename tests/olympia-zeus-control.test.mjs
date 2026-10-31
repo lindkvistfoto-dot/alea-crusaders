@@ -119,6 +119,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
     expect(workflow).toContain('CURRENT_DEV_SHA=');
-    expect(workflow).toContain('PR_MERGE_SHA" == "$SOURCE_PR_SHA');
+    expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
+    expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
+    expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
   });
 });
