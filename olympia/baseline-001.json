@@ -771,10 +771,10 @@
         "190 public types"
       ],
       "environment_differences": [
-        "pg_net is installed only in LIVE",
-        "DEV has broader public-table grants than LIVE"
+        "pg_net-tillägget är installerat endast i LIVE",
+        "DEV har bredare tabellbehörigheter än LIVE"
       ],
-      "candidate_scope_note": "Astrid candidate #416 changes two trophy-room presentation files and one test; it has no SQL, migration, dependency, or data files."
+      "candidate_scope_note": "Astrid-kandidaten ändrar bildvisningen i Troférummet och innehåller inga SQL-, migrations-, beroende- eller datafiler."
     }
   },
   "known_open_work": {
