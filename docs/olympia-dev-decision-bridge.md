@@ -26,3 +26,10 @@ The GitHub App must be installed on `lindkvistfoto-dot/alea-crusaders` and grant
 Deploy this folder to the DEV Supabase project with JWT verification enabled. The deployment workflow is triggered only by changes merged to `development` and targets the DEV project ref `wkiuyklzzroavclnsxna`. It requires the repository Actions secret `SUPABASE_ACCESS_TOKEN`.
 
 The three `OLYMPIA_*` runtime values above must also be configured as Edge Function secrets in the DEV project before Zeus can submit decisions. The handler returns a clear 503 and performs no write while these are missing. Do not copy them into Pages, source files, or PR descriptions.
+
+
+## Zeus-val efter funktionell acceptans
+- `Lägg i releasepaket` registrerar en godkänd ändring för en senare samlad release. Den åtgärden startar inte en LIVE-PR.
+- `Öppna Pandoras ask` är startordern för en separat, selektiv LIVE-PR för pilotändringen. Actions bygger en kandidat från LIVE-baslinjen och testar den.
+- Kandidat-PR:n är endast ett granskningsförslag. Den publiceras inte förrän Zeus separat väljer `Publicera LIVE`, då servern verifierar kandidaten och den aktuella LIVE-baslinjen igen.
+- Den nuvarande PILOT-001-kandidaten är begränsad till godkända käll-PR #385 och #404. Fler objekt i samma releasepaket kräver en senare paketbyggare.

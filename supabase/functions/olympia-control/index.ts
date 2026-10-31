@@ -330,7 +330,7 @@ Deno.serve(async (req: Request) => {
     });
     let requestBranch: string | null = null;
     let candidateStarted: boolean | null = null;
-    if (data.decision === "pandoras_ask" || data.decision === "release_package") {
+    if (data.decision === "pandoras_ask") {
       try {
         requestBranch = await startCandidateRequest(token, decisionIssue.number, item, data);
         candidateStarted = true;
@@ -341,10 +341,12 @@ Deno.serve(async (req: Request) => {
     }
     return json({
       ok: true,
-      message: candidateStarted === true
-        ? "Beslutet sparades. Den exakta releasekandidaten förbereds från LIVE."
+      message: data.decision === "release_package"
+        ? "Ändringen lades i releasepaketet. Ingen LIVE-PR har startats."
+        : candidateStarted === true
+        ? "Pandoras ask registrerades. En selektiv LIVE-PR förbereds från verifierad kod; inget publiceras ännu."
         : candidateStarted === false
-        ? "Beslutet sparades, men kandidatkontrollen kunde inte starta. OLYMPIA har registrerat ärendet."
+        ? "Pandoras ask registrerades, men kandidatkontrollen kunde inte starta. LIVE är oförändrat."
         : "Beslutet sparades i GitHub. OLYMPIA är uppdaterat.",
       issue: { number: decisionIssue.number, url: decisionIssue.html_url },
       requestBranch,

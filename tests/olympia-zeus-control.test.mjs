@@ -50,7 +50,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-olympia-session-3"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-olympia-decision-flow-4"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -122,5 +122,20 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
     expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
+  });
+});
+
+
+describe('OLYMPIA LIVE decision semantics',()=>{
+  it('queues release-package decisions without starting a LIVE candidate',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('if (data.decision === "pandoras_ask") {');
+    expect(edge).toContain('Ändringen lades i releasepaketet. Ingen LIVE-PR har startats.');
+    expect(edge).toContain('Pandoras ask registrerades. En selektiv LIVE-PR förbereds från verifierad kod; inget publiceras ännu.');
+  });
+  it('lets only Pandoras Ask start the one-item LIVE candidate workflow',()=>{
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(workflow).toContain('Only a Pandoras Ask start order can create a single-item LIVE PR candidate.');
+    expect(workflow).not.toContain('DECISION" == "pandoras_ask" || "$DECISION" == "release_package"');
   });
 });

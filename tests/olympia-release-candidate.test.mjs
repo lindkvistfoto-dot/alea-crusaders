@@ -24,4 +24,11 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).toContain("publication:'NOT_PERFORMED'");
   expect(workflow).toContain('LIVE publication: NOT PERFORMED.');
  });
+  it('starts a single-item LIVE PR only for Pandoras Ask; packages stay queued',()=>{
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(workflow).toContain('Only a Pandoras Ask start order can create a single-item LIVE PR candidate.');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('Ändringen lades i releasepaketet. Ingen LIVE-PR har startats.');
+    expect(edge).toContain('if (data.decision === "pandoras_ask") {');
+  });
 });
