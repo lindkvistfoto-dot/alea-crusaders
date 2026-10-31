@@ -23,15 +23,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(queue.items[0].acceptance.decision).toBeNull();
   });
 
-  it('tracks PILOT-002 image publication and blocks visual acceptance until all images are in DEV',()=>{
+  it('tracks PILOT-002 image publication and allows visual acceptance after all images are verified in DEV',()=>{
     const queue=JSON.parse(read('olympia/work-items.json'));
     const pilot=queue.items.find(x=>x.id==='PILOT-002');
     expect(pilot.image_count).toBe(3);
     expect(pilot.images).toHaveLength(3);
     expect(new Set(pilot.images.map(image=>image.asset_key)).size).toBe(3);
     expect(pilot.images.every(image=>image.alpha===true&&image.width===1143&&image.height===1376)).toBe(true);
-    expect(pilot.image_status).toBe('pending_dev_publication');
-    expect(pilot.ready_for_human_acceptance).toBe(false);
+    expect(pilot.images.every(image=>image.dev_publication_status==='verified')).toBe(true);
+    expect(pilot.image_status).toBe('published');
+    expect(pilot.ready_for_human_acceptance).toBe(true);
     const page=read('olympia/zeus-control.html');
     expect(page).toContain('imagesReady=imageCount===0||item.image_status==="published"');
     expect(page).toContain('Bilder: ');
