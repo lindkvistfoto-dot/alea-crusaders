@@ -38,6 +38,39 @@
         "environment_master": "ARCANE TROPHY ROOM V2.2",
         "environment_asset": "hermes/system-assets/arcane-trophy-room-v2.2.json"
       }
+    },
+    {
+      "id": "PILOT-002",
+      "sequence": 2,
+      "title": "Medaljvisning – hela sammetsasken på mobil",
+      "purpose": "Medaljdetaljen ska rymmas i mobilens bredd med medaljen centrerad i sammetsasken och texten under.",
+      "expected_result": "Hela sammetsramen syns i sidled utan beskärning. Medaljen är centrerad i kudden. All text visas under ramen och kan rullas vid behov. Stängknappen är diskret och fortsatt tillgänglig.",
+      "status": "ready_for_acceptance",
+      "technical_status": "PR #432 implementerar mobilfixen och cachebustad DEV-stilmall.",
+      "ready_for_human_acceptance": true,
+      "dev_sha": "ad0d78d2280db86a24f01841c301d5c255eb74d2",
+      "pr_number": 432,
+      "release_source_prs": [
+        432
+      ],
+      "dev_url": "../?view=trophy-room&cache=20261031-pilot-002",
+      "features": [
+        "features/trophy-room/room.css",
+        "index.html"
+      ],
+      "acceptance": {
+        "tested_dev_sha": null,
+        "decision": null,
+        "comment": null,
+        "record_issue": null,
+        "decided_at": null,
+        "release_group": null,
+        "live_status": "not_released"
+      },
+      "provenance": {
+        "environment_master": "ARCANE TROPHY ROOM V2.2",
+        "environment_asset": "hermes/system-assets/arcane-trophy-room-v2.2.json"
+      }
     }
   ]
 }
