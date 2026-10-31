@@ -16,6 +16,19 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
   expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
+  expect(workflow).toContain('Wait for release PR CI and mergeability');
+  expect(workflow).toContain('checks: read');
+  expect(workflow).toContain('statuses: read');
+  expect(workflow).toContain('STATUS_CONTEXTS="$(jq');
+  expect(workflow).toContain('STATUS_CONTEXTS == 0');
+  expect(workflow).toContain('Release PR checks: all GitHub checks passed; PR is mergeable.');
+  expect(workflow).toContain('GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"');
+  expect(workflow).toContain('ATTEMPT="$(jq -r \'.attempt // 1\'');
+  expect(workflow).toContain('push --force origin "HEAD:refs/heads/$BRANCH"');
+  expect(workflow).toContain('let pr = existing.data[0]');
+  expect(workflow).toContain('SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}');
+  expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
+  expect(workflow).toContain('verified Astrid candidate from LIVE (attempt $ATTEMPT)');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
  });
  it('keeps candidate publication behind explicit final Zeus approval',()=>{

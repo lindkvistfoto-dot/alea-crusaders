@@ -29,7 +29,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('ATT PUBLICERA');
     expect(page).toContain('HISTORIK');
     expect(page).toContain('ready_for_human_acceptance');
-    expect(page).toContain('testedSha===item.dev_sha');
+    expect(page).toContain('/^[0-9a-f]{40}$/i.test(testedSha)');
+    expect(page).toContain('i.user.type==="Bot"');
     expect(page).toContain('github.com/"+owner+"/"+repo+"/issues/new');
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
@@ -50,7 +51,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-olympia-decision-flow-4"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-pandora-final-gate-5"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -67,6 +68,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('request({action:"session_check"},session)');
     expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
     expect(edge).toContain('data.action === "session_check"');
+    expect(edge).toContain('checks: "read", statuses: "read"');
+    expect(edge).toContain('pr.mergeable !== true');
+    expect(edge).toContain('CANDIDATE_CHECKS_NOT_GREEN');
     expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
   });
 
@@ -115,6 +119,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
+    expect(page).not.toContain('testedSha===item.dev_sha');
+    expect(page).toContain('candidatePr.mergeable===true');
+    expect(page).toContain('statusesOk');
+    expect(page).toContain('liveBranch.commit.sha===liveMatch[1]');
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');

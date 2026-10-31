@@ -139,20 +139,51 @@ function fieldValue(label){var prefix="- "+label+": ";var row=body.split("\n").f
 var item=(queue&&queue.items||[]).find(function(x){return x.id===fieldValue("Ärende-ID")});
 var testedSha=fieldValue("Testad DEV-commit (full SHA)");
 var mergeMatch=body.match(/- Merge SHA: ([0-9a-f]{40})/i);var liveVerified=false;if(target==="live"&&mergeMatch){try{var liveManifest=await json("../../deployment-manifest.json?ts="+Date.now());liveVerified=liveManifest.environment==="main"&&liveManifest.source_sha===mergeMatch[1]}catch(e){liveVerified=false}}
-var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&item.dev_sha&&testedSha===item.dev_sha);
+var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&/^[0-9a-f]{40}$/i.test(testedSha)&&i.user&&i.user.type==="Bot");
 var candidate=null;
 if((target==="direct"||target==="package")&&exact&&i.comments_url){
 try{
 var comments=await json(i.comments_url+"?per_page=100");
-candidate=(comments||[]).map(function(c){return String(c.body||"")}).find(function(c){
-return c.includes("READY_FOR_ZEUS_FINAL_APPROVAL")&&c.includes("- Verified DEV SHA: "+testedSha);
-})||null;
+var candidateRows=(comments||[]).filter(function(c){
+var body=String(c.body||"");
+return body.includes("## OLYMPIA release candidate")&&body.includes("- Verified DEV SHA: "+testedSha);
+}).sort(function(a,b){return Date.parse(b.created_at||"")-Date.parse(a.created_at||"")});
+candidate=candidateRows.length?String(candidateRows[0].body||""):null;
 }catch(e){candidate=null}
 }
 var treeMatch=candidate&&candidate.match(/- Candidate tree SHA: ([0-9a-f]{40})/i);
 var prMatch=candidate&&candidate.match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
-var candidateReady=!!(candidate&&treeMatch&&prMatch);
-var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified};
+var reportReady=!!(candidate&&candidate.includes("READY_FOR_ZEUS_FINAL_APPROVAL"));
+var candidateRunMatch=candidate&&candidate.match(/- Workflow run: (https:\/\/[^\s]+)/i);
+var liveMatch=candidate&&candidate.match(/- LIVE rollback baseline: ([0-9a-f]{40})/i);
+var candidateReady=false;
+if(reportReady&&treeMatch&&prMatch&&liveMatch){
+try{
+var fresh=await Promise.all([
+json(api+"/pulls/"+prMatch[1]),
+json(api+"/branches/main")
+]);
+var candidatePr=fresh[0],liveBranch=fresh[1];
+var headSha=String(candidatePr.head&&candidatePr.head.sha||"");
+if(headSha){
+var verified=await Promise.all([
+json(api+"/commits/"+encodeURIComponent(headSha)),
+json(api+"/commits/"+encodeURIComponent(headSha)+"/check-runs"),
+json(api+"/commits/"+encodeURIComponent(headSha)+"/status")
+]);
+var tree=verified[0].commit&&verified[0].commit.tree&&verified[0].commit.tree.sha;
+var runs=verified[1].check_runs||[];
+var checksOk=runs.length>0&&runs.every(function(c){return c.status==="completed"&&["success","neutral","skipped"].includes(c.conclusion)});
+var statusContexts=verified[2].statuses||[];
+var statusesOk=statusContexts.length===0||verified[2].state==="success";
+candidateReady=candidatePr.state==="open"&&candidatePr.base&&candidatePr.base.ref==="main"&&candidatePr.mergeable===true&&
+liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&statusesOk;
+}
+}catch(e){candidateReady=false}
+}
+var candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"));
+var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
+var record={issue:i,exact:exact,itemId:item&&item.id,testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidate:candidate,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified};
 slots[target].push(record);
 return i;
 }));
@@ -162,9 +193,10 @@ var el=get(k+"-list"),arr=slots[k];
 if(!el)return;
 el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact;
-var status=k==="live"?(record.liveVerified?"LIVE verifierad · "+esc(record.mergeSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet hör inte till aktuell DEV-version. Ny provning krävs.":record.candidateReady?"Kandidat verifierad · releaseförslag #"+esc(record.releasePr):record.candidate?"Kandidat blockerad eller underkänd · LIVE är oförändrat.":i.state==="open"?"Registrerat · väntar på kandidatkontroll":"Avslutat · bevarat i historik";
+var status=k==="live"?(record.liveVerified?"LIVE verifierad · "+esc(record.mergeSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad pilotversion. Ny provning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidat blockerad · LIVE är oförändrat.":record.candidate?"Kandidat skapad · väntar på kontroller":"Registrerat · väntar på kandidatkontroll";
 var finalButton=record.candidateReady?'<div class="actions"><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(record.itemId)+'" data-sha="'+esc(record.testedSha)+'" data-candidate-issue="'+i.number+'" data-tree-sha="'+esc(record.candidateTree)+'">Slutgodkänn publicering till LIVE</button><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
-return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span></p>'+finalButton
+var runLink=record.candidateRunUrl?'<br><a class="small" href="'+esc(record.candidateRunUrl)+'" target="_blank" rel="noopener">Visa kandidatkontroll ↗</a>':'';
+return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton
 }).join(""):"Inga beslut registrerade."
 });
 }catch(e){["accept-list","direct-list","package-list","defer-list","fix-list","live-list"].forEach(function(id){var el=get(id);if(el)el.innerHTML='<span class="status blocked">Beslutsdata OKÄND</span>'});}
