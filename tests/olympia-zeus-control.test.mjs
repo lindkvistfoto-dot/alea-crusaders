@@ -68,6 +68,14 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
   });
 
+  it('reads the ALEA DEV session from the namespaced storage used inside its iframe',()=>{
+    const page=read('olympia/zeus-control.html');
+    const scope=read('dev-storage-scope.js');
+    expect(page).toContain('src="../dev-storage-scope.js');
+    expect(scope).toContain("var prefix='alea:dev:'");
+    expect(page).toContain('localStorage.getItem("alea_supabase_session_dev")');
+  });
+
   it('isolates DEV auth storage from the LIVE ALEA session',()=>{
     const legacy=read('legacy/app.js');
     const page=read('olympia/zeus-control.html');
