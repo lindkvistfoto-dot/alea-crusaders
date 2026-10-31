@@ -73,4 +73,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Status är OKÄND');
   });
 
+
+  it('binds Zeus approval to current DEV while retaining the verified pilot source SHA',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(page).toContain('currentDevSha');
+    expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
+    expect(edge).toContain('/git/ref/heads/development');
+    expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
+    expect(workflow).toContain('CURRENT_DEV_SHA=');
+    expect(workflow).toContain('PR_MERGE_SHA" == "$SOURCE_PR_SHA');
+  });
 });
