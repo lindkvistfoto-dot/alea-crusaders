@@ -200,7 +200,7 @@ return i;
 }));
 if(renderId!==decisionRenderSequence)return;
 var superseded={};
-slots.live.forEach(function(liveRecord){var candidateRef=String(liveRecord.issue.body||"").match(/^- Kandidatärende: #(\\d+)/m);if(candidateRef)superseded["direct:"+candidateRef[1]]=liveRecord});
+slots.live.forEach(function(liveRecord){var candidateRef=String(liveRecord.issue.body||"").match(/^- Kandidatärende: #(\d+)/m);if(candidateRef)superseded["direct:"+candidateRef[1]]=liveRecord});
 slots.accept.forEach(function(acceptRecord){var newer=slots.live.filter(function(liveRecord){return liveRecord.itemId&&liveRecord.itemId===acceptRecord.itemId&&Date.parse(liveRecord.issue.created_at||"")>Date.parse(acceptRecord.issue.created_at||"")}).sort(function(a,b){return Date.parse(a.issue.created_at||"")-Date.parse(b.issue.created_at||"")}).pop();if(newer)superseded["accept:"+acceptRecord.issue.number]=newer});
 window.zeusDecisions=rows;
 Object.keys(slots).forEach(function(k){
