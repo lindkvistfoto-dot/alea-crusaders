@@ -73,7 +73,7 @@ async function githubToken() {
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-    body: JSON.stringify({ permissions: { issues: "write", contents: "write", pull_requests: "write" }, repository_ids: [1403008145] }),
+    body: JSON.stringify({ permissions: { issues: "write", contents: "write", pull_requests: "write", checks: "read", statuses: "read" }, repository_ids: [1403008145] }),
   });
   if (!res.ok) throw new Error("GITHUB_APP_TOKEN_FAILED");
   const data = await res.json();
@@ -216,10 +216,19 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
   if (live.sha !== liveMatch[1]) throw new Error("LIVE_BASELINE_CHANGED");
   const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1]);
-  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== "github-actions[bot]") throw new Error("RELEASE_PR_NOT_VALID");
+  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.user?.login !== "github-actions[bot]" || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
+  const checks = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
+  const statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status");
+  if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||
+      checks.check_runs.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
+    throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
+  }
+  if (Array.isArray(statuses.statuses) && statuses.statuses.length > 0 && statuses.state !== "success") {
+    throw new Error("CANDIDATE_STATUS_NOT_GREEN");
+  }
   return { issue, pr, report, liveSha: live.sha };
 }
 function title(item: any, decision: string) {
@@ -291,7 +300,9 @@ Deno.serve(async (req: Request) => {
           CANDIDATE_NOT_READY: "Releasekandidaten är inte verifierad. LIVE förblir oförändrat.",
           CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
           LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. Skapa en ny kandidat.",
-          RELEASE_PR_NOT_VALID: "Releaseförslaget är inte öppet och verifierat mot main.",
+          RELEASE_PR_NOT_VALID: "Releaseförslaget är inte öppet, mergebart och verifierat mot main.",
+          CANDIDATE_CHECKS_NOT_GREEN: "Releaseförslagets CI-kontroller är inte godkända. LIVE förblir oförändrat.",
+          CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända. LIVE förblir oförändrat.",
           RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
           CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
         };
