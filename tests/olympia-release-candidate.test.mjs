@@ -19,6 +19,9 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(workflow).toContain('Wait for release PR CI and mergeability');
   expect(workflow).toContain('checks: read');
   expect(workflow).toContain('statuses: read');
+  expect(workflow).toContain('STATUS_CONTEXTS="$(jq');
+  expect(workflow).toContain('STATUS_CONTEXTS == 0');
+  expect(workflow).toContain('Release PR checks: all GitHub checks passed; PR is mergeable.');
   expect(workflow).toContain('GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"');
   expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
