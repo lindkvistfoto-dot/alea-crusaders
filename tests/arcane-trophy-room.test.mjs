@@ -33,6 +33,7 @@ describe('Trophy room Astrid fit',()=>{
   expect(room).toContain("get('view')==='trophy-room'");
   expect(css).toContain('height:68%;width:40%;bottom:8%');
   expect(css).toContain('object-fit:contain');
+  expect(css).toContain('.trophy-room-viewport .trophy-room-character-layer{width:40%;height:68%}');
   expect(room).toContain('options.find(o=>o.value&&/\\bastrid\\b/i.test(o.textContent||\'\'))');
  });
 });
