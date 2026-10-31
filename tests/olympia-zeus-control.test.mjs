@@ -115,6 +115,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
+    expect(page).not.toContain('testedSha===item.dev_sha');
+    expect(page).toContain('candidatePr.mergeable===true');
+    expect(page).toContain('liveBranch.commit.sha===liveMatch[1]');
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
