@@ -56,6 +56,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
     expect(edge).toContain('pr.base?.sha !== live.sha');
     expect(edge).toContain('DEPLOYMENT_MANIFEST_UNVERIFIED');
+    expect(page).toContain('if(renderId!==decisionRenderSequence)return;');
+    expect(page).toContain('data-release-refresh');
+    expect(page).toContain('Kontrollen kunde inte hämtas:');
+    expect(page).toContain('candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"))');
+    expect(page).not.toContain('||!!candidate&&!candidateReady');
+    expect(page).toContain('Kandidatstatus kunde inte hämtas.');
+    expect(baseline.database.core_schema_audit.environment_differences[0]).toContain('endast i LIVE');
     expect(baseline.completeness.commit_history).toContain('100');
   });
   it('integrates OLYMPIA in ALEA admin and reuses the ALEA session',()=>{
