@@ -161,20 +161,23 @@ if(reportReady&&treeMatch&&prMatch&&liveMatch){
 try{
 var fresh=await Promise.all([
 json(api+"/pulls/"+prMatch[1]),
-json(api+"/branches/main"),
-json(api+"/commits/"+encodeURIComponent(prMatch[1])+"/check-runs")
+json(api+"/branches/main")
 ]);
-var candidatePr=fresh[0],liveBranch=fresh[1],runs=fresh[2].check_runs||[];
+var candidatePr=fresh[0],liveBranch=fresh[1];
 var headSha=String(candidatePr.head&&candidatePr.head.sha||"");
 if(headSha){
 var verified=await Promise.all([
 json(api+"/commits/"+encodeURIComponent(headSha)),
+json(api+"/commits/"+encodeURIComponent(headSha)+"/check-runs"),
 json(api+"/commits/"+encodeURIComponent(headSha)+"/status")
 ]);
 var tree=verified[0].commit&&verified[0].commit.tree&&verified[0].commit.tree.sha;
+var runs=verified[1].check_runs||[];
 var checksOk=runs.length>0&&runs.every(function(c){return c.status==="completed"&&["success","neutral","skipped"].includes(c.conclusion)});
+var statusContexts=verified[2].statuses||[];
+var statusesOk=statusContexts.length===0||verified[2].state==="success";
 candidateReady=candidatePr.state==="open"&&candidatePr.base&&candidatePr.base.ref==="main"&&candidatePr.mergeable===true&&
-liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&verified[1].state==="success";
+liveBranch.commit&&liveBranch.commit.sha===liveMatch[1]&&tree===treeMatch[1]&&checksOk&&statusesOk;
 }
 }catch(e){candidateReady=false}
 }
