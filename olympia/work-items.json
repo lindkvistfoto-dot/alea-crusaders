@@ -45,13 +45,14 @@
       "title": "Medaljvisning – hela sammetsasken på mobil",
       "purpose": "Medaljdetaljen ska rymmas i mobilens bredd med medaljen centrerad i sammetsasken och texten under.",
       "expected_result": "Hela sammetsramen syns i sidled utan beskärning. Medaljen är centrerad i kudden. All text visas under ramen och kan rullas vid behov. Stängknappen är diskret och fortsatt tillgänglig.",
-      "status": "images_pending_publication",
-      "technical_status": "PR #432 implementerar mobilfixen. De tre RGBA-originalen är verifierade i ARTEMIS; HERMES DEV-publicering inväntar den isolerade DEV-kön.",
-      "ready_for_human_acceptance": false,
-      "dev_sha": "ad0d78d2280db86a24f01841c301d5c255eb74d2",
+      "status": "ready_for_acceptance",
+      "technical_status": "PR #432 implementerar mobilfixen; PR #433 kopplar de tre RGBA-originalen i ARTEMIS och HERMES CORE har verifierat DEV-publiceringen av röda, gröna och blå versioner.",
+      "ready_for_human_acceptance": true,
+      "dev_sha": "68b40454ec1a0fd6870c5b0ee9c9dbb5ba8ed2e1",
       "pr_number": 432,
       "release_source_prs": [
-        432
+        432,
+        433
       ],
       "dev_url": "../?view=trophy-room&cache=20261031-pilot-002",
       "features": [
@@ -74,37 +75,52 @@
       "images": [
         {
           "asset_key": "arcane-badge-frame-velvet-red",
-          "version": "v1",
+          "version": 1,
+          "format": "PNG",
           "source_sha256": "07fe627d1211717e5979e0bcf9dd4ca0cfa3f68b374efd0d1db1fc756261beee",
           "width": 1143,
           "height": 1376,
           "alpha": true,
           "inbox_file_id": "1VWpjEHqhri0hoYUGY742FelokF9KEUOY",
-          "archive_file_id": "1H1VAR8kbDAC-TrTdQhVNkSvUdYTj06r_"
+          "archive_file_id": "1H1VAR8kbDAC-TrTdQhVNkSvUdYTj06r_",
+          "dev_publication_status": "verified",
+          "webp_sha256": "f015de2d520318507daade51a4d44559d711bd85192ecb5f6bc79cef86ed6582",
+          "webp_path": "hermes/system-asset/arcane-badge-frame-velvet-red/f015de2d520318507daade51a4d44559d711bd85192ecb5f6bc79cef86ed6582.webp",
+          "webp_bytes": 409610
         },
         {
           "asset_key": "arcane-badge-frame-velvet-green",
-          "version": "v1",
+          "version": 1,
+          "format": "PNG",
           "source_sha256": "552d4ac2b909aa645c3e2f4d26005a540d99cbe8e5695f8d0c9e6acb1259c917",
           "width": 1143,
           "height": 1376,
           "alpha": true,
           "inbox_file_id": "1-mnT671-fCv2Ka_t-JU8CRR9ye5-02fI",
-          "archive_file_id": "1z3r51o5wFsjKfhOVT14SLPAoWn8fYJ47"
+          "archive_file_id": "1z3r51o5wFsjKfhOVT14SLPAoWn8fYJ47",
+          "dev_publication_status": "verified",
+          "webp_sha256": "948c6cdcdd401c8856bc38707596b9bc0935985d2251fd554a9960be9764cbde",
+          "webp_path": "hermes/system-asset/arcane-badge-frame-velvet-green/948c6cdcdd401c8856bc38707596b9bc0935985d2251fd554a9960be9764cbde.webp",
+          "webp_bytes": 430118
         },
         {
           "asset_key": "arcane-badge-frame-velvet-blue",
-          "version": "v1",
+          "version": 1,
+          "format": "PNG",
           "source_sha256": "d1c0f36b9f9c9330ac7c7e8ee6d805063057b92a90472f195bb7fb3e604583dc",
           "width": 1143,
           "height": 1376,
           "alpha": true,
           "inbox_file_id": "1Pd7adZGilgmAad8JKcPr0MMA-A8utbgB",
-          "archive_file_id": "1HSzJar__s0YKybyX-lOyKf_c7OmspNKD"
+          "archive_file_id": "1HSzJar__s0YKybyX-lOyKf_c7OmspNKD",
+          "dev_publication_status": "verified",
+          "webp_sha256": "562bdb35e98d297626d057c0e9c57e3ddd7086c54a4bef961589ddbb314b1eab",
+          "webp_path": "hermes/system-asset/arcane-badge-frame-velvet-blue/562bdb35e98d297626d057c0e9c57e3ddd7086c54a4bef961589ddbb314b1eab.webp",
+          "webp_bytes": 488638
         }
       ],
       "image_count": 3,
-      "image_status": "pending_dev_publication"
+      "image_status": "published"
     }
   ]
 }
