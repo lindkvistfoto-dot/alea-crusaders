@@ -49,11 +49,11 @@
 var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/repos/"+owner+"/"+repo;
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
-var baseline=null,queue=null,inventory=[];
+var baseline=null,queue=null,inventory=[],currentDevSha=null;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
 async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status+" "+url);return r.json()}
-async function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
+async function renderRefs(){currentDevSha=null;var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
 refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Hämtar aktuell GitHub-status…</span>';
 try{
 var result=await Promise.all([
@@ -62,18 +62,20 @@ var result=await Promise.all([
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:open")),
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:merged"))
 ]);
-refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill">DEV '+esc(result[0].commit.sha.slice(0,7))+'</span><span class="pill">LIVE '+esc(result[1].commit.sha.slice(0,7))+'</span><span class="pill">'+esc(result[2].total_count)+' öppna PR</span><span class="pill">'+esc(result[3].total_count)+' mergade PR</span>';
-}catch(_){refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Aktuell GitHub-status OKÄND</span>'}}
+currentDevSha=String(result[0].commit.sha||"");
+refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill">DEV '+esc(currentDevSha.slice(0,7))+'</span><span class="pill">LIVE '+esc(result[1].commit.sha.slice(0,7))+'</span><span class="pill">'+esc(result[2].total_count)+' öppna PR</span><span class="pill">'+esc(result[3].total_count)+' mergade PR</span>';
+renderTrial();
+}catch(_){currentDevSha=null;refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Aktuell GitHub-status OKÄND</span>';renderTrial()}}
 function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issues/new?template="+encodeURIComponent(template)}
 function renderTrial(){
 var root=get("trial-list"),items=queue&&queue.items||[];
 if(!items.length){root.innerHTML='<div class="empty">Kön är tom. Ingen historik har raderats.</div>';return}
 root.innerHTML=items.map(function(item){
-var ready=!!item.ready_for_human_acceptance&&!!item.dev_sha;
+var ready=!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
 var status=ready?'<span class="status ready">Klar att prova</span>':'<span class="status">Pågår · inte klar att prova</span>';
-var links=ready?'<div class="actions"><a class="btn" href="'+esc(item.dev_url||"../")+'" target="_blank" rel="noopener">Öppna i DEV ↗</a><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(item.dev_sha)+'">Godkänn Astrid</button><button class="btn secondary" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(item.dev_sha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(item.dev_sha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(item.dev_sha)+'">Till Karon</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(item.dev_sha)+'">Behöver rättas</button></div>':'<p class="small muted">Beslutsvalen låses upp när en exakt DEV-version har implementerats och tekniskt verifierats.</p>';
+var links=ready?'<div class="actions"><a class="btn" href="'+esc(item.dev_url||"../")+'" target="_blank" rel="noopener">Öppna i DEV ↗</a><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn Astrid</button><button class="btn secondary" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Behöver rättas</button></div>':'<p class="small muted">Beslutsvalen låses upp när aktuell DEV-version har hämtats och ärendet är tekniskt verifierat.</p>';
 var sourceIssue='<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'">#'+esc(item.provenance.source_issue)+'</a>';
-return '<article class="card"><div class="label">'+esc(item.id)+' · PILOT</div><h2>'+esc(item.title)+'</h2>'+status+'<p><strong>Syfte:</strong> '+esc(item.purpose)+'</p><p><strong>Förväntat resultat:</strong> '+esc(item.expected_result)+'</p>'+links+'<details class="details"><summary>Visa detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte skapad")+' · DEV SHA: '+esc(item.dev_sha||"inte publicerad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Miljömaster: '+esc(item.provenance.environment_master)+' · Asset: '+esc(item.provenance.environment_asset)+'</p></details></article>'
+return '<article class="card"><div class="label">'+esc(item.id)+' · PILOT</div><h2>'+esc(item.title)+'</h2>'+status+'<p><strong>Syfte:</strong> '+esc(item.purpose)+'</p><p><strong>Förväntat resultat:</strong> '+esc(item.expected_result)+'</p>'+links+'<details class="details"><summary>Visa detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte skapad")+' · Käll-PR SHA: '+esc(item.dev_sha||"inte verifierad")+' · Testad DEV SHA: '+esc(currentDevSha||"inte verifierad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Miljömaster: '+esc(item.provenance.environment_master)+' · Asset: '+esc(item.provenance.environment_asset)+'</p></details></article>'
 }).join("")}
 async function renderPullRequests(){
 var root=get("live-pr-list");
