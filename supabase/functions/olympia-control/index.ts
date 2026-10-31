@@ -64,20 +64,26 @@ async function appJwt(appId: string, privateKey: string) {
   const signature = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, data));
   return header + "." + payload + "." + encBytes(signature);
 }
-async function githubToken() {
+async function githubToken(decision: string) {
   const appId = Deno.env.get("OLYMPIA_GITHUB_APP_ID");
   const installationId = Deno.env.get("OLYMPIA_GITHUB_INSTALLATION_ID");
   const privateKey = Deno.env.get("OLYMPIA_GITHUB_APP_PRIVATE_KEY");
   if (!appId || !installationId || !privateKey) throw new Error("OLYMPIA_BACKEND_NOT_CONFIGURED");
   const jwt = await appJwt(appId, privateKey);
+  const permissions: Record<string, string> = { issues: "write", contents: "write" };
+  if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-    body: JSON.stringify({ permissions: { issues: "write", contents: "write", pull_requests: "write", checks: "read", statuses: "read" }, repository_ids: [1403008145] }),
+    body: JSON.stringify({ permissions, repository_ids: [1403008145] }),
   });
-  if (!res.ok) throw new Error("GITHUB_APP_TOKEN_FAILED");
+  if (!res.ok) {
+    const failure = await res.json().catch(() => ({}));
+    console.error("OLYMPIA GitHub installation token rejected", res.status, String(failure.message || "").slice(0, 180));
+    throw new Error("GITHUB_APP_TOKEN_FAILED_" + res.status);
+  }
   const data = await res.json();
-  if (typeof data.token !== "string") throw new Error("GITHUB_APP_TOKEN_FAILED");
+  if (typeof data.token !== "string") throw new Error("GITHUB_APP_TOKEN_FAILED_RESPONSE");
   return data.token as string;
 }
 async function gh(token: string, path: string, init: RequestInit = {}) {
@@ -306,7 +312,7 @@ Deno.serve(async (req: Request) => {
     if (typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
     if (typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) return fail("Testad DEV-version saknas eller är ogiltig.", 400);
 
-    const token = await githubToken();
+    const token = await githubToken(data.decision);
     const item = await workItem(token, data.itemId);
     if (!item.ready_for_human_acceptance || !/^[0-9a-f]{40}$/i.test(item.dev_sha || "")) {
       return fail("Pilotens källversion är inte verifierad. Ingen skrivning utfördes.", 409);
