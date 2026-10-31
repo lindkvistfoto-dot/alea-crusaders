@@ -74,9 +74,9 @@ async function githubToken(decision: string) {
   const permissions: Record<string, string> = decision === "deployment_check"
     ? { contents: "read" }
     : decision === "candidate_check"
-    ? { contents: "read", issues: "read", pull_requests: "read", checks: "read" }
+    ? { contents: "read", issues: "read", pull_requests: "read" }
     : { issues: "write", contents: "write" };
-  if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read" });
+  if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
@@ -98,6 +98,14 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
+  return data;
+}
+async function ghPublic(path: string) {
+  const res = await fetch("https://api.github.com" + path, {
+    headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
   return data;
 }
 async function appBotLogin() {
@@ -306,7 +314,7 @@ async function verifyCandidate(token: string, item: any, data: any) {
       actualFiles.some((filename: string, index: number) => filename !== [...allowedFiles].sort()[index])) {
     throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
   }
-  const checks = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
+  const checks = await ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
   if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||
       checks.check_runs.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
     throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
