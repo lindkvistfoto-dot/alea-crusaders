@@ -96,8 +96,8 @@
 .arcane-medal-display-description{margin:.7em 0;white-space:pre-line}
 .arcane-medal-display-reason{margin:.8em 0;font-size:.85em}
 .arcane-medal-display-date{margin:1.2em 0 0;padding-top:.7em;border-top:1px solid #6e4b3066;font-size:.88em}
-.arcane-medal-display-close{position:absolute;z-index:20;right:3%;top:4%;width:clamp(36px,4vw,48px);height:clamp(36px,4vw,48px);border:2px solid #b98c4c;border-radius:50%;background:#25170ee8;color:#f0d5a0;font:32px/1 Georgia,serif;cursor:pointer;box-shadow:0 2px 8px #0009}
-.arcane-medal-display-close:hover,.arcane-medal-display-close:focus-visible{background:#4c2d1a;outline:2px solid #eac584;outline-offset:2px}
+.arcane-medal-display-close{position:absolute;z-index:20;right:3%;top:4%;width:clamp(32px,3.4vw,40px);height:clamp(32px,3.4vw,40px);display:grid;place-items:center;padding:0;border:1px solid #b98c4c88;border-radius:50%;background:#25170e80;color:#f0d5a0b8;font:24px/1 Georgia,serif;cursor:pointer;box-shadow:none;opacity:.68;transition:opacity .15s,background-color .15s}
+.arcane-medal-display-close:hover,.arcane-medal-display-close:focus-visible{background:#4c2d1a;outline:2px solid #eac584;outline-offset:2px;opacity:1}
 @media(max-width:650px){
  .arcane-medal-dialog{width:min(96vw,420px);max-height:95dvh}
  .arcane-medal-display{display:grid;grid-template-columns:1fr 1fr;aspect-ratio:3/2;background-image:var(--medal-frame-image,linear-gradient(125deg,#4b3422,#9e7845 50%,#4b3422));background-size:100% 100%;filter:drop-shadow(0 15px 22px #000b);gap:0}
@@ -187,19 +187,14 @@ main:has(> #trophyRoomPage:not(.hidden)){
 }
 
 
-/* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU texture. */
-.trophy-room-viewport > .trophy-room-medal-wall{transform:none;pointer-events:auto;filter:none}
-
-/* LEJONHJARTA: mobile detail uses the LEFT HALF of the approved 3:2
-   HERMES panel as a portrait medal display; readable story follows below.
-   Desktop retains the complete two-panel artwork unchanged. */
+/* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU te/* PILOT-002: show the whole velvet frame on mobile, with the story below. */
 @media(max-width:650px){
- .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:48px 0 0}
+ .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:44px 0 0;overscroll-behavior:contain}
  .arcane-medal-display{display:flex;flex-direction:column;aspect-ratio:auto;background:none;filter:none;gap:0}
- .arcane-medal-display-cushion{flex:none;width:100%;aspect-ratio:3/4;min-height:0;padding:17% 13%;background-image:var(--medal-frame-image,linear-gradient(140deg,#583c29,#ad824f));background-size:200% 100%;background-position:left center;background-repeat:no-repeat}
- .arcane-medal-display-image{width:76%;max-height:74%;object-fit:contain}
- .arcane-medal-display-parchment{flex:none;width:100%;min-height:0;aspect-ratio:auto;display:block;padding:22px 24px 30px;background:#ead5ac;color:#422b1e;border:2px solid #b38a4f;box-sizing:border-box}
+ .arcane-medal-display-cushion{box-sizing:border-box;flex:none;width:100%;aspect-ratio:3/2;min-height:0;padding:12% 10%;background-image:var(--medal-frame-image,linear-gradient(140deg,#583c29,#ad824f));background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+ .arcane-medal-display-image{width:58%;max-height:68%;object-fit:contain}
+ .arcane-medal-display-parchment{box-sizing:border-box;flex:none;width:100%;min-height:0;aspect-ratio:auto;display:block;padding:22px 24px 30px;background:#ead5ac;color:#422b1e;border:2px solid #b38a4f;overflow-wrap:anywhere}
  .arcane-medal-display-story{max-height:none;overflow:visible;font-size:clamp(15px,4vw,19px);line-height:1.5}
- .arcane-medal-display-title{font-size:clamp(28px,7vw,38px);margin:0 0 12px}
- .arcane-medal-display-close{position:absolute;top:2px;right:8px;float:none;margin:0;width:40px;height:40px;z-index:30}
+ .arcane-medal-display-title{font-size:clamp(28px,7vw,38px);margin:0 0 12px;overflow-wrap:anywhere}
+ .arcane-medal-display-close{position:absolute;top:6px;right:8px;float:none;margin:0;width:32px;height:32px;z-index:30;font-size:21px}
 }
