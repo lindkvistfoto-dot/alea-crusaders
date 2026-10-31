@@ -47,7 +47,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(baseline.deployments.verification_policy).toContain('source_sha');
     const page=read('olympia/zeus-control.html');
     const edge=read('supabase/functions/olympia-control/index.ts');
-    expect(page).toContain('window.olympiaReleasePreflightReady===true');
+    expect(page).toContain('window.olympiaReleasePreflightReady=lines.length===0&&!unknown');
     expect(edge).toContain('pr.base?.sha !== live.sha');
     expect(edge).toContain('const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"]');
     expect(page).not.toContain('candidatePr.base.sha===liveMatch[1]');
