@@ -274,6 +274,13 @@ async function verifyCandidate(token: string, item: any, data: any) {
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
+  const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1] + "/files?per_page=100");
+  const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"];
+  const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")).sort() : [];
+  if (actualFiles.length !== allowedFiles.length ||
+      actualFiles.some((filename: string, index: number) => filename !== [...allowedFiles].sort()[index])) {
+    throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
+  }
   const checks = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
   const statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status");
   if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||

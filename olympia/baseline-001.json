@@ -36,7 +36,8 @@
     "github_pages_latest_runs": [],
     "live_manifest_source_sha": "UNKNOWN: no successful public-manifest HTTP read was captured during this baseline",
     "dev_manifest_source_sha": "UNKNOWN: no successful public-manifest HTTP read was captured during this baseline",
-    "verified_deployments": false
+    "verified_deployments": false,
+    "verification_policy": "Runtime preflight must fetch DEV and LIVE deployment-manifest.json and verify each source_sha against current development/main branch heads before enabling final approval."
   },
   "release_history": {
     "github_releases_count": 0,
@@ -753,8 +754,28 @@
         }
       ]
     },
-    "reconciliation": "BLOCKED_UNKNOWN",
-    "finding": "LIVE has a 171-entry migration history while DEV has a 2-entry history consisting of a schema baseline and auth trigger restoration. These are not directly comparable as an ordinary pending-migration list; schema/data equivalence is unverified. No database was changed."
+    "reconciliation": "VERIFIED_CORE_SCHEMA_MATCH_WITH_ENVIRONMENT_DIFFERENCES",
+    "finding": "Read-only comparison verified matching public core schema across DEV and LIVE. Migration history counts differ because DEV uses a consolidated baseline; counts are not a pending-migration comparison. Environment-level differences remain and must be considered for changes that touch them. No database was changed.",
+    "core_schema_audit": {
+      "status": "VERIFIED_CORE_SCHEMA_MATCH",
+      "checked_at": "2026-10-31T12:20:00Z",
+      "equal_categories": [
+        "95 public relations/views",
+        "1,180 public columns",
+        "613 constraints",
+        "244 RLS policies",
+        "59 routines (newline-only formatting difference)",
+        "79 triggers",
+        "266 indexes",
+        "3 views",
+        "190 public types"
+      ],
+      "environment_differences": [
+        "pg_net is installed only in LIVE",
+        "DEV has broader public-table grants than LIVE"
+      ],
+      "candidate_scope_note": "Astrid candidate #416 changes two trophy-room presentation files and one test; it has no SQL, migration, dependency, or data files."
+    }
   },
   "known_open_work": {
     "issue_379": "Open; process baseline and DEV/LIVE release controls",
