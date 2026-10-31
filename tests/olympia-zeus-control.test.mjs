@@ -185,3 +185,21 @@ describe('OLYMPIA LIVE decision semantics',()=>{
     expect(workflow).not.toContain('DECISION" == "pandoras_ask" || "$DECISION" == "release_package"');
   });
 });
+
+
+describe('OLYMPIA server-side deployment preflight',()=>{
+  it('verifies DEV and LIVE through the authenticated read-only decision bridge',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const page=read('olympia/zeus-control.html');
+    const block=page.slice(page.indexOf('async function renderBlockers(){'),page.indexOf('async function renderDecisions(){'));
+    expect(edge).toContain('data.action === "deployment_check"');
+    expect(edge).toContain('githubToken("deployment_check")');
+    expect(edge).toContain('verifyPublishedManifest("main", liveSha)');
+    expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(block).toContain('request({action:"deployment_check"},session)');
+    expect(block).not.toContain('json(api+"/branches/main")');
+    expect(block).not.toContain('json(api+"/branches/development")');
+    expect(page).toContain('if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers()');
+  });
+});
