@@ -187,7 +187,10 @@ main:has(> #trophyRoomPage:not(.hidden)){
 }
 
 
-/* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU te/* PILOT-002: show the whole velvet frame on mobile, with the story below. */
+/* Render the medal wall in viewport pixels so zoom does not enlarge a cached GPU texture. */
+.trophy-room-viewport > .trophy-room-medal-wall{transform:none;pointer-events:auto;filter:none}
+
+/* PILOT-002: show the whole velvet frame on mobile, with the story below. */
 @media(max-width:650px){
  .arcane-medal-dialog{width:min(96vw,440px);max-height:94dvh;overflow-y:auto;padding:44px 0 0;overscroll-behavior:contain}
  .arcane-medal-display{display:flex;flex-direction:column;aspect-ratio:auto;background:none;filter:none;gap:0}
