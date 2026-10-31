@@ -1,5 +1,9 @@
 name: OLYMPIA · prepare exact LIVE release candidate
 
+concurrency:
+  group: olympia-release-candidate-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   push:
     branches:
@@ -11,6 +15,8 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  checks: read
+  statuses: read
 
 jobs:
   candidate:
@@ -85,6 +91,7 @@ jobs:
           fi
 
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "issue_created_at=$(jq -r '.created_at' <<< "$ISSUE_JSON")" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
           echo "source_pr_sha=$SOURCE_PR_SHA" >> "$GITHUB_OUTPUT"
           SOURCE_PRS_CSV="$(IFS=,; echo "${SOURCE_PRS[*]}")"
@@ -153,6 +160,7 @@ jobs:
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          ISSUE_CREATED_AT: ${{ steps.candidate.outputs.issue_created_at }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
           SOURCE_DIR: ${{ runner.temp }}/olympia-candidate/source
         run: |
@@ -160,10 +168,11 @@ jobs:
           [[ -z "$(git -C "$SOURCE_DIR" status --porcelain)" ]] || { echo "::error::Candidate changed during tests; refusing to publish a non-tested tree."; exit 1; }
           git -C "$SOURCE_DIR" config user.name "github-actions[bot]"
           git -C "$SOURCE_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          export GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"
           git -C "$SOURCE_DIR" commit -m "release(PILOT-001): verified Astrid candidate from LIVE"
           COMMIT="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           TREE="$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})"
-          BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER"
+          BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"
           AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git -C "$SOURCE_DIR" -c http.extraheader="$AUTH" push origin "HEAD:refs/heads/$BRANCH"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
@@ -211,6 +220,47 @@ jobs:
             }
             core.setOutput("number", String(pr.number));
             core.setOutput("url", pr.html_url);
+
+      - name: Wait for release PR CI and mergeability
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pull_request.outputs.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::The release PR number is missing."; exit 1; }
+          stable=0
+          for attempt in $(seq 1 90); do
+            PR_JSON="$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER")"
+            HEAD_SHA="$(jq -r '.head.sha' <<< "$PR_JSON")"
+            MERGEABLE="$(jq -r '.mergeable' <<< "$PR_JSON")"
+            CHECKS="$(gh api "repos/$REPOSITORY/commits/$HEAD_SHA/check-runs")"
+            CHECK_COUNT="$(jq -r '.total_count // 0' <<< "$CHECKS")"
+            PENDING="$(jq '[.check_runs[] | select(.status != "completed")] | length' <<< "$CHECKS")"
+            FAILED="$(jq '[.check_runs[] | select(.status == "completed" and (.conclusion != "success" and .conclusion != "neutral" and .conclusion != "skipped"))] | length' <<< "$CHECKS")"
+            STATUS="$(gh api "repos/$REPOSITORY/commits/$HEAD_SHA/status" --jq '.state')"
+            if (( FAILED > 0 )); then
+              echo "::error::A release PR CI check failed. No LIVE merge was performed."
+              exit 1
+            fi
+            if [[ "$MERGEABLE" == "false" ]]; then
+              echo "::error::The release PR conflicts with main. No LIVE merge was performed."
+              exit 1
+            fi
+            if (( CHECK_COUNT > 0 && PENDING == 0 )) && [[ "$STATUS" == "success" && "$MERGEABLE" == "true" ]]; then
+              stable=$((stable + 1))
+              if (( stable >= 2 )); then
+                echo "All release PR checks passed and GitHub reports the PR mergeable."
+                exit 0
+              fi
+            else
+              stable=0
+            fi
+            sleep 10
+          done
+          echo "::error::Release PR checks or mergeability did not settle within 15 minutes. No LIVE merge was performed."
+          exit 1
 
       - name: Write candidate manifest and preserve rollback point
         if: success()
@@ -286,12 +336,22 @@ jobs:
                   "- Candidate tree SHA: " + process.env.TREE_SHA,
                   "- Release PR: #" + process.env.RELEASE_PR_NUMBER + " · " + process.env.RELEASE_PR_URL,
                   "- Tests: npm run check passed on candidate assembled from LIVE.",
+                  "- Release PR checks: all GitHub checks passed; PR is mergeable.",
                   "- Dependency changes: none.",
                   "- Database migrations: none.",
                   "- LIVE publication: NOT PERFORMED.",
                   "- Artifact: open the successful workflow run and download OLYMPIA-PILOT-001-LIVE-candidate."
                 ].join("\n")
-              : "## OLYMPIA release candidate\n\nStatus: BLOCKED. A required candidate check failed. Review the linked workflow run. LIVE was not changed.";
+              : [
+                  "## OLYMPIA release candidate",
+                  "",
+                  "- Status: BLOCKED. A required candidate check failed. LIVE was not changed.",
+                  "- Verified DEV SHA: " + (process.env.DEV_SHA || "unknown"),
+                  "- LIVE rollback baseline: " + (process.env.LIVE_SHA || "unknown"),
+                  "- Release PR: #" + (process.env.RELEASE_PR_NUMBER || "unknown") + " · " + (process.env.RELEASE_PR_URL || "not created"),
+                  "- LIVE publication: NOT PERFORMED.",
+                  "- Workflow run: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId
+                ].join("\n");
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
