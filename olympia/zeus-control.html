@@ -111,26 +111,30 @@ output.textContent="CI: "+checks+" · "+merge+(pr.mergeable_state?" · "+pr.merg
 finally{button.disabled=false}
 });
 async function renderBlockers(){
-var b=get("release-blockers"),requestId=++preflightRequestSequence,unknown=false;
+var b=get("release-blockers"),requestId=++preflightRequestSequence,unknown=false,unknownMessage="";
 window.olympiaReleasePreflightReady=false;
 if(!baseline){b.innerHTML="<strong>Kontrollen väntar:</strong> OLYMPIA-underlaget läses in.";return}
 var db=baseline.database||{},audit=db.core_schema_audit||{};
 var lines=[],info=[];
+if(!window.olympiaAuthVerified){
+unknown=true;
+unknownMessage="Logga in i ALEA DEV för att verifiera publiceringsstatus.";
+}else{
 try{
-var values=await Promise.all([
-json(new URL("../../deployment-manifest.json?ts="+Date.now(),location.href).href),
-json(new URL("../deployment-manifest.json?ts="+Date.now(),location.href).href),
-json(api+"/branches/main"),
-json(api+"/branches/development")
-]);
+var session=storedSession();
+if(!session)throw new Error("ALEA-session saknas.");
+var check=await request({action:"deployment_check"},session);
 if(requestId!==preflightRequestSequence)return;
-var liveManifest=values[0],devManifest=values[1],liveBranch=values[2],devBranch=values[3];
-var liveOk=liveManifest.environment==="main"&&liveManifest.source_sha===liveBranch.commit.sha;
-var devOk=devManifest.environment==="development"&&devManifest.source_sha===devBranch.commit.sha;
-if(!liveOk)lines.push("LIVE-manifestet matchar inte aktuell main-branch.");
-if(!devOk)lines.push("DEV-manifestet matchar inte aktuell development-branch.");
-if(liveOk&&devOk)info.push("DEV och LIVE är verifierade mot aktuella GitHub-brancher.");
-}catch(_){if(requestId!==preflightRequestSequence)return;unknown=true}
+if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Serverkontrollen svarade inte.");
+var environments=check.result.environments||{},liveSha=environments.main&&environments.main.sha,devSha=environments.development&&environments.development.sha;
+if(!/^[a-f0-9]{40}$/i.test(String(liveSha||""))||!/^[a-f0-9]{40}$/i.test(String(devSha||"")))throw new Error("Branch-SHA saknas.");
+info.push("DEV "+String(devSha).slice(0,7)+" och LIVE "+String(liveSha).slice(0,7)+" matchar publicerade versioner.");
+}catch(error){
+if(requestId!==preflightRequestSequence)return;
+unknown=true;
+unknownMessage=error&&error.message?String(error.message):"Serverkontrollen kunde inte hämtas.";
+}
+}
 var schemaOk=audit.status==="VERIFIED_CORE_SCHEMA_MATCH";
 if(!schemaOk)lines.push("Kärnschemats likhet är inte verifierad.");
 if(schemaOk){
@@ -140,9 +144,10 @@ if(audit.environment_differences&&audit.environment_differences.length)info.push
 }
 window.olympiaReleasePreflightReady=lines.length===0&&!unknown;
 var heading=unknown?"Kontrollen kunde inte hämtas:":lines.length?"Release blockerad:":"Releasekontroll godkänd:";
-b.innerHTML="<strong>"+heading+"</strong> "+esc(unknown?"DEV/LIVE-manifest eller GitHub-status svarade inte. Slutgodkännandet är låst. Försök igen.":lines.join(" "))+(info.length?"<br><span class=\"small\">"+info.join(" ")+"</span>":"")+(unknown?' <button class="btn secondary" type="button" data-release-refresh>Kontrollera igen</button>':"");
+b.innerHTML="<strong>"+heading+"</strong> "+esc(unknown?unknownMessage+" Slutgodkännandet är låst. Försök igen.":lines.join(" "))+(info.length?"<br><span class=\"small\">"+info.join(" ")+"</span>":"")+(unknown?'<button class="btn secondary" type="button" data-release-refresh>Kontrollera igen</button>':"");
 if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
 }
+window.olympiaRefreshBlockers=renderBlockers;
 async function renderDecisions(){
 var renderId=++decisionRenderSequence;
 var slots={accept:[],direct:[],package:[],defer:[],fix:[],live:[]};
@@ -326,6 +331,7 @@ async function syncAuth(){
   }
   window.olympiaAuthVerified=true;
   setStatus("ALEA-session och Zeus-behörighet verifierade.");
+  if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers();
  }catch(error){
   setStatus(error&&error.name==="AbortError"?"Kontrollen tog för lång tid.":"ALEA-sessionen kunde inte kontrolleras.");
   say("Kontrollera nätverket och ladda om OLYMPIA. Beslutsåtgärder förblir låsta.");

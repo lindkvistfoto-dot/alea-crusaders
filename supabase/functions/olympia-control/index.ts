@@ -71,7 +71,9 @@ async function githubToken(decision: string) {
   const privateKey = Deno.env.get("OLYMPIA_GITHUB_APP_PRIVATE_KEY");
   if (!appId || !installationId || !privateKey) throw new Error("OLYMPIA_BACKEND_NOT_CONFIGURED");
   const jwt = await appJwt(appId, privateKey);
-  const permissions: Record<string, string> = { issues: "write", contents: "write" };
+  const permissions: Record<string, string> = decision === "deployment_check"
+    ? { contents: "read" }
+    : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
     method: "POST",
@@ -352,6 +354,36 @@ Deno.serve(async (req: Request) => {
     const data = await req.json();
     if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
     if (data.action === "session_check") return json({ ok: true });
+    if (data.action === "deployment_check") {
+      try {
+        const token = await githubToken("deployment_check");
+        const [live, development] = await Promise.all([
+          gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main"),
+          gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development"),
+        ]);
+        const liveSha = String(live.object?.sha || "");
+        const developmentSha = String(development.object?.sha || "");
+        if (!/^[0-9a-f]{40}$/i.test(liveSha) || !/^[0-9a-f]{40}$/i.test(developmentSha)) {
+          throw new Error("BRANCH_SHA_UNVERIFIED");
+        }
+        await Promise.all([
+          verifyPublishedManifest("main", liveSha),
+          verifyPublishedManifest("development", developmentSha),
+        ]);
+        return json({
+          ok: true,
+          message: "DEV och LIVE är publicerade från aktuella brancher.",
+          environments: {
+            main: { sha: liveSha },
+            development: { sha: developmentSha },
+          },
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "";
+        console.error("OLYMPIA deployment preflight failed", code);
+        return fail("DEV/LIVE-publiceringen kunde inte verifieras just nu. Slutgodkännandet är låst; försök igen.", 409);
+      }
+    }
     if (!DECISIONS.has(data.decision)) return fail("Ogiltigt beslut.", 400);
     if (typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
     if (typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) return fail("Testad DEV-version saknas eller är ogiltig.", 400);

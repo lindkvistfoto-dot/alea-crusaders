@@ -91,7 +91,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
     expect(edge).toContain('data.action === "session_check"');
     expect(edge).toContain('async function githubToken(decision: string)');
-    expect(edge).toContain('const permissions: Record<string, string> = { issues: "write", contents: "write" };');
+    expect(edge).toContain('decision === "deployment_check"');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(edge).toContain(': { issues: "write", contents: "write" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });');
     expect(edge).toContain('githubToken(data.decision)');
     expect(edge).toContain('pr.mergeable !== true');
@@ -183,5 +185,23 @@ describe('OLYMPIA LIVE decision semantics',()=>{
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(workflow).toContain('Only a Pandoras Ask start order can create a single-item LIVE PR candidate.');
     expect(workflow).not.toContain('DECISION" == "pandoras_ask" || "$DECISION" == "release_package"');
+  });
+});
+
+
+describe('OLYMPIA server-side deployment preflight',()=>{
+  it('verifies DEV and LIVE through the authenticated read-only decision bridge',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const page=read('olympia/zeus-control.html');
+    const block=page.slice(page.indexOf('async function renderBlockers(){'),page.indexOf('async function renderDecisions(){'));
+    expect(edge).toContain('data.action === "deployment_check"');
+    expect(edge).toContain('githubToken("deployment_check")');
+    expect(edge).toContain('verifyPublishedManifest("main", liveSha)');
+    expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(block).toContain('request({action:"deployment_check"},session)');
+    expect(block).not.toContain('json(api+"/branches/main")');
+    expect(block).not.toContain('json(api+"/branches/development")');
+    expect(page).toContain('if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers()');
   });
 });
