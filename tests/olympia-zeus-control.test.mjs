@@ -92,7 +92,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
     expect(outerScript).not.toContain('storedSession()');
-    const inlineScripts=[...page.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(match=>match[1]);
+    const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
     expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
     for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
   });
