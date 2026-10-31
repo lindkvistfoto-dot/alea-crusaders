@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "asset_key": "arcane-badge-frame-velvet-blue",
+  "label": "PILOT-002 sammetsask blå v1",
+  "drive_file_id": "1Pd7adZGilgmAad8JKcPr0MMA-A8utbgB",
+  "archive_file_id": "1HSzJar__s0YKybyX-lOyKf_c7OmspNKD",
+  "source_sha256": "d1c0f36b9f9c9330ac7c7e8ee6d805063057b92a90472f195bb7fb3e604583dc",
+  "olympia_item_id": "PILOT-002",
+  "source_pr_number": 432,
+  "source_dev_sha": "ad0d78d2280db86a24f01841c301d5c255eb74d2"
+}
