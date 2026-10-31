@@ -48,8 +48,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const page=read('olympia/zeus-control.html');
     const edge=read('supabase/functions/olympia-control/index.ts');
     expect(page).toContain('window.olympiaReleasePreflightReady===true');
-    expect(page).toContain('candidatePr.base.sha===liveMatch[1]');
-    expect(page).toContain('exactScope');
+    expect(edge).toContain('pr.base?.sha !== live.sha');
+    expect(edge).toContain('const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"]');
+    expect(page).not.toContain('candidatePr.base.sha===liveMatch[1]');
+    expect(page).not.toContain('exactScope');
     expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
     expect(edge).toContain('CANDIDATE_SCOPE_NOT_ALLOWED');
     expect(edge).toContain('verifyPublishedManifest("main", live.sha)');
@@ -73,7 +75,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-server-preflight-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-candidate-server-check-1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
