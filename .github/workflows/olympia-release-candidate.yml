@@ -167,9 +167,12 @@ jobs:
           ATTEMPT: ${{ steps.candidate.outputs.attempt }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
           SOURCE_DIR: ${{ runner.temp }}/olympia-candidate/source
+          EXPECTED_TREE: ${{ steps.candidate.outputs.candidate_tree }}
         run: |
           set -euo pipefail
-          [[ -z "$(git -C "$SOURCE_DIR" status --porcelain)" ]] || { echo "::error::Candidate changed during tests; refusing to publish a non-tested tree."; exit 1; }
+          ACTUAL_TREE="$(git -C "$SOURCE_DIR" write-tree)"
+          [[ "$ACTUAL_TREE" == "$EXPECTED_TREE" ]] || { echo "::error::Candidate index tree changed during tests; refusing to publish a different tree."; exit 1; }
+          git -C "$SOURCE_DIR" diff --quiet || { echo "::error::Candidate worktree changed during tests; refusing to publish a non-tested tree."; exit 1; }
           git -C "$SOURCE_DIR" config user.name "github-actions[bot]"
           git -C "$SOURCE_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           export GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"
