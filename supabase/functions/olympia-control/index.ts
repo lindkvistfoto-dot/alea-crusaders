@@ -110,6 +110,24 @@ async function workItem(token: string, itemId: string) {
   if (!item) throw new Error("WORK_ITEM_NOT_FOUND");
   return item;
 }
+
+async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any, currentSha: string) {
+  const acceptedIssues = issues.filter(issue => {
+    const body = String(issue.body || "");
+    return body.includes("- Beslut: ACCEPTANS") && body.includes("- Ärende-ID: " + item.id);
+  });
+  const protectedPaths = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
+  for (const issue of acceptedIssues) {
+    const body = String(issue.body || "");
+    const tested = body.match(/- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})/i)?.[1];
+    if (!tested) continue;
+    if (tested === currentSha) return true;
+    const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + tested + "..." + currentSha);
+    if (comparison.status !== "ahead" || comparison.ahead_by > 100 || !Array.isArray(comparison.files) || comparison.files.length >= 300) continue;
+    if (!comparison.files.some((file: any) => protectedPaths.has(file.filename))) return true;
+  }
+  return false;
+}
 async function startCandidateRequest(token: string, issueNumber: number, item: any, data: any) {
   const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
   const branch = "olympia/release-requests/decision-" + issueNumber;
@@ -315,13 +333,8 @@ Deno.serve(async (req: Request) => {
 
     if (data.decision === "pandoras_ask" || data.decision === "release_package") {
       const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin()));
-      const accepted = (issues as any[]).some(i => {
-        const body = String(i.body || "");
-        return body.includes("- Beslut: ACCEPTANS") &&
-          body.includes("- Ärende-ID: " + item.id) &&
-          body.includes("- Testad DEV-commit (full SHA): " + data.testedDevSha);
-      });
-      if (!accepted) return fail("Registrera först att du godkänner Astrid för exakt denna DEV-version.", 409);
+      const accepted = await hasAcceptedFeatureVersion(token, issues as any[], item, data.testedDevSha);
+      if (!accepted) return fail("Godkänn Astrid först. Om Astrids bildvisningsfiler har ändrats sedan godkännandet behöver du prova henne igen.", 409);
     }
 
     const decisionIssue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
