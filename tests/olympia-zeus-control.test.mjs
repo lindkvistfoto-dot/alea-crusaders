@@ -29,7 +29,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('ATT PUBLICERA');
     expect(page).toContain('HISTORIK');
     expect(page).toContain('ready_for_human_acceptance');
-    expect(page).toContain('testedSha===item.dev_sha');
+    expect(page).toContain('/^[0-9a-f]{40}$/i.test(testedSha)');
+    expect(page).toContain('i.user.type==="Bot"');
     expect(page).toContain('github.com/"+owner+"/"+repo+"/issues/new');
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
@@ -50,7 +51,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-olympia-decision-flow-4"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-pandora-final-gate-5"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
