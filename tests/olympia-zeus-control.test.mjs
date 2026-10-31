@@ -70,7 +70,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('request({action:"session_check"},session)');
     expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
     expect(edge).toContain('data.action === "session_check"');
-    expect(edge).toContain('checks: "read", statuses: "read"');
+    expect(edge).toContain('async function githubToken(decision: string)');
+    expect(edge).toContain('const permissions: Record<string, string> = { issues: "write", contents: "write" };');
+    expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });');
+    expect(edge).toContain('githubToken(data.decision)');
     expect(edge).toContain('pr.mergeable !== true');
     expect(edge).toContain('CANDIDATE_CHECKS_NOT_GREEN');
     expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
