@@ -1,0 +1,267 @@
+name: OLYMPIA · prepare exact LIVE release candidate
+
+on:
+  push:
+    branches:
+      - 'olympia/release-requests/**'
+    paths:
+      - 'olympia/release-requests/*.json'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout release request branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: request
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout LIVE baseline
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: live
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout verified DEV source
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          path: dev
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate Zeus decision and build exact candidate
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          REQUEST_DIR: request
+          LIVE_DIR: live
+          DEV_DIR: dev
+          OUTPUT_DIR: ${{ runner.temp }}/olympia-candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUTPUT_DIR"
+          REQUEST_FILE="$(find "$REQUEST_DIR/olympia/release-requests" -maxdepth 1 -type f -name '*.json' -print -quit)"
+          [[ -n "$REQUEST_FILE" ]] || { echo "::error::Release request manifest is missing."; exit 1; }
+          cp "$REQUEST_FILE" "$OUTPUT_DIR/request.json"
+          ISSUE_NUMBER="$(jq -r '.issueNumber' "$OUTPUT_DIR/request.json")"
+          DECISION="$(jq -r '.decision' "$OUTPUT_DIR/request.json")"
+          ITEM_ID="$(jq -r '.itemId' "$OUTPUT_DIR/request.json")"
+          TESTED_SHA="$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")"
+          [[ "$DECISION" == "pandoras_ask" || "$DECISION" == "release_package" ]] || { echo "::error::Unsupported candidate decision."; exit 1; }
+          [[ "$ITEM_ID" == "PILOT-001" && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to the exact Astrid pilot version."; exit 1; }
+          ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
+          [[ "$(jq -r '.user.type' <<< "$ISSUE_JSON")" == "Bot" ]] || { echo "::error::Decision was not created by the OLYMPIA server app."; exit 1; }
+          ISSUE_BODY="$(jq -r '.body' <<< "$ISSUE_JSON")"
+          grep -Fq "OLYMPIA Zeus-beslut" <<< "$ISSUE_BODY"
+          grep -Fq -- "- Ärende-ID: $ITEM_ID" <<< "$ISSUE_BODY"
+          grep -Fq -- "- Testad DEV-commit (full SHA): $TESTED_SHA" <<< "$ISSUE_BODY"
+          [[ "$DECISION" == "pandoras_ask" && "$ISSUE_BODY" == *"- Beslut: PANDORAS ASK"* || "$DECISION" == "release_package" && "$ISSUE_BODY" == *"- Beslut: RELEASEPAKET"* ]] || { echo "::error::The journal decision does not match its release request."; exit 1; }
+          QUEUE="$DEV_DIR/olympia/work-items.json"
+          jq -e --arg item "$ITEM_ID" --arg sha "$TESTED_SHA" '.items[] | select(.id==$item and .ready_for_human_acceptance==true and .dev_sha==$sha and .pr_number==385)' "$QUEUE" >/dev/null || { echo "::error::The PILOT-001 queue no longer confirms this exact DEV version."; exit 1; }
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "dev_sha=$TESTED_SHA" >> "$GITHUB_OUTPUT"
+
+          PR_JSON="$(gh api "repos/$REPOSITORY/pulls/385")"
+          PR_BASE_SHA="$(jq -r '.base.sha' <<< "$PR_JSON")"
+          PR_HEAD_SHA="$(jq -r '.head.sha' <<< "$PR_JSON")"
+          PR_MERGED="$(jq -r '.merged' <<< "$PR_JSON")"
+          PR_BASE="$(jq -r '.base.ref' <<< "$PR_JSON")"
+          PR_MERGE_SHA="$(jq -r '.merge_commit_sha' <<< "$PR_JSON")"
+          [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" == "$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" ]] || { echo "::error::PR #385 is not the exact merged DEV version approved by Zeus."; exit 1; }
+
+          git -C "$DEV_DIR" fetch --no-tags origin "refs/pull/385/head:refs/olympia/pr-385"
+          git -C "$DEV_DIR" diff --binary "$PR_BASE_SHA...refs/olympia/pr-385" > "$OUTPUT_DIR/candidate.patch"
+          git -C "$DEV_DIR" diff --name-only "$PR_BASE_SHA...refs/olympia/pr-385" > "$OUTPUT_DIR/source-files.txt"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const actual = fs.readFileSync(process.env.OUTPUT_DIR + '/source-files.txt','utf8').trim().split(/\r?\n/).sort();
+          const allowed = ['features/trophy-room/room.css','features/trophy-room/room.js','tests/arcane-trophy-room.test.mjs'].sort();
+          if (JSON.stringify(actual)!==JSON.stringify(allowed)) throw new Error('PR #385 changed-file set differs from its reviewed allowlist');
+          NODE
+
+          LIVE_SHA="$(git -C "$LIVE_DIR" rev-parse HEAD)"
+          git -C "$LIVE_DIR" worktree add "$OUTPUT_DIR/source" "$LIVE_SHA"
+          git -C "$OUTPUT_DIR/source" apply --check "$OUTPUT_DIR/candidate.patch"
+          git -C "$OUTPUT_DIR/source" apply "$OUTPUT_DIR/candidate.patch"
+          git -C "$OUTPUT_DIR/source" add -A
+
+          MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
+          DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
+          [[ -z "$MIGRATIONS" ]] || { echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
+          [[ -z "$DEPENDENCIES" ]] || { echo "::error::Candidate changes dependencies; dependency review is required."; exit 1; }
+
+          echo "live_sha=$LIVE_SHA" >> "$GITHUB_OUTPUT"
+          echo "dev_sha=$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" >> "$GITHUB_OUTPUT"
+          echo "candidate_tree=$(git -C "$OUTPUT_DIR/source" write-tree)" >> "$GITHUB_OUTPUT"
+
+      - name: Test candidate against LIVE baseline
+        working-directory: ${{ runner.temp }}/olympia-candidate/source
+        run: |
+          npm ci --no-audit --no-fund
+          npm run check
+          mkdir -p ${{ runner.temp }}/olympia-candidate/package
+          cp -a dist/. ${{ runner.temp }}/olympia-candidate/package/
+
+      - name: Commit exact candidate and open LIVE release PR
+        id: release_pr
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
+          LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
+          DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          SOURCE_DIR: ${{ runner.temp }}/olympia-candidate/source
+        run: |
+          set -euo pipefail
+          [[ -z "$(git -C "$SOURCE_DIR" status --porcelain)" ]] || { echo "::error::Candidate changed during tests; refusing to publish a non-tested tree."; exit 1; }
+          git -C "$SOURCE_DIR" config user.name "github-actions[bot]"
+          git -C "$SOURCE_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$SOURCE_DIR" commit -m "release(PILOT-001): verified Astrid candidate from LIVE"
+          COMMIT="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
+          TREE="$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})"
+          BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER"
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git -C "$SOURCE_DIR" -c http.extraheader="$AUTH" push origin "HEAD:refs/heads/$BRANCH"
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "tree=$TREE" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Open exact release pull request to main
+        id: pull_request
+        if: success()
+        uses: actions/github-script@v7
+        env:
+          BRANCH: ${{ steps.release_pr.outputs.branch }}
+          COMMIT: ${{ steps.release_pr.outputs.commit }}
+          TREE: ${{ steps.release_pr.outputs.tree }}
+          LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
+          DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: "open", base: "main", head: owner + ":" + process.env.BRANCH
+            });
+            let pr = existing.data.find(item => item.head.sha === process.env.COMMIT);
+            if (!pr) {
+              if (existing.data.length) throw new Error("A different release candidate PR already exists for this issue.");
+              const body = [
+                "## OLYMPIA release candidate · PILOT-001",
+                "",
+                "- Prepared from LIVE baseline: " + process.env.LIVE_SHA,
+                "- Approved DEV test version: " + process.env.DEV_SHA,
+                "- Exact candidate tree: " + process.env.TREE,
+                "- Zeus decision journal: #" + process.env.ISSUE_NUMBER,
+                "- Tests: `npm run check` passed on the candidate.",
+                "- Database migrations: none included.",
+                "- Dependency changes: none included.",
+                "- This PR is not approved for LIVE until OLYMPIA final approval is recorded."
+              ].join("\n");
+              const created = await github.rest.pulls.create({
+                owner, repo, title: "release(PILOT-001): Astrid from verified LIVE candidate",
+                head: process.env.BRANCH, base: "main", body, draft: false
+              });
+              pr = created.data;
+            }
+            core.setOutput("number", String(pr.number));
+            core.setOutput("url", pr.html_url);
+
+      - name: Write candidate manifest and preserve rollback point
+        if: success()
+        env:
+          LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
+          DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          TREE_SHA: ${{ steps.release_pr.outputs.tree }}
+          OUTPUT_DIR: ${{ runner.temp }}/olympia-candidate
+          RELEASE_PR_NUMBER: ${{ steps.pull_request.outputs.number }}
+          RELEASE_PR_URL: ${{ steps.pull_request.outputs.url }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const report={
+            schema:'olympia-release-candidate/v1',
+            status:'READY_FOR_ZEUS_FINAL_APPROVAL',
+            pilot:'PILOT-001',
+            pr_number:385,
+            tested_dev_sha:process.env.DEV_SHA,
+            live_base_sha:process.env.LIVE_SHA,
+            candidate_tree_sha:process.env.TREE_SHA,
+            dependency_changes:[],
+            database_migrations:[],
+            tests:'npm run check: passed',
+            rollback:'Restore the exact LIVE baseline by reverting the eventual release commit based on live_base_sha.',
+            publication:'NOT_PERFORMED',
+            release_pr_number:Number(process.env.RELEASE_PR_NUMBER),
+            release_pr_url:process.env.RELEASE_PR_URL,
+            created_at:new Date().toISOString()
+          };
+          fs.writeFileSync(process.env.OUTPUT_DIR+'/release-candidate.json',JSON.stringify(report,null,2));
+          NODE
+
+      - name: Upload exact candidate package
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: OLYMPIA-PILOT-001-LIVE-candidate
+          path: |
+            ${{ runner.temp }}/olympia-candidate/candidate.patch
+            ${{ runner.temp }}/olympia-candidate/source-files.txt
+            ${{ runner.temp }}/olympia-candidate/release-candidate.json
+            ${{ runner.temp }}/olympia-candidate/package
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Record result in Zeus decision journal
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
+          LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
+          DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          TREE_SHA: ${{ steps.release_pr.outputs.tree }}
+          RELEASE_PR_NUMBER: ${{ steps.pull_request.outputs.number }}
+          RELEASE_PR_URL: ${{ steps.pull_request.outputs.url }}
+          CANDIDATE_OUTCOME: ${{ job.status }}
+        with:
+          script: |
+            const outcome = process.env.CANDIDATE_OUTCOME;
+            const ready = outcome === "success";
+            const body = ready
+              ? [
+                  "## OLYMPIA release candidate",
+                  "",
+                  "- Status: READY_FOR_ZEUS_FINAL_APPROVAL",
+                  "- Pilot: PILOT-001 · PR #385",
+                  "- Verified DEV SHA: " + process.env.DEV_SHA,
+                  "- LIVE rollback baseline: " + process.env.LIVE_SHA,
+                  "- Candidate tree SHA: " + process.env.TREE_SHA,
+                  "- Release PR: #" + process.env.RELEASE_PR_NUMBER + " · " + process.env.RELEASE_PR_URL,
+                  "- Tests: npm run check passed on candidate assembled from LIVE.",
+                  "- Dependency changes: none.",
+                  "- Database migrations: none.",
+                  "- LIVE publication: NOT PERFORMED.",
+                  "- Artifact: open the successful workflow run and download OLYMPIA-PILOT-001-LIVE-candidate."
+                ].join("\n")
+              : "## OLYMPIA release candidate\n\nStatus: BLOCKED. A required candidate check failed. Review the linked workflow run. LIVE was not changed.";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(process.env.ISSUE_NUMBER),
+              body
+            });
