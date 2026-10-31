@@ -149,9 +149,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
     expect(page).not.toContain('testedSha===item.dev_sha');
-    expect(page).toContain('candidatePr.mergeable===true');
-    expect(page).toContain('statusesOk');
-    expect(page).toContain('liveBranch.commit.sha===liveMatch[1]');
+    expect(page).toContain('action:"candidate_check"');
+    expect(edge).toContain('async function inspectCandidate');
+    expect(edge).toContain('verifyCandidate(token, item, {');
+    expect(edge).toContain('decision === "candidate_check"');
+    expect(page).not.toContain('candidatePr.mergeable===true');
+    expect(page).not.toContain('liveBranch.commit.sha===liveMatch[1]');
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
@@ -202,6 +205,8 @@ describe('OLYMPIA server-side deployment preflight',()=>{
     expect(block).toContain('request({action:"deployment_check"},session)');
     expect(block).not.toContain('json(api+"/branches/main")');
     expect(block).not.toContain('json(api+"/branches/development")');
+    expect(edge).toContain('data.action === "candidate_check"');
+    expect(edge).toContain('githubToken("candidate_check")');
     expect(page).toContain('if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers()');
   });
 });
