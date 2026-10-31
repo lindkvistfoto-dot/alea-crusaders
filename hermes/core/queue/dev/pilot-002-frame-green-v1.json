@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "asset_key": "arcane-badge-frame-velvet-green",
+  "label": "PILOT-002 sammetsask grön v1",
+  "drive_file_id": "1-mnT671-fCv2Ka_t-JU8CRR9ye5-02fI",
+  "archive_file_id": "1z3r51o5wFsjKfhOVT14SLPAoWn8fYJ47",
+  "source_sha256": "552d4ac2b909aa645c3e2f4d26005a540d99cbe8e5695f8d0c9e6acb1259c917",
+  "olympia_item_id": "PILOT-002",
+  "source_pr_number": 432,
+  "source_dev_sha": "ad0d78d2280db86a24f01841c301d5c255eb74d2"
+}

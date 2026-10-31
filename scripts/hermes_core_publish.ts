@@ -1,4 +1,5 @@
 /** HERMES CORE developer publisher. Runs only in trusted GitHub Actions. */
+import {resolveHermesPublicationEnvironment} from "./hermes_publication_environment.js";
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 import {createHermesCore} from "../features/hermes-core/core.js";
 import {createCoreActionsTargetAdapter} from "../features/hermes-core/actions-target-adapter.js";
@@ -7,12 +8,11 @@ import {createCoreSystemReservation} from "../features/hermes-core/system-reserv
 const [outputDir] = Deno.args;
 const repository = Deno.env.get("GITHUB_REPOSITORY") || "";
 const ref = Deno.env.get("GITHUB_REF") || "";
+const targetEnv = Deno.env.get("HERMES_TARGET_ENV") || "";
 const url = Deno.env.get("SUPABASE_URL") || "";
 const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-if (repository !== "lindkvistfoto-dot/alea-crusaders" || ref !== "refs/heads/main") {
-  throw new Error("UNTRUSTED_CORE_ACTION");
-}
-if (!outputDir || !url || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
+const environment = resolveHermesPublicationEnvironment({repository, ref, targetEnv, url});
+if (!outputDir || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
 const targetKind = prepared.target?.kind ?? "system";
@@ -85,8 +85,11 @@ const core = createHermesCore({
 const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label};
 const result = await core.add({target, file: source});
 console.log("HERMES_CORE_ACTIVE", JSON.stringify({
+  environment,
   asset_key: registryKey,
   archive_file_id: prepared.archive_file_id,
+  olympia_item_id: prepared.olympia_item_id ?? null,
+  source_pr_number: prepared.source_pr_number ?? null,
   target,
   image_reference: result.activation.key,
   path: `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
