@@ -24,7 +24,8 @@
 <button class="tab" data-panel="publish">ATT PUBLICERA</button>
 <button class="tab" data-panel="history">HISTORIK</button>
 </nav>
-<section class="panel active" id="panel-try"><div class="notice" id="zeus-auth"><strong>Kontrollerar ALEA-sessionen…</strong> OLYMPIA använder din befintliga inloggning. Zeus-behörighet kontrolleras på servern.</div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiv arbetskö…</div></div></section>
+<section class="panel active" id="panel-try"><div class="notice" id="zeus-auth"><strong>Kontrollerar ALEA-sessionen…</strong> OLYMPIA använder din befintliga inloggning. Zeus-behörighet kontrolleras på servern.</div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiv arbetskö…</div></div>
+<div class="card" style="margin-top:18px"><div class="label">GitHub · ÖPPNA PULL REQUESTS</div><h2>Aktiva PR</h2><p class="muted small">Lista hämtas direkt från GitHub. Välj en PR för att kontrollera dess aktuella CI-körningar och mergebarhet.</p><div id="live-pr-list" class="pr-list"><div class="empty">Läser öppna PR…</div></div></div></section>
 <section class="panel" id="panel-publish">
 <div class="notice" id="release-blockers"><strong>Kontrollerar förhandsvillkor…</strong></div>
 <div class="grid">
@@ -74,6 +75,36 @@ var links=ready?'<div class="actions"><a class="btn" href="'+esc(item.dev_url||"
 var sourceIssue='<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'">#'+esc(item.provenance.source_issue)+'</a>';
 return '<article class="card"><div class="label">'+esc(item.id)+' · PILOT</div><h2>'+esc(item.title)+'</h2>'+status+'<p><strong>Syfte:</strong> '+esc(item.purpose)+'</p><p><strong>Förväntat resultat:</strong> '+esc(item.expected_result)+'</p>'+links+'<details class="details"><summary>Visa detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte skapad")+' · DEV SHA: '+esc(item.dev_sha||"inte publicerad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Miljömaster: '+esc(item.provenance.environment_master)+' · Asset: '+esc(item.provenance.environment_asset)+'</p></details></article>'
 }).join("")}
+async function renderPullRequests(){
+var root=get("live-pr-list");
+try{
+var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");
+if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
+if(!prs.length){root.innerHTML='<div class="empty">Inga öppna pull requests.</div>';return}
+root.innerHTML=prs.map(function(pr){
+var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
+var feature=(String(pr.body||"").match(/(?:^|\\n)#+\\s*(?:förväntat resultat|expected result|syfte|summary)\\s*\\n([\\s\\S]*?)(?=\\n#+\\s|$)/i)||[])[1]||"";
+feature=feature.trim().replace(/\\s+/g," ").slice(0,360);
+var kind=pr.draft?"Draft":"Öppen";
+return '<article class="pr"><div class="n">#'+esc(n)+'</div><div><a href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">'+esc(pr.title)+'</a><div class="small muted">'+esc(kind)+' · '+esc(pr.head.ref)+' → '+esc(pr.base.ref)+'</div>'+(feature?'<div class="small muted">Att prova: '+esc(feature)+'</div>':'')+'<div class="small muted" id="pr-status-'+esc(n)+'">CI och mergebarhet: inte hämtade</div></div><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Uppdatera status</button></article>'
+}).join("");
+}catch(_){root.innerHTML='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>'}
+}
+document.addEventListener("click",async function(event){
+var button=event.target.closest("[data-pr-status]");
+if(!button)return;
+var number=Number(button.dataset.prStatus),sha=String(button.dataset.prSha||""),output=get("pr-status-"+number);
+if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)||!output)return;
+button.disabled=true;output.textContent="Hämtar CI och mergebarhet från GitHub…";
+try{
+var values=await Promise.all([json(api+"/pulls/"+number),json(api+"/commits/"+encodeURIComponent(sha)+"/check-runs")]);
+var pr=values[0],runs=values[1].check_runs||[];
+var merge=pr.mergeable===true?"Mergebar":pr.mergeable===false?"Konflikt eller ej mergebar": "Mergebarhet OKÄND";
+var checks=!runs.length?"Inga check-runs":runs.some(function(c){return c.status!=="completed"})?"CI pågår":runs.some(function(c){return !["success","neutral","skipped"].includes(c.conclusion)})?"CI misslyckad":"CI godkänd";
+output.textContent="CI: "+checks+" · "+merge+(pr.mergeable_state?" · "+pr.mergeable_state:"");
+}catch(_){output.textContent="CI eller mergebarhet kunde inte verifieras. Status är OKÄND."}
+finally{button.disabled=false}
+});
 function renderBlockers(){
 var b=get("release-blockers");
 if(!baseline){b.innerHTML="<strong>Blockerat:</strong> baslinjen kunde inte läsas. Release-status är OKÄND.";return}
@@ -140,7 +171,7 @@ get("history-list").innerHTML=rows.slice(0,150).map(function(p){var status=p.sta
 }
 get("history-search").addEventListener("input",renderHistory);
 Promise.all([json("./baseline-001.json"),json("./work-items.json"),json("./history/pr-inventory-001.json")]).then(function(v){
-baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTrial();renderBlockers();renderHistory();
+baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTrial();renderPullRequests();renderBlockers();renderHistory();
 }).catch(function(e){get("trial-list").innerHTML='<div class="empty">Arbetskön kunde inte verifieras. Status är OKÄND. '+esc(e.message)+'</div>';get("release-blockers").innerHTML="<strong>Release blockerad:</strong> OLYMPIA-underlaget kunde inte läsas.";});
 window.olympiaRefreshDecisions=renderDecisions;
 renderDecisions();
