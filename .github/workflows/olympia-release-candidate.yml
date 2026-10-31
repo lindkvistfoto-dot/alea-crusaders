@@ -239,7 +239,9 @@ jobs:
             CHECK_COUNT="$(jq -r '.total_count // 0' <<< "$CHECKS")"
             PENDING="$(jq '[.check_runs[] | select(.status != "completed")] | length' <<< "$CHECKS")"
             FAILED="$(jq '[.check_runs[] | select(.status == "completed" and (.conclusion != "success" and .conclusion != "neutral" and .conclusion != "skipped"))] | length' <<< "$CHECKS")"
-            STATUS="$(gh api "repos/$REPOSITORY/commits/$HEAD_SHA/status" --jq '.state')"
+            STATUS_JSON="$(gh api "repos/$REPOSITORY/commits/$HEAD_SHA/status")"
+            STATUS="$(jq -r '.state' <<< "$STATUS_JSON")"
+            STATUS_CONTEXTS="$(jq '.statuses | length' <<< "$STATUS_JSON")"
             if (( FAILED > 0 )); then
               echo "::error::A release PR CI check failed. No LIVE merge was performed."
               exit 1
@@ -248,7 +250,7 @@ jobs:
               echo "::error::The release PR conflicts with main. No LIVE merge was performed."
               exit 1
             fi
-            if (( CHECK_COUNT > 0 && PENDING == 0 )) && [[ "$STATUS" == "success" && "$MERGEABLE" == "true" ]]; then
+            if (( CHECK_COUNT > 0 && PENDING == 0 )) && { (( STATUS_CONTEXTS == 0 )) || [[ "$STATUS" == "success" ]]; } && [[ "$MERGEABLE" == "true" ]]; then
               stable=$((stable + 1))
               if (( stable >= 2 )); then
                 echo "All release PR checks passed and GitHub reports the PR mergeable."
@@ -337,6 +339,7 @@ jobs:
                   "- Release PR: #" + process.env.RELEASE_PR_NUMBER + " · " + process.env.RELEASE_PR_URL,
                   "- Tests: npm run check passed on candidate assembled from LIVE.",
                   "- Release PR checks: all GitHub checks passed; PR is mergeable.",
+                  "- Workflow run: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId,
                   "- Dependency changes: none.",
                   "- Database migrations: none.",
                   "- LIVE publication: NOT PERFORMED.",
