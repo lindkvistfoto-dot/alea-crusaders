@@ -57,6 +57,8 @@
 .trophy-room-viewport.trophy-room-cinematic .trophy-room-scene{transition:none!important;will-change:transform}
 .trophy-room-viewport .trophy-room-character-layer{left:50%;bottom:8%;width:30%;height:54%;transform-origin:center bottom;transition:none!important;will-change:transform}
 @media(max-width:700px){.trophy-room-viewport .trophy-room-character-layer{width:30%;height:54%}}
+/* Restore the approved full-figure mobile fit after the animation sizing override. */
+@media(max-width:700px){.trophy-room-viewport .trophy-room-character-layer{width:40%;height:68%}}
 @media(prefers-reduced-motion:reduce){.trophy-room-viewport .trophy-room-scene,.trophy-room-viewport .trophy-room-character-layer{will-change:auto}}
 
 /* JAKOB 3I: wall-view navigation, outside the animated scene. */
