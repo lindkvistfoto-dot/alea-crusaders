@@ -85,6 +85,15 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).not.toContain('signInWithOAuth');
   });
 
+  it('routes deployment and candidate checks through the ALEA-authenticated bridge',()=>{
+    const page=read('olympia/zeus-control.html');
+    const outerScript=page.split('<script>')[1]?.split('</script>')[0]||'';
+    expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
+    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
+    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(outerScript).not.toContain('storedSession()');
+  });
+
   it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
     const page=read('olympia/zeus-control.html');
     const edge=read('supabase/functions/olympia-control/index.ts');
