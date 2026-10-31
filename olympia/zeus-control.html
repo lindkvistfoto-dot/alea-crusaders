@@ -192,7 +192,7 @@ var check=await request({action:"candidate_check",candidateIssue:i.number,itemId
 if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Kandidatkontrollen svarade inte.");
 candidateReady=check.result.ready===true;
 candidateBlocked=check.result.blocked===true;
-if(check.result.candidateTreeSha)treeMatch=[check.result.candidateTreeSha];
+if(check.result.candidateTreeSha)treeMatch=[null,check.result.candidateTreeSha];
 if(check.result.releasePr)prMatch=[null,String(check.result.releasePr),String(check.result.releaseUrl||"")];
 if(check.result.candidateRunUrl)candidateRunMatch=[null,check.result.candidateRunUrl];
 }catch(e){candidateCheckUnknown=true}
