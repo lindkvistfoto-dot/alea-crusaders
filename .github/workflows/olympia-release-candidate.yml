@@ -111,14 +111,14 @@ jobs:
               exit 1
             fi
             git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA" || { echo "::error::Accepted DEV version does not contain source PR #$PR_NUMBER."; exit 1; }
-            git -C "$DEV_DIR" fetch --no-tags origin "refs/pull/$PR_NUMBER/head:refs/olympia/pr-$PR_NUMBER"
-            CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_BASE_SHA...refs/olympia/pr-$PR_NUMBER")"
+            PR_PARENT_SHA="$(git -C "$DEV_DIR" rev-parse "$PR_MERGE_SHA^1")"
+            CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_PARENT_SHA" "$PR_MERGE_SHA")"
             while IFS= read -r changed; do
               [[ -z "$changed" ]] && continue
               grep -Fxq "$changed" <<< "$ALLOWED_FILES" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }
             done <<< "$CHANGED_FILES"
             PATCH_FILE="$OUTPUT_DIR/pr-$PR_NUMBER.patch"
-            git -C "$DEV_DIR" diff --binary "$PR_BASE_SHA...refs/olympia/pr-$PR_NUMBER" > "$PATCH_FILE"
+            git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA" > "$PATCH_FILE"
             [[ -s "$PATCH_FILE" ]] || { echo "::error::Source PR #$PR_NUMBER has an empty patch."; exit 1; }
             git -C "$SOURCE_DIR" apply --check "$PATCH_FILE"
             git -C "$SOURCE_DIR" apply "$PATCH_FILE"
@@ -126,6 +126,7 @@ jobs:
             printf '%s\n' "$CHANGED_FILES" >> "$OUTPUT_DIR/source-files.txt"
           done
           sort -u "$OUTPUT_DIR/source-files.txt" -o "$OUTPUT_DIR/source-files.txt"
+          git -C "$SOURCE_DIR" add -A
           MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
           DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
           [[ -z "$MIGRATIONS" ]] || { echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
