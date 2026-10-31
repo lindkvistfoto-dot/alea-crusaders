@@ -7,3 +7,7 @@ major_version = 17
 verify_jwt = true
 entrypoint = "./functions/hermes-alea/index.ts"
 static_files = ["./functions/hermes-alea/magick.wasm"]
+
+[functions.olympia-control]
+verify_jwt = true
+entrypoint = "./functions/olympia-control/index.ts"

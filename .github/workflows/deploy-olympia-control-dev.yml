@@ -1,0 +1,35 @@
+name: Deploy OLYMPIA Decision Bridge to DEV
+
+on:
+  push:
+    branches:
+      - development
+    paths:
+      - supabase/config.toml
+      - supabase/functions/olympia-control/**
+      - .github/workflows/deploy-olympia-control-dev.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: olympia-control-development
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require deployment credential
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ -n "$SUPABASE_ACCESS_TOKEN" ]] || { echo "::error::Configure SUPABASE_ACCESS_TOKEN before deploying OLYMPIA DEV."; exit 1; }
+      - name: Deploy OLYMPIA function to the isolated DEV project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npx --yes supabase@2.81.3 functions deploy olympia-control --project-ref wkiuyklzzroavclnsxna
