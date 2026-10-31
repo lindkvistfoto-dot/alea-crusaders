@@ -35,6 +35,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
     expect(()=>new Function(script)).not.toThrow();
+    expect(page).toContain("esc(item.expected_result)+'</p>'+links+");
+    expect(page).not.toContain("esc(item.expected_result)+'</p'>+links+");
   });
 
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
