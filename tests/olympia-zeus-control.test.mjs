@@ -47,9 +47,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(baseline.deployments.verification_policy).toContain('source_sha');
     const page=read('olympia/zeus-control.html');
     const edge=read('supabase/functions/olympia-control/index.ts');
-    expect(page).toContain('window.olympiaReleasePreflightReady===true');
-    expect(page).toContain('candidatePr.base.sha===liveMatch[1]');
-    expect(page).toContain('exactScope');
+    expect(page).toContain('window.olympiaReleasePreflightReady=lines.length===0&&!unknown');
+    expect(edge).toContain('pr.base?.sha !== live.sha');
+    expect(edge).toContain('const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"]');
+    expect(page).not.toContain('candidatePr.base.sha===liveMatch[1]');
+    expect(page).not.toContain('exactScope');
     expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
     expect(edge).toContain('CANDIDATE_SCOPE_NOT_ALLOWED');
     expect(edge).toContain('verifyPublishedManifest("main", live.sha)');
@@ -73,7 +75,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-server-preflight-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-candidate-server-check-1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -149,9 +151,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
     expect(page).not.toContain('testedSha===item.dev_sha');
-    expect(page).toContain('candidatePr.mergeable===true');
-    expect(page).toContain('statusesOk');
-    expect(page).toContain('liveBranch.commit.sha===liveMatch[1]');
+    expect(page).toContain('action:"candidate_check"');
+    expect(edge).toContain('async function inspectCandidate');
+    expect(edge).toContain('verifyCandidate(token, item, {');
+    expect(edge).toContain('decision === "candidate_check"');
+    expect(page).not.toContain('candidatePr.mergeable===true');
+    expect(page).not.toContain('liveBranch.commit.sha===liveMatch[1]');
     expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
     expect(edge).toContain('/git/ref/heads/development');
     expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
@@ -202,6 +207,8 @@ describe('OLYMPIA server-side deployment preflight',()=>{
     expect(block).toContain('request({action:"deployment_check"},session)');
     expect(block).not.toContain('json(api+"/branches/main")');
     expect(block).not.toContain('json(api+"/branches/development")');
+    expect(edge).toContain('data.action === "candidate_check"');
+    expect(edge).toContain('githubToken("candidate_check")');
     expect(page).toContain('if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers()');
   });
 });

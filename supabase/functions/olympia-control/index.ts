@@ -73,6 +73,8 @@ async function githubToken(decision: string) {
   const jwt = await appJwt(appId, privateKey);
   const permissions: Record<string, string> = decision === "deployment_check"
     ? { contents: "read" }
+    : decision === "candidate_check"
+    ? { contents: "read", issues: "read", pull_requests: "read", checks: "read", statuses: "read" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write", checks: "read", statuses: "read" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
@@ -315,6 +317,80 @@ async function verifyCandidate(token: string, item: any, data: any) {
   }
   return { issue, pr, report, liveSha: live.sha };
 }
+async function inspectCandidate(token: string, item: any, issueNumber: number, testedDevSha: string) {
+  const appLogin = await appBotLogin();
+  const issue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + issueNumber);
+  const decisionBody = String(issue.body || "");
+  if (issue.user?.login !== appLogin ||
+      !decisionBody.includes("- Ärende-ID: " + item.id) ||
+      !decisionBody.includes("- Testad DEV-commit (full SHA): " + testedDevSha) ||
+      !["- Beslut: PANDORAS ASK", "- Beslut: RELEASEPAKET"].some(value => decisionBody.includes(value))) {
+    throw new Error("CANDIDATE_DECISION_MISMATCH");
+  }
+  const comments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + issueNumber + "/comments?per_page=100");
+  const report = (comments as any[])
+    .filter(comment => {
+      const body = String(comment.body || "");
+      return comment.user?.login === "github-actions[bot]" &&
+        body.includes("## OLYMPIA release candidate") &&
+        body.includes("- Verified DEV SHA: " + testedDevSha);
+    })
+    .sort((a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
+  if (!report) return { ready: false, blocked: false, message: "Kandidatkontrollen har ännu inte rapporterat resultat." };
+  const body = String(report.body || "");
+  const blocked = body.includes("- Status: BLOCKED");
+  const treeMatch = body.match(/- Candidate tree SHA: ([0-9a-f]{40})/i);
+  const runMatch = body.match(/- Workflow run: (https:\/\/[^\s]+)/i);
+  if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") || !treeMatch) {
+    return {
+      ready: false,
+      blocked,
+      message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
+      candidateRunUrl: runMatch?.[1] || null,
+    };
+  }
+  try {
+    const verified = await verifyCandidate(token, item, {
+      candidateIssue: issueNumber,
+      candidateTreeSha: treeMatch[1],
+      testedDevSha,
+    });
+    const prMatch = String(report.body || "").match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
+    if (!prMatch) throw new Error("CANDIDATE_REPORT_INCOMPLETE");
+    return {
+      ready: true,
+      blocked: false,
+      message: "Redo för LIVE – releaseförslag verifierat.",
+      candidateTreeSha: treeMatch[1],
+      releasePr: Number(prMatch[1]),
+      releaseUrl: prMatch[2],
+      candidateRunUrl: runMatch?.[1] || null,
+      liveSha: verified.liveSha,
+    };
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "";
+    const messages: Record<string, string> = {
+      CANDIDATE_NOT_READY: "Kandidatrapporten är inte klar. LIVE är oförändrat.",
+      CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
+      LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. En ny kandidat behövs.",
+      RELEASE_PR_NOT_VALID: "Releaseförslaget är inte öppet, mergebart och verifierat mot main.",
+      CANDIDATE_CHECKS_NOT_GREEN: "Releaseförslagets CI-kontroller är inte godkända.",
+      CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända.",
+      RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
+      CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
+      DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
+      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför Astrids godkända omfattning.",
+    };
+    return {
+      ready: false,
+      blocked: true,
+      message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
+      candidateTreeSha: treeMatch[1],
+      candidateRunUrl: runMatch?.[1] || null,
+    };
+  }
+}
+
 function title(item: any, decision: string) {
   const label: Record<string, string> = {
     accept: "ACCEPTANS",
@@ -384,6 +460,27 @@ Deno.serve(async (req: Request) => {
         return fail("DEV/LIVE-publiceringen kunde inte verifieras just nu. Slutgodkännandet är låst; försök igen.", 409);
       }
     }
+    if (data.action === "candidate_check") {
+      if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
+          typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId) ||
+          typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) {
+        return fail("Kandidatens ärende, pilot eller testade DEV-version är ogiltig.", 400);
+      }
+      try {
+        const token = await githubToken("candidate_check");
+        const item = await workItem(token, data.itemId);
+        if (!item.ready_for_human_acceptance || item.id !== "PILOT-001" || item.pr_number !== 385) {
+          return fail("Astrid-pilotens underlag är inte verifierat.", 409);
+        }
+        const status = await inspectCandidate(token, item, data.candidateIssue, data.testedDevSha);
+        return json({ ok: true, ...status });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "";
+        console.error("OLYMPIA candidate check failed", code);
+        return fail("Kandidatstatus kunde inte verifieras just nu. Slutgodkännandet är låst; försök igen.", 502);
+      }
+    }
+
     if (!DECISIONS.has(data.decision)) return fail("Ogiltigt beslut.", 400);
     if (typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
     if (typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) return fail("Testad DEV-version saknas eller är ogiltig.", 400);
