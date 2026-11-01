@@ -78,6 +78,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Visa i LIVE');
   });
 
+  it('copies the OLYMPIA static pages into the Pages build output',()=>{
+    const vite=read('vite.config.js');
+    expect(vite).toContain('copyStaticTree("alea-copy-olympia", "olympia", "olympia")');
+  });
+
   it('uses only the exact Cloudflare Pages check summary URL for a successful queried SHA',async()=>{
     const page=read('olympia/zeus-control.html');
     const helperStart=page.indexOf('function pagesPreviewUrl(value){');
