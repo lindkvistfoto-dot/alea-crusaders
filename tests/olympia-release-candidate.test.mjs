@@ -3,11 +3,14 @@ import {readFileSync} from 'node:fs';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
-describe('OLYMPIA Astrid LIVE candidate',()=>{
+describe('OLYMPIA per-pilot LIVE candidate',()=>{
  it('includes the approved mobile correction in the exact candidate source set',()=>{
   const queue=JSON.parse(read('olympia/work-items.json'));
   const item=queue.items.find(entry=>entry.id==='PILOT-001');
   expect(item.release_source_prs).toEqual([385,404]);
+  const pilot002=queue.items.find(entry=>entry.id==='PILOT-002');
+  expect(pilot002.release_source_prs).toEqual([432,434,435,436,437]);
+  expect(pilot002.features).toContain('index.html');
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   expect(workflow).toContain('mapfile -t SOURCE_PRS');
   expect(workflow).toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
@@ -38,8 +41,11 @@ describe('OLYMPIA Astrid LIVE candidate',()=>{
   expect(bridge).toContain('let pull = Array.isArray(existing) ? existing[0] : null');
   expect(bridge).toContain('Zeus decision journal: #" + issueNumber');
   expect(workflow).toContain('SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}');
-  expect(workflow).toContain('BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
-  expect(workflow).toContain('verified Astrid candidate from LIVE (attempt $ATTEMPT)');
+  expect(workflow).toContain('BRANCH="olympia/${ITEM_ID,,}/issue-$ISSUE_NUMBER-live-$LIVE_SHA"');
+  expect(workflow).toContain('release($ITEM_ID): verified candidate from LIVE (attempt $ATTEMPT)');
+  expect(workflow).toContain('PRIMARY_PR="$(jq -r');
+  expect(workflow).toContain('-- "${ALLOWED_FILES[@]}"');
+  expect(workflow).not.toContain('ITEM_ID" == "PILOT-001"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
  });
  it('retries the same decision from current DEV while preserving the request attempt',()=>{
