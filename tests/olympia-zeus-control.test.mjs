@@ -172,6 +172,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('api+"/branches/main"');
     expect(page).toContain('is:pr is:open');
     expect(page).toContain('is:pr is:merged');
+    expect(page).toContain('currentDevSha=sha;');
+    expect(page).toContain('Promise.allSettled([');
+    expect(page).toContain('currentDevSha=String(devSha);renderTrial();');
+    expect(page).toContain('Övrig GitHub-status kunde inte hämtas');
     expect(page).toContain('Aktuell GitHub-status OKÄND');
   });
 
