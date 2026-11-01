@@ -262,10 +262,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('ALEA-sessionen gäller inte DEV.');
   });
 
-  it('reads current branches and pull request counts from GitHub instead of the captured snapshot',()=>{
+  it('reads current branch SHAs through the authenticated ALEA bridge',()=>{
     const page=read('olympia/zeus-control.html');
-    expect(page).toContain('api+"/branches/development"');
-    expect(page).toContain('api+"/branches/main"');
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"current_refs"})');
+    expect(page).not.toContain('api+"/branches/development"');
+    expect(page).not.toContain('api+"/branches/main"');
     expect(page).toContain('is:pr is:open');
     expect(page).toContain('is:pr is:merged');
     expect(page).toContain('currentDevSha=sha;');
@@ -288,6 +289,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('pr.mergeable===true');
     expect(page).toContain('Status är OKÄND');
     const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('decision === "deployment_check" || decision === "current_refs"');
+    expect(edge).toContain('data.action === "current_refs"');
+    expect(edge).toContain('OLYMPIA GitHub branch status failed');
     expect(edge).toContain('decision === "pull_request_list"');
     expect(edge).toContain('data.action === "pull_request_list"');
     expect(edge).toContain('pull_requests: "read"');
