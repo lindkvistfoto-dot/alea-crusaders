@@ -209,7 +209,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
-    expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
+    expect(workflow).toContain('The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
   });
 });
 
