@@ -250,7 +250,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('isolates DEV auth storage from the LIVE ALEA session',()=>{
     const legacy=read('legacy/app.js');
     const page=read('olympia/zeus-control.html');
-    expect(legacy).toContain("SUPABASE_SESSION_KEY='alea_supabase_session_dev'");
+    expect(legacy).toContain("sessionKey:'alea_supabase_session_dev'");
+    expect(legacy).toContain("const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;");
     expect(legacy).toContain('function sessionBelongsToProject(session)');
     expect(legacy).toContain('return payload.iss===SUPABASE_URL');
     expect(legacy).toContain('function projectSession()');

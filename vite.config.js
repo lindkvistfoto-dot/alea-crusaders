@@ -20,6 +20,15 @@ export default defineConfig({
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-preview", "preview", "preview"),
     copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
+    copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
+    {
+      name: "alea-copy-innkeeper-hero",
+      apply: "build",
+      async closeBundle() {
+        await mkdir(resolve("dist/assets"), { recursive: true });
+        await copyFile(resolve("assets/innkeeper-hero.jpg"), resolve("dist/assets/innkeeper-hero.jpg"));
+      },
+    },
     copyStaticTree("alea-copy-dice-assets", "alea-dicebox-assets-v1.1.4", "alea-dicebox-assets-v1.1.4"),
     copyStaticTree("alea-copy-committed-round-art", "assets/combat/round", "assets/combat/round"),
     copyStaticTree("alea-copy-arcane-system-art", "assets/arcane/system", "assets/arcane/system"),
