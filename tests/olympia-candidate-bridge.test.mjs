@@ -67,6 +67,14 @@ describe('OLYMPIA GitHub candidate bridge authentication',()=>{
     }
   });
 
+  it('reads the release request before matching its item ID to the decision',()=>{
+    const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+    const requestRead=bridge.indexOf('const request = decodedJson');
+    const decisionCheck=bridge.indexOf('issueBody.includes("- Ärende-ID: " + request.itemId)');
+    expect(requestRead).toBeGreaterThan(-1);
+    expect(decisionCheck).toBeGreaterThan(requestRead);
+  });
+
   it('keeps the OIDC callback isolated and pins the exact candidate workflow',()=>{
     const config=read('supabase/config.toml');
     const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');

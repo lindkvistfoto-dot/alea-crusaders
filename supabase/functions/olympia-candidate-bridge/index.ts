@@ -178,14 +178,6 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
   const issue = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/issues/" + issueNumber);
   const appLogin = await appBotLogin();
   const issueBody = String(issue.body || "");
-  if (issue.user?.login !== appLogin ||
-      !issueBody.includes("## OLYMPIA Zeus-beslut") ||
-      !issueBody.includes("- Beslut: PANDORAS ASK") ||
-      !issueBody.includes("- Ärende-ID: " + request.itemId) ||
-      !issueBody.includes("- Testad DEV-commit (full SHA): " + devSha)) {
-    throw new Error("OLYMPIA_DECISION_MISMATCH");
-  }
-
   const requestRef = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/" + encodeURIComponent(requestBranch));
   if (requestRef.object?.sha !== requestCommitSha) throw new Error("REQUEST_BRANCH_MOVED");
   const requestFile = await contents(tokenForApp, "olympia/release-requests/decision-" + issueNumber + ".json", requestBranch);
@@ -199,6 +191,14 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
       request.workflowBlobSha !== workflowBlobSha ||
       String(request.attempt) !== String(candidateAttempt)) {
     throw new Error("RELEASE_REQUEST_MISMATCH");
+  }
+
+  if (issue.user?.login !== appLogin ||
+      !issueBody.includes("## OLYMPIA Zeus-beslut") ||
+      !issueBody.includes("- Beslut: PANDORAS ASK") ||
+      !issueBody.includes("- Ärende-ID: " + request.itemId) ||
+      !issueBody.includes("- Testad DEV-commit (full SHA): " + devSha)) {
+    throw new Error("OLYMPIA_DECISION_MISMATCH");
   }
   const queueFile = await contents(tokenForApp, "olympia/work-items.json", "development");
   const queue = decodedJson(String(queueFile.content || ""));
