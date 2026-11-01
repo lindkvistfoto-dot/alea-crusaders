@@ -84,15 +84,23 @@ const core = createHermesCore({
 
 const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label};
 const result = await core.add({target, file: source});
-console.log("HERMES_CORE_ACTIVE", JSON.stringify({
+const publication = {
+  schema: "hermes-core-publication/v1",
   environment,
   asset_key: registryKey,
   archive_file_id: prepared.archive_file_id,
   olympia_item_id: prepared.olympia_item_id ?? null,
   source_pr_number: prepared.source_pr_number ?? null,
+  source_dev_sha: prepared.source_dev_sha ?? null,
   target,
   image_reference: result.activation.key,
   path: `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
   webp_sha256: prepared.webp_sha256,
   webp_bytes: prepared.webp_bytes,
-}));
+  width: prepared.width,
+  height: prepared.height,
+  alpha: prepared.alpha_preserved,
+  status: "verified",
+};
+await Deno.writeTextFile(`${outputDir}/publication.json`, JSON.stringify(publication, null, 2) + "\n");
+console.log("HERMES_CORE_ACTIVE", JSON.stringify(publication));

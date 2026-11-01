@@ -7,7 +7,7 @@ on:
       - 'hermes/core/queue/dev/**'
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -33,6 +33,7 @@ jobs:
             scripts/hermes_core_prepare.py
             scripts/hermes_core_publish.ts
             scripts/hermes_publication_environment.js
+            scripts/olympia
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -70,6 +71,7 @@ jobs:
       - name: Prepare and publish changed DEV requests
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          GITHUB_TOKEN: ${{ github.token }}
           HERMES_TARGET_ENV: DEV
           SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
           HERMES_BEFORE: ${{ github.event.before }}
@@ -91,6 +93,7 @@ jobs:
             mkdir -p "$output"
             python scripts/hermes_core_prepare.py "$request" --output "$output"
             deno run --no-config --no-lock --node-modules-dir=none \
-              --allow-env --allow-net --allow-read="$output" \
+              --allow-env --allow-net --allow-read="$output" --allow-write="$output" \
               scripts/hermes_core_publish.ts "$output"
+            node scripts/olympia/register-core-image.mjs "$output/publication.json"
           done

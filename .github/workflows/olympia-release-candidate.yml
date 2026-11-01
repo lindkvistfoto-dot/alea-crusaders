@@ -98,6 +98,9 @@ jobs:
 
           CURRENT_DEV_SHA="$(git -C "$DEV_DIR" rev-parse HEAD)"
           git -C "$DEV_DIR" merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA" || { echo "::error::The accepted DEV version is no longer in the development history."; exit 1; }
+          TESTED_IMAGES="$(git -C "$DEV_DIR" show "$TESTED_SHA:olympia/work-items.json" | jq -cS --arg item "$ITEM_ID" '[.items[] | select(.id==$item) | (.images // [])] | .[0] // []')"
+          CURRENT_IMAGES="$(jq -cS '.images // []' <<< "$ITEM_JSON")"
+          [[ "$TESTED_IMAGES" == "$CURRENT_IMAGES" ]] || { echo "::error::The image inventory changed after Zeus accepted this DEV version. Refresh OLYMPIA and review the updated images before release."; exit 1; }
           if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}" | grep -q .; then
             echo "::error::The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
             exit 1
@@ -183,8 +186,42 @@ jobs:
             printf '%s\n' "$CHANGED_FILES" >> "$OUTPUT_DIR/source-files.txt"
           done
           sort -u "$OUTPUT_DIR/source-files.txt" -o "$OUTPUT_DIR/source-files.txt"
-          git -C "$SOURCE_DIR" diff --binary --full-index "$LIVE_SHA" > "$OUTPUT_DIR/candidate.patch"
+          # Carry the existing HERMES CORE asset identities into the exact
+          # candidate. The LIVE deploy workflow consumes this manifest before
+          # deploying the matching code. Empty image lists produce no manifest.
+          IMAGE_COUNT="$(jq '.images // [] | length' <<< "$ITEM_JSON")"
+          if (( IMAGE_COUNT > 0 )); then
+            jq -e '
+              (.images | type == "array") and
+              ([.images[].asset_key] | length == (unique | length)) and
+              all(.images[];
+                .dev_publication_status == "verified" and
+                (.asset_key | test("^[a-z0-9][a-z0-9_.-]*$")) and
+                ((.target_kind // "system") == "system" and (.target_id // .asset_key) == .asset_key or
+                 (.target_kind // "system") == "honor-definition" and (.target_id | test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")) or
+                 (.target_kind // "system") == "honor-relief" and (.target_id | test("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")) and (.target_material | IN("enamel","metal","wood","stone","other"))) and
+                (.webp_sha256 | test("^[a-f0-9]{64}$")) and
+                (.webp_path == ("hermes/system-asset/" + .asset_key + "/" + .webp_sha256 + ".webp")) and
+                (.webp_bytes | type == "number" and . > 0) and
+                (.width | type == "number" and . > 0) and
+                (.height | type == "number" and . > 0) and
+                (.alpha | type == "boolean")
+              )
+            ' <<< "$ITEM_JSON" >/dev/null || { echo "::error::The OLYMPIA image inventory is incomplete or does not match HERMES CORE's verified WebP contract."; exit 1; }
+            MANIFEST_DIR="$SOURCE_DIR/olympia/release-manifests"
+            mkdir -p "$MANIFEST_DIR"
+            jq --arg issue "$ISSUE_NUMBER" --arg item "$ITEM_ID" --arg dev "$TESTED_SHA" '
+              {schema:"olympia-image-promotion/v1",issueNumber:($issue|tonumber),itemId:$item,testedDevSha:$dev,
+               images:[.images[] | {asset_key,webp_sha256,webp_path,webp_bytes,width,height,alpha,
+                 target_kind:(.target_kind // "system"),target_id:(.target_id // .asset_key),
+                 target_material,label}]}
+            ' <<< "$ITEM_JSON" > "$MANIFEST_DIR/decision-$ISSUE_NUMBER.json"
+            echo "Prepared $IMAGE_COUNT HERMES CORE image resource(s) for LIVE promotion."
+          else
+            echo "No image resources are attached to this OLYMPIA change; no promotion manifest is needed."
+          fi
           git -C "$SOURCE_DIR" add -A
+          git -C "$SOURCE_DIR" diff --binary --full-index "$LIVE_SHA" > "$OUTPUT_DIR/candidate.patch"
           MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
           DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
           [[ -z "$MIGRATIONS" ]] || { echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
