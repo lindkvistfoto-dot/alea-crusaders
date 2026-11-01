@@ -46,7 +46,7 @@
       "purpose": "Medaljdetaljen ska rymmas i mobilens bredd med medaljen centrerad i sammetsasken och texten under.",
       "expected_result": "Hela sammetsramen syns i sidled utan beskärning. Medaljen är centrerad i kudden. All text visas under ramen och kan rullas vid behov. Stängknappen är diskret och fortsatt tillgänglig.",
       "status": "ready_for_acceptance",
-      "technical_status": "PILOT-002 layout: PR #432 and corrections #434–#437 are merged in development. Three frame images are verified as published in DEV.",
+      "technical_status": "PILOT-002 layout and environment-local HERMES image URL fix (PR #448) are merged in development. Three frame images are verified as published in DEV.",
       "ready_for_human_acceptance": true,
       "dev_sha": "53701a734a4f7eb971d446c5fe0c816fc176cb15",
       "pr_number": 432,
@@ -55,7 +55,8 @@
         434,
         435,
         436,
-        437
+        437,
+        448
       ],
       "dev_url": "../?view=trophy-room&cache=20261031-pilot-002",
       "features": [
