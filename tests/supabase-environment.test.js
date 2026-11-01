@@ -27,6 +27,22 @@ describe('Supabase environment selection',()=>{
     expect(config.sessionKey).toBe('alea_supabase_session');
   });
 
+  it('keeps the actual GitHub Pages production host on LIVE',()=>{
+    const config=selectForHost('lindkvistfoto-dot.github.io');
+    expect(config.name).toBe('live');
+    expect(config.url).toBe('https://wbmosmkirsitkonejzpg.supabase.co');
+    expect(config.sessionKey).toBe('alea_supabase_session');
+  });
+
+  it('uses one selected endpoint for Auth, REST, and Storage',()=>{
+    const config=selectForHost('abc123.alea-crusaders.pages.dev');
+    expect(config.endpoint('/auth/v1/token?grant_type=password')).toBe(config.url+'/auth/v1/token?grant_type=password');
+    expect(config.endpoint('/rest/v1/example')).toBe(config.url+'/rest/v1/example');
+    expect(config.endpoint('/storage/v1/object/example/file.webp')).toBe(config.url+'/storage/v1/object/example/file.webp');
+    expect((appSource.match(/ALEA_SUPABASE_CONFIG\\.endpoint\\(path\\)/g)||[])).toHaveLength(2);
+    expect((appSource.match(/ALEA_SUPABASE_CONFIG\\.endpoint\\('\\/storage\\/v1\\/'\\+path\\)/g)||[])).toHaveLength(2);
+  });
+
   it('sends an authenticated write from a preview host to DEV',async()=>{
     const config=selectForHost('abc123.alea-crusaders.pages.dev');
     const begin=appSource.indexOf('/* v0.35.69 — keep the JWT fresh');
