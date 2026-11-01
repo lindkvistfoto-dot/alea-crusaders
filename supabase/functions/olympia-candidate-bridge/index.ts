@@ -130,6 +130,15 @@ function decodedJson(content: string) {
 function validSha(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
 }
+function validWorkItem(item: any) {
+  return !!item && /^PILOT-[0-9]{3}$/.test(String(item.id || "")) &&
+    Number.isSafeInteger(item.pr_number) &&
+    Array.isArray(item.release_source_prs) && item.release_source_prs.length > 0 &&
+    item.release_source_prs.every((number: any) => Number.isSafeInteger(number) && number > 0) &&
+    item.release_source_prs.includes(item.pr_number) &&
+    Array.isArray(item.features) && item.features.length > 0 &&
+    item.features.every((path: any) => typeof path === "string" && path.length > 0);
+}
 async function createCandidatePullRequest(token: string, claims: Record<string, unknown>, data: Record<string, unknown>) {
   const issueNumber = Number(data.issueNumber);
   const runId = String(data.runId || "");
@@ -172,7 +181,7 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
   if (issue.user?.login !== appLogin ||
       !issueBody.includes("## OLYMPIA Zeus-beslut") ||
       !issueBody.includes("- Beslut: PANDORAS ASK") ||
-      !issueBody.includes("- Ärende-ID: PILOT-001") ||
+      !issueBody.includes("- Ärende-ID: " + request.itemId) ||
       !issueBody.includes("- Testad DEV-commit (full SHA): " + devSha)) {
     throw new Error("OLYMPIA_DECISION_MISMATCH");
   }
@@ -183,13 +192,19 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
   const request = decodedJson(String(requestFile.content || ""));
   if (request.schema !== "olympia-release-request/v1" ||
       request.issueNumber !== issueNumber ||
-      request.itemId !== "PILOT-001" ||
-      request.prNumber !== 385 ||
+      typeof request.itemId !== "string" ||
+      !/^PILOT-[0-9]{3}$/.test(request.itemId) ||
       request.decision !== "pandoras_ask" ||
       request.testedDevSha !== devSha ||
       request.workflowBlobSha !== workflowBlobSha ||
       String(request.attempt) !== String(candidateAttempt)) {
     throw new Error("RELEASE_REQUEST_MISMATCH");
+  }
+  const queueFile = await contents(tokenForApp, "olympia/work-items.json", "development");
+  const queue = decodedJson(String(queueFile.content || ""));
+  const item = Array.isArray(queue.items) ? queue.items.find((entry: any) => entry.id === request.itemId) : null;
+  if (!validWorkItem(item) || !item.ready_for_human_acceptance || item.pr_number !== request.prNumber) {
+    throw new Error("WORK_ITEM_NOT_READY");
   }
 
   const workflow = await contents(tokenForApp, ".github/workflows/olympia-release-candidate.yml", String(claims.workflow_sha));
@@ -197,24 +212,19 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
 
   const main = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/commits/main");
   if (main.sha !== liveSha) throw new Error("LIVE_BASELINE_CHANGED");
-  const expectedBranch = "olympia/pilot-001/issue-" + issueNumber + "-live-" + liveSha;
+  const expectedBranch = "olympia/" + request.itemId.toLowerCase() + "/issue-" + issueNumber + "-live-" + liveSha;
   if (candidateBranch !== expectedBranch) throw new Error("CANDIDATE_BRANCH_INVALID");
   const candidateRef = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/" + encodeURIComponent(candidateBranch));
   if (candidateRef.object?.sha !== candidateCommitSha) throw new Error("CANDIDATE_BRANCH_MOVED");
   const commit = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/commits/" + candidateCommitSha);
   if (commit.commit?.tree?.sha !== candidateTreeSha || commit.parents?.[0]?.sha !== liveSha ||
-      !String(commit.commit?.message || "").includes("verified Astrid candidate from LIVE (attempt " + candidateAttempt + ")")) {
+      !String(commit.commit?.message || "").includes("release(" + request.itemId + "): verified candidate from LIVE (attempt " + candidateAttempt + ")")) {
     throw new Error("CANDIDATE_COMMIT_INVALID");
   }
   const comparison = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/compare/" + liveSha + "..." + candidateCommitSha);
-  const allowed = new Set([
-    "features/trophy-room/room.css",
-    "features/trophy-room/room.js",
-    "tests/arcane-trophy-room.test.mjs",
-  ]);
+  const allowed = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
   const changed = Array.isArray(comparison.files) ? comparison.files.map((file: any) => String(file.filename)) : [];
-  if (comparison.status !== "ahead" || changed.length !== 3 || changed.some(path => !allowed.has(path)) ||
-      ![...allowed].every(path => changed.includes(path))) {
+  if (comparison.status !== "ahead" || !changed.length || changed.some(path => !allowed.has(path))) {
     throw new Error("CANDIDATE_FILE_SCOPE_INVALID");
   }
 
@@ -227,10 +237,10 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
     }
   } else {
     const body = [
-      "## OLYMPIA release candidate · PILOT-001",
+      "## OLYMPIA release candidate · " + request.itemId,
       "",
       "- Prepared from LIVE baseline: " + liveSha,
-      "- Source DEV PRs: #385, #404",
+      "- Source DEV PRs: #" + item.release_source_prs.join(", #"),
       "- Approved DEV test version: " + devSha,
       "- Exact candidate tree: " + candidateTreeSha,
       "- Zeus decision journal: #" + issueNumber,
@@ -242,7 +252,7 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
     pull = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/pulls", {
       method: "POST",
       body: JSON.stringify({
-        title: "release(PILOT-001): Astrid from verified LIVE candidate",
+        title: "release(" + request.itemId + "): " + item.title + " from verified LIVE candidate",
         head: candidateBranch,
         base: "main",
         body,
