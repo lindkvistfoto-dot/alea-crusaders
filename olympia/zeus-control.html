@@ -78,13 +78,16 @@ async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)thro
 async function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
 refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Hämtar aktuell GitHub-status…</span>';
 try{
-var development=await json(api+"/branches/development");
+var branchStatus=await window.olympiaAuthenticatedRequest({action:"current_refs"});
+if(!branchStatus.response.ok||!branchStatus.result.ok)throw new Error(branchStatus.result.message||"GitHub-grenarna kunde inte läsas.");
+var environments=branchStatus.result.environments||{};
+var development={commit:{sha:environments.development&&environments.development.sha}};
 var sha=String(development.commit&&development.commit.sha||"");
 if(!/^[a-f0-9]{40}$/i.test(sha))throw new Error("DEV SHA saknas.");
 currentDevSha=sha;
 renderTrial();
 var extras=await Promise.allSettled([
- json(api+"/branches/main"),
+ Promise.resolve({commit:{sha:environments.main&&environments.main.sha}}),
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:open")),
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:merged"))
 ]);

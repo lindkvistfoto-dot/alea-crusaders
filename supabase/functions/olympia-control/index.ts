@@ -71,7 +71,7 @@ async function githubToken(decision: string) {
   const privateKey = Deno.env.get("OLYMPIA_GITHUB_APP_PRIVATE_KEY");
   if (!appId || !installationId || !privateKey) throw new Error("OLYMPIA_BACKEND_NOT_CONFIGURED");
   const jwt = await appJwt(appId, privateKey);
-  const permissions: Record<string, string> = decision === "deployment_check"
+  const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
     : decision === "pull_request_list"
     ? { pull_requests: "read" }
@@ -508,6 +508,25 @@ Deno.serve(async (req: Request) => {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA GitHub PR list failed", code);
         return fail("GitHub PR-listan kunde inte hämtas (" + code + ").", 502);
+      }
+    }
+    if (data.action === "current_refs") {
+      try {
+        const token = await githubToken("current_refs");
+        const [live, development] = await Promise.all([
+          gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main"),
+          gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development"),
+        ]);
+        const liveSha = String(live.object?.sha || "");
+        const developmentSha = String(development.object?.sha || "");
+        if (!/^[0-9a-f]{40}$/i.test(liveSha) || !/^[0-9a-f]{40}$/i.test(developmentSha)) {
+          throw new Error("BRANCH_SHA_UNVERIFIED");
+        }
+        return json({ ok: true, environments: { main: { sha: liveSha }, development: { sha: developmentSha } } });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA GitHub branch status failed", code);
+        return fail("Aktuell GitHub-status kunde inte hämtas (" + code + ").", 502);
       }
     }
     if (data.action === "deployment_check") {
