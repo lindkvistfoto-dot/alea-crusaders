@@ -107,7 +107,8 @@ function itemPriority(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)});
 var accepted=rows.some(function(row){return /ACCEPTANS/i.test(row.title||"")}),candidate=rows.some(function(row){return /PANDORAS/i.test(row.title||"" )}),packaged=rows.some(function(row){return /RELEASEPAKET/i.test(row.title||"")});
-var ready=window.olympiaDecisionsLoaded===true&&!published&&window.olympiaAuthVerified&&item.ready_for_human_acceptance&&/^[a-f0-9]{40}$/i.test(String(currentDevSha||""));
+var hasDecision=accepted||candidate||packaged||rows.some(function(row){return /RÄTTAS|KARON|AVVAKTA/i.test(row.title||"")});
+var ready=window.olympiaDecisionsLoaded===true&&!published&&!hasDecision&&item.ready_for_human_acceptance&&/^[a-f0-9]{40}$/i.test(String(currentDevSha||""));
 var candidateStatus=window.olympiaCandidateByItem&&window.olympiaCandidateByItem[item.id];
 if(published)return 3;
 if(candidateStatus&&candidateStatus.candidateReady)return 0;
