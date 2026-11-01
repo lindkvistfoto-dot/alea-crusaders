@@ -115,9 +115,9 @@ jobs:
           echo "source_prs=$SOURCE_PRS_CSV" >> "$GITHUB_OUTPUT"
 
           LIVE_SHA="$(git -C "$LIVE_DIR" rev-parse HEAD)"
+          git -C "$DEV_DIR" cat-file -e "$LIVE_SHA^{commit}" || { echo "::error::Current LIVE commit is unavailable in the verified DEV object store; no candidate was created."; exit 1; }
           SOURCE_DIR="$OUTPUT_DIR/source"
-          git -C "$LIVE_DIR" worktree add "$SOURCE_DIR" "$LIVE_SHA"
-          : > "$OUTPUT_DIR/candidate.patch"
+          git -C "$DEV_DIR" worktree add --detach "$SOURCE_DIR" "$LIVE_SHA"
           : > "$OUTPUT_DIR/source-files.txt"
 
           for PR_NUMBER in "${SOURCE_PRS[@]}"; do
@@ -139,15 +139,51 @@ jobs:
               [[ -z "$changed" ]] && continue
               grep -Fxq "$changed" <<< "$ALLOWED_FILES_TEXT" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }
             done <<< "$CHANGED_FILES"
-            PATCH_FILE="$OUTPUT_DIR/pr-$PR_NUMBER.patch"
-            git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${ALLOWED_FILES[@]}" > "$PATCH_FILE"
-            [[ -s "$PATCH_FILE" ]] || { echo "::error::Source PR #$PR_NUMBER has an empty patch."; exit 1; }
-            git -C "$SOURCE_DIR" apply --check "$PATCH_FILE"
-            git -C "$SOURCE_DIR" apply "$PATCH_FILE"
-            cat "$PATCH_FILE" >> "$OUTPUT_DIR/candidate.patch"
+
+            INDEX_HANDLED=false
+            if grep -Fxq 'index.html' <<< "$CHANGED_FILES"; then
+              BASE_INDEX="$OUTPUT_DIR/pr-$PR_NUMBER-base-index.html"
+              SOURCE_INDEX="$OUTPUT_DIR/pr-$PR_NUMBER-source-index.html"
+              git -C "$DEV_DIR" show "$PR_PARENT_SHA:index.html" > "$BASE_INDEX"
+              git -C "$DEV_DIR" show "$PR_MERGE_SHA:index.html" > "$SOURCE_INDEX"
+              if node "$DEV_DIR/scripts/olympia/reconcile-index-asset-versions.mjs" "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" "${FEATURE_FILES[@]}"; then
+                INDEX_HANDLED=true
+                echo "PR #$PR_NUMBER: safely promoted approved cache versions while preserving LIVE-only URL parameters."
+              else
+                RECONCILE_STATUS=$?
+                if [[ "$RECONCILE_STATUS" -ne 2 ]]; then
+                  echo "::error::PR #$PR_NUMBER index reconciliation failed unexpectedly (exit $RECONCILE_STATUS)."
+                  exit "$RECONCILE_STATUS"
+                fi
+              fi
+            fi
+
+            APPLY_FILES=()
+            for allowed in "${ALLOWED_FILES[@]}"; do
+              if [[ "$INDEX_HANDLED" == "true" && "$allowed" == "index.html" ]]; then
+                continue
+              fi
+              APPLY_FILES+=("$allowed")
+            done
+            if (( ${#APPLY_FILES[@]} > 0 )); then
+              PATCH_FILE="$OUTPUT_DIR/pr-$PR_NUMBER.patch"
+              git -C "$DEV_DIR" diff --binary --full-index "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${APPLY_FILES[@]}" > "$PATCH_FILE"
+              if [[ -s "$PATCH_FILE" ]]; then
+                if ! git -C "$SOURCE_DIR" apply --3way --index "$PATCH_FILE"; then
+                  CONFLICTS="$(git -C "$SOURCE_DIR" diff --name-only --diff-filter=U)"
+                  if [[ -n "$CONFLICTS" ]]; then
+                    echo "::error::LIVE candidate stopped on unresolved DEV/LIVE conflicts in PR #$PR_NUMBER: $(tr '\n' ' ' <<< "$CONFLICTS"). No candidate PR was created."
+                  else
+                    echo "::error::LIVE candidate stopped because PR #$PR_NUMBER could not be applied safely to the current LIVE baseline. No candidate PR was created."
+                  fi
+                  exit 1
+                fi
+              fi
+            fi
             printf '%s\n' "$CHANGED_FILES" >> "$OUTPUT_DIR/source-files.txt"
           done
           sort -u "$OUTPUT_DIR/source-files.txt" -o "$OUTPUT_DIR/source-files.txt"
+          git -C "$SOURCE_DIR" diff --binary --full-index "$LIVE_SHA" > "$OUTPUT_DIR/candidate.patch"
           git -C "$SOURCE_DIR" add -A
           MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
           DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
