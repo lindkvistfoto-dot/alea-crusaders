@@ -85,7 +85,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('action === "review_pull_request"');
     expect(edge).toContain('event: "APPROVE"');
     expect(edge).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(edge).not.toContain('PILOT-003');
     expect(workflow).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(workflow).not.toContain('PILOT-003');
     expect(workflow).toContain('gh api --paginate "repos/$REPOSITORY/pulls/$PRIMARY_PR/files?per_page=100"');
     expect(edge).toContain('if (data.decision === "final_approval")');
   });
