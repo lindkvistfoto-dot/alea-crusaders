@@ -121,8 +121,6 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
     replacements.set(matches[0].start, { ref: matches[0], url });
   }
 
-  const html = replaceRefs(liveHtml, [...replacements.values()].map(entry => entry.ref),
-    (_url, _path, index) => _url);
   // Apply by original byte offsets, from right to left, preserving every other LIVE byte.
   let output = liveHtml;
   for (const { ref, url } of [...replacements.values()].sort((a, b) => b.ref.start - a.ref.start)) {
