@@ -1,8 +1,9 @@
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 function assetPath(url) {
   try {
-    return new URL(url, 'https://olympia.invalid/').pathname.replace(/^\\/+/, '');
+    return new URL(url, 'https://olympia.invalid/').pathname.replace(/^\/+/, '');
   } catch {
     return null;
   }
@@ -18,13 +19,13 @@ function versionParts(url) {
   const parts = query.split('&');
   const matches = parts.map((part, index) => ({ part, index, key: part.split('=', 1)[0] }))
     .filter(entry => {
-      try { return decodeURIComponent(entry.key.replace(/\\+/g, ' ')) === 'v'; } catch { return false; }
+      try { return decodeURIComponent(entry.key.replace(/\+/g, ' ')) === 'v'; } catch { return false; }
     });
   if (matches.length !== 1) return null;
   const entry = matches[0];
   const value = entry.part.includes('=') ? entry.part.slice(entry.part.indexOf('=') + 1) : '';
   let version;
-  try { version = decodeURIComponent(value.replace(/\\+/g, ' ')); } catch { return null; }
+  try { version = decodeURIComponent(value.replace(/\+/g, ' ')); } catch { return null; }
   if (!version) return null;
   return { before, parts, index: entry.index, hash, version };
 }
@@ -39,12 +40,12 @@ function replaceVersion(url, version) {
 }
 
 function refsFor(html, allowedPaths) {
-  const allowed = new Set(allowedPaths.map(path => path.replace(/^\\.\\//, '').replace(/^\\/+/, '')));
+  const allowed = new Set(allowedPaths.map(path => path.replace(/^\.\//, '').replace(/^\/+/, '')));
   const refs = [];
   const tags = /<[^>]+>/g;
   let tagMatch;
   while ((tagMatch = tags.exec(html))) {
-    const attrs = /\\b(href|src)\\s*=\\s*(["'])(.*?)\\2/gi;
+    const attrs = /\b(href|src)\s*=\s*(["'])(.*?)\2/gi;
     let attrMatch;
     while ((attrMatch = attrs.exec(tagMatch[0]))) {
       const url = attrMatch[3];
@@ -80,13 +81,12 @@ function normalized(html, paths) {
 /**
  * Promote only cache-version changes in approved HTML asset references.
  * LIVE-specific query parameters (for example, omission of DEV's env=dev1)
- * are preserved. Any other HTML change falls back to the normal three-way
- * merge path so Git can merge non-overlapping edits or stop on real conflicts.
+ * are preserved. Any other HTML change falls back to Git three-way merge.
  */
 export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allowedAssetPaths) {
   const paths = [...new Set(allowedAssetPaths
-    .filter(path => typeof path === 'string' && path !== 'index.html' && /\\.(css|js|mjs)$/.test(path))
-    .map(path => path.replace(/^\\.\\//, '').replace(/^\\/+/, '')))];
+    .filter(path => typeof path === 'string' && path !== 'index.html' && /\.(css|js|mjs)$/.test(path))
+    .map(path => path.replace(/^\.\//, '').replace(/^\/+/, '')))];
   if (!paths.length || baseHtml === sourceHtml) return { handled: false, html: liveHtml };
 
   const normalizedBase = normalized(baseHtml, paths);
@@ -102,8 +102,7 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
   for (const path of paths) {
     const before = baseRefs.filter(ref => ref.path === path);
     const after = sourceRefs.filter(ref => ref.path === path);
-    if (before.length !== after.length) return { handled: false, html: liveHtml };
-    if (before.length > 1) return { handled: false, html: liveHtml };
+    if (before.length !== after.length || before.length > 1) return { handled: false, html: liveHtml };
     if (!before.length) continue;
     const beforeVersion = versionParts(before[0].url)?.version;
     const afterVersion = versionParts(after[0].url)?.version;
@@ -112,24 +111,23 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
   }
   if (!changed.length) return { handled: false, html: liveHtml };
 
-  const replacements = new Map();
+  const replacements = [];
   for (const change of changed) {
     const matches = liveRefs.filter(ref => ref.path === change.path);
     if (matches.length !== 1) return { handled: false, html: liveHtml };
     const url = replaceVersion(matches[0].url, change.version);
     if (!url) return { handled: false, html: liveHtml };
-    replacements.set(matches[0].start, { ref: matches[0], url });
+    replacements.push({ ref: matches[0], url });
   }
 
-  // Apply by original byte offsets, from right to left, preserving every other LIVE byte.
   let output = liveHtml;
-  for (const { ref, url } of [...replacements.values()].sort((a, b) => b.ref.start - a.ref.start)) {
+  for (const { ref, url } of replacements.sort((a, b) => b.ref.start - a.ref.start)) {
     output = output.slice(0, ref.start) + url + output.slice(ref.end);
   }
   return { handled: true, html: output };
 }
 
-if (process.argv[1] && import.meta.url === new URL('file://' + process.argv[1]).href) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [basePath, sourcePath, livePath, ...assetPaths] = process.argv.slice(2);
   if (!basePath || !sourcePath || !livePath || !assetPaths.length) {
     console.error('Usage: reconcile-index-asset-versions.mjs BASE SOURCE LIVE ASSET_PATH...');
