@@ -75,6 +75,8 @@ async function githubToken(decision: string) {
     ? { contents: "read" }
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
+    : decision === "review_pull_request"
+    ? { pull_requests: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
@@ -122,6 +124,29 @@ async function appBotLogin() {
   return data.slug + "[bot]";
 }
 async function workItem(token: string, itemId: string) {
+  const generic = itemId.match(/^PR-([1-9][0-9]*)$/);
+  if (generic) {
+    const number = Number(generic[1]);
+    const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+    if (pr.merged !== true || pr.base?.ref !== "development" || !/^[0-9a-f]{40}$/i.test(String(pr.merge_commit_sha || ""))) {
+      throw new Error("SOURCE_PR_NOT_MERGED_TO_DEV");
+    }
+    const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number + "/files?per_page=100");
+    const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+    const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + pr.merge_commit_sha + "..." + ref.object.sha);
+    if (!(comparison.status === "identical" || comparison.status === "ahead" && comparison.merge_base_commit?.sha?.toLowerCase() === String(pr.merge_commit_sha).toLowerCase())) {
+      throw new Error("SOURCE_PR_NOT_IN_DEV");
+    }
+    const changedFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")).filter(Boolean) : [];
+    if (!changedFiles.length) throw new Error("SOURCE_PR_FILES_UNKNOWN");
+    return {
+      id: itemId, title: String(pr.title || "PR #" + number), purpose: String(pr.title || ""),
+      expected_result: String(pr.body || "").slice(0, 2000), ready_for_human_acceptance: true,
+      dev_sha: String(pr.merge_commit_sha), pr_number: number, release_source_prs: [number],
+      features: changedFiles, images: [], image_count: 0, image_status: "published", dev_url: "../",
+      provenance: { source_pr: number },
+    };
+  }
   const data = await gh(token, "/repos/" + OWNER + "/" + REPO + "/contents/olympia/work-items.json?ref=development");
   if (typeof data.content !== "string") throw new Error("WORK_QUEUE_UNKNOWN");
   const queue = JSON.parse(atob(data.content.replace(/\n/g, "")));
@@ -131,7 +156,7 @@ async function workItem(token: string, itemId: string) {
 }
 
 function configuredWorkItem(item: any) {
-  return !!item && /^PILOT-[0-9]{3}$/.test(String(item.id || "")) &&
+  return !!item && /^(?:PILOT-[0-9]{3}|PR-[1-9][0-9]*)$/.test(String(item.id || "")) &&
     Number.isSafeInteger(item.pr_number) &&
     Array.isArray(item.release_source_prs) && item.release_source_prs.length > 0 &&
     item.release_source_prs.every((number: any) => Number.isSafeInteger(number) && number > 0) &&
@@ -370,12 +395,23 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
   const blocked = body.includes("- Status: BLOCKED");
   const treeMatch = body.match(/- Candidate tree SHA: ([0-9a-f]{40})/i);
   const runMatch = body.match(/- Workflow run: (https:\/\/[^\s]+)/i);
+  const candidatePrMatch = body.match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
+  let releasePrSha: string | null = null;
+  if (candidatePrMatch) {
+    try {
+      const candidatePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidatePrMatch[1]);
+      releasePrSha = String(candidatePr.head?.sha || "") || null;
+    } catch (_error) { releasePrSha = null; }
+  }
   if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") || !treeMatch) {
     return {
       ready: false,
       blocked,
       message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
+      releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
+      releaseUrl: candidatePrMatch?.[2] || null,
+      releasePrSha,
     };
   }
   try {
@@ -393,6 +429,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       candidateTreeSha: treeMatch[1],
       releasePr: Number(prMatch[1]),
       releaseUrl: prMatch[2],
+      releasePrSha: verified.pr.head.sha,
       candidateRunUrl: runMatch?.[1] || null,
       liveSha: verified.liveSha,
     };
@@ -408,7 +445,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
-      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför pilotens registrerade omfattning.",
+      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
     };
     return {
       ready: false,
@@ -489,11 +526,32 @@ Deno.serve(async (req: Request) => {
         return fail("DEV/LIVE-publiceringen kunde inte verifieras just nu. Slutgodkännandet är låst; försök igen.", 409);
       }
     }
+    if (data.action === "review_pull_request") {
+      if (!Number.isInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha)) {
+        return fail("PR-nummer eller versions-SHA saknas.", 400);
+      }
+      try {
+        const token = await githubToken("review_pull_request");
+        const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber);
+        if (pr.state !== "open" || pr.draft || pr.base?.ref !== "development" || pr.head?.sha !== data.pullRequestHeadSha) {
+          return fail("PR:en är inte en aktuell, öppen DEV-ändring. Uppdatera OLYMPIA och prova igen.", 409);
+        }
+        const review = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber + "/reviews", {
+          method: "POST", body: JSON.stringify({ commit_id: data.pullRequestHeadSha, event: "APPROVE" }),
+        });
+        return json({ ok: true, message: "PR #" + data.pullRequestNumber + " godkändes i GitHub.", reviewId: review.id });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "";
+        console.error("OLYMPIA PR review failed", code);
+        return fail("PR-godkännandet kunde inte registreras. Ingen ändring gjordes.", 502);
+      }
+    }
     if (data.action === "candidate_check") {
       if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
-          typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId) ||
+          typeof data.itemId !== "string" || !/^(?:PILOT-[0-9]{3}|PR-[1-9][0-9]*)$/.test(data.itemId) ||
           typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) {
-        return fail("Kandidatens ärende, pilot eller testade DEV-version är ogiltig.", 400);
+        return fail("Kandidatens ärende eller testade DEV-version är ogiltig.", 400);
       }
       try {
         const token = await githubToken("candidate_check");
@@ -512,7 +570,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!DECISIONS.has(data.decision)) return fail("Ogiltigt beslut.", 400);
-    if (typeof data.itemId !== "string" || !/^PILOT-[0-9]{3}$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
+    if (typeof data.itemId !== "string" || !/^(?:PILOT-[0-9]{3}|PR-[1-9][0-9]*)$/.test(data.itemId)) return fail("Ogiltigt ärende-ID.", 400);
     if (typeof data.testedDevSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.testedDevSha)) return fail("Testad DEV-version saknas eller är ogiltig.", 400);
 
     const token = await githubToken(data.decision);
@@ -540,7 +598,7 @@ Deno.serve(async (req: Request) => {
         const code = error instanceof Error ? error.message : "";
         const messages: Record<string, string> = {
           CANDIDATE_INPUT_INVALID: "Kandidatens ID eller SHA saknas.",
-          CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till det här pilotärendet.",
+          CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till det här ärendet.",
           CANDIDATE_NOT_READY: "Releasekandidaten är inte verifierad. LIVE förblir oförändrat.",
           CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
           LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. Skapa en ny kandidat.",
@@ -592,7 +650,7 @@ Deno.serve(async (req: Request) => {
     if (data.decision === "pandoras_ask" || data.decision === "release_package") {
       const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin()));
       const accepted = await hasAcceptedFeatureVersion(token, issues as any[], item, data.testedDevSha);
-      if (!accepted) return fail("Godkänn ändringen i DEV först. Om pilotens berörda filer har ändrats sedan godkännandet behöver du prova igen.", 409);
+      if (!accepted) return fail("Godkänn ändringen i DEV först. Om berörda filer har ändrats sedan godkännandet behöver du prova igen.", 409);
       if (data.decision === "pandoras_ask") {
         const appLogin = await appBotLogin();
         const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
@@ -683,6 +741,8 @@ Deno.serve(async (req: Request) => {
     if (message === "OLYMPIA_BACKEND_NOT_CONFIGURED") return fail("GitHub App saknas i DEV-serverhemligheterna. Ingen skrivning utfördes.", 503);
     if (message === "WORK_QUEUE_UNKNOWN") return fail("Ärendekön kunde inte verifieras. Ingen skrivning utfördes.", 503);
     if (message === "WORK_ITEM_NOT_FOUND") return fail("Ärendet hittades inte.", 404);
+    if (message === "SOURCE_PR_NOT_MERGED_TO_DEV" || message === "SOURCE_PR_NOT_IN_DEV") return fail("PR:en måste vara mergad till DEV innan den kan godkännas eller skickas vidare.", 409);
+    if (message === "SOURCE_PR_FILES_UNKNOWN") return fail("PR:ens ändrade filer kunde inte läsas.", 502);
     console.error("OLYMPIA decision bridge failed", message);
     return fail("Beslutet kunde inte sparas. Ingen ändring registrerades.", 502);
   }

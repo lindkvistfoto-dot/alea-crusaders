@@ -65,12 +65,31 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('touchstart');
     expect(page).toContain('Math.abs(dx)<Math.abs(dy)*1.5');
     expect(page).toContain('olympia-preview');
-    expect(page).toContain('Kandidatförhandsvisning saknas');
-    expect(page).toContain('den här sidan visar inte LIVE som om det vore kandidaten');
+    expect(page).toContain('function cloudflarePreview(sha)');
+    expect(page).toContain('previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat")');
+    expect(page).toContain('.pages\\.dev');
+    expect(page).toContain('data-pr-approve');
     expect(page).toContain('aria-busy');
     expect(page).toContain('Registrerat · behandlar…');
     expect(page).toContain('Slutgodkänn LIVE');
     expect(page).toContain('Visa i LIVE');
+  });
+
+  it('routes ordinary merged DEV PRs through the same Zeus decision flow',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(page).toContain('id:"PR-"+Number(pr.number)');
+    expect(page).toContain('prWorkItem(sourcePr)');
+    expect(edge).toContain('const generic = itemId.match(/^PR-([1-9][0-9]*)$/)');
+    expect(edge).toContain('action === "review_pull_request"');
+    expect(edge).toContain('event: "APPROVE"');
+    expect(edge).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(edge).not.toContain('PILOT-003');
+    expect(workflow).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(workflow).not.toContain('PILOT-003');
+    expect(workflow).toContain('gh api --paginate "repos/$REPOSITORY/pulls/$PRIMARY_PR/files?per_page=100"');
+    expect(edge).toContain('if (data.decision === "final_approval")');
   });
 
   it('keeps the main flow compact and orders decisions before active work',()=>{
@@ -148,7 +167,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
-    expect(outerScript).not.toContain('storedSession()');
+    expect(outerScript).toContain('action:"review_pull_request"');
     const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
     expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
     for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
@@ -254,11 +273,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('async function hasAcceptedFeatureVersion');
     expect(edge).toContain('compare/\" + tested + \"...\" + currentSha');
     expect(edge).toContain('protectedPaths.has(file.filename)');
-    expect(edge).toContain('Om pilotens berörda filer har ändrats sedan godkännandet');
+    expect(edge).toContain('Om berörda filer har ändrats sedan godkännandet');
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
-    expect(workflow).toContain('The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+    expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
   });
 });
 

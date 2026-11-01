@@ -66,7 +66,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#
 var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/repos/"+owner+"/"+repo;
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
-var baseline=null,queue=null,inventory=[],openPullRequests=null,openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0;window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
+var baseline=null,queue=null,inventory=[],openPullRequests=null,openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
 window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
@@ -103,6 +103,24 @@ function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issue
 function flowStep(label,state){return '<span class="step '+state+'">'+label+'</span>'}
 function liveUrl(item,published){var base="https://lindkvistfoto-dot.github.io/alea-crusaders/",relative=String(item.dev_url||"../").replace(/^\.\.\//,"");var url=new URL(relative,base);if(published&&published.mergeSha)url.searchParams.set("olympia-version",String(published.deployedLiveSha||published.mergeSha).slice(0,12));return url.href}
 function devUrl(item){var url=new URL(String(item.dev_url||"../"),location.href);if(currentDevSha)url.searchParams.set("olympia-preview",currentDevSha.slice(0,12));return url.href}
+async function cloudflarePreview(sha){
+sha=String(sha||"");if(!/^[a-f0-9]{40}$/i.test(sha))return {state:"unknown"};
+if(previewBySha[sha])return previewBySha[sha];
+if(previewRequests[sha])return previewRequests[sha];
+previewRequests[sha]=(async function(){try{
+var values=await Promise.all([json(api+"/commits/"+encodeURIComponent(sha)+"/status"),json(api+"/commits/"+encodeURIComponent(sha)+"/check-runs?per_page=100")]);
+var statuses=Array.isArray(values[0].statuses)?values[0].statuses:[],checks=Array.isArray(values[1].check_runs)?values[1].check_runs:[];
+var relevant=statuses.filter(function(item){return /cloudflare|pages\.dev/i.test(String(item.context||"")+" "+String(item.target_url||""))});
+var current=relevant[0],check=checks.filter(function(item){return /cloudflare|pages\.dev/i.test(String(item.name||"")+" "+String(item.details_url||""))})[0];
+var target=String(current&&current.target_url||check&&check.details_url||"");
+if(target&&/^https:\/\//i.test(target)&&/\.pages\.dev(?:\/|$)/i.test(new URL(target).hostname+new URL(target).pathname))previewBySha[sha]={state:"ready",url:target,sha:sha};
+else if(current&&current.state==="pending"||check&&check.status!=="completed")previewBySha[sha]={state:"pending",sha:sha};
+else previewBySha[sha]={state:"missing",sha:sha};
+}catch(_){previewBySha[sha]={state:"unknown",sha:sha}}
+delete previewRequests[sha];return previewBySha[sha]})();
+return previewRequests[sha]
+}
+function previewMarkup(sha,label){var result=previewBySha[String(sha||"")];if(result&&result.state==="ready"&&result.sha===sha)return '<div class="preview-actions" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'"><a class="btn secondary" href="'+esc(result.url)+'" target="_blank" rel="noopener">Förhandsvisa '+esc(label)+' ↗</a></div>';var message=result&&result.state==="pending"?"Cloudflare-förhandsvisning byggs för den här versionen.":result&&result.state==="unknown"?"Cloudflare-status kunde inte hämtas.":result&&result.state==="missing"?"Ingen Cloudflare-förhandsvisning finns för den här versionen.":"Cloudflare-status visas när PR-kortet öppnas.";return '<p class="small muted" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'">'+esc(message)+'</p>'}
 function itemPriority(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)});
@@ -128,7 +146,7 @@ var stepHtml='<div class="steps" aria-label="Ändringens steg">'+flowStep('Skapa
 var next=published?'Klart. Öppna ändringen i LIVE för slutlig visuell kontroll.':candidateStatus&&candidateStatus.candidateReady?'Granska kandidaten och slutgodkänn LIVE när du är nöjd.':candidate?'Väntar på LIVE-kandidat.':packaged?'Ändringen ligger i releasepaketet och inväntar samlad publicering.':accepted?'Välj Pandoras ask för direktpublicering eller releasepaket för senare.':ready?'Förhandsvisa ändringen i DEV. Godkänn först när den ser rätt ut.':'Statusen väntar på verifiering från DEV.';
 var devLink=devUrl(item);
 var preview='<div class="preview-actions"><a class="btn" href="'+esc(devLink)+'" target="_blank" rel="noopener">Förhandsvisa DEV ↗</a><button class="btn secondary" type="button" data-preview-toggle="'+esc(item.id)+'">Visa här</button><button class="btn secondary" type="button" data-preview-fullscreen="'+esc(item.id)+'">Större vy</button></div><iframe class="preview-frame" title="DEV-förhandsvisning: '+esc(item.title)+'" data-preview-frame="'+esc(item.id)+'" src="'+esc(devLink)+'" loading="lazy" hidden></iframe>';
-var candidatePreview=candidateStatus&&candidateStatus.candidateReady?'<p class="status-line">LIVE-kandidaten är klar. Kandidatförhandsvisning saknas i den befintliga publiceringskedjan; den här sidan visar inte LIVE som om det vore kandidaten.</p>':'<p class="status-line">LIVE-kandidatens förhandsvisning visas när den finns. Ingen kandidatvy är registrerad just nu.</p>';
+var candidatePreview=candidateStatus&&candidateStatus.releasePrSha?previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat"):'<p class="status-line">LIVE-kandidatens förhandsvisning visas när den finns.</p>';
 var livePreview=published?'<div class="preview-actions"><a class="btn" href="'+esc(liveUrl(item,published))+'" target="_blank" rel="noopener">Visa i LIVE ↗</a><a class="btn secondary" href="'+esc(published.issue.html_url)+'" target="_blank" rel="noopener">Visa beslut</a></div>':'';
 var links=published?livePreview:ready?preview+'<div class="actions"><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn DEV</button></div>':candidateStatus&&candidateStatus.candidateReady?'<div class="preview-actions"><a class="btn secondary" href="'+esc(candidateStatus.releaseUrl||candidateStatus.issue.html_url)+'" target="_blank" rel="noopener">Granska LIVE-kandidaten ↗</a></div>':accepted?candidatePreview:'<p class="small muted">Beslut visas när DEV och Zeus-behörighet har bekräftats.</p>';
 var decisions=accepted&&!candidate&&!packaged&&!published?'<h3>Välj nästa steg</h3><div class="actions"><button class="btn" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Tillbaka till Hefaiastos</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button></div>':candidateStatus&&candidateStatus.candidateReady&&!published?'<h3>Slutgodkännande</h3><p class="small muted">När du är nöjd med kandidaten kan du godkänna publiceringen. LIVE ändras först efter bekräftelse.</p><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(item.id)+'" data-sha="'+esc(candidateStatus.testedSha)+'" data-candidate-issue="'+esc(candidateStatus.issue.number)+'" data-tree-sha="'+esc(candidateStatus.candidateTree)+'">Slutgodkänn LIVE</button>':'';
@@ -137,10 +155,16 @@ return '<details class="card pr-card"><summary><span class="card-title">'+esc(it
 }
 function renderOpenPullRequest(pr){
 var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
+if(pr.merged&&pr.base&&pr.base.ref==="development"){
+return renderQueueItem(prWorkItem(pr))
+}
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
 var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
-return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+'<p class="small muted">Förhandsvisning visas när en riktig miljödeployment finns.</p><div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions"><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
+var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat");
+var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?'<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>':'';
+return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
 }
+function prWorkItem(pr){var files=Array.isArray(pr.changed_files_list)?pr.changed_files_list:[];return {id:"PR-"+Number(pr.number),title:pr.title,purpose:pr.title,expected_result:String(pr.body||"").slice(0,360),status:"ready_for_acceptance",ready_for_human_acceptance:true,dev_sha:pr.merge_commit_sha,pr_number:Number(pr.number),release_source_prs:[Number(pr.number)],dev_url:"../",features:files,image_count:0,image_status:"published",provenance:{source_pr:Number(pr.number)}}}
 function renderTrial(){
 var root=get("trial-list"),items=(queue&&queue.items||[]).slice().sort(function(a,b){return itemPriority(a)-itemPriority(b)}),active=items.filter(function(item){return !(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])}),published=items.filter(function(item){return !!(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])});
 var registered=new Set(items.flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
@@ -153,13 +177,19 @@ if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+pub
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
 }
 window.olympiaRefreshTrial=renderTrial;
+document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR";cloudflarePreview(sha).then(function(){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label);if(node.isConnected&&replacement.firstElementChild)node.replaceWith(replacement.firstElementChild)})},true);
 async function renderPullRequests(){
 try{
-var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");
-if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
-openPullRequests=prs;openPullRequestError=false;
+ var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");
+ if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
+ var closed=[];try{var closedResponse=await json(api+"/pulls?state=closed&base=development&per_page=30&sort=updated&direction=desc");if(Array.isArray(closedResponse))closed=closedResponse}catch(_){}
+var registered=new Set((queue&&queue.items||[]).flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
+ var merged=closed.filter(function(pr){return !!pr.merged_at&&pr.base&&pr.base.ref==="development"&&!registered.has(Number(pr.number))});
+await Promise.all(merged.map(async function(pr){try{var files=await json(api+"/pulls/"+Number(pr.number)+"/files?per_page=100");pr.changed_files_list=Array.isArray(files)?files.map(function(file){return file.filename}):[]}catch(_){pr.changed_files_list=[]}}));
+ openPullRequests=prs.concat(merged);openPullRequestError=false;
 }catch(_){openPullRequests=[];openPullRequestError=true}
 renderTrial();
+if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
 }
 function renderImages(){
 var root=get("image-list"),items=queue&&queue.items||[],images=items.flatMap(function(item){return (item.images||[]).map(function(image){return {item:item,image:image}})});
@@ -189,6 +219,14 @@ var checks=!runs.length?"Inga check-runs":runs.some(function(c){return c.status!
 output.textContent="CI: "+checks+" · "+merge+(pr.mergeable_state?" · "+pr.mergeable_state:"");
 }catch(_){output.textContent="CI eller mergebarhet kunde inte verifieras. Status är OKÄND."}
 finally{button.disabled=false}
+});
+document.addEventListener("click",async function(event){
+var button=event.target.closest("[data-pr-approve]");if(!button)return;
+if(!window.olympiaAuthVerified){say("Logga in som Zeus i ALEA DEV för att godkänna en PR.");return}
+var number=Number(button.dataset.prApprove),sha=String(button.dataset.prSha||""),session=storedSession();
+if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)||!session)return;
+button.disabled=true;var label=button.textContent;button.textContent="Registrerar godkännandet…";
+try{var response=await request({action:"review_pull_request",pullRequestNumber:number,pullRequestHeadSha:sha},session);if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"PR-godkännandet kunde inte registreras.");say("PR #"+number+" godkändes i GitHub. Den har inte mergats.",true);button.textContent="Godkänd ✓";button.disabled=true;return}catch(error){say(error.message||"PR-godkännandet kunde inte registreras.");button.textContent=label;button.disabled=false}
 });
 async function renderBlockers(){
 var b=get("release-blockers"),requestId=++preflightRequestSequence,unknown=false,unknownMessage="";
@@ -244,6 +282,7 @@ var title=i.title.toLowerCase(),target=title.indexOf("live approval")>=0?"live":
 var body=i.body||"";
 function fieldValue(label){var prefix="- "+label+": ";var row=body.split("\n").find(function(line){return line.indexOf(prefix)===0});return row?row.slice(prefix.length).trim():""}
 var item=(queue&&queue.items||[]).find(function(x){return x.id===fieldValue("Ärende-ID")});
+if(!item&&/^PR-[1-9][0-9]*$/.test(fieldValue("Ärende-ID"))){var sourceNumber=Number(fieldValue("Ärende-ID").slice(3)),sourcePr=(openPullRequests||[]).find(function(pr){return Number(pr.number)===sourceNumber&&pr.merged&&pr.base&&pr.base.ref==="development"});if(sourcePr)item=prWorkItem(sourcePr)}
 var testedSha=fieldValue("Testad DEV-commit (full SHA)");
 var mergeMatch=body.match(/- Merge SHA: ([0-9a-f]{40})/i);var liveVerified=false,deployedLiveSha="";if(target==="live"&&mergeMatch){try{var liveManifest=await json("../../deployment-manifest.json?ts="+Date.now());deployedLiveSha=String(liveManifest.source_sha||"");if(liveManifest.environment==="main"&&/^[a-f0-9]{40}$/i.test(deployedLiveSha)){var relation=await json(api+"/compare/"+mergeMatch[1]+"..."+deployedLiveSha);liveVerified=(relation.status==="identical"||relation.status==="ahead")&&!!relation.merge_base_commit&&String(relation.merge_base_commit.sha||"").toLowerCase()===mergeMatch[1].toLowerCase()}}catch(e){liveVerified=false}}
 var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&/^[0-9a-f]{40}$/i.test(testedSha)&&i.user&&i.user.type==="Bot");
@@ -266,7 +305,8 @@ candidateMessage="Kandidatstatus kunde inte hämtas. Det betyder inte att kandid
 }
 }
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
-var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,deployedLiveSha:deployedLiveSha,target:target};
+var releasePrSha=check&&check.result&&check.result.releasePrSha||null;
+var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],releasePrSha:releasePrSha,candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,deployedLiveSha:deployedLiveSha,target:target};
 slots[target].push(record);
 return i;
 }));
@@ -282,7 +322,7 @@ var el=get(k+"-list"),arr=slots[k];
 if(!el)return;
 el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact,supersededRecord=superseded[k+":"+i.number];
-var status=supersededRecord?(k==="direct"?"Övertaget av LIVE-godkännande #"+esc(supersededRecord.issue.number):"Äldre godkännande ersatt av LIVE-beslut #"+esc(supersededRecord.issue.number)):k==="live"?(record.liveVerified?"LIVE verifierad · release "+esc(record.mergeSha.slice(0,7))+" ingår i publicerad "+esc(record.deployedLiveSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad pilotversion. Ny provning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?(record.candidateMessage||"Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats."):record.candidateMessage||"Registrerat · väntar på kandidatkontroll";
+var status=supersededRecord?(k==="direct"?"Övertaget av LIVE-godkännande #"+esc(supersededRecord.issue.number):"Äldre godkännande ersatt av LIVE-beslut #"+esc(supersededRecord.issue.number)):k==="live"?(record.liveVerified?"LIVE verifierad · release "+esc(record.mergeSha.slice(0,7))+" ingår i publicerad "+esc(record.deployedLiveSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad DEV-version. Ny granskning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?(record.candidateMessage||"Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats."):record.candidateMessage||"Registrerat · väntar på kandidatkontroll";
 var finalButton=record.candidateReady&&!supersededRecord?'<div class="actions"><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
 var runLink=record.candidateRunUrl?'<br><a class="small" href="'+esc(record.candidateRunUrl)+'" target="_blank" rel="noopener">Visa kandidatkontroll ↗</a>':'';
 return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton
