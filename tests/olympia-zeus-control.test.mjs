@@ -146,7 +146,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('requires the live decision snapshot to include the current PR and image scope',async()=>{
     const page=read('olympia/zeus-control.html');
     const start=page.indexOf('async function verifyLiveScope(item,testedSha){');
-    const end=page.indexOf('\\nasync function renderRefs()',start);
+    const end=page.indexOf('async function renderRefs()',start);
     expect(start).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(start);
     const source=page.slice(start,end);
