@@ -112,7 +112,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('id:"PR-"+Number(pr.number)');
     expect(page).toContain('prWorkItem(sourcePr)');
     expect(edge).toContain('const generic = itemId.match(/^PR-([1-9][0-9]*)$/)');
-    expect(edge).toContain('action === "review_pull_request"');
+    expect(edge).toContain('action === "approve_and_merge_dev"');
+    expect(edge).toContain('merge_method: "squash"');
+    expect(edge).toContain('data.pullRequestHeadSha');
     expect(edge).toContain('event: "APPROVE"');
     expect(edge).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
     expect(edge).not.toContain('PILOT-003');
@@ -198,7 +200,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
-    expect(outerScript).toContain('action:"review_pull_request"');
+    expect(outerScript).toContain('action:"approve_and_merge_dev"');
     const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
     expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
     for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
