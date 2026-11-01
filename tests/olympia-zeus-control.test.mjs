@@ -41,11 +41,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Bilder: ');
   });
 
-  it('shows the three human-facing views and gates decisions on a ready DEV version',()=>{
+  it('shows the four mobile-first views and gates decisions on a ready DEV version',()=>{
     const page=read('olympia/zeus-control.html');
-    expect(page).toContain('ATT PROVA');
-    expect(page).toContain('ATT PUBLICERA');
-    expect(page).toContain('HISTORIK');
+    expect(page).toContain('PR-flöde');
+    expect(page).toContain('data-panel="images"');
+    expect(page).toContain('data-panel="storage"');
+    expect(page).toContain('Historik');
     expect(page).toContain('ready_for_human_acceptance');
     expect(page).toContain('/^[0-9a-f]{40}$/i.test(testedSha)');
     expect(page).toContain('i.user.type==="Bot"');
@@ -53,8 +54,23 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const script=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(script.length).toBeGreaterThan(0);
     expect(()=>new Function(script)).not.toThrow();
-    expect(page).toContain("esc(item.expected_result)+'</p>'+imageSummary+links+");
-    expect(page).not.toContain("esc(item.expected_result)+'</p'>+links+");
+    expect(page).toContain('data-preview-toggle');
+    expect(page).toContain('data-preview-fullscreen');
+    expect(page).toContain('class="steps" aria-label="Ändringens steg"');
+    expect(page).toContain("esc(item.purpose||item.expected_result||\"\")+'</p>'+stepHtml");
+  });
+
+  it('provides honest preview states and a single swipeable mobile workspace',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('touchstart');
+    expect(page).toContain('Math.abs(dx)<Math.abs(dy)*1.5');
+    expect(page).toContain('olympia-preview');
+    expect(page).toContain('Kandidatförhandsvisning saknas');
+    expect(page).toContain('den här sidan visar inte LIVE som om det vore kandidaten');
+    expect(page).toContain('aria-busy');
+    expect(page).toContain('Registrerat · behandlar…');
+    expect(page).toContain('Slutgodkänn LIVE');
+    expect(page).toContain('Visa i LIVE');
   });
 
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
@@ -97,7 +113,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-server-candidate-status-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-zeus-experience-v2"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -204,7 +220,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
-    expect(page).toContain('Godkänn i DEV');
+    expect(page).toContain('Godkänn DEV');
     expect(page).not.toContain('Godkänn Astrid');
     expect(page).not.toContain('testedSha===item.dev_sha');
     expect(page).toContain('action:"candidate_check"');

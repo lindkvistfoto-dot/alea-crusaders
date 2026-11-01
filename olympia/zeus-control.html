@@ -9,25 +9,38 @@
 :root{color-scheme:dark;--bg:#100d0a;--panel:#171b1f;--panel2:#1d2228;--line:#493b29;--gold:#d5ab62;--gold2:#f1d294;--text:#f1eadb;--muted:#b7afa1;--green:#65c68a;--red:#e17a72;--blue:#79b4ff;--amber:#efb65f;font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 60% -12%,#5b3e24 0,transparent 38%),linear-gradient(155deg,#111317,#0c0e11 62%,#12100d);color:var(--text);min-height:100vh}a{color:var(--gold2)}.wrap{max-width:1240px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:18px;border-bottom:1px solid var(--line)}.brand{font:700 25px Georgia,serif;letter-spacing:.12em;color:var(--gold2)}.brand small{display:block;font:10px system-ui;letter-spacing:.19em;color:var(--muted);margin-top:5px}.top a{font-size:13px}.hero{padding:28px 0 18px}.eyebrow{color:var(--gold);letter-spacing:.2em;font-size:11px;font-weight:800}.hero h1{font:600 clamp(30px,5vw,48px)/1.1 Georgia,serif;margin:8px 0}.hero p{color:var(--muted);max-width:790px;margin:0}.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.pill{border:1px solid var(--line);border-radius:99px;padding:5px 10px;color:var(--muted);font:12px system-ui}.pill.warn{color:#ffd28c;border-color:#806335;background:#302314}.pill.good{color:#a0e7b7;border-color:#3a7750;background:#11251a}.tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-top:18px;overflow:auto}.tab{white-space:nowrap;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:13px 15px;font:700 13px system-ui;letter-spacing:.07em;cursor:pointer}.tab.active{color:var(--gold2);border-bottom-color:var(--gold)}.panel{display:none;padding:20px 0}.panel.active{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card,.notice,.empty{background:linear-gradient(150deg,#1a1e22,#151719);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 8px 25px #0003}.card h2,.card h3{color:var(--gold2);margin:0 0 8px;font:600 21px Georgia,serif}.card p{margin:7px 0;color:#ded6c8}.label{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.status{display:inline-flex;border-radius:99px;padding:5px 10px;font-size:12px;font-weight:800;background:#302314;color:#ffd28c;border:1px solid #806335}.status.ready{background:#11251a;border-color:#3a7750;color:#a0e7b7}.status.blocked{background:#321a19;border-color:#75403c;color:#ffb3aa}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #725a35;border-radius:8px;background:linear-gradient(#47361e,#2d2418);color:#ffe3a5;padding:10px 13px;text-decoration:none;font:700 12px system-ui;cursor:pointer}.btn:hover{filter:brightness(1.15)}.btn.secondary{background:#20252a;border-color:#3e454c;color:#e4ddd0}.btn:focus-visible,.tab:focus-visible,input:focus-visible{outline:2px solid #f1d294;outline-offset:2px}[hidden]{display:none!important}.muted{color:var(--muted)!important}.small{font-size:12px}.notice{border-color:#755b30;background:linear-gradient(130deg,#332714,#201b14);margin:10px 0 16px}.notice strong{color:#ffd28c}.empty{color:var(--muted)}.items{display:grid;gap:12px}.pr-list{display:grid;gap:8px;margin-top:14px}.pr{display:grid;grid-template-columns:65px minmax(0,1fr) 130px;gap:12px;padding:11px 13px;border:1px solid #3d3830;background:#15181a;border-radius:8px;align-items:center}.pr a{text-decoration:none}.pr .n{color:var(--gold);font-weight:800}.search{width:100%;max-width:450px;border:1px solid var(--line);border-radius:8px;padding:11px 12px;background:#131619;color:var(--text);margin:10px 0}.details{margin-top:12px}.details summary{cursor:pointer;color:var(--gold2)}.footer{border-top:1px solid var(--line);margin-top:24px;padding-top:16px;color:#918777;font-size:12px}
 @media(max-width:600px){.wrap{padding:16px}.top{align-items:flex-start;flex-wrap:wrap}.pr{grid-template-columns:53px minmax(0,1fr)}.pr .kind{grid-column:2}.actions input{min-width:min(100%,220px);flex:1 1 180px}.actions .btn{flex:1 1 130px}}
+/* Zeus Experience V2: a single, mobile-first workspace with one page scroll. */
+:root{font:16px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--panel:#191b1d;--muted:#c0b8aa}
+body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#101214;overflow-x:hidden}
+.wrap{max-width:1040px;padding:16px clamp(14px,3vw,30px) 32px}
+.top{padding-bottom:12px}.brand{font-size:21px}.hero{padding:18px 0 12px}.hero h1{font-size:clamp(28px,7vw,42px);color:var(--gold2)}.hero p{font-size:14px}
+.meta{margin-top:12px}.tabs{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:10px -4px 0;padding:6px 4px;background:#111416ed;border:1px solid #423a2d;border-radius:11px;overflow:visible;backdrop-filter:blur(12px)}
+.tab{min-height:46px;padding:8px 6px;border:1px solid transparent;border-radius:8px;font-size:12px;letter-spacing:0;text-transform:none}.tab.active{background:#332817;border:1px solid #826438;color:#ffe3a5}
+.panel{padding:14px 0}.notice{padding:12px 14px;margin:8px 0 12px}.items{gap:10px}.card,.empty{padding:15px;border-radius:13px}.card h2{font-size:20px}.card p{margin:7px 0}.status{margin-top:4px}.actions{gap:8px}.btn{min-height:46px;padding:11px 14px;font-size:13px}.btn:disabled{opacity:.65;cursor:progress;filter:saturate(.7)}
+.pr-card{padding:0;overflow:hidden}.pr-card>summary{list-style:none;cursor:pointer;padding:15px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px}.pr-card>summary::-webkit-details-marker{display:none}.pr-card>summary:after{content:"⌄";grid-column:2;grid-row:1/3;color:var(--gold2);font-size:20px}.pr-card[open]>summary:after{content:"⌃"}.pr-card .card-title{font:600 19px/1.25 Georgia,serif;color:var(--gold2)}.pr-card .card-sub{grid-column:1;color:var(--muted);font-size:12px}.pr-body{border-top:1px solid #49402f;padding:14px 15px 16px}.pr-body h3{font:600 15px Georgia,serif;color:#e9d6ad;margin:15px 0 5px}.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:13px 0}.step{position:relative;text-align:center;color:#aba69c;font-size:10px;line-height:1.2}.step:before{content:"";display:block;margin:0 auto 5px;width:18px;height:18px;border:2px solid #55524b;border-radius:50%;background:#191b1d}.step.done{color:#94dca9}.step.done:before{border-color:#64be80;background:#244b32;content:"✓";line-height:14px}.step.current{color:#f0cc80;font-weight:800}.step.current:before{border-color:#e4bc68;background:#523d1d;box-shadow:0 0 0 3px #e4bc6828}.step.error{color:#f49a8f}.step.error:before{border-color:#d96a60;background:#512523;content:"!";line-height:14px}.next-action{border-left:3px solid var(--gold);padding:8px 10px;background:#211d17;border-radius:0 7px 7px 0;font-size:13px}.preview-frame{width:100%;height:min(72vh,700px);border:1px solid #55472f;border-radius:10px;background:#fff}.preview-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-actions .btn{flex:1 1 140px}.pr{grid-template-columns:45px minmax(0,1fr) auto}.pr .btn{min-width:118px}.decision-lists{margin-top:14px}.decision-lists summary{padding:12px;border:1px solid #4d412e;border-radius:9px;color:var(--gold2);background:#191a1a}.decision-content{padding:10px}.decision-content .grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.decision-content .card{padding:12px}.decision-content .card h3{font-size:16px}.hidden-technical{color:#aaa396}.status-line{font-size:12px;color:#ccc4b6}
+.image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.image-card{border:1px solid #443b2f;border-radius:10px;padding:12px;background:#171a1c}.image-card strong{display:block;color:#ecd08f}.storage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.storage-card{border:1px solid #443b2f;border-radius:10px;padding:14px;background:#171a1c}.storage-card h3{margin:0 0 6px;color:#ecd08f}.storage-card p{margin:4px 0;color:#bfb8ab;font-size:13px}.footer{margin-top:18px}
+@media(max-width:600px){.wrap{padding:12px 12px 24px}.top{align-items:center}.top a{font-size:12px}.hero{padding:14px 0 9px}.tabs{margin-left:-2px;margin-right:-2px}.tab{font-size:11px;padding:7px 3px}.pr{grid-template-columns:38px minmax(0,1fr);gap:8px}.pr .btn{grid-column:2;justify-self:start}.steps{gap:1px}.step{font-size:8px}.step:before{width:17px;height:17px}.pr-card>summary{padding:13px}.pr-body{padding:12px}.preview-frame{height:68vh}.decision-content .grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header class="top"><div class="brand">✧ OLYMPIA<small>ZEUS CONTROL · DEV / LIVE · ALEA ADMIN</small></div><a href="../" target="_top">← Till ALEA</a></header>
 <section class="hero">
-<div class="eyebrow">MÄNSKLIG ACCEPTANS · TEKNISK SPÅRBARHET</div>
-<h1>ZEUS CONTROL</h1>
-<p>Här provar Zeus den upplevelse som finns i DEV och väljer vad som ska hända sedan. GitHub lagrar beslut och historik. Releasekontrollen stoppar publicering när kod, miljö eller databas inte kan verifieras.</p>
+<div class="eyebrow">ALEA CRUSADERS · KONTROLLRUM</div>
+<h1>Ändringar</h1>
+<p>Se vad som är klart, prova i DEV och följ en ändring hela vägen till LIVE.</p>
 <div class="meta" id="refs"><span class="pill">Läser versionsbaslinje…</span></div>
 </section>
-<nav class="tabs" aria-label="Arbetskö">
-<button class="tab active" data-panel="try">ATT PROVA</button>
-<button class="tab" data-panel="publish">ATT PUBLICERA</button>
-<button class="tab" data-panel="history">HISTORIK</button>
+<nav class="tabs" aria-label="Olympia sidor">
+<button class="tab active" data-panel="try">☷ <span>PR-flöde</span></button>
+<button class="tab" data-panel="images">▧ <span>Bilder</span></button>
+<button class="tab" data-panel="storage">◈ <span>Lagring</span></button>
+<button class="tab" data-panel="history">◷ <span>Historik</span></button>
 </nav>
-<section class="panel active" id="panel-try"><div class="notice" id="zeus-auth"><strong>Kontrollerar ALEA-sessionen…</strong> OLYMPIA använder din befintliga inloggning. Zeus-behörighet kontrolleras på servern.</div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiv arbetskö…</div></div>
-<div class="card" style="margin-top:18px"><div class="label">GitHub · ÖPPNA PULL REQUESTS</div><h2>Aktiva PR</h2><p class="muted small">Lista hämtas direkt från GitHub. Välj en PR för att kontrollera dess aktuella CI-körningar och mergebarhet.</p><div id="live-pr-list" class="pr-list"><div class="empty">Läser öppna PR…</div></div></div></section>
-<section class="panel" id="panel-publish">
+<section class="panel active" id="panel-try"><div class="notice" id="zeus-auth"><strong>Kontrollerar ALEA-sessionen…</strong></div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiva ändringar…</div></div>
+<div class="card" style="margin-top:14px"><div class="label">Aktiva ändringar</div><h2>Öppna PR</h2><div id="live-pr-list" class="pr-list"><div class="empty">Läser öppna PR…</div></div></div>
+<details class="decision-lists">
+<summary>Beslut och publicering</summary><div class="decision-content">
 <div class="notice" id="release-blockers"><strong>Kontrollerar förhandsvillkor…</strong></div>
 <div class="grid">
 <div class="card"><div class="label">Mänskligt godkännande</div><h3>Godkännanden</h3><div id="accept-list" class="muted">Inga godkännanden.</div></div><div class="card"><div class="label">LIVE publicering</div><h3>Verifiering</h3><div id="live-list" class="muted">Ingen LIVE-publicering.</div></div><div class="card"><div class="label">Direktrelease</div><h3>Öppna Pandoras ask</h3><div id="direct-list" class="muted">Inga godkända uppdrag.</div></div>
@@ -36,13 +49,15 @@
 <div class="card"><div class="label">Återkoppling</div><h3>Behöver rättas</h3><div id="fix-list" class="muted">Inga öppna rättningar.</div></div>
 </div>
 <div class="notice"><strong>Slutgodkännande:</strong> En verifierad kandidat visas här som separat release-PR mot <code>main</code>. När underlaget är komplett kan Zeus slutgodkänna i OLYMPIA. Då sparas godkännandet och exakt verifierad release-PR mergas; Pages publicerar till LIVE först efter detta.</div>
-</section>
+</div></details></section>
+<section class="panel" id="panel-images"><h2>Bilder</h2><p class="muted">Bildstatus hämtas från den aktiva ändringens manifest.</p><div id="image-list" class="image-grid"><div class="empty">Läser bildstatus…</div></div></section>
+<section class="panel" id="panel-storage"><h2>Lagring och miljöer</h2><p class="muted">Visar den bekräftade statusen för DEV och LIVE.</p><div id="storage-status" class="storage-grid"><div class="empty">Läser miljöstatus…</div></div></section>
 <section class="panel" id="panel-history">
-<p class="muted">Baslinje 001 bevarar befintliga pull requests. Äldre olösta eller oklassificerade ändringar är historik/teknisk kontroll, aldrig automatiskt redo att prova. De fortsätter även synas i <a href="./index.html#release-track">teknisk Release Guard</a>.</p>
+<p class="muted">Ändringarnas beslut och PR-status i kronologisk ordning.</p>
 <input class="search" id="history-search" type="search" placeholder="Sök på PR-nummer, rubrik, gren eller status" aria-label="Sök i PR-historik">
 <div id="history-count" class="muted small"></div><div id="history-list" class="pr-list"><div class="empty">Läser PR-historik…</div></div>
 </section>
-<footer class="footer">Baslinje och aktiv kö är versionsbundna JSON-filer i repot. Beslut lagras som GitHub-ärenden skapade av den säkra serverfunktionen. Inga skrivbara token eller databasnycklar skickas till webbläsaren. Status blir OKÄND när underlag saknas.</footer>
+<footer class="footer">DEV och LIVE hålls åtskilda. Status visas först efter att den har bekräftats av GitHub eller ALEA-servern.</footer>
 </div>
 <script>
 (function(){
@@ -54,6 +69,9 @@ var baseline=null,queue=null,inventory=[],currentDevSha=null,decisionRenderSeque
 window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
+var swipeStart=null;
+document.addEventListener("touchstart",function(e){if(e.target.closest("button,a,input,textarea,select,summary,iframe"))return;var t=e.changedTouches[0];swipeStart={x:t.clientX,y:t.clientY}},{passive:true});
+document.addEventListener("touchend",function(e){if(!swipeStart)return;var t=e.changedTouches[0],dx=t.clientX-swipeStart.x,dy=t.clientY-swipeStart.y;swipeStart=null;if(Math.abs(dx)<85||Math.abs(dx)<Math.abs(dy)*1.5)return;var ids=["try","images","storage","history"],active=document.querySelector(".tab.active"),index=ids.indexOf(active&&active.dataset.panel);if(index<0)return;var next=ids[index+(dx<0?1:-1)];if(next)panel(next)},{passive:true});
 async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status+" "+url);return r.json()}
 async function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
 refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Hämtar aktuell GitHub-status…</span>';
@@ -81,6 +99,9 @@ refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local
 renderTrial();
 }}
 function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issues/new?template="+encodeURIComponent(template)}
+function flowStep(label,state){return '<span class="step '+state+'">'+label+'</span>'}
+function liveUrl(item,published){var base="https://lindkvistfoto-dot.github.io/alea-crusaders/",relative=String(item.dev_url||"../").replace(/^\.\.\//,"");var url=new URL(relative,base);if(published&&published.mergeSha)url.searchParams.set("olympia-version",String(published.deployedLiveSha||published.mergeSha).slice(0,12));return url.href}
+function devUrl(item){var url=new URL(String(item.dev_url||"../"),location.href);if(currentDevSha)url.searchParams.set("olympia-preview",currentDevSha.slice(0,12));return url.href}
 function renderTrial(){
 var root=get("trial-list"),items=queue&&queue.items||[];
 if(!items.length){root.innerHTML='<div class="empty">Kön är tom. Ingen historik har raderats.</div>';return}
@@ -88,13 +109,20 @@ root.innerHTML=items.map(function(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var decisionsKnown=window.olympiaDecisionsLoaded===true;
 var imageCount=Number(item.image_count||0),imagesReady=imageCount===0||item.image_status==="published";
-var imageSummary='<p class="small muted">Bilder: '+imageCount+' · '+esc(imageCount===0?'inga bilder':imagesReady?'publicerade i DEV':'väntar på verifierad DEV-publicering')+'</p>';
-var ready=decisionsKnown&&!published&&imagesReady&&!!window.olympiaAuthVerified&&!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
-var status=published?'<span class="status ready">Publicerad i LIVE</span>':!decisionsKnown?'<span class="status">Kontrollerar releasehistorik…</span>':ready?'<span class="status ready">Klar att prova</span>':'<span class="status">Pågår · inte klar att prova</span>';
-var publishedLink=published?'<p class="small muted">Verifierad publicering · <a href="'+esc(published.issue.html_url)+'" target="_blank" rel="noopener">Visa LIVE-beslut #'+esc(published.issue.number)+' ↗</a></p>':'';
-var links=published?publishedLink:ready?'<div class="actions"><a class="btn" href="'+esc(item.dev_url||"../")+'" target="_blank" rel="noopener">Öppna i DEV ↗</a><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn i DEV</button><button class="btn secondary" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'" title="Startar en separat LIVE-PR. Publicering kräver ett senare slutgodkännande.">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'" title="Lägger till ändringen i releasepaketet utan att starta en LIVE-PR.">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Behöver rättas</button></div>':'<p class="small muted">Beslutsvalen låses upp när aktuell DEV-version har hämtats och ärendet är tekniskt verifierat.</p>';
-var sourceIssue='<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'">#'+esc(item.provenance.source_issue)+'</a>';
-return '<article class="card"><div class="label">'+esc(item.id)+' · PILOT</div><h2>'+esc(item.title)+'</h2>'+status+'<p><strong>Syfte:</strong> '+esc(item.purpose)+'</p><p><strong>Förväntat resultat:</strong> '+esc(item.expected_result)+'</p>'+imageSummary+links+'<p class="small muted">'+(published?'Ärendet är slutfört och LIVE-publiceringen är verifierad.':'Releasepaket köar ändringar för samlad release. Pandoras ask startar en selektiv LIVE-PR; ingen knapp här publicerar till LIVE.')+'</p><details class="details"><summary>Visa detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte skapad")+' · Käll-PR SHA: '+esc(item.dev_sha||"inte verifierad")+' · Testad DEV SHA: '+esc(currentDevSha||"inte verifierad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Miljömaster: '+esc(item.provenance.environment_master)+' · Asset: '+esc(item.provenance.environment_asset)+'</p></details></article>'
+var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)}),accepted=rows.some(function(row){return /ACCEPTANS/i.test(row.title||"")}),candidate=rows.find(function(row){return /PANDORAS/i.test(row.title||"")}),packaged=rows.some(function(row){return /RELEASEPAKET/i.test(row.title||"")}),needsFix=rows.some(function(row){return /RÄTTAS/i.test(row.title||"")}),deferred=rows.some(function(row){return /KARON|AVVAKTA/i.test(row.title||"")});
+var ready=decisionsKnown&&!published&&!accepted&&!candidate&&!packaged&&!needsFix&&!deferred&&imagesReady&&!!window.olympiaAuthVerified&&!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
+var candidateStatus=window.olympiaCandidateByItem&&window.olympiaCandidateByItem[item.id],currentIndex=published?4:candidateStatus&&candidateStatus.candidateReady?3:candidate?3:accepted?2:ready?1:0;
+var status=published?'<span class="status ready">✓ Publicerad i LIVE</span>':!decisionsKnown?'<span class="status">Läser aktuell status…</span>':needsFix?'<span class="status blocked">Behöver rättas</span>':deferred?'<span class="status">Avvaktar</span>':candidateStatus&&candidateStatus.candidateCheckUnknown?'<span class="status">Kandidatstatus kunde inte hämtas</span>':packaged?'<span class="status">I releasepaket</span>':candidate?'<span class="status">LIVE-kandidat förbereds</span>':accepted?'<span class="status ready">DEV godkänd</span>':ready?'<span class="status ready">Klar för visuell granskning</span>':'<span class="status">Status inväntas</span>';
+var stepHtml='<div class="steps" aria-label="Ändringens steg">'+flowStep('Skapad',currentIndex>=0?'done':'')+flowStep('Testad',item.ready_for_human_acceptance?'done':currentIndex===1?'current':'')+flowStep('DEV godkänd',accepted?'done':currentIndex===2?'current':'')+flowStep('LIVE-kandidat',candidateStatus&&candidateStatus.candidateReady?'done':currentIndex===3?'current':'')+flowStep('Publicerad',published?'done':currentIndex===4?'current':'')+'</div>';
+var next=published?'Klart. Öppna ändringen i LIVE för slutlig visuell kontroll.':candidateStatus&&candidateStatus.candidateReady?'Granska kandidaten och slutgodkänn LIVE när du är nöjd.':candidate?'Väntar på LIVE-kandidat.':packaged?'Ändringen ligger i releasepaketet och inväntar samlad publicering.':accepted?'Välj Pandoras ask för direktpublicering eller releasepaket för senare.':ready?'Förhandsvisa ändringen i DEV. Godkänn först när den ser rätt ut.':'Statusen väntar på verifiering från DEV.';
+var devLink=devUrl(item);
+var preview='<div class="preview-actions"><a class="btn" href="'+esc(devLink)+'" target="_blank" rel="noopener">Förhandsvisa DEV ↗</a><button class="btn secondary" type="button" data-preview-toggle="'+esc(item.id)+'">Visa här</button><button class="btn secondary" type="button" data-preview-fullscreen="'+esc(item.id)+'">Större vy</button></div><iframe class="preview-frame" title="DEV-förhandsvisning: '+esc(item.title)+'" data-preview-frame="'+esc(item.id)+'" src="'+esc(devLink)+'" loading="lazy" hidden></iframe>';
+var candidatePreview=candidateStatus&&candidateStatus.candidateReady?'<p class="status-line">LIVE-kandidaten är klar. Kandidatförhandsvisning saknas i den befintliga publiceringskedjan; den här sidan visar inte LIVE som om det vore kandidaten.</p>':'<p class="status-line">LIVE-kandidatens förhandsvisning visas när den finns. Ingen kandidatvy är registrerad just nu.</p>';
+var livePreview=published?'<div class="preview-actions"><a class="btn" href="'+esc(liveUrl(item,published))+'" target="_blank" rel="noopener">Visa i LIVE ↗</a><a class="btn secondary" href="'+esc(published.issue.html_url)+'" target="_blank" rel="noopener">Visa beslut</a></div>':'';
+var links=published?livePreview:ready?preview+'<div class="actions"><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn DEV</button></div>':candidateStatus&&candidateStatus.candidateReady?'<div class="preview-actions"><a class="btn secondary" href="'+esc(candidateStatus.releaseUrl||candidateStatus.issue.html_url)+'" target="_blank" rel="noopener">Granska LIVE-kandidaten ↗</a></div>':accepted?candidatePreview:'<p class="small muted">Beslut visas när DEV och Zeus-behörighet har bekräftats.</p>';
+var decisions=accepted&&!candidate&&!packaged&&!published?'<h3>Välj nästa steg</h3><div class="actions"><button class="btn" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Tillbaka till Hefaiastos</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button></div>':candidateStatus&&candidateStatus.candidateReady&&!published?'<h3>Slutgodkännande</h3><p class="small muted">När du är nöjd med kandidaten kan du godkänna publiceringen. LIVE ändras först efter bekräftelse.</p><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(item.id)+'" data-sha="'+esc(candidateStatus.testedSha)+'" data-candidate-issue="'+esc(candidateStatus.issue.number)+'" data-tree-sha="'+esc(candidateStatus.candidateTree)+'">Slutgodkänn LIVE</button>':'';
+var sourceIssue=item.provenance&&item.provenance.source_issue?'<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'" target="_blank" rel="noopener">#'+esc(item.provenance.source_issue)+' ↗</a>':'—';
+return '<details class="card pr-card"><summary><span class="card-title">'+esc(item.title)+'</span><span class="card-sub">PR #'+esc(item.pr_number||"—")+' · '+status+'</span></summary><div class="pr-body"><p><strong>Ändringen:</strong> '+esc(item.purpose||item.expected_result||"")+'</p>'+stepHtml+'<div class="next-action"><strong>Nästa:</strong> '+esc(next)+'</div><h3>Förhandsvisning</h3>'+links+decisions+(published?'':candidatePreview)+'<details class="details"><summary>Tekniska detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte registrerad")+' · DEV-version: '+esc(currentDevSha||"inte verifierad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Bilder: '+imageCount+' · '+esc(imageCount===0?'inga bilder':imagesReady?'publicerade i DEV':'status ej verifierad')+'</p></details></div></details>'
 }).join("")}
 window.olympiaRefreshTrial=renderTrial;
 async function renderPullRequests(){
@@ -108,11 +136,25 @@ var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];var feature=match[1]||"";
 feature=feature.trim().replace(/\s+/g," ").slice(0,360);
 var kind=pr.draft?"Draft":"Öppen";
-return '<article class="pr"><div class="n">#'+esc(n)+'</div><div><a href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">'+esc(pr.title)+'</a><div class="small muted">'+esc(kind)+' · '+esc(pr.head.ref)+' → '+esc(pr.base.ref)+'</div>'+(feature?'<div class="small muted">Att prova: '+esc(feature)+'</div>':'')+'<div class="small muted" id="pr-status-'+esc(n)+'">CI och mergebarhet: inte hämtade</div></div><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Uppdatera status</button></article>'
+return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · '+esc(pr.base.ref==='development'?'Väntar på DEV':'Väntar på LIVE')+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+'<p class="small muted">Ändringen finns ännu inte i DEV. När den har landat där visas DEV-förhandsvisningen i samma flöde.</p><div class="small muted">Status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions"><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
 }).join("");
 }catch(_){root.innerHTML='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>'}
 }
+function renderImages(){
+var root=get("image-list"),items=queue&&queue.items||[],images=items.flatMap(function(item){return (item.images||[]).map(function(image){return {item:item,image:image}})});
+if(!images.length){root.innerHTML='<div class="empty">Ingen bildinformation finns i aktiva ändringar.</div>';return}
+root.innerHTML=images.map(function(entry){var image=entry.image,ready=image.dev_publication_status==="verified";return '<article class="image-card"><strong>'+esc(image.asset_key||"Bild")+'</strong><span class="status '+(ready?'ready':'')+'">'+(ready?'Publicerad i DEV':'Status ej bekräftad')+'</span><p class="small muted">'+esc(entry.item.title)+' · '+esc(image.width||'?')+' × '+esc(image.height||'?')+' · '+esc(image.format||'format okänt')+(image.alpha?' · transparens':'')+'</p><details class="details"><summary>Bilddetaljer</summary><p class="small muted">SHA: '+esc(image.webp_sha256||image.source_sha256||'saknas')+'</p><p class="small muted">Lagringsväg: '+esc(image.webp_path||'saknas')+'</p></details></article>'}).join("")
+}
+function renderStorage(){
+var root=get("storage-status"),env=window.olympiaEnvironments||{};
+if(!window.olympiaAuthVerified||!env.verified){root.innerHTML='<div class="empty">Miljöstatus kan inte bekräftas just nu.</div>';return}
+root.innerHTML=['development','main'].map(function(key){var live=key==='main',entry=env[key]||{};return '<article class="storage-card"><h3>'+(live?'LIVE':'DEV')+'</h3><p><strong>Status:</strong> '+(entry.published?'Publicerad version bekräftad':'Status okänd')+'</p><p><strong>Aktuell version:</strong> '+esc(entry.sha?entry.sha.slice(0,12):'saknas')+'</p></article>'}).join("")
+}
 document.addEventListener("click",async function(event){
+var previewButton=event.target.closest("[data-preview-toggle]");
+if(previewButton){var frame=get("preview-frame-"+previewButton.dataset.previewToggle)||document.querySelector('[data-preview-frame="'+previewButton.dataset.previewToggle+'"]');if(frame){frame.hidden=!frame.hidden;previewButton.textContent=frame.hidden?"Visa här":"Dölj förhandsvisning";if(!frame.hidden)frame.scrollIntoView({behavior:"smooth",block:"nearest"})}return}
+var fullscreenButton=event.target.closest("[data-preview-fullscreen]");
+if(fullscreenButton){var fullFrame=document.querySelector('[data-preview-frame="'+fullscreenButton.dataset.previewFullscreen+'"]');if(fullFrame){fullFrame.hidden=false;try{if(fullFrame.requestFullscreen)await fullFrame.requestFullscreen();else window.open(fullFrame.src,"_blank","noopener")}catch(_){window.open(fullFrame.src,"_blank","noopener")}}return}
 var button=event.target.closest("[data-pr-status]");
 if(!button)return;
 var number=Number(button.dataset.prStatus),sha=String(button.dataset.prSha||""),output=get("pr-status-"+number);
@@ -143,10 +185,12 @@ if(requestId!==preflightRequestSequence)return;
 if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Serverkontrollen svarade inte.");
 var environments=check.result.environments||{},liveSha=environments.main&&environments.main.sha,devSha=environments.development&&environments.development.sha;
 if(!/^[a-f0-9]{40}$/i.test(String(liveSha||""))||!/^[a-f0-9]{40}$/i.test(String(devSha||"")))throw new Error("Branch-SHA saknas.");
+window.olympiaEnvironments={verified:true,main:{sha:String(liveSha),published:true},development:{sha:String(devSha),published:true}};renderStorage();
 currentDevSha=String(devSha);renderTrial();
 info.push("DEV "+String(devSha).slice(0,7)+" och LIVE "+String(liveSha).slice(0,7)+" matchar publicerade versioner.");
 }catch(error){
 if(requestId!==preflightRequestSequence)return;
+window.olympiaEnvironments={verified:false};renderStorage();
 unknown=true;
 unknownMessage=error&&error.message?String(error.message):"Serverkontrollen kunde inte hämtas.";
 }
@@ -201,7 +245,7 @@ candidateMessage="Kandidatstatus kunde inte hämtas. Det betyder inte att kandid
 }
 }
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
-var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,deployedLiveSha:deployedLiveSha};
+var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,deployedLiveSha:deployedLiveSha,target:target};
 slots[target].push(record);
 return i;
 }));
@@ -210,6 +254,7 @@ var superseded={};
 slots.live.forEach(function(liveRecord){var candidateRef=String(liveRecord.issue.body||"").match(/^- Kandidatärende: #(\d+)/m);if(candidateRef)superseded["direct:"+candidateRef[1]]=liveRecord});
 slots.accept.forEach(function(acceptRecord){var newer=slots.live.filter(function(liveRecord){return liveRecord.itemId&&liveRecord.itemId===acceptRecord.itemId&&Date.parse(liveRecord.issue.created_at||"")>Date.parse(acceptRecord.issue.created_at||"")}).sort(function(a,b){return Date.parse(a.issue.created_at||"")-Date.parse(b.issue.created_at||"")}).pop();if(newer)superseded["accept:"+acceptRecord.issue.number]=newer});
 window.zeusDecisions=rows;
+window.olympiaCandidateByItem={};slots.direct.forEach(function(record){if(record.itemId)window.olympiaCandidateByItem[record.itemId]=record});
 window.olympiaLivePublishedByItem={};slots.live.filter(function(record){return record.liveVerified&&record.itemId}).sort(function(a,b){return Date.parse(a.issue.created_at||"")-Date.parse(b.issue.created_at||"")}).forEach(function(record){window.olympiaLivePublishedByItem[record.itemId]=record});window.olympiaDecisionsLoaded=true;
 Object.keys(slots).forEach(function(k){
 var el=get(k+"-list"),arr=slots[k];
@@ -217,7 +262,7 @@ if(!el)return;
 el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact,supersededRecord=superseded[k+":"+i.number];
 var status=supersededRecord?(k==="direct"?"Övertaget av LIVE-godkännande #"+esc(supersededRecord.issue.number):"Äldre godkännande ersatt av LIVE-beslut #"+esc(supersededRecord.issue.number)):k==="live"?(record.liveVerified?"LIVE verifierad · release "+esc(record.mergeSha.slice(0,7))+" ingår i publicerad "+esc(record.deployedLiveSha.slice(0,7)):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad pilotversion. Ny provning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?(record.candidateMessage||"Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats."):record.candidateMessage||"Registrerat · väntar på kandidatkontroll";
-var finalButton=record.candidateReady&&!supersededRecord?'<div class="actions"><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(record.itemId)+'" data-sha="'+esc(record.testedSha)+'" data-candidate-issue="'+i.number+'" data-tree-sha="'+esc(record.candidateTree)+'">Slutgodkänn publicering till LIVE</button><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
+var finalButton=record.candidateReady&&!supersededRecord?'<div class="actions"><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
 var runLink=record.candidateRunUrl?'<br><a class="small" href="'+esc(record.candidateRunUrl)+'" target="_blank" rel="noopener">Visa kandidatkontroll ↗</a>':'';
 return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton
 }).join(""):"Inga beslut registrerade."
@@ -232,7 +277,7 @@ get("history-list").innerHTML=rows.slice(0,150).map(function(p){var status=p.sta
 }
 get("history-search").addEventListener("input",renderHistory);
 Promise.all([json("./baseline-001.json"),json("./work-items.json"),json("./history/pr-inventory-001.json")]).then(function(v){
-baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTrial();renderPullRequests();renderBlockers();renderHistory();
+baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTrial();renderPullRequests();renderImages();renderStorage();renderBlockers();renderHistory();
 }).catch(function(e){get("trial-list").innerHTML='<div class="empty">Arbetskön kunde inte verifieras. Status är OKÄND. '+esc(e.message)+'</div>';get("release-blockers").innerHTML="<strong>Release blockerad:</strong> OLYMPIA-underlaget kunde inte läsas.";});
 window.olympiaRefreshDecisions=renderDecisions;
 renderDecisions();
@@ -346,7 +391,10 @@ document.addEventListener("click",async event=>{
  if(!window.olympiaAuthVerified){say("Beslutsåtgärder är låsta tills ALEA-session och Zeus-behörighet verifierats.");return}
  const session=storedSession();
  if(!session){window.olympiaAuthVerified=false;if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();setStatus("Ingen ALEA-session hittades.");say("Logga in i ALEA DEV igen.");return}
+ const originalLabel=button.textContent;
  button.disabled=true;
+ button.setAttribute("aria-busy","true");
+ button.textContent="Registrerat · behandlar…";
  try{
   const {response,result}=await request({
    itemId:button.dataset.item,
@@ -355,13 +403,15 @@ document.addEventListener("click",async event=>{
    candidateIssue:button.dataset.candidateIssue?Number(button.dataset.candidateIssue):undefined,
    candidateTreeSha:button.dataset.treeSha
   },session);
-  if(!response.ok||!result.ok){say(result.message||"Beslutet kunde inte sparas.");return}
+  if(!response.ok||!result.ok){say(result.message||"Beslutet kunde inte sparas.");button.textContent=originalLabel;return}
   say(result.message+" <a href='"+result.issue.url+"' target='_blank' rel='noopener'>Visa journalpost #"+result.issue.number+" ↗</a>",true);
-  if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
+  if(window.olympiaRefreshDecisions)await window.olympiaRefreshDecisions();
+  button.textContent="Sparat ✓";
   if(result.decision==="final_approval"&&result.mergeSha)verifyLive(result.mergeSha);
  }catch(error){
   say(error&&error.name==="AbortError"?"Serverkontrollen tog för lång tid. Ingen skrivning bekräftades.":"Beslutet kunde inte nå servern. Ingen skrivning bekräftades.");
- }finally{button.disabled=false}
+  button.textContent=originalLabel;
+ }finally{button.disabled=false;button.removeAttribute("aria-busy")}
 });
 window.addEventListener("storage",event=>{
  if(event.key==="alea:dev:alea_supabase_session_dev"||event.key==="alea:dev:alea_supabase_session")syncAuth();
