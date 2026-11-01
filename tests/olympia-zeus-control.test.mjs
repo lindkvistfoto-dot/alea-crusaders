@@ -136,10 +136,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('.step.skipped');
     expect(page).toContain("rejected?'skipped'");
     expect(page).toContain('var registered=new Set(items.flatMap');
-    expect(page).toContain('var open=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
+    expect(page).toContain('var listed=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
     expect(page).toContain("if(published.length)html+='<h2 class=\"queue-section-title\">Publicerade</h2>'");
     expect(page).not.toContain('id="live-pr-list"');
-    expect(page).toContain('Övriga öppna PR');
+    expect(page).toContain('Klart för granskning');
+    expect(page).toContain('Klart för LIVE');
     expect(page).not.toContain('id="zeus-auth" class="notice"');
   });
 
@@ -310,7 +311,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
     expect(page).toContain('finally{pullRequestsRefresh=null}');
     expect(page).toContain('Aktuella PR visas inte eftersom GitHub-statusen inte kunde bekräftas.');
-    expect(trial).toContain('var open=openPullRequestError?[]:');
+    expect(trial).toContain('var listed=openPullRequestError?[]:');
     expect(trial).not.toContain('Visar senast hämtade öppna PR');
     expect(page).toContain('data-pr-status');
     expect(page).toContain('action:"pull_request_status"');
@@ -330,6 +331,46 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('data.action === "pull_request_list"');
     expect(edge).toContain('pull_requests: "read"');
     expect(edge).toContain('/pulls?state=open&per_page=100&sort=updated&direction=desc');
+    expect(edge).toContain('/pulls?state=closed&base=development&per_page=100&page=');
+    expect(edge).toContain('pr.merged === true && pr.base?.ref === "development"');
+    expect(edge).toContain('for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr)');
+    expect(edge).toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
+  });
+
+  it('rechecks unknown mergeability and persists the same PR as a DEV-accepted work item',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const page=read('olympia/zeus-control.html');
+    expect(edge).toContain('async function currentDevPullRequest(token: string, number: number, headSha: string)');
+    expect(edge).toContain('pr.mergeable !== null');
+    expect(edge).toContain('await new Promise(resolve => setTimeout(resolve, 500))');
+    expect(edge).toContain('PR_MERGEABILITY_UNKNOWN');
+    expect(edge).toContain('PR_HAS_CONFLICTS');
+    expect(edge).toContain('merge_method: "squash"');
+    expect(edge).toContain('if (refreshed.merged === true && refreshed.base?.ref === "development"');
+    expect(edge).toContain('async function recordDevAcceptance(token: string, number: number, actor: string)');
+    expect(edge).toContain('body.includes("- Ärende-ID: PR-" + number)');
+    expect(edge).toContain('message: "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE."');
+    expect(page).toContain('await window.olympiaRefreshPullRequests()');
+    expect(page).toContain('window.olympiaRefreshRefs()');
+    expect(page).toContain('Merge-commit: <a href=');
+    expect(page).toContain('olympia-pr-flow-cache-v1');
+  });
+
+  it('retries GitHub mergeability when it is temporarily unknown',async()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('async function currentDevPullRequest(');
+    const end=edge.indexOf('async function recordDevAcceptance(',start);
+    const source=edge.slice(start,end).replace('token: string, number: number, headSha: string','token, number, headSha').replace('): Promise<any> {',') {').replace('let pr: any = null;','let pr = null;');
+    const sha='a'.repeat(40);
+    let calls=0;
+    const fakeGh=async()=>({state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:[null,null,true][calls++]});
+    const resolve=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(fakeGh,fn=>fn(),'owner','repo');
+    await expect(resolve('token',42,sha)).resolves.toMatchObject({mergeable:true});
+    expect(calls).toBe(3);
+    calls=0;
+    const remainsUnknown=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(async()=>{calls++;return {state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:null}},fn=>fn(),'owner','repo');
+    await expect(remainsUnknown('token',42,sha)).rejects.toThrow('PR_MERGEABILITY_UNKNOWN');
+    expect(calls).toBe(4);
   });
 
   it('opens the existing OLYMPIA admin section across the full viewport on mobile',()=>{
