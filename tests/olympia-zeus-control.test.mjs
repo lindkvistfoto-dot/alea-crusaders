@@ -83,7 +83,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('if(renderId!==decisionRenderSequence)return;');
     expect(page).toContain('data-release-refresh');
     expect(page).toContain('Kontrollen kunde inte hämtas:');
-    expect(page).toContain('candidateBlocked=!!(candidate&&candidate.includes("- Status: BLOCKED"))');
+    expect(page).toContain('candidateBlocked=check.result.blocked===true');
     expect(page).not.toContain('||!!candidate&&!candidateReady');
     expect(page).toContain('Kandidatstatus kunde inte hämtas.');
     expect(baseline.database.core_schema_audit.environment_differences[0]).toContain('endast i LIVE');
@@ -97,7 +97,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261031-pilot-live-complete-1"');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-server-candidate-status-1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -117,6 +117,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
     expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
     for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
+  });
+
+  it('uses the authenticated candidate check as the sole status source',()=>{
+    const page=read('olympia/zeus-control.html');
+    const decisions=page.slice(page.indexOf('async function renderDecisions()'),page.indexOf('function renderHistory()'));
+    expect(decisions).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(decisions).not.toContain('i.comments_url');
+    expect(decisions).not.toContain('candidateRows=');
+    expect(decisions).toContain('candidateMessage=String(check.result.message||"")');
+    expect(decisions).toContain('Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats.');
   });
 
   it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
