@@ -80,7 +80,7 @@ if(!item||!item.id||!/^[a-f0-9]{40}$/i.test(String(testedSha||"")))return false;
 try{
 var snapshot=await json(api+"/contents/olympia/work-items.json?ref="+encodeURIComponent(testedSha));
 if(snapshot.encoding!=="base64"||typeof snapshot.content!=="string")return false;
-var bytes=Uint8Array.from(atob(snapshot.content.replace(/[\\r\\n\\t ]/g,"")),function(c){return c.charCodeAt(0)});
+var bytes=Uint8Array.from(atob(snapshot.content.replace(/\s/g,"")),function(c){return c.charCodeAt(0)});
 var historical=JSON.parse(new TextDecoder().decode(bytes));
 var prior=(historical.items||[]).find(function(candidate){return candidate.id===item.id});
 if(!prior)return false;
