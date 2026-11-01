@@ -143,6 +143,30 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).not.toContain('id="zeus-auth" class="notice"');
   });
 
+  it('requires the live decision snapshot to include the current PR and image scope',async()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('async function verifyLiveScope(item,testedSha){');
+    const end=page.indexOf('async function renderRefs()',start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const source=page.slice(start,end);
+    let historical;
+    const response=()=>({encoding:'base64',content:Buffer.from(JSON.stringify(historical),'utf8').toString('base64')});
+    const verify=new Function('api','json',source+';return verifyLiveScope;')('https://api.github.com/repos/example/repo',async()=>response());
+    const current=JSON.parse(read('olympia/work-items.json')).items.find(item=>item.id==='PILOT-002');
+    historical={items:[JSON.parse(JSON.stringify(current))]};
+    await expect(verify(current,current.dev_sha)).resolves.toBe(true);
+    const partial=JSON.parse(JSON.stringify(current));
+    partial.release_source_prs=[432];
+    partial.images=[];
+    partial.image_count=0;
+    partial.image_status='published';
+    historical={items:[partial]};
+    await expect(verify(current,current.dev_sha)).resolves.toBe(false);
+    historical=null;
+    await expect(verify(current,current.dev_sha)).resolves.toBe(false);
+  });
+
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
     const baseline=JSON.parse(read('olympia/baseline-001.json'));
     expect(baseline.database.reconciliation).toBe('VERIFIED_CORE_SCHEMA_MATCH_WITH_ENVIRONMENT_DIFFERENCES');
