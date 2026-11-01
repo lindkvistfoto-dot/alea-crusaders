@@ -46,17 +46,21 @@
       "purpose": "Medaljdetaljen ska rymmas i mobilens bredd med medaljen centrerad i sammetsasken och texten under.",
       "expected_result": "Hela sammetsramen syns i sidled utan beskärning. Medaljen är centrerad i kudden. All text visas under ramen och kan rullas vid behov. Stängknappen är diskret och fortsatt tillgänglig.",
       "status": "ready_for_acceptance",
-      "technical_status": "PR #432 implementerar mobilfixen; PR #433 kopplar de tre RGBA-originalen i ARTEMIS och HERMES CORE har verifierat DEV-publiceringen av röda, gröna och blå versioner.",
+      "technical_status": "PILOT-002 layout: PR #432 and corrections #434–#437 are merged in development. Three frame images are verified as published in DEV.",
       "ready_for_human_acceptance": true,
-      "dev_sha": "68b40454ec1a0fd6870c5b0ee9c9dbb5ba8ed2e1",
+      "dev_sha": "53701a734a4f7eb971d446c5fe0c816fc176cb15",
       "pr_number": 432,
       "release_source_prs": [
         432,
-        433
+        434,
+        435,
+        436,
+        437
       ],
       "dev_url": "../?view=trophy-room&cache=20261031-pilot-002",
       "features": [
         "features/trophy-room/room.css",
+        "features/trophy-room/room.js",
         "index.html"
       ],
       "acceptance": {

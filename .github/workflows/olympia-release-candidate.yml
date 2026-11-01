@@ -73,7 +73,7 @@ jobs:
           [[ "$ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::The retry attempt is invalid."; exit 1; }
           [[ "$WORKFLOW_BLOB_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The approved candidate workflow SHA is missing."; exit 1; }
           [[ "$DECISION" == "pandoras_ask" ]] || { echo "::error::Only a Pandoras Ask start order can create a single-item LIVE PR candidate."; exit 1; }
-          [[ "$ITEM_ID" == "PILOT-001" && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to the exact Astrid pilot version."; exit 1; }
+          [[ "$ITEM_ID" =~ ^PILOT-[0-9]{3}$ && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to a valid pilot version."; exit 1; }
           ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
           [[ "$(jq -r '.user.type' <<< "$ISSUE_JSON")" == "Bot" ]] || { echo "::error::Decision was not created by the OLYMPIA server app."; exit 1; }
           ISSUE_BODY="$(jq -r '.body' <<< "$ISSUE_JSON")"
@@ -82,20 +82,30 @@ jobs:
           grep -Fq -- "- Testad DEV-commit (full SHA): $TESTED_SHA" <<< "$ISSUE_BODY"
           [[ "$DECISION" == "pandoras_ask" && "$ISSUE_BODY" == *"- Beslut: PANDORAS ASK"* || "$DECISION" == "release_package" && "$ISSUE_BODY" == *"- Beslut: RELEASEPAKET"* ]] || { echo "::error::The journal decision does not match its release request."; exit 1; }
           QUEUE="$DEV_DIR/olympia/work-items.json"
-          ITEM_JSON="$(jq -ce --arg item "$ITEM_ID" '.items[] | select(.id==$item and .ready_for_human_acceptance==true and .pr_number==385)' "$QUEUE")"
-          SOURCE_PR_SHA="$(jq -r '.dev_sha' <<< "$ITEM_JSON")"
-          mapfile -t SOURCE_PRS < <(jq -r '.release_source_prs[]' <<< "$ITEM_JSON")
-          [[ "$SOURCE_PR_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The PILOT-001 source merge SHA is not verified."; exit 1; }
-          [[ "${SOURCE_PRS[*]}" == "385 404" ]] || { echo "::error::The reviewed Astrid source PR set must include PR #385 and its approved mobile correction #404."; exit 1; }
+          ITEM_JSON="$(jq -ce --arg item "$ITEM_ID" '.items[] | select(.id==$item and .ready_for_human_acceptance==true)' "$QUEUE")"
+          PRIMARY_PR="$(jq -r '.pr_number // empty' <<< "$ITEM_JSON")"
+          SOURCE_PR_SHA="$(jq -r '.dev_sha // empty' <<< "$ITEM_JSON")"
+          mapfile -t SOURCE_PRS < <(jq -r '.release_source_prs[]?' <<< "$ITEM_JSON")
+          mapfile -t FEATURE_FILES < <(jq -r '.features[]? | select(type=="string" and length>0)' <<< "$ITEM_JSON")
+          [[ "$PRIMARY_PR" =~ ^[0-9]+$ && "$SOURCE_PR_SHA" =~ ^[0-9a-fA-F]{40}$ && "${#SOURCE_PRS[@]}" -gt 0 && "${#FEATURE_FILES[@]}" -gt 0 ]] || { echo "::error::The pilot PR source set or feature scope is not verified."; exit 1; }
+          [[ " ${SOURCE_PRS[*]} " == *" $PRIMARY_PR "* ]] || { echo "::error::The pilot PR source set does not include its primary PR."; exit 1; }
+          [[ "$(printf '%s\n' "${SOURCE_PRS[@]}" | sort -u | wc -l)" -eq "${#SOURCE_PRS[@]}" ]] || { echo "::error::The pilot PR source set contains duplicate PRs."; exit 1; }
+          for feature in "${FEATURE_FILES[@]}"; do
+            [[ "$feature" =~ ^[A-Za-z0-9._/-]+$ && "$feature" != *".."* ]] || { echo "::error::The pilot feature scope contains an invalid path."; exit 1; }
+          done
+          ALLOWED_FILES=("${FEATURE_FILES[@]}" "tests/arcane-trophy-room.test.mjs")
+          ALLOWED_FILES_TEXT="$(printf '%s\n' "${ALLOWED_FILES[@]}")"
 
           CURRENT_DEV_SHA="$(git -C "$DEV_DIR" rev-parse HEAD)"
           git -C "$DEV_DIR" merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA" || { echo "::error::The accepted DEV version is no longer in the development history."; exit 1; }
-          if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" | grep -Eq '^(features/trophy-room/room\.css|features/trophy-room/room\.js|tests/arcane-trophy-room\.test\.mjs)$'; then
-            echo "::error::The accepted trophy-room files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
+          if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}" | grep -q .; then
+            echo "::error::The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
             exit 1
           fi
 
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
+          echo "primary_pr=$PRIMARY_PR" >> "$GITHUB_OUTPUT"
           echo "attempt=$ATTEMPT" >> "$GITHUB_OUTPUT"
           echo "workflow_blob_sha=$WORKFLOW_BLOB_SHA" >> "$GITHUB_OUTPUT"
           echo "issue_created_at=$(jq -r '.created_at' <<< "$ISSUE_JSON")" >> "$GITHUB_OUTPUT"
@@ -107,9 +117,6 @@ jobs:
           LIVE_SHA="$(git -C "$LIVE_DIR" rev-parse HEAD)"
           SOURCE_DIR="$OUTPUT_DIR/source"
           git -C "$LIVE_DIR" worktree add "$SOURCE_DIR" "$LIVE_SHA"
-          ALLOWED_FILES='features/trophy-room/room.css
-          features/trophy-room/room.js
-          tests/arcane-trophy-room.test.mjs'
           : > "$OUTPUT_DIR/candidate.patch"
           : > "$OUTPUT_DIR/source-files.txt"
 
@@ -120,19 +127,20 @@ jobs:
             PR_MERGED="$(jq -r '.merged' <<< "$PR_JSON")"
             PR_MERGE_SHA="$(jq -r '.merge_commit_sha' <<< "$PR_JSON")"
             [[ "$PR_MERGED" == "true" && "$PR_BASE" == "development" && "$PR_MERGE_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::Source PR #$PR_NUMBER is not a merged DEV change."; exit 1; }
-            if [[ "$PR_NUMBER" == "385" && "$PR_MERGE_SHA" != "$SOURCE_PR_SHA" ]]; then
-              echo "::error::PR #385 no longer matches the verified OLYMPIA work item."
+            if [[ "$PR_NUMBER" == "$PRIMARY_PR" && "$PR_MERGE_SHA" != "$SOURCE_PR_SHA" ]]; then
+              echo "::error::The primary source PR no longer matches the verified OLYMPIA work item."
               exit 1
             fi
             git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA" || { echo "::error::Accepted DEV version does not contain source PR #$PR_NUMBER."; exit 1; }
             PR_PARENT_SHA="$(git -C "$DEV_DIR" rev-parse "$PR_MERGE_SHA^1")"
-            CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_PARENT_SHA" "$PR_MERGE_SHA")"
+            CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${ALLOWED_FILES[@]}")"
+            [[ -n "$CHANGED_FILES" ]] || { echo "::error::PR #$PR_NUMBER contains no changes in this pilot's approved feature scope."; exit 1; }
             while IFS= read -r changed; do
               [[ -z "$changed" ]] && continue
-              grep -Fxq "$changed" <<< "$ALLOWED_FILES" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }
+              grep -Fxq "$changed" <<< "$ALLOWED_FILES_TEXT" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }
             done <<< "$CHANGED_FILES"
             PATCH_FILE="$OUTPUT_DIR/pr-$PR_NUMBER.patch"
-            git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA" > "$PATCH_FILE"
+            git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${ALLOWED_FILES[@]}" > "$PATCH_FILE"
             [[ -s "$PATCH_FILE" ]] || { echo "::error::Source PR #$PR_NUMBER has an empty patch."; exit 1; }
             git -C "$SOURCE_DIR" apply --check "$PATCH_FILE"
             git -C "$SOURCE_DIR" apply "$PATCH_FILE"
@@ -167,6 +175,7 @@ jobs:
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          ITEM_ID: ${{ steps.candidate.outputs.item_id }}
           ISSUE_CREATED_AT: ${{ steps.candidate.outputs.issue_created_at }}
           ATTEMPT: ${{ steps.candidate.outputs.attempt }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
@@ -180,10 +189,10 @@ jobs:
           git -C "$SOURCE_DIR" config user.name "github-actions[bot]"
           git -C "$SOURCE_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           export GIT_AUTHOR_DATE="$ISSUE_CREATED_AT" GIT_COMMITTER_DATE="$ISSUE_CREATED_AT"
-          git -C "$SOURCE_DIR" commit -m "release(PILOT-001): verified Astrid candidate from LIVE (attempt $ATTEMPT)"
+          git -C "$SOURCE_DIR" commit -m "release($ITEM_ID): verified candidate from LIVE (attempt $ATTEMPT)"
           COMMIT="$(git -C "$SOURCE_DIR" rev-parse HEAD)"
           TREE="$(git -C "$SOURCE_DIR" rev-parse HEAD^{tree})"
-          BRANCH="olympia/pilot-001/issue-$ISSUE_NUMBER-live-$LIVE_SHA"
+          BRANCH="olympia/${ITEM_ID,,}/issue-$ISSUE_NUMBER-live-$LIVE_SHA"
           AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git -C "$SOURCE_DIR" -c http.extraheader="$AUTH" push --force origin "HEAD:refs/heads/$BRANCH"
           echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
@@ -281,6 +290,8 @@ jobs:
         env:
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          ITEM_ID: ${{ steps.candidate.outputs.item_id }}
+          PRIMARY_PR: ${{ steps.candidate.outputs.primary_pr }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
           TREE_SHA: ${{ steps.release_pr.outputs.tree }}
           OUTPUT_DIR: ${{ runner.temp }}/olympia-candidate
@@ -292,8 +303,8 @@ jobs:
           const report={
             schema:'olympia-release-candidate/v1',
             status:'READY_FOR_ZEUS_FINAL_APPROVAL',
-            pilot:'PILOT-001',
-            pr_number:385,
+            pilot:process.env.ITEM_ID,
+            pr_number:Number(process.env.PRIMARY_PR),
             source_prs:process.env.SOURCE_PRS.split(",").map(Number),
             tested_dev_sha:process.env.DEV_SHA,
             live_base_sha:process.env.LIVE_SHA,
@@ -314,7 +325,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: OLYMPIA-PILOT-001-LIVE-candidate
+          name: OLYMPIA-${{ steps.candidate.outputs.item_id }}-LIVE-candidate
           path: |
             ${{ runner.temp }}/olympia-candidate/candidate.patch
             ${{ runner.temp }}/olympia-candidate/source-files.txt
@@ -330,6 +341,8 @@ jobs:
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          ITEM_ID: ${{ steps.candidate.outputs.item_id }}
+          PRIMARY_PR: ${{ steps.candidate.outputs.primary_pr }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
           TREE_SHA: ${{ steps.release_pr.outputs.tree }}
           RELEASE_PR_NUMBER: ${{ steps.pull_request.outputs.number }}
@@ -344,7 +357,7 @@ jobs:
                   "## OLYMPIA release candidate",
                   "",
                   "- Status: READY_FOR_ZEUS_FINAL_APPROVAL",
-                  "- Pilot: PILOT-001 · source PRs #" + process.env.SOURCE_PRS.split(",").join(", #"),
+                  "- Pilot: " + process.env.ITEM_ID + " · source PRs #" + process.env.SOURCE_PRS.split(",").join(", #"),
                   "- Verified DEV SHA: " + process.env.DEV_SHA,
                   "- LIVE rollback baseline: " + process.env.LIVE_SHA,
                   "- Candidate tree SHA: " + process.env.TREE_SHA,
@@ -355,7 +368,7 @@ jobs:
                   "- Dependency changes: none.",
                   "- Database migrations: none.",
                   "- LIVE publication: NOT PERFORMED.",
-                  "- Artifact: open the successful workflow run and download OLYMPIA-PILOT-001-LIVE-candidate."
+                  "- Artifact: open the successful workflow run to inspect the exact candidate package."
                 ].join("\n")
               : [
                   "## OLYMPIA release candidate",

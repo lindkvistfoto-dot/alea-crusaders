@@ -130,6 +130,32 @@ async function workItem(token: string, itemId: string) {
   return item;
 }
 
+function configuredWorkItem(item: any) {
+  return !!item && /^PILOT-[0-9]{3}$/.test(String(item.id || "")) &&
+    Number.isSafeInteger(item.pr_number) &&
+    Array.isArray(item.release_source_prs) && item.release_source_prs.length > 0 &&
+    item.release_source_prs.every((number: any) => Number.isSafeInteger(number) && number > 0) &&
+    item.release_source_prs.includes(item.pr_number) &&
+    Array.isArray(item.features) && item.features.length > 0 &&
+    item.features.every((path: any) => typeof path === "string" && path.length > 0);
+}
+async function verifyReleaseSources(token: string, item: any, testedSha: string) {
+  if (!configuredWorkItem(item) || !/^[0-9a-f]{40}$/i.test(testedSha)) return false;
+  const sourceNumbers = item.release_source_prs as number[];
+  if (new Set(sourceNumbers).size !== sourceNumbers.length) return false;
+  const sourcePRs = await Promise.all(sourceNumbers.map(number =>
+    gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number)
+  ));
+  for (const pr of sourcePRs) {
+    const mergeSha = String(pr.merge_commit_sha || "");
+    if (pr.merged !== true || pr.base?.ref !== "development" || !/^[0-9a-f]{40}$/i.test(mergeSha)) return false;
+    const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + mergeSha + "..." + testedSha);
+    if (!(comparison.status === "identical" ||
+        comparison.status === "ahead" && comparison.merge_base_commit?.sha?.toLowerCase() === mergeSha.toLowerCase())) return false;
+  }
+  const primary = sourcePRs.find(pr => Number(pr.number) === item.pr_number);
+  return !!primary && primary.merge_commit_sha?.toLowerCase() === String(item.dev_sha).toLowerCase();
+}
 async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any, currentSha: string) {
   const acceptedIssues = issues.filter(issue => {
     const body = String(issue.body || "");
@@ -308,10 +334,9 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
   const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1] + "/files?per_page=100");
-  const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"];
-  const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")).sort() : [];
-  if (actualFiles.length !== allowedFiles.length ||
-      actualFiles.some((filename: string, index: number) => filename !== [...allowedFiles].sort()[index])) {
+  const allowedFiles = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
+  const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")) : [];
+  if (!actualFiles.length || actualFiles.some((filename: string) => !allowedFiles.has(filename))) {
     throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
   }
   const checks = await ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
@@ -383,7 +408,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
-      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför Astrids godkända omfattning.",
+      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför pilotens registrerade omfattning.",
     };
     return {
       ready: false,
@@ -473,8 +498,9 @@ Deno.serve(async (req: Request) => {
       try {
         const token = await githubToken("candidate_check");
         const item = await workItem(token, data.itemId);
-        if (!item.ready_for_human_acceptance || item.id !== "PILOT-001" || item.pr_number !== 385) {
-          return fail("Astrid-pilotens underlag är inte verifierat.", 409);
+        if (!item.ready_for_human_acceptance || !configuredWorkItem(item) ||
+            !await verifyReleaseSources(token, item, data.testedDevSha)) {
+          return fail("Pilotens registrerade PR-underlag kunde inte verifieras.", 409);
         }
         const status = await inspectCandidate(token, item, data.candidateIssue, data.testedDevSha);
         return json({ ok: true, ...status });
@@ -491,10 +517,13 @@ Deno.serve(async (req: Request) => {
 
     const token = await githubToken(data.decision);
     const item = await workItem(token, data.itemId);
-    if (!item.ready_for_human_acceptance || !/^[0-9a-f]{40}$/i.test(item.dev_sha || "")) {
-      return fail("Pilotens källversion är inte verifierad. Ingen skrivning utfördes.", 409);
+    if (!item.ready_for_human_acceptance || !/^[0-9a-f]{40}$/i.test(item.dev_sha || "") || !configuredWorkItem(item)) {
+      return fail("Pilotens källversion eller PR-underlag är inte verifierat. Ingen skrivning utfördes.", 409);
     }
-    if (item.pr_number !== 385 || item.id !== "PILOT-001") return fail("Pilotens PR-koppling kunde inte verifieras.", 409);
+    if (["accept", "pandoras_ask", "release_package", "final_approval"].includes(data.decision) &&
+        !await verifyReleaseSources(token, item, data.testedDevSha)) {
+      return fail("Pilotens registrerade PR-underlag finns inte i den testade DEV-versionen. Ingen skrivning utfördes.", 409);
+    }
 
     if (data.decision !== "final_approval") {
       const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
@@ -511,7 +540,7 @@ Deno.serve(async (req: Request) => {
         const code = error instanceof Error ? error.message : "";
         const messages: Record<string, string> = {
           CANDIDATE_INPUT_INVALID: "Kandidatens ID eller SHA saknas.",
-          CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till detta Astrid-ärende.",
+          CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till det här pilotärendet.",
           CANDIDATE_NOT_READY: "Releasekandidaten är inte verifierad. LIVE förblir oförändrat.",
           CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
           LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. Skapa en ny kandidat.",
@@ -555,7 +584,7 @@ Deno.serve(async (req: Request) => {
         releasePr: { number: candidate.pr.number, url: candidate.pr.html_url },
         mergeSha: merged.sha,
         itemId: item.id,
-        devSha: item.dev_sha,
+        devSha: data.testedDevSha,
         decision: data.decision,
       });
     }
@@ -563,7 +592,7 @@ Deno.serve(async (req: Request) => {
     if (data.decision === "pandoras_ask" || data.decision === "release_package") {
       const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin()));
       const accepted = await hasAcceptedFeatureVersion(token, issues as any[], item, data.testedDevSha);
-      if (!accepted) return fail("Godkänn Astrid först. Om Astrids bildvisningsfiler har ändrats sedan godkännandet behöver du prova henne igen.", 409);
+      if (!accepted) return fail("Godkänn ändringen i DEV först. Om pilotens berörda filer har ändrats sedan godkännandet behöver du prova igen.", 409);
       if (data.decision === "pandoras_ask") {
         const appLogin = await appBotLogin();
         const live = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/main");
@@ -590,12 +619,12 @@ Deno.serve(async (req: Request) => {
           if (latest?.body?.includes("READY_FOR_ZEUS_FINAL_APPROVAL")) {
             return json({
               ok: true,
-              message: "Astrids LIVE-kandidat är redan förberedd. OLYMPIA återanvänder samma beslut och releaseförslag.",
+              message: "LIVE-kandidaten för det här ärendet är redan förberedd. OLYMPIA återanvänder samma beslut och releaseförslag.",
               issue: { number: previous.number, url: previous.html_url },
               requestBranch: null,
               candidateStarted: true,
               itemId: item.id,
-              devSha: item.dev_sha,
+              devSha: data.testedDevSha,
               decision: data.decision,
             });
           }
@@ -608,7 +637,7 @@ Deno.serve(async (req: Request) => {
               requestBranch,
               candidateStarted: true,
               itemId: item.id,
-              devSha: item.dev_sha,
+              devSha: data.testedDevSha,
               decision: data.decision,
             });
           } catch (_error) {
@@ -646,7 +675,7 @@ Deno.serve(async (req: Request) => {
       requestBranch,
       candidateStarted,
       itemId: item.id,
-      devSha: item.dev_sha,
+      devSha: data.testedDevSha,
       decision: data.decision,
     });
   } catch (error) {
