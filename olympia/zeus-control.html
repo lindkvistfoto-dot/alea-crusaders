@@ -109,13 +109,14 @@ function liveUrl(item,published){var base="https://lindkvistfoto-dot.github.io/a
 function devUrl(item){var url=new URL(String(item.dev_url||"../"),location.href);if(currentDevSha)url.searchParams.set("olympia-preview",currentDevSha.slice(0,12));return url.href}
 function pagesPreviewUrl(value){try{var parsed=new URL(String(value||""));return parsed.protocol==="https:"&&!parsed.username&&!parsed.password&&/\.pages\.dev$/i.test(parsed.hostname)?parsed.href:""}catch(_){return ""}}
 function cloudflareSummaryPreviewUrl(summary){var text=String(summary||"").replace(/<[^>]*>/g," ").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&");var match=text.match(/Preview URL\s*:\s*(https:\/\/[^\s"'<>]+)/i);return match?pagesPreviewUrl(match[1]):""}
-async function cloudflarePreview(sha){
-sha=String(sha||"");if(!/^[a-f0-9]{40}$/i.test(sha))return {state:"unknown"};
+async function cloudflarePreview(sha,pullRequestNumber){
+sha=String(sha||"");pullRequestNumber=Number(pullRequestNumber);if(!/^[a-f0-9]{40}$/i.test(sha)||!Number.isSafeInteger(pullRequestNumber)||pullRequestNumber<1)return {state:"unknown"};
 if(previewBySha[sha]&&previewBySha[sha].state!=="pending")return previewBySha[sha];
 if(previewRequests[sha])return previewRequests[sha];
 previewRequests[sha]=(async function(){try{
-var values=await Promise.all([json(api+"/commits/"+encodeURIComponent(sha)+"/status"),json(api+"/commits/"+encodeURIComponent(sha)+"/check-runs?per_page=100")]);
-var statuses=Array.isArray(values[0].statuses)?values[0].statuses:[],checks=Array.isArray(values[1].check_runs)?values[1].check_runs:[];
+var response=await window.olympiaAuthenticatedRequest({action:"pull_request_status",pullRequestNumber:pullRequestNumber,pullRequestHeadSha:sha});
+if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"GitHub-status kunde inte hämtas.");
+var statuses=Array.isArray(response.result.statuses)?response.result.statuses:[],checks=Array.isArray(response.result.checkRuns)?response.result.checkRuns:[];
 var relevant=statuses.filter(function(item){return /cloudflare|pages\\.dev/i.test(String(item.context||"")+" "+String(item.target_url||""))});
 var relevantChecks=checks.filter(function(item){return item.head_sha===sha&&/cloudflare pages/i.test(String(item.name||""))});
 var events=relevant.map(function(item){return {time:Date.parse(item.updated_at||item.created_at||"")||0,state:item.state,url:pagesPreviewUrl(item.target_url)}}).concat(relevantChecks.map(function(item){return {time:Date.parse(item.completed_at||item.started_at||item.created_at||"")||0,state:item.status==="completed"?item.conclusion:"pending",url:cloudflareSummaryPreviewUrl(item.output&&item.output.summary)}}));
@@ -125,11 +126,11 @@ if(latest&&latest.state==="success"&&latest.url)previewBySha[sha]={state:"ready"
 else if(latest&&(latest.state==="pending"||latest.state==="queued"||latest.state==="in_progress"))previewBySha[sha]={state:"pending",sha:sha};
 else if(latest&&(latest.state==="failure"||latest.state==="error"||latest.state==="cancelled"||latest.state==="timed_out"))previewBySha[sha]={state:"failed",sha:sha};
 else previewBySha[sha]={state:"missing",sha:sha};
-}catch(_){previewBySha[sha]={state:"unknown",sha:sha}}
+}catch(error){previewBySha[sha]={state:"unknown",message:error&&error.message?String(error.message):"",sha:sha}}
 var result=previewBySha[sha];if(result&&result.state==="pending")delete previewBySha[sha];delete previewRequests[sha];return result})();
 return previewRequests[sha]
 }
-function previewMarkup(sha,label){var result=previewBySha[String(sha||"")];if(result&&result.state==="ready"&&result.sha===sha)return '<div class="preview-actions" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'"><a class="btn secondary" href="'+esc(result.url)+'" target="_blank" rel="noopener">Förhandsvisa '+esc(label)+' ↗</a></div>';var message=result&&result.state==="pending"?"Cloudflare-förhandsvisning byggs för den här versionen.":result&&result.state==="unknown"?"Cloudflare-status kunde inte hämtas.":result&&result.state==="failed"?"Cloudflare-förhandsvisningen misslyckades.":result&&result.state==="missing"?"Ingen Cloudflare-förhandsvisning finns för den här versionen.":"Cloudflare-status visas när PR-kortet öppnas.";return '<p class="small muted" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'">'+esc(message)+'</p>'}
+function previewMarkup(sha,label,pullRequestNumber){var result=previewBySha[String(sha||"")];if(result&&result.state==="ready"&&result.sha===sha)return '<div class="preview-actions" data-preview-sha="'+esc(sha)+'" data-preview-pr="'+esc(pullRequestNumber)+'" data-preview-label="'+esc(label)+'"><a class="btn secondary" href="'+esc(result.url)+'" target="_blank" rel="noopener">Förhandsvisa '+esc(label)+' ↗</a></div>';var message=result&&result.state==="pending"?"Cloudflare-förhandsvisning byggs för den här versionen.":result&&result.state==="unknown"?(result.message||"Cloudflare-status kunde inte hämtas."):result&&result.state==="failed"?"Cloudflare-förhandsvisningen misslyckades.":result&&result.state==="missing"?"Ingen Cloudflare-förhandsvisning finns för den här versionen.":"Cloudflare-status visas när PR-kortet öppnas.";return '<p class="small muted" data-preview-sha="'+esc(sha)+'" data-preview-pr="'+esc(pullRequestNumber)+'" data-preview-label="'+esc(label)+'">'+esc(message)+'</p>'}
 function itemPriority(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)});
@@ -155,7 +156,7 @@ var stepHtml='<div class="steps" aria-label="Ändringens steg">'+flowStep('Skapa
 var next=published?'Klart. Öppna ändringen i LIVE för slutlig visuell kontroll.':candidateStatus&&candidateStatus.candidateReady?'Granska kandidaten och slutgodkänn LIVE när du är nöjd.':candidate?'Väntar på LIVE-kandidat.':packaged?'Ändringen ligger i releasepaketet och inväntar samlad publicering.':accepted?'Välj Pandoras ask för direktpublicering eller releasepaket för senare.':ready?'Förhandsvisa ändringen i DEV. Godkänn först när den ser rätt ut.':'Statusen väntar på verifiering från DEV.';
 var devLink=devUrl(item);
 var preview='<div class="preview-actions"><a class="btn" href="'+esc(devLink)+'" target="_blank" rel="noopener">Förhandsvisa DEV ↗</a><button class="btn secondary" type="button" data-preview-toggle="'+esc(item.id)+'">Visa här</button><button class="btn secondary" type="button" data-preview-fullscreen="'+esc(item.id)+'">Större vy</button></div><iframe class="preview-frame" title="DEV-förhandsvisning: '+esc(item.title)+'" data-preview-frame="'+esc(item.id)+'" src="'+esc(devLink)+'" loading="lazy" hidden></iframe>';
-var candidatePreview=candidateStatus&&candidateStatus.releasePrSha?previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat"):'<p class="status-line">LIVE-kandidatens förhandsvisning visas när den finns.</p>';
+var candidatePreview=candidateStatus&&candidateStatus.releasePrSha?previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat",candidateStatus.releasePr):'<p class="status-line">LIVE-kandidatens förhandsvisning visas när den finns.</p>';
 var livePreview=published?'<div class="preview-actions"><a class="btn" href="'+esc(liveUrl(item,published))+'" target="_blank" rel="noopener">Visa i LIVE ↗</a><a class="btn secondary" href="'+esc(published.issue.html_url)+'" target="_blank" rel="noopener">Visa beslut</a></div>':'';
 var links=published?livePreview:ready?preview+'<div class="actions"><button class="btn secondary" type="button" data-decision="accept" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Godkänn DEV</button></div>':candidateStatus&&candidateStatus.candidateReady?'<div class="preview-actions"><a class="btn secondary" href="'+esc(candidateStatus.releaseUrl||candidateStatus.issue.html_url)+'" target="_blank" rel="noopener">Granska LIVE-kandidaten ↗</a></div>':accepted?candidatePreview:'<p class="small muted">Beslut visas när DEV och Zeus-behörighet har bekräftats.</p>';
 var decisions=accepted&&!candidate&&!packaged&&!published?'<h3>Välj nästa steg</h3><div class="actions"><button class="btn" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Tillbaka till Hefaiastos</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button></div>':candidateStatus&&candidateStatus.candidateReady&&!published?'<h3>Slutgodkännande</h3><p class="small muted">När du är nöjd med kandidaten kan du godkänna publiceringen. LIVE ändras först efter bekräftelse.</p><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(item.id)+'" data-sha="'+esc(candidateStatus.testedSha)+'" data-candidate-issue="'+esc(candidateStatus.issue.number)+'" data-tree-sha="'+esc(candidateStatus.candidateTree)+'">Slutgodkänn LIVE</button>':'';
@@ -169,7 +170,7 @@ return renderQueueItem(prWorkItem(pr))
 }
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
 var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
-var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat");
+var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat",n);
 var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?'<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>':'';
 return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
 }
@@ -186,7 +187,8 @@ if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+pub
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
 }
 window.olympiaRefreshTrial=renderTrial;
-document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR";cloudflarePreview(sha).then(function(result){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label);if(node.isConnected&&replacement.firstElementChild){if(result&&result.state==="pending")delete replacement.firstElementChild.dataset.previewLoaded;node.replaceWith(replacement.firstElementChild)}})},true);
+window.olympiaRefreshRefs=renderRefs;
+document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR",number=Number(node.dataset.previewPr);cloudflarePreview(sha,number).then(function(result){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label,number);if(node.isConnected&&replacement.firstElementChild){if(result&&result.state==="pending")delete replacement.firstElementChild.dataset.previewLoaded;node.replaceWith(replacement.firstElementChild)}})},true);
 async function renderPullRequests(){
 if(!window.olympiaAuthVerified||typeof window.olympiaAuthenticatedRequest!=="function")return;
 if(pullRequestsRefresh)return pullRequestsRefresh;
@@ -225,12 +227,13 @@ var number=Number(button.dataset.prStatus),sha=String(button.dataset.prSha||""),
 if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)||!output)return;
 button.disabled=true;output.textContent="Hämtar CI och mergebarhet från GitHub…";
 try{
-var values=await Promise.all([json(api+"/pulls/"+number),json(api+"/commits/"+encodeURIComponent(sha)+"/check-runs")]);
-var pr=values[0],runs=values[1].check_runs||[];
+var response=await window.olympiaAuthenticatedRequest({action:"pull_request_status",pullRequestNumber:number,pullRequestHeadSha:sha});
+if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"GitHub-status kunde inte hämtas.");
+var pr=response.result.pullRequest,runs=response.result.checkRuns||[];
 var merge=pr.mergeable===true?"Mergebar":pr.mergeable===false?"Konflikt eller ej mergebar": "Mergebarhet OKÄND";
 var checks=!runs.length?"Inga check-runs":runs.some(function(c){return c.status!=="completed"})?"CI pågår":runs.some(function(c){return !["success","neutral","skipped"].includes(c.conclusion)})?"CI misslyckad":"CI godkänd";
 output.textContent="CI: "+checks+" · "+merge+(pr.mergeable_state?" · "+pr.mergeable_state:"");
-}catch(_){output.textContent="CI eller mergebarhet kunde inte verifieras. Status är OKÄND."}
+}catch(error){output.textContent=(error&&error.message?String(error.message):"CI eller mergebarhet kunde inte verifieras.")+" Status är OKÄND."}
 finally{button.disabled=false}
 });
 document.addEventListener("click",async function(event){
@@ -451,6 +454,7 @@ async function syncAuth(){
   }
   window.olympiaAuthVerified=true;
   setStatus("ALEA-session och Zeus-behörighet verifierade.");
+  if(window.olympiaRefreshRefs)await window.olympiaRefreshRefs();
   if(window.olympiaRefreshPullRequests)await window.olympiaRefreshPullRequests();
   if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers();
  }catch(error){
