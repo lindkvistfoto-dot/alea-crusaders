@@ -79,6 +79,10 @@ describe('OLYMPIA GitHub candidate bridge authentication',()=>{
     expect(bridge).toContain('workflow.sha !== workflowBlobSha');
     expect(bridge).toContain('claims.event_name !== "push"');
     expect(bridge).toContain('candidateTreeSha');
+    expect(bridge).toContain('request.itemId');
+    expect(bridge).toContain('validWorkItem(item)');
+    expect(bridge).toContain('request.itemId.toLowerCase()');
+    expect(bridge).not.toContain('request.itemId !== "PILOT-001"');
     expect(workflow).toContain('id-token: write');
   });
 });
