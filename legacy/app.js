@@ -6,9 +6,9 @@ const defaults=[
 {id:'evalin',icon:'🦆',identity:{namn:'Evalin Hugger',ras:'Humanoid anka',yrke:'',kon:'Kvinna',alder:'',langd:'120 cm',vikt:''},base:{Styrka:{v:10,g:''},Fysik:{v:12,g:''},Storlek:{v:8,g:''},Smidighet:{v:16,g:''},Intelligens:{v:13,g:''},'Psykisk kraft':{v:12,g:''},Karisma:{v:14,g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},skills:[{name:'',fv:'',erf:''}],languages:[{name:'',speak:'',readwrite:''}],live:{KP:11,KPmax:11,PSY:12,PSYmax:12,Mynt:51}}
 ];
 let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
-const SUPABASE_URL='https://wkiuyklzzroavclnsxna.supabase.co';
-const SUPABASE_KEY='sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et';
-const SUPABASE_SESSION_KEY='alea_supabase_session_dev';
+const ALEA_SUPABASE_CONFIG=window.ALEA_SUPABASE_CONFIG||{url:"https://wkiuyklzzroavclnsxna.supabase.co",key:"sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et",sessionKey:'alea_supabase_session_dev',endpoint:function(path){return this.url+(String(path||'').startsWith('/')?'':'/')+String(path||'')}};const SUPABASE_URL=ALEA_SUPABASE_CONFIG.url;
+const SUPABASE_KEY=ALEA_SUPABASE_CONFIG.key;
+const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;
 function sessionBelongsToProject(session){
  try{
   const part=String(session?.access_token||'').split('.')[1];
@@ -118,11 +118,11 @@ async function authFetch(path,options={}){
   headers.Authorization='Bearer '+await freshSupabaseAccessToken();
   delete headers.authorization;
  }
- let response=await fetch(SUPABASE_URL+path,{...options,headers});
+ let response=await fetch(ALEA_SUPABASE_CONFIG.endpoint(path),{...options,headers});
  if(authorized&&await expiredJwtResponse(response)){
   const failedToken=headers.Authorization.slice(7);
   headers.Authorization='Bearer '+await freshSupabaseAccessToken(true,failedToken);
-  response=await fetch(SUPABASE_URL+path,{...options,headers});
+  response=await fetch(ALEA_SUPABASE_CONFIG.endpoint(path),{...options,headers});
  }
  return response;
 }
@@ -3371,7 +3371,7 @@ async function persistAdminCombatIcon(entityId){
 function encodeStoragePath(path){return String(path||'').split('/').map(encodeURIComponent).join('/')}
 async function mapStorageFetch(path,options={}){
  let headers={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+supabaseSession.access_token,...(options.headers||{})};
- return fetch(SUPABASE_URL+'/storage/v1/'+path,{...options,headers});
+ return fetch(ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/'+path),{...options,headers});
 }
 function validMapStoragePath(path){
  let p=String(path||'').split('/');return p.length>=3&&isUuid(p[0])&&isUuid(p[1]);
@@ -3726,7 +3726,7 @@ async function saveLocationContent(id){
 
 async function locationAssetStorageFetch(path,options){
  options=options||{};let headers={apikey:SUPABASE_KEY,Authorization:'Bearer '+supabaseSession.access_token};Object.assign(headers,options.headers||{});
- return fetch(SUPABASE_URL+'/storage/v1/'+path,Object.assign({},options,{headers:headers}));
+ return fetch(ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/'+path),Object.assign({},options,{headers:headers}));
 }
 async function getLocationAssetUrl(asset){
  let cached=locationAssetUrlCache.get(asset.storage_path);if(cached)return cached;
