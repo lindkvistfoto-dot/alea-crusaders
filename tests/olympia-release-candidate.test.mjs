@@ -9,7 +9,7 @@ describe('OLYMPIA per-pilot LIVE candidate',()=>{
   const item=queue.items.find(entry=>entry.id==='PILOT-001');
   expect(item.release_source_prs).toEqual([385,404]);
   const pilot002=queue.items.find(entry=>entry.id==='PILOT-002');
-  expect(pilot002.release_source_prs).toEqual([432,434,435,436,437]);
+  expect(pilot002.release_source_prs).toEqual([432,434,435,436,437,448]);
   expect(pilot002.features).toContain('index.html');
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   expect(workflow).toContain('mapfile -t SOURCE_PRS');
