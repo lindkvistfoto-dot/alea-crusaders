@@ -32,7 +32,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(pilot.images.every(image=>image.alpha===true&&image.width===1143&&image.height===1376)).toBe(true);
     expect(pilot.images.every(image=>image.dev_publication_status==='verified')).toBe(true);
     expect(pilot.image_status).toBe('published');
+    expect(pilot.release_source_prs).toEqual([432,434,435,436,437]);
+    expect(pilot.dev_sha).toBe('53701a734a4f7eb971d446c5fe0c816fc176cb15');
     expect(pilot.ready_for_human_acceptance).toBe(true);
+    expect(pilot.features).toEqual(['features/trophy-room/room.css','features/trophy-room/room.js','index.html']);
     const page=read('olympia/zeus-control.html');
     expect(page).toContain('imagesReady=imageCount===0||item.image_status==="published"');
     expect(page).toContain('Bilder: ');
@@ -64,7 +67,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     expect(page).toContain('window.olympiaReleasePreflightReady=lines.length===0&&!unknown');
     expect(edge).toContain('pr.base?.sha !== live.sha');
-    expect(edge).toContain('const allowedFiles = ["features/trophy-room/room.css", "features/trophy-room/room.js", "tests/arcane-trophy-room.test.mjs"]');
+    expect(edge).toContain('new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"])');
+    expect(edge).toContain('function configuredWorkItem(item: any)');
+    expect(edge).toContain('async function verifyReleaseSources');
+    expect(edge).not.toContain('item.pr_number !== 385');
+    expect(edge).not.toContain('item.id !== "PILOT-001"');
     expect(page).not.toContain('candidatePr.base.sha===liveMatch[1]');
     expect(page).not.toContain('exactScope');
     expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
@@ -183,6 +190,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const workflow=read('.github/workflows/olympia-release-candidate.yml');
     expect(page).toContain('currentDevSha');
+    expect(page).toContain('Godkänn i DEV');
+    expect(page).not.toContain('Godkänn Astrid');
     expect(page).not.toContain('testedSha===item.dev_sha');
     expect(page).toContain('action:"candidate_check"');
     expect(edge).toContain('async function inspectCandidate');
@@ -196,7 +205,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('async function hasAcceptedFeatureVersion');
     expect(edge).toContain('compare/\" + tested + \"...\" + currentSha');
     expect(edge).toContain('protectedPaths.has(file.filename)');
-    expect(edge).toContain('Om Astrids bildvisningsfiler har ändrats sedan godkännandet');
+    expect(edge).toContain('Om pilotens berörda filer har ändrats sedan godkännandet');
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
