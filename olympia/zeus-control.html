@@ -103,24 +103,28 @@ function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issue
 function flowStep(label,state){return '<span class="step '+state+'">'+label+'</span>'}
 function liveUrl(item,published){var base="https://lindkvistfoto-dot.github.io/alea-crusaders/",relative=String(item.dev_url||"../").replace(/^\.\.\//,"");var url=new URL(relative,base);if(published&&published.mergeSha)url.searchParams.set("olympia-version",String(published.deployedLiveSha||published.mergeSha).slice(0,12));return url.href}
 function devUrl(item){var url=new URL(String(item.dev_url||"../"),location.href);if(currentDevSha)url.searchParams.set("olympia-preview",currentDevSha.slice(0,12));return url.href}
+function pagesPreviewUrl(value){try{var parsed=new URL(String(value||""));return parsed.protocol==="https:"&&!parsed.username&&!parsed.password&&/\.pages\.dev$/i.test(parsed.hostname)?parsed.href:""}catch(_){return ""}}
 async function cloudflarePreview(sha){
 sha=String(sha||"");if(!/^[a-f0-9]{40}$/i.test(sha))return {state:"unknown"};
-if(previewBySha[sha])return previewBySha[sha];
+if(previewBySha[sha]&&previewBySha[sha].state!=="pending")return previewBySha[sha];
 if(previewRequests[sha])return previewRequests[sha];
 previewRequests[sha]=(async function(){try{
 var values=await Promise.all([json(api+"/commits/"+encodeURIComponent(sha)+"/status"),json(api+"/commits/"+encodeURIComponent(sha)+"/check-runs?per_page=100")]);
 var statuses=Array.isArray(values[0].statuses)?values[0].statuses:[],checks=Array.isArray(values[1].check_runs)?values[1].check_runs:[];
 var relevant=statuses.filter(function(item){return /cloudflare|pages\.dev/i.test(String(item.context||"")+" "+String(item.target_url||""))});
-var current=relevant[0],check=checks.filter(function(item){return /cloudflare|pages\.dev/i.test(String(item.name||"")+" "+String(item.details_url||""))})[0];
-var target=String(current&&current.target_url||check&&check.details_url||"");
-if(target&&/^https:\/\//i.test(target)&&/\.pages\.dev(?:\/|$)/i.test(new URL(target).hostname+new URL(target).pathname))previewBySha[sha]={state:"ready",url:target,sha:sha};
-else if(current&&current.state==="pending"||check&&check.status!=="completed")previewBySha[sha]={state:"pending",sha:sha};
+var relevantChecks=checks.filter(function(item){return /cloudflare|pages\.dev/i.test(String(item.name||"")+" "+String(item.details_url||""))});
+var events=relevant.map(function(item){return {time:Date.parse(item.updated_at||item.created_at||"")||0,state:item.state,url:pagesPreviewUrl(item.target_url)}}).concat(relevantChecks.map(function(item){return {time:Date.parse(item.completed_at||item.started_at||item.created_at||"")||0,state:item.status==="completed"?item.conclusion:"pending",url:pagesPreviewUrl(item.details_url)}}));
+events.sort(function(a,b){var ar=a.state==="pending"||a.state==="failure"||a.state==="error"?0:1,br=b.state==="pending"||b.state==="failure"||b.state==="error"?0:1;return b.time-a.time||ar-br});
+var latest=events[0];
+if(latest&&latest.state==="success"&&latest.url)previewBySha[sha]={state:"ready",url:latest.url,sha:sha};
+else if(latest&&(latest.state==="pending"||latest.state==="queued"||latest.state==="in_progress"))previewBySha[sha]={state:"pending",sha:sha};
+else if(latest&&(latest.state==="failure"||latest.state==="error"||latest.state==="cancelled"||latest.state==="timed_out"))previewBySha[sha]={state:"failed",sha:sha};
 else previewBySha[sha]={state:"missing",sha:sha};
 }catch(_){previewBySha[sha]={state:"unknown",sha:sha}}
-delete previewRequests[sha];return previewBySha[sha]})();
+var result=previewBySha[sha];if(result&&result.state==="pending")delete previewBySha[sha];delete previewRequests[sha];return result})();
 return previewRequests[sha]
 }
-function previewMarkup(sha,label){var result=previewBySha[String(sha||"")];if(result&&result.state==="ready"&&result.sha===sha)return '<div class="preview-actions" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'"><a class="btn secondary" href="'+esc(result.url)+'" target="_blank" rel="noopener">Förhandsvisa '+esc(label)+' ↗</a></div>';var message=result&&result.state==="pending"?"Cloudflare-förhandsvisning byggs för den här versionen.":result&&result.state==="unknown"?"Cloudflare-status kunde inte hämtas.":result&&result.state==="missing"?"Ingen Cloudflare-förhandsvisning finns för den här versionen.":"Cloudflare-status visas när PR-kortet öppnas.";return '<p class="small muted" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'">'+esc(message)+'</p>'}
+function previewMarkup(sha,label){var result=previewBySha[String(sha||"")];if(result&&result.state==="ready"&&result.sha===sha)return '<div class="preview-actions" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'"><a class="btn secondary" href="'+esc(result.url)+'" target="_blank" rel="noopener">Förhandsvisa '+esc(label)+' ↗</a></div>';var message=result&&result.state==="pending"?"Cloudflare-förhandsvisning byggs för den här versionen.":result&&result.state==="unknown"?"Cloudflare-status kunde inte hämtas.":result&&result.state==="failed"?"Cloudflare-förhandsvisningen misslyckades.":result&&result.state==="missing"?"Ingen Cloudflare-förhandsvisning finns för den här versionen.":"Cloudflare-status visas när PR-kortet öppnas.";return '<p class="small muted" data-preview-sha="'+esc(sha)+'" data-preview-label="'+esc(label)+'">'+esc(message)+'</p>'}
 function itemPriority(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)});
@@ -177,7 +181,7 @@ if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+pub
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
 }
 window.olympiaRefreshTrial=renderTrial;
-document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR";cloudflarePreview(sha).then(function(){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label);if(node.isConnected&&replacement.firstElementChild)node.replaceWith(replacement.firstElementChild)})},true);
+document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR";cloudflarePreview(sha).then(function(result){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label);if(node.isConnected&&replacement.firstElementChild){if(result&&result.state==="pending")delete replacement.firstElementChild.dataset.previewLoaded;node.replaceWith(replacement.firstElementChild)}})},true);
 async function renderPullRequests(){
 try{
  var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");

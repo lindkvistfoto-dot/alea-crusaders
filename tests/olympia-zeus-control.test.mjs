@@ -66,6 +66,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Math.abs(dx)<Math.abs(dy)*1.5');
     expect(page).toContain('olympia-preview');
     expect(page).toContain('function cloudflarePreview(sha)');
+    expect(page).toContain('latest.state==="success"&&latest.url');
+    expect(page).toContain('events.sort(function(a,b){var ar=');
+    expect(page).toContain('result.state==="failed"');
     expect(page).toContain('previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat")');
     expect(page).toContain('.pages\\.dev');
     expect(page).toContain('data-pr-approve');
@@ -73,6 +76,36 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Registrerat · behandlar…');
     expect(page).toContain('Slutgodkänn LIVE');
     expect(page).toContain('Visa i LIVE');
+  });
+
+  it('shows Cloudflare previews only after successful deployment for the queried SHA',async()=>{
+    const page=read('olympia/zeus-control.html');
+    const helperStart=page.indexOf('function pagesPreviewUrl(value){');
+    const functionStart=page.indexOf('async function cloudflarePreview(sha){',helperStart);
+    const functionEnd=page.indexOf('function previewMarkup(sha,label){',functionStart);
+    const source=page.slice(helperStart,functionEnd);
+    const previewFor=(status,checks)=>{
+      const json=async url=>url.endsWith('/status')?{statuses:status}: {check_runs:checks};
+      const run=new Function('json','api','previewBySha','previewRequests',`${source}; return cloudflarePreview;`);
+      return run(json,'https://api.github.com/repos/example/app',{},{});
+    };
+    const sha='a'.repeat(40);
+    const url='https://abc123.alea.pages.dev/';
+    await expect(previewFor([{context:'Cloudflare Pages',state:'pending',target_url:url,updated_at:'2026-11-01T12:02:00Z'}],[])(sha))
+      .resolves.toEqual({state:'pending',sha});
+    await expect(previewFor([{context:'Cloudflare Pages',state:'success',target_url:url,updated_at:'2026-11-01T12:03:00Z'}],[])(sha))
+      .resolves.toEqual({state:'ready',url,sha});
+    await expect(previewFor([{context:'Cloudflare Pages',state:'success',target_url:'https://example.com/abc.pages.dev'}],[])(sha))
+      .resolves.toEqual({state:'missing',sha});
+    await expect(previewFor([{context:'Cloudflare Pages',state:'pending',target_url:url,updated_at:'2026-11-01T12:02:00Z'}],[{name:'Cloudflare Pages',status:'completed',conclusion:'success',details_url:url,completed_at:'2026-11-01T12:01:00Z'}])(sha))
+      .resolves.toEqual({state:'pending',sha});
+    let statusRows=[{context:'Cloudflare Pages',state:'pending',target_url:url,updated_at:'2026-11-01T12:02:00Z'}];
+    const json=async endpoint=>endpoint.endsWith('/status')?{statuses:statusRows}:{check_runs:[]};
+    const run=new Function('json','api','previewBySha','previewRequests',`${source}; return cloudflarePreview;`);
+    const refreshable=run(json,'https://api.github.com/repos/example/app',{},{ });
+    await expect(refreshable(sha)).resolves.toEqual({state:'pending',sha});
+    statusRows=[{context:'Cloudflare Pages',state:'success',target_url:url,updated_at:'2026-11-01T12:03:00Z'}];
+    await expect(refreshable(sha)).resolves.toEqual({state:'ready',url,sha});
   });
 
   it('routes ordinary merged DEV PRs through the same Zeus decision flow',()=>{
