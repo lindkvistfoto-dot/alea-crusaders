@@ -32,7 +32,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(pilot.images.every(image=>image.alpha===true&&image.width===1143&&image.height===1376)).toBe(true);
     expect(pilot.images.every(image=>image.dev_publication_status==='verified')).toBe(true);
     expect(pilot.image_status).toBe('published');
-    expect(pilot.release_source_prs).toEqual([432,434,435,436,437]);
+    expect(pilot.release_source_prs).toEqual([432,434,435,436,437,448]);
     expect(pilot.dev_sha).toBe('53701a734a4f7eb971d446c5fe0c816fc176cb15');
     expect(pilot.ready_for_human_acceptance).toBe(true);
     expect(pilot.features).toEqual(['features/trophy-room/room.css','features/trophy-room/room.js','index.html']);
