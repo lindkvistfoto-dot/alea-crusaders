@@ -22,11 +22,16 @@ export default defineConfig({
     copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
     copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
     {
-      name: "alea-copy-innkeeper-hero",
+      name: "alea-copy-root-image-assets",
       apply: "build",
       async closeBundle() {
-        await mkdir(resolve("dist/assets"), { recursive: true });
-        await copyFile(resolve("assets/innkeeper-hero.jpg"), resolve("dist/assets/innkeeper-hero.jpg"));
+        const sourceDir = resolve("assets");
+        const outputDir = resolve("dist/assets");
+        await mkdir(outputDir, { recursive: true });
+        for (const entry of await readdir(sourceDir, { withFileTypes: true })) {
+          if (!entry.isFile() || !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(entry.name)) continue;
+          await copyFile(resolve(sourceDir, entry.name), resolve(outputDir, entry.name));
+        }
       },
     },
     copyStaticTree("alea-copy-dice-assets", "alea-dicebox-assets-v1.1.4", "alea-dicebox-assets-v1.1.4"),
