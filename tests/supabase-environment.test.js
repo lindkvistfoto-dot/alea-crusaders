@@ -39,8 +39,8 @@ describe('Supabase environment selection',()=>{
     expect(config.endpoint('/auth/v1/token?grant_type=password')).toBe(config.url+'/auth/v1/token?grant_type=password');
     expect(config.endpoint('/rest/v1/example')).toBe(config.url+'/rest/v1/example');
     expect(config.endpoint('/storage/v1/object/example/file.webp')).toBe(config.url+'/storage/v1/object/example/file.webp');
-    expect((appSource.match(/ALEA_SUPABASE_CONFIG\\.endpoint\\(path\\)/g)||[])).toHaveLength(2);
-    expect((appSource.match(/ALEA_SUPABASE_CONFIG\\.endpoint\\('\\/storage\\/v1\\/'\\+path\\)/g)||[])).toHaveLength(2);
+    expect(appSource.split('ALEA_SUPABASE_CONFIG.endpoint(path)').length-1).toBe(2);
+    expect(appSource.split("ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/'+path)").length-1).toBe(2);
   });
 
   it('sends an authenticated write from a preview host to DEV',async()=>{
