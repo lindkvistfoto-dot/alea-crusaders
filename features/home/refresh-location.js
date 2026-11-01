@@ -129,5 +129,11 @@
    requestAnimationFrame(()=>requestAnimationFrame(()=>{save();reveal();}));
   }
  }
- window.aleaRefreshLocation={restore,save,clear,reveal,characterOpened,tabChanged};
+ // Routes that do not depend on the full character and campaign hydration can open immediately.
+ function restoreEarly(){
+  if(!pending||['view','admin'].includes(pending.page))return false;
+  void restore();
+  return true;
+ }
+ window.aleaRefreshLocation={restore,restoreEarly,save,clear,reveal,characterOpened,tabChanged};
 })();
