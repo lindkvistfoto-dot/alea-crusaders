@@ -15,7 +15,7 @@ let shopCheckoutBusy=false;
 let shopExpandedItemKey='';
 const shopRowQuantities=new Map();
 const SHOP_HERO_SRC='./assets/targans-gille-clean.jpg?v=0.33.42';
-const ALCHEMY_HERO_SRC='./assets/alchemy-hero.jpg?v=0.35.63';
+const ALCHEMY_HERO_SRC='./assets/alchemy-hero.jpg?v=0.35.64';
 
 async function loadShopHeroImage(){
   const img=document.getElementById('shopHeroImage');
@@ -26,7 +26,7 @@ async function loadShopHeroImage(){
   img.dataset.shopHeroSrc=src;
   img.dataset.shopHeroLoaded='0';
   img.classList.remove('loaded');
-  img.alt=alchemy?'Alkemisten brygger magiska drycker i sin grotta':'Targans Gille';
+  img.alt=alchemy?'Alkemisten arbetar i sitt laboratorium':'Targans Gille';
   img.onload=()=>{
     if(img.dataset.shopHeroSrc!==src)return;
     img.dataset.shopHeroLoaded='1';
