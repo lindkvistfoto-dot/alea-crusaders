@@ -22,7 +22,7 @@ describe('OLYMPIA per-pilot LIVE candidate',()=>{
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" status --porcelain');
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
-  expect(workflow).toContain('The accepted trophy-room files changed after Zeus tested this DEV version');
+  expect(workflow).toContain('The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
   expect(workflow).toContain('Wait for release PR CI and mergeability');
   expect(workflow).toContain('checks: read');
   expect(workflow).toContain('statuses: read');
