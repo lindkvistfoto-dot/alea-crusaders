@@ -241,8 +241,8 @@ var button=event.target.closest("[data-pr-approve]");if(!button)return;
 if(!window.olympiaAuthVerified){say("Logga in som Zeus i ALEA DEV för att godkänna en PR.");return}
 var number=Number(button.dataset.prApprove),sha=String(button.dataset.prSha||""),session=storedSession();
 if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)||!session)return;
-button.disabled=true;var label=button.textContent;button.textContent="Registrerar godkännandet…";
-try{var response=await request({action:"review_pull_request",pullRequestNumber:number,pullRequestHeadSha:sha},session);if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"PR-godkännandet kunde inte registreras.");say("PR #"+number+" godkändes i GitHub. Den har inte mergats.",true);button.textContent="Godkänd ✓";button.disabled=true;return}catch(error){say(error.message||"PR-godkännandet kunde inte registreras.");button.textContent=label;button.disabled=false}
+button.disabled=true;var label=button.textContent;button.textContent="Kontrollerar och mergar till DEV…";
+try{var response=await request({action:"approve_and_merge_dev",pullRequestNumber:number,pullRequestHeadSha:sha},session);if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"PR-godkännandet kunde inte registreras.");say("PR #"+number+" godkänd och mergad till DEV · "+String(response.result.sha||"").slice(0,7),true);button.textContent="Mergad till DEV ✓";button.disabled=true;return}catch(error){say(error.message||"PR-godkännandet kunde inte registreras.");button.textContent=label;button.disabled=false}
 });
 async function renderBlockers(){
 var b=get("release-blockers"),requestId=++preflightRequestSequence,unknown=false,unknownMessage="";

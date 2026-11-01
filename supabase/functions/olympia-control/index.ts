@@ -77,7 +77,7 @@ async function githubToken(decision: string) {
     ? { pull_requests: "read" }
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
-    : decision === "review_pull_request"
+    : decision === "review_pull_request" || decision === "approve_and_merge_dev"
     ? { pull_requests: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
@@ -582,6 +582,43 @@ Deno.serve(async (req: Request) => {
         const code = error instanceof Error ? error.message : "";
         console.error("OLYMPIA deployment preflight failed", code);
         return fail("DEV/LIVE-publiceringen kunde inte verifieras just nu. Slutgodkännandet är låst; försök igen.", 409);
+      }
+    }
+    if (data.action === "approve_and_merge_dev") {
+      if (!Number.isInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha)) {
+        return fail("PR-nummer eller versions-SHA saknas.", 400);
+      }
+      try {
+        const token = await githubToken("approve_and_merge_dev");
+        const path = "/repos/" + OWNER + "/" + REPO;
+        const pr = await gh(token, path + "/pulls/" + data.pullRequestNumber);
+        if (pr.state !== "open" || pr.draft || pr.base?.ref !== "development" ||
+            pr.head?.sha !== data.pullRequestHeadSha || pr.mergeable !== true) {
+          return fail("PR:en är inte en aktuell, mergebar DEV-ändring. Uppdatera status.", 409);
+        }
+        const [checks, status] = await Promise.all([
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+        ]);
+        const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
+        if (!runs.length || Number(checks.total_count) > runs.length ||
+            runs.some((check: any) => check.status !== "completed" ||
+              !["success", "neutral", "skipped"].includes(check.conclusion)) ||
+            (Array.isArray(status.statuses) && status.statuses.length > 0 && status.state !== "success")) {
+          return fail("Alla CI-kontroller måste vara färdiga och godkända före DEV-merge.", 409);
+        }
+        const merged = await gh(token, path + "/pulls/" + data.pullRequestNumber + "/merge", {
+          method: "PUT",
+          body: JSON.stringify({ sha: data.pullRequestHeadSha, merge_method: "squash" }),
+        });
+        if (!merged.merged) throw new Error("GITHUB_MERGE_NOT_CONFIRMED");
+        return json({ ok: true, merged: true, sha: merged.sha,
+          message: "PR #" + data.pullRequestNumber + " godkänd och mergad till DEV." });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA DEV merge failed", code);
+        return fail("DEV-merge kunde inte genomföras (" + code + "). Kontrollera PR-status i GitHub.", 409);
       }
     }
     if (data.action === "review_pull_request") {
