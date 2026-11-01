@@ -66,7 +66,8 @@ body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#
 var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/repos/"+owner+"/"+repo;
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
-var baseline=null,queue=null,inventory=[],openPullRequests=null,openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
+function cachedOpenPullRequests(){try{var value=JSON.parse(sessionStorage.getItem("olympia-open-pr-cache")||"null");return Array.isArray(value)?value:null}catch(_){return null}}
+var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
 window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
@@ -175,9 +176,10 @@ var root=get("trial-list"),items=(queue&&queue.items||[]).slice().sort(function(
 var registered=new Set(items.flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
 var open=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
 var html=active.map(renderQueueItem).join("");
-if(openPullRequests===null)html+='<div class="empty">Läser öppna PR…</div>';
+if(openPullRequestError)html+='<div class="empty">GitHub kunde inte uppdateras. Visar senast hämtade öppna PR.</div>';
+if(open.length)html+='<h2 class="queue-section-title">Övriga öppna PR</h2>'+open.map(renderOpenPullRequest).join("");
+else if(openPullRequests===null)html+='<div class="empty">Läser öppna PR…</div>';
 else if(openPullRequestError)html+='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>';
-else if(open.length)html+='<h2 class="queue-section-title">Övriga öppna PR</h2>'+open.map(renderOpenPullRequest).join("");
 if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+published.map(renderQueueItem).join("");
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
 }
@@ -191,8 +193,8 @@ try{
 var registered=new Set((queue&&queue.items||[]).flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
  var merged=closed.filter(function(pr){return !!pr.merged_at&&pr.base&&pr.base.ref==="development"&&!registered.has(Number(pr.number))});
 await Promise.all(merged.map(async function(pr){try{var files=await json(api+"/pulls/"+Number(pr.number)+"/files?per_page=100");pr.changed_files_list=Array.isArray(files)?files.map(function(file){return file.filename}):[]}catch(_){pr.changed_files_list=[]}}));
- openPullRequests=prs.concat(merged);openPullRequestError=false;
-}catch(_){openPullRequests=[];openPullRequestError=true}
+ openPullRequests=prs.concat(merged);openPullRequestError=false;try{sessionStorage.setItem("olympia-open-pr-cache",JSON.stringify(openPullRequests))}catch(_){}
+}catch(_){if(!Array.isArray(openPullRequests))openPullRequests=cachedOpenPullRequests();openPullRequestError=true}
 renderTrial();
 if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
 }
@@ -347,6 +349,8 @@ baseline=v[0];queue=v[1];inventory=v[2].pull_requests||[];renderRefs();renderTri
 }).catch(function(e){get("trial-list").innerHTML='<div class="empty">Arbetskön kunde inte verifieras. Status är OKÄND. '+esc(e.message)+'</div>';get("release-blockers").innerHTML="<strong>Release blockerad:</strong> OLYMPIA-underlaget kunde inte läsas.";});
 window.olympiaRefreshDecisions=renderDecisions;
 renderDecisions();
+window.addEventListener("pageshow",function(event){if(event.persisted)renderPullRequests()});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)renderPullRequests()});
 })();
 </script>
 <script>
