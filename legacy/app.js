@@ -6,8 +6,7 @@ const defaults=[
 {id:'evalin',icon:'🦆',identity:{namn:'Evalin Hugger',ras:'Humanoid anka',yrke:'',kon:'Kvinna',alder:'',langd:'120 cm',vikt:''},base:{Styrka:{v:10,g:''},Fysik:{v:12,g:''},Storlek:{v:8,g:''},Smidighet:{v:16,g:''},Intelligens:{v:13,g:''},'Psykisk kraft':{v:12,g:''},Karisma:{v:14,g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},skills:[{name:'',fv:'',erf:''}],languages:[{name:'',speak:'',readwrite:''}],live:{KP:11,KPmax:11,PSY:12,PSYmax:12,Mynt:51}}
 ];
 let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
-const SUPABASE_URL='https://wbmosmkirsitkonejzpg.supabase.co';
-const SUPABASE_KEY='sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o';
+const ALEA_SUPABASE_CONFIG=window.ALEA_SUPABASE_CONFIG;const SUPABASE_URL=ALEA_SUPABASE_CONFIG.url;const SUPABASE_KEY=ALEA_SUPABASE_CONFIG.key;const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;
 window.aleaEquipmentArt?.configure(SUPABASE_URL);
 let supabaseSession=null,supabaseProfile=null;
 let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
@@ -95,11 +94,11 @@ async function authFetch(path,options={}){
   headers.Authorization='Bearer '+await freshSupabaseAccessToken();
   delete headers.authorization;
  }
- let response=await fetch(SUPABASE_URL+path,{...options,headers});
+ let response=await fetch(ALEA_SUPABASE_CONFIG.endpoint(path),{...options,headers});
  if(authorized&&await expiredJwtResponse(response)){
   const failedToken=headers.Authorization.slice(7);
   headers.Authorization='Bearer '+await freshSupabaseAccessToken(true,failedToken);
-  response=await fetch(SUPABASE_URL+path,{...options,headers});
+  response=await fetch(ALEA_SUPABASE_CONFIG.endpoint(path),{...options,headers});
  }
  return response;
 }
@@ -1179,10 +1178,10 @@ async function syncCharacterToCentral(c){
  if(c._dbId)centralCharacterSnapshots.set(c._dbId,fingerprint)
 }
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
-function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession)localStorage.setItem('alea_supabase_session',JSON.stringify(supabaseSession));else localStorage.removeItem('alea_supabase_session')}
+function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession)localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(supabaseSession));else localStorage.removeItem(SUPABASE_SESSION_KEY)}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
 async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
-async function restoreSession(){let raw=localStorage.getItem('alea_supabase_session');if(!raw)return false;try{supabaseSession=JSON.parse(raw);if(!supabaseSession?.refresh_token)throw 0;let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
+async function restoreSession(){let raw=localStorage.getItem(SUPABASE_SESSION_KEY);if(!raw)return false;try{supabaseSession=JSON.parse(raw);if(!supabaseSession?.refresh_token)throw 0;let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
 async function initLogin(){if(await restoreSession())enterApp();else showLogin()}
 function saveAdmin(){localStorage.setItem('dod_admin_v014',JSON.stringify(adminData))}
 function uid(prefix){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
@@ -3347,7 +3346,7 @@ async function persistAdminCombatIcon(entityId){
 function encodeStoragePath(path){return String(path||'').split('/').map(encodeURIComponent).join('/')}
 async function mapStorageFetch(path,options={}){
  let headers={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+supabaseSession.access_token,...(options.headers||{})};
- return fetch(SUPABASE_URL+'/storage/v1/'+path,{...options,headers});
+ return fetch(ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/'+path),{...options,headers});
 }
 function validMapStoragePath(path){
  let p=String(path||'').split('/');return p.length>=3&&isUuid(p[0])&&isUuid(p[1]);
@@ -3702,7 +3701,7 @@ async function saveLocationContent(id){
 
 async function locationAssetStorageFetch(path,options){
  options=options||{};let headers={apikey:SUPABASE_KEY,Authorization:'Bearer '+supabaseSession.access_token};Object.assign(headers,options.headers||{});
- return fetch(SUPABASE_URL+'/storage/v1/'+path,Object.assign({},options,{headers:headers}));
+ return fetch(ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/'+path),Object.assign({},options,{headers:headers}));
 }
 async function getLocationAssetUrl(asset){
  let cached=locationAssetUrlCache.get(asset.storage_path);if(cached)return cached;
