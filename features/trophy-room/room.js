@@ -1,4 +1,4 @@
-(function(root){'use strict';const KEY='arcane-trophy-room-v2.2',URL='https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/arcane-trophy-room-v2.2/c9e8d5d3807df1ded67669afbe64db33c5098f12082576e56e3a91fa2e05aa55.webp';let scale=1,x=0,y=0,drag=null;const byId=id=>document.getElementById(id);function page(){return byId('trophyRoomPage')||document.querySelector('.trophy-room-page')}function viewport(){return byId('trophyRoomViewport')}function image(){return byId('trophyRoomImage')}/* JAKOB 3H: one animation clock drives both the wall camera and hero. */
+(function(root){'use strict';const KEY='arcane-trophy-room-v2.2';let scale=1,x=0,y=0,drag=null;const byId=id=>document.getElementById(id);function page(){return byId('trophyRoomPage')||document.querySelector('.trophy-room-page')}function viewport(){return byId('trophyRoomViewport')}function image(){return byId('trophyRoomImage')}/* JAKOB 3H: one animation clock drives both the wall camera and hero. */
 let cameraFrame=0,cameraMotion=null,suppressClick=false;
 let heroPose={x:0,y:0,scale:1};
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -56,13 +56,16 @@ function focusWall(side='center'){
 function zoom(delta){if(delta>0&&scale<1.5)focusWall();else if(delta<0&&scale>1.5)reset()}
 function availableCharacters(){try{if(typeof root.shopEligibleBuyers==='function')return root.shopEligibleBuyers()||[];if(typeof shopEligibleBuyers==='function')return shopEligibleBuyers()||[]}catch(e){console.warn('Trophy character roster unavailable',e)}return []}
 function renderCharacter(){const layer=byId('trophyRoomCharacterLayer'),cutout=byId('trophyRoomCharacterCutout'),picker=byId('trophyRoomCharacter');if(!layer||!cutout||!picker)return;const character=availableCharacters().find(c=>String(c.id)===picker.value);/* Uploaded Rollperson > Bilder > Helfigur (rustning); no synthesized equipment. */const images=character?.figureImages||character?.data?.figureImages;const src=images?.armored||'';const valid=typeof src==='string'&&src.startsWith('data:image/')&&/^data:image\/(?:png|jpeg|webp);base64,/i.test(src);layer.hidden=!valid;if(valid){cutout.src=src;cutout.alt=(character?.identity?.namn||character?.name||'Rollperson')+' i rustning'}else{cutout.removeAttribute('src');cutout.alt=''} }
-const MEDAL_BASE='https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/';
 let medalSequence=0;
+function systemAssetUrl(path){
+ if(typeof path!=='string'||!/^hermes\/system-asset\/[a-z0-9][a-z0-9_.-]*\/[a-f0-9]{64}\.webp$/.test(path)||typeof SUPABASE_URL!=='string'||!SUPABASE_URL)return null;
+ return SUPABASE_URL.replace(/\/$/,'')+'/storage/v1/object/public/alea-hermes-public/'+path.split('/').map(encodeURIComponent).join('/');
+}
 function medalUrl(asset){
  if(asset?.asset_key?.startsWith('hermes-alea:'))return root.aleaHermesAleaImages?.resolve(asset)||null;
  const path=asset?.asset_path;
  if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-adventure-medal-[a-z0-9-]+\/[a-f0-9]{64}\.webp$/.test(path))return null;
- return MEDAL_BASE+path;
+ return systemAssetUrl(path);
 }
 
 /* JAKOB 4A: the medal stays a separate asset; the display frame is a HERMES system asset. */
@@ -71,7 +74,7 @@ let medalDialog=null,medalDialogReturnFocus=null;
 function medalFrameUrl(asset){
  const path=asset?.asset_path;
  if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-badge-frame-velvet-(?:red|green|blue)\/[a-f0-9]{64}\.webp$/.test(path))return null;
- return MEDAL_BASE+path;
+ return systemAssetUrl(path);
 }
 function formatGrantDate(value){
  if(!value)return 'Datum saknas';
@@ -174,7 +177,7 @@ function open(){const p=page();if(!p)return;ensureScene();document.querySelector
  v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion||scale>=1.5)return;const rect=v.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width;focusWall(px<.36?'left':px>.64?'right':'center')});
  v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='ArrowLeft'&&scale<1.5){e.preventDefault();focusWall('left')}else if(e.key==='ArrowRight'&&scale<1.5){e.preventDefault();focusWall('right')}else if(e.key==='0')reset()});
 }
-window.addEventListener('resize',draw,{passive:true});const img=image();if(img){img.src=URL;img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'})}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
+window.addEventListener('resize',draw,{passive:true});const img=image();if(img){img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'});void(async()=>{try{if(typeof root.dbJson!=='function')throw Error('HERMES-registret är inte tillgängligt');const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));const asset=Array.isArray(assets)?assets.find(row=>row.asset_key===KEY):null;const path=asset?.asset_path;if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');img.src=url}catch(error){console.warn('Trophy room HERMES image unavailable',error);const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'}})()}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
  const actor=root.activeUser?.();
  if(!(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm'))return;
  open();
