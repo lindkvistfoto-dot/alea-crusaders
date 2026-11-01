@@ -73,7 +73,7 @@ jobs:
           [[ "$ATTEMPT" =~ ^[1-9][0-9]*$ ]] || { echo "::error::The retry attempt is invalid."; exit 1; }
           [[ "$WORKFLOW_BLOB_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The approved candidate workflow SHA is missing."; exit 1; }
           [[ "$DECISION" == "pandoras_ask" ]] || { echo "::error::Only a Pandoras Ask start order can create a single-item LIVE PR candidate."; exit 1; }
-          [[ "$ITEM_ID" =~ ^PILOT-[0-9]{3}$ && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to a valid pilot version."; exit 1; }
+          [[ "$ITEM_ID" =~ ^(PILOT-[0-9]{3}|PR-[1-9][0-9]*)$ && "$TESTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::The request is not bound to a valid OLYMPIA change."; exit 1; }
           ISSUE_JSON="$(gh api "repos/$REPOSITORY/issues/$ISSUE_NUMBER")"
           [[ "$(jq -r '.user.type' <<< "$ISSUE_JSON")" == "Bot" ]] || { echo "::error::Decision was not created by the OLYMPIA server app."; exit 1; }
           ISSUE_BODY="$(jq -r '.body' <<< "$ISSUE_JSON")"
@@ -82,18 +82,29 @@ jobs:
           grep -Fq -- "- Testad DEV-commit (full SHA): $TESTED_SHA" <<< "$ISSUE_BODY"
           [[ "$DECISION" == "pandoras_ask" && "$ISSUE_BODY" == *"- Beslut: PANDORAS ASK"* || "$DECISION" == "release_package" && "$ISSUE_BODY" == *"- Beslut: RELEASEPAKET"* ]] || { echo "::error::The journal decision does not match its release request."; exit 1; }
           QUEUE="$DEV_DIR/olympia/work-items.json"
-          ITEM_JSON="$(jq -ce --arg item "$ITEM_ID" '.items[] | select(.id==$item and .ready_for_human_acceptance==true)' "$QUEUE")"
-          PRIMARY_PR="$(jq -r '.pr_number // empty' <<< "$ITEM_JSON")"
-          SOURCE_PR_SHA="$(jq -r '.dev_sha // empty' <<< "$ITEM_JSON")"
-          mapfile -t SOURCE_PRS < <(jq -r '.release_source_prs[]?' <<< "$ITEM_JSON")
-          mapfile -t FEATURE_FILES < <(jq -r '.features[]? | select(type=="string" and length>0)' <<< "$ITEM_JSON")
-          [[ "$PRIMARY_PR" =~ ^[0-9]+$ && "$SOURCE_PR_SHA" =~ ^[0-9a-fA-F]{40}$ && "${#SOURCE_PRS[@]}" -gt 0 && "${#FEATURE_FILES[@]}" -gt 0 ]] || { echo "::error::The pilot PR source set or feature scope is not verified."; exit 1; }
-          [[ " ${SOURCE_PRS[*]} " == *" $PRIMARY_PR "* ]] || { echo "::error::The pilot PR source set does not include its primary PR."; exit 1; }
-          [[ "$(printf '%s\n' "${SOURCE_PRS[@]}" | sort -u | wc -l)" -eq "${#SOURCE_PRS[@]}" ]] || { echo "::error::The pilot PR source set contains duplicate PRs."; exit 1; }
+          if [[ "$ITEM_ID" =~ ^PR-([1-9][0-9]*)$ ]]; then
+            PRIMARY_PR="${BASH_REMATCH[1]}"
+            PR_JSON="$(gh api "repos/$REPOSITORY/pulls/$PRIMARY_PR")"
+            [[ "$(jq -r '.merged' <<< "$PR_JSON")" == "true" && "$(jq -r '.base.ref' <<< "$PR_JSON")" == "development" ]] || { echo "::error::The source PR is not merged into development."; exit 1; }
+            SOURCE_PR_SHA="$(jq -r '.merge_commit_sha' <<< "$PR_JSON")"
+            mapfile -t SOURCE_PRS < <(printf '%s\n' "$PRIMARY_PR")
+            mapfile -t FEATURE_FILES < <(gh api --paginate "repos/$REPOSITORY/pulls/$PRIMARY_PR/files?per_page=100" --jq '.[].filename')
+            ITEM_JSON="$(jq -n --arg id "$ITEM_ID" --arg title "$(jq -r '.title' <<< "$PR_JSON")" --arg sha "$SOURCE_PR_SHA" --argjson pr "$PRIMARY_PR" --argjson files "$(printf '%s\n' "${FEATURE_FILES[@]}" | jq -R . | jq -s .)" '{id:$id,title:$title,ready_for_human_acceptance:true,pr_number:$pr,dev_sha:$sha,release_source_prs:[$pr],features:$files,images:[]}')"
+          else
+            ITEM_JSON="$(jq -ce --arg item "$ITEM_ID" '.items[] | select(.id==$item and .ready_for_human_acceptance==true)' "$QUEUE")"
+            PRIMARY_PR="$(jq -r '.pr_number // empty' <<< "$ITEM_JSON")"
+            SOURCE_PR_SHA="$(jq -r '.dev_sha // empty' <<< "$ITEM_JSON")"
+            mapfile -t SOURCE_PRS < <(jq -r '.release_source_prs[]?' <<< "$ITEM_JSON")
+            mapfile -t FEATURE_FILES < <(jq -r '.features[]? | select(type=="string" and length>0)' <<< "$ITEM_JSON")
+          fi
+          [[ "$PRIMARY_PR" =~ ^[0-9]+$ && "$SOURCE_PR_SHA" =~ ^[0-9a-fA-F]{40}$ && "${#SOURCE_PRS[@]}" -gt 0 && "${#FEATURE_FILES[@]}" -gt 0 ]] || { echo "::error::The PR source set or change scope is not verified."; exit 1; }
+          [[ " ${SOURCE_PRS[*]} " == *" $PRIMARY_PR "* ]] || { echo "::error::The PR source set does not include its primary PR."; exit 1; }
+          [[ "$(printf '%s\n' "${SOURCE_PRS[@]}" | sort -u | wc -l)" -eq "${#SOURCE_PRS[@]}" ]] || { echo "::error::The source PR list contains duplicates."; exit 1; }
           for feature in "${FEATURE_FILES[@]}"; do
-            [[ "$feature" =~ ^[A-Za-z0-9._/-]+$ && "$feature" != *".."* ]] || { echo "::error::The pilot feature scope contains an invalid path."; exit 1; }
+            [[ "$feature" =~ ^[A-Za-z0-9._/-]+$ && "$feature" != *".."* ]] || { echo "::error::The change scope contains an invalid path."; exit 1; }
           done
-          ALLOWED_FILES=("${FEATURE_FILES[@]}" "tests/arcane-trophy-room.test.mjs")
+          ALLOWED_FILES=("${FEATURE_FILES[@]}")
+          if printf '%s\n' "${FEATURE_FILES[@]}" | grep -Eq '^features/trophy-room/room\.(js|css)$'; then ALLOWED_FILES+=("tests/arcane-trophy-room.test.mjs"); fi
           ALLOWED_FILES_TEXT="$(printf '%s\n' "${ALLOWED_FILES[@]}")"
 
           CURRENT_DEV_SHA="$(git -C "$DEV_DIR" rev-parse HEAD)"
@@ -102,7 +113,7 @@ jobs:
           CURRENT_IMAGES="$(jq -cS '.images // []' <<< "$ITEM_JSON")"
           [[ "$TESTED_IMAGES" == "$CURRENT_IMAGES" ]] || { echo "::error::The image inventory changed after Zeus accepted this DEV version. Refresh OLYMPIA and review the updated images before release."; exit 1; }
           if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}" | grep -q .; then
-            echo "::error::The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
+            echo "::error::The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
             exit 1
           fi
 
@@ -137,7 +148,7 @@ jobs:
             git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA" || { echo "::error::Accepted DEV version does not contain source PR #$PR_NUMBER."; exit 1; }
             PR_PARENT_SHA="$(git -C "$DEV_DIR" rev-parse "$PR_MERGE_SHA^1")"
             CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${ALLOWED_FILES[@]}")"
-            [[ -n "$CHANGED_FILES" ]] || { echo "::error::PR #$PR_NUMBER contains no changes in this pilot's approved feature scope."; exit 1; }
+            [[ -n "$CHANGED_FILES" ]] || { echo "::error::PR #$PR_NUMBER contains no changes in the approved source scope."; exit 1; }
             while IFS= read -r changed; do
               [[ -z "$changed" ]] && continue
               grep -Fxq "$changed" <<< "$ALLOWED_FILES_TEXT" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }
@@ -376,7 +387,7 @@ jobs:
           const report={
             schema:'olympia-release-candidate/v1',
             status:'READY_FOR_ZEUS_FINAL_APPROVAL',
-            pilot:process.env.ITEM_ID,
+             change_id:process.env.ITEM_ID,
             pr_number:Number(process.env.PRIMARY_PR),
             source_prs:process.env.SOURCE_PRS.split(",").map(Number),
             tested_dev_sha:process.env.DEV_SHA,

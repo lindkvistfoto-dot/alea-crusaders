@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
-describe('OLYMPIA per-pilot LIVE candidate',()=>{
+describe('OLYMPIA LIVE candidate',()=>{
  it('includes the approved mobile correction in the exact candidate source set',()=>{
   const queue=JSON.parse(read('olympia/work-items.json'));
   const item=queue.items.find(entry=>entry.id==='PILOT-001');
@@ -26,7 +26,7 @@ describe('OLYMPIA per-pilot LIVE candidate',()=>{
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" status --porcelain');
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
-  expect(workflow).toContain('The accepted pilot files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+  expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
   expect(workflow).toContain('Wait for release PR CI and mergeability');
   expect(workflow).toContain('checks: read');
   expect(workflow).toContain('statuses: read');
