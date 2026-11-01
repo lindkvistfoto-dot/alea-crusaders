@@ -55,19 +55,31 @@ window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
 async function json(url){var r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status+" "+url);return r.json()}
-async function renderRefs(){currentDevSha=null;var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
+async function renderRefs(){var refs=get("refs");if(!baseline){refs.innerHTML='<span class="pill warn">Baslinje OKÄND</span>';return}
 refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Hämtar aktuell GitHub-status…</span>';
 try{
-var result=await Promise.all([
- json(api+"/branches/development"),
+var development=await json(api+"/branches/development");
+var sha=String(development.commit&&development.commit.sha||"");
+if(!/^[a-f0-9]{40}$/i.test(sha))throw new Error("DEV SHA saknas.");
+currentDevSha=sha;
+renderTrial();
+var extras=await Promise.allSettled([
  json(api+"/branches/main"),
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:open")),
  json("https://api.github.com/search/issues?q="+encodeURIComponent("repo:"+owner+"/"+repo+" is:pr is:merged"))
 ]);
-currentDevSha=String(result[0].commit.sha||"");
-refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill">DEV '+esc(currentDevSha.slice(0,7))+'</span><span class="pill">LIVE '+esc(result[1].commit.sha.slice(0,7))+'</span><span class="pill">'+esc(result[2].total_count)+' öppna PR</span><span class="pill">'+esc(result[3].total_count)+' mergade PR</span>';
+var pills=['<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span>','<span class="pill">DEV '+esc(sha.slice(0,7))+'</span>'];
+if(extras[0].status==="fulfilled"&&extras[0].value.commit&&extras[0].value.commit.sha)pills.push('<span class="pill">LIVE '+esc(extras[0].value.commit.sha.slice(0,7))+'</span>');
+if(extras[1].status==="fulfilled")pills.push('<span class="pill">'+esc(extras[1].value.total_count)+' öppna PR</span>');
+if(extras[2].status==="fulfilled")pills.push('<span class="pill">'+esc(extras[2].value.total_count)+' mergade PR</span>');
+if(extras.some(function(x){return x.status!=="fulfilled"}))pills.push('<span class="pill warn">Övrig GitHub-status kunde inte hämtas</span>');
+refs.innerHTML=pills.join("");
 renderTrial();
-}catch(_){currentDevSha=null;refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span><span class="pill warn">Aktuell GitHub-status OKÄND</span>';renderTrial()}}
+}catch(_){
+var verifiedSha=/^[a-f0-9]{40}$/i.test(String(currentDevSha||""))?String(currentDevSha):"";
+refs.innerHTML='<span class="pill">BASELINE 001 · '+esc(baseline.captured_local)+'</span>'+(verifiedSha?'<span class="pill">DEV '+esc(verifiedSha.slice(0,7))+'</span>':'<span class="pill warn">Aktuell GitHub-status OKÄND</span>');
+renderTrial();
+}}
 function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issues/new?template="+encodeURIComponent(template)}
 function renderTrial(){
 var root=get("trial-list"),items=queue&&queue.items||[];
@@ -131,6 +143,7 @@ if(requestId!==preflightRequestSequence)return;
 if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Serverkontrollen svarade inte.");
 var environments=check.result.environments||{},liveSha=environments.main&&environments.main.sha,devSha=environments.development&&environments.development.sha;
 if(!/^[a-f0-9]{40}$/i.test(String(liveSha||""))||!/^[a-f0-9]{40}$/i.test(String(devSha||"")))throw new Error("Branch-SHA saknas.");
+currentDevSha=String(devSha);renderTrial();
 info.push("DEV "+String(devSha).slice(0,7)+" och LIVE "+String(liveSha).slice(0,7)+" matchar publicerade versioner.");
 }catch(error){
 if(requestId!==preflightRequestSequence)return;
