@@ -62,9 +62,12 @@ describe('Supabase environment selection',()=>{
     };
     scope.storeSession=value=>{scope.supabaseSession=value;};
     runInNewContext(code+';globalThis.api={authFetch};',scope);
+    await scope.api.authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:'{}'});
     await scope.api.authFetch('/rest/v1/example',{method:'POST',headers:{Authorization:'Bearer '+token},body:'{}'});
-    expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe(config.url+'/rest/v1/example');
-    expect(calls[0].options.method).toBe('POST');
+    expect(calls.map(call=>call.url)).toEqual([
+      config.url+'/auth/v1/token?grant_type=password',
+      config.url+'/rest/v1/example'
+    ]);
+    expect(calls.every(call=>call.options.method==='POST')).toBe(true);
   });
 });
