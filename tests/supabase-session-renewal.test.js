@@ -22,6 +22,7 @@ function makeAuth(fetch,expiresIn=-30){
    user:{id:'user1'}
   },
   SUPABASE_URL:'https://example.supabase.co',
+  ALEA_SUPABASE_CONFIG:{endpoint:path=>'https://example.supabase.co'+path},
   SUPABASE_KEY:'publishable-test',
   fetch,
   atob:s=>Buffer.from(s,'base64').toString('utf8')
