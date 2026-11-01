@@ -1,5 +1,4 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import {describe, expect, it} from 'vitest';
 import {createHash} from 'node:crypto';
 import {promoteCoreImageManifest} from '../scripts/olympia/promote-core-assets.mjs';
 
@@ -56,57 +55,58 @@ function harness({assets=[image],devBytes=bytes,liveBytes=null,liveRow=null,devT
 }
 const args=(h,overrides={})=>({manifest,devUrl:'https://dev.example',liveUrl:'https://live.example',devKey:'dev-key',liveKey:'live-key',fetchImpl:h.fetchImpl,...overrides});
 
-test('copies and verifies every immutable WebP before updating the LIVE asset reference',async()=>{
+describe('OLYMPIA CORE image promotion',()=>{
+it('copies and verifies every immutable WebP before updating the LIVE asset reference',async()=>{
   const h=harness();
   const result=await promoteCoreImageManifest(args(h));
-  assert.equal(result.status,'verified');
-  assert.equal(h.state.uploads,1);
-  assert.equal(h.state.inserts,1);
-  assert.equal(h.state.patches,1);
+  expect(result.status).toBe('verified');
+  expect(h.state.uploads).toBe(1);
+  expect(h.state.inserts).toBe(1);
+  expect(h.state.patches).toBe(1);
   const lastUpload=h.state.events.findIndex(x=>x.startsWith('POST live.example/storage/'));
   const firstDbWrite=h.state.events.findIndex(x=>x.startsWith('POST live.example/rest/')||x.startsWith('PATCH live.example/rest/'));
-  assert.ok(lastUpload>=0 && firstDbWrite>lastUpload);
-  assert.equal(h.state.liveRows.get(image.asset_key).asset_path,image.webp_path);
-  assert.equal(h.state.liveRows.get(image.asset_key).app_sha256,image.webp_sha256);
+  expect(lastUpload>=0 && firstDbWrite>lastUpload).toBe(true);
+  expect(h.state.liveRows.get(image.asset_key).asset_path).toBe(image.webp_path);
+  expect(h.state.liveRows.get(image.asset_key).app_sha256).toBe(image.webp_sha256);
 });
 
-test('retry reuses the existing WebP and LIVE reference without duplicates',async()=>{
+it('retry reuses the existing WebP and LIVE reference without duplicates',async()=>{
   const h=harness({liveBytes:bytes,liveRow:registryRow(image,{image_revision:2})});
   const result=await promoteCoreImageManifest(args(h));
-  assert.equal(result.promoted[0].reference,'already-current');
-  assert.equal(h.state.uploads,0);
-  assert.equal(h.state.inserts,0);
-  assert.equal(h.state.patches,0);
+  expect(result.promoted[0].reference).toBe('already-current');
+  expect(h.state.uploads).toBe(0);
+  expect(h.state.inserts).toBe(0);
+  expect(h.state.patches).toBe(0);
 });
 
-test('a missing or changed DEV object fails before any LIVE write',async()=>{
+it('a missing or changed DEV object fails before any LIVE write',async()=>{
   const h=harness({devBytes:Buffer.from('wrong')});
-  await assert.rejects(promoteCoreImageManifest(args(h)),/Storage bytes do not match/);
-  assert.equal(h.state.uploads,0);
-  assert.equal(h.state.inserts,0);
-  assert.equal(h.state.patches,0);
+  await expect(promoteCoreImageManifest(args(h))).rejects.toThrow(/Storage bytes do not match/);
+  expect(h.state.uploads).toBe(0);
+  expect(h.state.inserts).toBe(0);
+  expect(h.state.patches).toBe(0);
 });
 
-test('a PR with no images passes without accessing either environment',async()=>{
+it('a PR with no images passes without accessing either environment',async()=>{
   const h=harness();
   const result=await promoteCoreImageManifest(args(h,{manifest:{...manifest,images:[]}}));
-  assert.deepEqual(result,{status:'skipped',promoted:[],reason:'no-image-changes'});
-  assert.equal(h.state.events.length,0);
+  expect(result).toEqual({status:'skipped',promoted:[],reason:'no-image-changes'});
+  expect(h.state.events.length).toBe(0);
 });
 
-test('Dimön and Månhjärtat V2 use the same generic CORE promotion path',async()=>{
+it('Dimön and Månhjärtat V2 use the same generic CORE promotion path',async()=>{
   const h=harness({assets:[image,moonheart]});
   const result=await promoteCoreImageManifest(args(h,{manifest:{...manifest,images:[image,moonheart]}}));
-  assert.equal(result.promoted.length,2);
-  assert.deepEqual(result.promoted.map(item=>item.asset_key),[image.asset_key,moonheart.asset_key]);
-  assert.equal(h.state.uploads,2);
-  assert.equal(h.state.patches,2);
+  expect(result.promoted.length).toBe(2);
+  expect(result.promoted.map(item=>item.asset_key)).toEqual([image.asset_key,moonheart.asset_key]);
+  expect(h.state.uploads).toBe(2);
+  expect(h.state.patches).toBe(2);
   const firstWrite=h.state.events.findIndex(x=>x.startsWith('POST live.example/rest/')||x.startsWith('PATCH live.example/rest/'));
   const secondUpload=h.state.events.findIndex((x,i)=>i>h.state.events.findIndex(e=>e.startsWith('POST live.example/storage/'))&&x.startsWith('POST live.example/storage/'));
-  assert.ok(firstWrite>secondUpload);
+  expect(firstWrite>secondUpload).toBe(true);
 });
 
-test('honor image references update only after the LIVE registry image is verified',async()=>{
+it('honor image references update only after the LIVE registry image is verified',async()=>{
   const targetId='123e4567-e89b-42d3-a456-426614174000';
   const honorImage={...image,asset_key:`arcane-honor-definition-${targetId}-${digest.slice(0,16)}`,
     webp_path:`hermes/system-asset/arcane-honor-definition-${targetId}-${digest.slice(0,16)}/${digest}.webp`,
@@ -114,6 +114,7 @@ test('honor image references update only after the LIVE registry image is verifi
   const targetRow={id:targetId,image_asset_id:null,image_revision:0};
   const h=harness({assets:[honorImage],devTargets:[[targetId,{...targetRow,image_asset_id:honorImage.asset_key}]],liveTargets:[[targetId,targetRow]]});
   const result=await promoteCoreImageManifest(args(h,{manifest:{...manifest,images:[honorImage]}}));
-  assert.equal(result.promoted[0].target_reference,'registered');
-  assert.equal(h.state.liveTargets.get(targetId).image_asset_id,honorImage.asset_key);
+  expect(result.promoted[0].target_reference).toBe('registered');
+  expect(h.state.liveTargets.get(targetId).image_asset_id).toBe(honorImage.asset_key);
+});
 });
