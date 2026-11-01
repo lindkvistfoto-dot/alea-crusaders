@@ -53,6 +53,8 @@ async function enterApp(){
  document.querySelector('main').classList.remove('hidden');
  goHome(); // Initial route only. Never force it again after awaits.
  refreshAuthUI();
+ // Restore simple routes before waiting for unrelated Supabase catalogs.
+ window.aleaRefreshLocation?.restoreEarly?.();
  try{
   await loadCentralData();
   await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(),window.aleaEquipmentCatalog?.load()]);
