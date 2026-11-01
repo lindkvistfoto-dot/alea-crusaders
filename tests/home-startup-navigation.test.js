@@ -35,7 +35,8 @@ function setup({fail=false}={}){
   loadRuleSocialStands:async()=>{},loadCampaignMaps:async()=>{},
   loadCampaignDayState:async()=>{},
   console:{error:(...a)=>errors.push(a)},
-  alert:message=>alerts.push(message)
+  alert:message=>alerts.push(message),
+  window:{aleaRefreshLocation:{restoreEarly:()=>false,restore:async()=>{}}}
  };
  runInNewContext(source.slice(start,end)+';globalThis.startApp=enterApp;',ctx);
  return {startApp:ctx.startApp,load,openPage:value=>{page=value},
