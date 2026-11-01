@@ -73,6 +73,8 @@ async function githubToken(decision: string) {
   const jwt = await appJwt(appId, privateKey);
   const permissions: Record<string, string> = decision === "deployment_check"
     ? { contents: "read" }
+    : decision === "pull_request_list"
+    ? { pull_requests: "read" }
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "review_pull_request"
@@ -496,6 +498,18 @@ Deno.serve(async (req: Request) => {
     const data = await req.json();
     if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
     if (data.action === "session_check") return json({ ok: true });
+    if (data.action === "pull_request_list") {
+      try {
+        const token = await githubToken("pull_request_list");
+        const pullRequests = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
+        if (!Array.isArray(pullRequests)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+        return json({ ok: true, pullRequests });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA GitHub PR list failed", code);
+        return fail("GitHub PR-listan kunde inte hämtas (" + code + ").", 502);
+      }
+    }
     if (data.action === "deployment_check") {
       try {
         const token = await githubToken("deployment_check");

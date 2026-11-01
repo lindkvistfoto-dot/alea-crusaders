@@ -67,7 +67,7 @@ var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
 function cachedOpenPullRequests(){try{var value=JSON.parse(sessionStorage.getItem("olympia-open-pr-cache")||"null");return Array.isArray(value)?value:null}catch(_){return null}}
-var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
+var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=true,openPullRequestErrorMessage="Aktuella PR kräver en verifierad ALEA DEV-session.",pullRequestsRefresh=null,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
 window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
@@ -174,30 +174,33 @@ function prWorkItem(pr){var files=Array.isArray(pr.changed_files_list)?pr.change
 function renderTrial(){
 var root=get("trial-list"),items=(queue&&queue.items||[]).slice().sort(function(a,b){return itemPriority(a)-itemPriority(b)}),active=items.filter(function(item){return !(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])}),published=items.filter(function(item){return !!(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])});
 var registered=new Set(items.flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
-var open=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
+var open=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
 var html=active.map(renderQueueItem).join("");
-if(openPullRequestError)html+='<div class="empty">GitHub kunde inte uppdateras. Visar senast hämtade öppna PR.</div>';
+if(openPullRequestError)html+='<div class="empty">Aktuella PR visas inte eftersom GitHub-statusen inte kunde bekräftas. '+esc(openPullRequestErrorMessage||"Försök igen när ALEA-sessionen är verifierad.")+'</div>';
 if(open.length)html+='<h2 class="queue-section-title">Övriga öppna PR</h2>'+open.map(renderOpenPullRequest).join("");
-else if(openPullRequests===null)html+='<div class="empty">Läser öppna PR…</div>';
-else if(openPullRequestError)html+='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>';
+else if(openPullRequests===null&&!openPullRequestError)html+='<div class="empty">Läser öppna PR…</div>';
 if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+published.map(renderQueueItem).join("");
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
 }
 window.olympiaRefreshTrial=renderTrial;
 document.addEventListener("toggle",function(event){var card=event.target;if(!card||card.tagName!=="DETAILS"||!card.open)return;var node=card.querySelector("[data-preview-sha]");if(!node||node.dataset.previewLoaded)return;node.dataset.previewLoaded="true";var sha=node.dataset.previewSha,label=node.dataset.previewLabel||"PR";cloudflarePreview(sha).then(function(result){var replacement=document.createElement("div");replacement.innerHTML=previewMarkup(sha,label);if(node.isConnected&&replacement.firstElementChild){if(result&&result.state==="pending")delete replacement.firstElementChild.dataset.previewLoaded;node.replaceWith(replacement.firstElementChild)}})},true);
 async function renderPullRequests(){
+if(!window.olympiaAuthVerified||typeof window.olympiaAuthenticatedRequest!=="function")return;
+if(pullRequestsRefresh)return pullRequestsRefresh;
+pullRequestsRefresh=(async function(){
 try{
- var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");
+ var response=await window.olympiaAuthenticatedRequest({action:"pull_request_list"});
+ if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"HTTP "+response.response.status);
+ var prs=response.result.pullRequests;
  if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
- var closed=[];try{var closedResponse=await json(api+"/pulls?state=closed&base=development&per_page=30&sort=updated&direction=desc");if(Array.isArray(closedResponse))closed=closedResponse}catch(_){}
-var registered=new Set((queue&&queue.items||[]).flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
- var merged=closed.filter(function(pr){return !!pr.merged_at&&pr.base&&pr.base.ref==="development"&&!registered.has(Number(pr.number))});
-await Promise.all(merged.map(async function(pr){try{var files=await json(api+"/pulls/"+Number(pr.number)+"/files?per_page=100");pr.changed_files_list=Array.isArray(files)?files.map(function(file){return file.filename}):[]}catch(_){pr.changed_files_list=[]}}));
- openPullRequests=prs.concat(merged);openPullRequestError=false;try{sessionStorage.setItem("olympia-open-pr-cache",JSON.stringify(openPullRequests))}catch(_){}
-}catch(_){if(!Array.isArray(openPullRequests))openPullRequests=cachedOpenPullRequests();openPullRequestError=true}
+ openPullRequests=prs;openPullRequestError=false;openPullRequestErrorMessage="";try{sessionStorage.setItem("olympia-open-pr-cache",JSON.stringify(openPullRequests))}catch(_){}
+}catch(error){openPullRequestError=true;openPullRequestErrorMessage=error&&error.message?String(error.message):"GitHub-status kunde inte läsas."}
 renderTrial();
 if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
+})();
+try{return await pullRequestsRefresh}finally{pullRequestsRefresh=null}
 }
+window.olympiaRefreshPullRequests=renderPullRequests;
 function renderImages(){
 var root=get("image-list"),items=queue&&queue.items||[],images=items.flatMap(function(item){return (item.images||[]).map(function(image){return {item:item,image:image}})});
 if(!images.length){root.innerHTML='<div class="empty">Ingen bildinformation finns i aktiva ändringar.</div>';return}
@@ -445,6 +448,7 @@ async function syncAuth(){
   }
   window.olympiaAuthVerified=true;
   setStatus("ALEA-session och Zeus-behörighet verifierade.");
+  if(window.olympiaRefreshPullRequests)await window.olympiaRefreshPullRequests();
   if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers();
  }catch(error){
   setStatus(error&&error.name==="AbortError"?"Kontrollen tog för lång tid.":"ALEA-sessionen kunde inte kontrolleras.");

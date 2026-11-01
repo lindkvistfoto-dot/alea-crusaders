@@ -134,7 +134,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('.step.skipped');
     expect(page).toContain("rejected?'skipped'");
     expect(page).toContain('var registered=new Set(items.flatMap');
-    expect(page).toContain('var open=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
+    expect(page).toContain('var open=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
     expect(page).toContain("if(published.length)html+='<h2 class=\"queue-section-title\">Publicerade</h2>'");
     expect(page).not.toContain('id="live-pr-list"');
     expect(page).toContain('Övriga öppna PR');
@@ -181,7 +181,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(app).toContain('data-admin-section="olympia"');
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-zeus-experience-v2"');
+    expect(app).toContain('admin-olympia-fullscreen');
+    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-repair-pr-list-fullscreen-v1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
@@ -276,11 +277,31 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
 
   it('lists current open GitHub PRs and checks selected PR CI and mergeability on demand',()=>{
     const page=read('olympia/zeus-control.html');
-    expect(page).toContain('pulls?state=open&per_page=100');
+    const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('window.olympiaRefreshTrial=renderTrial'));
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
+    expect(page).toContain('finally{pullRequestsRefresh=null}');
+    expect(page).toContain('Aktuella PR visas inte eftersom GitHub-statusen inte kunde bekräftas.');
+    expect(trial).toContain('var open=openPullRequestError?[]:');
+    expect(trial).not.toContain('Visar senast hämtade öppna PR');
     expect(page).toContain('data-pr-status');
     expect(page).toContain('/check-runs');
     expect(page).toContain('pr.mergeable===true');
     expect(page).toContain('Status är OKÄND');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('decision === "pull_request_list"');
+    expect(edge).toContain('data.action === "pull_request_list"');
+    expect(edge).toContain('pull_requests: "read"');
+    expect(edge).toContain('/pulls?state=open&per_page=100&sort=updated&direction=desc');
+  });
+
+  it('opens the existing OLYMPIA admin section across the full viewport on mobile',()=>{
+    const app=read('index.html');
+    const styles=read('src/styles/app.css');
+    expect(app).toContain('class="adminbox admin-detail admin-olympia-fullscreen hidden"');
+    expect(app).toContain('class="admin-olympia-frame"');
+    expect(styles).toContain('#adminOlympia.admin-olympia-fullscreen{position:fixed;inset:0');
+    expect(styles).toContain('width:100vw;height:100vh;height:100dvh');
+    expect(styles).toContain('#adminOlympia .admin-olympia-frame{display:block;width:100%;height:100%');
   });
 
 
