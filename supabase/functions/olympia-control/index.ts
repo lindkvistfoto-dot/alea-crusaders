@@ -78,7 +78,7 @@ async function githubToken(decision: string) {
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "review_pull_request" || decision === "approve_and_merge_dev"
-    ? { pull_requests: "write", checks: "read", statuses: "read" }
+    ? { pull_requests: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
@@ -598,8 +598,8 @@ Deno.serve(async (req: Request) => {
           return fail("PR:en är inte en aktuell, mergebar DEV-ändring. Uppdatera status.", 409);
         }
         const [checks, status] = await Promise.all([
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
         const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
         if (!runs.length || Number(checks.total_count) > runs.length ||
