@@ -13,8 +13,12 @@ describe('OLYMPIA per-pilot LIVE candidate',()=>{
   expect(pilot002.features).toContain('index.html');
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   expect(workflow).toContain('mapfile -t SOURCE_PRS');
-  expect(workflow).toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
-  expect(workflow).toContain('git -C "$DEV_DIR" diff --binary "$PR_PARENT_SHA" "$PR_MERGE_SHA"');
+  expect(workflow).toContain('git -C "$SOURCE_DIR" apply --3way --index "$PATCH_FILE"');
+  expect(workflow).toContain('git -C "$DEV_DIR" worktree add --detach "$SOURCE_DIR" "$LIVE_SHA"');
+  expect(workflow).toContain('reconcile-index-asset-versions.mjs');
+  expect(workflow).toContain('No candidate PR was created.');
+  expect(workflow).not.toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
+  expect(workflow).toContain('git -C "$DEV_DIR" diff --binary --full-index "$PR_PARENT_SHA" "$PR_MERGE_SHA"');
   expect(workflow).toContain('git -C "$SOURCE_DIR" add -A');
   expect(workflow).toContain('EXPECTED_TREE: ${{ steps.candidate.outputs.candidate_tree }}');
   expect(workflow).toContain('ACTUAL_TREE="$(git -C "$SOURCE_DIR" write-tree)"');
