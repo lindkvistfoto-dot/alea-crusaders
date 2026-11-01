@@ -116,11 +116,22 @@ async function showMedalDetail(medal,trigger){
  if(!dialog.open)dialog.showModal();
  const frame=dialog.querySelector('.arcane-medal-display');
  frame.style.removeProperty('--medal-frame-image');
+ frame.style.removeProperty('--medal-frame-ratio');
  if(typeof root.dbJson!=='function')return;
  try{
   const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(DISPLAY_FRAME_KEY));
   const url=medalFrameUrl(Array.isArray(assets)?assets.find(a=>a.asset_key===DISPLAY_FRAME_KEY):null);
-  if(dialog.open&&url)frame.style.setProperty('--medal-frame-image','url("'+url+'")');
+  if(dialog.open&&url){
+   const background='url("'+url+'")';
+   frame.style.setProperty('--medal-frame-image',background);
+   const ratioProbe=new Image();
+   ratioProbe.onload=()=>{
+    if(dialog.open&&frame.style.getPropertyValue('--medal-frame-image')===background&&ratioProbe.naturalWidth&&ratioProbe.naturalHeight){
+     frame.style.setProperty('--medal-frame-ratio',ratioProbe.naturalWidth+' / '+ratioProbe.naturalHeight);
+    }
+   };
+   ratioProbe.src=url;
+  }
  }catch(error){console.warn('ARCANE MEDAL DISPLAY frame awaiting HERMES',error)}
 }
 async function renderMedals(){
