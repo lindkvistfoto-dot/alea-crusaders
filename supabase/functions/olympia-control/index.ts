@@ -77,8 +77,10 @@ async function githubToken(decision: string) {
     ? { pull_requests: "read" }
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
-    : decision === "review_pull_request" || decision === "approve_and_merge_dev"
+    : decision === "review_pull_request"
     ? { pull_requests: "write" }
+    : decision === "approve_and_merge_dev"
+    ? { pull_requests: "write", issues: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
@@ -111,6 +113,41 @@ async function ghPublic(path: string) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
   return data;
+}
+async function currentDevPullRequest(token: string, number: number, headSha: string) {
+  let pr: any = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+    if (pr.state !== "open" || pr.draft || pr.base?.ref !== "development" || pr.head?.sha !== headSha || pr.mergeable !== null) break;
+    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  if (pr.state !== "open") throw new Error("PR_NOT_OPEN");
+  if (pr.draft) throw new Error("PR_IS_DRAFT");
+  if (pr.base?.ref !== "development") throw new Error("PR_NOT_TARGETING_DEV");
+  if (pr.head?.sha !== headSha) throw new Error("PR_HEAD_CHANGED");
+  if (pr.mergeable === null || pr.mergeable === undefined) throw new Error("PR_MERGEABILITY_UNKNOWN");
+  if (pr.mergeable !== true) throw new Error("PR_HAS_CONFLICTS");
+  return pr;
+}
+async function recordDevAcceptance(token: string, number: number, actor: string) {
+  const item = await workItem(token, "PR-" + number);
+  const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+  const testedDevSha = String(ref.object?.sha || "");
+  if (!await verifyReleaseSources(token, item, testedDevSha)) throw new Error("DEV_ACCEPTANCE_SOURCE_UNVERIFIED");
+  const appLogin = await appBotLogin();
+  const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(appLogin));
+  const existing = (issues as any[]).find(issue => {
+    const body = String(issue.body || "");
+    return !issue.pull_request && body.includes("- Beslut: ACCEPTANS") &&
+      body.includes("- Ärende-ID: PR-" + number) &&
+      body.includes("- Testad DEV-commit (full SHA): " + testedDevSha);
+  });
+  if (existing) return { number: existing.number, url: existing.html_url, testedDevSha };
+  const result = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
+    method: "POST",
+    body: JSON.stringify({ title: title(item, "accept"), body: issueBody(item, { decision: "accept", testedDevSha, releaseGroup: "PR #" + number }, actor) }),
+  });
+  return { number: result.number, url: result.html_url, testedDevSha };
 }
 async function appBotLogin() {
   const appId = Deno.env.get("OLYMPIA_GITHUB_APP_ID");
@@ -501,8 +538,19 @@ Deno.serve(async (req: Request) => {
     if (data.action === "pull_request_list") {
       try {
         const token = await githubToken("pull_request_list");
-        const pullRequests = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
-        if (!Array.isArray(pullRequests)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+        const open = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
+        if (!Array.isArray(open)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+        const closed: any[] = [];
+        for (let page = 1; page <= 100; page++) {
+          const batch = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+          closed.push(...batch.filter((pr: any) => pr.merged === true && pr.base?.ref === "development"));
+          if (batch.length < 100) break;
+          if (page === 100) throw new Error("GITHUB_PR_LIST_PAGE_LIMIT_REACHED");
+        }
+        const byNumber = new Map<number, any>();
+        for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
+        const pullRequests = [...byNumber.values()].sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
         return json({ ok: true, pullRequests });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
@@ -592,33 +640,56 @@ Deno.serve(async (req: Request) => {
       try {
         const token = await githubToken("approve_and_merge_dev");
         const path = "/repos/" + OWNER + "/" + REPO;
-        const pr = await gh(token, path + "/pulls/" + data.pullRequestNumber);
-        if (pr.state !== "open" || pr.draft || pr.base?.ref !== "development" ||
-            pr.head?.sha !== data.pullRequestHeadSha || pr.mergeable !== true) {
-          return fail("PR:en är inte en aktuell, mergebar DEV-ändring. Uppdatera status.", 409);
-        }
+        const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         const [checks, status] = await Promise.all([
           ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
           ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
         const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
-        if (!runs.length || Number(checks.total_count) > runs.length ||
+        const statuses = Array.isArray(status.statuses) ? status.statuses : [];
+        if ((!runs.length && !statuses.length) || Number(checks.total_count) > runs.length ||
             runs.some((check: any) => check.status !== "completed" ||
               !["success", "neutral", "skipped"].includes(check.conclusion)) ||
-            (Array.isArray(status.statuses) && status.statuses.length > 0 && status.state !== "success")) {
-          return fail("Alla CI-kontroller måste vara färdiga och godkända före DEV-merge.", 409);
+            (statuses.length > 0 && status.state !== "success")) {
+          throw new Error("CI_NOT_GREEN");
         }
-        const merged = await gh(token, path + "/pulls/" + data.pullRequestNumber + "/merge", {
-          method: "PUT",
-          body: JSON.stringify({ sha: data.pullRequestHeadSha, merge_method: "squash" }),
-        });
-        if (!merged.merged) throw new Error("GITHUB_MERGE_NOT_CONFIRMED");
-        return json({ ok: true, merged: true, sha: merged.sha,
-          message: "PR #" + data.pullRequestNumber + " godkänd och mergad till DEV." });
+        let mergeSha = "";
+        try {
+          const merged = await gh(token, path + "/pulls/" + data.pullRequestNumber + "/merge", {
+            method: "PUT",
+            body: JSON.stringify({ sha: data.pullRequestHeadSha, merge_method: "squash" }),
+          });
+          if (merged.merged === true && /^[0-9a-f]{40}$/i.test(String(merged.sha || ""))) mergeSha = merged.sha;
+          else throw new Error("GITHUB_MERGE_NOT_CONFIRMED");
+        } catch (mergeError) {
+          const refreshed = await gh(token, path + "/pulls/" + data.pullRequestNumber);
+          if (refreshed.merged === true && refreshed.base?.ref === "development" &&
+              /^[0-9a-f]{40}$/i.test(String(refreshed.merge_commit_sha || ""))) {
+            mergeSha = refreshed.merge_commit_sha;
+          } else {
+            if (mergeError instanceof Error && /GITHUB_REQUEST_FAILED_409/.test(mergeError.message)) {
+              await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
+            }
+            throw mergeError;
+          }
+        }
+        const acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
+        return json({ ok: true, merged: true, sha: mergeSha, acceptance,
+          message: "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE." });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA DEV merge failed", code);
-        return fail("DEV-merge kunde inte genomföras (" + code + "). Kontrollera PR-status i GitHub.", 409);
+        const messages: Record<string, string> = {
+          PR_NOT_OPEN: "PR:en är inte längre öppen. Uppdatera OLYMPIA för aktuell status.",
+          PR_IS_DRAFT: "PR:en är fortfarande ett utkast och kan inte godkännas.",
+          PR_NOT_TARGETING_DEV: "PR:en riktar sig inte till development.",
+          PR_HEAD_CHANGED: "PR:en har ändrats sedan den visades. Uppdatera OLYMPIA och granska den nya versionen.",
+          PR_MERGEABILITY_UNKNOWN: "GitHub kunde inte fastställa mergebarheten efter flera uppdateringar. Försök igen om en stund.",
+          PR_HAS_CONFLICTS: "PR:en har konflikter och behöver rättas innan DEV-merge.",
+          CI_NOT_GREEN: "CI är inte färdig eller godkänd. Vänta in kontrollerna och försök igen.",
+          DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
+        };
+        return fail(messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.", code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
       }
     }
     if (data.action === "review_pull_request") {
