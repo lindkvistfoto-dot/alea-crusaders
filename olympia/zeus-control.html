@@ -18,6 +18,8 @@ body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#
 .tab{min-height:46px;padding:8px 6px;border:1px solid transparent;border-radius:8px;font-size:12px;letter-spacing:0;text-transform:none}.tab.active{background:#332817;border:1px solid #826438;color:#ffe3a5}
 .panel{padding:14px 0}.notice{padding:12px 14px;margin:8px 0 12px}.items{gap:10px}.card,.empty{padding:15px;border-radius:13px}.card h2{font-size:20px}.card p{margin:7px 0}.status{margin-top:4px}.actions{gap:8px}.btn{min-height:46px;padding:11px 14px;font-size:13px}.btn:disabled{opacity:.65;cursor:progress;filter:saturate(.7)}
 .pr-card{padding:0;overflow:hidden}.pr-card>summary{list-style:none;cursor:pointer;padding:15px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px}.pr-card>summary::-webkit-details-marker{display:none}.pr-card>summary:after{content:"⌄";grid-column:2;grid-row:1/3;color:var(--gold2);font-size:20px}.pr-card[open]>summary:after{content:"⌃"}.pr-card .card-title{font:600 19px/1.25 Georgia,serif;color:var(--gold2)}.pr-card .card-sub{grid-column:1;color:var(--muted);font-size:12px}.pr-body{border-top:1px solid #49402f;padding:14px 15px 16px}.pr-body h3{font:600 15px Georgia,serif;color:#e9d6ad;margin:15px 0 5px}.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:13px 0}.step{position:relative;text-align:center;color:#aba69c;font-size:10px;line-height:1.2}.step:before{content:"";display:block;margin:0 auto 5px;width:18px;height:18px;border:2px solid #55524b;border-radius:50%;background:#191b1d}.step.done{color:#94dca9}.step.done:before{border-color:#64be80;background:#244b32;content:"✓";line-height:14px}.step.current{color:#f0cc80;font-weight:800}.step.current:before{border-color:#e4bc68;background:#523d1d;box-shadow:0 0 0 3px #e4bc6828}.step.error{color:#f49a8f}.step.error:before{border-color:#d96a60;background:#512523;content:"!";line-height:14px}.next-action{border-left:3px solid var(--gold);padding:8px 10px;background:#211d17;border-radius:0 7px 7px 0;font-size:13px}.preview-frame{width:100%;height:min(72vh,700px);border:1px solid #55472f;border-radius:10px;background:#fff}.preview-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-actions .btn{flex:1 1 140px}.pr{grid-template-columns:45px minmax(0,1fr) auto}.pr .btn{min-width:118px}.decision-lists{margin-top:14px}.decision-lists summary{padding:12px;border:1px solid #4d412e;border-radius:9px;color:var(--gold2);background:#191a1a}.decision-content{padding:10px}.decision-content .grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.decision-content .card{padding:12px}.decision-content .card h3{font-size:16px}.hidden-technical{color:#aaa396}.status-line{font-size:12px;color:#ccc4b6}
+.step.skipped{color:#746f66}.step.skipped:before{border-color:#3b3b39;background:#17191a;content:"–";color:#898378;line-height:13px}
+.auth-status{display:inline-flex;align-items:center;gap:8px;max-width:100%;margin:8px 0 2px;padding:7px 11px;border:1px solid #48423a;border-radius:999px;background:#17191a;color:var(--muted);font-size:12px}.auth-status:before{content:"";width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#b59a68;box-shadow:0 0 0 3px #b59a6820}.auth-status[data-state="ready"]{border-color:#315b3c;color:#c5e8cc}.auth-status[data-state="ready"]:before{background:#65c68a;box-shadow:0 0 0 3px #65c68a20}.auth-status[data-state="error"]{border-color:#70403b;color:#ffd0ca}.auth-status[data-state="error"]:before{background:#e17a72;box-shadow:0 0 0 3px #e17a7220}.queue-section-title{margin:18px 0 4px;color:var(--muted);font:700 11px/1.3 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
 .image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.image-card{border:1px solid #443b2f;border-radius:10px;padding:12px;background:#171a1c}.image-card strong{display:block;color:#ecd08f}.storage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.storage-card{border:1px solid #443b2f;border-radius:10px;padding:14px;background:#171a1c}.storage-card h3{margin:0 0 6px;color:#ecd08f}.storage-card p{margin:4px 0;color:#bfb8ab;font-size:13px}.footer{margin-top:18px}
 @media(max-width:600px){.wrap{padding:12px 12px 24px}.top{align-items:center}.top a{font-size:12px}.hero{padding:14px 0 9px}.tabs{margin-left:-2px;margin-right:-2px}.tab{font-size:11px;padding:7px 3px}.pr{grid-template-columns:38px minmax(0,1fr);gap:8px}.pr .btn{grid-column:2;justify-self:start}.steps{gap:1px}.step{font-size:8px}.step:before{width:17px;height:17px}.pr-card>summary{padding:13px}.pr-body{padding:12px}.preview-frame{height:68vh}.decision-content .grid{grid-template-columns:1fr}}
 </style>
@@ -37,8 +39,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#
 <button class="tab" data-panel="storage">◈ <span>Lagring</span></button>
 <button class="tab" data-panel="history">◷ <span>Historik</span></button>
 </nav>
-<section class="panel active" id="panel-try"><div class="notice" id="zeus-auth"><strong>Kontrollerar ALEA-sessionen…</strong></div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiva ändringar…</div></div>
-<div class="card" style="margin-top:14px"><div class="label">Aktiva ändringar</div><h2>Öppna PR</h2><div id="live-pr-list" class="pr-list"><div class="empty">Läser öppna PR…</div></div></div>
+<section class="panel active" id="panel-try"><div id="zeus-auth" class="auth-status" role="status" aria-live="polite" data-state="loading"><strong>Kontrollerar ALEA-sessionen…</strong></div><div class="notice" id="zeus-feedback" role="status" aria-live="polite" hidden></div><div id="trial-list" class="items"><div class="empty">Läser aktiva ändringar…</div></div>
 <details class="decision-lists">
 <summary>Beslut och publicering</summary><div class="decision-content">
 <div class="notice" id="release-blockers"><strong>Kontrollerar förhandsvillkor…</strong></div>
@@ -65,7 +66,7 @@ body{background:radial-gradient(ellipse at 50% -20%,#543b20 0,transparent 42%),#
 var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/repos/"+owner+"/"+repo;
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
-var baseline=null,queue=null,inventory=[],currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0;window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
+var baseline=null,queue=null,inventory=[],openPullRequests=null,openPullRequestError=false,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0;window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};
 window.olympiaAuthVerified=false;
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
@@ -102,18 +103,27 @@ function issueLink(template){return "https://github.com/"+owner+"/"+repo+"/issue
 function flowStep(label,state){return '<span class="step '+state+'">'+label+'</span>'}
 function liveUrl(item,published){var base="https://lindkvistfoto-dot.github.io/alea-crusaders/",relative=String(item.dev_url||"../").replace(/^\.\.\//,"");var url=new URL(relative,base);if(published&&published.mergeSha)url.searchParams.set("olympia-version",String(published.deployedLiveSha||published.mergeSha).slice(0,12));return url.href}
 function devUrl(item){var url=new URL(String(item.dev_url||"../"),location.href);if(currentDevSha)url.searchParams.set("olympia-preview",currentDevSha.slice(0,12));return url.href}
-function renderTrial(){
-var root=get("trial-list"),items=queue&&queue.items||[];
-if(!items.length){root.innerHTML='<div class="empty">Kön är tom. Ingen historik har raderats.</div>';return}
-root.innerHTML=items.map(function(item){
+function itemPriority(item){
+var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
+var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)});
+var accepted=rows.some(function(row){return /ACCEPTANS/i.test(row.title||"")}),candidate=rows.some(function(row){return /PANDORAS/i.test(row.title||"" )}),packaged=rows.some(function(row){return /RELEASEPAKET/i.test(row.title||"")});
+var ready=window.olympiaDecisionsLoaded===true&&!published&&window.olympiaAuthVerified&&item.ready_for_human_acceptance&&/^[a-f0-9]{40}$/i.test(String(currentDevSha||""));
+var candidateStatus=window.olympiaCandidateByItem&&window.olympiaCandidateByItem[item.id];
+if(published)return 3;
+if(candidateStatus&&candidateStatus.candidateReady)return 0;
+if(ready||accepted)return 0;
+if(candidate||packaged||candidateStatus)return 1;
+return 2;
+}
+function renderQueueItem(item){
 var published=window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id];
 var decisionsKnown=window.olympiaDecisionsLoaded===true;
 var imageCount=Number(item.image_count||0),imagesReady=imageCount===0||item.image_status==="published";
 var rows=(window.zeusDecisions||[]).filter(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)}),accepted=rows.some(function(row){return /ACCEPTANS/i.test(row.title||"")}),candidate=rows.find(function(row){return /PANDORAS/i.test(row.title||"")}),packaged=rows.some(function(row){return /RELEASEPAKET/i.test(row.title||"")}),needsFix=rows.some(function(row){return /RÄTTAS/i.test(row.title||"")}),deferred=rows.some(function(row){return /KARON|AVVAKTA/i.test(row.title||"")});
 var ready=decisionsKnown&&!published&&!accepted&&!candidate&&!packaged&&!needsFix&&!deferred&&imagesReady&&!!window.olympiaAuthVerified&&!!item.ready_for_human_acceptance&&!!item.dev_sha&&!!currentDevSha&&/^[a-f0-9]{40}$/i.test(currentDevSha);
-var candidateStatus=window.olympiaCandidateByItem&&window.olympiaCandidateByItem[item.id],currentIndex=published?4:candidateStatus&&candidateStatus.candidateReady?3:candidate?3:accepted?2:ready?1:0;
+var candidateStatus=window.olympiaCandidateByItem&&window.olympiaCandidateByItem[item.id],rejected=needsFix||deferred,activeStage=published?4:candidateStatus&&candidateStatus.candidateReady?4:candidate||packaged||accepted?3:ready?2:1;
 var status=published?'<span class="status ready">✓ Publicerad i LIVE</span>':!decisionsKnown?'<span class="status">Läser aktuell status…</span>':needsFix?'<span class="status blocked">Behöver rättas</span>':deferred?'<span class="status">Avvaktar</span>':candidateStatus&&candidateStatus.candidateCheckUnknown?'<span class="status">Kandidatstatus kunde inte hämtas</span>':packaged?'<span class="status">I releasepaket</span>':candidate?'<span class="status">LIVE-kandidat förbereds</span>':accepted?'<span class="status ready">DEV godkänd</span>':ready?'<span class="status ready">Klar för visuell granskning</span>':'<span class="status">Status inväntas</span>';
-var stepHtml='<div class="steps" aria-label="Ändringens steg">'+flowStep('Skapad',currentIndex>=0?'done':'')+flowStep('Testad',item.ready_for_human_acceptance?'done':currentIndex===1?'current':'')+flowStep('DEV godkänd',accepted?'done':currentIndex===2?'current':'')+flowStep('LIVE-kandidat',candidateStatus&&candidateStatus.candidateReady?'done':currentIndex===3?'current':'')+flowStep('Publicerad',published?'done':currentIndex===4?'current':'')+'</div>';
+var stepHtml='<div class="steps" aria-label="Ändringens steg">'+flowStep('Skapad','done')+flowStep('Testad',item.ready_for_human_acceptance?'done':activeStage===1?'current':'')+flowStep('DEV godkänd',needsFix?'error':accepted?'done':activeStage===2?'current':'')+flowStep('LIVE-kandidat',candidateStatus&&candidateStatus.candidateReady?'done':rejected?'skipped':activeStage===3?'current':'')+flowStep('Publicerad',published?'done':candidateStatus&&candidateStatus.candidateReady?'current':rejected?'skipped':'')+'</div>';
 var next=published?'Klart. Öppna ändringen i LIVE för slutlig visuell kontroll.':candidateStatus&&candidateStatus.candidateReady?'Granska kandidaten och slutgodkänn LIVE när du är nöjd.':candidate?'Väntar på LIVE-kandidat.':packaged?'Ändringen ligger i releasepaketet och inväntar samlad publicering.':accepted?'Välj Pandoras ask för direktpublicering eller releasepaket för senare.':ready?'Förhandsvisa ändringen i DEV. Godkänn först när den ser rätt ut.':'Statusen väntar på verifiering från DEV.';
 var devLink=devUrl(item);
 var preview='<div class="preview-actions"><a class="btn" href="'+esc(devLink)+'" target="_blank" rel="noopener">Förhandsvisa DEV ↗</a><button class="btn secondary" type="button" data-preview-toggle="'+esc(item.id)+'">Visa här</button><button class="btn secondary" type="button" data-preview-fullscreen="'+esc(item.id)+'">Större vy</button></div><iframe class="preview-frame" title="DEV-förhandsvisning: '+esc(item.title)+'" data-preview-frame="'+esc(item.id)+'" src="'+esc(devLink)+'" loading="lazy" hidden></iframe>';
@@ -123,22 +133,32 @@ var links=published?livePreview:ready?preview+'<div class="actions"><button clas
 var decisions=accepted&&!candidate&&!packaged&&!published?'<h3>Välj nästa steg</h3><div class="actions"><button class="btn" type="button" data-decision="pandoras_ask" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Öppna Pandoras ask</button><button class="btn secondary" type="button" data-decision="release_package" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Lägg i releasepaket</button><button class="btn secondary" type="button" data-decision="needs_fix" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Tillbaka till Hefaiastos</button><button class="btn secondary" type="button" data-decision="karon" data-item="'+esc(item.id)+'" data-sha="'+esc(currentDevSha)+'">Till Karon</button></div>':candidateStatus&&candidateStatus.candidateReady&&!published?'<h3>Slutgodkännande</h3><p class="small muted">När du är nöjd med kandidaten kan du godkänna publiceringen. LIVE ändras först efter bekräftelse.</p><button class="btn" type="button" data-decision="final_approval" data-item="'+esc(item.id)+'" data-sha="'+esc(candidateStatus.testedSha)+'" data-candidate-issue="'+esc(candidateStatus.issue.number)+'" data-tree-sha="'+esc(candidateStatus.candidateTree)+'">Slutgodkänn LIVE</button>':'';
 var sourceIssue=item.provenance&&item.provenance.source_issue?'<a href="https://github.com/'+owner+'/'+repo+'/issues/'+esc(item.provenance.source_issue)+'" target="_blank" rel="noopener">#'+esc(item.provenance.source_issue)+' ↗</a>':'—';
 return '<details class="card pr-card"><summary><span class="card-title">'+esc(item.title)+'</span><span class="card-sub">PR #'+esc(item.pr_number||"—")+' · '+status+'</span></summary><div class="pr-body"><p><strong>Ändringen:</strong> '+esc(item.purpose||item.expected_result||"")+'</p>'+stepHtml+'<div class="next-action"><strong>Nästa:</strong> '+esc(next)+'</div><h3>Förhandsvisning</h3>'+links+decisions+(published?'':candidatePreview)+'<details class="details"><summary>Tekniska detaljer</summary><p class="small muted">PR: '+esc(item.pr_number||"inte registrerad")+' · DEV-version: '+esc(currentDevSha||"inte verifierad")+' · Källärende: '+sourceIssue+'</p><p class="small muted">Bilder: '+imageCount+' · '+esc(imageCount===0?'inga bilder':imagesReady?'publicerade i DEV':'status ej verifierad')+'</p></details></div></details>'
-}).join("")}
+}
+function renderOpenPullRequest(pr){
+var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
+var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
+var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
+return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+'<p class="small muted">Förhandsvisning visas när en riktig miljödeployment finns.</p><div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions"><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
+}
+function renderTrial(){
+var root=get("trial-list"),items=(queue&&queue.items||[]).slice().sort(function(a,b){return itemPriority(a)-itemPriority(b)}),active=items.filter(function(item){return !(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])}),published=items.filter(function(item){return !!(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])});
+var registered=new Set(items.flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
+var open=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
+var html=active.map(renderQueueItem).join("");
+if(openPullRequests===null)html+='<div class="empty">Läser öppna PR…</div>';
+else if(openPullRequestError)html+='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>';
+else if(open.length)html+='<h2 class="queue-section-title">Övriga öppna PR</h2>'+open.map(renderOpenPullRequest).join("");
+if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+published.map(renderQueueItem).join("");
+root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
+}
 window.olympiaRefreshTrial=renderTrial;
 async function renderPullRequests(){
-var root=get("live-pr-list");
 try{
 var prs=await json(api+"/pulls?state=open&per_page=100&sort=updated&direction=desc");
 if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
-if(!prs.length){root.innerHTML='<div class="empty">Inga öppna pull requests.</div>';return}
-root.innerHTML=prs.map(function(pr){
-var n=Number(pr.number),sha=String(pr.head&&pr.head.sha||"");
-var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];var feature=match[1]||"";
-feature=feature.trim().replace(/\s+/g," ").slice(0,360);
-var kind=pr.draft?"Draft":"Öppen";
-return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · '+esc(pr.base.ref==='development'?'Väntar på DEV':'Väntar på LIVE')+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+'<p class="small muted">Ändringen finns ännu inte i DEV. När den har landat där visas DEV-förhandsvisningen i samma flöde.</p><div class="small muted">Status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions"><button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
-}).join("");
-}catch(_){root.innerHTML='<div class="empty">Öppna PR kunde inte hämtas från GitHub. Status är OKÄND.</div>'}
+openPullRequests=prs;openPullRequestError=false;
+}catch(_){openPullRequests=[];openPullRequestError=true}
+renderTrial();
 }
 function renderImages(){
 var root=get("image-list"),items=queue&&queue.items||[],images=items.flatMap(function(item){return (item.images||[]).map(function(image){return {item:item,image:image}})});
@@ -293,7 +313,7 @@ const authBox=document.getElementById("zeus-auth");
 const feedback=document.getElementById("zeus-feedback");
 const authMessage=authBox.querySelector("strong");
 function say(message,ok=false){feedback.hidden=false;feedback.innerHTML="<strong>"+(ok?"Sparat:":"Information:")+"</strong> "+message}
-function setStatus(message){authMessage.textContent=message}
+function setStatus(message){authMessage.textContent=message;authBox.dataset.state=/verifierad|verifierade/i.test(message)?"ready":/saknas|kunde inte|tar för lång tid/i.test(message)?"error":"loading"}
 function sessionBelongsToDev(session){
  try{
   const part=String(session?.access_token||"").split(".")[1];

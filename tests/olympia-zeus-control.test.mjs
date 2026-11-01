@@ -73,6 +73,25 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('Visa i LIVE');
   });
 
+  it('keeps the main flow compact and orders decisions before active work',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('function itemPriority(item)');
+    expect(page).toContain('.sort(function(a,b){return itemPriority(a)-itemPriority(b)})');
+    expect(page).toContain('if(candidateStatus&&candidateStatus.candidateReady)return 0');
+    expect(page).toContain('if(ready||accepted)return 0');
+    expect(page).toContain('if(published)return 3');
+    expect(page).toContain('class="auth-status"');
+    expect(page).toContain('authBox.dataset.state');
+    expect(page).toContain('.step.skipped');
+    expect(page).toContain("rejected?'skipped'");
+    expect(page).toContain('var registered=new Set(items.flatMap');
+    expect(page).toContain('var open=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
+    expect(page).toContain("if(published.length)html+='<h2 class=\"queue-section-title\">Publicerade</h2>'");
+    expect(page).not.toContain('id="live-pr-list"');
+    expect(page).toContain('Övriga öppna PR');
+    expect(page).not.toContain('id="zeus-auth" class="notice"');
+  });
+
   it('does not represent unresolved database or deployment evidence as release-ready',()=>{
     const baseline=JSON.parse(read('olympia/baseline-001.json'));
     expect(baseline.database.reconciliation).toBe('VERIFIED_CORE_SCHEMA_MATCH_WITH_ENVIRONMENT_DIFFERENCES');
