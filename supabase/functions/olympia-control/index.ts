@@ -529,6 +529,31 @@ Deno.serve(async (req: Request) => {
         return fail("Aktuell GitHub-status kunde inte hämtas (" + code + ").", 502);
       }
     }
+    if (data.action === "pull_request_status") {
+      if (!Number.isInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha)) {
+        return fail("PR-nummer eller versions-SHA saknas.", 400);
+      }
+      try {
+        const path = "/repos/" + OWNER + "/" + REPO;
+        const [pr, status, checks] = await Promise.all([
+          ghPublic(path + "/pulls/" + data.pullRequestNumber),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+        ]);
+        if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
+        return json({
+          ok: true,
+          pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
+          statuses: Array.isArray(status.statuses) ? status.statuses : [],
+          checkRuns: Array.isArray(checks.check_runs) ? checks.check_runs : [],
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA GitHub PR status failed", code);
+        return fail("GitHub PR-status kunde inte hämtas (" + code + ").", 502);
+      }
+    }
     if (data.action === "deployment_check") {
       try {
         const token = await githubToken("deployment_check");
