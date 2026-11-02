@@ -190,8 +190,10 @@ return renderQueueItem(prWorkItem(pr))
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
 var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
 var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat",n);
+var savedApproval="";
+try{var last=JSON.parse(sessionStorage.getItem("olympia-dev-approval-"+n)||"null");if(last&&last.sha===sha&&Date.now()-last.at<3600000)savedApproval=String(last.message||"")}catch(_){}
 var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?'<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>':'';
-return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
+return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div>'+(savedApproval?'<p data-pr-approve-feedback role="status">'+esc(savedApproval)+'</p>':'')+'</div></details>'
 }
 function prWorkItem(pr){var files=Array.isArray(pr.changed_files_list)?pr.changed_files_list:[];return {id:"PR-"+Number(pr.number),title:pr.title,purpose:pr.title,expected_result:String(pr.body||"").slice(0,360),status:"ready_for_acceptance",ready_for_human_acceptance:true,dev_sha:pr.merge_commit_sha,pr_number:Number(pr.number),release_source_prs:[Number(pr.number)],dev_url:"../",features:files,image_count:0,image_status:"published",provenance:{source_pr:Number(pr.number)}}}
 function renderTrial(){
@@ -314,7 +316,10 @@ document.addEventListener("click",async function(event){
   feedback.setAttribute("aria-live","polite");
   actions.appendChild(feedback);
  }
- const report=function(message){feedback.textContent=message;};
+ const report=function(message){
+  feedback.textContent=message;
+  try{sessionStorage.setItem("olympia-dev-approval-"+number,JSON.stringify({sha,message,at:Date.now()}))}catch(_){}
+ };
  report("Klick registrerat. Kontrollerar DEV-session…");
  const session=storedSession();
  if(!session){report("Godkännande stoppat: ALEA DEV-session saknas. Logga in igen.");return;}
