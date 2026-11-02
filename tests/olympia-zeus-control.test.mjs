@@ -370,6 +370,19 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(tokenCode).toContain('? { pull_requests: "write" }');
   });
 
+  it('shows DEV accepted PRs first even when GitHub list refresh fails',()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('function renderTrial()');
+    const end=page.indexOf('// Preserve expanded PR cards',start);
+    const view=page.slice(start,end);
+    expect(view).toContain('Klart för LIVE');
+    expect(view).toContain('Klart för granskning');
+    expect(view.indexOf('Klart för LIVE')).toBeLessThan(view.indexOf('Klart för granskning'));
+    expect(view).toContain('GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.');
+    expect(view).toContain('acceptedNumbers');
+    expect(view).toContain('fallback');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
