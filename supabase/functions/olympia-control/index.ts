@@ -163,6 +163,31 @@ async function recordDevAcceptance(token: string, number: number, actor: string)
   });
   return { number: result.number, url: result.html_url, testedDevSha };
 }
+// SAFE EVOLUTION stage 2: opt-in server-only candidate preparation after a verified DEV merge.
+// Disabled by default until the idempotency and candidate-preview pilot is accepted.
+async function autoPrepareLiveCandidate(token: string, number: number, actor: string, acceptance: { testedDevSha: string }) {
+  if (Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") !== "enabled") return { state: "disabled" };
+  const item = await workItem(token, "PR-" + number);
+  const testedDevSha = acceptance.testedDevSha;
+  if (!await verifyReleaseSources(token, item, testedDevSha)) throw new Error("AUTO_CANDIDATE_SOURCE_UNVERIFIED");
+  const appLogin = await appBotLogin();
+  const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(appLogin));
+  const existing = (issues as any[]).find(issue => {
+    const body = String(issue.body || "");
+    return !issue.pull_request && body.includes("- Beslut: PANDORAS ASK") &&
+      body.includes("- Ärende-ID: PR-" + number) &&
+      body.includes("- Testad DEV-commit (full SHA): " + testedDevSha);
+  });
+  const issue = existing || await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
+    method: "POST",
+    body: JSON.stringify({ title: title(item, "pandoras_ask"), body: issueBody(item, {
+      decision: "pandoras_ask", testedDevSha, releaseGroup: "PR #" + number,
+      comment: "Automatiskt efter verifierad DEV-merge; ingen LIVE-publicering.",
+    }, actor) }),
+  });
+  const requestBranch = await startCandidateRequest(token, issue.number, item, { decision: "pandoras_ask", testedDevSha });
+  return { state: "requested", issue: { number: issue.number, url: issue.html_url }, requestBranch };
+}
 async function appBotLogin() {
   const appId = Deno.env.get("OLYMPIA_GITHUB_APP_ID");
   const privateKey = Deno.env.get("OLYMPIA_GITHUB_APP_PRIVATE_KEY");
@@ -706,8 +731,17 @@ async function handleRequest(req: Request): Promise<Response> {
           acceptanceWarning = "GitHub-mergen lyckades, men DEV-journalen kunde inte uppdateras. Kontrollera journalen innan LIVE-steget.";
           console.error("OLYMPIA DEV acceptance record failed after confirmed merge", JSON.stringify({ pr: data.pullRequestNumber, mergeSha, code: acceptanceError instanceof Error ? acceptanceError.message : "UNKNOWN" }));
         }
-        return json({ ok: true, merged: true, sha: mergeSha, acceptance, acceptanceWarning,
-          message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE." });
+        let liveCandidate: any = { state: "disabled" };
+        if (acceptance && !acceptanceWarning) {
+          try {
+            liveCandidate = await autoPrepareLiveCandidate(token, data.pullRequestNumber, user.email || "Zeus", acceptance);
+          } catch (candidateError) {
+            liveCandidate = { state: "failed", message: "DEV-merge lyckades, men LIVE-kandidaten kunde inte förberedas. Ingen LIVE-publicering skedde." };
+            console.error("OLYMPIA auto LIVE candidate failed after DEV merge", candidateError instanceof Error ? candidateError.message : "UNKNOWN");
+          }
+        }
+        return json({ ok: true, merged: true, sha: mergeSha, acceptance, acceptanceWarning, liveCandidate,
+          message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. LIVE-förberedelse: " + liveCandidate.state });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA DEV merge failed", JSON.stringify({ pr: data.pullRequestNumber, stage, code }));
