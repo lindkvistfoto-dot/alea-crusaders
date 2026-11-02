@@ -8,6 +8,9 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain("const tiers = ['bronze']");
   expect(admin).not.toContain('Samma ram med en, två och tre stjärnor');
   expect(admin).toContain('honors-badge-tiers');
+  const html=read('index.html');
+  expect(html).toContain('honors-entry.js?v=20261102-badge-single-frame-486');
+  expect(html).toContain('ARCANE HONORS kunde inte laddas.');
  });
 });
 
