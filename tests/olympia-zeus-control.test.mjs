@@ -360,6 +360,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('olympia-pr-flow-cache-v1');
   });
 
+  it('requests contents write only for the DEV merge token',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('async function githubToken(');
+    const end=edge.indexOf('async function gh(',start);
+    const tokenCode=edge.slice(start,end);
+    expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
+    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(tokenCode).toContain('? { pull_requests: "write" }');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
