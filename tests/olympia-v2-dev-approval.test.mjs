@@ -13,3 +13,8 @@ it('keeps merged PR visible in the same card',()=>{
  expect(page).toContain('För publicering');
  expect(page).toContain('data-dev-approve');
 });
+
+it('does not treat an empty legacy commit status as pending CI',()=>{
+ expect(page).toContain("(statuses.length>0&&status.state==='pending')");
+ expect(page).toContain('DEV-beslut kräver verifierad Zeus-session och godkänd CI');
+});
