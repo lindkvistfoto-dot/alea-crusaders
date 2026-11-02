@@ -11,7 +11,11 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain('aria-label="Vald badgebild och ram"');
   expect(admin).toContain("const tiers = ['bronze']");
   expect(admin).not.toContain('Samma ram med en, två och tre stjärnor');
-  expect(admin).toContain('honors-badge-tiers');
+  expect(admin).toContain('data-card-badge-frame');
+  expect(admin).toContain('data-card-badge-image');
+  expect(admin).toContain('data-card-image-upload');
+  expect(admin).toContain('Redigera regler &amp; inställningar');
+  expect(admin).not.toContain("'<div class=\"honors-badge-tiers\">'+criteria");
   expect(admin).toContain('honors-preview-overhang');
   expect(admin).toContain('honors-preview-window');
   const css=read('features/honors/honors-admin.css');
