@@ -189,7 +189,9 @@ return renderQueueItem(prWorkItem(pr))
 }
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
 var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
+var isAdminChange=/admin|honors|badge/i.test(String(pr.title||"")+" "+String(pr.body||""));
 var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat",n);
+if(isAdminChange&&destination==="DEV")preview+='<p class="small muted">Admin-ändring: öppna PR-förhandsvisningen, logga in och välj Admin → Honors → Badges. Vanlig DEV visar inte den här PR-ändringen före merge.</p>';
 var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?'<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>':'';
 return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
 }

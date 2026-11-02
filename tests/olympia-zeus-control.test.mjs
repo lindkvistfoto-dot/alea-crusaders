@@ -422,6 +422,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha');
   });
 
+  it('guides Admin PR review to the exact PR preview rather than published DEV',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('var isAdminChange=/admin|honors|badge/i');
+    expect(page).toContain('Admin → Honors → Badges');
+    expect(page).toContain('Vanlig DEV visar inte den här PR-ändringen före merge.');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
