@@ -353,7 +353,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('acceptanceWarning');
     expect(page).toContain('await window.olympiaRefreshPullRequests()');
     expect(page).toContain('window.olympiaRefreshRefs()');
-    expect(page).toContain('Merge-commit: <a href=');
+    expect(page).toContain('PR #"+number+" mergad till DEV');
+    expect(page).toContain('data-pr-approve-feedback');
+    expect(page).toContain('Godkännande stoppat: ALEA DEV-session saknas');
+    expect(page).toContain('result.acceptanceWarning');
     expect(page).toContain('olympia-pr-flow-cache-v1');
   });
 
