@@ -334,7 +334,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('pull_requests: "read"');
     expect(edge).toContain('/pulls?state=open&per_page=100&sort=updated&direction=desc');
     expect(edge).toContain('/pulls?state=closed&base=development&per_page=100&page=');
-    expect(edge).toContain('pr.merged === true && pr.base?.ref === "development"');
+    expect(edge).toContain('Boolean(pr.merged_at) && pr.base?.ref === "development"');
     expect(edge).toContain('for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr)');
     expect(edge).toContain('const recentClosed = await gh(token');
     expect(edge).not.toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
