@@ -185,3 +185,9 @@
 .honors-badge-gallery-actions{display:grid;gap:6px}
 .honors-badge-gallery-actions button{padding:8px}
 @media(max-width:600px){.honors-badge-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Explicit containing block for the large composite badge preview. */
+.honors-badge-preview .honors-badge-frames{display:block;width:100%;min-width:0}
+.honors-badge-preview .honors-badge-frame{display:block;width:min(100%,380px);max-width:100%;margin-inline:auto;aspect-ratio:1/1}
+.honors-badge-preview .honors-badge-frame .honors-preview-art{display:block;position:relative;width:100%;height:100%;aspect-ratio:1/1}
+@media(max-width:600px){.honors-badge-preview .honors-badge-frame{width:100%}}
