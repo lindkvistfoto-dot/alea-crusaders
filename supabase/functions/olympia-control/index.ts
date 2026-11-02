@@ -565,7 +565,7 @@ async function handleRequest(req: Request): Promise<Response> {
         // Older accepted items remain visible from the persistent Zeus decision journal.
         const recentClosed = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=1&sort=updated&direction=desc");
         if (!Array.isArray(recentClosed)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        const closed = recentClosed.filter((pr: any) => pr.merged === true && pr.base?.ref === "development");
+        const closed = recentClosed.filter((pr: any) => Boolean(pr.merged_at) && pr.base?.ref === "development");
         const byNumber = new Map<number, any>();
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
         const pullRequests = [...byNumber.values()].sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
