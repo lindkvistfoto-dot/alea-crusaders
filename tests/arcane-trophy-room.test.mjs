@@ -1,7 +1,11 @@
 import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 describe('Badge Admin single-frame presentation',()=>{
+ it('loads Honors Admin as syntactically valid JavaScript',()=>{
+  expect(()=>execFileSync(process.execPath,['--check',new URL('../features/honors/honors-admin.js',import.meta.url).pathname],{stdio:'pipe'})).not.toThrow();
+ });
  it('shows one selected badge frame while keeping achievement criteria',()=>{
   const admin=read('features/honors/honors-admin.js');
   expect(admin).toContain('aria-label="Vald badgebild och ram"');
