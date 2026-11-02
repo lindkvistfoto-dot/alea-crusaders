@@ -1,7 +1,6 @@
 import {readFileSync} from 'node:fs';
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
+import {it,expect} from 'vitest';
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
-test('V2 is separate and read-only',()=>{assert.match(page,/PILOT \/ ENDAST LÄSNING/);assert.match(page,/button disabled>Godkänn DEV/);assert.doesNotMatch(page,/approve_and_merge_dev|pandoras_ask|final_approval/);});
-test('V2 reads GitHub PR, CI and preview without a duplicate status store',()=>{assert.match(page,/\/pulls\?state=open&base=development/);assert.match(page,/\/check-runs\?per_page=100/);assert.match(page,/cloudflare pages/i);assert.match(page,/Promise\.allSettled/);});
-test('V2 escapes untrusted GitHub content',()=>{assert.match(page,/const safe=/);assert.match(page,/safe\(pr\.title\)/);assert.match(page,/safe\(pr\.html_url\)/);});
+it('V2 is separate and read-only',()=>{expect(page).toMatch(/PILOT \/ ENDAST LÄSNING/);expect(page).toMatch(/button disabled>Godkänn DEV/);expect(page).not.toMatch(/approve_and_merge_dev|pandoras_ask|final_approval/);});
+it('V2 reads GitHub PR, CI and preview without a duplicate status store',()=>{expect(page).toMatch(/\/pulls\?state=open&base=development/);expect(page).toMatch(/\/check-runs\?per_page=100/);expect(page).toMatch(/cloudflare pages/i);expect(page).toMatch(/Promise\.allSettled/);});
+it('V2 escapes untrusted GitHub content',()=>{expect(page).toMatch(/const safe=/);expect(page).toMatch(/safe\(pr\.title\)/);expect(page).toMatch(/safe\(pr\.html_url\)/);});
