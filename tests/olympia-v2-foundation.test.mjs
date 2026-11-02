@@ -10,3 +10,8 @@ it('Cloudflare build includes the V2 route',()=>{
   const vite=readFileSync(new URL('../vite.config.js',import.meta.url),'utf8');
   expect(vite).toContain('copyStaticTree("alea-copy-olympia-v2", "olympia-v2", "olympia-v2")');
 });
+
+it('V2 browser script has no literal escaped line breaks',()=>{
+  expect(page).not.toContain('}\\\\nsetInterval(');
+  expect(page).not.toContain(');\\\\nfilter.addEventListener');
+});
