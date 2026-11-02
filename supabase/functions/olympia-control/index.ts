@@ -103,7 +103,12 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
     headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", ...(init.headers || {}) },
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
+  if (!res.ok) {
+    if (init.method === "PUT" && /\/pulls\/[0-9]+\/merge$/.test(path)) {
+      console.error("OLYMPIA GitHub merge rejected", JSON.stringify({ status: res.status, reason: String(data.message || "unknown").slice(0, 240) }));
+    }
+    throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
+  }
   return data;
 }
 async function ghPublic(path: string) {
