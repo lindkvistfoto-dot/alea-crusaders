@@ -1,12 +1,12 @@
 import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
-import {transformSync} from 'esbuild';
+import {stripTypeScriptTypes} from 'node:module';
 
 const source=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const start=source.indexOf('async function autoPrepareLiveCandidate(');
 const end=source.indexOf('async function appBotLogin()',start);
 if(start<0||end<0)throw Error('Candidate function not found');
-const compiled=transformSync(source.slice(start,end), {loader:'ts',format:'cjs'}).code;
+const compiled=stripTypeScriptTypes(source.slice(start,end),{mode:'strip'});
 
 function harness({failAfterLock=false}={}){
  const locks=new Set(),issues=[],calls={createRef:0,createIssue:0,startCandidate:0};
