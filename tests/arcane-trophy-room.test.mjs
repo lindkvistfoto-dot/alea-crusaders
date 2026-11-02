@@ -14,7 +14,8 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain('honors-badge-tiers');
   const html=read('index.html');
   expect(html).toContain('honors-entry.js?v=20261102-badge-single-frame-486-fix2');
-  expect(html).toContain('ARCANE HONORS kunde inte laddas.');
+  expect(html).toContain('ARCANE HONORS laddningsfel:');
+  expect(html).toContain("import('./features/honors/honors-entry.js?v=20261102-honors-diagnostic-486')");
   expect(read('features/honors/honors-entry.js')).toContain('honors-admin.js?v=20261102-single-frame-486-fix2');
  });
 });
