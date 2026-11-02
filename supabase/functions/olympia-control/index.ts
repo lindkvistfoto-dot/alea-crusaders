@@ -3,6 +3,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
 const ALLOWED_ORIGIN = "https://lindkvistfoto-dot.github.io";
+const DEV_ORIGIN = "https://development.alea-crusaders.pages.dev";
+const ALLOWED_ORIGINS = new Set([ALLOWED_ORIGIN, DEV_ORIGIN]);
 const PAGES_BASE = ALLOWED_ORIGIN + "/alea-crusaders";
 const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix", "final_approval"]);
 const responseHeaders = {
@@ -511,13 +513,20 @@ function title(item: any, decision: string) {
   return "[OLYMPIA " + label[decision] + "] " + item.id + " · " + item.title;
 }
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("Origin");
+  const response = await handleRequest(req);
+  if (origin && ALLOWED_ORIGINS.has(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
+  return response;
+});
+
+async function handleRequest(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
     const origin = req.headers.get("Origin");
-    if (origin !== ALLOWED_ORIGIN) return new Response(null, { status: 403, headers: responseHeaders });
-    return new Response("ok", { headers: responseHeaders });
+    if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
+    return new Response("ok", { headers: { ...responseHeaders, "Access-Control-Allow-Origin": origin } });
   }
   if (req.method !== "POST") return fail("Endast POST stöds.", 405);
-  if (req.headers.get("Origin") !== ALLOWED_ORIGIN) return fail("Origin nekad.", 403);
+  if (!ALLOWED_ORIGINS.has(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
 
   try {
     const auth = req.headers.get("Authorization") || "";
@@ -925,4 +934,4 @@ Deno.serve(async (req: Request) => {
     console.error("OLYMPIA decision bridge failed", message);
     return fail("Beslutet kunde inte sparas. Ingen ändring registrerades.", 502);
   }
-});
+}
