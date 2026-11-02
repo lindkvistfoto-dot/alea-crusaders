@@ -196,7 +196,7 @@ export function renderHonorsAdmin(root, options = {}) {
       const frameUrl = isBadge ? assetImage(selectedBadgeFrame(definition,preview)) : assetImage(frameFor(definition,tier));
       const reliefLayer = reliefUrl
         ? (allowOverhang
-          ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">'
+          ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt=""></span><img class="honors-preview-relief honors-preview-overhang" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">'
           : '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '"></span>')
         : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '';
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
@@ -233,7 +233,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const reliefLayer=variantUrl
       ? (variant?.allow_overhang===false
         ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
-        : '<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">')
+        : '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span><img class="honors-preview-relief honors-preview-overhang" src="'+esc(variantUrl)+'" alt="">')
       : '<span class="honors-preview-empty">Bild saknas</span>';
     const framePreview='<div class="honors-badge-frame"><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
       reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'<span class="honors-preview-empty">Välj en ram</span>')+
