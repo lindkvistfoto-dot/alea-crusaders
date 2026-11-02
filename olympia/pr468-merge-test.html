@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OLYMPIA · Test PR 468</title>
+<script src="../dev-storage-scope.js?v=20261102"></script>
+<style>body{font:16px system-ui;background:#151719;color:#f1e8d9;margin:0;padding:24px;max-width:560px}h1{color:#e6c58e}button{background:#d5ab62;color:#181818;border:0;border-radius:9px;padding:17px;font-size:18px;font-weight:700;width:100%}button:disabled{opacity:.65}#status{white-space:pre-wrap;background:#262a2c;padding:18px;border-radius:8px;min-height:60px;margin-top:18px}a{color:#f1d294}</style></head>
+<body><h1>OLYMPIA – isolerat test</h1><p>Endast PR <strong>#468</strong> till <strong>development</strong>. Ingen LIVE-merge.</p>
+<p>Den här knappen använder ALEAs befintliga DEV-session och den befintliga skyddade Supabase-funktionen. Ingen OLYMPIA-kö eller automatisk siduppdatering.</p>
+<button id="approve" type="button">Godkänn och mergea PR #468 till DEV</button><div id="status" role="status" aria-live="polite">Redo. Klicka en gång.</div>
+<script>
+(()=>{
+ const url="https://wkiuyklzzroavclnsxna.supabase.co";
+ const key="sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et";
+ const sha="de8184f1db7d708d1542f1d77be7c4cfc8459de6";
+ const button=document.getElementById("approve"),status=document.getElementById("status");
+ function message(s){status.textContent=s;}
+ function session(){
+  for(const name of ["alea_supabase_session_dev","alea_supabase_session"]){
+   try{
+    const value=JSON.parse(localStorage.getItem(name)||"null");
+    if(!value?.access_token)continue;
+    const payload=JSON.parse(atob(value.access_token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
+    if(payload.iss===url+"/auth/v1")return value;
+   }catch(_){}
+  }
+  return null;
+ }
+ button.addEventListener("click",async()=>{
+  button.disabled=true;
+  message("Klick registrerat. Kontrollerar DEV-session…");
+  const auth=session();
+  if(!auth){message("STOPP: Ingen giltig ALEA DEV-session i den här webbläsaren. Logga in i ALEA DEV först.");button.disabled=false;return;}
+  message("Session hittad. Skickar en enda merge-begäran för PR #468…");
+  try{
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+   let response;
+   try{response=await fetch(url+"/functions/v1/olympia-control",{method:"POST",headers:{"Authorization":"Bearer "+auth.access_token,"apikey":key,"Content-Type":"application/json"},body:JSON.stringify({action:"approve_and_merge_dev",pullRequestNumber:468,pullRequestHeadSha:sha}),signal:controller.signal});}
+   finally{clearTimeout(timer);}
+   const raw=await response.text();
+   let result;try{result=JSON.parse(raw)}catch(_){result={message:raw.slice(0,300)}}
+   if(response.ok&&result.ok&&result.merged&&/^[a-f0-9]{40}$/i.test(result.sha||"")){
+    message("GITHUB BEKRÄFTAR DEV-MERGE. Commit: "+result.sha+(result.acceptanceWarning?"\nVARNING: "+result.acceptanceWarning:"\nJournalföring rapporterad OK."));
+   }else{
+    message("INGEN BEKRÄFTAD MERGE. HTTP "+response.status+"\nSteg: "+(result.stage||"okänt")+"\nKod: "+(result.errorCode||"saknas")+"\nOrsak: "+(result.message||"inget meddelande"));
+    button.disabled=false;
+   }
+  }catch(error){message("Begäran misslyckades: "+(error.name==="AbortError"?"Timeout efter 20 sekunder":error.message)+". Kontrollera GitHub-status före nytt försök.");button.disabled=false;}
+ });
+})();
+</script></body></html>
