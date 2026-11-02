@@ -23,6 +23,8 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain('honors-preview-window');
   const css=read('features/honors/honors-admin.css');
   expect(css).toContain('object-fit:cover');
+  expect(css).toContain('.honors-badge-preview .honors-badge-frame{display:block;width:min(100%,380px)');
+  expect(css).toContain('.honors-badge-preview .honors-badge-frame .honors-preview-art{display:block;position:relative;width:100%;height:100%');
   expect(css).toContain('left:16%;top:16%;width:68%;height:68%;aspect-ratio:1/1');
   expect(css).toContain('honors-preview-overhang');
   expect(admin).toContain('name="allow_overhang"> Tillåt bilden');
