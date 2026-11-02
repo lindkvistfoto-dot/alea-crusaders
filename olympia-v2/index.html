@@ -31,6 +31,7 @@ async function refresh(){
   const shown=prs.filter(p=>filter.value==='all'||String(p.number)===filter.value);
   const results=await Promise.allSettled(shown.map(card));
   cards.innerHTML=results.map((r,i)=>r.status==='fulfilled'?r.value:'<section class="panel">PR #'+shown[i].number+': status kunde inte hämtas. '+safe(r.reason?.message)+'</section>').join('');
+  window.olympiaV2RestoreLiveButtons?.();
   global.textContent=prs.length+' DEV-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE');
  }catch(error){global.textContent='PR-listan kunde inte uppdateras: '+error.message+'.';}
  finally{refreshButton.disabled=false}
