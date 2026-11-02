@@ -80,7 +80,7 @@ async function githubToken(decision: string) {
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "approve_and_merge_dev"
-    ? { pull_requests: "write", issues: "write" }
+    ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
