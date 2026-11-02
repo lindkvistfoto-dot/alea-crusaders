@@ -85,11 +85,20 @@ async function githubToken(decision: string) {
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
-  const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
-    method: "POST",
-    headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" },
-    body: JSON.stringify({ permissions, repository_ids: [1403008145] }),
+  const readOnlyPrAction = decision === "pull_request_list" || decision === "pull_request_status";
+  const tokenUrl = "https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens";
+  const tokenHeaders = { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" };
+  const requestToken = (body: Record<string, unknown>) => fetch(tokenUrl, {
+    method: "POST", headers: tokenHeaders, body: JSON.stringify(body),
   });
+  let res = await requestToken({ permissions, repository_ids: [1403008145] });
+  if (res.status === 422 && readOnlyPrAction) {
+    // An installation may lack the explicitly requested checks/statuses scope.
+    // For read-only PR actions, use the installation's existing permissions
+    // without requesting any new permissions. Write actions never fall back.
+    console.warn("OLYMPIA read-only GitHub token: requested permission subset unavailable; using installed permissions");
+    res = await requestToken({ repository_ids: [1403008145] });
+  }
   if (!res.ok) {
     const failure = await res.json().catch(() => ({}));
     console.error("OLYMPIA GitHub installation token rejected", res.status, String(failure.message || "").slice(0, 180));
