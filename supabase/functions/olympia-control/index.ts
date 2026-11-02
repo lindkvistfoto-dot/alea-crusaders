@@ -170,15 +170,46 @@ async function autoPrepareLiveCandidate(token: string, number: number, actor: st
   const item = await workItem(token, "PR-" + number);
   const testedDevSha = acceptance.testedDevSha;
   if (!await verifyReleaseSources(token, item, testedDevSha)) throw new Error("AUTO_CANDIDATE_SOURCE_UNVERIFIED");
+  // GitHub refs are created atomically: only one concurrent request can own
+  // the deterministic candidate key. Existing locks are never force-reset.
+  const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + testedDevSha.toLowerCase();
+  const repoPath = "/repos/" + OWNER + "/" + REPO;
+  const lockPath = repoPath + "/git/ref/heads/" + lockBranch;
+  try {
+    await gh(token, lockPath);
+    return { state: "already_requested", message: "LIVE-förberedelse finns redan eller behöver kontrolleras. Ingen ny begäran skapades." };
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+  }
+  try {
+    await gh(token, repoPath + "/git/refs", {
+      method: "POST",
+      body: JSON.stringify({ ref: "refs/heads/" + lockBranch, sha: testedDevSha }),
+    });
+  } catch (error) {
+    // GitHub returns 422 if another request won the atomic create race.
+    if (error instanceof Error && error.message === "GITHUB_REQUEST_FAILED_422") {
+      return { state: "already_requested", message: "En annan LIVE-förberedelse har redan startat. Ingen dubblett skapades." };
+    }
+    throw error;
+  }
+  // Once the lock exists, failure is fail-closed: never delete it automatically
+  // or create a second issue. Recovery must inspect the journal first.
   const appLogin = await appBotLogin();
-  const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(appLogin));
-  const existing = (issues as any[]).find(issue => {
-    const body = String(issue.body || "");
-    return !issue.pull_request && body.includes("- Beslut: PANDORAS ASK") &&
-      body.includes("- Ärende-ID: PR-" + number) &&
-      body.includes("- Testad DEV-commit (full SHA): " + testedDevSha);
-  });
-  const issue = existing || await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
+  let existing: any = null;
+  for (let page = 1; page <= 20; page++) {
+    const issues = await gh(token, repoPath + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(appLogin));
+    if (!Array.isArray(issues)) throw new Error("AUTO_CANDIDATE_ISSUE_LIST_INVALID");
+    existing = issues.find((issue: any) => {
+      const body = String(issue.body || "");
+      return !issue.pull_request && body.includes("- Beslut: PANDORAS ASK") &&
+        body.includes("- Ärende-ID: PR-" + number) &&
+        body.includes("- Testad DEV-commit (full SHA): " + testedDevSha);
+    });
+    if (existing || issues.length < 100) break;
+    if (page === 20) throw new Error("AUTO_CANDIDATE_ISSUE_SCAN_INCOMPLETE");
+  }
+  const issue = existing || await gh(token, repoPath + "/issues", {
     method: "POST",
     body: JSON.stringify({ title: title(item, "pandoras_ask"), body: issueBody(item, {
       decision: "pandoras_ask", testedDevSha, releaseGroup: "PR #" + number,
