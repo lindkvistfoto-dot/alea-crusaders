@@ -167,6 +167,9 @@ async function recordDevAcceptance(token: string, number: number, actor: string)
 // Disabled by default until the idempotency and candidate-preview pilot is accepted.
 async function autoPrepareLiveCandidate(token: string, number: number, actor: string, acceptance: { testedDevSha: string }) {
   if (Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") !== "enabled") return { state: "disabled" };
+  // Fail closed: an explicitly selected pilot PR is required even when enabled.
+  const pilotPr = Deno.env.get("OLYMPIA_AUTO_LIVE_PILOT_PR") || "";
+  if (!/^[1-9][0-9]*$/.test(pilotPr) || Number(pilotPr) !== number) return { state: "not_selected" };
   const item = await workItem(token, "PR-" + number);
   const testedDevSha = acceptance.testedDevSha;
   if (!await verifyReleaseSources(token, item, testedDevSha)) throw new Error("AUTO_CANDIDATE_SOURCE_UNVERIFIED");
