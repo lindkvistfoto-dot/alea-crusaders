@@ -136,7 +136,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('.step.skipped');
     expect(page).toContain("rejected?'skipped'");
     expect(page).toContain('var registered=new Set(items.flatMap');
-    expect(page).toContain('var listed=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
+    expect(page).toContain('var listed=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
     expect(page).toContain("if(published.length)html+='<h2 class=\"queue-section-title\">Publicerade</h2>'");
     expect(page).not.toContain('id="live-pr-list"');
     expect(page).toContain('Klart för granskning');
@@ -310,8 +310,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('window.olympiaRefreshTrial=renderTrial'));
     expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
     expect(page).toContain('finally{pullRequestsRefresh=null}');
-    expect(page).toContain('Aktuella PR visas inte eftersom GitHub-statusen inte kunde bekräftas.');
-    expect(trial).toContain('var listed=openPullRequestError?[]:');
+    expect(page).toContain('GitHub-listan kunde inte uppdateras. Registrerade DEV-godkännanden visas ovan');
+    expect(trial).toContain('var open=(!openPullRequestError?listed:[])');
     expect(trial).not.toContain('Visar senast hämtade öppna PR');
     expect(page).toContain('data-pr-status');
     expect(page).toContain('action:"pull_request_status"');
