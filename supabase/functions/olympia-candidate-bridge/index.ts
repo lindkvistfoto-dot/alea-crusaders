@@ -131,7 +131,7 @@ function validSha(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{40}$/i.test(value);
 }
 function validWorkItem(item: any) {
-  return !!item && /^PILOT-[0-9]{3}$/.test(String(item.id || "")) &&
+  return !!item && typeof item.id === "string" && /^[A-Za-z][A-Za-z0-9_-]{1,63}$/.test(item.id) &&
     Number.isSafeInteger(item.pr_number) &&
     Array.isArray(item.release_source_prs) && item.release_source_prs.length > 0 &&
     item.release_source_prs.every((number: any) => Number.isSafeInteger(number) && number > 0) &&
@@ -185,7 +185,7 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
   if (request.schema !== "olympia-release-request/v1" ||
       request.issueNumber !== issueNumber ||
       typeof request.itemId !== "string" ||
-      !/^PILOT-[0-9]{3}$/.test(request.itemId) ||
+      !/^[A-Za-z][A-Za-z0-9_-]{1,63}$/.test(request.itemId) ||
       request.decision !== "pandoras_ask" ||
       request.testedDevSha !== devSha ||
       request.workflowBlobSha !== workflowBlobSha ||
@@ -200,9 +200,30 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
       !issueBody.includes("- Testad DEV-commit (full SHA): " + devSha)) {
     throw new Error("OLYMPIA_DECISION_MISMATCH");
   }
-  const queueFile = await contents(tokenForApp, "olympia/work-items.json", "development");
-  const queue = decodedJson(String(queueFile.content || ""));
-  const item = Array.isArray(queue.items) ? queue.items.find((entry: any) => entry.id === request.itemId) : null;
+  let item: any = null;
+  const genericPr = request.itemId.match(/^PR-([1-9][0-9]*)$/);
+  if (genericPr) {
+    const number = Number(genericPr[1]);
+    const pr = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+    if (pr.merged !== true || pr.base?.ref !== "development" ||
+        !validSha(pr.merge_commit_sha) || number !== request.prNumber) {
+      throw new Error("SOURCE_PR_NOT_MERGED_TO_DEV");
+    }
+    const files = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number + "/files?per_page=100");
+    const ref = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
+    const comparison = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/compare/" + pr.merge_commit_sha + "..." + ref.object.sha);
+    if (!(comparison.status === "identical" ||
+        comparison.status === "ahead" && comparison.merge_base_commit?.sha?.toLowerCase() === String(pr.merge_commit_sha).toLowerCase())) {
+      throw new Error("SOURCE_PR_NOT_IN_DEV");
+    }
+    const changed = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")).filter(Boolean) : [];
+    item = { id: request.itemId, pr_number: number, release_source_prs: [number], features: changed,
+      ready_for_human_acceptance: true, dev_sha: pr.merge_commit_sha, title: String(pr.title || request.itemId) };
+  } else {
+    const queueFile = await contents(tokenForApp, "olympia/work-items.json", "development");
+    const queue = decodedJson(String(queueFile.content || ""));
+    item = Array.isArray(queue.items) ? queue.items.find((entry: any) => entry.id === request.itemId) : null;
+  }
   if (!validWorkItem(item) || !item.ready_for_human_acceptance || item.pr_number !== request.prNumber) {
     throw new Error("WORK_ITEM_NOT_READY");
   }

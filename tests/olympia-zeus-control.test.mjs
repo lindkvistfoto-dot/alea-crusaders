@@ -403,6 +403,15 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('data-decision="pandoras_ask"');
   });
 
+  it('allows PR-backed release candidates without PILOT-only naming',()=>{
+    const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+    expect(bridge).toContain('const genericPr = request.itemId.match(/^PR-([1-9][0-9]*)$/)');
+    expect(bridge).toContain('SOURCE_PR_NOT_MERGED_TO_DEV');
+    expect(bridge).toContain('SOURCE_PR_NOT_IN_DEV');
+    expect(bridge).toContain('if (!validWorkItem(item)');
+    expect(bridge).not.toContain('!/^PILOT-[0-9]{3}$/.test(request.itemId)');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
