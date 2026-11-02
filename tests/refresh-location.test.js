@@ -67,7 +67,9 @@ describe('Refresh stays on the same Alea page',()=>{
   expect(legacy).toContain('await window.aleaRefreshLocation?.restore?.()');
   expect(legacy).toContain('window.aleaRefreshLocation?.clear?.()');
   expect(read('index.html')).toContain('refresh-location.js?v=0.35.230');
-  expect(read('index.html')).toContain('html.alea-route-restoring body > main');
+  expect(read('index.html')).not.toContain('html.alea-route-restoring body > main');
+  expect(legacy).toContain('window.aleaRefreshLocation?.restoreEarly?.()');
+  expect(code).toContain('function restoreEarly()');
   expect(legacy).toContain('window.aleaRefreshLocation?.reveal?.()');
   expect(code).not.toContain('rollDice(');
   expect(code).not.toContain('combatCast');
