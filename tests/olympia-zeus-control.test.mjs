@@ -379,7 +379,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(view).toContain('Klart för LIVE');
     expect(view).toContain('Klart för granskning');
     expect(view.indexOf('Klart för LIVE')).toBeLessThan(view.indexOf('Klart för granskning'));
-    expect(view).toContain('GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.');
+    expect(view).toContain('html+=fallback.map(renderQueueItem).join("")');
     expect(view).toContain('acceptedNumbers');
     expect(view).toContain('fallback');
   });
@@ -392,6 +392,15 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(section).toContain('pulls?state=closed&base=development&per_page=100&page=1');
     expect(section).not.toContain('page <= 100');
     expect(section).toContain('const pullRequests = [...byNumber.values()]');
+  });
+
+  it('uses existing release actions for accepted PRs and excludes published PRs',()=>{
+    const page=read('olympia/zeus-control.html');
+    const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('// Preserve expanded PR cards',page.indexOf('function renderTrial()')));
+    expect(trial).toContain('html+=fallback.map(renderQueueItem).join("")');
+    expect(trial).toContain('!window.olympiaLivePublishedByItem["PR-"+Number(match[1])]');
+    expect(trial).toContain('id:"PR-"+number');
+    expect(page).toContain('data-decision="pandoras_ask"');
   });
 
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
