@@ -613,6 +613,7 @@ async function handleRequest(req: Request): Promise<Response> {
           ok: true,
           pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
           statuses: Array.isArray(status.statuses) ? status.statuses : [],
+          combinedStatusState: String(status.state || 'unknown'),
           checkRuns: Array.isArray(checks.check_runs) ? checks.check_runs : [],
         });
       } catch (error) {
