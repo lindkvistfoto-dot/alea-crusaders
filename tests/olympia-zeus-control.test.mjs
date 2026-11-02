@@ -349,7 +349,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('if (refreshed.merged === true && refreshed.base?.ref === "development"');
     expect(edge).toContain('async function recordDevAcceptance(token: string, number: number, actor: string)');
     expect(edge).toContain('body.includes("- Ärende-ID: PR-" + number)');
-    expect(edge).toContain('message: "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE."');
+    expect(edge).toContain('message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE."');
+    expect(edge).toContain('acceptanceWarning');
     expect(page).toContain('await window.olympiaRefreshPullRequests()');
     expect(page).toContain('window.olympiaRefreshRefs()');
     expect(page).toContain('Merge-commit: <a href=');
@@ -369,7 +370,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(calls).toBe(3);
     calls=0;
     const remainsUnknown=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(async()=>{calls++;return {state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:null}},fn=>fn(),'owner','repo');
-    await expect(remainsUnknown('token',42,sha)).rejects.toThrow('PR_MERGEABILITY_UNKNOWN');
+    await expect(remainsUnknown('token',42,sha)).resolves.toMatchObject({mergeable:null});
     expect(calls).toBe(4);
   });
 

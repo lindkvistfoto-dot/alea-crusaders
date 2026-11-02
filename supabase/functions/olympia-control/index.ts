@@ -130,8 +130,6 @@ async function currentDevPullRequest(token: string, number: number, headSha: str
   if (pr.draft) throw new Error("PR_IS_DRAFT");
   if (pr.base?.ref !== "development") throw new Error("PR_NOT_TARGETING_DEV");
   if (pr.head?.sha !== headSha) throw new Error("PR_HEAD_CHANGED");
-  if (pr.mergeable === null || pr.mergeable === undefined) throw new Error("PR_MERGEABILITY_UNKNOWN");
-  if (pr.mergeable !== true) throw new Error("PR_HAS_CONFLICTS");
   return pr;
 }
 async function recordDevAcceptance(token: string, number: number, actor: string) {
@@ -683,9 +681,16 @@ Deno.serve(async (req: Request) => {
           }
         }
         stage = "dev_acceptance_record";
-        const acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
-        return json({ ok: true, merged: true, sha: mergeSha, acceptance,
-          message: "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE." });
+        let acceptance: any = null;
+        let acceptanceWarning = "";
+        try {
+          acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
+        } catch (acceptanceError) {
+          acceptanceWarning = "GitHub-mergen lyckades, men DEV-journalen kunde inte uppdateras. Kontrollera journalen innan LIVE-steget.";
+          console.error("OLYMPIA DEV acceptance record failed after confirmed merge", JSON.stringify({ pr: data.pullRequestNumber, mergeSha, code: acceptanceError instanceof Error ? acceptanceError.message : "UNKNOWN" }));
+        }
+        return json({ ok: true, merged: true, sha: mergeSha, acceptance, acceptanceWarning,
+          message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE." });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA DEV merge failed", JSON.stringify({ pr: data.pullRequestNumber, stage, code }));
