@@ -124,3 +124,10 @@
 }
 
 .honors-frame-choice{grid-column:1/-1;display:grid;gap:5px;color:#e0c18a;font-size:.8rem}.honors-frame-choice select{max-width:100%;padding:7px;border:1px solid #725735;border-radius:7px;background:#211912;color:#f3e8d1}.honors-badge-frames{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Badge previews use one selected frame; criteria tiers remain separate. */
+.honors-badge-frames{grid-template-columns:minmax(0,1fr);justify-items:center}
+.honors-badge-frames .honors-preview-art{width:120px}
+.honors-variant-library.is-badge .honors-preview-tiers{grid-template-columns:minmax(0,1fr);justify-items:center}
+.honors-variant-library.is-badge .honors-preview-tier{width:120px}
+.honors-variant-library.is-badge .honors-preview-tier .honors-preview-art{width:120px}
