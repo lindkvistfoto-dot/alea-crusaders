@@ -16,6 +16,9 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain('honors-preview-window');
   const css=read('features/honors/honors-admin.css');
   expect(css).toContain('object-fit:cover');
+  expect(css).toContain('left:16%;top:16%;width:68%;height:68%;aspect-ratio:1/1');
+  expect(css).toContain('honors-preview-overhang');
+  expect(admin).toContain('name="allow_overhang"> Tillåt bilden');
   const html=read('index.html');
   expect(html).toContain('honors-entry.js?v=20261102-badge-single-frame-486-fix2');
   expect(html).toContain('ARCANE HONORS laddningsfel:');
