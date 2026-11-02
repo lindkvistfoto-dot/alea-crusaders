@@ -24,6 +24,21 @@ function liveNotice(button,message){const lane=button.closest('.lane');let node=
 async function currentDevSha(){const result=await window.olympiaV2Request({action:'current_refs'});const sha=result.environments?.development?.sha; if(typeof sha!=='string'||!/^[a-f0-9]{40}$/i.test(sha))throw Error('DEV-versionen kunde inte verifieras. Ingen åtgärd gjordes.');return sha}
 document.addEventListener('click',async event=>{const button=event.target.closest('[data-live-accept],[data-live-pandora]');if(!button||liveBusy)return;const accept=button.hasAttribute('data-live-accept');const number=Number(accept?button.dataset.liveAccept:button.dataset.livePandora);liveNotice(button,'Tryck registrerat · kontrollerar LIVE-förberedelse…');if(!verified){liveNotice(button,'Zeus-behörigheten är inte verifierad. Uppdatera status eller logga in i ALEA DEV igen. Inget beslut har skickats.');return}if(!Number.isSafeInteger(number)||number<1){liveNotice(button,'Ogiltigt PR-nummer. Inget beslut har skickats.');return}const action=accept?'accept':'pandoras_ask';if(!confirm(accept?'Godkänn DEV-underlaget för PR #'+number+' inför LIVE? Ingen LIVE-publicering sker.':'Öppna Pandoras ask för PR #'+number+' och begär en LIVE-kandidat? Ingen LIVE-publicering sker.')){liveNotice(button,'Avbrutet av Zeus. Inget beslut skickades.');return}liveBusy=true;button.disabled=true;liveNotice(button,'Kontrollerar DEV och registrerar beslut…');try{const sha=await currentDevSha();const result=await window.olympiaV2Request({decision:action,itemId:'PR-'+number,testedDevSha:sha,comment:'OLYMPIA 2.0 – Zeus beslut för PR #'+number});if(result.ok!==true)throw Error(result.message||'Beslutet kunde inte bekräftas');liveNotice(button,result.message||'Beslut registrerat.');if(accept){try{sessionStorage.setItem('olympia-v2-live-accepted-'+number,sha)}catch(_){}button.textContent='DEV-underlag godkänt ✓';const next=button.closest('.lane').querySelector('[data-live-pandora]');if(next)next.disabled=false}else{button.textContent='Pandoras ask öppnad ✓';const issue=result.issue?.url;if(issue){const a=document.createElement('a');a.href=issue;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Visa releaseärendet';button.closest('.lane').append(a)}}}catch(error){liveNotice(button,'Ingen bekräftad åtgärd: '+(error.message||'okänt fel'));button.disabled=false}finally{liveBusy=false}},false);
 window.olympiaV2RestoreLiveButtons=()=>{document.querySelectorAll('[data-live-accept]').forEach(button=>{const number=Number(button.dataset.liveAccept);try{if(sessionStorage.getItem('olympia-v2-live-accepted-'+number)){button.textContent='DEV-underlag godkänt ✓';button.disabled=true;const next=button.closest('.lane').querySelector('[data-live-pandora]');if(next)next.disabled=false}}catch(_){}})};
+document.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-candidate-diagnostics]');if(!button)return;
+ const number=Number(button.dataset.candidateDiagnostics);
+ liveNotice(button,'Kontrollerar kandidatlås och releasejournal…');
+ if(!verified){liveNotice(button,'Zeus-sessionen är inte verifierad. Ingen åtgärd gjordes.');return}
+ if(!Number.isSafeInteger(number)||number<1){liveNotice(button,'Ogiltigt PR-nummer.');return}
+ button.disabled=true;
+ try{
+  const sha=await currentDevSha();
+  const result=await window.olympiaV2Request({action:'auto_candidate_diagnostics',pullRequestNumber:number,testedDevSha:sha});
+  const labels={not_started:'Ingen automatisk kandidat startad',requested:'Kandidatbegäran hittad',needs_review:'Låset behöver granskas',unlocked_issue:'Releaseärende utan automatiskt lås',unknown:'Status kunde inte verifieras',inconsistent:'Låset har fel commit'};
+  liveNotice(button,(labels[result.state]||'Okänd status')+' · '+(result.message||'')+' · Kontrollerad DEV-version: '+sha.slice(0,12));
+ }catch(error){liveNotice(button,'Kandidatlåset kunde inte kontrolleras: '+(error.message||'okänt fel')+'. Ingen ändring gjordes.')}
+ finally{button.disabled=false}
+},false);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!verified)verify()});
 verify();
 })();
