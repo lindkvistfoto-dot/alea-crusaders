@@ -73,8 +73,8 @@ async function githubToken(decision: string) {
   const jwt = await appJwt(appId, privateKey);
   const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
-    : decision === "pull_request_list"
-    ? { pull_requests: "read" }
+    : decision === "pull_request_list" || decision === "pull_request_status"
+    ? { pull_requests: "read", checks: "read", statuses: "read" }
     : decision === "candidate_check"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "review_pull_request"
@@ -584,10 +584,11 @@ Deno.serve(async (req: Request) => {
       }
       try {
         const path = "/repos/" + OWNER + "/" + REPO;
+        const token = await githubToken("pull_request_status");
         const [pr, status, checks] = await Promise.all([
-          ghPublic(path + "/pulls/" + data.pullRequestNumber),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          gh(token, path + "/pulls/" + data.pullRequestNumber),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
         ]);
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
         return json({
