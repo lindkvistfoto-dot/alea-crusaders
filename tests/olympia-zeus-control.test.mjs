@@ -246,7 +246,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     expect(page).toContain('!!window.olympiaAuthVerified');
     expect(page).toContain('request({action:"session_check"},session)');
-    expect(page).toContain('setTimeout(()=>controller.abort(),12000)');
+    expect(page).toContain('setTimeout(()=>controller.abort(),timeoutMs)');
+    expect(page).toContain('timeoutMs=12000');
+    expect(page).toContain('pullRequestHeadSha:sha},session,20000');
     expect(edge).toContain('data.action === "session_check"');
     expect(edge).toContain('async function githubToken(decision: string)');
     expect(edge).toContain('decision === "deployment_check"');
@@ -420,6 +422,15 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(section).toContain('fieldValue("Verifierad ärende-SHA")');
     expect(section).toContain('item={id:"PR-"+sourceNumber');
     expect(page).toContain('action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha');
+  });
+
+  it('uses the ordinary PR button for one verified DEV merge with visible feedback',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('data-pr-approve=');
+    expect(page).toContain('result.merged!==true');
+    expect(page).toContain('data-pr-approve-feedback');
+    expect(page).toContain('pullRequestHeadSha:sha},session,20000');
+    expect(page).not.toContain('pr486-merge-test.html');
   });
 
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{

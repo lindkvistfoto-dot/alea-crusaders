@@ -314,7 +314,6 @@ document.addEventListener("click",async function(event){
   actions.appendChild(feedback);
  }
  const report=function(message){feedback.textContent=message;};
- if(!window.olympiaAuthVerified){report("Godkännande stoppat: Zeus-behörighet saknas. Logga in i ALEA DEV.");return;}
  const session=storedSession();
  if(!session){report("Godkännande stoppat: ALEA DEV-session saknas. Logga in igen.");return;}
  if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){
@@ -326,8 +325,8 @@ document.addEventListener("click",async function(event){
  button.textContent="Godkänner DEV…";
  report("PR #"+number+": kontrollerar och begär DEV-merge…");
  try{
-  const {response,result}=await request({action:"approve_and_merge_dev",pullRequestNumber:number,pullRequestHeadSha:sha},session);
-  if(!response.ok||!result.ok)throw new Error(result.message||("Servern svarade HTTP "+response.status));
+  const {response,result}=await request({action:"approve_and_merge_dev",pullRequestNumber:number,pullRequestHeadSha:sha},session,20000);
+  if(!response.ok||!result.ok||result.merged!==true)throw new Error("HTTP "+response.status+" · "+(result.stage||"server")+" · "+(result.errorCode||"")+" · "+(result.message||"Ingen bekräftad merge"));
   const mergeSha=String(result.sha||"");
   if(!/^[a-f0-9]{40}$/i.test(mergeSha))throw new Error("GitHub bekräftade ingen merge-commit.");
   const message="PR #"+number+" mergad till DEV · "+mergeSha.slice(0,7)+". "+(result.acceptanceWarning||"Ärendet är klart för LIVE.");
@@ -340,7 +339,7 @@ document.addEventListener("click",async function(event){
    if(window.olympiaRefreshPullRequests)await window.olympiaRefreshPullRequests();
   }catch(refreshError){say(message+" Statuslistan kunde inte uppdateras automatiskt.",true);}
  }catch(error){
-  const reason=error&&error.name==="AbortError"?"Servern svarade inte inom 12 sekunder. Hämta status innan nytt försök.":String(error?.message||"Okänt fel");
+  const reason=error&&error.name==="AbortError"?"Servern svarade inte inom 20 sekunder. Kontrollera PR-status före nytt försök.":String(error?.message||"Okänt fel");
   report("PR #"+number+" kunde inte godkännas: "+reason);
   button.textContent=original;
   button.disabled=false;
@@ -504,9 +503,9 @@ function storedSession(){
  }catch(_){}
  return null;
 }
-async function request(body,session){
+async function request(body,session,timeoutMs=12000){
  const controller=new AbortController();
- const timeout=setTimeout(()=>controller.abort(),12000);
+ const timeout=setTimeout(()=>controller.abort(),timeoutMs);
  try{
   const response=await fetch(endpoint,{
    method:"POST",
