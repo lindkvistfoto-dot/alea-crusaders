@@ -6,7 +6,7 @@ const source=readFileSync(new URL('../supabase/functions/olympia-control/index.t
 const start=source.indexOf('async function autoPrepareLiveCandidate(');
 const end=source.indexOf('async function appBotLogin()',start);
 if(start<0||end<0)throw Error('Candidate function not found');
-const compiled=transformSync(source.slice(start,end)+'\nreturn autoPrepareLiveCandidate;', {loader:'ts',format:'cjs'}).code;
+const compiled=transformSync(source.slice(start,end), {loader:'ts',format:'cjs'}).code;
 
 function harness({failAfterLock=false}={}){
  const locks=new Set(),issues=[],calls={createRef:0,createIssue:0,startCandidate:0};
@@ -36,7 +36,7 @@ function harness({failAfterLock=false}={}){
   gh,title:()=> 'candidate',issueBody:()=>'- Beslut: PANDORAS ASK\n- Ärende-ID: PR-502\n- Testad DEV-commit (full SHA): '+'a'.repeat(40),
   startCandidateRequest:async()=>{calls.startCandidate++;return 'candidate-branch';},
  };
- const fn=new Function(...Object.keys(deps),compiled)(...Object.values(deps));
+ const fn=new Function(...Object.keys(deps),compiled+'\nreturn autoPrepareLiveCandidate;')(...Object.values(deps));
  const run=()=>fn('token',502,'Zeus',{testedDevSha:'a'.repeat(40)});
  return {run,calls,locks};
 }
