@@ -433,6 +433,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).not.toContain('pr486-merge-test.html');
   });
 
+  it('captures approval clicks before other handlers and immediately reports progress',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('event.stopImmediatePropagation()');
+    expect(page).toContain('report("Klick registrerat. Kontrollerar DEV-session…")');
+    expect(page).toContain('},true);\\nasync function renderBlockers()'.replace('\\n','\n'));
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
