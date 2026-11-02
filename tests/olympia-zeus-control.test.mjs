@@ -440,6 +440,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('},true);\\nasync function renderBlockers()'.replace('\\n','\n'));
   });
 
+  it('persists and restores DEV approval feedback after mobile navigation',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('sessionStorage.setItem("olympia-dev-approval-"+number');
+    expect(page).toContain('sessionStorage.getItem("olympia-dev-approval-"+n)');
+    expect(page).toContain('savedApproval');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
