@@ -167,7 +167,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const isBadge = getCategory(definition) === 'badge';
     const selectedPreview = String(definition.preview_variant_id || '');
     const selectedPublished = String(definition.published_variant_id || '');
-    const tiers = isBadge ? ['bronze','silver','gold'] : ['bronze'];
+    const tiers = ['bronze'];
     const tierLabels = {bronze:'Brons',silver:'Silver',gold:'Guld'};
     const rows = own.length ? own.map(v => {
       const img = assetImage(v.image_asset_id);
@@ -212,7 +212,7 @@ export function renderHonorsAdmin(root, options = {}) {
         '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. '+(isBadge?'Badgebilder måste vara kvadratiska (1:1). ':'')+'Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
         '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt bilden att sticka utanför ramen (3D-effekt)</label>' +
         '<button type="submit"'+(!imagePilot?' disabled':'')+'>Lägg till variant</button></form>' +
-      '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i brons-, silver- och guldram"><span>Förhandsvisning · valda ramar</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
+      '<div class="honors-preview-card" aria-label="Förhandsvisning av vald bild och ram"><span>Förhandsvisning · vald bild och ram</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
       '<button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
   }
 
@@ -229,19 +229,15 @@ export function renderHonorsAdmin(root, options = {}) {
     const selectedText=variant
       ? (definition.published_variant_id&&String(definition.published_variant_id)===String(variant.id)?'Vald variant':'Vald förhandsvisning')
       : 'Ingen bildvariant vald';
-    const metals=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
     const frameUrl=variant?assetImage(selectedBadgeFrame(definition,variant)):null;
-    const frames=metals.map(([metal,label],index)=>{
-      const stars='★'.repeat(index+1);
-      const reliefLayer=variantUrl
-        ? (variant?.allow_overhang===false
-          ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
-          : '<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">')
-        : '<span class="honors-preview-empty">Bild saknas</span>';
-      return '<div class="honors-badge-frame"><span>'+label+' · '+stars+'</span><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
-        reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'<span class="honors-preview-empty">Välj en ram</span>')+
+    const reliefLayer=variantUrl
+      ? (variant?.allow_overhang===false
+        ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
+        : '<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">')
+      : '<span class="honors-preview-empty">Bild saknas</span>';
+    const framePreview='<div class="honors-badge-frame"><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
+      reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'<span class="honors-preview-empty">Välj en ram</span>')+
       '</div></div>';
-    }).join('');
     const criteria=[['bronze','Brons'],['silver','Silver'],['gold','Guld']].map(([tier,label])=>
       '<div class="honors-badge-tier"><strong>'+label+'</strong><span>'+esc(tierText(definition,tier)||'Inte definierat')+'</span></div>'
     ).join('');
@@ -257,7 +253,7 @@ export function renderHonorsAdmin(root, options = {}) {
     return '<article class="honors-badge-card">'+
       '<header><div><span class="honors-eyebrow">BADGE</span><h3>'+esc(definition.name)+'</h3></div><span class="honors-status '+statusClass+'">'+esc(statusLabel)+'</span></header>'+
       '<p class="honors-badge-description">'+esc(definition.description||'Ingen beskrivning ännu.')+'</p>'+
-      '<div class="honors-badge-frames" aria-label="Samma ram med en, två och tre stjärnor">'+frames+'</div>'+
+      '<div class="honors-badge-frames" aria-label="Vald badgebild och ram">'+framePreview+'</div>'+
       '<div class="honors-badge-tiers">'+criteria+'</div><p class="honors-badge-metric-note">Karriärmått kontrolleras manuellt tills statistikfunktionen finns.</p>'+
       '<div class="honors-badge-current"><strong>'+esc(selectedText)+'</strong><span>'+(variant?esc(variant.name)+' · '+esc(materials[variant.material]||variant.material):'Lägg till en variant när illustrationen är klar')+'</span></div>'+
       '<details class="honors-badge-variants"><summary>Bildvarianter ('+alternatives.length+')</summary>'+
