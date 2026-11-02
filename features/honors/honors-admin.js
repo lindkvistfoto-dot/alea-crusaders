@@ -252,7 +252,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<header><div><span class="honors-eyebrow">BADGE</span><h3>'+esc(definition.name)+'</h3></div><span class="honors-status '+statusClass+'">'+esc(statusLabel)+'</span></header>'+
       '<div class="honors-badge-frames" aria-label="Förhandsgranska vald badgebild och ram">'+framePreview+'</div>'+
       '<div class="honors-badge-quick-controls">'+frameChoice+imageChoice+
-      '<div class="honors-badge-image-actions"><button type="button" data-card-image-action="'+esc(definition.id)+'" data-image-task="upload">Ladda upp bild</button>'+
+      '<div class="honors-badge-image-actions"><label class="honors-badge-upload">Ladda upp bild<input type="file" data-card-image-upload="'+esc(definition.id)+'" accept="image/png,image/jpeg,image/webp"></label>'+
       '<button type="button" data-card-image-action="'+esc(definition.id)+'" data-image-task="remove"'+(!variant?' disabled':'')+'>Ta bort bild</button></div></div>'+
       '<footer><button type="button" data-edit-badge="'+esc(definition.id)+'">Redigera regler &amp; inställningar</button></footer>'+
     '</article>';
@@ -323,15 +323,27 @@ export function renderHonorsAdmin(root, options = {}) {
           draw();notice('Aktiv badgebild sparad.');
         }catch(error){notice(error.message||'Bilden kunde inte väljas.');}
       }));
-      grid.querySelectorAll('[data-card-image-action]').forEach(button=>button.addEventListener('click',()=>{
+      grid.querySelectorAll('[data-card-image-upload]').forEach(input=>input.addEventListener('change',async()=>{
+        const definition=definitions.find(d=>String(d.id)===input.dataset.cardImageUpload);
+        const variant=definition&&selectedBadgeVariant(definition);
+        const file=input.files?.[0];if(!file)return;
+        if(!variant){openEditor(definition);notice('Skapa först en bildvariant under Bildvarianter.');return;}
+        try{
+          await assertSquareBadgeImage(file);
+          if(typeof options.onUploadImage!=='function')throw Error('Bilduppladdning saknas.');
+          const saved=await options.onUploadImage('relief',variant,file);
+          Object.assign(variant,saved);draw();notice('Badgebild uppladdad.');
+        }catch(error){notice(error.message||'Kunde inte ladda upp bilden.');input.value='';}
+      }));
+      grid.querySelectorAll('[data-card-image-action]').forEach(button=>button.addEventListener('click',async()=>{
         const definition=definitions.find(d=>String(d.id)===button.dataset.cardImageAction);
-        if(!definition)return;
-        openEditor(definition);
-        const task=button.dataset.imageTask;
-        const target=task==='upload'?root.querySelector('[data-variant-form] input[name="image_file"]'):
-          root.querySelector('[data-variant-row] [data-image-remove], [data-image-controls][data-kind="relief"] [data-image-remove]');
-        if(target){target.scrollIntoView({block:'center'});if(task==='upload')target.focus();}
-        notice(task==='upload'?'Välj bildfil under Bildvarianter.':'Ta bort bilden under Bildvarianter. Originalarkivet behålls.');
+        const variant=definition&&selectedBadgeVariant(definition);
+        if(!variant||!root.ownerDocument.defaultView.confirm('Ta bort bildkopplingen? Originalarkivet behålls.'))return;
+        try{
+          if(typeof options.onRemoveImage!=='function')throw Error('Bildborttagning saknas.');
+          const saved=await options.onRemoveImage('relief',variant);
+          Object.assign(variant,saved);draw();notice('Bildkopplingen borttagen.');
+        }catch(error){notice(error.message||'Bilden kunde inte tas bort.');}
       }));
       grid.querySelectorAll('[data-edit-badge]').forEach(button=>button.addEventListener('click',()=>{
         const definition=definitions.find(d=>String(d.id)===button.dataset.editBadge);
