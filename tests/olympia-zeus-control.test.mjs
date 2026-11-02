@@ -422,14 +422,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha');
   });
 
-  it('routes PR 486 to the isolated DEV merge with exact head SHA',()=>{
+  it('uses the ordinary PR button for one verified DEV merge with visible feedback',()=>{
     const page=read('olympia/zeus-control.html');
-    const isolated=read('olympia/pr486-merge-test.html');
-    expect(page).toContain('href="./pr486-merge-test.html"');
-    expect(isolated).toContain('pullRequestNumber:486');
-    expect(isolated).toContain('bea42796a093f221f6b2022e059768547782f083');
-    expect(isolated).toContain('action:"approve_and_merge_dev"');
-    expect(isolated).toContain('result.merged');
+    expect(page).toContain('data-pr-approve=');
+    expect(page).toContain('result.merged!==true');
+    expect(page).toContain('data-pr-approve-feedback');
+    expect(page).toContain('pullRequestHeadSha:sha},session,20000');
+    expect(page).not.toContain('pr486-merge-test.html');
   });
 
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
