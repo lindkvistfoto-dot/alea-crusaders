@@ -197,15 +197,30 @@ function prWorkItem(pr){var files=Array.isArray(pr.changed_files_list)?pr.change
 function renderTrial(){
 var root=get("trial-list"),items=(queue&&queue.items||[]).slice().sort(function(a,b){return itemPriority(a)-itemPriority(b)}),active=items.filter(function(item){return !(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])}),published=items.filter(function(item){return !!(window.olympiaLivePublishedByItem&&window.olympiaLivePublishedByItem[item.id])});
 var registered=new Set(items.flatMap(function(item){return [item.pr_number].concat(item.release_source_prs||[])}).filter(Boolean));
-var listed=openPullRequestError?[]:(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
-var open=listed.filter(function(pr){return !pr.merged&&pr.state==="open"});
-var readyForLive=listed.filter(function(pr){return pr.merged&&pr.base&&pr.base.ref==="development"&&(window.zeusDecisions||[]).some(function(row){var body=String(row.body||"");return body.includes("- Ärende-ID: PR-"+Number(pr.number))&&body.includes("- Beslut: ACCEPTANS")})});
-var html=active.map(renderQueueItem).join("");
-if(openPullRequestError)html+='<div class="empty">Aktuella PR visas inte eftersom GitHub-statusen inte kunde bekräftas. '+esc(openPullRequestErrorMessage||"Försök igen när ALEA-sessionen är verifierad.")+'</div>';
-if(open.length)html+='<h2 class="queue-section-title">Klart för granskning</h2>'+open.map(renderOpenPullRequest).join("");
-else if(openPullRequests===null&&!openPullRequestError)html+='<div class="empty">Läser öppna PR…</div>';
-if(readyForLive.length)html+='<h2 class="queue-section-title">Klart för LIVE</h2>'+readyForLive.map(renderOpenPullRequest).join("");
-if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+published.map(renderQueueItem).join("");
+var decisions=window.zeusDecisions||[];
+var acceptedNumbers=new Set(decisions.filter(function(row){return String(row.body||"").includes("- Beslut: ACCEPTANS")}).map(function(row){var match=String(row.body||"").match(/- Ärende-ID: PR-([0-9]+)/);return match?Number(match[1]):null}).filter(Boolean));
+var listed=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
+var open=(!openPullRequestError?listed:[]).filter(function(pr){return !pr.merged&&pr.state==="open"});
+var readyForLive=listed.filter(function(pr){return pr.merged&&pr.base&&pr.base.ref==="development"&&acceptedNumbers.has(Number(pr.number))});
+var shownReady=new Set(readyForLive.map(function(pr){return Number(pr.number)}));
+var fallback=decisions.filter(function(row){
+ var match=String(row.body||"").match(/- Ärende-ID: PR-([0-9]+)/);
+ return String(row.body||"").includes("- Beslut: ACCEPTANS")&&match&&!registered.has(Number(match[1]))&&!shownReady.has(Number(match[1]));
+}).map(function(row){
+ var body=String(row.body||""),number=Number(body.match(/- Ärende-ID: PR-([0-9]+)/)[1]);
+ var sha=(body.match(/- Testad DEV-commit \(full SHA\): ([a-f0-9]{40})/i)||[])[1]||"";
+ return {number:number,title:String(row.title||"").replace(/^\[OLYMPIA ACCEPTANS\] PR-[0-9]+\s*[·:-]?\s*/,""),sha:sha};
+}).filter(function(item,index,array){return array.findIndex(function(other){return other.number===item.number})===index});
+var acceptedQueue=active.filter(function(item){return decisions.some(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)&&String(row.body||"").includes("- Beslut: ACCEPTANS")})});
+var reviewQueue=active.filter(function(item){return !acceptedQueue.includes(item)});
+var html='<h2 class="queue-section-title">Klart för LIVE</h2>';
+html+=acceptedQueue.map(renderQueueItem).join("")+readyForLive.map(renderOpenPullRequest).join("");
+html+=fallback.map(function(item){return '<div class="card"><strong>PR #'+esc(item.number)+' · '+esc(item.title)+'</strong><p class="small muted">DEV-godkännande registrerat · '+esc(item.sha.slice(0,7))+'</p><p class="small muted">GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.</p><a class="btn secondary" href="https://github.com/'+esc(owner)+'/'+esc(repo)+'/pull/'+esc(item.number)+'" target="_blank" rel="noopener">Visa PR ↗</a></div>'}).join("");
+if(!acceptedQueue.length&&!readyForLive.length&&!fallback.length)html+='<p class="small muted">Inga DEV-godkända ärenden väntar.</p>';
+html+='<h2 class="queue-section-title">Klart för granskning</h2>'+reviewQueue.map(renderQueueItem).join("")+open.map(renderOpenPullRequest).join("");
+if(!reviewQueue.length&&!open.length)html+='<p class="small muted">Inga ärenden väntar på granskning.</p>';
+if(openPullRequestError)html+='<p class="small muted">GitHub-listan kunde inte uppdateras. Registrerade DEV-godkännanden visas ovan, men LIVE-beslut kräver aktuell verifiering.</p>';
+if(published.length)html+='<details class="details"><summary>Publicerade ('+published.length+')</summary>'+published.map(renderQueueItem).join("")+'</details>';
 // Preserve expanded PR cards and the reader's position during background refresh.
 var before=Array.from(root.querySelectorAll("details.pr-card"));
 var expanded=new Set(before.filter(function(card){return card.open}).map(function(card){return card.querySelector("[data-pr-status]")?.dataset.prStatus}).filter(Boolean));
