@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+import { classifyCi } from "../_shared/olympia-ci.ts";
 
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
@@ -73,14 +74,16 @@ async function githubToken(decision: string) {
   const jwt = await appJwt(appId, privateKey);
   const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
-    : decision === "pull_request_list" || decision === "pull_request_status"
+    : decision === "pull_request_list"
+    ? { pull_requests: "read" }
+    : decision === "pull_request_status"
     ? { pull_requests: "read", checks: "read", statuses: "read" }
     : decision === "candidate_check"
-    ? { contents: "read", issues: "read", pull_requests: "read" }
+    ? { contents: "read", issues: "read", pull_requests: "read", checks: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "approve_and_merge_dev"
-    ? { pull_requests: "write", issues: "write", contents: "write" }
+    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const res = await fetch("https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens", {
@@ -109,14 +112,6 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
     }
     throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
   }
-  return data;
-}
-async function ghPublic(path: string) {
-  const res = await fetch("https://api.github.com" + path, {
-    headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
   return data;
 }
 async function currentDevPullRequest(token: string, number: number, headSha: string) {
@@ -406,11 +401,10 @@ async function verifyCandidate(token: string, item: any, data: any) {
   if (!actualFiles.length || actualFiles.some((filename: string) => !allowedFiles.has(filename))) {
     throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
   }
-  const checks = await ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
-  if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||
-      checks.check_runs.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
-    throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
-  }
+  const checks = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
+  const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
+  const ci = classifyCi(runs, [], pr.head.sha, Number(checks.total_count));
+  if (ci.state !== "success") throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
   return { issue, pr, report, liveSha: live.sha };
 }
 async function inspectCandidate(token: string, item: any, issueNumber: number, testedDevSha: string) {
@@ -541,13 +535,22 @@ Deno.serve(async (req: Request) => {
     if (data.action === "pull_request_list") {
       try {
         const token = await githubToken("pull_request_list");
-        const open = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
-        if (!Array.isArray(open)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        // Only recent merged DEV PRs are needed for the active decision queue.
-        // Older accepted items remain visible from the persistent Zeus decision journal.
-        const recentClosed = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=1&sort=updated&direction=desc");
-        if (!Array.isArray(recentClosed)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        const closed = recentClosed.filter((pr: any) => pr.merged === true && pr.base?.ref === "development");
+        const open: any[] = [];
+        for (let page = 1; page <= 1000; page++) {
+          const batch = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&base=development&per_page=100&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+          open.push(...batch);
+          if (batch.length < 100) break;
+          if (page === 1000) throw new Error("GITHUB_PR_LIST_PAGE_LIMIT");
+        }
+        const closed: any[] = [];
+        for (let page = 1; page <= 1000; page++) {
+          const batch = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+          closed.push(...batch.filter((pr: any) => pr.merged === true && pr.base?.ref === "development"));
+          if (batch.length < 100) break;
+          if (page === 1000) throw new Error("GITHUB_PR_LIST_PAGE_LIMIT");
+        }
         const byNumber = new Map<number, any>();
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
         const pullRequests = [...byNumber.values()].sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
@@ -587,15 +590,21 @@ Deno.serve(async (req: Request) => {
         const token = await githubToken("pull_request_status");
         const [pr, status, checks] = await Promise.all([
           gh(token, path + "/pulls/" + data.pullRequestNumber),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status?per_page=100"),
           gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
         ]);
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
+        const statuses = Array.isArray(status.statuses) ? status.statuses : [];
+        const checkRuns = Array.isArray(checks.check_runs) ? checks.check_runs : [];
+        const ci = classifyCi(checkRuns, statuses, data.pullRequestHeadSha, Number(checks.total_count),
+          Number(status.total_count), String(status.state || ""));
         return json({
           ok: true,
           pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
-          statuses: Array.isArray(status.statuses) ? status.statuses : [],
-          checkRuns: Array.isArray(checks.check_runs) ? checks.check_runs : [],
+          statuses,
+          checkRuns,
+          ci,
+          previewUrl: ci.previewUrl,
         });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
@@ -646,17 +655,14 @@ Deno.serve(async (req: Request) => {
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
         const [checks, status] = await Promise.all([
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status?per_page=100"),
         ]);
         const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
         const statuses = Array.isArray(status.statuses) ? status.statuses : [];
-        if ((!runs.length && !statuses.length) || Number(checks.total_count) > runs.length ||
-            runs.some((check: any) => check.status !== "completed" ||
-              !["success", "neutral", "skipped"].includes(check.conclusion)) ||
-            (statuses.length > 0 && status.state !== "success")) {
-          throw new Error("CI_NOT_GREEN");
-        }
+        const ci = classifyCi(runs, statuses, data.pullRequestHeadSha, Number(checks.total_count),
+          Number(status.total_count), String(status.state || ""));
+        if (Number(checks.total_count) > runs.length || ci.state !== "success") throw new Error("CI_NOT_GREEN");
         stage = "github_merge";
         let mergeSha = "";
         try {
