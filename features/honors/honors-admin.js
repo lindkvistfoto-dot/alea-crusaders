@@ -200,7 +200,7 @@ export function renderHonorsAdmin(root, options = {}) {
           : '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '"></span>')
         : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '';
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
-        (isBadge ? '<span class="honors-preview-stars" aria-label="' + String(['bronze','silver','gold'].indexOf(tier)+1) + ' stjärnor">' + '★'.repeat(['bronze','silver','gold'].indexOf(tier)+1) + '</span>' : '') +
+        '' +
         (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + frameFamilyLabel + ' ' + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         reliefLayer +
       '</div></div>';
