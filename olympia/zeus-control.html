@@ -201,21 +201,21 @@ var decisions=window.zeusDecisions||[];
 var acceptedNumbers=new Set(decisions.filter(function(row){return String(row.body||"").includes("- Beslut: ACCEPTANS")}).map(function(row){var match=String(row.body||"").match(/- Ärende-ID: PR-([0-9]+)/);return match?Number(match[1]):null}).filter(Boolean));
 var listed=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))});
 var open=(!openPullRequestError?listed:[]).filter(function(pr){return !pr.merged&&pr.state==="open"});
-var readyForLive=listed.filter(function(pr){return pr.merged&&pr.base&&pr.base.ref==="development"&&acceptedNumbers.has(Number(pr.number))});
+var readyForLive=listed.filter(function(pr){return pr.merged&&pr.base&&pr.base.ref==="development"&&acceptedNumbers.has(Number(pr.number))&&!window.olympiaLivePublishedByItem["PR-"+Number(pr.number)]});
 var shownReady=new Set(readyForLive.map(function(pr){return Number(pr.number)}));
 var fallback=decisions.filter(function(row){
  var match=String(row.body||"").match(/- Ärende-ID: PR-([0-9]+)/);
- return String(row.body||"").includes("- Beslut: ACCEPTANS")&&match&&!registered.has(Number(match[1]))&&!shownReady.has(Number(match[1]));
+ return String(row.body||"").includes("- Beslut: ACCEPTANS")&&match&&!registered.has(Number(match[1]))&&!shownReady.has(Number(match[1]))&&!window.olympiaLivePublishedByItem["PR-"+Number(match[1])];
 }).map(function(row){
  var body=String(row.body||""),number=Number(body.match(/- Ärende-ID: PR-([0-9]+)/)[1]);
- var sha=(body.match(/- Testad DEV-commit \(full SHA\): ([a-f0-9]{40})/i)||[])[1]||"";
- return {number:number,title:String(row.title||"").replace(/^\[OLYMPIA ACCEPTANS\] PR-[0-9]+\s*[·:-]?\s*/,""),sha:sha};
+ var sha=(body.match(/- Testad DEV-commit \\(full SHA\\): ([a-f0-9]{40})/i)||[])[1]||"";
+ return {id:"PR-"+number,number:number,pr_number:number,title:String(row.title||"").replace(/^\\[OLYMPIA ACCEPTANS\\] PR-[0-9]+\\s*[·:-]?\\s*/,""),dev_sha:sha,ready_for_human_acceptance:true,image_count:0,image_status:"published",dev_url:"../",release_source_prs:[number],features:[],provenance:{source_pr:number}};
 }).filter(function(item,index,array){return array.findIndex(function(other){return other.number===item.number})===index});
-var acceptedQueue=active.filter(function(item){return decisions.some(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)&&String(row.body||"").includes("- Beslut: ACCEPTANS")})});
+var acceptedQueue=active.filter(function(item){return !window.olympiaLivePublishedByItem[item.id]&&decisions.some(function(row){return String(row.body||"").includes("- Ärende-ID: "+item.id)&&String(row.body||"").includes("- Beslut: ACCEPTANS")})});
 var reviewQueue=active.filter(function(item){return !acceptedQueue.includes(item)});
 var html='<h2 class="queue-section-title">Klart för LIVE</h2>';
 html+=acceptedQueue.map(renderQueueItem).join("")+readyForLive.map(renderOpenPullRequest).join("");
-html+=fallback.map(function(item){return '<div class="card"><strong>PR #'+esc(item.number)+' · '+esc(item.title)+'</strong><p class="small muted">DEV-godkännande registrerat · '+esc(item.sha.slice(0,7))+'</p><p class="small muted">GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.</p><a class="btn secondary" href="https://github.com/'+esc(owner)+'/'+esc(repo)+'/pull/'+esc(item.number)+'" target="_blank" rel="noopener">Visa PR ↗</a></div>'}).join("");
+html+=fallback.map(renderQueueItem).join("");
 if(!acceptedQueue.length&&!readyForLive.length&&!fallback.length)html+='<p class="small muted">Inga DEV-godkända ärenden väntar.</p>';
 html+='<h2 class="queue-section-title">Klart för granskning</h2>'+reviewQueue.map(renderQueueItem).join("")+open.map(renderOpenPullRequest).join("");
 if(!reviewQueue.length&&!open.length)html+='<p class="small muted">Inga ärenden väntar på granskning.</p>';
