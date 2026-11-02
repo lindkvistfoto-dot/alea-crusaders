@@ -210,7 +210,7 @@ export function renderHonorsAdmin(root, options = {}) {
       '<form data-variant-form class="honors-variant-form">' +
         '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood','other'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
         '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. '+(isBadge?'Badgebilder måste vara kvadratiska (1:1). ':'')+'Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
-        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt bilden att sticka utanför ramen (3D-effekt)</label>' +
+        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang"> Tillåt bilden att sticka utanför ramen (kräver transparent motiv)</label>' +
         '<button type="submit"'+(!imagePilot?' disabled':'')+'>Lägg till variant</button></form>' +
       '<div class="honors-preview-card" aria-label="Förhandsvisning av vald bild och ram"><span>Förhandsvisning · vald bild och ram</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
       '<button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
