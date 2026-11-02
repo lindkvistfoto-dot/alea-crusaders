@@ -379,7 +379,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(view).toContain('Klart för LIVE');
     expect(view).toContain('Klart för granskning');
     expect(view.indexOf('Klart för LIVE')).toBeLessThan(view.indexOf('Klart för granskning'));
-    expect(view).toContain('GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.');
+    expect(view).toContain('html+=fallback.map(renderQueueItem).join("")');
     expect(view).toContain('acceptedNumbers');
     expect(view).toContain('fallback');
   });
