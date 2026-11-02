@@ -394,6 +394,15 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(section).toContain('const pullRequests = [...byNumber.values()]');
   });
 
+  it('uses existing release actions for accepted PRs and excludes published PRs',()=>{
+    const page=read('olympia/zeus-control.html');
+    const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('// Preserve expanded PR cards',page.indexOf('function renderTrial()')));
+    expect(trial).toContain('html+=fallback.map(renderQueueItem).join("")');
+    expect(trial).toContain('!window.olympiaLivePublishedByItem["PR-"+Number(match[1])]');
+    expect(trial).toContain('id:"PR-"+number');
+    expect(page).toContain('data-decision="pandoras_ask"');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
