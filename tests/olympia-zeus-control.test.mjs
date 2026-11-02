@@ -334,7 +334,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('/pulls?state=closed&base=development&per_page=100&page=');
     expect(edge).toContain('pr.merged === true && pr.base?.ref === "development"');
     expect(edge).toContain('for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr)');
-    expect(edge).toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
+    expect(edge).toContain('const recentClosed = await gh(token');
+    expect(edge).not.toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
   });
 
   it('rechecks unknown mergeability and persists the same PR as a DEV-accepted work item',()=>{
@@ -381,6 +382,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(view).toContain('GitHub-status behöver hämtas innan LIVE-kandidat kan skapas.');
     expect(view).toContain('acceptedNumbers');
     expect(view).toContain('fallback');
+  });
+
+  it('loads recent merged DEV PRs without unbounded pagination',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('if (data.action === "pull_request_list")');
+    const end=edge.indexOf('if (data.action === "current_refs")',start);
+    const section=edge.slice(start,end);
+    expect(section).toContain('pulls?state=closed&base=development&per_page=100&page=1');
+    expect(section).not.toContain('page <= 100');
+    expect(section).toContain('const pullRequests = [...byNumber.values()]');
   });
 
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{

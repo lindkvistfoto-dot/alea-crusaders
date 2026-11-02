@@ -543,14 +543,11 @@ Deno.serve(async (req: Request) => {
         const token = await githubToken("pull_request_list");
         const open = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
         if (!Array.isArray(open)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        const closed: any[] = [];
-        for (let page = 1; page <= 100; page++) {
-          const batch = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=" + page + "&sort=updated&direction=desc");
-          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-          closed.push(...batch.filter((pr: any) => pr.merged === true && pr.base?.ref === "development"));
-          if (batch.length < 100) break;
-          if (page === 100) throw new Error("GITHUB_PR_LIST_PAGE_LIMIT_REACHED");
-        }
+        // Only recent merged DEV PRs are needed for the active decision queue.
+        // Older accepted items remain visible from the persistent Zeus decision journal.
+        const recentClosed = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=1&sort=updated&direction=desc");
+        if (!Array.isArray(recentClosed)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+        const closed = recentClosed.filter((pr: any) => pr.merged === true && pr.base?.ref === "development");
         const byNumber = new Map<number, any>();
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
         const pullRequests = [...byNumber.values()].sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
