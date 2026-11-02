@@ -383,6 +383,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(view).toContain('fallback');
   });
 
+  it('loads recent merged DEV PRs without unbounded pagination',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('if (data.action === "pull_request_list")');
+    const end=edge.indexOf('if (data.action === "current_refs")',start);
+    const section=edge.slice(start,end);
+    expect(section).toContain('pulls?state=closed&base=development&per_page=100&page=1');
+    expect(section).not.toContain('page <= 100');
+    expect(section).toContain('const pullRequests = [...byNumber.values()]');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
