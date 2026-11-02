@@ -206,7 +206,30 @@ if(open.length)html+='<h2 class="queue-section-title">Klart för granskning</h2>
 else if(openPullRequests===null&&!openPullRequestError)html+='<div class="empty">Läser öppna PR…</div>';
 if(readyForLive.length)html+='<h2 class="queue-section-title">Klart för LIVE</h2>'+readyForLive.map(renderOpenPullRequest).join("");
 if(published.length)html+='<h2 class="queue-section-title">Publicerade</h2>'+published.map(renderQueueItem).join("");
+// Preserve expanded PR cards and the reader's position during background refresh.
+var before=Array.from(root.querySelectorAll("details.pr-card"));
+var expanded=new Set(before.filter(function(card){return card.open}).map(function(card){return card.querySelector("[data-pr-status]")?.dataset.prStatus}).filter(Boolean));
+var anchor=before.find(function(card){var rect=card.getBoundingClientRect();return rect.bottom>0&&rect.top<window.innerHeight})||null;
+var anchorId=anchor?.querySelector("[data-pr-status]")?.dataset.prStatus;
+var anchorTop=anchor?.getBoundingClientRect().top;
+var feedbackByPr=new Map(before.map(function(card){
+ var id=card.querySelector("[data-pr-status]")?.dataset.prStatus;
+ var note=card.querySelector("[data-pr-approve-feedback]");
+ return [id,note?.textContent||""];
+}).filter(function(pair){return pair[0]&&pair[1]}));
 root.innerHTML=html||'<div class="empty">Inga ändringar behöver uppmärksamhet.</div>';
+root.querySelectorAll("details.pr-card").forEach(function(card){
+ var id=card.querySelector("[data-pr-status]")?.dataset.prStatus;
+ if(expanded.has(id))card.open=true;
+ if(feedbackByPr.has(id)){
+  var actions=card.querySelector(".actions");
+  if(actions){var note=document.createElement("p");note.setAttribute("data-pr-approve-feedback","");note.setAttribute("role","status");note.setAttribute("aria-live","polite");note.textContent=feedbackByPr.get(id);actions.appendChild(note)}
+ }
+});
+if(anchorId&&Number.isFinite(anchorTop)){
+ var next=Array.from(root.querySelectorAll("details.pr-card")).find(function(card){return card.querySelector("[data-pr-status]")?.dataset.prStatus===anchorId});
+ if(next)window.scrollBy(0,next.getBoundingClientRect().top-anchorTop);
+}
 }
 window.olympiaRefreshTrial=renderTrial;
 window.olympiaRefreshRefs=renderRefs;
