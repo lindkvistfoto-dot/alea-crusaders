@@ -637,10 +637,13 @@ Deno.serve(async (req: Request) => {
           typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha)) {
         return fail("PR-nummer eller versions-SHA saknas.", 400);
       }
+      let stage = "github_auth";
       try {
         const token = await githubToken("approve_and_merge_dev");
+        stage = "pr_validation";
         const path = "/repos/" + OWNER + "/" + REPO;
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
+        stage = "ci_validation";
         const [checks, status] = await Promise.all([
           ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
           ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
@@ -653,6 +656,7 @@ Deno.serve(async (req: Request) => {
             (statuses.length > 0 && status.state !== "success")) {
           throw new Error("CI_NOT_GREEN");
         }
+        stage = "github_merge";
         let mergeSha = "";
         try {
           const merged = await gh(token, path + "/pulls/" + data.pullRequestNumber + "/merge", {
@@ -673,12 +677,13 @@ Deno.serve(async (req: Request) => {
             throw mergeError;
           }
         }
+        stage = "dev_acceptance_record";
         const acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
         return json({ ok: true, merged: true, sha: mergeSha, acceptance,
           message: "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE." });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
-        console.error("OLYMPIA DEV merge failed", code);
+        console.error("OLYMPIA DEV merge failed", JSON.stringify({ pr: data.pullRequestNumber, stage, code }));
         const messages: Record<string, string> = {
           PR_NOT_OPEN: "PR:en är inte längre öppen. Uppdatera OLYMPIA för aktuell status.",
           PR_IS_DRAFT: "PR:en är fortfarande ett utkast och kan inte godkännas.",
@@ -689,7 +694,7 @@ Deno.serve(async (req: Request) => {
           CI_NOT_GREEN: "CI är inte färdig eller godkänd. Vänta in kontrollerna och försök igen.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
-        return fail(messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.", code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
+        return json({ ok: false, stage, errorCode: code, message: (messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.") + " (Steg: " + stage + ")" }, code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
       }
     }
     if (data.action === "review_pull_request") {
