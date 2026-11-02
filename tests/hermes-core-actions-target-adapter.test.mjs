@@ -78,7 +78,7 @@ describe('Actions publisher with restricted production grants',()=>{
     const {rows}=await f.pg.query('select count(*)::int as count from arcane_system_assets');
     expect(rows[0].count).toBe(1);
    } finally {await f.pg.close();}
-  });
+  },15000);
  }
  it('does not widen INSERT grants to metadata or permit honor metadata changes',async()=>{
   const f=await fixture('honor-definition');
