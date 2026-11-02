@@ -24,7 +24,7 @@ async function refresh(){
  try{
   if(!window.olympiaV2Request)throw Error('ALEA DEV-anslutningen är inte klar');
   const data=await window.olympiaV2Request({action:'pull_request_list'});
-  const prs=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&(p.state==='open'||p.merged||p.merged_at)).slice(0,25);
+  const prs=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&(p.state==='open'||p.merged||p.merged_at)).sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
   const selected=filter.value;
   filter.innerHTML='<option value="all">Aktuella DEV-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+' · '+safe(p.title)+'</option>').join('');
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
