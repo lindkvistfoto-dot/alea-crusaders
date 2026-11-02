@@ -20,6 +20,7 @@ export default defineConfig({
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-preview", "preview", "preview"),
     copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
+    copyStaticTree("alea-copy-olympia-v2", "olympia-v2", "olympia-v2"),
     copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
     {
       name: "alea-copy-root-image-assets",
