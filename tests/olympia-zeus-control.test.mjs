@@ -412,6 +412,16 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(bridge).not.toContain('!/^PILOT-[0-9]{3}$/.test(request.itemId)');
   });
 
+  it('checks candidate status using a journal-backed PR when the PR list is unavailable',()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('async function renderDecisions()');
+    const end=page.indexOf('var testedSha=fieldValue',start);
+    const section=page.slice(start,end);
+    expect(section).toContain('fieldValue("Verifierad ärende-SHA")');
+    expect(section).toContain('item={id:"PR-"+sourceNumber');
+    expect(page).toContain('action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha');
+  });
+
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
