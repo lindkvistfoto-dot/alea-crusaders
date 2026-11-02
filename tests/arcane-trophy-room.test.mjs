@@ -12,6 +12,10 @@ describe('Badge Admin single-frame presentation',()=>{
   expect(admin).toContain("const tiers = ['bronze']");
   expect(admin).not.toContain('Samma ram med en, två och tre stjärnor');
   expect(admin).toContain('honors-badge-tiers');
+  expect(admin).toContain('honors-preview-overhang');
+  expect(admin).toContain('honors-preview-window');
+  const css=read('features/honors/honors-admin.css');
+  expect(css).toContain('object-fit:cover');
   const html=read('index.html');
   expect(html).toContain('honors-entry.js?v=20261102-badge-single-frame-486-fix2');
   expect(html).toContain('ARCANE HONORS laddningsfel:');
