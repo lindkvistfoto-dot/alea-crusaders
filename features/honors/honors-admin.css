@@ -151,3 +151,18 @@
 }
 .honors-badge-card .honors-preview-art:not(.has-overhang) .honors-preview-overhang,
 .honors-variant-library.is-badge .honors-preview-art:not(.has-overhang) .honors-preview-overhang{display:none}
+
+/* Badge quick editor: image and frame first, rules in the separate editor. */
+.honors-badge-quick-controls{display:grid;gap:12px;margin:14px 0}
+.honors-badge-control{display:grid;gap:6px;color:#e5c278;font-weight:600}
+.honors-badge-control select{width:100%;padding:11px;border:1px solid #86663e;border-radius:9px;background:#211912;color:#f3e8d1}
+.honors-badge-image-actions{display:flex;gap:8px;flex-wrap:wrap}
+.honors-badge-image-actions button{flex:1 1 130px}
+.honors-badge-card>footer{justify-content:flex-end}
+.honors-badge-card .honors-preview-art{width:min(100%,min(78vw,380px))}
+.honors-badge-frames .honors-preview-art{width:min(100%,min(78vw,380px))}
+@media(max-width:600px){
+ .honors-badge-detail-row .honors-badge-card{padding:12px}
+ .honors-badge-frames{margin:16px 0 20px}
+ .honors-badge-card .honors-preview-art,.honors-badge-frames .honors-preview-art{width:min(100%,78vw)}
+}
