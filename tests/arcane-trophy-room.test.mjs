@@ -1,6 +1,16 @@
 import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+describe('Badge Admin single-frame presentation',()=>{
+ it('shows one selected badge frame while keeping achievement criteria',()=>{
+  const admin=read('features/honors/honors-admin.js');
+  expect(admin).toContain('aria-label="Vald badgebild och ram"');
+  expect(admin).toContain("const tiers = ['bronze']");
+  expect(admin).not.toContain('Samma ram med en, två och tre stjärnor');
+  expect(admin).toContain('honors-badge-tiers');
+ });
+});
+
 describe('ARCANE Trophy Room V2.2',()=>{
  it('adds an independent navigable view and locked HERMES scene',()=>{
   const html=read('index.html'),icons=read('features/home/navigation-icons.js'),room=read('features/trophy-room/room.js');
