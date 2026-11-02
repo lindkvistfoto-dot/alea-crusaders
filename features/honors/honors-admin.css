@@ -131,3 +131,18 @@
 .honors-variant-library.is-badge .honors-preview-tiers{grid-template-columns:minmax(0,1fr);justify-items:center}
 .honors-variant-library.is-badge .honors-preview-tier{width:120px}
 .honors-variant-library.is-badge .honors-preview-tier .honors-preview-art{width:120px}
+
+/* Fit artwork to the lion frame's inner landscape aperture, not the outer square. */
+.honors-badge-card .honors-preview-art:not(.has-overhang) > .honors-preview-relief,
+.honors-variant-library.is-badge .honors-preview-art:not(.has-overhang) > .honors-preview-relief{
+  inset:30% 16% auto;
+  width:68%;
+  height:52%;
+  object-fit:cover;
+}
+.honors-badge-card .honors-preview-window .honors-preview-relief,
+.honors-variant-library.is-badge .honors-preview-window .honors-preview-relief{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
