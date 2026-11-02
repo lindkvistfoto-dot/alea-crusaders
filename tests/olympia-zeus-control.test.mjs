@@ -137,7 +137,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain("rejected?'skipped'");
     expect(page).toContain('var registered=new Set(items.flatMap');
     expect(page).toContain('var listed=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
-    expect(page).toContain("if(published.length)html+='<h2 class=\"queue-section-title\">Publicerade</h2>'");
+    expect(page).toContain('if(published.length)html+=\'<details class="details"><summary>Publicerade');
     expect(page).not.toContain('id="live-pr-list"');
     expect(page).toContain('Klart för granskning');
     expect(page).toContain('Klart för LIVE');
