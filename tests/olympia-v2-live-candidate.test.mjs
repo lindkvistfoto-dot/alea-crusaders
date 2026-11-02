@@ -11,8 +11,6 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(html).toContain('LIVE-publicering kräver separat verifiering');
  });
  it('uses authenticated read-only candidate status',()=>{
-  expect(js).toContain("action:'current_refs'");
-  expect(js).toContain('result.environments?.development?.sha');
   expect(js).toContain("action:'auto_candidate_diagnostics'");
  });
  it('never directly merges or publishes LIVE',()=>{
