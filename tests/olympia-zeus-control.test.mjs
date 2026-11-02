@@ -352,7 +352,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('if (refreshed.merged === true && refreshed.base?.ref === "development"');
     expect(edge).toContain('async function recordDevAcceptance(token: string, number: number, actor: string)');
     expect(edge).toContain('body.includes("- Ärende-ID: PR-" + number)');
-    expect(edge).toContain('message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. Ärendet är klart för LIVE."');
+    expect(edge).toContain('message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. LIVE-förberedelse: " + liveCandidate.state');
     expect(edge).toContain('acceptanceWarning');
     expect(page).toContain('await window.olympiaRefreshPullRequests()');
     expect(page).toContain('window.olympiaRefreshRefs()');
