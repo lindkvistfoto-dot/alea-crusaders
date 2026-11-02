@@ -190,9 +190,7 @@ return renderQueueItem(prWorkItem(pr))
 var match=String(pr.body||"").match(/(?:Förväntat resultat|Expected result|Syfte|Summary)\s*\n([\s\S]*?)(?:\n#+\s|$)/i)||[];
 var feature=(match[1]||"").trim().replace(/\s+/g," ").slice(0,360),kind=pr.draft?"Utkast":"Öppen",destination=pr.base&&pr.base.ref==="development"?"DEV":"LIVE";
 var preview=previewMarkup(sha,destination==="DEV"?"DEV":"LIVE-kandidat",n);
-var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?
- (n===486?'<a class="btn" href="./pr486-merge-test.html" target="_blank" rel="noopener">Godkänn DEV – isolerad knapp #486 ↗</a>':
- '<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>'):'';
+var approve=destination==="DEV"&&!pr.draft&&pr.state==="open"?'<button class="btn" type="button" data-pr-approve="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Godkänn PR</button>':'';
 return '<details class="pr-card card"><summary><span class="card-title">#'+esc(n)+' · '+esc(pr.title)+'</span><span class="card-sub">'+esc(kind)+' · Mål: '+esc(destination)+'</span></summary><div class="pr-body">'+(feature?'<p>'+esc(feature)+'</p>':'<p class="muted">Ingen sammanfattning angiven.</p>')+preview+'<div class="small muted">GitHub-status: <span id="pr-status-'+esc(n)+'">inte hämtad</span></div><div class="actions">'+approve+'<button class="btn secondary" type="button" data-pr-status="'+esc(n)+'" data-pr-sha="'+esc(sha)+'">Hämta status</button><a class="btn secondary" href="'+esc(pr.html_url)+'" target="_blank" rel="noopener">Visa PR ↗</a></div></div></details>'
 }
 function prWorkItem(pr){var files=Array.isArray(pr.changed_files_list)?pr.changed_files_list:[];return {id:"PR-"+Number(pr.number),title:pr.title,purpose:pr.title,expected_result:String(pr.body||"").slice(0,360),status:"ready_for_acceptance",ready_for_human_acceptance:true,dev_sha:pr.merge_commit_sha,pr_number:Number(pr.number),release_source_prs:[Number(pr.number)],dev_url:"../",features:files,image_count:0,image_status:"published",provenance:{source_pr:Number(pr.number)}}}
@@ -316,7 +314,6 @@ document.addEventListener("click",async function(event){
   actions.appendChild(feedback);
  }
  const report=function(message){feedback.textContent=message;};
- if(!window.olympiaAuthVerified){report("Godkännande stoppat: Zeus-behörighet saknas. Logga in i ALEA DEV.");return;}
  const session=storedSession();
  if(!session){report("Godkännande stoppat: ALEA DEV-session saknas. Logga in igen.");return;}
  if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){
@@ -328,8 +325,8 @@ document.addEventListener("click",async function(event){
  button.textContent="Godkänner DEV…";
  report("PR #"+number+": kontrollerar och begär DEV-merge…");
  try{
-  const {response,result}=await request({action:"approve_and_merge_dev",pullRequestNumber:number,pullRequestHeadSha:sha},session);
-  if(!response.ok||!result.ok)throw new Error(result.message||("Servern svarade HTTP "+response.status));
+  const {response,result}=await request({action:"approve_and_merge_dev",pullRequestNumber:number,pullRequestHeadSha:sha},session,20000);
+  if(!response.ok||!result.ok||result.merged!==true)throw new Error("HTTP "+response.status+" · "+(result.stage||"server")+" · "+(result.errorCode||"")+" · "+(result.message||"Ingen bekräftad merge"));
   const mergeSha=String(result.sha||"");
   if(!/^[a-f0-9]{40}$/i.test(mergeSha))throw new Error("GitHub bekräftade ingen merge-commit.");
   const message="PR #"+number+" mergad till DEV · "+mergeSha.slice(0,7)+". "+(result.acceptanceWarning||"Ärendet är klart för LIVE.");
@@ -342,7 +339,7 @@ document.addEventListener("click",async function(event){
    if(window.olympiaRefreshPullRequests)await window.olympiaRefreshPullRequests();
   }catch(refreshError){say(message+" Statuslistan kunde inte uppdateras automatiskt.",true);}
  }catch(error){
-  const reason=error&&error.name==="AbortError"?"Servern svarade inte inom 12 sekunder. Hämta status innan nytt försök.":String(error?.message||"Okänt fel");
+  const reason=error&&error.name==="AbortError"?"Servern svarade inte inom 20 sekunder. Kontrollera PR-status före nytt försök.":String(error?.message||"Okänt fel");
   report("PR #"+number+" kunde inte godkännas: "+reason);
   button.textContent=original;
   button.disabled=false;
@@ -506,9 +503,9 @@ function storedSession(){
  }catch(_){}
  return null;
 }
-async function request(body,session){
+async function request(body,session,timeoutMs=12000){
  const controller=new AbortController();
- const timeout=setTimeout(()=>controller.abort(),12000);
+ const timeout=setTimeout(()=>controller.abort(),timeoutMs);
  try{
   const response=await fetch(endpoint,{
    method:"POST",
