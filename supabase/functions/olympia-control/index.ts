@@ -532,7 +532,7 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
 function trustedCandidatePreviewUrl(value: unknown): string | null {
   try {
     const url = new URL(String(value || ""));
-    if (url.protocol !== "https:" || !/^[a-z0-9-]+\\.alea-crusaders\\.pages\\.dev$/i.test(url.hostname) ||
+    if (url.protocol !== "https:" || !/^[a-z0-9-]+\.alea-crusaders\.pages\.dev$/i.test(url.hostname) ||
         url.hostname === "alea-crusaders.pages.dev" || url.username || url.password ||
         (url.pathname !== "/" && url.pathname !== "") || url.search || url.hash) return null;
     return url.origin + "/";
