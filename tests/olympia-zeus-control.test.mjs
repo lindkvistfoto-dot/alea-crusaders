@@ -209,7 +209,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
     expect(app).toContain('admin-olympia-fullscreen');
-    expect(app).toContain('src="./olympia/zeus-control.html?v=20261101-repair-pr-list-fullscreen-v1"');
+    expect(app).toContain('src="./olympia-v2/?v=20261103-uppslag-v1"');
+    expect(app).toContain('<b>OLYMPIA 2.0</b>');
+    expect(app).not.toContain('src="./olympia/zeus-control.html?v=20261101-repair-pr-list-fullscreen-v1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
     expect(page).toContain('session_check');
     expect(page).toContain('window.olympiaAuthVerified');
