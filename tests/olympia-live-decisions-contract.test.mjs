@@ -32,7 +32,7 @@ describe('OLYMPIA LIVE decision safety contracts (no network writes)', () => {
     expect(nonFinal).toContain('data.decision === "pandoras_ask"');
   });
   it('keeps LIVE controls disabled until the decision flow is connected', () => {
-    expect(ui).toContain("for(const label of ['Godkänn LIVE · Pandoras ask','Lägg i releasepaket','Omarbeta','Kasta'])");
+    expect(ui).toContain('approve.disabled=!pilotReady');
     expect(ui).toContain('control.disabled=true');
   });
 });
