@@ -736,6 +736,13 @@ async function handleRequest(req: Request): Promise<Response> {
       };
       const errorText = (error: any) => {
         const code = String(error?.message || "");
+        const databaseCode = String(error?.code || "");
+        if (databaseCode === "PGRST205" || /could not find the table ['\"]public\.olympia_ideas['\"] in the schema cache/i.test(code)) {
+          return fail("UPPSLAG-tabellen saknas i DEV-databasen. Databasmigrationen behöver driftsättas.", 503);
+        }
+        if (databaseCode === "42501" || /row-level security|permission denied for table/i.test(code)) {
+          return fail("Zeus saknar administratörsbehörighet för UPPSLAG i DEV.", 403);
+        }
         const messages: Record<string, string> = {
           IDEA_INPUT_INVALID: "Kontrollera rubrik, beskrivning och uppslagets PR-underlag.",
           HISTORICAL_PR_INVALID: "Varje historisk PR behöver nummer, syfte, klassning och rekommenderad åtgärd.",
