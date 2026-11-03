@@ -20,6 +20,7 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(edge).toContain('currentTreeSha !== data.candidateTreeSha');
   expect(edge).toContain('pr.head.sha !== data.releasePrSha');
   expect(edge).toContain('verifiedCandidatePreview(token, verified.pr.head.sha)');
+  expect(edge).toContain('const requiredChecks = [/^check$/i, /^guard$/i, /^preview$/i]');
   expect(edge).toContain('releaseBeforeMerge.head?.sha !== data.releasePrSha');
   expect(edge).toContain('body: JSON.stringify({ sha: data.releasePrSha, merge_method: "squash" })');
   expect(js).toContain('releasePrSha:candidate.releasePrSha');
