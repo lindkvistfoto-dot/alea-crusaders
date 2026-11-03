@@ -17,7 +17,9 @@ describe('OLYMPIA candidate attached to original PR',()=>{
  });
  it('never exposes premature LIVE approval or unverified preview',()=>{
   expect(js).toContain('LIVE-beslut är låsta.');
-  expect(js).not.toContain("decision:'final_approval'");
+  expect(js).toContain("number===524&&candidate.releasePr===528");
+  expect(js).toContain('approve.disabled=!pilotReady');
+  expect(js).toContain("decision:'final_approval',itemId:'PR-524'");
   expect(html).not.toContain('data-live-accept');
  });
 });
