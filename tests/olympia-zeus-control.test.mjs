@@ -254,7 +254,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('decision === "deployment_check"');
     expect(edge).toContain('? { contents: "read" }');
     expect(edge).toContain(': { issues: "write", contents: "write" }');
-    expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read", deployments: "read" }');
+    expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });');
     expect(edge).toContain('checks: "read"');
     expect(edge).toContain('statuses: "read"');
