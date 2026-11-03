@@ -16,7 +16,7 @@ function ensureSessionUi(){
  const clock=document.querySelector('.alea-clock');
  if(!clock)return;
  if(!$id('gameSessionBtn')){
-  const btn=document.createElement('button');btn.id='gameSessionBtn';btn.type='button';btn.className='btn game-session-nav';btn.title='Starta eller hantera speltillfället';btn.textContent='🎲 Session';btn.addEventListener('click',openGameSessionPanel);clock.appendChild(btn)
+  const btn=document.createElement('button');btn.id='gameSessionBtn';btn.type='button';btn.className='btn game-session-nav';btn.title='Starta eller hantera speltillfället';btn.textContent='🎲 Spelmöte';btn.addEventListener('click',openGameSessionPanel);clock.appendChild(btn)
  }
  if(!$id('gameSessionModal')){
   const modal=document.createElement('div');modal.id='gameSessionModal';modal.className='game-session-backdrop hidden';modal.setAttribute('role','presentation');
@@ -27,7 +27,7 @@ function ensureSessionUi(){
 function renderSessionButton(){
  const btn=$id('gameSessionBtn');if(!btn)return;
  btn.disabled=sessionUiBusy;
- btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Session':'🎲 Session · Pågår'):'🎲 Session';
+ btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Spelmöte':'🎲 Spelmöte · Pågår'):'🎲 Spelmöte';
  btn.title=activeGameSession?'Öppna aktivt speltillfälle':'Starta ett speltillfälle';
 }
 function renderSessionBody(session,participants=[]){
