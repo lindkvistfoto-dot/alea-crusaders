@@ -426,7 +426,8 @@ async function verifyPublishedManifest(environment: "main" | "development", sour
 }
 async function verifyCandidate(token: string, item: any, data: any) {
   if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
-      typeof data.candidateTreeSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.candidateTreeSha)) {
+      typeof data.candidateTreeSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.candidateTreeSha) ||
+      typeof data.releasePrSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.releasePrSha)) {
     throw new Error("CANDIDATE_INPUT_INVALID");
   }
   const appLogin = await appBotLogin();
@@ -449,8 +450,8 @@ async function verifyCandidate(token: string, item: any, data: any) {
     .sort((a, b) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
   if (!report) throw new Error("CANDIDATE_NOT_READY");
   const body = String(report.body || "");
-  if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") ||
-      !body.includes("- Candidate tree SHA: " + data.candidateTreeSha)) {
+  const reportTreeMatch = body.match(/- Candidate tree SHA: ([0-9a-f]{40})/i);
+  if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") || !reportTreeMatch) {
     throw new Error("CANDIDATE_NOT_READY");
   }
   const liveMatch = body.match(/- LIVE rollback baseline: ([0-9a-f]{40})/i);
@@ -470,19 +471,28 @@ async function verifyCandidate(token: string, item: any, data: any) {
       pr.user?.login !== appLogin || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
-  if (headCommit.commit?.tree?.sha !== data.candidateTreeSha) throw new Error("CANDIDATE_TREE_MISMATCH");
+  const currentTreeSha = String(headCommit.commit?.tree?.sha || "");
+  if (pr.head.sha !== data.releasePrSha || !/^[0-9a-f]{40}$/i.test(currentTreeSha) ||
+      currentTreeSha !== data.candidateTreeSha) throw new Error("CANDIDATE_HEAD_CHANGED");
   const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1] + "/files?per_page=100");
   const allowedFiles = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
   const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")) : [];
   if (!actualFiles.length || actualFiles.some((filename: string) => !allowedFiles.has(filename))) {
     throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
   }
-  const checks = await ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");
+  const [checks, status] = await Promise.all([
+    ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
+    ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status"),
+  ]);
   if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||
+      Number(checks.total_count) > checks.check_runs.length ||
       checks.check_runs.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
     throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
   }
-  return { issue, pr, report, liveSha: live.sha };
+  if (Array.isArray(status.statuses) && status.statuses.length > 0 && status.state !== "success") {
+    throw new Error("CANDIDATE_STATUS_NOT_GREEN");
+  }
+  return { issue, pr, report, liveSha: live.sha, candidateTreeSha: currentTreeSha };
 }
 async function verifiedCandidatePreview(token: string, releasePrSha: string) {
   // First reuse any exact-SHA GitHub deployment already verified by OLYMPIA.
@@ -575,11 +585,16 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
   const runMatch = body.match(/- Workflow run: (https:\/\/[^\s]+)/i);
   const candidatePrMatch = body.match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
   let releasePrSha: string | null = null;
+  let releasePrTreeSha: string | null = null;
   if (candidatePrMatch) {
     try {
       const candidatePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidatePrMatch[1]);
       releasePrSha = String(candidatePr.head?.sha || "") || null;
-    } catch (_error) { releasePrSha = null; }
+      if (releasePrSha) {
+        const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + releasePrSha);
+        releasePrTreeSha = String(headCommit.commit?.tree?.sha || "") || null;
+      }
+    } catch (_error) { releasePrSha = null; releasePrTreeSha = null; }
   }
   if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") || !treeMatch) {
     return {
@@ -593,9 +608,11 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     };
   }
   try {
+    if (!releasePrSha || !releasePrTreeSha) throw new Error("CANDIDATE_HEAD_CHANGED");
     const verified = await verifyCandidate(token, item, {
       candidateIssue: issueNumber,
-      candidateTreeSha: treeMatch[1],
+      candidateTreeSha: releasePrTreeSha,
+      releasePrSha,
       testedDevSha,
     });
     const prMatch = String(report.body || "").match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
@@ -604,7 +621,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       ready: true,
       blocked: false,
       message: "Redo för LIVE – releaseförslag verifierat.",
-      candidateTreeSha: treeMatch[1],
+      candidateTreeSha: verified.candidateTreeSha,
       releasePr: Number(prMatch[1]),
       releaseUrl: prMatch[2],
       releasePrSha: verified.pr.head.sha,
@@ -622,6 +639,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       CANDIDATE_CHECKS_NOT_GREEN: "Releaseförslagets CI-kontroller är inte godkända.",
       CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända.",
       RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
+      CANDIDATE_HEAD_CHANGED: "Releaseförslaget har ändrats. Aktuell SHA och dess kontroller måste hämtas igen.",
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
       CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
@@ -630,7 +648,8 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       ready: false,
       blocked: true,
       message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
-      candidateTreeSha: treeMatch[1],
+      candidateTreeSha: releasePrTreeSha,
+      releasePrSha,
       candidateRunUrl: runMatch?.[1] || null,
     };
   }
@@ -1010,6 +1029,7 @@ async function handleRequest(req: Request): Promise<Response> {
           CANDIDATE_CHECKS_NOT_GREEN: "Releaseförslagets CI-kontroller är inte godkända. LIVE förblir oförändrat.",
           CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända. LIVE förblir oförändrat.",
           RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
+          CANDIDATE_HEAD_CHANGED: "Releaseförslaget har ändrats. Aktuell SHA och dess kontroller måste hämtas igen.",
           CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
           DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras. Slutgodkännandet spärrades; ingen ändring gjordes i LIVE.",
         };
@@ -1027,9 +1047,13 @@ async function handleRequest(req: Request): Promise<Response> {
       if (liveBeforeMerge.sha !== candidate.liveSha) {
         return fail("LIVE ändrades under slutgodkännandet. Skapa en ny kandidat; LIVE är oförändrat.", 409);
       }
+      const releaseBeforeMerge = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidate.pr.number);
+      if (releaseBeforeMerge.head?.sha !== data.releasePrSha) {
+        return fail("Releaseförslagets SHA ändrades efter Zeus-godkännandet. Ingen merge genomfördes; hämta aktuell status igen.", 409);
+      }
       const merged = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidate.pr.number + "/merge", {
         method: "PUT",
-        body: JSON.stringify({ sha: candidate.pr.head.sha, merge_method: "squash" }),
+        body: JSON.stringify({ sha: data.releasePrSha, merge_method: "squash" }),
       });
       if (!merged.merged) return fail("Slutgodkännandet sparades, men GitHub kunde inte merge:a releaseförslaget. LIVE ändrades inte.", 502);
       const finalBody = issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) +
