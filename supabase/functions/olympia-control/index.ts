@@ -724,7 +724,10 @@ async function handleRequest(req: Request): Promise<Response> {
             const item = await workItem(token, "PR-" + number);
             candidate = await inspectCandidate(token, item, issue.number, sha);
           } catch (error) {
-            candidate = { ready: false, blocked: true, message: "Kandidatverifieringen kunde inte slutföras. Ingen publicering tillåten." };
+            // Candidate diagnostics must survive preview lookup errors.
+            // Never infer readiness or permit LIVE approval from a fallback.
+            console.warn("OLYMPIA preview diagnostics unavailable", error instanceof Error ? error.message : "unknown");
+            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Förhandsvisningen kunde inte verifieras; LIVE-beslut förblir låsta." };
           }
         }
         const state = locked ? (requestPresent ? "requested" : "needs_review") : (issue ? "unlocked_issue" : "not_started");
