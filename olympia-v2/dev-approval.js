@@ -48,7 +48,14 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       const heading=document.createElement('strong');heading.textContent='LIVE · Förhandsgranskning';review.append(heading);
       const preview=document.createElement('button');preview.type='button';preview.disabled=true;
       preview.textContent='Förhandsvisa LIVE · inväntar säker preview';review.append(preview);
-      const note=document.createElement('p');note.className='muted';note.textContent='Kandidatens tester är godkända. En versionsbunden, skrivskyddad förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
+      if(candidate.previewUrl){
+       try{const verifiedUrl=new URL(candidate.previewUrl);
+        if(verifiedUrl.protocol==='https:'&&verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')&&verifiedUrl.hostname!=='alea-crusaders.pages.dev'){
+         preview.remove();const previewLink=document.createElement('a');previewLink.className='action';previewLink.href=verifiedUrl.href;previewLink.target='_blank';previewLink.rel='noopener noreferrer';previewLink.textContent='Förhandsvisa LIVE-kandidat #'+candidate.releasePr;review.append(previewLink);
+        }
+       }catch(_){}
+      }
+      const note=document.createElement('p');note.className='muted';note.textContent=candidate.previewUrl?'Förhandsvisning finns för kandidatens verifierade version. LIVE-beslut är fortfarande låsta tills beslutskedjan är ansluten.':'Kandidatens tester är godkända. En versionsbunden förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
       const decisions=document.createElement('div');decisions.className='actions';
       for(const label of ['Godkänn LIVE · Pandoras ask','Lägg i releasepaket','Omarbeta','Kasta']){
        const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);

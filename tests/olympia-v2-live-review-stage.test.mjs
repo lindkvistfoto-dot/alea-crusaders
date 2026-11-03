@@ -8,7 +8,7 @@ describe('OLYMPIA LIVE review stage fail-closed',()=>{
  it('does not fabricate preview URL or allow premature publishing',()=>{
   expect(js).toContain("preview.disabled=true");
   expect(js).toContain("control.disabled=true");
-  expect(js).toContain('versionsbunden, skrivskyddad förhandsvisning saknas ännu');
+  expect(js).toContain('versionsbunden förhandsvisning saknas ännu');
   expect(js).not.toContain("decision:'final_approval'");
  });
  it('displays four intended decisions without wiring them prematurely',()=>{
