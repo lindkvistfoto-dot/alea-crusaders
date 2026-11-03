@@ -9,7 +9,7 @@ describe('LIVE candidate preview is verified and fail-closed',()=>{
   expect(edge).toContain('previewUrl: await verifiedCandidatePreview(token, verified.pr.head.sha)');
  });
  it('only accepts Cloudflare preview host, not production',()=>{
-  expect(edge).toContain('^[a-z0-9-]+\\.alea-crusaders\\.pages\\.dev
+  expect(edge).toContain('trustedCandidatePreviewUrl(deployment.url)');
   expect(edge).toContain('url.hostname === "alea-crusaders.pages.dev"');
   expect(ui).toContain("verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')");
  });
