@@ -13,12 +13,13 @@ const makeRunner = new Function('deps', `return async function run(data) {
 }`);
 const SHA = 'a'.repeat(40);
 const LIVE = 'b'.repeat(40);
-function harness({preview='https://candidate.alea-crusaders.pages.dev/', baseline=LIVE, rejectCandidate=false, mergeResult=true, journalFailure=false}={}) {
+function harness({preview='https://candidate.alea-crusaders.pages.dev/', baseline=LIVE, releaseHead=SHA, rejectCandidate=false, mergeResult=true, journalFailure=false}={}) {
  const writes=[];
  const candidate={pr:{number:528,head:{sha:SHA},html_url:'https://github.com/example/pull/528'},liveSha:LIVE};
  const gh=vi.fn(async (_token,path,init={})=>{
   if(init.method) writes.push({path,method:init.method,body:init.body});
   if(path.endsWith('/commits/main')) return {sha:baseline};
+  if(path.endsWith('/pulls/528') && !path.endsWith('/merge')) return {head:{sha:releaseHead}};
   if(path.endsWith('/issues') && init.method==='POST') return {number:900,html_url:'https://github.com/example/issues/900'};
   if(path.endsWith('/pulls/528/merge')) return {merged:mergeResult,sha:'c'.repeat(40)};
   if(path.endsWith('/issues/900') && init.method==='PATCH') {
@@ -38,7 +39,7 @@ function harness({preview='https://candidate.alea-crusaders.pages.dev/', baselin
  };
  return {run:makeRunner(deps),writes,deps};
 }
-const data={decision:'final_approval',candidateIssue:527,testedDevSha:SHA,candidateTreeSha:SHA};
+const data={decision:'final_approval',candidateIssue:527,testedDevSha:SHA,candidateTreeSha:SHA,releasePrSha:SHA};
 describe('OLYMPIA LIVE decisions: executable mocked server branch',()=>{
  it('merges exact candidate only after verified preview and unchanged LIVE baseline',async()=>{
   const h=harness();const result=await h.run(data);
@@ -57,6 +58,11 @@ describe('OLYMPIA LIVE decisions: executable mocked server branch',()=>{
  });
  it('rejects changed LIVE baseline before merge',async()=>{
   const h=harness({baseline:'d'.repeat(40)});expect((await h.run(data)).status).toBe(409);
+  expect(h.writes.some(x=>x.path.endsWith('/merge'))).toBe(false);
+ });
+ it('rejects a release HEAD change after Zeus approved the displayed SHA',async()=>{
+  const h=harness({releaseHead:'d'.repeat(40)});
+  expect((await h.run(data)).status).toBe(409);
   expect(h.writes.some(x=>x.path.endsWith('/merge'))).toBe(false);
  });
  it('does not claim success if GitHub refuses merge',async()=>{
