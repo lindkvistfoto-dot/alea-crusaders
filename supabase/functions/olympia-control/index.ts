@@ -509,13 +509,24 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
   const accountId = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
   if (!apiToken || !accountId || !/^[a-f0-9]{40}$/i.test(releasePrSha)) { console.warn("OLYMPIA_PREVIEW_CONFIG_UNAVAILABLE"); return null; }
   try {
-    for (let page = 1; page <= 5; page++) {
+    for (let page = 1; page <= 20; page++) {
       const response = await fetch("https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(accountId) +
-        "/pages/projects/alea-crusaders/deployments?env=preview&per_page=100&page=" + page, {
+        "/pages/projects/alea-crusaders/deployments?env=preview&per_page=20&page=" + page, {
         headers: { Authorization: "Bearer " + apiToken, Accept: "application/json" },
         signal: AbortSignal.timeout(8000),
       });
-      if (!response.ok) { console.warn("OLYMPIA_PREVIEW_HTTP_STATUS", response.status); return null; }
+      if (!response.ok) {
+        // Cloudflare error codes are non-secret and identify validation errors without exposing credentials.
+        let codes: number[] = [];
+        try {
+          const errorPayload = await response.json();
+          if (Array.isArray(errorPayload?.errors)) {
+            codes = errorPayload.errors.map((error: any) => Number(error.code)).filter((code: number) => Number.isInteger(code)).slice(0, 3);
+          }
+        } catch (_) { /* Keep the response body private. */ }
+        console.warn("OLYMPIA_PREVIEW_HTTP_STATUS", response.status, "CLOUDFLARE_ERROR_CODES", codes);
+        return null;
+      }
       const payload = await response.json();
       if (payload?.success !== true || !Array.isArray(payload.result)) { console.warn("OLYMPIA_PREVIEW_RESPONSE_INVALID"); return null; }
       for (const deployment of payload.result) {
@@ -524,7 +535,7 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
         const url = trustedCandidatePreviewUrl(deployment.url);
         if (url) return url;
       }
-      if (payload.result.length < 100) break;
+      if (payload.result.length < 20) break;
     }
   } catch (_) { console.warn("OLYMPIA_PREVIEW_REQUEST_FAILED"); }
   return null;
