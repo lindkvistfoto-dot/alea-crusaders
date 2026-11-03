@@ -168,7 +168,7 @@ async function recordDevAcceptance(token: string, number: number, actor: string)
 async function autoPrepareLiveCandidate(token: string, number: number, actor: string, acceptance: { testedDevSha: string }) {
   // Enabled by default ONLY in the known ALEA DEV Supabase project.
   // Emergency stop: set OLYMPIA_AUTO_LIVE_CANDIDATE=disabled.
-  const projectUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\\/$/, "").toLowerCase();
+  const projectUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/$/, "").toLowerCase();
   if (projectUrl !== "https://wkiuyklzzroavclnsxna.supabase.co" ||
       Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") === "disabled") return { state: "disabled" };
   const item = await workItem(token, "PR-" + number);
