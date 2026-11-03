@@ -485,24 +485,58 @@ async function verifyCandidate(token: string, item: any, data: any) {
   return { issue, pr, report, liveSha: live.sha };
 }
 async function verifiedCandidatePreview(token: string, releasePrSha: string) {
-  // Read only the deployment records attached to the exact release PR commit.
-  let deployments: any;\n  try { deployments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments?sha=" + releasePrSha + "&per_page=100"); } catch (_) { return null; }
-  if (!Array.isArray(deployments)) return null;
-  for (const deployment of deployments) {
-    if (String(deployment.sha || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
-    if (!/preview/i.test(String(deployment.environment || ""))) continue;
-    let statuses: any;\n    try { statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments/" + deployment.id + "/statuses?per_page=30"); } catch (_) { continue; }
-    if (!Array.isArray(statuses)) continue;
-    const successful = statuses.find((status: any) => status.state === "success" && status.environment_url);
-    if (!successful) continue;
-    try {
-      const url = new URL(successful.environment_url);
-      if (url.protocol !== "https:" || !url.hostname.endsWith(".alea-crusaders.pages.dev") ||
-          url.hostname === "alea-crusaders.pages.dev" || url.username || url.password) continue;
-      return url.origin + "/";
-    } catch (_) { /* Invalid URL: no preview */ }
-  }
+  // First reuse any exact-SHA GitHub deployment already verified by OLYMPIA.
+  try {
+    const deployments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments?sha=" + releasePrSha + "&per_page=100");
+    if (Array.isArray(deployments)) {
+      for (const deployment of deployments) {
+        if (String(deployment.sha || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
+        if (!/preview/i.test(String(deployment.environment || ""))) continue;
+        const statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments/" + deployment.id + "/statuses?per_page=30");
+        if (!Array.isArray(statuses)) continue;
+        const status = statuses.find((entry: any) => entry.state === "success" && entry.environment_url);
+        if (status) {
+          const url = trustedCandidatePreviewUrl(status.environment_url);
+          if (url) return url;
+        }
+      }
+    }
+  } catch (_) { /* Try the Cloudflare source of truth below. */ }
+
+  // No GitHub deployment is required when Cloudflare already published the exact SHA.
+  // Missing credentials or incomplete metadata always leave LIVE preview locked.
+  const apiToken = Deno.env.get("CLOUDFLARE_API_TOKEN");
+  const accountId = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
+  if (!apiToken || !accountId || !/^[a-f0-9]{40}$/i.test(releasePrSha)) return null;
+  try {
+    for (let page = 1; page <= 5; page++) {
+      const response = await fetch("https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(accountId) +
+        "/pages/projects/alea-crusaders/deployments?env=preview&per_page=100&page=" + page, {
+        headers: { Authorization: "Bearer " + apiToken, Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) return null;
+      const payload = await response.json();
+      if (payload?.success !== true || !Array.isArray(payload.result)) return null;
+      for (const deployment of payload.result) {
+        if (deployment.environment !== "preview" || deployment.latest_stage?.status !== "success") continue;
+        if (String(deployment.deployment_trigger?.metadata?.commit_hash || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
+        const url = trustedCandidatePreviewUrl(deployment.url);
+        if (url) return url;
+      }
+      if (payload.result.length < 100) break;
+    }
+  } catch (_) { /* Cloudflare unavailable: keep preview locked. */ }
   return null;
+}
+function trustedCandidatePreviewUrl(value: unknown): string | null {
+  try {
+    const url = new URL(String(value || ""));
+    if (url.protocol !== "https:" || !/^[a-z0-9-]+\\.alea-crusaders\\.pages\\.dev$/i.test(url.hostname) ||
+        url.hostname === "alea-crusaders.pages.dev" || url.username || url.password ||
+        (url.pathname !== "/" && url.pathname !== "") || url.search || url.hash) return null;
+    return url.origin + "/";
+  } catch (_) { return null; }
 }
 async function inspectCandidate(token: string, item: any, issueNumber: number, testedDevSha: string) {
   const appLogin = await appBotLogin();
