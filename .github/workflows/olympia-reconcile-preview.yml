@@ -1,0 +1,39 @@
+name: OLYMPIA reconcile existing Cloudflare preview
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact release candidate commit SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+  deployments: write
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify existing Cloudflare deployment and register exact-SHA GitHub status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SHA: ${{ inputs.candidate_sha }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid SHA"; exit 1; }
+          [[ -n "$CF_TOKEN" && -n "$CF_ACCOUNT" ]] || { echo "::error::Cloudflare read credentials unavailable"; exit 1; }
+          PRS="$(gh api "repos/$REPO/pulls?state=open&base=main&per_page=100")"
+          jq -e --arg sha "$SHA" '[.[] | select(.head.sha == $sha and (.head.ref | startswith("olympia/pr-")))] | length == 1' <<< "$PRS" >/dev/null || { echo "::error::No unique open OLYMPIA release PR for SHA"; exit 1; }
+          DEPLOYMENTS="$(curl --fail --silent --show-error -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects/alea-crusaders/deployments?env=preview&per_page=100")"
+          jq -e '.success == true' <<< "$DEPLOYMENTS" >/dev/null
+          MATCH="$(jq -c --arg sha "$SHA" '[.result[] | select(.deployment_trigger.metadata.commit_hash == $sha and .environment == "preview" and .latest_stage.status == "success")] | first // empty' <<< "$DEPLOYMENTS")"
+          [[ -n "$MATCH" ]] || { echo "::error::No successful Cloudflare preview matching exact SHA"; exit 1; }
+          URL="$(jq -r '.url // empty' <<< "$MATCH")"
+          [[ "$URL" =~ ^https://[a-zA-Z0-9-]+\.alea-crusaders\.pages\.dev/?$ && "$URL" != "https://alea-crusaders.pages.dev" ]] || { echo "::error::Preview URL not trusted"; exit 1; }
+          DEPLOYMENT="$(gh api "repos/$REPO/deployments" -X POST -f ref="$SHA" -f sha="$SHA" -f environment="preview" -f description="Verified existing Cloudflare Pages preview" -F auto_merge=false -F required_contexts='[]' -F transient_environment=true)"
+          ID="$(jq -r '.id' <<< "$DEPLOYMENT")"
+          gh api "repos/$REPO/deployments/$ID/statuses" -X POST -f state=success -f environment_url="$URL" -f description="Verified Cloudflare deployment for exact release SHA"
+          echo "Registered verified Cloudflare preview for $SHA"
