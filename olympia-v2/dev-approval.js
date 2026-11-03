@@ -43,7 +43,17 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
       const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kandidatens CI och releasekontroller godkända';node.append(checks);
       const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
-      const note=document.createElement('p');note.className='muted';note.textContent='Förhandsvisning och LIVE-beslut aktiveras först när kandidatkopplad, säker preview är verifierad. Publicera inte via GitHub.';node.append(note);
+      // A release PR is not a deploy preview. Never guess a Cloudflare URL.
+      const review=document.createElement('div');review.className='live-review';
+      const heading=document.createElement('strong');heading.textContent='LIVE · Förhandsgranskning';review.append(heading);
+      const preview=document.createElement('button');preview.type='button';preview.disabled=true;
+      preview.textContent='Förhandsvisa LIVE · inväntar säker preview';review.append(preview);
+      const note=document.createElement('p');note.className='muted';note.textContent='Kandidatens tester är godkända. En versionsbunden, skrivskyddad förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
+      const decisions=document.createElement('div');decisions.className='actions';
+      for(const label of ['Godkänn LIVE · Pandoras ask','Lägg i releasepaket','Omarbeta','Kasta']){
+       const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);
+      }
+      review.append(decisions);node.append(review);
      }else if(candidate?.blocked){line.textContent=candidate.message||'LIVE-kandidaten behöver granskas. Ingen publicering har skett.';}
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
