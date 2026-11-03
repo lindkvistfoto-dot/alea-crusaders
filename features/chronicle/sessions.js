@@ -27,7 +27,7 @@ function ensureSessionUi(){
 function renderSessionButton(){
  const btn=$id('gameSessionBtn');if(!btn)return;
  btn.disabled=sessionUiBusy;
- btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Session':'🎲 Session · Pågår'):'🎲 Session';
+ btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Spelmöte':'🎲 Spelmöte · Pågår'):'🎲 Spelmöte';
  btn.title=activeGameSession?'Öppna aktivt speltillfälle':'Starta ett speltillfälle';
 }
 function renderSessionBody(session,participants=[]){
