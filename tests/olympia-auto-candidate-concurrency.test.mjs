@@ -1,12 +1,17 @@
 import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
-import {stripTypeScriptTypes} from 'node:module';
 
 const source=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const start=source.indexOf('async function autoPrepareLiveCandidate(');
 const end=source.indexOf('async function appBotLogin()',start);
 if(start<0||end<0)throw Error('Candidate function not found');
-const compiled=stripTypeScriptTypes(source.slice(start,end),{mode:'strip'});
+// This extracted function uses only four TypeScript annotations. Strip them
+// explicitly so the test executes the real function body without a TS parser.
+const compiled=source.slice(start,end)
+ .replace('token: string, number: number, actor: string, acceptance: { testedDevSha: string }', 'token, number, actor, acceptance')
+ .replace('let existing: any = null', 'let existing = null')
+ .replace('(issue: any) =>', '(issue) =>');
+if (/\\b(?:token: string|existing: any|issue: any)\\b/.test(compiled)) throw Error('Unstripped TypeScript annotation');
 
 function harness({failAfterLock=false}={}){
  const locks=new Set(),issues=[],calls={createRef:0,createIssue:0,startCandidate:0};
