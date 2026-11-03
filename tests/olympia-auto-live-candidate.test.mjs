@@ -3,7 +3,8 @@ import {describe,it,expect} from 'vitest';
 const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 describe('OLYMPIA safe automatic LIVE candidate staging',()=>{
  it('is DEV-only with emergency stop',()=>{
-  expect(edge).toContain('Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") === "disabled"');\n  expect(edge).toContain("https://wkiuyklzzroavclnsxna.supabase.co");
+  expect(edge).toContain('Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") === "disabled"');
+  expect(edge).toContain("https://wkiuyklzzroavclnsxna.supabase.co");
   expect(edge).toContain('return { state: "disabled" }');
  });
  it('starts only after confirmed DEV merge and acceptance',()=>{
