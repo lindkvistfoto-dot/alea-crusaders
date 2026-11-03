@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -22,5 +23,18 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Test and build
-        run: npm run check
+      - name: Test all suites except MINOTAURUS-owned focused suites
+        run: >-
+          npx vitest run
+          --exclude tests/minotaurus-publisher.test.mjs
+          --exclude tests/hermes4-batch-publisher.test.mjs
+          --exclude tests/hermes-system-assets-publisher.test.mjs
+          --exclude tests/arcane-paper-doll-assets.test.js
+          --exclude tests/arcane-system-assets-rls.test.mjs
+          --exclude tests/hermes-wide-publisher.test.mjs
+          --exclude tests/hermes-spell-cutout-profile.test.js
+          --exclude tests/hermes-v2-gates.test.mjs
+          --exclude tests/arcane-gallery-release-smoke.test.js
+          --exclude tests/arcane-morph-art-assets.test.js
+      - name: Build
+        run: npm run build

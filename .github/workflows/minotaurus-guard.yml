@@ -5,6 +5,14 @@ on:
     branches: [main]
 permissions:
   contents: read
+
+# A newer commit in the same PR replaces an in-progress run. Keep the job name
+# `guard` stable so branch-protection required checks still report success when
+# path-selected test steps are skipped.
+concurrency:
+  group: minotaurus-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   guard:
     runs-on: ubuntu-latest
@@ -20,26 +28,76 @@ jobs:
             features/combat
             features/material
             features/ui
+            features/hermes-core
+            features/trophy-room
+            features/honors
+            src/honors
+            hermes
             supabase
             config
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: Select relevant test groups
+        id: select
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python scripts/minotaurus_select.py "$BASE" "$HEAD" >> "$GITHUB_OUTPUT"
+
+      # Mandatory original-asset security gate: always runs for every PR and
+      # main push, independently of the selected functional test groups.
       - name: Reject original trees and new PNG blobs
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python scripts/minotaurus_guard.py "$BASE" "$HEAD"
-      - run: python -m pip install Pillow==12.3.0
-      - run: python -m unittest discover -s tests -p 'test_minotaurus*.py'
-      - run: python -m unittest discover -s tests -p 'test_hermes4*.py'
+
+      - name: Test MINOTAURUS selector and security guard
+        run: |
+          python -m unittest discover -s tests -p 'test_minotaurus_select.py' -v
+          python -m unittest discover -s tests -p 'test_minotaurus_guard.py' -v
+
+      - name: Install pinned image verifier
+        if: steps.select.outputs.hermes4_python == 'true'
+        run: python -m pip install Pillow==12.3.0
+
+      - name: Run legacy image-pipeline Python tests
+        if: steps.select.outputs.hermes4_python == 'true'
+        run: |
+          python -m unittest discover -s tests -p 'test_minotaurus_direct.py' -v
+          python -m unittest discover -s tests -p 'test_hermes4*.py' -v
+
+      - name: Run HERMES 4.1 worker tests
+        if: steps.select.outputs.web_worker_python == 'true'
+        run: python -m unittest discover -s tests -p 'test_hermes_web_worker.py' -v
+
       - uses: actions/setup-node@v4
+        if: steps.select.outputs.vitest_files != ''
         with:
           node-version: '24'
           cache: npm
-      - run: npm ci
-      - run: npx vitest run tests/minotaurus-publisher.test.mjs tests/hermes4-batch-publisher.test.mjs tests/hermes-system-assets-publisher.test.mjs tests/arcane-paper-doll-assets.test.js tests/arcane-system-assets-rls.test.mjs tests/hermes-wide-publisher.test.mjs tests/hermes-spell-cutout-profile.test.js tests/hermes-v2-gates.test.mjs tests/arcane-gallery-release-smoke.test.js tests/arcane-morph-art-assets.test.js
+
+      - name: Install Node dependencies
+        if: steps.select.outputs.vitest_files != ''
+        run: npm ci
+
+      - name: Run selected Vitest suites
+        if: steps.select.outputs.vitest_files != ''
+        run: npx vitest run ${{ steps.select.outputs.vitest_files }}
+
       - uses: denoland/setup-deno@v2
+        if: steps.select.outputs.deno_hermes2 == 'true' || steps.select.outputs.deno_hermes_v2 == 'true'
         with:
           deno-version: v2.x
-      - run: deno check --node-modules-dir=auto scripts/hermes2_publish.ts supabase/functions/hermes-v2/index.ts
+
+      - name: Typecheck legacy HERMES publisher
+        if: steps.select.outputs.deno_hermes2 == 'true'
+        run: deno check --node-modules-dir=auto scripts/hermes2_publish.ts
+
+      - name: Typecheck HERMES v2 Edge Function
+        if: steps.select.outputs.deno_hermes_v2 == 'true'
+        run: deno check --node-modules-dir=auto supabase/functions/hermes-v2/index.ts
