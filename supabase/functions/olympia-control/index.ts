@@ -1015,6 +1015,10 @@ async function handleRequest(req: Request): Promise<Response> {
         };
         return fail(messages[code] || "Kandidaten kunde inte verifieras. LIVE förblir oförändrat.", 409);
       }
+      // LIVE approval requires a real, verified preview of the exact release PR SHA.
+      // A green build artifact alone must never authorize publication.
+      const previewUrl = await verifiedCandidatePreview(token, candidate.pr.head.sha);
+      if (!previewUrl) return fail("Kandidatens Cloudflare-preview kunde inte verifieras. LIVE förblir oförändrat.", 409);
       const approvalIssue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues", {
         method: "POST",
         body: JSON.stringify({ title: title(item, data.decision), body: issueBody(item, { ...data, releaseGroup: "Kandidat #" + data.candidateIssue }, user.email) }),
