@@ -486,12 +486,12 @@ async function verifyCandidate(token: string, item: any, data: any) {
 }
 async function verifiedCandidatePreview(token: string, releasePrSha: string) {
   // Read only the deployment records attached to the exact release PR commit.
-  const deployments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments?sha=" + releasePrSha + "&per_page=100");
+  let deployments: any;\n  try { deployments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments?sha=" + releasePrSha + "&per_page=100"); } catch (_) { return null; }
   if (!Array.isArray(deployments)) return null;
   for (const deployment of deployments) {
     if (String(deployment.sha || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
     if (!/preview/i.test(String(deployment.environment || ""))) continue;
-    const statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments/" + deployment.id + "/statuses?per_page=30");
+    let statuses: any;\n    try { statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments/" + deployment.id + "/statuses?per_page=30"); } catch (_) { continue; }
     if (!Array.isArray(statuses)) continue;
     const successful = statuses.find((status: any) => status.state === "success" && status.environment_url);
     if (!successful) continue;
