@@ -41,7 +41,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      const candidate=result.candidate;
      if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
       line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
-      const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kandidatens CI och releasekontroller godkända';node.append(checks);
+      const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kontroller verifierade för aktuell SHA '+candidate.releasePrSha;node.append(checks);
       const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
       // A release PR is not a deploy preview. Never guess a Cloudflare URL.
       const review=document.createElement('div');review.className='live-review';
@@ -65,7 +65,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
        if(!confirmed)return;
        busy=true;approve.disabled=true;feedback(approve,'Verifierar LIVE-kandidat och publiceringsvillkor…');
        try{
-        const {response:reply,result:outcome}=await call({action:'decision',decision:'final_approval',itemId:'PR-524',testedDevSha:sha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha},session(),60000);
+        const {response:reply,result:outcome}=await call({action:'decision',decision:'final_approval',itemId:'PR-524',testedDevSha:sha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha,releasePrSha:candidate.releasePrSha},session(),60000);
         if(!reply.ok||outcome.ok!==true)throw Error(outcome.message||'LIVE-godkännandet kunde inte verifieras');
         feedback(approve,'GitHub bekräftade LIVE-merge · '+(outcome.mergeSha||'')+'. Publicering verifieras separat.');
         approve.textContent='LIVE-merge genomförd ✓';
@@ -87,6 +87,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
   }
  }finally{candidateStatusBusy=false}
 };
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!verified)verify()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(!verified)verify();else window.olympiaV2CheckCandidateStatuses?.()});
+setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},30000);
 verify();
 })();
