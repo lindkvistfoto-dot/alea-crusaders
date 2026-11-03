@@ -55,7 +55,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
         }
        }catch(_){}
       }
-      const note=document.createElement('p');note.className='muted';note.textContent='Kandidatens tester är godkända. En versionsbunden, skrivskyddad förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
+      const note=document.createElement('p');note.className='muted';note.textContent=candidate.previewUrl?'Förhandsvisning finns för kandidatens verifierade version. LIVE-beslut är fortfarande låsta tills beslutskedjan är ansluten.':'Kandidatens tester är godkända. En versionsbunden förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
       const decisions=document.createElement('div');decisions.className='actions';
       for(const label of ['Godkänn LIVE · Pandoras ask','Lägg i releasepaket','Omarbeta','Kasta']){
        const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);
