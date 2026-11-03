@@ -33,7 +33,7 @@ function harness({failAfterLock=false}={}){
   Deno:{env:{get:key=>key==='SUPABASE_URL'?'https://wkiuyklzzroavclnsxna.supabase.co':'enabled'}},OWNER:'example',REPO:'repo',
   workItem:async()=>({id:'PR-502',pr_number:502}),
   verifyReleaseSources:async()=>true,appBotLogin:async()=> 'test[bot]',
-  gh,title:()=> 'candidate',issueBody:()=>'- Beslut: PANDORAS ASK\\n- Ärende-ID: PR-502\\n- Testad DEV-commit (full SHA): '+'a'.repeat(40),
+  gh,title:()=> 'candidate',issueBody:()=>'- Beslut: PANDORAS ASK\n- Ärende-ID: PR-502\n- Testad DEV-commit (full SHA): '+'a'.repeat(40),
   startCandidateRequest:async()=>{calls.startCandidate++;return 'candidate-branch';},
  };
  const fn=new Function(...Object.keys(deps),compiled+'\nreturn autoPrepareLiveCandidate;')(...Object.values(deps));
