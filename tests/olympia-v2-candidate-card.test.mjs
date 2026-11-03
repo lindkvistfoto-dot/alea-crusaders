@@ -15,6 +15,16 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(js).toContain('candidate.releasePr');
   expect(js).toContain('candidate.releaseUrl');
  });
+ it('revalidates the mutable release PR HEAD and binds approval to the exact SHA',()=>{
+  expect(edge).toContain('const reportTreeMatch = body.match(/- Candidate tree SHA: ([0-9a-f]{40})/i)');
+  expect(edge).toContain('currentTreeSha !== data.candidateTreeSha');
+  expect(edge).toContain('pr.head.sha !== data.releasePrSha');
+  expect(edge).toContain('verifiedCandidatePreview(token, verified.pr.head.sha)');
+  expect(edge).toContain('releaseBeforeMerge.head?.sha !== data.releasePrSha');
+  expect(edge).toContain('body: JSON.stringify({ sha: data.releasePrSha, merge_method: "squash" })');
+  expect(js).toContain('releasePrSha:candidate.releasePrSha');
+  expect(js).toContain('setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},30000)');
+ });
  it('never exposes premature LIVE approval or unverified preview',()=>{
   expect(js).toContain('LIVE-beslut är låsta.');
   expect(js).toContain("number===524&&candidate.releasePr===528");
