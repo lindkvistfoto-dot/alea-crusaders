@@ -484,9 +484,12 @@ async function verifyCandidate(token: string, item: any, data: any) {
     ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
     ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status"),
   ]);
-  if (!Array.isArray(checks.check_runs) || checks.check_runs.length === 0 ||
-      Number(checks.total_count) > checks.check_runs.length ||
-      checks.check_runs.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
+  const checkRuns = Array.isArray(checks.check_runs) ? checks.check_runs : [];
+  const requiredChecks = [/^check$/i, /^guard$/i, /^preview$/i];
+  const checkNames = checkRuns.map((check: any) => String(check.name || ""));
+  if (checkRuns.length === 0 || Number(checks.total_count) > checkRuns.length ||
+      requiredChecks.some(pattern => !checkNames.some(name => pattern.test(name))) ||
+      checkRuns.some((check: any) => check.status !== "completed" || !["success", "neutral", "skipped"].includes(check.conclusion))) {
     throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
   }
   if (Array.isArray(status.statuses) && status.statuses.length > 0 && status.state !== "success") {
