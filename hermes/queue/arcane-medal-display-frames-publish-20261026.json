@@ -1,0 +1,33 @@
+{
+  "schema": 4,
+  "mode": "publish",
+  "items": [
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-medal-display-red",
+      "target_id": "a4ab4afa-8899-44be-80b7-d4afc7d216e3",
+      "drive_file_id": "15bWiTN5jU_oiqZNzy_EGuVL-mcNzrtli",
+      "archive_file_id": "1yErw2ldsMwSBGaXah3ck0R4mAGHfGbla",
+      "source_sha256": "a4ab4afa8899f2be70b7d4afc7d216e3e2004f6f7c144e00764aa221579f8d0a",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-medal-display-green",
+      "target_id": "04cafa72-c2a8-4446-88f1-262551ef1bab",
+      "drive_file_id": "1Jmj3QloSUeZS8os23ERaZgN6Zzud3DZJ",
+      "archive_file_id": "14gwSIuMJGJ7xkriHtHOqfx2zbp3nbG3O",
+      "source_sha256": "04cafa72c2a8ce4608f1262551ef1bab72ba5883726b8c5f714ef5f3f70d190f",
+      "visual_approved": true
+    },
+    {
+      "kind": "system-asset",
+      "target_key": "arcane-medal-display-blue",
+      "target_id": "9575b4aa-9838-46b6-8128-c8cf2372d5d5",
+      "drive_file_id": "1O2cdzLDUnCyrqQd_mF82xwL8G-RIZiJx",
+      "archive_file_id": "1N2trfCG1NhNqYF2ldJLybNnTDYH2nFK-",
+      "source_sha256": "9575b4aa983856b61287c8cf2372d5d562a3d07de89765bf0cdc3346c435b2b4",
+      "visual_approved": true
+    }
+  ]
+}
