@@ -16,7 +16,7 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(js).toContain('candidate.releaseUrl');
  });
  it('never exposes premature LIVE approval or unverified preview',()=>{
-  expect(js).toContain('Publicera inte via GitHub.');
+  expect(js).toContain('LIVE-beslut är låsta.');
   expect(js).not.toContain("decision:'final_approval'");
   expect(html).not.toContain('data-live-accept');
  });
