@@ -1,0 +1,11 @@
+{
+  "sub": "repo:lindkvistfoto-dot@337302317/alea-crusaders@1403008145:ref:refs/heads/artemis/skylla-mobile-operations-20261020",
+  "ref": "refs/heads/artemis/skylla-mobile-operations-20261020",
+  "environment": null,
+  "repository_id": "1403008145",
+  "actor_id": "337302317",
+  "workflow_ref": "lindkvistfoto-dot/alea-crusaders/.github/workflows/skylla-mobile.yml@refs/heads/artemis/skylla-mobile-operations-20261020",
+  "workflow_sha": "9848e137d48440a9964f2701c74a0046fa9766c2",
+  "run_id": "39442513843",
+  "run_attempt": "1"
+}

@@ -307,8 +307,8 @@ class Journal:
         self.stream.close();fcntl.flock(self.lock,fcntl.LOCK_UN);self.lock.close()
 
 
-def run(manifest,token_file,journal_dir,verify_only=False,initial_receipts=None,send=transfer):
-    validate_manifest(manifest);token=access.read_token(token_file)
+def run(manifest,token_file,journal_dir,verify_only=False,initial_receipts=None,send=transfer,token_loader=access.read_token):
+    validate_manifest(manifest);token=token_loader(token_file)
     seeds={r['id']:r.get('verification_receipt') for r in (initial_receipts or [])}
     journal=Journal(journal_dir,manifest);interrupted=False;consecutive_transfer_failures=0
     results={}
