@@ -3,7 +3,7 @@ import {describe,it,expect} from 'vitest';
 const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const auto=edge.slice(edge.indexOf('async function autoPrepareLiveCandidate('),edge.indexOf('async function appBotLogin()'));
 describe('OLYMPIA automatic candidate concurrency safeguards',()=>{
- it('remains off by default',()=>expect(auto).toContain('OLYMPIA_AUTO_LIVE_CANDIDATE'));
+ it('has a DEV-only gate and emergency stop',()=>{expect(auto).toContain('wkiuyklzzroavclnsxna.supabase.co');expect(auto).toContain('OLYMPIA_AUTO_LIVE_CANDIDATE')});
  it('uses a deterministic atomic ref per PR and SHA',()=>{
   expect(auto).toContain('"olympia/auto-candidates/pr-" + number + "-" + testedDevSha.toLowerCase()');
   expect(auto).toContain('"refs/heads/" + lockBranch');
