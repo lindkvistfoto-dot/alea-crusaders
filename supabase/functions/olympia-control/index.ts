@@ -77,6 +77,8 @@ async function githubToken(decision: string) {
     ? { contents: "read" }
     : decision === "pull_request_list" || decision === "pull_request_status"
     ? { pull_requests: "read", checks: "read", statuses: "read" }
+    : decision === "idea_verify_live"
+    ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "review_pull_request"
@@ -700,10 +702,213 @@ async function handleRequest(req: Request): Promise<Response> {
     if (authError || !user || !user.email_confirmed_at || user.email?.toLowerCase() !== allowedEmail) {
       return fail("Kontot är inte auktoriserat att fatta OLYMPIA-beslut.", 403);
     }
+    const ideaClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: auth } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const data = await req.json();
     if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
     if (data.action === "session_check") return json({ ok: true });
+    if (String(data.action || "").startsWith("idea_")) {
+      const table = ideaClient.from("olympia_ideas");
+      const statuses = new Set(["idea_bank", "to_process", "in_olympia", "done"]);
+      const classifications = new Set(["fully_handled", "partially_handled", "not_handled", "superseded", "uncertain"]);
+      const canonicalPr = (pr: any) => {
+        const number = Number(pr?.number);
+        if (!Number.isSafeInteger(number) || number < 1 || !classifications.has(String(pr?.classification || "")) ||
+            !String(pr?.purpose || "").trim() || !String(pr?.recommendation || "").trim() ||
+            String(pr.purpose).length > 2000 || String(pr.remaining_need || "").length > 4000 || String(pr.recommendation).length > 2000) {
+          throw new Error("HISTORICAL_PR_INVALID");
+        }
+        return { number, url: "https://github.com/" + OWNER + "/" + REPO + "/pull/" + number,
+          purpose: String(pr.purpose).trim(), classification: pr.classification,
+          remaining_need: String(pr.remaining_need || "").trim(), recommendation: String(pr.recommendation).trim(), hidden: pr.hidden === true };
+      };
+      const eventFor = (action: string, actor: string, changes: Record<string, unknown>) => ({ action, actor, at: new Date().toISOString(), changes });
+      const checkedIdea = (value: any) => {
+        if (!value || typeof value !== "object" || !String(value.title || "").trim() || String(value.title).trim().length > 160 ||
+            String(value.description || "").length > 4000 || !Array.isArray(value.historical_prs) || value.historical_prs.length > 38 ||
+            !statuses.has(String(value.status || "idea_bank"))) throw new Error("IDEA_INPUT_INVALID");
+        const prs = value.historical_prs.map(canonicalPr);
+        if (new Set(prs.map((pr: any) => pr.number)).size !== prs.length) throw new Error("DUPLICATE_HISTORICAL_PR");
+        return { title: String(value.title).trim(), description: String(value.description || "").trim(), historical_prs: prs };
+      };
+      const errorText = (error: any) => {
+        const code = String(error?.message || "");
+        const messages: Record<string, string> = {
+          IDEA_INPUT_INVALID: "Kontrollera rubrik, beskrivning och uppslagets PR-underlag.",
+          HISTORICAL_PR_INVALID: "Varje historisk PR behöver nummer, syfte, klassning och rekommenderad åtgärd.",
+          DUPLICATE_HISTORICAL_PR: "Samma historiska PR får bara kopplas en gång per uppslag.",
+          IDEA_NOT_FOUND: "Uppslaget finns inte längre. Uppdatera sidan.",
+          IDEA_CHANGED: "Uppslaget har ändrats i en annan vy. Läs in det igen innan du sparar.",
+          ACTIVE_PR_INVALID: "Välj en öppen PR mot development som aktivt utvecklingsärende.",
+          ACTIVE_PR_ALREADY_REGISTERED: "Den aktiva PR:n finns redan som historisk PR på detta uppslag.",
+          IMPORT_UNVERIFIED: "Importfilen behöver vara CLEAN OLYMPUS 2026-11-03, innehålla exakt 38 unika PR:ar och bekräftas efter granskning.",
+          LIVE_NOT_VERIFIED: "LIVE-publicering har inte verifierats. Uppslaget är oförändrat.",
+        };
+        console.error("OLYMPIA UPPSLAG request failed", code.slice(0, 100));
+        return fail(messages[code] || "UPPSLAG kunde inte spara ändringen. Kontrollera anslutningen och försök igen.", code === "IDEA_CHANGED" ? 409 : 400);
+      };
+      try {
+        if (data.action === "idea_list") {
+          const { data: rows, error } = await table.select("*").order("updated_at", { ascending: false });
+          if (error) throw error;
+          const ideas = Array.isArray(rows) ? rows : [];
+          const hiddenPrNumbers = [...new Set(ideas.flatMap((idea: any) => (idea.historical_prs || []).filter((pr: any) => pr.hidden).map((pr: any) => Number(pr.number))))];
+          return json({ ok: true, ideas, hiddenPrNumbers });
+        }
+        if (data.action === "idea_save") {
+          const input = checkedIdea({ ...data, status: "idea_bank" });
+          if (data.id) {
+            const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+            if (readError) throw readError;
+            if (!current) throw new Error("IDEA_NOT_FOUND");
+            if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+            if (current.status === "in_olympia" || current.status === "done") throw new Error("IDEA_CHANGED");
+            const history = [...(Array.isArray(current.history) ? current.history : []), eventFor("edit", user.id, { title: input.title, description: input.description, historical_pr_count: input.historical_prs.length })];
+            const { data: saved, error } = await table.update({ ...input, history, updated_by: user.id, updated_at: new Date().toISOString() }).eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+            if (error) throw error;
+            return json({ ok: true, idea: saved });
+          }
+          const now = new Date().toISOString();
+          const row = { ...input, status: "idea_bank", active_pr_number: null, completed_at: null, created_by: user.id, updated_by: user.id, created_at: now, updated_at: now, history: [eventFor("created", user.id, { title: input.title })] };
+          const { data: saved, error } = await table.insert(row).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_set_status") {
+          if (!statuses.has(data.status) || data.status === "done" || data.status === "in_olympia") return fail("Välj Idébank eller Att bearbeta. Pågående och genomfört kräver särskild verifiering.", 400);
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          const { data: saved, error } = await table.update({ status: data.status, active_pr_number: null, completed_at: null,
+            history: [...(current.history || []), eventFor("status_changed", user.id, { from: current.status, to: data.status })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_activate") {
+          const number = Number(data.activePrNumber);
+          if (!Number.isSafeInteger(number) || number < 1) throw new Error("ACTIVE_PR_INVALID");
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          if ((current.historical_prs || []).some((pr: any) => Number(pr.number) === number)) throw new Error("ACTIVE_PR_ALREADY_REGISTERED");
+          const token = await githubToken("pull_request_list");
+          const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+          if (pr.state !== "open" || pr.base?.ref !== "development" || pr.draft) throw new Error("ACTIVE_PR_INVALID");
+          const { data: saved, error } = await table.update({ status: "in_olympia", active_pr_number: number, completed_at: null,
+            history: [...(current.history || []), eventFor("activated", user.id, { active_pr_number: number, url: pr.html_url })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved, pullRequest: { number, url: pr.html_url, title: pr.title } });
+        }
+        if (data.action === "idea_hide_historical_pr") {
+          const number = Number(data.number);
+          if (!Number.isSafeInteger(number) || number < 1 || typeof data.hidden !== "boolean") throw new Error("HISTORICAL_PR_INVALID");
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          let found = false;
+          const prs = (current.historical_prs || []).map((pr: any) => {
+            if (Number(pr.number) !== number) return pr;
+            found = true;
+            return { ...pr, hidden: data.hidden };
+          });
+          if (!found) throw new Error("IDEA_NOT_FOUND");
+          const { data: saved, error } = await table.update({ historical_prs: prs,
+            history: [...(current.history || []), eventFor("historical_pr_filter_changed", user.id, { number, hidden: data.hidden })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_import") {
+          const source = data.sourceReport || {};
+          if (data.confirmImport !== true || source.name !== "CLEAN OLYMPUS" || source.date !== "2026-11-03" || source.openPrCount !== 38 || !Array.isArray(data.ideas) || !data.ideas.length || data.ideas.length > 38) throw new Error("IMPORT_UNVERIFIED");
+          const prsSeen = new Set<number>();
+          const rows = data.ideas.map((idea: any) => {
+            const input = checkedIdea({ ...idea, status: "idea_bank" });
+            if (!input.historical_prs.length) throw new Error("IMPORT_UNVERIFIED");
+            for (const pr of input.historical_prs) {
+              if (prsSeen.has(pr.number)) throw new Error("IMPORT_UNVERIFIED");
+              prsSeen.add(pr.number);
+            }
+            const now = new Date().toISOString();
+            return { ...input, status: "idea_bank", active_pr_number: null, completed_at: null, import_source: "CLEAN OLYMPUS · 2026-11-03",
+              created_by: user.id, updated_by: user.id, created_at: now, updated_at: now,
+              history: [eventFor("clean_olympus_import", user.id, { source_report: "CLEAN OLYMPUS · 2026-11-03", historical_pr_count: input.historical_prs.length })] };
+          });
+          if (prsSeen.size !== 38) throw new Error("IMPORT_UNVERIFIED");
+          const { data: existing, error: readError } = await table.select("historical_prs");
+          if (readError) throw readError;
+          const existingNumbers = new Set((existing || []).flatMap((idea: any) => (idea.historical_prs || []).map((pr: any) => Number(pr.number))));
+          if ([...prsSeen].some(number => existingNumbers.has(number))) throw new Error("IMPORT_UNVERIFIED");
+          const { data: saved, error } = await table.insert(rows).select("id,title,status,historical_prs,created_at,updated_at");
+          if (error) throw error;
+          return json({ ok: true, importedCount: saved?.length || 0, ideas: saved });
+        }
+        if (data.action === "idea_verify_live") {
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current || current.status !== "in_olympia" || !Number.isSafeInteger(Number(current.active_pr_number))) throw new Error("LIVE_NOT_VERIFIED");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          const token = await githubToken("idea_verify_live");
+          const number = Number(current.active_pr_number);
+          const sourcePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+          if (sourcePr.state !== "closed" || sourcePr.merged !== true || sourcePr.base?.ref !== "development") throw new Error("LIVE_NOT_VERIFIED");
+          const sourceMergeSha = String(sourcePr.merge_commit_sha || "");
+          if (!/^[0-9a-f]{40}$/i.test(sourceMergeSha)) throw new Error("LIVE_NOT_VERIFIED");
+          const botLogin = await appBotLogin();
+          let decision: any = null;
+          for (let page = 1; page <= 20; page++) {
+            const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
+            if (!Array.isArray(issues)) throw new Error("LIVE_NOT_VERIFIED");
+            decision = issues.find((issue: any) => {
+              const body = String(issue.body || "");
+              return !issue.pull_request && body.includes("- Ärende-ID: PR-" + number) && body.includes("- PR: #" + number) &&
+                body.includes("- Beslut: PANDORAS ASK") && /^[0-9]+$/.test(String(issue.number));
+            }) || null;
+            if (decision || issues.length < 100) break;
+          }
+          if (!decision) throw new Error("LIVE_NOT_VERIFIED");
+          const testedMatch = String(decision.body || "").match(/- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})/i);
+          if (!testedMatch) throw new Error("LIVE_NOT_VERIFIED");
+          const sourceInTestedDev = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + sourceMergeSha + "..." + testedMatch[1]);
+          const sourceOnDev = sourceInTestedDev.status === "identical" || sourceInTestedDev.status === "ahead" && String(sourceInTestedDev.merge_base_commit?.sha || "").toLowerCase() === sourceMergeSha.toLowerCase();
+          if (!sourceOnDev) throw new Error("LIVE_NOT_VERIFIED");
+          const [closedReleasePrs, live] = await Promise.all([
+            gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=main&per_page=100&sort=updated&direction=desc&page=1"),
+            gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main"),
+          ]);
+          if (!Array.isArray(closedReleasePrs)) throw new Error("LIVE_NOT_VERIFIED");
+          const releasePr = closedReleasePrs.find((candidate: any) => candidate.merged_at && candidate.base?.ref === "main" &&
+            String(candidate.body || "").includes("Zeus decision journal: #" + decision.number));
+          if (!releasePr || releasePr.merged !== true) throw new Error("LIVE_NOT_VERIFIED");
+          const releaseMergeSha = String(releasePr.merge_commit_sha || ""), mainSha = String(live.object?.sha || "");
+          if (!/^[0-9a-f]{40}$/i.test(releaseMergeSha) || !/^[0-9a-f]{40}$/i.test(mainSha)) throw new Error("LIVE_NOT_VERIFIED");
+          const releaseComparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + releaseMergeSha + "..." + mainSha);
+          const releaseOnMain = releaseComparison.status === "identical" || releaseComparison.status === "ahead" && String(releaseComparison.merge_base_commit?.sha || "").toLowerCase() === releaseMergeSha.toLowerCase();
+          const manifestResponse = await fetch(PAGES_BASE + "/deployment-manifest.json?ts=" + Date.now(), { headers: { "Accept": "application/json", "Cache-Control": "no-cache" }, signal: AbortSignal.timeout(10000) });
+          const manifest = manifestResponse.ok ? await manifestResponse.json().catch(() => null) : null;
+          if (!releaseOnMain || manifest?.environment !== "main" || manifest?.source_sha !== mainSha) throw new Error("LIVE_NOT_VERIFIED");
+          const verifiedAt = new Date().toISOString();
+          const { data: saved, error } = await table.update({ status: "done", completed_at: verifiedAt,
+            history: [...(current.history || []), eventFor("live_verified", user.id, { active_pr_number: number, source_merge_sha: sourceMergeSha, decision_issue: decision.number, release_pr_number: releasePr.number, release_merge_sha: releaseMergeSha, main_sha: mainSha, manifest_source_sha: manifest.source_sha })], updated_by: user.id, updated_at: verifiedAt })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved, verification: { prNumber: number, decisionIssue: decision.number, releasePrNumber: releasePr.number, releaseMergeSha, mainSha, publishedSha: manifest.source_sha, verifiedAt } });
+        }
+        return fail("UPPSLAG-åtgärden känns inte igen.", 400);
+      } catch (error) {
+        const response = errorText(error);
+        if (response.status !== 400) return response;
+        return response;
+      }
+    }
     if (data.action === "auto_candidate_diagnostics") {
       if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
           typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {

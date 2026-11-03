@@ -1,0 +1,24 @@
+{
+  "schema": "olympia-uppslag-import/v1",
+  "source_report": {
+    "name": "CLEAN OLYMPUS",
+    "date": "2026-11-03",
+    "open_pr_count": 38
+  },
+  "ideas": [
+    {
+      "title": "Samlad idé eller kvarstående behov",
+      "description": "Sammanfatta behovet. Flera historiska PR:ar kan ligga under samma uppslag.",
+      "historical_prs": [
+        {
+          "number": 534,
+          "purpose": "PR:ns verifierade ursprungliga syfte",
+          "classification": "not_handled",
+          "remaining_need": "Konkret kvarstående behov enligt granskningen",
+          "recommendation": "BEHÅLL · nästa rekommenderade steg",
+          "hidden": true
+        }
+      ]
+    }
+  ]
+}
