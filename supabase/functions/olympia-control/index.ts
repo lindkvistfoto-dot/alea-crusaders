@@ -661,8 +661,19 @@ async function handleRequest(req: Request): Promise<Response> {
             if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
           }
         }
+        // Resolve the actual release candidate through the existing server verifier.
+        // This is read-only; never infer readiness from the existence of an issue.
+        let candidate: any = null;
+        if (locked && requestPresent && issue) {
+          try {
+            const item = await workItem(token, "PR-" + number);
+            candidate = await inspectCandidate(token, item, issue.number, sha);
+          } catch (error) {
+            candidate = { ready: false, blocked: true, message: "Kandidatverifieringen kunde inte slutföras. Ingen publicering tillåten." };
+          }
+        }
         const state = locked ? (requestPresent ? "requested" : "needs_review") : (issue ? "unlocked_issue" : "not_started");
-        return json({ ok: true, state, locked, requestPresent,
+        return json({ ok: true, state, locked, requestPresent, candidate,
           issue: issue ? { number: issue.number, url: issue.html_url } : null,
           message: state === "needs_review" ? "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." :
             state === "requested" ? "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut." :
