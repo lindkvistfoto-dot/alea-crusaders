@@ -507,7 +507,7 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
   // Missing credentials or incomplete metadata always leave LIVE preview locked.
   const apiToken = Deno.env.get("CLOUDFLARE_API_TOKEN");
   const accountId = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
-  if (!apiToken || !accountId || !/^[a-f0-9]{40}$/i.test(releasePrSha)) return null;
+  if (!apiToken || !accountId || !/^[a-f0-9]{40}$/i.test(releasePrSha)) { console.warn("OLYMPIA_PREVIEW_CONFIG_UNAVAILABLE"); return null; }
   try {
     for (let page = 1; page <= 5; page++) {
       const response = await fetch("https://api.cloudflare.com/client/v4/accounts/" + encodeURIComponent(accountId) +
@@ -515,9 +515,9 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
         headers: { Authorization: "Bearer " + apiToken, Accept: "application/json" },
         signal: AbortSignal.timeout(8000),
       });
-      if (!response.ok) return null;
+      if (!response.ok) { console.warn("OLYMPIA_PREVIEW_HTTP_STATUS", response.status); return null; }
       const payload = await response.json();
-      if (payload?.success !== true || !Array.isArray(payload.result)) return null;
+      if (payload?.success !== true || !Array.isArray(payload.result)) { console.warn("OLYMPIA_PREVIEW_RESPONSE_INVALID"); return null; }
       for (const deployment of payload.result) {
         if (deployment.environment !== "preview" || deployment.latest_stage?.status !== "success") continue;
         if (String(deployment.deployment_trigger?.metadata?.commit_hash || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
@@ -526,7 +526,7 @@ async function verifiedCandidatePreview(token: string, releasePrSha: string) {
       }
       if (payload.result.length < 100) break;
     }
-  } catch (_) { /* Cloudflare unavailable: keep preview locked. */ }
+  } catch (_) { console.warn("OLYMPIA_PREVIEW_REQUEST_FAILED"); }
   return null;
 }
 function trustedCandidatePreviewUrl(value: unknown): string | null {
