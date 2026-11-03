@@ -1,6 +1,41 @@
 import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+describe('Badge Admin single-frame presentation',()=>{
+ it('loads Honors Admin as syntactically valid JavaScript',()=>{
+  expect(()=>execFileSync(process.execPath,['--check',new URL('../features/honors/honors-admin.js',import.meta.url).pathname],{stdio:'pipe'})).not.toThrow();
+ });
+ it('shows one selected badge frame while keeping achievement criteria',()=>{
+  const admin=read('features/honors/honors-admin.js');
+  expect(admin).toContain('aria-label="Förhandsgranska vald badgebild och ram"');
+  expect(admin).toContain("const tiers = ['bronze']");
+  expect(admin).not.toContain('Samma ram med en, två och tre stjärnor');
+  expect(admin).toContain('data-card-badge-frame');
+  expect(admin).toContain('honors-badge-preview');
+  expect(admin).toContain('honors-badge-gallery');
+  expect(admin).toContain('data-card-select-image');
+  expect(admin).toContain('data-card-archive-image');
+  expect(admin).toContain('data-card-image-upload');
+  expect(admin).toContain('Redigera regler &amp; inställningar');
+  expect(admin).not.toContain("'<div class=\"honors-badge-tiers\">'+criteria");
+  expect(admin).toContain('honors-preview-overhang');
+  expect(admin).toContain('honors-preview-window');
+  const css=read('features/honors/honors-admin.css');
+  expect(css).toContain('object-fit:cover');
+  expect(css).toContain('.honors-badge-preview .honors-badge-frame{display:block;width:min(100%,380px)');
+  expect(css).toContain('.honors-badge-preview .honors-badge-frame .honors-preview-art{display:block;position:relative;width:100%;height:100%');
+  expect(css).toContain('left:16%;top:16%;width:68%;height:68%;aspect-ratio:1/1');
+  expect(css).toContain('honors-preview-overhang');
+  expect(admin).toContain('name="allow_overhang"> Tillåt bilden');
+  const html=read('index.html');
+  expect(html).toContain('honors-entry.js?v=20261102-badge-single-frame-486-fix2');
+  expect(html).toContain('ARCANE HONORS laddningsfel:');
+  expect(html).toContain("import('./features/honors/honors-entry.js?v=20261102-honors-diagnostic-486')");
+  expect(read('features/honors/honors-entry.js')).toContain('honors-admin.js?v=20261102-single-frame-486-fix2');
+ });
+});
+
 describe('ARCANE Trophy Room V2.2',()=>{
  it('adds an independent navigable view and locked HERMES scene',()=>{
   const html=read('index.html'),icons=read('features/home/navigation-icons.js'),room=read('features/trophy-room/room.js');

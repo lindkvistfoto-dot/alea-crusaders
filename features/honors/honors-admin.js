@@ -167,7 +167,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const isBadge = getCategory(definition) === 'badge';
     const selectedPreview = String(definition.preview_variant_id || '');
     const selectedPublished = String(definition.published_variant_id || '');
-    const tiers = isBadge ? ['bronze','silver','gold'] : ['bronze'];
+    const tiers = ['bronze'];
     const tierLabels = {bronze:'Brons',silver:'Silver',gold:'Guld'};
     const rows = own.length ? own.map(v => {
       const img = assetImage(v.image_asset_id);
@@ -180,7 +180,7 @@ export function renderHonorsAdmin(root, options = {}) {
         (img ? '<img src="' + esc(img) + '" alt="" loading="lazy">' : '<span class="honors-variant-placeholder" aria-hidden="true">✦</span>') +
         '<div><strong>' + esc(v.name) + '</strong><span>' + esc(materials[v.material] || v.material) + ' · ' + statusText + '</span>' +
         '<small>' + (v.image_asset_id ? 'HERMES-asset: ' + esc(v.image_asset_id) : 'Bild väntar på HERMES') + (v.allow_overhang ? ' · bilden visas framför ramen' : ' · ramen visas framför bilden') + '</small></div>' +
-        imageControls('relief',v) + (isBadge ? '<label class="honors-frame-choice">Ram för bilden<select data-badge-frame="' + esc(v.id) + '"><option value="">Välj ram</option>' + imageAssets.filter(asset=>asset?.asset_key?.startsWith(badgeFramePrefix)&&asset.asset_path).sort((x,y)=>badgeFrameLabel(x).localeCompare(badgeFrameLabel(y),'sv')).map(asset=>'<option value="'+esc(asset.asset_key)+'"'+(selectedBadgeFrame(definition,v)===asset.asset_key?' selected':'')+'>'+esc(badgeFrameLabel(asset))+'</option>').join('') + '</select></label>' : '') + '<div class="honors-variant-actions">'
+        imageControls('relief',v) + (isBadge ? '<label class="honors-frame-choice">Ram för bilden<select data-badge-frame="' + esc(v.id) + '"><option value="">Välj ram</option>' + imageAssets.filter(asset=>asset?.asset_key?.startsWith(badgeFramePrefix)&&asset.asset_path).sort((x,y)=>badgeFrameLabel(x).localeCompare(badgeFrameLabel(y),'sv')).map(asset=>'<option value="'+esc(asset.asset_key)+'"'+(selectedBadgeFrame(definition,v)===asset.asset_key?' selected':'')+'>'+esc(badgeFrameLabel(asset))+'</option>').join('') + '</select></label>' : '') + '<div class="honors-variant-actions">' +
           (isBadge
             ? '<button type="button" data-select-badge-image="' + esc(v.id) + '"' + (!publishedAsset(v.image_asset_id) || isPublished ? ' disabled' : '') + '>' + (isPublished ? 'Vald bild' : 'Välj bild') + '</button>'
             : '<button type="button" data-preview-variant="' + esc(v.id) + '"' + (v.status === 'archived' ? ' disabled' : '') + '>Förhandsvisa</button>') +
@@ -196,11 +196,11 @@ export function renderHonorsAdmin(root, options = {}) {
       const frameUrl = isBadge ? assetImage(selectedBadgeFrame(definition,preview)) : assetImage(frameFor(definition,tier));
       const reliefLayer = reliefUrl
         ? (allowOverhang
-          ? '<img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">'
+          ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt=""></span><img class="honors-preview-relief honors-preview-overhang" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '">'
           : '<span class="honors-preview-window"><img class="honors-preview-relief" src="' + esc(reliefUrl) + '" alt="' + esc(preview.name) + '"></span>')
         : preview ? '<span class="honors-preview-relief-label">' + esc(preview.name) + ' · bild väntar</span>' : '';
       return '<div class="honors-preview-tier"><span>' + tierLabels[tier] + '</span><div class="honors-preview-art' + (allowOverhang ? ' has-overhang' : '') + '">' +
-        (isBadge ? '<span class="honors-preview-stars" aria-label="' + String(['bronze','silver','gold'].indexOf(tier)+1) + ' stjärnor">' + '★'.repeat(['bronze','silver','gold'].indexOf(tier)+1) + '</span>' : '') +
+        '' +
         (frameUrl ? '<img class="honors-preview-frame" src="' + esc(frameUrl) + '" alt="' + frameFamilyLabel + ' ' + tierLabels[tier].toLowerCase() + 'ram">' : '<span class="honors-preview-empty">Ram väntar på HERMES</span>') +
         reliefLayer +
       '</div></div>';
@@ -210,9 +210,9 @@ export function renderHonorsAdmin(root, options = {}) {
       '<form data-variant-form class="honors-variant-form">' +
         '<label>Material<select name="material">' + Object.entries(materials).filter(([key]) => ['enamel','metal','wood','other'].includes(key)).map(([key,label]) => '<option value="' + key + '">' + label + '</option>').join('') + '</select></label>' +
         '<label>Bildfil<input type="file" name="image_file" accept="image/png,image/jpeg,image/webp" required'+(!imagePilot?' disabled':'')+'></label><small>'+(imagePilot?'HERMES ALEA: PNG, JPG eller WebP, högst 12 MB och 2048 × 2048 pixlar. '+(isBadge?'Badgebilder måste vara kvadratiska (1:1). ':'')+'Äkta transparens krävs.':'HERMES ALEA är inte tillgänglig. Bilduppladdning är spärrad tills tjänsten är driftsatt.')+'</small>' +
-        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang" checked> Tillåt bilden att sticka utanför ramen (3D-effekt)</label>' +
+        '<label class="honors-overhang"><input type="checkbox" name="allow_overhang"> Tillåt bilden att sticka utanför ramen (kräver transparent motiv)</label>' +
         '<button type="submit"'+(!imagePilot?' disabled':'')+'>Lägg till variant</button></form>' +
-      '<div class="honors-preview-card" aria-label="Förhandsvisning av badge i brons-, silver- och guldram"><span>Förhandsvisning · valda ramar</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
+      '<div class="honors-preview-card" aria-label="Förhandsvisning av vald bild och ram"><span>Förhandsvisning · vald bild och ram</span><div class="honors-preview-tiers">' + framePreviews + '</div>' +
       '<button type="button" data-trophy-preview' + (preview ? '' : ' disabled') + '>Visa i troférummet</button></div></section>';
   }
 
@@ -229,41 +229,40 @@ export function renderHonorsAdmin(root, options = {}) {
     const selectedText=variant
       ? (definition.published_variant_id&&String(definition.published_variant_id)===String(variant.id)?'Vald variant':'Vald förhandsvisning')
       : 'Ingen bildvariant vald';
-    const metals=[['bronze','Brons'],['silver','Silver'],['gold','Guld']];
     const frameUrl=variant?assetImage(selectedBadgeFrame(definition,variant)):null;
-    const frames=metals.map(([metal,label],index)=>{
-      const stars='★'.repeat(index+1);
-      const reliefLayer=variantUrl
-        ? (variant?.allow_overhang===false
-          ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
-          : '<img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt="">')
-        : '<span class="honors-preview-empty">Bild saknas</span>';
-      return '<div class="honors-badge-frame"><span>'+label+' · '+stars+'</span><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
-        reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'<span class="honors-preview-empty">Välj en ram</span>')+
+    const reliefLayer=variantUrl
+      ? (variant?.allow_overhang===false
+        ? '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span>'
+        : '<span class="honors-preview-window"><img class="honors-preview-relief" src="'+esc(variantUrl)+'" alt=""></span><img class="honors-preview-relief honors-preview-overhang" src="'+esc(variantUrl)+'" alt="">')
+      : '<span class="honors-preview-empty">Bild saknas</span>';
+    const framePreview='<div class="honors-badge-frame"><div class="honors-preview-art'+(variant?.allow_overhang?' has-overhang':'')+'">'+
+      reliefLayer+(frameUrl?'<img class="honors-preview-frame" src="'+esc(frameUrl)+'" alt="">':'<span class="honors-preview-empty">Välj en ram</span>')+
       '</div></div>';
-    }).join('');
-    const criteria=[['bronze','Brons'],['silver','Silver'],['gold','Guld']].map(([tier,label])=>
-      '<div class="honors-badge-tier"><strong>'+label+'</strong><span>'+esc(tierText(definition,tier)||'Inte definierat')+'</span></div>'
-    ).join('');
     const alternatives=variantsFor(definition.id).filter(v=>v.status!=='archived');
-    const variantRows=alternatives.map(v=>{
-      const url=assetImage(v.image_asset_id);
-      const chosen=variant&&String(v.id)===String(variant.id);
-      const position=v.allow_overhang===false?'Bakom ramen':'Sticker ut framför ramen';
-      return '<li>'+(url?'<img src="'+esc(url)+'" alt="">':'<span class="honors-badge-variant-empty">✦</span>')+
-        '<span><strong>'+esc(v.name)+'</strong><small>'+esc(materials[v.material]||v.material)+' · '+position+'</small></span>'+
-        (chosen?'<em>Vald</em>':'')+'</li>';
-    }).join('');
+    const frameOptions=imageAssets.filter(asset=>asset?.asset_key?.startsWith(badgeFramePrefix)&&asset.asset_path)
+      .sort((x,y)=>badgeFrameLabel(x).localeCompare(badgeFrameLabel(y),'sv'));
+    const currentFrame=variant?selectedBadgeFrame(definition,variant):'';
+    const frameChoice=variant?'<label class="honors-badge-control">Välj ram<select data-card-badge-frame="'+esc(definition.id)+'"><option value="">Välj ram</option>'+
+      frameOptions.map(asset=>'<option value="'+esc(asset.asset_key)+'"'+(asset.asset_key===currentFrame?' selected':'')+'>'+esc(badgeFrameLabel(asset))+'</option>').join('')+
+      '</select></label>':'<p class="honors-help">Välj först en bild för att välja ram.</p>';
+    const imageGallery='<div class="honors-badge-gallery" aria-label="Tillgängliga badgebilder">'+
+      (alternatives.length?alternatives.map(v=>{
+        const url=assetImage(v.image_asset_id);
+        const active=variant&&String(variant.id)===String(v.id);
+        const available=!!publishedAsset(v.image_asset_id);
+        return '<div class="honors-badge-gallery-item'+(active?' is-active':'')+'">'+
+          (url?'<img src="'+esc(url)+'" alt="'+esc(v.name)+'" loading="lazy">':'<span class="honors-badge-gallery-empty">Bild saknas</span>')+
+          '<small>'+esc(v.name)+(active?' · Aktiv':'')+'</small>'+
+          '<div class="honors-badge-gallery-actions"><button type="button" data-card-select-image="'+esc(v.id)+'" data-card-honor="'+esc(definition.id)+'"'+(!available||active?' disabled':'')+'>'+(active?'Aktiv':'Välj aktiv')+'</button>'+
+          '<button type="button" data-card-archive-image="'+esc(v.id)+'" data-card-honor="'+esc(definition.id)+'">Ta bort</button></div></div>';
+      }).join(''):'<p class="honors-help">Inga bilder uppladdade.</p>')+'</div>';
     return '<article class="honors-badge-card">'+
       '<header><div><span class="honors-eyebrow">BADGE</span><h3>'+esc(definition.name)+'</h3></div><span class="honors-status '+statusClass+'">'+esc(statusLabel)+'</span></header>'+
-      '<p class="honors-badge-description">'+esc(definition.description||'Ingen beskrivning ännu.')+'</p>'+
-      '<div class="honors-badge-frames" aria-label="Samma ram med en, två och tre stjärnor">'+frames+'</div>'+
-      '<div class="honors-badge-tiers">'+criteria+'</div><p class="honors-badge-metric-note">Karriärmått kontrolleras manuellt tills statistikfunktionen finns.</p>'+
-      '<div class="honors-badge-current"><strong>'+esc(selectedText)+'</strong><span>'+(variant?esc(variant.name)+' · '+esc(materials[variant.material]||variant.material):'Lägg till en variant när illustrationen är klar')+'</span></div>'+
-      '<details class="honors-badge-variants"><summary>Bildvarianter ('+alternatives.length+')</summary>'+
-        (variantRows?'<ul>'+variantRows+'</ul>':'<p>Inga bildvarianter registrerade.</p>')+
-      '</details>'+
-      '<footer><span>'+count(definition.id)+' tilldelningar</span><button type="button" data-edit-badge="'+esc(definition.id)+'">Redigera</button></footer>'+
+      '<section class="honors-badge-preview"><h4>Förhandsgranska</h4><div class="honors-badge-frames" aria-label="Förhandsgranska vald badgebild och ram">'+framePreview+'</div></section>'+
+      '<div class="honors-badge-quick-controls">'+frameChoice+'<h4>Tillgängliga bilder</h4>'+imageGallery+
+      '<div class="honors-badge-image-actions"><label class="honors-badge-upload">Ladda upp bild<input type="file" data-card-image-upload="'+esc(definition.id)+'" accept="image/png,image/jpeg,image/webp"></label>'+
+      '<button type="button" data-card-image-action="'+esc(definition.id)+'" data-image-task="remove"'+(!variant?' disabled':'')+'>Ta bort bild</button></div></div>'+
+      '<footer><button type="button" data-edit-badge="'+esc(definition.id)+'">Redigera regler &amp; inställningar</button></footer>'+
     '</article>';
   }
 
@@ -310,6 +309,63 @@ export function renderHonorsAdmin(root, options = {}) {
         const id=button.dataset.expandBadge;
         expandedBadgeId=String(expandedBadgeId)===String(id)?'':id;
         draw();
+      }));
+      grid.querySelectorAll('[data-card-badge-frame]').forEach(select=>select.addEventListener('change',async()=>{
+        const definition=definitions.find(d=>String(d.id)===select.dataset.cardBadgeFrame);
+        const variant=definition&&selectedBadgeVariant(definition);
+        try{
+          if(!variant||typeof options.onSelectBadgeFrame!=='function')throw Error('Välj först en bild.');
+          await options.onSelectBadgeFrame(definition,variant.id,select.value||null);
+          definition.badge_frame_assets={...(definition.badge_frame_assets||{}),[variant.id]:select.value||null};
+          draw();notice('Ramvalet sparades.');
+        }catch(error){notice(error.message||'Ramvalet kunde inte sparas.');}
+      }));
+      grid.querySelectorAll('[data-card-select-image]').forEach(button=>button.addEventListener('click',async()=>{
+        const definition=definitions.find(d=>String(d.id)===button.dataset.cardHonor);
+        const variant=variants.find(v=>String(v.id)===button.dataset.cardSelectImage);
+        try{
+          if(!definition||!variant||!publishedAsset(variant.image_asset_id))throw Error('Bilden är inte publicerad.');
+          await onPreviewVariant(definition,variant.id);
+          await onPublishVariant(definition,variant);
+          definition.preview_variant_id=variant.id;definition.published_variant_id=variant.id;
+          variant.status='published';draw();notice('Aktiv badgebild vald.');
+        }catch(error){notice(error.message||'Bilden kunde inte väljas.');}
+      }));
+      grid.querySelectorAll('[data-card-archive-image]').forEach(button=>button.addEventListener('click',async()=>{
+        const definition=definitions.find(d=>String(d.id)===button.dataset.cardHonor);
+        const variant=variants.find(v=>String(v.id)===button.dataset.cardArchiveImage);
+        if(!definition||!variant)return;
+        if(!root.ownerDocument.defaultView.confirm('Ta bort "'+variant.name+'" från badgen? Originalbilden bevaras.'))return;
+        try{
+          if(typeof onArchiveVariant!=='function')throw Error('Borttagning är inte tillgänglig.');
+          await onArchiveVariant(definition,variant);
+          variant.status='archived';
+          if(String(definition.preview_variant_id)===String(variant.id))definition.preview_variant_id=null;
+          if(String(definition.published_variant_id)===String(variant.id))definition.published_variant_id=null;
+          draw();notice('Bildvarianten borttagen från badgen.');
+        }catch(error){notice(error.message||'Bilden kunde inte tas bort.');}
+      }));
+      grid.querySelectorAll('[data-card-image-upload]').forEach(input=>input.addEventListener('change',async()=>{
+        const definition=definitions.find(d=>String(d.id)===input.dataset.cardImageUpload);
+        const variant=definition&&selectedBadgeVariant(definition);
+        const file=input.files?.[0];if(!file)return;
+        if(!variant){openEditor(definition);notice('Skapa först en bildvariant under Bildvarianter.');return;}
+        try{
+          await assertSquareBadgeImage(file);
+          if(typeof options.onUploadImage!=='function')throw Error('Bilduppladdning saknas.');
+          const saved=await options.onUploadImage('relief',variant,file);
+          Object.assign(variant,saved);draw();notice('Badgebild uppladdad.');
+        }catch(error){notice(error.message||'Kunde inte ladda upp bilden.');input.value='';}
+      }));
+      grid.querySelectorAll('[data-card-image-action]').forEach(button=>button.addEventListener('click',async()=>{
+        const definition=definitions.find(d=>String(d.id)===button.dataset.cardImageAction);
+        const variant=definition&&selectedBadgeVariant(definition);
+        if(!variant||!root.ownerDocument.defaultView.confirm('Ta bort bildkopplingen? Originalarkivet behålls.'))return;
+        try{
+          if(typeof options.onRemoveImage!=='function')throw Error('Bildborttagning saknas.');
+          const saved=await options.onRemoveImage('relief',variant);
+          Object.assign(variant,saved);draw();notice('Bildkopplingen borttagen.');
+        }catch(error){notice(error.message||'Bilden kunde inte tas bort.');}
       }));
       grid.querySelectorAll('[data-edit-badge]').forEach(button=>button.addEventListener('click',()=>{
         const definition=definitions.find(d=>String(d.id)===button.dataset.editBadge);

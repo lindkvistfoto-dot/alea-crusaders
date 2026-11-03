@@ -1,5 +1,5 @@
 import { createHermesAleaClient } from '../hermes-alea/client.js?v=direct-storage-315';
-import { renderHonorsAdmin } from './honors-admin.js';
+import { renderHonorsAdmin } from './honors-admin.js?v=20261102-single-frame-486-fix2';
 import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-resolver.js';
 function browserImageClient(){
   return createHermesAleaClient({
