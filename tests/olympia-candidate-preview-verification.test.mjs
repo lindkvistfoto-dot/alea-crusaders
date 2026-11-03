@@ -19,13 +19,3 @@ describe('LIVE candidate preview is verified and fail-closed',()=>{
   expect(ui).toContain('control.disabled=true');
  });
 });
-);
-  expect(edge).toContain('url.hostname === "alea-crusaders.pages.dev"');
-  expect(ui).toContain("verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')");
- });
- it('keeps preview disabled without verified URL and never enables publishing',()=>{
-  expect(ui).toContain('preview.disabled=true');
-  expect(ui).toContain('if(candidate.previewUrl)');
-  expect(ui).toContain('control.disabled=true');
- });
-});
