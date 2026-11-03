@@ -19,7 +19,6 @@ export default defineConfig({
     copyStaticTree("alea-copy-legacy", "legacy", "legacy"),
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-preview", "preview", "preview"),
-    copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
     {
       name: "alea-copy-root-image-assets",
       apply: "build",
