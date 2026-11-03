@@ -166,7 +166,11 @@ async function recordDevAcceptance(token: string, number: number, actor: string)
 // SAFE EVOLUTION stage 2: opt-in server-only candidate preparation after a verified DEV merge.
 // Disabled by default until the idempotency and candidate-preview pilot is accepted.
 async function autoPrepareLiveCandidate(token: string, number: number, actor: string, acceptance: { testedDevSha: string }) {
-  if (Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") !== "enabled") return { state: "disabled" };
+  // Enabled by default ONLY in the known ALEA DEV Supabase project.
+  // Emergency stop: set OLYMPIA_AUTO_LIVE_CANDIDATE=disabled.
+  const projectUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\\/$/, "").toLowerCase();
+  if (projectUrl !== "https://wkiuyklzzroavclnsxna.supabase.co" ||
+      Deno.env.get("OLYMPIA_AUTO_LIVE_CANDIDATE") === "disabled") return { state: "disabled" };
   const item = await workItem(token, "PR-" + number);
   const testedDevSha = acceptance.testedDevSha;
   if (!await verifyReleaseSources(token, item, testedDevSha)) throw new Error("AUTO_CANDIDATE_SOURCE_UNVERIFIED");
