@@ -6,6 +6,7 @@ on:
       - development
     paths:
       - supabase/migrations/**
+      - .github/workflows/deploy-development-migrations.yml
 
 permissions:
   contents: read
@@ -62,7 +63,17 @@ jobs:
           fi
           plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"
           printf '%s\n' "$plan"
-          grep -q 'restore_auth_user_profile_trigger' <<< "$plan" || { echo "::error::Dry run did not show the expected auth trigger migration; no schema migration was pushed."; exit 1; }
+          auth_trigger="$(find supabase/migrations -maxdepth 1 -type f -name '*_restore_auth_user_profile_trigger.sql' -print -quit)"
+          test -n "$auth_trigger"
+          auth_version="$(basename "$auth_trigger" | cut -d_ -f1)"
+          auth_applied=false
+          if [[ "$history_table" == "supabase_migrations.schema_migrations" ]]; then
+            auth_applied="$(psql "$DEVELOPMENT_DATABASE_URL" -v ON_ERROR_STOP=1 -Atqc "SELECT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version = '$auth_version')")"
+          fi
+          if [[ "$auth_applied" != "t" ]] && ! grep -q 'restore_auth_user_profile_trigger' <<< "$plan"; then
+            echo "::error::Auth trigger migration is neither applied nor present in the dry run; no schema migration was pushed."
+            exit 1
+          fi
           if grep -q 'development_schema_baseline' <<< "$plan"; then
             echo "::error::Baseline still appears pending after registration; no schema migration was pushed."
             exit 1
