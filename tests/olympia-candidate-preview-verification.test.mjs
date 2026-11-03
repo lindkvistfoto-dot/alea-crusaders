@@ -5,11 +5,21 @@ const ui=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'
 describe('LIVE candidate preview is verified and fail-closed',()=>{
  it('requires deployment matching exact release PR SHA',()=>{
   expect(edge).toContain('deployment.sha || "").toLowerCase() !== releasePrSha.toLowerCase()');
-  expect(edge).toContain('status.state === "success"');
+  expect(edge).toContain('entry.state === "success"');
   expect(edge).toContain('previewUrl: await verifiedCandidatePreview(token, verified.pr.head.sha)');
  });
  it('only accepts Cloudflare preview host, not production',()=>{
-  expect(edge).toContain('url.hostname.endsWith(".alea-crusaders.pages.dev")');
+  expect(edge).toContain('^[a-z0-9-]+\\.alea-crusaders\\.pages\\.dev
+  expect(edge).toContain('url.hostname === "alea-crusaders.pages.dev"');
+  expect(ui).toContain("verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')");
+ });
+ it('keeps preview disabled without verified URL and never enables publishing',()=>{
+  expect(ui).toContain('preview.disabled=true');
+  expect(ui).toContain('if(candidate.previewUrl)');
+  expect(ui).toContain('control.disabled=true');
+ });
+});
+);
   expect(edge).toContain('url.hostname === "alea-crusaders.pages.dev"');
   expect(ui).toContain("verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')");
  });
