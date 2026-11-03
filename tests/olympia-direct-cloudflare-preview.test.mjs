@@ -11,7 +11,7 @@ describe('OLYMPIA direct Cloudflare preview verification',()=>{
  });
  it('fails closed without credentials or Cloudflare response',()=>{
   expect(preview).toContain('if (!apiToken || !accountId');
-  expect(preview).toContain('if (!response.ok) return null');
+  expect(preview).toContain('if (!response.ok) { console.warn("OLYMPIA_PREVIEW_HTTP_STATUS", response.status); return null; }');
   expect(preview).toContain('return null;');
  });
  it('uses a restricted preview hostname and never writes a deployment',()=>{
