@@ -259,8 +259,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('checks: "read"');
     expect(edge).toContain('statuses: "read"');
     expect(edge).toContain('async function ghPublic(path: string)');
-    expect(edge).toContain('const checks = await ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs");');
-    expect(edge).not.toContain('/commits/" + pr.head.sha + "/status');
+    expect(edge).toContain('const [checks, status] = await Promise.all([');
+    expect(edge).toContain('/commits/" + pr.head.sha + "/check-runs?per_page=100');
+    expect(edge).toContain('/commits/" + pr.head.sha + "/status');
+    expect(edge).toContain('const requiredChecks = [/^check$/i, /^guard$/i, /^preview$/i]');
     expect(edge).toContain('githubToken(data.decision)');
     expect(edge).toContain('pr.mergeable !== true');
     expect(edge).toContain('pr.user?.login !== appLogin');
