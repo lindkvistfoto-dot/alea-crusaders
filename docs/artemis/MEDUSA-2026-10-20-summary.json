@@ -1,0 +1,63 @@
+{
+  "schema": "medusa-summary-manifest-v1",
+  "generated_at": "2026-10-20",
+  "repository": {
+    "name": "lindkvistfoto-dot/alea-crusaders",
+    "branch": "main",
+    "commit_sha": "c63d3f5f57141e1cce6ce7f5ad0dccd21a6593b5",
+    "tree_sha": "aaebe12b72df281c9bb77d0c0d767f2b55b978e2"
+  },
+  "drive": {
+    "inbox_objects": 579,
+    "files": 578,
+    "bytes": 1618315354,
+    "sha256_verified_files": 578,
+    "full_image_decodes": 577,
+    "zip_integrity_verified": 1,
+    "verified_duplicate_groups": 6,
+    "duplicate_copy_bytes": 16402877
+  },
+  "github": {
+    "current_original_paths": 547,
+    "pngs_full_decoded": 546,
+    "zip_bundle_verified": 1,
+    "main_history_commits": 544,
+    "history_path_changes": 585,
+    "unique_blob_versions_byte_verified": 564,
+    "older_truncated_unique_original_versions": 18,
+    "github_only_pngs_without_drive_match": 3
+  },
+  "supabase": {
+    "source_bucket": "alea-hermes-source",
+    "objects": 519,
+    "bytes": 1501614754,
+    "current_raw_bytes_verified": 0,
+    "historical_hash_and_size_drive_candidates": 518,
+    "public_bucket": "alea-hermes-public",
+    "optimized_objects": 158,
+    "optimized_bytes": 25564008,
+    "optimized_raw_bytes_verified": 158,
+    "objects_without_direct_reference_in_inspected_fields": 2
+  },
+  "recovered_spell_icons": {
+    "total": 24,
+    "active": 11,
+    "pending_for_hydra": 13,
+    "replacements": [
+      "eld",
+      "dimma",
+      "blixt",
+      "besudla"
+    ],
+    "all_drive_bytes_and_png_decode_verified": true
+  },
+  "constraints": {
+    "no_originals_moved_overwritten_or_deleted": true,
+    "no_database_changes": true,
+    "no_hermes_publication_started": true,
+    "no_git_history_rewritten": true
+  },
+  "full_manifest_drive_file_id": "1bdJ-b2P47cpZYUReGCefHP-WmW0rHJi5",
+  "drive_medusa_folder_id": "1x49xC5Ueb_Nz_0kJkXiTYNiMLHj5x8aj",
+  "recommendation": "Do not approve Kerberos cleanup until private Supabase current bytes, three GitHub-only originals, and archive/independent backup readback are resolved."
+}
