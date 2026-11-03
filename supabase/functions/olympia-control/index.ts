@@ -78,7 +78,7 @@ async function githubToken(decision: string) {
     : decision === "pull_request_list" || decision === "pull_request_status"
     ? { pull_requests: "read", checks: "read", statuses: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
-    ? { contents: "read", issues: "read", pull_requests: "read" }
+    ? { contents: "read", issues: "read", pull_requests: "read", deployments: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "approve_and_merge_dev"
@@ -484,6 +484,26 @@ async function verifyCandidate(token: string, item: any, data: any) {
   }
   return { issue, pr, report, liveSha: live.sha };
 }
+async function verifiedCandidatePreview(token: string, releasePrSha: string) {
+  // Read only the deployment records attached to the exact release PR commit.
+  const deployments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments?sha=" + releasePrSha + "&per_page=100");
+  if (!Array.isArray(deployments)) return null;
+  for (const deployment of deployments) {
+    if (String(deployment.sha || "").toLowerCase() !== releasePrSha.toLowerCase()) continue;
+    if (!/preview/i.test(String(deployment.environment || ""))) continue;
+    const statuses = await gh(token, "/repos/" + OWNER + "/" + REPO + "/deployments/" + deployment.id + "/statuses?per_page=30");
+    if (!Array.isArray(statuses)) continue;
+    const successful = statuses.find((status: any) => status.state === "success" && status.environment_url);
+    if (!successful) continue;
+    try {
+      const url = new URL(successful.environment_url);
+      if (url.protocol !== "https:" || !url.hostname.endsWith(".alea-crusaders.pages.dev") ||
+          url.hostname === "alea-crusaders.pages.dev" || url.username || url.password) continue;
+      return url.origin + "/";
+    } catch (_) { /* Invalid URL: no preview */ }
+  }
+  return null;
+}
 async function inspectCandidate(token: string, item: any, issueNumber: number, testedDevSha: string) {
   const appLogin = await appBotLogin();
   const issue = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + issueNumber);
@@ -543,6 +563,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       releasePr: Number(prMatch[1]),
       releaseUrl: prMatch[2],
       releasePrSha: verified.pr.head.sha,
+      previewUrl: await verifiedCandidatePreview(token, verified.pr.head.sha),
       candidateRunUrl: runMatch?.[1] || null,
       liveSha: verified.liveSha,
     };
