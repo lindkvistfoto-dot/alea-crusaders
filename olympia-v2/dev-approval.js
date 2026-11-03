@@ -27,21 +27,30 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
  if(!verified){targets.forEach(node=>node.textContent='LIVE-status väntar på Zeus-verifiering.');return}
  candidateStatusBusy=true;
  try{
-  const sha=await currentDevSha();
-  // Limit concurrent requests to avoid overloading GitHub and Supabase.
   for(let i=0;i<targets.length;i+=3){
    await Promise.all(targets.slice(i,i+3).map(async node=>{
-    const number=Number(node.dataset.candidateStatus);
-    if(!Number.isSafeInteger(number)||number<1)return;
+    const number=Number(node.dataset.candidateStatus),sha=node.dataset.mergeSha||'';
+    if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){
+     node.textContent='Kandidatens DEV-mergeversion saknas. Teknisk granskning krävs.';return;
+    }
     try{
      const result=await window.olympiaV2Request({action:'auto_candidate_diagnostics',pullRequestNumber:number,testedDevSha:sha});
-     const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för aktuell DEV-version.',requested:'LIVE-kandidat begärd – väntar på verifierad förhandsvisning.',needs_review:'LIVE-förberedelsen behöver granskas. Ingen publicering har skett.',unlocked_issue:'Releaseärende finns, men automatisk status behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};
-     if(node.isConnected)node.textContent=labels[result.state]||'LIVE-status okänd.';
+     if(!node.isConnected)return;
+     node.replaceChildren();
+     const line=document.createElement('p');node.append(line);
+     const candidate=result.candidate;
+     if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
+      line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
+      const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kandidatens CI och releasekontroller godkända';node.append(checks);
+      const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
+      const note=document.createElement('p');note.className='muted';note.textContent='Förhandsvisning och LIVE-beslut aktiveras först när kandidatkopplad, säker preview är verifierad. Publicera inte via GitHub.';node.append(note);
+     }else if(candidate?.blocked){line.textContent=candidate.message||'LIVE-kandidaten behöver granskas. Ingen publicering har skett.';}
+     else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
+     else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
     }catch(_){if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas. Ingen publicering har skett.'}
    }));
   }
- }catch(_){targets.forEach(node=>{if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas.'})}
- finally{candidateStatusBusy=false}
+ }finally{candidateStatusBusy=false}
 };
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!verified)verify()});
 verify();
