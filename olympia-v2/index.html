@@ -5,6 +5,7 @@
 .lanes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}.lane{border:1px solid #72583a;border-radius:12px;padding:14px;background:#191613}.lane h3{margin-top:0}.lane .actions{grid-template-columns:1fr}@media(max-width:650px){.lanes{grid-template-columns:1fr}}</style></head><body>
 <header class="header"><div><small>ALEA ADMIN · DEV</small><h1>OLYMPIA 2.0</h1><p class="muted">En PR · ett kort · en verifierad status</p></div><div class="actions"><a href="./uppslag-ny.html" class="action">▤ UPPSLAG</a><a href="../" class="action">Till ALEA DEV</a></div></header>
 <section class="panel"><div class="header"><strong>GitHub-status</strong><button id="refresh" type="button">Uppdatera status</button></div><p id="global" role="status" aria-live="polite">Läser aktuella PR…</p><label>Visa PR <select id="filter"><option value="all">Alla öppna DEV-PR</option></select></label></section>
+<details id="merged-history" class="panel"><summary>DEV-mergade PR:ar · historik och eventuella LIVE-ärenden (<span id="merged-count">0</span>)</summary><p class="muted">Dessa är inte längre aktiva DEV-granskningar. Kontrollera LIVE-status innan ett ärende betraktas som färdigt.</p><div id="merged-items"></div></details>
 <p id="zeus-session" class="notice" role="status">Kontrollerar Zeus-behörighet…</p><main id="cards" aria-label="PR-kort"></main>
 <footer class="muted">PR-flödet hanterar aktiva DEV/LIVE-beslut. UPPSLAG sparar framtida idéer och historiska PR-underlag utan GitHub-åtgärder.</footer>
 <script>
@@ -27,7 +28,11 @@ async function refresh(){
   const registry=registryResult.ok?registryResult.value:null;
   window.olympiaV2HiddenPrNumbers=registry?.hiddenPrNumbers||[];
   const hidden=new Set(window.olympiaV2HiddenPrNumbers.map(Number));
-  const prs=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&(p.state==='open'||p.merged||p.merged_at)&&!hidden.has(Number(p.number))).sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
+  const all=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&!hidden.has(Number(p.number))).sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
+  const prs=all.filter(p=>p.state==='open'&&!p.merged_at);
+  const merged=all.filter(p=>Boolean(p.merged_at||p.merged));
+  document.querySelector('#merged-count').textContent=String(merged.length);
+  document.querySelector('#merged-items').innerHTML=merged.map(p=>'<p><a href="'+safe(p.html_url)+'" target="_blank" rel="noopener">#'+Number(p.number)+'</a> · '+safe(p.title)+' <span class="muted">· DEV-mergad, LIVE-status ej verifierad</span></p>').join('')||'<p class="muted">Inga DEV-mergade PR:ar i listan.</p>';
   const selected=filter.value;
   filter.innerHTML='<option value="all">Aktuella DEV-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+' · '+safe(p.title)+'</option>').join('');
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
@@ -35,7 +40,7 @@ async function refresh(){
   const results=await Promise.allSettled(shown.map(card));
   cards.innerHTML=results.map((r,i)=>r.status==='fulfilled'?r.value:'<section class="panel">PR #'+shown[i].number+': status kunde inte hämtas. '+safe(r.reason?.message)+'</section>').join('');
   window.olympiaV2CheckCandidateStatuses?.();
-  global.textContent=prs.length+' DEV-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE')+(registryResult.ok?'':' · historiska PR-filter kunde inte läsas');
+  global.textContent=prs.length+' öppna DEV-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE')+(registryResult.ok?'':' · historiska PR-filter kunde inte läsas');
  }catch(error){global.textContent='PR-listan kunde inte uppdateras: '+error.message+'.';}
  finally{refreshButton.disabled=false}
 }
