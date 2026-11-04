@@ -35,7 +35,7 @@ function positionBadgeWall(v){
   if(!center||!left||!right||!top||!bottom)return;
   const sx=Math.hypot((right[0]-left[0])*W,(right[1]-left[1])*H);
   const sy=Math.hypot((bottom[0]-top[0])*W,(bottom[1]-top[1])*H);
-  const size=Math.max(1,Math.min(sx,sy)*.86);
+  const size=Math.max(1,Math.min(sx,sy)*.80);
   const angle=Math.atan2((right[1]-left[1])*H,(right[0]-left[0])*W);
   slot.style.position='absolute';slot.style.left=(W*(.5+(center[0]-.5)*scale)+x)+'px';
   slot.style.top=(H*(.5+(center[1]-.5)*scale)+y)+'px';
@@ -82,7 +82,7 @@ async function renderBadges(){
   const assetMap=new Map((assets||[]).map(a=>[a.asset_key,a]));
   const variantsById=new Map((variants||[]).map(v=>[String(v.id),v]));
   const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
-  for(const d of awarded){
+  // DEV visual calibration: repeat existing grants to fill all nine slots without modifying grants.\n  const visibleBadges=awarded.length?Array.from({length:9},(_,i)=>awarded[i%awarded.length]):[];\n  for(const d of visibleBadges){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    slot.title=d.name;
    const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
@@ -101,7 +101,7 @@ async function renderBadges(){
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
    wall.append(slot);
   }
-  wall.hidden=awarded.length===0;draw();
+  wall.hidden=visibleBadges.length===0;draw();
  }catch(error){if(seq!==badgeSequence)return;console.warn('Trophy badge wall unavailable',error)}
 }
 function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
