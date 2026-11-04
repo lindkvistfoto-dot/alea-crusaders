@@ -78,6 +78,7 @@
       offsets: Object.freeze(aligned.offsets.slice()),
       cells: Object.freeze(cells.map(Object.freeze)),
       canonical_key: canonical(cells),
+      geometry_status: 'verified-prototype',
       geometric_center: Object.freeze({
         q: cells.reduce((sum, c) => sum + c.q, 0) / cells.length,
         r: cells.reduce((sum, c) => sum + c.r, 0) / cells.length
@@ -87,7 +88,7 @@
       directions: Object.freeze([0, 1, 2, 3, 4, 5]),
       mirror_available: rotationalCanonical(cells) !== rotationalCanonical(cells.map(engine.reflect)),
       graphic_profile: 'arcane-bronze-ivory-base', graphic_version: 'v1',
-      graphic_status: 'generated-in-geometry-lab'
+      graphic_status: 'preview-only-not-published'
     });
   });
   const ids = new Set();
