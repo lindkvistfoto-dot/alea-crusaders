@@ -121,12 +121,12 @@ jobs:
               if [[ "$CHANGED_AFTER" == "index.html" ]]; then
                 git -C "$DEV_DIR" show "$TESTED_SHA:index.html" > "$OUTPUT_DIR/approved-index.html"
                 node --input-type=module - "$OUTPUT_DIR/approved-index.html" "$DEV_DIR/index.html" <<'NODE' && CLEANUP_VERIFIED=true
-import fs from 'node:fs';
-const approved=fs.readFileSync(process.argv[2],'utf8');
-const current=fs.readFileSync(process.argv[3],'utf8');
-const debug='<a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a>';
-if(approved.split(debug).length!==2 || current!==approved.replace(debug,''))process.exit(1);
-NODE
+          import fs from 'node:fs';
+          const approved=fs.readFileSync(process.argv[2],'utf8');
+          const current=fs.readFileSync(process.argv[3],'utf8');
+          const debug='<a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a>';
+          if(approved.split(debug).length!==2 || current!==approved.replace(debug,''))process.exit(1);
+          NODE
               fi
             fi
             if [[ "$CLEANUP_VERIFIED" != "true" ]]; then
