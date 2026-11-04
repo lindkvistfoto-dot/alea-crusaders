@@ -39,7 +39,9 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      node.replaceChildren();
      const line=document.createElement('p');node.append(line);
      const candidate=result.candidate;
-     if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
+     if(candidate?.published===true){
+      line.className='good';line.textContent='Publicerad i LIVE · verifierad'+(candidate.liveMergeSha?' · '+candidate.liveMergeSha.slice(0,10):'');
+     }else if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
       line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
       const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kontroller verifierade för aktuell SHA '+candidate.releasePrSha;node.append(checks);
       const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
