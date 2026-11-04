@@ -57,15 +57,15 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       }
       const note=document.createElement('p');note.className='muted';note.textContent=candidate.previewUrl?'Förhandsvisningen är verifierad. Endast pilot #524 kan slutgodkännas i denna version.':'Kandidatens tester är godkända. En versionsbunden förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
       const decisions=document.createElement('div');decisions.className='actions';
-      const pilotReady=number===524&&candidate.releasePr===528&&result.issue?.number>0&&/^[a-f0-9]{40}$/i.test(candidate.candidateTreeSha||'')&&/^[a-f0-9]{40}$/i.test(candidate.releasePrSha||'')&&Boolean(candidate.previewUrl);
-      const approve=document.createElement('button');approve.type='button';approve.textContent='Godkänn LIVE';approve.disabled=!pilotReady;decisions.append(approve);
-      if(pilotReady)approve.addEventListener('click',async()=>{
+      const candidateReady=Number.isInteger(number)&&number>0&&Number.isInteger(candidate.releasePr)&&candidate.releasePr>0&&result.issue?.number>0&&/^[a-f0-9]{40}$/i.test(candidate.candidateTreeSha||'')&&/^[a-f0-9]{40}$/i.test(candidate.releasePrSha||'')&&Boolean(candidate.previewUrl);
+      const approve=document.createElement('button');approve.type='button';approve.textContent='Godkänn LIVE';approve.disabled=!candidateReady;decisions.append(approve);
+      if(candidateReady)approve.addEventListener('click',async()=>{
        if(busy||!verified)return;
-       const confirmed=confirm('Godkänn LIVE-kandidat #528 för PR #524? Detta squash-mergar releaseförslaget till main och startar verklig LIVE-publicering. Åtgärden kan inte ångras automatiskt.');
+       const confirmed=confirm('Godkänn LIVE-kandidat #'+candidate.releasePr+' för PR #'+number+'? Detta squash-mergar releaseförslaget till main och startar verklig LIVE-publicering. Åtgärden kan inte ångras automatiskt.');
        if(!confirmed)return;
        busy=true;approve.disabled=true;feedback(approve,'Verifierar LIVE-kandidat och publiceringsvillkor…');
        try{
-        const {response:reply,result:outcome}=await call({action:'decision',decision:'final_approval',itemId:'PR-524',testedDevSha:sha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha,releasePrSha:candidate.releasePrSha},session(),60000);
+        const {response:reply,result:outcome}=await call({action:'decision',decision:'final_approval',itemId:'PR-'+number,testedDevSha:sha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha,releasePrSha:candidate.releasePrSha},session(),60000);
         if(!reply.ok||outcome.ok!==true)throw Error(outcome.message||'LIVE-godkännandet kunde inte verifieras');
         feedback(approve,'GitHub bekräftade LIVE-merge · '+(outcome.mergeSha||'')+'. Publicering verifieras separat.');
         approve.textContent='LIVE-merge genomförd ✓';
