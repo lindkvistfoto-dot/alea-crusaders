@@ -116,10 +116,11 @@ async function renderBadges(){
   const assetMap=new Map((assets||[]).map(a=>[a.asset_key,a]));
   const variantsById=new Map((variants||[]).map(v=>[String(v.id),v]));
   const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
-  // DEV visual calibration: repeat existing grants to fill all nine slots without modifying grants.
-  const visibleBadges=awarded.length?Array.from({length:9},(_,i)=>awarded[i%awarded.length]):[];
-  for(const d of visibleBadges){
+  // Reserve nine positions; render each awarded badge only once.
+  for(let index=0;index<9;index++){
+   const d=awarded[index];
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
+   if(!d){slot.classList.add('trophy-room-badge-empty');slot.setAttribute('aria-hidden','true');wall.append(slot);continue}
    slot.title=d.name;
    const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
    const variant=variantsById.get(String(selected));
@@ -137,7 +138,7 @@ async function renderBadges(){
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
    wall.append(slot);
   }
-  wall.hidden=visibleBadges.length===0;draw();
+  wall.hidden=awarded.length===0;draw();
  }catch(error){if(seq!==badgeSequence)return;console.warn('Trophy badge wall unavailable',error)}
 }
 function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
