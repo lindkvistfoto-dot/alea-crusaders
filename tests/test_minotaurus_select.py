@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from minotaurus_select import select
 
 
-(unittest.TestCase):
+class MinotaurusSelectionTests(unittest.TestCase):
     def test_plain_ui_change_skips_legacy_hermes_environments(self):
         result = select(["features/ui/character-sheet.js"])
         self.assertFalse(result["full"])
