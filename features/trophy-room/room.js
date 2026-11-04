@@ -12,6 +12,19 @@ const BADGE_CAL_KEY='alea:trophy:badge-wall-corners:v1';
 const BADGE_DEFAULT_CORNERS=[[.735,.315],[.90,.30],[.90,.555],[.735,.57]];
 let badgeCorners=BADGE_DEFAULT_CORNERS.map(p=>p.slice());
 try{const saved=JSON.parse(root.localStorage.getItem(BADGE_CAL_KEY)||'null');if(Array.isArray(saved)&&saved.length===4&&saved.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))badgeCorners=saved}catch(_){}
+function exportBadgeCorners(){
+ const output=byId('trophyBadgeExportResult');
+ if(!output)return;
+ let raw=null;
+ try{raw=root.localStorage.getItem(BADGE_CAL_KEY)}catch(_){}
+ let corners=null;
+ try{corners=raw?JSON.parse(raw):null}catch(_){}
+ const valid=Array.isArray(corners)&&corners.length===4&&corners.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=1));
+ if(!valid){output.value='Inga giltiga lokalt sparade koordinater på denna Cloudflare-adress. Reservvärden exporteras inte.';output.hidden=false;return}
+ const value=JSON.stringify({source:'localStorage',key:BADGE_CAL_KEY,origin:root.location.origin,corners});
+ output.value=value;output.hidden=false;output.select();
+ try{if(root.navigator?.clipboard?.writeText)void root.navigator.clipboard.writeText(value).catch(()=>{})}catch(_){}
+}
 let badgeCalibration=false;
 function solveHomography(corners){
  const src=[[0,0],[1,0],[1,1],[0,1]],a=[];
@@ -340,4 +353,4 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
 }
 root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
-root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});/* Deep links are handled after authentication and route restoration in enterApp. */})(window);
+root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyBadgeExport=exportBadgeCorners;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});/* Deep links are handled after authentication and route restoration in enterApp. */})(window);
