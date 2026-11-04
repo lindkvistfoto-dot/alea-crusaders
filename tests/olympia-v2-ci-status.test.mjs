@@ -5,5 +5,5 @@ const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts'
 describe('OLYMPIA V2 real CI status',()=>{
  it('does not fabricate pending for any nonempty status list',()=>{expect(ui).not.toContain("state:details.statuses?.length?'pending':'success'");expect(ui).toContain('details.combinedStatusState');});
  it('returns GitHub combined status from server',()=>{expect(edge).toContain("combinedStatusState: String(status.state || 'unknown')");});
- it('requires the actual four mandatory check-run names',()=>{for(const name of ['^check$','^guard$','^preview$','^Cloudflare Pages$'])expect(ui).toContain(name);expect(ui).toContain("x.conclusion!=='success'");});
+ it('requires the actual four mandatory check-run names',()=>{for(const name of ['^check$','^guard$','^preview$','^Cloudflare Pages$'])expect(ui).toContain(name);expect(ui).toContain("!['success','neutral','skipped'].includes(x.conclusion)");expect(ui).not.toContain("x.conclusion!=='success'");});
 });
