@@ -22,7 +22,7 @@ describe('OLYMPIA candidate status survives preview verification failure',()=>{
   expect(edge).toContain('liveMergePublicationStatus(candidateToken, mergeMatch[1])');
   expect(edge).toContain('await verifyPublishedManifest("main", liveSha)');
   expect(edge).toContain('["ahead", "identical"].includes(String(comparison.status || ""))');
-  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number)) && !livePublished)');
+  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished)');
   expect(edge).toContain('livePublished');
   expect(html).toContain('Publicerad i LIVE · verifierad');
   expect(ui).toContain("candidate?.published===true");
