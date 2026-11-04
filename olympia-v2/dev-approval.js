@@ -79,7 +79,12 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
        const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);
       }
       review.append(decisions);node.append(review);
-     }else if(candidate?.blocked){line.textContent=candidate.message||'LIVE-kandidaten behöver granskas. Ingen publicering har skett.';}
+     }else if(candidate?.blocked){
+      line.className='bad';line.textContent=candidate.message||'BLOCKERAD – LIVE-kandidat kunde inte skapas.';
+      if(candidate.workflowRunUrl&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+$/.test(candidate.workflowRunUrl)){
+       const run=document.createElement('a');run.className='action';run.href=candidate.workflowRunUrl;run.target='_blank';run.rel='noopener noreferrer';run.textContent='Visa misslyckad körning';node.append(run);
+      }
+     }
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
     }catch(_){if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas. Ingen publicering har skett.'}

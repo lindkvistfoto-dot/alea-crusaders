@@ -6,6 +6,7 @@ const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts'
 describe('OLYMPIA candidate attached to original PR',()=>{
  it('uses each PR merge SHA rather than the latest development SHA',()=>{
   expect(html).toContain('data-merge-sha=');
+  expect(html).toContain('p.liveCandidateActive');
   expect(js).toContain('sha=node.dataset.mergeSha');
   expect(js).not.toContain('const sha=await currentDevSha();');
  });
