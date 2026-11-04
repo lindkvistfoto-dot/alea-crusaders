@@ -6,14 +6,47 @@ const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function clampCamera(){const v=viewport();if(!v)return;const maxX=Math.max(0,(scale-1)*v.clientWidth/2),maxY=Math.max(0,(scale-1)*v.clientHeight/2);x=clamp(x,-maxX,maxX);y=clamp(y,-maxY,maxY);if(scale<=1){x=0;y=0}}
 function positionMedalWall(v){const wall=byId('trophyRoomMedalWall');if(!wall)return;const left=.4073,top=.2769,width=.1931,height=.3277;wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';wall.style.width=(v.clientWidth*width*scale)+'px';wall.style.height=(v.clientHeight*height*scale)+'px'}
 /* Right wall is an independent 3x3 badge plane; camera follows the medal wall. */
+const BADGE_CAL_KEY='alea:trophy:badge-wall-corners:v1';
+const BADGE_DEFAULT_CORNERS=[[.735,.315],[.90,.30],[.90,.555],[.735,.57]];
+let badgeCorners=BADGE_DEFAULT_CORNERS.map(p=>p.slice());
+try{const saved=JSON.parse(root.localStorage.getItem(BADGE_CAL_KEY)||'null');if(Array.isArray(saved)&&saved.length===4&&saved.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))badgeCorners=saved}catch(_){}
+let badgeCalibration=false;
+function solveHomography(corners){
+ const src=[[0,0],[1,0],[1,1],[0,1]],a=[];
+ for(let i=0;i<4;i++){const [u,v]=src[i],[X,Y]=corners[i];a.push([u,v,1,0,0,0,-u*X,-v*X,X]);a.push([0,0,0,u,v,1,-u*Y,-v*Y,Y])}
+ for(let c=0;c<8;c++){let pivot=c;for(let r=c+1;r<8;r++)if(Math.abs(a[r][c])>Math.abs(a[pivot][c]))pivot=r;if(Math.abs(a[pivot][c])<1e-10)return null;[a[c],a[pivot]]=[a[pivot],a[c]];const d=a[c][c];for(let j=c;j<9;j++)a[c][j]/=d;for(let r=0;r<8;r++)if(r!==c){const k=a[r][c];for(let j=c;j<9;j++)a[r][j]-=k*a[c][j]}}
+ return a.map(row=>row[8]);
+}
+function badgeScreenPoint(p,v){return [v.clientWidth*(.5+(p[0]-.5)*scale)+x,v.clientHeight*(.5+(p[1]-.5)*scale)+y]}
 function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
- const left=.735,top=.315,width=.165,height=.255;
- wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';
- wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';
- wall.style.width=(v.clientWidth*width*scale)+'px';
- wall.style.height=(v.clientHeight*height*scale)+'px';
+ const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
+ const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
+ const h=solveHomography(target.map(p=>[p[0]/W,p[1]/H]));if(!h)return;
+ const [a,b,c,d,e,f,g,i]=h;
+ wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
+ wall.style.transformOrigin='0 0';
+ wall.style.transform='matrix3d('+[a,d*H/W,0,g/W,b*W/H,e,0,i/H,0,0,1,0,c*W,f*H,0,1].join(',')+')';
+ const overlay=byId('trophyBadgeCalibration');if(overlay&&!overlay.hidden){
+  overlay.setAttribute('viewBox','0 0 '+W+' '+H);
+  const polygon=overlay.querySelector('polygon');if(polygon)polygon.setAttribute('points',target.map(p=>p.join(',')).join(' '));
+  overlay.querySelectorAll('[data-badge-corner]').forEach((node,j)=>{node.setAttribute('cx',target[j][0]);node.setAttribute('cy',target[j][1])});
+ }
 }
+function enableBadgeCalibration(){
+ const v=viewport();if(!v)return;
+ badgeCalibration=!badgeCalibration;
+ let overlay=byId('trophyBadgeCalibration');
+ if(!overlay){overlay=document.createElementNS('http://www.w3.org/2000/svg','svg');overlay.id='trophyBadgeCalibration';overlay.setAttribute('aria-label','Kalibrera badgeväggens fyra hörn');
+ const poly=document.createElementNS('http://www.w3.org/2000/svg','polygon');poly.setAttribute('fill','#e5bd7630');poly.setAttribute('stroke','#e5bd76');poly.setAttribute('stroke-width','2');overlay.append(poly);
+ for(let j=0;j<4;j++){const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');dot.setAttribute('data-badge-corner',String(j));dot.setAttribute('r','12');dot.setAttribute('fill','#e5bd76');dot.setAttribute('stroke','#171410');dot.setAttribute('stroke-width','3');dot.style.touchAction='none';dot.addEventListener('pointerdown',event=>{event.preventDefault();dot.setPointerCapture(event.pointerId)});dot.addEventListener('pointermove',event=>{if(!dot.hasPointerCapture(event.pointerId))return;const rect=v.getBoundingClientRect();const px=event.clientX-rect.left,py=event.clientY-rect.top;badgeCorners[j]=[Math.max(0,Math.min(1,(px-x-v.clientWidth*(1-scale)/2)/(v.clientWidth*scale))),Math.max(0,Math.min(1,(py-y-v.clientHeight*(1-scale)/2)/(v.clientHeight*scale)))];draw()});overlay.append(dot)}
+ v.append(overlay)}
+ overlay.hidden=!badgeCalibration;
+ const button=byId('trophyBadgeCalibrate');if(button)button.textContent=badgeCalibration?'Spara väggperspektiv':'Kalibrera badgevägg';
+ if(!badgeCalibration)try{root.localStorage.setItem(BADGE_CAL_KEY,JSON.stringify(badgeCorners))}catch(_){}
+ draw();
+}
+
 let badgeSequence=0;
 async function renderBadges(){
  const wall=byId('trophyRoomBadgeWall'),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
@@ -253,4 +286,4 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
 }
 root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
-root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});if(new URLSearchParams(root.location.search).get('view')==='trophy-room')open()})(window);
+root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});if(new URLSearchParams(root.location.search).get('view')==='trophy-room')open()})(window);
