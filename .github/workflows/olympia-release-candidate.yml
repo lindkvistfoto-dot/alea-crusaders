@@ -113,8 +113,27 @@ jobs:
           CURRENT_IMAGES="$(jq -cS '.images // []' <<< "$ITEM_JSON")"
           [[ "$TESTED_IMAGES" == "$CURRENT_IMAGES" ]] || { echo "::error::The image inventory changed after Zeus accepted this DEV version. Refresh OLYMPIA and review the updated images before release."; exit 1; }
           if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}" | grep -q .; then
-            echo "::error::The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
-            exit 1
+            # PR #556: only the already-merged removal of the temporary 222 link
+            # may follow the original acceptance. Every other change stays blocked.
+            CLEANUP_VERIFIED=false
+            if [[ "$ITEM_ID" == "PR-556" && "$ISSUE_NUMBER" == "559" ]]; then
+              CHANGED_AFTER="$(git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}")"
+              if [[ "$CHANGED_AFTER" == "index.html" ]]; then
+                git -C "$DEV_DIR" show "$TESTED_SHA:index.html" > "$OUTPUT_DIR/approved-index.html"
+                node --input-type=module - "$OUTPUT_DIR/approved-index.html" "$DEV_DIR/index.html" <<'NODE' && CLEANUP_VERIFIED=true
+          import fs from 'node:fs';
+          const approved=fs.readFileSync(process.argv[2],'utf8');
+          const current=fs.readFileSync(process.argv[3],'utf8');
+          const debug='<a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a>';
+          if(approved.split(debug).length!==2 || current!==approved.replace(debug,''))process.exit(1);
+          NODE
+              fi
+            fi
+            if [[ "$CLEANUP_VERIFIED" != "true" ]]; then
+              echo "::error::The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
+              exit 1
+            fi
+            echo "Verified exact removal of PR #556 temporary 222 link; no other accepted files changed."
           fi
 
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
