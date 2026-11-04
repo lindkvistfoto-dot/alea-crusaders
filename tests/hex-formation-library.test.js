@@ -10,6 +10,7 @@ vm.runInNewContext(
 );
 const engine = context.aleaArcaneGeometryEngine;
 const library = context.aleaHexFormationLibrary;
+const appHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const positions = cells => cells.map(c => `${c.q},${c.r}`).sort().join(';');
 const combatContext = {};
 vm.runInNewContext(
@@ -76,6 +77,8 @@ describe('Universal hex formation library', () => {
         expect(combatContext.footprints.cells(actor)).toHaveLength(cells.length);
       }
     }
+    expect(appHtml.indexOf('arcane-geometry-engine.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
+    expect(appHtml.indexOf('arcane-hex-formation-library.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
   });
 });
 
