@@ -23,7 +23,13 @@ function badgeScreenPoint(p,v){return [v.clientWidth*(.5+(p[0]-.5)*scale)+x,v.cl
 function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
  const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
- const h=solveHomography(badgeCorners);if(!h)return;
+ // Optical wall fit V2.2: inset from the left stone edge, retain a slight
+ // rightward perspective expansion. Source calibration remains untouched.
+ const fittedCorners=badgeCorners.map(([px,py],index)=>[
+  Math.min(.97,px+(index===0||index===3?.013:.018)),
+  py+(index===0?-.002:index===1?-.004:index===2?.002:0)
+ ]);
+ const h=solveHomography(fittedCorners);if(!h)return;
  const project=(u,t)=>{
   const [a,b,c,d,e,f,g,i]=h,den=g*u+i*t+1;
   return Math.abs(den)>1e-7?[(a*u+b*t+c)/den,(d*u+e*t+f)/den]:null;
@@ -53,7 +59,7 @@ function positionBadgeWall(v){
  }
  const overlay=byId('trophyBadgeCalibration');
  if(overlay&&!overlay.hidden){
-  const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
+  const target=fittedCorners.map(p=>badgeScreenPoint(p,v));
   overlay.setAttribute('viewBox','0 0 '+W+' '+H);
   const polygon=overlay.querySelector('polygon');if(polygon)polygon.setAttribute('points',target.map(p=>p.join(',')).join(' '));
   overlay.querySelectorAll('[data-badge-corner]').forEach((node,j)=>{node.setAttribute('cx',target[j][0]);node.setAttribute('cy',target[j][1])});
