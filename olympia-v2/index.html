@@ -29,18 +29,18 @@ async function refresh(){
   window.olympiaV2HiddenPrNumbers=registry?.hiddenPrNumbers||[];
   const hidden=new Set(window.olympiaV2HiddenPrNumbers.map(Number));
   const all=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&!hidden.has(Number(p.number))).sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
-  const prs=all.filter(p=>p.state==='open'&&!p.merged_at);
-  const merged=all.filter(p=>Boolean(p.merged_at||p.merged));
+  const prs=all.filter(p=>(p.state==='open'&&!p.merged_at)||Boolean(p.merged_at||p.merged));
+  const merged=prs.filter(p=>Boolean(p.merged_at||p.merged));
   document.querySelector('#merged-count').textContent=String(merged.length);
   document.querySelector('#merged-items').innerHTML=merged.map(p=>'<p><a href="'+safe(p.html_url)+'" target="_blank" rel="noopener">#'+Number(p.number)+'</a> · '+safe(p.title)+' <span class="muted">· DEV-mergad, LIVE-status ej verifierad</span></p>').join('')||'<p class="muted">Inga DEV-mergade PR:ar i listan.</p>';
   const selected=filter.value;
-  filter.innerHTML='<option value="all">Aktuella DEV-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+' · '+safe(p.title)+'</option>').join('');
+  filter.innerHTML='<option value="all">Aktuella DEV- och LIVE-ärenden</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+' · '+safe(p.title)+'</option>').join('');
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
   const shown=prs.filter(p=>filter.value==='all'||String(p.number)===filter.value);
   const results=await Promise.allSettled(shown.map(card));
   cards.innerHTML=results.map((r,i)=>r.status==='fulfilled'?r.value:'<section class="panel">PR #'+shown[i].number+': status kunde inte hämtas. '+safe(r.reason?.message)+'</section>').join('');
   window.olympiaV2CheckCandidateStatuses?.();
-  global.textContent=prs.length+' öppna DEV-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE')+(registryResult.ok?'':' · historiska PR-filter kunde inte läsas');
+  global.textContent=prs.length+' DEV- och LIVE-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE')+(registryResult.ok?'':' · historiska PR-filter kunde inte läsas');
  }catch(error){global.textContent='PR-listan kunde inte uppdateras: '+error.message+'.';}
  finally{refreshButton.disabled=false}
 }
