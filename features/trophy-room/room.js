@@ -69,7 +69,9 @@ async function renderBadges(){
   const assetMap=new Map((assets||[]).map(a=>[a.asset_key,a]));
   const variantsById=new Map((variants||[]).map(v=>[String(v.id),v]));
   const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
-  // DEV visual calibration: repeat existing grants to fill all nine slots without modifying grants.\n  const visibleBadges=awarded.length?Array.from({length:9},(_,i)=>awarded[i%awarded.length]):[];\n  for(const d of visibleBadges){
+  // DEV visual calibration: repeat existing grants to fill all nine slots without modifying grants.
+  const visibleBadges=awarded.length?Array.from({length:9},(_,i)=>awarded[i%awarded.length]):[];
+  for(const d of visibleBadges){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    slot.title=d.name;
    const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
