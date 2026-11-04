@@ -1,6 +1,8 @@
 import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 const source=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
+const html=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
+const ui=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
 const start=source.indexOf('if (data.action === "auto_candidate_diagnostics")');
 const end=source.indexOf('if (data.action === "pull_request_list")',start);
 const edge=source;
