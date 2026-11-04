@@ -12,7 +12,7 @@ Kanonisering tar bort translation och identifierar samma form under 60-graders r
 
 ## Befintligt stridsfotavtryck
 
-`features/combat/footprint.js` har redan fasta speldata för single, line2, triangle3, line3 och giant7. Dessa driver kollision, räckvidd, rörelse och riktning; SQL/RPC-implementationen har motsvarande lista. De lämnas orörda i den här etappen eftersom byte av auktoritativ spelgeometri kräver samordnad JS/RPC migration och regressionsverifiering. Formationsbiblioteket är ännu inte inkopplat som runtimekälla för dessa fotavtryck.
+`features/combat/footprint.js` mappar nu single, line2, triangle3, line3 och giant7 från det gemensamma katalogbiblioteket. Riktning, kollisionskontroll, räckvidd, rörelse och RPC-kontrakt är oförändrade. SQL/RPC-sidan behåller sin verifierade legacy-mappning; riktade tester jämför dess fem JS-fotavtryck mot de befintliga celluppsättningarna. En separat databasändring krävs inte i denna etapp.
 
 ## Grafik och publicering
 
@@ -26,7 +26,7 @@ HERMES CORE:s befintliga generiska `system`-mål passar senare basbilder. En per
 - **B – geometri/data:** katalog och orienterings-API klara som prototyp; algebraiska tester finns.
 - **C – grafisk motor:** återstår för production-grade reliefmaterial, förenad ytterkontur, kamerakalibrering och PNG/WebP alfaverifiering.
 - **D – Geometry Lab:** formationsfilter, miniatyrer, rotation, spegling, upptagna koordinater och SVG/PNG-export implementerade. Mobil och live-preview behöver verifieras i Cloudflare.
-- **E – integration:** inventerad men inte kopplad; befintliga stridsfotavtryck har avsiktligt lämnats oförändrade.
+- **E – integration:** Geometry Lab och Dockfabrikens runtime-script laddar samma formationskatalog före combat footprint-funktionen; befintliga fotavtrycksformer, riktningar och stridsregler bevaras.
 - **F – verifiering:** lokala riktade geometritester körda; CI, MINOTAURUS och Cloudflare-preview återstår.
 
 ## Geometriskt grundbibliotek
