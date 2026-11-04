@@ -128,23 +128,43 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
 }
 
 
-// Scoped recovery for PR #556: the approved change contains a temporary 222
-// debug link that was subsequently removed by merged DEV PR #560.
-// Reconcile only the exact trophy toolbar addition; preserve LIVE's other HTML.
+// Carry only the approved Trofé room markup into LIVE. The complete DEV
+// index is intentionally never merged: retain every LIVE-specific setting.
 export function reconcileTrophy556(baseHtml, sourceHtml, liveHtml, currentDevHtml) {
-  const welcome='Välkommen till Alea Crusaders';
-  const debug='Välkommen <a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a> till Alea Crusaders';
-  const anchor='<button class="btn" type="button" onclick="trophyRoomReset()">Centrera</button>';
-  const addition='<button class="btn" id="trophyBadgeCalibrate" type="button" hidden onclick="trophyBadgeCalibrate()">Kalibrera badgevägg</button><button class="btn" id="trophyBadgeExport" type="button" onclick="trophyBadgeExport()">Kopiera koordinater</button><textarea id="trophyBadgeExportResult" hidden readonly aria-label="Sparade badgekoordinater" rows="3" style="width:100%;font-size:12px"></textarea>';
-  const once=(html,part)=>html.split(part).length===2;
-  if (![baseHtml,sourceHtml,liveHtml,currentDevHtml].every(html=>once(html,anchor))) return {handled:false,html:liveHtml};
-  if(!once(sourceHtml,debug)||!once(baseHtml,welcome)||!once(liveHtml,welcome)||!once(currentDevHtml,welcome))return {handled:false,html:liveHtml};
-  if(!once(sourceHtml,anchor+addition)||!once(currentDevHtml,anchor+addition))return {handled:false,html:liveHtml};
-  if(baseHtml.includes(addition)||liveHtml.includes(addition)||currentDevHtml.includes(debug))return {handled:false,html:liveHtml};
-  // No hidden extra changes may be smuggled in with the accepted PR's HTML.
-  const normalizedSource=sourceHtml.replace(debug,welcome).replace(anchor+addition,anchor);
-  if(normalizedSource!==baseHtml)return {handled:false,html:liveHtml};
-  return {handled:true,html:liveHtml.replace(anchor,anchor+addition)};
+  const welcome = 'Välkommen till Alea Crusaders';
+  const debug = 'Välkommen <a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a> till Alea Crusaders';
+  const medalWall = '<div id="trophyRoomMedalWall" class="trophy-room-medal-wall" aria-label="Medaljvägg" hidden></div>';
+  const badgeWall = '<div id="trophyRoomBadgeWall" class="trophy-room-badge-wall" aria-label="Högra väggen: badges i 3 gånger 3" hidden></div>';
+  const toolbarAnchor = '<button class="btn" type="button" onclick="trophyRoomReset()">Centrera</button>';
+  const controls = '<button class="btn" id="trophyBadgeCalibrate" type="button" hidden onclick="trophyBadgeCalibrate()">Kalibrera badgevägg</button><button class="btn" id="trophyBadgeExport" type="button" onclick="trophyBadgeExport()">Kopiera koordinater</button><textarea id="trophyBadgeExportResult" hidden readonly aria-label="Sparade badgekoordinater" rows="3" style="width:100%;font-size:12px"></textarea>';
+  const exactlyOnce = (html, part) => html.split(part).length === 2;
+
+  if (![baseHtml, sourceHtml, liveHtml, currentDevHtml].every(html => exactlyOnce(html, medalWall) && exactlyOnce(html, toolbarAnchor))) {
+    return { handled: false, html: liveHtml };
+  }
+  if (!exactlyOnce(sourceHtml, debug) || !exactlyOnce(baseHtml, welcome) || !exactlyOnce(liveHtml, welcome) || !exactlyOnce(currentDevHtml, welcome)) {
+    return { handled: false, html: liveHtml };
+  }
+  if (!exactlyOnce(sourceHtml, medalWall + badgeWall) || !exactlyOnce(currentDevHtml, medalWall + badgeWall)) {
+    return { handled: false, html: liveHtml };
+  }
+  if (baseHtml.includes(badgeWall) || liveHtml.includes(badgeWall) || currentDevHtml.includes(debug) ||
+      baseHtml.includes(controls) || liveHtml.includes(controls)) {
+    return { handled: false, html: liveHtml };
+  }
+
+  // The accepted source PR must contain only the temporary debug link and these
+  // four required badge-wall elements. Any additional index edit remains blocked.
+  const normalizedSource = sourceHtml
+    .replace(debug, welcome)
+    .replace(medalWall + badgeWall, medalWall)
+    .replace(toolbarAnchor + controls, toolbarAnchor);
+  if (normalizedSource !== baseHtml) return { handled: false, html: liveHtml };
+
+  const html = liveHtml
+    .replace(medalWall, medalWall + badgeWall)
+    .replace(toolbarAnchor, toolbarAnchor + controls);
+  return { handled: true, html };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
