@@ -125,7 +125,7 @@ jobs:
           const approved=fs.readFileSync(process.argv[2],'utf8');
           const current=fs.readFileSync(process.argv[3],'utf8');
           const debug='<a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a>';
-          if(approved.split(debug).length!==2 || current!==approved.replace(debug,''))process.exit(1);
+          if(approved.split(debug).length!==2 || current!==approved.replace(' '+debug+' ',' '))process.exit(1);
           NODE
               fi
             fi
