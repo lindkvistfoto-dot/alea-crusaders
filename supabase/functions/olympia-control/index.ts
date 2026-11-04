@@ -426,6 +426,26 @@ async function verifyPublishedManifest(environment: "main" | "development", sour
     throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
   }
 }
+async function liveMergePublicationStatus(token: string, mergeSha: string) {
+  if (!/^[0-9a-f]{40}$/i.test(mergeSha || "")) return { onMain: false, published: false };
+  try {
+    const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main");
+    const liveSha = String(ref.object?.sha || "");
+    if (!/^[0-9a-f]{40}$/i.test(liveSha)) return { onMain: false, published: false };
+    const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + mergeSha + "..." + liveSha);
+    const onMain = ["ahead", "identical"].includes(String(comparison.status || ""));
+    if (!onMain) return { onMain: false, published: false };
+    try {
+      await verifyPublishedManifest("main", liveSha);
+      return { onMain: true, published: true };
+    } catch (_) {
+      return { onMain: true, published: false };
+    }
+  } catch (_) {
+    return { onMain: false, published: false };
+  }
+}
+
 async function verifyCandidate(token: string, item: any, data: any) {
   if (!Number.isInteger(data.candidateIssue) || data.candidateIssue < 1 ||
       typeof data.candidateTreeSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.candidateTreeSha) ||
@@ -591,9 +611,10 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
   const candidatePrMatch = body.match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
   let releasePrSha: string | null = null;
   let releasePrTreeSha: string | null = null;
+  let candidatePr: any = null;
   if (candidatePrMatch) {
     try {
-      const candidatePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidatePrMatch[1]);
+      candidatePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + candidatePrMatch[1]);
       releasePrSha = String(candidatePr.head?.sha || "") || null;
       if (releasePrSha) {
         const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + releasePrSha);
@@ -611,6 +632,35 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       releaseUrl: candidatePrMatch?.[2] || null,
       releasePrSha,
     };
+  }
+  const sourcePrNumber = Number(String(item.id || "").match(/^PR-([1-9][0-9]*)$/)?.[1] || 0);
+  const sourcePrLine = String(candidatePr?.body || "").match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+  const mergedReleaseIsForThisCandidate = Boolean(
+    candidatePr?.merged_at &&
+    candidatePr.base?.ref === "main" &&
+    candidatePr.user?.login === appLogin &&
+    candidatePr.head?.sha === releasePrSha &&
+    candidatePr.merge_commit_sha &&
+    sourcePrNumber > 0 &&
+    sourcePrLine.split(/\s*,\s*/).includes("#" + sourcePrNumber) &&
+    String(candidatePr.body || "").includes("Zeus decision journal: #" + issueNumber) &&
+    releasePrTreeSha === treeMatch[1]
+  );
+  if (mergedReleaseIsForThisCandidate) {
+    const publication = await liveMergePublicationStatus(token, String(candidatePr.merge_commit_sha));
+    if (publication.onMain) {
+      return {
+        ready: false,
+        published: publication.published,
+        blocked: false,
+        message: publication.published ? "Publicerad i LIVE · verifierad." : "LIVE-merge genomförd; inväntar verifierad Pages-publicering.",
+        candidateTreeSha: treeMatch[1],
+        releasePr: Number(candidatePrMatch[1]),
+        releaseUrl: candidatePrMatch[2],
+        releasePrSha,
+        liveMergeSha: String(candidatePr.merge_commit_sha),
+      };
+    }
   }
   try {
     if (!releasePrSha || !releasePrTreeSha) throw new Error("CANDIDATE_HEAD_CHANGED");
@@ -1036,18 +1086,47 @@ async function handleRequest(req: Request): Promise<Response> {
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
         const candidateToken = await githubToken("auto_candidate_diagnostics");
         const botLogin = await appBotLogin();
-        const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=open&per_page=100&creator=" + encodeURIComponent(botLogin));
+        const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(botLogin));
         if (!Array.isArray(candidateIssues)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
+        const candidateIssueByNumber = new Map<number, any>();
         const activeCandidatePrs = new Set<number>();
         for (const issue of candidateIssues) {
           if (issue.pull_request) continue;
+          candidateIssueByNumber.set(Number(issue.number), issue);
           const body = String(issue.body || "");
-          if (!body.includes("- Beslut: PANDORAS ASK")) continue;
+          if (issue.state !== "open" || !body.includes("- Beslut: PANDORAS ASK")) continue;
           const match = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
           if (match) activeCandidatePrs.add(Number(match[1]));
         }
+        const publishedCandidatePrs = new Map<number, string>();
+        for (const issue of candidateIssues) {
+          if (issue.pull_request) continue;
+          const body = String(issue.body || "");
+          if (issue.user?.login !== botLogin || !body.includes("- Beslut: SLUTGODKÄNNANDE LIVE")) continue;
+          const prMatch = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
+          const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
+          const candidateMatch = body.match(/^- Kandidatärende: #([1-9][0-9]*)$/m);
+          const mergeMatch = body.match(/^- Merge SHA: ([0-9a-f]{40})$/mi);
+          if (!prMatch || !testedMatch || !candidateMatch || !mergeMatch) continue;
+          const candidateIssue = candidateIssueByNumber.get(Number(candidateMatch[1]));
+          const candidateBody = String(candidateIssue?.body || "");
+          if (!candidateIssue || !candidateBody.includes("- Beslut: PANDORAS ASK") ||
+              !candidateBody.includes("- Ärende-ID: PR-" + prMatch[1]) ||
+              !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
+          const publication = await liveMergePublicationStatus(candidateToken, mergeMatch[1]);
+          if (publication.published) publishedCandidatePrs.set(Number(prMatch[1]), mergeMatch[1]);
+        }
         const pullRequests = [...byNumber.values()]
-          .map((pr: any) => ({ ...pr, liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number))) }))
+          .map((pr: any) => {
+            const number = Number(pr.number);
+            const livePublished = Boolean(pr.merged_at && publishedCandidatePrs.has(number));
+            return {
+              ...pr,
+              livePublished,
+              liveMergeSha: livePublished ? publishedCandidatePrs.get(number) : null,
+              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished),
+            };
+          })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
         return json({ ok: true, pullRequests });
       } catch (error) {

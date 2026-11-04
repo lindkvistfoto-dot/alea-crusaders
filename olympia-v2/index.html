@@ -32,7 +32,7 @@ async function refresh(){
   const prs=all.filter(p=>(p.state==='open'&&!p.merged_at)||Boolean(p.merged_at&&p.liveCandidateActive));
   const merged=all.filter(p=>Boolean(p.merged_at||p.merged)&&!p.liveCandidateActive);
   document.querySelector('#merged-count').textContent=String(merged.length);
-  document.querySelector('#merged-items').innerHTML=merged.map(p=>'<p><a href="'+safe(p.html_url)+'" target="_blank" rel="noopener">#'+Number(p.number)+'</a> · '+safe(p.title)+' <span class="muted">· DEV-mergad, LIVE-status ej verifierad</span></p>').join('')||'<p class="muted">Inga DEV-mergade PR:ar i listan.</p>';
+  document.querySelector('#merged-items').innerHTML=merged.map(p=>'<p><a href="'+safe(p.html_url)+'" target="_blank" rel="noopener">#'+Number(p.number)+'</a> · '+safe(p.title)+' <span class="muted">· '+(p.livePublished?'Publicerad i LIVE · verifierad'+(p.liveMergeSha?' · '+safe(p.liveMergeSha.slice(0,10)):''):'DEV-mergad, LIVE-status ej verifierad')+'</span></p>').join('')||'<p class="muted">Inga DEV-mergade PR:ar i listan.</p>';
   const selected=filter.value;
   filter.innerHTML='<option value="all">Aktuella DEV-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+' · '+safe(p.title)+'</option>').join('');
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
