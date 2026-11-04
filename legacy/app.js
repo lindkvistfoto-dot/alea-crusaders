@@ -69,6 +69,8 @@ async function enterApp(){
   refreshAuthUI();
   // Restore navigation after authenticated app data is loaded.
   if(typeof window!=='undefined')await window.aleaRefreshLocation?.restore?.();
+  // Explicit deep links win over saved navigation, after asynchronous restoration.
+  if(typeof window.URLSearchParams==='function'&&new window.URLSearchParams(window.location?.search||'').get('view')==='trophy-room')window.openTrophyRoom?.();
  }
 }
 /* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */
