@@ -48,6 +48,7 @@ function renderGallery(){
 }
 function choose(item){selected=item;countSelect.value=String(item.count);$('rotation').value='0';$('mirror').checked=false;renderGallery();render()}
 function render(){
+ $('mirror').disabled=!selected.mirror_available;if($('mirror').disabled)$('mirror').checked=false;
  const opts=options(),geom=library.orient(selected,opts),qa=library.audit(selected,opts),engineQa=engine.audit(selected.rows,{...opts,offsets:selected.offsets});
  markup=engine.svg(selected.rows,opts);$('stage').innerHTML=markup;
  $('selected-title').textContent=selected.name+' · '+selected.count+' hex · '+selected.id;
