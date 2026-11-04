@@ -34,7 +34,6 @@ const reserveAsset = async ({target,metadata}: any) => {
   }
   return reserveSystem({target:{kind:"system",id:registryKey},metadata});
 };
-const bucket = "alea-hermes-public";
 const {readTarget, activate} = createCoreActionsTargetAdapter({db,prepared,registryKey});
 
 function hex(bytes: Uint8Array) {
