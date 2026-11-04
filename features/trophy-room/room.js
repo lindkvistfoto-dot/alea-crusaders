@@ -302,4 +302,4 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
 }
 root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
-root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});if(new URLSearchParams(root.location.search).get('view')==='trophy-room')open()})(window);
+root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});/* Deep links are handled after authentication and route restoration in enterApp. */})(window);
