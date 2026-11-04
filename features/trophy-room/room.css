@@ -215,3 +215,16 @@ main:has(> #trophyRoomPage:not(.hidden)){
  .arcane-medal-display-description,.arcane-medal-display-reason{margin:5px 0}
  .arcane-medal-display-date{margin-top:6px;padding-top:5px}
 }
+
+
+/* JAKOB: right-side badge wall, 3x3. Perspective is applied to the entire plane,
+   keeping each badge, frame and star marker aligned with the angled masonry. */
+.trophy-room-badge-wall{position:absolute;z-index:7;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:3%;padding:2%;box-sizing:border-box;transform-origin:18% 50%;transform:perspective(650px) rotateY(-24deg) skewY(-7deg);pointer-events:none}
+.trophy-room-badge-wall[hidden]{display:none}
+.trophy-room-badge-slot{position:relative;min-width:0;min-height:0;display:grid;place-items:center;filter:drop-shadow(1px 2px 2px #000a)}
+.trophy-room-badge-art{position:relative;width:100%;aspect-ratio:1;max-height:100%;display:grid;place-items:center}
+.trophy-room-badge-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.trophy-room-badge-relief{z-index:1}.trophy-room-badge-frame{z-index:2}
+.trophy-room-badge-art.is-overhanging .trophy-room-badge-relief{z-index:3;transform:scale(1.10)}
+.trophy-room-badge-label{display:grid;place-items:center;width:100%;height:100%;border:1px solid #a78a57;border-radius:4px;background:#20180ecb;color:#f4ddb0;text-align:center;font-size:clamp(5px,.7vw,11px);line-height:1.1;padding:3px}
+.trophy-room-badge-stars{position:absolute;z-index:4;top:-14%;left:0;width:100%;text-align:center;color:#f9d16e;font-size:clamp(8px,1vw,17px);letter-spacing:.02em;text-shadow:0 1px 2px #000}
