@@ -22,11 +22,26 @@ function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
  const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
  const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
- const h=solveHomography(target.map(p=>[p[0]/W,p[1]/H]));if(!h)return;
- const [a,b,c,d,e,f,g,i]=h;
+ // Project individual slots; never stretch the whole badge grid or its illustrations.
+ const h=solveHomography(badgeCorners);if(!h)return;
+ const project=(u,t)=>{const [a,b,c,d,e,f,g,i]=h,den=g*u+i*t+1;return den>1e-7?[(a*u+b*t+c)/den,(d*u+e*t+f)/den]:null};
  wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
- wall.style.transformOrigin='0 0';
- wall.style.transform='matrix3d('+[a,d*H/W,0,g/W,b*W/H,e,0,i/H,0,0,1,0,c*W,f*H,0,1].join(',')+')';
+ wall.style.transform='none';wall.style.display='block';wall.style.padding='0';
+ const slots=[...wall.querySelectorAll('.trophy-room-badge-slot')];
+ slots.forEach((slot,n)=>{
+  const col=n%3,row=Math.floor(n/3),center=project((col+.5)/3,(row+.5)/3);
+  const left=project(col/3,(row+.5)/3),right=project((col+1)/3,(row+.5)/3);
+  const top=project((col+.5)/3,row/3),bottom=project((col+.5)/3,(row+1)/3);
+  if(!center||!left||!right||!top||!bottom)return;
+  const sx=Math.hypot((right[0]-left[0])*W,(right[1]-left[1])*H);
+  const sy=Math.hypot((bottom[0]-top[0])*W,(bottom[1]-top[1])*H);
+  const size=Math.max(1,Math.min(sx,sy)*.86);
+  const angle=Math.atan2((right[1]-left[1])*H,(right[0]-left[0])*W);
+  slot.style.position='absolute';slot.style.left=(W*(.5+(center[0]-.5)*scale)+x)+'px';
+  slot.style.top=(H*(.5+(center[1]-.5)*scale)+y)+'px';
+  slot.style.width=(size*scale)+'px';slot.style.height=(size*scale)+'px';
+  slot.style.transform='translate(-50%,-50%) rotate('+angle+'rad)';
+ });
  const overlay=byId('trophyBadgeCalibration');if(overlay&&!overlay.hidden){
   overlay.setAttribute('viewBox','0 0 '+W+' '+H);
   const polygon=overlay.querySelector('polygon');if(polygon)polygon.setAttribute('points',target.map(p=>p.join(',')).join(' '));
@@ -86,7 +101,7 @@ async function renderBadges(){
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
    wall.append(slot);
   }
-  wall.hidden=awarded.length===0;
+  wall.hidden=awarded.length===0;draw();
  }catch(error){if(seq!==badgeSequence)return;console.warn('Trophy badge wall unavailable',error)}
 }
 function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
