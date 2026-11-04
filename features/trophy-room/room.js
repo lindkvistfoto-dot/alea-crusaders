@@ -18,43 +18,44 @@ function solveHomography(corners){
  return a.map(row=>row[8]);
 }
 function badgeScreenPoint(p,v){return [v.clientWidth*(.5+(p[0]-.5)*scale)+x,v.clientHeight*(.5+(p[1]-.5)*scale)+y]}
+/* ARCANE Perspective: each badge is an independent projective plane.
+   The frame and relief share one CSS 3D homography; no full-screen transforms. */
 function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
  const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
- // Project each badge independently. Never transform the containing viewport.
- const h=solveHomography(badgeCorners);
+ const h=solveHomography(badgeCorners);if(!h)return;
  const project=(u,t)=>{
-  if(!h)return null;
   const [a,b,c,d,e,f,g,i]=h,den=g*u+i*t+1;
   return Math.abs(den)>1e-7?[(a*u+b*t+c)/den,(d*u+e*t+f)/den]:null;
  };
  wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
  wall.style.transform='none';wall.style.padding='0';wall.style.pointerEvents='none';
  wall.style.removeProperty('display');
+ const tile=256,margin=.11;
  for(const [n,slot] of [...wall.querySelectorAll('.trophy-room-badge-slot')].entries()){
   const col=n%3,row=Math.floor(n/3);
-  const p=project((col+.5)/3,(row+.5)/3);
-  const l=project(col/3,(row+.5)/3),r=project((col+1)/3,(row+.5)/3);
-  const t=project((col+.5)/3,row/3),bt=project((col+.5)/3,(row+1)/3);
-  if(!p||!l||!r||!t||!bt)continue;
-  const dx=(r[0]-l[0])*W,dy=(r[1]-l[1])*H;
-  const horizontal=Math.hypot(dx,dy),vertical=Math.hypot((bt[0]-t[0])*W,(bt[1]-t[1])*H);
-  // Keep frame sides vertical: skewY changes top/bottom slope without rotation.
-  // Right-hand columns are progressively larger, as the wall approaches the viewer.
-  const size=Math.max(8,Math.min(horizontal,vertical)*.68)*(1+col*.095)*scale;
-  const topSlope=Math.atan2(dy,dx);
-  const skew=Math.max(-.14,Math.min(.14,topSlope*(1-row*.32)));
-  slot.style.position='absolute';
-  slot.style.left=(W*(.5+(p[0]+.027-.5)*scale)+x)+'px';
-  slot.style.top=(H*(.5+(p[1]-.5)*scale)+y)+'px';
-  slot.style.width=size+'px';slot.style.height=size+'px';
-  slot.style.transform='translate(-50%,-50%) skewY('+skew+'rad)';
+  const u0=(col+margin)/3,u1=(col+1-margin)/3;
+  const v0=(row+margin)/3,v1=(row+1-margin)/3;
+  const quad=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]].map(([u,t])=>{
+   const p=project(u,t);if(!p)return null;
+   return [W*(.5+(p[0]-.5)*scale)+x,H*(.5+(p[1]-.5)*scale)+y];
+  });
+  if(quad.some(p=>!p))continue;
+  // Normalize to viewport pixels before solving the local projective mapping.
+  const dest=quad.map(p=>[p[0]/W,p[1]/H]);
+  const matrix=solveHomography(dest);if(!matrix)continue;
+  const [a,b,c,d,e,f,g,i]=matrix;
+  const m=[a*W/tile,d*H/tile,0,g/tile,b*W/tile,e*H/tile,0,i/tile,0,0,1,0,c*W,f*H,0,1];
+  if(!m.every(Number.isFinite))continue;
+  slot.style.position='absolute';slot.style.left='0px';slot.style.top='0px';
+  slot.style.width=tile+'px';slot.style.height=tile+'px';
+  slot.style.transformOrigin='0 0';slot.style.transform='matrix3d('+m.join(',')+')';
  }
  const overlay=byId('trophyBadgeCalibration');
  if(overlay&&!overlay.hidden){
   const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
   overlay.setAttribute('viewBox','0 0 '+W+' '+H);
-  const poly=overlay.querySelector('polygon');if(poly)poly.setAttribute('points',target.map(p=>p.join(',')).join(' '));
+  const polygon=overlay.querySelector('polygon');if(polygon)polygon.setAttribute('points',target.map(p=>p.join(',')).join(' '));
   overlay.querySelectorAll('[data-badge-corner]').forEach((node,j)=>{node.setAttribute('cx',target[j][0]);node.setAttribute('cy',target[j][1])});
  }
 }
