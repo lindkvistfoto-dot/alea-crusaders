@@ -9,11 +9,12 @@ describe('OLYMPIA LIVE review stage fail-closed',()=>{
   expect(js).toContain("preview.disabled=true");
   expect(js).toContain("control.disabled=true");
   expect(js).toContain('versionsbunden förhandsvisning saknas ännu');
-  expect(js).toContain("number===524&&candidate.releasePr===528");
-  expect(js).toContain('approve.disabled=!pilotReady');
-  expect(js).toContain("decision:'final_approval',itemId:'PR-524'");
+  expect(js).toContain('Number.isInteger(number)&&number>0&&Number.isInteger(candidate.releasePr)&&candidate.releasePr>0');
+  expect(js).toContain('approve.disabled=!candidateReady');
+  expect(js).toContain("decision:'final_approval',itemId:'PR-'+number");
+  expect(js).not.toContain("decision:'final_approval',itemId:'PR-524'");
  });
- it('enables pilot approval while leaving other decisions disabled',()=>{
+ it('enables LIVE approval and leaves other decisions disabled',()=>{
   for(const name of ['Godkänn LIVE','Lägg i releasepaket','Omarbeta','Kasta'])expect(js).toContain(name);
  });
 });
