@@ -222,7 +222,9 @@ jobs:
                     exit 1
                   fi
                 fi
-              fi           fi
+                fi
+              fi
+            fi
             printf '%s\n' "$CHANGED_FILES" >> "$OUTPUT_DIR/source-files.txt"
           done
           sort -u "$OUTPUT_DIR/source-files.txt" -o "$OUTPUT_DIR/source-files.txt"
