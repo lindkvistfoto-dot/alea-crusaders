@@ -56,7 +56,7 @@ async function enterApp(){
  // Restore simple routes before waiting for unrelated Supabase catalogs.
  window.aleaRefreshLocation?.restoreEarly?.();
  // Honor explicit trophy-room deep links after the login flow resets navigation.
- if(new URLSearchParams(window.location.search).get('view')==='trophy-room')window.openTrophyRoom?.();
+ if(typeof window.URLSearchParams==='function'&&new window.URLSearchParams(window.location?.search||'').get('view')==='trophy-room')window.openTrophyRoom?.();
  try{
   await loadCentralData();
   await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(),window.aleaEquipmentCatalog?.load()]);
