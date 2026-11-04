@@ -1,11 +1,24 @@
-/* Alea Crusaders · shared hex-footprint geometry, loaded before scene editor and combat runtime. */
-const COMBAT_FOOTPRINT_OFFSETS={
- single:[[0,0]],
- line2:[[0,0],[1,0]],
- triangle3:[[0,0],[1,0],[0,1]],
- line3:[[0,0],[1,0],[2,0]],
- giant7:[[0,0],[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]]
+/* Alea Crusaders · combat footprints use the shared axial formation catalog. */
+const COMBAT_FOOTPRINT_LIBRARY_MAP={
+ single:{id:'single-standard',anchor:'first'},
+ line2:{id:'double-line',anchor:'first'},
+ triangle3:{id:'triple-compact',anchor:'first',steps:5},
+ line3:{id:'triple-line',anchor:'first'},
+ giant7:{id:'seven-standard',anchor:{q:0,r:1}}
 };
+function combatFootprintLibraryOffsets(definition){
+ const library=globalThis.aleaHexFormationLibrary,engine=globalThis.aleaArcaneGeometryEngine;
+ if(!library||!engine)throw new Error('Shared hex formation library must load before combat footprints');
+ const formation=library.get(definition.id);if(!formation)throw new Error('Unknown combat formation '+definition.id);
+ const anchor=definition.anchor==='first'?formation.cells[0]:definition.anchor;
+ return formation.cells.map(cell=>{
+  const local={q:cell.q-anchor.q,r:cell.r-anchor.r};
+  const rotated=engine.rotate(definition.mirror?engine.reflect(local):local,definition.steps||0);
+  return [Object.is(rotated.q,-0)?0:rotated.q,Object.is(rotated.r,-0)?0:rotated.r];
+ });
+}
+const COMBAT_FOOTPRINT_OFFSETS=Object.fromEntries(Object.entries(COMBAT_FOOTPRINT_LIBRARY_MAP)
+ .map(([shape,definition])=>[shape,combatFootprintLibraryOffsets(definition)]));
 const COMBAT_FOOTPRINT_LABELS={single:'1 hex',line2:'2 hex · avlång',triangle3:'3 hex · triangel',line3:'3 hex · avlång',giant7:'7 hex · stor'};
 function combatFootprintDefaultShape(name){
  const text=String(name||'').toLocaleLowerCase('sv-SE');
@@ -28,7 +41,7 @@ function combatFootprintCells(actor,q=actor?.q,r=actor?.r,facing=combatFootprint
  const turns=((Number(facing)%6)+6)%6;
  return COMBAT_FOOTPRINT_OFFSETS[combatFootprintShape(actor)].map(([dx,dy])=>{
   for(let i=0;i<turns;i++){const next=-dy;dy=dx+dy;dx=next}
-  return {q:aq+dx,r:ar+dy}
+  return {q:aq+dx,r:ar+dy};
  });
 }
 function combatFootprintKey(c){return c.q+','+c.r}
@@ -36,10 +49,7 @@ function combatFootprintDistance(a,b){
  const A=combatFootprintCells(a),B=combatFootprintCells(b);
  if(!A.length||!B.length)return Infinity;
  let best=Infinity;
- for(const x of A)for(const y of B){
-  const dq=x.q-y.q,dr=x.r-y.r;
-  best=Math.min(best,(Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2)
- }
+ for(const x of A)for(const y of B){const dq=x.q-y.q,dr=x.r-y.r;best=Math.min(best,(Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2)}
  return best;
 }
 function combatFootprintOverlaps(a,b){
