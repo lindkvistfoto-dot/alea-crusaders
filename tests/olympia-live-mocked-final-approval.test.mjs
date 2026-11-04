@@ -15,13 +15,13 @@ const SHA = 'a'.repeat(40);
 const LIVE = 'b'.repeat(40);
 function harness({preview='https://candidate.alea-crusaders.pages.dev/', baseline=LIVE, releaseHead=SHA, rejectCandidate=false, mergeResult=true, journalFailure=false}={}) {
  const writes=[];
- const candidate={pr:{number:528,head:{sha:SHA},html_url:'https://github.com/example/pull/528'},liveSha:LIVE};
+ const candidate={pr:{number:572,head:{sha:SHA},html_url:'https://github.com/example/pull/572'},liveSha:LIVE};
  const gh=vi.fn(async (_token,path,init={})=>{
   if(init.method) writes.push({path,method:init.method,body:init.body});
   if(path.endsWith('/commits/main')) return {sha:baseline};
-  if(path.endsWith('/pulls/528') && !path.endsWith('/merge')) return {head:{sha:releaseHead}};
+  if(path.endsWith('/pulls/572') && !path.endsWith('/merge')) return {head:{sha:releaseHead}};
   if(path.endsWith('/issues') && init.method==='POST') return {number:900,html_url:'https://github.com/example/issues/900'};
-  if(path.endsWith('/pulls/528/merge')) return {merged:mergeResult,sha:'c'.repeat(40)};
+  if(path.endsWith('/pulls/572/merge')) return {merged:mergeResult,sha:'c'.repeat(40)};
   if(path.endsWith('/issues/900') && init.method==='PATCH') {
    if(journalFailure) throw Error('journal unavailable');
    return {};
@@ -29,7 +29,7 @@ function harness({preview='https://candidate.alea-crusaders.pages.dev/', baselin
   throw Error('Unexpected GitHub call: '+path);
  });
  const deps={
-  token:'mock-only',item:{id:'PR-524'},user:{email:'zeus@example.invalid'},
+  token:'mock-only',item:{id:'PR-567'},user:{email:'zeus@example.invalid'},
   verifyCandidate:vi.fn(async()=>{if(rejectCandidate)throw Error('CANDIDATE_NOT_READY');return candidate}),
   verifiedCandidatePreview:vi.fn(async()=>preview),
   gh,title:()=> 'Approval',issueBody:()=> 'Mock journal',
@@ -39,14 +39,14 @@ function harness({preview='https://candidate.alea-crusaders.pages.dev/', baselin
  };
  return {run:makeRunner(deps),writes,deps};
 }
-const data={decision:'final_approval',candidateIssue:527,testedDevSha:SHA,candidateTreeSha:SHA,releasePrSha:SHA};
+const data={decision:'final_approval',candidateIssue:569,testedDevSha:SHA,candidateTreeSha:SHA,releasePrSha:SHA};
 describe('OLYMPIA LIVE decisions: executable mocked server branch',()=>{
  it('merges exact candidate only after verified preview and unchanged LIVE baseline',async()=>{
   const h=harness();const result=await h.run(data);
   expect(result.ok).toBe(true);
   expect(h.deps.verifiedCandidatePreview).toHaveBeenCalledWith('mock-only',SHA);
   expect(h.writes.map(x=>x.path)).toEqual([
-   '/repos/test/alea/issues','/repos/test/alea/pulls/528/merge','/repos/test/alea/issues/900'
+   '/repos/test/alea/issues','/repos/test/alea/pulls/572/merge','/repos/test/alea/issues/900'
   ]);
   expect(JSON.parse(h.writes[1].body)).toEqual({sha:SHA,merge_method:'squash'});
  });
