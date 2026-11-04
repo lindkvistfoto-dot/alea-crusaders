@@ -15,6 +15,7 @@
 <label for="priority">Prioritet</label><select id="priority"><option>1</option><option selected>2</option><option>3</option></select>
 <label for="pr">Historisk PR (valfri)</label><input id="pr" type="number" min="1" inputmode="numeric">
 <div class="actions"><button type="submit">Spara</button><button id="cancel" type="button">Avbryt</button></div></form></section>
+<p id="zeus-session" class="hidden" aria-hidden="true"></p><section id="connection-health" class="hidden" aria-hidden="true"></section>
 <script src="./dev-approval.js"></script>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id);let ideas=[],editing=null,busy=false;
