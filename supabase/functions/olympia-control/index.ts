@@ -732,7 +732,9 @@ async function handleRequest(req: Request): Promise<Response> {
             !statuses.has(String(value.status || "idea_bank"))) throw new Error("IDEA_INPUT_INVALID");
         const prs = value.historical_prs.map(canonicalPr);
         if (new Set(prs.map((pr: any) => pr.number)).size !== prs.length) throw new Error("DUPLICATE_HISTORICAL_PR");
-        return { title: String(value.title).trim(), description: String(value.description || "").trim(), historical_prs: prs };
+        const priority = Number(value.priority ?? 2);
+        if (!Number.isInteger(priority) || priority < 1 || priority > 3) throw new Error("IDEA_INPUT_INVALID");
+        return { title: String(value.title).trim(), description: String(value.description || "").trim(), priority, historical_prs: prs };
       };
       const errorText = (error: any) => {
         const code = String(error?.message || "");
@@ -749,6 +751,8 @@ async function handleRequest(req: Request): Promise<Response> {
           DUPLICATE_HISTORICAL_PR: "Samma historiska PR får bara kopplas en gång per uppslag.",
           IDEA_NOT_FOUND: "Uppslaget finns inte längre. Uppdatera sidan.",
           IDEA_CHANGED: "Uppslaget har ändrats i en annan vy. Läs in det igen innan du sparar.",
+          HISTORICAL_PR_PROTECTED: "Historiska PR-kopplingar kan inte tas bort.",
+          IDEA_DELETE_PROTECTED: "Historiska uppslag får inte raderas.",
           ACTIVE_PR_INVALID: "Välj en öppen PR mot development som aktivt utvecklingsärende.",
           ACTIVE_PR_ALREADY_REGISTERED: "Den aktiva PR:n finns redan som historisk PR på detta uppslag.",
           IMPORT_UNVERIFIED: "Importfilen behöver vara CLEAN OLYMPUS 2026-11-03, innehålla exakt 38 unika PR:ar och bekräftas efter granskning.",
@@ -773,6 +777,7 @@ async function handleRequest(req: Request): Promise<Response> {
             if (!current) throw new Error("IDEA_NOT_FOUND");
             if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
             if (current.status === "in_olympia" || current.status === "done") throw new Error("IDEA_CHANGED");
+            if ((current.historical_prs || []).length && input.historical_prs.length < current.historical_prs.length) throw new Error("HISTORICAL_PR_PROTECTED");
             const history = [...(Array.isArray(current.history) ? current.history : []), eventFor("edit", user.id, { title: input.title, description: input.description, historical_pr_count: input.historical_prs.length })];
             const { data: saved, error } = await table.update({ ...input, history, updated_by: user.id, updated_at: new Date().toISOString() }).eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
             if (error) throw error;
@@ -783,6 +788,16 @@ async function handleRequest(req: Request): Promise<Response> {
           const { data: saved, error } = await table.insert(row).select("*").single();
           if (error) throw error;
           return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_delete") {
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          if ((current.historical_prs || []).length || current.import_source || current.active_pr_number) throw new Error("IDEA_DELETE_PROTECTED");
+          const { error } = await table.delete().eq("id", current.id).eq("updated_at", current.updated_at);
+          if (error) throw error;
+          return json({ ok: true, deletedId: current.id });
         }
         if (data.action === "idea_set_status") {
           if (!statuses.has(data.status) || data.status === "done" || data.status === "in_olympia") return fail("Välj Idébank eller Att bearbeta. Pågående och genomfört kräver särskild verifiering.", 400);
