@@ -27,7 +27,7 @@ function positionBadgeWall(v){
  // rightward perspective expansion. Source calibration remains untouched.
  // Pixel-based optical adjustment on the 1280px V2.2 source image.
  // Change this single number to shift all nine badges without altering saved corners.
- const BADGE_WALL_OFFSET_X_PX=-20;
+ const BADGE_WALL_OFFSET_X_PX=10;
  const fittedCorners=badgeCorners.map(([px,py],index)=>[
   Math.min(.95,Math.max(.05,px+(index===0||index===3?-.005:-.025)+BADGE_WALL_OFFSET_X_PX/1280)),
   py+(index===0?-.002:index===1?-.004:index===2?.002:0)
@@ -43,9 +43,9 @@ function positionBadgeWall(v){
  // Clip the badges to the dark masonry plane. The original room image remains
  // visible underneath, so any part crossing the tapestry edge disappears behind it.
  // These boundaries are room-image coordinates and follow camera zoom/pan.
- // Preserve all three columns. Only the lower-left tapestry overlap is clipped.
- // The sloping edge moves gently from x=.53 at y=.62 to x=.56 at y=.77.
- const maskPolygon=[[0,0],[1,0],[1,1],[.56,1],[.56,.77],[.53,.62],[0,.62]];
+ // Clip only left of the dark wall: a near-vertical edge bends outward toward
+ // the lower tapestry, without excluding an entire badge column.
+ const maskPolygon=[[.545,0],[1,0],[1,1],[.585,1],[.585,.80],[.573,.66],[.552,.35],[.545,0]];
  const clip=maskPolygon.map(p=>badgeScreenPoint(p,v).map((n,j)=>(n/(j?H:W)*100).toFixed(3)+'%').join(' ')).join(',');
  wall.style.clipPath='polygon('+clip+')';
  const tile=256,margin=.11;
