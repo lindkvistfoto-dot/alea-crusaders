@@ -17,7 +17,7 @@ if (!outputDir || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
 const targetKind = prepared.target?.kind ?? "system";
-const appTarget=resolveCoreAppImageTarget(targetKind);
+const appTarget=resolveCoreAppImageTarget(targetKind, prepared.profile_id);
 if (!["system","honor-definition","honor-relief"].includes(targetKind) && !appTarget) throw new Error("INVALID_CORE_TARGET");
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
@@ -26,10 +26,10 @@ const webp = new Blob([webpBytes], {type: "image/webp"});
 const db = createClient(url, secret, {auth: {persistSession: false}});
 const reserveSystem = createCoreSystemReservation();
 const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
-  : "arcane-" + targetKind + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
+  : "arcane-" + (prepared.profile_id ?? targetKind) + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
 const reserveAsset = async ({target,metadata}: any) => {
   if (appTarget) {
-    const path=coreAppImagePath(targetKind,target.id,metadata.sha256);
+    const path=coreAppImagePath(prepared.profile_id,target.id,metadata.sha256);
     return {key:path,path,bucket:appTarget.bucket,metadata};
   }
   return reserveSystem({target:{kind:"system",id:registryKey},metadata});
@@ -71,7 +71,7 @@ async function publishWebP({target, webp: image}: any) {
     throw new Error("SUPABASE_READBACK_HASH_MISMATCH");
   }
   let readbackUrl: string | null = null;
-  if (appTarget?.bucket === "alea-spell-art" || appTarget?.bucket === "alea-skill-art") {
+  if (appTarget?.visibility === "private") {
     const {data:signed,error:signedError}=await storage.createSignedUrl(asset.path,60);
     if (signedError) throw new Error("SUPABASE_SIGNED_READBACK_URL_FAILED");
     readbackUrl=signed?.signedUrl??null;
@@ -96,7 +96,9 @@ const core = createHermesCore({
     activate(target, 0, null, {...metadata, path: key}, true),
 });
 
-const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label};
+const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label,
+  ...(prepared.profile_id ? {profile_id:prepared.profile_id} : {}),
+  ...(prepared.target?.material ? {material:prepared.target.material} : {})};
 const result = await core.add({target, file: source});
 const publication = {
   schema: "hermes-core-publication/v1",

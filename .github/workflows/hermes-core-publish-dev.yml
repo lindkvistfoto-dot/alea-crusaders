@@ -5,6 +5,14 @@ on:
     branches: [development]
     paths:
       - 'hermes/core/queue/dev/**'
+  pull_request:
+    branches: [development]
+    paths:
+      - 'features/hermes-core/**'
+      - 'scripts/hermes_core_prepare.py'
+      - 'tests/test_hermes_core_profiles.py'
+      - 'config/hermes-system-assets.json'
+      - '.github/workflows/hermes-core-publish-dev.yml'
 
 permissions:
   contents: write
@@ -15,6 +23,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test-core-profiles:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            config/hermes-system-assets.json
+            features/hermes-core/contract.json
+            scripts/hermes_core_prepare.py
+            scripts/hermes_system_assets.py
+            tests/test_hermes_core_profiles.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.3.0
+      - run: python -m unittest discover -s tests -p 'test_hermes_core_profiles.py' -v
+
   publish:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
     runs-on: ubuntu-24.04

@@ -2,15 +2,37 @@
 import {normalizeCoreAppImageKey,resolveCoreAppImageTarget} from "./app-image-targets.js";
 export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
  const targetKind=prepared.target?.kind??"system";
- const appTarget=resolveCoreAppImageTarget(targetKind);
+ const appTarget=resolveCoreAppImageTarget(targetKind, prepared.profile_id);
  const honorTable=targetKind==="honor-definition"?"honor_definitions":"honor_relief_variants";
  function dbMetadata(metadata){return {asset_path:metadata.path,app_sha256:metadata.sha256,app_bytes:metadata.bytes,width:metadata.width,height:metadata.height,alpha_preserved:metadata.alphaPreserved};}
+ function appImageUpdate(previous,metadata){
+  const values={[appTarget.image_column]:metadata.path};
+  if(appTarget.metadata_column){
+   values[appTarget.metadata_column]={
+    ...(previous.row[appTarget.metadata_column]&&typeof previous.row[appTarget.metadata_column]==="object"?previous.row[appTarget.metadata_column]:{}),
+    master:prepared.source_file_name??null,
+    drive_file_id:prepared.drive_file_id,
+    archive_file_id:prepared.archive_file_id,
+    source_sha256:prepared.source_sha256,
+    app_sha256:metadata.sha256,
+    mime_type:prepared.source_mime,
+    width:metadata.width,
+    height:metadata.height,
+    alpha_preserved:metadata.alphaPreserved,
+    verified:true,
+    published_by:"HERMES-CORE"
+   };
+  }
+  return values;
+ }
  async function readTarget(target){
   if(appTarget){
-   const key=normalizeCoreAppImageKey(targetKind,target.id);
-   const {data,error}=await db.from(appTarget.table).select(`id,${appTarget.imageColumn}`).eq(appTarget.lookupColumn,key).maybeSingle();
+   const key=normalizeCoreAppImageKey(targetKind,target.id,prepared.profile_id);
+   const columns=["id",appTarget.image_column];
+   if(appTarget.metadata_column)columns.push(appTarget.metadata_column);
+   const {data,error}=await db.from(appTarget.table).select(columns.join(",")).eq(appTarget.lookup_column,key).maybeSingle();
    if(error)throw error;
-   return data?{key:data[appTarget.imageColumn]??null,revision:0,row:data}:null;
+   return data?{key:data[appTarget.image_column]??null,revision:0,row:data}:null;
   }
   if(targetKind!=="system"){
    const {data,error}=await db.from(honorTable).select(targetKind==="honor-relief"?"id,honor_id,image_asset_id,image_revision,material":"id,image_asset_id,image_revision").eq("id",target.id).maybeSingle();
@@ -27,12 +49,20 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
   if(appTarget){
    if(create)throw new Error("CORE_APP_TARGET_MUST_EXIST");
    if(metadata?.path==null)throw new Error("CORE_APP_IMAGE_REMOVE_UNSUPPORTED");
-   if(targetKind==="spell-cutout"&&expectedKey&&expectedKey!==metadata.path)throw new Error("EXISTING_CUTOUT_PROTECTED");
+   if(prepared.profile_id==="spell-cutout"&&expectedKey&&expectedKey!==metadata.path)throw new Error("EXISTING_CUTOUT_PROTECTED");
    const previous=await readTarget(target);
    if(!previous||previous.key!==expectedKey)throw new Error("CORE_APP_TARGET_CHANGED");
-   let update=db.from(appTarget.table).update({[appTarget.imageColumn]:metadata.path}).eq("id",previous.row.id);
-   update=expectedKey===null?update.is(appTarget.imageColumn,null):update.eq(appTarget.imageColumn,expectedKey);
-   const {data,error}=await update.select(`id,${appTarget.imageColumn}`).maybeSingle();
+   if(appTarget.binding_type==="record-image"&&expectedKey!==null&&expectedKey!==metadata.path)
+    throw new Error("CORE_RECORD_IMAGE_REPLACE_PROTECTED");
+   let update=db.from(appTarget.table).update(appImageUpdate(previous,metadata)).eq("id",previous.row.id);
+   update=expectedKey===null?update.is(appTarget.image_column,null):update.eq(appTarget.image_column,expectedKey);
+   if(appTarget.metadata_column){
+    const oldMetadata=previous.row[appTarget.metadata_column];
+    update=oldMetadata===null||oldMetadata===undefined
+     ?update.is(appTarget.metadata_column,null):update.eq(appTarget.metadata_column,oldMetadata);
+   }
+   const columns=["id",appTarget.image_column];
+   const {data,error}=await update.select(columns.join(",")).maybeSingle();
    if(error)throw error;
    if(!data){
     const current=await readTarget(target);
@@ -41,6 +71,12 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    }
    const confirmed=await readTarget(target);
    if(confirmed?.key!==metadata.path)throw new Error("CORE_APP_TARGET_READBACK_MISMATCH");
+   if(appTarget.metadata_column){
+    const record=confirmed.row[appTarget.metadata_column];
+    if(record?.app_sha256!==metadata.sha256||record?.source_sha256!==prepared.source_sha256||
+       record?.archive_file_id!==prepared.archive_file_id||record?.verified!==true)
+     throw new Error("CORE_APP_IMAGE_METADATA_READBACK_MISMATCH");
+   }
    return {key:confirmed.key,revision:0};
   }
   if(targetKind!=="system"){

@@ -1,0 +1,405 @@
+{
+  "contract": "hermes-core-image-contract",
+  "version": 1,
+  "defaults": {
+    "profile_id": "unrestricted-system",
+    "source_formats": [
+      "PNG",
+      "JPEG",
+      "WEBP"
+    ],
+    "max_source_bytes": 67108864
+  },
+  "adapters": {
+    "system-registry": {
+      "kind": "system",
+      "table": "arcane_system_assets",
+      "lookup_column": "asset_key",
+      "image_column": "asset_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "path": "hermes/system-asset/{id}/{sha256}.webp",
+      "key_pattern": "system-asset"
+    },
+    "spell-icon": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug"
+    },
+    "spell-cutout": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "cutout_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "spell-illustration": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "illustration_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "spell-illustration-wide": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "illustration_wide_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "symbol-icon": {
+      "kind": "app-image",
+      "table": "rule_magic_symbols",
+      "lookup_column": "symbol_key",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug"
+    },
+    "skill-icon": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "skill-illustration": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "illustration_path",
+      "bucket": "alea-skill-art",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "skill-illustration-wide": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "illustration_wide_path",
+      "bucket": "alea-skill-art",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "honor-definition": {
+      "kind": "honor-definition",
+      "table": "honor_definitions",
+      "lookup_column": "id",
+      "image_column": "image_asset_id",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid"
+    },
+    "honor-relief": {
+      "kind": "honor-relief",
+      "table": "honor_relief_variants",
+      "lookup_column": "id",
+      "image_column": "image_asset_id",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid"
+    },
+    "npc-private-portrait": {
+      "kind": "app-image",
+      "binding_type": "record-image",
+      "table": "global_npcs",
+      "lookup_column": "npc_key",
+      "image_column": "image_path",
+      "metadata_column": "image_reference",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "path_template": "global-npc/{id}/{sha256}.webp"
+    }
+  },
+  "profiles": {
+    "unrestricted-system": {
+      "adapter": "system-registry",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4
+    },
+    "spell-icon": {
+      "adapter": "spell-icon",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "spell"
+    },
+    "spell-cutout": {
+      "adapter": "spell-cutout",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1024,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.cutout",
+      "path_segment": "spell-cutout"
+    },
+    "spell-illustration-square": {
+      "adapter": "spell-illustration",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "opaque",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.square",
+      "path_segment": "spell-illustration"
+    },
+    "spell-illustration-wide": {
+      "adapter": "spell-illustration-wide",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 360,
+      "source_min_width": 640,
+      "source_min_height": 360,
+      "source_max_edge": 4096,
+      "aspect": "ratio:1.25-2.4",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 2560,
+      "output_height": 1440,
+      "output_max_edge": 2560,
+      "max_webp_bytes": 524288,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.wide",
+      "path_segment": "spell-illustration-wide"
+    },
+    "symbol-icon": {
+      "adapter": "symbol-icon",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "symbol"
+    },
+    "skill-icon": {
+      "adapter": "skill-icon",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.icon",
+      "path_segment": "skill"
+    },
+    "skill-illustration-square": {
+      "adapter": "skill-illustration",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "opaque",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.square",
+      "path_segment": "skill-illustration"
+    },
+    "skill-illustration-wide": {
+      "adapter": "skill-illustration-wide",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 360,
+      "source_min_width": 640,
+      "source_min_height": 360,
+      "source_max_edge": 4096,
+      "aspect": "ratio:16:9",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 2560,
+      "output_height": 1440,
+      "output_max_edge": 2560,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.wide",
+      "path_segment": "skill-illustration-wide"
+    },
+    "honor-definition": {
+      "adapter": "honor-definition",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 4096,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4,
+      "archive_folder_key": "folders.original_archive"
+    },
+    "honor-relief": {
+      "adapter": "honor-relief",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 4096,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4,
+      "archive_folder_key": "folders.original_archive"
+    },
+    "npc-portrait-private": {
+      "adapter": "npc-private-portrait",
+      "source_formats": [
+        "JPEG"
+      ],
+      "source_min_edge": 640,
+      "source_min_width": 640,
+      "source_min_height": 800,
+      "source_max_edge": 4096,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 1024,
+      "output_height": 1536,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 87,
+      "quality_min": 87,
+      "quality_step": 1,
+      "orientation": "exif",
+      "archive_folder_key": "archive_categories.npcs_monsters",
+      "max_source_bytes": 8388608,
+      "min_webp_bytes": 1000
+    }
+  },
+  "legacy_kind_profiles": {
+    "spell": "spell-icon",
+    "spell-cutout": "spell-cutout",
+    "spell-illustration": "spell-illustration-square",
+    "spell-illustration-wide": "spell-illustration-wide",
+    "symbol": "symbol-icon",
+    "skill": "skill-icon",
+    "skill-illustration": "skill-illustration-square",
+    "skill-illustration-wide": "skill-illustration-wide"
+  }
+}
