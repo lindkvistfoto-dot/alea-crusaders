@@ -7,10 +7,10 @@ export function createWebPPublisher({reserveAsset,upload,stat,bucket='alea-herme
  return async function publishWebP({target,webp,archive}) {
   if(!target||webp?.type!=='image/webp'||!webp.size) throw new Error('Invalid WebP publication');
   const isSystem=target.kind==='system';
-  const selectedBucket=asset.bucket??(isSystem?'alea-hermes-public':bucket);
   const metadata=isSystem?await inspectCoreWebP(webp):null;
   const asset=await reserveAsset({target,archive,bytes:webp.size,mimeType:'image/webp',metadata});
   if(!asset?.key||!asset?.path) throw new Error('Image asset reservation failed');
+  const selectedBucket=asset.bucket??(isSystem?'alea-hermes-public':bucket);
   if(isSystem) {
    const prefix='hermes/system-asset/'+target.id+'/';
    if(metadata.sha256!==asset.path.slice(prefix.length,-5)) throw new Error('System image digest mismatch');
