@@ -23,10 +23,10 @@ function positionBadgeWall(v){
  const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
  const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
  // Project individual slots; never stretch the whole badge grid or its illustrations.
- const h=solveHomography(badgeCorners);if(!h)return;
+ const h=solveHomography(badgeCorners);if(!h){console.warn('Invalid badge-wall calibration; retaining room navigation');return;}
  const project=(u,t)=>{const [a,b,c,d,e,f,g,i]=h,den=g*u+i*t+1;return den>1e-7?[(a*u+b*t+c)/den,(d*u+e*t+f)/den]:null};
  wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
- wall.style.transform='none';wall.style.display='block';wall.style.padding='0';
+ wall.style.transform='none';wall.style.removeProperty('display');wall.style.padding='0';wall.style.pointerEvents='none';
  const slots=[...wall.querySelectorAll('.trophy-room-badge-slot')];
  slots.forEach((slot,n)=>{
   const col=n%3,row=Math.floor(n/3),center=project((col+.5)/3,(row+.5)/3);
