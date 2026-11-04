@@ -47,6 +47,8 @@ export function coreAppImagePath(profileId, key, sha256) {
       !SLUG.test(key) || !/^[a-f0-9]{64}$/.test(sha256 || "")) {
     throw new Error("INVALID_CORE_APP_IMAGE_PATH");
   }
-  const template = resolveCoreImageProfile(profileId).path_template || `hermes/core/${profileId}/{id}/{sha256}.webp`;
+  const profile = resolveCoreImageProfile(profileId);
+  const segment = profile.path_segment || profileId;
+  const template = profile.path_template || `hermes/core/${segment}/{id}/{sha256}.webp`;
   return template.replace("{id}", key).replace("{sha256}", sha256);
 }
