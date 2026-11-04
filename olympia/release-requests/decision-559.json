@@ -1,1 +1,10 @@
-{"schema":"olympia-release-request/v1","issueNumber":559,"itemId":"PR-556","prNumber":556,"testedDevSha":"64d53a0ab897653e0de474493fe894eede44609b","decision":"pandoras_ask","attempt":1,"workflowBlobSha":"fc6a2e05450657a7d6a88633fbf33fc534ab6566"}
+{
+  "schema": "olympia-release-request/v1",
+  "issueNumber": 559,
+  "itemId": "PR-556",
+  "prNumber": 556,
+  "testedDevSha": "64d53a0ab897653e0de474493fe894eede44609b",
+  "decision": "pandoras_ask",
+  "attempt": 2,
+  "workflowBlobSha": "609483fd9c533725855467de6f0ddb85fb66e58c"
+}
