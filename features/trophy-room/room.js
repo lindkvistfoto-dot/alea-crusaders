@@ -7,11 +7,11 @@ function clampCamera(){const v=viewport();if(!v)return;const maxX=Math.max(0,(sc
 function positionMedalWall(v){const wall=byId('trophyRoomMedalWall');if(!wall)return;const left=.4073,top=.2769,width=.1931,height=.3277;wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';wall.style.width=(v.clientWidth*width*scale)+'px';wall.style.height=(v.clientHeight*height*scale)+'px'}
 /* Right wall is an independent 3x3 badge plane; camera follows the medal wall. */
 const BADGE_CAL_KEY='alea:trophy:badge-wall-corners:v1';
-// Recovered Zeus calibration, screenshot coordinate system 709 x 1536.
-// Order: top-left, top-right, bottom-right, bottom-left.
-// Versioned in the PR so Cloudflare origins and browser storage cannot override it.
-const BADGE_DEFAULT_CORNERS=[[364/709,609/1536],[576/709,545/1536],[576/709,835/1536],[369/709,864/1536]];
+// Normalized room-viewport fallback, not the approved browser calibration.
+// Screenshot pixel coordinates must not be substituted for viewport coordinates.
+const BADGE_DEFAULT_CORNERS=[[.735,.315],[.90,.30],[.90,.555],[.735,.57]];
 let badgeCorners=BADGE_DEFAULT_CORNERS.map(p=>p.slice());
+try{const saved=JSON.parse(root.localStorage.getItem(BADGE_CAL_KEY)||'null');if(Array.isArray(saved)&&saved.length===4&&saved.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))badgeCorners=saved}catch(_){}
 let badgeCalibration=false;
 function solveHomography(corners){
  const src=[[0,0],[1,0],[1,1],[0,1]],a=[];
