@@ -76,6 +76,7 @@ describe('OLYMPIA UPPSLAG', () => {
     const edge = read('../supabase/functions/olympia-control/index.ts');
     const migration = read('../supabase/migrations/20261103235000_olympia_uppslag.sql');
     expect(page).toContain("api({action:'idea_list'})");
+    expect(page).toContain('window.olympiaV2Refresh=load');
     expect(page).toContain('<table class="table">');
     expect(page).toContain('data-priority');
     expect(page).toContain('data-delete');
