@@ -167,7 +167,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "spell_types.icon"
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "spell"
     },
     "spell-cutout": {
       "adapter": "spell-cutout",
@@ -187,7 +188,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "spell_types.cutout"
+      "archive_folder_key": "spell_types.cutout",
+      "path_segment": "spell-cutout"
     },
     "spell-illustration-square": {
       "adapter": "spell-illustration",
@@ -208,7 +210,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "spell_types.square"
+      "archive_folder_key": "spell_types.square",
+      "path_segment": "spell-illustration"
     },
     "spell-illustration-wide": {
       "adapter": "spell-illustration-wide",
@@ -231,7 +234,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "spell_types.wide"
+      "archive_folder_key": "spell_types.wide",
+      "path_segment": "spell-illustration-wide"
     },
     "symbol-icon": {
       "adapter": "symbol-icon",
@@ -251,7 +255,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "spell_types.icon"
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "symbol"
     },
     "skill-icon": {
       "adapter": "skill-icon",
@@ -271,7 +276,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "skill_types.icon"
+      "archive_folder_key": "skill_types.icon",
+      "path_segment": "skill"
     },
     "skill-illustration-square": {
       "adapter": "skill-illustration",
@@ -292,7 +298,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "skill_types.square"
+      "archive_folder_key": "skill_types.square",
+      "path_segment": "skill-illustration"
     },
     "skill-illustration-wide": {
       "adapter": "skill-illustration-wide",
@@ -315,7 +322,8 @@
       "quality_start": 90,
       "quality_min": 76,
       "quality_step": 3,
-      "archive_folder_key": "skill_types.wide"
+      "archive_folder_key": "skill_types.wide",
+      "path_segment": "skill-illustration-wide"
     },
     "honor-definition": {
       "adapter": "honor-definition",
