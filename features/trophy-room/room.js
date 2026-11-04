@@ -30,9 +30,13 @@ function positionBadgeWall(v){
  // Pixel-based optical adjustment on the 1280px V2.2 source image.
  // Change this single number to shift all nine badges without altering saved corners.
  const BADGE_WALL_OFFSET_X_PX=10;
+ // Extend the right edge toward the red-marked wall boundary while keeping
+ // the left edge and existing tapestry mask fixed.
+ const BADGE_WALL_RIGHT_EXTENSION_PX=18;
+ const BADGE_WALL_DOWN_PX=5;
  const fittedCorners=badgeCorners.map(([px,py],index)=>[
-  Math.min(.95,Math.max(.05,px+(index===0||index===3?-.005:-.025)+BADGE_WALL_OFFSET_X_PX/1280)),
-  py+(index===0?-.002:index===1?-.004:index===2?.002:0)
+  Math.min(.97,Math.max(.05,px+(index===0||index===3?-.005:-.025)+BADGE_WALL_OFFSET_X_PX/1280+(index===1||index===2?BADGE_WALL_RIGHT_EXTENSION_PX/1280:0))),
+  py+(index===0?-.002:index===1?-.004:index===2?.002:0)+BADGE_WALL_DOWN_PX/720
  ]);
  const h=solveHomography(fittedCorners);if(!h)return;
  const project=(u,t)=>{
