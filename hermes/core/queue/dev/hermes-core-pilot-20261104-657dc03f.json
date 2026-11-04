@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "HERMES CORE isolated DEV integration pilot 2026-11-04",
+  "target": {
+    "kind": "profile",
+    "profile_id": "unrestricted-system",
+    "id": "arcane-hermes-core-dev-pilot-20261104"
+  },
+  "drive_file_id": "15oTbd1t34B-9rVKwEnoq3IGWhyKbryrr",
+  "archive_file_id": "1eBIKj4faVVNejCLl_Ynd0LIPbukYlqBv",
+  "source_sha256": "657dc03fb4e5d286b81dbaca5891582f27171e47ce81fb18c87895d0f6763273"
+}
