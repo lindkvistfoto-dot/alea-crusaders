@@ -127,8 +127,36 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
   return { handled: true, html: output };
 }
 
+
+// Scoped recovery for PR #556: the approved change contains a temporary 222
+// debug link that was subsequently removed by merged DEV PR #560.
+// Reconcile only the exact trophy toolbar addition; preserve LIVE's other HTML.
+export function reconcileTrophy556(baseHtml, sourceHtml, liveHtml, currentDevHtml) {
+  const welcome='Välkommen till Alea Crusaders';
+  const debug='Välkommen <a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a> till Alea Crusaders';
+  const anchor='<button class="btn" type="button" onclick="trophyRoomReset()">Centrera</button>';
+  const addition='<button class="btn" id="trophyBadgeCalibrate" type="button" hidden onclick="trophyBadgeCalibrate()">Kalibrera badgevägg</button><button class="btn" id="trophyBadgeExport" type="button" onclick="trophyBadgeExport()">Kopiera koordinater</button><textarea id="trophyBadgeExportResult" hidden readonly aria-label="Sparade badgekoordinater" rows="3" style="width:100%;font-size:12px"></textarea>';
+  const once=(html,part)=>html.split(part).length===2;
+  if (![baseHtml,sourceHtml,liveHtml,currentDevHtml].every(html=>once(html,anchor))) return {handled:false,html:liveHtml};
+  if(!once(sourceHtml,debug)||!once(baseHtml,welcome)||!once(liveHtml,welcome)||!once(currentDevHtml,welcome))return {handled:false,html:liveHtml};
+  if(!once(sourceHtml,anchor+addition)||!once(currentDevHtml,anchor+addition))return {handled:false,html:liveHtml};
+  if(baseHtml.includes(addition)||liveHtml.includes(addition)||currentDevHtml.includes(debug))return {handled:false,html:liveHtml};
+  // No hidden extra changes may be smuggled in with the accepted PR's HTML.
+  const normalizedSource=sourceHtml.replace(debug,welcome).replace(anchor+addition,anchor);
+  if(normalizedSource!==baseHtml)return {handled:false,html:liveHtml};
+  return {handled:true,html:liveHtml.replace(anchor,anchor+addition)};
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [basePath, sourcePath, livePath, ...assetPaths] = process.argv.slice(2);
+  if(assetPaths[0]==='--trophy-556'){
+    const currentDevPath=assetPaths[1];
+    if(!currentDevPath)process.exit(1);
+    const result=reconcileTrophy556(fs.readFileSync(basePath,'utf8'),fs.readFileSync(sourcePath,'utf8'),fs.readFileSync(livePath,'utf8'),fs.readFileSync(currentDevPath,'utf8'));
+    if(!result.handled)process.exit(2);
+    fs.writeFileSync(livePath,result.html);
+    process.exit(0);
+  }
   if (!basePath || !sourcePath || !livePath || !assetPaths.length) {
     console.error('Usage: reconcile-index-asset-versions.mjs BASE SOURCE LIVE ASSET_PATH...');
     process.exit(1);
