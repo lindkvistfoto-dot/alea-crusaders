@@ -642,7 +642,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     candidatePr.head?.sha === releasePrSha &&
     candidatePr.merge_commit_sha &&
     sourcePrNumber > 0 &&
-    sourcePrLine.split(/\\s*,\\s*/).includes("#" + sourcePrNumber) &&
+    sourcePrLine.split(/\s*,\s*/).includes("#" + sourcePrNumber) &&
     String(candidatePr.body || "").includes("Zeus decision journal: #" + issueNumber) &&
     releasePrTreeSha === treeMatch[1]
   );
