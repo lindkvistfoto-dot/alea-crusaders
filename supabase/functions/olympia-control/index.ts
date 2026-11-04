@@ -979,7 +979,7 @@ async function handleRequest(req: Request): Promise<Response> {
         // Resolve the actual release candidate through the existing server verifier.
         // This is read-only; never infer readiness from the existence of an issue.
         let candidate: any = null;
-        if (locked && requestPresent && issue) {
+        if (requestPresent && issue) {
           try {
             const item = await workItem(token, "PR-" + number);
             candidate = await inspectCandidate(token, item, issue.number, sha);
@@ -988,6 +988,26 @@ async function handleRequest(req: Request): Promise<Response> {
             // Never infer readiness or permit LIVE approval from a fallback.
             console.warn("OLYMPIA preview diagnostics unavailable", error instanceof Error ? error.message : "unknown");
             candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Förhandsvisningen kunde inte verifieras; LIVE-beslut förblir låsta." };
+          }
+        }
+        if (issue && (!candidate || candidate.blocked === false)) {
+          try {
+            const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
+            if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
+            const latest = comments.filter((comment: any) => String(comment.body || "").includes("## OLYMPIA release candidate")).at(-1);
+            const body = String(latest?.body || "");
+            if (/Status:\s*BLOCKED\b/i.test(body)) {
+              const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
+              const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
+              candidate = {
+                ready: false,
+                blocked: true,
+                message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
+                workflowRunUrl
+              };
+            }
+          } catch (error) {
+            console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
           }
         }
         const state = locked ? (requestPresent ? "requested" : "needs_review") : (issue ? "unlocked_issue" : "not_started");
@@ -1014,7 +1034,21 @@ async function handleRequest(req: Request): Promise<Response> {
         const closed = recentClosed.filter((pr: any) => Boolean(pr.merged_at) && pr.base?.ref === "development");
         const byNumber = new Map<number, any>();
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
-        const pullRequests = [...byNumber.values()].sort((a, b) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+        const candidateToken = await githubToken("auto_candidate_diagnostics");
+        const botLogin = await appBotLogin();
+        const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=open&per_page=100&creator=" + encodeURIComponent(botLogin));
+        if (!Array.isArray(candidateIssues)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
+        const activeCandidatePrs = new Set<number>();
+        for (const issue of candidateIssues) {
+          if (issue.pull_request) continue;
+          const body = String(issue.body || "");
+          if (!body.includes("- Beslut: PANDORAS ASK")) continue;
+          const match = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
+          if (match) activeCandidatePrs.add(Number(match[1]));
+        }
+        const pullRequests = [...byNumber.values()]
+          .map((pr: any) => ({ ...pr, liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number))) }))
+          .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
         return json({ ok: true, pullRequests });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";

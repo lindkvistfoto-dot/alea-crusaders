@@ -128,53 +128,40 @@ export function reconcileIndexAssetVersions(baseHtml, sourceHtml, liveHtml, allo
 }
 
 
-// Carry only the approved Trofé room markup into LIVE. The complete DEV
-// index is intentionally never merged: retain every LIVE-specific setting.
-export function reconcileTrophy556(baseHtml, sourceHtml, liveHtml, currentDevHtml) {
-  const welcome = 'Välkommen till Alea Crusaders';
-  const debug = 'Välkommen <a href="?view=trophy-room" onclick="event.preventDefault(); window.openTrophyRoom?.()" aria-label="Öppna Troférummet">222</a> till Alea Crusaders';
-  const medalWall = '<div id="trophyRoomMedalWall" class="trophy-room-medal-wall" aria-label="Medaljvägg" hidden></div>';
-  const badgeWall = '<div id="trophyRoomBadgeWall" class="trophy-room-badge-wall" aria-label="Högra väggen: badges i 3 gånger 3" hidden></div>';
-  const toolbarAnchor = '<button class="btn" type="button" onclick="trophyRoomReset()">Centrera</button>';
-  const controls = '<button class="btn" id="trophyBadgeCalibrate" type="button" hidden onclick="trophyBadgeCalibrate()">Kalibrera badgevägg</button><button class="btn" id="trophyBadgeExport" type="button" onclick="trophyBadgeExport()">Kopiera koordinater</button><textarea id="trophyBadgeExportResult" hidden readonly aria-label="Sparade badgekoordinater" rows="3" style="width:100%;font-size:12px"></textarea>';
-  const exactlyOnce = (html, part) => html.split(part).length === 2;
-
-  if (![baseHtml, sourceHtml, liveHtml, currentDevHtml].every(html => exactlyOnce(html, medalWall) && exactlyOnce(html, toolbarAnchor))) {
-    return { handled: false, html: liveHtml };
-  }
-  if (!exactlyOnce(sourceHtml, debug) || !exactlyOnce(baseHtml, welcome) || !exactlyOnce(liveHtml, welcome) || !exactlyOnce(currentDevHtml, welcome)) {
-    return { handled: false, html: liveHtml };
-  }
-  if (!exactlyOnce(sourceHtml, medalWall + badgeWall) || !exactlyOnce(currentDevHtml, medalWall + badgeWall)) {
-    return { handled: false, html: liveHtml };
-  }
-  if (baseHtml.includes(badgeWall) || liveHtml.includes(badgeWall) || currentDevHtml.includes(debug) ||
-      baseHtml.includes(controls) || liveHtml.includes(controls)) {
-    return { handled: false, html: liveHtml };
-  }
-
-  // The accepted source PR must contain only the temporary debug link and these
-  // four required badge-wall elements. Any additional index edit remains blocked.
-  const normalizedSource = sourceHtml
-    .replace(debug, welcome)
-    .replace(medalWall + badgeWall, medalWall)
-    .replace(toolbarAnchor + controls, toolbarAnchor);
-  if (normalizedSource !== baseHtml) return { handled: false, html: liveHtml };
-
-  const html = liveHtml
-    .replace(medalWall, medalWall + badgeWall)
-    .replace(toolbarAnchor, toolbarAnchor + controls);
-  return { handled: true, html };
+function diffTextEdits(before, after) {
+  const n=before.length,m=after.length,max=n+m,trace=[];let v=new Map([[1,0]]),distance=null;
+  for(let d=0;d<=max;d++){trace.push(new Map(v));for(let k=-d;k<=d;k+=2){
+    let x;if(k===-d||(k!==d&&(v.get(k-1)??-Infinity)<(v.get(k+1)??-Infinity)))x=v.get(k+1)??0;else x=(v.get(k-1)??0)+1;
+    let y=x-k;while(x<n&&y<m&&before.charCodeAt(x)===after.charCodeAt(y)){x++;y++}v.set(k,x);if(x>=n&&y>=m){distance=d;break}
+  }if(distance!==null)break}
+  if(distance===null)return null;let x=n,y=m;const reverse=[];
+  for(let d=distance;d>0;d--){const prev=trace[d],k=x-y,pk=(k===-d||(k!==d&&(prev.get(k-1)??-Infinity)<(prev.get(k+1)??-Infinity)))?k+1:k-1,px=prev.get(pk)??0,py=px-pk;
+    while(x>px&&y>py){reverse.push(['=',before[x-1]]);x--;y--}if(x===px){reverse.push(['+',after[y-1]]);y--}else{reverse.push(['-',before[x-1]]);x--}}
+  while(x>0&&y>0){reverse.push(['=',before[x-1]]);x--;y--}while(x>0){reverse.push(['-',before[x-1]]);x--}while(y>0){reverse.push(['+',after[y-1]]);y--}
+  reverse.reverse();const edits=[];let offset=0,edit=null;const flush=()=>{if(edit){edits.push(edit);edit=null}};
+  for(const [kind,ch] of reverse){if(kind==='='){flush();offset++;continue}if(!edit)edit={start:offset,end:offset,text:''};if(kind==='-'){edit.end++;offset++}else edit.text+=ch}flush();return edits;
+}
+function textEditsOverlap(a,b){
+  if(a.start===b.start&&a.end===b.end&&a.text===b.text)return false;
+  if(a.start===a.end&&b.start===b.end)return a.start===b.start;
+  if(a.start===a.end)return a.start>b.start&&a.start<b.end;
+  if(b.start===b.end)return b.start>a.start&&b.start<a.end;
+  return a.start<b.end&&b.start<a.end;
+}
+export function mergeTextThreeWay(base,source,target){
+  if(source===base)return{handled:true,text:target};if(target===base)return{handled:true,text:source};
+  const a=diffTextEdits(base,source),b=diffTextEdits(base,target);if(!a||!b)return{handled:false,text:target,reason:'diff-failed'};
+  for(const left of a)for(const right of b)if(textEditsOverlap(left,right))return{handled:false,text:target,reason:'overlapping-edits'};
+  const edits=[...a,...b].sort((x,y)=>y.start-x.start||y.end-x.end);let text=base;
+  for(const e of edits)text=text.slice(0,e.start)+e.text+text.slice(e.end);return{handled:true,text};
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [basePath, sourcePath, livePath, ...assetPaths] = process.argv.slice(2);
-  if(assetPaths[0]==='--trophy-556'){
-    const currentDevPath=assetPaths[1];
-    if(!currentDevPath)process.exit(1);
-    const result=reconcileTrophy556(fs.readFileSync(basePath,'utf8'),fs.readFileSync(sourcePath,'utf8'),fs.readFileSync(livePath,'utf8'),fs.readFileSync(currentDevPath,'utf8'));
-    if(!result.handled)process.exit(2);
-    fs.writeFileSync(livePath,result.html);
+  if (assetPaths[0] === '--merge-html-three-way') {
+    const result = mergeTextThreeWay(fs.readFileSync(basePath, 'utf8'), fs.readFileSync(sourcePath, 'utf8'), fs.readFileSync(livePath, 'utf8'));
+    if (!result.handled) { console.error('Unresolved overlapping text edits in index.html.'); process.exit(2); }
+    fs.writeFileSync(livePath, result.text);
     process.exit(0);
   }
   if (!basePath || !sourcePath || !livePath || !assetPaths.length) {

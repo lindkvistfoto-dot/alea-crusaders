@@ -29,8 +29,8 @@ async function refresh(){
   window.olympiaV2HiddenPrNumbers=registry?.hiddenPrNumbers||[];
   const hidden=new Set(window.olympiaV2HiddenPrNumbers.map(Number));
   const all=(data.pullRequests||[]).filter(p=>p.base?.ref==='development'&&!hidden.has(Number(p.number))).sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
-  const prs=all.filter(p=>p.state==='open'&&!p.merged_at);
-  const merged=all.filter(p=>Boolean(p.merged_at||p.merged));
+  const prs=all.filter(p=>(p.state==='open'&&!p.merged_at)||Boolean(p.merged_at&&p.liveCandidateActive));
+  const merged=all.filter(p=>Boolean(p.merged_at||p.merged)&&!p.liveCandidateActive);
   document.querySelector('#merged-count').textContent=String(merged.length);
   document.querySelector('#merged-items').innerHTML=merged.map(p=>'<p><a href="'+safe(p.html_url)+'" target="_blank" rel="noopener">#'+Number(p.number)+'</a> · '+safe(p.title)+' <span class="muted">· DEV-mergad, LIVE-status ej verifierad</span></p>').join('')||'<p class="muted">Inga DEV-mergade PR:ar i listan.</p>';
   const selected=filter.value;
