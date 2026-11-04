@@ -26,7 +26,7 @@ function positionBadgeWall(v){
  // Optical wall fit V2.2: inset from the left stone edge, retain a slight
  // rightward perspective expansion. Source calibration remains untouched.
  const fittedCorners=badgeCorners.map(([px,py],index)=>[
-  Math.min(.97,px+(index===0||index===3?.013:.018)),
+  Math.min(.95,Math.max(.05,px+(index===0||index===3?-.005:-.025))),
   py+(index===0?-.002:index===1?-.004:index===2?.002:0)
  ]);
  const h=solveHomography(fittedCorners);if(!h)return;
@@ -37,6 +37,12 @@ function positionBadgeWall(v){
  wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
  wall.style.transform='none';wall.style.padding='0';wall.style.pointerEvents='none';
  wall.style.removeProperty('display');
+ // Clip the badges to the dark masonry plane. The original room image remains
+ // visible underneath, so any part crossing the tapestry edge disappears behind it.
+ // These boundaries are room-image coordinates and follow camera zoom/pan.
+ const maskPolygon=[[.525,.12],[.855,.12],[.855,.93],[.542,.93],[.525,.66]];
+ const clip=maskPolygon.map(p=>badgeScreenPoint(p,v).map((n,j)=>(n/(j?H:W)*100).toFixed(3)+'%').join(' ')).join(',');
+ wall.style.clipPath='polygon('+clip+')';
  const tile=256,margin=.11;
  for(const [n,slot] of [...wall.querySelectorAll('.trophy-room-badge-slot')].entries()){
   const col=n%3,row=Math.floor(n/3);
@@ -162,11 +168,12 @@ function animateCamera(target,duration=2500,nextHeroPose=null){
 function reset(){animateCamera({scale:1,x:0,y:0},2500,{x:0,y:0,scale:1})}
 function focusWall(side='center'){
  const v=viewport();if(!v)return;
- const targetScale=2.25;
+ const mobile=v.clientWidth<700;
+ const targetScale=mobile&&side==='right'?1.85:2.25;
  const targets={
   center:{x:.4073+.1931/2,y:.2769+.3277/2,hero:{x:-.36,y:.66,scale:2.45}},
   left:{x:.22,y:.42,hero:{x:.32,y:.66,scale:2.45}},
-  right:{x:.78,y:.42,hero:{x:-.32,y:.66,scale:2.45}}
+  right:{x:.75,y:.44,hero:{x:-.32,y:mobile?.46:.66,scale:mobile?2.0:2.45}}
  };
  const destination=targets[side]||targets.center;
  animateCamera({scale:targetScale,x:(.5-destination.x)*v.clientWidth*targetScale,y:(.5-destination.y)*v.clientHeight*targetScale},2500,destination.hero);
