@@ -8,7 +8,7 @@ function positionMedalWall(v){const wall=byId('trophyRoomMedalWall');if(!wall)re
 /* Right wall is an independent 3x3 badge plane; camera follows the medal wall. */
 function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
- const left=.655,top=.30,width=.215,height=.31;
+ const left=.735,top=.315,width=.165,height=.255;
  wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';
  wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';
  wall.style.width=(v.clientWidth*width*scale)+'px';
@@ -24,7 +24,7 @@ async function renderBadges(){
  try{
   const [grants,definitions,variants,assets]=await Promise.all([
    root.dbJson('honor_grants?select=honor_id,character_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
-   root.dbJson('honor_definitions?select=id,name,description,category,status,published_variant_id,image_asset_id,badge_frame_assets,tier_criteria&category=eq.badge'),
+   root.dbJson('honor_definitions?select=id,name,description,category,status,published_variant_id,preview_variant_id,image_asset_id,badge_frame_assets,tier_criteria&category=eq.badge'),
    root.dbJson('honor_relief_variants?select=id,honor_id,status,allow_overhang,image_asset_id'),
    root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*')
   ]);
@@ -36,7 +36,7 @@ async function renderBadges(){
   for(const d of awarded){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    slot.title=d.name;
-   const selected=d.published_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id))?.id;
+   const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
    const variant=variantsById.get(String(selected));
    const frameKey=d.badge_frame_assets?.[selected];
    const relief=assetMap.get(variant?.image_asset_id||d.image_asset_id);
