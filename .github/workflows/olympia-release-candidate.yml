@@ -160,7 +160,10 @@ jobs:
               SOURCE_INDEX="$OUTPUT_DIR/pr-$PR_NUMBER-source-index.html"
               git -C "$DEV_DIR" show "$PR_PARENT_SHA:index.html" > "$BASE_INDEX"
               git -C "$DEV_DIR" show "$PR_MERGE_SHA:index.html" > "$SOURCE_INDEX"
-              if node "$DEV_DIR/scripts/olympia/reconcile-index-asset-versions.mjs" "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" "${FEATURE_FILES[@]}"; then
+              if [[ "$PR_NUMBER" == "556" ]] && node "$DEV_DIR/scripts/olympia/reconcile-index-asset-versions.mjs" "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" --trophy-556 "$DEV_DIR/index.html"; then
+                INDEX_HANDLED=true
+                echo "PR #556: verified trophy toolbar added; removed 222 debug link excluded; LIVE HTML preserved."
+              elif node "$DEV_DIR/scripts/olympia/reconcile-index-asset-versions.mjs" "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" "${FEATURE_FILES[@]}"; then
                 INDEX_HANDLED=true
                 echo "PR #$PR_NUMBER: safely promoted approved cache versions while preserving LIVE-only URL parameters."
               else
