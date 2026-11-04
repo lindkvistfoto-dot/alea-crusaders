@@ -1,9 +1,12 @@
+import sys
 import unittest
+from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from minotaurus_select import select
 
 
-class MinotaurusSelectionTests(unittest.TestCase):
+(unittest.TestCase):
     def test_plain_ui_change_skips_legacy_hermes_environments(self):
         result = select(["features/ui/character-sheet.js"])
         self.assertFalse(result["full"])
@@ -47,6 +50,7 @@ class MinotaurusSelectionTests(unittest.TestCase):
 
     def test_unknown_path_falls_back_to_full(self):
         self.assertTrue(select(["new/unclassified/file.txt"])["full"])
+
 
 
 if __name__ == "__main__":
