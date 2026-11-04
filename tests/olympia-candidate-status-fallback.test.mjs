@@ -16,10 +16,10 @@ describe('OLYMPIA candidate status survives preview verification failure',()=>{
  it('keeps a failed Pandoras Ask visible with its reason and workflow run',()=>{
   expect(diagnostic).toContain('BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: ');
   expect(diagnostic).toContain('workflowRunUrl');
-  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number)))');
+  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number)) && !livePublished)');
  });
  it('marks a merged candidate published only when its merge is in deployed main',()=>{
-  expect(edge).toContain('liveMergePublicationStatus(token, mergeMatch[1])');
+  expect(edge).toContain('liveMergePublicationStatus(candidateToken, mergeMatch[1])');
   expect(edge).toContain('await verifyPublishedManifest("main", liveSha)');
   expect(edge).toContain('["ahead", "identical"].includes(String(comparison.status || ""))');
   expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(Number(pr.number)) && !livePublished)');
