@@ -6,9 +6,16 @@ const COMBAT_FOOTPRINT_LIBRARY_MAP={
  line3:{id:'triple-line',anchor:'first'},
  giant7:{id:'seven-standard',anchor:{q:0,r:1}}
 };
-function combatFootprintLibraryOffsets(definition){
+// Bare-script consumers that do not load index.html keep the legacy shape map.
+// The application loads the shared geometry and formation library first.
+const COMBAT_FOOTPRINT_LEGACY_OFFSETS={
+ single:[[0,0]],line2:[[0,0],[1,0]],triangle3:[[0,0],[1,0],[0,1]],
+ line3:[[0,0],[1,0],[2,0]],
+ giant7:[[0,0],[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]]
+};
+function combatFootprintLibraryOffsets(definition,shape){
  const library=globalThis.aleaHexFormationLibrary,engine=globalThis.aleaArcaneGeometryEngine;
- if(!library||!engine)throw new Error('Shared hex formation library must load before combat footprints');
+ if(!library||!engine)return COMBAT_FOOTPRINT_LEGACY_OFFSETS[shape].map(cell=>cell.slice());
  const formation=library.get(definition.id);if(!formation)throw new Error('Unknown combat formation '+definition.id);
  const anchor=definition.anchor==='first'?formation.cells[0]:definition.anchor;
  return formation.cells.map(cell=>{
@@ -18,7 +25,7 @@ function combatFootprintLibraryOffsets(definition){
  });
 }
 const COMBAT_FOOTPRINT_OFFSETS=Object.fromEntries(Object.entries(COMBAT_FOOTPRINT_LIBRARY_MAP)
- .map(([shape,definition])=>[shape,combatFootprintLibraryOffsets(definition)]));
+ .map(([shape,definition])=>[shape,combatFootprintLibraryOffsets(definition,shape)]));
 const COMBAT_FOOTPRINT_LABELS={single:'1 hex',line2:'2 hex · avlång',triangle3:'3 hex · triangel',line3:'3 hex · avlång',giant7:'7 hex · stor'};
 function combatFootprintDefaultShape(name){
  const text=String(name||'').toLocaleLowerCase('sv-SE');
