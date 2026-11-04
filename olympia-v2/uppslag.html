@@ -33,6 +33,6 @@ $('new').onclick=()=>edit(null);$('cancel').onclick=()=>$('editor').classList.ad
 $('form').onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;try{await save(editing,Number($('priority').value));$('editor').classList.add('hidden');await load();message('Sparat.')}catch(e){message('Kunde inte spara: '+e.message)}finally{busy=false}};
 $('rows').onchange=async e=>{const node=e.target.closest('[data-priority]');if(!node)return;const i=ideas.find(x=>x.id===node.dataset.priority);if(!i)return;try{await api({action:'idea_save',id:i.id,expectedUpdatedAt:i.updated_at,title:i.title,description:i.description,priority:Number(node.value),status:'idea_bank',historical_prs:i.historical_prs||[]});await load();message('Prioritet sparad.')}catch(err){message('Kunde inte ändra prioritet: '+err.message);render()}};
 $('rows').onclick=async e=>{const btn=e.target.closest('button');if(!btn)return;const i=ideas.find(x=>x.id===(btn.dataset.edit||btn.dataset.delete));if(!i)return;if(btn.dataset.edit){edit(i);return}if(btn.dataset.delete&&confirm('Ta bort uppslaget?')){try{await api({action:'idea_delete',id:i.id,expectedUpdatedAt:i.updated_at});await load()}catch(err){message('Kunde inte ta bort: '+err.message)}}};
-window.addEventListener('olympia-v2-auth-ready',load);setTimeout(load,0);
+window.olympiaV2Refresh=load;window.addEventListener('olympia-v2-auth-ready',load);setTimeout(load,0);
 })();
 </script></body></html>
