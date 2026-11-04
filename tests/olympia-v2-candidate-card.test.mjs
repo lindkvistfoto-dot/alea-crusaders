@@ -27,11 +27,11 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(js).toContain('releasePrSha:candidate.releasePrSha');
   expect(js).toContain('setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},30000)');
  });
- it('never exposes premature LIVE approval or unverified preview',()=>{
+ it('exposes approval only for verified candidates',()=>{
   expect(js).toContain('LIVE-beslut är låsta.');
-  expect(js).toContain("number===524&&candidate.releasePr===528");
-  expect(js).toContain('approve.disabled=!pilotReady');
-  expect(js).toContain("decision:'final_approval',itemId:'PR-524'");
+  expect(js).toContain('Number.isInteger(number)&&number>0&&Number.isInteger(candidate.releasePr)&&candidate.releasePr>0');
+  expect(js).toContain('approve.disabled=!candidateReady');
+  expect(js).toContain("decision:'final_approval',itemId:'PR-'+number");
   expect(html).not.toContain('data-live-accept');
  });
 });
