@@ -55,8 +55,6 @@ async function enterApp(){
  refreshAuthUI();
  // Restore simple routes before waiting for unrelated Supabase catalogs.
  window.aleaRefreshLocation?.restoreEarly?.();
- // Honor explicit trophy-room deep links after the login flow resets navigation.
- if(typeof window.URLSearchParams==='function'&&new window.URLSearchParams(window.location?.search||'').get('view')==='trophy-room')window.openTrophyRoom?.();
  try{
   await loadCentralData();
   await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(),window.aleaEquipmentCatalog?.load()]);
@@ -71,6 +69,8 @@ async function enterApp(){
   refreshAuthUI();
   // Restore navigation after authenticated app data is loaded.
   if(typeof window!=='undefined')await window.aleaRefreshLocation?.restore?.();
+  // Explicit deep links win over saved navigation, after asynchronous restoration.
+  if(typeof window.URLSearchParams==='function'&&new window.URLSearchParams(window.location?.search||'').get('view')==='trophy-room')window.openTrophyRoom?.();
  }
 }
 /* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */
