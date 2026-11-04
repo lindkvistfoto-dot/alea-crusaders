@@ -11,6 +11,14 @@ vm.runInNewContext(
 const engine = context.aleaArcaneGeometryEngine;
 const library = context.aleaHexFormationLibrary;
 const positions = cells => cells.map(c => `${c.q},${c.r}`).sort().join(';');
+const combatContext = {};
+vm.runInNewContext(
+  readFileSync(new URL('../features/ui/arcane-geometry-engine.js', import.meta.url), 'utf8') + '\n' +
+  readFileSync(new URL('../features/ui/arcane-hex-formation-library.js', import.meta.url), 'utf8') + '\n' +
+  readFileSync(new URL('../features/combat/footprint.js', import.meta.url), 'utf8') +
+  '\nthis.footprints={offsets:COMBAT_FOOTPRINT_OFFSETS,cells:combatFootprintCells};',
+  combatContext
+);
 
 describe('Universal hex formation library', () => {
   it('provides a useful, connected, duplicate-free catalog for every size from one to nine', () => {
@@ -51,6 +59,22 @@ describe('Universal hex formation library', () => {
       expect(item.graphic_version).toBe('v1');
       expect(item.geometry_status).toBe('verified-prototype');
       expect(item.graphic_status).toBe('preview-only-not-published');
+    }
+  });
+
+  it('sources combat footprints from the shared catalog without changing existing cell sets', () => {
+    const expected = {
+      single: [[0,0]], line2: [[0,0],[1,0]], triangle3: [[0,0],[1,0],[0,1]],
+      line3: [[0,0],[1,0],[2,0]],
+      giant7: [[0,0],[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]]
+    };
+    const catalogOffsets = combatContext.footprints.offsets;
+    for (const [shape, cells] of Object.entries(expected)) {
+      expect(positions(catalogOffsets[shape].map(([q,r]) => ({q,r})))).toBe(positions(cells.map(([q,r]) => ({q,r}))));
+      for (let facing=0; facing<6; facing++) {
+        const actor={q:0,r:0,state:{footprint:{shape,facing}}};
+        expect(combatContext.footprints.cells(actor)).toHaveLength(cells.length);
+      }
     }
   });
 });
