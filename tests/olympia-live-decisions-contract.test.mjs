@@ -31,8 +31,9 @@ describe('OLYMPIA LIVE decision safety contracts (no network writes)', () => {
     expect(nonFinal).not.toContain('merge_method: "squash"');
     expect(nonFinal).toContain('data.decision === "pandoras_ask"');
   });
-  it('keeps LIVE controls disabled until the decision flow is connected', () => {
-    expect(ui).toContain('approve.disabled=!pilotReady');
+  it('enables verified LIVE candidates while keeping other controls disabled', () => {
+    expect(ui).toContain('approve.disabled=!candidateReady');
+    expect(ui).not.toContain('number===524&&candidate.releasePr===528');
     expect(ui).toContain('control.disabled=true');
   });
 });
