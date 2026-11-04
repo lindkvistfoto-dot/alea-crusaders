@@ -30,8 +30,8 @@ export default defineConfig({
         const outputDir = resolve("dist/assets");
         await mkdir(outputDir, { recursive: true });
         for (const entry of await readdir(sourceDir, { withFileTypes: true })) {
-          if (!entry.isFile() || !/\.(?:avif|gif|jpe?g|png|webp)$/i.test(entry.name)) continue;
-          await copyFile(resolve(sourceDir, entry.name), resolve(outputDir, entry.name));
+          if (!entry.isFile() || /\.(?:avif|gif|jpe?g|png|webp)$/i.test(entry.name)) continue;
+          await copyFile(resolve("assets", entry.name), resolve(outputDir, entry.name));
         }
       },
     },
@@ -57,5 +57,11 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     target: "es2022",
+    rollupOptions: {
+      input: {
+        main: resolve("index.html"),
+        geometryLab: resolve("geometry-lab.html"),
+      },
+    },
   },
 });
