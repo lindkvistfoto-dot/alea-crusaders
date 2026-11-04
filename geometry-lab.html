@@ -1,15 +1,69 @@
-<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arcane Geometry Lab</title><style>body{margin:0;background:#161b22;color:#f1e6d0;font:16px system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:24px}h1{font-size:24px}section{background:#222b35;border:1px solid #5c4934;border-radius:16px;padding:20px;margin:18px 0}label{display:inline-flex;gap:12px;align-items:center;margin:8px 20px 8px 0}select,input,button{background:#313e4b;color:#fff;border:1px solid #a98b57;border-radius:7px;padding:9px}button{cursor:pointer}#stage{background:#10151c;border-radius:12px;min-height:350px;display:grid;place-items:center;overflow:hidden}#stage svg{width:95%;max-height:440px}#stage polygon{vector-effect:non-scaling-stroke}small{color:#b9ae9d}</style></head><body><main><h1>OPERATION HEXAGONIA · Geometry Lab V1</h1><p>Matematisk geometri, fast ortografisk kamera, transparent SVG. Ingen AI-genererad bas.</p><section><label>Formation <select id="pattern"><option value="1-2-1">4 · 1–2–1</option><option value="2-2">4 · 2–2</option><option value="5-3-5">13 · 5–3–5</option><option value="1-2">3 · 1–2</option><option value="1-2-3">6 · 1–2–3</option><option value="1-2-2-1">6 · 1–2–2–1</option><option value="2-3-2">7 · 2–3–2</option><option value="1-2-3-2-1">9 · 1–2–3–2–1</option></select></label><label>Rotation <select id="rotation"><option value="0">0°</option><option value="1">60°</option><option value="2">120°</option><option value="3">180°</option><option value="4">240°</option><option value="5">300°</option></select></label><label><input id="mirror" type="checkbox"> Spegla</label><label>High Angle <input id="elevation" type="range" min="25" max="85" value="55" step="1"><output id="elevValue">55°</output></label></section><section><h2>Egna rader</h2><div id="row-editor"></div><button id="add-row">+ Rad</button> <button id="remove-row">− Rad</button> <button id="auto-align">Automatisk kantjustering</button></section><section><div id="stage"></div><p id="status"></p><button id="download">Exportera transparent SVG</button> <button id="manifest">Exportera geometrimetadata</button></section><small>Prototyp: radredigeraren använder samma motor och stoppar ogiltiga formationer. QA: rutnätskontakt och lika stora hexagoner kontrolleras matematiskt. Ornament och 3D-sidoväggar tillkommer i nästa fas.</small></main><script src="/features/ui/arcane-geometry-engine.js"></script><script>const e=globalThis.aleaArcaneGeometryEngine,$=id=>document.getElementById(id);
-let rows=[1,2,1],offsets=[0,0,0],markup='',valid=false;
-function opts(){return {steps:Number($('rotation').value),mirror:$('mirror').checked,offsets:offsets.slice(),camera:{elevationDegrees:Number($('elevation').value)}}}
-function redrawEditor(){const root=$('row-editor');root.replaceChildren();rows.forEach((n,i)=>{const line=document.createElement('div');line.style.cssText='display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0';const label=document.createElement('strong');label.textContent='Rad '+(i+1);const count=document.createElement('input');count.type='number';count.min='1';count.max='20';count.value=n;count.style.width='75px';count.setAttribute('aria-label','Hexagoner på rad '+(i+1));count.addEventListener('change',()=>{const v=Number(count.value);if(!Number.isInteger(v)||v<1||v>20){count.value=rows[i];return}rows[i]=v;render()});const shift=document.createElement('input');shift.type='range';shift.min='-10';shift.max='10';shift.step='1';shift.value=offsets[i];shift.setAttribute('aria-label','Förskjutning rad '+(i+1));const value=document.createElement('span');value.textContent=offsets[i];shift.addEventListener('input',()=>{offsets[i]=Number(shift.value);value.textContent=shift.value;render()});line.append(label,count,shift,value);root.append(line)})}
-function render(){const options=opts();$('elevValue').textContent=options.camera.elevationDegrees+'°';try{const qa=e.audit(rows,options);valid=qa.valid;markup=valid?e.svg(rows,options):'';$('stage').innerHTML=markup||'<p>Ogiltig formation: justera radförskjutningen eller välj automatisk kantjustering.</p>';$('status').textContent=rows.reduce((a,b)=>a+b,0)+' hexagoner · '+(valid?'QA GODKÄND':'QA UNDERKÄND')+' · '+(valid?'kantkontakter '+qa.sharedPairs+' · max storleksavvikelse '+(Math.max(qa.maxWidthError,qa.maxHeightError)*100).toFixed(5)+' %':'formationen är inte sammanhängande');}catch(err){valid=false;markup='';$('stage').textContent='Ogiltig formation';$('status').textContent=err.message}for(const id of ['download','manifest'])$(id).disabled=!valid}
-function align(){offsets=e.autoAlign(rows).offsets;redrawEditor();render()}
-function save(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-$('pattern').addEventListener('change',()=>{rows=$('pattern').value.split('-').map(Number);align()});
-$('add-row').addEventListener('click',()=>{if(rows.length>=20)return;rows.push(1);align()});
-$('remove-row').addEventListener('click',()=>{if(rows.length<=1)return;rows.pop();align()});
-$('auto-align').addEventListener('click',align);
-for(const id of ['rotation','mirror','elevation'])$(id).addEventListener('input',render);
-$('download').addEventListener('click',()=>{if(valid)save(markup,'hexagonia-'+rows.join('-')+'.svg','image/svg+xml')});
-$('manifest').addEventListener('click',()=>{if(valid)save(JSON.stringify(e.manifest(rows,opts()),null,2),'hexagonia-'+rows.join('-')+'.json','application/json')});
-align();</script></body></html>
+<!doctype html>
+<html lang="sv">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ALEA · Geometry Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#15191f;--panel:#202832;--edge:#836b43;--text:#f4ead5;--muted:#c1b7a7;--gold:#c9a25e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,sans-serif}
+main{max-width:1120px;margin:auto;padding:clamp(14px,3vw,32px)}h1{font-size:clamp(22px,4vw,32px);margin:0 0 6px}h2{font-size:18px;margin:0 0 12px}p{margin:6px 0;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid #524b3e;border-radius:14px;padding:16px;margin:14px 0}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}select,button{font:inherit;color:var(--text);background:#303b46;border:1px solid var(--edge);border-radius:8px;padding:9px 12px}
+button{cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #e2bd73;outline-offset:2px}
+#gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-top:12px}
+.card{display:flex;flex-direction:column;min-width:0;min-height:130px;text-align:left;padding:9px;background:#182029;border:1px solid #5e5546}
+.card[aria-pressed=true]{border:2px solid var(--gold);background:#2b3035}.thumb{height:76px;display:grid;place-items:center;overflow:hidden}.thumb svg{width:100%;height:100%;max-height:72px}.card strong{font-size:14px}.card small{color:var(--muted)}
+#stage{min-height:260px;display:grid;place-items:center;overflow:hidden;background:#11161c;border-radius:10px;padding:10px}
+#stage svg{width:min(100%,720px);max-height:460px}.status{color:#f1d49a;font-weight:600}.occupied{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.cell{font:12px ui-monospace,monospace;padding:3px 7px;border:1px solid #695a40;border-radius:999px;color:#f0dfbb}
+.note{font-size:13px}.danger{color:#f1c884}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button{flex:1 1 130px}
+@media(max-width:560px){#gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:12px}.controls>*{flex:1}.controls label{flex-basis:100%}#stage{min-height:210px}.thumb{height:62px}}
+</style></head>
+<body><main>
+<header><h1>Geometry Lab · Flerhexbaser</h1><p>Gemensam axialgeometri och datadrivna formationer. Välj en form, vrid i 60°-steg och jämför dess upptagna hexagoner med basrenderingen.</p></header>
+<section class="panel" aria-labelledby="choose-title"><h2 id="choose-title">Formationsbibliotek</h2>
+<div class="controls"><label for="hex-count">Antal hexagoner</label><select id="hex-count" aria-label="Filtrera efter antal hexagoner"></select>
+<label for="rotation">Riktning</label><select id="rotation" aria-label="Rotation"><option value="0">0°</option><option value="1">60°</option><option value="2">120°</option><option value="3">180°</option><option value="4">240°</option><option value="5">300°</option></select>
+<label><input id="mirror" type="checkbox"> Spegla</label></div><div id="gallery" aria-live="polite"></div></section>
+<section class="panel"><h2 id="selected-title">Förhandsvisning</h2><div id="stage"></div><p id="status" class="status" role="status"></p>
+<div id="occupied" class="occupied" aria-label="Upptagna hexagoner"></div>
+<div class="toolbar" style="margin-top:12px"><button id="download-svg">Hämta SVG</button><button id="download-png">Hämta transparent PNG</button></div>
+<p id="graphic-status" class="note danger"></p></section>
+<p class="note">Bilderna genereras från den gemensamma geometrimotorn. En skapad förhandsvisning är inte en publicerad basbild. Alla systembilder som senare publiceras ska gå via HERMES CORE.</p>
+</main>
+<script src="/features/ui/arcane-geometry-engine.js"></script><script src="/features/ui/arcane-hex-formation-library.js"></script>
+<script>
+const engine=globalThis.aleaArcaneGeometryEngine,library=globalThis.aleaHexFormationLibrary,$=id=>document.getElementById(id);
+let selected=library.get('single-standard'),markup='';
+const countSelect=$('hex-count');
+for(let n=1;n<=9;n++){const option=document.createElement('option');option.value=String(n);option.textContent=n+' hex';countSelect.append(option)}
+countSelect.value='1';
+function options(){return {steps:Number($('rotation').value),mirror:$('mirror').checked,offsets:selected.offsets.slice(),camera:{elevationDegrees:55}}}
+function renderGallery(){
+ const count=Number(countSelect.value),root=$('gallery');root.replaceChildren();
+ library.byCount(count).forEach(item=>{
+  const card=document.createElement('button');card.type='button';card.className='card';card.setAttribute('aria-pressed',String(item.id===selected.id));
+  const thumb=document.createElement('span');thumb.className='thumb';thumb.innerHTML=engine.svg(item.rows,{offsets:item.offsets,camera:{elevationDegrees:55}});
+  const name=document.createElement('strong');name.textContent=item.name;
+  const detail=document.createElement('small');detail.textContent=item.id+' · '+item.count+' hex';
+  card.append(thumb,name,detail);card.addEventListener('click',()=>choose(item));root.append(card);
+ });
+}
+function choose(item){selected=item;countSelect.value=String(item.count);$('rotation').value='0';$('mirror').checked=false;renderGallery();render()}
+function render(){
+ const opts=options(),geom=library.orient(selected,opts),qa=library.audit(selected,opts),engineQa=engine.audit(selected.rows,{...opts,offsets:selected.offsets});
+ markup=engine.svg(selected.rows,opts);$('stage').innerHTML=markup;
+ $('selected-title').textContent=selected.name+' · '+selected.count+' hex · '+selected.id;
+ $('status').textContent=(qa.valid&&engineQa.valid?'GEOMETRI GODKÄND':'GEOMETRI UNDERKÄND')+' · '+qa.outerEdges+' yttre kantsegment · rotation '+qa.rotation+'°'+(opts.mirror?' · speglad':'');
+ const occupied=$('occupied');occupied.replaceChildren();geom.cells.forEach(c=>{const chip=document.createElement('span');chip.className='cell';chip.textContent='q '+c.q+', r '+c.r;occupied.append(chip)});
+ $('graphic-status').textContent='Grafik: dynamiskt genererad förhandsvisning. Statisk HERMES CORE-publicerad bild: saknas.';
+ $('download-svg').disabled=!qa.valid||!engineQa.valid;$('download-png').disabled=!qa.valid||!engineQa.valid;
+}
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('rotation').addEventListener('change',render);$('mirror').addEventListener('change',render);
+countSelect.addEventListener('change',()=>{const items=library.byCount(Number(countSelect.value));choose(items[0])});
+$('download-svg').addEventListener('click',()=>download(new Blob([markup],{type:'image/svg+xml'}),'hex-base-'+selected.id+'-'+$('rotation').value+'x60.svg'));
+$('download-png').addEventListener('click',async()=>{
+ const svgBlob=new Blob([markup],{type:'image/svg+xml'}),url=URL.createObjectURL(svgBlob),img=new Image();
+ try{img.src=url;await img.decode();const scale=Math.min(2,2048/Math.max(img.naturalWidth,img.naturalHeight));const canvas=document.createElement('canvas');canvas.width=Math.ceil(img.naturalWidth*scale);canvas.height=Math.ceil(img.naturalHeight*scale);const ctx=canvas.getContext('2d',{alpha:true});ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);const pixel=ctx.getImageData(0,0,1,1).data;if(pixel[3]!==0)throw new Error('Exportens hörnpixel är inte transparent');canvas.toBlob(blob=>blob?download(blob,'hex-base-'+selected.id+'-'+$('rotation').value+'x60.png'):alert('PNG-exporten misslyckades'),'image/png')}
+ catch(error){alert('PNG-exporten misslyckades: '+error.message)}finally{URL.revokeObjectURL(url)}
+});
+renderGallery();render();
+</script></body></html>
