@@ -1113,7 +1113,7 @@ async function handleRequest(req: Request): Promise<Response> {
           if (!candidateIssue || !candidateBody.includes("- Beslut: PANDORAS ASK") ||
               !candidateBody.includes("- Ärende-ID: PR-" + prMatch[1]) ||
               !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
-          const publication = await liveMergePublicationStatus(token, mergeMatch[1]);
+          const publication = await liveMergePublicationStatus(candidateToken, mergeMatch[1]);
           if (publication.published) publishedCandidatePrs.set(Number(prMatch[1]), mergeMatch[1]);
         }
         const pullRequests = [...byNumber.values()]
