@@ -61,7 +61,7 @@ $('rotation').addEventListener('change',render);$('mirror').addEventListener('ch
 countSelect.addEventListener('change',()=>{const items=library.byCount(Number(countSelect.value));choose(items[0])});
 $('download-svg').addEventListener('click',()=>download(new Blob([markup],{type:'image/svg+xml'}),'hex-base-'+selected.id+'-'+$('rotation').value+'x60.svg'));
 $('download-png').addEventListener('click',async()=>{
- const svgBlob=new Blob([markup],{type:'image/svg+xml'}),url=URL.createObjectURL(svgBlob),img=new Image();
+ const viewBox=markup.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/);if(!viewBox){alert('SVG saknar storleksmått');return}const svgSized=markup.replace('<svg ','<svg width="'+viewBox[1]+'" height="'+viewBox[2]+'" ');const svgBlob=new Blob([svgSized],{type:'image/svg+xml'}),url=URL.createObjectURL(svgBlob),img=new Image();
  try{img.src=url;await img.decode();const scale=Math.min(2,2048/Math.max(img.naturalWidth,img.naturalHeight));const canvas=document.createElement('canvas');canvas.width=Math.ceil(img.naturalWidth*scale);canvas.height=Math.ceil(img.naturalHeight*scale);const ctx=canvas.getContext('2d',{alpha:true});ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);const pixel=ctx.getImageData(0,0,1,1).data;if(pixel[3]!==0)throw new Error('Exportens hörnpixel är inte transparent');canvas.toBlob(blob=>blob?download(blob,'hex-base-'+selected.id+'-'+$('rotation').value+'x60.png'):alert('PNG-exporten misslyckades'),'image/png')}
  catch(error){alert('PNG-exporten misslyckades: '+error.message)}finally{URL.revokeObjectURL(url)}
 });
