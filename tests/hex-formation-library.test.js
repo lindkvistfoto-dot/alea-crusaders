@@ -80,6 +80,29 @@ describe('Universal hex formation library', () => {
     expect(appHtml.indexOf('arcane-geometry-engine.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
     expect(appHtml.indexOf('arcane-hex-formation-library.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
   });
+
+  it('renders the reusable Arcane master in exact hex geometry with a single shared seam', () => {
+    const one = engine.svg([1]);
+    expect(one).toContain('data-components="marble,compass,bronze,sidewall,binding,lion"');
+    expect(one).toContain('<feTurbulence');
+    expect(one).toContain('data-outer-edge-count="6"');
+    expect(one).toContain('data-internal-seam-count="0"');
+    expect((one.match(/data-component="sidewall"/g) || [])).toHaveLength(6);
+    expect((one.match(/data-component="outer-braid"/g) || [])).toHaveLength(6);
+    expect((one.match(/data-component="ivory-marble"/g) || [])).toHaveLength(1);
+    expect((one.match(/data-component="relief-compass"/g) || [])).toHaveLength(1);
+    expect((one.match(/data-component="lion-relief"/g) || [])).toHaveLength(1);
+
+    const two = engine.svg([2]);
+    expect(two).toContain('data-outer-edge-count="10"');
+    expect(two).toContain('data-internal-seam-count="1"');
+    expect((two.match(/data-component="sidewall"/g) || [])).toHaveLength(10);
+    expect((two.match(/data-component="single-internal-seam"/g) || [])).toHaveLength(1);
+    expect((two.match(/data-component="outer-braid"/g) || [])).toHaveLength(10);
+    expect((two.match(/data-component="relief-compass"/g) || [])).toHaveLength(2);
+    expect((two.match(/data-component="lion-relief"/g) || [])).toHaveLength(2);
+  });
+
 });
 
 function sharedPairs(cells) {
