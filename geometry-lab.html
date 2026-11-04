@@ -35,8 +35,9 @@ function choose(item){customMode=false;selected=item;countSelect.value=String(it
 function redrawEditor(){const host=$('row-editor');host.replaceChildren();rows.forEach((n,i)=>{const line=document.createElement('div');line.className='rowline';const label=document.createElement('strong');label.textContent='Rad '+(i+1);const count=document.createElement('input');count.type='number';count.min='1';count.max='20';count.value=n;count.setAttribute('aria-label','Hexagoner på rad '+(i+1));count.addEventListener('change',()=>{const value=Number(count.value);if(!Number.isInteger(value)||value<1||value>20){count.value=rows[i];return}rows[i]=value;customMode=true;render()});const shift=document.createElement('input');shift.type='range';shift.min='-10';shift.max='10';shift.value=offsets[i]||0;shift.setAttribute('aria-label','Förskjutning rad '+(i+1));const text=document.createElement('span');text.textContent=shift.value;shift.addEventListener('input',()=>{offsets[i]=Number(shift.value);text.textContent=shift.value;customMode=true;render()});line.append(label,count,shift,text);host.append(line)})}
 function align(){offsets=e.autoAlign(rows).offsets;customMode=true;redrawEditor();render()}
 function render(){
- const options=opts(),currentRows=activeRows(),catalogPreview=!customMode,geom=catalogPreview?library.orient(selected,options):{cells:e.transform(e.fromRows(currentRows,options),options),outline:library.outline(e.transform(e.fromRows(currentRows,options),options))};
- const engineQa=e.audit(currentRows,options),libraryQa=catalogPreview?library.audit(selected,options):{valid:e.validate(geom.cells).valid,outerEdges:geom.outline.length,count:geom.cells.length,rotation:options.steps*60};
+ try{
+ const options=opts(),rows=activeRows(),catalogPreview=!customMode,geom=catalogPreview?library.orient(selected,options):{cells:e.transform(e.fromRows(rows,options),options),outline:library.outline(e.transform(e.fromRows(rows,options),options))};
+ const engineQa=e.audit(rows,options),libraryQa=catalogPreview?library.audit(selected,options):{valid:e.validate(geom.cells).valid,outerEdges:geom.outline.length,count:geom.cells.length,rotation:options.steps*60};
  valid=engineQa.valid&&libraryQa.valid;markup=valid?e.svg(currentRows,options):'';
  $('stage').innerHTML=markup||'<p>Ogiltig formation: justera radförskjutningen eller välj automatisk kantjustering.</p>';
  $('selected-title').textContent=catalogPreview?selected.name+' · '+selected.count+' hex · '+selected.id:'Egen formation · '+currentRows.reduce((a,b)=>a+b,0)+' hex';
@@ -45,6 +46,7 @@ function render(){
  $('graphic-status').textContent='Grafik: dynamiskt genererad förhandsvisning. Statisk HERMES CORE-publicerad bild: saknas.';
  $('mirror').disabled=catalogPreview&&!selected.mirror_available;
  $('download-svg').disabled=!valid;$('download-png').disabled=!valid;$('manifest').disabled=!valid;
+ }catch(error){valid=false;markup='';$('stage').textContent='Ogiltig formation';$('status').textContent=error.message;$('download-svg').disabled=!valid;$('download-png').disabled=!valid;$('manifest').disabled=!valid}
 }
 function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 countSelect.addEventListener('change',()=>choose(library.byCount(Number(countSelect.value))[0]));
