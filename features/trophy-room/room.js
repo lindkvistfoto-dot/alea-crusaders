@@ -20,19 +20,38 @@ function solveHomography(corners){
 function badgeScreenPoint(p,v){return [v.clientWidth*(.5+(p[0]-.5)*scale)+x,v.clientHeight*(.5+(p[1]-.5)*scale)+y]}
 function positionBadgeWall(v){
  const wall=byId('trophyRoomBadgeWall');if(!wall)return;
- // Recovery: retain saved four corners, but avoid full-viewport calibration
- // layers until the interactive route and per-slot projection are verified.
- const left=.735,top=.315,width=.165,height=.255;
- wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';
- wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';
- wall.style.width=(v.clientWidth*width*scale)+'px';
- wall.style.height=(v.clientHeight*height*scale)+'px';
- wall.style.removeProperty('display');wall.style.removeProperty('padding');
- wall.style.removeProperty('pointer-events');wall.style.removeProperty('transform');
- for(const slot of wall.querySelectorAll('.trophy-room-badge-slot')){
-  slot.style.removeProperty('position');slot.style.removeProperty('left');
-  slot.style.removeProperty('top');slot.style.removeProperty('width');
-  slot.style.removeProperty('height');slot.style.removeProperty('transform');
+ const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
+ // Project each badge independently. Never transform the containing viewport.
+ const h=solveHomography(badgeCorners);
+ const project=(u,t)=>{
+  if(!h)return null;
+  const [a,b,c,d,e,f,g,i]=h,den=g*u+i*t+1;
+  return Math.abs(den)>1e-7?[(a*u+b*t+c)/den,(d*u+e*t+f)/den]:null;
+ };
+ wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';
+ wall.style.transform='none';wall.style.padding='0';wall.style.pointerEvents='none';
+ wall.style.removeProperty('display');
+ for(const [n,slot] of [...wall.querySelectorAll('.trophy-room-badge-slot')].entries()){
+  const col=n%3,row=Math.floor(n/3);
+  const p=project((col+.5)/3,(row+.5)/3);
+  const l=project(col/3,(row+.5)/3),r=project((col+1)/3,(row+.5)/3);
+  const t=project((col+.5)/3,row/3),bt=project((col+.5)/3,(row+1)/3);
+  if(!p||!l||!r||!t||!bt)continue;
+  const dx=(r[0]-l[0])*W,dy=(r[1]-l[1])*H;
+  const horizontal=Math.hypot(dx,dy),vertical=Math.hypot((bt[0]-t[0])*W,(bt[1]-t[1])*H);
+  const size=Math.max(8,Math.min(horizontal,vertical)*.78)*scale;
+  slot.style.position='absolute';
+  slot.style.left=(W*(.5+(p[0]-.5)*scale)+x)+'px';
+  slot.style.top=(H*(.5+(p[1]-.5)*scale)+y)+'px';
+  slot.style.width=size+'px';slot.style.height=size+'px';
+  slot.style.transform='translate(-50%,-50%) rotate('+Math.atan2(dy,dx)+'rad)';
+ }
+ const overlay=byId('trophyBadgeCalibration');
+ if(overlay&&!overlay.hidden){
+  const target=badgeCorners.map(p=>badgeScreenPoint(p,v));
+  overlay.setAttribute('viewBox','0 0 '+W+' '+H);
+  const poly=overlay.querySelector('polygon');if(poly)poly.setAttribute('points',target.map(p=>p.join(',')).join(' '));
+  overlay.querySelectorAll('[data-badge-corner]').forEach((node,j)=>{node.setAttribute('cx',target[j][0]);node.setAttribute('cy',target[j][1])});
  }
 }
 function enableBadgeCalibration(){
@@ -260,7 +279,7 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}if(background.parentElement!==scene)scene.append(background);if(wall.parentElement!==v)v.append(wall);const badgeWall=byId('trophyRoomBadgeWall');if(badgeWall&&badgeWall.parentElement!==v)v.append(badgeWall)}
-function open(){const p=page();if(!p)return;ensureScene();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=true;document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
+function open(){const p=page();if(!p)return;ensureScene();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
  v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion||scale>=1.5)return;const rect=v.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width;focusWall(px<.36?'left':px>.64?'right':'center')});
  v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='ArrowLeft'&&scale<1.5){e.preventDefault();focusWall('left')}else if(e.key==='ArrowRight'&&scale<1.5){e.preventDefault();focusWall('right')}else if(e.key==='0')reset()});
