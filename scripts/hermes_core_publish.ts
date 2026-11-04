@@ -4,6 +4,7 @@ import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 import {createHermesCore} from "../features/hermes-core/core.js";
 import {createCoreActionsTargetAdapter} from "../features/hermes-core/actions-target-adapter.js";
 import {createCoreSystemReservation} from "../features/hermes-core/system-reservation.js";
+import {coreAppImagePath,resolveCoreAppImageTarget} from "../features/hermes-core/app-image-targets.js";
 
 const [outputDir] = Deno.args;
 const repository = Deno.env.get("GITHUB_REPOSITORY") || "";
@@ -16,7 +17,8 @@ if (!outputDir || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
 const targetKind = prepared.target?.kind ?? "system";
-if (!["system","honor-definition","honor-relief"].includes(targetKind)) throw new Error("INVALID_CORE_TARGET");
+const appTarget=resolveCoreAppImageTarget(targetKind);
+if (!["system","honor-definition","honor-relief"].includes(targetKind) && !appTarget) throw new Error("INVALID_CORE_TARGET");
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
 const source = new Blob([originalBytes], {type: prepared.source_mime});
@@ -25,7 +27,13 @@ const db = createClient(url, secret, {auth: {persistSession: false}});
 const reserveSystem = createCoreSystemReservation();
 const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
   : "arcane-" + targetKind + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
-const reserveAsset = async ({metadata}: any) => reserveSystem({target:{kind:"system",id:registryKey},metadata});
+const reserveAsset = async ({target,metadata}: any) => {
+  if (appTarget) {
+    const path=coreAppImagePath(targetKind,target.id,metadata.sha256);
+    return {key:path,path,bucket:appTarget.bucket,metadata};
+  }
+  return reserveSystem({target:{kind:"system",id:registryKey},metadata});
+};
 const bucket = "alea-hermes-public";
 const {readTarget, activate} = createCoreActionsTargetAdapter({db,prepared,registryKey});
 
@@ -51,7 +59,7 @@ async function publishWebP({target, webp: image}: any) {
     throw new Error("WEBP_PREPARATION_MISMATCH");
   }
   const asset = await reserveAsset({target, metadata});
-  const storage = db.storage.from(bucket);
+  const storage = db.storage.from(appTarget?.bucket || "alea-hermes-public");
   const {error: uploadError} = await storage.upload(asset.path, image, {
     contentType: "image/webp", upsert: false, cacheControl: "31536000",
   });
@@ -63,8 +71,15 @@ async function publishWebP({target, webp: image}: any) {
   if (await sha256(new Uint8Array(await downloaded.arrayBuffer())) !== metadata.sha256) {
     throw new Error("SUPABASE_READBACK_HASH_MISMATCH");
   }
-  const publicUrl = storage.getPublicUrl(asset.path).data?.publicUrl;
-  const response = publicUrl ? await fetch(publicUrl, {cache: "no-store"}) : null;
+  let readbackUrl: string | null = null;
+  if (appTarget?.bucket === "alea-spell-art" || appTarget?.bucket === "alea-skill-art") {
+    const {data:signed,error:signedError}=await storage.createSignedUrl(asset.path,60);
+    if (signedError) throw new Error("SUPABASE_SIGNED_READBACK_URL_FAILED");
+    readbackUrl=signed?.signedUrl??null;
+  } else {
+    readbackUrl=storage.getPublicUrl(asset.path).data?.publicUrl??null;
+  }
+  const response = readbackUrl ? await fetch(readbackUrl, {cache: "no-store"}) : null;
   if (!response?.ok || await sha256(new Uint8Array(await response.arrayBuffer())) !== metadata.sha256) {
     throw new Error("SUPABASE_PUBLIC_IMAGE_READBACK_FAILED");
   }
@@ -94,7 +109,7 @@ const publication = {
   source_dev_sha: prepared.source_dev_sha ?? null,
   target,
   image_reference: result.activation.key,
-  path: `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
+  path: appTarget ? result.activation.key : `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
   webp_sha256: prepared.webp_sha256,
   webp_bytes: prepared.webp_bytes,
   width: prepared.width,
