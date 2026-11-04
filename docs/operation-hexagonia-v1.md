@@ -12,7 +12,7 @@ Kanonisering tar bort translation och identifierar samma form under 60-graders r
 
 ## Befintligt stridsfotavtryck
 
-`features/combat/footprint.js` mappar nu single, line2, triangle3, line3 och giant7 från det gemensamma katalogbiblioteket. Riktning, kollisionskontroll, räckvidd, rörelse och RPC-kontrakt är oförändrade. SQL/RPC-sidan behåller sin verifierade legacy-mappning; riktade tester jämför dess fem JS-fotavtryck mot de befintliga celluppsättningarna. En separat databasändring krävs inte i denna etapp.
+`index.html` laddar den gemensamma geometrimotorn och formationskatalogen före `features/combat/footprint.js`. JavaScript-fotavtrycken single, line2, triangle3, line3 och giant7 hämtas nu från katalogen; riktning, kollisionskontroll, räckvidd, rörelse och RPC-kontrakt är oförändrade. SQL/RPC-sidan behåller sin verifierade legacy-mappning, och riktade tester jämför JavaScript-cellerna mot befintliga former. En liten fallback bevarar äldre isolerade skriptharnesser som saknar katalogen. Dockfabrikens figur-/basväljare är ännu inte direkt ansluten till katalogen.
 
 ## Grafik och publicering
 
@@ -26,7 +26,7 @@ HERMES CORE:s befintliga generiska `system`-mål passar senare basbilder. En per
 - **B – geometri/data:** katalog och orienterings-API klara som prototyp; algebraiska tester finns.
 - **C – grafisk motor:** återstår för production-grade reliefmaterial, förenad ytterkontur, kamerakalibrering och PNG/WebP alfaverifiering.
 - **D – Geometry Lab:** formationsfilter, miniatyrer, rotation, spegling, upptagna koordinater och SVG/PNG-export implementerade. Mobil och live-preview behöver verifieras i Cloudflare.
-- **E – integration:** Geometry Lab och Dockfabrikens runtime-script laddar samma formationskatalog före combat footprint-funktionen; befintliga fotavtrycksformer, riktningar och stridsregler bevaras.
+- **E – integration:** JavaScript-stridsfotavtrycken använder nu katalogen med bevarade celluppsättningar. Dockfabrikens direkta basval/rendering och SQL/RPC-katalogdelning återstår.
 - **F – verifiering:** lokala riktade geometritester körda; CI, MINOTAURUS och Cloudflare-preview återstår.
 
 ## Geometriskt grundbibliotek
