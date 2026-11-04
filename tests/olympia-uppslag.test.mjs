@@ -76,8 +76,10 @@ describe('OLYMPIA UPPSLAG', () => {
     const edge = read('../supabase/functions/olympia-control/index.ts');
     const migration = read('../supabase/migrations/20261103235000_olympia_uppslag.sql');
     expect(page).toContain("api({action:'idea_list'})");
-    expect(page).toContain('Verifiera LIVE och slutför');
-    expect(page).toContain('jämför tidigare kod med aktuell');
+    expect(page).toContain('ideas-table');
+    expect(page).toContain('data-priority');
+    expect(page).toContain('data-delete');
+    expect(page).toContain('Historiska PR:ar');
     expect(bridge).toContain('https://wkiuyklzzroavclnsxna.supabase.co/functions/v1/olympia-control');
     expect(edge).toContain('"/pull/" + number');
     expect(edge).toContain('data.action === "idea_list"');
