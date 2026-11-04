@@ -7,11 +7,16 @@ function clampCamera(){const v=viewport();if(!v)return;const maxX=Math.max(0,(sc
 function positionMedalWall(v){const wall=byId('trophyRoomMedalWall');if(!wall)return;const left=.4073,top=.2769,width=.1931,height=.3277;wall.style.left=(v.clientWidth*(.5+(left-.5)*scale)+x)+'px';wall.style.top=(v.clientHeight*(.5+(top-.5)*scale)+y)+'px';wall.style.width=(v.clientWidth*width*scale)+'px';wall.style.height=(v.clientHeight*height*scale)+'px'}
 /* Right wall is an independent 3x3 badge plane; camera follows the medal wall. */
 const BADGE_CAL_KEY='alea:trophy:badge-wall-corners:v1';
-// Normalized room-viewport fallback, not the approved browser calibration.
-// Screenshot pixel coordinates must not be substituted for viewport coordinates.
-const BADGE_DEFAULT_CORNERS=[[.735,.315],[.90,.30],[.90,.555],[.735,.57]];
+// Zeus-approved four corners, recovered verbatim from the original branch preview.
+// Normalized to the room viewport; the perspective engine applies zoom and pan.
+// Do not override these defaults with browser-local values on page load.
+const BADGE_DEFAULT_CORNERS=[
+ [0.7870891876614987,0.2888314872875548],
+ [0.9175624798126615,0.2015233732524671],
+ [0.9159727269056848,0.581491884822734],
+ [0.7910635699289406,0.5939644725420322]
+];
 let badgeCorners=BADGE_DEFAULT_CORNERS.map(p=>p.slice());
-try{const saved=JSON.parse(root.localStorage.getItem(BADGE_CAL_KEY)||'null');if(Array.isArray(saved)&&saved.length===4&&saved.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))badgeCorners=saved}catch(_){}
 function exportBadgeCorners(){
  const output=byId('trophyBadgeExportResult');
  if(!output)return;
