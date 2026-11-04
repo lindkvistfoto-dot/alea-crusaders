@@ -29,6 +29,13 @@ describe('OLYMPIA generic HTML reconciliation',()=>{
     expect(result.reason).toBe('overlapping-edits');
   });
 
+
+  it('merges an insertion at the edge of a deletion as adjacent text',()=>{
+    const base='abcde';
+    const result=mergeTextThreeWay(base,'abde','abc!de');
+    expect(result.handled).toBe(true);
+    expect(result.text).toBe('ab!de');
+  });
   it('allows identical edits already present in LIVE',()=>{
     const base='<html><body><button>Old</button></body></html>';
     const changed=base.replace('Old','New');

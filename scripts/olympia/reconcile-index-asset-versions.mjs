@@ -144,8 +144,8 @@ function diffTextEdits(before, after) {
 function textEditsOverlap(a,b){
   if(a.start===b.start&&a.end===b.end&&a.text===b.text)return false;
   if(a.start===a.end&&b.start===b.end)return a.start===b.start;
-  if(a.start===a.end)return a.start>=b.start&&a.start<=b.end;
-  if(b.start===b.end)return b.start>=a.start&&b.start<=a.end;
+  if(a.start===a.end)return a.start>b.start&&a.start<b.end;
+  if(b.start===b.end)return b.start>a.start&&b.start<a.end;
   return a.start<b.end&&b.start<a.end;
 }
 export function mergeTextThreeWay(base,source,target){
