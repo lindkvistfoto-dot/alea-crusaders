@@ -63,7 +63,7 @@ describe('HERMES CORE declarative image contract',()=>{
   expect(target.profile_id).toBe('skill-icon');
   expect(target.kind).toBe('skill');
   expect(coreAppImagePath('skill-icon','combat-training','a'.repeat(64))).toBe(
-   'hermes/core/skill-icon/combat-training/'+ 'a'.repeat(64)+'.webp'
+   'hermes/core/skill/combat-training/'+ 'a'.repeat(64)+'.webp'
   );
  });
 });
