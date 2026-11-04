@@ -4,12 +4,14 @@ import {runInNewContext} from 'node:vm';
 
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
+const geometry=readFileSync(new URL('../features/ui/arcane-geometry-engine.js',import.meta.url),'utf8');
+const formations=readFileSync(new URL('../features/ui/arcane-hex-formation-library.js',import.meta.url),'utf8');
 function slice(start,end){
  const a=runtime.indexOf(start),b=runtime.indexOf(end,a+start.length);
  if(a<0||b<a)throw Error('Missing LEJON code '+start+' -> '+end);
  return runtime.slice(a,b);
 }
-const code=footprint+'\n'+[
+const code=geometry+'\n'+formations+'\n'+footprint+'\n'+[
  slice('function combatMagicCastingRules(', 'function combatSpellOptions('),
  slice('function combatSpellRangeHexes(', 'function combatCurrentAttackTargets('),
  slice('function combatEffectIsActive(', 'function combatEffectExpiry(')
