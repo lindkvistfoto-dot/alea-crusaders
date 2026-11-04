@@ -68,7 +68,10 @@
     return edges;
   }
   const catalog = recipes.map(([id, name, label, rows, family]) => {
-    const aligned = engine.autoAlign(rows);
+    const manualOffsets = id === 'seven-standard' ? [1, 1, 1] : null;
+    const aligned = manualOffsets
+      ? engine.buildRows(rows, { offsets: manualOffsets })
+      : engine.autoAlign(rows);
     const cells = aligned.cells.map(c => ({ q: c.q, r: c.r }));
     const check = engine.validate(cells);
     if (!check.valid) throw new Error(`Invalid built-in formation: ${id}`);
