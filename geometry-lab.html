@@ -38,9 +38,9 @@ function render(){
  try{
  const options=opts(),rows=activeRows(),catalogPreview=!customMode,geom=catalogPreview?library.orient(selected,options):{cells:e.transform(e.fromRows(rows,options),options),outline:library.outline(e.transform(e.fromRows(rows,options),options))};
  const engineQa=e.audit(rows,options),libraryQa=catalogPreview?library.audit(selected,options):{valid:e.validate(geom.cells).valid,outerEdges:geom.outline.length,count:geom.cells.length,rotation:options.steps*60};
- valid=engineQa.valid&&libraryQa.valid;markup=valid?e.svg(currentRows,options):'';
+ valid=engineQa.valid&&libraryQa.valid;markup=valid?e.svg(rows,options):'';
  $('stage').innerHTML=markup||'<p>Ogiltig formation: justera radförskjutningen eller välj automatisk kantjustering.</p>';
- $('selected-title').textContent=catalogPreview?selected.name+' · '+selected.count+' hex · '+selected.id:'Egen formation · '+currentRows.reduce((a,b)=>a+b,0)+' hex';
+ $('selected-title').textContent=catalogPreview?selected.name+' · '+selected.count+' hex · '+selected.id:'Egen formation · '+rows.reduce((a,b)=>a+b,0)+' hex';
  $('status').textContent=(valid?'GEOMETRI GODKÄND':'GEOMETRI UNDERKÄND')+' · '+(libraryQa.outerEdges||engineQa.outerEdges)+' yttre kantsegment · rotation '+options.steps*60+'°'+(options.mirror?' · speglad':'');
  const occupied=$('occupied');occupied.replaceChildren();geom.cells.forEach(c=>{const chip=document.createElement('span');chip.className='cell';chip.textContent='q '+c.q+', r '+c.r;occupied.append(chip)});
  $('graphic-status').textContent='Grafik: dynamiskt genererad förhandsvisning. Statisk HERMES CORE-publicerad bild: saknas.';
