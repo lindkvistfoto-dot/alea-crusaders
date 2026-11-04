@@ -100,7 +100,6 @@ def select(changed_paths: list[str]) -> dict[str, object]:
     full = any(
         path in FULL_FILES
         or path.startswith((".github/workflows/", "tests/helpers/", "supabase/", "config/"))
-        or path.startswith(("tests/", "scripts/"))
         for path in paths
     )
 
