@@ -39,12 +39,16 @@ function positionBadgeWall(v){
   if(!p||!l||!r||!t||!bt)continue;
   const dx=(r[0]-l[0])*W,dy=(r[1]-l[1])*H;
   const horizontal=Math.hypot(dx,dy),vertical=Math.hypot((bt[0]-t[0])*W,(bt[1]-t[1])*H);
-  const size=Math.max(8,Math.min(horizontal,vertical)*.78)*scale;
+  // Keep frame sides vertical: skewY changes top/bottom slope without rotation.
+  // Right-hand columns are progressively larger, as the wall approaches the viewer.
+  const size=Math.max(8,Math.min(horizontal,vertical)*.68)*(1+col*.095)*scale;
+  const topSlope=Math.atan2(dy,dx);
+  const skew=Math.max(-.14,Math.min(.14,topSlope*(1-row*.32)));
   slot.style.position='absolute';
-  slot.style.left=(W*(.5+(p[0]-.5)*scale)+x)+'px';
+  slot.style.left=(W*(.5+(p[0]+.027-.5)*scale)+x)+'px';
   slot.style.top=(H*(.5+(p[1]-.5)*scale)+y)+'px';
   slot.style.width=size+'px';slot.style.height=size+'px';
-  slot.style.transform='translate(-50%,-50%) rotate('+Math.atan2(dy,dx)+'rad)';
+  slot.style.transform='translate(-50%,-50%) skewY('+skew+'rad)';
  }
  const overlay=byId('trophyBadgeCalibration');
  if(overlay&&!overlay.hidden){
