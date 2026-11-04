@@ -50,9 +50,11 @@ jobs:
       - name: Level 2 – application tests and build
         if: inputs.level == '2'
         run: npm run check
-      - name: Level 3 – full application check
+      - name: Level 3 – full application tests excluding MINOTAURUS-owned suites
         if: inputs.level == '3'
-        run: npm run check
+        run: |
+          npm run test -- --exclude tests/minotaurus-publisher.test.mjs --exclude tests/hermes4-batch-publisher.test.mjs --exclude tests/hermes-system-assets-publisher.test.mjs
+          npm run build
       - name: Level 3 – MINOTAURUS Python and HERMES checks
         if: inputs.level == '3'
         run: |
