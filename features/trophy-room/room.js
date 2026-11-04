@@ -136,7 +136,9 @@ async function renderBadges(){
   const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
   // Reserve nine positions; render each awarded badge only once.
   for(let index=0;index<9;index++){
-   const d=awarded[index];
+   // Fill each row right-to-left, while preserving the nine fixed perspective slots.
+   const row=Math.floor(index/3),column=index%3;
+   const d=awarded[row*3+(2-column)];
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');slot.setAttribute('aria-hidden','true');wall.append(slot);continue}
    slot.title=d.name;
