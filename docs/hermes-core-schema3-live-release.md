@@ -160,7 +160,7 @@ The GitHub connector cannot inspect the stored secret or prove its project bindi
 
 The arcane-paper-doll-workshop.js client uploads through the authenticated ALEA Pages session to alea-battle-pose-staging and creates hermes_web_jobs; the scheduled worker then archives and publishes pose files. This is Pages-originated, so under the accepted upload-source rule it belongs to HERMES ALEA, not CORE. Current ALEA target RPCs allow honor definitions and relief variants; no ALEA battle-pose target is verified. The existing 4.1 publisher must therefore remain until ALEA coverage is separately implemented and verified. This CORE candidate does not change or disable it.
 
-PR #610 is merged to DEV. This candidate carries its narrow runtime cleanup: the 5-minute worker no longer checks out tests or runs py_compile and the offline unittest suite; publication, scheduling, credential checks, and runtime prerequisites remain. Tests stay in the existing PR test workflow. The 4.1 publisher itself remains active.
+PR #610 is merged to DEV. This candidate carries PR #610’s narrow runtime cleanup: the 5-minute worker no longer checks out tests or runs py_compile and the offline unittest suite. It also removes the workflow-file self-trigger so merging this configuration does not immediately start the LIVE worker. Scheduled/manual delivery and worker-code-change triggers remain. Tests stay in the existing PR test workflow. The 4.1 publisher itself remains active.
 
 ## Release and rollback sequence
 
