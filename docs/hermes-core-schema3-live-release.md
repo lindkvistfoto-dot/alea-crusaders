@@ -29,6 +29,23 @@ For each of these 15 tables — rule_weapons, rule_shields, rule_armor_types, ru
 
 The existing REFERENCES, TRIGGER, TRUNCATE, and MAINTAIN ACL entries are granted directly to service_role by postgres and are not grantable. They predate this release and the candidate does not change them. The recursive role-membership check found no parent roles whose privileges service_role inherits. Effective checks also found no PUBLIC or inherited SELECT/INSERT/UPDATE/DELETE access to these tables. On every column in these tables, the only effective column privilege found before the proposal was REFERENCES. In particular, SELECT and UPDATE were false for every column in the proposed lists below.
 
+### Existing CORE targets already authorized
+
+The LIVE contract was also checked for existing adapters outside the 15-table grant set, so the new SQL does not duplicate their rights:
+
+| Existing target | Effective LIVE access before release |
+|---|---|
+| rule_spells | Table SELECT and UPDATE; all declared image pointers also have effective SELECT/UPDATE |
+| rule_magic_symbols | Table SELECT and UPDATE; declared image pointer has effective SELECT/UPDATE |
+| rule_skills | Table SELECT; the declared icon/illustration pointer columns have effective SELECT/UPDATE (table UPDATE is false) |
+| honor_definitions | Table SELECT; image_asset_id has effective SELECT/UPDATE; image_revision is SELECT-only |
+| honor_relief_variants | Table SELECT; image_asset_id has effective SELECT/UPDATE; image_revision is SELECT-only |
+| global_npcs | Table SELECT and UPDATE; npc_key, image_path, and image_reference have effective SELECT; image_path and image_reference have UPDATE |
+| combatant_battle_poses | Table SELECT and UPDATE; all declared lookup/guard fields have SELECT, and image_path/source metadata have UPDATE |
+| arcane_system_assets | Table SELECT; asset_key/asset_path are SELECT; asset_path is UPDATE; id/asset_key/label have column INSERT |
+
+These rights are pre-existing and are not included in the proposed grants or rollback. In particular, no UPDATE on honor image_revision is needed by the current adapter.
+
 The proposed statements add only column-level SELECT on the lookup, path, and guard columns CORE reads, and column-level UPDATE on the image pointer and explicitly declared image metadata it writes. Expected after-state: those listed column privileges become true; table-level SELECT/INSERT/UPDATE/DELETE remain false; all existing REFERENCES/TRIGGER/TRUNCATE/MAINTAIN privileges remain unchanged; and no INSERT, DELETE, sequence, RLS, or policy permission is added.
 
 The existing arcane_system_assets adapter is a separate exception and needs no new grant: LIVE already has table-level SELECT; column SELECT on asset_key and asset_path; column UPDATE on asset_path; and column INSERT on id, asset_key, and label. It has no table-level INSERT or UPDATE. No sequence privilege is needed because app-image target rows must already exist and the registry’s narrow column INSERT privileges suffice.
