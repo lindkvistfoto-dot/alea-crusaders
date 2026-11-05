@@ -95,7 +95,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    for(const [column,value] of Object.entries(appTarget.required_row_values??{}))update=update.eq(column,value);
    for(const column of appTarget.guard_columns??[]){
     const value=previous.row[column];
-    update=value===null||value===undefined?update.is(column,null):update.eq(column,value);
+    update=value===null||value===undefined?update.is(column,null):update.eq(column,postgrestFilterValue(value));
    }
    if(appTarget.metadata_column){
     const oldMetadata=previous.row[appTarget.metadata_column];
