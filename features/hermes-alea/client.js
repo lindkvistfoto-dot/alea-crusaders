@@ -11,13 +11,15 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
  const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});
  try{
   if(!bitmap.width||!bitmap.height||bitmap.width>limits.maxWidth||bitmap.height>limits.maxHeight||bitmap.width*bitmap.height>limits.maxPixels)throw Error('Bilden överskrider bildprofilens dimensionsgräns.');
-  const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
+  const scale=Math.min(1,(limits.outputMaxEdge??Math.max(bitmap.width,bitmap.height))/Math.max(bitmap.width,bitmap.height));
+  const width=Math.max(1,Math.round(bitmap.width*scale)),height=Math.max(1,Math.round(bitmap.height*scale));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('Webbläsaren kan inte konvertera bilden.');
-  ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+  ctx.drawImage(bitmap,0,0,width,height);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
   if(limits.requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Bildprofilen kräver äkta transparent bakgrund.');
-  const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
+  const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',limits.quality??.92));
   if(!output||output.type!=='image/webp'||output.size>limits.maxBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
-  const check=await createImageBitmap(output);try{if(check.width!==bitmap.width||check.height!==bitmap.height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
+  const check=await createImageBitmap(output);try{if(check.width!==width||check.height!==height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
   return output;
  }finally{bitmap.close();}
 }
@@ -62,13 +64,18 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
     throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
   const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
   const expected_revision=Number(target.image_revision||0);
-  const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:target.image_asset_id?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
+  const pose=['combatant-pose','race-pose'].includes(targetKind);
+  const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:(pose?target.image_path:target.image_asset_id)?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
   meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
   const job=await rpc('hermes_alea_begin',{request:meta});
   if(job.state==='activated')return job;
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
   await uploadBlob(SOURCE_BUCKET,job.source_path,file);
+  if(pose){
+   onStatus('verifying');
+   await json('/functions/v1/hermes-alea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:job.id})});
+  }
   onStatus('activating');
   const result=await rpc('hermes_alea_finalize',{job_id:job.id});
   onStatus('completed');

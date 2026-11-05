@@ -1,4 +1,4 @@
-import {validatePair} from './validation.mjs';
+import {validatePair,sha256} from './validation.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function createVerifyHandler({env,decode,fetcher=fetch}){
  return async request=>{
@@ -41,6 +41,19 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
    const source=await download('hermes-alea-originals',job.source_path,job.source_bytes);
    const output=await download('hermes-alea-display',job.output_path,job.output_bytes);
    const receipt=await validatePair(job,source,output,decode);
+   if(['combatant-pose','race-pose'].includes(job.target_kind)){
+    const segment=job.target_kind==='race-pose'?'race-battle-pose-cutout':'battle-pose-cutout';
+    const path='hermes/'+segment+'/'+job.target_id+'/'+receipt.output_sha256+'.webp';
+    const uploaded=await fetcher(url+'/storage/v1/object/alea-hermes-public/'+path,{
+     method:'POST',headers:{...trusted,'Content-Type':'image/webp','x-upsert':'false'},body:output
+    });
+    if(!uploaded.ok){
+     const duplicate=await uploaded.json().catch(()=>null);
+     if(uploaded.status!==409&&duplicate?.statusCode!=='409'&&duplicate?.error!=='Duplicate')throw Error('POSE_OUTPUT_UPLOAD_FAILED');
+    }
+    const stored=await download('alea-hermes-public',path,job.output_bytes);
+    if(stored.length!==job.output_bytes||await sha256(stored)!==receipt.output_sha256)throw Error('POSE_OUTPUT_READBACK_FAILED');
+   }
    await json('/rest/v1/rpc/hermes_alea_verify',{method:'POST',headers:trusted,body:JSON.stringify({job_id,receipt})});
    return reply({verified:true});
   }catch(error){

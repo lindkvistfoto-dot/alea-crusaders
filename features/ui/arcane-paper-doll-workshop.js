@@ -39,8 +39,8 @@
    '</div></div></div>'+ 
    '<div class="apdw-controls"><div class="apdw-cutout-controls"><b>Montera figur på vald bas</b><p class="apdw-help">Basen ligger kvar underst. Figuren placeras i ett separat transparent lager ovanpå.</p><label for="apdwCutoutFile">Ladda upp FIGUR / CUTOUT (PNG/WebP)</label><input id="apdwCutoutFile" type="file" accept="image/png,image/webp"><label>Storlek <input id="apdwCutoutScale" type="range" min="20" max="150" value="'+cutoutScale+'"><output id="apdwCutoutScaleOut">'+cutoutScale+'%</output></label><label>Sidled <input id="apdwCutoutX" type="range" min="-80" max="80" value="'+cutoutX+'"><output id="apdwCutoutXOut">'+cutoutX+'%</output></label><label>Höjd <input id="apdwCutoutY" type="range" min="-80" max="80" value="'+cutoutY+'"><output id="apdwCutoutYOut">'+cutoutY+'%</output></label><button type="button" data-action="clear-cutout" class="btn">Ta bort cutout</button><small>Endast lokal förhandsvisning. Ingen publicering.</small></div>'+ 
    '<div class="apdw-control-grid"></div>'+ 
-   '<section class="apdw-pose-admin"><h3>Grundrasposer – förberedelse</h3><label>Grundras <select id="apdwRaceSelect"><option value="">Välj grundras…</option>'+raceCatalog.map(r=>'<option value="'+escape(r.id)+'" '+(r.id===selectedRace?'selected':'')+'>'+escape(r.name)+'</option>').join('')+'</select></label><label>Könsvariant <select id="apdwRaceGender"><option value="neutral" '+(selectedGender==='neutral'?'selected':'')+'>Könsneutral</option><option value="male" '+(selectedGender==='male'?'selected':'')+'>Man</option><option value="female" '+(selectedGender==='female'?'selected':'')+'>Kvinna</option></select></label><label>Raspose <select id="apdwRacePoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-race-pose" class="btn primary">Publicera raspose via HERMES</button><p class="apdw-help">Rasposen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
-   '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Spara och leverera via HERMES</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Sparar cutout och monteringsprofil samt skapar ett leveransjobb hos HERMES. Posen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
+   '<section class="apdw-pose-admin"><h3>Grundrasposer – förberedelse</h3><label>Grundras <select id="apdwRaceSelect"><option value="">Välj grundras…</option>'+raceCatalog.map(r=>'<option value="'+escape(r.id)+'" '+(r.id===selectedRace?'selected':'')+'>'+escape(r.name)+'</option>').join('')+'</select></label><label>Könsvariant <select id="apdwRaceGender"><option value="neutral" '+(selectedGender==='neutral'?'selected':'')+'>Könsneutral</option><option value="male" '+(selectedGender==='male'?'selected':'')+'>Man</option><option value="female" '+(selectedGender==='female'?'selected':'')+'>Kvinna</option></select></label><label>Raspose <select id="apdwRacePoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-race-pose" class="btn primary">Publicera rasposebild via ALEA</button><p class="apdw-help">Bilden publiceras utan att ändra aktivering, bas eller mounting.</p></section>'+
+   '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Publicera posebild via ALEA</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Nya poseutkast sparar vald profil. Bildpubliceringen bevarar befintlig aktivering, bas och mounting.</p></section>'+
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
   arrangeWorkspace();bind();$('apdwRaceSelect')?.addEventListener('change',e=>{selectedRace=e.target.value});$('apdwRaceGender')?.addEventListener('change',e=>{selectedGender=e.target.value});applyAssets();applyBaseMode();
@@ -139,88 +139,59 @@
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(record.id))throw new Error('Kombattanten saknar permanent UUID.');
   return {record,poseKey:$('apdwPoseKey')?.value||'standard'};
  }
- async function stageCutout(record,poseKey){
-  if(!cutoutFile)throw new Error('Ladda upp en cutout (PNG/WebP) innan du sparar.');
-  if(!['image/png','image/webp'].includes(cutoutFile.type)||cutoutFile.size>12000000||cutoutFile.size<1)throw new Error('Cutouten måste vara PNG/WebP och högst 12 MB.');
+ let poseUploader;
+ async function uploadPoseImage(kind,pose){
+  if(!cutoutFile)throw new Error('Välj en cutout innan bilden publiceras.');
   if(typeof authFetch!=='function'||typeof supabaseSession==='undefined'||!supabaseSession?.access_token)throw new Error('Autentiserad lagringsanslutning saknas.');
-  const extension=cutoutFile.type==='image/png'?'png':'webp';
-  const path='battle-pose/'+record.kind+'/'+record.id+'/'+poseKey+'/'+crypto.randomUUID()+'.'+extension;
-  const response=await authFetch('/storage/v1/object/alea-battle-pose-staging/'+path,{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token,'Content-Type':cutoutFile.type,'x-upsert':'false'},body:cutoutFile});
-  if(!response.ok)throw new Error('Cutout kunde inte lagras ('+response.status+'): '+(await response.text()).slice(0,180));
-  return path;
+  if(!poseUploader){
+   const {createBattlePoseUploader}=await import(new URL('./features/hermes-alea/battle-poses.js',document.baseURI).href);
+   poseUploader=createBattlePoseUploader({
+    rpc:(name,args)=>dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)}),
+    request:(path,options={})=>authFetch(path,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+supabaseSession.access_token}})
+   });
+  }
+  const job=await poseUploader.upload({targetKind:kind,target:pose,file:cutoutFile,onStatus:stage=>{
+   const labels={preparing:'Förbereder WebP…',uploading:'Bevarar original och laddar upp bilden…',verifying:'Verifierar bild, SHA-256 och återläsning…',activating:'Sparar bildreferensen…'};
+   if(labels[stage])setStatus(labels[stage]);
+  }});
+  const segment=kind==='race-pose'?'race-battle-pose-cutout':'battle-pose-cutout';
+  cutoutUrl=SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/hermes/'+segment+'/'+pose.id+'/'+job.output_sha256+'.webp';
+  applyCutout();
+  setStatus('Bilden är verifierad och sparad via HERMES ALEA. Originalet är bevarat privat och arkiveringen är köad. Aktivering, bas och mounting är oförändrade.');
  }
+ function newPoseMounting(poseName){return {schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:BASE_STANDARD_LEGACY}};}
  async function saveRacePose(){
   if(!isAdmin())throw new Error('Endast administratörer får publicera rasposer.');
-  if(!selectedRace||!raceCatalog.some(r=>r.id===selectedRace))throw new Error('Välj en giltig grundras.');
-  if(!['male','female','neutral'].includes(selectedGender))throw new Error('Ogiltig könsvariant.');
-  const poseKey=$('apdwRacePoseKey')?.value||'standard';
-  const poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
+  if(!selectedRace||!raceCatalog.some(r=>r.id===selectedRace)||!['male','female','neutral'].includes(selectedGender))throw new Error('Välj en giltig grundras och könsvariant.');
+  if(!cutoutFile)throw new Error('Välj en cutout.');
+  const poseKey=$('apdwRacePoseKey')?.value||'standard',poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
   if(!poseName)throw new Error('Ogiltig raspose.');
-  if(!cutoutFile)throw new Error('Välj en cutout innan rasposen publiceras.');
-  const query='race_battle_poses?select=id,publication_status,staging_path,pending_staging_path&race_id=eq.'+encodeURIComponent(selectedRace)+'&gender_variant=eq.'+selectedGender+'&pose_key=eq.'+encodeURIComponent(poseKey);
-  const existing=(await dbJson(query))?.[0];
-  if(existing?.publication_status==='published'&&!root.confirm('Ersätt publicerad raspose? Den gamla bilden förblir aktiv tills HERMES har verifierat ersättningen.'))return;
-  if(existing?.id){
-   const pending=await dbJson('hermes_web_jobs?select=id&race_pose_id=eq.'+existing.id+'&state=in.(queued,archiving,archived,optimizing,publishing)&limit=1');
-   if(pending?.length)throw new Error('HERMES arbetar redan med denna raspose.');
+  const query='race_battle_poses?select=*&race_id=eq.'+encodeURIComponent(selectedRace)+'&gender_variant=eq.'+selectedGender+'&pose_key=eq.'+encodeURIComponent(poseKey);
+  let pose=(await dbJson(query))?.[0];
+  if(pose?.image_path&&!root.confirm('Ersätt rasposens bild? Aktivering, bas och mounting ändras inte.'))return;
+  if(!pose){
+   pose=(await dbJson('race_battle_poses',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({race_id:selectedRace,gender_variant:selectedGender,pose_key:poseKey,base_key:currentBase().key,mounting_profile:newPoseMounting(poseName),publication_status:'draft',is_active:false})}))?.[0];
   }
-  const extension=cutoutFile.type==='image/png'?'png':cutoutFile.type==='image/webp'?'webp':null;
-  if(!extension||cutoutFile.size<1||cutoutFile.size>12000000)throw new Error('Cutouten måste vara PNG/WebP, högst 12 MB.');
-  if(typeof authFetch!=='function'||!supabaseSession?.access_token)throw new Error('Autentiserad lagringsanslutning saknas.');
-  const staged='race-battle-pose/'+selectedRace+'/'+selectedGender+'/'+poseKey+'/'+crypto.randomUUID()+'.'+extension;
-  const uploaded=await authFetch('/storage/v1/object/alea-battle-pose-staging/'+staged,{method:'POST',headers:{Authorization:'Bearer '+supabaseSession.access_token,'Content-Type':cutoutFile.type,'x-upsert':'false'},body:cutoutFile});
-  if(!uploaded.ok)throw new Error('Mellanlagring misslyckades: '+uploaded.status);
-  const mounting={schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:BASE_STANDARD_LEGACY}};
-  const replacing=existing?.publication_status==='published';
-  const fields=replacing?{pending_staging_path:staged,pending_base_key:currentBase().key,pending_mounting_profile:mounting}:{race_id:selectedRace,gender_variant:selectedGender,pose_key:poseKey,staging_path:staged,base_key:currentBase().key,mounting_profile:mounting,publication_status:'draft',is_active:false};
-  const saved=await dbJson(existing?'race_battle_poses?id=eq.'+existing.id:'race_battle_poses',{method:existing?'PATCH':'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(fields)});
-  const poseId=saved?.[0]?.id;
-  if(!poseId)throw new Error('Rasposen sparades inte. HERMES-jobb skapades inte.');
-  await dbJson('hermes_web_jobs',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({race_pose_id:poseId,asset_kind:'race-battle-pose-cutout',source_path:staged,idempotency_key:crypto.randomUUID()})});
-  setStatus('HERMES har tagit emot '+selectedRace+' · '+selectedGender+' · '+poseName+'.');
+  if(!pose?.id)throw new Error('Rasposen kunde inte sparas.');
+  await uploadPoseImage('race-pose',pose);
  }
  async function savePose(){
-  const {record,poseKey}=poseSelection();
-  if(typeof dbJson!=='function')throw new Error('Databasanslutning saknas.');
-  const query='combatant_battle_poses?select=id,publication_status,image_path,staging_path,pending_staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey);
-  const existing=await dbJson(query);
-  const replacing=existing?.[0]?.publication_status==='published';
-  if(replacing){
-
-   if(!cutoutFile)throw new Error('Välj en ny cutout innan du ersätter den publicerade posen.');
-   if(!root.confirm('Ersätt '+record.name+' · '+poseKey+'? Den befintliga bilden fortsätter visas tills HERMES verifierat den nya.'))return;
-  }
-  if(existing?.[0]?.id){
-   const inFlight=await dbJson('hermes_web_jobs?select=id,state&pose_id=eq.'+encodeURIComponent(existing[0].id)+'&state=in.(queued,archiving,archived,optimizing,publishing)&limit=1');
-   if(inFlight?.length)throw new Error('HERMES behandlar redan den här posen. Vänta tills leveransen är klar innan du sparar igen.');
-  }
-  const staged=cutoutFile?await stageCutout(record,poseKey):existing?.[0]?.staging_path;
-  if(!staged)throw new Error('Välj en cutout innan du sparar posen.');
-  const poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
+  if(!isAdmin())throw new Error('Endast administratörer får publicera poser.');
+  if(!cutoutFile)throw new Error('Välj en cutout.');
+  const {record,poseKey}=poseSelection(),poseName=root.aleaBattlePoseCatalog?.POSE_NAMES?.[poseKey];
   if(!poseName)throw new Error('Ogiltigt Battle Pose-val.');
-  const mounting={schema:1,pose_name:poseName,cutout:{scale:cutoutScale,x:cutoutX,y:cutoutY},base:{scale:BASE_STANDARD_LEGACY}};
-  const row=replacing
-   ?{pending_staging_path:staged,pending_base_key:currentBase().key,pending_mounting_profile:mounting,updated_at:new Date().toISOString()}
-   :{combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,staging_path:staged,
-     mounting_profile:mounting,publication_status:'draft',is_active:false,updated_at:new Date().toISOString()};
-  let saved;
-  try{
-   const rows=existing?.[0]?.id
-    ?await dbJson('combatant_battle_poses?id=eq.'+encodeURIComponent(existing[0].id)+(replacing?'&publication_status=eq.published&'+(existing[0].pending_staging_path?'pending_staging_path=eq.'+encodeURIComponent(existing[0].pending_staging_path):'pending_staging_path=is.null'):''),{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)})
-    :await dbJson('combatant_battle_poses',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify(row)});
-   saved=rows?.[0];
-  }catch(error){throw new Error('Cutouten finns i säker mellanlagring men poseposten kunde inte sparas: '+error.message)}
-  if(!saved?.id)throw new Error('Poseposten saknar bekräftat ID. Ingen leverans har startats.');
-  try{
-   await dbJson('hermes_web_jobs',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
-    pose_id:saved.id,asset_kind:'battle-pose-cutout',source_path:staged,idempotency_key:crypto.randomUUID()
-   })});
-  }catch(error){throw new Error('Monteringsprofilen är sparad men HERMES kunde inte kölägga bilden: '+error.message)}
-  setStatus('HERMES har tagit emot '+(replacing?'ersättningen':'leveransen')+' för '+record.name+' · '+poseName+'. '+(replacing?'Den tidigare bilden förblir aktiv tills den nya verifierats.':'Väntar på arkivering och publicering.'));
+  const query='combatant_battle_poses?select=*&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey);
+  let pose=(await dbJson(query))?.[0];
+  if(pose?.image_path&&!root.confirm('Ersätt '+record.name+' · '+poseKey+'? Aktivering, bas och mounting ändras inte.'))return;
+  if(!pose){
+   pose=(await dbJson('combatant_battle_poses',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({combatant_type:record.kind,combatant_id:record.id,pose_key:poseKey,base_key:currentBase().key,mounting_profile:newPoseMounting(poseName),publication_status:'draft',is_active:false})}))?.[0];
+  }
+  if(!pose?.id)throw new Error('Poseposten kunde inte sparas.');
+  await uploadPoseImage('combatant-pose',pose);
  }
  async function loadPose(){
   const {record,poseKey}=poseSelection();
-  const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status,staging_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
+  const rows=await dbJson('combatant_battle_poses?select=base_key,mounting_profile,publication_status,staging_path,image_path&combatant_type=eq.'+encodeURIComponent(record.kind)+'&combatant_id=eq.'+encodeURIComponent(record.id)+'&pose_key=eq.'+encodeURIComponent(poseKey)+'&limit=1');
   const item=rows?.[0];if(!item)throw new Error('Ingen sparad profil finns för denna pose.');
   const p=item.mounting_profile||{},c=p.cutout||p;
   if(![c.scale,c.x,c.y].every(Number.isFinite))throw new Error('Profilen saknar giltiga monteringsvärden.');
@@ -228,7 +199,9 @@
   // Legacy base scale is intentionally ignored: the base is globally locked.
   const base=BASES.find(x=>x.key===item.base_key);if(base)baseId=base.id;
   cutoutFile=null;
-  if(item.staging_path&&typeof authFetch==='function'&&typeof supabaseSession!=='undefined'&&supabaseSession?.access_token){
+  if(item.image_path?.startsWith('hermes/')){
+   cutoutUrl=SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+item.image_path;
+  }else if(item.staging_path&&typeof authFetch==='function'&&typeof supabaseSession!=='undefined'&&supabaseSession?.access_token){
    const signed=await authFetch('/storage/v1/object/sign/alea-battle-pose-staging/'+item.staging_path,{method:'POST',headers:{Authorization:'Bearer '+supabaseSession.access_token},body:JSON.stringify({expiresIn:3600})});
    if(signed.ok){const result=await signed.json();if(result.signedURL)cutoutUrl=SUPABASE_URL+'/storage/v1'+result.signedURL}
   }

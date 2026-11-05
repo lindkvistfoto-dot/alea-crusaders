@@ -6,6 +6,7 @@ const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261
 const directSql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261026190000_hermes_alea_direct_storage_finalize.sql',import.meta.url),'utf8');
 const adapterSql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261026172000_hermes_alea_target_adapter_boundary.sql',import.meta.url),'utf8');
 const cleanupSql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261026093615_hermes_alea_cleanup_reservations.sql',import.meta.url),'utf8');
+const poseSql=readFileSync(new URL('../supabase/migrations/20261105214447_hermes_alea_battle_pose_targets.sql',import.meta.url),'utf8');
 const user='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222',target='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 let db;
 beforeEach(async()=>{
@@ -19,6 +20,9 @@ beforeEach(async()=>{
  create table public.campaign_members(user_id uuid,campaign_id uuid,role text);
  create table public.honor_definitions(id uuid primary key default gen_random_uuid(),name text,category text,campaign_id uuid,image_asset_id text,updated_at timestamptz);
  create table public.honor_relief_variants(id uuid primary key default gen_random_uuid(),honor_id uuid references public.honor_definitions(id),image_asset_id text,updated_at timestamptz);
+ create table public.combatant_battle_poses(id uuid primary key,image_path text,base_key text,mounting_profile jsonb,is_active boolean,publication_status text,staging_path text,pending_staging_path text,source_sha256 text);
+ create table public.race_battle_poses(like public.combatant_battle_poses including all);
+ create table public.hermes_web_jobs(pose_id uuid,race_pose_id uuid,state text);
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
  create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,metadata jsonb,unique(bucket_id,name));
  alter table storage.objects enable row level security;
@@ -31,6 +35,7 @@ beforeEach(async()=>{
  await db.exec(cleanupSql);
  await db.exec(adapterSql);
  await db.exec(directSql);
+ await db.exec(poseSql);
  await db.exec(`update private.hermes_alea_settings set enabled=true;set role authenticated;set request.jwt.claim.sub='${user}';`);
 },20000);
 afterEach(async()=>db?.close());
@@ -163,4 +168,32 @@ it('rejects wrong storage metadata without requiring WASM verification',async()=
  ('hermes-alea-display','${j.output_path}',jsonb_build_object('size',81,'mimetype','image/webp'));
  set role authenticated;set request.jwt.claim.sub='${user}';`);
  await expect(finish(j)).rejects.toThrow('UPLOAD_METADATA_MISMATCH');
+});
+
+it.each([['combatant-pose','combatant_battle_poses'],['race-pose','race_battle_poses']])('publishes %s without activation or mounting changes and fences CORE and a second upload',async(kind,table)=>{
+ await db.exec(`reset role;insert into ${table}(id,base_key,mounting_profile,is_active,publication_status) values('${target}','original-base','{"scale":47}',false,'draft');set role authenticated;`);
+ const j=await rpc('hermes_alea_begin',req({target_kind:kind}));
+ await expect(rpc('hermes_alea_begin',req({target_kind:kind}))).rejects.toThrow('POSE_BUSY');
+ await ready(j);
+ const segment=kind==='race-pose'?'race-battle-pose-cutout':'battle-pose-cutout';
+ const path=`hermes/${segment}/${target}/${j.output_sha256}.webp`;
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name,metadata) values('alea-hermes-public','${path}','{"size":80,"mimetype":"image/webp"}');set role service_role;`);
+ // CORE's existing pending_staging_path compare-and-set predicate loses safely.
+ expect((await db.query(`update ${table} set image_path='competing.webp' where id=$1 and pending_staging_path is null returning id`,[target])).rows).toEqual([]);
+ await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${user}';`);
+ const done=await finish(j);expect(done.state).toBe('activated');expect(done.archive_state).toBe('queued');
+ await db.exec('reset role');
+ expect((await db.query(`select image_path,is_active,publication_status,base_key,mounting_profile,pending_staging_path,image_revision from ${table}`)).rows[0]).toEqual({image_path:path,is_active:false,publication_status:'draft',base_key:'original-base',mounting_profile:{scale:47},pending_staging_path:null,image_revision:1});
+ expect((await db.query('select source_candidate,output_candidate from hermes_alea_cleanup_report where id=$1',[j.id])).rows[0]).toEqual({source_candidate:false,output_candidate:false});
+});
+
+it('rejects a stale pose intent after metadata changes without publishing or losing its original',async()=>{
+ await db.exec(`reset role;insert into combatant_battle_poses(id,base_key,mounting_profile,is_active,publication_status) values('${target}','base','{}',false,'draft');set role authenticated;`);
+ const j=await rpc('hermes_alea_begin',req({target_kind:'combatant-pose'}));await ready(j);
+ const path=`hermes/battle-pose-cutout/${target}/${j.output_sha256}.webp`;
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name,metadata) values('alea-hermes-public','${path}','{"size":80,"mimetype":"image/webp"}');update combatant_battle_poses set mounting_profile='{"scale":99}' where id='${target}';set role authenticated;`);
+ await expect(finish(j)).rejects.toThrow('IMAGE_REVISION_CONFLICT');
+ await db.exec('reset role');
+ expect((await db.query('select image_path from combatant_battle_poses')).rows[0].image_path).toBeNull();
+ expect((await db.query('select count(*)::int as n from storage.objects')).rows[0].n).toBe(3);
 });
