@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       verify_live_credential:
-        description: 'Run only a read-only validation of the existing LIVE credential.'
+        description: 'Run only the fixed, read-only LIVE credential check; no publication is started.'
         required: true
         type: boolean
 
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Validate existing LIVE key against fixed LIVE project (read-only)
+      - name: Validate existing LIVE key against the fixed LIVE project (read-only)
         env:
           KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
         shell: bash
