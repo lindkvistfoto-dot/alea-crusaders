@@ -1,0 +1,1199 @@
+{
+  "contract": "hermes-core-image-contract",
+  "version": 1,
+  "defaults": {
+    "profile_id": "unrestricted-system",
+    "source_formats": [
+      "PNG",
+      "JPEG",
+      "WEBP"
+    ],
+    "max_source_bytes": 67108864
+  },
+  "adapters": {
+    "system-registry": {
+      "kind": "system",
+      "table": "arcane_system_assets",
+      "lookup_column": "asset_key",
+      "image_column": "asset_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "path": "hermes/system-asset/{id}/{sha256}.webp",
+      "key_pattern": "system-asset"
+    },
+    "spell-icon": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug"
+    },
+    "spell-cutout": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "cutout_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "spell-illustration": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "illustration_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "spell-illustration-wide": {
+      "kind": "app-image",
+      "table": "rule_spells",
+      "lookup_column": "spell_key",
+      "image_column": "illustration_wide_path",
+      "bucket": "alea-spell-art",
+      "visibility": "private",
+      "key_pattern": "slug"
+    },
+    "symbol-icon": {
+      "kind": "app-image",
+      "table": "rule_magic_symbols",
+      "lookup_column": "symbol_key",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug"
+    },
+    "skill-icon": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "icon_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "skill-illustration": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "illustration_path",
+      "bucket": "alea-skill-art",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "skill-illustration-wide": {
+      "kind": "app-image",
+      "table": "rule_skills",
+      "lookup_column": "id",
+      "image_column": "illustration_wide_path",
+      "bucket": "alea-skill-art",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "normalize_key": "hyphen-to-underscore"
+    },
+    "honor-definition": {
+      "kind": "honor-definition",
+      "table": "honor_definitions",
+      "lookup_column": "id",
+      "image_column": "image_asset_id",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid"
+    },
+    "honor-relief": {
+      "kind": "honor-relief",
+      "table": "honor_relief_variants",
+      "lookup_column": "id",
+      "image_column": "image_asset_id",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid"
+    },
+    "npc-private-portrait": {
+      "kind": "app-image",
+      "binding_type": "record-image",
+      "table": "global_npcs",
+      "lookup_column": "npc_key",
+      "image_column": "image_path",
+      "metadata_column": "image_reference",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "slug",
+      "path_template": "global-npc/{id}/{sha256}.webp"
+    },
+    "weapon-art": {
+      "kind": "app-image",
+      "table": "rule_weapons",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "weapon/{id}/{image_uuid}.webp"
+    },
+    "shield-art": {
+      "kind": "app-image",
+      "table": "rule_shields",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "shield/{id}/{image_uuid}.webp"
+    },
+    "armor-art": {
+      "kind": "app-image",
+      "table": "rule_armor_types",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "armor/{id}/{image_uuid}.webp"
+    },
+    "shop-item-art": {
+      "kind": "app-image",
+      "table": "rule_shop_items",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "equipment/{id}/{image_uuid}.webp"
+    },
+    "armor-head-art": {
+      "kind": "app-image",
+      "table": "rule_armor_types",
+      "lookup_column": "id",
+      "image_column": "image_head_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "armor/head/{id}/{image_uuid}.webp"
+    },
+    "armor-arms-art": {
+      "kind": "app-image",
+      "table": "rule_armor_types",
+      "lookup_column": "id",
+      "image_column": "image_arms_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "armor/arms/{id}/{image_uuid}.webp"
+    },
+    "armor-torso-art": {
+      "kind": "app-image",
+      "table": "rule_armor_types",
+      "lookup_column": "id",
+      "image_column": "image_torso_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "armor/torso/{id}/{image_uuid}.webp"
+    },
+    "armor-legs-art": {
+      "kind": "app-image",
+      "table": "rule_armor_types",
+      "lookup_column": "id",
+      "image_column": "image_legs_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "armor/legs/{id}/{image_uuid}.webp"
+    },
+    "projectile-art": {
+      "kind": "app-image",
+      "table": "rule_projectile_types",
+      "lookup_column": "projectile_key",
+      "image_column": "image_path",
+      "bucket": "alea-equipment-art",
+      "visibility": "public",
+      "key_pattern": "slug",
+      "path_template": "projectile/{id}/{image_uuid}.webp"
+    },
+    "campaign-map": {
+      "kind": "app-image",
+      "table": "campaign_maps",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "campaign-maps",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/{id}/image-{image_uuid}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "width": "width",
+        "height": "height"
+      }
+    },
+    "combat-scene-background": {
+      "kind": "app-image",
+      "table": "campaign_combat_scenes",
+      "lookup_column": "id",
+      "image_column": "background_image_path",
+      "bucket": "combat-scene-maps",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/{id}/background-{image_uuid}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "background_width": "width",
+        "background_height": "height"
+      }
+    },
+    "hit-figure": {
+      "kind": "app-image",
+      "table": "rule_hit_figure_images",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-hit-figures",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "figure/{image_uuid}.webp"
+    },
+    "combatant-battle-pose": {
+      "kind": "app-image",
+      "table": "combatant_battle_poses",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "hermes/battle-pose-cutout/{id}/{sha256}.webp",
+      "write_fields": {
+        "source_sha256": "source_sha256",
+        "source_drive_file_id": "source_drive_file_id"
+      },
+      "required_null_columns": [
+        "pending_staging_path"
+      ],
+      "guard_columns": [
+        "staging_path",
+        "pending_staging_path",
+        "pending_base_key",
+        "pending_mounting_profile",
+        "publication_status",
+        "is_active",
+        "base_key",
+        "mounting_profile"
+      ]
+    },
+    "race-battle-pose": {
+      "kind": "app-image",
+      "table": "race_battle_poses",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "hermes/race-battle-pose-cutout/{id}/{sha256}.webp",
+      "write_fields": {
+        "source_sha256": "source_sha256",
+        "source_drive_file_id": "source_drive_file_id"
+      },
+      "required_null_columns": [
+        "pending_staging_path"
+      ],
+      "guard_columns": [
+        "staging_path",
+        "pending_staging_path",
+        "pending_base_key",
+        "pending_mounting_profile",
+        "publication_status",
+        "is_active",
+        "base_key",
+        "mounting_profile"
+      ]
+    },
+    "campaign-npc-portrait": {
+      "kind": "app-image",
+      "table": "campaign_npcs",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/npc/{id}/{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ]
+    },
+    "campaign-monster-portrait": {
+      "kind": "app-image",
+      "table": "campaign_monsters",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/monster/{id}/{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ]
+    },
+    "campaign-material-image": {
+      "kind": "app-image",
+      "table": "campaign_materials",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-materials",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/{id}/core-{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "sha256": "output_sha256",
+        "file_size_bytes": "output_bytes",
+        "mime_type": "output_mime_type"
+      },
+      "required_row_values": {
+        "asset_kind": "image",
+        "storage_bucket": "campaign-materials"
+      },
+      "required_null_columns": [
+        "archived_at",
+        "thumbnail_path"
+      ],
+      "guard_columns": [
+        "storage_bucket",
+        "asset_kind",
+        "archived_at",
+        "thumbnail_path"
+      ]
+    },
+    "campaign-gallery-image": {
+      "kind": "app-image",
+      "table": "campaign_images",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-location-assets",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/{id}-{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "mime_type": "output_mime_type"
+      },
+      "required_row_values": {
+        "storage_bucket": "campaign-location-assets"
+      },
+      "guard_columns": [
+        "storage_bucket",
+        "mime_type"
+      ]
+    },
+    "campaign-location-asset": {
+      "kind": "app-image",
+      "table": "campaign_location_assets",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-location-assets",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/location/{location_id}/{id}-{sha256}.webp",
+      "path_columns": [
+        "campaign_id",
+        "location_id"
+      ],
+      "required_row_values": {
+        "asset_type": "image",
+        "asset_kind": "image"
+      },
+      "guard_columns": [
+        "asset_type",
+        "asset_kind",
+        "player_visible"
+      ]
+    },
+    "round-background-catalog": {
+      "kind": "app-image",
+      "table": "rule_combat_round_backgrounds",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-round-backgrounds",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "round/{id}.webp",
+      "required_row_values": {
+        "is_active": false
+      },
+      "required_null_columns": [
+        "archived_at"
+      ],
+      "guard_columns": [
+        "is_active",
+        "archived_at"
+      ]
+    }
+  },
+  "profiles": {
+    "unrestricted-system": {
+      "adapter": "system-registry",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4
+    },
+    "spell-icon": {
+      "adapter": "spell-icon",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "spell"
+    },
+    "spell-cutout": {
+      "adapter": "spell-cutout",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1024,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.cutout",
+      "path_segment": "spell-cutout"
+    },
+    "spell-illustration-square": {
+      "adapter": "spell-illustration",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "opaque",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.square",
+      "path_segment": "spell-illustration"
+    },
+    "spell-illustration-wide": {
+      "adapter": "spell-illustration-wide",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 360,
+      "source_min_width": 640,
+      "source_min_height": 360,
+      "source_max_edge": 4096,
+      "aspect": "ratio:1.25-2.4",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 2560,
+      "output_height": 1440,
+      "output_max_edge": 2560,
+      "max_webp_bytes": 524288,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.wide",
+      "path_segment": "spell-illustration-wide"
+    },
+    "symbol-icon": {
+      "adapter": "symbol-icon",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "spell_types.icon",
+      "path_segment": "symbol"
+    },
+    "skill-icon": {
+      "adapter": "skill-icon",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "visible",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.icon",
+      "path_segment": "skill"
+    },
+    "skill-illustration-square": {
+      "adapter": "skill-illustration",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 4096,
+      "aspect": "square",
+      "alpha": "opaque",
+      "fit": "resize",
+      "output_width": 640,
+      "output_height": 640,
+      "output_max_edge": 640,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.square",
+      "path_segment": "skill-illustration"
+    },
+    "skill-illustration-wide": {
+      "adapter": "skill-illustration-wide",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 360,
+      "source_min_width": 640,
+      "source_min_height": 360,
+      "source_max_edge": 4096,
+      "aspect": "ratio:16:9",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 2560,
+      "output_height": 1440,
+      "output_max_edge": 2560,
+      "max_webp_bytes": 500000,
+      "quality_start": 90,
+      "quality_min": 76,
+      "quality_step": 3,
+      "archive_folder_key": "skill_types.wide",
+      "path_segment": "skill-illustration-wide"
+    },
+    "honor-definition": {
+      "adapter": "honor-definition",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 4096,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4,
+      "archive_folder_key": "folders.original_archive"
+    },
+    "honor-relief": {
+      "adapter": "honor-relief",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 4096,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 500000,
+      "quality_start": 92,
+      "quality_min": 40,
+      "quality_step": 4,
+      "archive_folder_key": "folders.original_archive"
+    },
+    "npc-portrait-private": {
+      "adapter": "npc-private-portrait",
+      "source_formats": [
+        "JPEG"
+      ],
+      "source_min_edge": 640,
+      "source_min_width": 640,
+      "source_min_height": 800,
+      "source_max_edge": 4096,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": 1024,
+      "output_height": 1536,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 87,
+      "quality_min": 87,
+      "quality_step": 1,
+      "orientation": "exif",
+      "archive_folder_key": "archive_categories.npcs_monsters",
+      "max_source_bytes": 8388608,
+      "min_webp_bytes": 1000
+    },
+    "weapon-art": {
+      "adapter": "weapon-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "shield-art": {
+      "adapter": "shield-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "armor-art": {
+      "adapter": "armor-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "shop-item-art": {
+      "adapter": "shop-item-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "armor-head-art": {
+      "adapter": "armor-head-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "armor-arms-art": {
+      "adapter": "armor-arms-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "armor-torso-art": {
+      "adapter": "armor-torso-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "armor-legs-art": {
+      "adapter": "armor-legs-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "projectile-art": {
+      "adapter": "projectile-art",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 900,
+      "max_webp_bytes": 3000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "campaign-map": {
+      "adapter": "campaign-map",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "combat-scene-background": {
+      "adapter": "combat-scene-background",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "hit-figure": {
+      "adapter": "hit-figure",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 4000000,
+      "quality_start": 88,
+      "quality_min": 64,
+      "quality_step": 4,
+      "max_source_bytes": 12582912
+    },
+    "combatant-pose-published": {
+      "adapter": "combatant-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "published"
+      }
+    },
+    "combatant-pose-draft": {
+      "adapter": "combatant-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "draft"
+      },
+      "required_null_columns": [
+        "staging_path",
+        "pending_staging_path"
+      ]
+    },
+    "race-pose-published": {
+      "adapter": "race-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "published"
+      }
+    },
+    "race-pose-draft": {
+      "adapter": "race-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "draft"
+      },
+      "required_null_columns": [
+        "staging_path",
+        "pending_staging_path"
+      ]
+    },
+    "campaign-npc-portrait": {
+      "adapter": "campaign-npc-portrait",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 8192,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 8388608,
+      "source_min_width": 640,
+      "source_min_height": 800
+    },
+    "campaign-monster-portrait": {
+      "adapter": "campaign-monster-portrait",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 8192,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 8388608,
+      "source_min_width": 640,
+      "source_min_height": 800
+    },
+    "campaign-material-image": {
+      "adapter": "campaign-material-image",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "campaign-gallery-image": {
+      "adapter": "campaign-gallery-image",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "campaign-location-asset": {
+      "adapter": "campaign-location-asset",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "round-background-catalog": {
+      "adapter": "round-background-catalog",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    }
+  },
+  "legacy_kind_profiles": {
+    "spell": "spell-icon",
+    "spell-cutout": "spell-cutout",
+    "spell-illustration": "spell-illustration-square",
+    "spell-illustration-wide": "spell-illustration-wide",
+    "symbol": "symbol-icon",
+    "skill": "skill-icon",
+    "skill-illustration": "skill-illustration-square",
+    "skill-illustration-wide": "skill-illustration-wide"
+  }
+}
