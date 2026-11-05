@@ -4,6 +4,13 @@ import {normalizeCoreQueueTarget} from '../features/hermes-core/queue-target.js'
 import {CORE_APP_IMAGE_PROFILES,resolveCoreImageProfile,coreAppImagePath} from '../features/hermes-core/app-image-targets.js';
 import {createCoreActionsTargetAdapter} from '../features/hermes-core/actions-target-adapter.js';
 
+function matchesFilterValue(actual,expected){
+ if(actual!==null&&typeof actual==='object'&&typeof expected==='string'){
+  try{return JSON.stringify(actual)===JSON.stringify(JSON.parse(expected));}catch{return false;}
+ }
+ return JSON.stringify(actual)===JSON.stringify(expected);
+}
+
 describe('HERMES CORE declarative image contract',()=>{
  it('resolves each profile only to a repository-approved adapter',()=>{
   for(const [profileId,profile] of Object.entries(contract.profiles)){
@@ -38,7 +45,7 @@ describe('HERMES CORE declarative image contract',()=>{
    };
    async function run(){
     const matches=filters.every(([kind,key,value])=>kind==='eq'
-      ? JSON.stringify(row[key])===JSON.stringify(value) : row[key]===value);
+      ? matchesFilterValue(row[key],value) : row[key]===value);
     if(!matches)return {data:null,error:null};
     if(op==='update'){Object.assign(row,values);return {data:{id:row.id,image_path:row.image_path},error:null};}
     return {data:{id:row.id,npc_key:row.npc_key,image_path:row.image_path,image_reference:row.image_reference},error:null};
@@ -69,7 +76,7 @@ describe('HERMES CORE declarative image contract',()=>{
     maybeSingle(){return run();}};
    async function run(){
     const matches=filters.every(([kind,key,value])=>kind==='eq'
-     ?JSON.stringify(row[key])===JSON.stringify(value):row[key]===value);
+     ?matchesFilterValue(row[key],value):row[key]===value);
     if(!matches)return {data:null,error:null};
     if(op==='update'){Object.assign(row,values);return {data:{id:row.id,image_path:row.image_path},error:null};}
     return {data:{...row},error:null};
