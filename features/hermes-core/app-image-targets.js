@@ -3,7 +3,7 @@ import contract from "./contract.json" with {type: "json"};
 
 const PROFILES = contract.profiles;
 export const LEGACY_KIND_PROFILES = Object.freeze(contract.legacy_kind_profiles);
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SLUG = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function validKey(target, value) {

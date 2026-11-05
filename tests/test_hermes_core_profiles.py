@@ -11,6 +11,7 @@ class CoreImageProfileTests(unittest.TestCase):
     def test_app_profiles_accept_only_the_declared_target_key_shape(self):
         self.assertTrue(valid_core_target_id("app-image", "campaign-map", "123e4567-e89b-42d3-a456-426614174000"))
         self.assertTrue(valid_core_target_id("app-image", "projectile-art", "arrow"))
+        self.assertTrue(valid_core_target_id("app-image", "projectile-art", "hermes_dev_test_universal_core"))
         self.assertFalse(valid_core_target_id("app-image", "projectile-art", "123e4567-e89b-42d3-a456-426614174000"))
         self.assertFalse(valid_core_target_id("app-image", "campaign-map", "not-a-uuid"))
 

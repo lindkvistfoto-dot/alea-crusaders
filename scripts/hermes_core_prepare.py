@@ -30,7 +30,7 @@ CORE_CONTRACT = json.loads((ROOT / "features/hermes-core/contract.json").read_te
 PROFILES = CORE_CONTRACT["profiles"]
 LEGACY_KIND_PROFILES = CORE_CONTRACT["legacy_kind_profiles"]
 APP_IMAGE_KINDS = set(LEGACY_KIND_PROFILES)
-APP_IMAGE_KEY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+APP_IMAGE_KEY = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
 def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
