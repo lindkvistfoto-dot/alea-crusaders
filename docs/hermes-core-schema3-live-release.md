@@ -14,7 +14,7 @@ Read-only inspection found the destination tables, profile columns, and buckets 
 
 PostgREST authorizes table operations using database-role privileges and supports column-level grants. CORE selects each adapter’s lookup, pointer, metadata, path, and guard columns. Its compare-and-set PATCH writes only the selected image pointer and declared metadata columns, then selects the lookup and pointer for verification. The SQL below is the narrow set derived from the schema-3 contract and CAS adapter. It is not applied. Review it against the final candidate before separate Zeus approval. genui{"citation":{"ref":"turn5search3"}}
 
-### Proposed grants (19 profiles across 15 target tables)
+### Proposed grants (19 adapter models across 15 target tables; race poses use two profiles on one adapter)
 
 ```sql
 BEGIN;
