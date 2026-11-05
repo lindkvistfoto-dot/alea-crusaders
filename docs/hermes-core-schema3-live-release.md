@@ -4,7 +4,7 @@ Status: release candidate only. This PR does not deploy, merge, change credentia
 
 ## Candidate scope
 
-Based on DEV commit a07ba9c09ef4142f20a8fa0b15e9dcdb87889871 and LIVE e606e4bfccba02f4164535475fb859412e6c3aae. The branches diverge (270 ahead / 44 behind); this candidate is based on main and ports only the HERMES files in this PR. It excludes gameplay code, OLYMPIA application code, DEV queue requests, and unrelated migrations.
+Based on the verified DEV starting commit a07ba9c09ef4142f20a8fa0b15e9dcdb87889871, now advanced by merged PR #610 to bab7e581139cf73bbc143daf60dd1ecf3577a34a, and LIVE e606e4bfccba02f4164535475fb859412e6c3aae. The branches diverge (270 ahead / 44 behind); this candidate is based on main and ports only the HERMES files in this PR. It excludes gameplay code, OLYMPIA application code, DEV queue requests, and unrelated migrations.
 
 The candidate adds schema-3 profiles/adapters while retaining schema 1/2 compatibility; fixes the LIVE workflow checkout and write permissions needed by the publisher; pins the LIVE endpoint and branch/environment guard; keeps Drive read-only through existing Google Workload Identity; and preserves the independent ALEA direct-upload path. It adds an opt-in read-only credential check, which is not run by this PR.
 
@@ -88,63 +88,63 @@ Run only if these exact grants were applied by the approved release and no later
 BEGIN;
 -- rule_weapons: weapon-art
 REVOKE SELECT ("id", "image_path") ON TABLE public.rule_weapons FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_weapons FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_weapons FROM service_role;
 
 -- rule_shields: shield-art
 REVOKE SELECT ("id", "image_path") ON TABLE public.rule_shields FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_shields FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_shields FROM service_role;
 
 -- rule_armor_types: armor-art, armor-head-art, armor-arms-art, armor-torso-art, armor-legs-art
 REVOKE SELECT ("id", "image_path", "image_head_path", "image_arms_path", "image_torso_path", "image_legs_path") ON TABLE public.rule_armor_types FROM service_role;
-GRANT UPDATE ("image_path", "image_head_path", "image_arms_path", "image_torso_path", "image_legs_path") ON TABLE public.rule_armor_types FROM service_role;
+REVOKE UPDATE ("image_path", "image_head_path", "image_arms_path", "image_torso_path", "image_legs_path") ON TABLE public.rule_armor_types FROM service_role;
 
 -- rule_shop_items: shop-item-art
 REVOKE SELECT ("id", "image_path") ON TABLE public.rule_shop_items FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_shop_items FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_shop_items FROM service_role;
 
 -- rule_projectile_types: projectile-art
 REVOKE SELECT ("projectile_key", "image_path") ON TABLE public.rule_projectile_types FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_projectile_types FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_projectile_types FROM service_role;
 
 -- campaign_maps: campaign-map
 REVOKE SELECT ("id", "campaign_id", "image_path", "width", "height") ON TABLE public.campaign_maps FROM service_role;
-GRANT UPDATE ("image_path", "width", "height") ON TABLE public.campaign_maps FROM service_role;
+REVOKE UPDATE ("image_path", "width", "height") ON TABLE public.campaign_maps FROM service_role;
 
 -- campaign_combat_scenes: combat-scene-background
 REVOKE SELECT ("id", "campaign_id", "background_image_path", "background_width", "background_height") ON TABLE public.campaign_combat_scenes FROM service_role;
-GRANT UPDATE ("background_image_path", "background_width", "background_height") ON TABLE public.campaign_combat_scenes FROM service_role;
+REVOKE UPDATE ("background_image_path", "background_width", "background_height") ON TABLE public.campaign_combat_scenes FROM service_role;
 
 -- rule_hit_figure_images: hit-figure
 REVOKE SELECT ("id", "image_path") ON TABLE public.rule_hit_figure_images FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_hit_figure_images FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_hit_figure_images FROM service_role;
 
 -- race_battle_poses: race-pose-published, race-pose-draft
 REVOKE SELECT ("id", "image_path", "base_key", "mounting_profile", "is_active", "publication_status", "staging_path", "pending_staging_path", "pending_base_key", "pending_mounting_profile", "source_sha256", "source_drive_file_id") ON TABLE public.race_battle_poses FROM service_role;
-GRANT UPDATE ("image_path", "source_sha256", "source_drive_file_id") ON TABLE public.race_battle_poses FROM service_role;
+REVOKE UPDATE ("image_path", "source_sha256", "source_drive_file_id") ON TABLE public.race_battle_poses FROM service_role;
 
 -- campaign_npcs: campaign-npc-portrait
 REVOKE SELECT ("id", "campaign_id", "image_path") ON TABLE public.campaign_npcs FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.campaign_npcs FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.campaign_npcs FROM service_role;
 
 -- campaign_monsters: campaign-monster-portrait
 REVOKE SELECT ("id", "campaign_id", "image_path") ON TABLE public.campaign_monsters FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.campaign_monsters FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.campaign_monsters FROM service_role;
 
 -- campaign_materials: campaign-material-image
 REVOKE SELECT ("id", "campaign_id", "storage_path", "storage_bucket", "asset_kind", "mime_type", "file_size_bytes", "sha256", "archived_at", "thumbnail_path") ON TABLE public.campaign_materials FROM service_role;
-GRANT UPDATE ("storage_path", "mime_type", "file_size_bytes", "sha256") ON TABLE public.campaign_materials FROM service_role;
+REVOKE UPDATE ("storage_path", "mime_type", "file_size_bytes", "sha256") ON TABLE public.campaign_materials FROM service_role;
 
 -- campaign_images: campaign-gallery-image
 REVOKE SELECT ("id", "campaign_id", "storage_path", "storage_bucket", "mime_type") ON TABLE public.campaign_images FROM service_role;
-GRANT UPDATE ("storage_path", "mime_type") ON TABLE public.campaign_images FROM service_role;
+REVOKE UPDATE ("storage_path", "mime_type") ON TABLE public.campaign_images FROM service_role;
 
 -- campaign_location_assets: campaign-location-asset
 REVOKE SELECT ("id", "campaign_id", "location_id", "asset_type", "asset_kind", "storage_path", "player_visible") ON TABLE public.campaign_location_assets FROM service_role;
-GRANT UPDATE ("storage_path") ON TABLE public.campaign_location_assets FROM service_role;
+REVOKE UPDATE ("storage_path") ON TABLE public.campaign_location_assets FROM service_role;
 
 -- rule_combat_round_backgrounds: round-background-catalog
 REVOKE SELECT ("id", "image_path", "is_active", "archived_at") ON TABLE public.rule_combat_round_backgrounds FROM service_role;
-GRANT UPDATE ("image_path") ON TABLE public.rule_combat_round_backgrounds FROM service_role;
+REVOKE UPDATE ("image_path") ON TABLE public.rule_combat_round_backgrounds FROM service_role;
 COMMIT;
 ```
 
