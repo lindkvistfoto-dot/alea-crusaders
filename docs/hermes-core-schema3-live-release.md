@@ -194,9 +194,9 @@ No broad table grants, RLS policy changes, or sequence grants are proposed. Afte
 
 ## Credential verification
 
-The LIVE workflow refers to the existing secret HERMES_SUPABASE_SERVICE_ROLE_KEY; DEV uses a separate secret. Secret values are never read into this PR or printed. The PR adds a manual workflow_dispatch input that runs only a GET against the fixed LIVE project’s registry endpoint, masks the key, and reports HTTP success/failure. The publish job remains push-only and cannot run from the validation dispatch.
+The LIVE workflow uses the existing secret HERMES_SUPABASE_SERVICE_ROLE_KEY; DEV uses a separate secret. Secret values are never read into this PR or printed. A minimal precheck is prepared in PR #615 by adding a manually dispatched, read-only GET to the existing CORE workflow. Its publisher job is explicitly push-only, so dispatch cannot start publication. PR #615 must be separately reviewed and approved before merge. GitHub requires a workflow_dispatch workflow to exist on the default branch before it can be manually run; see [GitHub's manual workflow documentation](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow). This small control PR lets the check run on main without merging the full #614 release candidate.
 
-The GitHub connector cannot inspect the stored secret or prove its project binding. After OLYMPIA review, Zeus must separately approve and manually start this read-only check on main with verify_live_credential=true. A successful HTTP 200 means the stored key is accepted by the fixed LIVE project’s read-only registry endpoint. No new secret is required unless this check fails.
+The GitHub connector cannot inspect the stored secret or prove its project binding. After PR #615 is separately approved and merged, Zeus must separately approve manually dispatching the read-only check with verify_live_credential=true. The check reports only HTTP success/failure and never prints the key. HTTP 200 proves the existing key is accepted by the fixed LIVE registry endpoint; it does not prove that all adapter writes work. No new secret is required unless the check fails. The same dispatch gate is carried in #614's CORE workflow so the single workflow remains consistent after a later release merge.
 
 ## HERMES 4.1 source and ownership
 
