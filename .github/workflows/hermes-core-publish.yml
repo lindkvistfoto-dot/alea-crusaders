@@ -34,10 +34,10 @@ jobs:
           key="${KEY:-}"
           [[ -n "$key" ]] || { echo "::error::Existing LIVE Supabase secret is unavailable."; exit 1; }
           echo "::add-mask::$key"
-          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \\
-            --header "apikey: $key" \\
-            --header "Authorization: Bearer $key" \\
-            --header "Accept: application/json" \\
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" \
+            --header "Authorization: Bearer $key" \
+            --header "Accept: application/json" \
             "https://wbmosmkirsitkonejzpg.supabase.co/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
           [[ "$status" == "200" ]] || { echo "::error::Existing secret failed fixed LIVE read-only validation (HTTP $status)."; exit 1; }
           unset key
