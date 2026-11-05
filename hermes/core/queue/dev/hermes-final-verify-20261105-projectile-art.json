@@ -1,10 +1,10 @@
 {
   "schema": 3,
-  "label": "HERMES final DEV verification projectile-art 2026-11-05",
+  "label": "HERMES DEV TEST — projectile-art isolated 2026-11-05",
   "target": {
     "kind": "profile",
     "profile_id": "projectile-art",
-    "id": "javelin"
+    "id": "hermes_dev_test_universal_core"
   },
   "drive_file_id": "1a69MmY7CNehuwdZ4dQXJTxGu16oMH4_a",
   "archive_file_id": "1PLcw9aW_-TjkQ6XZjdg5-FBDD24zf9LC",

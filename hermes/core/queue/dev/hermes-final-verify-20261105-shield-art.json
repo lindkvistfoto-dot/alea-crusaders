@@ -1,10 +1,10 @@
 {
   "schema": 3,
-  "label": "HERMES final DEV verification shield-art 2026-11-05",
+  "label": "HERMES DEV TEST — shield-art isolated 2026-11-05",
   "target": {
     "kind": "profile",
     "profile_id": "shield-art",
-    "id": "a218bdc2-aa35-46e9-a332-66a78184f2a9"
+    "id": "7d5b6fd3-c963-425d-a9e1-a70bf7875b8d"
   },
   "drive_file_id": "1a69MmY7CNehuwdZ4dQXJTxGu16oMH4_a",
   "archive_file_id": "1PLcw9aW_-TjkQ6XZjdg5-FBDD24zf9LC",

@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "HERMES DEV TEST — armor-legs-art isolated 2026-11-05",
+  "target": {
+    "kind": "profile",
+    "profile_id": "armor-legs-art",
+    "id": "9eeac7b0-dd50-433a-b66c-0bf19820ba26"
+  },
+  "drive_file_id": "1a69MmY7CNehuwdZ4dQXJTxGu16oMH4_a",
+  "archive_file_id": "1PLcw9aW_-TjkQ6XZjdg5-FBDD24zf9LC",
+  "source_sha256": "930136c7258f701889fc722babf7c24895ba4061e46a7a1d903e308d2539948a"
+}
