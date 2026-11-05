@@ -5,6 +5,10 @@ on:
     branches:
       - development
       - main
+    paths-ignore:
+      - 'hermes/core/queue/*.json'
+      - 'hermes/core/queue/dev/**'
+      - '.github/workflows/deploy-pages-live-dev.yml'
   workflow_dispatch:
 
 permissions:
