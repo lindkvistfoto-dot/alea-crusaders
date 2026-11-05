@@ -1,22 +1,24 @@
 /** HERMES CORE developer publisher. Runs only in trusted GitHub Actions. */
+import {resolveHermesPublicationEnvironment} from "./hermes_publication_environment.js";
 import {createClient} from "npm:@supabase/supabase-js@2.58.0";
 import {createHermesCore} from "../features/hermes-core/core.js";
 import {createCoreActionsTargetAdapter} from "../features/hermes-core/actions-target-adapter.js";
 import {createCoreSystemReservation} from "../features/hermes-core/system-reservation.js";
+import {coreAppImagePath,resolveCoreAppImageTarget} from "../features/hermes-core/app-image-targets.js";
 
 const [outputDir] = Deno.args;
 const repository = Deno.env.get("GITHUB_REPOSITORY") || "";
 const ref = Deno.env.get("GITHUB_REF") || "";
+const targetEnv = Deno.env.get("HERMES_TARGET_ENV") || "";
 const url = Deno.env.get("SUPABASE_URL") || "";
 const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-if (repository !== "lindkvistfoto-dot/alea-crusaders" || ref !== "refs/heads/main") {
-  throw new Error("UNTRUSTED_CORE_ACTION");
-}
-if (!outputDir || !url || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
+const environment = resolveHermesPublicationEnvironment({repository, ref, targetEnv, url});
+if (!outputDir || !secret) throw new Error("CORE_PUBLISH_INPUT_MISSING");
 
 const prepared = JSON.parse(await Deno.readTextFile(`${outputDir}/prepared.json`));
 const targetKind = prepared.target?.kind ?? "system";
-if (!["system","honor-definition","honor-relief"].includes(targetKind)) throw new Error("INVALID_CORE_TARGET");
+const appTarget=resolveCoreAppImageTarget(targetKind, prepared.profile_id);
+if (!["system","honor-definition","honor-relief"].includes(targetKind) && !appTarget) throw new Error("INVALID_CORE_TARGET");
 const originalBytes = await Deno.readFile(`${outputDir}/${prepared.source_file}`);
 const webpBytes = await Deno.readFile(`${outputDir}/${prepared.webp_file}`);
 const source = new Blob([originalBytes], {type: prepared.source_mime});
@@ -24,9 +26,15 @@ const webp = new Blob([webpBytes], {type: "image/webp"});
 const db = createClient(url, secret, {auth: {persistSession: false}});
 const reserveSystem = createCoreSystemReservation();
 const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
-  : "arcane-" + targetKind + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
-const reserveAsset = async ({metadata}: any) => reserveSystem({target:{kind:"system",id:registryKey},metadata});
-const bucket = "alea-hermes-public";
+  : "arcane-" + (prepared.profile_id ?? targetKind) + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
+const reserveAsset = async ({target,metadata,current}: any) => {
+  if (appTarget) {
+    if (!current) throw new Error("CORE_APP_TARGET_MUST_EXIST");
+    const path=coreAppImagePath(prepared.profile_id,target.id,metadata.sha256,current?.row??{});
+    return {key:path,path,bucket:appTarget.bucket,metadata};
+  }
+  return reserveSystem({target:{kind:"system",id:registryKey},metadata});
+};
 const {readTarget, activate} = createCoreActionsTargetAdapter({db,prepared,registryKey});
 
 function hex(bytes: Uint8Array) {
@@ -39,7 +47,7 @@ async function sha256(bytes: Uint8Array) {
   return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", copy)));
 }
 
-async function publishWebP({target, webp: image}: any) {
+async function publishWebP({target, webp: image, current}: any) {
   const metadata = {
     sha256: await sha256(new Uint8Array(await image.arrayBuffer())),
     bytes: image.size,
@@ -50,8 +58,8 @@ async function publishWebP({target, webp: image}: any) {
   if (metadata.sha256 !== prepared.webp_sha256 || metadata.bytes !== prepared.webp_bytes) {
     throw new Error("WEBP_PREPARATION_MISMATCH");
   }
-  const asset = await reserveAsset({target, metadata});
-  const storage = db.storage.from(bucket);
+  const asset = await reserveAsset({target, metadata, current});
+  const storage = db.storage.from(appTarget?.bucket || "alea-hermes-public");
   const {error: uploadError} = await storage.upload(asset.path, image, {
     contentType: "image/webp", upsert: false, cacheControl: "31536000",
   });
@@ -63,8 +71,15 @@ async function publishWebP({target, webp: image}: any) {
   if (await sha256(new Uint8Array(await downloaded.arrayBuffer())) !== metadata.sha256) {
     throw new Error("SUPABASE_READBACK_HASH_MISMATCH");
   }
-  const publicUrl = storage.getPublicUrl(asset.path).data?.publicUrl;
-  const response = publicUrl ? await fetch(publicUrl, {cache: "no-store"}) : null;
+  let readbackUrl: string | null = null;
+  if (appTarget?.visibility === "private") {
+    const {data:signed,error:signedError}=await storage.createSignedUrl(asset.path,60);
+    if (signedError) throw new Error("SUPABASE_SIGNED_READBACK_URL_FAILED");
+    readbackUrl=signed?.signedUrl??null;
+  } else {
+    readbackUrl=storage.getPublicUrl(asset.path).data?.publicUrl??null;
+  }
+  const response = readbackUrl ? await fetch(readbackUrl, {cache: "no-store"}) : null;
   if (!response?.ok || await sha256(new Uint8Array(await response.arrayBuffer())) !== metadata.sha256) {
     throw new Error("SUPABASE_PUBLIC_IMAGE_READBACK_FAILED");
   }
@@ -82,14 +97,27 @@ const core = createHermesCore({
     activate(target, 0, null, {...metadata, path: key}, true),
 });
 
-const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label};
+const target = {kind:targetKind, id:prepared.target?.id ?? prepared.asset_key,label:prepared.label,
+  ...(prepared.profile_id ? {profile_id:prepared.profile_id} : {}),
+  ...(prepared.target?.material ? {material:prepared.target.material} : {})};
 const result = await core.add({target, file: source});
-console.log("HERMES_CORE_ACTIVE", JSON.stringify({
+const publication = {
+  schema: "hermes-core-publication/v1",
+  environment,
   asset_key: registryKey,
   archive_file_id: prepared.archive_file_id,
+  olympia_item_id: prepared.olympia_item_id ?? null,
+  source_pr_number: prepared.source_pr_number ?? null,
+  source_dev_sha: prepared.source_dev_sha ?? null,
   target,
   image_reference: result.activation.key,
-  path: `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
+  path: appTarget ? result.activation.key : `hermes/system-asset/${registryKey}/${prepared.webp_sha256}.webp`,
   webp_sha256: prepared.webp_sha256,
   webp_bytes: prepared.webp_bytes,
-}));
+  width: prepared.width,
+  height: prepared.height,
+  alpha: prepared.alpha_preserved,
+  status: "verified",
+};
+await Deno.writeTextFile(`${outputDir}/publication.json`, JSON.stringify(publication, null, 2) + "\n");
+console.log("HERMES_CORE_ACTIVE", JSON.stringify(publication));
