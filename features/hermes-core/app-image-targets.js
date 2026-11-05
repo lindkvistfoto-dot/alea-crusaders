@@ -24,8 +24,13 @@ export function resolveCoreImageProfile(profileId) {
   const profile = PROFILES[profileId];
   const adapter = contract.adapters[profile.adapter];
   if (!adapter) throw new Error("CORE_PROFILE_ADAPTER_MISSING");
+  const conditions={
+    required_row_values:{...(profile.required_row_values??{}),...(adapter.required_row_values??{})},
+    required_null_columns:[...new Set([...(adapter.required_null_columns??[]),...(profile.required_null_columns??[])])],
+    guard_columns:[...new Set([...(adapter.guard_columns??[]),...(profile.guard_columns??[])])],
+  };
   return Object.freeze({
-    profile_id: profileId, ...profile, ...adapter,
+    profile_id: profileId, ...profile, ...adapter, ...conditions,
     lookupColumn: adapter.lookup_column,
     imageColumn: adapter.image_column,
     normalizeKey: adapter.normalize_key === "hyphen-to-underscore",

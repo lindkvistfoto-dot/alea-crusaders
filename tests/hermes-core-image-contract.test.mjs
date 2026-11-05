@@ -12,7 +12,7 @@ describe('HERMES CORE declarative image contract',()=>{
    expect(resolved.kind).toBe(contract.adapters[profile.adapter].kind);
    expect(['public','private']).toContain(resolved.visibility);
   }
-  expect(CORE_APP_IMAGE_PROFILES.length).toBe(21);
+  expect(CORE_APP_IMAGE_PROFILES.length).toBe(31);
  });
  it('normalizes generic requests without accepting caller-selected destinations',()=>{
   const target=normalizeCoreQueueTarget({schema:3,label:'Portrait',target:{

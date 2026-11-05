@@ -259,6 +259,184 @@
       "visibility": "private",
       "key_pattern": "uuid",
       "path_template": "figure/{image_uuid}.webp"
+    },
+    "combatant-battle-pose": {
+      "kind": "app-image",
+      "table": "combatant_battle_poses",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "hermes/battle-pose-cutout/{id}/{sha256}.webp",
+      "write_fields": {
+        "source_sha256": "source_sha256",
+        "source_drive_file_id": "source_drive_file_id"
+      },
+      "required_null_columns": [
+        "pending_staging_path"
+      ],
+      "guard_columns": [
+        "staging_path",
+        "pending_staging_path",
+        "pending_base_key",
+        "pending_mounting_profile",
+        "publication_status",
+        "is_active",
+        "base_key",
+        "mounting_profile"
+      ]
+    },
+    "race-battle-pose": {
+      "kind": "app-image",
+      "table": "race_battle_poses",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-hermes-public",
+      "visibility": "public",
+      "key_pattern": "uuid",
+      "path_template": "hermes/race-battle-pose-cutout/{id}/{sha256}.webp",
+      "write_fields": {
+        "source_sha256": "source_sha256",
+        "source_drive_file_id": "source_drive_file_id"
+      },
+      "required_null_columns": [
+        "pending_staging_path"
+      ],
+      "guard_columns": [
+        "staging_path",
+        "pending_staging_path",
+        "pending_base_key",
+        "pending_mounting_profile",
+        "publication_status",
+        "is_active",
+        "base_key",
+        "mounting_profile"
+      ]
+    },
+    "campaign-npc-portrait": {
+      "kind": "app-image",
+      "table": "campaign_npcs",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/npc/{id}/{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ]
+    },
+    "campaign-monster-portrait": {
+      "kind": "app-image",
+      "table": "campaign_monsters",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "campaign-actor-images",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/monster/{id}/{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ]
+    },
+    "campaign-material-image": {
+      "kind": "app-image",
+      "table": "campaign_materials",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-materials",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/{id}/core-{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "sha256": "output_sha256",
+        "file_size_bytes": "output_bytes",
+        "mime_type": "output_mime_type"
+      },
+      "required_row_values": {
+        "asset_kind": "image",
+        "storage_bucket": "campaign-materials"
+      },
+      "required_null_columns": [
+        "archived_at",
+        "thumbnail_path"
+      ],
+      "guard_columns": [
+        "storage_bucket",
+        "asset_kind",
+        "archived_at",
+        "thumbnail_path"
+      ]
+    },
+    "campaign-gallery-image": {
+      "kind": "app-image",
+      "table": "campaign_images",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-location-assets",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/core/{id}-{sha256}.webp",
+      "path_columns": [
+        "campaign_id"
+      ],
+      "write_fields": {
+        "mime_type": "output_mime_type"
+      },
+      "required_row_values": {
+        "storage_bucket": "campaign-location-assets"
+      },
+      "guard_columns": [
+        "storage_bucket",
+        "mime_type"
+      ]
+    },
+    "campaign-location-asset": {
+      "kind": "app-image",
+      "table": "campaign_location_assets",
+      "lookup_column": "id",
+      "image_column": "storage_path",
+      "bucket": "campaign-location-assets",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "{campaign_id}/location/{location_id}/{id}-{sha256}.webp",
+      "path_columns": [
+        "campaign_id",
+        "location_id"
+      ],
+      "required_row_values": {
+        "asset_type": "image",
+        "asset_kind": "image"
+      },
+      "guard_columns": [
+        "asset_type",
+        "asset_kind",
+        "player_visible"
+      ]
+    },
+    "round-background-catalog": {
+      "kind": "app-image",
+      "table": "rule_combat_round_backgrounds",
+      "lookup_column": "id",
+      "image_column": "image_path",
+      "bucket": "alea-round-backgrounds",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "round/{id}.webp",
+      "required_row_values": {
+        "is_active": false
+      },
+      "required_null_columns": [
+        "archived_at"
+      ],
+      "guard_columns": [
+        "is_active",
+        "archived_at"
+      ]
     }
   },
   "profiles": {
@@ -776,6 +954,236 @@
       "quality_min": 64,
       "quality_step": 4,
       "max_source_bytes": 12582912
+    },
+    "combatant-pose-published": {
+      "adapter": "combatant-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "published"
+      }
+    },
+    "combatant-pose-draft": {
+      "adapter": "combatant-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "draft"
+      },
+      "required_null_columns": [
+        "staging_path",
+        "pending_staging_path"
+      ]
+    },
+    "race-pose-published": {
+      "adapter": "race-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "published"
+      }
+    },
+    "race-pose-draft": {
+      "adapter": "race-battle-pose",
+      "source_formats": [
+        "PNG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1280,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 12000000,
+      "required_row_values": {
+        "publication_status": "draft"
+      },
+      "required_null_columns": [
+        "staging_path",
+        "pending_staging_path"
+      ]
+    },
+    "campaign-npc-portrait": {
+      "adapter": "campaign-npc-portrait",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 8192,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 8388608,
+      "source_min_width": 640,
+      "source_min_height": 800
+    },
+    "campaign-monster-portrait": {
+      "adapter": "campaign-monster-portrait",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 640,
+      "source_max_edge": 8192,
+      "aspect": "portrait",
+      "alpha": "opaque",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 1536,
+      "max_webp_bytes": 6291456,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 8388608,
+      "source_min_width": 640,
+      "source_min_height": 800
+    },
+    "campaign-material-image": {
+      "adapter": "campaign-material-image",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "campaign-gallery-image": {
+      "adapter": "campaign-gallery-image",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "campaign-location-asset": {
+      "adapter": "campaign-location-asset",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "round-background-catalog": {
+      "adapter": "round-background-catalog",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
     }
   },
   "legacy_kind_profiles": {
