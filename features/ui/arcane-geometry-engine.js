@@ -87,7 +87,7 @@
   const g=geometry(rows,opts),size=opts.size||1,padding=opts.padding??.42;
   const elevation=(g.camera.elevationDegrees??55)*Math.PI/180;
   const verticalScale=Math.sin(elevation),wallDrop=(g.camera.wallHeight??.2)*Math.cos(elevation)*(g.camera.scale??1);
-  const ptKey=p=>p.x.toFixed(5)+','+p.y.toFixed(5),edgeMap=new Map(),vertexMap=new Map();
+  const ptKey=p=>Number(p.x.toFixed(5))+','+Number(p.y.toFixed(5)),edgeMap=new Map(),vertexMap=new Map();
   for(let fi=0;fi<g.faces.length;fi++){
    const face=g.faces[fi];
    for(let i=0;i<6;i++){
