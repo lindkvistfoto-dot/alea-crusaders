@@ -1,6 +1,6 @@
 {
   "schema": 3,
-  "label": "HERMES CORE isolated DEV integration pilot 2026-11-04",
+  "label": "HERMES CORE isolated DEV integration pilot 2026-11-04 (resume with existing DEV secret)",
   "target": {
     "kind": "profile",
     "profile_id": "unrestricted-system",
