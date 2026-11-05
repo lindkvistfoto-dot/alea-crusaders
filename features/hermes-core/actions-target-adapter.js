@@ -11,6 +11,9 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    height:metadata.height,
    source_sha256:prepared.source_sha256,
    source_drive_file_id:prepared.archive_file_id,
+   output_sha256:metadata.sha256,
+   output_bytes:metadata.bytes,
+   output_mime_type:"image/webp",
   };
  }
  function appImageUpdate(previous,metadata){
@@ -51,7 +54,9 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    const key=normalizeCoreAppImageKey(targetKind,target.id,prepared.profile_id);
    const columns=[...new Set(["id",appTarget.image_column,...(appTarget.path_columns??[]),
     ...(appTarget.metadata_column?[appTarget.metadata_column]:[]),
-    ...Object.keys(appTarget.required_row_values??{}),...(appTarget.required_null_columns??[])])];
+    ...Object.keys(appTarget.required_row_values??{}),
+    ...(appTarget.guard_columns??[]),...(appTarget.required_null_columns??[]),
+    ...Object.keys(appTarget.write_fields??{})])];
    const {data,error}=await db.from(appTarget.table).select(columns.join(",")).eq(appTarget.lookup_column,key).maybeSingle();
    if(error)throw error;
    if(data)assertTargetState(data);
@@ -85,6 +90,10 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    }
    for(const column of appTarget.required_null_columns??[])update=update.is(column,null);
    for(const [column,value] of Object.entries(appTarget.required_row_values??{}))update=update.eq(column,value);
+   for(const column of appTarget.guard_columns??[]){
+    const value=previous.row[column];
+    update=value===null||value===undefined?update.is(column,null):update.eq(column,value);
+   }
    if(appTarget.metadata_column){
     const oldMetadata=previous.row[appTarget.metadata_column];
     update=oldMetadata===null||oldMetadata===undefined
