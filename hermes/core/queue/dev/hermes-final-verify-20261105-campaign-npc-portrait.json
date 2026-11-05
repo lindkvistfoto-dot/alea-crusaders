@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "HERMES final DEV verification campaign-npc-portrait 2026-11-05",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-npc-portrait",
+    "id": "9837cdfc-64a8-41a0-aa49-078865473994"
+  },
+  "drive_file_id": "1pWYC-sFNu-KPJSnC04tHfmltxDf2sUD2",
+  "archive_file_id": "1U9Bm7u4cIjX7LlNDbWToMe0VuzG-ZRHU",
+  "source_sha256": "11cd62775227d7a207eb4ac080a33ee3032f747eee56c564faa4c815c931e482"
+}

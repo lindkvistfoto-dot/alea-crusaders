@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "HERMES final DEV verification campaign-location-asset 2026-11-05",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "b22c3bda-bb73-4c08-94b6-dd8eda456fcc"
+  },
+  "drive_file_id": "1-tVTyWfiKS8InE1MsUsbnZxU-x6jVyPu",
+  "archive_file_id": "1S76NPrmVg_IOFWImacto_i3tc2BRExEX",
+  "source_sha256": "cb078145ed2c4b9c66af8f25397e7422a7a81979ab363cc25e1282ab447bc21e"
+}

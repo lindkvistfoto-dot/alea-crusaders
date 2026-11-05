@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "HERMES final DEV verification campaign-map 2026-11-05",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-map",
+    "id": "6c723f3a-e5fa-4553-ad1a-a730a6039af2"
+  },
+  "drive_file_id": "1-tVTyWfiKS8InE1MsUsbnZxU-x6jVyPu",
+  "archive_file_id": "1S76NPrmVg_IOFWImacto_i3tc2BRExEX",
+  "source_sha256": "cb078145ed2c4b9c66af8f25397e7422a7a81979ab363cc25e1282ab447bc21e"
+}
