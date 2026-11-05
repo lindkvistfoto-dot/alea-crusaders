@@ -5,14 +5,46 @@ on:
     branches: [main]
     paths:
       - 'hermes/core/queue/*.json'
+  workflow_dispatch:
+    inputs:
+      verify_live_credential:
+        description: 'Run only a read-only validation of the existing LIVE credential.'
+        required: true
+        type: boolean
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
+  verify-live-credential:
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_live_credential
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Validate existing LIVE key against fixed LIVE project (read-only)
+        env:
+          KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          key="${KEY:-}"
+          [[ -n "$key" ]] || { echo "::error::Existing LIVE Supabase secret is unavailable."; exit 1; }
+          echo "::add-mask::$key"
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" \
+            --header "Authorization: Bearer $key" \
+            --header "Accept: application/json" \
+            "https://wbmosmkirsitkonejzpg.supabase.co/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
+          [[ "$status" == "200" ]] || { echo "::error::Existing secret failed fixed LIVE read-only validation (HTTP $status)."; exit 1; }
+          unset key
+          echo "Existing LIVE key passed a read-only project-bound registry check."
+
   publish:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
