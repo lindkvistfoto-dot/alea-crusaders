@@ -37,7 +37,7 @@ describe("HERMES CORE ALEA image target coverage",()=>{
   expect(resolveCoreAppImageTarget("skill-illustration-wide")).toMatchObject({table:"rule_skills",imageColumn:"illustration_wide_path",bucket:"alea-skill-art"});
   expect(normalizeCoreAppImageKey("skill","first-aid")).toBe("first_aid");
   expect(normalizeCoreAppImageKey("app-image","hermes_dev_test_universal_core","projectile-art")).toBe("hermes_dev_test_universal_core");
-  expect(coreAppImagePath("projectile-art","hermes_dev_test_universal_core","b".repeat(64))).toBe(`projectile/hermes_dev_test_universal_core/${"b".repeat(64)}.webp`);
+  expect(coreAppImagePath("projectile-art","hermes_dev_test_universal_core","b".repeat(64))).toBe(`projectile/hermes_dev_test_universal_core/bbbbbbbb-bbbb-8bbb-bbbb-bbbbbbbbbbbb.webp`);
   expect(coreAppImagePath("spell","eld","b".repeat(64))).toBe(`hermes/core/spell/eld/${"b".repeat(64)}.webp`);
  });
  it("publishes through each configured target's own pointer using compare-and-set",async()=>{
