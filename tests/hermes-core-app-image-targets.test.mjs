@@ -53,6 +53,18 @@ describe("HERMES CORE ALEA image target coverage",()=>{
    expect(result.key).toBe(path);
   }
  });
+ it("publishes natural-key targets without assuming an id column",async()=>{
+  const kind="app-image",profileId="projectile-art",id="hermes_dev_test_universal_core";
+  const profile=resolveCoreAppImageTarget(kind,profileId),row={[profile.lookupColumn]:id,[profile.imageColumn]:null};
+  const prepared={target:{kind,id},profile_id:profileId,source_sha256:"a".repeat(64)};
+  const adapter=createCoreActionsTargetAdapter({db:fakeDb(profile.table,row),prepared,registryKey:"unused"});
+  expect(row).not.toHaveProperty("id");
+  const before=await adapter.readTarget(prepared.target);
+  const path=coreAppImagePath(profileId,id,"c".repeat(64));
+  const result=await adapter.activate(prepared.target,before.revision,before.key,{path},false);
+  expect(row[profile.imageColumn]).toBe(path);
+  expect(result.key).toBe(path);
+ });
  it("rejects unknown target kinds and unsafe target keys",()=>{
   expect(resolveCoreAppImageTarget("arbitrary-table")).toBeNull();
   expect(()=>normalizeCoreQueueTarget({schema:2,target:{kind:"unknown",id:"x"}})).toThrow("CORE_TARGET_KIND_UNSUPPORTED");
