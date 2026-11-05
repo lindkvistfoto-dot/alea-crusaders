@@ -55,7 +55,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
  async function readTarget(target){
   if(appTarget){
    const key=normalizeCoreAppImageKey(targetKind,target.id,prepared.profile_id);
-   const columns=[...new Set(["id",appTarget.image_column,...(appTarget.path_columns??[]),
+   const columns=[...new Set([appTarget.lookup_column,appTarget.image_column,...(appTarget.path_columns??[]),
     ...(appTarget.metadata_column?[appTarget.metadata_column]:[]),
     ...Object.keys(appTarget.required_row_values??{}),
     ...(appTarget.guard_columns??[]),...(appTarget.required_null_columns??[]),
@@ -85,7 +85,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    if(!previous||previous.key!==expectedKey)throw new Error("CORE_APP_TARGET_CHANGED");
    if(appTarget.binding_type==="record-image"&&expectedKey!==null&&expectedKey!==metadata.path)
     throw new Error("CORE_RECORD_IMAGE_REPLACE_PROTECTED");
-   let update=db.from(appTarget.table).update(appImageUpdate(previous,metadata)).eq("id",previous.row.id);
+   let update=db.from(appTarget.table).update(appImageUpdate(previous,metadata)).eq(appTarget.lookup_column,previous.row[appTarget.lookup_column]);
    update=expectedKey===null?update.is(appTarget.image_column,null):update.eq(appTarget.image_column,expectedKey);
    for(const column of appTarget.path_columns??[]){
     const value=previous.row[column];
@@ -102,7 +102,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
     update=oldMetadata===null||oldMetadata===undefined
      ?update.is(appTarget.metadata_column,null):update.eq(appTarget.metadata_column,postgrestFilterValue(oldMetadata));
    }
-   const columns=["id",appTarget.image_column];
+   const columns=[appTarget.lookup_column,appTarget.image_column];
    const {data,error}=await update.select(columns.join(",")).maybeSingle();
    if(error)throw error;
    if(!data){
