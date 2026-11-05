@@ -27,9 +27,10 @@ const db = createClient(url, secret, {auth: {persistSession: false}});
 const reserveSystem = createCoreSystemReservation();
 const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.asset_key)
   : "arcane-" + (prepared.profile_id ?? targetKind) + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
-const reserveAsset = async ({target,metadata}: any) => {
+const reserveAsset = async ({target,metadata,current}: any) => {
   if (appTarget) {
-    const path=coreAppImagePath(prepared.profile_id,target.id,metadata.sha256);
+    if (!current) throw new Error("CORE_APP_TARGET_MUST_EXIST");
+    const path=coreAppImagePath(prepared.profile_id,target.id,metadata.sha256,current?.row??{});
     return {key:path,path,bucket:appTarget.bucket,metadata};
   }
   return reserveSystem({target:{kind:"system",id:registryKey},metadata});
@@ -46,7 +47,7 @@ async function sha256(bytes: Uint8Array) {
   return hex(new Uint8Array(await crypto.subtle.digest("SHA-256", copy)));
 }
 
-async function publishWebP({target, webp: image}: any) {
+async function publishWebP({target, webp: image, current}: any) {
   const metadata = {
     sha256: await sha256(new Uint8Array(await image.arrayBuffer())),
     bytes: image.size,
@@ -57,7 +58,7 @@ async function publishWebP({target, webp: image}: any) {
   if (metadata.sha256 !== prepared.webp_sha256 || metadata.bytes !== prepared.webp_bytes) {
     throw new Error("WEBP_PREPARATION_MISMATCH");
   }
-  const asset = await reserveAsset({target, metadata});
+  const asset = await reserveAsset({target, metadata, current});
   const storage = db.storage.from(appTarget?.bucket || "alea-hermes-public");
   const {error: uploadError} = await storage.upload(asset.path, image, {
     contentType: "image/webp", upsert: false, cacheControl: "31536000",

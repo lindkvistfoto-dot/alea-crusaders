@@ -18,6 +18,7 @@ function normalizeTarget(kind, id, profileId, material) {
  if (!supported) throw new Error("CORE_TARGET_KIND_UNSUPPORTED");
  const validId=kind==="system"?SYSTEM.test(id||"")
   :kind==="honor-definition"||kind==="honor-relief"?UUID.test(id||"")
+  :profile?.key_pattern==="uuid"?UUID.test(id||"")
   :APP_KEY.test(id||"");
  if(typeof id!=="string"||!validId)throw new Error("INVALID_CORE_TARGET_ID");
  if(kind==="honor-relief"&&!["enamel","metal","wood","stone","other"].includes(material))

@@ -20,6 +20,14 @@ The shared [image contract](./contract.json) defines profile-specific source con
 | Spell, skill, symbol | Approved existing table and image column per profile | Public or signed Storage and selected column |
 | Honor or relief | Existing honor reference to a registered system asset | Public Storage and reference |
 | NPC portrait | Existing `global_npcs` image pointer plus merged `image_reference` metadata | Private bucket via signed URL and record |
+| Equipment master art | Existing weapon, shield, armor-slot, projectile, or shop-item image pointer in public `alea-equipment-art` | Public Storage readback and pointer CAS; old UUID-addressed objects remain untouched |
+| Campaign map | Existing `campaign_maps` row, `campaign_id`-scoped private path, `image_path`, `width`, and `height` | Private Storage readback and row readback; no map row is created or activated |
+| Combat-scene background | Existing `campaign_combat_scenes` row, campaign-scoped private path, background pointer and dimensions | Private Storage readback and row readback; scene geometry and map selection are untouched |
+| Hit-area figure | Existing `rule_hit_figure_images` pointer and private `alea-hit-figures` object | Signed Storage readback and pointer CAS; previous object is retained |
+
+Schema-3 app-image identifiers and all write destinations remain repository-owned. UUID-keyed profiles accept only UUID targets, slug-keyed profiles only slugs; campaign path segments are read from the selected existing row. The publisher derives a stable UUIDv8 filename from the output SHA-256 where an existing Storage path contract requires UUID filenames.
+
+Battle-pose publication remains on its existing ALEA worker until that worker is migrated: it shares pose rows and staging/job state, so CORE must not race its pending replacement or implicitly change `publication_status` or `is_active`. Character/campaign-scoped portraits and round-background catalog rows also require their existing ownership/catalog lifecycle to be connected before they can be safely changed by CORE.
 
 If a target is not covered by a safe adapter, stop that target and report the missing integration; do not fall back to an older publisher. Older workflows remain active until their replacement is verified and separately approved. No LIVE workflow or deployment is part of this DEV change.
 

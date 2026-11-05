@@ -12,7 +12,7 @@ export function createHermesCore({archiveOriginal, convertToWebP, publishWebP, g
   if (!webp || webp.type!=='image/webp' || !webp.size) throw new Error('Invalid WebP');
   const current=await getTarget(target);
   if (!current && typeof createTarget !== 'function') throw new Error('CREATE adapter required for new image target');
-  const published=await publishWebP({target,webp,archive});
+  const published=await publishWebP({target,webp,archive,current});
   if (!published?.key || published.verified!==true) throw new Error('WebP publication not verified');
   const activation=current
    ? await setTarget({target,expectedRevision:current.revision,expectedKey:current.key??null,key:published.key,metadata:published.metadata})

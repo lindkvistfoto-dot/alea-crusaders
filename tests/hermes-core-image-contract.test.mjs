@@ -12,7 +12,7 @@ describe('HERMES CORE declarative image contract',()=>{
    expect(resolved.kind).toBe(contract.adapters[profile.adapter].kind);
    expect(['public','private']).toContain(resolved.visibility);
   }
-  expect(CORE_APP_IMAGE_PROFILES.length).toBe(9);
+  expect(CORE_APP_IMAGE_PROFILES.length).toBe(21);
  });
  it('normalizes generic requests without accepting caller-selected destinations',()=>{
   const target=normalizeCoreQueueTarget({schema:3,label:'Portrait',target:{
@@ -58,6 +58,32 @@ describe('HERMES CORE declarative image contract',()=>{
   expect(row.image_reference.source_sha256).toBe(prepared.source_sha256);
   expect(row.image_reference.verified).toBe(true);
  });
+ it('updates only the approved campaign map pointer and output dimensions',async()=>{
+  const row={id:'123e4567-e89b-42d3-a456-426614174000',campaign_id:'987e6543-e21b-43d2-b654-426614174111',
+   image_path:'old-map.webp',width:1200,height:800};
+  const db={from(table){
+   expect(table).toBe('campaign_maps');
+   let op='select',values;const filters=[];
+   const q={select(){return q;},update(value){op='update';values=value;return q;},
+    eq(key,value){filters.push(['eq',key,value]);return q;},is(key,value){filters.push(['is',key,value]);return q;},
+    maybeSingle(){return run();}};
+   async function run(){
+    const matches=filters.every(([kind,key,value])=>kind==='eq'
+     ?JSON.stringify(row[key])===JSON.stringify(value):row[key]===value);
+    if(!matches)return {data:null,error:null};
+    if(op==='update'){Object.assign(row,values);return {data:{id:row.id,image_path:row.image_path},error:null};}
+    return {data:{...row},error:null};
+   }
+   return q;
+  }};
+  const prepared={target:{kind:'app-image',id:row.id},profile_id:'campaign-map'};
+  const adapter=createCoreActionsTargetAdapter({db,prepared,registryKey:'unused'});
+  const result=await adapter.activate(prepared.target,0,row.image_path,{
+   path:'new-map.webp',sha256:'a'.repeat(64),bytes:3200,width:2048,height:1365,alphaPreserved:false,
+  },false);
+  expect(result.key).toBe('new-map.webp');
+  expect(row).toMatchObject({campaign_id:'987e6543-e21b-43d2-b654-426614174111',image_path:'new-map.webp',width:2048,height:1365});
+ });
  it('keeps earlier schema-2 targets compatible and hashes profile paths immutably',()=>{
   const target=normalizeCoreQueueTarget({schema:2,label:'Skill',target:{kind:'skill',id:'combat-training'}});
   expect(target.profile_id).toBe('skill-icon');
@@ -65,5 +91,21 @@ describe('HERMES CORE declarative image contract',()=>{
   expect(coreAppImagePath('skill-icon','combat-training','a'.repeat(64))).toBe(
    'hermes/core/skill/combat-training/'+ 'a'.repeat(64)+'.webp'
   );
+ });
+ it('binds UUID app targets to their approved row and campaign-scoped paths',()=>{
+  const mapId='123e4567-e89b-42d3-a456-426614174000';
+  const campaignId='987e6543-e21b-43d2-b654-426614174111';
+  const target=normalizeCoreQueueTarget({schema:3,label:'Dev map',target:{
+   kind:'profile',profile_id:'campaign-map',id:mapId,bucket:'attacker-bucket',
+  }});
+  expect(target).toEqual({kind:'app-image',id:mapId,profile_id:'campaign-map',label:'Dev map'});
+  const path=coreAppImagePath('campaign-map',mapId,'a'.repeat(64),{campaign_id:campaignId});
+  expect(path).toMatch(new RegExp(`^${campaignId}/${mapId}/image-[0-9a-f-]{36}\\.webp$`));
+  expect(()=>coreAppImagePath('campaign-map',mapId,'a'.repeat(64),{})).toThrow('CORE_APP_IMAGE_PATH_CONTEXT_MISSING');
+  expect(()=>normalizeCoreQueueTarget({schema:3,target:{kind:'profile',profile_id:'weapon-art',id:'not-a-uuid'}}))
+   .toThrow('INVALID_CORE_TARGET_ID');
+  expect(resolveCoreImageProfile('weapon-art').visibility).toBe('public');
+  expect(resolveCoreImageProfile('campaign-map').visibility).toBe('private');
+  expect(resolveCoreImageProfile('hit-figure').bucket).toBe('alea-hit-figures');
  });
 });
