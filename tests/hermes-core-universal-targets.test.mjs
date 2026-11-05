@@ -87,4 +87,12 @@ describe('Universal HERMES CORE adapters',()=>{
   const adapter=createCoreActionsTargetAdapter({db:dbFor(profile,row),prepared,registryKey:'unused'});
   await expect(adapter.readTarget(prepared.target)).rejects.toThrow('CORE_APP_TARGET_BUSY');
  });
+
+ it('refuses active round-background rows so publication cannot change the active art',async()=>{
+  const profile=resolveCoreImageProfile('round-background-catalog');
+  const row={id:UUID,[profile.lookup_column]:UUID,[profile.image_column]:'assets/combat/round/evergreen.webp',is_active:true,archived_at:null};
+  const prepared={target:{kind:'app-image',id:UUID,profile_id:'round-background-catalog'},profile_id:'round-background-catalog'};
+  const adapter=createCoreActionsTargetAdapter({db:dbFor(profile,row),prepared,registryKey:'unused'});
+  await expect(adapter.readTarget(prepared.target)).rejects.toThrow('CORE_APP_TARGET_STATE_UNSUPPORTED');
+ });
 });

@@ -33,7 +33,7 @@ Schema-3 app-image identifiers and all write destinations remain repository-owne
 
 CORE publishes developer-supplied battle-pose bytes only to existing published rows or unclaimed draft rows. It refuses pending ALEA replacements and leaves `publication_status`, `is_active`, pose keys, base keys and mounting data unchanged. ALEA Pages uploads continue through the independent ALEA staging/worker lifecycle. Personal character portrait uploads remain ALEA-owned; CORE profiles target developer-managed campaign NPC/monster images.
 
-Round-background publication requires an existing, unarchived catalog row. The fixed row-ID path is write-once (`upsert: false`); republishing different bytes to the same row safely fails, and CORE never changes `is_active`.
+Round-background publication requires an existing, unarchived, inactive catalog row. Active catalog entries are rejected. The fixed row-ID path is write-once (`upsert: false`); republishing different bytes to the same row safely fails, and CORE never changes `is_active`.
 
 If a target is not covered by a safe adapter, stop that target and report the missing integration; do not fall back to an older publisher. Older workflows remain active until their replacement is verified and separately approved. No LIVE workflow or deployment is part of this DEV change.
 

@@ -427,6 +427,9 @@
       "visibility": "private",
       "key_pattern": "uuid",
       "path_template": "round/{id}.webp",
+      "required_row_values": {
+        "is_active": false
+      },
       "required_null_columns": [
         "archived_at"
       ],
