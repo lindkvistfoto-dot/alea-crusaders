@@ -3,10 +3,13 @@ import {readFileSync} from 'node:fs';
 const drive=readFileSync(new URL('../.github/workflows/hermes-drive-intake.yml',import.meta.url),'utf8');
 const ui=readFileSync(new URL('../.github/workflows/hermes-ui-intake.yml',import.meta.url),'utf8');
 const intake=readFileSync(new URL('../scripts/hermes_drive_intake.py',import.meta.url),'utf8');
-describe('HERMES queue concurrency safeguards',()=>{
- it('keys Drive jobs to their distinct push commit',()=>{
-  expect(drive).toContain('group: hermes-drive-queue-${{ github.sha }}');
-  expect(drive).toContain('cancel-in-progress: false');
+describe('HERMES queue routing safeguards',()=>{
+ it('keeps the legacy Drive batch intake retired in favor of CORE',()=>{
+  expect(drive).not.toContain('push:');
+  expect(drive).toContain('workflow_dispatch:');
+  expect(drive).toContain('Legacy HERMES Drive batch publication is retired');
+  expect(drive).toContain('HERMES CORE Drive queue');
+  expect(drive).not.toContain('hermes2_publish.ts');
  });
  it('retires the old UI publisher without a push trigger',()=>{
   expect(ui).toContain('exit 1');expect(ui).not.toContain('push:');
