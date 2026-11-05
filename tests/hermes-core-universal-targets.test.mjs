@@ -6,17 +6,23 @@ const UUID='6a67121d-67ee-4943-82a3-83a15334d815';
 const CAMPAIGN='c45228b1-c692-4a4c-9f15-4ed97da9b57c';
 const HASH='a'.repeat(64);
 
-function dbFor(profile,row){
+function dbFor(profile,row,observedFilters=[]){
  return {from(table){
   if(table!==profile.table)throw new Error('UNEXPECTED_TABLE');
   let operation='select',values={};const filters=[];
   const q={
    select(){return q;},
    update(next){operation='update';values=next;return q;},
-   eq(column,value){filters.push([column,'eq',value]);return q;},
+   eq(column,value){filters.push([column,'eq',value]);observedFilters.push([column,'eq',value]);return q;},
    is(column,value){filters.push([column,'is',value]);return q;},
    async maybeSingle(){
-    if(!filters.every(([column,operator,value])=>operator==='is'?row[column]===value:row[column]===value))return {data:null,error:null};
+    if(!filters.every(([column,operator,value])=>{
+     if(operator==='is')return row[column]===value;
+     if(row[column]&&typeof row[column]==='object'&&typeof value==='string'){
+      try{return JSON.stringify(row[column])===JSON.stringify(JSON.parse(value));}catch{return false;}
+     }
+     return row[column]===value;
+    }))return {data:null,error:null};
     if(operation==='update')Object.assign(row,values);
     return {data:{...row},error:null};
    }
@@ -78,6 +84,19 @@ describe('Universal HERMES CORE adapters',()=>{
    }
    if(profileId==='round-background-catalog')expect(row.is_active).toBe(false);
   }
+ });
+
+ it('serializes JSON guard values for PostgREST compare-and-set filters',async()=>{
+  const profile=resolveCoreImageProfile('combatant-pose-draft');
+  const row={id:UUID,[profile.lookup_column]:UUID,[profile.image_column]:null,publication_status:'draft',staging_path:null,pending_staging_path:null,pending_base_key:null,pending_mounting_profile:null,is_active:false,base_key:'hex-base',mounting_profile:{scale:1,offset:{x:0,y:0}}};
+  const filters=[];
+  const prepared={target:{kind:'app-image',id:UUID,profile_id:'combatant-pose-draft'},profile_id:'combatant-pose-draft',source_sha256:HASH,archive_file_id:'archive'};
+  const adapter=createCoreActionsTargetAdapter({db:dbFor(profile,row,filters),prepared,registryKey:'unused'});
+  const before=await adapter.readTarget(prepared.target);
+  const path=coreAppImagePath('combatant-pose-draft',UUID,HASH,before.row);
+  await adapter.activate(prepared.target,before.revision,before.key,{path,sha256:HASH,bytes:2048,width:640,height:640,alphaPreserved:true},false);
+  expect(filters).toContainEqual(['mounting_profile','eq',JSON.stringify(row.mounting_profile)]);
+  expect(row.mounting_profile).toEqual({scale:1,offset:{x:0,y:0}});
  });
 
  it('refuses pose records claimed by the ALEA staging lifecycle',async()=>{
