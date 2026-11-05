@@ -77,25 +77,26 @@ jobs:
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/drive.readonly
           create_credentials_file: false
-      - name: Resolve the DEV service-role key using the existing Supabase connection
+      - name: Validate the existing DEV Supabase secret without revealing it
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
         shell: bash
         run: |
           set -euo pipefail
           set +x
-          [[ -n "$SUPABASE_ACCESS_TOKEN" ]] || { echo "::error::Existing Supabase management connection is unavailable."; exit 1; }
-          response="$(curl --fail --silent --show-error --get \
-            --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            --header "Accept: application/json" \
-            --data-urlencode "reveal=true" \
-            "https://api.supabase.com/v1/projects/wkiuyklzzroavclnsxna/api-keys")"
-          key="$(jq -er '[.[] | select(.name == "service_role") | .api_key][0] // empty' <<< "$response")"
-          unset response
-          [[ "$key" == eyJ* ]] || { echo "::error::Supabase did not return a DEV service-role key."; exit 1; }
+          key="${ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY:-}"
+          [[ -n "$key" ]] || { echo "::error::Existing DEV Supabase secret is unavailable."; exit 1; }
           echo "::add-mask::$key"
+          url="https://wkiuyklzzroavclnsxna.supabase.co"
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" \
+            --header "Authorization: Bearer $key" \
+            --header "Accept: application/json" \
+            "$url/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
+          [[ "$status" == "200" ]] || { echo "::error::Existing secret failed read-only DEV project validation (HTTP $status)."; exit 1; }
           printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$key" >> "$GITHUB_ENV"
           unset key
+          echo "Validated existing secret against the fixed DEV project and read-only asset registry."
       - name: Prepare and publish changed DEV requests
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
