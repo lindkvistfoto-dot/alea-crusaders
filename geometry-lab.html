@@ -56,6 +56,30 @@ $('remove-row').addEventListener('click',()=>{if(rows.length<=1)return;rows.pop(
 $('auto-align').addEventListener('click',align);
 $('download-svg').addEventListener('click',()=>download(new Blob([markup],{type:'image/svg+xml'}),'hex-base-'+(customMode?'custom':selected.id)+'.svg'));
 $('manifest').addEventListener('click',()=>{const rows=activeRows();const data=JSON.stringify(e.manifest(rows,opts()),null,2);download(new Blob([data],{type:'application/json'}),'hexagonia-geometry.json')});
-$('download-png').addEventListener('click',async()=>{const viewBox=markup.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/);if(!viewBox){alert('SVG saknar storleksmått');return}const svgSized=markup.replace('<svg ','<svg width="'+viewBox[1]+'" height="'+viewBox[2]+'" '),url=URL.createObjectURL(new Blob([svgSized],{type:'image/svg+xml'})),img=new Image();try{img.src=url;await img.decode();const scale=Math.min(2,2048/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.ceil(img.naturalWidth*scale);canvas.height=Math.ceil(img.naturalHeight*scale);const ctx=canvas.getContext('2d',{alpha:true});ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);if(ctx.getImageData(0,0,1,1).data[3]!==0)throw new Error('Exportens hörnpixel är inte transparent');canvas.toBlob(blob=>blob?download(blob,'hex-base-'+(customMode?'custom':selected.id)+'.png'):alert('PNG-exporten misslyckades'),'image/png')}catch(error){alert('PNG-exporten misslyckades: '+error.message)}finally{URL.revokeObjectURL(url)}});
+async function rasterizeSvg(svg){
+ const viewBox=svg.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/);
+ if(!viewBox)throw new Error('SVG saknar storleksmått');
+ const viewWidth=Number(viewBox[1]),viewHeight=Number(viewBox[2]);
+ if(!Number.isFinite(viewWidth)||!Number.isFinite(viewHeight)||viewWidth<=0||viewHeight<=0)throw new Error('SVG har ogiltiga storleksmått');
+ const rasterScale=2048/Math.max(viewWidth,viewHeight);
+ const pixelWidth=Math.ceil(viewWidth*rasterScale),pixelHeight=Math.ceil(viewHeight*rasterScale);
+ const svgSized=svg.replace('<svg ','<svg width="'+pixelWidth+'" height="'+pixelHeight+'" ');
+ const url=URL.createObjectURL(new Blob([svgSized],{type:'image/svg+xml'}));
+ try{
+  const img=new Image();img.src=url;await img.decode();
+  const canvas=document.createElement('canvas');canvas.width=pixelWidth;canvas.height=pixelHeight;
+  const ctx=canvas.getContext('2d',{alpha:true});
+  if(!ctx)throw new Error('Kunde inte skapa transparent canvas');
+  ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  for(const [x,y] of [[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]]){
+   if(ctx.getImageData(x,y,1,1).data[3]!==0)throw new Error('Exportens hörnpixel är inte transparent');
+  }
+  return await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-exporten misslyckades')),'image/png'));
+ }finally{URL.revokeObjectURL(url)}
+}
+$('download-png').addEventListener('click',async()=>{
+ try{const blob=await rasterizeSvg(markup);download(blob,'hex-base-'+(customMode?'custom':selected.id)+'.png')}
+ catch(error){alert('PNG-exporten misslyckades: '+error.message)}
+});
 redrawEditor();renderGallery();render();
 </script></body></html>
