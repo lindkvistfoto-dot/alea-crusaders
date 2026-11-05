@@ -5,6 +5,14 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
  const appTarget=resolveCoreAppImageTarget(targetKind, prepared.profile_id);
  const honorTable=targetKind==="honor-definition"?"honor_definitions":"honor_relief_variants";
  function dbMetadata(metadata){return {asset_path:metadata.path,app_sha256:metadata.sha256,app_bytes:metadata.bytes,width:metadata.width,height:metadata.height,alpha_preserved:metadata.alphaPreserved};}
+ function imageWriteValues(metadata){
+  return {
+   width:metadata.width,
+   height:metadata.height,
+   source_sha256:prepared.source_sha256,
+   source_drive_file_id:prepared.archive_file_id,
+  };
+ }
  function appImageUpdate(previous,metadata){
   const values={[appTarget.image_column]:metadata.path};
   if(appTarget.metadata_column){
@@ -23,15 +31,30 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
     published_by:"HERMES-CORE"
    };
   }
+  const writeValues=imageWriteValues(metadata);
+  for(const [column,value] of Object.entries(appTarget.write_fields??{})){
+   if(!Object.hasOwn(writeValues,value))throw new Error("CORE_APP_IMAGE_WRITE_FIELD_UNSUPPORTED");
+   values[column]=writeValues[value];
+  }
   return values;
+ }
+ function assertTargetState(row){
+  for(const [column,value] of Object.entries(appTarget.required_row_values??{})){
+   if(row?.[column]!==value)throw new Error("CORE_APP_TARGET_STATE_UNSUPPORTED");
+  }
+  for(const column of appTarget.required_null_columns??[]){
+   if(row?.[column]!==null&&row?.[column]!==undefined)throw new Error("CORE_APP_TARGET_BUSY");
+  }
  }
  async function readTarget(target){
   if(appTarget){
    const key=normalizeCoreAppImageKey(targetKind,target.id,prepared.profile_id);
-   const columns=["id",appTarget.image_column];
-   if(appTarget.metadata_column)columns.push(appTarget.metadata_column);
+   const columns=[...new Set(["id",appTarget.image_column,...(appTarget.path_columns??[]),
+    ...(appTarget.metadata_column?[appTarget.metadata_column]:[]),
+    ...Object.keys(appTarget.required_row_values??{}),...(appTarget.required_null_columns??[])])];
    const {data,error}=await db.from(appTarget.table).select(columns.join(",")).eq(appTarget.lookup_column,key).maybeSingle();
    if(error)throw error;
+   if(data)assertTargetState(data);
    return data?{key:data[appTarget.image_column]??null,revision:0,row:data}:null;
   }
   if(targetKind!=="system"){
@@ -56,6 +79,12 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
     throw new Error("CORE_RECORD_IMAGE_REPLACE_PROTECTED");
    let update=db.from(appTarget.table).update(appImageUpdate(previous,metadata)).eq("id",previous.row.id);
    update=expectedKey===null?update.is(appTarget.image_column,null):update.eq(appTarget.image_column,expectedKey);
+   for(const column of appTarget.path_columns??[]){
+    const value=previous.row[column];
+    update=value===null||value===undefined?update.is(column,null):update.eq(column,value);
+   }
+   for(const column of appTarget.required_null_columns??[])update=update.is(column,null);
+   for(const [column,value] of Object.entries(appTarget.required_row_values??{}))update=update.eq(column,value);
    if(appTarget.metadata_column){
     const oldMetadata=previous.row[appTarget.metadata_column];
     update=oldMetadata===null||oldMetadata===undefined
@@ -71,6 +100,10 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    }
    const confirmed=await readTarget(target);
    if(confirmed?.key!==metadata.path)throw new Error("CORE_APP_TARGET_READBACK_MISMATCH");
+   const writeValues=imageWriteValues(metadata);
+   for(const [column,value] of Object.entries(appTarget.write_fields??{})){
+    if(confirmed.row?.[column]!==writeValues[value])throw new Error("CORE_APP_IMAGE_METADATA_READBACK_MISMATCH");
+   }
    if(appTarget.metadata_column){
     const record=confirmed.row[appTarget.metadata_column];
     if(record?.app_sha256!==metadata.sha256||record?.source_sha256!==prepared.source_sha256||

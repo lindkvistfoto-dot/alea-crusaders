@@ -5,9 +5,15 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.hermes_core_prepare import prepare
+from scripts.hermes_core_prepare import prepare, valid_core_target_id
 
 class CoreImageProfileTests(unittest.TestCase):
+    def test_app_profiles_accept_only_the_declared_target_key_shape(self):
+        self.assertTrue(valid_core_target_id("app-image", "campaign-map", "123e4567-e89b-42d3-a456-426614174000"))
+        self.assertTrue(valid_core_target_id("app-image", "projectile-art", "arrow"))
+        self.assertFalse(valid_core_target_id("app-image", "projectile-art", "123e4567-e89b-42d3-a456-426614174000"))
+        self.assertFalse(valid_core_target_id("app-image", "campaign-map", "not-a-uuid"))
+
     def test_unrestricted_profile_preserves_real_alpha_without_category_rules(self):
         image = Image.new("RGBA", (24, 12), (40, 80, 120, 255))
         image.putpixel((0, 0), (40, 80, 120, 0))

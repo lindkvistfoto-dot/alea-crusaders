@@ -87,6 +87,20 @@ def profile_id_for(target: dict, request_schema: int) -> str:
         raise ValueError("CORE_PROFILE_UNSUPPORTED")
     return profile_id
 
+
+def valid_core_target_id(kind: str, profile_id: str, ident: object) -> bool:
+    if not isinstance(ident, str):
+        return False
+    if kind == "system":
+        return bool(ASSET_KEY.fullmatch(ident))
+    if kind in ("honor-definition", "honor-relief"):
+        return bool(UUID.fullmatch(ident))
+    profile = PROFILES.get(profile_id)
+    adapter = CORE_CONTRACT["adapters"].get(profile.get("adapter")) if profile else None
+    if adapter and adapter.get("key_pattern") == "uuid":
+        return bool(UUID.fullmatch(ident))
+    return bool(APP_IMAGE_KEY.fullmatch(ident) and not UUID.fullmatch(ident))
+
 def _validate_aspect(image: Image.Image, aspect: str) -> None:
     ratio = image.width / image.height if image.height else 0
     if aspect == "square" and image.width != image.height:
@@ -233,8 +247,7 @@ def main() -> None:
         if target.get("kind") not in valid_kinds:
             raise ValueError("INVALID_CORE_TARGET")
         ident = target.get("id")
-        id_pattern = ASSET_KEY if target["kind"] == "system" else UUID if target["kind"] in ("honor-definition", "honor-relief") else APP_IMAGE_KEY
-        if not isinstance(ident, str) or not id_pattern.fullmatch(ident):
+        if not valid_core_target_id(target["kind"], target["profile_id"], ident):
             raise ValueError("INVALID_CORE_TARGET_ID")
         if target["kind"] == "honor-relief" and target.get("material") not in ("enamel", "metal", "wood", "stone", "other"):
             raise ValueError("INVALID_RELIEF_MATERIAL")
