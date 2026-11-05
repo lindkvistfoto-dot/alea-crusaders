@@ -5,6 +5,10 @@ on:
     branches:
       - development
       - main
+    # DEV CORE queue pushes must not redeploy the combined main + development Pages artifact.
+    paths-ignore:
+      - 'hermes/core/queue/dev/**'
+      - '.github/workflows/deploy-pages-live-dev.yml'
   workflow_dispatch:
 
 permissions:
