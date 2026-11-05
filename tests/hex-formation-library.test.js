@@ -11,6 +11,7 @@ vm.runInNewContext(
 const engine = context.aleaArcaneGeometryEngine;
 const library = context.aleaHexFormationLibrary;
 const appHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const geometryLabHtml = readFileSync(new URL('../geometry-lab.html', import.meta.url), 'utf8');
 const positions = cells => cells.map(c => `${c.q},${c.r}`).sort().join(';');
 const combatContext = {};
 vm.runInNewContext(
@@ -79,6 +80,17 @@ describe('Universal hex formation library', () => {
     }
     expect(appHtml.indexOf('arcane-geometry-engine.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
     expect(appHtml.indexOf('arcane-hex-formation-library.js')).toBeLessThan(appHtml.indexOf('features/combat/footprint.js'));
+  });
+
+  it('exports a full-size transparent PNG from the SVG viewBox', () => {
+    expect(geometryLabHtml).toContain('const rasterScale=2048/Math.max(viewWidth,viewHeight)');
+    expect(geometryLabHtml).toContain('const pixelWidth=Math.ceil(viewWidth*rasterScale),pixelHeight=Math.ceil(viewHeight*rasterScale)');
+    expect(geometryLabHtml).toContain('canvas.width=pixelWidth;canvas.height=pixelHeight');
+    expect(geometryLabHtml).toContain("canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-exporten misslyckades')),'image/png')");
+    expect(geometryLabHtml).toContain('for(const [x,y] of [[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]])');
+    const viewWidth=4,viewHeight=5,rasterScale=2048/Math.max(viewWidth,viewHeight);
+    expect(Math.ceil(viewHeight*rasterScale)).toBe(2048);
+    expect(Math.ceil(viewWidth*rasterScale)).toBe(1639);
   });
 
   it('renders the reusable Arcane master in exact hex geometry with a single shared seam', () => {
