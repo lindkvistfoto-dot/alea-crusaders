@@ -83,14 +83,14 @@ describe('Universal hex formation library', () => {
   });
 
   it('exports a full-size transparent PNG from the SVG viewBox', () => {
-    expect(geometryLabHtml).toContain('const rasterScale=2048/Math.max(viewWidth,viewHeight)');
+    expect(geometryLabHtml).toContain('const rasterScale=1536/Math.max(viewWidth,viewHeight)');
     expect(geometryLabHtml).toContain('const pixelWidth=Math.ceil(viewWidth*rasterScale),pixelHeight=Math.ceil(viewHeight*rasterScale)');
     expect(geometryLabHtml).toContain('canvas.width=pixelWidth;canvas.height=pixelHeight');
     expect(geometryLabHtml).toContain("canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG-exporten misslyckades')),'image/png')");
     expect(geometryLabHtml).toContain('for(const [x,y] of [[0,0],[canvas.width-1,0],[0,canvas.height-1],[canvas.width-1,canvas.height-1]])');
-    const viewWidth=4,viewHeight=5,rasterScale=2048/Math.max(viewWidth,viewHeight);
-    expect(Math.ceil(viewHeight*rasterScale)).toBe(2048);
-    expect(Math.ceil(viewWidth*rasterScale)).toBe(1639);
+    const viewWidth=4,viewHeight=5,rasterScale=1536/Math.max(viewWidth,viewHeight);
+    expect(Math.ceil(viewHeight*rasterScale)).toBe(1536);
+    expect(Math.ceil(viewWidth*rasterScale)).toBe(1229);
   });
 
   it('renders the reusable Arcane master in exact hex geometry with a single shared seam', () => {
