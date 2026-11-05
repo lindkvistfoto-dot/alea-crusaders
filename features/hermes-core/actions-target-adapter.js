@@ -4,6 +4,9 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
  const targetKind=prepared.target?.kind??"system";
  const appTarget=resolveCoreAppImageTarget(targetKind, prepared.profile_id);
  const honorTable=targetKind==="honor-definition"?"honor_definitions":"honor_relief_variants";
+ function postgrestFilterValue(value){
+  return value!==null&&typeof value==="object"?JSON.stringify(value):value;
+ }
  function dbMetadata(metadata){return {asset_path:metadata.path,app_sha256:metadata.sha256,app_bytes:metadata.bytes,width:metadata.width,height:metadata.height,alpha_preserved:metadata.alphaPreserved};}
  function imageWriteValues(metadata){
   return {
@@ -86,7 +89,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    update=expectedKey===null?update.is(appTarget.image_column,null):update.eq(appTarget.image_column,expectedKey);
    for(const column of appTarget.path_columns??[]){
     const value=previous.row[column];
-    update=value===null||value===undefined?update.is(column,null):update.eq(column,value);
+    update=value===null||value===undefined?update.is(column,null):update.eq(column,postgrestFilterValue(value));
    }
    for(const column of appTarget.required_null_columns??[])update=update.is(column,null);
    for(const [column,value] of Object.entries(appTarget.required_row_values??{}))update=update.eq(column,value);
@@ -97,7 +100,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    if(appTarget.metadata_column){
     const oldMetadata=previous.row[appTarget.metadata_column];
     update=oldMetadata===null||oldMetadata===undefined
-     ?update.is(appTarget.metadata_column,null):update.eq(appTarget.metadata_column,oldMetadata);
+     ?update.is(appTarget.metadata_column,null):update.eq(appTarget.metadata_column,postgrestFilterValue(oldMetadata));
    }
    const columns=["id",appTarget.image_column];
    const {data,error}=await update.select(columns.join(",")).maybeSingle();
