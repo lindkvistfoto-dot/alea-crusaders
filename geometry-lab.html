@@ -61,7 +61,7 @@ async function rasterizeSvg(svg){
  if(!viewBox)throw new Error('SVG saknar storleksmått');
  const viewWidth=Number(viewBox[1]),viewHeight=Number(viewBox[2]);
  if(!Number.isFinite(viewWidth)||!Number.isFinite(viewHeight)||viewWidth<=0||viewHeight<=0)throw new Error('SVG har ogiltiga storleksmått');
- const rasterScale=2048/Math.max(viewWidth,viewHeight);
+ const rasterScale=1536/Math.max(viewWidth,viewHeight);
  const pixelWidth=Math.ceil(viewWidth*rasterScale),pixelHeight=Math.ceil(viewHeight*rasterScale);
  const svgSized=svg.replace('<svg ','<svg width="'+pixelWidth+'" height="'+pixelHeight+'" ');
  const url=URL.createObjectURL(new Blob([svgSized],{type:'image/svg+xml'}));
