@@ -1,6 +1,6 @@
 {
   "schema": 3,
-  "label": "HERMES final DEV verification combatant-pose-draft 2026-11-05",
+  "label": "HERMES final DEV verification combatant-pose-draft after #601 2026-11-05",
   "target": {
     "kind": "profile",
     "profile_id": "combatant-pose-draft",
