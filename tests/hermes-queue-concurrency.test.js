@@ -7,7 +7,7 @@ describe('HERMES queue routing safeguards',()=>{
  it('keeps the legacy Drive batch intake retired in favor of CORE',()=>{
   expect(drive).not.toContain('push:');
   expect(drive).toContain('workflow_dispatch:');
-  expect(drive).toContain('HERMES 2.x Drive publication is retired');
+  expect(drive).toContain('Legacy HERMES Drive batch publication is retired');
   expect(drive).toContain('HERMES CORE Drive queue');
   expect(drive).not.toContain('hermes2_publish.ts');
  });
