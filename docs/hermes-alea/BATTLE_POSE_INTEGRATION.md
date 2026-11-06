@@ -11,7 +11,7 @@ Targets are `combatant-pose` and `race-pose`, restricted to the existing pose-ad
 permission. New records are draft/inactive. Replacing an image does not change
 pose identity, `publication_status`, `is_active`, base, mounting or equipment.
 
-Original PNG/WebP: <=12 MB, <=4096 px, actual transparency. Browser conversion:
+Original PNG/WebP: <=12 MB, <=2048 px, actual transparency. Browser conversion:
 contain within 1280 px, no upscale/crop, WebP quality .85. The existing Edge codec
 decodes both objects and checks hashes, dimensions and alpha. Edge writes the
 verified WebP once to the existing `alea-hermes-public` SHA-addressed pose path,
