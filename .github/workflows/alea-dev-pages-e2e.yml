@@ -46,6 +46,7 @@ jobs:
       - name: Authenticate and verify DEV admin access in ALEA
         env:
           ALEA_PR_BODY: ${{ github.event.pull_request.body || '' }}
+          ALEA_HERMES_PUBLICATION: ${{ contains(github.event.pull_request.body, 'ALEA-DEV-HERMES-ALEA: YES') && 'YES' || 'NO' }}
           ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
           ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
         run: node scripts/alea-dev-pages-e2e.mjs
