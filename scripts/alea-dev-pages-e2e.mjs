@@ -120,7 +120,10 @@ async function main() {
   browser = await chromium.launch({headless:true, env});
   context = await browser.newContext({viewport:{width:1440,height:1000}, acceptDownloads:false});
   page = await context.newPage();
-  page.on('pageerror', error => {\n    const message=String(error.message).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\\s+\\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]');\n    report.errors.push('PAGE_ERROR: ' + message.slice(0,300));\n  });
+  page.on('pageerror', error => {
+    const message=String(error.message).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]');
+    report.errors.push('PAGE_ERROR: ' + message.slice(0,300));
+  });
   await page.goto(origin, {waitUntil:'domcontentloaded',timeout:60000});
   const backend = await page.evaluate(() => window.ALEA_SUPABASE_CONFIG && ({name:window.ALEA_SUPABASE_CONFIG.name,url:window.ALEA_SUPABASE_CONFIG.url}));
   assert(backend?.name==='development' && backend.url===SUPABASE, 'PREVIEW_BACKEND_IS_NOT_DEV');
