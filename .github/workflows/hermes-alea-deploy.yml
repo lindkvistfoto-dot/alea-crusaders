@@ -1,9 +1,5 @@
 name: HERMES ALEA – deploy verifier
 on:
-  push:
-    branches: [hermes/alea-battle-pose-integration]
-    paths:
-      - '.github/workflows/hermes-alea-deploy.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -58,26 +54,3 @@ jobs:
           echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
           npx --yes supabase@2.81.3 functions deploy hermes-alea --project-ref wkiuyklzzroavclnsxna --debug 2>&1 | tee hermes-alea-deploy-debug.log
           grep -Ei 'script size|bundle size|function size|bundling' hermes-alea-deploy-debug.log | tail -n 20 || true
-      - name: Smoke-test deployed DEV Edge and WASM initialization
-        env:
-          SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Existing DEV service credential is unavailable"
-            exit 1
-          fi
-          echo "::add-mask::$SUPABASE_SERVICE_ROLE_KEY"
-          node --input-type=module <<'NODE'
-          const ref='wkiuyklzzroavclnsxna';
-          const service=process.env.SUPABASE_SERVICE_ROLE_KEY;
-          const response=await fetch(process.env.SUPABASE_URL+'/functions/v1/hermes-alea',{
-            method:'POST',
-            headers:{apikey:service,Authorization:'Bearer '+service,'Content-Type':'application/json'},
-            body:JSON.stringify({action:'recover_staging',requested_by:'66e4fd1b-ccd1-49a5-bbed-2b7264981732'})
-          });
-          const result=await response.json().catch(()=>null);
-          if(!response.ok)throw Error('DEV Edge smoke failed (HTTP '+response.status+'): '+(result?.error||'unknown error'));
-          console.log('DEV Edge started; WASM init passed; stale jobs recovered: '+result.recovered);
-          NODE
