@@ -35,15 +35,16 @@ jobs:
       - name: Package approved local WASM
         run: node scripts/hermes-alea-prepare-edge.mjs
       - name: Validate packaged binary
-        run: python3 - <<'PY'
-from pathlib import Path
-import os
-p=Path('supabase/functions/hermes-alea/magick.wasm')
-assert p.is_file() and p.read_bytes()[:4] == b'\x00asm'
-size=p.stat().st_size
-print(f'magick.wasm: {size} bytes')
-with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f: f.write(f'WASM size: {size} bytes\n')
-PY
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path('supabase/functions/hermes-alea/magick.wasm')
+          assert p.is_file() and p.read_bytes()[:4] == b'\x00asm'
+          size=p.stat().st_size
+          print(f'magick.wasm: {size} bytes')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f: f.write(f'WASM size: {size} bytes\\n')
+          PY
       - name: Deploy isolated Edge Function (does not enable uploads)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
