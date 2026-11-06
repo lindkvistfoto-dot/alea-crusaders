@@ -170,10 +170,26 @@ try {
   report.result = 'FAIL';
   report.failure = sanitize(error?.message || 'TEST_FAILED').replace(/[^A-Za-z0-9_:\- ]/g, ' ').slice(0, 300);
 } finally {
-  if (page) await page.evaluate(() => localStorage.clear()).catch(() => {});
-  if (context) await context.clearCookies().catch(() => {});
-  if (context) await context.close().catch(() => {});
-  if (browser) await browser.close().catch(() => {});
+  let cleanupOk = true;
+  if (page) {
+    cleanupOk = await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+      return localStorage.length === 0 && sessionStorage.length === 0;
+    }).catch(() => false);
+  }
+  if (context) {
+    await context.clearCookies().catch(() => { cleanupOk = false; });
+    const remainingCookies = await context.cookies().catch(() => { cleanupOk = false; return [true]; });
+    if (remainingCookies.length) cleanupOk = false;
+    await context.close().catch(() => { cleanupOk = false; });
+  }
+  if (browser) await browser.close().catch(() => { cleanupOk = false; });
+  report.checks.browserSessionCleanup = cleanupOk ? 'pass' : 'fail';
+  if (!cleanupOk) {
+    report.result = 'FAIL';
+    report.failure ||= 'BROWSER_SESSION_CLEANUP_FAILED';
+  }
   report.finishedAt = new Date().toISOString();
   await fs.writeFile(path.join(outputDir, 'report.json'), JSON.stringify(report, null, 2));
 }
