@@ -154,9 +154,21 @@ async function main() {
   assert(evalin, 'EVALIN_NOT_AVAILABLE_IN_DOCKFABRIKEN');
   await page.locator('#apdwCombatant').selectOption(evalin.value);
   await page.locator('#apdwPoseKey').selectOption('lasso');
+  const selectedLabel=await page.locator('#apdwCombatant option:checked').textContent();
+  assert(/Evalin Hugger/i.test(selectedLabel||''),'EVALIN_SELECTION_DID_NOT_STICK');
   await page.locator('#apdwCutoutFile').setInputFiles(FIXTURE);
+  await screenshot('02-ready-to-publish.png');
+  page.on('dialog', async dialog => { report.dialogs ||= []; report.dialogs.push(dialog.type()); await dialog.dismiss(); });
   await page.locator('button[data-action="save-pose"]').click();
-  await page.getByText(/Bilden är verifierad och sparad via HERMES ALEA/i).waitFor({timeout:90000});
+  await page.waitForFunction(() => {
+    const root=document.querySelector('#arcanePaperDollWorkshopMount');
+    if(!root)return true;
+    const status=document.querySelector('#apdwActionStatus')?.textContent||'';
+    return /Bilden är verifierad och sparad via HERMES ALEA|kunde inte publiceras|misslyckades|Ogiltig Battle Pose|Välj en cutout|Autentiserad lagringsanslutning saknas/i.test(status);
+  },null,{timeout:90000});
+  const publishStatus=await page.locator('#apdwActionStatus').textContent().catch(()=> 'STATUS_ELEMENT_MISSING');
+  report.publishStatus=String(publishStatus||'').replaceAll(EMAIL,'[redacted]').replace(/Bearer\\s+\\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').slice(0,300);
+  assert(/Bilden är verifierad och sparad via HERMES ALEA/i.test(report.publishStatus),'PUBLISH_UI_DID_NOT_CONFIRM_SUCCESS');
   report.checks.pagesPublication = 'pass';
   await screenshot('02-published.png');
 
