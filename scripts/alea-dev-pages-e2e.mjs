@@ -192,7 +192,7 @@ async function main() {
       before.pose.image_path === null && before.pose.pending_staging_path === null,
       'EVALIN_LASSO_DRAFT_NOT_SAFE_FOR_FIRST_PUBLICATION');
 
-    const adminSectionButton = page.locator('button[onclick="openAdminSection(\\'paperDollWorkshop\\')"]');
+    const adminSectionButton = page.locator('button[onclick="openAdminSection(\'paperDollWorkshop\')"]');
     await adminSectionButton.click();
     await page.locator('#apdwCutoutFile').waitFor({ state: 'visible', timeout: 30000 });
     const combatantValue = await page.locator('#apdwCombatant option').evaluateAll(options =>
@@ -336,7 +336,7 @@ async function main() {
 
   if (hermesPublication) {
     await page.locator('#adminNavBtn').click();
-    await page.locator('button[onclick="openAdminSection(\\'paperDollWorkshop\\')"]').click();
+    await page.locator('button[onclick="openAdminSection(\'paperDollWorkshop\')"]').click();
     await page.locator('#apdwCutoutFile').waitFor({ state: 'visible', timeout: 30000 });
     const combatantValue = await page.locator('#apdwCombatant option').evaluateAll(options =>
       options.find(option => option.textContent?.includes('Evalin Hugger'))?.value || '');
