@@ -36,7 +36,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Authenticate and verify Evalin Lasso in DEV
         env:
-          ALEA_PREVIEW_URL: ${{ inputs.preview_url || '' }}
+          ALEA_PREVIEW_URL: ${{ inputs.preview_url || '' }}\n          ALEA_TEST_CASE: ${{ inputs.test_case || 'evalin-lasso' }}
           ALEA_PR_BODY: ${{ github.event.pull_request.body || '' }}
           ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
         run: node scripts/alea-dev-pages-e2e.mjs
