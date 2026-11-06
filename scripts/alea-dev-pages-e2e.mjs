@@ -95,14 +95,62 @@ async function main() {
   await page.locator('#admin').waitFor({ state: 'visible', timeout: 15000 });
   report.checks.adminPanel = 'pass';
 
-  const adminData = await page.evaluate(async () => {
+  const adminData = await page.evaluate(async ({ tag, uid }) => {
     if (typeof dbJson !== 'function') throw new Error('APP_DATABASE_HELPER_UNAVAILABLE');
-    const campaigns = await dbJson('campaigns?select=id&limit=1');
-    const characters = await dbJson('characters?select=id&limit=1');
-    return { campaigns: Array.isArray(campaigns), characters: Array.isArray(characters) };
-  });
-  assert(adminData.campaigns && adminData.characters, 'DEV_ADMIN_CANNOT_READ_CAMPAIGNS_OR_GAME_DATA');
-  report.checks.campaignAndGameDataRead = 'pass';
+    let campaignId = '';
+    let characterId = '';
+    let cleanupOk = true;
+    try {
+      const existing = await dbJson('campaigns?select=id&name=eq.' + encodeURIComponent(tag));
+      if (Array.isArray(existing) && existing.length) throw new Error('ADMIN_PROBE_NAME_ALREADY_EXISTS');
+      const campaigns = await dbJson('campaigns', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ name: tag, description: 'Temporary DEV admin permission check', created_by: uid })
+      });
+      campaignId = campaigns?.[0]?.id || '';
+      if (!campaignId) throw new Error('DEV_ADMIN_CAMPAIGN_INSERT_FAILED');
+
+      const characters = await dbJson('characters', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          campaign_id: campaignId, owner_id: null, name: tag,
+          is_npc: true, schema_version: 1,
+          data: { identity: { namn: tag }, test_fixture: true },
+          created_by: uid
+        })
+      });
+      characterId = characters?.[0]?.id || '';
+      if (!characterId) throw new Error('DEV_ADMIN_GAME_DATA_INSERT_FAILED');
+
+      const updated = await dbJson('characters?id=eq.' + encodeURIComponent(characterId), {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ name: tag + '_updated' })
+      });
+      if (!updated?.[0]?.id) throw new Error('DEV_ADMIN_GAME_DATA_UPDATE_FAILED');
+      return { campaignWrite: true, gameDataWrite: true };
+    } finally {
+      try {
+        if (campaignId) {
+          await dbJson('characters?campaign_id=eq.' + encodeURIComponent(campaignId), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+          await dbJson('campaigns?id=eq.' + encodeURIComponent(campaignId), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+        } else {
+          await dbJson('campaigns?name=eq.' + encodeURIComponent(tag), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+        }
+      } catch { cleanupOk = false; }
+      if (!cleanupOk) throw new Error('DEV_ADMIN_PROBE_CLEANUP_FAILED');
+    }
+  }, { tag: '__HEPHAISTOS_DEV_ADMIN_' + crypto.randomUUID(), uid: firstUserId });
+  assert(adminData.campaignWrite && adminData.gameDataWrite, 'DEV_ADMIN_WRITE_ACCESS_NOT_VERIFIED');
+  report.checks.campaignAndGameDataWrite = 'pass';
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForAuthenticatedHome();
