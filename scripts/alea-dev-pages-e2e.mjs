@@ -150,7 +150,7 @@ async function main() {
   await page.getByRole('button',{name:/Arcane Paper Doll.*Dockfabriken/}).click();
   await page.locator('#apdwCombatant').waitFor({state:'visible',timeout:30000});
   const options = await page.locator('#apdwCombatant option').evaluateAll(nodes=>nodes.map(o=>({value:o.value,label:o.textContent||''})));
-  const evalin = options.find(o=>/Evalin Hugger från Caddo/i.test(o.label));
+  const evalin = options.find(o=>/Evalin Hugger/i.test(o.label));
   assert(evalin, 'EVALIN_NOT_AVAILABLE_IN_DOCKFABRIKEN');
   await page.locator('#apdwCombatant').selectOption(evalin.value);
   await page.locator('#apdwPoseKey').selectOption('lasso');
@@ -195,7 +195,7 @@ async function main() {
   await page.getByRole('button',{name:/Arcane Paper Doll.*Dockfabriken/}).click();
   await page.locator('#apdwCombatant').waitFor({state:'visible',timeout:30000});
   const refreshedOptions = await page.locator('#apdwCombatant option').evaluateAll(nodes=>nodes.map(o=>({value:o.value,label:o.textContent||''})));
-  const refreshedEvalin = refreshedOptions.find(o=>/Evalin Hugger från Caddo/i.test(o.label));
+  const refreshedEvalin = refreshedOptions.find(o=>/Evalin Hugger/i.test(o.label));
   assert(refreshedEvalin,'EVALIN_NOT_AVAILABLE_AFTER_RELOAD');
   await page.locator('#apdwCombatant').selectOption(refreshedEvalin.value);
   await page.locator('#apdwPoseKey').selectOption('lasso');
