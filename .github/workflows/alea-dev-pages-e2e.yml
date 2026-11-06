@@ -27,8 +27,9 @@ jobs:
         run: node scripts/alea-dev-admin-provision.mjs
 
   pages-e2e:
+    needs: [provision-admin]
     if: >-
-      ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') }}
+      ${{ always() && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') && (needs.provision-admin.result == 'success' || needs.provision-admin.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
