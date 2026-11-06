@@ -180,12 +180,13 @@ async function main() {
       const people = await dbJson('characters?select=id,name&name=eq.' + encodeURIComponent('Evalin Hugger'));
       const person = Array.isArray(people) ? people.find(row => row.name === 'Evalin Hugger') : null;
       if (!person?.id) throw new Error('EVALIN_TEST_CHARACTER_NOT_FOUND');
+      const personDataRows = await dbJson('characters?select=id,data&id=eq.' + encodeURIComponent(person.id));
       const query = 'combatant_type=eq.character-npc&combatant_id=eq.' + encodeURIComponent(person.id);
       const poses = await dbJson('combatant_battle_poses?select=*&' + query + '&pose_key=eq.lasso&limit=2');
       const standards = await dbJson('combatant_battle_poses?select=*&' + query + '&pose_key=eq.standard&limit=2');
       if (!Array.isArray(poses) || poses.length !== 1 || !Array.isArray(standards) || standards.length !== 1)
         throw new Error('EVALIN_POSE_REGISTRY_NOT_UNIQUE');
-      return { person, pose: poses[0], standard: standards[0] };
+      return { person, personData: personDataRows?.[0], pose: poses[0], standard: standards[0] };
     });
     assert(before.pose.publication_status === 'draft' && before.pose.is_active === false &&
       before.pose.image_path === null && before.pose.pending_staging_path === null,
@@ -225,7 +226,7 @@ async function main() {
       const pose = await getRow(poseId);
       const standardRows = await dbJson('combatant_battle_poses?select=*&combatant_type=eq.character-npc&combatant_id=eq.' +
         encodeURIComponent(personId) + '&pose_key=eq.standard&limit=1');
-      const personRows = await dbJson('characters?select=id,data& id=eq.' + encodeURIComponent(personId));
+      const personRows = await dbJson('characters?select=id,data&id=eq.' + encodeURIComponent(personId));
       const jobs = await dbJson('hermes_alea_jobs?select=*&target_kind=eq.combatant-pose&target_id=eq.' +
         encodeURIComponent(poseId) + '&created_at=gte.' + encodeURIComponent(startedAt) + '&order=created_at.desc&limit=5');
       const env = window.ALEA_SUPABASE_CONFIG;
@@ -281,7 +282,8 @@ async function main() {
       job.output_bytes === after.outputBytesActual,
       'PUBLIC_WEBP_SHA256_READBACK_FAILED');
     assert(job.alpha_preserved === true && after.raster?.transparent > 0 &&
-      after.raster?.visible > 0, 'OUTPUT_ALPHA_OR_IMAGE_CONTENT_INVALID');
+      after.raster?.visible > 0 && after.raster?.width <= 1280 && after.raster?.height <= 1280,
+      'OUTPUT_ALPHA_DIMENSIONS_OR_IMAGE_CONTENT_INVALID');
     assert(job.verified_at && job.result_revision === before.pose.image_revision + 1 &&
       after.pose?.image_revision === job.result_revision &&
       after.pose.image_path === job.output_path, 'POSE_REVISION_OR_REGISTER_INVALID');
@@ -296,10 +298,8 @@ async function main() {
       JSON.stringify(after.standard?.mounting_profile) === JSON.stringify(before.standard.mounting_profile),
       'EVALIN_STANDARD_POSE_CHANGED');
     assert(after.person?.id === before.person.id &&
-      JSON.stringify(after.person?.data) === JSON.stringify((await page.evaluate(async id => {
-        const rows = await dbJson('characters?select=id,data& id=eq.' + encodeURIComponent(id));
-        return rows?.[0]?.data;
-      }, before.person.id))), 'EVALIN_CHARACTER_DATA_UNAVAILABLE');
+      JSON.stringify(after.person?.data) === JSON.stringify(before.personData?.data),
+      'EVALIN_CHARACTER_OR_EQUIPMENT_DATA_CHANGED');
     assert(legacyPublisherPosts.length === 0, 'LEGACY_HERMES_4_1_PUBLISH_REQUEST_OBSERVED');
     assert(liveRequests.length === 0 && after.backend === SUPABASE, 'LIVE_BACKEND_REQUEST_OBSERVED');
 
