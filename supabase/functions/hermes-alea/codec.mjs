@@ -1,5 +1,5 @@
 import {ImageMagick,MagickFormat,MagickReadSettings,ResourceLimits} from '@imagemagick/magick-wasm';
-export function decodeImage(bytes,{maxDimension=2048}={}){
+export function decodeImage(bytes){
  // Select only allowed decoders; never dispatch SVG, delegates, URLs or arbitrary formats.
  let format;
  if(bytes[0]===137&&String.fromCharCode(...bytes.slice(1,4))==='PNG')format=MagickFormat.Png;
@@ -24,13 +24,13 @@ export function decodeImage(bytes,{maxDimension=2048}={}){
    p+=8+size+(size%2);
   }
  }
- ResourceLimits.width=BigInt(maxDimension);ResourceLimits.height=BigInt(maxDimension);ResourceLimits.area=BigInt(maxDimension*maxDimension);
+ ResourceLimits.width=2048n;ResourceLimits.height=2048n;ResourceLimits.area=4194304n;
  ResourceLimits.memory=96n*1024n*1024n;ResourceLimits.disk=0n;ResourceLimits.listLength=2n;
  const settings=new MagickReadSettings();settings.format=format;
  return ImageMagick.readCollection(bytes,settings,images=>{
   if(images.length!==1)throw Error('ANIMATION_NOT_SUPPORTED');
   const image=images[0];image.autoOrient();
-  if(image.width>maxDimension||image.height>maxDimension)throw Error('INVALID_DIMENSIONS');
+  if(image.width>2048||image.height>2048)throw Error('INVALID_DIMENSIONS');
   const alpha=new Uint8Array(image.width*image.height);
   if(!image.hasAlpha)alpha.fill(255);
   else image.getPixels(pixels=>{

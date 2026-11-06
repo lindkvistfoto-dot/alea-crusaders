@@ -5,7 +5,7 @@ export const DEFAULT_IMAGE_PROFILE=Object.freeze({
   requireAlpha:false,allowedMimeTypes:Object.freeze(['image/png','image/jpeg','image/webp'])
 });
 export const BATTLE_POSE_IMAGE_PROFILE=Object.freeze({
- ...DEFAULT_IMAGE_PROFILE,kind:'battle-pose',maxWidth:4096,maxHeight:4096,maxPixels:16_777_216,
+ ...DEFAULT_IMAGE_PROFILE,kind:'battle-pose',maxWidth:2048,maxHeight:2048,maxPixels:4_194_304,
  requireAlpha:true,allowedMimeTypes:Object.freeze(['image/png','image/webp']),outputMaxEdge:1280,quality:.85
 });
 export function resolveImageProfile(profile={}){

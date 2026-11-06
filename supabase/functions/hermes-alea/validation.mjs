@@ -8,9 +8,9 @@ export async function validatePair(job,source,output,decode){
  const [sourceHash,outputHash]=await Promise.all([sha256(source),sha256(output)]);
  if(sourceHash!==job.source_sha256||outputHash!==job.output_sha256)throw Error('HASH_MISMATCH');
  const pose=['combatant-pose','race-pose'].includes(job.target_kind);
- const a=await decode(source,{maxDimension:pose?4096:2048}),b=await decode(output);
+ const a=await decode(source),b=await decode(output);
  if(a.mime!==job.source_mime||b.mime!=='image/webp')throw Error('INVALID_MIME');
- for(const [img,max] of [[a,pose?4096:2048],[b,pose?1280:2048]])if(img.frames!==1||img.width<1||img.height<1||img.width>max||img.height>max||img.width*img.height>max*max)throw Error('INVALID_DIMENSIONS_OR_ANIMATION');
+ for(const [img,max] of [[a,2048],[b,pose?1280:2048]])if(img.frames!==1||img.width<1||img.height<1||img.width>max||img.height>max||img.width*img.height>max*max)throw Error('INVALID_DIMENSIONS_OR_ANIMATION');
  const scale=pose?Math.min(1,1280/Math.max(a.width,a.height)):1;
  if(Math.max(1,Math.round(a.width*scale))!==b.width||Math.max(1,Math.round(a.height*scale))!==b.height)throw Error('DIMENSIONS_CHANGED');
  if(pose&&!['image/png','image/webp'].includes(a.mime))throw Error('INVALID_MIME');
