@@ -1,0 +1,49 @@
+name: ALEA DEV authenticated Pages acceptance
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [development]
+  workflow_call:
+    inputs:
+      preview_url:
+        description: Exact isolated Cloudflare Pages preview URL
+        required: true
+        type: string
+    secrets:
+      ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  pages-e2e:
+    if: ${{ github.event_name == 'workflow_call' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install isolated Playwright browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Authenticate and verify Evalin Lasso in DEV
+        env:
+          ALEA_PREVIEW_URL: ${{ inputs.preview_url || '' }}
+          ALEA_PR_BODY: ${{ github.event.pull_request.body || '' }}
+          ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
+        run: node scripts/alea-dev-pages-e2e.mjs
+      - name: Upload sanitized screenshots and result report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: alea-dev-pages-e2e-${{ github.run_id }}
+          path: test-results/alea-dev-pages-e2e/
+          if-no-files-found: warn
+          retention-days: 7
