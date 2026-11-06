@@ -31,7 +31,8 @@ jobs:
           fi
       - run: npm ci
       - name: Verify Docker local bundler
-        run: docker info --format 'Docker server: {{.ServerVersion}}'
+        run: |
+          docker info --format 'Docker server: {{.ServerVersion}}'
       - name: Package approved local WASM
         run: node scripts/hermes-alea-prepare-edge.mjs
       - name: Validate packaged binary
