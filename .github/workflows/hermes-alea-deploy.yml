@@ -1,12 +1,5 @@
 name: HERMES ALEA – deploy verifier
 on:
-  push:
-    branches: [hermes/alea-battle-pose-integration]
-    paths:
-      - 'supabase/functions/hermes-alea/**'
-      - 'scripts/hermes-alea-prepare-edge.mjs'
-      - 'package-lock.json'
-      - '.github/workflows/hermes-alea-deploy.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -61,15 +54,3 @@ jobs:
           echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
           npx --yes supabase@2.81.3 functions deploy hermes-alea --project-ref wkiuyklzzroavclnsxna --debug 2>&1 | tee hermes-alea-deploy-debug.log
           grep -Ei 'script size|bundle size|function size|bundling' hermes-alea-deploy-debug.log | tail -n 20 || true
-      - name: Recover abandoned DEV staging with the existing DEV service key
-        env:
-          SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Existing DEV service credential is unavailable"
-            exit 1
-          fi
-          echo "::add-mask::$SUPABASE_SERVICE_ROLE_KEY"
-          node scripts/hermes-alea-recover-staging.mjs
