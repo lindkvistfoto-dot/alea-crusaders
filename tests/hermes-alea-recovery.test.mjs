@@ -1,4 +1,4 @@
-import test from 'node:test';
+import {test} from 'vitest';
 import assert from 'node:assert/strict';
 import {recoverAbandonedStaging} from '../supabase/functions/hermes-alea/recovery.mjs';
 import {sha256} from '../supabase/functions/hermes-alea/validation.mjs';
