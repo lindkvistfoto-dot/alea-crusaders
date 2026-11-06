@@ -81,16 +81,37 @@ async function main() {
   await waitForAuthenticatedHome();
   const firstUserId = await currentUserId();
   assert(firstUserId, 'SUPABASE_AUTH_SESSION_NOT_ESTABLISHED');
+  const activeAdmin = await page.evaluate(() => {
+    try { return typeof activeUser === 'function' && activeUser()?.admin === true; }
+    catch { return false; }
+  });
+  assert(activeAdmin, 'DEV_TEST_ACCOUNT_MISSING_PERMANENT_ALEA_ADMIN_ROLE');
   report.checks.normalSupabaseLogin = 'pass';
+  report.checks.permanentAdminRole = 'pass';
 
   const adminVisible = await page.locator('#adminNavBtn').isVisible().catch(() => false);
-  assert(!adminVisible, 'DEV_TEST_ACCOUNT_HAS_UNEXPECTED_ADMIN_UI_ACCESS');
-  report.checks.leastPrivilegeUi = 'pass';
+  assert(adminVisible, 'DEV_ADMIN_NAVIGATION_NOT_AVAILABLE');
+  await page.locator('#adminNavBtn').click();
+  await page.locator('#admin').waitFor({ state: 'visible', timeout: 15000 });
+  report.checks.adminPanel = 'pass';
+
+  const adminData = await page.evaluate(async () => {
+    if (typeof dbJson !== 'function') throw new Error('APP_DATABASE_HELPER_UNAVAILABLE');
+    const campaigns = await dbJson('campaigns?select=id&limit=1');
+    const characters = await dbJson('characters?select=id&limit=1');
+    return { campaigns: Array.isArray(campaigns), characters: Array.isArray(characters) };
+  });
+  assert(adminData.campaigns && adminData.characters, 'DEV_ADMIN_CANNOT_READ_CAMPAIGNS_OR_GAME_DATA');
+  report.checks.campaignAndGameDataRead = 'pass';
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForAuthenticatedHome();
   const reloadedUserId = await currentUserId();
-  assert(reloadedUserId === firstUserId, 'AUTH_SESSION_DID_NOT_SURVIVE_RELOAD');
+  const adminAfterReload = await page.evaluate(() => {
+    try { return typeof activeUser === 'function' && activeUser()?.admin === true; }
+    catch { return false; }
+  });
+  assert(reloadedUserId === firstUserId && adminAfterReload, 'AUTH_ADMIN_SESSION_DID_NOT_SURVIVE_RELOAD');
   report.checks.sessionReload = 'pass';
   report.result = 'PASS';
 }
