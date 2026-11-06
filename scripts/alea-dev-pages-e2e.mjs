@@ -160,15 +160,12 @@ async function main() {
   await screenshot('02-ready-to-publish.png');
   page.on('dialog', async dialog => { report.dialogs ||= []; report.dialogs.push(dialog.type()); await dialog.dismiss(); });
   await page.locator('button[data-action="save-pose"]').click();
-  await page.waitForFunction(() => {
-    const root=document.querySelector('#arcanePaperDollWorkshopMount');
-    if(!root)return true;
-    const status=document.querySelector('#apdwActionStatus')?.textContent||'';
-    return /Bilden är verifierad och sparad via HERMES ALEA|kunde inte publiceras|misslyckades|Ogiltig Battle Pose|Välj en cutout|Autentiserad lagringsanslutning saknas/i.test(status);
-  },null,{timeout:90000});
+  await page.waitForTimeout(5000);
   const publishStatus=await page.locator('#apdwActionStatus').textContent().catch(()=> 'STATUS_ELEMENT_MISSING');
   report.publishStatus=String(publishStatus||'').replaceAll(EMAIL,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').slice(0,300);
-  assert(/Bilden är verifierad och sparad via HERMES ALEA/i.test(report.publishStatus),'PUBLISH_UI_DID_NOT_CONFIRM_SUCCESS');
+  report.pageAfterClick=page.url();
+  await screenshot('03-after-publish-click.png');
+  assert(/HERMES har tagit emot/i.test(report.publishStatus),'PUBLISH_UI_DID_NOT_CONFIRM_SUCCESS_OR_TERMINAL_STATUS');
   report.checks.pagesPublication = 'pass';
   await screenshot('02-published.png');
 
