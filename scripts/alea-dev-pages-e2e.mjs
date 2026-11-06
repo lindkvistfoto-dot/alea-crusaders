@@ -13,6 +13,7 @@ const report = { test: 'auth-smoke', checks: {}, errors: [], startedAt: new Date
 let context;
 let browser;
 let page;
+let logoutStatus = 0;
 
 function assert(ok, message) { if (!ok) throw new Error(message); }
 function previewFromInput() {
@@ -49,9 +50,9 @@ async function waitForAuthenticatedHome() {
   await page.waitForFunction(() => {
     const user = typeof activeUser === 'function' ? activeUser() : null;
     const home = document.querySelector('#home');
-    const login = document.querySelector('#loginForm');
+    const loginScreen = document.querySelector('#loginScreen');
     return Boolean(user?.id && home && !home.classList.contains('hidden') &&
-      (!login || login.classList.contains('hidden') || getComputedStyle(login).display === 'none'));
+      (!loginScreen || loginScreen.classList.contains('hidden') || getComputedStyle(loginScreen).display === 'none'));
   }, null, { timeout: 45000 });
 }
 async function main() {
@@ -68,6 +69,9 @@ async function main() {
     if (message.type() === 'error') (report.consoleErrors ||= []).push(sanitize(message.text()));
   });
   page.on('pageerror', error => report.errors.push('PAGE_ERROR: ' + sanitize(error.message)));
+  page.on('response', response => {
+    if (new URL(response.url()).pathname === '/auth/v1/logout') logoutStatus = response.status();
+  });
 
   await page.goto(origin, { waitUntil: 'domcontentloaded', timeout: 60000 });
   const backend = await page.evaluate(() => window.ALEA_SUPABASE_CONFIG &&
@@ -161,6 +165,20 @@ async function main() {
   });
   assert(reloadedUserId === firstUserId && adminAfterReload, 'AUTH_ADMIN_SESSION_DID_NOT_SURVIVE_RELOAD');
   report.checks.sessionReload = 'pass';
+
+  const logoutState = await page.evaluate(async () => {
+    if (typeof logoutUser !== 'function') throw new Error('APP_LOGOUT_UNAVAILABLE');
+    await logoutUser();
+    return {
+      authenticated: Boolean(typeof activeUser === 'function' && activeUser()),
+      loginScreenHidden: Boolean(document.querySelector('#loginScreen')?.classList.contains('hidden')),
+      sessionStored: Boolean(localStorage.getItem('alea_supabase_session_dev'))
+    };
+  });
+  assert(logoutStatus >= 200 && logoutStatus < 300, 'SUPABASE_AUTH_LOGOUT_FAILED');
+  assert(!logoutState.authenticated && !logoutState.loginScreenHidden && !logoutState.sessionStored,
+    'APP_LOGOUT_DID_NOT_CLEAR_DEV_SESSION');
+  report.checks.normalSupabaseLogout = 'pass';
   report.result = 'PASS';
 }
 await fs.mkdir(outputDir, { recursive: true });
