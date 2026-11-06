@@ -6,7 +6,7 @@ This uses the existing Playwright and Supabase Auth path against an exact Cloudf
 
 The existing account is `alea-dev-e2e@alea-crusaders.test` in the DEV Supabase project. The trusted admin-provision job will set its password from the GitHub secret, lift its Auth ban, and set the existing ALEA `profiles.is_admin` flag to true. It refuses to create or modify any other account.
 
-Store these values as repository **Actions secrets** before provisioning:
+Store these values as repository **Actions secrets** before the first login test:
 
 - `ALEA_DEV_TEST_EMAIL` = `alea-dev-e2e@alea-crusaders.test`
 - `ALEA_DEV_TEST_PASSWORD` = a unique password of at least 16 characters
@@ -19,7 +19,7 @@ To provision the account, merge a trusted PR targeting `development` whose descr
 ALEA-DEV-ADMIN-PROVISION: YES
 ```
 
-This one-time job uses Supabase Auth Admin API to set the existing account's password and clear its ban, then sets and verifies `profiles.is_admin=true`. It does not run during ordinary test executions. It adds no campaign membership: the current DEV RLS policies grant the admin profile campaign and game-data access through `private.is_admin()`.
+This one-time job uses Supabase Auth Admin API to clear the existing account's ban, then sets and verifies `profiles.is_admin=true`. If `ALEA_DEV_TEST_PASSWORD` is present, it also syncs that password to Auth. Thus account activation can be completed first; automatic login remains blocked until both login secrets are configured. It does not run during ordinary test executions. It adds no campaign membership: the current DEV RLS policies grant the admin profile campaign and game-data access through `private.is_admin()`.
 
 ## Run an authenticated DEV admin test
 
