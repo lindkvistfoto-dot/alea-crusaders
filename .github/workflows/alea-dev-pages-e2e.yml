@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   pages-e2e:
-    if: ${{ github.event_name == 'workflow_call' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development') }}
+    if: >-\n      ${{ github.event_name == 'workflow_call' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -31,7 +31,7 @@ jobs:
       - run: npm ci
       - name: Install isolated Playwright browser
         run: |
-          npm install --no-save --package-lock=false playwright@1.56.1
+          npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Authenticate and verify Evalin Lasso in DEV
         env:
