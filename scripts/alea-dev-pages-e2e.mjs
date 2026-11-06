@@ -81,16 +81,85 @@ async function main() {
   await waitForAuthenticatedHome();
   const firstUserId = await currentUserId();
   assert(firstUserId, 'SUPABASE_AUTH_SESSION_NOT_ESTABLISHED');
+  const activeAdmin = await page.evaluate(() => {
+    try { return typeof activeUser === 'function' && activeUser()?.admin === true; }
+    catch { return false; }
+  });
+  assert(activeAdmin, 'DEV_TEST_ACCOUNT_MISSING_PERMANENT_ALEA_ADMIN_ROLE');
   report.checks.normalSupabaseLogin = 'pass';
+  report.checks.permanentAdminRole = 'pass';
 
   const adminVisible = await page.locator('#adminNavBtn').isVisible().catch(() => false);
-  assert(!adminVisible, 'DEV_TEST_ACCOUNT_HAS_UNEXPECTED_ADMIN_UI_ACCESS');
-  report.checks.leastPrivilegeUi = 'pass';
+  assert(adminVisible, 'DEV_ADMIN_NAVIGATION_NOT_AVAILABLE');
+  await page.locator('#adminNavBtn').click();
+  await page.locator('#admin').waitFor({ state: 'visible', timeout: 15000 });
+  report.checks.adminPanel = 'pass';
+
+  const adminData = await page.evaluate(async ({ tag, uid }) => {
+    if (typeof dbJson !== 'function') throw new Error('APP_DATABASE_HELPER_UNAVAILABLE');
+    let campaignId = '';
+    let characterId = '';
+    let cleanupOk = true;
+    try {
+      const existing = await dbJson('campaigns?select=id&name=eq.' + encodeURIComponent(tag));
+      if (Array.isArray(existing) && existing.length) throw new Error('ADMIN_PROBE_NAME_ALREADY_EXISTS');
+      const campaigns = await dbJson('campaigns', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ name: tag, description: 'Temporary DEV admin permission check', created_by: uid })
+      });
+      campaignId = campaigns?.[0]?.id || '';
+      if (!campaignId) throw new Error('DEV_ADMIN_CAMPAIGN_INSERT_FAILED');
+
+      const characters = await dbJson('characters', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          campaign_id: campaignId, owner_id: null, name: tag,
+          is_npc: true, schema_version: 1,
+          data: { identity: { namn: tag }, test_fixture: true },
+          created_by: uid
+        })
+      });
+      characterId = characters?.[0]?.id || '';
+      if (!characterId) throw new Error('DEV_ADMIN_GAME_DATA_INSERT_FAILED');
+
+      const updated = await dbJson('characters?id=eq.' + encodeURIComponent(characterId), {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ name: tag + '_updated' })
+      });
+      if (!updated?.[0]?.id) throw new Error('DEV_ADMIN_GAME_DATA_UPDATE_FAILED');
+      return { campaignWrite: true, gameDataWrite: true };
+    } finally {
+      try {
+        if (campaignId) {
+          await dbJson('characters?campaign_id=eq.' + encodeURIComponent(campaignId), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+          await dbJson('campaigns?id=eq.' + encodeURIComponent(campaignId), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+        } else {
+          await dbJson('campaigns?name=eq.' + encodeURIComponent(tag), {
+            method: 'DELETE', headers: { Prefer: 'return=minimal' }
+          });
+        }
+      } catch { cleanupOk = false; }
+      if (!cleanupOk) throw new Error('DEV_ADMIN_PROBE_CLEANUP_FAILED');
+    }
+  }, { tag: '__HEPHAISTOS_DEV_ADMIN_' + crypto.randomUUID(), uid: firstUserId });
+  assert(adminData.campaignWrite && adminData.gameDataWrite, 'DEV_ADMIN_WRITE_ACCESS_NOT_VERIFIED');
+  report.checks.campaignAndGameDataWrite = 'pass';
 
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForAuthenticatedHome();
   const reloadedUserId = await currentUserId();
-  assert(reloadedUserId === firstUserId, 'AUTH_SESSION_DID_NOT_SURVIVE_RELOAD');
+  const adminAfterReload = await page.evaluate(() => {
+    try { return typeof activeUser === 'function' && activeUser()?.admin === true; }
+    catch { return false; }
+  });
+  assert(reloadedUserId === firstUserId && adminAfterReload, 'AUTH_ADMIN_SESSION_DID_NOT_SURVIVE_RELOAD');
   report.checks.sessionReload = 'pass';
   report.result = 'PASS';
 }
@@ -100,7 +169,6 @@ try {
 } catch (error) {
   report.result = 'FAIL';
   report.failure = sanitize(error?.message || 'TEST_FAILED').replace(/[^A-Za-z0-9_:\- ]/g, ' ').slice(0, 300);
-  if (page) await page.screenshot({ path: path.join(outputDir, 'failure.png'), fullPage: true }).catch(() => {});
 } finally {
   if (page) await page.evaluate(() => localStorage.clear()).catch(() => {});
   if (context) await context.clearCookies().catch(() => {});

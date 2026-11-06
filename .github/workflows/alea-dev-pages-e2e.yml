@@ -9,8 +9,27 @@ permissions:
   contents: read
 
 jobs:
+  provision-admin:
+    if: >-
+      ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-ADMIN-PROVISION: YES') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Activate the existing DEV test account and set its permanent ALEA admin role
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+          ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
+        run: node scripts/alea-dev-admin-provision.mjs
+
   pages-e2e:
-    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') }}
+    needs: [provision-admin]
+    if: >-
+      ${{ always() && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') && (needs.provision-admin.result == 'success' || needs.provision-admin.result == 'skipped') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -24,7 +43,7 @@ jobs:
         run: |
           npm install --no-save playwright@1.56.1
           npx playwright install chromium
-      - name: Authenticate with the permanent DEV test account
+      - name: Authenticate and verify DEV admin access in ALEA
         env:
           ALEA_PR_BODY: ${{ github.event.pull_request.body || '' }}
           ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
