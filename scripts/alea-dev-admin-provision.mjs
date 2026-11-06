@@ -2,7 +2,7 @@
 const PROJECT = 'wkiuyklzzroavclnsxna';
 const SUPABASE = `https://${PROJECT}.supabase.co`;
 const EXPECTED_EMAIL = 'alea-dev-e2e@alea-crusaders.test';
-const email = (process.env.ALEA_DEV_TEST_EMAIL || '').trim().toLowerCase();
+const email = (process.env.ALEA_DEV_TEST_EMAIL || EXPECTED_EMAIL).trim().toLowerCase();
 const password = process.env.ALEA_DEV_TEST_PASSWORD || '';
 const secretKey = process.env.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY || '';
 
@@ -20,7 +20,7 @@ const adminHeaders = () => ({
 async function main() {
   assert(secretKey, 'MISSING_DEV_ADMIN_SECRET');
   assert(email === EXPECTED_EMAIL, 'UNEXPECTED_DEV_TEST_ACCOUNT');
-  assert(password.length >= 16, 'DEV_TEST_PASSWORD_TOO_SHORT');
+  if (password && password.length < 16) throw new Error('DEV_TEST_PASSWORD_TOO_SHORT');
 
   const list = await request(SUPABASE + '/auth/v1/admin/users?page=1&per_page=1000', {
     headers: adminHeaders()
@@ -28,10 +28,12 @@ async function main() {
   const user = list.users?.find(item => item.email?.toLowerCase() === EXPECTED_EMAIL);
   assert(user?.id, 'EXISTING_DEV_TEST_ACCOUNT_NOT_FOUND');
 
+  const authUpdate = { ban_duration: 'none', email_confirm: true };
+  if (password) authUpdate.password = password;
   await request(SUPABASE + '/auth/v1/admin/users/' + encodeURIComponent(user.id), {
     method: 'PUT',
     headers: adminHeaders(),
-    body: JSON.stringify({ password, ban_duration: 'none', email_confirm: true })
+    body: JSON.stringify(authUpdate)
   });
 
   const profileUrl = SUPABASE + '/rest/v1/profiles?select=id,is_admin&id=eq.' + encodeURIComponent(user.id);
