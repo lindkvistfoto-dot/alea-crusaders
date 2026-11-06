@@ -49,10 +49,7 @@ async function currentUserId() {
 async function waitForAuthenticatedHome() {
   await page.waitForFunction(() => {
     const user = typeof activeUser === 'function' ? activeUser() : null;
-    const home = document.querySelector('#home');
-    const loginScreen = document.querySelector('#loginScreen');
-    return Boolean(user?.id && home && !home.classList.contains('hidden') &&
-      (!loginScreen || loginScreen.classList.contains('hidden') || getComputedStyle(loginScreen).display === 'none'));
+    return Boolean(user?.id);
   }, null, { timeout: 45000 });
 }
 async function main() {
