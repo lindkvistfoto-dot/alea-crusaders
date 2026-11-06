@@ -5,15 +5,22 @@ permissions:
   contents: read
 jobs:
   deploy:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/hermes/alea-battle-pose-integration'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
+      - name: Verify exact PR checkout
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REF" == "refs/heads/hermes/alea-battle-pose-integration" ]]
+          actual="$(git rev-parse HEAD)"
+          [[ "$actual" == "$GITHUB_SHA" ]]
+          echo "PR source SHA: $actual" >> "$GITHUB_STEP_SUMMARY"
       - name: Check deployment credential
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -23,11 +30,27 @@ jobs:
             exit 1
           fi
       - run: npm ci
+      - name: Verify Docker local bundler
+        run: |
+          docker info --format 'Docker server: {{.ServerVersion}}'
       - name: Package approved local WASM
         run: node scripts/hermes-alea-prepare-edge.mjs
       - name: Validate packaged binary
-        run: python3 -c "from pathlib import Path; p=Path('supabase/functions/hermes-alea/magick.wasm'); assert p.is_file() and p.stat().st_size > 100000"
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+          p=Path('supabase/functions/hermes-alea/magick.wasm')
+          assert p.is_file() and p.read_bytes()[:4] == b'\x00asm'
+          size=p.stat().st_size
+          print(f'magick.wasm: {size} bytes')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f: f.write(f'WASM size: {size} bytes\\n')
+          PY
       - name: Deploy isolated Edge Function (does not enable uploads)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: npx --yes supabase@2.81.3 functions deploy hermes-alea --project-ref wbmosmkirsitkonejzpg
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
+          npx --yes supabase@2.81.3 functions deploy hermes-alea --project-ref wkiuyklzzroavclnsxna --debug 2>&1 | tee hermes-alea-deploy-debug.log
+          grep -Ei 'script size|bundle size|function size|bundling' hermes-alea-deploy-debug.log | tail -n 20 || true

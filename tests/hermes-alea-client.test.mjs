@@ -1,6 +1,7 @@
 import {it,expect} from 'vitest';
 import {createHermesAleaClient} from '../features/hermes-alea/client.js';
 import {verifiedHonorImageUrl} from '../features/honors/honors-image-resolver.js';
+import {createBattlePoseUploader} from '../features/hermes-alea/battle-poses.js';
 const target={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',image_revision:0,image_asset_id:null};
 function harness(fail=''){
  const calls=[];let meta;
@@ -12,6 +13,19 @@ function harness(fail=''){
  },request:async(path)=>{calls.push(path);return path.includes(fail)&&fail?Response.json({error:'TEST_FAILURE'},{status:500}):Response.json({verified:true});}});
  return {client,calls,getMeta:()=>meta};
 }
+it('pose uploads use ALEA verification before finalize and preserve the caller pose',async()=>{
+ const calls=[],pose={...target,image_path:'old.webp',is_active:false,publication_status:'draft',base_key:'base',mounting_profile:{scale:47}};
+ const original=structuredClone(pose);
+ const {createHermesAleaClient}=await import('../features/hermes-alea/client.js');
+ const {BATTLE_POSE_IMAGE_PROFILE}=await import('../features/hermes-alea/profiles.js');
+ const client=createHermesAleaClient({storage:null,targetPolicies:{'combatant-pose':BATTLE_POSE_IMAGE_PROFILE},convert:async()=>new Blob(['webp'],{type:'image/webp'}),
+  rpc:async(name,args)=>{calls.push(name);if(name==='hermes_alea_begin'){expect(args.request.operation).toBe('REPLACE');return {id:pose.id,source_path:'user/job/original',output_path:'trophy/job.webp',state:'uploading'};}return {state:'activated'};},
+  request:async path=>{calls.push(path);return Response.json({verified:true});}
+ });
+ await client.upload({targetKind:'combatant-pose',target:pose,file:new Blob(['original'],{type:'image/png'})});
+ expect(calls.slice(-2)).toEqual(['/functions/v1/hermes-alea','hermes_alea_finalize']);
+ expect(pose).toEqual(original);expect(typeof createBattlePoseUploader).toBe('function');
+});
 it('creates intent before either upload, then verifies before finalize without Actions',async()=>{
  const h=harness();const result=await h.client.upload({targetKind:'definition',target,file:new Blob(['original'],{type:'image/png'})});
  expect(result.state).toBe('activated');expect(h.calls).toEqual(['hermes_alea_begin','/storage/v1/object/hermes-alea-display/trophy/job.webp','/storage/v1/object/hermes-alea-originals/user/job/original','hermes_alea_finalize']);

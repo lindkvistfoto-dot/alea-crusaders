@@ -1,4 +1,5 @@
-import {validatePair} from './validation.mjs';
+import {validatePair,sha256} from './validation.mjs';
+import {recoverAbandonedStaging} from './recovery.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function createVerifyHandler({env,decode,fetcher=fetch}){
  return async request=>{
@@ -20,10 +21,24 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
    const body=await r.text();return body?JSON.parse(body):null;
   }
   try{
-   // getUser equivalent: validate JWT against Auth, then use caller RLS for job lookup.
-   const user=await json('/auth/v1/user');
    const text=await request.text();if(text.length>1024)return reply({error:'REQUEST_TOO_LARGE'},413);
-   const {job_id}=JSON.parse(text);if(!uuid.test(job_id))return reply({error:'INVALID_JOB'},400);
+   const payload=JSON.parse(text);
+   const serviceCall=Boolean(service&&authorization==='Bearer '+service);
+   if(serviceCall&&origin)return reply({error:'FORBIDDEN'},403);
+   // User calls are bound to their own authenticated account; service calls are CI-only and scoped to one owner.
+   const user=serviceCall?null:await json('/auth/v1/user');
+   if(payload?.action==='recover_staging'){
+    const requesterId=serviceCall?payload.requested_by:user?.id;
+    if(!uuid.test(String(requesterId||'')))return reply({error:'INVALID_RECOVERY_OWNER'},400);
+    if(!serviceCall){
+     const cap=await json('/rest/v1/rpc/hermes_alea_capabilities',{method:'POST',body:'{}'});
+     if(!cap?.enabled)return reply({error:'HERMES_ALEA_DISABLED'},409);
+    }
+    const result=await recoverAbandonedStaging({url,headers:trusted,requesterId,fetcher});
+    return reply(result);
+   }
+   if(serviceCall)return reply({error:'FORBIDDEN'},403);
+   const {job_id}=payload;if(!uuid.test(job_id))return reply({error:'INVALID_JOB'},400);
    const rows=await json('/rest/v1/hermes_alea_jobs?id=eq.'+job_id+'&select=*');
    const job=rows[0];if(!job||job.requested_by!==user.id)return reply({error:'FORBIDDEN'},403);
    if(job.state==='activated')return reply({verified:true});
@@ -41,6 +56,19 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
    const source=await download('hermes-alea-originals',job.source_path,job.source_bytes);
    const output=await download('hermes-alea-display',job.output_path,job.output_bytes);
    const receipt=await validatePair(job,source,output,decode);
+   if(['combatant-pose','race-pose'].includes(job.target_kind)){
+    const segment=job.target_kind==='race-pose'?'race-battle-pose-cutout':'battle-pose-cutout';
+    const path='hermes/'+segment+'/'+job.target_id+'/'+receipt.output_sha256+'.webp';
+    const uploaded=await fetcher(url+'/storage/v1/object/alea-hermes-public/'+path,{
+     method:'POST',headers:{...trusted,'Content-Type':'image/webp','x-upsert':'false'},body:output
+    });
+    if(!uploaded.ok){
+     const duplicate=await uploaded.json().catch(()=>null);
+     if(uploaded.status!==409&&duplicate?.statusCode!=='409'&&duplicate?.error!=='Duplicate')throw Error('POSE_OUTPUT_UPLOAD_FAILED');
+    }
+    const stored=await download('alea-hermes-public',path,job.output_bytes);
+    if(stored.length!==job.output_bytes||await sha256(stored)!==receipt.output_sha256)throw Error('POSE_OUTPUT_READBACK_FAILED');
+   }
    await json('/rest/v1/rpc/hermes_alea_verify',{method:'POST',headers:trusted,body:JSON.stringify({job_id,receipt})});
    return reply({verified:true});
   }catch(error){

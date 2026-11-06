@@ -57,3 +57,33 @@ it('rejects oversized input before invoking a codec and rejects APNG animation m
  new DataView(animated.buffer).setUint32(33,8);animated.set(new TextEncoder().encode('acTL'),37);animated.set(p.source.slice(33),53);
  expect(()=>decodeImage(animated)).toThrow('ANIMATION_NOT_SUPPORTED');
 });
+
+it('pose verification publishes immutable bytes and records proof only after actual readback',async()=>{
+ const source=ImageMagick.read(MagickColors.Transparent,16,16,image=>{
+  image.getPixels(pixels=>pixels.setPixel(8,8,[255,0,0,255]));
+  return image.write(MagickFormat.Png,bytes=>new Uint8Array(bytes));
+ });
+ const output=ImageMagick.read(source,image=>image.write(MagickFormat.WebP,bytes=>new Uint8Array(bytes)));
+ const job={...await jobFor({source,output},'combatant-pose'),id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',target_id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',requested_by:'user',source_path:'user/job/original',output_path:'trophy/job.webp',state:'uploading',operation:'CREATE'};
+ const calls=[];let corrupt=false;
+ const handler=createVerifyHandler({env:k=>({SUPABASE_URL:'https://project.test',SUPABASE_ANON_KEY:'anon',SUPABASE_SERVICE_ROLE_KEY:'secret'}[k]),decode:decodeImage,fetcher:async(url,opt)=>{
+  calls.push(url);
+  if(url.endsWith('/auth/v1/user'))return Response.json({id:'user'});
+  if(url.includes('/hermes_alea_jobs?'))return Response.json([job]);
+  if(url.endsWith('/hermes_alea_capabilities'))return Response.json({enabled:true});
+  if(url.includes('/hermes-alea-originals/'))return new Response(source);
+  if(url.includes('/hermes-alea-display/'))return new Response(output);
+  if(url.includes('/alea-hermes-public/')){
+   if(opt.method==='POST'){expect(opt.headers['x-upsert']).toBe('false');expect(opt.body).toEqual(output);return Response.json({});}
+   return new Response(corrupt?new Uint8Array([1,2,3]):output);
+  }
+  if(url.endsWith('/hermes_alea_verify'))return Response.json(null);
+  throw Error('UNEXPECTED');
+ }});
+ const request=()=>new Request('https://example.test',{method:'POST',headers:{Authorization:'Bearer caller'},body:JSON.stringify({job_id:job.id})});
+ expect(await (await handler(request())).json()).toEqual({verified:true});
+ expect(calls.at(-1)).toContain('hermes_alea_verify');
+ calls.length=0;corrupt=true;
+ expect(await (await handler(request())).json()).toEqual({error:'POSE_OUTPUT_READBACK_FAILED'});
+ expect(calls.some(url=>url.endsWith('/hermes_alea_verify'))).toBe(false);
+});
