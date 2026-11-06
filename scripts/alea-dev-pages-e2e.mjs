@@ -169,7 +169,6 @@ try {
 } catch (error) {
   report.result = 'FAIL';
   report.failure = sanitize(error?.message || 'TEST_FAILED').replace(/[^A-Za-z0-9_:\- ]/g, ' ').slice(0, 300);
-  if (page) await page.screenshot({ path: path.join(outputDir, 'failure.png'), fullPage: true }).catch(() => {});
 } finally {
   if (page) await page.evaluate(() => localStorage.clear()).catch(() => {});
   if (context) await context.clearCookies().catch(() => {});
