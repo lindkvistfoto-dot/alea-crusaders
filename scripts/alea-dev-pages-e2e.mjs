@@ -6,7 +6,6 @@ import { chromium } from 'playwright';
 
 const PROJECT = 'wkiuyklzzroavclnsxna';
 const SUPABASE = `https://${PROJECT}.supabase.co`;
-const ANON = 'sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et';
 const EMAIL = 'alea-dev-e2e@alea-crusaders.test';
 const EVALIN = 'd6310877-52e8-41c0-b2e5-bd81d5a50bbf';
 const LASSO = '0795bc2a-6470-4b61-bb97-54e0b22b140c';
@@ -19,11 +18,9 @@ let userId = '';
 let context;
 let browser;
 let page;
-let profileWasAdmin = false;
 
 function assert(ok, message) { if (!ok) throw new Error(message); }
 function sha(bytes) { return crypto.createHash('sha256').update(bytes).digest('hex'); }
-function cleanUrl(url) { try { const u = new URL(url); return u.origin + u.pathname; } catch { return ''; } }
 async function api(url, options={}) {
   const response = await fetch(url, options);
   if (!response.ok) throw new Error(`DEV_API_${response.status}`);
@@ -76,7 +73,6 @@ async function prepareIdentity() {
     }
   }
   assert(rows.length===1, 'DEV_TEST_PROFILE_MISSING');
-  profileWasAdmin = rows[0].is_admin === true;
   await rest('profiles?id=eq.' + userId, 'PATCH', {is_admin:true});
   return password;
 }
@@ -120,7 +116,7 @@ async function main() {
   browser = await chromium.launch({headless:true, env});
   context = await browser.newContext({viewport:{width:1440,height:1000}, acceptDownloads:false});
   page = await context.newPage();
-  page.on('pageerror', error => {
+  const sanitize = value => String(value).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]').slice(0,300);\n  page.on('console', message => { if (message.type()==='error') report.errors.push('CONSOLE_ERROR: '+sanitize(message.text())); });\n  page.on('pageerror', error => {
     const message=String(error.message).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]');
     report.errors.push('PAGE_ERROR: ' + message.slice(0,300));
   });
