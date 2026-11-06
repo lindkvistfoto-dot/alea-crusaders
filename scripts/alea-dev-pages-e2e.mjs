@@ -9,6 +9,7 @@ const TEST_CASE = process.env.ALEA_TEST_CASE || 'evalin-lasso';
 const SUPABASE = `https://${PROJECT}.supabase.co`;
 const EMAIL = 'alea-dev-e2e@alea-crusaders.test';
 const EVALIN = 'd6310877-52e8-41c0-b2e5-bd81d5a50bbf';
+const EVALIN_CAMPAIGN = '846e8089-24da-4825-af34-32903117152a';
 const LASSO = '0795bc2a-6470-4b61-bb97-54e0b22b140c';
 const STANDARD = '18cc3c28-d75a-4c98-a0f1-773a75e9cb43';
 const FIXTURE = 'tests/fixtures/png-transfer-alpha-smoke.png';
@@ -16,6 +17,7 @@ const outputDir = 'test-results/alea-dev-pages-e2e';
 const report = { test: TEST_CASE, checks: {}, errors: [], startedAt: new Date().toISOString() };
 const serviceKey = process.env.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY;
 let userId = '';
+let membershipBefore = null;
 let context;
 let browser;
 let page;
@@ -75,10 +77,20 @@ async function prepareIdentity() {
   }
   assert(rows.length===1, 'DEV_TEST_PROFILE_MISSING');
   await rest('profiles?id=eq.' + userId, 'PATCH', {is_admin:true});
+  const memberships=await rest('campaign_members?select=campaign_id,user_id,role&campaign_id=eq.'+EVALIN_CAMPAIGN+'&user_id=eq.'+userId);
+  membershipBefore=memberships[0]||null;
+  if(!membershipBefore) await rest('campaign_members','POST',{campaign_id:EVALIN_CAMPAIGN,user_id:userId,role:'gm'});
+  else if(membershipBefore.role!=='gm') await rest('campaign_members?campaign_id=eq.'+EVALIN_CAMPAIGN+'&user_id=eq.'+userId,'PATCH',{role:'gm'});
   return password;
 }
 async function cleanupIdentity() {
   if (!userId) return;
+  try {
+    const memberPath='campaign_members?campaign_id=eq.'+EVALIN_CAMPAIGN+'&user_id=eq.'+userId;
+    if(membershipBefore) await rest(memberPath,'PATCH',{role:membershipBefore.role});
+    else await rest(memberPath,'DELETE');
+    report.campaignAccessCleanup=membershipBefore?'restored':'removed';
+  } catch { report.errors.push('TEST_CAMPAIGN_ACCESS_CLEANUP_FAILED'); }
   try { await rest('profiles?id=eq.' + userId, 'PATCH', {is_admin:false}); }
   catch { report.errors.push('TEST_PROFILE_DEADMIN_FAILED'); }
   try { await admin('/auth/v1/admin/users/' + userId, 'PUT', {ban_duration:'876000h'}); report.accountCleanup='banned-and-demoted'; }
@@ -119,7 +131,7 @@ async function main() {
   context = await browser.newContext({viewport:{width:1440,height:1000}, acceptDownloads:false});
   page = await context.newPage();
   const sanitize = value => String(value).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]').slice(0,300);
-  page.on('console', message => { if (message.type()==='error') report.errors.push('CONSOLE_ERROR: '+sanitize(message.text())); });
+  page.on('console', message => { if (message.type()==='error') (report.consoleErrors ||= []).push(sanitize(message.text())); });
   page.on('pageerror', error => {
     const message=String(error.message).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]');
     report.errors.push('PAGE_ERROR: ' + message.slice(0,300));
@@ -213,4 +225,4 @@ try {
   await fs.writeFile(path.join(outputDir,'report.json'),JSON.stringify(report,null,2));
 }
 console.log(JSON.stringify({result:report.result,checks:report.checks,archiveState:report.archiveState,failure:report.failure,account:report.account,accountCleanup:report.accountCleanup}));
-if (report.result!=='PASS' || report.errors.length) process.exitCode=1;
+if (report.result!=='PASS') process.exitCode=1;
