@@ -1,25 +1,41 @@
-# ALEA DEV Pages E2E
+# ALEA DEV authenticated smoke test
 
-This is an isolated, reusable Playwright runner for an exact Cloudflare Pages preview and the existing DEV Supabase project. It uses normal email/password Supabase Auth in the real Pages UI.
+This reuses the existing Playwright and Supabase Auth path to check a normal user login against an exact Cloudflare Pages DEV preview. It does not publish data or require an administrator account.
 
-## Trigger a preview test
+## One-time account and secrets setup
 
-For a DEV pull request, add one line to its description:
+Create or reuse one normal email/password user in the DEV Supabase project only. Confirm the account's profile has `is_admin=false`, and do not add it to campaign membership or any privileged role. Do not create the same identity in LIVE.
+
+Store these values as repository **Actions secrets**:
+
+- `ALEA_DEV_TEST_EMAIL`
+- `ALEA_DEV_TEST_PASSWORD`
+
+Use a unique, long password. Do not put the credentials in workflow inputs, PR text, repository variables, fixtures, or logs. Rotate them by changing the DEV Auth password and updating the secret. To suspend access, disable the Auth user in DEV.
+
+The runner only reads these secrets in the trusted post-merge workflow below. It does not call Supabase Admin APIs, change profile roles, create users, ban users, or grant campaign access. Browser login uses the normal ALEA sign-in form.
+
+## Run against a DEV preview
+
+Add this exact marker to a DEV PR description:
 
 ```text
 ALEA-DEV-PREVIEW: https://<exact-preview>.alea-crusaders.pages.dev
 ```
 
-Merge the PR into `development`. The workflow validates the preview hostname and the runtime Supabase project before it signs in. A call from another workflow can reuse `alea-dev-pages-e2e.yml` with its exact `preview_url`, the implemented `test_case: evalin-lasso`, and the `ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY` secret. Other cases fail fast until their test modules are added.
+Merge that PR into `development`. The workflow starts only on a **merged** PR targeting `development` with the marker. It does not run on ordinary open/update PR events, and it is not exposed as a reusable workflow callable by arbitrary PR jobs.
 
-The first implemented case is Evalin's inactive Lasso pose in Dockfabriken. It stops before writing unless the known DEV Lasso row is still an empty, inactive draft and Evalin's active Standard pose is present. It uses the existing transparent smoke fixture. It checks the UI publication, the HERMES ALEA job, private original and WebP read-backs against SHA-256, pose revision and state preservation, and Dockfabriken display after reload. Screenshots and a sanitized JSON report are retained as a seven-day Actions artifact. Browser context and ephemeral session are closed after each run.
+The runner validates the isolated Cloudflare preview hostname and checks that its runtime backend is the DEV Supabase project. It logs in through the real Pages UI, verifies an authenticated home view and that admin UI is unavailable, reloads to confirm the session persists, then clears browser storage and closes the isolated context. The report is retained as a seven-day Actions artifact and contains no credentials. A failure screenshot is intentionally not collected because the UI can display the test username.
 
-The test identity is created or reused in DEV at run time, gets a fresh random password for that run, is granted the existing DEV profile admin flag and temporary GM membership in Evalin's DEV campaign while the test runs; both are reverted in cleanup, then the account is banned. No password, session file, or service key is written to the repository or passed to Chromium. The service key is used only by the isolated Node process for account lifecycle and read-back verification. Use the existing GitHub Actions secret `ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY`; it must contain the DEV Supabase secret key, never a LIVE key.
+## Security boundaries
 
-## Archive requirement
+- No LIVE URL or LIVE Supabase project is allowed.
+- The permanent account has no admin flag or campaign membership.
+- Username/password are read only by the post-merge DEV workflow; unmerged PR code never receives them.
+- The browser receives only the account credentials for normal Supabase Auth. No service or secret key is passed to Playwright.
+- No session state is saved as a persistent artifact; local storage, cookies, and the isolated browser context are cleared after each run.
+- Future feature tests should use separate narrowly scoped accounts or fixtures where privileged access is genuinely required. Do not elevate this smoke-test identity.
 
-A passing acceptance also requires `hermes_alea_jobs.archive_state=verified` and a Drive archive id/timestamp. The current archive worker is restricted to the existing trophy path and its workflow runs against LIVE. This test intentionally does not invoke it or share its Drive destination. Until a DEV-only archive consumer and destination can verify battle-pose jobs, the UI/Storage checks can pass but the overall acceptance reports failure at archive verification. Do not use the LIVE worker for a DEV test.
+## Extend the smoke test
 
-## Extending cases
-
-Keep each future case as a separate Playwright test module selected by an explicit workflow input, with its own DEV-only fixtures and data safety preflight. The same authentication setup, runtime backend guard, screenshot/report handling, and cleanup should be reused for Dockfabriken, HEXAGONIA, SL Control Board, combat, and HERMES ALEA. Do not relax the preview allowlist or supply any production key.
+Keep this runner limited to the basic authenticated DEV check. Feature acceptance tests for Dockfabriken, HEXAGONIA, SL Control Board, combat, and HERMES ALEA need their own explicit case, data-safety preflight, and narrowly scoped permissions. They may reuse the browser setup and backend guard, but should not add administrator rights to this account.
