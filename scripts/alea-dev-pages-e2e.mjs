@@ -167,7 +167,7 @@ async function main() {
     return /Bilden är verifierad och sparad via HERMES ALEA|kunde inte publiceras|misslyckades|Ogiltig Battle Pose|Välj en cutout|Autentiserad lagringsanslutning saknas/i.test(status);
   },null,{timeout:90000});
   const publishStatus=await page.locator('#apdwActionStatus').textContent().catch(()=> 'STATUS_ELEMENT_MISSING');
-  report.publishStatus=String(publishStatus||'').replaceAll(EMAIL,'[redacted]').replace(/Bearer\\s+\\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').slice(0,300);
+  report.publishStatus=String(publishStatus||'').replaceAll(EMAIL,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').slice(0,300);
   assert(/Bilden är verifierad och sparad via HERMES ALEA/i.test(report.publishStatus),'PUBLISH_UI_DID_NOT_CONFIRM_SUCCESS');
   report.checks.pagesPublication = 'pass';
   await screenshot('02-published.png');
