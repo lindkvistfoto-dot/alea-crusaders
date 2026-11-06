@@ -18,7 +18,7 @@ function assert(ok, message) { if (!ok) throw new Error(message); }
 function previewFromInput() {
   if (process.env.ALEA_PREVIEW_URL) return process.env.ALEA_PREVIEW_URL.trim();
   const body = process.env.ALEA_PR_BODY || '';
-  return body.match(/^ALEA-DEV-PREVIEW:\\s*(https:\\/\\/\\S+)\\s*$/m)?.[1] || '';
+  return body.match(/^ALEA-DEV-PREVIEW:\s*(https:\/\/\S+)\s*$/m)?.[1] || '';
 }
 function validatePreview(raw) {
   let u;
@@ -32,7 +32,7 @@ function sanitize(value) {
   return String(value)
     .replaceAll(EMAIL, '[redacted]')
     .replaceAll(PASSWORD, '[redacted]')
-    .replace(/Bearer\\s+\\S+/gi, 'Bearer [redacted]')
+    .replace(/Bearer\s+\S+/gi, 'Bearer [redacted]')
     .replace(/eyJ[A-Za-z0-9_.-]{20,}/g, '[redacted]')
     .replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g, '[redacted]')
     .slice(0, 300);
@@ -99,7 +99,7 @@ try {
   await main();
 } catch (error) {
   report.result = 'FAIL';
-  report.failure = sanitize(error?.message || 'TEST_FAILED').replace(/[^A-Za-z0-9_:\\- ]/g, ' ').slice(0, 300);
+  report.failure = sanitize(error?.message || 'TEST_FAILED').replace(/[^A-Za-z0-9_:\- ]/g, ' ').slice(0, 300);
   if (page) await page.screenshot({ path: path.join(outputDir, 'failure.png'), fullPage: true }).catch(() => {});
 } finally {
   if (page) await page.evaluate(() => localStorage.clear()).catch(() => {});
