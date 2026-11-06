@@ -33,7 +33,7 @@ Merge the PR into `development`. The smoke job starts only on a **merged** PR ta
 
 The runner validates the exact isolated Cloudflare preview hostname and confirms that the runtime backend is the DEV Supabase project. It signs in through the normal ALEA form, verifies the permanent admin flag and admin panel, then uses the authenticated app session to create a uniquely named temporary campaign and test character, update the character, and delete both. It reloads the page to confirm the same admin session remains active, then clears local storage and cookies and closes the isolated Playwright context. The report is retained as a seven-day Actions artifact; it does not include the credentials or a screenshot that could reveal the username.
 
-Run the smoke job twice on separate merged DEV preview PRs. Both runs should report the same user session identity while leaving no probe rows behind. Feature-specific HERMES or battle-pose acceptance remains a separate test with its own safety preflight.
+For the first run, a merged trusted PR may include both markers; the smoke job waits for admin provisioning to finish. For the second run, use a separate merged DEV preview PR with only the preview marker. Both runs reuse the same account and leave no probe rows behind. Feature-specific HERMES or battle-pose acceptance remains a separate test with its own safety preflight.
 
 ## Security boundaries
 
