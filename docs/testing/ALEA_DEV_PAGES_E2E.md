@@ -10,7 +10,7 @@ For a DEV pull request, add one line to its description:
 ALEA-DEV-PREVIEW: https://<exact-preview>.alea-crusaders.pages.dev
 ```
 
-Merge the PR into `development`. The workflow validates the preview hostname and the runtime Supabase project before it signs in. A call from another workflow can reuse `alea-dev-pages-e2e.yml` with its exact `preview_url` input and the `ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY` secret.
+Merge the PR into `development`. The workflow validates the preview hostname and the runtime Supabase project before it signs in. A call from another workflow can reuse `alea-dev-pages-e2e.yml` with its exact `preview_url`, the implemented `test_case: evalin-lasso`, and the `ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY` secret. Other cases fail fast until their test modules are added.
 
 The first implemented case is Evalin's inactive Lasso pose in Dockfabriken. It stops before writing unless the known DEV Lasso row is still an empty, inactive draft and Evalin's active Standard pose is present. It uses the existing transparent smoke fixture. It checks the UI publication, the HERMES ALEA job, private original and WebP read-backs against SHA-256, pose revision and state preservation, and Dockfabriken display after reload. Screenshots and a sanitized JSON report are retained as a seven-day Actions artifact. Browser context and ephemeral session are closed after each run.
 

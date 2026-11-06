@@ -10,6 +10,11 @@ on:
         description: Exact isolated Cloudflare Pages preview URL
         required: true
         type: string
+      test_case:
+        description: Implemented DEV browser scenario
+        required: false
+        default: evalin-lasso
+        type: string
     secrets:
       ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY:
         required: true
@@ -37,6 +42,7 @@ jobs:
       - name: Authenticate and verify Evalin Lasso in DEV
         env:
           ALEA_PREVIEW_URL: ${{ inputs.preview_url || '' }}
+          ALEA_TEST_CASE: ${{ inputs.test_case || 'evalin-lasso' }}\n          ALEA_TEST_CASE: ${{ inputs.test_case || 'evalin-lasso' }}
           ALEA_PR_BODY: ${{ github.event.pull_request.body || '' }}
           ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
         run: node scripts/alea-dev-pages-e2e.mjs

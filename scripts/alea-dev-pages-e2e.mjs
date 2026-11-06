@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { chromium } from 'playwright';
 
 const PROJECT = 'wkiuyklzzroavclnsxna';
+const TEST_CASE = process.env.ALEA_TEST_CASE || 'evalin-lasso';
 const SUPABASE = `https://${PROJECT}.supabase.co`;
 const EMAIL = 'alea-dev-e2e@alea-crusaders.test';
 const EVALIN = 'd6310877-52e8-41c0-b2e5-bd81d5a50bbf';
@@ -12,7 +13,7 @@ const LASSO = '0795bc2a-6470-4b61-bb97-54e0b22b140c';
 const STANDARD = '18cc3c28-d75a-4c98-a0f1-773a75e9cb43';
 const FIXTURE = 'tests/fixtures/png-transfer-alpha-smoke.png';
 const outputDir = 'test-results/alea-dev-pages-e2e';
-const report = { test: 'evalin-lasso-pages-publication', checks: {}, errors: [], startedAt: new Date().toISOString() };
+const report = { test: TEST_CASE, checks: {}, errors: [], startedAt: new Date().toISOString() };
 const serviceKey = process.env.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY;
 let userId = '';
 let context;
@@ -94,6 +95,7 @@ async function screenshot(name) {
   catch { /* Keep the main test error as the report cause. */ }
 }
 async function main() {
+  assert(TEST_CASE==='evalin-lasso', 'UNSUPPORTED_DEV_TEST_CASE');
   assert(serviceKey, 'MISSING_ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY');
   const origin = validatePreview(previewFromInput());
   report.preview = origin;
