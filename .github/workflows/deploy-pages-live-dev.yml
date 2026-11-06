@@ -9,6 +9,9 @@ on:
     paths-ignore:
       - 'hermes/core/queue/dev/**'
       - '.github/workflows/deploy-pages-live-dev.yml'
+      - '.github/workflows/alea-dev-pages-e2e.yml'
+      - 'scripts/alea-dev-pages-e2e.mjs'
+      - 'docs/testing/ALEA_DEV_PAGES_E2E.md'
   workflow_dispatch:
 
 permissions:
