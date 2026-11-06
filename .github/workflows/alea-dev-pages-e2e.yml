@@ -10,7 +10,8 @@ permissions:
 
 jobs:
   provision-admin:
-    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-ADMIN-PROVISION: YES') }}
+    if: >-
+      ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-ADMIN-PROVISION: YES') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -26,7 +27,8 @@ jobs:
         run: node scripts/alea-dev-admin-provision.mjs
 
   pages-e2e:
-    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') }}
+    if: >-
+      ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'development' && contains(github.event.pull_request.body, 'ALEA-DEV-PREVIEW:') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
