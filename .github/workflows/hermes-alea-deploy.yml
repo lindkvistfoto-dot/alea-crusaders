@@ -1,5 +1,12 @@
 name: HERMES ALEA – deploy verifier
 on:
+  push:
+    branches: [hermes/alea-battle-pose-integration]
+    paths:
+      - 'supabase/functions/hermes-alea/**'
+      - 'scripts/hermes-alea-prepare-edge.mjs'
+      - 'package-lock.json'
+      - '.github/workflows/hermes-alea-deploy.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -54,3 +61,28 @@ jobs:
           echo "::add-mask::$SUPABASE_ACCESS_TOKEN"
           npx --yes supabase@2.81.3 functions deploy hermes-alea --project-ref wkiuyklzzroavclnsxna --debug 2>&1 | tee hermes-alea-deploy-debug.log
           grep -Ei 'script size|bundle size|function size|bundling' hermes-alea-deploy-debug.log | tail -n 20 || true
+      - name: Recover abandoned DEV staging with the existing project credential
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node --input-type=module <<'NODE'
+          const ref='wkiuyklzzroavclnsxna';
+          const owner='66e4fd1b-ccd1-49a5-bbed-2b7264981732';
+          const token=process.env.SUPABASE_ACCESS_TOKEN;
+          if(!token)throw Error('SUPABASE_ACCESS_TOKEN unavailable');
+          const keysResponse=await fetch('https://api.supabase.com/v1/projects/'+ref+'/api-keys?reveal=true',{headers:{Authorization:'Bearer '+token}});
+          if(!keysResponse.ok)throw Error('Existing token cannot read the DEV service key (HTTP '+keysResponse.status+'); no cleanup was run.');
+          const keys=await keysResponse.json();
+          const service=keys.find(item=>item.name==='service_role')?.api_key;
+          if(!service)throw Error('DEV service_role key was not returned; no cleanup was run.');
+          console.log('::add-mask::'+service);
+          const response=await fetch('https://'+ref+'.supabase.co/functions/v1/hermes-alea',{
+            method:'POST',
+            headers:{apikey:service,Authorization:'Bearer '+service,'Content-Type':'application/json'},
+            body:JSON.stringify({action:'recover_staging',requested_by:owner})
+          });
+          const result=await response.json().catch(()=>null);
+          if(!response.ok)throw Error('DEV staging recovery failed (HTTP '+response.status+'): '+(result?.error||'unknown error'));
+          console.log('DEV staging recovered: '+result.recovered+' jobs; reservation released: '+result.released_bytes+' bytes');
+          if(!result.recovered)throw Error('No abandoned DEV job was recovered; quota remains unchanged.');
+          NODE

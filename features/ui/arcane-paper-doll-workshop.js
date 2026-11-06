@@ -151,7 +151,7 @@
    });
   }
   const job=await poseUploader.upload({targetKind:kind,target:pose,file:cutoutFile,onStatus:stage=>{
-   const labels={preparing:'Förbereder WebP…',uploading:'Bevarar original och laddar upp bilden…',verifying:'Verifierar bild, SHA-256 och återläsning…',activating:'Sparar bildreferensen…'};
+   const labels={preparing:'Förbereder WebP…',recovering:'Återställer en avbruten uppladdning…',uploading:'Bevarar original och laddar upp bilden…',verifying:'Verifierar bild, SHA-256 och återläsning…',activating:'Sparar bildreferensen…'};
    if(labels[stage])setStatus(labels[stage]);
   }});
   const segment=kind==='race-pose'?'race-battle-pose-cutout':'battle-pose-cutout';

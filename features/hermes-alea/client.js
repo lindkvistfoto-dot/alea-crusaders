@@ -67,7 +67,15 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   const pose=['combatant-pose','race-pose'].includes(targetKind);
   const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:(pose?target.image_path:target.image_asset_id)?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
   meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
-  const job=await rpc('hermes_alea_begin',{request:meta});
+  let job;
+  try{job=await rpc('hermes_alea_begin',{request:meta});}
+  catch(error){
+   if(!String(error?.message||error).includes('STAGING_QUOTA_EXCEEDED'))throw error;
+   onStatus('recovering');
+   const recovery=await json('/functions/v1/hermes-alea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recover_staging'})});
+   if(!Number(recovery?.recovered))throw error;
+   job=await rpc('hermes_alea_begin',{request:meta});
+  }
   if(job.state==='activated')return job;
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
