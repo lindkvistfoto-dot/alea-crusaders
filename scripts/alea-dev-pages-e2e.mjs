@@ -85,7 +85,14 @@ async function prepareIdentity() {
 }
 async function cleanupIdentity() {
   if (!userId) return;
-  try {\n    const memberPath='campaign_members?campaign_id=eq.'+EVALIN_CAMPAIGN+'&user_id=eq.'+userId;\n    if(membershipBefore) await rest(memberPath,'PATCH',{role:membershipBefore.role});\n    else await rest(memberPath,'DELETE');\n    report.campaignAccessCleanup=membershipBefore?'restored':'removed';\n  } catch { report.errors.push('TEST_CAMPAIGN_ACCESS_CLEANUP_FAILED'); }\n  try { await rest('profiles?id=eq.' + userId, 'PATCH', {is_admin:false}); }\n  catch { report.errors.push('TEST_PROFILE_DEADMIN_FAILED'); }
+  try {
+    const memberPath='campaign_members?campaign_id=eq.'+EVALIN_CAMPAIGN+'&user_id=eq.'+userId;
+    if(membershipBefore) await rest(memberPath,'PATCH',{role:membershipBefore.role});
+    else await rest(memberPath,'DELETE');
+    report.campaignAccessCleanup=membershipBefore?'restored':'removed';
+  } catch { report.errors.push('TEST_CAMPAIGN_ACCESS_CLEANUP_FAILED'); }
+  try { await rest('profiles?id=eq.' + userId, 'PATCH', {is_admin:false}); }
+  catch { report.errors.push('TEST_PROFILE_DEADMIN_FAILED'); }
   try { await admin('/auth/v1/admin/users/' + userId, 'PUT', {ban_duration:'876000h'}); report.accountCleanup='banned-and-demoted'; }
   catch { report.errors.push('TEST_ACCOUNT_BAN_FAILED'); }
 }
