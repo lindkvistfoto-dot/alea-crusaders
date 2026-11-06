@@ -116,7 +116,9 @@ async function main() {
   browser = await chromium.launch({headless:true, env});
   context = await browser.newContext({viewport:{width:1440,height:1000}, acceptDownloads:false});
   page = await context.newPage();
-  const sanitize = value => String(value).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]').slice(0,300);\n  page.on('console', message => { if (message.type()==='error') report.errors.push('CONSOLE_ERROR: '+sanitize(message.text())); });\n  page.on('pageerror', error => {
+  const sanitize = value => String(value).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]').slice(0,300);
+  page.on('console', message => { if (message.type()==='error') report.errors.push('CONSOLE_ERROR: '+sanitize(message.text())); });
+  page.on('pageerror', error => {
     const message=String(error.message).replaceAll(EMAIL,'[redacted]').replaceAll(password,'[redacted]').replace(/Bearer\s+\S+/gi,'Bearer [redacted]').replace(/eyJ[A-Za-z0-9_.-]{20,}/g,'[redacted]').replace(/sb_(?:service_role|secret|publishable)_[A-Za-z0-9_-]+/g,'[redacted]');
     report.errors.push('PAGE_ERROR: ' + message.slice(0,300));
   });
