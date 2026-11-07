@@ -224,7 +224,6 @@ def cleanup_report(execute=False, environment='DEV', retention_execute=False):
                     except Exception as error:
                         report['failures'].append({'job_id': row['id'], 'kind': kind, 'error': type(error).__name__})
     report.update(inventory())
-    report['health'] = io.rest('rpc/hermes_alea_health', 'POST', {})
     status='failure' if report['failures'] else 'success'
     write_heartbeat(environment,status,
                     report['failures'][0]['error'] if report['failures'] else None,
@@ -255,6 +254,7 @@ def main():
         jobs = io.rest('rpc/hermes_alea_claim', 'POST', {'batch_size': 3})
     failures = archive_batch(jobs)
     report = cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup)
+    report['health'] = io.rest('rpc/hermes_alea_health', 'POST', {})
     report['archive_failures'] = failures
     report['environment'] = args.environment
     for item in failures:
