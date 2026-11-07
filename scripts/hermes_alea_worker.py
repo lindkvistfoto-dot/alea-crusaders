@@ -65,7 +65,7 @@ def archive_job(job):
     io.rest('rpc/hermes_alea_archive_result', 'POST', {'job_id': job['id'], 'token': job['lease_token'], 'drive_id': drive_id})
 
 
-def archive_batch(jobs):
+def archive_batch(jobs, environment='DEV'):
     errors = []
     for job in jobs:
         try:
@@ -79,6 +79,11 @@ def archive_batch(jobs):
             except Exception:
                 code += '_ACK_FAILED'
             errors.append({'job_id': job['id'], 'error': code})
+            continue
+        try:
+            resolve_alert('hermes-alea:'+environment.lower()+':archive:'+job['id'])
+        except Exception:
+            errors.append({'job_id':job['id'],'error':'ARCHIVE_ALERT_RESOLUTION_FAILED'})
     return errors
 
 
@@ -252,7 +257,7 @@ def main():
             raise RuntimeError('HERMES_ALEA_ARCHIVE_FOLDER_MISSING')
         io.TOKEN = io.user_drive_token()
         jobs = io.rest('rpc/hermes_alea_claim', 'POST', {'batch_size': 3})
-    failures = archive_batch(jobs)
+    failures = archive_batch(jobs,args.environment)
     report = cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup)
     report['health'] = io.rest('rpc/hermes_alea_health', 'POST', {})
     report['archive_failures'] = failures
