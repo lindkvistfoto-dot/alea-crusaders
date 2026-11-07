@@ -36,7 +36,14 @@ class WorkerTest(unittest.TestCase):
         with patch.object(worker,'archive_job',side_effect=[ValueError('ARCHIVE_HASH_MISMATCH'),None]) as run,patch.object(worker.io,'rest') as rest:
             failures=worker.archive_batch(jobs)
             self.assertEqual(run.call_count,2);self.assertEqual(len(failures),1)
-            self.assertEqual(rest.call_args.args[2]['failure'],'ARCHIVE_HASH_MISMATCH')
+            self.assertEqual(rest.call_args_list[0].args[2]['failure'],'ARCHIVE_HASH_MISMATCH')
+
+    def test_successful_archive_retry_resolves_previous_alert(self):
+        job=self.job()
+        with patch.object(worker,'archive_job'),patch.object(worker,'resolve_alert') as resolve:
+            failures=worker.archive_batch([job],'DEV')
+            self.assertEqual(failures,[])
+            resolve.assert_called_once_with('hermes-alea:dev:archive:'+job['id'])
 
     def test_report_mode_never_calls_cleanup(self):
         rows=[{'id':'id','source_candidate':True,'output_candidate':True,'abandoned_candidate':False}]
