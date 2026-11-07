@@ -3,7 +3,8 @@
  * on an honor definition matches arcane_system_assets.asset_key.
  * Private Drive originals and guessed paths are never used as image fallbacks.
  */
-const PUBLIC_BASE='https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/alea-hermes-public/';
+const supabaseOrigin = () => globalThis.ALEA_SUPABASE_CONFIG?.url || 'https://wbmosmkirsitkonejzpg.supabase.co';
+const publicBase = () => supabaseOrigin() + '/storage/v1/object/public/alea-hermes-public/';
 
 export function verifiedHonorImageUrl(record){
   if(!record) return null;
@@ -11,9 +12,10 @@ export function verifiedHonorImageUrl(record){
   if(typeof record.asset_key==='string' && record.asset_key.startsWith('hermes-alea:')){
     const path=record.hermes_alea_signed_path;
     if(typeof path!=='string'||!/^\/object\/sign\/hermes-alea-display\/trophy\/[a-f0-9-]{36}\.webp\?token=[A-Za-z0-9_.-]+$/.test(path))return null;
-    return 'https://wbmosmkirsitkonejzpg.supabase.co/storage/v1'+path;
+    return supabaseOrigin()+'/storage/v1'+path;
   }
 
+  const PUBLIC_BASE=publicBase();
   let value=record.public_url||record.optimized_public_url;
   if(!value && typeof record.asset_path==='string'){
     const path=record.asset_path.replace(/^\/+/, '');
