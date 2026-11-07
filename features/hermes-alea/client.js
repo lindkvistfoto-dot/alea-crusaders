@@ -16,7 +16,7 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
   ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
   if(limits.requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Bildprofilen kräver äkta transparent bakgrund.');
   const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
-  if(!output||output.type!=='image/webp'||output.size>limits.maxBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
+  if(!output||output.type!=='image/webp'||output.size>limits.maxOutputBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP inom bildprofilens storleksgräns.');
   const check=await createImageBitmap(output);try{if(check.width!==bitmap.width||check.height!==bitmap.height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
   return output;
  }finally{bitmap.close();}
@@ -54,6 +54,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   const policy=resolveImageProfile(targetPolicies[targetKind]);
   const limits=resolveImageProfile({...policy,...profile,
     maxBytes:Math.min(policy.maxBytes,profile.maxBytes??policy.maxBytes),
+    maxOutputBytes:Math.min(policy.maxOutputBytes,profile.maxOutputBytes??policy.maxOutputBytes),
     maxWidth:Math.min(policy.maxWidth,profile.maxWidth??policy.maxWidth),
     maxHeight:Math.min(policy.maxHeight,profile.maxHeight??policy.maxHeight),
     maxPixels:Math.min(policy.maxPixels,profile.maxPixels??policy.maxPixels),
@@ -64,7 +65,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
   onStatus('preparing');
   const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
-  if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxBytes)
+  if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxOutputBytes)
     throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
   const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
   const expected_revision=Number(target.image_revision||0);
@@ -79,14 +80,18 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
    }
    throw error;
   }
-  if(job.state==='activated')return job;
+  if(job.state==='activated')return {...job,displayBlob:webp};
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
   await uploadBlob(SOURCE_BUCKET,job.source_path,file);
+  onStatus('verifying');
+  await json('/functions/v1/hermes-alea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:job.id})});
   onStatus('activating');
   const result=await rpc('hermes_alea_finalize',{job_id:job.id});
   onStatus('completed');
-  return result;
+  // Callers that must preserve an older public storage contract can mirror the
+  // exact verified display bytes after activation; existing callers ignore it.
+  return {...result,displayBlob:webp};
  }
  async function remove({targetKind,target}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Okänd bildplats.');
