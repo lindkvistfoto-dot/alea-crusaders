@@ -3,19 +3,72 @@ on:
   schedule:
     - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
+    inputs:
+      archive_target:
+        description: Environment to archive
+        type: choice
+        options: [both, live, dev]
+        default: both
+        required: true
+      cleanup_abandoned_job_ids:
+        description: Exact comma-separated LIVE abandoned job IDs; leave blank for report-only
+        type: string
+        required: false
+      authorize_cleanup:
+        description: Explicitly authorize deletion of only the listed abandoned LIVE jobs
+        type: boolean
+        default: false
+        required: true
 permissions:
   contents: read
 concurrency:
   group: hermes-alea-archive
   cancel-in-progress: false
 jobs:
-  archive:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+  archive-live:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.event_name != 'workflow_dispatch' || inputs.archive_target != 'dev')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==12.0.0
+      - name: Archive and report; optionally clean explicitly approved LIVE abandoned jobs
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
+          HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
+          HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
+          CLEANUP_JOB_IDS: ${{ inputs.cleanup_abandoned_job_ids }}
+          AUTHORIZE_CLEANUP: ${{ inputs.authorize_cleanup }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${CLEANUP_JOB_IDS}" ]]; then
+            [[ "${AUTHORIZE_CLEANUP}" == "true" ]] || { echo "::error::Explicit cleanup approval is required."; exit 1; }
+            export HERMES_ALEA_CLEANUP_APPROVED=true
+            python scripts/hermes_alea_worker.py --cleanup-abandoned-ids "${CLEANUP_JOB_IDS}"
+          else
+            python scripts/hermes_alea_worker.py
+          fi
+
+  archive-dev:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.event_name != 'workflow_dispatch' || inputs.archive_target != 'live')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: development
           filter: blob:none
           sparse-checkout: |
             scripts
@@ -25,11 +78,11 @@ jobs:
       - run: python -m pip install Pillow==12.0.0
       - name: Archive and report only
         env:
-          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
           HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
           HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
           HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
           HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
-        # No execute-cleanup flag or approval environment: production deletion remains off.
+        # DEV runs the same archive task on the same cron, with its own Supabase project.
         run: python scripts/hermes_alea_worker.py
