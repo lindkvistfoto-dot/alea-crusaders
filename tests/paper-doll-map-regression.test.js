@@ -14,7 +14,7 @@ it('renders Paper Doll overlays without a missing baseScale declaration',async()
  context.aleaArcanePaperDollAssets={load:async()=>({assets:[{id:'base-id',verified:true,src:'base.webp'},{id:'stand-id',verified:true,src:'stand.webp'}],systemArt:{legacy:'base-id',stand:'stand-id'}})};
  context.SUPABASE_URL='https://example.supabase.co';
  context.dbJson=async()=>[];
- context.Image=class {set src(_value){this.onload?.()}};
+ // No Image constructor: rendering must not depend on preloading.
  let signal;
  const rendered=new Promise(resolve=>{signal=resolve});
  context.renderCombat=()=>signal();

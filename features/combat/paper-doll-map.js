@@ -9,15 +9,9 @@
   if(loading||ready||!resolver||!root.aleaArcanePaperDollAssets||typeof dbJson!=='function'||typeof SUPABASE_URL==='undefined')return;
   loading=true;
   root.aleaArcanePaperDollAssets.load({dbJson,baseUrl:SUPABASE_URL}).then(result=>{
-   const next=resolver.assetsByKey(result);
-   return Promise.all(Object.entries(next).map(([key,a])=>new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>{checked.add(key);resolve([key,a])};
-    img.onerror=()=>{failed.add(key);resolve(null)};
-    img.src=a.src;
-   })));
-  }).then(rows=>{
-   assets=Object.fromEntries(rows.filter(Boolean));
+   // The published asset contract is already validated by the adapter.
+   // A failed image preload must not disable every combatant's Paper Doll.
+   assets=resolver.assetsByKey(result);
    ready=true;
    loadPublishedPoses();
    loadPublishedRacePoses();
