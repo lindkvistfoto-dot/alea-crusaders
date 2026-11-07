@@ -24,9 +24,15 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
 export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={}}){
  const allowedTargets=new Set(Object.keys(targetPolicies));
  const attempts=new Map();
+ function uploadError(data,status){
+  const code=String(data?.error||data?.code||data?.message||'');
+  if(code==='STAGING_QUOTA_EXCEEDED')return 'HERMES ALEA stagingkvot är full. Ingen bild har aktiverats. Försök igen när en stagingplats har frigjorts.';
+  if(code==='STAGING_SLOT_UNAVAILABLE')return 'Ingen stagingplats är tillgänglig just nu. Varianten är sparad; försök ladda upp igen senare.';
+  return code||'Bildöverföringen misslyckades ('+status+').';
+ }
  async function json(path,options={}){
   const r=await request(path,options);const text=await r.text();const data=text?JSON.parse(text):null;
-  if(!r.ok)throw Error(data?.error||data?.message||'Bildöverföringen misslyckades ('+r.status+').');return data;
+  if(!r.ok)throw Error(uploadError(data,r.status));return data;
  }
  async function uploadBlob(bucket,path,blob){
   const r=await request('/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{'Content-Type':blob.type,'x-upsert':'false'},body:blob});
