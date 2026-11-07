@@ -4,7 +4,7 @@ import {verifiedHonorImageUrl} from '../features/honors/honors-image-resolver.js
 const target={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',image_revision:0,image_asset_id:null};
 function harness(fail=''){
  const calls=[];let meta;
- const client=createHermesAleaClient({storage:null,targetPolicies:{definition:{},relief:{requireAlpha:true}},convert:async()=>new Blob(['webp'],{type:'image/webp'}),rpc:async(name,args)=>{
+ const client=createHermesAleaClient({storage:null,targetPolicies:{definition:{},relief:{requireAlpha:true},weapon:{}},convert:async()=>new Blob(['webp'],{type:'image/webp'}),rpc:async(name,args)=>{
   calls.push(name);
   if(name==='hermes_alea_begin'){meta=args.request;return {id:target.id,state:'uploading',source_path:'user/job/original',output_path:'trophy/job.webp'};}
   if(name==='hermes_alea_finalize')return {id:target.id,state:'activated',result_revision:1};
@@ -12,15 +12,20 @@ function harness(fail=''){
  },request:async(path)=>{calls.push(path);return path.includes(fail)&&fail?Response.json({error:'TEST_FAILURE'},{status:500}):Response.json({verified:true});}});
  return {client,calls,getMeta:()=>meta};
 }
-it('creates intent before either upload, then verifies before finalize without Actions',async()=>{
+it('creates intent, uploads both objects, verifies through the deployed verifier, then finalizes',async()=>{
  const h=harness();const result=await h.client.upload({targetKind:'definition',target,file:new Blob(['original'],{type:'image/png'})});
- expect(result.state).toBe('activated');expect(h.calls).toEqual(['hermes_alea_begin','/storage/v1/object/hermes-alea-display/trophy/job.webp','/storage/v1/object/hermes-alea-originals/user/job/original','hermes_alea_finalize']);
+ expect(result.state).toBe('activated');expect(result.displayBlob).toBeInstanceOf(Blob);expect(h.calls).toEqual(['hermes_alea_begin','/storage/v1/object/hermes-alea-display/trophy/job.webp','/storage/v1/object/hermes-alea-originals/user/job/original','/functions/v1/hermes-alea','hermes_alea_finalize']);
  expect(h.getMeta().source_sha256).not.toBe(h.getMeta().output_sha256);
 });
 it('failed original upload never finalizes or changes caller target',async()=>{
  const h=harness('hermes-alea-originals');const t={...target,image_asset_id:'old'};
  await expect(h.client.upload({targetKind:'definition',target:t,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow();
  expect(h.calls).not.toContain('hermes_alea_finalize');expect(t.image_asset_id).toBe('old');expect(h.getMeta().operation).toBe('REPLACE');
+});
+it('failed server verification never finalizes or returns compatibility bytes',async()=>{
+ const h=harness('/functions/v1/hermes-alea');
+ await expect(h.client.upload({targetKind:'weapon',target,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow();
+ expect(h.calls).not.toContain('hermes_alea_finalize');
 });
 it('repeated attempts reuse idempotency and REMOVE never sends storage requests',async()=>{
  const h=harness();const file=new Blob(['source'],{type:'image/png'});await h.client.upload({targetKind:'definition',target,file});const key=h.getMeta().idempotency_key;
@@ -84,8 +89,15 @@ it('caller cannot widen adapter size or accepted MIME types',async()=>{
  expect(calls).toEqual([]);
 });
 
+it('adapter output limits cannot be widened and are checked before upload intent',async()=>{
+ const calls=[];
+ const client=createHermesAleaClient({storage:null,targetPolicies:{weapon:{maxOutputBytes:2}},convert:async()=>new Blob(['large'],{type:'image/webp'}),rpc:async name=>{calls.push(name);throw Error('RPC_NOT_EXPECTED');},request:async()=>{throw Error('REQUEST_NOT_EXPECTED');}});
+ await expect(client.upload({targetKind:'weapon',target,file:new Blob(['source'],{type:'image/png'}),profile:{maxOutputBytes:12_000_000}})).rejects.toThrow(/storleksgräns/);
+ expect(calls).toEqual([]);
+});
+
 it('reports progress and completes only after verification and finalize',async()=>{
  const h=harness();const stages=[];
  await h.client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),onStatus:s=>stages.push(s)});
- expect(stages).toEqual(['preparing','uploading','activating','completed']);
+ expect(stages).toEqual(['preparing','uploading','verifying','activating','completed']);
 });
