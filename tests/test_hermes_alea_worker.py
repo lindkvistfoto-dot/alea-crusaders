@@ -40,7 +40,7 @@ class WorkerTest(unittest.TestCase):
 
     def test_report_mode_never_calls_cleanup(self):
         rows=[{'id':'id','source_candidate':True,'output_candidate':True,'abandoned_candidate':False}]
-        with patch.object(worker,'all_rows',return_value=iter(rows)),patch.object(worker,'inventory',return_value={'objects':2,'orphans_for_review':0}),patch.object(worker,'cleanup_file') as delete:
+        with patch.object(worker,'all_rows',return_value=iter(rows)),patch.object(worker,'inventory',return_value={'objects':2,'orphans_for_review':0}),patch.object(worker,'cleanup_file') as delete,patch.object(worker,'write_heartbeat'):
             report=worker.cleanup_report()
             delete.assert_not_called();self.assertEqual(report['mode'],'report_only');self.assertEqual(report['output_candidates'],1)
 
