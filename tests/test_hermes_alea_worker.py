@@ -36,11 +36,18 @@ class WorkerTest(unittest.TestCase):
         with patch.object(worker,'archive_job',side_effect=[ValueError('ARCHIVE_HASH_MISMATCH'),None]) as run,patch.object(worker.io,'rest') as rest:
             failures=worker.archive_batch(jobs)
             self.assertEqual(run.call_count,2);self.assertEqual(len(failures),1)
-            self.assertEqual(rest.call_args.args[2]['failure'],'ARCHIVE_HASH_MISMATCH')
+            self.assertEqual(rest.call_args_list[0].args[2]['failure'],'ARCHIVE_HASH_MISMATCH')
+
+    def test_successful_archive_retry_resolves_previous_alert(self):
+        job=self.job()
+        with patch.object(worker,'archive_job'),patch.object(worker,'resolve_alert') as resolve:
+            failures=worker.archive_batch([job],'DEV')
+            self.assertEqual(failures,[])
+            resolve.assert_called_once_with('hermes-alea:dev:archive:'+job['id'])
 
     def test_report_mode_never_calls_cleanup(self):
         rows=[{'id':'id','source_candidate':True,'output_candidate':True,'abandoned_candidate':False}]
-        with patch.object(worker,'all_rows',return_value=iter(rows)),patch.object(worker,'inventory',return_value={'objects':2,'orphans_for_review':0}),patch.object(worker,'cleanup_file') as delete:
+        with patch.object(worker,'all_rows',return_value=iter(rows)),patch.object(worker,'inventory',return_value={'objects':2,'orphans_for_review':0}),patch.object(worker,'cleanup_file') as delete,patch.object(worker,'write_heartbeat'):
             report=worker.cleanup_report()
             delete.assert_not_called();self.assertEqual(report['mode'],'report_only');self.assertEqual(report['output_candidates'],1)
 
@@ -82,5 +89,90 @@ class WorkerTest(unittest.TestCase):
         missing=urllib.error.HTTPError('https://example.test',400,'missing',{},io.BytesIO(b'{"statusCode":"404","error":"not_found"}'))
         denied=urllib.error.HTTPError('https://example.test',400,'denied',{},io.BytesIO(b'{"statusCode":"403","error":"permission_denied"}'))
         self.assertTrue(worker.missing_storage_object(missing));self.assertFalse(worker.missing_storage_object(denied))
+
+class AbandonedCleanupTest(unittest.TestCase):
+    def row(self):
+        job=WorkerTest().job()
+        job.update({'state':'uploading','source_sha256':worker.io.digest(b'original'),
+                    'output_sha256':worker.io.digest(b'webpdata')})
+        return {**job,'abandoned_candidate':True,'source_candidate':False,'output_candidate':False}
+
+    def missing(self):
+        return urllib.error.HTTPError('https://storage.test/object',404,'missing',{},None)
+
+    def test_abandoned_cleanup_deletes_both_objects_before_ack(self):
+        row=self.row()
+        with patch.object(worker.io,'rest',side_effect=[row,row]) as rest, \
+             patch.object(worker.io,'storage_download',side_effect=[b'original',self.missing(),b'webpdata',self.missing()]), \
+             patch.object(worker.io,'fetch',return_value=b'') as delete:
+            worker.cleanup_abandoned_file(row)
+        self.assertEqual(rest.call_args_list[0].args[2]['action'],'reserve')
+        self.assertEqual(rest.call_args_list[-1].args[2]['action'],'ack')
+        self.assertEqual(delete.call_count,2)
+        self.assertIn(row['source_path'],delete.call_args_list[0].args[2].decode())
+        self.assertIn(row['output_path'],delete.call_args_list[1].args[2].decode())
+
+    def test_abandoned_cleanup_acknowledges_objects_already_missing(self):
+        row=self.row()
+        with patch.object(worker.io,'rest',side_effect=[row,row]) as rest, \
+             patch.object(worker.io,'storage_download',side_effect=[self.missing(),self.missing()]), \
+             patch.object(worker.io,'fetch') as delete:
+            worker.cleanup_abandoned_file(row)
+        delete.assert_not_called()
+        self.assertEqual(rest.call_args_list[-1].args[2]['action'],'ack')
+
+    def test_abandoned_hash_mismatch_never_deletes_or_acknowledges(self):
+        row=self.row()
+        with patch.object(worker.io,'rest',return_value=row) as rest, \
+             patch.object(worker.io,'storage_download',return_value=b'unexpected'), \
+             patch.object(worker.io,'fetch') as delete:
+            with self.assertRaisesRegex(ValueError,'DELETE_HASH_MISMATCH'):
+                worker.cleanup_abandoned_file(row)
+        delete.assert_not_called()
+        self.assertEqual(rest.call_count,1)
+
+    def test_report_only_lists_abandoned_jobs_without_deleting(self):
+        row=self.row()
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker,'inventory',return_value={'objects':0,'orphans_for_review':0}), \
+             patch.object(worker,'cleanup_abandoned_file') as cleanup, \
+             patch.object(worker,'write_heartbeat'):
+            report=worker.cleanup_report(environment='DEV')
+        cleanup.assert_not_called()
+        self.assertEqual(report['abandoned_candidates'],1)
+        self.assertEqual(report['mode'],'report_only')
+
+    def test_qualified_cleanup_failure_creates_alert(self):
+        row=self.row()
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker,'inventory',return_value={'objects':0,'orphans_for_review':0}), \
+             patch.object(worker,'cleanup_abandoned_file',side_effect=ValueError('DELETE_READBACK_FAILED')), \
+             patch.object(worker,'report_alert') as alert, patch.object(worker,'write_heartbeat'):
+            report=worker.cleanup_report(execute=True,environment='DEV')
+        self.assertEqual(report['failures'][0]['kind'],'abandoned')
+        alert.assert_called_once()
+        self.assertEqual(alert.call_args.args[1],'hermes-alea:dev:abandoned:'+row['id'])
+        self.assertEqual(alert.call_args.args[2],'critical')
+
+    def test_successful_cleanup_resolves_incident_alert(self):
+        row=self.row()
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker,'inventory',return_value={'objects':0,'orphans_for_review':0}), \
+             patch.object(worker,'cleanup_abandoned_file'), patch.object(worker,'resolve_alert') as resolve, \
+             patch.object(worker,'write_heartbeat'):
+            report=worker.cleanup_report(execute=True,environment='DEV')
+        resolve.assert_called_once_with('hermes-alea:dev:abandoned:'+row['id'])
+        self.assertEqual(report['abandoned_cleaned'],1)
+        self.assertEqual(report['failures'],[])
+
+    def test_active_job_is_not_selected_as_abandoned(self):
+        row=self.row();row.update({'state':'activated','abandoned_candidate':False})
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker,'inventory',return_value={'objects':0,'orphans_for_review':0}), \
+             patch.object(worker,'cleanup_abandoned_file') as cleanup, \
+             patch.object(worker,'write_heartbeat'):
+            report=worker.cleanup_report(execute=True,environment='DEV')
+        cleanup.assert_not_called()
+        self.assertEqual(report['abandoned_cleaned'],0)
 
 if __name__=='__main__':unittest.main()

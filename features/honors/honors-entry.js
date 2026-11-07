@@ -4,6 +4,7 @@ import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-
 function browserImageClient(){
   return createHermesAleaClient({
     targetPolicies:{definition:{requireAlpha:false},relief:{requireAlpha:true}},
+    environment:window.ALEA_SUPABASE_CONFIG?.name==='live'?'LIVE':'DEV',
     rpc:(name,args)=>window.dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)}),
     request:(path,options={})=>window.authFetch(path,{...options,headers:{Authorization:'Bearer session',...(options.headers||{})}})
   });

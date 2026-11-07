@@ -760,6 +760,28 @@ async function handleRequest(req: Request): Promise<Response> {
     const data = await req.json();
     if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
     if (data.action === "session_check") return json({ ok: true });
+    if (data.action === "system_alert_list" || data.action === "system_alert_ack") {
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (!serviceRoleKey) return fail("OLYMPIA alert storage is not configured.", 503);
+      const alertClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      if (data.action === "system_alert_list") {
+        const [alertsResult, healthResult] = await Promise.all([
+          alertClient.from("olympia_system_alerts").select("*").order("occurred_at", { ascending: false }).limit(100),
+          alertClient.from("olympia_system_health").select("*").order("updated_at", { ascending: false }).limit(20),
+        ]);
+        if (alertsResult.error || healthResult.error) return fail("OLYMPIA alert data could not be read.", 503);
+        return json({ ok: true, alerts: alertsResult.data || [], health: healthResult.data || [] });
+      }
+      const alertId = String(data.alert_id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(alertId)) return fail("Ogiltigt larm-ID.", 400);
+      const { data: alert, error: ackError } = await alertClient.rpc("olympia_system_alert_ack", {
+        alert_id: alertId, actor_id: user.id,
+      });
+      if (ackError || !alert?.id) return fail("Larmet kunde inte kvitteras.", 409);
+      return json({ ok: true, alert });
+    }
     if (String(data.action || "").startsWith("idea_")) {
       const table = ideaClient.from("olympia_ideas");
       const statuses = new Set(["idea_bank", "to_process", "in_olympia", "done"]);

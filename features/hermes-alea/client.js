@@ -21,7 +21,7 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
   return output;
  }finally{bitmap.close();}
 }
-export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={}}){
+export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={},environment='DEV'}){
  const allowedTargets=new Set(Object.keys(targetPolicies));
  const attempts=new Map();
  function uploadError(data,status){
@@ -70,7 +70,15 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   const expected_revision=Number(target.image_revision||0);
   const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:target.image_asset_id?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
   meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
-  const job=await rpc('hermes_alea_begin',{request:meta});
+  let job;
+  try{
+   job=await rpc('hermes_alea_begin',{request:meta});
+  }catch(error){
+   if(/STAGING_QUOTA_EXCEEDED/.test(String(error?.message||error))){
+    try{await rpc('hermes_alea_report_staging_block',{request:{environment:environment==='LIVE'?'LIVE':'DEV',target_kind:targetKind,target_id:target.id}});}catch{}
+   }
+   throw error;
+  }
   if(job.state==='activated')return job;
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
