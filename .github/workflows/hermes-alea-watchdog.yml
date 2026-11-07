@@ -1,0 +1,44 @@
+name: HERMES ALEA – scheduled-run watchdog
+on:
+  schedule:
+    - cron: '13,28,43,58 * * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to inspect
+        type: choice
+        required: true
+        default: DEV
+        options: [DEV, LIVE]
+permissions:
+  contents: read
+concurrency:
+  group: hermes-alea-watchdog-${{ github.event_name == 'schedule' && 'scheduled' || inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  live:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || inputs.environment == 'LIVE')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/hermes_alea_watchdog.py
+      - name: Check LIVE cleanup heartbeat and open/resolve OLYMPIA alarm
+        env:
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+          OLYMPIA_ENVIRONMENT: LIVE
+        run: python scripts/hermes_alea_watchdog.py
+  dev:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && ((github.ref == 'refs/heads/main' && github.event_name == 'schedule') || (github.ref == 'refs/heads/development' && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV'))
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/hermes_alea_watchdog.py
+      - name: Check DEV cleanup heartbeat and open/resolve OLYMPIA alarm
+        env:
+          SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
+          OLYMPIA_ENVIRONMENT: DEV
+        run: python scripts/hermes_alea_watchdog.py
