@@ -102,8 +102,8 @@ class AbandonedCleanupTest(unittest.TestCase):
         self.assertEqual(rest.call_args_list[0].args[2]['action'],'reserve')
         self.assertEqual(rest.call_args_list[-1].args[2]['action'],'ack')
         self.assertEqual(delete.call_count,2)
-        self.assertIn(row['source_path'],delete.call_args_list[0].args[1])
-        self.assertIn(row['output_path'],delete.call_args_list[1].args[1])
+        self.assertIn(row['source_path'],delete.call_args_list[0].args[2].decode())
+        self.assertIn(row['output_path'],delete.call_args_list[1].args[2].decode())
 
     def test_abandoned_cleanup_acknowledges_objects_already_missing(self):
         row=self.row()
