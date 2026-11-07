@@ -257,8 +257,19 @@ def main():
     report = cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup)
     report['archive_failures'] = failures
     report['environment'] = args.environment
+    for item in failures:
+        key='hermes-alea:'+args.environment.lower()+':archive:'+item['job_id']
+        report_alert(args.environment,key,'critical',item['error'],
+          'En aktiverad bild kunde inte arkiveras till Drive.',
+          {'job_id':item['job_id']},
+          'Behåll originalet i Supabase. Kontrollera Drive-anslutningen och kör arkiveringen igen.')
+    failed=bool(failures or report['failures'])
+    write_heartbeat(args.environment,'failure' if failed else 'success',
+      (failures[0]['error'] if failures else report['failures'][0]['error']) if failed else None,
+      {'archived_failures':len(failures),'cleanup_failures':len(report['failures']),
+       'abandoned_cleaned':report['abandoned_cleaned']})
     print('HERMES_ALEA_REPORT', json.dumps(report))
-    if failures or report['failures']:
+    if failed:
         raise SystemExit(1)
 
 
