@@ -159,3 +159,24 @@ end
 $function$;
 revoke all on function public.hermes_alea_report_staging_block(jsonb) from public,anon;
 grant execute on function public.hermes_alea_report_staging_block(jsonb) to authenticated;
+
+create or replace function public.olympia_system_alert_ack(alert_id uuid, actor_id uuid)
+returns jsonb language plpgsql security definer set search_path=''
+as $function$
+declare result public.olympia_system_alerts;
+begin
+  if actor_id is null then raise exception 'ALERT_ACTOR_REQUIRED'; end if;
+  update public.olympia_system_alerts a set status='acknowledged',
+    acknowledged_at=now(),acknowledged_by=actor_id,last_checked_at=now(),updated_at=now(),
+    history=a.history||jsonb_build_array(jsonb_build_object('event','acknowledged','at',now(),'actor_id',actor_id))
+  where a.id=alert_id and a.status='active'
+  returning * into result;
+  if not found then
+    select * into result from public.olympia_system_alerts a where a.id=alert_id;
+    if not found then raise exception 'ALERT_NOT_FOUND'; end if;
+  end if;
+  return to_jsonb(result);
+end
+$function$;
+revoke all on function public.olympia_system_alert_ack(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.olympia_system_alert_ack(uuid,uuid) to service_role;
