@@ -5,6 +5,8 @@ import {runInNewContext} from 'node:vm';
 const combat=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../features/combat/admin-scenes.js',import.meta.url),'utf8');
 const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
+const geometry=readFileSync(new URL('../features/ui/arcane-geometry-engine.js',import.meta.url),'utf8');
+const formations=readFileSync(new URL('../features/ui/arcane-hex-formation-library.js',import.meta.url),'utf8');
 const placement=combat.slice(combat.indexOf('function combatMovementOccupied('),combat.indexOf('function combatSetMovementPreview('));
 
 const flight={id:'flight',code:'spell_flyga',active:true,modifiers:{
@@ -27,7 +29,7 @@ function harness({cells=paths(),effects=[],defs=[flight],character=actor}={}){
  const start=combat.indexOf('function combatAxialDistance('),stop=combat.indexOf('function combatAttackProfile(',start);
  const moveStart=combat.indexOf('function combatReachableHexes('),moveEnd=combat.indexOf('async function combatRecordFullMoveAction(',moveStart);
  if(start<0||stop<start||moveStart<0||moveEnd<moveStart)throw Error('Missing ÖRN runtime slice');
- runInNewContext(footprint+'\n'+placement+'\n'+combat.slice(start,stop)+'\n'+combat.slice(moveStart,moveEnd)+
+ runInNewContext(geometry+'\n'+formations+'\n'+footprint+'\n'+placement+'\n'+combat.slice(start,stop)+'\n'+combat.slice(moveStart,moveEnd)+
   '\nthis.rules={combatIsFlying,combatFlightCapabilities,combatTerrainIsWall,combatHasLineOfSight,combatReachableHexes,combatIgnoresSightObstacle};',context);
  return context.rules
 }

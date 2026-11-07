@@ -2,11 +2,13 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const source=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
+const geometry=readFileSync(new URL('../features/ui/arcane-geometry-engine.js',import.meta.url),'utf8');
+const formations=readFileSync(new URL('../features/ui/arcane-hex-formation-library.js',import.meta.url),'utf8');
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const scene=readFileSync(new URL('../features/combat/admin-scenes.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261009164500_multihex_area_and_terrain.sql',import.meta.url),'utf8');
-const geo=runInNewContext(source+`
+const geo=runInNewContext(geometry+'\n'+formations+'\n'+source+`
 this.geo={shape:combatFootprintShape,face:combatFootprintFacing,cells:combatFootprintCells,
  overlap:combatFootprintOverlaps,distance:combatFootprintDistance,area:combatFootprintIntersectsRadius};`,{});
 const actor=(name,shape,q,r,facing=0)=>({id:name,name_snapshot:name,q,r,state:{footprint:{shape,facing}}});
