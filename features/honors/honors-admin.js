@@ -67,6 +67,7 @@ export function renderHonorsAdmin(root, options = {}) {
       (currentImage?'<img class="honors-image-current" src="'+esc(currentImage)+'" alt="Aktuell bild">':'<span>'+(row.image_asset_id?'Förhandsvisning saknas':'Ingen bild')+'</span>')+
       '<label>'+ (row.image_asset_id?'Byt bild':'Lägg till bild')+'<input data-image-upload type="file" accept="image/png,image/jpeg,image/webp"></label>'+
       '<small>PNG, JPEG eller WebP. Högst 12 MB och 2048 × 2048 pixlar. Förbered beskärning och bakgrund före uppladdning.'+(kind==='relief'?(row.allow_overhang===false?' Basbild bakom ramen kan vara ogenomskinlig via HERMES CORE.':' Bild som sticker ut kräver äkta transparens.'):'')+'</small>'+
+      (row.image_upload_error?'<p class="honors-image-error" role="alert">'+esc(row.image_upload_error)+' Välj filen igen för att återuppta uppladdningen.</p>':'')+
       (row.image_asset_id?'<button type="button" data-image-remove>Ta bort bild</button>':'')+
       '<button type="button" data-image-retry hidden>Försök igen</button><p role="status" aria-live="polite" data-image-status></p></fieldset>';
   }
@@ -455,6 +456,8 @@ export function renderHonorsAdmin(root, options = {}) {
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
       if (!imagePilot || !options.onUploadImage) { notice('HERMES ALEA är inte tillgänglig. Ingen variant har skapats.'); return; }
+      const submitButton=form.querySelector('[type="submit"]');
+      if(submitButton?.disabled)return;
       const data=formData(event.currentTarget);
       const file=event.currentTarget.elements.namedItem('image_file')?.files?.[0];
       if (!file) { notice('Välj en bildfil.'); return; }
@@ -466,16 +469,21 @@ export function renderHonorsAdmin(root, options = {}) {
       data.name='Relief '+data.material+' '+crypto.randomUUID().slice(0,8);
       data.honor_id=definition.id; data.allow_overhang=data.allow_overhang === 'on';
       let row;
+      if(submitButton)submitButton.disabled=true;
       try {
-        const saved=await onSaveVariant(data); row=Array.isArray(saved)?saved[0]:saved;
-        if (!row?.id) throw Error('Reliefvarianten kunde inte sparas.');
-        variants.push(row);
+        row=variantsFor(definition.id).find(v=>!v.image_asset_id&&v.material===data.material&&v.status!=='archived');
+        if(!row){
+          const saved=await onSaveVariant(data); row=Array.isArray(saved)?saved[0]:saved;
+          if (!row?.id) throw Error('Reliefvarianten kunde inte sparas.');
+          variants.push(row);
+        }
+        row.image_upload_error='';
         draw(); openEditor(definition);
         const uploaded=await options.onUploadImage('relief',row,file,stage=>{
           const messages={preparing:'Förbereder bilden…',uploading:'Laddar upp bilden…',verifying:'Kontrollerar bilden…',activating:'Sparar bildkopplingen…'};
           if(messages[stage])notice(messages[stage]);
         });
-        Object.assign(row,uploaded);
+        Object.assign(row,uploaded); row.image_upload_error='';
         let autoSelected=false;
         if(getCategory(definition)==='badge'&&!definition.preview_variant_id&&typeof options.onPreviewVariant==='function'){
           try{
@@ -489,22 +497,18 @@ export function renderHonorsAdmin(root, options = {}) {
             autoSelected=true;
           }catch(error){notice('Bilden sparades, men kunde inte väljas automatiskt: '+(error.message||'okänt fel'));}
         }
-        draw(); openEditor(definition); notice(autoSelected?'Första bildvarianten sparad och vald som aktiv förhandsvisning.':'Bildvariant sparad via HERMES ALEA.');
+        draw(); openEditor(definition);
+        notice(autoSelected?'Första bildvarianten sparad och vald som aktiv förhandsvisning.':'Bildvariant sparad via HERMES ALEA.');
       } catch (error) {
-        let message=error.message || 'Kunde inte lägga till reliefvarianten.';
-        if (row?.id && !row.image_asset_id) {
-          try {
-            if (typeof options.onDeleteEmptyVariant !== 'function') throw Error('Återställning saknas');
-            await options.onDeleteEmptyVariant(row);
-            const index=variants.findIndex(v=>String(v.id)===String(row.id));
-            if (index>=0) variants.splice(index,1);
-            draw(); openEditor(definition);
-            message+=' Den tomma varianten har återställts.';
-          } catch (rollbackError) {
-            message+=' En tom variant kan finnas kvar; öppna registret igen innan du försöker på nytt.';
-          }
-        }
-        notice(message);
+        const message=error.message || 'Kunde inte lägga till reliefvarianten.';
+        if(row?.id&&!row.image_asset_id){
+          row.image_upload_error=message;
+          draw(); openEditor(definition);
+          notice('Varianten finns kvar som utkast. '+message+' Återuppta uppladdningen från varianten nedan.');
+        }else notice(message);
+      } finally {
+        const currentSubmit=root.querySelector('[data-variant-form] [type="submit"]');
+        if(currentSubmit)currentSubmit.disabled=false;
       }
     });
     root.querySelectorAll('[data-select-badge-image]').forEach(button => button.addEventListener('click', async () => {
