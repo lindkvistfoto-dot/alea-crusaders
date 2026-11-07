@@ -83,4 +83,57 @@ class WorkerTest(unittest.TestCase):
         denied=urllib.error.HTTPError('https://example.test',400,'denied',{},io.BytesIO(b'{"statusCode":"403","error":"permission_denied"}'))
         self.assertTrue(worker.missing_storage_object(missing));self.assertFalse(worker.missing_storage_object(denied))
 
+
+    def abandoned_row(self):
+        ident='dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+        user='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+        return {
+            'id':ident,
+            'abandoned_candidate':True,
+            'source_path':user+'/'+ident+'/original',
+            'output_path':'trophy/'+ident+'.webp',
+            'source_sha256':worker.io.digest(b'original'),
+            'output_sha256':worker.io.digest(b'webp'),
+        }
+
+    def test_abandoned_cleanup_deletes_only_after_hashes_and_reservation(self):
+        row=self.abandoned_row()
+        missing=urllib.error.HTTPError('https://example.test',404,'missing',{},None)
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker.io,'storage_download',side_effect=[b'original',b'webp',missing,missing]) as download, \
+             patch.object(worker.io,'rest',return_value={}) as rest, \
+             patch.object(worker.io,'fetch') as delete:
+            worker.cleanup_abandoned_job(row['id'])
+            self.assertEqual(download.call_count,4)
+            self.assertEqual(rest.call_args_list[0].args[2]['action'],'reserve')
+            self.assertEqual(rest.call_args_list[-1].args[2]['action'],'ack')
+            self.assertEqual(rest.call_args_list[0].args[2]['kind'],'abandoned')
+            self.assertEqual(delete.call_count,2)
+            self.assertTrue(all(call.args[1]=='DELETE' for call in delete.call_args_list))
+
+    def test_abandoned_cleanup_refuses_job_not_in_report(self):
+        row=self.abandoned_row()
+        row['abandoned_candidate']=False
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker.io,'storage_download') as download, \
+             patch.object(worker.io,'rest') as rest, \
+             patch.object(worker.io,'fetch') as delete:
+            with self.assertRaisesRegex(ValueError,'ABANDONED_JOB_NOT_ELIGIBLE'):
+                worker.cleanup_abandoned_job(row['id'])
+            download.assert_not_called()
+            rest.assert_not_called()
+            delete.assert_not_called()
+
+    def test_abandoned_cleanup_hash_mismatch_never_reserves_or_deletes(self):
+        row=self.abandoned_row()
+        with patch.object(worker,'all_rows',return_value=iter([row])), \
+             patch.object(worker.io,'storage_download',return_value=b'altered'), \
+             patch.object(worker.io,'rest') as rest, \
+             patch.object(worker.io,'fetch') as delete:
+            with self.assertRaisesRegex(ValueError,'DELETE_HASH_MISMATCH'):
+                worker.cleanup_abandoned_job(row['id'])
+            rest.assert_not_called()
+            delete.assert_not_called()
+
+
 if __name__=='__main__':unittest.main()

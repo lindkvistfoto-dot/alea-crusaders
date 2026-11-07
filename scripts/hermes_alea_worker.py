@@ -160,11 +160,67 @@ def cleanup_report(execute=False):
     return report
 
 
+def cleanup_abandoned_job(job_id):
+    if not UUID.fullmatch(job_id):
+        raise ValueError('INVALID_JOB_ID')
+    rows = [row for row in all_rows('hermes_alea_cleanup_report?select=*') if row['id'] == job_id]
+    if len(rows) != 1 or not rows[0].get('abandoned_candidate'):
+        raise ValueError('ABANDONED_JOB_NOT_ELIGIBLE')
+    row = rows[0]
+    # Read and hash both objects before reserving deletion. The DB RPC rechecks
+    # that this aged upload is still unreferenced when the reservation is made.
+    objects = (
+        ('source', 'hermes-alea-originals', row['source_path'], row['source_sha256']),
+        ('output', 'hermes-alea-display', row['output_path'], row['output_sha256']),
+    )
+    present = {}
+    for kind, bucket, path, expected in objects:
+        if not path or not re.fullmatch(r'[a-f0-9]{64}', expected or ''):
+            raise ValueError('INVALID_ABANDONED_METADATA')
+        try:
+            data = io.storage_download(bucket, path)
+        except urllib.error.HTTPError as error:
+            if not missing_storage_object(error):
+                raise
+            present[kind] = False
+        else:
+            if io.digest(data) != expected:
+                raise ValueError('DELETE_HASH_MISMATCH')
+            present[kind] = True
+    io.rest('rpc/hermes_alea_cleanup', 'POST', {'job_id': job_id, 'kind': 'abandoned', 'action': 'reserve'})
+    for kind, bucket, path, expected in objects:
+        if present[kind]:
+            io.fetch(io.SUPA + '/storage/v1/object/' + bucket, 'DELETE', json.dumps({'prefixes': [path]}).encode(), {**io.BASE, 'Content-Type': 'application/json'})
+        try:
+            io.storage_download(bucket, path)
+        except urllib.error.HTTPError as error:
+            if not missing_storage_object(error):
+                raise
+        else:
+            raise ValueError('DELETE_READBACK_FAILED')
+    io.rest('rpc/hermes_alea_cleanup', 'POST', {'job_id': job_id, 'kind': 'abandoned', 'action': 'ack'})
+    print('HERMES_ALEA_ABANDONED_CLEANED', job_id)
+
+
+def cleanup_abandoned_jobs(job_ids):
+    ids = [item.strip() for item in job_ids.split(',') if item.strip()]
+    if len(ids) > 20 or len(ids) != len(set(ids)):
+        raise ValueError('INVALID_ABANDONED_JOB_LIST')
+    results = []
+    for job_id in ids:
+        try:
+            cleanup_abandoned_job(job_id)
+        except Exception as error:
+            code = str(error) if isinstance(error, ValueError) and re.fullmatch(r'[A-Z_]+', str(error)) else type(error).__name__
+            results.append({'job_id': job_id, 'error': code})
+    return results
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--execute-cleanup', action='store_true')
+    parser.add_argument('--cleanup-abandoned-ids', default='')
     args = parser.parse_args()
-    if args.execute_cleanup and os.environ.get('HERMES_ALEA_CLEANUP_APPROVED') != 'true':
+    if (args.execute_cleanup or args.cleanup_abandoned_ids) and os.environ.get('HERMES_ALEA_CLEANUP_APPROVED') != 'true':
         raise RuntimeError('CLEANUP_NOT_APPROVED')
     io.FOLDER = os.environ.get('HERMES_ALEA_ARCHIVE_FOLDER_ID', '')
     if not io.FOLDER:
@@ -174,9 +230,10 @@ def main():
     failures = archive_batch(jobs)
     report = cleanup_report(args.execute_cleanup)
     report['archive_failures'] = failures
+    report['abandoned_cleanup_failures'] = cleanup_abandoned_jobs(args.cleanup_abandoned_ids) if args.cleanup_abandoned_ids else []
     report['health'] = io.rest('rpc/hermes_alea_health', 'POST', {})
     print('HERMES_ALEA_REPORT', json.dumps(report))
-    if failures or report['failures']:
+    if failures or report['failures'] or report['abandoned_cleanup_failures']:
         raise SystemExit(1)
 
 
