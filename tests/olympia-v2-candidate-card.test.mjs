@@ -25,7 +25,9 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(edge).toContain('releaseBeforeMerge.head?.sha !== data.releasePrSha');
   expect(edge).toContain('body: JSON.stringify({ sha: data.releasePrSha, merge_method: "squash" })');
   expect(js).toContain('releasePrSha:candidate.releasePrSha');
-  expect(js).toContain('setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},30000)');
+  expect(js).toContain('setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},180000)');
+  expect(js).toContain('candidateCacheUntil.get(requestKey)');
+  expect(js).toContain('Math.min(2,targets.length)');
  });
  it('exposes approval only for verified candidates',()=>{
   expect(js).toContain('LIVE-beslut är låsta.');
