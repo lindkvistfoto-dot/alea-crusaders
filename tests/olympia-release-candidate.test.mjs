@@ -59,6 +59,15 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(edge).toContain('body: JSON.stringify({ sha: ref.object.sha, force: true }),');
   expect(edge).toContain('contents/" + path + "?ref=" + encodeURIComponent(branch)');
  });
+ it('exposes a safe retry for a blocked Pandoras Ask using the existing decision',()=>{
+  const control=read('olympia/zeus-control.html');
+  expect(control).toContain('accepted&&candidate&&!packaged&&!published&&candidateStatus&&candidateStatus.candidateBlocked');
+  expect(control).toContain('Återuppta kandidatkontroll');
+  expect(control).toContain('data-decision="pandoras_ask"');
+  expect(control).toContain('data-sha="'+esc(currentDevSha)+'"');
+  const edge=read('supabase/functions/olympia-control/index.ts');
+  expect(edge).toContain('Pandoras ask återupptogs på samma beslut. Ingen dubblett av releaseförslaget skapas.');
+ });
  it('rejects a stale workflow copied into a resumed request branch before any release-token push',()=>{
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   const edge=read('supabase/functions/olympia-control/index.ts');
