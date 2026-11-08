@@ -8,7 +8,7 @@ describe('OLYMPIA LIVE PR visibility',()=>{
  });
  it('keeps LIVE PR cards read-only, before any DEV approval markup',()=>{
   const live=html.indexOf("if(pr.base?.ref==='main')return");
-  const dev=html.indexOf("const details=await window.olympiaV2Request",live);
+  const dev=html.indexOf("const details=await readPrStatus",live);
   expect(live).toBeGreaterThan(-1);
   expect(dev).toBeGreaterThan(live);
   expect(html.slice(live,dev)).not.toContain('data-dev-approve');
