@@ -174,12 +174,34 @@ jobs:
             fi
 
             APPLY_FILES=()
-            for allowed in "${ALLOWED_FILES[@]}"; do
-              if [[ "$INDEX_HANDLED" == "true" && "$allowed" == "index.html" ]]; then
+            # A DEV PR may modify a file that has never existed in LIVE.
+            # A three-way patch cannot modify a missing LIVE index entry.
+            # Bootstrap only files explicitly changed by this approved PR,
+            # present in the verified DEV merge, and absent in LIVE.
+            while IFS= read -r changed; do
+              [[ -n "$changed" ]] || continue
+              if [[ "$INDEX_HANDLED" == "true" && "$changed" == "index.html" ]]; then
                 continue
               fi
-              APPLY_FILES+=("$allowed")
-            done
+              if ! git -C "$SOURCE_DIR" cat-file -e "HEAD:$changed" 2>/dev/null; then
+                if ! git -C "$DEV_DIR" cat-file -e "$PR_MERGE_SHA:$changed" 2>/dev/null; then
+                  echo "::error::Approved PR #$PR_NUMBER deletes a file absent in LIVE: $changed"
+                  exit 1
+                fi
+                # No filesystem path traversal or symlink import from a PR.
+                [[ "$changed" != /* && "$changed" != *../* && "$changed" != ../* ]] || exit 1
+                [[ "$(git -C "$DEV_DIR" ls-tree "$PR_MERGE_SHA" -- "$changed" | awk '{print $1}')" == "100644" ]] || {
+                  echo "::error::Only ordinary approved files can be introduced to LIVE: $changed"
+                  exit 1
+                }
+                mkdir -p "$SOURCE_DIR/$(dirname "$changed")"
+                git -C "$DEV_DIR" show "$PR_MERGE_SHA:$changed" > "$SOURCE_DIR/$changed"
+                git -C "$SOURCE_DIR" add -- "$changed"
+                echo "PR #$PR_NUMBER: introduced approved file missing from LIVE baseline: $changed"
+              else
+                APPLY_FILES+=("$changed")
+              fi
+            done <<< "$CHANGED_FILES"
             if (( ${#APPLY_FILES[@]} > 0 )); then
               PATCH_FILE="$OUTPUT_DIR/pr-$PR_NUMBER.patch"
               git -C "$DEV_DIR" diff --binary --full-index "$PR_PARENT_SHA" "$PR_MERGE_SHA" -- "${APPLY_FILES[@]}" > "$PATCH_FILE"
