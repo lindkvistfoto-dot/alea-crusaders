@@ -101,6 +101,10 @@ jobs:
           test -s _site/index.html
           test -s _site/dev/index.html
 
+      - name: Version CSS and JavaScript from published file contents
+        run: |
+          python3 development/scripts/version-pages-assets.py _site
+
       - name: Fetch both branch histories
         run: git -C live fetch --depth=100 --no-tags origin +refs/heads/development:refs/remotes/origin/development
 
