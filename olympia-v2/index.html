@@ -49,7 +49,14 @@ async function refresh(){
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
   const shown=prs.filter(p=>filter.value==='all'||String(p.number)===filter.value);
   const results=await Promise.allSettled(shown.map(card));
+  // Preserve the existing LIVE-candidate subtree while an asynchronous diagnostic is running.
+  // Otherwise fast PR polling detaches its target and discards the successful response.
+  const previousCandidates=new Map([...cards.querySelectorAll('[data-candidate-status]')].map(node=>[node.dataset.candidateStatus+'|'+node.dataset.mergeSha,node]));
   cards.innerHTML=results.map((r,i)=>r.status==='fulfilled'?r.value:'<section class="panel">PR #'+shown[i].number+': status kunde inte hämtas. '+safe(r.reason?.message)+'</section>').join('');
+  cards.querySelectorAll('[data-candidate-status]').forEach(node=>{
+   const old=previousCandidates.get(node.dataset.candidateStatus+'|'+node.dataset.mergeSha);
+   if(old)node.replaceWith(old);
+  });
   window.olympiaV2CheckCandidateStatuses?.();
   global.textContent=prs.length+' aktiva DEV/LIVE-ärenden · uppdaterad '+new Date().toLocaleTimeString('sv-SE')+(registryResult.ok?'':' · historiska PR-filter kunde inte läsas');
  }catch(error){global.textContent='PR-listan kunde inte uppdateras: '+error.message+'.';}
