@@ -129,6 +129,17 @@ jobs:
           SOURCE_PRS_CSV="$(IFS=,; echo "${SOURCE_PRS[*]}")"
           echo "source_prs=$SOURCE_PRS_CSV" >> "$GITHUB_OUTPUT"
 
+          RUNNING_WORKFLOW_SHA="$(git -C "$REQUEST_DIR" rev-parse "$GITHUB_SHA:.github/workflows/olympia-release-candidate.yml" 2>/dev/null || true)"
+          CURRENT_WORKFLOW_SHA="$(git -C "$DEV_DIR" rev-parse "HEAD:.github/workflows/olympia-release-candidate.yml" 2>/dev/null || true)"
+          if [[ ! "$RUNNING_WORKFLOW_SHA" =~ ^[0-9a-fA-F]{40}$ ||
+                ! "$CURRENT_WORKFLOW_SHA" =~ ^[0-9a-fA-F]{40}$ ||
+                "${RUNNING_WORKFLOW_SHA,,}" != "${CURRENT_WORKFLOW_SHA,,}" ||
+                "${WORKFLOW_BLOB_SHA,,}" != "${RUNNING_WORKFLOW_SHA,,}" ]]; then
+            echo "::error::The release request ran a stale or mismatched OLYMPIA workflow. Resume it in OLYMPIA to refresh the request branch from current development."
+            echo "blocked_reason=Release request used a stale OLYMPIA workflow; resume it in OLYMPIA to refresh the request branch." >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
           LIVE_SHA="$(git -C "$LIVE_DIR" rev-parse HEAD)"
           git -C "$DEV_DIR" cat-file -e "$LIVE_SHA^{commit}" || { echo "::error::Current LIVE commit is unavailable in the verified DEV object store; no candidate was created."; exit 1; }
           SOURCE_DIR="$OUTPUT_DIR/source"
