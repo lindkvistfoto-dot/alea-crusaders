@@ -11,3 +11,11 @@ test('candidate diagnostics have a bounded longer timeout and visible error',()=
  expect(js).toContain("action.action==='auto_candidate_diagnostics'?60000:20000");
  expect(js).toContain('LIVE-status kunde inte verifieras');
 });
+
+test('LIVE candidate checks are independently tracked per PR and SHA',()=>{
+ expect(js).toContain('const candidateRequests=new Set()');
+ expect(js).toContain("const requestKey=number+'|'+sha");
+ expect(js).toContain('if(candidateRequests.has(requestKey))return');
+ expect(js).toContain('finally{candidateRequests.delete(requestKey)}');
+ expect(js).not.toContain('candidateStatusBusy');
+});
