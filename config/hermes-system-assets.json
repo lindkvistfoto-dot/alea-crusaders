@@ -487,6 +487,72 @@
         1280
       ],
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "ARCANE_MAP_ICON_HIDDEN": {
+      "label": "ARCANE MAP ICON — Dolda ting",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ]
+    },
+    "ARCANE_MAP_ICON_ITEM": {
+      "label": "ARCANE MAP ICON — Föremål",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ]
+    },
+    "ARCANE_MAP_ICON_NPC": {
+      "label": "ARCANE MAP ICON — Personer / SLP",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ]
+    },
+    "ARCANE_MAP_ICON_TRAP": {
+      "label": "ARCANE MAP ICON — Fällor",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ]
+    },
+    "ARCANE_MAP_ICON_EVENT": {
+      "label": "ARCANE MAP ICON — Händelser",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ]
+    },
+    "ARCANE_MAP_ICON_ENEMY": {
+      "label": "ARCANE MAP ICON — Fiender",
+      "source_size": [
+        1261,
+        1247
+      ],
+      "display_size": [
+        1261,
+        1247
+      ]
     }
   }
 }
