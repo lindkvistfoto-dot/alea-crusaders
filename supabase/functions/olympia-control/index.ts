@@ -1245,9 +1245,21 @@ async function handleRequest(req: Request): Promise<Response> {
         const path = "/repos/" + OWNER + "/" + REPO;
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
+        // Retry only transient GitHub transport errors; never retry a failed CI verdict.
+        const readCi = async (endpoint: string) => {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try { return await gh(token, endpoint); }
+            catch (error) {
+              const message = error instanceof Error ? error.message : "";
+              if (!/GITHUB_REQUEST_FAILED_(502|503|504)$/.test(message) || attempt === 2) throw error;
+              await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+            }
+          }
+          throw new Error("GITHUB_CI_UNAVAILABLE");
+        };
         const [checks, status] = await Promise.all([
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          readCi(path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
         const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
         const statuses = Array.isArray(status.statuses) ? status.statuses : [];
