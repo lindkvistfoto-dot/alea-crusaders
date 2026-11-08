@@ -4048,12 +4048,14 @@ function renderMapPanel(){
  let viewport=$('mapViewport');
  if(!activeCampaignMap){
   viewport?.style.removeProperty('--campaign-map-aspect-ratio');
+  viewport?.style.removeProperty('--campaign-map-aspect-ratio-number');
   img.classList.add('hidden');overlay.classList.add('hidden');placeholder.classList.remove('hidden');subtitle.textContent='Kampanjens aktuella karta.';status.textContent='Ingen karta vald';renderMapLibraryControls();return
  }
  placeholder.classList.add('hidden');img.classList.remove('hidden');overlay.classList.remove('hidden');
  img.src=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';img.alt=activeCampaignMap.name||'Kampanjkarta';
  let w=Number(activeCampaignMap.width)||1600,h=Number(activeCampaignMap.height)||1000;
  viewport?.style.setProperty('--campaign-map-aspect-ratio',w+' / '+h);
+ viewport?.style.setProperty('--campaign-map-aspect-ratio-number',String(w/h));
  img.width=w;img.height=h;overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);overlay.setAttribute('width',w);overlay.setAttribute('height',h);
  subtitle.textContent=activeCampaignMap.name||'Aktuell karta';status.textContent=(activeCampaignMap.name||'Karta')+' · '+campaignMapAreas.length+' områden';
  let maskId='fogMask_'+String(activeCampaignMap.id||'map').replace(/[^a-zA-Z0-9_-]/g,'');
