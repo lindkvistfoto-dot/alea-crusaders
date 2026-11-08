@@ -1246,8 +1246,8 @@ async function handleRequest(req: Request): Promise<Response> {
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
         const [checks, status] = await Promise.all([
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
         const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
         const statuses = Array.isArray(status.statuses) ? status.statuses : [];
