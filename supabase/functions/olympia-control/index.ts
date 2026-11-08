@@ -1105,7 +1105,9 @@ async function handleRequest(req: Request): Promise<Response> {
             state === "unlocked_issue" ? "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." :
             "Ingen automatisk kandidatbegäran hittades." });
       } catch (error) {
-        console.error("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "UNKNOWN");
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA candidate diagnostics failed", code);
+        if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail(code, 503);
         return fail("Kandidatens lås eller journal kunde inte verifieras. Ingen ändring gjordes.", 502);
       }
     }
