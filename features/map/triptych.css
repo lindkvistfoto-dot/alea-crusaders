@@ -61,7 +61,11 @@ body:has(#mapPage:not(.hidden)) main:has(> #mapPage) {
   grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
 }
 #mapPage .mapviewport {
-  height: min(76vh, 830px);
+  width: min(100%, calc(76vh * var(--campaign-map-aspect-ratio-number, 1.6)), calc(830px * var(--campaign-map-aspect-ratio-number, 1.6)));
+  height: auto;
+  min-height: 0;
+  aspect-ratio: var(--campaign-map-aspect-ratio, 16 / 10);
+  margin-inline: auto;
 }
 @media (max-width: 1150px) {
   #mapPage .mapworkarea {
@@ -80,5 +84,9 @@ body:has(#mapPage:not(.hidden)) main:has(> #mapPage) {
     grid-template-areas: "map" "images" "info";
   }
   #mapPage .map-location-images-panel { padding: 12px; }
-  #mapPage .mapviewport { height: 68vh; }
+  #mapPage .mapviewport {
+    width: min(100%, calc(68vh * var(--campaign-map-aspect-ratio-number, 1.6)));
+    height: auto;
+    min-height: 0;
+  }
 }
