@@ -3,9 +3,10 @@ import { test, expect } from 'vitest';
 
 const html = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
 
-test('poll pending CI every 10 seconds and settled CI every 30 seconds', () => {
-  expect(html).toMatch(/pendingChecks\?10000:30000/);
-  expect(html).not.toMatch(/setInterval\(automaticRefresh,120000\)/);
+test('poll pending CI every 30 seconds and settled CI every 120 seconds', () => {
+  expect(html).toMatch(/pendingChecks\?30000:120000/);
+  expect(html).toContain('const ttl=cached?.pending?30000:300000');
+  expect(html).toContain('mapLimit(shown,5,card)');
 });
 
 test('pending status names the waiting GitHub check', () => {

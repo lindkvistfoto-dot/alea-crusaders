@@ -24,5 +24,6 @@ describe('OLYMPIA automatic candidate read-only diagnostics',()=>{
  it('uses only read permissions and never calls final approval',()=>{
   expect(edge).toContain('decision === "candidate_check" || decision === "auto_candidate_diagnostics"');
   expect(diagnostics).not.toContain('final_approval');
+  expect(diagnostics).toContain('code.startsWith("GITHUB_RATE_LIMITED_")');
  });
 });

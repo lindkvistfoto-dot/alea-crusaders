@@ -15,7 +15,7 @@ test('candidate diagnostics have a bounded longer timeout and visible error',()=
 test('LIVE candidate checks are independently tracked per PR and SHA',()=>{
  expect(js).toContain('const candidateRequests=new Set()');
  expect(js).toContain("const requestKey=number+'|'+sha");
- expect(js).toContain('if(candidateRequests.has(requestKey))return');
+ expect(js).toContain('candidateRequests.has(requestKey)||(candidateCacheUntil.get(requestKey)||0)>Date.now()');
  expect(js).toContain('finally{candidateRequests.delete(requestKey)}');
  expect(js).not.toContain('candidateStatusBusy');
 });

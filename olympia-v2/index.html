@@ -26,8 +26,32 @@ async function card(pr){const id=pr.number,sha=pr.head.sha;
 if(pr.base?.ref==='main')return '<article class="panel" data-pr="'+id+'"><div class="header"><div><small>PR #'+id+' · LIVE (main)</small><h2>'+safe(pr.title)+'</h2></div><span class="pill wait">LIVE-kandidat · separat verifiering</span></div><p class="notice">LIVE-PR visas för insyn. Slutgodkännande sker endast via det verifierade LIVE-steget på tillhörande DEV-ärende. Ingen DEV-merge tillåts här.</p>'+link(pr.html_url,'Visa LIVE-PR på GitHub')+'</article>';
 
 if(pr.merged_at){return '<article class="panel" data-pr="'+id+'"><div class="header"><div><small>PR #'+id+' · development</small><h2>'+safe(pr.title)+'</h2></div><span class="pill good">För publicering</span></div><div class="progress">'+step('Skapad','done')+step('Testad','done')+step('DEV','done')+step('LIVE-kandidat','current')+step('Publicerad','')+'</div><p class="notice">DEV-merge bekräftad · <code style="overflow-wrap:anywhere">'+safe((pr.merge_commit_sha||'GitHub').slice(0,12))+'</code>. Kontrollerar LIVE-kandidat.</p><div class="lanes"><section class="lane"><h3>DEV</h3><p class="good">✓ Godkänd och mergad</p></section><section class="lane"><h3>LIVE</h3><p class="wait">LIVE-kandidat förbereds automatiskt efter godkänd DEV-merge när funktionen är aktiverad.</p><div data-candidate-status="'+id+'" data-merge-sha="'+safe(pr.merge_commit_sha||'')+'" role="status"><p class="muted">Kontrollerar LIVE-kandidaten…</p></div><p class="muted">LIVE-publicering kräver separat verifiering och godkännande.</p></section></div>'+link(pr.html_url,'Visa PR på GitHub')+'</article>'}
-const details=await window.olympiaV2Request({action:'pull_request_status',pullRequestNumber:id,pullRequestHeadSha:sha});const checks={check_runs:details.checkRuns||[]},status={statuses:details.statuses||[],state:details.combinedStatusState||'unknown'};const [state,label]=ci(checks,status);if(state==='pending')pendingChecks=true;const cloud=(checks.check_runs||[]).find(x=>/cloudflare pages/i.test(x.name));const raw=cloud?.output?.summary||'';const url=(raw.match(/https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev(?:\/[^\s<'"]*)?/i)||[])[0]||null;const ready=state==='success';const stage=ready?'För granskning':state==='pending'?'Tester pågår':state==='failed'?'Tester underkända':'Väntar på CI';return '<article class="panel" data-pr="'+id+'"><div class="header"><div><small>PR #'+id+' · '+safe(pr.base.ref)+'</small><h2>'+safe(pr.title)+'</h2></div><span class="pill">'+safe(stage)+'</span></div><div class="progress">'+step('Skapad','done')+step('Testad',ready?'done':'current')+step('DEV',ready?'current':'')+step('LIVE-kandidat','')+step('Publicerad','')+'</div><div class="notice" role="status">'+safe(ready?'Väntar på Zeus DEV-beslut.':state==='pending'?label:label)+'</div><div class="lanes"><section class="lane"><h3>DEV · Granskning</h3><div class="ci"><span>CI DEV <strong class="'+(ready?'good':state==='failed'?'bad':'wait')+'">'+safe(label)+'</strong></span></div>'+link(url,'Förhandsvisa DEV')+'<div class="actions"><button type="button" data-dev-approve="'+id+'" data-head-sha="'+safe(sha)+'" '+(!ready||!window.olympiaV2ZeusVerified?'disabled':'')+'>Godkänn DEV</button><button disabled>Omarbeta</button><button disabled>Avslå</button></div></section><section class="lane"><h3>LIVE · Publicering</h3><div class="ci"><span>CI LIVE <strong class="muted">Ej startad</strong></span></div>'+link(null,'Förhandsvisa LIVE')+'<div class="actions"><button disabled>Öppna Pandoras ask</button><button disabled>Lägg i releasepaket</button><button disabled>Till Hefaiastos</button><button disabled>Till Karon</button><button disabled>Slutgodkänn LIVE</button></div></section></div><p class="muted">Commit: <code>'+safe(sha.slice(0,10))+'</code> · Källa: GitHub</p><p class="muted">DEV-beslut kräver verifierad Zeus-session och godkänd CI. LIVE-beslut är ännu inte aktiverade.</p>'+link(pr.html_url,'Visa PR på GitHub')+'</article>'}
+const details=await readPrStatus(id,sha);const checks={check_runs:details.checkRuns||[]},status={statuses:details.statuses||[],state:details.combinedStatusState||'unknown'};const [state,label]=ci(checks,status);if(state==='pending')pendingChecks=true;const cloud=(checks.check_runs||[]).find(x=>/cloudflare pages/i.test(x.name));const raw=cloud?.output?.summary||'';const url=(raw.match(/https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev(?:\/[^\s<'"]*)?/i)||[])[0]||null;const ready=state==='success';const stage=ready?'För granskning':state==='pending'?'Tester pågår':state==='failed'?'Tester underkända':'Väntar på CI';return '<article class="panel" data-pr="'+id+'"><div class="header"><div><small>PR #'+id+' · '+safe(pr.base.ref)+'</small><h2>'+safe(pr.title)+'</h2></div><span class="pill">'+safe(stage)+'</span></div><div class="progress">'+step('Skapad','done')+step('Testad',ready?'done':'current')+step('DEV',ready?'current':'')+step('LIVE-kandidat','')+step('Publicerad','')+'</div><div class="notice" role="status">'+safe(ready?'Väntar på Zeus DEV-beslut.':state==='pending'?label:label)+'</div><div class="lanes"><section class="lane"><h3>DEV · Granskning</h3><div class="ci"><span>CI DEV <strong class="'+(ready?'good':state==='failed'?'bad':'wait')+'">'+safe(label)+'</strong></span></div>'+link(url,'Förhandsvisa DEV')+'<div class="actions"><button type="button" data-dev-approve="'+id+'" data-head-sha="'+safe(sha)+'" '+(!ready||!window.olympiaV2ZeusVerified?'disabled':'')+'>Godkänn DEV</button><button disabled>Omarbeta</button><button disabled>Avslå</button></div></section><section class="lane"><h3>LIVE · Publicering</h3><div class="ci"><span>CI LIVE <strong class="muted">Ej startad</strong></span></div>'+link(null,'Förhandsvisa LIVE')+'<div class="actions"><button disabled>Öppna Pandoras ask</button><button disabled>Lägg i releasepaket</button><button disabled>Till Hefaiastos</button><button disabled>Till Karon</button><button disabled>Slutgodkänn LIVE</button></div></section></div><p class="muted">Commit: <code>'+safe(sha.slice(0,10))+'</code> · Källa: GitHub</p><p class="muted">DEV-beslut kräver verifierad Zeus-session och godkänd CI. LIVE-beslut är ännu inte aktiverade.</p>'+link(pr.html_url,'Visa PR på GitHub')+'</article>'}
 let pendingChecks=false;
+const prStatusCache=new Map();
+async function readPrStatus(id,sha){
+ const key=Number(id)+'|'+String(sha).toLowerCase();
+ const cached=prStatusCache.get(key);
+ const ttl=cached?.pending?30000:300000;
+ if(cached?.value&&Date.now()-cached.at<ttl){if(cached.pending)pendingChecks=true;return cached.value}
+ if(cached?.promise)return cached.promise;
+ const request=window.olympiaV2Request({action:'pull_request_status',pullRequestNumber:Number(id),pullRequestHeadSha:sha}).then(details=>{
+  const runs=details.checkRuns||[],statuses=details.statuses||[];
+  const pending=runs.some(run=>run.status!=='completed')||(statuses.length>0&&details.combinedStatusState==='pending');
+  prStatusCache.set(key,{value:details,at:Date.now(),pending});
+  if(pending)pendingChecks=true;
+  return details;
+ });
+ prStatusCache.set(key,{...(cached?.value?cached:{}),promise:request});
+ try{return await request}catch(error){prStatusCache.delete(key);throw error}
+}
+async function mapLimit(items,limit,fn){
+ const results=new Array(items.length);let cursor=0;
+ await Promise.all(Array.from({length:Math.min(limit,items.length)},async()=>{
+  while(cursor<items.length){const index=cursor++;try{results[index]={status:'fulfilled',value:await fn(items[index])}}catch(reason){results[index]={status:'rejected',reason}}}
+ }));
+ return results;
+}
 async function refresh(){
  if(refreshing)return;
  refreshing=true;pendingChecks=false;
@@ -48,7 +72,7 @@ async function refresh(){
   filter.innerHTML='<option value="all">Aktuella DEV- och LIVE-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+'  · '+(p.base?.ref==='main'?'LIVE':'DEV')+' · '+safe(p.title)+'</option>').join('');
   filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
   const shown=prs.filter(p=>filter.value==='all'||String(p.number)===filter.value);
-  const results=await Promise.allSettled(shown.map(card));
+  const results=await mapLimit(shown,5,card);
   // Preserve the existing LIVE-candidate subtree while an asynchronous diagnostic is running.
   // Otherwise fast PR polling detaches its target and discards the successful response.
   const previousCandidates=new Map([...cards.querySelectorAll('[data-candidate-status]')].map(node=>[node.dataset.candidateStatus+'|'+node.dataset.mergeSha,node]));
@@ -63,7 +87,7 @@ async function refresh(){
  finally{refreshButton.disabled=false;refreshing=false;lastRefreshAt=Date.now()}
 }
 let refreshing=false,lastRefreshAt=0;function automaticRefresh(){if(!refreshing&&!document.hidden)refresh()}
-setInterval(()=>{if(document.hidden)return;const interval=pendingChecks?10000:30000;if(Date.now()-lastRefreshAt>=interval)automaticRefresh()},1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastRefreshAt>(pendingChecks?10000:30000))automaticRefresh()});
+setInterval(()=>{if(document.hidden)return;const interval=pendingChecks?30000:120000;if(Date.now()-lastRefreshAt>=interval)automaticRefresh()},5000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastRefreshAt>(pendingChecks?30000:120000))automaticRefresh()});
 window.olympiaV2Refresh=refresh;filter.addEventListener('change',refresh);document.querySelector('#refresh').addEventListener('click',refresh);
 })();
 </script><script src="./dev-approval.js"></script><script src="./system-alerts.js"></script></body></html>

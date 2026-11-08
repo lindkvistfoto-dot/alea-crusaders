@@ -117,9 +117,24 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const rateLimitReset = res.headers.get("x-ratelimit-reset");
+    const rateLimited = res.status === 403 &&
+      (res.headers.get("x-ratelimit-remaining") === "0" || /API rate limit exceeded/i.test(String(data.message || "")));
+    if (res.status === 403) {
+      console.error("OLYMPIA GitHub read denied", JSON.stringify({
+        method: init.method || "GET",
+        path,
+        reason: String(data.message || "unknown").slice(0, 180),
+        remaining: res.headers.get("x-ratelimit-remaining"),
+        resource: res.headers.get("x-ratelimit-resource"),
+        reset: rateLimitReset,
+        retryAfter: res.headers.get("retry-after"),
+      }));
+    }
     if (init.method === "PUT" && /\/pulls\/[0-9]+\/merge$/.test(path)) {
       console.error("OLYMPIA GitHub merge rejected", JSON.stringify({ status: res.status, reason: String(data.message || "unknown").slice(0, 240) }));
     }
+    if (rateLimited) throw new Error("GITHUB_RATE_LIMITED_" + (rateLimitReset || ""));
     throw new Error("GITHUB_REQUEST_FAILED_" + res.status);
   }
   return data;
@@ -1090,7 +1105,9 @@ async function handleRequest(req: Request): Promise<Response> {
             state === "unlocked_issue" ? "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." :
             "Ingen automatisk kandidatbegäran hittades." });
       } catch (error) {
-        console.error("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "UNKNOWN");
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA candidate diagnostics failed", code);
+        if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail(code, 503);
         return fail("Kandidatens lås eller journal kunde inte verifieras. Ingen ändring gjordes.", 502);
       }
     }
