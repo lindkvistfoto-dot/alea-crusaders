@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "ARCANE MAP – Crossed Swords (approved LIVE publication)",
+  "target": {
+    "kind": "profile",
+    "profile_id": "unrestricted-system",
+    "id": "arcane-map-crossed-swords"
+  },
+  "drive_file_id": "18ZvI_ZqaSnX5kA_XkMaxAvFyXin0pkYD",
+  "archive_file_id": "1YDyN9L70FGqJx2tFmimf2tuKBf5tFc_o",
+  "source_sha256": "fc2d4bf2ccae946eeedc1c01352d8c064c3fc93a5ccde8459094e2809392fa37"
+}
