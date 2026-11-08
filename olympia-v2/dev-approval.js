@@ -19,21 +19,20 @@ document.addEventListener('click',async event=>{const button=event.target.closes
 
 // LIVE candidate workflow reuses the existing server-side Zeus decision bridge.
 // No client action merges to main; final LIVE approval remains disabled.
-let candidateStatusBusy=false;
+const candidateRequests=new Set();
 window.olympiaV2CheckCandidateStatuses=async()=>{
- if(candidateStatusBusy)return;
  const targets=[...document.querySelectorAll('[data-candidate-status]')];
  if(!targets.length)return;
  if(!verified){targets.forEach(node=>node.textContent='LIVE-status väntar på Zeus-verifiering.');return}
- candidateStatusBusy=true;
- try{
-  for(let i=0;i<targets.length;i+=3){
-   await Promise.all(targets.slice(i,i+3).map(async node=>{
+ await Promise.all(targets.map(async node=>{
     const number=Number(node.dataset.candidateStatus),sha=node.dataset.mergeSha||'';
-    if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){
-     node.textContent='Kandidatens DEV-mergeversion saknas. Teknisk granskning krävs.';return;
-    }
+    const requestKey=number+'|'+sha;
+    if(candidateRequests.has(requestKey))return;
+    candidateRequests.add(requestKey);
     try{
+     if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){
+      node.textContent='Kandidatens DEV-mergeversion saknas. Teknisk granskning krävs.';return;
+     }
      const result=await window.olympiaV2Request({action:'auto_candidate_diagnostics',pullRequestNumber:number,testedDevSha:sha});
      if(!node.isConnected)return;
      node.replaceChildren();
@@ -90,9 +89,8 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
     }catch(error){if(node.isConnected)node.textContent='LIVE-status kunde inte verifieras ('+(error.name==='AbortError'?'timeout':String(error.message||'anslutningsfel').slice(0,140))+'). Inget LIVE-godkännande är tillgängligt.'}
-   }));
-  }
- }finally{candidateStatusBusy=false}
+    finally{candidateRequests.delete(requestKey)}
+ }));
 };
 document.addEventListener('visibilitychange',()=>{if(document.hidden)return;if(!verified)verify();else window.olympiaV2CheckCandidateStatuses?.()});
 setInterval(()=>{if(!document.hidden&&verified)window.olympiaV2CheckCandidateStatuses?.()},30000);
