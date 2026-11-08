@@ -280,11 +280,23 @@ jobs:
           mkdir -p ${{ runner.temp }}/olympia-candidate/package
           cp -a dist/. ${{ runner.temp }}/olympia-candidate/package/
 
+      - name: Create narrowly scoped release branch token
+        id: release_token
+        if: success()
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.OLYMPIA_RELEASE_APP_ID }}
+          private-key: ${{ secrets.OLYMPIA_RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: alea-crusaders
+          permission-contents: write
+          permission-workflows: write
+
       - name: Commit exact candidate and open LIVE release PR
         id: release_pr
         if: success()
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release_token.outputs.token }}
           REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
