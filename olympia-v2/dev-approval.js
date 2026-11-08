@@ -43,7 +43,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      }else if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
       line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
       const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kontroller verifierade för aktuell SHA '+candidate.releasePrSha;node.append(checks);
-      const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
+      const link=document.createElement('a');link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='GitHub PR #'+candidate.releasePr;link.className='muted';link.style.fontSize='.85em';node.append(link);
       // A release PR is not a deploy preview. Never guess a Cloudflare URL.
       const review=document.createElement('div');review.className='live-review';
       const heading=document.createElement('strong');heading.textContent='LIVE · Förhandsgranskning';review.append(heading);
