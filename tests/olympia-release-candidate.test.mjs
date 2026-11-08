@@ -64,7 +64,7 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(control).toContain('accepted&&candidate&&!packaged&&!published&&candidateStatus&&candidateStatus.candidateBlocked');
   expect(control).toContain('Återuppta kandidatkontroll');
   expect(control).toContain('data-decision="pandoras_ask"');
-  expect(control).toContain('data-sha="'+esc(currentDevSha)+'"');
+  expect(control).toContain('data-sha="\'+esc(currentDevSha)+\'"');
   const edge=read('supabase/functions/olympia-control/index.ts');
   expect(edge).toContain('Pandoras ask återupptogs på samma beslut. Ingen dubblett av releaseförslaget skapas.');
  });
