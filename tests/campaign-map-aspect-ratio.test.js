@@ -11,5 +11,7 @@ describe('Campaign map frame follows image dimensions',()=>{
   expect(css).toContain('aspect-ratio: var(--campaign-map-aspect-ratio, 16 / 10)');
   expect(css).not.toContain('height: min(76vh, 830px)');
   expect(css).not.toContain('height: 68vh');
+  expect(css).toContain('calc(76vh * var(--campaign-map-aspect-ratio-number, 1.6))');
+  expect(css).toContain('calc(68vh * var(--campaign-map-aspect-ratio-number, 1.6))');
  });
 });
