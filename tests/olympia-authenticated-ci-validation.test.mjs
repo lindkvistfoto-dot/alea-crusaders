@@ -6,9 +6,11 @@ describe('OLYMPIA DEV CI validation',()=>{
   const start=edge.indexOf('if (data.action === "approve_and_merge_dev")');
   const end=edge.indexOf('stage = "github_merge"',start);
   const section=edge.slice(start,end);
-  expect(section).toContain('gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
-  expect(section).toContain('gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status")');
+  expect(section).toContain('readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
+  expect(section).toContain('readCi(path + "/commits/" + data.pullRequestHeadSha + "/status")');
   expect(section).not.toContain('ghPublic(');
+  expect(section).toContain('GITHUB_REQUEST_FAILED_(502|503|504)');
+  expect(section).toContain('attempt < 3');
   expect(section).toContain('CI_NOT_GREEN');
   expect(section).toContain('Number(checks.total_count) > runs.length');
   expect(section).toContain('check.status !== "completed"');
