@@ -9,7 +9,7 @@ test('preserves in-flight candidate status node across PR refresh',()=>{
 });
 test('candidate diagnostics have a bounded longer timeout and visible error',()=>{
  expect(js).toContain("action.action==='auto_candidate_diagnostics'?60000:20000");
- expect(js).toContain('LIVE-status kunde inte verifieras');
+ expect(js).toContain('LIVE-status kunde inte hämtas eller verifieras');
 });
 
 test('LIVE candidate checks are independently tracked per PR and SHA',()=>{
