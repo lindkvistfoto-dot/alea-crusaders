@@ -39,11 +39,16 @@ async function load(force=false){
  inFlight=getClient().loadAssets(window.dbJson).then(rows=>prime(rows)).finally(()=>{inFlight=null});
  return inFlight;
 }
-function url(key){
- const row=assets.get(String(key||''));
+function urlForRecord(row){
  const path=row?.hermes_alea_signed_path;
- if(!row||!signedPathPattern.test(String(path||'')))return '';
+ if(!assetKeyPattern.test(String(row?.asset_key||''))||
+    !assetPathPattern.test(String(row?.asset_path||''))||
+    row?.publication_status&&row.publication_status!=='published'||
+    !signedPathPattern.test(String(path||'')))return '';
  return origin()+'/storage/v1'+path;
+}
+function url(key){
+ return urlForRecord(assets.get(String(key||'')));
 }
 function reference(record){
  const key=String(record?.image_asset_id||'');
@@ -51,7 +56,7 @@ function reference(record){
  return record?.image_path||null;
 }
 
-const resolver=Object.freeze({load,prime,url,reference});
+const resolver=Object.freeze({load,prime,url,urlForRecord,reference});
 globalThis.aleaHermesAssetResolver=resolver;
-export {load,prime,url,reference};
+export {load,prime,url,urlForRecord,reference};
 export default resolver;
