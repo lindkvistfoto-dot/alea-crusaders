@@ -61,7 +61,11 @@ jobs:
           if [[ "$applied" != "t" ]]; then
             supabase migration repair "$version" --status applied --db-url "$DEVELOPMENT_DATABASE_URL"
           fi
-          plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"
+          if ! plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"; then
+            printf '%s\n' "$plan"
+            echo "::error::DEV migration dry-run failed; no migrations were pushed."
+            exit 1
+          fi
           printf '%s\n' "$plan"
           auth_trigger="$(find supabase/migrations -maxdepth 1 -type f -name '*_restore_auth_user_profile_trigger.sql' -print -quit)"
           test -n "$auth_trigger"
