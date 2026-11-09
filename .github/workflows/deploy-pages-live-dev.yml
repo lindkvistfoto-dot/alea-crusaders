@@ -9,6 +9,8 @@ on:
     paths-ignore:
       - 'hermes/core/queue/dev/**'
       - '.github/workflows/deploy-pages-live-dev.yml'
+      - '.github/workflows/hermes-alea.yml'
+      - 'supabase/migrations/**'
       - '.github/workflows/alea-dev-pages-e2e.yml'
       - 'scripts/alea-dev-pages-e2e.mjs'
       - 'scripts/alea-dev-admin-provision.mjs'
