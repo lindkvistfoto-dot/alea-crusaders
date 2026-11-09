@@ -887,7 +887,6 @@ async function saveRuleWeapon(id=''){
  if(category!=='melee'&&!ruleProjectileFromKey(projectileKey)){
   alert('Välj en giltig projektiltyp innan du sparar avstånds- eller kastvapnet.');return
  }
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  const imageFile=ruleWeaponImageDraft;
  const oldRecord=id?ruleWeapons.find(x=>String(x.id)===String(id)):null;
  let saved=false;
@@ -921,7 +920,7 @@ async function saveRuleWeapon(id=''){
   else{await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});saved=true}
   if(imageFile){
    if(!window.aleaHermesAleaWeapons?.upload)throw Error('HERMES ALEA-klienten är inte tillgänglig. Ladda om sidan och försök igen.');
-   const result=await window.aleaHermesAleaWeapons.upload({target:{id:artId,image_asset_id:oldRecord?.image_asset_id||null,image_revision:oldRecord?.image_revision||0},file:imageFile,onStatus:stage=>{
+   await window.aleaHermesAleaWeapons.upload({target:{id:artId,image_asset_id:oldRecord?.image_asset_id||null,image_revision:oldRecord?.image_revision||0},file:imageFile,onStatus:stage=>{
     const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp original och WebP…',verifying:'Kontrollerar bilddata…',activating:'Aktiverar bilden…'};
     if(labels[stage]&&$('rwImageStatus'))$('rwImageStatus').textContent=labels[stage];
    }});
