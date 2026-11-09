@@ -9,20 +9,10 @@ const client=createHermesAleaClient({
 
 async function upload({target,file,onStatus}){
   const result=await client.upload({targetKind:'weapon',target,file,onStatus});
-  if(!result.displayBlob)throw Error('HERMES ALEA aktiverade bilden, men förhandsvisningen behöver laddas om innan den kan speglas till vapenregistret.');
-
-  // Vapen används även av rollpersoner och stridsvyer som läser den publika
-  // alea-equipment-art-sökvägen. Keep that established path contract while
-  // HERMES ALEA owns conversion, verification, activation and source archive.
-  const path='weapon/'+target.id+'/'+crypto.randomUUID()+'.webp';
-  const response=await window.authFetch('/storage/v1/object/alea-equipment-art/'+path,{
-    method:'POST',headers:{'Content-Type':'image/webp','x-upsert':'false'},body:result.displayBlob
-  });
-  if(!response.ok){
-    const data=await response.json().catch(()=>null);
-    throw Error(data?.message||data?.error||'HERMES-bilden aktiverades, men den publika vapenbilden kunde inte uppdateras ('+response.status+').');
-  }
-  return {...result,compatibilityPath:path};
+  // Refresh the shared read model after activation. A signing/list refresh failure
+  // must not turn a successful HERMES ALEA publication into a reported failure.
+  try{await window.aleaHermesAssetResolver?.load(true)}catch(error){console.warn('HERMES ALEA-bilden är aktiverad; den gemensamma bildvyn uppdateras vid nästa laddning.',error)}
+  return result;
 }
 
 window.aleaHermesAleaWeapons={upload};
