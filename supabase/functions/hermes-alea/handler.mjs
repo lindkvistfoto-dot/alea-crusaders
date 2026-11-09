@@ -4,6 +4,10 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
  return async request=>{
   const origin=request.headers.get('Origin')||'';
   const allowed=(env('HERMES_ALEA_ALLOWED_ORIGINS')||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(env('SUPABASE_URL')==='https://wkiuyklzzroavclnsxna.supabase.co'){
+   allowed.push('https://1d6a0354.alea-crusaders.pages.dev');
+   allowed.push('https://feature-hermes-alea-vapenlis.alea-crusaders.pages.dev');
+  }
   const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:'null','Access-Control-Allow-Headers':'authorization,apikey,content-type','Vary':'Origin'};
   const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,'Content-Type':'application/json'}});
   if(origin&&!allowed.includes(origin))return reply({error:'ORIGIN_NOT_ALLOWED'},403);
