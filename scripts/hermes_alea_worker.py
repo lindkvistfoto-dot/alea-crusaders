@@ -249,13 +249,17 @@ def main():
     if (args.execute_cleanup or args.execute_retention_cleanup) and os.environ.get('HERMES_ALEA_CLEANUP_APPROVED') != 'true':
         raise RuntimeError('CLEANUP_NOT_APPROVED')
     io.SUPA=os.environ.get('SUPABASE_URL',io.SUPA).rstrip('/')
-    if args.cleanup_only:
-        jobs=[]
-    else:
+    needs_drive = not args.cleanup_only or args.execute_retention_cleanup
+    if needs_drive:
         io.FOLDER = os.environ.get('HERMES_ALEA_ARCHIVE_FOLDER_ID', '')
         if not io.FOLDER:
             raise RuntimeError('HERMES_ALEA_ARCHIVE_FOLDER_MISSING')
-        io.TOKEN = io.user_drive_token()
+        io.TOKEN = os.environ.get('GOOGLE_ACCESS_TOKEN', '')
+        if not io.TOKEN:
+            raise RuntimeError('HERMES_GOOGLE_ACCESS_TOKEN_MISSING')
+    if args.cleanup_only:
+        jobs=[]
+    else:
         jobs = io.rest('rpc/hermes_alea_claim', 'POST', {'batch_size': 3})
     failures = archive_batch(jobs,args.environment)
     report = cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup)
