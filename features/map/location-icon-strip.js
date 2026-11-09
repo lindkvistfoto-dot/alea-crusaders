@@ -12,14 +12,9 @@
   const root = document.getElementById('mapLocationIconStrip');
   const panel = document.getElementById('mapLocationPanel');
   if (!root || !panel) return;
-  const mapPage = document.getElementById('mapPage');
   const icons = new Map();
-  const project = document.querySelector('script[src*="supabase-environment"]');
-  const imageBase = () => {
-    // Existing public system assets; use the current environment's registry resolver when available.
-    const host = location.hostname;
-    return /(?:^|[.-])dev(?:[.-]|$)/i.test(host) ? 'wkiuyklzzroavclnsxna' : 'wbmosmkirsitkonejzpg';
-  };
+  const imageBase = () => window.ALEA_SUPABASE_CONFIG?.url || '';
+
   const knownPaths = {
     ARCANE_MAP_ICON_EVENT: 'be9b7dd28dfee78745bad6a20831b637c151556365453f505f9a85ea59a3a040',
     ARCANE_MAP_ICON_NPC: '720e7f2951349ba8ffb6f6217a9482049807ea7bee696a86745b0cf41755474c',
@@ -41,7 +36,7 @@
       const img = document.createElement('img');
       img.alt = '';
       img.loading = 'lazy';
-      img.src = 'https://' + imageBase() + '.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/' + asset + '/' + knownPaths[asset] + '.webp';
+      img.src = imageBase() + '/storage/v1/object/public/alea-hermes-public/hermes/system-asset/' + asset + '/' + knownPaths[asset] + '.webp';
       visual.appendChild(img);
     } else {
       visual.textContent = '▧';
