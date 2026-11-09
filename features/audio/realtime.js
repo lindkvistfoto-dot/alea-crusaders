@@ -15,7 +15,7 @@ export function createAudioRealtime({
  getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
  onState=()=>{},onEvent=()=>{},onConnected=()=>{},onStatus=()=>{},
  makeSocket=url=>new WebSocket(url),clock=()=>Date.now(),
- timers={setInterval,clearInterval}
+ timers={setInterval:(...args)=>globalThis.setInterval(...args),clearInterval:id=>globalThis.clearInterval(id)}
 }){
  const state={started:false,connected:false,connecting:false,scope:'',socket:null,
   serial:0,ref:0,joinRef:null,token:'',heartbeat:null,lifecycle:null,

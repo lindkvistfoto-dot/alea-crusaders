@@ -30,7 +30,10 @@ function fixture(){
  const map=new Map(ammo.map(x=>[x.projectile_key,x]));
  const src=path=>path?'https://example.invalid/'+path:'';
  const ctx={
-  window:{aleaEquipmentArt:{src}},
+  window:{
+   aleaEquipmentArt:{src},
+   aleaHermesAssetResolver:{reference:record=>record?.image_asset_id||record?.image_path||null}
+  },
   ruleWeapons:weapons,
   ruleProjectileTypes:ammo,
   ruleProjectileFromKey:key=>map.get(key),
