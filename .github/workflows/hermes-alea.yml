@@ -43,6 +43,9 @@ jobs:
         run: python scripts/hermes_alea_worker.py --execute-cleanup --environment LIVE
   archive-dev:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV'
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -55,18 +58,27 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
+      - id: google
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.file
+          create_credentials_file: false
       - name: Archive queued DEV originals to Drive
         env:
           SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
-          HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
-          HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
-          HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
           HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_DEV_ARCHIVE_FOLDER_ID || vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
           OLYMPIA_ENVIRONMENT: DEV
         run: python scripts/hermes_alea_worker.py --environment DEV
   cleanup-dev:
     if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && ((github.ref == 'refs/heads/main' && github.event_name == 'schedule') || ((github.ref == 'refs/heads/development' || github.ref == 'refs/heads/main') && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV'))
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -79,10 +91,20 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
+      - id: google
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/303776456341/locations/global/workloadIdentityPools/github/providers/alea-hermes
+          service_account: hermes-transfer@alea-hermes.iam.gserviceaccount.com
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive.file
+          create_credentials_file: false
       - name: Clean qualified abandoned staging jobs and archived DEV sources
         env:
           SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
+          GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_DEV_ARCHIVE_FOLDER_ID || vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
           HERMES_ALEA_CLEANUP_APPROVED: 'true'
           OLYMPIA_ENVIRONMENT: DEV
         run: python scripts/hermes_alea_worker.py --cleanup-only --execute-cleanup --execute-retention-cleanup --environment DEV
