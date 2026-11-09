@@ -251,7 +251,7 @@ async function loadRuleShields(force=false){
 }
 async function loadRuleWeapons(force=false){
  if(ruleWeaponsLoaded&&!force)return ruleWeapons;
- try{return await withRuleRegistryLoad('weapons',async()=>{ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');ruleWeaponsLoaded=true;return ruleWeapons})}catch(e){ruleWeapons=[];ruleWeaponsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('weapons',async()=>{ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');ruleWeaponsLoaded=true;try{await window.aleaHermesAssetResolver?.load()}catch(error){console.warn('Kunde inte läsa HERMES ALEA-bilder just nu',error)}return ruleWeapons})}catch(e){ruleWeapons=[];ruleWeaponsLoaded=false;return []}
 }
 const RULE_WEAPON_ICON_DEFS=[
  {key:'sword',label:'Svärd'},{key:'dagger',label:'Dolk'},{key:'hammer',label:'Hammare'},
@@ -276,7 +276,7 @@ function ruleWeaponIconHtml(rule){
   '<img src="'+escAttr(ruleWeaponIconSrc(key))+'" alt="" aria-hidden="true">'+
   '<small>'+escAttr(def?.label||'SAKNAS')+'</small>'+
  '</span>'
- return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
+ return window.aleaEquipmentArt?.thumbnail(window.aleaHermesAssetResolver?.reference(rule),fallback,rule?.name)||fallback;
 }
 function ruleWeaponIconOptions(selected=''){
  selected=String(selected||'');
@@ -408,7 +408,7 @@ function projectileMasterImagePath(projectile){
  if(!projectile)return null;
  const thrown=projectileThrownWeapon(projectile.projectile_key);
  // A thrown item IS its own ammunition: reuse the weapon's single shared image.
- return thrown?thrown.image_path||null:projectile.image_path||null
+ return thrown?window.aleaHermesAssetResolver?.reference(thrown)||null:projectile.image_path||null
 }
 function projectileImageHtml(key,name){
  const path=projectileMasterImagePath(ruleProjectileFromKey(key));
@@ -868,7 +868,7 @@ function editRuleWeapon(id=''){
    '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+ 
    combatCropQuadrantEditor('rwCombatCrop',r)+
    '<label class="wide admincheck"><input id="rwMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk vapentyp (gäller själva registerposten)</label>'+
-  '<section class="item-art-editor weapon-hermes-upload wide" aria-label="Vapenbild"><div class="item-art-heading"><strong>Vapenbild</strong><span>Uppladdning, WebP-konvertering och aktivering hanteras av HERMES ALEA.</span></div><div class="item-art-editor-content"><div id="rwImagePreview" class="item-art-preview">'+(r?.image_path&&window.aleaEquipmentArt?.src(r.image_path)?'<img src="'+escAttr(window.aleaEquipmentArt.src(r.image_path))+'" alt="Nuvarande vapenbild">':'<span class="item-art-empty">Ingen bild vald</span>')+'</div><div class="item-art-controls"><label class="item-art-upload">'+(r?.image_path?'Ersätt bild':'Välj bild')+'<input type="file" accept="image/png,image/jpeg,image/webp" onchange="chooseRuleWeaponImage(this.files[0]);this.value=\'\'"></label><small id="rwImageStatus">'+(r?.image_path?'Befintlig bild visas tills ersättningen har lyckats.':'Ingen bild vald.')+'</small></div></div><details class="weapon-image-guide"><summary>Bildguide (råd)</summary><ul><li>Visa hela vapnet tydligt och lämna lite luft runt spetsar och skaft.</li><li>En enkel bakgrund och bra kontrast brukar göra bilden lättare att läsa.</li><li>En frilagd bild med transparens passar ofta bra, men är inget krav.</li><li>Undvik text, vattenstämplar och andra föremål som skymmer vapnet.</li></ul><small>Rekommendationerna är rådgivande. PNG, JPEG och WebP upp till 12 MB stöds.</small></details></section>'+
+  '<section class="item-art-editor weapon-hermes-upload wide" aria-label="Vapenbild"><div class="item-art-heading"><strong>Vapenbild</strong><span>Uppladdning, WebP-konvertering och aktivering hanteras av HERMES ALEA.</span></div><div class="item-art-editor-content"><div id="rwImagePreview" class="item-art-preview">'+((r?.image_asset_id||r?.image_path)&&window.aleaEquipmentArt?.src(r?.image_asset_id||r?.image_path)?'<img src="'+escAttr(window.aleaEquipmentArt.src(r?.image_asset_id||r?.image_path))+'" alt="Nuvarande vapenbild">':'<span class="item-art-empty">Ingen bild vald</span>')+'</div><div class="item-art-controls"><label class="item-art-upload">'+((r?.image_asset_id||r?.image_path)?'Ersätt bild':'Välj bild')+'<input type="file" accept="image/png,image/jpeg,image/webp" onchange="chooseRuleWeaponImage(this.files[0]);this.value=\'\'"></label><small id="rwImageStatus">'+((r?.image_asset_id||r?.image_path)?'Befintlig bild visas tills ersättningen har lyckats.':'Ingen bild vald.')+'</small></div></div><details class="weapon-image-guide"><summary>Bildguide (råd)</summary><ul><li>Visa hela vapnet tydligt och lämna lite luft runt spetsar och skaft.</li><li>En enkel bakgrund och bra kontrast brukar göra bilden lättare att läsa.</li><li>En frilagd bild med transparens passar ofta bra, men är inget krav.</li><li>Undvik text, vattenstämplar och andra föremål som skymmer vapnet.</li></ul><small>Rekommendationerna är rådgivande. PNG, JPEG och WebP upp till 12 MB stöds.</small></details></section>'+
   '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden');
  for(const fieldId of ['rwCategory','rwName','rwIconKey','rwTags']){
@@ -890,7 +890,7 @@ async function saveRuleWeapon(id=''){
  const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
  const imageFile=ruleWeaponImageDraft;
  const oldRecord=id?ruleWeapons.find(x=>String(x.id)===String(id)):null;
- let saved=false,compatibilityPath='';
+ let saved=false;
  const artId=id||crypto.randomUUID();
  try{
   let payload={
@@ -925,14 +925,12 @@ async function saveRuleWeapon(id=''){
     const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp original och WebP…',verifying:'Kontrollerar bilddata…',activating:'Aktiverar bilden…'};
     if(labels[stage]&&$('rwImageStatus'))$('rwImageStatus').textContent=labels[stage];
    }});
-   compatibilityPath=result.compatibilityPath;
-   await dbJson('rule_weapons?id=eq.'+encodeURIComponent(artId),{method:'PATCH',body:JSON.stringify({image_path:compatibilityPath,updated_at:new Date().toISOString()})});
-   if(oldRecord?.image_path&&oldRecord.image_path!==compatibilityPath)window.aleaEquipmentArt.removeStored(oldRecord.image_path,artContext).catch(e=>console.warn('Gamla vapenbilden kunde inte rensas',e));
+   // Finalization has already updated image_asset_id; legacy image_path stays read-only.
   }
   clearRuleWeaponImageDraft();
   closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render()
  }catch(e){
-  if(compatibilityPath)await window.aleaEquipmentArt.removeStored(compatibilityPath,artContext).catch(()=>{});
+  // Do not delete or overwrite legacy images when HERMES ALEA fails.
   if(saved){clearRuleWeaponImageDraft();closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render();alert('Vapnet sparades, men bilden kunde inte uppdateras: '+e.message)}
   else alert('Kunde inte spara vapnet: '+e.message)
  }
@@ -1930,7 +1928,7 @@ function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shi
    Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
 function currentEquipmentItemArtPath(ref,item,slot){
  if(!ref||!item)return null;
- if(ref.kind==='weapon')return item.imageOverridePath||ruleWeaponForItem(item)?.image_path||null;
+ if(ref.kind==='weapon')return item.imageOverridePath||window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item))||null;
  if(ref.kind==='shield')return item.imageOverridePath||characterShieldRule(item)?.image_path||null;
  if(ref.kind==='equipment')return window.aleaEquipmentCatalog?.imagePath(item)||null;
  if(ref.kind==='armor'){
@@ -1991,7 +1989,7 @@ function twoHandDisplayProfile(item){
  return {type,...profiles[type]};
 }
 function gandalfTwoHandSlotHtml(item){
- const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
+ const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item)))||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
  const name=escAttr(item.name||'Vapen');
@@ -2027,7 +2025,7 @@ function currentEquipmentProjectileEntries(character){
    canonicalWeaponProjectileKey(category,master?.name||item.name,master?.icon_key||item.icon_key,master?.tags||item.tags);
   const projectile=ruleProjectileFromKey(key);
   if(!key||!projectile)continue;
-  const imagePath=category==='thrown'?(item.imageOverridePath||master?.image_path||projectileMasterImagePath(projectile)):
+  const imagePath=category==='thrown'?(item.imageOverridePath||window.aleaHermesAssetResolver?.reference(master)||projectileMasterImagePath(projectile)):
    projectileMasterImagePath(projectile);
   const row=byKey.get(key);
   if(row){row.weapons.push(item.name||master?.name||'Vapen');continue}
