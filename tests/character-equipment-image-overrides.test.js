@@ -56,7 +56,7 @@ describe('single-item weapon and shield artwork',()=>{
   expect(img.control('equipment',0)).toBe('');
  });
  it('uses override before register art on character equipment and combat HUD',()=>{
-  expect(app).toContain("item.imageOverridePath||ruleWeaponForItem(item)?.image_path");
+  expect(app).toContain("item.imageOverridePath||window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item))");
   expect(app).toContain("item.imageOverridePath||characterShieldRule(item)?.image_path");
   expect(combat).toContain("item.imageOverridePath||rule?.image_path||item.image_path");
   expect(combat).toContain("item.imageOverridePath||rule?.image_path||item.image_path");
