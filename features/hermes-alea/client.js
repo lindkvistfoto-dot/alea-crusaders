@@ -80,7 +80,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
    }
    throw error;
   }
-  if(job.state==='activated')return {...job,displayBlob:webp};
+  if(job.state==='activated')return job;
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
   await uploadBlob(SOURCE_BUCKET,job.source_path,file);
@@ -89,9 +89,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   onStatus('activating');
   const result=await rpc('hermes_alea_finalize',{job_id:job.id});
   onStatus('completed');
-  // Callers that must preserve an older public storage contract can mirror the
-  // exact verified display bytes after activation; existing callers ignore it.
-  return {...result,displayBlob:webp};
+  return result;
  }
  async function remove({targetKind,target}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Okänd bildplats.');
