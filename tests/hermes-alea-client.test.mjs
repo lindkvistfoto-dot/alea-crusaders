@@ -1,6 +1,7 @@
 import {it,expect} from 'vitest';
 import {createHermesAleaClient} from '../features/hermes-alea/client.js';
 import {verifiedHonorImageUrl} from '../features/honors/honors-image-resolver.js';
+import '../features/hermes-alea/asset-resolver.js';
 const target={id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',image_revision:0,image_asset_id:null};
 function harness(fail=''){
  const calls=[];let meta;
@@ -14,7 +15,7 @@ function harness(fail=''){
 }
 it('creates intent, uploads both objects, verifies through the deployed verifier, then finalizes',async()=>{
  const h=harness();const result=await h.client.upload({targetKind:'definition',target,file:new Blob(['original'],{type:'image/png'})});
- expect(result.state).toBe('activated');expect(result.displayBlob).toBeInstanceOf(Blob);expect(h.calls).toEqual(['hermes_alea_begin','/storage/v1/object/hermes-alea-display/trophy/job.webp','/storage/v1/object/hermes-alea-originals/user/job/original','/functions/v1/hermes-alea','hermes_alea_finalize']);
+ expect(result.state).toBe('activated');expect(result.displayBlob).toBeUndefined();expect(h.calls).toEqual(['hermes_alea_begin','/storage/v1/object/hermes-alea-display/trophy/job.webp','/storage/v1/object/hermes-alea-originals/user/job/original','/functions/v1/hermes-alea','hermes_alea_finalize']);
  expect(h.getMeta().source_sha256).not.toBe(h.getMeta().output_sha256);
 });
 it('failed original upload never finalizes or changes caller target',async()=>{
@@ -22,7 +23,7 @@ it('failed original upload never finalizes or changes caller target',async()=>{
  await expect(h.client.upload({targetKind:'definition',target:t,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow();
  expect(h.calls).not.toContain('hermes_alea_finalize');expect(t.image_asset_id).toBe('old');expect(h.getMeta().operation).toBe('REPLACE');
 });
-it('failed server verification never finalizes or returns compatibility bytes',async()=>{
+it('failed server verification never finalizes or returns a published result',async()=>{
  const h=harness('/functions/v1/hermes-alea');
  await expect(h.client.upload({targetKind:'weapon',target,file:new Blob(['source'],{type:'image/png'})})).rejects.toThrow();
  expect(h.calls).not.toContain('hermes_alea_finalize');
@@ -33,7 +34,7 @@ it('repeated attempts reuse idempotency and REMOVE never sends storage requests'
  h.calls.length=0;await h.client.remove({targetKind:'definition',target});expect(h.calls).toEqual(['hermes_alea_remove']);
 });
 it('accepts only the dedicated signed display path while preserving old image resolver',()=>{
- const asset={asset_key:'hermes-alea:'+target.id,hermes_alea_signed_path:'/object/sign/hermes-alea-display/trophy/'+target.id+'.webp?token=abc.xyz'};
+ const asset={asset_key:'hermes-alea:'+target.id,asset_path:'trophy/'+target.id+'.webp',publication_status:'published',hermes_alea_signed_path:'/object/sign/hermes-alea-display/trophy/'+target.id+'.webp?token=abc.xyz'};
  expect(verifiedHonorImageUrl(asset)).toContain('/storage/v1/object/sign/hermes-alea-display/');
  expect(verifiedHonorImageUrl({...asset,hermes_alea_signed_path:'https://evil.test/image.webp'})).toBeNull();
  expect(verifiedHonorImageUrl({asset_path:'hermes/system-asset/test/a.webp'})).toContain('/object/public/alea-hermes-public/');
