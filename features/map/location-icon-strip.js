@@ -79,5 +79,9 @@
     requestAnimationFrame(refresh);
   });
   observer.observe(panel, {childList:true,subtree:true,characterData:true});
+  // Campaign role is loaded asynchronously; the map toolbar updates when SL controls become available.
+  // Observe that existing UI instead of assuming permissions are ready at script startup.
+  const toolbar = document.querySelector('#mapPage .maptoolbar');
+  if (toolbar) observer.observe(toolbar, {attributes:true,childList:true,subtree:true,attributeFilter:['class','aria-checked']});
   refresh();
 })();
