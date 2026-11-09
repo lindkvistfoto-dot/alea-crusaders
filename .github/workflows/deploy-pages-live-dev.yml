@@ -9,6 +9,7 @@ on:
       - 'hermes/core/queue/*.json'
       - 'hermes/core/queue/dev/**'
       - '.github/workflows/deploy-pages-live-dev.yml'
+      - '.github/workflows/hermes-alea.yml'
   workflow_dispatch:
 
 permissions:
