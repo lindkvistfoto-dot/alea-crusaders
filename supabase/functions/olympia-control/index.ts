@@ -81,7 +81,7 @@ async function githubToken(decision: string) {
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
     ? { contents: "read", issues: "read", pull_requests: "read" }
-    : decision === "review_pull_request"
+    : (decision === "review_pull_request" || decision === "set_pull_request_draft")
     ? { pull_requests: "write" }
     : decision === "approve_and_merge_dev"
     ? { pull_requests: "write", issues: "write", contents: "write" }
@@ -1341,6 +1341,37 @@ async function handleRequest(req: Request): Promise<Response> {
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
         return json({ ok: false, stage, errorCode: code, message: (messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.") + " (Steg: " + stage + ")" }, code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
+      }
+    }
+    if (data.action === "set_pull_request_draft") {
+      if (!Number.isInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha) ||
+          typeof data.draft !== "boolean") return fail("Ogiltig PR-statusbegäran.", 400);
+      try {
+        const token = await githubToken("set_pull_request_draft");
+        const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber);
+        if (pr.state !== "open" || pr.base?.ref !== "development" || pr.head?.sha !== data.pullRequestHeadSha) {
+          return fail("PR:en har ändrats eller är inte en öppen DEV-PR. Uppdatera OLYMPIA.", 409);
+        }
+        if (pr.draft === data.draft) return json({ ok: true, draft: pr.draft, unchanged: true });
+        const node = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber);
+        if (!node.node_id) return fail("GitHub saknar PR-identitet.", 502);
+        const mutation = data.draft
+          ? "mutation($id:ID!){convertPullRequestToDraft(input:{pullRequestId:$id}){pullRequest{isDraft}}}"
+          : "mutation($id:ID!){markPullRequestReadyForReview(input:{pullRequestId:$id}){pullRequest{isDraft}}}";
+        const response = await fetch("https://api.github.com/graphql", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+          body: JSON.stringify({ query: mutation, variables: { id: node.node_id } }),
+        });
+        const payload = await response.json();
+        if (!response.ok || payload.errors?.length) throw new Error("GITHUB_DRAFT_TRANSITION_FAILED");
+        const updated = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber);
+        if (updated.draft !== data.draft) throw new Error("GITHUB_DRAFT_VERIFICATION_FAILED");
+        return json({ ok: true, draft: updated.draft });
+      } catch (error) {
+        console.error("OLYMPIA draft transition failed", error instanceof Error ? error.message : "unknown");
+        return fail("GitHub kunde inte ändra Draft-status. Ingen lyckad ändring bekräftad.", 502);
       }
     }
     if (data.action === "review_pull_request") {
