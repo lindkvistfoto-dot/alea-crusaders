@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "asset_key": "ARCANE_MAP_ICON_ENEMY",
+  "label": "ARCANE MAP Icon — Enemy",
+  "source": {
+    "drive_file_id": "18ZvI_ZqaSnX5kA_XkMaxAvFyXin0pkYD",
+    "archive_file_id": "1YDyN9L70FGqJx2tFmimf2tuKBf5tFc_o",
+    "sha256": "fc2d4bf2ccae946eeedc1c01352d8c064c3fc93a5ccde8459094e2809392fa37"
+  }
+}
