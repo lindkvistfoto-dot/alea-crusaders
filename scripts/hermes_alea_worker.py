@@ -254,9 +254,13 @@ def main():
         io.FOLDER = os.environ.get('HERMES_ALEA_ARCHIVE_FOLDER_ID', '')
         if not io.FOLDER:
             raise RuntimeError('HERMES_ALEA_ARCHIVE_FOLDER_MISSING')
-        io.TOKEN = os.environ.get('GOOGLE_ACCESS_TOKEN', '')
-        if not io.TOKEN:
-            raise RuntimeError('HERMES_GOOGLE_ACCESS_TOKEN_MISSING')
+        if args.environment == 'LIVE':
+            # Preserve the existing LIVE credential path until its separately approved retirement.
+            io.TOKEN = io.user_drive_token()
+        else:
+            io.TOKEN = os.environ.get('GOOGLE_ACCESS_TOKEN', '')
+            if not io.TOKEN:
+                raise RuntimeError('HERMES_GOOGLE_ACCESS_TOKEN_MISSING')
     if args.cleanup_only:
         jobs=[]
     else:
