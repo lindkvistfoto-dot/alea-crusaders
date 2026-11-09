@@ -6,8 +6,24 @@ from pathlib import Path
 from PIL import Image
 
 from scripts.hermes_core_prepare import prepare, valid_core_target_id
+from scripts.hermes_system_assets import system_asset
 
 class CoreImageProfileTests(unittest.TestCase):
+    def test_uppercase_arcane_map_system_asset_keys_are_supported(self):
+        keys = [
+            "ARCANE_MAP_ICON_HIDDEN",
+            "ARCANE_MAP_ICON_ITEM",
+            "ARCANE_MAP_ICON_NPC",
+            "ARCANE_MAP_ICON_TRAP",
+            "ARCANE_MAP_ICON_EVENT",
+            "ARCANE_MAP_ICON_ENEMY",
+        ]
+        for key in keys:
+            with self.subTest(key=key):
+                self.assertTrue(valid_core_target_id("system", "unrestricted-system", key))
+                self.assertIsNotNone(system_asset(key))
+        self.assertFalse(valid_core_target_id("system", "unrestricted-system", "ARCANE-MAP-ICON"))
+
     def test_app_profiles_accept_only_the_declared_target_key_shape(self):
         self.assertTrue(valid_core_target_id("app-image", "campaign-map", "123e4567-e89b-42d3-a456-426614174000"))
         self.assertTrue(valid_core_target_id("app-image", "projectile-art", "arrow"))

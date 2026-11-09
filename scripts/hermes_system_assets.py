@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 PROFILE = json.loads((Path(__file__).resolve().parents[1] / 'config/hermes-system-assets.json').read_text())
-KEY = re.compile(r'^arcane-[a-z0-9]+(?:-[a-z0-9]+)*$')
+KEY = re.compile(r'^(?:arcane-[a-z0-9]+(?:-[a-z0-9]+)*|arcane-trophy-room-v2[.]2|[A-Z][A-Z0-9_]{0,79})$')
 OPAQUE_SCENE_KEY = 'arcane-trophy-room-v2.2'
 
 
