@@ -163,6 +163,24 @@ export function renderHonorsAdmin(root, options = {}) {
   }
 
   function renderVariantPanel(definition) {
+    // Awards have one canonical image on the definition, not material-based relief variants.
+    // Existing relief rows remain untouched in storage for backwards compatibility.
+    if (definition && getCategory(definition) === 'award') {
+      const image = assetImage(definition.image_asset_id);
+      const tiers = [['bronze', 'Brons'], ['silver', 'Silver'], ['gold', 'Guld']];
+      const previews = tiers.map(([metal, label]) => {
+        const frame = assetImage(laurelFrameKeys[metal]);
+        return '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
+          '<div class="honors-preview-art">' +
+          (image ? '<img class="honors-preview-relief" src="' + esc(image) + '" alt="Utmärkelsens bild">' : '<span class="honors-preview-empty">Ladda upp bild ovan</span>') +
+          (frame ? '<img class="honors-preview-frame" src="' + esc(frame) + '" alt="' + label + 'ram">' : '') +
+          '</div></div>';
+      }).join('');
+      return '<section class="honors-variant-library honors-award-single-image">' +
+        '<h4>En bild · tre ramar</h4>' +
+        '<p>Utmärkelsen använder bilden ovan i brons-, silver- och guldram. Ingen materialvariant behöver skapas.</p>' +
+        '<div class="honors-preview-tiers">' + previews + '</div></section>';
+    }
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
     const own = variantsFor(definition.id).filter(v=>v.status!=='archived');
     const isBadge = getCategory(definition) === 'badge';
