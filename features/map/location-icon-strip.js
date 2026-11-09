@@ -57,7 +57,9 @@
   function refresh() {
     scheduled = false;
     const selected = !panel.classList.contains('empty') && !panel.querySelector('.map-location-loading');
-    const gm = !!panel.querySelector('.map-location-gm');
+    // Show all seven slots in SL mode even before selecting a polygon.
+    // Do not infer SL permissions from the currently loaded place content.
+    const gm = typeof canManageCampaignMaps === 'function' && canManageCampaignMaps();
     root.hidden = !gm;
     for (const [key,entry] of icons) {
       const section = selected ? panel.querySelector(entry.selector) : null;
