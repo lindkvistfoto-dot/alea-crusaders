@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hermes_system_assets import system_asset
 
 ROOT = Path(__file__).resolve().parents[1]
-ASSET_KEY = re.compile(r"^(?:arcane-[a-z0-9]+(?:-[a-z0-9]+)*|arcane-trophy-room-v2[.]2)$")
+ASSET_KEY = re.compile(r"^(?:arcane-[a-z0-9]+(?:-[a-z0-9]+)*|arcane-trophy-room-v2[.]2|[A-Z][A-Z0-9_]{0,79})$")
 DRIVE_ID = re.compile(r"^[A-Za-z0-9_-]{10,160}$")
 SHA256 = re.compile(r"^[a-f0-9]{64}$")
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
