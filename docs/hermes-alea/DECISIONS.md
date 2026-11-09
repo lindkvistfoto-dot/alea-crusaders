@@ -8,6 +8,16 @@ Preserve CREATE/REPLACE/REMOVE, upload intent before bytes, immutable paths, ato
 
 The new instruction supersedes the earlier preference to extend hermes_web_jobs: production constraints require a pose FK, pose-specific paths and battle-pose bucket. Its worker also publishes only AFTER archive. Sharing that contract would couple the pilot to live pose processing. Use a separate `hermes_alea_jobs` operation ledger and private settings row. The ledger is not a general image registry: one operation owns one output; REMOVE records a detached reference. Separate buckets avoid changing the existing 512 KiB WebP bucket or PNG/WebP-only pose staging. Existing OAuth/Drive archive helpers may be reused without altering their pose entrypoint.
 
+## ALEA-wide publishing standard
+
+HERMES ALEA is the single standard publishing process for user- and administrator-initiated images anywhere in ALEA, regardless of screen or image type. Every target uses the same client, operation lifecycle, private staging/display buckets, Edge verification gate, activation/replace semantics, source archive and retention worker.
+
+The common lifecycle is: validate against the target profile; convert to WebP in the browser; create the operation intent; upload original and display bytes to HERMES ALEA; verify the uploaded pair in the Edge verifier; finalize the managed asset pointer and revision; resolve the image through the shared HERMES ALEA asset resolver. Target-specific differences are limited to authorization, profile limits and the destination record/pointer.
+
+New ALEA uploads must not be copied into a second legacy display bucket or published by a target-specific worker. Existing legacy paths may remain as read-only fallbacks for records that have not been republished. Where old consumers only understand a legacy path, adapt the shared resolver and those read paths so they can display managed HERMES ALEA assets; do not add a second write path.
+
+If a target cannot follow this contract, stop and ask Zeus before introducing any exception. Profiles may express image constraints, but must not fork the publishing process.
+
 ## Pilot targets
 
 | Target | Actual table/field | Existing permission | Profile |
