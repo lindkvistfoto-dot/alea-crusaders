@@ -196,6 +196,7 @@ jobs:
               fi
               if ! git -C "$SOURCE_DIR" cat-file -e "HEAD:$changed" 2>/dev/null; then
                 if ! git -C "$DEV_DIR" cat-file -e "$PR_MERGE_SHA:$changed" 2>/dev/null; then
+                  echo "blocked_reason=PR #$PR_NUMBER deletes '$changed', which is absent from the current LIVE baseline. No LIVE change can be produced for this deletion." >> "$GITHUB_OUTPUT"
                   echo "::error::Approved PR #$PR_NUMBER deletes a file absent in LIVE: $changed"
                   exit 1
                 fi

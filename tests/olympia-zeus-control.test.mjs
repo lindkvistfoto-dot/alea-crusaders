@@ -249,7 +249,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('!!window.olympiaAuthVerified');
     expect(page).toContain('request({action:"session_check"},session)');
     expect(page).toContain('setTimeout(()=>controller.abort(),timeoutMs)');
-    expect(page).toContain('timeoutMs=12000');
+    expect(page).toContain('timeoutMs=20000');
     expect(page).toContain('pullRequestHeadSha:sha},session,20000');
     expect(edge).toContain('data.action === "session_check"');
     expect(edge).toContain('async function githubToken(decision: string)');
