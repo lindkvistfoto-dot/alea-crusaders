@@ -42,10 +42,8 @@
       visual.textContent = '▧';
       visual.setAttribute('aria-hidden', 'true');
     }
-    const name = document.createElement('span');
-    name.className = 'map-location-icon-label';
-    name.textContent = label;
-    button.append(visual, name);
+    // Icon-only UI: title provides the hover tooltip; aria-label supports assistive tech.
+    button.append(visual);
     button.addEventListener('click', () => {
       const target = panel.querySelector(selector);
       if (target) target.scrollIntoView({behavior:'smooth',block:'start'});
