@@ -44,6 +44,9 @@ function setup(){
   canonicalWeaponProjectileKey:()=>null,
   escAttr:value=>String(value??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
  };
+ const imageSrc=ctx.window.aleaEquipmentArt.src;
+ runInNewContext(read('features/equipment/art.js'),{window:ctx.window});
+ ctx.window.aleaEquipmentArt.src=imageSrc;
  runInNewContext(source+';globalThis.makeCombatEquipment=combatTurnEquipmentHtml;',ctx);
  return {combatant,render:()=>ctx.makeCombatEquipment(combatant)};
 }

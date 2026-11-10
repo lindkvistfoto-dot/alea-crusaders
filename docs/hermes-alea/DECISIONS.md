@@ -25,6 +25,9 @@ If a target cannot follow this contract, stop and ask Zeus before introducing an
 | definition | honor_definitions.image_asset_id | admin, campaign GM, existing named global relief GM scope | honor-art-v1 |
 | relief | honor_relief_variants.image_asset_id | corresponding definition manager | honor-relief-v1 |
 | weapon | rule_weapons.image_asset_id | admin for write; authenticated ALEA users for active display read | weapon-art-v1 |
+| armor_head / armor_arms / armor_torso / armor_legs | rule_armor_types.image_{zone}_asset_id | admin for write; authenticated ALEA users for active display read | DEFAULT_IMAGE_PROFILE |
+
+Armor destination mapping and DEV evidence: [ARMOR_DEV_CANDIDATE.md](ARMOR_DEV_CANDIDATE.md). Each armor slot has an independent image_{zone}_revision.
 
 Definitions cover category medal, award, badge. Reliefs retain preview/published selection. Shared Laurel/display frames, room scene, RP portraits, spell/skill art and other system assets remain outside the pilot. No fake arcane_system_assets registration: managed IDs use `hermes-alea:<job UUID>` and a safe display projection. Existing HERMES asset keys still resolve unchanged.
 
