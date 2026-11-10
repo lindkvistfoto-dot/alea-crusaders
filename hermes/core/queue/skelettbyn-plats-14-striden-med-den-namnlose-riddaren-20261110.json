@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 14 - striden med den namnlöse riddaren.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "58b646c6-fc4d-4e1b-bb0a-15c906c3ebea"
+  },
+  "drive_file_id": "1dzQfqS5RGwYh1a3U3n3JX4cZbY0Shwdp",
+  "archive_file_id": "1d-MVwhm5PltaY4HLqJMjRAUE7LQcOHq7",
+  "source_sha256": "5f4df6fe90f6e619cd30488cfe2bbd8403aa0a352ee45ecdee2ab3702f0df584"
+}
