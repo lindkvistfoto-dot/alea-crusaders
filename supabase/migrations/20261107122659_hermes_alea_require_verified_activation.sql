@@ -1,4 +1,3 @@
--- Enforce the existing Edge verifier as a prerequisite to activating images.
 create or replace function private.hermes_alea_require_verified_activation()
 returns trigger language plpgsql set search_path='' as $$
 begin

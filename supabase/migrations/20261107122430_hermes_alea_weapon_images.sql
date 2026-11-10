@@ -57,8 +57,7 @@ begin
  elsif kind='weapon' then
   update public.rule_weapons set image_asset_id=newkey,updated_at=now()
   where id=target returning image_revision into rev;
- else raise exception 'BAD_TARGET';
- end if;
+ else raise exception 'BAD_TARGET'; end if;
  if not found then raise exception 'BAD_TARGET'; end if;
  return rev;
 end $$;
@@ -68,8 +67,7 @@ language plpgsql set search_path='' as $$
 begin
  if TG_OP='INSERT' then
   if new.image_asset_id like 'hermes-alea:%' then raise exception 'USE_HERMES_ALEA'; end if;
-  new.image_revision:=0;
-  return new;
+  new.image_revision:=0; return new;
  end if;
  if (new.image_asset_id is distinct from old.image_asset_id or new.image_revision is distinct from old.image_revision)
    and (old.image_asset_id like 'hermes-alea:%' or new.image_asset_id like 'hermes-alea:%'
