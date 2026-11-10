@@ -3931,9 +3931,49 @@ function openMapStatusMenu(e,a){
  title.textContent=a.location_id?(a.name||'Plats'):'Polygonen är inte kopplad till en plats';
  actions.innerHTML=['unknown','unexplored','explored'].map(s=>`<button type="button" class="map-status-choice ${a.status===s?'active':''}" ${a.location_id?'':'disabled'} onclick="setMapLocationStatus('${a.location_id||''}','${s}')">${statusLabel(s)}</button>`).join('');
  menu.classList.remove('hidden');
- let x=Math.min(window.innerWidth-menu.offsetWidth-12,Math.max(12,e.clientX+10)),y=Math.min(window.innerHeight-menu.offsetHeight-12,Math.max(12,e.clientY+10));menu.style.left=x+'px';menu.style.top=y+'px';
+ menu.classList.remove('is-fading');
+ // Fixed placement above the map, not over the selected polygon or at the pointer.
+ let viewport=$('mapViewport'),rect=viewport?.getBoundingClientRect();
+ let x=Math.max(12,Math.min(window.innerWidth-menu.offsetWidth-12,(rect?.right||window.innerWidth)-menu.offsetWidth));
+ let y=Math.max(12,Math.min(window.innerHeight-menu.offsetHeight-12,(rect?.top||120)-menu.offsetHeight-8));
+ menu.style.left=x+'px';menu.style.top=y+'px';
+ resetMapStatusMenuTimer();
 }
-function closeMapStatusMenu(){$('mapStatusMenu')?.classList.add('hidden')}
+let mapStatusMenuTimer=null,mapStatusMenuFadeTimer=null;
+function clearMapStatusMenuTimers(){
+ clearTimeout(mapStatusMenuTimer);clearTimeout(mapStatusMenuFadeTimer);
+ mapStatusMenuTimer=null;mapStatusMenuFadeTimer=null;
+}
+function resetMapStatusMenuTimer(){
+ clearMapStatusMenuTimers();
+ const menu=$('mapStatusMenu');
+ if(!menu||menu.classList.contains('hidden'))return;
+ menu.classList.remove('is-fading');
+ mapStatusMenuTimer=setTimeout(()=>{
+  if(menu.matches(':hover')||menu.matches(':focus-within'))return;
+  menu.classList.add('is-fading');
+  mapStatusMenuFadeTimer=setTimeout(closeMapStatusMenu,300);
+ },3000);
+}
+function closeMapStatusMenu(){
+ clearMapStatusMenuTimers();
+ const menu=$('mapStatusMenu');
+ if(menu){menu.classList.add('hidden');menu.classList.remove('is-fading')}
+}
+document.addEventListener('pointerover',event=>{
+ if(event.target?.closest?.('#mapStatusMenu'))clearMapStatusMenuTimers();
+});
+document.addEventListener('pointerout',event=>{
+ const menu=$('mapStatusMenu');
+ if(menu&&!menu.contains(event.relatedTarget)&&!menu.classList.contains('hidden'))resetMapStatusMenuTimer();
+});
+document.addEventListener('focusin',event=>{
+ if(event.target?.closest?.('#mapStatusMenu'))clearMapStatusMenuTimers();
+});
+document.addEventListener('focusout',event=>{
+ const menu=$('mapStatusMenu');
+ if(menu&&!menu.contains(event.relatedTarget)&&!menu.classList.contains('hidden'))resetMapStatusMenuTimer();
+});
 // Dismiss the transient status menu when interacting anywhere outside it.
 // Keep the selected location detail panel open.
 document.addEventListener('pointerdown',function(event){
