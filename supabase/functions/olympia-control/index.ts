@@ -1365,7 +1365,11 @@ async function handleRequest(req: Request): Promise<Response> {
           body: JSON.stringify({ query: mutation, variables: { id: node.node_id } }),
         });
         const payload = await response.json();
-        if (!response.ok || payload.errors?.length) throw new Error("GITHUB_DRAFT_TRANSITION_FAILED");
+        if (!response.ok || payload.errors?.length) {
+          const codes = Array.isArray(payload.errors) ? payload.errors.map((entry: { type?: string; extensions?: { code?: string } }) => String(entry.extensions?.code || entry.type || "GRAPHQL_ERROR")).slice(0, 3) : [];
+          console.error("OLYMPIA draft GitHub GraphQL rejected", { httpStatus: response.status, errorCodes: codes });
+          throw new Error("GITHUB_DRAFT_TRANSITION_FAILED");
+        }
         const updated = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + data.pullRequestNumber);
         if (updated.draft !== data.draft) throw new Error("GITHUB_DRAFT_VERIFICATION_FAILED");
         return json({ ok: true, draft: updated.draft });
