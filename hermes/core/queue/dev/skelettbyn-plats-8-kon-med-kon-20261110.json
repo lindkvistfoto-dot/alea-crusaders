@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 8 - kon med kon.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "765da423-fce9-4812-9128-d89c6056e90d"
+  },
+  "drive_file_id": "16pyOLwJhk44X5-tLTU5hrWVwwpNSVInf",
+  "archive_file_id": "1xVOZSI3YA9I4ubqhzJKT0HE5Yvic7uit",
+  "source_sha256": "05b669014e241bb1ad4c1182234384ac4c8ba5fdc97d0e443f71f1b981480911"
+}

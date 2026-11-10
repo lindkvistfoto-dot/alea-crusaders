@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 1 - med sigillen på plats.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "779c2297-0dd4-44e7-aa36-fbc2e9b2724c"
+  },
+  "drive_file_id": "1D0oZhGrMb2Gm82sf-ywH0eK_68AN7Y2f",
+  "archive_file_id": "1qNg2UpI_z5QEceceloYTeO64Os0QGsDN",
+  "source_sha256": "548e385dd933a0de6384b5651be7e8b26a727cd7e54a82209998c7c8f5b90954"
+}
