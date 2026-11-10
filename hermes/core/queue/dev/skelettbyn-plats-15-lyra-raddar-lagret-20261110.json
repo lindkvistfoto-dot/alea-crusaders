@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 15 - Lyra räddar lägret.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "8626f481-dd52-438e-9146-952a49e16c10"
+  },
+  "drive_file_id": "1kcPzyq5QjaUUvBSVSP5vnV0AqS47epGm",
+  "archive_file_id": "1csnpyEaDVslEusBLLat7rogWeNKufZSt",
+  "source_sha256": "945e1f7d49e2868f9a12980d3e220cec1d73e535ac2e619502f2e56feadc0252"
+}

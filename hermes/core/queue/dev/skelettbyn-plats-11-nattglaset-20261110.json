@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 11 - Nattglaset.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "fdd0d8fd-7b44-4ff2-a72a-52881afb456f"
+  },
+  "drive_file_id": "1yPJsVuKHPQpzGkAovDCUSvldR7a5dlHr",
+  "archive_file_id": "16M_AvfnmlruZpCXlVB0Kc4mJQv8rOWWF",
+  "source_sha256": "329acfa882372af66a080449a31e0349793b0363013188049c233858f8902734"
+}

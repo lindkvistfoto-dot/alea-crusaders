@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plst 8.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "ec98cf59-e948-487c-8c9f-d07408bfed33"
+  },
+  "drive_file_id": "1WrHNCva3_jxvSgOXfIaUAuYshMX5d_4O",
+  "archive_file_id": "11V5Ns3RnZ32d88mNL0CASguoZCLNDWUM",
+  "source_sha256": "d5335d6f6e6a768c5eee6f1ddf40b501e75180d31ff1a647d0ed5286e3157ef5"
+}
