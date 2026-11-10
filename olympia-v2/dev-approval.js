@@ -93,7 +93,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      }
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
-    }catch(error){if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas eller verifieras ('+(error.name==='AbortError'?'timeout':String(error.message||'anslutningsfel').slice(0,140))+'). Inget LIVE-godkännande är tillgängligt.'}
+    }catch(error){candidateCacheUntil.delete(requestKey);if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas eller verifieras ('+(error.name==='AbortError'?'timeout':String(error.message||'anslutningsfel').slice(0,140))+'). Inget LIVE-godkännande är tillgängligt.'}
     finally{candidateRequests.delete(requestKey)}
  };
  await Promise.all(Array.from({length:Math.min(2,targets.length)},async()=>{while(cursor<targets.length){const node=targets[cursor++];await runOne(node)}}));
