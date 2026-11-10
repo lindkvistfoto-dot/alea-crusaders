@@ -287,8 +287,8 @@ jobs:
           git -C "$SOURCE_DIR" diff --binary --full-index "$LIVE_SHA" > "$OUTPUT_DIR/candidate.patch"
           MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
           DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
-          [[ -z "$MIGRATIONS" ]] || { echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
-          [[ -z "$DEPENDENCIES" ]] || { echo "::error::Candidate changes dependencies; dependency review is required."; exit 1; }
+          [[ -z "$MIGRATIONS" ]] || { echo "blocked_reason=Kandidaten innehåller Supabase-migrationer; separat migrationsgranskning krävs innan en LIVE-kandidat kan skapas." >> "$GITHUB_OUTPUT"; echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
+          [[ -z "$DEPENDENCIES" ]] || { echo "blocked_reason=Kandidaten ändrar beroendefiler; separat dependency-granskning krävs innan en LIVE-kandidat kan skapas." >> "$GITHUB_OUTPUT"; echo "::error::Candidate changes dependencies; dependency review is required."; exit 1; }
 
           echo "live_sha=$LIVE_SHA" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" >> "$GITHUB_OUTPUT"
