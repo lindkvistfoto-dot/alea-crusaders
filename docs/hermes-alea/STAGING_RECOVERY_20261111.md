@@ -27,3 +27,24 @@ Parent task: armor PR #721. DEV baseline: `0a2901d6`.
 ## Operational follow-up
 
 The scheduler definition on main must receive the DEV cleanup invocation/approval and Drive-read initialization. That operational workflow repair must preserve the LIVE job. User-authorized Drive archival still needs a working user connection for this personal archive; service-account ownership is not a valid shortcut.
+
+## Real recovery run and second browser attempt
+
+Run 42927653796 executed the existing cleanup worker from the repair branch.
+The old weapon job 5712fecc-d95f-4cba-b583-d9cd97fb4ffd became abandoned;
+both of its staging objects were deleted with the existing hash/readback path.
+WIF correctly denied the untrusted repair branch (attribute condition). The
+worker still completed abandoned recovery, skipped archive retention and
+reported failure. No WIF trust expansion was requested or performed.
+
+The Cloudflare test then passed the quota gate and uploaded the original and
+WebP to a new armor_head job e23a0b11-beec-4a55-9de8-79d3618b0c73. The next
+failure was the existing verifier CORS list: Supabase logged OPTIONS 403.
+Replace two per-PR hostname exceptions with the DEV project's own Cloudflare
+Pages hostname family; authentication and target permission remain unchanged.
+The existing DEV verifier deployment workflow is also scoped to this repair
+branch so the unchanged packaging/deployment path can verify the repair before
+merge. No public bucket, new verifier or arbitrary external origin is added.
+
+Health reporting now uses the same verified-size reservation calculation as
+begin; its additive migration is 20261111000131.
