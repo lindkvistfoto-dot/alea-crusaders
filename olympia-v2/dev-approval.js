@@ -111,6 +111,16 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      }
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}
+     // Keep the LIVE lane concise; diagnostic text and actions remain available on demand.
+     if(node.isConnected && node.children.length>1){
+      const summaryText=line.textContent||'LIVE-status';
+      const details=document.createElement('details');details.className='candidate-details';
+      const summary=document.createElement('summary');summary.textContent='Visa LIVE-detaljer och åtgärder';
+      details.append(summary);
+      while(node.firstChild)details.append(node.firstChild);
+      const compact=document.createElement('p');compact.className=line.className||'muted';compact.textContent=summaryText;
+      node.append(compact,details);
+     }
     }catch(error){candidateCacheUntil.delete(requestKey);if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas eller verifieras ('+(error.name==='AbortError'?'timeout':String(error.message||'anslutningsfel').slice(0,140))+'). Inget LIVE-godkännande är tillgängligt.'}
     finally{candidateRequests.delete(requestKey)}
  };
