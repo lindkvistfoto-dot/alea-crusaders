@@ -45,7 +45,7 @@ jobs:
           OLYMPIA_ENVIRONMENT: LIVE
         run: python scripts/hermes_alea_worker.py --execute-cleanup --environment LIVE
   archive-dev:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV'
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && ((github.ref == 'refs/heads/development' && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV') || (github.ref == 'refs/heads/fix/hermes-alea-staging-recovery' && github.event_name == 'push'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
