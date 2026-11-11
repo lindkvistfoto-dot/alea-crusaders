@@ -1,10 +1,9 @@
 /* Fixed seven-slot SL navigation beneath the campaign map. */
 .map-location-icon-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;padding:8px 10px;border-top:1px solid rgba(183,149,89,.3);background:rgba(21,17,14,.8)}
 .map-location-icon-strip[hidden]{display:none!important}
-.map-location-icon{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:62px;padding:4px 2px;border:1px solid rgba(184,147,82,.22);border-radius:7px;background:rgba(39,29,22,.55);color:#e5d6b6;cursor:pointer}
+.map-location-icon{display:flex;align-items:center;justify-content:center;min-width:0;min-height:48px;padding:5px 2px;border:1px solid rgba(184,147,82,.22);border-radius:7px;background:rgba(39,29,22,.55);color:#e5d6b6;cursor:pointer}
 .map-location-icon:disabled{opacity:.3;filter:grayscale(1);cursor:default}
 .map-location-icon.is-available:hover,.map-location-icon.is-available:focus-visible{border-color:#cda85e;background:rgba(96,65,31,.55);outline-offset:2px}
 .map-location-icon-art{display:flex;align-items:center;justify-content:center;width:34px;height:34px;font-size:27px}
 .map-location-icon-art img{display:block;max-width:100%;max-height:100%;object-fit:contain}
-.map-location-icon-label{font-size:9px;line-height:1.15;text-align:center;overflow-wrap:anywhere}
-@media(max-width:760px){.map-location-icon-strip{gap:2px;padding:5px 3px}.map-location-icon{min-height:52px;padding:3px 1px}.map-location-icon-art{width:26px;height:26px}.map-location-icon-label{font-size:8px}}
+@media(max-width:760px){.map-location-icon-strip{gap:2px;padding:5px 3px}.map-location-icon{min-height:40px;padding:3px 1px}.map-location-icon-art{width:26px;height:26px}}
