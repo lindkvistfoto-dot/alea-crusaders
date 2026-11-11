@@ -115,7 +115,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
         if(!confirm('Skapa en ny verifierad LIVE-kandidat för PR #'+number+' från aktuell main? Ingen ändring publiceras till LIVE.'))return;
         busy=true;rebuild.disabled=true;line.textContent='Bygger om kandidaten mot aktuell LIVE-bas…';
         try{
-         const outcome=await window.olympiaV2Request({action:'decision',decision:'pandoras_ask',itemId:'PR-'+number,testedDevSha:sha});
+         const outcome=await window.olympiaV2Request({action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number});
          line.textContent=outcome.message||'Ny kandidat begärd. LIVE är oförändrat.';
          candidateCacheUntil.delete(requestKey);
          await window.olympiaV2Refresh?.();
