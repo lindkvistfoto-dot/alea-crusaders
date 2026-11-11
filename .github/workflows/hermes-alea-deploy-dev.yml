@@ -2,7 +2,7 @@ name: HERMES ALEA – deploy verifier to DEV
 
 on:
   push:
-    branches: [development]
+    branches: [development, fix/hermes-alea-staging-recovery]
     paths:
       - 'supabase/functions/hermes-alea/**'
       - 'scripts/hermes-alea-prepare-edge.mjs'
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.ref == 'refs/heads/development' || github.ref == 'refs/heads/fix/hermes-alea-staging-recovery')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

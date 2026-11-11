@@ -48,7 +48,7 @@ Open PRs #271/#261 use archive-first symbol publication and are not dependencies
 
 ## Implementation refinements
 
-Reserve the full 12 MB per source job when calculating staging quotas. Never trust a browser-declared small byte count to reserve capacity: Storage still caps every actual file at 12 MB and final verification checks exact bytes/hash. Reservations remain charged until source cleanup is acknowledged.
+Reserve the full 12 MB per source job when calculating staging quotas. Never trust a browser-declared small byte count to reserve capacity: Storage still caps every actual file at 12 MB and final verification checks exact bytes/hash. Unfinished uploads retain the full reservation. After activation has checked source_bytes against immutable Storage metadata, only that verified byte count remains charged until source cleanup is acknowledged.
 
 Drive archive IDs are pre-generated and committed under the worker lease before file creation. All retries use the same file ID; a 409 is followed by folder/hash readback. This avoids depending on name-search visibility for duplicate prevention. See https://developers.google.com/workspace/drive/api/guides/create-file#generate-ids .
 

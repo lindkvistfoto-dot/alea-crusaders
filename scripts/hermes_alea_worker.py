@@ -249,16 +249,28 @@ def main():
     if (args.execute_cleanup or args.execute_retention_cleanup) and os.environ.get('HERMES_ALEA_CLEANUP_APPROVED') != 'true':
         raise RuntimeError('CLEANUP_NOT_APPROVED')
     io.SUPA=os.environ.get('SUPABASE_URL',io.SUPA).rstrip('/')
-    if args.cleanup_only:
-        jobs=[]
-    else:
-        io.FOLDER = os.environ.get('HERMES_ALEA_ARCHIVE_FOLDER_ID', '')
-        if not io.FOLDER:
-            raise RuntimeError('HERMES_ALEA_ARCHIVE_FOLDER_MISSING')
-        io.TOKEN = io.user_drive_token()
-        jobs = io.rest('rpc/hermes_alea_claim', 'POST', {'batch_size': 3})
-    failures = archive_batch(jobs,args.environment)
-    report = cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup)
+    jobs=[]
+    drive_error=None
+    # Abandoned staging needs no Drive connection. An archive outage must not
+    # prevent the existing independent abandoned-job recovery from running.
+    if not args.cleanup_only or args.execute_retention_cleanup:
+        io.FOLDER=os.environ.get('HERMES_ALEA_ARCHIVE_FOLDER_ID','')
+        try:
+            if not io.FOLDER:
+                raise ValueError('HERMES_ALEA_ARCHIVE_FOLDER_MISSING')
+            io.TOKEN=os.environ.get('GOOGLE_ACCESS_TOKEN') or io.user_drive_token()
+        except Exception as error:
+            # OAuth helper exposes only its existing allowlisted status/code.
+            message=str(error)
+            drive_error=message if ((isinstance(error,RuntimeError) and re.fullmatch(r'HERMES_DRIVE_OAUTH_ERROR status=[0-9]+ code=[a-z_]+',message)) or (isinstance(error,ValueError) and re.fullmatch(r'[A-Z_]+',message))) else type(error).__name__
+        else:
+            if not args.cleanup_only:
+                jobs=io.rest('rpc/hermes_alea_claim','POST',{'batch_size':3})
+    failures=archive_batch(jobs,args.environment)
+    report=cleanup_report(args.execute_cleanup,args.environment,args.execute_retention_cleanup and drive_error is None)
+    if drive_error:
+        failures.append({'job_id':'drive-auth','error':drive_error})
+        report['archive_auth_error']=drive_error
     report['health'] = io.rest('rpc/hermes_alea_health', 'POST', {})
     report['archive_failures'] = failures
     report['environment'] = args.environment
