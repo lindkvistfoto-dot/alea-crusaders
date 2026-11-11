@@ -108,6 +108,24 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       if(candidate.workflowRunUrl&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+$/.test(candidate.workflowRunUrl)){
        const run=document.createElement('a');run.className='action';run.href=candidate.workflowRunUrl;run.target='_blank';run.rel='noopener noreferrer';run.textContent='Visa misslyckad körning';node.append(run);
       }
+      if(candidate.reasonCode==='LIVE_BASELINE_CHANGED'&&Number.isSafeInteger(result.issue?.number)&&result.issue.number>0){
+       const rebuild=document.createElement('button');rebuild.type='button';rebuild.className='action';rebuild.textContent='Skapa ny LIVE-kandidat från aktuell LIVE';node.append(rebuild);
+       rebuild.addEventListener('click',async()=>{
+        if(busy||!verified)return;
+        if(!confirm('Skapa en ny verifierad LIVE-kandidat för PR #'+number+' från aktuell main? Ingen ändring publiceras till LIVE.'))return;
+        busy=true;rebuild.disabled=true;line.textContent='Bygger om kandidaten mot aktuell LIVE-bas…';
+        try{
+         const outcome=await window.olympiaV2Request({action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number});
+         line.textContent=outcome.message||'Ny kandidat begärd. LIVE är oförändrat.';
+         candidateCacheUntil.delete(requestKey);
+         await window.olympiaV2Refresh?.();
+         window.olympiaV2CheckCandidateStatuses?.();
+        }catch(error){
+         line.textContent='Ny kandidat kunde inte skapas: '+String(error.message||error);
+         rebuild.disabled=false;
+        }finally{busy=false}
+       });
+      }
      }
      else if(candidate){line.textContent=candidate.message||'LIVE-kandidat förbereds.';}
      else {const labels={not_started:'Ingen automatisk LIVE-kandidat hittad för denna DEV-merge.',requested:'LIVE-kandidat begärd – verifiering pågår.',needs_review:'LIVE-förberedelsen behöver granskas.',unlocked_issue:'Releaseärende behöver granskas.',unknown:'LIVE-status kunde inte verifieras.',inconsistent:'LIVE-kandidatlåset behöver teknisk granskning.'};line.textContent=labels[result.state]||'LIVE-status okänd.';}

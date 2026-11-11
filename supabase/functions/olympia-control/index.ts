@@ -717,6 +717,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     return {
       ready: false,
       blocked: true,
+      reasonCode: code || "CANDIDATE_VERIFICATION_FAILED",
       message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
       candidateTreeSha: releasePrTreeSha,
       releasePrSha,
@@ -1109,6 +1110,55 @@ async function handleRequest(req: Request): Promise<Response> {
         console.error("OLYMPIA candidate diagnostics failed", code);
         if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail(code, 503);
         return fail("Kandidatens lås eller journal kunde inte verifieras. Ingen ändring gjordes.", 502);
+      }
+    }
+    if (data.action === "resume_stale_candidate") {
+      if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          !Number.isSafeInteger(data.candidateIssue) || data.candidateIssue < 1 ||
+          typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
+        return fail("Ange giltigt DEV-PR, kandidatärende och fullständig testad DEV-SHA.", 400);
+      }
+      try {
+        const token = await githubToken("resume_stale_candidate");
+        const number = data.pullRequestNumber;
+        const sha = data.testedDevSha.toLowerCase();
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const [appLogin, item, issue, issues] = await Promise.all([
+          appBotLogin(),
+          workItem(token, "PR-" + number),
+          gh(token, repoPath + "/issues/" + data.candidateIssue),
+          gh(token, repoPath + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin())),
+        ]);
+        if (!Array.isArray(issues)) throw new Error("CANDIDATE_ISSUES_INVALID");
+        const body = String(issue.body || "");
+        if (issue.user?.login !== appLogin || issue.pull_request ||
+            !body.includes("- Beslut: PANDORAS ASK") ||
+            !body.includes("- Ärende-ID: PR-" + number) ||
+            !body.includes("- Testad DEV-commit (full SHA): " + sha)) {
+          return fail("Kandidatbeslutet matchar inte den valda DEV-ändringen.", 409);
+        }
+        if (!await hasAcceptedFeatureVersion(token, issues, item, sha)) {
+          return fail("DEV-acceptansen saknas eller berörda filer har ändrats efter godkännandet.", 409);
+        }
+        const candidate = await inspectCandidate(token, item, data.candidateIssue, sha);
+        if (candidate.reasonCode !== "LIVE_BASELINE_CHANGED") {
+          return fail("Kandidaten kan bara byggas om automatiskt när LIVE-baslinjen har ändrats.", 409);
+        }
+        const requestBranch = await startCandidateRequest(token, data.candidateIssue, item, {
+          decision: "pandoras_ask",
+          testedDevSha: sha,
+        });
+        return json({
+          ok: true,
+          message: "Kandidaten återupptogs mot aktuell LIVE-bas. Ingen LIVE-publicering har skett.",
+          issue: { number: issue.number, url: issue.html_url },
+          requestBranch,
+          candidateStarted: true,
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA stale LIVE candidate rebuild failed", code);
+        return fail("Kandidaten kunde inte byggas om säkert. LIVE är oförändrat.", 502);
       }
     }
     if (data.action === "pull_request_list") {
