@@ -18,7 +18,9 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(edge).toContain('reasonCode: code || "CANDIDATE_VERIFICATION_FAILED"');
   expect(js).toContain("candidate.reasonCode==='LIVE_BASELINE_CHANGED'");
   expect(js).toContain("action:'resume_stale_candidate'");
-  expect(edge).toContain('candidate.reasonCode !== "LIVE_BASELINE_CHANGED"');
+  expect(edge).toContain('candidate.reasonCode === "LIVE_BASELINE_CHANGED"');
+  expect(edge).toContain('candidate.reasonCode === "CANDIDATE_WORKFLOW_BLOCKED" && candidate.blocked === true');
+  expect(edge).toContain('if (!staleBaseline && !blockedRun)');
   expect(edge).toContain('decision: "pandoras_ask"');
   expect(js).toContain('Skapa ny LIVE-kandidat från aktuell LIVE');
   expect(js).toContain('Ingen ändring publiceras till LIVE.');
