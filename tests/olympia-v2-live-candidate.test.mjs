@@ -13,9 +13,17 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
  it('uses authenticated read-only candidate status',()=>{
   expect(js).toContain("action:'auto_candidate_diagnostics'");
  });
- it('never directly merges or publishes LIVE',()=>{
-  expect(js).not.toContain("action:'final_approval'");
-  expect(js).not.toContain("decision:'pandoras_ask'");
+ it('offers candidate rebuild only when LIVE baseline changed',()=>{
+  expect(edge).toContain('reasonCode: code || "CANDIDATE_VERIFICATION_FAILED"');
+  expect(js).toContain("candidate.reasonCode==='LIVE_BASELINE_CHANGED'");
+  expect(js).toContain("decision:'pandoras_ask'");
+  expect(js).toContain('Skapa ny LIVE-kandidat från aktuell LIVE');
+  expect(js).toContain('Ingen ändring publiceras till LIVE.');
+ });
+ it('keeps final LIVE approval bound to a separate explicit action',()=>{
+  expect(js).toContain("decision:'final_approval'");
+  expect(js).toContain('LIVE-beslut är låsta.');
+  expect(html).not.toContain('data-live-accept');
  });
  it('keeps SHA compact on mobile',()=>{
   expect(html).toContain('slice(0,12)');
