@@ -43,6 +43,24 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      node.replaceChildren();
      const line=document.createElement('p');node.append(line);
      const candidate=result.candidate;
+     // Link only a candidate returned by the verified server diagnostic.
+     // Do not infer parentage from PR titles, branch names, or numbers.
+     if(Number.isSafeInteger(candidate?.releasePr)&&candidate.releasePr>0){
+      const parentCard=node.closest('[data-pr]');
+      if(parentCard){
+       let relation=parentCard.querySelector('[data-live-child]');
+       if(!relation){relation=document.createElement('p');relation.className='muted';relation.dataset.liveChild='true';parentCard.querySelector('.pr-body')?.prepend(relation)}
+       relation.textContent='Parent DEV #'+number+' · Child LIVE #'+candidate.releasePr;
+       const childCard=[...document.querySelectorAll('#cards > [data-pr]')].find(card=>Number(card.dataset.pr)===candidate.releasePr);
+       if(childCard){
+        childCard.classList.add('pr-child');
+        childCard.dataset.parentPr=String(number);
+        const heading=childCard.querySelector('.pr-summary small');
+        if(heading)heading.textContent='Child LIVE #'+candidate.releasePr+' · Parent DEV #'+number;
+        parentCard.insertAdjacentElement('afterend',childCard);
+       }
+      }
+     }
      if(candidate?.published===true){
       line.className='good';line.textContent='Publicerad i LIVE · verifierad'+(candidate.liveMergeSha?' · '+candidate.liveMergeSha.slice(0,10):'');
      }else if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
