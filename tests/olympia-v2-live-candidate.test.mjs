@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 const html=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 const js=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
+const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
  it('shows automatic read-only status for merged DEV PR',()=>{
   expect(html).toContain('if(pr.merged_at)');
