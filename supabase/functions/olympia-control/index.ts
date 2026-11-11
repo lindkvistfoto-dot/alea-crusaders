@@ -717,6 +717,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     return {
       ready: false,
       blocked: true,
+      reasonCode: code || "CANDIDATE_VERIFICATION_FAILED",
       message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
       candidateTreeSha: releasePrTreeSha,
       releasePrSha,
