@@ -166,6 +166,7 @@ async function combatRollDice(specs,label='Slag'){
 }
 
 let combatGmPlacementId=null;
+let combatSlBoardOpen=false,combatSlBoardTab='overview';
 let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
@@ -313,7 +314,7 @@ function renderCombatGmControls(){
     (scenes.length?scenes.map(row=>'<option value="'+escAttr(row.id)+'" '+(String(row.id)===String(combatSelectedSceneId)?'selected':'')+'>'+escAttr(row.name||'Stridsscen')+'</option>').join(''):'<option value="">Ingen stridsscen</option>')+
   '</select>'+
   '<button type="button" class="btn" onclick="prepareCombatScene()" '+(combatSceneBusy||!scene?'disabled':'')+'>⚙ Förbered</button>'+
-   '<button type="button" class="btn" onclick="combatShowGmToolbox()" '+(!activeCombat||previewing?'disabled':'')+'>SL-kontroll</button>'+
+   '<button type="button" class="btn" onclick="combatShowGmToolbox()" '+(!activeCombat||previewing?'disabled':'')+'>SL Board</button>'+
    '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat||previewing?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat&&['active','paused'].includes(activeCombat.status)&&!previewing?
@@ -6829,8 +6830,33 @@ function combatGmPlacementHintHtml(){
 }
 function combatShowGmToolbox(){
  if(!combatCanManage()||!activeCombat)return;
- const el=$('combatGmToolbox');el?.scrollIntoView?.({behavior:'smooth',block:'center'});
- const details=el?.querySelector?.('details');if(details)details.open=true
+ combatSlBoardOpen=true;combatSlBoardTab='combatants';renderCombat()
+}
+function combatSlBoardToggle(){
+ if(!combatCanManage())return;
+ combatSlBoardOpen=!combatSlBoardOpen;renderCombat()
+}
+function combatSlBoardNavigate(tab){
+ if(!combatCanManage())return;
+ combatSlBoardTab=String(tab||'overview');renderCombat()
+}
+function combatSlBoardModuleHtml(logHtml){
+ const sceneId=activeCombat?.settings?.scene_id||'',scene=combatSceneFromId(sceneId);
+ const tab=combatSlBoardTab;
+ if(tab==='combatants')return '<div class="slcb-module"><h3>Stridande</h3><p>Placering och reserver använder den aktiva stridens kombattanter. Klicka på en ledig hex på kartan för att sätta ut eller flytta vald figur.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+'</div>';
+ if(tab==='battlefield')return '<div class="slcb-module"><h3>Terräng och sikt</h3><p>Redigera scenens hexterräng i den befintliga sceneditorn. Den aktiva stridens rörelse och LoS använder samma hexdata och regelmotor.</p><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Redigera stridsscen</button>'+combatAreasAdminHtml()+'</div>';
+ if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
+ if(tab==='log')return '<div class="slcb-module"><h3>Stridslogg</h3><p>Händelserna visas i den befintliga stridsloggen nedanför kartan.</p><button type="button" class="btn" onclick="document.querySelector(\'#combatPage .combat-log\')?.scrollIntoView({behavior:\'smooth\',block:\'nearest\'})">Visa stridslogg</button><div class="slcb-log-preview">'+logHtml+'</div></div>';
+ const status=activeCombat?.status||'setup';
+ return '<div class="slcb-module"><h3>Scen och stridsläge</h3><p><b>'+escAttr(scene?.name||activeCombat?.name||'Aktiv strid')+'</b> · '+escAttr(combatPhaseLabel(activeCombat?.phase))+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+escAttr(status)+'</p><p>Förbered, starta, återställ och avsluta med befintlig scenstyrning. Samma stridsinstans fortsätter vara källa för karta, deltagare, turordning och logg.</p></div>'
+}
+function combatSlControlBoardHtml(logHtml){
+ if(!combatCanManage()||!activeCombat)return '';
+ const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Terräng & sikt'],['events','Effekter'],['log','Händelselogg']];
+ return '<section class="sl-control-board'+(combatSlBoardOpen?' is-open':'')+'" aria-label="SL Control Board">'+
+  '<button type="button" class="slcb-toggle" aria-expanded="'+(combatSlBoardOpen?'true':'false')+'" aria-controls="slControlBoardPanel" onclick="combatSlBoardToggle()"><span class="slcb-mark" aria-hidden="true">⬡</span><span><b>SL CONTROL BOARD</b><small>'+escAttr(activeCombat?.name||'Aktiv strid')+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+(combatSlBoardOpen?'panelen öppen':'öppna spelledarverktyg')+'</small></span><span class="slcb-chevron" aria-hidden="true">'+(combatSlBoardOpen?'⌃':'⌄')+'</span></button>'+
+  (combatSlBoardOpen?'<div id="slControlBoardPanel" class="slcb-panel"><div id="combatGmControls" class="combat-gm-controls hidden"></div><nav class="slcb-tabs" aria-label="SL-verktyg">'+tabs.map(([key,label])=>'<button type="button" class="slcb-tab'+(combatSlBoardTab===key?' active':'')+'" aria-pressed="'+(combatSlBoardTab===key?'true':'false')+'" onclick="combatSlBoardNavigate(\''+key+'\')">'+label+'</button>').join('')+'</nav>'+combatSlBoardModuleHtml(logHtml)+'</div>':'')+
+  '</section>'
 }
 function combatSelectGmPlacement(id){
  if(!combatCanManage()||!activeCombat)return;
@@ -7045,8 +7071,7 @@ function renderCombat(){
    '<div class="combat-board-wrap">'+combatGmPlacementHintHtml()+
     '<div class="combat-board" style="'+combatMapFrameStyle()+'">'+renderCombatMap()+combatMapPresetsHtml()+'</div>'+combatMapFooterHtml()+
    '</div>'+
-   '<div class="combat-below-map"><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+
-    combatGmToolboxHtml()+
+   '<div class="combat-below-map">'+combatSlControlBoardHtml(logHtml)+
     '<section class="combat-log"><h3>Stridslogg</h3><div class="combat-log-list">'+logHtml+'</div></section>'+
    '</div>'+
   '</div>'+

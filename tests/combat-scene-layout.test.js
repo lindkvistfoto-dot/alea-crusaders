@@ -3,26 +3,27 @@ import {readFileSync} from 'node:fs';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../src/styles/app.css',import.meta.url),'utf8');
+const boardCss=readFileSync(new URL('../features/combat/sl-control-board.css',import.meta.url),'utf8');
 const render=runtime.slice(runtime.indexOf('function renderCombat(){'),runtime.indexOf("document.addEventListener('keydown'",runtime.indexOf('function renderCombat(){')));
 describe('Trekolumnig stridsvy med SL-kontroller under kartan',()=>{
  test('SL-rutan finns inte kvar ovanför stridsvyn i index',()=>{
   expect(html).not.toContain('id="combatGmControls"');
  });
  test('SL-rutan skapas under kartan vid aktiv strid och före Play i vänteläget',()=>{
-  expect((render.match(/id="combatGmControls"/g)||[])).toHaveLength(3);
-  expect(render).toContain('<div class="combat-below-map"><div id="combatGmControls"');
+  expect((render.match(/id="combatGmControls"/g)||[])).toHaveLength(2);
+  expect(render).toContain('combatSlControlBoardHtml(logHtml)');
   expect(render).toContain('combat-shell combat-shell-idle');
   expect(render).toContain('combat-finished-shell');
   expect(render).toContain('renderCombatGmControls();return');
  });
  test('SL stridskontroll och logg visas efter hexkartan i mittenkolumnen',()=>{
-  expect((render.match(/combatGmToolboxHtml\(\)/g)||[])).toHaveLength(1);
-  expect(render).toContain(`id="combatGmControls" class="combat-gm-controls hidden"></div>'+`);
-  expect(render).toContain(`combatGmToolboxHtml()+`);
+  expect(render).toContain('combatSlControlBoardHtml(logHtml)');
+  expect(render).not.toContain('combatGmToolboxHtml()');
+  expect(runtime).toContain('combatGmControls');
   expect(render).toContain(`'<section class="combat-log">`);
   expect(render).not.toContain(`+'</div></section>'+combatGmToolboxHtml()+'</div>'`);
-  expect(css).toContain('.combat-shell-live .combat-below-map .combat-gm-toolbox{');
-  expect(css).toContain('grid-template-columns:minmax(0,1fr);');
+  expect(boardCss).toContain('.slcb-panel{');
+  expect(boardCss).toContain('position:absolute');
  });
  test('SL-kontrollerna återskapas vid varje omrendering',()=>{
   expect(render).toContain(' renderCombatGmControls();\n requestAnimationFrame(');
@@ -56,7 +57,7 @@ describe('Trekolumnig stridsvy med SL-kontroller under kartan',()=>{
   expect(render).toContain('combatAttackPanelHtml()');
   expect(render).toContain('combatGmPlacementHintHtml()');
   expect(render).toContain('combatMapFooterHtml()');
-  expect(render).toContain('combatGmToolboxHtml()');
+  expect(render).toContain('combatSlControlBoardHtml(logHtml)');
   expect(render).toContain('combatantDetailsPopupHtml()');
  });
 
