@@ -641,6 +641,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     return {
       ready: false,
       blocked,
+      reasonCode: blocked ? "CANDIDATE_WORKFLOW_BLOCKED" : "CANDIDATE_NOT_READY",
       message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
       releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
@@ -1141,8 +1142,26 @@ async function handleRequest(req: Request): Promise<Response> {
           return fail("DEV-acceptansen saknas eller berörda filer har ändrats efter godkännandet.", 409);
         }
         const candidate = await inspectCandidate(token, item, data.candidateIssue, sha);
-        if (candidate.reasonCode !== "LIVE_BASELINE_CHANGED") {
-          return fail("Kandidaten kan bara byggas om automatiskt när LIVE-baslinjen har ändrats.", 409);
+        const staleBaseline = candidate.reasonCode === "LIVE_BASELINE_CHANGED";
+        const blockedRun = candidate.reasonCode === "CANDIDATE_WORKFLOW_BLOCKED" && candidate.blocked === true;
+        if (!staleBaseline && !blockedRun) {
+          return fail("Kandidaten kan byggas om när LIVE-baslinjen ändrats eller dess tidigare releasekontroll blockerats.", 409);
+        }
+        if (blockedRun) {
+          const releaseNumber = Number(candidate.releasePr || 0);
+          if (!Number.isSafeInteger(releaseNumber) || releaseNumber < 1) {
+            return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
+          }
+          const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
+          const releaseBody = String(releasePr.body || "");
+          const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+          if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
+              releasePr.user?.login !== appLogin ||
+              !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
+              !releaseBody.includes("- Approved DEV test version: " + sha) ||
+              !sources.split(/\s*,\s*/).includes("#" + number)) {
+            return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
+          }
         }
         const requestBranch = await startCandidateRequest(token, data.candidateIssue, item, {
           decision: "pandoras_ask",

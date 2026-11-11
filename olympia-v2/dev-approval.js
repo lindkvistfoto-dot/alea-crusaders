@@ -108,11 +108,14 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       if(candidate.workflowRunUrl&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+$/.test(candidate.workflowRunUrl)){
        const run=document.createElement('a');run.className='action';run.href=candidate.workflowRunUrl;run.target='_blank';run.rel='noopener noreferrer';run.textContent='Visa misslyckad körning';node.append(run);
       }
-      if(candidate.reasonCode==='LIVE_BASELINE_CHANGED'&&Number.isSafeInteger(result.issue?.number)&&result.issue.number>0){
-       const rebuild=document.createElement('button');rebuild.type='button';rebuild.className='action';rebuild.textContent='Skapa ny LIVE-kandidat från aktuell LIVE';node.append(rebuild);
+      const staleBaseline=candidate.reasonCode==='LIVE_BASELINE_CHANGED';
+      const blockedRun=candidate.reasonCode==='CANDIDATE_WORKFLOW_BLOCKED';
+      if((staleBaseline||blockedRun)&&candidate.blocked&&Number.isSafeInteger(result.issue?.number)&&result.issue.number>0){
+       const rebuild=document.createElement('button');rebuild.type='button';rebuild.className='action';rebuild.textContent=blockedRun?'Återuppta blockerad LIVE-kandidat':'Skapa ny LIVE-kandidat från aktuell LIVE';node.append(rebuild);
        rebuild.addEventListener('click',async()=>{
         if(busy||!verified)return;
-        if(!confirm('Skapa en ny verifierad LIVE-kandidat för PR #'+number+' från aktuell main? Ingen ändring publiceras till LIVE.'))return;
+        const order=blockedRun?'Återuppta den blockerade kandidaten':'Skapa en ny verifierad LIVE-kandidat';
+        if(!confirm(order+' för PR #'+number+' från aktuell main? Ingen ändring publiceras till LIVE.'))return;
         busy=true;rebuild.disabled=true;line.textContent='Bygger om kandidaten mot aktuell LIVE-bas…';
         try{
          const outcome=await window.olympiaV2Request({action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number});
