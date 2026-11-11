@@ -83,36 +83,59 @@
    alpha:{format:'SVG',background:'none',raster_rgba_verified:false},
    release_ready:false};
  }
+
  function svg(rows,opts={}){
-  const g=geometry(rows,opts),padding=opts.padding??0.5,wallHeight=(opts.size||1)*(g.camera.wallHeight??0.2);
-  const edges=new Map();
-  const ptKey=p=>p.x.toFixed(6)+','+p.y.toFixed(6);
-  for(const f of g.faces){for(let i=0;i<6;i++){
-   const a=f.points[i],b=f.points[(i+1)%6],keys=[ptKey(a),ptKey(b)].sort(),k=keys.join('|');
-   if(edges.has(k))edges.get(k).count++;else edges.set(k,{a,b,count:1});
-  }}
-  const walls=[];
-  for(const edge of edges.values())if(edge.count===1){
-   const offset=wallHeight*Math.cos((g.camera.elevationDegrees??55)*Math.PI/180)*(g.camera.scale??1);
-   walls.push([edge.a,edge.b,{x:edge.b.x,y:edge.b.y+offset},{x:edge.a.x,y:edge.a.y+offset}]);
+  const g=geometry(rows,opts),size=opts.size||1,camera=g.camera,padding=opts.padding??0.5;
+  const elevation=(camera.elevationDegrees??55)*Math.PI/180;
+  const height=size*(camera.wallHeight??0.2);
+  const cellSet=new Set(g.cells.map(key));
+  const allEdges=new Map(),shared=[],outer=[];
+  const vertexKey=p=>p.x.toFixed(8)+','+p.y.toFixed(8);
+  const edgesFor=(c)=>{const pts=corners(c,size);return pts.map((a,i)=>({a,b:pts[(i+1)%6]}))};
+  for(const c of g.cells)for(const e of edgesFor(c)){
+   const k=[vertexKey(e.a),vertexKey(e.b)].sort().join('|');
+   if(allEdges.has(k))allEdges.get(k).count++;
+   else allEdges.set(k,{...e,count:1});
   }
-  const all=[...g.faces.flatMap(f=>f.points),...walls.flat()];
-  const bounds=all.reduce((a,p)=>({minX:Math.min(a.minX,p.x),maxX:Math.max(a.maxX,p.x),minY:Math.min(a.minY,p.y),maxY:Math.max(a.maxY,p.y)}),{minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity});
-  const w=bounds.maxX-bounds.minX+padding*2,h=bounds.maxY-bounds.minY+padding*2;
-  const points=pts=>pts.map(p=>(p.x-bounds.minX+padding).toFixed(4)+','+(p.y-bounds.minY+padding).toFixed(4)).join(' ');
-  const palette={ivory:'#f4ead5',marble:'#e8dcc1',bronze:'#99713c',gold:'#d7ad61',engraving:'#78552e',dark:'#543c23'};
-  const wallArt=walls.map((p,i)=>'<polygon points="'+points(p)+'" fill="'+(i%2?'#806039':'#a47b43')+'" stroke="'+palette.dark+'" stroke-width="0.035"/>').join('');
-  const faces=g.faces.map(f=>{
-   const cx=f.center.x-bounds.minX+padding,cy=f.center.y-bounds.minY+padding;
-   const poly=f.points.map(p=>({x:p.x-bounds.minX+padding,y:p.y-bounds.minY+padding}));
-   const inner=poly.map(p=>({x:cx+(p.x-cx)*.81,y:cy+(p.y-cy)*.81}));
-   const ring=poly.map(p=>({x:cx+(p.x-cx)*.91,y:cy+(p.y-cy)*.91}));
-   const path=(pts)=>pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(4)+' '+p.y.toFixed(4)).join(' ')+' Z';
-   const petals=Array.from({length:8},(_,i)=>{const a=i*Math.PI/4,b=a+Math.PI/8,r=.35*(opts.size||1),r2=.12*(opts.size||1);return '<path d="M '+cx.toFixed(4)+' '+cy.toFixed(4)+' L '+(cx+Math.sin(a)*r).toFixed(4)+' '+(cy-Math.cos(a)*r*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+' L '+(cx+Math.sin(b)*r2).toFixed(4)+' '+(cy-Math.cos(b)*r2).toFixed(4)+' Z" fill="'+(i%2?palette.gold:palette.engraving)+'"/>'}).join('');
-   const rivets=poly.map(p=>'<circle cx="'+(cx+(p.x-cx)*.94).toFixed(4)+'" cy="'+(cy+(p.y-cy)*.94).toFixed(4)+'" r=".052" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".013"/>').join('');
-   return '<g><path d="'+path(poly)+'" fill="'+palette.bronze+'" stroke="'+palette.dark+'" stroke-width=".055"/><path d="'+path(ring)+'" fill="'+palette.gold+'" stroke="'+palette.engraving+'" stroke-width=".024"/><path d="'+path(inner)+'" fill="'+palette.ivory+'" stroke="'+palette.bronze+'" stroke-width=".035"/><ellipse cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" rx=".39" ry="'+(.39*Math.sin((g.camera.elevationDegrees??55)*Math.PI/180)).toFixed(4)+'" fill="none" stroke="'+palette.engraving+'" stroke-width=".027"/>'+petals+'<circle cx="'+cx.toFixed(4)+'" cy="'+cy.toFixed(4)+'" r=".067" fill="'+palette.gold+'" stroke="'+palette.dark+'" stroke-width=".018"/>'+rivets+'</g>';
+  for(const e of allEdges.values())(e.count===1?outer:shared).push(e);
+  const faces=g.faces.map(f=>f.points);
+  const projectedOuter=outer.map(e=>({a:project(e.a,camera),b:project(e.b,camera),world:e}));
+  const walls=projectedOuter.filter(e=>{
+   const dx=e.world.b.x-e.world.a.x,dy=e.world.b.y-e.world.a.y;
+   // Only outward-facing edges with normals pointing toward the viewer.
+   const mid={x:(e.world.a.x+e.world.b.x)/2,y:(e.world.a.y+e.world.b.y)/2};
+   const centroid=g.cells.reduce((a,c)=>{const w=world(c,size);return {x:a.x+w.x/g.cells.length,y:a.y+w.y/g.cells.length}},{x:0,y:0});
+   const nx=mid.x-centroid.x,ny=mid.y-centroid.y;
+   return ny>1e-8 && Math.abs(dx*ny-dy*nx)>1e-8;
+  }).map(e=>{
+   const d={x:0,y:height*Math.cos(elevation)*(camera.scale??1)};
+   return [e.a,e.b,{x:e.b.x+d.x,y:e.b.y+d.y},{x:e.a.x+d.x,y:e.a.y+d.y}];
+  });
+  const all=[...faces.flat(),...walls.flat()];
+  const bounds=all.reduce((b,p)=>({minX:Math.min(b.minX,p.x),minY:Math.min(b.minY,p.y),maxX:Math.max(b.maxX,p.x),maxY:Math.max(b.maxY,p.y)}),{minX:Infinity,minY:Infinity,maxX:-Infinity,maxY:-Infinity});
+  const w=bounds.maxX-bounds.minX+2*padding,h=bounds.maxY-bounds.minY+2*padding;
+  const xy=p=>[(p.x-bounds.minX+padding).toFixed(5),(p.y-bounds.minY+padding).toFixed(5)].join(',');
+  const line=e=>'<path d="M '+xy(e.a).replace(',',' ')+' L '+xy(e.b).replace(',',' ')+'" />';
+  const faceArt=g.faces.map(f=>{
+   const c=f.center,pts=f.points.map(p=>({x:c.x+(p.x-c.x)*.89,y:c.y+(p.y-c.y)*.89}));
+   const rose=Array.from({length:8},(_,i)=>{
+    const a=i*Math.PI/4,r=size*.36;
+    const tip={x:c.x+Math.sin(a)*r*(camera.scale??1),y:c.y-Math.cos(a)*r*Math.sin(elevation)*(camera.scale??1)};
+    const l={x:c.x+Math.sin(a-.22)*r*.22,y:c.y-Math.cos(a-.22)*r*.22*Math.sin(elevation)};
+    const rt={x:c.x+Math.sin(a+.22)*r*.22,y:c.y-Math.cos(a+.22)*r*.22*Math.sin(elevation)};
+    return '<polygon points="'+[l,tip,rt].map(xy).join(' ')+'" fill="'+(i%2?'#c59a4b':'#8c622e')+'" stroke="#5c3b1b" stroke-width=".012"/>';
+   }).join('');
+   return '<g><polygon points="'+pts.map(xy).join(' ')+'" fill="#f4ead5" stroke="none"/><ellipse cx="'+(c.x-bounds.minX+padding).toFixed(5)+'" cy="'+(c.y-bounds.minY+padding).toFixed(5)+'" rx="'+(.40*size*(camera.scale??1)).toFixed(5)+'" ry="'+(.40*size*Math.sin(elevation)*(camera.scale??1)).toFixed(5)+'" fill="none" stroke="#b28a49" stroke-width=".024"/>'+rose+'<circle cx="'+(c.x-bounds.minX+padding).toFixed(5)+'" cy="'+(c.y-bounds.minY+padding).toFixed(5)+'" r=".067" fill="#d7ad61" stroke="#6e471f" stroke-width=".018"/></g>';
   }).join('');
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' hex formation">'+wallArt+faces+'</svg>';
+  const wallArt=walls.map(p=>'<polygon points="'+p.map(xy).join(' ')+'" fill="#806039" stroke="#543c23" stroke-width=".025"/>').join('');
+  const outerArt=projectedOuter.map(e=>'<path d="M '+xy(e.a).replace(',',' ')+' L '+xy(e.b).replace(',',' ')+'" fill="none" stroke="#6a451f" stroke-width=".15" stroke-linecap="round"/><path d="M '+xy(e.a).replace(',',' ')+' L '+xy(e.b).replace(',',' ')+'" fill="none" stroke="#99713c" stroke-width=".092" stroke-linecap="round"/>').join('');
+  const seamArt=shared.map(e=>({a:project(e.a,camera),b:project(e.b,camera)})).map(e=>'<path d="M '+xy(e.a).replace(',',' ')+' L '+xy(e.b).replace(',',' ')+'" stroke="#805c36" stroke-width=".028" fill="none"/>').join('');
+  const front=projectedOuter.filter(e=>e.world.a.y+e.world.b.y>0);
+  const markers=front.filter((e,i)=>i===0||i===Math.floor(front.length/2)||i===front.length-1).map(e=>{
+   const p={x:(e.a.x+e.b.x)/2,y:(e.a.y+e.b.y)/2};
+   return '<circle cx="'+(p.x-bounds.minX+padding).toFixed(5)+'" cy="'+(p.y-bounds.minY+padding).toFixed(5)+'" r=".075" fill="#b98a45" stroke="#5b3c1e" stroke-width=".025"/>';
+  }).join('');
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w.toFixed(4)+' '+h.toFixed(4)+'" role="img" aria-label="'+rows.join('-')+' integrated hex formation">'+wallArt+faceArt+seamArt+outerArt+markers+'</svg>';
  }
 
  root.aleaArcaneGeometryEngine=Object.freeze({DEFAULT_CAMERA,PATTERNS,fromRows,buildRows,autoAlign,rotate,reflect,transform,neighbors,validate,world,project,corners,geometry,audit,manifest,svg});
