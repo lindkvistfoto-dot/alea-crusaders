@@ -1,0 +1,15 @@
+name: ALEA isolated runner smoke test
+on:
+  push:
+    branches:
+      - diagnostics/actions-runner-smoke-20261111
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify runner
+        run: |
+          echo "ALEA RUNNER TEST"
+          echo "RUNNER_OK"
