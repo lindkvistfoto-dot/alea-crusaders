@@ -24,6 +24,11 @@ describe('Battlefield object workshop',()=>{
   expect(workshop).toContain('HERMES CORE asset_key');
  });
 
+ it('renders form controls before initializing a new or selected template',()=>{
+  const loadForm=workshop.slice(workshop.indexOf('function loadForm('),workshop.indexOf('function previewMarkup('));
+  expect(loadForm.indexOf('render();')).toBeLessThan(loadForm.indexOf("$('bfwName').value"));
+ });
+
  it('persists reusable templates separately from placements and limits private instances to GMs',()=>{
   expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.arcane_battlefield_library');
   expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.combat_battlefield_objects');
