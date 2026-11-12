@@ -167,7 +167,7 @@ async function combatRollDice(specs,label='Slag'){
 
 let combatGmPlacementId=null;
 let combatSlBoardOpen=false,combatSlBoardTab='overview';
-let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
+let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatLifecycleBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
 let combatMovementLastClick=null,combatMovementCommitting=false,combatMapLastPointerType='mouse';
@@ -318,9 +318,22 @@ function renderCombatGmControls(){
    '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat||previewing?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat&&['active','paused'].includes(activeCombat.status)&&!previewing?
+    '<button id="combatPauseBtn" type="button" class="btn" onclick="combatTogglePauseResume()" '+((typeof combatLifecycleBusy!=='undefined'&&combatLifecycleBusy)||combatSceneBusy||combatStopBusy?'disabled':'')+'>'+
+    ((typeof combatLifecycleBusy!=='undefined'&&combatLifecycleBusy)?'Sparar…':activeCombat.status==='paused'?'▶ Återuppta':'Ⅱ Pausa')+'</button>'+
     '<button id="combatStopBtn" type="button" class="btn combat-stop-btn" title="Avsluta striden och skapa en sammanfattning" onclick="combatFinishAndRecover()" '+(combatStopBusy||combatSceneBusy?'disabled':'')+'>'+
     (combatStopBusy?'Avslutar…':'■ Avsluta strid')+'</button>':'')+
   (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
+}
+async function combatTogglePauseResume(){
+ if(!combatCanManage()||!activeCombat?.id||!['active','paused'].includes(activeCombat.status)||combatLifecycleBusy||combatSceneBusy||combatStopBusy)return;
+ const combatId=String(activeCombat.id),previousStatus=activeCombat.status,nextStatus=previousStatus==='active'?'paused':'active';
+ combatLifecycleBusy=true;renderCombatGmControls();
+ try{
+  const rows=await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId)+'&campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=eq.'+encodeURIComponent(previousStatus)+'&select=id,status',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:nextStatus,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(rows)||!rows.some(row=>String(row.id)===combatId))throw new Error('Striden ändrades i en annan vy. Statusen har lästs in på nytt.');
+  await loadActiveCombat(combatId,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte ändra stridsläge',error);alert('Kunde inte '+(nextStatus==='paused'?'pausa':'återuppta')+' striden: '+(error?.message||error));await loadActiveCombat(combatId,{preserveSelectedTarget:true}).catch(()=>{})}
+ finally{combatLifecycleBusy=false;renderCombatGmControls()}
 }
 function combatNumber(value,fallback=null){
  if(value==null||value==='')return fallback;
@@ -6840,19 +6853,51 @@ function combatSlBoardNavigate(tab){
  if(!combatCanManage())return;
  combatSlBoardTab=String(tab||'overview');renderCombat()
 }
+async function combatToggleCombatantVisibility(id){
+ if(!combatCanManage()||!activeCombat?.id)return;
+ const row=combatants.find(candidate=>String(candidate.id)===String(id));
+ if(!row)return;
+ const visible=row.visible_to_players===false;
+ try{
+  const rows=await dbJson('combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({visible_to_players:visible,updated_at:new Date().toISOString()})});
+  if(!Array.isArray(rows)||!rows.some(candidate=>String(candidate.id)===String(row.id)))throw new Error('Kombattanten kunde inte uppdateras.');
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte ändra synlighet för kombattant',error);alert('Kunde inte ändra vad spelarna ser: '+(error?.message||error))}
+}
+let combatPrivateNoteBusy=false;
+async function combatAddPrivateNote(){
+ if(!combatCanManage()||!activeCombat?.id||combatPrivateNoteBusy)return;
+ const field=$('combatPrivateNote'),message=String(field?.value||'').trim();
+ if(!message)return;
+ combatPrivateNoteBusy=true;
+ try{
+  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+   phase:activeCombat.phase||'initiative',event_type:'gm_note',message,details:{scope:'gm'},player_visible:false
+  })});
+  combatPrivateNoteBusy=false;
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte spara SL-anteckning',error);alert('Kunde inte spara SL-anteckningen: '+(error?.message||error))}
+ finally{combatPrivateNoteBusy=false}
+}
 function combatSlBoardModuleHtml(logHtml){
  const sceneId=activeCombat?.settings?.scene_id||'',scene=combatSceneFromId(sceneId);
  const tab=combatSlBoardTab;
  if(tab==='combatants')return '<div class="slcb-module"><h3>Stridande</h3><p>Placering och reserver använder den aktiva stridens kombattanter. Klicka på en ledig hex på kartan för att sätta ut eller flytta vald figur.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+'</div>';
  if(tab==='battlefield')return '<div class="slcb-module"><h3>Terräng och sikt</h3><p>Redigera scenens hexterräng i den befintliga sceneditorn. Den aktiva stridens rörelse och LoS använder samma hexdata och regelmotor.</p><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Redigera stridsscen</button>'+combatAreasAdminHtml()+'</div>';
  if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
+ if(tab==='secrets'){
+  const actors=combatants.filter(row=>row.status!=='removed');
+  const rows=actors.length?actors.map(row=>'<div class="slcb-visibility-row"><span><b>'+escAttr(row.name_snapshot||'Stridande')+'</b><small>'+(row.visible_to_players===false?'Dold för spelarna':'Synlig för spelarna')+'</small></span><button type="button" class="btn" onclick="combatToggleCombatantVisibility(\''+escAttr(row.id)+'\')">'+(row.visible_to_players===false?'Visa för spelarna':'Dölj för spelarna')+'</button></div>').join(''):'<p>Inga stridande att visa.</p>';
+  return '<div class="slcb-module"><h3>SL-info och delad vy</h3><p>Anteckningar här sparas i stridens logg med befintlig SL-behörighet och är markerade som dolda för spelarna. Synlighetsändringar använder samma kombattanter som spelarvyn läser.</p><label class="slcb-private-note-label" for="combatPrivateNote">Hemlig SL-anteckning</label><textarea id="combatPrivateNote" rows="3" maxlength="2000" placeholder="Skriv en anteckning som bara SL kan läsa"></textarea><button type="button" class="btn" onclick="combatAddPrivateNote()">Spara SL-anteckning</button><h4>Delad presentation · stridande</h4><div class="slcb-visibility-list">'+rows+'</div></div>';
+ }
  if(tab==='log')return '<div class="slcb-module"><h3>Stridslogg</h3><p>Händelserna visas i den befintliga stridsloggen nedanför kartan.</p><button type="button" class="btn" onclick="document.querySelector(\'#combatPage .combat-log\')?.scrollIntoView({behavior:\'smooth\',block:\'nearest\'})">Visa stridslogg</button><div class="slcb-log-preview">'+logHtml+'</div></div>';
  const status=activeCombat?.status||'setup';
  return '<div class="slcb-module"><h3>Scen och stridsläge</h3><p><b>'+escAttr(scene?.name||activeCombat?.name||'Aktiv strid')+'</b> · '+escAttr(combatPhaseLabel(activeCombat?.phase))+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+escAttr(status)+'</p><p>Förbered, starta, återställ och avsluta med befintlig scenstyrning. Samma stridsinstans fortsätter vara källa för karta, deltagare, turordning och logg.</p></div>'
 }
 function combatSlControlBoardHtml(logHtml){
  if(!combatCanManage()||!activeCombat)return '';
- const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Terräng & sikt'],['events','Effekter'],['log','Händelselogg']];
+ const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Terräng & sikt'],['events','Effekter'],['secrets','SL-info'],['log','Händelselogg']];
  return '<section class="sl-control-board'+(combatSlBoardOpen?' is-open':'')+'" aria-label="SL Control Board">'+
   '<button type="button" class="slcb-toggle" aria-expanded="'+(combatSlBoardOpen?'true':'false')+'" aria-controls="slControlBoardPanel" onclick="combatSlBoardToggle()"><span class="slcb-mark" aria-hidden="true">⬡</span><span><b>SL CONTROL BOARD</b><small>'+escAttr(activeCombat?.name||'Aktiv strid')+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+(combatSlBoardOpen?'panelen öppen':'öppna spelledarverktyg')+'</small></span><span class="slcb-chevron" aria-hidden="true">'+(combatSlBoardOpen?'⌃':'⌄')+'</span></button>'+
   (combatSlBoardOpen?'<div id="slControlBoardPanel" class="slcb-panel"><div id="combatGmControls" class="combat-gm-controls hidden"></div><nav class="slcb-tabs" aria-label="SL-verktyg">'+tabs.map(([key,label])=>'<button type="button" class="slcb-tab'+(combatSlBoardTab===key?' active':'')+'" aria-pressed="'+(combatSlBoardTab===key?'true':'false')+'" onclick="combatSlBoardNavigate(\''+key+'\')">'+label+'</button>').join('')+'</nav>'+combatSlBoardModuleHtml(logHtml)+'</div>':'')+
