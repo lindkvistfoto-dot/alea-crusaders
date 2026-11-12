@@ -83,6 +83,8 @@ async function githubToken(decision: string) {
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
+    : decision === "prepare_merged_dev_candidate"
+    ? { pull_requests: "read", checks: "read", statuses: "read", issues: "write", contents: "write" }
     : (decision === "set_pull_request_draft" || decision === "approve_and_merge_dev")
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
@@ -1410,6 +1412,75 @@ async function handleRequest(req: Request): Promise<Response> {
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
         return json({ ok: false, stage, errorCode: code, message: (messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.") + " (Steg: " + stage + ")" }, code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
+      }
+    }
+    if (data.action === "prepare_merged_dev_candidate") {
+      if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1) {
+        return fail("Ange ett giltigt DEV-PR-nummer.", 400);
+      }
+      try {
+        const token = await githubToken("prepare_merged_dev_candidate");
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
+        if (pr.merged !== true || pr.base?.ref !== "development" ||
+            !/^[0-9a-f]{40}$/i.test(String(pr.merge_commit_sha || "")) ||
+            !/^[0-9a-f]{40}$/i.test(String(pr.head?.sha || ""))) {
+          return fail("PR:en är inte en verifierad merge till DEV.", 409);
+        }
+
+        const item = await workItem(token, "PR-" + data.pullRequestNumber);
+        const devRef = await gh(token, repoPath + "/git/ref/heads/development");
+        const testedDevSha = String(devRef.object?.sha || "");
+        if (!/^[0-9a-f]{40}$/i.test(testedDevSha) ||
+            !await verifyReleaseSources(token, item, testedDevSha)) {
+          return fail("PR-underlaget finns inte i aktuell DEV-version. Ingen LIVE-kandidat skapades.", 409);
+        }
+
+        const comparison = await gh(token, repoPath + "/compare/" + pr.merge_commit_sha + "..." + testedDevSha);
+        if (!(comparison.status === "identical" ||
+              comparison.status === "ahead" &&
+              String(comparison.merge_base_commit?.sha || "").toLowerCase() === String(pr.merge_commit_sha).toLowerCase()) ||
+            !Array.isArray(comparison.files) || comparison.files.length >= 300) {
+          return fail("DEV-historiken efter PR-merge kunde inte verifieras fullständigt. Ingen LIVE-kandidat skapades.", 409);
+        }
+        const sourceFiles = new Set(item.features || []);
+        if (comparison.files.some((file: any) => sourceFiles.has(String(file.filename || "")))) {
+          return fail("Berörda filer har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
+        }
+
+        const checkResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
+        const statusResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/status");
+        const checkRuns = Array.isArray(checkResponse.check_runs) ? checkResponse.check_runs : [];
+        const statuses = Array.isArray(statusResponse.statuses) ? statusResponse.statuses : [];
+        if ((!checkRuns.length && !statuses.length) ||
+            Number(checkResponse.total_count) > checkRuns.length ||
+            checkRuns.some((check: any) => check.status !== "completed" ||
+              !["success", "neutral", "skipped"].includes(check.conclusion)) ||
+            (statuses.length > 0 && statusResponse.state !== "success")) {
+          return fail("PR-CI är inte helt godkänd. Vänta in kontrollerna innan LIVE-förberedelse.", 409);
+        }
+
+        await verifyPublishedManifest("development", testedDevSha);
+        const acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
+        const liveCandidate = await autoPrepareLiveCandidate(token, data.pullRequestNumber, user.email || "Zeus", acceptance);
+        return json({
+          ok: true,
+          message: liveCandidate.state === "requested"
+            ? "DEV-acceptansen registrerades och OLYMPIA förbereder en separat LIVE-kandidat. Ingen LIVE-publicering skedde."
+            : "DEV-acceptansen registrerades. LIVE-förberedelsens status behöver kontrolleras i OLYMPIA.",
+          acceptance,
+          liveCandidate,
+          testedDevSha,
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA merged DEV candidate preparation failed", JSON.stringify({ pr: data.pullRequestNumber, code }));
+        return fail(
+          code === "DEPLOYMENT_MANIFEST_UNVERIFIED"
+            ? "Den aktuella DEV-publiceringen kunde inte verifieras. Ingen LIVE-kandidat skapades."
+            : "LIVE-kandidat kunde inte förberedas säkert. LIVE är oförändrat.",
+          502,
+        );
       }
     }
     if (data.action === "set_pull_request_draft") {

@@ -15,6 +15,13 @@ it('keeps merged PR visible in the same card',()=>{
  expect(page).toContain('data-dev-approve');
 });
 
+it('offers a gated recovery action for merged DEV PRs without publishing LIVE',()=>{
+ expect(page).toContain('data-prepare-live');
+ expect(page).toContain("action:'prepare_merged_dev_candidate'");
+ expect(page).toContain('window.olympiaV2ZeusVerified');
+ expect(page).toContain('Detta publicerar inte till LIVE.');
+});
+
 it('does not treat an empty legacy commit status as pending CI',()=>{
  expect(page).toContain("(statuses.length>0&&status.state==='pending')");
  expect(page).toContain('DEV-beslut kräver verifierad Zeus-session och godkänd CI');
