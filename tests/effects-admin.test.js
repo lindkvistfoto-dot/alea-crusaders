@@ -61,10 +61,11 @@ describe('Admin · effektregister – live data and CRUD',()=>{
  });
  test('GM toolbox is below the map and manual assignment is its last tool',()=>{
   const render=runtime.slice(runtime.indexOf('function renderCombat(){'));
-  expect(render.indexOf('combatGmToolboxHtml()')).toBeGreaterThan(render.indexOf('renderCombatMap()+combatMapPresetsHtml()'));
-  expect(render.indexOf('combatGmToolboxHtml()')).toBeLessThan(render.indexOf('<section class="combat-log">'));
-  const toolbox=runtime.slice(runtime.indexOf('function combatGmToolboxHtml(){'),runtime.indexOf('function renderCombat(){'));
-  expect(toolbox.indexOf('combatAreasAdminHtml()')).toBeLessThan(toolbox.indexOf('combatEffectsAdminHtml()'));
+  expect(render.indexOf('combatSlControlBoardHtml(logHtml)')).toBeGreaterThan(render.indexOf('renderCombatMap()+combatMapPresetsHtml()'));
+  expect(render.indexOf('combatSlControlBoardHtml(logHtml)')).toBeLessThan(render.indexOf('<section class="combat-log">'));
+  const board=runtime.slice(runtime.indexOf('function combatSlBoardModuleHtml(logHtml){'),runtime.indexOf('function combatSlControlBoardHtml(logHtml){'));
+  expect(board).toContain('combatAreasAdminHtml()');
+  expect(board).toContain('combatEffectsAdminHtml()');
  });
 
  test('register can be fetched directly from shared rule_effects table',async()=>{
