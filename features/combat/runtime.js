@@ -166,6 +166,7 @@ async function combatRollDice(specs,label='Slag'){
 }
 
 let combatGmPlacementId=null,combatBattlefieldBrushKey=null,combatBattlefieldObjectPlacementKey=null,combatBattlefieldObjectRotation=0,combatBattlefieldObjectVisible=true,combatBattlefieldBusy=false,combatBattlefieldObjects=[],combatBattlefieldCatalog=[],combatBattlefieldArtLoadState='idle',combatBattlefieldArtPaths=new Map();
+let combatHexTriggers=[],combatHexTriggerPlacement=false,combatHexTriggerSelected=[],combatHexTriggerBusy=false,combatHexTriggerMessageDraft='';
 let combatSlBoardOpen=false,combatSlBoardTab='overview';
 let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatLifecycleBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
@@ -2913,7 +2914,7 @@ async function endCombatTurn(event,combatantId){
 }
 async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
  const selectedTargetBeforeLoad=combatSelectedTargetId;
- activeCombat=null;combatants=[];combatHexes=[];combatBattlefieldObjects=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
+ activeCombat=null;combatants=[];combatHexes=[];combatBattlefieldObjects=[];combatHexTriggers=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
   const instanceQuery=combatId
@@ -2934,13 +2935,15 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
     dbJson('combat_hexes?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc'),
     dbJson('combat_actions?combat_id=eq.'+cid+'&round_number=gte.'+Math.max(1,round-1)+'&select=*&order=round_number.desc,sequence.asc,created_at.asc'),
     dbJson('combat_log?combat_id=eq.'+cid+'&or=(event_type.neq.gm_event_pending,details->>queue_status.eq.pending)&select=*&order=created_at.desc,id.desc&limit=60'),
-    dbJson('combat_battlefield_objects?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc').catch(error=>{console.warn('Kartobjektstabellen är inte tillgänglig ännu',error);return []})
+    dbJson('combat_battlefield_objects?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc').catch(error=>{console.warn('Kartobjektstabellen är inte tillgänglig ännu',error);return []}),
+    dbJson('combat_log?combat_id=eq.'+cid+'&event_type=eq.gm_hex_trigger&select=*&order=created_at.desc,id.desc').catch(error=>{console.warn('Hexutlösare kunde inte läsas in',error);return []})
    ]);
    combatants=Array.isArray(data[0])?data[0]:[];
    await combatLoadActorImageSources();
    await combatHydrateFigureIdentity();
    combatHexes=Array.isArray(data[1])?data[1]:[];
    combatBattlefieldObjects=Array.isArray(data[4])?data[4]:[];
+   combatHexTriggers=Array.isArray(data[5])?data[5]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatMagicCarouselRecordCasts();
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
@@ -4613,6 +4616,44 @@ function combatMovementHexPath(combatant,q,r){
  keys.reverse();
  return {path:keys.map(k=>{const [q,r]=k.split(',').map(Number);return {q,r}}),cost:reachable.get(goal)}
 }
+function combatEnteredHexKeys(actor,path,startQ=actor?.q,startR=actor?.r){
+ const entered=new Set(),steps=Array.isArray(path)?path:[];
+ let previous=new Set(combatFootprintCells(actor,Number(startQ),Number(startR)).map(combatFootprintKey));
+ for(const step of steps){
+  const currentCells=combatFootprintCells(actor,Number(step.q),Number(step.r));
+  const current=new Set(currentCells.map(combatFootprintKey));
+  currentCells.forEach(cell=>{const key=combatFootprintKey(cell);if(!previous.has(key))entered.add(key)});
+  previous=current
+ }
+ return entered
+}
+async function combatTriggerHexEvents(actor,path,startQ,startR){
+ if(!actor||!activeCombat?.id||!combatHexTriggers.length)return;
+ const entered=combatEnteredHexKeys(actor,path,startQ,startR);
+ if(!entered.size)return;
+ const round=Number(activeCombat.round_number)||1;
+ for(const trigger of combatHexTriggers){
+  if(trigger.event_type!=='gm_hex_trigger'||trigger.details?.trigger_status!=='armed')continue;
+  const triggerHexes=(Array.isArray(trigger.details?.trigger_hexes)?trigger.details.trigger_hexes:[])
+   .map(cell=>({q:Number(cell?.q),r:Number(cell?.r)})).filter(cell=>Number.isInteger(cell.q)&&Number.isInteger(cell.r));
+  const touched=triggerHexes.filter(cell=>entered.has(cell.q+','+cell.r));
+  if(!touched.length)continue;
+  try{
+   const rows=await dbJson('combat_log?id=eq.'+encodeURIComponent(trigger.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&event_type=eq.gm_hex_trigger&details->>trigger_status=eq.armed&select=id',{
+    method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({
+     event_type:'gm_event_pending',round_number:round,phase:activeCombat.phase||'movement',player_visible:false,
+     details:{scope:'gm',queue_status:'pending',due_round:round,source:'hex_trigger',trigger_status:'triggered',
+      trigger_hexes:triggerHexes,entered_hexes:touched,triggered_by:actor.id,triggered_by_name:actor.name_snapshot||'Stridande',
+      triggered_at:new Date().toISOString()}
+    })
+   });
+   if(Array.isArray(rows)&&rows.some(row=>String(row.id)===String(trigger.id)))trigger.event_type='gm_event_pending'
+  }catch(error){
+   console.error('Hexutlösaren kunde inte läggas i händelsekön',error);
+   alert('Förflyttningen sparades, men en hexutlösare kunde inte köas: '+(error?.message||error))
+  }
+ }
+}
 async function combatRecordFullMoveAction(combatant){
  if(!combatant||!activeCombat)return;
  const existing=combatChosenAction(combatant),def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key==='move_full');
@@ -4661,6 +4702,7 @@ async function commitCombatMovementPlan(){
   if(actor.status!=='dead'&&combatMovementHasUsedMoreThanHalf(actor))await combatRecordFullMoveAction(actor);
   combatMovementAnimation={combatantId:String(actor.id),fromQ,fromR,toQ:actor.q,toR:actor.r};
   combatMovementPlan=null;
+  await combatTriggerHexEvents(actor,route.path,fromQ,fromR);
   await loadActiveCombat();
   if(moved.interrupted)alert('Förflyttningen avbröts eftersom kombatanten nedkämpades i ett effektområde.')
  }catch(error){
@@ -5030,6 +5072,9 @@ function renderCombatMap(){
   }
   if(cell.key===originKey)cls.push('move-origin');
   if(roadKeys.has(cell.key))cls.push('yellow-brick-road');
+  const triggerSelected=combatHexTriggerSelected.includes(cell.key);
+  if(combatHexTriggerPlacement)cls.push('hex-trigger-selectable');
+  if(triggerSelected)cls.push('hex-trigger-selected');
   const reachText=moveCost!=null
    ?' · kostnad '+moveCost+(combatDestinationKeepsAction(actor,moveCost)?' · handling kvar':' · full rörelse')
    :'';
@@ -5038,11 +5083,11 @@ function renderCombatMap(){
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
   if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked'&&combatFootprintCanStand(combatants.find(c=>String(c.id)===String(combatGmPlacementId)),cell.q,cell.r))cls.push('gm-placement-hex');
   if(battlefieldPlaceMode||battlefieldObjectPlaceMode)cls.push('battlefield-placement-hex');
-  const clickable=gmPlaceMode||battlefieldPlaceMode||battlefieldObjectPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldObjectPlaceMode?'onclick="combatPlaceBattlefieldObject(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
+  const clickable=combatHexTriggerPlacement||gmPlaceMode||battlefieldPlaceMode||battlefieldObjectPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  const click=combatHexTriggerPlacement?'onclick="combatHexTriggerPick(event,'+cell.q+','+cell.r+')"':gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldObjectPlaceMode?'onclick="combatPlaceBattlefieldObject(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+(combatHexTriggerPlacement?' · välj för händelseutlösare':'')+(triggerSelected?' · vald för händelseutlösare':'')+'</title></polygon>'
  }).join('');
  // Visual guide only: the exact server-validated route, never a straight shortcut.
  const roadPoints=previewRoute&&planningActor
@@ -6921,7 +6966,8 @@ function combatQueuedEventsHtml(){
   .sort((a,b)=>(Number(a.details?.due_round)||Number(a.round_number)||1)-(Number(b.details?.due_round)||Number(b.round_number)||1)||Number(a.id)-Number(b.id));
  const rows=queued.length?queued.map(row=>{
   const dueRound=Number(row.details?.due_round)||Number(row.round_number)||1,ready=dueRound<=round;
-  return '<div class="slcb-event-row"><span><b>Runda '+dueRound+(ready?' · redo för godkännande':' · väntar')+'</b><small>'+escAttr(row.message||'Händelse')+'</small></span><div class="slcb-event-actions"><button type="button" class="btn" '+(!ready||combatQueuedEventBusy?'disabled':'')+' onclick="combatApproveQueuedEvent(\''+escAttr(row.id)+'\')">'+(combatQueuedEventBusyId===String(row.id)?'Publicerar…':'Godkänn och visa')+'</button><button type="button" class="smallbtn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatCancelQueuedEvent(\''+escAttr(row.id)+'\')">Ta bort</button></div></div>'
+  const triggerInfo=row.details?.source==='hex_trigger'?'Utlöst på hex '+combatHexTriggerCellsLabel(row.details?.entered_hexes)+' av '+String(row.details?.triggered_by_name||'stridande')+' · ':'';
+  return '<div class="slcb-event-row"><span><b>Runda '+dueRound+(ready?' · redo för godkännande':' · väntar')+'</b><small>'+escAttr(triggerInfo+(row.message||'Händelse'))+'</small></span><div class="slcb-event-actions"><button type="button" class="btn" '+(!ready||combatQueuedEventBusy?'disabled':'')+' onclick="combatApproveQueuedEvent(\''+escAttr(row.id)+'\')">'+(combatQueuedEventBusyId===String(row.id)?'Publicerar…':'Godkänn och visa')+'</button><button type="button" class="smallbtn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatCancelQueuedEvent(\''+escAttr(row.id)+'\')">Ta bort</button></div></div>'
  }).join(''):'<p class="combat-action-note">Inga väntande händelser.</p>';
  return '<div class="slcb-event-queue-list">'+rows+'</div>'
 }
@@ -6966,6 +7012,69 @@ async function combatCancelQueuedEvent(id){
   await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
  }catch(error){console.error('Kunde inte ta bort händelsen',error);alert('Kunde inte ta bort händelsen: '+(error?.message||error));await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true}).catch(()=>{})}
  finally{combatQueuedEventBusy=false;combatQueuedEventBusyId='';renderCombat()}
+}
+function combatHexTriggerCellsLabel(cells){
+ return (Array.isArray(cells)?cells:[]).map(cell=>Number(cell.q)+','+Number(cell.r)).join(' · ')
+}
+function combatHexTriggerListHtml(){
+ const rows=combatHexTriggers.filter(row=>row.event_type==='gm_hex_trigger'&&row.details?.trigger_status==='armed');
+ if(!rows.length)return '<p class="combat-action-note">Inga aktiva hexutlösare.</p>';
+ return rows.map(row=>'<div class="slcb-event-row"><span><b>Hex '+escAttr(combatHexTriggerCellsLabel(row.details?.trigger_hexes))+'</b><small>'+escAttr(row.message||'Händelse')+'</small></span><div class="slcb-event-actions"><button type="button" class="smallbtn" '+(combatHexTriggerBusy?'disabled':'')+' onclick="combatDisarmHexTrigger(\''+escAttr(row.id)+'\')">Avväpna</button></div></div>').join('')
+}
+function combatHexTriggerPlacementToggle(){
+ if(!combatCanManage()||!activeCombat?.id)return;
+ combatHexTriggerPlacement=!combatHexTriggerPlacement;
+ if(combatHexTriggerPlacement){
+  combatGmPlacementId=null;combatBattlefieldBrushKey=null;combatBattlefieldObjectPlacementKey=null;
+  combatAreaPlacementActive=false;combatAreaDraftCenter=null;combatMovementPlan=null
+ }
+ renderCombat()
+}
+function combatHexTriggerPick(event,q,r){
+ event?.stopPropagation?.();
+ if(!combatCanManage()||!combatHexTriggerPlacement)return;
+ const key=Number(q)+','+Number(r),index=combatHexTriggerSelected.indexOf(key);
+ if(index>=0)combatHexTriggerSelected.splice(index,1);else combatHexTriggerSelected.push(key);
+ combatHexTriggerSelected.sort((a,b)=>{const aa=a.split(',').map(Number),bb=b.split(',').map(Number);return aa[1]-bb[1]||aa[0]-bb[0]});
+ renderCombat()
+}
+async function combatSaveHexTrigger(){
+ if(!combatCanManage()||!activeCombat?.id||combatHexTriggerBusy)return;
+ const field=$('combatHexTriggerMessage'),message=String(field?.value||combatHexTriggerMessageDraft||'').trim();
+ if(!message)return alert('Beskriv händelsen som hexarna ska utlösa.');
+ const triggerHexes=combatHexTriggerSelected.map(key=>{const [q,r]=key.split(',').map(Number);return {q,r}});
+ if(!triggerHexes.length)return alert('Välj minst en hex på kartan.');
+ combatHexTriggerBusy=true;
+ try{
+  const rows=await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
+   phase:activeCombat.phase||'movement',event_type:'gm_hex_trigger',message,
+   details:{scope:'gm',trigger_status:'armed',trigger_kind:'on_enter',trigger_hexes:triggerHexes},player_visible:false
+  })});
+  if(!Array.isArray(rows)||!rows.length)throw new Error('Hexutlösaren kunde inte sparas.');
+  combatHexTriggerPlacement=false;combatHexTriggerSelected=[];combatHexTriggerMessageDraft='';
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true})
+ }catch(error){console.error('Kunde inte spara hexutlösaren',error);alert('Kunde inte spara hexutlösaren: '+(error?.message||error))}
+ finally{combatHexTriggerBusy=false;renderCombat()}
+}
+async function combatDisarmHexTrigger(id){
+ if(!combatCanManage()||!activeCombat?.id||combatHexTriggerBusy)return;
+ const row=combatHexTriggers.find(item=>String(item.id)===String(id)&&item.event_type==='gm_hex_trigger'&&item.details?.trigger_status==='armed');
+ if(!row)return;
+ combatHexTriggerBusy=true;renderCombat();
+ try{
+  const saved=await dbJson('combat_log?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&event_type=eq.gm_hex_trigger&details->>trigger_status=eq.armed&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({details:{...(row.details||{}),trigger_status:'disarmed'}})});
+  if(!Array.isArray(saved)||!saved.some(item=>String(item.id)===String(row.id)))throw new Error('Hexutlösaren har redan ändrats. Läs in striden på nytt.');
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true})
+ }catch(error){console.error('Kunde inte avväpna hexutlösaren',error);alert('Kunde inte avväpna hexutlösaren: '+(error?.message||error))}
+ finally{combatHexTriggerBusy=false;renderCombat()}
+}
+function combatHexTriggerPanelHtml(){
+ const selected=combatHexTriggerSelected.map(key=>'<span class="slcb-trigger-hex">'+escAttr(key)+'</span>').join('');
+ return '<section class="slcb-hex-trigger"><h4>Hexutlösare</h4><p>Välj en eller flera hexar. När en stridande går in på någon av dem hamnar händelsen privat i SL:s godkännandekö.</p>'+combatHexTriggerListHtml()+
+  '<label class="slcb-private-note-label" for="combatHexTriggerMessage">Händelse som ska utlösas</label><textarea id="combatHexTriggerMessage" rows="2" maxlength="2000" oninput="combatHexTriggerMessageDraft=this.value" placeholder="Till exempel: Fällan utlöses…">'+escAttr(combatHexTriggerMessageDraft)+'</textarea>'+
+  '<div class="slcb-event-compose"><button type="button" class="btn" '+(combatHexTriggerBusy?'disabled':'')+' onclick="combatHexTriggerPlacementToggle()">'+(combatHexTriggerPlacement?'Klar med hexval':'Välj hexar på kartan')+'</button><button type="button" class="btn" '+(!combatHexTriggerSelected.length||combatHexTriggerBusy?'disabled':'')+' onclick="combatSaveHexTrigger()">'+(combatHexTriggerBusy?'Sparar…':'Armera händelse')+'</button></div>'+
+  '<div class="slcb-trigger-selection" aria-live="polite">'+(combatHexTriggerPlacement?'Klicka på hexar för att lägga till eller ta bort dem. ':'Valda hexar: ')+(selected||'Inga valda')+'</div></section>'
 }
 async function combatLoadBattlefieldArt(){
  if(combatBattlefieldArtLoadState!=='idle')return;
@@ -7084,7 +7193,7 @@ function combatSlBoardModuleHtml(logHtml){
  const tab=combatSlBoardTab;
  if(tab==='combatants')return '<div class="slcb-module"><h3>Stridande</h3><p>Placering och reserver använder den aktiva stridens kombattanter. Klicka på en ledig hex på kartan för att sätta ut eller flytta vald figur.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+'</div>';
  if(tab==='battlefield')return combatBattlefieldLibraryHtml(sceneId,scene);
- if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p><section class="slcb-event-queue"><h4>Händelsekö</h4><p>Händelsetexten är privat tills SL godkänner publicering. Spelarna ser den därefter i den befintliga stridsloggen.</p>'+combatQueuedEventsHtml()+'<label class="slcb-private-note-label" for="combatQueuedEventMessage">Spelarsynlig händelsetext</label><textarea id="combatQueuedEventMessage" rows="2" maxlength="2000" placeholder="Vad ska visas för spelarna när händelsen godkänns?"></textarea><div class="slcb-event-compose"><label>Runda<input id="combatQueuedEventRound" type="number" min="'+(Number(activeCombat.round_number)||1)+'" value="'+(Number(activeCombat.round_number)||1)+'"></label><button type="button" class="btn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatQueueManualEvent()">Lägg i händelsekön</button></div></section>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
+ if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p>'+combatHexTriggerPanelHtml()+'<section class="slcb-event-queue"><h4>Händelsekö</h4><p>Händelsetexten är privat tills SL godkänner publicering. Spelarna ser den därefter i den befintliga stridsloggen.</p>'+combatQueuedEventsHtml()+'<label class="slcb-private-note-label" for="combatQueuedEventMessage">Spelarsynlig händelsetext</label><textarea id="combatQueuedEventMessage" rows="2" maxlength="2000" placeholder="Vad ska visas för spelarna när händelsen godkänns?"></textarea><div class="slcb-event-compose"><label>Runda<input id="combatQueuedEventRound" type="number" min="'+(Number(activeCombat.round_number)||1)+'" value="'+(Number(activeCombat.round_number)||1)+'"></label><button type="button" class="btn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatQueueManualEvent()">Lägg i händelsekön</button></div></section>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
  if(tab==='secrets'){
   const actors=combatants.filter(row=>row.status!=='removed');
   const rows=actors.length?actors.map(row=>'<div class="slcb-visibility-row"><span><b>'+escAttr(row.name_snapshot||'Stridande')+'</b><small>'+(row.visible_to_players===false?'Dold för spelarna':'Synlig för spelarna')+'</small></span><button type="button" class="btn" onclick="combatToggleCombatantVisibility(\''+escAttr(row.id)+'\')">'+(row.visible_to_players===false?'Visa för spelarna':'Dölj för spelarna')+'</button></div>').join(''):'<p>Inga stridande att visa.</p>';
