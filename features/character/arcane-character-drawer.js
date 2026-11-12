@@ -4,7 +4,7 @@
  const labels=['Grundegenskaper','Färdigheter','Magi','Utrustning'];
  let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,panelSuspended=false,focusPortraitId=null,observer,npcFlags=new Map(),npcFlagsCampaign=null,npcFlagsPromise=null;
  const esc=value=>typeof escAttr==='function'?escAttr(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return typeof c.isNpc==='boolean'?!c.isNpc:c.ownerId!=='SLP'}):[];
+ const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(typeof c.isNpc==='boolean')return !c.isNpc;if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return c.ownerId!=='SLP'}):[];
  const charId=c=>String(c?._dbId||c?.id||'');
  const charName=c=>c?.identity?.namn||c?.name||'Namnlös';
  const portrait=c=>(typeof getPortraitSrc==='function'&&getPortraitSrc(c))||c?._combatIconUrl||c?.portrait||'';
