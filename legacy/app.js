@@ -2178,7 +2178,7 @@ async function confirmCombatWeaponSwitch(){
   await syncCharacterToCentral(character);
   const committed=await window.combatCommitWeaponSwitch?.({...session,newEquipment:JSON.parse(JSON.stringify(character.currentEquipment))});
   if(!committed)throw new Error('Handlingen kunde inte bekräftas. Vapenbytet återställdes.');
-  combatWeaponSwitchSession=null;currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden');renderCurrentEquipment();return true
+  localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));combatWeaponSwitchSession=null;currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden');renderCurrentEquipment();return true
  }catch(error){
   character.currentEquipment=JSON.parse(JSON.stringify(session.original));
   try{await syncCharacterToCentral(character)}catch(rollbackError){console.error('Kunde inte återställa vapenuppsättningen',rollbackError)}
