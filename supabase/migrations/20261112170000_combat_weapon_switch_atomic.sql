@@ -28,8 +28,8 @@ BEGIN
     RAISE EXCEPTION 'Authentication required';
   END IF;
   IF p_round_number IS NULL OR p_round_number < 1
-     OR (p_left_hand IS NOT NULL AND jsonb_typeof(p_left_hand) <> 'object')
-     OR (p_right_hand IS NOT NULL AND jsonb_typeof(p_right_hand) <> 'object') THEN
+     OR (p_left_hand IS NOT NULL AND jsonb_typeof(p_left_hand) NOT IN ('object','null'))
+     OR (p_right_hand IS NOT NULL AND jsonb_typeof(p_right_hand) NOT IN ('object','null')) THEN
     RAISE EXCEPTION 'Invalid weapon loadout';
   END IF;
 
@@ -37,7 +37,10 @@ BEGIN
   FROM public.combat_instances AS ci
   WHERE ci.id = p_combat_id
   FOR UPDATE;
-  IF NOT FOUND OR v_combat.status <> 'active'
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Combat does not exist';
+  END IF;
+  IF v_combat.status <> 'active'
      OR v_combat.round_number <> p_round_number
      OR v_combat.active_actor_id <> p_combatant_id THEN
     RAISE EXCEPTION 'Combat turn has changed';
@@ -82,7 +85,8 @@ BEGIN
     RAISE EXCEPTION 'Character does not belong to this combat campaign';
   END IF;
 
-  v_old_equipment := coalesce(v_character.data -> 'currentEquipment', '{}'::jsonb);
+  v_old_equipment := CASE WHEN jsonb_typeof(v_character.data -> 'currentEquipment') = 'object'
+    THEN v_character.data -> 'currentEquipment' ELSE '{}'::jsonb END;
   v_new_equipment := v_old_equipment || jsonb_build_object(
     'leftHand', p_left_hand,
     'rightHand', p_right_hand
