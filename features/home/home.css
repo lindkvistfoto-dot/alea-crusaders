@@ -231,3 +231,27 @@ main:has(> #landing:not(.hidden)){max-width:1540px;padding:clamp(10px,1.8vw,28px
       rgba(23,15,12,.9),rgba(23,15,12,.75) 58%,rgba(23,15,12,.63));
   }
 }
+
+
+/* ARCANE CHRONICLE — review-only landing-page draft */
+#landing:has(.arcane-chronicle-draft) .landing-cinematic{display:none}
+.arcane-chronicle-draft{padding:12px 0 8px;color:#f2e2c8}
+.arcane-chronicle-heading{text-align:center;margin:12px 0 22px}
+.arcane-chronicle-heading>span{font:700 10px system-ui;letter-spacing:.23em;color:#d1ad75}
+.arcane-chronicle-heading h2{font:700 clamp(28px,4vw,45px) Georgia,serif;color:#f1d8ad;margin:9px 0}
+.arcane-chronicle-heading p{font:14px Georgia,serif;color:#c7b49c}
+.arcane-chronicle-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.arcane-chronicle-card{min-width:0;display:flex;flex-direction:column;text-align:left;overflow:hidden;border:1px solid #99754c;border-radius:12px;padding:0;color:#f2e2c8;background:linear-gradient(135deg,#37291f,#1d1815);cursor:pointer;box-shadow:inset 0 0 0 3px #211912,0 8px 25px #0007}
+.arcane-chronicle-card:hover,.arcane-chronicle-card:focus-visible{border-color:#e7c18b;outline:2px solid #ad8556}
+.arcane-chronicle-art{display:grid;place-items:center;width:100%;height:clamp(120px,19vw,240px);font-size:clamp(75px,12vw,150px);color:#d8b47a;background:radial-gradient(ellipse at 50% 40%,#64452f,#231b17 72%);text-shadow:0 9px 12px #0009}
+.arcane-chronicle-copy{display:flex;flex-direction:column;padding:14px;gap:7px}
+.arcane-chronicle-copy .category,.arcane-chronicle-dialog .category{font:700 10px system-ui;letter-spacing:.13em;color:#d3a86c}
+.arcane-chronicle-copy .title{font:700 clamp(16px,2vw,23px) Georgia,serif;color:#f6e0bd}
+.arcane-chronicle-copy .subtitle{font:12px/1.45 system-ui;color:#c7b8a5}
+.arcane-chronicle-note{text-align:center;color:#b4a28b;font:11px/1.5 system-ui;margin:15px}
+.arcane-chronicle-dialog{width:min(92vw,640px);max-height:85vh;background:#241b16;color:#f4e4c8;border:1px solid #b9935c;border-radius:12px;padding:28px;box-shadow:0 20px 90px #000b}
+.arcane-chronicle-dialog::backdrop{background:#000b}
+.arcane-chronicle-dialog h2{font:700 30px Georgia,serif;color:#f4dfba}
+.arcane-chronicle-dialog p{font:16px/1.6 Georgia,serif}
+.arcane-chronicle-dialog button{background:#503824;border:1px solid #c39b65;color:#f4e4c8;padding:10px 20px;border-radius:6px;cursor:pointer}
+@media(max-width:700px){.arcane-chronicle-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.arcane-chronicle-art{height:clamp(130px,38vw,190px);font-size:clamp(80px,23vw,115px)}.arcane-chronicle-copy{padding:10px}.arcane-chronicle-copy .title{font-size:17px}.arcane-chronicle-copy .subtitle{font-size:11px}}
