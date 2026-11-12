@@ -1419,7 +1419,10 @@ async function handleRequest(req: Request): Promise<Response> {
         return fail("Ange ett giltigt DEV-PR-nummer.", 400);
       }
       try {
-        const token = await githubToken("prepare_merged_dev_candidate");
+        // Reuse the existing least-privilege read and write token profiles.
+        // The installation may reject a combined checks/statuses plus write scope.
+        const writeToken = await githubToken("approve_and_merge_dev");
+        const token = await githubToken("pull_request_list");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
         if (pr.merged !== true || pr.base?.ref !== "development" ||
@@ -1461,8 +1464,8 @@ async function handleRequest(req: Request): Promise<Response> {
         }
 
         await verifyPublishedManifest("development", testedDevSha);
-        const acceptance = await recordDevAcceptance(token, data.pullRequestNumber, user.email || "Zeus");
-        const liveCandidate = await autoPrepareLiveCandidate(token, data.pullRequestNumber, user.email || "Zeus", acceptance);
+        const acceptance = await recordDevAcceptance(writeToken, data.pullRequestNumber, user.email || "Zeus");
+        const liveCandidate = await autoPrepareLiveCandidate(writeToken, data.pullRequestNumber, user.email || "Zeus", acceptance);
         return json({
           ok: true,
           message: liveCandidate.state === "requested"
