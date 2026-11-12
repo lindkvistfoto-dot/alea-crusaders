@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARCANE CHRONICLE — Draft</title>
+<style>
+:root{color-scheme:dark;--gold:#c4a36b;--ivory:#eee1c5;--ink:#16120f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#453426,#130f0d 70%);color:var(--ivory);font-family:Georgia,serif}
+main{max-width:960px;margin:auto;padding:24px 16px 50px}header{text-align:center;padding:26px 0 22px;border-bottom:1px solid #8b6c42}
+header small{letter-spacing:.28em;color:var(--gold)}h1{font-size:clamp(25px,5vw,43px);margin:12px 0 6px;letter-spacing:.1em}header p{color:#bfae94;margin:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:24px}
+article{background:linear-gradient(140deg,#30251d,#1d1815);border:1px solid #967346;border-radius:10px;overflow:hidden;min-width:0;box-shadow:inset 0 0 0 3px #231b16,0 8px 20px #0007}
+article button{display:block;width:100%;padding:0;border:0;color:inherit;background:none;text-align:left;cursor:pointer;font:inherit}
+.art{height:clamp(125px,26vw,210px);display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#604733,#241c17 75%);position:relative;overflow:hidden}
+.art svg{width:78%;height:88%;filter:drop-shadow(0 10px 8px #0008)}
+.copy{padding:13px}.category{color:var(--gold);font:10px system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+h2{font-size:clamp(15px,2.4vw,21px);margin:7px 0}article p{font-size:12px;line-height:1.4;color:#c7bba9;margin:0}
+.note{font:12px system-ui,sans-serif;color:#a89a87;text-align:center;margin:20px auto;max-width:660px}
+dialog{background:#211a15;color:var(--ivory);border:1px solid var(--gold);border-radius:12px;width:min(92vw,600px);padding:25px;box-shadow:0 20px 90px #000}
+dialog::backdrop{background:#000b}dialog h2{font-size:27px}dialog p{line-height:1.65}dialog button{background:#443222;color:var(--ivory);border:1px solid var(--gold);padding:10px 18px;border-radius:6px;cursor:pointer}
+@media(min-width:850px){.grid{grid-template-columns:repeat(4,1fr);gap:18px}.art{height:205px}}
+</style></head><body><main><header><small>ALEA CRUSADERS</small><h1>ARCANE CHRONICLE</h1><p>Berättelser ur Ereb Altor</p></header>
+<section class="grid" aria-label="Fyra utvalda artiklar">
+<article><button data-id="evalin"><div class="art"><svg viewBox="0 0 180 180" role="img" aria-label="Platshållare för Evalins riktiga Battlepose och LOW ANGLE-bas"><path d="M25 139 90 116 155 139 155 154 90 177 25 154Z" fill="#87683f" stroke="#d6b780" stroke-width="3"/><path d="M25 139 90 116 155 139 90 162Z" fill="#e6d8b6" stroke="#bca477" stroke-width="3"/><path d="M90 32v93M60 80l30-15 30 15M65 117l25-25 25 25" fill="none" stroke="#d5b57d" stroke-width="7" stroke-linecap="round"/><circle cx="90" cy="28" r="15" fill="#d5b57d"/><text x="90" y="108" text-anchor="middle" fill="#2c2117" font-size="9">BATTLEPOSE</text></svg></div><div class="copy"><div class="category">Hjältar</div><h2>Evalin Hugger</h2><p>En äventyrare från Caddo.</p></div></button></article>
+<article><button data-id="beskyddare"><div class="art"><svg viewBox="0 0 180 180"><circle cx="90" cy="85" r="54" fill="none" stroke="#b89e6d" stroke-width="3"/><path d="M90 32 133 53 127 110 90 145 53 110 47 53Z" fill="#547785" fill-opacity=".5" stroke="#d7c393" stroke-width="5"/><path d="M90 54v66M67 85h46" stroke="#f2e2ad" stroke-width="7"/></svg></div><div class="copy"><div class="category">Magi & färdigheter</div><h2>Beskyddare</h2><p>En besvärjelse om skydd och kraft.</p></div></button></article>
+<article><button data-id="sword"><div class="art"><svg viewBox="0 0 180 180"><path d="M90 12 102 36 96 126 84 126 78 36Z" fill="#c6c8c5" stroke="#fff0ce" stroke-width="2"/><path d="M49 124 131 124 127 136 53 136Z" fill="#a67c40"/><path d="M86 135h8v28h-8z" fill="#63492b"/><circle cx="90" cy="165" r="7" fill="#c3a56e"/></svg></div><div class="copy"><div class="category">Ereb Altor</div><h2>Tvåhandssvärd</h2><p>Stålets historia och Järnväktarens ed.</p></div></button></article>
+<article><button data-id="award"><div class="art"><svg viewBox="0 0 180 180"><path d="M59 20h25l10 55-23 10zM96 20h25l-12 65-23-10z" fill="#7b2730"/><circle cx="90" cy="108" r="51" fill="#916c36" stroke="#e6c781" stroke-width="5"/><circle cx="90" cy="108" r="38" fill="#c2a46a" stroke="#f7df9b" stroke-width="2"/><path d="m90 75 9 22 23 2-18 15 6 24-20-13-20 13 6-24-18-15 23-2Z" fill="#694725"/></svg></div><div class="copy"><div class="category">Heder</div><h2>Perfektionisten</h2><p>En utmärkelse för det särskilda handlaget.</p></div></button></article>
+</section><p class="note">DESIGNUTKAST · Illustrationerna är tillfälliga platshållare. Produktionsversionen ska använda befintliga ALEA-bilder; Evalin ska monteras som en riktig spelpjäs med ordinarie Battlepose på LOW ANGLE-bas.</p></main>
+<dialog id="detail"><div class="category" id="cat"></div><h2 id="title"></h2><p id="body"></p><p class="note">I nästa fas hämtas artikeltext och bild från respektive källobjekt i databasen.</p><button id="close">Stäng</button></dialog>
+<script>
+const entries={evalin:['Hjältar','Evalin Hugger från Caddo','Evalins artikel visas här. Den färdiga presentationen använder hennes ordinarie Battlepose på HEXAGONIA LOW ANGLE-bas, med äkta transparens.'],beskyddare:['Magi & färdigheter','Beskyddare','Besvärjelsens artikel visas här, kopplad till dess befintliga post och ordinarie illustration.'],sword:['Ereb Altor','Tvåhandssvärd — Järnväktarens ed','Det berättas att Arved av Kardien höll en bergsfästnings port med det stora svärdet Järnväktarens ed, tills den sista försvararen nått säkerhet. Detta är ett förslag till nyskriven världsfiktion, inte etablerad kanon.'],award:['Heder','Perfektionisten','Utmärkelsens artikel, villkor och ordinarie bild ska hämtas från utmärkelsens databaspost.']};
+document.querySelectorAll('[data-id]').forEach(b=>b.addEventListener('click',()=>{const [c,t,p]=entries[b.dataset.id];document.querySelector('#cat').textContent=c;document.querySelector('#title').textContent=t;document.querySelector('#body').textContent=p;document.querySelector('#detail').showModal()}));document.querySelector('#close').addEventListener('click',()=>document.querySelector('#detail').close());
+</script></body></html>
