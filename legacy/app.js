@@ -3062,15 +3062,14 @@ function renderCampaignDayHeader(){
  b.classList.toggle('norest',!campaignDayState.with_rest);
  let w=String(campaignDayState.weather||'').trim();
  b.textContent='📅 Dag '+campaignDayState.day_number;
- let rh=Number(campaignDayState.rest_hours)||0;b.title='Dag '+campaignDayState.day_number+(w?' · '+w:'')+(rh>0?' · vila '+rh+' h':' · utan vila');renderCampaignTimeHeader()
+ let rh=Number(campaignDayState.rest_hours)||0;b.title='Dag '+campaignDayState.day_number+(w?' · '+w:'')+(rh>0?' · vila '+rh+' h':' · utan vila');renderCampaignTimeHeader();window.aleaRefreshChroniclePanel?.()
 }
 
 const CAMPAIGN_DAY_TIMES=[
- {key:'dawn',icon:'🌅',name:'Gryning'},
- {key:'morning',icon:'🌤️',name:'Morgon'},
- {key:'midday',icon:'☀️',name:'Mitt på dagen'},
- {key:'afternoon',icon:'🌞',name:'Eftermiddag'},
- {key:'evening',icon:'🌇',name:'Kväll'},
+ {key:'dawn',icon:'🌅',name:'Soluppgång'},
+ {key:'morning',icon:'🌤️',name:'Förmiddag'},
+ {key:'afternoon',icon:'☀️',name:'Eftermiddag'},
+ {key:'evening',icon:'🌆',name:'Skymning'},
  {key:'night',icon:'🌙',name:'Natt'}
 ];
 let campaignTimeSaving=false;
@@ -3088,25 +3087,16 @@ function renderCampaignTimeHeader(){
  control.classList.remove('hidden');
  const now=campaignTimeEntry(campaignDayState.time_of_day);
  btn.textContent=now.icon+' '+now.name;
- btn.title='Tid på dygnet: '+now.name+(campaignDayManager()?' · Klicka för att ändra':' · Endast SL kan ändra');
+ btn.title='Dygnsfas: '+now.name+' · Öppna Spelmöte';
  btn.disabled=campaignTimeSaving;
- if(campaignDayManager()){
-  menu.innerHTML='<div class="campaign-time-menu-title">Tid på dygnet</div><div class="campaign-time-options">'+
-   CAMPAIGN_DAY_TIMES.map(t=>'<button type="button" class="campaign-time-option'+(t.key===now.key?' selected':'')+
-     '" aria-pressed="'+(t.key===now.key?'true':'false')+'" onclick="setCampaignTimeOfDay(\''+t.key+'\')"'+
-     (campaignTimeSaving?' disabled':'')+'><span aria-hidden="true">'+t.icon+'</span><span>'+t.name+'</span></button>').join('')+
-   '</div><div class="campaign-time-note">Ändrar inte dag, väder eller vilotid.</div>';
- }else{
-  menu.innerHTML='<div class="campaign-time-menu-title">Tid på dygnet</div><p class="campaign-time-readonly">'+now.icon+' '+now.name+' · SL styr tiden.</p>'
- }
+ btn.setAttribute('aria-label','Öppna Spelmöte. Dygnsfas: '+now.name);
+ menu.classList.add('hidden');menu.innerHTML='';
+ window.aleaSetBannerTimePhase?.(now.key)
 }
 function toggleCampaignTimeMenu(event){
  event?.stopPropagation();
- if(!campaignDayState||campaignTimeSaving)return;
- const menu=$('campaignTimeMenu'),btn=$('campaignTimeBtn');if(!menu||!btn)return;
- const open=menu.classList.contains('hidden');
- menu.classList.toggle('hidden',!open);
- btn.setAttribute('aria-expanded',String(open))
+ if(campaignTimeSaving)return;
+ window.openGameSessionPanel?.()
 }
 async function setCampaignTimeOfDay(value){
  if(!campaignDayManager()||!centralCampaignId||campaignTimeSaving||!CAMPAIGN_DAY_TIMES.some(t=>t.key===value))return;
@@ -3122,7 +3112,8 @@ async function setCampaignTimeOfDay(value){
   closeCampaignTimeMenu();
   renderCampaignDayHeader();
   if(!$('campaignDayModal')?.classList.contains('hidden'))renderCampaignDayModal();
-  showBackupToast('✓ Tid på dygnet: '+campaignTimeEntry(value).name)
+  window.aleaRefreshChroniclePanel?.();
+  showBackupToast('✓ Dygnsfas: '+campaignTimeEntry(value).name)
  }catch(e){alert('Kunde inte ändra tiden på dygnet: '+e.message)}
  finally{campaignTimeSaving=false;renderCampaignTimeHeader()}
 }
@@ -3135,6 +3126,7 @@ document.addEventListener('keydown',event=>{
 
 function campaignDayManager(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
 async function openCampaignDay(){
+ if(window.openGameSessionPanel){window.openGameSessionPanel();return}
  if(!campaignDayState)await loadCampaignDayState();
  renderCampaignDayModal();$('campaignDayModal').classList.remove('hidden')
 }
