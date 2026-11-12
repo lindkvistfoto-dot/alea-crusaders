@@ -776,7 +776,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("active_actor_id:null");
     expect(combat).toContain("if(startActorId)");
     expect(combat).toContain("await loadActiveCombat(replacementCombatId)");
-    expect(combat).toContain("if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId)&&!previousCombatCompleted)await combatDeleteRuntime(previousCombatId)");
+    expect(combat).toContain("if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId)&&!previousCombatCompleted)\n   await combatArchiveRuntime(previousCombatId,previousCombatStatus)");
+    expect(combat).not.toContain("await combatDeleteRuntime(previousCombatId)");
     expect(combat).toContain("if(replacementCombatId&&!replacementCommitted)");
     expect(combat).toContain("await combatDeleteRuntime(replacementCombatId)");
     expect(combat).toContain("Reset återställer aktiv scen utan nytt initiativ");
