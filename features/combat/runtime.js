@@ -165,7 +165,7 @@ async function combatRollDice(specs,label='Slag'){
  }
 }
 
-let combatGmPlacementId=null,combatBattlefieldBrushKey=null,combatBattlefieldBusy=false,combatBattlefieldArtLoadState='idle',combatBattlefieldArtPaths=new Map();
+let combatGmPlacementId=null,combatBattlefieldBrushKey=null,combatBattlefieldObjectPlacementKey=null,combatBattlefieldObjectRotation=0,combatBattlefieldObjectVisible=true,combatBattlefieldBusy=false,combatBattlefieldObjects=[],combatBattlefieldCatalog=[],combatBattlefieldArtLoadState='idle',combatBattlefieldArtPaths=new Map();
 let combatSlBoardOpen=false,combatSlBoardTab='overview';
 let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatLifecycleBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
@@ -1052,6 +1052,11 @@ function combatMapPresetsHtml(){
 function combatRuntimeHexCells(){
  const g=combatRuntimeGeometry();if(!g)return[];
  const terrainByKey=new Map((combatHexes||[]).map(row=>[Number(row.q)+','+Number(row.r),row]));
+ const objectsByKey=new Map();
+ (combatBattlefieldObjects||[]).filter(row=>row.visible_to_players!==false||combatCanManage()).forEach(row=>{
+  const turns=((Number(row.rotation)||0)%6+6)%6,footprint=Array.isArray(row.footprint)&&row.footprint.length?row.footprint:[{q:0,r:0}];
+  footprint.forEach(offset=>{let oq=Number(offset.q)||0,or=Number(offset.r)||0;for(let i=0;i<turns;i++)[oq,or]=[-or,oq+or];objectsByKey.set((Number(row.q)+oq)+','+(Number(row.r)+or),row)})
+ });
  const cells=[];
  const rMin=Math.floor((-g.offsetY)/g.rowPitch)-3,rMax=Math.ceil((g.height-g.offsetY)/g.rowPitch)+3;
  for(let r=rMin;r<=rMax;r++){
@@ -1059,15 +1064,15 @@ function combatRuntimeHexCells(){
   for(let q=qMin;q<=qMax;q++){
    const x=g.xPitch*(q+r/2)+g.offsetX,y=g.rowPitch*r+g.offsetY;
    if(x<-g.size||x>g.width+g.size||y<-g.size||y>g.height+g.size)continue;
-   const key=q+','+r,terrain=terrainByKey.get(key)||null;
+   const key=q+','+r,terrain=terrainByKey.get(key)||null,placedObject=objectsByKey.get(key)||null;
    const areaTerrain=combatAreaTerrainForHex(q,r);
-   const baseMovement=terrain?.movement_mode||'free',baseSight=terrain?.sight_mode||'clear';
+   const baseMovement=placedObject?(placedObject.properties?.movement_mode||'blocked'):terrain?.movement_mode||'free',baseSight=placedObject?(placedObject.properties?.sight_mode||'blocked'):terrain?.sight_mode||'clear';
    const movement_mode=baseMovement==='blocked'||areaTerrain.movement==='blocked'?'blocked':
     baseMovement==='difficult'||areaTerrain.movement==='difficult'?'difficult':'free';
    const sight_mode=baseSight==='blocked'||areaTerrain.sight==='blocked'?'blocked':
     baseSight==='obscuring'||areaTerrain.sight==='obscuring'?'obscuring':'clear';
    cells.push({q,r,x,y,key,movement_mode,sight_mode,
-    movement_cost:movement_mode==='difficult'?2:Number(terrain?.movement_cost)||1,notes:terrain?.notes||''})
+    movement_cost:movement_mode==='difficult'?2:Number(terrain?.movement_cost)||1,notes:terrain?.notes||'',object:placedObject})
   }
  }
  return cells
@@ -2895,7 +2900,7 @@ async function endCombatTurn(event,combatantId){
 }
 async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={}){
  const selectedTargetBeforeLoad=combatSelectedTargetId;
- activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
+ activeCombat=null;combatants=[];combatHexes=[];combatBattlefieldObjects=[];combatActions=[];combatLogRows=[];combatActiveEffects=[];combatAreaEffects=[];combatSelectedTargetId=null;combatRuntimeMapUrl='';combatRuntimeMapMeta=null;combatRuntimeMapError='';
  if(!centralCampaignId){renderCombat();return null}
  try{
   const instanceQuery=combatId
@@ -2915,12 +2920,14 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
     dbJson('combatants?combat_id=eq.'+cid+'&select=*&order=sort_order.asc,name_snapshot.asc'),
     dbJson('combat_hexes?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc'),
     dbJson('combat_actions?combat_id=eq.'+cid+'&round_number=gte.'+Math.max(1,round-1)+'&select=*&order=round_number.desc,sequence.asc,created_at.asc'),
-    dbJson('combat_log?combat_id=eq.'+cid+'&or=(event_type.neq.gm_event_pending,details->>queue_status.eq.pending)&select=*&order=created_at.desc,id.desc&limit=60')
+    dbJson('combat_log?combat_id=eq.'+cid+'&or=(event_type.neq.gm_event_pending,details->>queue_status.eq.pending)&select=*&order=created_at.desc,id.desc&limit=60'),
+    dbJson('combat_battlefield_objects?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc').catch(error=>{console.warn('Kartobjektstabellen är inte tillgänglig ännu',error);return []})
    ]);
    combatants=Array.isArray(data[0])?data[0]:[];
    await combatLoadActorImageSources();
    await combatHydrateFigureIdentity();
    combatHexes=Array.isArray(data[1])?data[1]:[];
+   combatBattlefieldObjects=Array.isArray(data[4])?data[4]:[];
    combatActions=Array.isArray(data[2])?data[2]:[];
    combatMagicCarouselRecordCasts();
    combatLogRows=(Array.isArray(data[3])?data[3]:[]).reverse();
@@ -4966,6 +4973,7 @@ function combatMovementHitTargetsHtml(cells,reachable,planningActor,originKey,g)
    '"><title>Förflytta till '+cell.q+','+cell.r+' · dubbelklicka för att genomföra</title></polygon>').join('')
 }
 function renderCombatMap(){
+ if(typeof combatBattlefieldArtLoadState!=='undefined'&&combatBattlefieldArtLoadState==='idle'&&typeof combatLoadBattlefieldArt==='function')void combatLoadBattlefieldArt();
  const g=combatRuntimeGeometry();
  if(!g){
   const note=combatRuntimeMapError
@@ -4988,6 +4996,7 @@ function renderCombatMap(){
  const areaMode=combatAreaPlacementActive&&combatCanManage();
  const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
  const battlefieldPlaceMode=typeof combatBattlefieldBrushKey!=='undefined'&&!!combatBattlefieldBrushKey&&combatCanManage();
+ const battlefieldObjectPlaceMode=typeof combatBattlefieldObjectPlacementKey!=='undefined'&&!!combatBattlefieldObjectPlacementKey&&combatCanManage();
  const currentMagic=actor&&combatChosenAction(actor);
  const spellAreaMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&currentMagic.source_data.magic_binding?.kind==='area';
  const cubePreview=spellAreaMode&&currentMagic.source_data?.magic_binding?.cube&&currentMagic.source_data?.area_center?
@@ -5015,9 +5024,9 @@ function renderCombatMap(){
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
   if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked'&&combatFootprintCanStand(combatants.find(c=>String(c.id)===String(combatGmPlacementId)),cell.q,cell.r))cls.push('gm-placement-hex');
-  if(battlefieldPlaceMode)cls.push('battlefield-placement-hex');
-  const clickable=gmPlaceMode||battlefieldPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
+  if(battlefieldPlaceMode||battlefieldObjectPlaceMode)cls.push('battlefield-placement-hex');
+  const clickable=gmPlaceMode||battlefieldPlaceMode||battlefieldObjectPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldObjectPlaceMode?'onclick="combatPlaceBattlefieldObject(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
@@ -5040,6 +5049,16 @@ function renderCombatMap(){
    codes.some(x=>x==='area_fog')?'#aec9dc':'#e1b759';
   const names=areas.map(area=>{const name=combatEffectDefinition({effect_id:area.effect_id})?.name||'Område';return combatIsBeskyddareArea(area)?name+' '+Array(3).fill(combatBeskyddareStoredSideCells(area.parameters)).join('×')+' rutor':name}).join(', ');
   return '<polygon class="combat-area-hex" pointer-events="none" fill="'+color+'" fill-opacity="'+(preview||cubeSelected?'.36':'.24')+'" stroke="'+color+'" stroke-opacity=".85" stroke-width="'+(preview||cubeSelected?2.5:1)+'" points="'+combatHexPoints(cell.x,cell.y,g.size*.93)+'"><title>'+escAttr(cubeSelected?'Förhandsvisning: Beskyddares kub':names||'Valt centrum')+'</title></polygon>'
+ }).join('');
+ const battlefieldObjects=typeof combatBattlefieldObjects==='undefined'?[]:combatBattlefieldObjects;
+ const artPaths=typeof combatBattlefieldArtPaths==='undefined'?new Map():combatBattlefieldArtPaths;
+ const battlefieldObjectsOverlay=(battlefieldObjects||[]).filter(row=>row.visible_to_players!==false||combatCanManage()).map(row=>{
+  const q=Number(row.q),r=Number(row.r),cell=byCoord.get(q+','+r),assetKey=String(row.asset_key||''),path=artPaths.get(assetKey);
+  if(!cell||!path||!/^arcane-battlefield-[a-z0-9-]+$/.test(assetKey))return '';
+  const clipId='battlefield-object-'+q+'-'+r,rotation=((Number(row.rotation)||0)%6+6)%6*60;
+  const clip='<defs><clipPath id="'+clipId+'"><polygon points="'+combatHexPoints(cell.x,cell.y,g.size*.94)+'"/></clipPath></defs>';
+  const img='<image class="combat-battlefield-object" href="'+escAttr((typeof SUPABASE_URL==='string'?SUPABASE_URL:'')+'/storage/v1/object/public/alea-hermes-public/'+path.split('/').map(part=>encodeURIComponent(part)).join('/'))+'" x="'+(cell.x-g.size*.82)+'" y="'+(cell.y-g.size*.52)+'" width="'+(g.size*1.64)+'" height="'+(g.size*1.04)+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clipId+')" transform="rotate('+rotation+' '+cell.x+' '+cell.y+')"><title>'+escAttr(row.name_snapshot||'Mur')+' · '+escAttr(String(row.damage||0))+'/'+escAttr(String(row.max_damage||10))+' skada</title></image>';
+  return clip+img;
  }).join('');
  const tokenRows=combatants.filter(c=>c.status!=='removed').map(c=>{
   const isPlanning=combatIsMovementPlanning(c);
@@ -5095,7 +5114,7 @@ function renderCombatMap(){
  const image=combatRuntimeMapUrl
   ?'<image class="combat-map-background" href="'+escAttr(combatRuntimeMapUrl)+'" x="0" y="0" width="'+g.width+'" height="'+g.height+'" preserveAspectRatio="none"/>'
   :'';
- return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+roadLine+areasOverlay+tokens+movementHitTargets+'</svg>'
+ return '<svg class="combat-map-svg'+(combatMapView.zoom>1.001?' zoomed':'')+'" viewBox="'+mapView.x+' '+mapView.y+' '+mapView.width+' '+mapView.height+'" preserveAspectRatio="xMidYMid meet" aria-label="Hexkarta med bakgrund" onwheel="combatMapWheel(event)" ontouchstart="combatMapTouchGate(event)" ontouchmove="combatMapTouchGate(event)" onpointerdown="combatMapPointerDown(event)" onpointermove="combatMapPointerMove(event)" onpointerup="combatMapPointerEnd(event)" onpointercancel="combatMapPointerEnd(event)" ondblclick="combatMapDoubleClick(event)">'+combatMiniatureDefs()+image+terrain+roadLine+areasOverlay+battlefieldObjectsOverlay+tokens+movementHitTargets+'</svg>'
 }
 
 // Stridsdeltagare bär sitt porträtts lagringssökväg i state. Den är
@@ -6938,28 +6957,60 @@ async function combatCancelQueuedEvent(id){
 async function combatLoadBattlefieldArt(){
  if(combatBattlefieldArtLoadState!=='idle')return;
  combatBattlefieldArtLoadState='loading';
- const keys=(window.aleaBattlefieldLibrary?.entries()||[]).map(item=>item.assetKey).filter(Boolean);
  try{
+  try{
+   const rows=await dbJson('arcane_battlefield_library?active=eq.true&select=*&order=category.asc,name.asc');
+   combatBattlefieldCatalog=Array.isArray(rows)?rows:[];
+   window.aleaBattlefieldLibrary?.registerExternal(combatBattlefieldCatalog);
+  }catch(error){console.warn('Kunde inte läsa Battlefield Library-objekten',error)}
+  const keys=(window.aleaBattlefieldLibrary?.entries()||[]).map(item=>item.assetKey).filter(Boolean);
   if(keys.length){
-   const rows=await dbJson('arcane_system_assets?asset_key=in.('+keys.join(',')+')&select=asset_key,asset_path');
+   const rows=await dbJson('arcane_system_assets?asset_key=in.('+keys.map(encodeURIComponent).join(',')+')&select=asset_key,asset_path');
    (Array.isArray(rows)?rows:[]).forEach(row=>{if(/^arcane-battlefield-[a-z0-9-]+$/.test(row.asset_key||'')&&/^hermes\/system-asset\/arcane-battlefield-[a-z0-9-]+\/[a-f0-9]{64}\.webp$/.test(row.asset_path||''))combatBattlefieldArtPaths.set(String(row.asset_key),String(row.asset_path))});
   }
  }catch(error){console.warn('Kunde inte läsa publicerade HERMES CORE-systembilder för Battlefield Library',error)}
- finally{combatBattlefieldArtLoadState='loaded';if(combatSlBoardOpen&&combatSlBoardTab==='battlefield')renderCombat()}
+ finally{combatBattlefieldArtLoadState='loaded';if(activeCombat)renderCombat()}
 }
+window.aleaBattlefieldLibraryReload=async function(){
+ combatBattlefieldArtLoadState='idle';combatBattlefieldArtPaths.clear();
+ await combatLoadBattlefieldArt();
+};
 function combatBattlefieldLibraryHtml(sceneId,scene){
  const library=typeof window!=='undefined'?window.aleaBattlefieldLibrary:null;
  if(!library)return '<div class="slcb-module"><h3>Battlefield Library</h3><p>Biblioteket kunde inte läsas in.</p></div>';
  if(combatBattlefieldArtLoadState==='idle')void combatLoadBattlefieldArt();
  const entries=library.entries(),categories=[...new Set(entries.map(item=>item.category))];
  const cards=categories.map(category=>'<section class="slcb-bf-category"><h4>'+escAttr(category)+'</h4><div class="slcb-bf-grid">'+entries.filter(item=>item.category===category).map(item=>
-  '<button type="button" class="slcb-bf-card'+(combatBattlefieldBrushKey===item.key?' selected':'')+'" aria-pressed="'+(combatBattlefieldBrushKey===item.key?'true':'false')+'" onclick="combatBattlefieldSelectPreset(\''+item.key+'\')">'+combatBattlefieldCardArt(item)+'<span><b>'+escAttr(item.name)+'</b><small>'+escAttr(item.description)+'</small><small class="slcb-bf-core">'+(item.assetKey?'HERMES CORE · '+escAttr(item.assetKey):'Inget bildobjekt')+'</small></span></button>'
+  '<button type="button" class="slcb-bf-card'+((combatBattlefieldBrushKey===item.key||combatBattlefieldObjectPlacementKey===item.key)?' selected':'')+'" aria-pressed="'+((combatBattlefieldBrushKey===item.key||combatBattlefieldObjectPlacementKey===item.key)?'true':'false')+'" onclick="combatBattlefieldSelectPreset(\''+item.key+'\')">'+combatBattlefieldCardArt(item)+'<span><b>'+escAttr(item.name)+'</b><small>'+escAttr(item.description)+'</small><small class="slcb-bf-core">'+(item.assetKey?'HERMES CORE · '+escAttr(item.assetKey):'Inget bildobjekt')+'</small>'+(item.placement_mode==='object'?'<small>Avtryck: '+(item.footprint?.length||1)+' hex · anslutning: '+(item.connector_edges||[]).map(edge=>(edge+1)).join(', ')+'</small>':'')+'</span></button>'
  ).join('')+'</div></section>').join('');
- return '<div class="slcb-module"><h3>Battlefield Library</h3><p>Välj ett terrängkort och klicka hexar på kartan för att använda det. Placeringen uppdaterar den aktiva stridens befintliga hexdata, som fortsatt styr rörelse och sikt. Bildnycklar följer HERMES CORE:s systemasset-format.</p>'+cards+
-  '<div class="slcb-bf-status">'+(combatBattlefieldBrushKey?'<b>Aktivt verktyg:</b> '+escAttr(library.get(combatBattlefieldBrushKey)?.name||'Terräng')+' · klicka hexar på kartan.':'Välj en terrängtyp för att börja placera.')+
-  (combatBattlefieldBrushKey?'<button type="button" class="smallbtn" onclick="combatBattlefieldSelectPreset(\'\')">Avsluta placering</button>':'')+
+ return '<div class="slcb-module"><h3>Battlefield Library</h3><p>Välj terräng eller ett återanvändbart objekt. Objekt placeras på den aktiva stridens befintliga hexkarta; deras avtryck styr rörelse och sikt i samma stridsmotor. Skapa och redigera objekt i Administration → Battlefield-verkstaden.</p>'+cards+
+  '<div class="slcb-bf-status">'+(combatBattlefieldBrushKey||combatBattlefieldObjectPlacementKey?'<b>Aktivt verktyg:</b> '+escAttr(library.get(combatBattlefieldBrushKey||combatBattlefieldObjectPlacementKey)?.name||'Terräng')+' · klicka hexar på kartan.':'Välj en terrängtyp eller ett bibliotekobjekt för att börja placera.')+
+  (combatBattlefieldBrushKey||combatBattlefieldObjectPlacementKey?'<button type="button" class="smallbtn" onclick="combatBattlefieldSelectPreset(\'\')">Avsluta placering</button>':'')+
+  (combatBattlefieldObjectPlacementKey?'<label class="slcb-object-placement-settings">Rotation <select onchange="combatBattlefieldObjectRotation=Number(this.value);renderCombat()">'+[0,1,2,3,4,5].map(n=>'<option value="'+n+'" '+(combatBattlefieldObjectRotation===n?'selected':'')+'>'+n*60+'°</option>').join('')+'</select><span>Visa för spelare <input type="checkbox" '+(combatBattlefieldObjectVisible?'checked':'')+' onchange="combatBattlefieldObjectVisible=this.checked"></span></label>':'')+
   (combatBattlefieldBusy?'<span aria-live="polite">Sparar…</span>':'')+'</div>'+
+  combatBattlefieldPlacedObjectsHtml()+
   '<div class="slcb-bf-scene"><span><b>Scen:</b> '+escAttr(scene?.name||activeCombat?.name||'Aktiv strid')+' · <b>Strid:</b> '+escAttr(activeCombat?.status||'')+'</span><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Öppna sceneditorn</button></div>'+combatAreasAdminHtml()+'</div>'
+}
+function combatBattlefieldPlacedObjectsHtml(){
+ if(!combatCanManage()||!combatBattlefieldObjects.length)return '';
+ const rows=combatBattlefieldObjects.map(row=>'<div class="slcb-bf-object-row"><span><b>'+escAttr(row.name_snapshot||'Kartobjekt')+'</b><small>Hex '+Number(row.q)+','+Number(row.r)+' · '+Number(row.rotation||0)*60+'°'+(row.max_damage!=null?' · skada '+Number(row.damage||0)+'/'+Number(row.max_damage):'')+(row.visible_to_players===false?' · dold för spelare':'')+'</small></span><div class="slcb-bf-object-actions">'+(row.max_damage!=null?'<button class="smallbtn" type="button" aria-label="Minska skada" onclick="combatBattlefieldAdjustDamage(\''+escAttr(row.id)+'\',-1)">− skada</button><button class="smallbtn" type="button" aria-label="Öka skada" onclick="combatBattlefieldAdjustDamage(\''+escAttr(row.id)+'\',1)">+ skada</button>':'')+'<button class="smallbtn" type="button" onclick="combatBattlefieldRotate(\''+escAttr(row.id)+'\',1)">↻</button><button class="smallbtn" type="button" onclick="combatBattlefieldToggleVisibility(\''+escAttr(row.id)+'\')">'+(row.visible_to_players===false?'Visa':'Dölj')+'</button><button class="smallbtn" type="button" onclick="combatBattlefieldDeleteObject(\''+escAttr(row.id)+'\')">Ta bort</button></div></div>').join('');
+ return '<section class="slcb-bf-placed"><h4>Placerade objekt</h4>'+rows+'</section>'
+}
+async function combatBattlefieldPatchObject(id,patch){
+ if(!combatCanManage()||!activeCombat?.id||combatBattlefieldBusy)return;
+ combatBattlefieldBusy=true;
+ try{const rows=await dbJson('combat_battlefield_objects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=id',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...patch,updated_at:new Date().toISOString()})});if(!Array.isArray(rows)||!rows.length)throw new Error('Objektet hann ändras eller togs bort.');await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true})}
+ catch(error){alert('Kartobjektet kunde inte uppdateras: '+(error?.message||error))}finally{combatBattlefieldBusy=false;renderCombat()}
+}
+function combatBattlefieldRotate(id,step){const row=combatBattlefieldObjects.find(item=>String(item.id)===String(id));if(row)void combatBattlefieldPatchObject(id,{rotation:((Number(row.rotation||0)+step)%6+6)%6})}
+function combatBattlefieldAdjustDamage(id,step){const row=combatBattlefieldObjects.find(item=>String(item.id)===String(id));if(row)void combatBattlefieldPatchObject(id,{damage:Math.max(0,Math.min(Number(row.max_damage)||1,Number(row.damage||0)+step))})}
+function combatBattlefieldToggleVisibility(id){const row=combatBattlefieldObjects.find(item=>String(item.id)===String(id));if(row)void combatBattlefieldPatchObject(id,{visible_to_players:row.visible_to_players===false})}
+async function combatBattlefieldDeleteObject(id){
+ if(!combatCanManage()||!activeCombat?.id||combatBattlefieldBusy)return;
+ if(!confirm('Ta bort kartobjektet från den här stridsinstansen?'))return;
+ combatBattlefieldBusy=true;
+ try{await dbJson('combat_battlefield_objects?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id),{method:'DELETE',headers:{Prefer:'return=minimal'}});await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true})}
+ catch(error){alert('Kartobjektet kunde inte tas bort: '+(error?.message||error))}finally{combatBattlefieldBusy=false;renderCombat()}
 }
 function combatBattlefieldCardArt(item){
  const path=item?.assetKey?combatBattlefieldArtPaths.get(item.assetKey):'';
@@ -6971,9 +7022,26 @@ function combatBattlefieldSelectPreset(key){
  if(!combatCanManage()||!activeCombat)return;
  const item=window.aleaBattlefieldLibrary?.get(key);
  if(key&&!item)return;
- combatBattlefieldBrushKey=key||null;
+ combatBattlefieldBrushKey=key&&item.placement_mode!=='object'?key:null;
+ combatBattlefieldObjectPlacementKey=key&&item.placement_mode==='object'?key:null;
  combatGmPlacementId=null;combatAreaPlacementActive=false;combatAreaDraftCenter=null;combatMovementPlan=null;
  renderCombat()
+}
+async function combatPlaceBattlefieldObject(event,q,r){
+ event?.stopPropagation?.();
+ if(!combatCanManage()||!activeCombat?.id||!combatBattlefieldObjectPlacementKey||combatBattlefieldBusy)return;
+ const item=window.aleaBattlefieldLibrary?.get(combatBattlefieldObjectPlacementKey);
+ if(!item)return;
+ if((combatBattlefieldObjects||[]).some(row=>Number(row.q)===q&&Number(row.r)===r))return alert('Hexen har redan ett kartobjekt.');
+ if(combatants.some(actor=>actor.status!=='removed'&&actor.status!=='dead'&&combatFootprintCells(actor).some(cell=>cell.q===q&&cell.r===r)))return alert('Flytta stridande från hexen innan du placerar objektet.');
+ combatBattlefieldBusy=true;renderCombat();
+ try{
+  const payload=window.aleaBattlefieldLibrary.objectPayload(item,{q,r,rotation:combatBattlefieldObjectRotation,visible_to_players:combatBattlefieldObjectVisible});
+  const saved=await dbJson('combat_battlefield_objects',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,combat_id:activeCombat.id,campaign_id:centralCampaignId})});
+  if(!Array.isArray(saved)||!saved.length)throw new Error('Objektet kunde inte placeras på kartan.');
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte placera kartobjekt',error);alert('Kunde inte placera objektet: '+(error?.message||error))}
+ finally{combatBattlefieldBusy=false;renderCombat()}
 }
 async function combatApplyBattlefieldPreset(event,q,r){
  event?.stopPropagation?.();

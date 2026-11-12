@@ -1,0 +1,66 @@
+#adminBattlefieldWorkshop{padding:18px}
+#battlefieldObjectWorkshopMount{--bfw-line:rgba(190,151,93,.36);--bfw-muted:#c5b69e;--bfw-bright:#ead8b4;color:#f3e5c9}
+#battlefieldObjectWorkshopMount .bfw-head,#battlefieldObjectWorkshopMount .bfw-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#battlefieldObjectWorkshopMount .bfw-head{margin-bottom:16px}
+#battlefieldObjectWorkshopMount .bfw-head h2{margin:2px 0 5px;color:#f0d8a8}
+#battlefieldObjectWorkshopMount .bfw-head p{max-width:760px;margin:0;color:var(--bfw-muted);line-height:1.5}
+#battlefieldObjectWorkshopMount .bfw-kicker{color:#caa56e;font-size:10px;font-weight:800;letter-spacing:.2em}
+#battlefieldObjectWorkshopMount .bfw-status-pill{border:1px solid #9d7941;border-radius:999px;padding:6px 10px;color:#e5c98e;font-size:11px;letter-spacing:.12em;white-space:nowrap}
+#battlefieldObjectWorkshopMount .bfw-layout{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(480px,2fr);gap:16px;align-items:start}
+#battlefieldObjectWorkshopMount .bfw-library,#battlefieldObjectWorkshopMount .bfw-editor{min-width:0;border:1px solid var(--bfw-line);border-radius:12px;background:linear-gradient(145deg,#211a14,#15110e);padding:14px;box-shadow:0 12px 32px #0004}
+#battlefieldObjectWorkshopMount .bfw-section-head{margin-bottom:12px}
+#battlefieldObjectWorkshopMount .bfw-section-head h3{margin:0;color:var(--bfw-bright);font-size:15px}
+#battlefieldObjectWorkshopMount .bfw-key-preview{max-width:45%;overflow:hidden;text-overflow:ellipsis;color:#b99a6b;font:11px ui-monospace,monospace}
+#battlefieldObjectWorkshopMount .bfw-library-row{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;margin:5px 0;padding:9px;border:1px solid #594832;border-radius:8px;background:#1b1712;color:#ead8b4;text-align:left;cursor:pointer}
+#battlefieldObjectWorkshopMount .bfw-library-row:hover,#battlefieldObjectWorkshopMount .bfw-library-row.selected{border-color:#d0a568;background:#332719}
+#battlefieldObjectWorkshopMount .bfw-library-row>span:first-child{display:grid;gap:3px;min-width:0}
+#battlefieldObjectWorkshopMount .bfw-library-row b{font-size:12px}
+#battlefieldObjectWorkshopMount .bfw-library-row small{color:#bca989;font-size:10px;overflow-wrap:anywhere}
+#battlefieldObjectWorkshopMount .bfw-library-row>span:last-child{flex:0 0 auto;color:#d7bd8e;font-size:11px}
+#battlefieldObjectWorkshopMount .bfw-empty{color:var(--bfw-muted);font-size:12px}
+#battlefieldObjectWorkshopMount .bfw-object-preview{display:grid;grid-template-columns:minmax(220px,1fr) minmax(240px,1fr);gap:12px;margin:4px 0 14px}
+#battlefieldObjectWorkshopMount .bfw-source-art,#battlefieldObjectWorkshopMount .bfw-assembly-preview{display:flex;min-width:0;min-height:190px;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;border:1px solid #55442e;border-radius:9px;background:radial-gradient(ellipse at center,#453520 0,#211a13 70%,#100d0a 100%);overflow:hidden}
+#battlefieldObjectWorkshopMount .bfw-source-art img{display:block;width:100%;max-height:185px;object-fit:contain}
+#battlefieldObjectWorkshopMount .bfw-no-art{display:grid;gap:7px;max-width:270px;text-align:center;color:#e2c992;font-size:12px}
+#battlefieldObjectWorkshopMount .bfw-no-art span{color:var(--bfw-muted);line-height:1.45}
+#battlefieldObjectWorkshopMount .bfw-assembly-preview svg{width:min(100%,300px);height:auto;overflow:visible}
+#battlefieldObjectWorkshopMount .bfw-assembly-preview>b{color:#e4c78f;font-size:12px;text-align:center}
+#battlefieldObjectWorkshopMount .bfw-assembly-preview>small{max-width:360px;color:var(--bfw-muted);font-size:10px;text-align:center}
+#battlefieldObjectWorkshopMount .bfw-hex-outline{fill:none;stroke:#c59b5d;stroke-width:2}
+#battlefieldObjectWorkshopMount .bfw-connector{fill:#ffda91;stroke:#382819;stroke-width:1.5}
+#battlefieldObjectWorkshopMount .bfw-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#battlefieldObjectWorkshopMount .bfw-fields label,#battlefieldObjectWorkshopMount .bfw-description{display:grid;gap:5px;color:#e4d2ae;font-size:11px;font-weight:700}
+#battlefieldObjectWorkshopMount input:not([type=checkbox]),#battlefieldObjectWorkshopMount select,#battlefieldObjectWorkshopMount textarea{box-sizing:border-box;width:100%;min-width:0;min-height:36px;padding:7px 9px;border:1px solid #715a3c;border-radius:6px;background:#15110e;color:#f2e3c6;font:inherit}
+#battlefieldObjectWorkshopMount input[readonly]{color:#b99a6b}
+#battlefieldObjectWorkshopMount .bfw-description{margin-top:10px}
+#battlefieldObjectWorkshopMount .bfw-description textarea{resize:vertical}
+#battlefieldObjectWorkshopMount .bfw-property-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+#battlefieldObjectWorkshopMount .bfw-property-grid fieldset{min-width:0;padding:9px;border:1px solid #594832;border-radius:8px}
+#battlefieldObjectWorkshopMount .bfw-property-grid legend{padding:0 5px;color:#dfc18b;font-size:11px;font-weight:700}
+#battlefieldObjectWorkshopMount .bfw-footprint-lock{display:flex;align-items:center;gap:9px}
+#battlefieldObjectWorkshopMount .bfw-one-hex{color:#edc983;font-size:34px;line-height:1}
+#battlefieldObjectWorkshopMount .bfw-footprint-lock>span:last-child{display:grid;gap:3px}
+#battlefieldObjectWorkshopMount .bfw-footprint-lock small{color:var(--bfw-muted);font-size:10px;line-height:1.35}
+#battlefieldObjectWorkshopMount .bfw-edge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+#battlefieldObjectWorkshopMount .bfw-edge-grid label{display:flex;align-items:center;gap:4px;color:#d9c49e;font-size:10px;white-space:nowrap}
+#battlefieldObjectWorkshopMount .bfw-rotation{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+#battlefieldObjectWorkshopMount .bfw-rotation>span{min-width:38px;text-align:center;color:#edcf98;font-size:12px}
+#battlefieldObjectWorkshopMount .bfw-property-grid fieldset>label{display:grid;grid-template-columns:1fr;gap:4px;margin:5px 0;color:#d9c49e;font-size:10px}
+#battlefieldObjectWorkshopMount .bfw-damage{display:flex!important;grid-template-columns:auto 1fr 72px!important;align-items:center}
+#battlefieldObjectWorkshopMount .bfw-damage input[type=number]{max-width:72px}
+#battlefieldObjectWorkshopMount .bfw-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:13px}
+#battlefieldObjectWorkshopMount .bfw-status{min-height:1.2em;margin:10px 0 0;color:#dec790;font-size:11px}
+#battlefieldObjectWorkshopMount .bfw-status.is-error{color:#ffb2a9}
+#combatPage .slcb-object-placement-settings{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#combatPage .slcb-object-placement-settings select{padding:5px 8px;border:1px solid #69543a;border-radius:6px;background:#211d18;color:#f1dfc2}
+#combatPage .slcb-object-placement-settings>span{display:flex;align-items:center;gap:5px}
+#combatPage .slcb-bf-placed{display:grid;gap:6px;margin:11px 0}
+#combatPage .slcb-bf-placed h4{margin:0;color:#e8c995;font-size:12px}
+#combatPage .slcb-bf-object-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px;border:1px solid #554530;border-radius:7px;background:rgba(255,255,255,.025)}
+#combatPage .slcb-bf-object-row>span{display:grid;gap:3px;min-width:0}
+#combatPage .slcb-bf-object-row small{color:#c9b99f;font-size:10px}
+#combatPage .slcb-bf-object-actions{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap;justify-content:end}
+#combatPage .slcb-bf-object-actions .smallbtn{padding:4px 6px;font-size:10px}
+#combatPage .combat-battlefield-object{pointer-events:none}
+@media(max-width:900px){#battlefieldObjectWorkshopMount .bfw-layout{grid-template-columns:1fr}#battlefieldObjectWorkshopMount .bfw-property-grid{grid-template-columns:1fr 1fr}#battlefieldObjectWorkshopMount .bfw-property-grid fieldset:last-child{grid-column:1/-1}}
+@media(max-width:560px){#adminBattlefieldWorkshop{padding:10px}#battlefieldObjectWorkshopMount .bfw-object-preview,#battlefieldObjectWorkshopMount .bfw-fields,#battlefieldObjectWorkshopMount .bfw-property-grid{grid-template-columns:1fr}#battlefieldObjectWorkshopMount .bfw-property-grid fieldset:last-child{grid-column:auto}#combatPage .slcb-bf-object-row{align-items:flex-start;flex-direction:column}#combatPage .slcb-bf-object-actions{justify-content:start}}
