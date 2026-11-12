@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const equipment=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/migrations/20261112170000_combat_weapon_switch_atomic.sql',import.meta.url),'utf8');
 
 describe('combat weapon switch action',()=>{
  test('is available under other combat actions and costs the existing primary action slot',()=>{
@@ -16,7 +17,7 @@ describe('combat weapon switch action',()=>{
   expect(runtime).toContain("window.aleaBeginCombatWeaponSwitch?.(refreshed,reserved)");
   expect(equipment).toContain("window.aleaBeginCombatWeaponSwitch=beginCombatWeaponSwitch");
   expect(equipment).toContain("if(combatWeaponSwitchSession)return;localStorage.setItem");
-  expect(equipment).toContain("await syncCharacterToCentral(character)");
+  expect(runtime).toContain("rpc/combat_commit_weapon_switch");
   expect(equipment).toContain("window.combatCommitWeaponSwitch?.");
   expect(equipment).toContain("character.currentEquipment=JSON.parse(JSON.stringify(session.original))");
  });
@@ -29,11 +30,14 @@ describe('combat weapon switch action',()=>{
   expect(equipment).toContain("if(combatEquipmentIsLocked(slot))return");
  });
 
- test('confirms only the still-planned action and writes one player-visible combat log entry',()=>{
-  expect(runtime).toContain("status=eq.planned&select=id");
-  expect(runtime).toContain("status:'resolved',result:{weapon_switch:true");
-  expect(runtime).toContain("event_type:'weapon_switch'");
-  expect(runtime).toContain("message:(actor.name_snapshot||'Stridande')+' bytte/drog vapen'");
-  expect(runtime).toContain("if(!Array.isArray(updated)||!updated.some(row=>String(row.id)===String(action.id)))");
+ test('commits the loadout, single action cost and combat log atomically with stale-action protection',()=>{
+  expect(migration).toContain("FOR UPDATE");
+  expect(migration).toContain("ca.status = 'planned'");
+  expect(migration).toContain("ca.source_data ->> 'action_key' = 'weapon_switch'");
+  expect(migration).toContain("UPDATE public.characters");
+  expect(migration).toContain("SET status = 'resolved'");
+  expect(migration).toContain("'weapon_switch'");
+  expect(migration).toContain("INSERT INTO public.combat_log");
+  expect(migration).toContain("private.is_campaign_gm(v_combat.campaign_id)");
  });
 });
