@@ -9,6 +9,7 @@ function body(from,to){
  return source.slice(start,end);
 }
 const context={
+ activeCombat:null,combatWeaponSwitchSession:null,
  equipRefEquals:(a,b)=>Boolean(a&&b&&a.kind===b.kind&&a.itemId===b.itemId),
  equipItemByRef:(c,ref)=>c.weapons.find(w=>w.equipId===ref.itemId)
 };
