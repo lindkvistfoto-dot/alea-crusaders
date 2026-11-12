@@ -34,11 +34,26 @@ describe('SL Control Board integration',()=>{
   expect(runtime).not.toContain('sl_control_board_instances');
  });
 
+ it('provides pause and resume by updating the current combat instance with an expected status',()=>{
+  expect(runtime).toContain('function combatTogglePauseResume(){');
+  expect(runtime).toContain("const combatId=String(activeCombat.id),previousStatus=activeCombat.status,nextStatus=previousStatus==='active'?'paused':'active'");
+  expect(runtime).toContain("'&status=eq.'+encodeURIComponent(previousStatus)+'&select=id,status'");
+  expect(runtime).toContain('combatTogglePauseResume()');
+ });
+
+ it('keeps SL notes private and changes player visibility on existing combatants',()=>{
+  expect(runtime).toContain("event_type:'gm_note'");
+  expect(runtime).toContain('player_visible:false');
+  expect(runtime).toContain("combatants?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)");
+  expect(runtime).toContain("visible_to_players:visible");
+  expect(runtime).toContain("['secrets','SL-info']");
+ });
+
  it('positions the expanded panel as an overlay without resizing the map',()=>{
   expect(css).toContain('.combat-below-map{position:relative');
   expect(css).toContain('.slcb-panel{');
   expect(css).toContain('position:absolute');
-  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-1');
+  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-2');
   expect(runtime).toContain("'<div class=\"combat-below-map\">'+combatSlControlBoardHtml(logHtml)+");
  });
 });
