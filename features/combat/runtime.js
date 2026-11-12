@@ -6906,7 +6906,7 @@ async function combatQueueManualEvent(){
   })});
   await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
  }catch(error){console.error('Kunde inte lägga händelsen i kö',error);alert('Kunde inte lägga händelsen i kö: '+(error?.message||error))}
- finally{combatQueuedEventBusy=false}
+ finally{combatQueuedEventBusy=false;renderCombat()}
 }
 async function combatApproveQueuedEvent(id){
  if(!combatCanManage()||!activeCombat?.id||combatQueuedEventBusy)return;
