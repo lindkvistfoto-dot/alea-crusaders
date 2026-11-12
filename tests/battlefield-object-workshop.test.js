@@ -29,6 +29,12 @@ describe('Battlefield object workshop',()=>{
   expect(loadForm.indexOf('render();')).toBeLessThan(loadForm.indexOf("$('bfwName').value"));
  });
 
+ it('uses the shared ALEA Supabase URL for published HERMES artwork',()=>{
+  const imageUrl=workshop.slice(workshop.indexOf('function imageUrl('),workshop.indexOf('function current('));
+  expect(imageUrl).toContain("typeof SUPABASE_URL==='string'");
+  expect(imageUrl).toContain("'/storage/v1/object/public/alea-hermes-public/'");
+ });
+
  it('persists reusable templates separately from placements and limits private instances to GMs',()=>{
   expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.arcane_battlefield_library');
   expect(migration).toContain('CREATE TABLE IF NOT EXISTS public.combat_battlefield_objects');

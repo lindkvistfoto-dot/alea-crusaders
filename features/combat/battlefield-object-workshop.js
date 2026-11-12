@@ -6,7 +6,7 @@
  let records=[],assets=new Map(),selectedKey='',rotation=0,loading=false;
  function canAdmin(){return !!root.activeUser?.()?.admin}
  function status(message,error=false){const node=$('bfwStatus');if(node){node.textContent=message;node.classList.toggle('is-error',error)}}
- function imageUrl(assetKey){const path=assets.get(assetKey);if(!path||typeof root.SUPABASE_URL!=='string')return '';return root.SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+path.split('/').map(encodeURIComponent).join('/')}
+ function imageUrl(assetKey){const path=assets.get(assetKey),base=typeof SUPABASE_URL==='string'?SUPABASE_URL:root.SUPABASE_URL;if(!path||typeof base!=='string')return '';return base+'/storage/v1/object/public/alea-hermes-public/'+path.split('/').map(encodeURIComponent).join('/')}
  function current(){return records.find(row=>row.object_key===selectedKey)||null}
  function loadForm(row){
   selectedKey=row?.object_key||'';rotation=0;
