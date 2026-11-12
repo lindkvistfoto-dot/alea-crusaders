@@ -34,6 +34,6 @@ describe('combat weapon switch action',()=>{
   expect(runtime).toContain("status:'resolved',result:{weapon_switch:true");
   expect(runtime).toContain("event_type:'weapon_switch'");
   expect(runtime).toContain("message:(actor.name_snapshot||'Stridande')+' bytte/drog vapen'");
-  expect(runtime).toContain("if(!updated||");
+  expect(runtime).toContain("if(!Array.isArray(updated)||!updated.some(row=>String(row.id)===String(action.id)))");
  });
 });
