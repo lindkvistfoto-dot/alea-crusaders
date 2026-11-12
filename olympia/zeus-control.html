@@ -394,17 +394,24 @@ b.innerHTML="<strong>"+heading+"</strong> "+esc(unknown?unknownMessage+" Slutgod
 if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
 }
 window.olympiaRefreshBlockers=renderBlockers;
+async function mapWithConcurrency(items,limit,worker){
+var output=new Array(items.length),nextIndex=0;
+await Promise.all(Array.from({length:Math.min(limit,items.length)},async function(){
+while(true){var index=nextIndex++;if(index>=items.length)return;output[index]=await worker(items[index],index)}
+}));
+return output;
+}
 async function renderDecisions(){
 var renderId=++decisionRenderSequence;window.olympiaDecisionsLoaded=false;renderTrial();
 var slots={accept:[],direct:[],package:[],defer:[],fix:[],live:[]};
 try{
-var q=encodeURIComponent("repo:"+owner+"/"+repo+" is:issue in:title OLYMPIA");
+var q=encodeURIComponent("repo:"+owner+"/"+repo+" is:issue is:open in:title OLYMPIA");
 var data=await json("https://api.github.com/search/issues?q="+q+"&per_page=100");
 var rows=(data.items||[]).filter(function(i){
 var title=String(i.title||"").toUpperCase();
 return title.indexOf("[OLYMPIA ")===0&&String(i.body||"").includes("OLYMPIA Zeus-beslut");
 });
-var records=await Promise.all(rows.map(async function(i){
+var records=await mapWithConcurrency(rows,4,async function(i){
 var title=i.title.toLowerCase(),target=title.indexOf("live approval")>=0?"live":title.indexOf("acceptans")>=0?"accept":title.indexOf("pandoras")>=0?"direct":title.indexOf("paket")>=0?"package":title.indexOf("karon")>=0||title.indexOf("avvakta")>=0?"defer":"fix";
 var body=i.body||"";
 function fieldValue(label){var prefix="- "+label+": ";var row=body.split("\n").find(function(line){return line.indexOf(prefix)===0});return row?row.slice(prefix.length).trim():""}
@@ -441,7 +448,7 @@ var releasePrSha=check&&check.result&&check.result.releasePrSha||null;
 var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],releasePrSha:releasePrSha,candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,liveScopeVerified:liveScopeVerified,deployedLiveSha:deployedLiveSha,target:target};
 slots[target].push(record);
 return i;
-}));
+});
 if(renderId!==decisionRenderSequence)return;
 var superseded={};
 slots.live.forEach(function(liveRecord){var candidateRef=String(liveRecord.issue.body||"").match(/^- Kandidatärende: #(\d+)/m);if(candidateRef)superseded["direct:"+candidateRef[1]]=liveRecord});
