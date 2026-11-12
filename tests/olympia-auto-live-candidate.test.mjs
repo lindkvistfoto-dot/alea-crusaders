@@ -12,6 +12,15 @@ describe('OLYMPIA safe automatic LIVE candidate staging',()=>{
   expect(edge).toContain('if (acceptance && !acceptanceWarning)');
   expect(edge).toContain('verifyReleaseSources(token, item, testedDevSha)');
  });
+ it('recovers safely for a previously merged DEV PR',()=>{
+  expect(edge).toContain('data.action === "prepare_merged_dev_candidate"');
+  expect(edge).toContain('verifyPublishedManifest("development", testedDevSha)');
+  expect(edge).toContain('PR-CI är inte helt godkänd');
+  expect(edge).toContain('recordDevAcceptance(token, data.pullRequestNumber');
+  expect(edge).toContain('autoPrepareLiveCandidate(token, data.pullRequestNumber');
+  expect(edge).toContain('Berörda filer har ändrats efter DEV-mergen');
+  expect(edge).toContain('LIVE är oförändrat.');
+ });
  it('reuses existing candidate bridge and avoids LIVE publication',()=>{
   expect(edge).toContain('await startCandidateRequest(token, issue.number, item');
   expect(edge).toContain('body.includes("- Beslut: PANDORAS ASK")');
