@@ -2,9 +2,9 @@
 (()=>{
  'use strict';
  const labels=['Grundegenskaper','Färdigheter','Magi','Utrustning'];
- let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,panelSuspended=false,focusPortraitId=null,observer;
+ let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,panelSuspended=false,focusPortraitId=null,observer,npcFlags=new Map(),npcFlagsCampaign=null,npcFlagsPromise=null;
  const esc=value=>typeof escAttr==='function'?escAttr(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>c&&c.ownerId!=='SLP'):[];
+ const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return typeof c.isNpc==='boolean'?!c.isNpc:c.ownerId!=='SLP'}):[];
  const charId=c=>String(c?._dbId||c?.id||'');
  const charName=c=>c?.identity?.namn||c?.name||'Namnlös';
  const portrait=c=>(typeof getPortraitSrc==='function'&&getPortraitSrc(c))||c?._combatIconUrl||c?.portrait||'';
@@ -25,7 +25,8 @@
   watchModal('skillRollMenu');watchModal('spellRollMenu');
  }
  function isCombatVisible(){return !!document.getElementById('combatPage')&&!document.getElementById('combatPage').classList.contains('hidden')}
- function refresh(){makeRoot();const combatVisible=isCombatVisible(),diceVisible=!!document.getElementById('dicePage')&&!document.getElementById('dicePage').classList.contains('hidden');const visible=combatVisible&&window.matchMedia('(min-width: 1000px)').matches;rail.hidden=!visible;if(!visible){if(drawer.classList.contains('is-open')){if(diceVisible){drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');panelSuspended=true}else close()}return}if(panelSuspended&&selectedId){panelSuspended=false;drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false')}
+ async function loadNpcFlags(){const campaignId=typeof centralCampaignId!=='undefined'?centralCampaignId:null;if(!campaignId||typeof dbJson!=='function'||npcFlagsCampaign===campaignId)return;if(npcFlagsPromise)return npcFlagsPromise;npcFlagsPromise=(async()=>{try{const rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(campaignId)+'&select=id,is_npc');npcFlags=new Map((Array.isArray(rows)?rows:[]).map(r=>[String(r.id),r.is_npc===true]));npcFlagsCampaign=campaignId}catch(e){npcFlagsCampaign=campaignId}finally{npcFlagsPromise=null;requestAnimationFrame(refresh)}})();return npcFlagsPromise}
+ function refresh(){makeRoot();const combatVisible=isCombatVisible(),diceVisible=!!document.getElementById('dicePage')&&!document.getElementById('dicePage').classList.contains('hidden');const visible=combatVisible&&window.matchMedia('(min-width: 1000px)').matches;rail.hidden=!visible;if(!visible){if(drawer.classList.contains('is-open')){if(diceVisible){drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');panelSuspended=true}else close()}return}loadNpcFlags();if(panelSuspended&&selectedId){panelSuspended=false;drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false')}
   const list=campaignCharacters();if(!list.some(c=>charId(c)===selectedId))selectedId=null;
   rail.innerHTML=list.map(c=>'<button type="button" class="arcane-character-portrait" data-character="'+esc(charId(c))+'" aria-label="Visa '+esc(charName(c))+'" aria-pressed="'+(charId(c)===selectedId)+'" title="'+esc(charName(c))+'">'+imageOrFallback(portrait(c),c,'arcane-character-portrait')+'</button>').join('');
   rail.querySelectorAll('[data-character]').forEach(b=>b.addEventListener('click',()=>{focusPortraitId=b.dataset.character;toggleCharacter(b.dataset.character)}));if(focusPortraitId){rail.querySelector('[data-character="'+CSS.escape(focusPortraitId)+'"]')?.focus({preventScroll:true});focusPortraitId=null}
