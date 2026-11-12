@@ -16,7 +16,9 @@ describe('ARCANE character drawer',()=>{
   expect(styles).toContain('@media(max-width:999px)');
  });
  it('uses the active campaign character records and excludes NPC records from the party rail',()=>{
-  expect(component).toContain("chars.filter(c=>c&&c.ownerId!=='SLP')");
+  expect(component).toContain("characters?campaign_id=eq.'+encodeURIComponent(campaignId)+'&select=id,is_npc");
+  expect(component).toContain('npcFlags.get(id)!==true');
+  expect(component).toContain("c.ownerId!=='SLP'");
   expect(component).toContain('getPortraitSrc(c)');
   expect(component).toContain("c?._combatIconUrl");
  });
