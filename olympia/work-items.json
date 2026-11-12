@@ -126,6 +126,52 @@
       ],
       "image_count": 3,
       "image_status": "published"
+    },
+    {
+      "id": "PILOT-003",
+      "sequence": 3,
+      "title": "SL Control Board 2.0 – LIVE-grupp #774 + #775",
+      "purpose": "Publicera kontrollistans överlägg och dess paus-, SL-info- och synlighetsfunktioner tillsammans som en verifierad beroendegrupp.",
+      "expected_result": "SL Control Board visas under stridskartan. Öppning ändrar inte kartans layout. Pausa/återuppta, SL-anteckningar och synlighetskontroller bygger på samma befintliga stridsinstans och befintliga behörigheter.",
+      "status": "ready_for_acceptance",
+      "technical_status": "PR #774 och #775 är mergade i development. LIVE-kandidat ska innehålla båda i beroendeordning och köras mot aktuell LIVE-bas.",
+      "ready_for_human_acceptance": true,
+      "dev_sha": "f4480167865e877ba3434d4f24453bcf3ff526df",
+      "pr_number": 775,
+      "release_source_prs": [
+        774,
+        775
+      ],
+      "dev_url": "../",
+      "features": [
+        "features/combat/runtime.js",
+        "features/combat/sl-control-board.css",
+        "index.html",
+        "tests/combat-desktop-dashboard.test.js",
+        "tests/combat-scene-layout.test.js",
+        "tests/combat-sl-control-board.test.js",
+        "tests/effects-admin.test.js"
+      ],
+      "acceptance": {
+        "tested_dev_sha": null,
+        "decision": null,
+        "comment": null,
+        "record_issue": null,
+        "decided_at": null,
+        "release_group": null,
+        "live_status": "not_released"
+      },
+      "provenance": {
+        "source_prs": [
+          774,
+          775
+        ],
+        "primary_pr": 775,
+        "reason": "PR #775 bygger på SL Control Board-överlägget från PR #774."
+      },
+      "images": [],
+      "image_count": 0,
+      "image_status": "published"
     }
   ]
 }
