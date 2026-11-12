@@ -1096,7 +1096,8 @@ const COMBAT_PRIMARY_ACTIONS=[
  {key:'parry',type:'parry',label:'Parera',icon:'🛡',mode:'reaction',reactive:true},
  {key:'spell_cast',type:'spell',label:'Magi',icon:'✦',mode:'cast'},
  {key:'move_full',type:'move',label:'Full förflyttning',icon:'🏃',mode:'full',automatic:true},
- {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'}
+ {key:'other',type:'other',label:'Annan handling',icon:'⚙',mode:'other'},
+ {key:'weapon_switch',type:'other',label:'Byta/dra vapen',icon:'🗡',mode:'equipment'}
 ];
 function combatIsActiveTurn(combatant){
  return combatIsOnBattlefield(combatant)&&String(activeCombat?.active_actor_id||'')===String(combatant.id)
@@ -1130,7 +1131,7 @@ function combatCanChoosePrimaryAction(combatant){
 async function chooseCombatPrimaryAction(combatantId,actionKey){
  const combatant=combatants.find(row=>String(row.id)===String(combatantId));
  const def=COMBAT_PRIMARY_ACTIONS.find(item=>item.key===actionKey);
- if(!combatant||!def||def.automatic||def.reactive||!combatCanChoosePrimaryAction(combatant))return;
+ if(!combatant||!def||def.automatic||def.reactive||!combatCanChoosePrimaryAction(combatant)||window.combatWeaponSwitchIsOpen?.())return;
  if(combatMovementHasUsedMoreThanHalf(combatant))return;
  await window.combatUndoBeforeActorAction?.();
  const round=Number(activeCombat.round_number)||1;
@@ -1167,12 +1168,51 @@ async function chooseCombatPrimaryAction(combatantId,actionKey){
   }else{
    await dbJson('combat_actions',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(body)})
   }
-  await loadActiveCombat(null,{preserveSelectedTarget:def.type==='attack'})
+  await loadActiveCombat(null,{preserveSelectedTarget:def.type==='attack'});
+  if(def.key==='weapon_switch'){
+   const refreshed=combatants.find(row=>String(row.id)===String(combatant.id)),reserved=combatChosenAction(refreshed);
+   if(!refreshed||!reserved||reserved.source_data?.action_key!=='weapon_switch'||!await window.aleaBeginCombatWeaponSwitch?.(refreshed,reserved))throw new Error('Utrustningspanelen kunde inte öppnas för den aktiva rollpersonen.')
+  }
  }catch(error){
   console.error('Kunde inte välja action',error);
   alert('Kunde inte välja action: '+(error?.message||error))
  }
 }
+
+let combatWeaponSwitchCommitBusy=false;
+async function combatCommitWeaponSwitch(session){
+ if(!session||combatWeaponSwitchCommitBusy||!combatCanManage()||activeCombat?.status!=='active'||String(activeCombat.id)!==String(session.combatId)||Number(activeCombat.round_number)!==Number(session.roundNumber))return false;
+ const actor=combatants.find(row=>String(row.id)===String(session.combatantId)),action=actor&&combatChosenAction(actor);
+ if(!actor||!combatIsActiveTurn(actor)||actor.source_type!=='character'||String(actor.source_id)!==String(session.characterId)||!action||String(action.id)!==String(session.actionId)||action.status!=='planned'||action.source_data?.action_key!=='weapon_switch')return false;
+ combatWeaponSwitchCommitBusy=true;let logId=null;
+ const loadout=(equipment)=>['leftHand','rightHand'].map(slot=>{const ref=equipment?.[slot];if(!ref)return slot+': tom';const character=combatCharacterSource(actor),catalog=ref.kind==='weapon'?(character?.weapons||[]):(character?.shields||[]),item=catalog.find(entry=>String(entry.equipId)===String(ref.itemId));return slot+': '+(item?.name||ref.kind||'föremål')+(Number(ref.hands)===2?' (tvåhands)':'')});
+ try{
+  const now=new Date().toISOString();
+  const inserted=await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:activeCombat.phase||'movement',event_type:'weapon_switch',message:(actor.name_snapshot||'Stridande')+' bytte/drog vapen',details:{combatant_id:actor.id,character_id:session.characterId,old_loadout:loadout(session.original),new_loadout:loadout(session.newEquipment),action_id:action.id},player_visible:true})});
+  if(!Array.isArray(inserted)||!inserted[0])return false;logId=inserted[0].id;
+  const updated=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&combatant_id=eq.'+encodeURIComponent(actor.id)+'&round_number=eq.'+(Number(activeCombat.round_number)||1)+'&slot_key=eq.primary&status=eq.planned&select=id',{
+   method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolved',result:{weapon_switch:true,old_loadout:loadout(session.original),new_loadout:loadout(session.newEquipment),resolved_at:now},updated_at:now})
+  });
+  if(!Array.isArray(updated)||!updated.some(row=>String(row.id)===String(action.id))){await dbJson('combat_log?id=eq.'+encodeURIComponent(logId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});return false}
+  await loadActiveCombat(null,{preserveSelectedTarget:true});return true
+ }catch(error){
+  console.error('Vapenbyte kunde inte slutföras',error);
+  try{const latest=await dbJson('combat_actions?id=eq.'+encodeURIComponent(session.actionId)+'&combat_id=eq.'+encodeURIComponent(session.combatId)+'&select=id,status');if(Array.isArray(latest)&&latest.some(row=>String(row.id)===String(session.actionId)&&row.status==='resolved')){await loadActiveCombat(null,{preserveSelectedTarget:true});return true}}catch(_){}
+  if(logId)try{await dbJson('combat_log?id=eq.'+encodeURIComponent(logId),{method:'DELETE',headers:{'Prefer':'return=minimal'}})}catch(_){}
+  throw error
+ }finally{combatWeaponSwitchCommitBusy=false}
+}
+async function combatCancelWeaponSwitch(session){
+ if(!session||!combatCanManage()||String(activeCombat?.id)!==String(session.combatId))return;
+ try{
+  await dbJson('combat_actions?id=eq.'+encodeURIComponent(session.actionId)+'&combat_id=eq.'+encodeURIComponent(session.combatId)+'&combatant_id=eq.'+encodeURIComponent(session.combatantId)+'&round_number=eq.'+(Number(session.roundNumber)||1)+'&slot_key=eq.primary&status=eq.planned',{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+  await loadActiveCombat(null,{preserveSelectedTarget:true})
+ }catch(error){console.error('Vapenbyteshandlingen kunde inte avbrytas',error);alert('Utrustningen återställdes, men stridshandlingen kunde inte avbrytas. Läs in striden på nytt.')}
+}
+window.combatCommitWeaponSwitch=combatCommitWeaponSwitch;
+window.combatCancelWeaponSwitch=combatCancelWeaponSwitch;
+window.combatWeaponSwitchIsOpen=()=>!!combatWeaponSwitchCommitBusy||!!window.currentEquipmentCombatWeaponSwitchOpen?.();
+
 function combatPrimaryActionIsSpent(action){
  if(!action)return false;
  if(action.action_type==='move'&&action.source_data?.action_key==='move_full')return true;
