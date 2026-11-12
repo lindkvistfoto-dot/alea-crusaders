@@ -1297,6 +1297,7 @@ const ADMIN_SECTION_META={
  specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
  arcaneSystem:['ARCANE · Systembibliotek','Återanvändbara grafiska systemkomponenter'],
  paperDollWorkshop:['Arcane Paper Doll · Dockfabriken','Montera återanvändbara spelpjäser från befintliga porträtt'],
+ battlefieldWorkshop:['Battlefield · Objektverkstaden','Skapa återanvändbara hexobjekt med anslutningar och stridsegenskaper'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1380,6 +1381,8 @@ async function openAdminSection(key='overview'){
   window.aleaArcaneSystem?.renderAdmin?.()
  }else if(activeAdminSection==='paperDollWorkshop'){
   await window.aleaPaperDollWorkshop?.mount?.()
+ }else if(activeAdminSection==='battlefieldWorkshop'){
+  await window.aleaBattlefieldObjectWorkshop?.mount?.()
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()

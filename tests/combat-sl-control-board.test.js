@@ -46,6 +46,11 @@ describe('SL Control Board integration',()=>{
   expect(runtime).toContain("cls.push('battlefield-placement-hex')");
   expect(runtime).toContain('combatApplyBattlefieldPreset(event,' );
   expect(library).not.toContain('fetch(');
+  lib.registerExternal([{object_key:'wall-segment-prototype',name:'Mursegment',category:'Murar',asset_key:'arcane-battlefield-wall-prototype',footprint:[{q:0,r:0}],connector_edges:[0,3],movement_mode:'blocked',sight_mode:'blocked',max_damage:10}]);
+  const wall=lib.get('wall-segment-prototype');
+  expect(wall.placement_mode).toBe('object');
+  expect(wall.connector_edges).toEqual([0,3]);
+  expect(lib.objectPayload(wall,{q:2,r:-1,rotation:4,damage:3})).toMatchObject({object_key:'wall-segment-prototype',q:2,r:-1,rotation:4,damage:3,max_damage:10,properties:{movement_mode:'blocked',sight_mode:'blocked'}});
  });
 
  it('provides pause and resume by updating the current combat instance with an expected status',()=>{
@@ -80,8 +85,8 @@ describe('SL Control Board integration',()=>{
   expect(css).toContain('.combat-below-map{position:relative');
   expect(css).toContain('.slcb-panel{');
   expect(css).toContain('position:absolute');
-  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-4');
-  expect(html).toContain('features/combat/battlefield-library.js?v=20261112-1');
+  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-5');
+  expect(html).toContain('features/combat/battlefield-library.js?v=20261112-2');
   expect(runtime).toContain("'<div class=\"combat-below-map\">'+combatSlControlBoardHtml(logHtml)+");
  });
 });
