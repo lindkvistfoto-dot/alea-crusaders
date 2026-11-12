@@ -1,5 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const app=read('legacy/app.js');
@@ -16,7 +17,9 @@ const piece=(source,begin,end)=>{
  return source.slice(start,stop);
 };
 const escape=value=>String(value);
-const art={imageTag:path=>path?'<img class="gandalf-equip-art" alt="">':'',src:path=>path?'https://example.invalid/'+path:''};
+const readers={};
+runInNewContext(read('features/equipment/art.js'),{window:readers});
+const art={...readers.aleaEquipmentArt,imageTag:path=>path?'<img class="gandalf-equip-art" alt="">':'',src:path=>path?'https://example.invalid/'+path:''};
 const magic={magical:item=>item?.isMagical===true||item?.magic?.enabled===true};
 const win={aleaEquipmentArt:art,aleaCharacterItemMagic:magic};
 const item=(isMagical=true)=>({equipId:'sword',name:'Dödsbringaren',isMagical});

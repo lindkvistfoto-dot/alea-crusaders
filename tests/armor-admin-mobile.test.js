@@ -19,6 +19,7 @@ function renderArmors(){
  });
  const rows=[sample('aaaaaaaa-1111-4444-9999-aaaaaaaaaaaa','Härdat läder'),sample('bbbbbbbb-2222-4444-9999-bbbbbbbbbbbb','Läder med nitar')];
  const ctx={
+  window:{},
   $:id=>id==='adminArmorTable'?table:id==='adminArmorStatus'?status:null,
   ruleArmorLoaded:true,ruleArmorTypes:rows,ruleArmorMaterials:[],
   asBool:Boolean,escAttr:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;'),

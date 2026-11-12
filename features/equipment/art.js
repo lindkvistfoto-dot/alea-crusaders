@@ -10,6 +10,12 @@
  const armorColumn=z=>'image_'+z+'_path';
  function armorImagePathForSlot(rule,slot){
   const zone=slot==='head'||slot==='arms'||slot==='torso'||slot==='legs'?slot:null;
+  if(zone){
+   const key=rule?.['image_'+zone+'_asset_id'];
+   if(key)return key;
+   // A completed REMOVE must not resurrect a former legacy image.
+   if(Number(rule?.['image_'+zone+'_revision']||0)>0)return null;
+  }
   return (zone?rule?.[armorColumn(zone)]:null)||rule?.image_path||null;
  }
  let baseUrl='',draft=null;
@@ -35,7 +41,7 @@
   return url?'<img src="'+escapeHtml(url)+'" alt="Förhandsvisning av föremålsbild">':'<span class="item-art-empty">Ingen bild – standardikon visas</span>';
  }
  function pieceStatus(piece){
-  return piece?.blob?'Ny bild vald – sparas när du klickar Spara.':
+  return (piece?.file||piece?.blob)?'Ny bild vald – sparas när du klickar Spara.':
    piece?.removed?'Bilden tas bort när du sparar.':
    piece?.original?'Sparad bild från registret.':'Ingen bild vald.';
  }
@@ -53,7 +59,7 @@
  }
  function startArmor(rule){
   reset();
-  draft={kind:'armor',pieces:Object.fromEntries(ARMOR_ZONES.map(([zone])=>[zone,makePiece(rule?.[armorColumn(zone)])]))};
+  draft={kind:'armor',record:{...rule},pieces:Object.fromEntries(ARMOR_ZONES.map(([zone])=>[zone,{...makePiece(null),original:armorImagePathForSlot(rule,zone),file:null}]))};
   return '<section class="item-art-editor item-art-armor wide" aria-label="Rustningsbilder">'+
    '<div class="item-art-heading"><strong>Rustningsbilder · fyra kroppsdelar</strong><span>Varje bild är knuten till sin kroppsdel i ordinarie rustningssystem. PNG och WebP med transparens rekommenderas.</span></div>'+
    '<div class="item-art-armor-grid">'+ARMOR_ZONES.map(([zone,label])=>{
@@ -63,7 +69,7 @@
      '<div class="item-art-controls"><label class="item-art-upload">Välj bild<input type="file" accept="image/png,image/jpeg,image/webp" onchange="window.aleaEquipmentArt.choose(this.files[0],\''+zone+'\');this.value=\'\'"></label>'+
      '<button type="button" class="smallbtn" onclick="window.aleaEquipmentArt.remove(\''+zone+'\')">Ta bort</button>'+
      '<small id="itemArtStatus-'+zone+'">'+pieceStatus(piece)+'</small></div></div>';
-   }).join('')+'</div><small>Max 12 MB vid val. Bilder anpassas till max 900 px och lagras centralt per rustningstyp.</small></section>';
+   }).join('')+'</div><small>PNG, JPEG eller WebP upp till 12 MB och 2048 × 2048 px. Original och visningsbild hanteras av HERMES ALEA.</small></section>';
  }
  function start(kind,rule){
   if(kind==='armor')return startArmor(rule);
@@ -81,6 +87,9 @@
   if(!file||!draft)return;
   const active=draft?.pieces?draft.pieces[zone]:draft;
   if(!active)return;
+  if(draft.kind==='armor'){
+   releasePreview(active);active.previewUrl=URL.createObjectURL(file);active.file=file;active.removed=false;refresh(zone);return;
+  }
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>MAX_UPLOAD){
    alert('Välj PNG, JPG eller WebP, högst 12 MB.');return;
   }
@@ -113,7 +122,7 @@
   const active=draft?.pieces?draft.pieces[zone]:draft;
   if(!active)return;
   releasePreview(active);
-  active.previewUrl=null;active.blob=null;active.removed=true;refresh(zone);
+  active.previewUrl=null;active.blob=null;active.file=null;active.removed=true;refresh(zone);
  }
  /* v0.35.69 — storage requests must never reuse an expired editor-open token. */
  function authHeaders(ctx,token){return {'apikey':ctx.key,'Authorization':'Bearer '+token}}
@@ -168,36 +177,24 @@
    throw new Error(data?.message||data?.error||'Bilduppladdningen misslyckades ('+response.status+').');
   }
  }
- async function prepareArmor(id,ctx){
-  // Snapshot all four zones BEFORE the first await. The global editor draft may
-  // be reset by a modal close, navigation, or another editor while uploads run.
+ async function prepareArmor(id){
   const editor=draft;
   if(editor?.kind!=='armor'||!editor.pieces)throw new Error('Öppna rustningseditorn igen.');
-  if(!/^[0-9a-f-]{36}$/.test(id))throw new Error('Ogiltigt rustnings-ID.');
-  const selected=ARMOR_ZONES.map(([zone])=>{
+  if(!window.aleaHermesAleaArmors?.save)throw new Error('HERMES ALEA-klienten är inte tillgänglig. Ladda om sidan.');
+  // Snapshot before awaiting, as with the existing equipment editor.
+  const pieces=ARMOR_ZONES.map(([zone])=>{
    const piece=editor.pieces[zone];
-   if(!piece)throw new Error('Bildfältet '+zone+' saknas. Öppna rustningen igen.');
-   return {zone,original:piece.original,removed:piece.removed,blob:piece.blob};
+   return {zone,file:piece.file,removed:piece.removed,completed:()=>{
+    piece.file=null;piece.removed=false;releasePreview(piece);piece.previewUrl=null;
+    piece.original=armorImagePathForSlot(editor.record,zone);
+    if(draft===editor)refresh(zone);
+   }};
   });
-  const paths={},old=[],uploaded=[];
-  try{
-   for(const part of selected){
-    const {zone}=part,key=armorColumn(zone);
-    if(part.removed){paths[key]=null;if(part.original)old.push(part.original);continue;}
-    if(!part.blob){paths[key]=part.original;continue;}
-    if((!ctx?.token&&typeof ctx?.getToken!=='function')||!ctx?.key||!baseUrl)throw new Error('Inloggning saknas.');
-    const ext=part.blob.type==='image/webp'?'webp':'png';
-    const path='armor/'+zone+'/'+id+'/'+crypto.randomUUID()+'.'+ext;
-    await uploadPiece(part.blob,path,ctx);
-    uploaded.push(path);
-    paths[key]=path;
-    if(part.original)old.push(part.original);
-   }
-  }catch(e){
-   await Promise.all(uploaded.map(path=>removeStored(path,ctx).catch(()=>{})));
-   throw e;
-  }
-  return {paths,old,uploaded};
+  await window.aleaHermesAleaArmors.save({id,record:editor.record,pieces,onStatus:(zone,stage)=>{
+   const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp original och WebP…',verifying:'Kontrollerar bilddata…',activating:'Aktiverar bilden…',completed:'Bilden har uppdaterats.'};
+   const status=document.getElementById('itemArtStatus-'+zone);
+   if(draft===editor&&status&&labels[stage])status.textContent=labels[stage];
+  }});
  }
 
  /* A unique character-owned image is independent of any weapon or shield

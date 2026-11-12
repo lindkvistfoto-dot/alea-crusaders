@@ -12,7 +12,7 @@ const id='f53b9568-81ec-4623-ac6d-dd452177a769';
 const path='weapon/'+id+'/'+id+'.webp';
 
 function artFixture(){
- const w={};
+ const w={aleaHermesAleaArmors:{save:async()=>{}}};
  runInNewContext(artSource,{window:w,URL:{revokeObjectURL(){}},document:{getElementById(){return null;}}});
  w.aleaEquipmentArt.configure('https://example.supabase.co');
  return w.aleaEquipmentArt;
@@ -59,74 +59,37 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
   expect(html).toContain('features/equipment/weapon-hermes-alea.js?v=20261107-weapon-hermes-v1');
   for(const table of ['rule_weapons','rule_shields','rule_armor_types'])expect(app).toContain(table);
   expect((app.match(/payload.image_path=artChange.path/g)||[]).length).toBe(1);
-  expect(app).toContain('Object.assign(payload,artChange.paths)');
+  expect(app).not.toContain('Object.assign(payload,artChange.paths)');
   expect((app.match(/aleaEquipmentArt\?\.thumbnail/g)||[]).length).toBe(5);
   expect(app).toContain('function currentEquipmentItemArtPath(');
   expect(app).toContain('characterShieldRule(item)?.image_path');
   expect(app).toContain('window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item))');
-  expect(app).toContain('type?.image_path');
+  expect(app).toContain('armorImagePathForSlot(type,slot)');
   expect(app).toContain('armorImagePathForSlot(type,slot)');
   expect(app).toContain('window.aleaEquipmentArt?.reset()');
  });
- it('provides four independent armor upload controls and removes only the selected slot',async()=>{
-  const art=artFixture();
+ it('provides four independent HERMES ALEA controls and removes only the selected slot',async()=>{
+  const w={},calls=[];
+  w.aleaHermesAleaArmors={save:async args=>calls.push(args)};
+  runInNewContext(artSource,{window:w,URL:{revokeObjectURL(){}},document:{getElementById(){return null;}}});
+  const art=w.aleaEquipmentArt;
   const armorPaths=Object.fromEntries(['head','arms','torso','legs'].map(z=>['image_'+z+'_path','armor/'+z+'/'+id+'/'+id+'.webp']));
   const form=art.startArmor(armorPaths);
-  for(const zone of ['head','arms','torso','legs']){
-   expect(form).toContain('itemArtPreview-'+zone);
-   expect(form).toContain('itemArtStatus-'+zone);
-   expect(form).toContain("choose(this.files[0],'"+zone+"')");
-  }
-  const before=await art.prepareArmor(id,{});
-  for(const zone of ['head','arms','torso','legs'])expect(before.paths['image_'+zone+'_path']).toBe(armorPaths['image_'+zone+'_path']);
-  art.remove('head');
-  const after=await art.prepareArmor(id,{});
-  expect(after.paths.image_head_path).toBeNull();
-  expect(after.paths.image_arms_path).toBe(armorPaths.image_arms_path);
-  expect(after.paths.image_torso_path).toBe(armorPaths.image_torso_path);
-  expect(after.paths.image_legs_path).toBe(armorPaths.image_legs_path);
-  expect(after.old.length).toBe(1);
-  expect(after.old[0]).toBe(armorPaths.image_head_path);
-  art.reset();
+  for(const zone of ['head','arms','torso','legs'])expect(form).toContain("choose(this.files[0],'"+zone+"')");
+  art.remove('head');await art.prepareArmor(id);
+  expect(calls[0].pieces.filter(p=>p.removed).map(p=>p.zone)).toEqual(['head']);
+  expect(calls[0].record.image_arms_path).toBe(armorPaths.image_arms_path);
+  expect(form).not.toContain('900');
  });
- it('keeps saving all four images even when editor state resets during the first upload',async()=>{
-  const win={},uploads=[];
-  let art=null,seq=0;
-  const mockWindow={};
-  const ImageStub=class{
-   constructor(){this.naturalWidth=450;this.naturalHeight=450}
-   set src(value){Promise.resolve().then(()=>this.onload())}
-  };
-  const ctx={
-   window:mockWindow,
-   crypto:{randomUUID:()=>id},
-   URL:{createObjectURL:()=>('blob:test-'+(++seq)),revokeObjectURL(){}},
-   Image:ImageStub,
-   document:{
-    getElementById:()=>null,
-    createElement:()=>({
-     getContext:()=>({clearRect(){},drawImage(){}}),
-     toBlob:(callback,type)=>callback({type,size:5000})
-    })
-   },
-   fetch:async(url,options)=>{
-    uploads.push({url,method:options.method});
-    if(uploads.length===1)art.reset();
-    return {ok:true,status:200};
-   },
-   alert:()=>{throw new Error('Unexpected upload error')}
-  };
-  runInNewContext(artSource,ctx);
-  art=mockWindow.aleaEquipmentArt;
-  art.configure('https://example.supabase.co');
-  art.startArmor({});
-  for(const zone of ['head','arms','torso','legs'])
-   await art.choose({type:'image/png',size:15000},zone);
-  const saved=await art.prepareArmor(id,{token:'test',key:'test'});
-  expect(uploads).toHaveLength(4);
-  expect(saved.uploaded).toHaveLength(4);
-  for(const zone of ['head','arms','torso','legs'])
-   expect(saved.paths['image_'+zone+'_path']).toContain('armor/'+zone+'/'+id+'/');
+ it('snapshots all four original files before the editor resets during publication',async()=>{
+  const w={},files=['head','arms','torso','legs'].map(zone=>({name:zone,type:'image/png',size:15000}));
+  let selected;
+  w.aleaHermesAleaArmors={save:async args=>{w.aleaEquipmentArt.reset();selected=args.pieces;}};
+  runInNewContext(artSource,{window:w,URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},document:{getElementById(){return null;}}});
+  const art=w.aleaEquipmentArt;art.startArmor({});
+  for(const file of files)await art.choose(file,file.name);
+  await art.prepareArmor(id);
+  expect(selected.map(p=>p.file)).toEqual(files);
  });
  it('chooses the image belonging to each armor zone and retains the legacy fallback',()=>{
   const art=artFixture();
@@ -139,17 +102,21 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
    expect(art.armorImagePathForSlot(rule,zone)).toBe(rule['image_'+zone+'_path']);
    expect(art.src(rule['image_'+zone+'_path'])).toContain('alea-equipment-art/armor/'+zone);
   }
+  rule.image_head_asset_id='hermes-alea:'+id;
+  expect(art.armorImagePathForSlot(rule,'head')).toBe('hermes-alea:'+id);
+  rule.image_head_asset_id=null;rule.image_head_revision=2;
+  expect(art.armorImagePathForSlot(rule,'head')).toBeNull();
   expect(art.armorImagePathForSlot({},'head')).toBeNull();
   expect(art.src('armor/wrong/'+id+'/'+id+'.webp')).toBe('');
  });
  it('wires the armor UI thumbnail and all four images to ordinary equipment slots',()=>{
   for(const zone of ['head','arms','torso','legs']){
-   expect(app).toContain("'image_'+z+'_path'");
+   expect(app).toContain('armorImagePathForSlot(r,z)');
   }
   expect(app).toContain("function currentEquipmentItemArtPath(ref,item,slot)");
   expect(app).toContain("currentEquipmentItemArtPath(ref,item,slot)");
-  expect(app).toContain("r['image_'+z+'_path']");
-  expect(app).toContain('rule?.image_torso_path');
+  expect(app).toContain('armorImagePathForSlot(r,z)');
+  expect(app).toContain('armorImagePathForSlot(rule,zone)');
   expect(css).toContain('.item-art-armor-grid');
   expect(css).toContain('grid-template-columns:repeat(2,minmax(0,1fr))');
  });

@@ -242,6 +242,7 @@ async function loadRuleArmorRegistry(force=false){
    dbJson('rule_armor_materials?select=*&order=sort_order.asc,name.asc')
   ]);
   ruleArmorTypes=rows[0]||[];ruleArmorMaterials=rows[1]||[];ruleArmorLoaded=true;
+  try{await window.aleaHermesAssetResolver?.load()}catch(error){console.warn('Kunde inte läsa HERMES ALEA-bilder just nu',error)}
   return {types:ruleArmorTypes,materials:ruleArmorMaterials}
  })}catch(e){ruleArmorTypes=[];ruleArmorMaterials=[];ruleArmorLoaded=false;return {types:[],materials:[]}}
 }
@@ -968,7 +969,7 @@ function ruleShieldIconSrc(key){let d=ruleShieldIconDef(key);return './assets/ar
 function ruleArmorIconHtml(rule){
  let d=ruleArmorIconDef(rule?.icon_key);
  const fallback='<span class="admin-weapon-icon'+(!d?' missing':'')+'" title="'+escAttr(d?.label||'Ikon saknas')+'"><img src="'+escAttr(ruleArmorIconSrc(rule?.icon_key))+'" alt="" aria-hidden="true"><small>'+escAttr(d?.label||'SAKNAS')+'</small></span>'
- const preview=rule?.image_torso_path||rule?.image_head_path||rule?.image_arms_path||rule?.image_legs_path||rule?.image_path;
+ const preview=['torso','head','arms','legs'].map(zone=>window.aleaEquipmentArt?.armorImagePathForSlot(rule,zone)).find(Boolean);
  return window.aleaEquipmentArt?.thumbnail(preview,fallback,rule?.name)||fallback;
 }
 function ruleShieldIconHtml(rule){
@@ -1002,7 +1003,7 @@ function renderAdminArmors(){
   ruleArmorTypes.map(r=>
    '<div class="armor-admin-row armor-admin-record">'+
     '<div class="armor-cell-icon admin-weapon-icon-cell">'+ruleArmorIconHtml(r)+'</div>'+
-    '<div class="armor-cell-name"><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small><small class="item-art-armor-count">'+['head','arms','torso','legs'].filter(z=>r['image_'+z+'_path']).length+'/4 rustningsbilder</small></div>'+
+    '<div class="armor-cell-name"><b>'+escAttr(r.name||'—')+'</b><small class="admin-master-key">'+escAttr(r.type_key||'—')+'</small><small class="item-art-armor-count">'+['head','arms','torso','legs'].filter(z=>window.aleaEquipmentArt?.armorImagePathForSlot(r,z)).length+'/4 rustningsbilder</small></div>'+
     '<div class="armor-cell-type">'+escAttr(ruleArmorCategoryLabel(r.category))+'</div>'+
     '<div class="armor-cell-abs"><b>'+(r.absorption??'—')+'</b></div>'+
     '<div class="armor-cell-weight"><b>'+escAttr(r.weight_code||'—')+'</b></div>'+
@@ -1049,8 +1050,7 @@ async function saveRuleArmor(id=''){
  const saveButton=$('adminEditorBody')?.querySelector('.rule-editor-actions .primary')||null;
  if(saveButton)saveButton.disabled=true;
  let existing=id?ruleArmorTypes.find(x=>x.id===id):null;
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
- let artChange=null;
+ let saved=false;
  const artId=id||crypto.randomUUID();
  try{
   let payload={
@@ -1070,14 +1070,16 @@ async function saveRuleArmor(id=''){
    sort_order:Number($('raSort')?.value||0),
    updated_at:new Date().toISOString()
   };
-  artChange=await window.aleaEquipmentArt.prepareArmor(artId,artContext);
-  Object.assign(payload,artChange.paths);
   if(!id)payload.id=artId;
   if(id)await dbJson('rule_armor_types?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
   else await dbJson('rule_armor_types',{method:'POST',body:JSON.stringify(payload)});
-  for(const oldPath of artChange.old)window.aleaEquipmentArt.removeStored(oldPath,artContext).catch(e=>console.warn('Rustningsbild kunde inte rensas',e));
+  saved=true;
+  // Retain the new row ID on retry if an image fails after metadata was saved.
+  const retryButton=$('adminEditorBody')?.querySelector('.rule-editor-actions .primary');
+  if(retryButton)retryButton.setAttribute('onclick',"saveRuleArmor('"+artId+"')");
+  await window.aleaEquipmentArt.prepareArmor(artId);
   closeAdminEditor();await loadRuleArmorRegistry(true);renderAdminArmors();renderAdminOverviewCounts();if(current)render()
- }catch(e){if(artChange?.uploaded?.length)await Promise.all(artChange.uploaded.map(path=>window.aleaEquipmentArt.removeStored(path,artContext).catch(()=>{})));alert('Kunde inte spara rustningen: '+e.message)}
+ }catch(e){if(saved){await loadRuleArmorRegistry(true);renderAdminArmors();if(current)render()}alert((saved?'Rustningen sparades, men alla bildändringar kunde inte slutföras. Redan uppdaterade kroppsdelar är sparade. Försök igen: ':'Kunde inte spara rustningen: ')+e.message)}
  finally{ruleArmorSaveInProgress=false;if(saveButton)saveButton.disabled=false;}
 }
 async function deleteRuleArmor(id){
@@ -1934,7 +1936,7 @@ function currentEquipmentItemArtPath(ref,item,slot){
   const type=armorTypeById(item.armorTypeId||item.armor_type_id||'')||
    armorTypeByKey(item.armorTypeKey||item.armor_type_key||'')||
    ruleArmorTypes.find(r=>r.name&&(String(item.name||'')===String(r.name)||String(item.name||'').startsWith(String(r.name)+' (')))||null;
-  return window.aleaEquipmentArt?.armorImagePathForSlot(type,slot)||type?.image_path||null;
+  return window.aleaEquipmentArt?.armorImagePathForSlot(type,slot)??null;
  }
  return null;
 }

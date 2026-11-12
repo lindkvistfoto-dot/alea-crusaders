@@ -6250,7 +6250,7 @@ function combatTurnEquipmentHtml(combatant){
   String(r.id)===String(worn.armorTypeId||worn.armor_type_id||'')||
   (worn.armorTypeKey&&r.type_key===worn.armorTypeKey)||
   String(r.name||'').localeCompare(String(worn.name||''),'sv',{sensitivity:'base'})===0):null;
- const armorArt=armorRule?.image_torso_path||armorRule?.image_path||worn?.image_torso_path||worn?.image_path;
+ const armorArt=window.aleaEquipmentArt?.armorImagePathForSlot(armorRule||worn,'torso');
  const armorHtml=imageTile('armor','Rustning',worn,armorArt,false,null,cropValue(armorRule,worn));
  const projectileEntries=[],projectileKeys=new Set();
  for(const {item,rule} of shownWeapons){
