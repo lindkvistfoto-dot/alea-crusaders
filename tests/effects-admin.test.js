@@ -64,7 +64,8 @@ describe('Admin · effektregister – live data and CRUD',()=>{
   expect(render.indexOf('combatSlControlBoardHtml(logHtml)')).toBeGreaterThan(render.indexOf('renderCombatMap()+combatMapPresetsHtml()'));
   expect(render.indexOf('combatSlControlBoardHtml(logHtml)')).toBeLessThan(render.indexOf('<section class="combat-log">'));
   const board=runtime.slice(runtime.indexOf('function combatSlBoardModuleHtml(logHtml){'),runtime.indexOf('function combatSlControlBoardHtml(logHtml){'));
-  expect(board).toContain('combatAreasAdminHtml()');
+  expect(board).toContain('combatBattlefieldLibraryHtml(sceneId,scene)');
+  expect(runtime.slice(runtime.indexOf('function combatBattlefieldLibraryHtml('),runtime.indexOf('function combatSlBoardModuleHtml('))).toContain('combatAreasAdminHtml()');
   expect(board).toContain('combatEffectsAdminHtml()');
  });
 

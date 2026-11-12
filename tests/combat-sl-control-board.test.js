@@ -6,6 +6,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const runtime=read('features/combat/runtime.js');
 const css=read('features/combat/sl-control-board.css');
 const html=read('index.html');
+const library=read('features/combat/battlefield-library.js');
 
 function closedBoardMarkup({canManage=true}={}){
  const start=runtime.indexOf('function combatSlControlBoardHtml(logHtml){');
@@ -32,6 +33,19 @@ describe('SL Control Board integration',()=>{
   expect(runtime).toContain('combatSlBoardToggle(){');
   expect(runtime).toContain('combatSlBoardNavigate(tab){');
   expect(runtime).not.toContain('sl_control_board_instances');
+ });
+
+ it('places reusable terrain presets through the existing combat hexes and movement/LoS model',()=>{
+  const env={window:{}};
+  runInNewContext(library,env);
+  const lib=env.window.aleaBattlefieldLibrary;
+  expect(lib.entries().length).toBeGreaterThan(4);
+  expect(lib.get('stone-wall').assetKey).toBe('arcane-battlefield-stone-wall');
+  expect(lib.terrainPayload(lib.get('dense-forest'),{notes:'scene note'})).toEqual({movement_mode:'difficult',sight_mode:'obscuring',movement_cost:2,notes:'scene note'});
+  expect(runtime).toContain("combat_hexes?'+base+'&select=id,notes&limit=1");
+  expect(runtime).toContain("cls.push('battlefield-placement-hex')");
+  expect(runtime).toContain('combatApplyBattlefieldPreset(event,' );
+  expect(library).not.toContain('fetch(');
  });
 
  it('provides pause and resume by updating the current combat instance with an expected status',()=>{
@@ -66,7 +80,8 @@ describe('SL Control Board integration',()=>{
   expect(css).toContain('.combat-below-map{position:relative');
   expect(css).toContain('.slcb-panel{');
   expect(css).toContain('position:absolute');
-  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-3');
+  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-4');
+  expect(html).toContain('features/combat/battlefield-library.js?v=20261112-1');
   expect(runtime).toContain("'<div class=\"combat-below-map\">'+combatSlControlBoardHtml(logHtml)+");
  });
 });
