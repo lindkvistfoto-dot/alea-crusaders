@@ -165,7 +165,7 @@ async function combatRollDice(specs,label='Slag'){
  }
 }
 
-let combatGmPlacementId=null;
+let combatGmPlacementId=null,combatBattlefieldBrushKey=null,combatBattlefieldBusy=false,combatBattlefieldArtLoadState='idle',combatBattlefieldArtPaths=new Map();
 let combatSlBoardOpen=false,combatSlBoardTab='overview';
 let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatLifecycleBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
@@ -4986,7 +4986,8 @@ function renderCombatMap(){
  const roadKeys=new Set((previewRoute?.path||[]).map(step=>step.q+','+step.r));
  const attackTargets=combatCurrentAttackTargets();
  const areaMode=combatAreaPlacementActive&&combatCanManage();
-  const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
+ const gmPlaceMode=!!combatGmPlacementId&&combatCanManage();
+ const battlefieldPlaceMode=typeof combatBattlefieldBrushKey!=='undefined'&&!!combatBattlefieldBrushKey&&combatCanManage();
  const currentMagic=actor&&combatChosenAction(actor);
  const spellAreaMode=currentMagic?.status==='planned'&&currentMagic.source_data?.casting_spell===true&&currentMagic.source_data.magic_binding?.kind==='area';
  const cubePreview=spellAreaMode&&currentMagic.source_data?.magic_binding?.cube&&currentMagic.source_data?.area_center?
@@ -5014,8 +5015,9 @@ function renderCombatMap(){
   if(occupied)cls.push('move-occupied');
   if(previewKey&&cell.key===previewKey&&cell.key!==originKey)cls.push('move-preview');
   if(gmPlaceMode&&!occupied&&cell.movement_mode!=='blocked'&&combatFootprintCanStand(combatants.find(c=>String(c.id)===String(combatGmPlacementId)),cell.q,cell.r))cls.push('gm-placement-hex');
-   const clickable=gmPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
-  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
+  if(battlefieldPlaceMode)cls.push('battlefield-placement-hex');
+  const clickable=gmPlaceMode||battlefieldPlaceMode||spellAreaMode||areaMode||!!planningActor&&moveCost!=null&&moveCost>0&&!occupied;
+  const click=gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
   return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+'</title></polygon>'
@@ -6933,11 +6935,74 @@ async function combatCancelQueuedEvent(id){
  }catch(error){console.error('Kunde inte ta bort händelsen',error);alert('Kunde inte ta bort händelsen: '+(error?.message||error));await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true}).catch(()=>{})}
  finally{combatQueuedEventBusy=false;combatQueuedEventBusyId='';renderCombat()}
 }
+async function combatLoadBattlefieldArt(){
+ if(combatBattlefieldArtLoadState!=='idle')return;
+ combatBattlefieldArtLoadState='loading';
+ const keys=(window.aleaBattlefieldLibrary?.entries()||[]).map(item=>item.assetKey).filter(Boolean);
+ try{
+  if(keys.length){
+   const rows=await dbJson('arcane_system_assets?asset_key=in.('+keys.join(',')+')&select=asset_key,asset_path');
+   (Array.isArray(rows)?rows:[]).forEach(row=>{if(/^arcane-battlefield-[a-z0-9-]+$/.test(row.asset_key||'')&&/^hermes\/system-asset\/arcane-battlefield-[a-z0-9-]+\/[a-f0-9]{64}\.webp$/.test(row.asset_path||''))combatBattlefieldArtPaths.set(String(row.asset_key),String(row.asset_path))});
+  }
+ }catch(error){console.warn('Kunde inte läsa publicerade HERMES CORE-systembilder för Battlefield Library',error)}
+ finally{combatBattlefieldArtLoadState='loaded';if(combatSlBoardOpen&&combatSlBoardTab==='battlefield')renderCombat()}
+}
+function combatBattlefieldLibraryHtml(sceneId,scene){
+ const library=typeof window!=='undefined'?window.aleaBattlefieldLibrary:null;
+ if(!library)return '<div class="slcb-module"><h3>Battlefield Library</h3><p>Biblioteket kunde inte läsas in.</p></div>';
+ if(combatBattlefieldArtLoadState==='idle')void combatLoadBattlefieldArt();
+ const entries=library.entries(),categories=[...new Set(entries.map(item=>item.category))];
+ const cards=categories.map(category=>'<section class="slcb-bf-category"><h4>'+escAttr(category)+'</h4><div class="slcb-bf-grid">'+entries.filter(item=>item.category===category).map(item=>
+  '<button type="button" class="slcb-bf-card'+(combatBattlefieldBrushKey===item.key?' selected':'')+'" aria-pressed="'+(combatBattlefieldBrushKey===item.key?'true':'false')+'" onclick="combatBattlefieldSelectPreset(\''+item.key+'\')">'+combatBattlefieldCardArt(item)+'<span><b>'+escAttr(item.name)+'</b><small>'+escAttr(item.description)+'</small><small class="slcb-bf-core">'+(item.assetKey?'HERMES CORE · '+escAttr(item.assetKey):'Inget bildobjekt')+'</small></span></button>'
+ ).join('')+'</div></section>').join('');
+ return '<div class="slcb-module"><h3>Battlefield Library</h3><p>Välj ett terrängkort och klicka hexar på kartan för att använda det. Placeringen uppdaterar den aktiva stridens befintliga hexdata, som fortsatt styr rörelse och sikt. Bildnycklar följer HERMES CORE:s systemasset-format.</p>'+cards+
+  '<div class="slcb-bf-status">'+(combatBattlefieldBrushKey?'<b>Aktivt verktyg:</b> '+escAttr(library.get(combatBattlefieldBrushKey)?.name||'Terräng')+' · klicka hexar på kartan.':'Välj en terrängtyp för att börja placera.')+
+  (combatBattlefieldBrushKey?'<button type="button" class="smallbtn" onclick="combatBattlefieldSelectPreset(\'\')">Avsluta placering</button>':'')+
+  (combatBattlefieldBusy?'<span aria-live="polite">Sparar…</span>':'')+'</div>'+
+  '<div class="slcb-bf-scene"><span><b>Scen:</b> '+escAttr(scene?.name||activeCombat?.name||'Aktiv strid')+' · <b>Strid:</b> '+escAttr(activeCombat?.status||'')+'</span><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Öppna sceneditorn</button></div>'+combatAreasAdminHtml()+'</div>'
+}
+function combatBattlefieldCardArt(item){
+ const path=item?.assetKey?combatBattlefieldArtPaths.get(item.assetKey):'';
+ const base=typeof SUPABASE_URL==='string'?SUPABASE_URL:'';
+ if(path&&base){const encoded=path.split('/').map(part=>encodeURIComponent(part)).join('/');return '<span class="slcb-bf-icon has-art"><img src="'+escAttr(base+'/storage/v1/object/public/alea-hermes-public/'+encoded)+'" alt=""></span>'}
+ return '<span class="slcb-bf-icon" aria-hidden="true">'+escAttr(item?.icon||'⬡')+'</span>'
+}
+function combatBattlefieldSelectPreset(key){
+ if(!combatCanManage()||!activeCombat)return;
+ const item=window.aleaBattlefieldLibrary?.get(key);
+ if(key&&!item)return;
+ combatBattlefieldBrushKey=key||null;
+ combatGmPlacementId=null;combatAreaPlacementActive=false;combatAreaDraftCenter=null;combatMovementPlan=null;
+ renderCombat()
+}
+async function combatApplyBattlefieldPreset(event,q,r){
+ event?.stopPropagation?.();
+ if(!combatCanManage()||!activeCombat?.id||!combatBattlefieldBrushKey||combatBattlefieldBusy)return;
+ const library=window.aleaBattlefieldLibrary,item=library?.get(combatBattlefieldBrushKey);
+ if(!item)return;
+ if(item.movement_mode==='blocked'&&combatants.some(actor=>actor.status!=='removed'&&actor.status!=='dead'&&combatFootprintCells(actor).some(cell=>cell.q===q&&cell.r===r)))
+  return alert('Flytta stridande från hexen innan du placerar ett hinder.');
+ combatBattlefieldBusy=true;renderCombat();
+ try{
+  const base='combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&q=eq.'+encodeURIComponent(q)+'&r=eq.'+encodeURIComponent(r);
+  const found=await dbJson('combat_hexes?'+base+'&select=id,notes&limit=1');
+  const existing=Array.isArray(found)?found[0]:null,payload=library.terrainPayload(item,existing||{});
+  if(existing){
+   const saved=await dbJson('combat_hexes?id=eq.'+encodeURIComponent(existing.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&select=id',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,updated_at:new Date().toISOString()})});
+   if(!Array.isArray(saved)||!saved.some(row=>String(row.id)===String(existing.id)))throw new Error('Hexen kunde inte uppdateras.');
+  }else{
+   const saved=await dbJson('combat_hexes',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({...payload,combat_id:activeCombat.id,campaign_id:centralCampaignId,q,r})});
+   if(!Array.isArray(saved)||!saved.length)throw new Error('Hexen kunde inte sparas.');
+  }
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte placera biblioteksterräng',error);alert('Kunde inte placera terrängen: '+(error?.message||error))}
+ finally{combatBattlefieldBusy=false;renderCombat()}
+}
 function combatSlBoardModuleHtml(logHtml){
  const sceneId=activeCombat?.settings?.scene_id||'',scene=combatSceneFromId(sceneId);
  const tab=combatSlBoardTab;
  if(tab==='combatants')return '<div class="slcb-module"><h3>Stridande</h3><p>Placering och reserver använder den aktiva stridens kombattanter. Klicka på en ledig hex på kartan för att sätta ut eller flytta vald figur.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+'</div>';
- if(tab==='battlefield')return '<div class="slcb-module"><h3>Terräng och sikt</h3><p>Redigera scenens hexterräng i den befintliga sceneditorn. Den aktiva stridens rörelse och LoS använder samma hexdata och regelmotor.</p><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Redigera stridsscen</button>'+combatAreasAdminHtml()+'</div>';
+ if(tab==='battlefield')return combatBattlefieldLibraryHtml(sceneId,scene);
  if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p><section class="slcb-event-queue"><h4>Händelsekö</h4><p>Händelsetexten är privat tills SL godkänner publicering. Spelarna ser den därefter i den befintliga stridsloggen.</p>'+combatQueuedEventsHtml()+'<label class="slcb-private-note-label" for="combatQueuedEventMessage">Spelarsynlig händelsetext</label><textarea id="combatQueuedEventMessage" rows="2" maxlength="2000" placeholder="Vad ska visas för spelarna när händelsen godkänns?"></textarea><div class="slcb-event-compose"><label>Runda<input id="combatQueuedEventRound" type="number" min="'+(Number(activeCombat.round_number)||1)+'" value="'+(Number(activeCombat.round_number)||1)+'"></label><button type="button" class="btn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatQueueManualEvent()">Lägg i händelsekön</button></div></section>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
  if(tab==='secrets'){
   const actors=combatants.filter(row=>row.status!=='removed');
@@ -6950,7 +7015,7 @@ function combatSlBoardModuleHtml(logHtml){
 }
 function combatSlControlBoardHtml(logHtml){
  if(!combatCanManage()||!activeCombat)return '';
- const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Terräng & sikt'],['events','Effekter'],['secrets','SL-info'],['log','Händelselogg']];
+ const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Battlefield Library'],['events','Effekter'],['secrets','SL-info'],['log','Händelselogg']];
  return '<section class="sl-control-board'+(combatSlBoardOpen?' is-open':'')+'" aria-label="SL Control Board">'+
   '<button type="button" class="slcb-toggle" aria-expanded="'+(combatSlBoardOpen?'true':'false')+'" aria-controls="slControlBoardPanel" onclick="combatSlBoardToggle()"><span class="slcb-mark" aria-hidden="true">⬡</span><span><b>SL CONTROL BOARD</b><small>'+escAttr(activeCombat?.name||'Aktiv strid')+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+(combatSlBoardOpen?'panelen öppen':'öppna spelledarverktyg')+'</small></span><span class="slcb-chevron" aria-hidden="true">'+(combatSlBoardOpen?'⌃':'⌄')+'</span></button>'+
   (combatSlBoardOpen?'<div id="slControlBoardPanel" class="slcb-panel"><div id="combatGmControls" class="combat-gm-controls hidden"></div><nav class="slcb-tabs" aria-label="SL-verktyg">'+tabs.map(([key,label])=>'<button type="button" class="slcb-tab'+(combatSlBoardTab===key?' active':'')+'" aria-pressed="'+(combatSlBoardTab===key?'true':'false')+'" onclick="combatSlBoardNavigate(\''+key+'\')">'+label+'</button>').join('')+'</nav>'+combatSlBoardModuleHtml(logHtml)+'</div>':'')+
