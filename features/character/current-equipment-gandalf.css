@@ -348,3 +348,7 @@
     box-sizing:border-box;
   }
 }
+
+.current-equip-combat-note{margin:8px 0;padding:9px 12px;border:1px solid #947440;border-radius:8px;background:rgba(76,55,27,.55);color:#f0d29a;font-size:.9rem}
+.current-equip-combat-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(204,170,113,.35)}
+.current-equip-combat-actions button{min-height:40px}
