@@ -1184,22 +1184,14 @@ async function combatCommitWeaponSwitch(session){
  if(!session||combatWeaponSwitchCommitBusy||!combatCanManage()||activeCombat?.status!=='active'||String(activeCombat.id)!==String(session.combatId)||Number(activeCombat.round_number)!==Number(session.roundNumber))return false;
  const actor=combatants.find(row=>String(row.id)===String(session.combatantId)),action=actor&&combatChosenAction(actor);
  if(!actor||!combatIsActiveTurn(actor)||actor.source_type!=='character'||String(actor.source_id)!==String(session.characterId)||!action||String(action.id)!==String(session.actionId)||action.status!=='planned'||action.source_data?.action_key!=='weapon_switch')return false;
- combatWeaponSwitchCommitBusy=true;let logId=null;
- const loadout=(equipment)=>['leftHand','rightHand'].map(slot=>{const ref=equipment?.[slot];if(!ref)return slot+': tom';const character=combatCharacterSource(actor),catalog=ref.kind==='weapon'?(character?.weapons||[]):(character?.shields||[]),item=catalog.find(entry=>String(entry.equipId)===String(ref.itemId));return slot+': '+(item?.name||ref.kind||'föremål')+(Number(ref.hands)===2?' (tvåhands)':'')});
+ combatWeaponSwitchCommitBusy=true;
  try{
-  const now=new Date().toISOString();
-  const inserted=await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,phase:activeCombat.phase||'movement',event_type:'weapon_switch',message:(actor.name_snapshot||'Stridande')+' bytte/drog vapen',details:{combatant_id:actor.id,character_id:session.characterId,old_loadout:loadout(session.original),new_loadout:loadout(session.newEquipment),action_id:action.id},player_visible:true})});
-  if(!Array.isArray(inserted)||!inserted[0])return false;logId=inserted[0].id;
-  const updated=await dbJson('combat_actions?id=eq.'+encodeURIComponent(action.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&combatant_id=eq.'+encodeURIComponent(actor.id)+'&round_number=eq.'+(Number(activeCombat.round_number)||1)+'&slot_key=eq.primary&status=eq.planned&select=id',{
-   method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({status:'resolved',result:{weapon_switch:true,old_loadout:loadout(session.original),new_loadout:loadout(session.newEquipment),resolved_at:now},updated_at:now})
-  });
-  if(!Array.isArray(updated)||!updated.some(row=>String(row.id)===String(action.id))){await dbJson('combat_log?id=eq.'+encodeURIComponent(logId),{method:'DELETE',headers:{'Prefer':'return=minimal'}});return false}
+  const result=await dbJson('rpc/combat_commit_weapon_switch',{method:'POST',body:JSON.stringify({
+   p_combat_id:session.combatId,p_combatant_id:session.combatantId,p_action_id:session.actionId,p_character_id:session.characterId,p_round_number:Number(session.roundNumber),
+   p_left_hand:session.newEquipment?.leftHand??null,p_right_hand:session.newEquipment?.rightHand??null
+  })});
+  if(result?.committed!==true)return false;
   await loadActiveCombat(null,{preserveSelectedTarget:true});return true
- }catch(error){
-  console.error('Vapenbyte kunde inte slutföras',error);
-  try{const latest=await dbJson('combat_actions?id=eq.'+encodeURIComponent(session.actionId)+'&combat_id=eq.'+encodeURIComponent(session.combatId)+'&select=id,status');if(Array.isArray(latest)&&latest.some(row=>String(row.id)===String(session.actionId)&&row.status==='resolved')){await loadActiveCombat(null,{preserveSelectedTarget:true});return true}}catch(_){}
-  if(logId)try{await dbJson('combat_log?id=eq.'+encodeURIComponent(logId),{method:'DELETE',headers:{'Prefer':'return=minimal'}})}catch(_){}
-  throw error
  }finally{combatWeaponSwitchCommitBusy=false}
 }
 async function combatCancelWeaponSwitch(session){
