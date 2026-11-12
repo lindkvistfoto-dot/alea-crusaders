@@ -10,6 +10,7 @@
  function current(){return records.find(row=>row.object_key===selectedKey)||null}
  function loadForm(row){
   selectedKey=row?.object_key||'';rotation=0;
+  render();
   $('bfwName').value=row?.name||'';$('bfwKey').value=row?.object_key||'';$('bfwCategory').value=row?.category||'Murar';
   $('bfwAssetKey').value=row?.asset_key||'arcane-battlefield-wall-prototype';$('bfwDescription').value=row?.description||'';
   $('bfwMovement').value=row?.movement_mode||'blocked';$('bfwSight').value=row?.sight_mode||'blocked';
