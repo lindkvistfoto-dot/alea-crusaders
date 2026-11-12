@@ -69,7 +69,7 @@ var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){r
 var get=function(id){return document.getElementById(id)};
 function cachedOpenPullRequests(){try{var value=JSON.parse(sessionStorage.getItem("olympia-pr-flow-cache-v1")||"null");return Array.isArray(value)?value:null}catch(_){return null}}
 var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=true,openPullRequestErrorMessage="Aktuella PR kräver en verifierad ALEA DEV-session.",pullRequestsRefresh=null,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};window.olympiaLiveUnverifiedByItem={};
-window.olympiaAuthVerified=false;
+window.olympiaAuthVerified=false;window.olympiaCandidateCheckCache=window.olympiaCandidateCheckCache||{};
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
 var swipeStart=null;
@@ -425,27 +425,15 @@ else if(target==="direct"||target==="package"){
 var testedSha=fieldValue("Testad DEV-commit (full SHA)");
 var mergeMatch=body.match(/- Merge SHA: ([0-9a-f]{40})/i);var liveVerified=false,liveScopeVerified=false,deployedLiveSha="";if(target==="live"&&mergeMatch){try{var liveManifest=await json("../../deployment-manifest.json?ts="+Date.now());deployedLiveSha=String(liveManifest.source_sha||"");if(liveManifest.environment==="main"&&/^[a-f0-9]{40}$/i.test(deployedLiveSha)){var relation=await json(api+"/compare/"+mergeMatch[1]+"..."+deployedLiveSha);liveVerified=(relation.status==="identical"||relation.status==="ahead")&&!!relation.merge_base_commit&&String(relation.merge_base_commit.sha||"").toLowerCase()===mergeMatch[1].toLowerCase();if(liveVerified){if(fieldValue("Ärende-ID")==="PILOT-002"||Number(item&&item.image_count||0)>0)liveScopeVerified=await verifyLiveScope(item,testedSha);else liveScopeVerified=true}}}catch(e){liveVerified=false;liveScopeVerified=false}}
 var exact=target==="defer"||target==="fix"||!!(item&&item.ready_for_human_acceptance&&/^[0-9a-f]{40}$/i.test(testedSha)&&i.user&&i.user.type==="Bot");
-var candidateCheckUnknown=false,candidateMessage="";
-var treeMatch=null,prMatch=null,candidateRunMatch=null;
-var candidateReady=false,candidateBlocked=false;
-if((target==="direct"||target==="package")&&exact&&window.olympiaAuthVerified){
-try{
-var check=await window.olympiaAuthenticatedRequest({action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha});
-if(!check.response.ok||!check.result.ok)throw new Error(check.result.message||"Kandidatkontrollen svarade inte.");
-candidateReady=check.result.ready===true;
-candidateBlocked=check.result.blocked===true;
-candidateMessage=String(check.result.message||"");
-if(check.result.candidateTreeSha)treeMatch=[null,check.result.candidateTreeSha];
-if(check.result.releasePr)prMatch=[null,String(check.result.releasePr),String(check.result.releaseUrl||"")];
-if(check.result.candidateRunUrl)candidateRunMatch=[null,check.result.candidateRunUrl];
-}catch(e){
-candidateCheckUnknown=true;
-candidateMessage="Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats.";
-}
-}
+var cachedCandidate=window.olympiaCandidateCheckCache[String(i.number)]||null;
+var candidateCheckUnknown=!!(cachedCandidate&&cachedCandidate.error),candidateMessage=cachedCandidate?(cachedCandidate.message||cachedCandidate.error||""):"Registrerat · väntar på kandidatkontroll";
+var treeMatch=cachedCandidate&&cachedCandidate.candidateTreeSha?[null,cachedCandidate.candidateTreeSha]:null;
+var prMatch=cachedCandidate&&cachedCandidate.releasePr?[null,String(cachedCandidate.releasePr),String(cachedCandidate.releaseUrl||"")]:null;
+var candidateRunMatch=cachedCandidate&&cachedCandidate.candidateRunUrl?[null,cachedCandidate.candidateRunUrl]:null;
+var candidateReady=!!(cachedCandidate&&cachedCandidate.ready===true),candidateBlocked=!!(cachedCandidate&&cachedCandidate.blocked===true);
 var candidateRunUrl=candidateRunMatch&&candidateRunMatch[1];
-var releasePrSha=check&&check.result&&check.result.releasePrSha||null;
-var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],releasePrSha:releasePrSha,candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,liveScopeVerified:liveScopeVerified,deployedLiveSha:deployedLiveSha,target:target};
+var releasePrSha=cachedCandidate&&cachedCandidate.releasePrSha||null;
+var record={issue:i,exact:exact,itemId:fieldValue("Ärende-ID"),testedSha:testedSha,candidateReady:candidateReady,candidateBlocked:candidateBlocked,candidateRunUrl:candidateRunUrl,candidateTree:treeMatch&&treeMatch[1],releasePr:prMatch&&prMatch[1],releaseUrl:prMatch&&prMatch[2],releasePrSha:releasePrSha,candidateMessage:candidateMessage,candidateCheckUnknown:candidateCheckUnknown,candidateCheckRequested:!!cachedCandidate,mergeSha:mergeMatch&&mergeMatch[1],liveVerified:liveVerified,liveScopeVerified:liveScopeVerified,deployedLiveSha:deployedLiveSha,target:target};
 slots[target].push(record);
 return i;
 });
@@ -463,8 +451,9 @@ el.innerHTML=arr.length?arr.map(function(record){
 var i=record.issue,stale=(k==="direct"||k==="package")&&!record.exact,supersededRecord=superseded[k+":"+i.number];
 var status=supersededRecord?(k==="direct"?"Övertaget av LIVE-godkännande #"+esc(supersededRecord.issue.number):"Äldre godkännande ersatt av LIVE-beslut #"+esc(supersededRecord.issue.number)):k==="live"?(record.liveVerified?(record.liveScopeVerified?"LIVE verifierad · full ärendeomfattning publicerad":"LIVE-deploy verifierad · ärendeomfattningen ej fullständigt verifierad"):"Merge begärd · LIVE-deploy ej verifierad · "+esc(record.mergeSha||"SHA saknas")):stale?"Beslutet saknar verifierad DEV-version. Ny granskning krävs.":record.candidateReady?"Redo för LIVE · releaseförslag #"+esc(record.releasePr):record.candidateBlocked?"Kandidatkontrollen blockerade. LIVE är oförändrat.":record.candidateCheckUnknown?(record.candidateMessage||"Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats."):record.candidateMessage||"Registrerat · väntar på kandidatkontroll";
 var finalButton=record.candidateReady&&!supersededRecord?'<div class="actions"><a class="btn secondary" href="'+esc(record.releaseUrl)+'" target="_blank" rel="noopener">Granska releaseförslag ↗</a></div>':'';
+var checkButton=(k==="direct"||k==="package")&&record.exact&&!record.candidateReady&&!record.candidateBlocked&&!supersededRecord?'<div class="actions"><button class="btn secondary" type="button" data-decision="candidate_check" data-item="'+esc(record.itemId)+'" data-sha="'+esc(record.testedSha)+'" data-candidate-issue="'+esc(i.number)+'">'+(record.candidateCheckUnknown?"Kontrollera igen":"Kontrollera kandidatstatus")+'</button></div>':'';
 var runLink=record.candidateRunUrl?'<br><a class="small" href="'+esc(record.candidateRunUrl)+'" target="_blank" rel="noopener">Visa kandidatkontroll ↗</a>':'';
-return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton
+return '<p><a href="'+esc(i.html_url)+'">#'+i.number+" · "+esc(i.title)+'</a><br><span class="small muted">'+status+" · "+new Date(i.updated_at).toLocaleString("sv-SE")+'</span>'+runLink+'</p>'+finalButton+checkButton
 }).join(""):"Inga beslut registrerade."
 });
 renderTrial();
@@ -596,6 +585,20 @@ document.addEventListener("click",async event=>{
  const session=storedSession();
  if(!session){window.olympiaAuthVerified=false;if(window.olympiaRefreshTrial)window.olympiaRefreshTrial();setStatus("Ingen ALEA-session hittades.");say("Logga in i ALEA DEV igen.");return}
  const originalLabel=button.textContent;
+ if(button.dataset.decision==="candidate_check"){
+  button.disabled=true;button.setAttribute("aria-busy","true");button.textContent="Kontrollerar kandidat…";
+  try{
+   const {response,result}=await request({action:"candidate_check",candidateIssue:Number(button.dataset.candidateIssue),itemId:button.dataset.item,testedDevSha:button.dataset.sha},session);
+   if(!response.ok||!result.ok)throw new Error(result.message||"Kandidatkontrollen svarade inte.");
+   window.olympiaCandidateCheckCache[String(button.dataset.candidateIssue)]=result;
+   say(result.message||"Kandidatstatus uppdaterad.",true);
+  }catch(error){
+   window.olympiaCandidateCheckCache[String(button.dataset.candidateIssue)]={error:error&&error.message?error.message:"Kandidatstatus kunde inte hämtas. Försök igen."};
+   say(window.olympiaCandidateCheckCache[String(button.dataset.candidateIssue)].error);
+  }
+  if(window.olympiaRefreshDecisions)await window.olympiaRefreshDecisions();
+  button.disabled=false;button.removeAttribute("aria-busy");return;
+ }
  button.disabled=true;
  button.setAttribute("aria-busy","true");
  button.textContent="Registrerat · behandlar…";
