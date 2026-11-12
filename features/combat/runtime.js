@@ -6875,6 +6875,7 @@ async function combatAddPrivateNote(){
    combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:Number(activeCombat.round_number)||1,
    phase:activeCombat.phase||'initiative',event_type:'gm_note',message,details:{scope:'gm'},player_visible:false
   })});
+  combatPrivateNoteBusy=false;
   await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
  }catch(error){console.error('Kunde inte spara SL-anteckning',error);alert('Kunde inte spara SL-anteckningen: '+(error?.message||error))}
  finally{combatPrivateNoteBusy=false}
@@ -6888,7 +6889,7 @@ function combatSlBoardModuleHtml(logHtml){
  if(tab==='secrets'){
   const actors=combatants.filter(row=>row.status!=='removed');
   const rows=actors.length?actors.map(row=>'<div class="slcb-visibility-row"><span><b>'+escAttr(row.name_snapshot||'Stridande')+'</b><small>'+(row.visible_to_players===false?'Dold för spelarna':'Synlig för spelarna')+'</small></span><button type="button" class="btn" onclick="combatToggleCombatantVisibility(\''+escAttr(row.id)+'\')">'+(row.visible_to_players===false?'Visa för spelarna':'Dölj för spelarna')+'</button></div>').join(''):'<p>Inga stridande att visa.</p>';
-  return '<div class="slcb-module"><h3>SL-info och delad vy</h3><p>Anteckningar här sparas i stridens logg med befintlig SL-behörighet och är markerade som dolda för spelarna. Synlighetsändringar använder samma kombattanter som spelarvyn läser.</p><label class="slcb-private-note-label" for="combatPrivateNote">Hemlig SL-anteckning</label><textarea id="combatPrivateNote" rows="3" maxlength="2000" placeholder="Skriv en anteckning som bara SL kan läsa"></textarea><button type="button" class="btn" onclick="combatAddPrivateNote()" '+(combatPrivateNoteBusy?'disabled':'')+'>Spara SL-anteckning</button><h4>Delad presentation · stridande</h4><div class="slcb-visibility-list">'+rows+'</div></div>';
+  return '<div class="slcb-module"><h3>SL-info och delad vy</h3><p>Anteckningar här sparas i stridens logg med befintlig SL-behörighet och är markerade som dolda för spelarna. Synlighetsändringar använder samma kombattanter som spelarvyn läser.</p><label class="slcb-private-note-label" for="combatPrivateNote">Hemlig SL-anteckning</label><textarea id="combatPrivateNote" rows="3" maxlength="2000" placeholder="Skriv en anteckning som bara SL kan läsa"></textarea><button type="button" class="btn" onclick="combatAddPrivateNote()">Spara SL-anteckning</button><h4>Delad presentation · stridande</h4><div class="slcb-visibility-list">'+rows+'</div></div>';
  }
  if(tab==='log')return '<div class="slcb-module"><h3>Stridslogg</h3><p>Händelserna visas i den befintliga stridsloggen nedanför kartan.</p><button type="button" class="btn" onclick="document.querySelector(\'#combatPage .combat-log\')?.scrollIntoView({behavior:\'smooth\',block:\'nearest\'})">Visa stridslogg</button><div class="slcb-log-preview">'+logHtml+'</div></div>';
  const status=activeCombat?.status||'setup';
