@@ -194,7 +194,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(page).toContain('if(renderId!==decisionRenderSequence)return;');
     expect(page).toContain('data-release-refresh');
     expect(page).toContain('Kontrollen kunde inte hämtas:');
-    expect(page).toContain('candidateBlocked=check.result.blocked===true');
+    expect(page).toContain('candidateBlocked=!!(cachedCandidate&&cachedCandidate.blocked===true)');
     expect(page).not.toContain('||!!candidate&&!candidateReady');
     expect(page).toContain('Kandidatstatus kunde inte hämtas.');
     expect(baseline.database.core_schema_audit.environment_differences[0]).toContain('endast i LIVE');
@@ -226,7 +226,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const outerScript=page.split('<script>')[1]?.split('</script>')[0]||'';
     expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
     expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
-    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(page).toContain('data-decision="candidate_check"');
+    expect(page).toContain('request({action:"candidate_check",candidateIssue:Number(button.dataset.candidateIssue)');
     expect(outerScript).toContain('action:"approve_and_merge_dev"');
     const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
     expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
@@ -236,11 +237,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('uses the authenticated candidate check as the sole status source',()=>{
     const page=read('olympia/zeus-control.html');
     const decisions=page.slice(page.indexOf('async function renderDecisions()'),page.indexOf('function renderHistory()'));
-    expect(decisions).toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(decisions).not.toContain('candidate_check');
+    expect(decisions).toContain('window.olympiaCandidateCheckCache[String(i.number)]');
     expect(decisions).not.toContain('i.comments_url');
     expect(decisions).not.toContain('candidateRows=');
-    expect(decisions).toContain('candidateMessage=String(check.result.message||"")');
-    expect(decisions).toContain('Kandidatstatus kunde inte hämtas. Det betyder inte att kandidatbygget har misslyckats.');
+    expect(decisions).toContain('candidateMessage=cachedCandidate?(cachedCandidate.message||cachedCandidate.error||"")');
+    expect(decisions).toContain('candidateCheckUnknown=!!(cachedCandidate&&cachedCandidate.error)');
   });
 
   it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
@@ -425,7 +427,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const section=page.slice(start,end);
     expect(section).toContain('fieldValue("Verifierad ärende-SHA")');
     expect(section).toContain('item={id:"PR-"+sourceNumber');
-    expect(page).toContain('action:"candidate_check",candidateIssue:i.number,itemId:item.id,testedDevSha:testedSha');
+    expect(page).toContain('data-decision="candidate_check"');
+    expect(page).toContain('action:"candidate_check",candidateIssue:Number(button.dataset.candidateIssue),itemId:button.dataset.item,testedDevSha:button.dataset.sha');
   });
 
   it('uses the ordinary PR button for one verified DEV merge with visible feedback',()=>{
