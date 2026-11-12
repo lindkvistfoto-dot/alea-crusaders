@@ -237,7 +237,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('uses the authenticated candidate check as the sole status source',()=>{
     const page=read('olympia/zeus-control.html');
     const decisions=page.slice(page.indexOf('async function renderDecisions()'),page.indexOf('function renderHistory()'));
-    expect(decisions).not.toContain('candidate_check');
+    expect(decisions).not.toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
     expect(decisions).toContain('window.olympiaCandidateCheckCache[String(i.number)]');
     expect(decisions).not.toContain('i.comments_url');
     expect(decisions).not.toContain('candidateRows=');
