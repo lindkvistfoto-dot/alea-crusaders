@@ -318,8 +318,8 @@ function renderCombatGmControls(){
    '<button id="combatPlayBtn" class="btn combat-play-btn" type="button" onclick="playCombatScene()" '+(combatSceneBusy||!scene||(activeCombat&&!combatIsResetReadyForPlay(scene))?'disabled':'')+'>▶ Play</button>'+
   '<button id="combatResetBtn" class="btn combat-reset-btn" type="button" onclick="resetCombatScene()" '+(combatSceneBusy||!activeCombat||previewing?'disabled':'')+'>↻ Reset</button>'+
   (activeCombat&&['active','paused'].includes(activeCombat.status)&&!previewing?
-    '<button id="combatPauseBtn" type="button" class="btn" onclick="combatTogglePauseResume()" '+(combatLifecycleBusy||combatSceneBusy||combatStopBusy?'disabled':'')+'>'+
-    (combatLifecycleBusy?'Sparar…':activeCombat.status==='paused'?'▶ Återuppta':'Ⅱ Pausa')+'</button>'+
+    '<button id="combatPauseBtn" type="button" class="btn" onclick="combatTogglePauseResume()" '+((typeof combatLifecycleBusy!=='undefined'&&combatLifecycleBusy)||combatSceneBusy||combatStopBusy?'disabled':'')+'>'+
+    ((typeof combatLifecycleBusy!=='undefined'&&combatLifecycleBusy)?'Sparar…':activeCombat.status==='paused'?'▶ Återuppta':'Ⅱ Pausa')+'</button>'+
     '<button id="combatStopBtn" type="button" class="btn combat-stop-btn" title="Avsluta striden och skapa en sammanfattning" onclick="combatFinishAndRecover()" '+(combatStopBusy||combatSceneBusy?'disabled':'')+'>'+
     (combatStopBusy?'Avslutar…':'■ Avsluta strid')+'</button>':'')+
   (activeCombat?'<span class="combat-gm-active">'+(activeCombat?.settings?.reset_ready_for_play===true?'Återställd · redo för Play: ':'Sparad: ')+escAttr(activeCombat.name||combatSceneFromId(activeSceneId)?.name||'Strid')+' · runda '+(Number(activeCombat.round_number)||1)+' · '+escAttr(combatPhaseLabel(activeCombat.phase))+'</span>':'<span class="combat-gm-active idle">Ingen aktiv strid</span>')
