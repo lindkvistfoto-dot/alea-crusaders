@@ -28,6 +28,14 @@
 #combatPage .slcb-module{padding:10px 3px 3px}
 #combatPage .slcb-module>h3{margin:0 0 5px;color:#e8c995;font-size:15px}
 #combatPage .slcb-module>p{margin:5px 0 9px;color:#c9b99f;font-size:12px;line-height:1.5}
+#combatPage .slcb-module>h4{margin:14px 0 6px;color:#e8c995;font-size:12px}
+#combatPage .slcb-private-note-label{display:block;margin:10px 0 5px;color:#e8c995;font-size:12px;font-weight:700}
+#combatPage .slcb-module textarea{display:block;width:min(100%,680px);min-height:72px;margin:0 0 7px;padding:8px;border:1px solid #69543a;border-radius:7px;background:#211d18;color:#f1dfc2;font:inherit;resize:vertical}
+#combatPage .slcb-visibility-list{display:grid;gap:5px;max-width:700px}
+#combatPage .slcb-visibility-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px;border:1px solid #554530;border-radius:7px;background:rgba(255,255,255,.025)}
+#combatPage .slcb-visibility-row>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+#combatPage .slcb-visibility-row small{color:#c9b99f;font-size:11px}
+#combatPage .slcb-visibility-row .btn{flex:0 0 auto;padding:5px 8px;font-size:11px}
 #combatPage .slcb-log-preview{max-height:130px;overflow:auto;margin-top:8px;border-top:1px solid #554530}
 #combatPage .slcb-log-preview .combat-log-row{padding:6px 3px}
 #combatPage .sl-control-board .combat-effects-admin{margin:8px 0}
