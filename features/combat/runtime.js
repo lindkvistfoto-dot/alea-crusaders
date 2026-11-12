@@ -2915,7 +2915,7 @@ async function loadActiveCombat(combatId=null,{preserveSelectedTarget=false}={})
     dbJson('combatants?combat_id=eq.'+cid+'&select=*&order=sort_order.asc,name_snapshot.asc'),
     dbJson('combat_hexes?combat_id=eq.'+cid+'&select=*&order=r.asc,q.asc'),
     dbJson('combat_actions?combat_id=eq.'+cid+'&round_number=gte.'+Math.max(1,round-1)+'&select=*&order=round_number.desc,sequence.asc,created_at.asc'),
-    dbJson('combat_log?combat_id=eq.'+cid+'&select=*&order=id.desc&limit=60')
+    dbJson('combat_log?combat_id=eq.'+cid+'&or=(event_type.neq.gm_event_pending,details->>queue_status.eq.pending)&select=*&order=created_at.desc,id.desc&limit=60')
    ]);
    combatants=Array.isArray(data[0])?data[0]:[];
    await combatLoadActorImageSources();
@@ -6880,12 +6880,65 @@ async function combatAddPrivateNote(){
  }catch(error){console.error('Kunde inte spara SL-anteckning',error);alert('Kunde inte spara SL-anteckningen: '+(error?.message||error))}
  finally{combatPrivateNoteBusy=false}
 }
+let combatQueuedEventBusy=false,combatQueuedEventBusyId='';
+function combatQueuedEventsHtml(){
+ const round=Number(activeCombat?.round_number)||1;
+ const queued=combatLogRows.filter(row=>row.event_type==='gm_event_pending'&&row.details?.queue_status==='pending')
+  .sort((a,b)=>(Number(a.details?.due_round)||Number(a.round_number)||1)-(Number(b.details?.due_round)||Number(b.round_number)||1)||Number(a.id)-Number(b.id));
+ const rows=queued.length?queued.map(row=>{
+  const dueRound=Number(row.details?.due_round)||Number(row.round_number)||1,ready=dueRound<=round;
+  return '<div class="slcb-event-row"><span><b>Runda '+dueRound+(ready?' · redo för godkännande':' · väntar')+'</b><small>'+escAttr(row.message||'Händelse')+'</small></span><div class="slcb-event-actions"><button type="button" class="btn" '+(!ready||combatQueuedEventBusy?'disabled':'')+' onclick="combatApproveQueuedEvent(\''+escAttr(row.id)+'\')">'+(combatQueuedEventBusyId===String(row.id)?'Publicerar…':'Godkänn och visa')+'</button><button type="button" class="smallbtn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatCancelQueuedEvent(\''+escAttr(row.id)+'\')">Ta bort</button></div></div>'
+ }).join(''):'<p class="combat-action-note">Inga väntande händelser.</p>';
+ return '<div class="slcb-event-queue-list">'+rows+'</div>'
+}
+async function combatQueueManualEvent(){
+ if(!combatCanManage()||!activeCombat?.id||combatQueuedEventBusy)return;
+ const field=$('combatQueuedEventMessage'),message=String(field?.value||'').trim();
+ const roundField=$('combatQueuedEventRound'),dueRound=Number(roundField?.value);
+ if(!message)return alert('Skriv händelsetexten först.');
+ if(!Number.isSafeInteger(dueRound)||dueRound<(Number(activeCombat.round_number)||1))return alert('Välj en giltig runda som inte redan har passerat.');
+ combatQueuedEventBusy=true;
+ try{
+  await dbJson('combat_log',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
+   combat_id:activeCombat.id,campaign_id:centralCampaignId,round_number:dueRound,
+   phase:activeCombat.phase||'initiative',event_type:'gm_event_pending',message,
+   details:{scope:'gm',queue_status:'pending',due_round:dueRound},player_visible:false
+  })});
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte lägga händelsen i kö',error);alert('Kunde inte lägga händelsen i kö: '+(error?.message||error))}
+ finally{combatQueuedEventBusy=false;renderCombat()}
+}
+async function combatApproveQueuedEvent(id){
+ if(!combatCanManage()||!activeCombat?.id||combatQueuedEventBusy)return;
+ const row=combatLogRows.find(item=>String(item.id)===String(id)&&item.event_type==='gm_event_pending'&&item.details?.queue_status==='pending');
+ if(!row)return alert('Händelsen är inte längre väntande. Läs in striden på nytt.');
+ const dueRound=Number(row.details?.due_round)||Number(row.round_number)||1;
+ if(dueRound>(Number(activeCombat.round_number)||1))return alert('Händelsen är kopplad till en senare runda.');
+ if(!confirm('Godkänna och visa den här händelsen för spelarna?\n\n'+String(row.message||'')))return;
+ combatQueuedEventBusy=true;combatQueuedEventBusyId=String(row.id);renderCombat();
+ try{
+  const saved=await dbJson('combat_log?id=eq.'+encodeURIComponent(row.id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&event_type=eq.gm_event_pending&details->>queue_status=eq.pending&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({event_type:'gm_event',player_visible:true,created_at:new Date().toISOString(),details:{scope:'public',approved:true}})});
+  if(!Array.isArray(saved)||!saved.some(item=>String(item.id)===String(row.id)))throw new Error('Händelsen hann ändras i en annan vy. Läs in striden på nytt.');
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte godkänna händelsen',error);alert('Kunde inte godkänna händelsen: '+(error?.message||error));await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true}).catch(()=>{})}
+ finally{combatQueuedEventBusy=false;combatQueuedEventBusyId='';renderCombat()}
+}
+async function combatCancelQueuedEvent(id){
+ if(!combatCanManage()||!activeCombat?.id||combatQueuedEventBusy)return;
+ combatQueuedEventBusy=true;combatQueuedEventBusyId=String(id);renderCombat();
+ try{
+  const saved=await dbJson('combat_log?id=eq.'+encodeURIComponent(id)+'&combat_id=eq.'+encodeURIComponent(activeCombat.id)+'&event_type=eq.gm_event_pending&details->>queue_status=eq.pending&select=id',{method:'PATCH',headers:{'Prefer':'return=representation'},body:JSON.stringify({details:{scope:'gm',queue_status:'cancelled'}})});
+  if(!Array.isArray(saved)||!saved.some(item=>String(item.id)===String(id)))throw new Error('Händelsen hann ändras i en annan vy. Läs in striden på nytt.');
+  await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true});
+ }catch(error){console.error('Kunde inte ta bort händelsen',error);alert('Kunde inte ta bort händelsen: '+(error?.message||error));await loadActiveCombat(activeCombat.id,{preserveSelectedTarget:true}).catch(()=>{})}
+ finally{combatQueuedEventBusy=false;combatQueuedEventBusyId='';renderCombat()}
+}
 function combatSlBoardModuleHtml(logHtml){
  const sceneId=activeCombat?.settings?.scene_id||'',scene=combatSceneFromId(sceneId);
  const tab=combatSlBoardTab;
  if(tab==='combatants')return '<div class="slcb-module"><h3>Stridande</h3><p>Placering och reserver använder den aktiva stridens kombattanter. Klicka på en ledig hex på kartan för att sätta ut eller flytta vald figur.</p>'+combatGmPlacementHtml()+combatSummonPanelHtml()+'</div>';
  if(tab==='battlefield')return '<div class="slcb-module"><h3>Terräng och sikt</h3><p>Redigera scenens hexterräng i den befintliga sceneditorn. Den aktiva stridens rörelse och LoS använder samma hexdata och regelmotor.</p><button type="button" class="btn" onclick="openCampaignCombatSceneEditor(\''+escAttr(sceneId)+'\')" '+(!scene?'disabled':'')+'>Redigera stridsscen</button>'+combatAreasAdminHtml()+'</div>';
- if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
+ if(tab==='events')return '<div class="slcb-module"><h3>Effekter och händelser</h3><p>Manuella effekter och områden sparas på den här stridsinstansen.</p><section class="slcb-event-queue"><h4>Händelsekö</h4><p>Händelsetexten är privat tills SL godkänner publicering. Spelarna ser den därefter i den befintliga stridsloggen.</p>'+combatQueuedEventsHtml()+'<label class="slcb-private-note-label" for="combatQueuedEventMessage">Spelarsynlig händelsetext</label><textarea id="combatQueuedEventMessage" rows="2" maxlength="2000" placeholder="Vad ska visas för spelarna när händelsen godkänns?"></textarea><div class="slcb-event-compose"><label>Runda<input id="combatQueuedEventRound" type="number" min="'+(Number(activeCombat.round_number)||1)+'" value="'+(Number(activeCombat.round_number)||1)+'"></label><button type="button" class="btn" '+(combatQueuedEventBusy?'disabled':'')+' onclick="combatQueueManualEvent()">Lägg i händelsekön</button></div></section>'+combatEffectsAdminHtml()+combatAmmoSummaryHtml()+'</div>';
  if(tab==='secrets'){
   const actors=combatants.filter(row=>row.status!=='removed');
   const rows=actors.length?actors.map(row=>'<div class="slcb-visibility-row"><span><b>'+escAttr(row.name_snapshot||'Stridande')+'</b><small>'+(row.visible_to_players===false?'Dold för spelarna':'Synlig för spelarna')+'</small></span><button type="button" class="btn" onclick="combatToggleCombatantVisibility(\''+escAttr(row.id)+'\')">'+(row.visible_to_players===false?'Visa för spelarna':'Dölj för spelarna')+'</button></div>').join(''):'<p>Inga stridande att visa.</p>';

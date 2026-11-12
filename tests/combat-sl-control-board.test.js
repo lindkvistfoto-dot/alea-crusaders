@@ -49,11 +49,24 @@ describe('SL Control Board integration',()=>{
   expect(runtime).toContain("['secrets','SL-info']");
  });
 
+ it('queues manual events privately and exposes them only after a conditional SL approval',()=>{
+  expect(runtime).toContain('or=(event_type.neq.gm_event_pending,details->>queue_status.eq.pending)');
+  expect(runtime).toContain("event_type:'gm_event_pending'");
+  expect(runtime).toContain("details:{scope:'gm',queue_status:'pending',due_round:dueRound},player_visible:false");
+  expect(runtime).toContain("event_type=eq.gm_event_pending&details->>queue_status=eq.pending&select=id");
+  expect(runtime).toContain("item.event_type==='gm_event_pending'&&item.details?.queue_status==='pending'");
+  expect(runtime).toContain("event_type:'gm_event',player_visible:true");
+  expect(runtime).toContain('combatCanManage()||!activeCombat?.id||combatQueuedEventBusy');
+  expect(runtime).toContain('combatQueueManualEvent()');
+  expect(runtime).toContain('combatApproveQueuedEvent(');
+  expect(runtime).toContain('combatCancelQueuedEvent(');
+ });
+
  it('positions the expanded panel as an overlay without resizing the map',()=>{
   expect(css).toContain('.combat-below-map{position:relative');
   expect(css).toContain('.slcb-panel{');
   expect(css).toContain('position:absolute');
-  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-2');
+  expect(html).toContain('features/combat/sl-control-board.css?v=20261112-3');
   expect(runtime).toContain("'<div class=\"combat-below-map\">'+combatSlControlBoardHtml(logHtml)+");
  });
 });
