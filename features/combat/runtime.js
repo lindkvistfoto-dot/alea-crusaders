@@ -498,6 +498,18 @@ async function combatDeleteRuntime(combatId){
  if(!combatId)return;
  await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId),{method:'DELETE',headers:{'Prefer':'return=minimal'}})
 }
+async function combatArchiveRuntime(combatId,previousStatus){
+ if(!combatId||!['setup','active','paused'].includes(previousStatus))return;
+ const now=new Date().toISOString();
+ const rows=await dbJson('combat_instances?id=eq.'+encodeURIComponent(combatId)+
+  '&campaign_id=eq.'+encodeURIComponent(centralCampaignId)+
+  '&status=eq.'+encodeURIComponent(previousStatus)+'&select=id,status',{
+   method:'PATCH',headers:{'Prefer':'return=representation'},
+   body:JSON.stringify({status:'completed',completed_at:now,updated_at:now})
+  });
+ if(!Array.isArray(rows)||!rows.some(row=>String(row.id)===String(combatId)))
+  throw new Error('Den tidigare striden ändrades i en annan vy och kunde inte arkiveras säkert.')
+}
 function combatRollD10(){
  try{
   if(globalThis.crypto?.getRandomValues){
@@ -829,9 +841,8 @@ async function combatCreateRuntimeFromScene(scene,{initiativeSnapshot=null,reset
  let instanceCreated=false;
  try{
   const pendingInitiative={formula:'SMI+1T10',status:'pending',rolled_at:null,order:[],results:[]};
-  const sessionId=await window.aleaGetActiveGameSessionId?.()||null;
   await dbJson('combat_instances',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({
-   id:instanceId,campaign_id:centralCampaignId,session_id:sessionId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
+   id:instanceId,campaign_id:centralCampaignId,event_id:scene.source_event_id||null,map_id:scene.map_id||null,
    name:scene.name||'Strid',status:resetReady?'setup':'active',round_number:1,phase:'initiative',winning_side:null,
    initiative:pendingInitiative,active_actor_id:null,settings,started_by:activeUser()?.id||null,started_at:new Date().toISOString(),completed_at:null
   })});
@@ -870,6 +881,7 @@ async function combatStartScene(sceneId,{reset=false,prepare=false}={}){
  const scene=combatSceneFromId(sceneId);if(!scene){alert('Välj en stridsscen.');return}
  combatSceneBusy=true;renderCombatGmControls();
  const previousCombatId=activeCombat?.id||null;
+ const previousCombatStatus=activeCombat?.status||null;
  const previousCombatCompleted=activeCombat?.status==='completed';
  let replacementCombatId=null,replacementCommitted=false;
  try{
@@ -879,7 +891,8 @@ async function combatStartScene(sceneId,{reset=false,prepare=false}={}){
   await loadActiveCombat(replacementCombatId);
   if(String(activeCombat?.id||'')!==String(replacementCombatId))throw new Error('Den nya stridsruntime-instansen kunde inte verifieras.');
   if(!reset&&!prepare)await combatRollAndApplyInitiative(replacementCombatId);
-  if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId)&&!previousCombatCompleted)await combatDeleteRuntime(previousCombatId);
+  if(previousCombatId&&String(previousCombatId)!==String(replacementCombatId)&&!previousCombatCompleted)
+   await combatArchiveRuntime(previousCombatId,previousCombatStatus);
   replacementCommitted=true;
   await loadActiveCombat(replacementCombatId);
  }catch(e){
@@ -7288,7 +7301,7 @@ function renderCombat(){
  }
  if(sub)sub.textContent=activeCombat.name||'Aktiv strid';
  if(activeCombat.status==='completed'){
-  body.innerHTML='<div class="combat-finished-shell"><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+
+  body.innerHTML='<div class="combat-finished-shell"><div class="combat-finished-actions"><button class="btn" type="button" onclick="closeCombat()" aria-label="Stäng avslutad strid och återgå till föregående vy">← Stäng stridsvyn</button></div><div id="combatGmControls" class="combat-gm-controls hidden"></div>'+
    (window.combatCompletedSummaryHtml?.(activeCombat)||'<p>Striden är avslutad.</p>')+'</div>';
   renderCombatGmControls();return;
  }

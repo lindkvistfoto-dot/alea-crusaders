@@ -17,6 +17,7 @@
 #combatPage .combathead .combat-head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
 #combatPage .combat-finished-shell{max-width:1180px;margin:12px auto 32px;display:grid;gap:15px}
 #combatPage .combat-finished-shell>.combat-gm-controls{width:100%;box-sizing:border-box}
+#combatPage .combat-finished-actions{display:flex;justify-content:flex-start}
 #combatPage .combat-finish-report{
   color:#e8d8c4;
   background:linear-gradient(158deg,#2c241f 0%,#181412 75%);
