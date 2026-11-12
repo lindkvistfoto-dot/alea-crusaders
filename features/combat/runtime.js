@@ -1191,7 +1191,8 @@ async function combatCommitWeaponSwitch(session){
    p_left_hand:session.newEquipment?.leftHand??null,p_right_hand:session.newEquipment?.rightHand??null
   })});
   if(result?.committed!==true)return false;
-  await loadActiveCombat(null,{preserveSelectedTarget:true});return true
+  try{await loadActiveCombat(null,{preserveSelectedTarget:true})}catch(refreshError){console.warn('Vapenbytet är sparat; stridsvyn kunde inte läsas om direkt',refreshError)}
+  return true
  }finally{combatWeaponSwitchCommitBusy=false}
 }
 async function combatCancelWeaponSwitch(session){
