@@ -122,7 +122,7 @@ function openHonorInspector(kind,data,trigger){
  if(!honorDialog){
   const d=document.createElement('dialog');d.id='arcaneHonorInspector';d.className='arcane-medal-dialog';d.setAttribute('aria-labelledby','arcaneHonorInspectorTitle');
   const frame=makeElement('div','arcane-medal-display'),cushion=makeElement('section','arcane-medal-display-cushion');
-  const art=makeElement('div','arcane-honor-inspector-art');art.style.cssText='position:relative;width:100%;height:100%;display:grid;place-items:center';cushion.append(art);
+  const art=makeElement('div','arcane-honor-inspector-art');cushion.append(art);
   const parchment=makeElement('section','arcane-medal-display-parchment'),story=makeElement('div','arcane-medal-display-story');
   const title=makeElement('h2','arcane-medal-display-title');title.id='arcaneHonorInspectorTitle';
   story.append(title,makeElement('p','arcane-medal-display-type'),makeElement('p','arcane-medal-display-description'),makeElement('p','arcane-medal-display-reason'));
@@ -138,7 +138,7 @@ function openHonorInspector(kind,data,trigger){
  d.querySelector('.arcane-medal-display-description').textContent=data.description||'';
  d.querySelector('.arcane-medal-display-reason').textContent=kind==='award'?'Antal: '+data.count:'Guldstjärnor: '+data.stars;
  const art=d.querySelector('.arcane-honor-inspector-art');art.replaceChildren();
- const clone=data.art.cloneNode(true);clone.style.cssText='position:relative;width:100%;height:100%;aspect-ratio:1;max-height:none';art.append(clone);
+ const clone=data.art.cloneNode(true);clone.classList.add('arcane-honor-inspector-object');clone.removeAttribute('style');art.append(clone);
  if(kind==='badge'&&data.stars>0){const stars=makeElement('span','arcane-honor-inspector-stars','★'.repeat(Math.min(3,data.stars)));stars.setAttribute('aria-label',data.stars+' guldstjärnor');art.append(stars)}
  d.dataset.honorKind=kind;
  const frame=d.querySelector('.arcane-medal-display');frame.style.removeProperty('--medal-frame-image');frame.style.removeProperty('--medal-frame-ratio');
