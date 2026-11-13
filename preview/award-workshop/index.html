@@ -9,7 +9,7 @@
 <label>Ram för brons<input id="bronzeFile" type="file" accept="image/png,image/webp"></label>
 <label>Ram för silver<input id="silverFile" type="file" accept="image/png,image/webp"></label>
 <label>Ram för guld<input id="goldFile" type="file" accept="image/png,image/webp"></label>
-<label>Accentfärg <input id="accent" type="color" value="#b51232"></label>
+<label>Accentfärg <input id="accent" type="color" value="#b51232"></label><button id="autoAccent" type="button">Analysera motivets accentfärg</button>
 <label>Motivstorlek <output id="scaleValue">100%</output><input id="scale" type="range" min="50" max="160" value="100"></label>
 <label>Motiv X <output id="xValue">0%</output><input id="x" type="range" min="-40" max="40" value="0"></label>
 <label>Motiv Y <output id="yValue">0%</output><input id="y" type="range" min="-40" max="40" value="0"></label>
@@ -23,11 +23,57 @@
 const ids=['motif','frame','metal','accent','scale','x','y','accents','guides','message'];const el=Object.fromEntries(ids.map(k=>[k,document.getElementById(k)]));const urls={};const frames={};const byId=id=>document.getElementById(id);
 function fileInput(id,callback){byId(id).addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f);callback(url);update();});}
 function update(){const metal=el.metal.value;el.frame.src=frames[metal]||'';el.frame.classList.toggle('hidden',!frames[metal]);el.motif.classList.toggle('hidden',!urls.motif);el.motif.src=urls.motif||'';const scale=Number(el.scale.value)/100,x=Number(el.x.value),y=Number(el.y.value);el.motif.style.transform='translate('+x+'%,'+y+'%) scale('+scale+')';for(const k of ['scale','x','y'])byId(k+'Value').textContent=el[k].value+(k==='scale'?'%':'%');el.accents.style.setProperty('--accent',el.accent.value);el.accents.classList.toggle('hidden',!byId('showAccents').checked);el.guides.classList.toggle('hidden',!byId('showGuides').checked);el.message.textContent=urls.motif?(frames[metal]?'Motiv och '+metal+'ram visas tillsammans.':'Motiv laddat. Välj en ram för '+metal+'.'):'Välj en motivbild för att börja.';}
-fileInput('motifFile',url=>{if(urls.motif)URL.revokeObjectURL(urls.motif);urls.motif=url;});
+fileInput('motifFile',url=>{if(urls.motif)URL.revokeObjectURL(urls.motif);urls.motif=url;void autoAccent();});
+async function autoAccent(){
+ if(!urls.motif)return;
+ try{
+ const image=new Image();image.src=urls.motif;await image.decode();
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0,64,64);
+ const data=ctx.getImageData(0,0,64,64).data,groups=new Map();
+ for(let i=0;i<data.length;i+=4){
+ if(data[i+3]<180)continue;
+ const [r,g,b]=[data[i]/255,data[i+1]/255,data[i+2]/255],hi=Math.max(r,g,b),lo=Math.min(r,g,b),d=hi-lo;
+ if(hi<.18||d<.2||d/hi<.32)continue;
+ let hue=hi===r?((g-b)/d+6)%6:hi===g?(b-r)/d+2:(r-g)/d+4;hue*=60;
+ if(hue>=35&&hue<=75)continue;
+ const k=Math.round(hue/15)%24,w=d*(.5+hi),v=groups.get(k)||{w:0,r:0,g:0,b:0};
+ v.w+=w;v.r+=r*w;v.g+=g*w;v.b+=b*w;groups.set(k,v);
+ }
+ const winner=[...groups.values()].sort((a,b)=>b.w-a.w)[0];
+ if(!winner){el.message.textContent='Ingen tydlig accentfärg hittades. Välj färg manuellt.';return;}
+ el.accent.value='#'+[winner.r,winner.g,winner.b].map(v=>Math.round(v/winner.w*255).toString(16).padStart(2,'0')).join('');
+ update();el.message.textContent='Accentfärg analyserad. Kontrollera och justera vid behov.';
+ }catch(error){el.message.textContent='Färganalys misslyckades: '+error.message;}
+}
+byId('autoAccent').addEventListener('click',()=>void autoAccent());
 for(const metal of ['bronze','silver','gold'])fileInput(metal+'File',url=>{if(frames[metal])URL.revokeObjectURL(frames[metal]);frames[metal]=url;});
 for(const id of ['metal','accent','scale','x','y','showAccents','showGuides'])byId(id).addEventListener('input',update);
 byId('reset').addEventListener('click',()=>{el.scale.value=100;el.x.value=0;el.y.value=0;update();});
-byId('export').addEventListener('click',async()=>{const size=2048,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const draw=async(url,scale=1,x=0,y=0)=>{if(!url)return;const img=new Image();img.src=url;await img.decode();ctx.save();ctx.translate(size/2+x*size/100,size/2+y*size/100);ctx.scale(scale,scale);ctx.drawImage(img,-size/2,-size/2,size,size);ctx.restore();};try{await draw(urls.motif,Number(el.scale.value)/100,Number(el.x.value),Number(el.y.value));if(byId('showAccents').checked){ctx.fillStyle=el.accent.value;for(const [x,y,w,h] of [[.473,.016,.054,.054],[.941,.473,.054,.054],[.473,.941,.054,.054],[.005,.473,.054,.054],[.425,.73,.15,.15]]){ctx.beginPath();if(w>.1)ctx.ellipse((x+w/2)*size,(y+h/2)*size,w*size/2,h*size/2,0,0,Math.PI*2);else{ctx.translate((x+w/2)*size,(y+h/2)*size);ctx.rotate(Math.PI/4);ctx.rect(-w*size/2,-h*size/2,w*size,h*size);ctx.rotate(-Math.PI/4);ctx.translate(-(x+w/2)*size,-(y+h/2)*size);}ctx.fill();}}await draw(frames[el.metal.value]);const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arcane-award-verification-'+el.metal.value+'.png';a.click();}catch(e){el.message.textContent='Export misslyckades: '+e.message;}});
+byId('export').addEventListener('click',async()=>{
+ const size=2048,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
+ const ctx=canvas.getContext('2d');
+ const draw=async(url,scale=1,x=0,y=0)=>{
+  if(!url)return;
+  const img=new Image();img.src=url;await img.decode();
+  ctx.save();ctx.translate(size/2+x*size/100,size/2+y*size/100);
+  ctx.scale(scale,scale);ctx.drawImage(img,-size/2,-size/2,size,size);ctx.restore();
+ };
+ try{
+  await draw(urls.motif,Number(el.scale.value)/100,Number(el.x.value),Number(el.y.value));
+  if(byId('showAccents').checked){
+   const color=el.accent.value;
+   for(const [x,y,w,h] of [[.473,.016,.054,.054],[.941,.473,.054,.054],[.473,.941,.054,.054],[.005,.473,.054,.054]]){
+    ctx.save();ctx.translate((x+w/2)*size,(y+h/2)*size);ctx.rotate(Math.PI/4);
+    const gradient=ctx.createLinearGradient(-w*size/2,-h*size/2,w*size/2,h*size/2);
+    gradient.addColorStop(0,'#ffffff');gradient.addColorStop(.35,color);gradient.addColorStop(1,'#211321');
+    ctx.fillStyle=gradient;ctx.fillRect(-w*size/2,-h*size/2,w*size,h*size);ctx.restore();
+   }
+   ctx.beginPath();ctx.ellipse(.5*size,.805*size,.075*size,.075*size,0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+  }
+  await draw(frames[el.metal.value]);
+  const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arcane-award-verification-'+el.metal.value+'.png';a.click();
+ }catch(e){el.message.textContent='Export misslyckades: '+e.message;}
+});
 update();
 })();
 </script></body></html>
