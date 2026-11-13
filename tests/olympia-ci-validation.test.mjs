@@ -39,6 +39,13 @@ describe('OLYMPIA shared DEV CI verdict', () => {
 });
 
 describe('OLYMPIA DEV approval API contract', () => {
+  it('keeps Draft and GitHub merge confirmation fail-closed', () => {
+    const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
+    expect(edge).toContain('if (pr.draft) throw new Error("PR_IS_DRAFT")');
+    expect(edge).toContain('merged.merged === true');
+    expect(edge).toContain('GITHUB_MERGE_NOT_CONFIRMED');
+    expect(edge).toContain('throw mergeError');
+  });
   it('requests CI read scopes on the existing merge token', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
     expect(edge).toContain('contents: "write", checks: "read", statuses: "read"');
