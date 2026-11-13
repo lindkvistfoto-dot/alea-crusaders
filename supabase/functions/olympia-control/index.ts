@@ -90,8 +90,10 @@ async function githubToken(decision: string) {
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
     ? { pull_requests: "read", checks: "read", statuses: "read", issues: "write", contents: "write" }
-    : (decision === "set_pull_request_draft" || decision === "approve_and_merge_dev")
+    : decision === "approve_and_merge_dev"
     ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }
+    : decision === "set_pull_request_draft"
+    ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
   const readOnlyPrAction = decision === "pull_request_list" || decision === "pull_request_status";
