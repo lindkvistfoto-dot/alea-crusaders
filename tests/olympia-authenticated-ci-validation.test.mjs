@@ -9,7 +9,7 @@ describe('OLYMPIA DEV CI validation',()=>{
   expect(section).toContain('readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
   expect(section).toContain('readCi(path + "/commits/" + data.pullRequestHeadSha + "/status")');
   expect(section).not.toContain('ghPublic(');
-  expect(section).toContain('GITHUB_REQUEST_FAILED_(429|502|503|504)');
+  expect(section).toContain('GITHUB_REQUEST_FAILED_(502|503|504)');
   expect(section).toContain('attempt < 3');
   expect(section).toContain('assessCi(checks, status, data.pullRequestHeadSha)');
   expect(edge).toContain('contents: "write", checks: "read", statuses: "read"');
