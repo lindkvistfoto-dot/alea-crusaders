@@ -11,4 +11,7 @@ describe('OLYMPIA GitHub installation token permission compatibility',()=>{
   expect(edge).toContain('CLOUDFLARE_API_TOKEN');
   expect(edge).toContain('verifiedCandidatePreview');
  });
+ it('grants blocked-candidate recovery write access only where required',()=>{
+  expect(edge).toMatch(/decision === "resume_stale_candidate"\s*\?\s*\{[^}]*pull_requests: "read"/);
+ });
 });

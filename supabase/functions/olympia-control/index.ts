@@ -81,6 +81,8 @@ async function githubToken(decision: string) {
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
     ? { contents: "read", issues: "read", pull_requests: "read" }
+    : decision === "resume_stale_candidate"
+    ? { contents: "write", issues: "write", pull_requests: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
