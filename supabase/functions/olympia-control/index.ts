@@ -1349,7 +1349,7 @@ async function handleRequest(req: Request): Promise<Response> {
             try { return await gh(token, endpoint); }
             catch (error) {
               const message = error instanceof Error ? error.message : "";
-              if (!/GITHUB_REQUEST_FAILED_(429|502|503|504)$/.test(message) || attempt === 2) throw error;
+              if (!/GITHUB_REQUEST_FAILED_(502|503|504)$/.test(message) || attempt === 2) throw error;
               await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
             }
           }
