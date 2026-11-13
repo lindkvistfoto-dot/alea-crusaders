@@ -25,334 +25,305 @@
   ],
   "assets": [
     {
-      "asset_key": "arcane-award-gem-diamond-red",
-      "file": "assets/arcane-awards/gems/diamond-red.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": false
+      "derived": false,
+      "published_asset_key": "arcane-award-gem-diamond-red"
     },
     {
-      "asset_key": "arcane-award-gem-round-red",
-      "file": "assets/arcane-awards/gems/round-red.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": false
+      "derived": false,
+      "published_asset_key": "arcane-award-gem-round-red"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-blue",
-      "file": "assets/arcane-awards/gems/diamond-blue.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "706b58c902d418019fa639b8a7f78411ec4351b11bff9c9ece8f5090ffeaa75f",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-blue"
     },
     {
-      "asset_key": "arcane-award-gem-round-blue",
-      "file": "assets/arcane-awards/gems/round-blue.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "052b88295f60d3cf87c6631c37040df627ac3db1cffd720f5949f720066f4a36",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-blue"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-green",
-      "file": "assets/arcane-awards/gems/diamond-green.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "a65e0be3123e1165ea881252457b77ad2f87802b8deb3846f8eb620f2ce4f763",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-green"
     },
     {
-      "asset_key": "arcane-award-gem-round-green",
-      "file": "assets/arcane-awards/gems/round-green.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "9a4cf75be4bca341ca9c3d93d390afb8d95cf593eecf8c388a2604e3037ab6c6",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-green"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-yellow",
-      "file": "assets/arcane-awards/gems/diamond-yellow.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "1bdcd258aeeebbf67c671fa623a8b6cad1c5d61095f23593f8c3dcb79174c745",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-yellow"
     },
     {
-      "asset_key": "arcane-award-gem-round-yellow",
-      "file": "assets/arcane-awards/gems/round-yellow.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "9124c57794f341f621e29a717bf1914fc094d8b01336a69ee08f683c1a38af38",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-yellow"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-orange",
-      "file": "assets/arcane-awards/gems/diamond-orange.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "a9c35c1d50fbbd49f7d2d818f0f1d5daf5f33e1571a4f51dafb7d0f48fdc81fa",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-orange"
     },
     {
-      "asset_key": "arcane-award-gem-round-orange",
-      "file": "assets/arcane-awards/gems/round-orange.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "c862aa5dc07764c0a9575dde90835dfcce4080d818374ac9742bd2c63e5a6a56",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-orange"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-purple",
-      "file": "assets/arcane-awards/gems/diamond-purple.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "063126a0ce42193e84e7dcdfdec3b5d0c9b0cdb1733067fd4be8f96e5373eb8a",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-purple"
     },
     {
-      "asset_key": "arcane-award-gem-round-purple",
-      "file": "assets/arcane-awards/gems/round-purple.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "59074b3b98c97352a26eead0e0d833ce179a78645d28cd8c4a2a995533f58582",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-purple"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-pink",
-      "file": "assets/arcane-awards/gems/diamond-pink.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "794ea9066d6a77c3b3a77cae14c137d55acda635125e302359ecce6c43fbb348",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-pink"
     },
     {
-      "asset_key": "arcane-award-gem-round-pink",
-      "file": "assets/arcane-awards/gems/round-pink.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "4cdecf40502dc252b4997b9f1fa16c5c881bf632b00dfa7810c3688b2bbbabd8",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-pink"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-turquoise",
-      "file": "assets/arcane-awards/gems/diamond-turquoise.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "2098a9ecaf76b9a5a6098d09059b1febf766c613ffb05af54ce5af8e15adae24",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-turquoise"
     },
     {
-      "asset_key": "arcane-award-gem-round-turquoise",
-      "file": "assets/arcane-awards/gems/round-turquoise.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "940e05691008e5b448c1b600aa48a27e0580b0270f4343c54cbbe8692e15468c",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-turquoise"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-cyan",
-      "file": "assets/arcane-awards/gems/diamond-cyan.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "d7577591d8ecb3e74e386545210fd96f30039943c7d26dabc1a921d0d8525502",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-cyan"
     },
     {
-      "asset_key": "arcane-award-gem-round-cyan",
-      "file": "assets/arcane-awards/gems/round-cyan.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "81cb7766bea70f82e3fc48afd3324770075f30523a139406499e6ecd86206af8",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-cyan"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-black",
-      "file": "assets/arcane-awards/gems/diamond-black.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "72cdfca5ff1ca5b8d8fd57ca7a1655261d1d50c2a475ba329f24fbd2b1c7f81f",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-black"
     },
     {
-      "asset_key": "arcane-award-gem-round-black",
-      "file": "assets/arcane-awards/gems/round-black.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "09f2f6b40aa6fc9abb9a06dde637c0c5a1e1e27eb3f7f30f5ff0f62b91b96645",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-black"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-white",
-      "file": "assets/arcane-awards/gems/diamond-white.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "dc3af5ea3fb7e1f6a5ea27e54ad380771be6bef137e37d293a17710157d46416",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-white"
     },
     {
-      "asset_key": "arcane-award-gem-round-white",
-      "file": "assets/arcane-awards/gems/round-white.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "28a59050b3f31be63862ed6b244fef018768dbbbdd337b4919e8860863896320",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-white"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-brown",
-      "file": "assets/arcane-awards/gems/diamond-brown.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "69072cede4ca230d0ec30612edc8c37c7f1ce5ef66ada219c785e12f220f51e6",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-brown"
     },
     {
-      "asset_key": "arcane-award-gem-round-brown",
-      "file": "assets/arcane-awards/gems/round-brown.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "c5cf4293aff9689d2ca7606abb2a2a5b72bf5933e0b41fbdbb278893eb7e7b1f",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-brown"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-light-gray",
-      "file": "assets/arcane-awards/gems/diamond-light-gray.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "63d96916dc4693f3b58052dc4abd57030bbf466e8fdf9d01b5d39686d6f8c514",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-light-gray"
     },
     {
-      "asset_key": "arcane-award-gem-round-light-gray",
-      "file": "assets/arcane-awards/gems/round-light-gray.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "e87f52fea7c88ed8c1be88625c55ba3988b574530d1074082be8d9b27116a3e4",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-light-gray"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-dark-gray",
-      "file": "assets/arcane-awards/gems/diamond-dark-gray.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "70213df47026f321dd679ce7ccc79fe5a02e33ad13bf6a73a997182ebb316c8e",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-dark-gray"
     },
     {
-      "asset_key": "arcane-award-gem-round-dark-gray",
-      "file": "assets/arcane-awards/gems/round-dark-gray.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "b1f4fb1f6adbff6eee993e0347a9005bfe1613c094e5044886bb1933760f3ef6",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-dark-gray"
     },
     {
-      "asset_key": "arcane-award-gem-diamond-amber",
-      "file": "assets/arcane-awards/gems/diamond-amber.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "e337ee072abb45512dbc1422a24a156f761df988f3ed2e08924022e0f792b268",
       "png_sha256": "cf0a55d9796ef8c3f1f2535ef63cd3333e8014dcb77c1e6694e7dd9e9676fa6d",
       "source_sha256": "56ced408e9b12ae8431a952881593f30507e59166b5ed4e2ebda0fb099ad39fe",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-diamond-amber"
     },
     {
-      "asset_key": "arcane-award-gem-round-amber",
-      "file": "assets/arcane-awards/gems/round-amber.png",
       "width": 350,
       "height": 350,
       "mode": "RGBA",
       "alpha_sha256": "90cadf550eef0c49e4ff54abf42778b06f9171bf8d3afa03c2436f4d548c1a20",
       "png_sha256": "6a2f3a58ba255ab089159718d2a400e4e24c33a5df65ea8f55d0d0d079a7822a",
       "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3",
-      "derived": true
+      "derived": true,
+      "published_asset_key": "arcane-award-gem-round-amber"
     }
-  ]
+  ],
+  "artifact_storage": "HERMES CORE DEV; exact source originals are retained in the configured Drive archive"
 }
