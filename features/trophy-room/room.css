@@ -234,3 +234,26 @@ main:has(> #trophyRoomPage:not(.hidden)){
 #trophyBadgeCalibration[hidden]{display:none}
 #trophyBadgeCalibration [data-badge-corner]{pointer-events:all;cursor:grab;touch-action:none}
 #trophyBadgeCalibration [data-badge-corner]:active{cursor:grabbing}
+
+
+/* Award/badge-only sizing. Never change the existing medal dialog. */
+#arcaneHonorInspector .arcane-honor-inspector-art{
+ position:relative;width:60%;height:60%;max-width:210px;max-height:210px;
+ margin:auto;display:grid;place-items:center;overflow:visible;
+}
+#arcaneHonorInspector .arcane-honor-inspector-art > .trophy-room-badge-art{
+ width:100%;height:100%;max-height:none;
+}
+#arcaneHonorInspector .arcane-honor-inspector-art .trophy-room-badge-relief{transform:scale(.74)}
+#arcaneHonorInspector .arcane-honor-inspector-art .trophy-room-badge-frame{transform:scale(1)}
+#arcaneHonorInspector .arcane-honor-inspector-stars{
+ position:absolute;left:0;right:0;bottom:-16%;z-index:6;text-align:center;
+ color:#f6cb62;font-size:clamp(16px,2vw,25px);letter-spacing:.12em;
+ text-shadow:0 2px 3px #000,0 0 6px #3d260a;
+}
+@media(max-width:650px){
+ #arcaneHonorInspector .arcane-honor-inspector-art{
+  width:56%;height:56%;max-width:none;max-height:none;
+ }
+ #arcaneHonorInspector .arcane-medal-display-cushion{display:grid;place-items:center}
+}
