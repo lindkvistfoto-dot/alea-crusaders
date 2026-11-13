@@ -61,5 +61,6 @@
  }
  function restoreCurrent(){if(!rollOwnerId)return;if(typeof current!=='undefined')current=previousCurrent;previousCurrent=null;rollOwnerId=null}
  function init(){makeRoot();const body=document.getElementById('combatBody'),dice=document.getElementById('dicePage'),surfaces=['loginScreen','home','admin','academyPage','view','combatPage','mapPage','dicePage','trophyRoomPage','shopPage','innPage'];observer=new MutationObserver(()=>requestAnimationFrame(refresh));surfaces.map(id=>document.getElementById(id)).filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));if(dice)new MutationObserver(()=>{if(dice.classList.contains('hidden')&&isNonHomePageVisible()){restoreCurrent();panelSuspended=false;requestAnimationFrame(refresh)}}).observe(dice,{attributes:true,attributeFilter:['class']});if(body)new MutationObserver(()=>requestAnimationFrame(refresh)).observe(body,{childList:true,subtree:true});window.addEventListener('resize',refresh);refresh()}
+ window.aleaCharacterDrawerRefresh=refresh;
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
