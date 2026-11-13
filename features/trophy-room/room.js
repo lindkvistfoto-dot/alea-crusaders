@@ -152,7 +152,16 @@ async function renderBadges(){
    const frameUrl=frame?.asset_path?systemAssetUrl(frame.asset_path):null;
    if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
-   if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
+   if(frameUrl){
+    const accent=/^#[0-9a-f]{6}$/i.test(d.badge_frame_assets?.accent_color||'')?d.badge_frame_assets.accent_color:'#B51232';
+    // All five insets are in the shared frame coordinate system, not the motif.
+    const insets=document.createElement('div');insets.className='trophy-room-award-insets';insets.style.setProperty('--award-accent',accent);
+    for(const position of ['top','right','bottom','left','crown']){
+      const inset=document.createElement('span');inset.className='trophy-room-award-inset trophy-room-award-inset-'+position;inset.setAttribute('aria-hidden','true');insets.append(inset);
+    }
+    art.append(insets);
+    const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)
+   }
    slot.append(art);
    const stars=Math.max(0,Math.min(3,Number(d.tier_criteria?.gold_stars||0)));
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ARCANE AWARDS – verifieringsverkstad (DEV)</title>
+<style>
+:root{color-scheme:dark;font-family:Georgia,serif;background:#16120e;color:#f4e5c9}*{box-sizing:border-box}body{margin:0;padding:24px}h1{font-size:1.65rem;margin:0 0 8px}p{color:#c7b79d;line-height:1.5}.layout{display:grid;grid-template-columns:minmax(280px,420px) minmax(320px,1fr);gap:24px;max-width:1200px;margin:auto}.controls{background:#272018;border:1px solid #725b3e;padding:20px;border-radius:12px}.controls label{display:block;margin:14px 0;font-size:.95rem}.controls input[type=file]{display:block;width:100%;margin-top:8px}.stepper{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px}.stepper button{min-width:60px;min-height:48px;font-size:1.5rem;font-weight:bold;touch-action:manipulation}.stepper output{min-width:65px;text-align:center;font-variant-numeric:tabular-nums}.stepper input{display:none}.controls select,.controls button,.controls input[type=color]{background:#33291f;color:#f4e5c9;border:1px solid #a78655;padding:8px;border-radius:6px}.controls select{width:100%}.stage{display:flex;flex-direction:column;align-items:center;gap:14px}.preview-controls{width:min(100%,640px);background:#272018;border:1px solid #725b3e;border-radius:12px;padding:12px 18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.preview-controls label{display:block;font-size:.9rem}.preview-controls .stepper button{min-width:44px;min-height:48px}.preview-controls .stepper{gap:4px}@media(max-width:600px){.preview-controls{grid-template-columns:1fr;gap:4px}.preview-controls label{margin:4px 0}}.board{position:relative;width:min(100%,640px);aspect-ratio:1;overflow:hidden;background-color:#36302a;background-image:linear-gradient(45deg,#484038 25%,transparent 25%),linear-gradient(-45deg,#484038 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#484038 75%),linear-gradient(-45deg,transparent 75%,#484038 75%);background-size:32px 32px;background-position:0 0,0 16px,16px -16px,-16px 0}.board img{position:absolute;width:100%;height:100%;object-fit:contain;pointer-events:none}.motif{z-index:1}.accents{position:absolute;inset:0;z-index:2;pointer-events:none}.gem{position:absolute;width:5.4%;height:5.4%;transform:rotate(45deg);background:radial-gradient(circle at 25% 20%,#fff9,transparent 42%),linear-gradient(135deg,#fff6,var(--accent),#000b);box-shadow:inset 0 0 5px #000b}.top{left:47.3%;top:1.6%}.right{left:94.1%;top:47.3%}.bottom{left:47.3%;top:94.1%}.left{left:.5%;top:47.3%}.crown{position:absolute;left:42.5%;top:73%;width:15%;height:15%;border-radius:50%;background:var(--accent)}.frame{z-index:3}.guides{position:absolute;inset:0;z-index:4;pointer-events:none;background:linear-gradient(90deg,transparent calc(50% - .5px),#ffd65a99 50%,transparent calc(50% + .5px)),linear-gradient(transparent calc(50% - .5px),#ffd65a99 50%,transparent calc(50% + .5px))}.hidden{display:none!important}.status{font-size:.85rem;color:#e2ccaa;max-width:640px}button{cursor:pointer}button:hover{filter:brightness(1.15)}@media(max-width:780px){body{padding:12px}.layout{grid-template-columns:1fr}.stage{grid-row:1}.controls{grid-row:2}}
+</style></head><body><main class="layout"><section class="controls"><h1>⚔️ ARCANE AWARDS</h1><p>Temporär verifieringsverkstad · DEV. Bilderna stannar i webbläsaren. Ingen databas skrivs.</p>
+<label>Motivbild (PNG/JPEG/WebP)<input id="motifFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<label>Valör<select id="metal"><option value="bronze">Brons</option><option value="silver">Silver</option><option value="gold">Guld</option></select></label>
+<label>Ram för brons<input id="bronzeFile" type="file" accept="image/png,image/webp"></label>
+<label>Ram för silver<input id="silverFile" type="file" accept="image/png,image/webp"></label>
+<label>Ram för guld<input id="goldFile" type="file" accept="image/png,image/webp"></label>
+<label>Accentfärg <input id="accent" type="color" value="#b51232"></label><button id="autoAccent" type="button">Analysera motivets accentfärg</button>
+<label><input id="showAccents" type="checkbox" checked> Visa ädelstenar och kronbakgrund</label>
+<label><input id="showGuides" type="checkbox"> Visa centrumguider</label>
+<button id="reset">Återställ position</button> <button id="export">Exportera montage som PNG</button>
+<p id="message" role="status">Välj motiv och en ram för att börja. Alla tre ramarna kan jämföras utan ny uppladdning.</p></section>
+<section class="stage"><div class="board" id="board"><img class="motif" id="motif" alt=""><div class="accents" id="accents"><span class="gem top"></span><span class="gem right"></span><span class="gem bottom"></span><span class="gem left"></span><span class="crown"></span></div><img class="frame" id="frame" alt=""><div class="guides hidden" id="guides"></div></div><div class="preview-controls"><label>Motivstorlek<div class="stepper"><button type="button" data-step="scale" data-delta="-1" aria-label="Minska motivstorlek">−</button><output id="scaleValue">100%</output><button type="button" data-step="scale" data-delta="1" aria-label="Öka motivstorlek">+</button><input id="scale" type="number" min="50" max="160" value="100"></div></label>
+<label>Motiv X (vänster / höger)<div class="stepper"><button type="button" data-step="x" data-delta="-1" aria-label="Flytta motiv vänster">←</button><output id="xValue">0%</output><button type="button" data-step="x" data-delta="1" aria-label="Flytta motiv höger">→</button><input id="x" type="number" min="-40" max="40" value="0"></div></label>
+<label>Motiv Y (upp / ner)<div class="stepper"><button type="button" data-step="y" data-delta="-1" aria-label="Flytta motiv upp">↑</button><output id="yValue">0%</output><button type="button" data-step="y" data-delta="1" aria-label="Flytta motiv ner">↓</button><input id="y" type="number" min="-40" max="40" value="0"></div></label>
+</div><p class="status">Monteringsordning: motiv → accentfärger → ram. Kontrollera att ramens hål ligger över de fem färgfälten. Fältens positioner är preliminära tills vi kalibrerat dem mot produktionsramarna.</p></section></main>
+<script>
+(()=>{'use strict';
+const ids=['motif','frame','metal','accent','scale','x','y','accents','guides','message'];const el=Object.fromEntries(ids.map(k=>[k,document.getElementById(k)]));const urls={};const frames={};const byId=id=>document.getElementById(id);
+function fileInput(id,callback){byId(id).addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const url=URL.createObjectURL(f);callback(url);update();});}
+function update(){const metal=el.metal.value;el.frame.src=frames[metal]||'';el.frame.classList.toggle('hidden',!frames[metal]);el.motif.classList.toggle('hidden',!urls.motif);el.motif.src=urls.motif||'';const scale=Number(el.scale.value)/100,x=Number(el.x.value),y=Number(el.y.value);el.motif.style.transform='translate('+x+'%,'+y+'%) scale('+scale+')';for(const k of ['scale','x','y'])byId(k+'Value').textContent=el[k].value+(k==='scale'?'%':'%');el.accents.style.setProperty('--accent',el.accent.value);el.accents.classList.toggle('hidden',!byId('showAccents').checked);el.guides.classList.toggle('hidden',!byId('showGuides').checked);el.message.textContent=urls.motif?(frames[metal]?'Motiv och '+metal+'ram visas tillsammans.':'Motiv laddat. Välj en ram för '+metal+'.'):'Välj en motivbild för att börja.';}
+fileInput('motifFile',url=>{if(urls.motif)URL.revokeObjectURL(urls.motif);urls.motif=url;void autoAccent();});
+async function autoAccent(){
+ if(!urls.motif)return;
+ try{
+ const image=new Image();image.src=urls.motif;await image.decode();
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0,64,64);
+ const data=ctx.getImageData(0,0,64,64).data,groups=new Map();
+ for(let i=0;i<data.length;i+=4){
+ if(data[i+3]<180)continue;
+ const [r,g,b]=[data[i]/255,data[i+1]/255,data[i+2]/255],hi=Math.max(r,g,b),lo=Math.min(r,g,b),d=hi-lo;
+ if(hi<.18||d<.2||d/hi<.32)continue;
+ let hue=hi===r?((g-b)/d+6)%6:hi===g?(b-r)/d+2:(r-g)/d+4;hue*=60;
+ if(hue>=35&&hue<=75)continue;
+ const k=Math.round(hue/15)%24,w=d*(.5+hi),v=groups.get(k)||{w:0,r:0,g:0,b:0};
+ v.w+=w;v.r+=r*w;v.g+=g*w;v.b+=b*w;groups.set(k,v);
+ }
+ const winner=[...groups.values()].sort((a,b)=>b.w-a.w)[0];
+ if(!winner){el.message.textContent='Ingen tydlig accentfärg hittades. Välj färg manuellt.';return;}
+ el.accent.value='#'+[winner.r,winner.g,winner.b].map(v=>Math.round(v/winner.w*255).toString(16).padStart(2,'0')).join('');
+ update();el.message.textContent='Accentfärg analyserad. Kontrollera och justera vid behov.';
+ }catch(error){el.message.textContent='Färganalys misslyckades: '+error.message;}
+}
+byId('autoAccent').addEventListener('click',()=>void autoAccent());
+for(const metal of ['bronze','silver','gold'])fileInput(metal+'File',url=>{if(frames[metal])URL.revokeObjectURL(frames[metal]);frames[metal]=url;});
+for(const id of ['metal','accent','showAccents','showGuides'])byId(id).addEventListener('input',update);
+for(const button of document.querySelectorAll('[data-step]'))button.addEventListener('click',()=>{const input=byId(button.dataset.step);const delta=Number(button.dataset.delta);input.value=String(Math.max(Number(input.min),Math.min(Number(input.max),Number(input.value)+delta)));update();});
+byId('reset').addEventListener('click',()=>{el.scale.value=100;el.x.value=0;el.y.value=0;update();});
+byId('export').addEventListener('click',async()=>{
+ const size=2048,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
+ const ctx=canvas.getContext('2d');
+ const draw=async(url,scale=1,x=0,y=0)=>{
+  if(!url)return;
+  const img=new Image();img.src=url;await img.decode();
+  ctx.save();ctx.translate(size/2+x*size/100,size/2+y*size/100);
+  ctx.scale(scale,scale);ctx.drawImage(img,-size/2,-size/2,size,size);ctx.restore();
+ };
+ try{
+  await draw(urls.motif,Number(el.scale.value)/100,Number(el.x.value),Number(el.y.value));
+  if(byId('showAccents').checked){
+   const color=el.accent.value;
+   for(const [x,y,w,h] of [[.473,.016,.054,.054],[.941,.473,.054,.054],[.473,.941,.054,.054],[.005,.473,.054,.054]]){
+    ctx.save();ctx.translate((x+w/2)*size,(y+h/2)*size);ctx.rotate(Math.PI/4);
+    const gradient=ctx.createLinearGradient(-w*size/2,-h*size/2,w*size/2,h*size/2);
+    gradient.addColorStop(0,'#ffffff');gradient.addColorStop(.35,color);gradient.addColorStop(1,'#211321');
+    ctx.fillStyle=gradient;ctx.fillRect(-w*size/2,-h*size/2,w*size,h*size);ctx.restore();
+   }
+   ctx.beginPath();ctx.ellipse(.5*size,.805*size,.075*size,.075*size,0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+  }
+  await draw(frames[el.metal.value]);
+  const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arcane-award-verification-'+el.metal.value+'.png';a.click();
+ }catch(e){el.message.textContent='Export misslyckades: '+e.message;}
+});
+update();
+})();
+</script></body></html>
