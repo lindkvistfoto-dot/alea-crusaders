@@ -61,6 +61,9 @@ describe('OLYMPIA DEV approval API contract', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403)');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504)');
+    expect(edge).toContain('GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter.');
+    expect(edge).toContain('GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403)');
+    expect(edge).toContain('GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502)');
     expect(edge).toContain('CI_PENDING: "CI körs fortfarande.');
     expect(edge).not.toContain('CI_NOT_GREEN');
   });
