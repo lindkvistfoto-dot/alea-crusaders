@@ -138,7 +138,9 @@ function openHonorInspector(kind,data,trigger){
  d.querySelector('.arcane-medal-display-description').textContent=data.description||'';
  d.querySelector('.arcane-medal-display-reason').textContent=kind==='award'?'Antal: '+data.count:'Guldstjärnor: '+data.stars;
  const art=d.querySelector('.arcane-honor-inspector-art');art.replaceChildren();
- const clone=data.art.cloneNode(true);clone.style.cssText='position:relative;width:min(100%,330px);height:min(100%,330px);aspect-ratio:1';art.append(clone);
+ const clone=data.art.cloneNode(true);clone.style.cssText='position:relative;width:100%;height:100%;aspect-ratio:1;max-height:none';art.append(clone);
+ if(kind==='badge'&&data.stars>0){const stars=makeElement('span','arcane-honor-inspector-stars','★'.repeat(Math.min(3,data.stars)));stars.setAttribute('aria-label',data.stars+' guldstjärnor');art.append(stars)}
+ d.dataset.honorKind=kind;
  const frame=d.querySelector('.arcane-medal-display');frame.style.removeProperty('--medal-frame-image');frame.style.removeProperty('--medal-frame-ratio');
  if(!d.open)d.showModal();
  if(typeof root.dbJson!=='function')return;
