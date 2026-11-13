@@ -257,7 +257,7 @@ async function renderAwards(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
-   const count=counts.get(String(d.id))||1,tier=count>=3?'gold':count>=2?'silver':'bronze';
+   const count=counts.get(String(d.id))||1,tier='bronze'; // Tier rules require explicit domain criteria, not grant-count guessing.
    const art=document.createElement('div');art.className='trophy-room-badge-art';
    const asset=assetMap.get(d.image_asset_id);
    const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
