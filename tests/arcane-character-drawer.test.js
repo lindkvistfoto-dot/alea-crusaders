@@ -8,12 +8,12 @@ const styles=read('features/character/arcane-character-drawer.css');
 
 describe('ARCANE character drawer',()=>{
  it('loads after the existing character model and styles without changing the combat layout',()=>{
-  expect(html).toContain('arcane-character-drawer.css?v=20261112-1');
-  expect(html).toContain('arcane-character-drawer.js?v=20261113-1');
+  expect(html).toContain('arcane-character-drawer.css?v=20261113-2');
+  expect(html).toContain('arcane-character-drawer.js?v=20261113-2');
   expect(html.indexOf('arcane-character-drawer.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));
   expect(styles).toContain('position:fixed');
   expect(styles).toContain('transform:translateX(102%)');
-  expect(styles).toContain('@media(max-width:999px)');
+  expect(styles).toContain('@media(max-width:900px)');
  });
  it('uses the active campaign character records and excludes NPC records from the party rail',()=>{
   expect(component).toContain("characters?campaign_id=eq.'+encodeURIComponent(campaignId)+'&select=id,is_npc");
