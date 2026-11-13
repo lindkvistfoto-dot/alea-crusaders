@@ -206,13 +206,81 @@ function positionLeftCalibration(v){
  overlay.querySelectorAll('[data-left-slot]').forEach((el,i)=>{const u=((i%3)+.5)/3,t=(Math.floor(i/3)+.5)/3,den=g*u+h*t+1;const point=leftScreenPoint([(a*u+b*t+c)/den,(d*u+e*t+f)/den],v);el.setAttribute('cx',point[0]);el.setAttribute('cy',point[1])});
 }
 
+
+/* Left award wall: same four-corner homography and nine independent 3D planes
+   as the right badge wall, with Zeus-approved background-image coordinates. */
+const AWARD_CORNERS=[[0.08039355216408267,0.1925328947368421],[0.22767280361757103,0.27137746710526317],[0.23017098675710596,0.6094737199036002],[0.07971222948966411,0.5934375356930739]];
+let awardSequence=0;
+function ensureAwardWall(){
+ const v=viewport();if(!v)return null;
+ let wall=byId('trophyRoomAwardWall');
+ if(!wall){wall=document.createElement('div');wall.id='trophyRoomAwardWall';wall.className='trophy-room-badge-wall trophy-room-award-wall';wall.setAttribute('aria-label','Vänstra väggen: utmärkelser i 3 gånger 3');v.append(wall)}
+ return wall;
+}
+function positionAwardWall(v){
+ const wall=byId('trophyRoomAwardWall');if(!wall||wall.hidden)return;
+ const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
+ const homography=solveHomography(AWARD_CORNERS);if(!homography)return;
+ const project=(u,t)=>{const [a,b,c,d,e,f,g,h]=homography,den=g*u+h*t+1;return [(a*u+b*t+c)/den,(d*u+e*t+f)/den]};
+ wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';wall.style.transform='none';wall.style.pointerEvents='none';wall.style.display='block';
+ const tile=256,margin=.11;
+ [...wall.querySelectorAll('.trophy-room-award-slot')].forEach((slot,n)=>{
+  const col=n%3,row=Math.floor(n/3),u0=(col+margin)/3,u1=(col+1-margin)/3,v0=(row+margin)/3,v1=(row+1-margin)/3;
+  const quad=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]].map(([u,t])=>{const p=project(u,t);return [W*(.5+(p[0]-.5)*scale)+x,H*(.5+(p[1]-.5)*scale)+y]});
+  const matrix=solveHomography(quad.map(p=>[p[0]/W,p[1]/H]));if(!matrix)return;
+  const [a,b,c,d,e,f,g,h]=matrix,m=[a*W/tile,d*H/tile,0,g/tile,b*W/tile,e*H/tile,0,h/tile,0,0,1,0,c*W,f*H,0,1];
+  if(!m.every(Number.isFinite))return;
+  slot.style.position='absolute';slot.style.left='0px';slot.style.top='0px';slot.style.width=tile+'px';slot.style.height=tile+'px';slot.style.transformOrigin='0 0';slot.style.transform='matrix3d('+m.join(',')+')';
+ });
+}
+async function renderAwards(){
+ const wall=ensureAwardWall(),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
+ const seq=++awardSequence;wall.replaceChildren();wall.hidden=true;
+ const character=availableCharacters().find(c=>String(c.id)===picker.value);
+ const dbId=character?._dbId||character?.dbId||character?.data?.id||character?.id;
+ if(!dbId||typeof root.dbJson!=='function')return;
+ try{
+  const [grants,definitions,assets,managedAssets]=await Promise.all([
+   root.dbJson('honor_grants?select=honor_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
+   root.dbJson('honor_definitions?select=id,name,category,status,image_asset_id,badge_frame_assets&category=eq.award'),
+   root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*'),
+   root.aleaHermesAleaImages?.loadAssets?.()||[]
+  ]);
+  if(seq!==awardSequence)return;
+  const counts=new Map();for(const grant of grants||[])counts.set(String(grant.honor_id),(counts.get(String(grant.honor_id))||0)+1);
+  const assetMap=new Map([...(assets||[]),...(managedAssets||[])].map(a=>[a.asset_key,a]));
+  const awarded=(definitions||[]).filter(d=>counts.has(String(d.id))&&d.category==='award').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
+  for(let index=0;index<9;index++){
+   const row=Math.floor(index/3),col=index%3;
+   // Mirror the right wall's right-to-left row filling.
+   const d=awarded[row*3+col];
+   const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
+   if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
+   slot.title=d.name;
+   const count=counts.get(String(d.id))||1,tier=count>=3?'gold':count>=2?'silver':'bronze';
+   const art=document.createElement('div');art.className='trophy-room-badge-art';
+   const asset=assetMap.get(d.image_asset_id);
+   const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
+   const frameAsset=assetMap.get(d.badge_frame_assets?.[tier]);
+   const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
+   if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
+   else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
+   if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
+   slot.append(art);
+   if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
+   wall.append(slot);
+  }
+  wall.hidden=awarded.length===0;positionAwardWall(viewport());
+ }catch(error){if(seq!==awardSequence)return;console.warn('Trophy award wall unavailable',error)}
+}
+
 function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
 function updateMedalInteraction(){const ready=medalInteractionReady();const v=viewport();if(v)v.classList.toggle('trophy-room-medals-active',ready);for(const button of document.querySelectorAll('#trophyRoomMedalWall .trophy-room-medal-trigger')){button.disabled=!ready;button.tabIndex=ready?0:-1}}
 function draw(){clampCamera();
  const v=viewport();if(!v)return;
  const scene=byId('trophyRoomScene'),hero=byId('trophyRoomCharacterLayer');
  v.style.setProperty('--pan-x',x+'px');v.style.setProperty('--pan-y',y+'px');v.style.setProperty('--zoom',String(scale));
- if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';positionMedalWall(v);positionBadgeWall(v);positionLeftCalibration(v);
+ if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';positionMedalWall(v);positionBadgeWall(v);positionAwardWall(v);positionLeftCalibration(v);
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
   const heroWidth=hero.offsetWidth||width*.30;
@@ -374,7 +442,7 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}if(background.parentElement!==scene)scene.append(background);if(wall.parentElement!==v)v.append(wall);const badgeWall=byId('trophyRoomBadgeWall');if(badgeWall&&badgeWall.parentElement!==v)v.append(badgeWall)}
-function open(){const p=page();if(!p)return;ensureScene();ensureLeftCalibration();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
+function open(){const p=page();if(!p)return;ensureScene();ensureLeftCalibration();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
  v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion||scale>=1.5)return;const rect=v.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width;focusWall(px<.36?'left':px>.64?'right':'center')});
  v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='ArrowLeft'&&scale<1.5){e.preventDefault();focusWall('left')}else if(e.key==='ArrowRight'&&scale<1.5){e.preventDefault();focusWall('right')}else if(e.key==='0')reset()});
