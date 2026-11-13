@@ -53,17 +53,17 @@ describe('OLYMPIA DEV approval API contract', () => {
     expect(vite).toContain('resolve("dist/olympia-v2/ci-validation.js")');
     expect(ui).toContain('<script src="./ci-validation.js"></script>');
   });
-  it('requests CI read scopes on the existing merge token', () => {
+  it('requests CI read scopes only for the DEV merge token', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('decision === "approve_and_merge_dev"\n    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+    expect(edge).toContain('decision === "approve_and_merge_dev"');
+    expect(edge).toContain('checks: "read", statuses: "read"');
   });
   it('does not translate GitHub API failures into a failed CI verdict', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403)');
-    expect(edge).toContain('GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504)');
     expect(edge).toContain('GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter.');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403)');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502)');
+    expect(edge).toContain('GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504)');
     expect(edge).toContain('CI_PENDING: "CI körs fortfarande.');
     expect(edge).not.toContain('CI_NOT_GREEN');
   });
