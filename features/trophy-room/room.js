@@ -166,7 +166,7 @@ async function renderBadges(){
    normalized to the 1280x720 background, independent of camera zoom/pan. */
 const LEFT_DEV_PROJECT='wkiuyklzzroavclnsxna';
 const LEFT_CAL_KEY='alea:trophy:left-wall-corners:v1';
-const leftDev=typeof SUPABASE_URL==='string'&&SUPABASE_URL.includes(LEFT_DEV_PROJECT);
+const leftDev=root.ALEA_SUPABASE_CONFIG?.name==='development'&&root.ALEA_SUPABASE_CONFIG?.url?.includes(LEFT_DEV_PROJECT);
 let leftCorners=[[.08,.22],[.34,.29],[.34,.76],[.08,.69]];
 try{const saved=JSON.parse(root.localStorage.getItem(LEFT_CAL_KEY)||'null');if(Array.isArray(saved)&&saved.length===4&&saved.every(p=>Array.isArray(p)&&p.length===2&&p.every(n=>Number.isFinite(n)&&n>=0&&n<=1)))leftCorners=saved}catch(_){}
 let leftCalVisible=false;
