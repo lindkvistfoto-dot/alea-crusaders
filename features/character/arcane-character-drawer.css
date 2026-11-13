@@ -33,5 +33,5 @@
 .arcane-drawer-page-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid #ffffff12}
 .arcane-drawer-page-count{color:#a99c88;font-size:12px}
 .arcane-drawer-overlay{position:fixed;z-index:calc(var(--arcane-drawer-z) - 1);inset:0;background:transparent;pointer-events:none}
-@media(max-width:999px){.arcane-character-rail,.arcane-character-drawer,.arcane-drawer-overlay{display:none!important}}
+@media(max-width:900px){.arcane-character-rail,.arcane-character-drawer,.arcane-drawer-overlay{display:none!important}}
 @media(prefers-reduced-motion:reduce){.arcane-character-drawer,.arcane-drawer-page{transition:none;animation:none}}
