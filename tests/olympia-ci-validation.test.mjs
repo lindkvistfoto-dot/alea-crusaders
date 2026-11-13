@@ -55,7 +55,7 @@ describe('OLYMPIA DEV approval API contract', () => {
   });
   it('requests CI read scopes on the existing merge token', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('contents: "write", checks: "read", statuses: "read"');
+    expect(edge).toContain('decision === "approve_and_merge_dev"\n    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
   });
   it('does not translate GitHub API failures into a failed CI verdict', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
