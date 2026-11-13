@@ -11,6 +11,11 @@ const badgeFrameLabel = asset => asset?.label || asset?.asset_key?.replace(badge
 const selectedBadgeFrame = (definition, variant) => definition?.badge_frame_assets?.[variant?.id] || '';
 const laurelFrameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-badge-silver', gold:'arcane-laurel-badge-gold' };
 const asArray = value => Array.isArray(value) ? value : [];
+const awardAccents = [
+  ['red','Röd'],['blue','Blå'],['green','Grön'],['yellow','Gul'],['orange','Orange'],
+  ['purple','Lila'],['pink','Rosa'],['turquoise','Turkos'],['cyan','Cyan'],['black','Svart'],
+  ['white','Vit'],['brown','Brun'],['light-gray','Ljusgrå'],['dark-gray','Mörkgrå'],['amber','Bärnsten']
+];
 
 async function assertSquareBadgeImage(file) {
   if (typeof createImageBitmap !== 'function') {
@@ -111,6 +116,21 @@ export function renderHonorsAdmin(root, options = {}) {
     const categoryFrames = selectedCategory === 'badge' ? frameKeys : laurelFrameKeys;
     const framePrefix = selectedCategory === 'badge' ? 'arcane-lion-badge-' : 'arcane-laurel-badge-';
     const frameFamilyLabel = selectedCategory === 'badge' ? 'ARCANE LION' : 'ARCANE LAUREL';
+    const awardMounting = selectedCategory === 'award'
+      ? '<fieldset class="honors-frames honors-wide"><legend>Gemensam ARCANE-montering</legend>' +
+        '<p>Metallramen följer automatiskt utmärkelsens valör. Alla fem stenar använder accentfärgen.</p>' +
+        '<label>Accentfärg<select name="award_accent_color">' + awardAccents.map(([key,label]) => '<option value="'+key+'"'+((frame.accent_color||'red')===key?' selected':'')+'>'+label+'</option>').join('') + '</select></label>' +
+        '<small>En gemensam monteringsmotor används i Troférummet och Award Simulator.</small></fieldset>'
+      : '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ' + frameFamilyLabel + '-ramar</legend>' +
+        ['bronze','silver','gold'].map(metal => {
+          const key = frame[metal] || categoryFrames[metal];
+          const asset = publishedAsset(key);
+          return '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[metal]) +
+            '<select name="frame_' + metal + '">' + imageAssets.filter(a => String(a.asset_key || '').startsWith(framePrefix)).map(a => '<option value="' + esc(a.asset_key) + '"' + (a.asset_key === key ? ' selected' : '') + '>' + esc(a.label || a.asset_key) + (a.asset_path ? '' : ' · ej publicerad') + '</option>').join('') +
+            (!imageAssets.some(a => a.asset_key === key) ? '<option value="' + esc(key) + '" selected>' + esc(key) + ' · väntar på HERMES</option>' : '') +
+            '</select><small>' + (asset ? 'HERMES-publicerad ram' : 'Väntar på HERMES-publicering') + '</small></label>';
+        }).join('') +
+      '</fieldset>';
     const badgeMetricPlaceholders = selectedCategory === 'badge'
       ? '<fieldset class="honors-metric-placeholders honors-wide"><legend>Automatiska karriärmått</legend>' +
         '<p>Platshållare för planerade karriärmått. Fälten är inte aktiva och sparas inte.</p>' +
@@ -150,16 +170,7 @@ export function renderHonorsAdmin(root, options = {}) {
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
       '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id"' + (imagePilot ? ' readonly' : '') + ' value="' + esc(d.image_asset_id) + '"></label>' +
-      '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ' + frameFamilyLabel + '-ramar</legend>' +
-        ['bronze','silver','gold'].map(metal => {
-          const key = frame[metal] || categoryFrames[metal];
-          const asset = publishedAsset(key);
-          return '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[metal]) +
-            '<select name="frame_' + metal + '">' + imageAssets.filter(a => String(a.asset_key || '').startsWith(framePrefix)).map(a => '<option value="' + esc(a.asset_key) + '"' + (a.asset_key === key ? ' selected' : '') + '>' + esc(a.label || a.asset_key) + (a.asset_path ? '' : ' · ej publicerad') + '</option>').join('') +
-            (!imageAssets.some(a => a.asset_key === key) ? '<option value="' + esc(key) + '" selected>' + esc(key) + ' · väntar på HERMES</option>' : '') +
-            '</select><small>' + (asset ? 'HERMES-publicerad ram' : 'Väntar på HERMES-publicering') + '</small></label>';
-        }).join('') +
-      '</fieldset></div>';
+      awardMounting + '</div>';
   }
 
   function renderVariantPanel(definition) {
@@ -169,16 +180,12 @@ export function renderHonorsAdmin(root, options = {}) {
       const image = assetImage(definition.image_asset_id);
       const tiers = [['bronze', 'Brons'], ['silver', 'Silver'], ['gold', 'Guld']];
       const previews = tiers.map(([metal, label]) => {
-        const frame = assetImage(laurelFrameKeys[metal]);
         return '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
-          '<div class="honors-preview-art">' +
-          (image ? '<img class="honors-preview-relief" src="' + esc(image) + '" alt="Utmärkelsens bild">' : '<span class="honors-preview-empty">Ladda upp bild ovan</span>') +
-          (frame ? '<img class="honors-preview-frame" src="' + esc(frame) + '" alt="' + label + 'ram">' : '') +
-          '</div></div>';
+          '<div class="honors-preview-art arcane-award-mount" data-award-mount data-metal="'+metal+'" data-accent="'+esc(definition.badge_frame_assets?.accent_color||'red')+'" data-motif="'+esc(image||'')+'" data-label="'+esc(definition.name)+'"></div></div>';
       }).join('');
       return '<section class="honors-variant-library honors-award-single-image">' +
-        '<h4>En bild · tre ramar</h4>' +
-        '<p>Utmärkelsen använder bilden ovan i brons-, silver- och guldram. Ingen materialvariant behöver skapas.</p>' +
+        '<h4>En bild · gemensam montering</h4>' +
+        '<p>Motivbilden, valörens metallram och accentstenarna monteras med samma motor som Troférummet.</p>' +
         '<div class="honors-preview-tiers">' + previews + '</div></section>';
     }
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
@@ -386,6 +393,12 @@ export function renderHonorsAdmin(root, options = {}) {
     const badgeEditor=definition?getCategory(definition)==='badge':category==='badge';
     root.querySelector('[data-definition-image]').innerHTML = badgeEditor?'':imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
     root.querySelector('[data-variants]').innerHTML = renderVariantPanel(definition);
+    const awardMount=root.ArcaneAwardMount;
+    if(awardMount&&definition&&getCategory(definition)==='award')root.querySelectorAll('[data-award-mount]').forEach(node=>{
+      const metal=node.dataset.metal,accent=awardMount.validAccent(node.dataset.accent),gemUrls={};
+      for(const form of ['diamond','round'])for(const color of awardMount.ACCENTS){const key=awardMount.gemAssetKey(form,color),url=assetImage(key);if(url)gemUrls[key]=url;}
+      awardMount.mountAward(node,{metal,accent,motifUrl:node.dataset.motif,motifAlt:definition.name,motifLabel:definition.name,frameUrl:assetImage(awardMount.frameAssetKey(metal)),gemUrls});
+    });
     bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
     const cat = root.querySelector('[data-fields] [name="category"]');
@@ -414,10 +427,17 @@ export function renderHonorsAdmin(root, options = {}) {
       data.badge_frame_assets=Object.fromEntries(Object.entries(editing?.badge_frame_assets||{}).filter(([key])=>!['bronze','silver','gold'].includes(key)));
       data.frame_family=null;
     }else{
-      data.badge_frame_assets = {};
-      for (const metal of ['bronze','silver','gold']) {
-        const value=data['frame_'+metal]; delete data['frame_'+metal];
-        if (value) data.badge_frame_assets[metal]=value;
+      const selectedAccent=data.award_accent_color; delete data.award_accent_color;
+      if(data.category==='award'){
+        data.badge_frame_assets={...(editing?.badge_frame_assets||{})};
+        delete data.badge_frame_assets.bronze;delete data.badge_frame_assets.silver;delete data.badge_frame_assets.gold;
+        data.badge_frame_assets.accent_color=awardAccents.some(([key])=>key===selectedAccent)?selectedAccent:(editing?.badge_frame_assets?.accent_color||'red');
+      }else{
+        data.badge_frame_assets = {};
+        for (const metal of ['bronze','silver','gold']) {
+          const value=data['frame_'+metal]; delete data['frame_'+metal];
+          if (value) data.badge_frame_assets[metal]=value;
+        }
       }
       data.frame_family = data.category === 'badge' ? 'arcane_lion_badge' : null;
     }

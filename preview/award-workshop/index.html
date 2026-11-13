@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#17130f">
+  <title>ARCANE Award Simulator V3.0</title>
+  <style>
+    :root{color-scheme:dark;font:16px system-ui,sans-serif;background:#17130f;color:#f4e5c9;--gold:#d1ad70;--panel:#272018;--border:#725b3e}
+    *{box-sizing:border-box}body{margin:0;padding:clamp(12px,2.4vw,28px)}header,main{max-width:1240px;margin:auto}header{margin-bottom:16px}h1{margin:0;color:#e5c27c;font:700 clamp(1.3rem,3vw,2rem) Georgia,serif}header p,.hint{color:#c7b79d;line-height:1.5}.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:18px;align-items:start}.panel,.stage{min-width:0;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:clamp(12px,2vw,20px)}.stage{position:sticky;top:12px}.board{position:relative;width:min(100%,680px);aspect-ratio:1;margin:auto;overflow:hidden;border:1px solid #8c7048;background-color:#36302a;background-image:linear-gradient(45deg,#484038 25%,transparent 25%),linear-gradient(-45deg,#484038 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#484038 75%),linear-gradient(-45deg,transparent 75%,#484038 75%);background-size:32px 32px;background-position:0 0,0 16px,16px -16px,-16px 0}.arcane-award-mount{position:relative;width:100%;height:100%;isolation:isolate;overflow:visible}.arcane-award-layer{position:absolute;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}.arcane-award-motif{inset:0;width:100%;height:100%;z-index:1}.arcane-award-gem{object-fit:contain}.arcane-award-frame{inset:0;width:100%;height:100%;z-index:4}.arcane-award-motif-label{left:18%;top:18%;width:64%;height:64%;display:grid;place-items:center;overflow:hidden;color:#f4ddb0;background:#20180ecb;text-align:center;font-size:clamp(10px,2vw,20px);padding:8px}.status{min-height:1.5em;color:#d7c49e;font-size:.9rem}.controls{display:grid;gap:14px}.controls label{display:grid;gap:6px;min-width:0}.controls select,.controls input[type=file],.controls button,.controls input[type=range]{max-width:100%;font:inherit}.controls select,.controls input[type=file],button{min-height:44px;border:1px solid #a78655;border-radius:8px;background:#33291f;color:#f4e5c9;padding:9px 11px}button{cursor:pointer;touch-action:manipulation}button:hover{filter:brightness(1.15)}fieldset{min-width:0;border:1px solid #62503a;border-radius:10px;padding:10px 12px}legend{color:#e1c487;padding:0 5px}.actions{display:flex;flex-wrap:wrap;gap:8px}.actions button{flex:1 1 132px}.selected-title{margin:0 0 4px;color:#e8cb93}.sliders{display:grid;gap:10px}.slider-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:center}.slider-row input{grid-column:1/-1;width:100%;accent-color:#d1ad70;touch-action:pan-y}.slider-row output{min-width:4.4em;text-align:right;font-variant-numeric:tabular-nums}.positions{width:100%;border-collapse:collapse;font-size:.84rem}.positions th,.positions td{padding:6px 4px;border-bottom:1px solid #55452f;text-align:right;font-variant-numeric:tabular-nums}.positions th:first-child,.positions td:first-child{text-align:left}.zoom{position:relative;width:min(100%,280px);aspect-ratio:1;margin:auto;border:1px solid #8c7048;border-radius:8px;overflow:hidden;background-color:#36302a;background-image:linear-gradient(45deg,#484038 25%,transparent 25%),linear-gradient(-45deg,#484038 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#484038 75%),linear-gradient(-45deg,transparent 75%,#484038 75%);background-size:24px 24px}.zoom img{display:none}.zoom-content{position:absolute;width:300%;height:300%;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}.zoom-content .arcane-award-layer{pointer-events:none}.footnote{font-size:.82rem;color:#b9a98f;line-height:1.45}
+    @media(max-width:760px){body{padding:10px}.layout{grid-template-columns:minmax(0,1fr)}.stage{position:relative;top:auto;order:0}.panel{order:1}.board{width:min(100%,580px)}.positions{font-size:.8rem}}
+  </style>
+</head>
+<body>
+  <header><h1>⚔ ARCANE AWARD SIMULATOR V3.0</h1><p>Gemensam monteringsmotor för Troférummet · mobilanpassad förhandsvisning</p></header>
+  <main class="layout">
+    <section class="stage" aria-label="Förhandsvisning av utmärkelsen">
+      <div class="board"><div id="award" class="arcane-award-mount" aria-label="Komplett ARCANE-utmärkelse"></div></div>
+      <p id="status" class="status" role="status" aria-live="polite">Läser in gemensamma ARCANE-resurser…</p>
+      <fieldset><legend>Förstorad detalj · <span id="selectedLabel">Klockan 12</span></legend><div id="zoom" class="zoom" aria-label="Förstorad vy av vald ädelsten"></div><p class="footnote">Förstoringen följer vald sten och samma lagerordning som utmärkelsen.</p></fieldset>
+    </section>
+    <section class="panel controls">
+      <label>Metallvalör
+        <select id="metal"><option value="bronze">Brons</option><option value="silver">Silver</option><option value="gold">Guld</option></select>
+      </label>
+      <label>Accentfärg
+        <select id="accent"></select>
+      </label>
+      <label>Motivbild
+        <input id="motifFile" type="file" accept="image/png,image/jpeg,image/webp">
+        <span class="footnote">Välj en befintlig utmärkelsebild från enheten. Bilden stannar i denna webbläsarflik.</span>
+      </label>
+      <fieldset><legend>Finjustering</legend>
+        <label>Ädelsten<select id="gem"></select></label>
+        <h2 class="selected-title" id="gemTitle">Diamant kl. 12</h2>
+        <div id="sliders" class="sliders"></div>
+        <div class="actions"><button id="reset">Återställ godkänd profil</button><button id="copy">Kopiera koordinater</button></div>
+      </fieldset>
+      <fieldset><legend>Aktuella koordinater · procent av ramens bredd</legend>
+        <table class="positions"><thead><tr><th>Position</th><th>X</th><th>Y</th><th>S</th></tr></thead><tbody id="coordinates"></tbody></table>
+      </fieldset>
+      <p class="footnote">X/Y är stenens centrum. S är både bredd och höjd i procent av den kvadratiska ramen. Startvärdena är den godkända profilen; manuella ändringar gäller bara denna förhandsvisning.</p>
+    </section>
+  </main>
+  <script src="../../features/honors/arcane-award-mount.js?v=arcane-award-mount-v3"></script>
+  <script>
+    (()=>{
+      const mount=window.ArcaneAwardMount;
+      const labels={top:'Diamant kl. 12',right:'Diamant kl. 3',bottom:'Diamant kl. 6',left:'Diamant kl. 9',round:'Rund sten · kronan'};
+      const colorLabels={red:'Röd',blue:'Blå',green:'Grön',yellow:'Gul',orange:'Orange',purple:'Lila',pink:'Rosa',turquoise:'Turkos',cyan:'Cyan',black:'Svart',white:'Vit',brown:'Brun','light-gray':'Ljusgrå','dark-gray':'Mörkgrå',amber:'Bärnsten'};
+      const defaults=()=>Object.fromEntries(Object.entries(mount.POSITIONS).map(([key,p])=>[key,{x:p.x,y:p.y,s:p.s,form:p.form}]));
+      let positions=defaults(),selected='top',assets={},motifUrl='',motifObjectUrl='';
+      const byId=id=>document.getElementById(id), art=byId('award'), status=byId('status');
+      const assetUrl=key=>assets[key]||'';
+      const gemUrls=()=>Object.fromEntries(Object.entries(assets).filter(([key])=>key.startsWith('arcane-award-gem-')));
+      function render(){
+        mount.mountAward(art,{metal:byId('metal').value,accent:byId('accent').value,positions,motifUrl,motifLabel:motifUrl?'':'Välj motivbild',resolveAsset:assetUrl,gemUrls:gemUrls()});
+        byId('coordinates').innerHTML=Object.entries(positions).map(([key,p])=>`<tr><td>${labels[key]}</td><td>${p.x.toFixed(1)}</td><td>${p.y.toFixed(1)}</td><td>${p.s.toFixed(1)}</td></tr>`).join('');
+        byId('selectedLabel').textContent=labels[selected];byId('gemTitle').textContent=labels[selected];
+        const p=positions[selected];
+        byId('sliders').innerHTML=[['x','X · centrum',0,100],['y','Y · centrum',0,100],['s','S · bredd/höjd',2,30]].map(([key,label,min,max])=>`<div class="slider-row"><label for="slider-${key}">${label}</label><output id="value-${key}">${p[key].toFixed(1)}%</output><input id="slider-${key}" type="range" min="${min}" max="${max}" step="0.1" value="${p[key]}"></div>`).join('');
+        for(const key of ['x','y','s'])byId(`slider-${key}`).addEventListener('input',event=>{positions[selected][key]=Number(event.target.value);render();});
+        renderZoom();
+      }
+      function renderZoom(){
+        const box=byId('zoom');box.replaceChildren();
+        const clone=art.cloneNode(true);clone.removeAttribute('id');clone.classList.add('zoom-content');
+        const p=positions[selected],scale=3;
+        clone.style.left='0';clone.style.top='0';clone.style.width='300%';clone.style.height='300%';
+        clone.style.transform=`translate(${50/scale-p.x}%, ${50/scale-p.y}%)`;
+        box.append(clone);
+      }
+      mount.ACCENTS.forEach(color=>byId('accent').add(new Option(colorLabels[color],color)));
+      Object.keys(positions).forEach(key=>byId('gem').add(new Option(labels[key],key)));
+      byId('gem').addEventListener('change',event=>{selected=event.target.value;render();});
+      byId('metal').addEventListener('change',render);byId('accent').addEventListener('change',render);
+      byId('reset').addEventListener('click',()=>{positions=defaults();render();status.textContent='Godkänd ARCANE RUBY MOUNT V1.0 återställd.';});
+      byId('copy').addEventListener('click',async()=>{const value=JSON.stringify({version:'ARCANE_AWARD_SIMULATOR_V3',metal:byId('metal').value,accent:byId('accent').value,positions},null,2);try{await navigator.clipboard.writeText(value);status.textContent='Koordinater kopierade.';}catch(_){window.prompt('Kopiera koordinaterna:',value);}});
+      byId('motifFile').addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;if(motifObjectUrl)URL.revokeObjectURL(motifObjectUrl);motifObjectUrl=URL.createObjectURL(file);motifUrl=motifObjectUrl;render();});
+      fetch('./assets.json',{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(manifest=>{
+        assets=manifest.assets||{};render();
+        const expected=3+mount.ACCENTS.length*2;
+        const available=Object.keys(assets).filter(key=>key.startsWith('arcane-award-')).length;
+        status.textContent=available>=expected?`Alla ${expected} gemensamma bilder är tillgängliga.`:`Laddade ${available} av ${expected} gemensamma bilder. CORE-publiceringen kan fortfarande pågå.`;
+      }).catch(()=>{render();status.textContent='Gemensamma bilder är ännu inte tillgängliga i denna preview.';});
+    })();
+  </script>
+</body>
+</html>

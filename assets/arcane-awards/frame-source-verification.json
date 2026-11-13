@@ -1,0 +1,60 @@
+{
+  "source": "Google Drive ALEA – HERMES",
+  "verification": "Dimensions, true RGBA alpha, and shared alpha geometry checked before CORE queueing.",
+  "frames": [
+    {
+      "metal": "bronze",
+      "asset_key": "arcane-award-frame-bronze",
+      "drive_file_id": "1qTDPKPdJ2XIQYz3nhcxe7xhgq75ib652",
+      "source_file": "bronze-frame.png",
+      "width": 2048,
+      "height": 2048,
+      "mode": "RGBA",
+      "rgba_sha256": "b50c50a6526175f09329b5b6897a19cebc369763435dabe47d2ca15aecb8984f",
+      "alpha_mask_sha256": "640f8b8581df8a85377ea3e12e4bfd901bc44ade322214a3e843ec72308baaa4",
+      "alpha_bounds": [
+        0,
+        0,
+        2025,
+        2048
+      ],
+      "has_transparency": true
+    },
+    {
+      "metal": "silver",
+      "asset_key": "arcane-award-frame-silver",
+      "drive_file_id": "1MjeJuvsPmwPSrz-OAyLpMAc2nGQjJAkr",
+      "source_file": "silver-frame.png",
+      "width": 2048,
+      "height": 2048,
+      "mode": "RGBA",
+      "rgba_sha256": "9c30b9149c52793dead4c0230b3178e6245c7bfc8651a03f88d4aec07da15987",
+      "alpha_mask_sha256": "640f8b8581df8a85377ea3e12e4bfd901bc44ade322214a3e843ec72308baaa4",
+      "alpha_bounds": [
+        0,
+        0,
+        2025,
+        2048
+      ],
+      "has_transparency": true
+    },
+    {
+      "metal": "gold",
+      "asset_key": "arcane-award-frame-gold",
+      "drive_file_id": "1aGn_aBBd9KKj4vQO3G1k3vlBUcJPf2rI",
+      "source_file": "gold-frame.png",
+      "width": 2048,
+      "height": 2048,
+      "mode": "RGBA",
+      "rgba_sha256": "e4d6301588ecc504c3314cfd9aa22db2712c9da997d5c2a84ae9299e7daf5b3e",
+      "alpha_mask_sha256": "640f8b8581df8a85377ea3e12e4bfd901bc44ade322214a3e843ec72308baaa4",
+      "alpha_bounds": [
+        0,
+        0,
+        2025,
+        2048
+      ],
+      "has_transparency": true
+    }
+  ]
+}
