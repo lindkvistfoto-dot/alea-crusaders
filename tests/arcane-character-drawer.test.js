@@ -9,7 +9,7 @@ const styles=read('features/character/arcane-character-drawer.css');
 describe('ARCANE character drawer',()=>{
  it('loads after the existing character model and styles without changing the combat layout',()=>{
   expect(html).toContain('arcane-character-drawer.css?v=20261113-2');
-  expect(html).toContain('arcane-character-drawer.js?v=20261113-2');
+  expect(html).toContain('arcane-character-drawer.js?v=20261113-3');
   expect(html.indexOf('arcane-character-drawer.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));
   expect(styles).toContain('position:fixed');
   expect(styles).toContain('transform:translateX(102%)');
@@ -33,6 +33,8 @@ describe('ARCANE character drawer',()=>{
  it('supports character switching, tab navigation, arrows and horizontal swipe',()=>{
   expect(component).toContain('toggleCharacter(b.dataset.character)');
   expect(component).toContain('function isNonHomePageVisible()');
+  expect(component).toContain('window.aleaCharacterDrawerRefresh=refresh');
+  expect(read('legacy/app.js')).toContain('window.aleaCharacterDrawerRefresh?.()');
   expect(component).toContain("'loginScreen','home','admin','academyPage','view','combatPage','mapPage','dicePage','trophyRoomPage','shopPage','innPage'");
   expect(component).toContain('data-dir');
   expect(component).toContain("e.changedTouches");
