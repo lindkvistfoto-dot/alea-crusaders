@@ -12,11 +12,6 @@ describe('OLYMPIA GitHub installation token permission compatibility',()=>{
   expect(edge).toContain('verifiedCandidatePreview');
  });
  it('grants blocked-candidate recovery write access only where required',()=>{
-  const recovery = edge.match(/decision === "resume_stale_candidate"\\s*\\?\\s*\\{([^}]+)\\}/);
-  expect(recovery).not.toBeNull();
-  expect(recovery[1]).toContain('contents: "write"');
-  expect(recovery[1]).toContain('issues: "write"');
-  expect(recovery[1]).toContain('pull_requests: "read"');
-  expect(recovery[1]).not.toContain('pull_requests: "write"');
+  expect(edge).toContain('decision === "resume_stale_candidate"\\n    ? { contents: "write", issues: "write", pull_requests: "read" }');
  });
 });
