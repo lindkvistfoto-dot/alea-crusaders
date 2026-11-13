@@ -234,3 +234,15 @@ main:has(> #trophyRoomPage:not(.hidden)){
 #trophyBadgeCalibration[hidden]{display:none}
 #trophyBadgeCalibration [data-badge-corner]{pointer-events:all;cursor:grab;touch-action:none}
 #trophyBadgeCalibration [data-badge-corner]:active{cursor:grabbing}
+
+/* ARCANE AWARDS: transparent, deterministic gemstone and crown-color layer.
+   The frame artwork remains above these five accents. */
+.trophy-room-award-slot .trophy-room-award-insets{position:absolute;inset:0;z-index:1;pointer-events:none;transform:scale(1.16);transform-origin:center}
+.trophy-room-award-slot .trophy-room-badge-relief{z-index:0}
+.trophy-room-award-inset{position:absolute;display:block;background:radial-gradient(circle at 32% 25%,#ffffffaa 0%,transparent 36%),linear-gradient(135deg,#ffffff55,var(--award-accent) 42%,#00000088 100%);box-shadow:inset 0 0 3px #0009}
+.trophy-room-award-inset-top,.trophy-room-award-inset-bottom,.trophy-room-award-inset-left,.trophy-room-award-inset-right{width:5.4%;height:5.4%;transform:rotate(45deg);border-radius:9%}
+.trophy-room-award-inset-top{left:47.3%;top:1.6%}
+.trophy-room-award-inset-right{left:94.1%;top:47.3%}
+.trophy-room-award-inset-bottom{left:47.3%;top:94.1%}
+.trophy-room-award-inset-left{left:.5%;top:47.3%}
+.trophy-room-award-inset-crown{width:15%;height:15%;left:42.5%;top:73%;border-radius:50%}
