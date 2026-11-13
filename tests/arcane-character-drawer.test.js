@@ -9,7 +9,7 @@ const styles=read('features/character/arcane-character-drawer.css');
 describe('ARCANE character drawer',()=>{
  it('loads after the existing character model and styles without changing the combat layout',()=>{
   expect(html).toContain('arcane-character-drawer.css?v=20261113-2');
-  expect(html).toContain('arcane-character-drawer.js?v=20261113-4');
+  expect(html).toContain('arcane-character-drawer.js?v=20261113-5');
   expect(html.indexOf('arcane-character-drawer.js')).toBeGreaterThan(html.indexOf('legacy/app.js'));
   expect(styles).toContain('position:fixed');
   expect(styles).toContain('transform:translateX(102%)');
@@ -38,8 +38,8 @@ describe('ARCANE character drawer',()=>{
   expect(component).toContain('function isNonHomePageVisible()');
   expect(component).toContain('window.aleaCharacterDrawerRefresh=refresh');
   expect(read('legacy/app.js')).toContain('window.aleaCharacterDrawerRefresh?.()');
-  expect(component).toContain("const app=document.querySelector('main'),home=document.getElementById('home'),login=document.getElementById('loginScreen')");
-  expect(component).toContain('home.classList.contains(\'hidden\')');
+  expect(component).toContain("const app=document.querySelector('main'),landing=document.getElementById('landing'),login=document.getElementById('loginScreen')");
+  expect(component).toContain('landing.classList.contains(\'hidden\')');
   expect(component).not.toContain('isCombatVisible');
   expect(component).not.toContain("['admin','academyPage','view','combatPage'");
   expect(component).toContain('data-dir');
