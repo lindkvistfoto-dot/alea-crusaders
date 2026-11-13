@@ -279,3 +279,13 @@ main:has(> #trophyRoomPage:not(.hidden)){
   width:54%;height:auto;max-width:none;max-height:none;aspect-ratio:1;
  }
 }
+
+
+/* Badge inspector: reserve the upper velvet area for up to three gold stars. */
+#arcaneHonorInspector[data-honor-kind="badge"] .arcane-honor-inspector-art{
+ transform:translateY(8%);
+}
+#arcaneHonorInspector[data-honor-kind="badge"] .arcane-honor-inspector-stars{
+ bottom:auto;top:-23%;left:50%;right:auto;transform:translateX(-50%);
+ width:max-content;white-space:nowrap;
+}
