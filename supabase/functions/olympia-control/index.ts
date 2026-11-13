@@ -1419,6 +1419,7 @@ async function handleRequest(req: Request): Promise<Response> {
           CI_SHA_MISMATCH: "CI-kontrollerna gäller inte den aktuella PR-versionen. Uppdatera status och granska igen.",
           CI_SHA_INVALID: "PR-versionen kunde inte verifieras. Ingen merge genomfördes.",
           CI_STATUS_UNKNOWN: "GitHub-status kunde inte verifieras. Ingen merge genomfördes.",
+          GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter. Ge appen läsbehörighet för kontroller och statusar; ingen merge genomfördes.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
         const ciApiMessages: Record<string, string> = {
