@@ -12,6 +12,40 @@ const selectedBadgeFrame = (definition, variant) => definition?.badge_frame_asse
 const laurelFrameKeys = { bronze:'arcane-laurel-badge-bronze', silver:'arcane-laurel-badge-silver', gold:'arcane-laurel-badge-gold' };
 const asArray = value => Array.isArray(value) ? value : [];
 
+
+// ARCANE AWARDS: derive a saturated accent from the uploaded image; gold and
+// near-neutral pixels are excluded so metallic ornament does not dominate.
+async function detectAwardAccent(file){
+ const bitmap=await createImageBitmap(file);
+ try{
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)return '#B51232';
+  ctx.drawImage(bitmap,0,0,64,64);
+  const pixels=ctx.getImageData(0,0,64,64).data, buckets=new Map();
+  for(let i=0;i<pixels.length;i+=4){
+   if(pixels[i+3]<180)continue;
+   const r=pixels[i]/255,g=pixels[i+1]/255,b=pixels[i+2]/255;
+   const max=Math.max(r,g,b),min=Math.min(r,g,b),delta=max-min;
+   if(max<.18||delta<.20||delta/max<.32)continue;
+   let hue=0;
+   if(max===r)hue=((g-b)/delta+6)%6;
+   else if(max===g)hue=(b-r)/delta+2;
+   else hue=(r-g)/delta+4;
+   hue*=60;
+   // Exclude the metallic yellow/gold range.
+   if(hue>=35&&hue<=75)continue;
+   const bin=Math.round(hue/15)%24;
+   const weight=delta*(.5+max);
+   const entry=buckets.get(bin)||{weight:0,r:0,g:0,b:0};
+   entry.weight+=weight;entry.r+=r*weight;entry.g+=g*weight;entry.b+=b*weight;buckets.set(bin,entry);
+  }
+  const best=[...buckets.values()].sort((a,b)=>b.weight-a.weight)[0];
+  if(!best)return '#B51232';
+  const color=[best.r,best.g,best.b].map(v=>Math.max(0,Math.min(255,Math.round(v/best.weight*255))).toString(16).padStart(2,'0'));
+  return '#'+color.join('').toUpperCase();
+ }finally{bitmap.close?.()}
+}
+
 async function assertSquareBadgeImage(file) {
   if (typeof createImageBitmap !== 'function') {
     throw new Error('Den här webbläsaren kan inte kontrollera bildens proportioner.');
@@ -88,7 +122,9 @@ export function renderHonorsAdmin(root, options = {}) {
         const status=panel.querySelector('[data-image-status]');status.textContent=file?'Laddar upp och kontrollerar bilden…':'Tar bort bildkopplingen…';
         try{
           if(file&&kind==='relief'&&getCategory(definitions.find(d=>String(d.id)===String(row.honor_id)))==='badge') await assertSquareBadgeImage(file);
+          const accent=file&&kind==='definition'&&getCategory(row)==='award'?await detectAwardAccent(file):null;
           const result=file?await options.onUploadImage(kind,row,file):await options.onRemoveImage(kind,row);
+          if(accent){const updated={...row,...result,badge_frame_assets:{...(row.badge_frame_assets||{}),accent_color:accent}};const saved=await options.onSave(updated);Object.assign(result,Array.isArray(saved)?saved[0]:saved||updated);}
           Object.assign(row,result);imageBusy=false;draw();openEditor(editing);
           const updatedPanel=[...root.querySelectorAll('[data-image-controls]')].find(el=>el.dataset.kind===kind&&el.dataset.id===String(row.id));
           if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
@@ -150,6 +186,7 @@ export function renderHonorsAdmin(root, options = {}) {
         ['bronze','silver','gold'].map(tier => '<label>' + ({bronze:'Brons',silver:'Silver',gold:'Guld'}[tier]) + '<textarea name="criteria_' + tier + '">' + esc(tierText(d,tier)) + '</textarea></label>').join('') +
       '</fieldset>' +
       '<label class="honors-wide">Bildresurs-ID (HERMES)<input name="image_asset_id"' + (imagePilot ? ' readonly' : '') + ' value="' + esc(d.image_asset_id) + '"></label>' +
+      (selectedCategory==='award'?'<label class="honors-wide">Accentfärg för ädelstenar och kronbakgrund<input type="color" name="award_accent_color" value="'+esc(/^#[0-9a-f]{6}$/i.test(frame.accent_color||'')?frame.accent_color:'#B51232')+'"><small>Föreslås automatiskt vid bilduppladdning och kan justeras manuellt.</small></label>':'') +
       '<fieldset class="honors-frames honors-wide"><legend>Gemensamma ' + frameFamilyLabel + '-ramar</legend>' +
         ['bronze','silver','gold'].map(metal => {
           const key = frame[metal] || categoryFrames[metal];
@@ -415,6 +452,8 @@ export function renderHonorsAdmin(root, options = {}) {
       data.frame_family=null;
     }else{
       data.badge_frame_assets = {};
+      if(data.category==='award'){data.badge_frame_assets.accent_color=data.award_accent_color||editing?.badge_frame_assets?.accent_color||'#B51232';}
+      delete data.award_accent_color;
       for (const metal of ['bronze','silver','gold']) {
         const value=data['frame_'+metal]; delete data['frame_'+metal];
         if (value) data.badge_frame_assets[metal]=value;
