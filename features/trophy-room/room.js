@@ -115,6 +115,49 @@ function enableBadgeCalibration(){
  draw();
 }
 
+
+/* Independent award/badge inspector. Medal implementation remains unchanged. */
+let honorDialog=null,honorFocus=null,honorRequest=0;
+function openHonorInspector(kind,data,trigger){
+ if(!honorDialog){
+  const d=document.createElement('dialog');d.id='arcaneHonorInspector';d.className='arcane-medal-dialog';d.setAttribute('aria-labelledby','arcaneHonorInspectorTitle');
+  const frame=makeElement('div','arcane-medal-display'),cushion=makeElement('section','arcane-medal-display-cushion');
+  const art=makeElement('div','arcane-honor-inspector-art');art.style.cssText='position:relative;width:100%;height:100%;display:grid;place-items:center';cushion.append(art);
+  const parchment=makeElement('section','arcane-medal-display-parchment'),story=makeElement('div','arcane-medal-display-story');
+  const title=makeElement('h2','arcane-medal-display-title');title.id='arcaneHonorInspectorTitle';
+  story.append(title,makeElement('p','arcane-medal-display-type'),makeElement('p','arcane-medal-display-description'),makeElement('p','arcane-medal-display-reason'));
+  parchment.append(story);frame.append(cushion,parchment);
+  const close=makeElement('button','arcane-medal-display-close','×');close.type='button';close.setAttribute('aria-label','Stäng visning');close.addEventListener('click',()=>d.close());
+  d.append(close,frame);d.addEventListener('click',e=>{if(e.target===d)d.close()});
+  d.addEventListener('close',()=>{honorRequest++;honorFocus?.focus?.();honorFocus=null});
+  document.body.append(d);honorDialog=d;
+ }
+ const d=honorDialog,request=++honorRequest;honorFocus=trigger;
+ d.querySelector('#arcaneHonorInspectorTitle').textContent=data.name||'';
+ d.querySelector('.arcane-medal-display-type').textContent=kind==='award'?'Utmärkelse':'Badge';
+ d.querySelector('.arcane-medal-display-description').textContent=data.description||'';
+ d.querySelector('.arcane-medal-display-reason').textContent=kind==='award'?'Antal: '+data.count:'Guldstjärnor: '+data.stars;
+ const art=d.querySelector('.arcane-honor-inspector-art');art.replaceChildren();
+ const clone=data.art.cloneNode(true);clone.style.cssText='position:relative;width:min(100%,330px);height:min(100%,330px);aspect-ratio:1';art.append(clone);
+ const frame=d.querySelector('.arcane-medal-display');frame.style.removeProperty('--medal-frame-image');frame.style.removeProperty('--medal-frame-ratio');
+ if(!d.open)d.showModal();
+ if(typeof root.dbJson!=='function')return;
+ const key='arcane-badge-frame-velvet-'+(kind==='award'?'green':'blue');
+ void root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(key)).then(assets=>{
+  if(request!==honorRequest||!d.open)return;
+  const url=medalFrameUrl((assets||[]).find(a=>a.asset_key===key));if(!url)return;
+  frame.style.setProperty('--medal-frame-image','url("'+url+'")');
+  const probe=new Image();probe.onload=()=>{if(request===honorRequest&&d.open)frame.style.setProperty('--medal-frame-ratio',probe.naturalWidth+' / '+probe.naturalHeight)};probe.src=url;
+ }).catch(error=>console.warn('Honor velvet box unavailable',error));
+}
+function activateHonorSlot(slot,kind,data){
+ slot.tabIndex=0;slot.setAttribute('role','button');slot.setAttribute('aria-label','Visa '+data.name);
+ slot.style.pointerEvents='auto';slot.style.cursor='pointer';
+ const open=e=>{e.stopPropagation();openHonorInspector(kind,data,slot)};
+ slot.addEventListener('click',open);
+ slot.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(e)}});
+}
+
 let badgeSequence=0;
 async function renderBadges(){
  const wall=byId('trophyRoomBadgeWall'),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
@@ -156,6 +199,7 @@ async function renderBadges(){
    slot.append(art);
    const stars=Math.max(0,Math.min(3,Number(d.tier_criteria?.gold_stars||0)));
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
+   activateHonorSlot(slot,'badge',{name:d.name,description:d.description,stars,art});
    wall.append(slot);
   }
   wall.hidden=awarded.length===0;draw();
@@ -197,7 +241,7 @@ async function renderAwards(){
  try{
   const [grants,definitions,assets,managedAssets]=await Promise.all([
    root.dbJson('honor_grants?select=honor_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
-   root.dbJson('honor_definitions?select=id,name,category,status,image_asset_id,badge_frame_assets&category=eq.award'),
+   root.dbJson('honor_definitions?select=id,name,description,category,status,image_asset_id,badge_frame_assets&category=eq.award'),
    root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*'),
    root.aleaHermesAleaImages?.loadAssets?.()||[]
   ]);
@@ -223,6 +267,7 @@ async function renderAwards(){
    if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
    slot.append(art);
    if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
+   activateHonorSlot(slot,'award',{name:d.name,description:d.description,count,art});
    wall.append(slot);
   }
   wall.hidden=awarded.length===0;positionAwardWall(viewport());
