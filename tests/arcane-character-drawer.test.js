@@ -21,6 +21,9 @@ describe('ARCANE character drawer',()=>{
   expect(component).toContain("c.ownerId!=='SLP'");
   expect(component).toContain('getPortraitSrc(c)');
   expect(component).toContain("c?._combatIconUrl");
+  const app=read('legacy/app.js');
+  expect(app).toContain('is_npc:c.isNpc===true');
+  expect(app).not.toContain("is_npc:c.ownerId==='SLP'");
  });
  it('provides four read-only pages and reuses the existing skill and spell roll flows',()=>{
   for(const label of ['Grundegenskaper','Färdigheter','Magi','Utrustning'])expect(component).toContain(label);
