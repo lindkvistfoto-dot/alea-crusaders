@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "system-asset",
+  "asset_key": "arcane-award-gem-round-cyan",
+  "label": "ARCANE Award Round Gem Cyan",
+  "drive_file_id": "1T-lRgaQd7ZYuC45sKGEa3LwZMo9CaGiM",
+  "archive_file_id": "10-5iKMNgihr3UNX2cYd0dUD97HAZOuLF",
+  "source_sha256": "81cb7766bea70f82e3fc48afd3324770075f30523a139406499e6ecd86206af8"
+}

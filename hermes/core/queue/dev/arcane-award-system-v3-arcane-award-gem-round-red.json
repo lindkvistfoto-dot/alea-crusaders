@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "system-asset",
+  "asset_key": "arcane-award-gem-round-red",
+  "label": "ARCANE Award Round Gem Red",
+  "drive_file_id": "1oQP8pa9NgENv0CmXMpPcmqBZGOvWOhgp",
+  "archive_file_id": "1he2Et2IJvdbXfkN9QpctXQuN_P-kuDKS",
+  "source_sha256": "b233e236fbe42f9b1ad2f2c42140324e5018def4f0e3ee1b3288e44fa38277f3"
+}
