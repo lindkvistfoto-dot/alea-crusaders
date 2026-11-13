@@ -211,6 +211,8 @@ function positionLeftCalibration(v){
    as the right badge wall, with Zeus-approved background-image coordinates. */
 const AWARD_CORNERS=[[0.08039355216408267,0.1925328947368421],[0.22767280361757103,0.27137746710526317],[0.23017098675710596,0.6094737199036002],[0.07971222948966411,0.5934375356930739]];
 let awardSequence=0;
+// Temporary DEV perspective study: repeat the same awarded image in all nine slots.
+const leftAwardPerspectiveDemo=root.ALEA_SUPABASE_CONFIG?.name==='development'&&root.ALEA_SUPABASE_CONFIG?.url?.includes('wkiuyklzzroavclnsxna');
 function ensureAwardWall(){
  const v=viewport();if(!v)return null;
  let wall=byId('trophyRoomAwardWall');
@@ -253,7 +255,7 @@ async function renderAwards(){
   for(let index=0;index<9;index++){
    const row=Math.floor(index/3),col=index%3;
    // Mirror the right wall's right-to-left row filling.
-   const d=awarded[row*3+col];
+   const d=leftAwardPerspectiveDemo?awarded.find(item=>item.name==='Förödande slag')||awarded[0]:awarded[row*3+col];
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
@@ -267,7 +269,7 @@ async function renderAwards(){
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
    if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
    slot.append(art);
-   if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
+   if(count>1&&!leftAwardPerspectiveDemo){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
    wall.append(slot);
   }
   wall.hidden=awarded.length===0;positionAwardWall(viewport());
