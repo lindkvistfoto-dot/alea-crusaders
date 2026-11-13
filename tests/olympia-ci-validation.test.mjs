@@ -28,7 +28,7 @@ describe('OLYMPIA shared DEV CI verdict', () => {
     expect(assess(response(required, { total_count: required.length + 1 }), { sha, statuses: [] }, sha).code).toBe('CI_CHECKS_INCOMPLETE');
   });
   it('never reuses check runs or commit statuses from another SHA', () => {
-    expect(assess(response(required.map(x => ({ ...x, head_sha: 'b'.repeat(40) })), { sha, statuses: [] }, sha).code).toBe('CI_SHA_MISMATCH');
+    expect(assess(response(required.map(x => ({ ...x, head_sha: 'b'.repeat(40) }))), { sha, statuses: [] }, sha).code).toBe('CI_SHA_MISMATCH');
     expect(assess(response(), { sha: 'b'.repeat(40), statuses: [] }, sha).code).toBe('CI_SHA_MISMATCH');
   });
   it('distinguishes failed, pending, and unknown legacy statuses', () => {
