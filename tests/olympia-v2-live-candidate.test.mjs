@@ -38,6 +38,14 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(js).toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:result.testedDevSha,candidateIssue:result.issue.number");
   expect(js).not.toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number");
  });
+ it('resolves legacy source-merge payloads only through the matching candidate journal',()=>{
+  const resume=edge.slice(edge.indexOf('if (data.action === "resume_stale_candidate")'));
+  expect(resume).toContain('const journalSha = body.match');
+  expect(resume).toContain('const sourceMergeSha = String(item.dev_sha || "").toLowerCase()');
+  expect(resume).toContain('requestedSha === sourceMergeSha');
+  expect(resume).toContain('hasAcceptedFeatureVersion(token, issues, item, sha)');
+  expect(resume).toContain('inspectCandidate(token, item, data.candidateIssue, sha)');
+ });
  it('cache-busts the OLYMPIA client after changing recovery payload semantics',()=>{
   expect(html).toContain('<script src="./dev-approval.js?v=20261114-resume-tested-dev-sha-v1">');
  });
