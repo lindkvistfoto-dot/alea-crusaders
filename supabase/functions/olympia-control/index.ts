@@ -1099,6 +1099,30 @@ async function handleRequest(req: Request): Promise<Response> {
             console.warn("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "unknown");
             candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Kandidatens aktuella status kunde inte verifieras; LIVE-beslut förblir låsta." };
           }
+          if (!candidate || candidate.blocked === false) {
+            try {
+              const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
+              if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
+              const latest = comments.filter((comment: any) =>
+                comment.user?.login === "github-actions[bot]" &&
+                String(comment.body || "").includes("## OLYMPIA release candidate") &&
+                String(comment.body || "").includes("- Verified DEV SHA: " + testedDevSha)
+              ).sort((a: any, b: any) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
+              const body = String(latest?.body || "");
+              if (/^- Status: BLOCKED$/mi.test(body)) {
+                const reason = body.match(/^- Felorsak:\\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
+                const workflowRunUrl = body.match(/https:\\/\\/github\\.com\\/[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+\\/actions\\/runs\\/\\d+/)?.[0] || null;
+                candidate = {
+                  ready: false,
+                  blocked: true,
+                  message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
+                  workflowRunUrl,
+                };
+              }
+            } catch (error) {
+              console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
+            }
+          }
           return json({
             ok: true, state: "requested", locked: true, requestPresent: true, candidate,
             issue: { number: issue.number, url: issue.html_url },
