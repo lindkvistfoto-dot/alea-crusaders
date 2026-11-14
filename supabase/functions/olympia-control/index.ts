@@ -686,6 +686,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
       releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
+      releasePrNotCreated: body.includes("- Release PR: #unknown · not created"),
       releaseUrl: candidatePrMatch?.[2] || null,
       releasePrSha,
     };
@@ -1251,7 +1252,7 @@ async function handleRequest(req: Request): Promise<Response> {
                 !sources.split(/\s*,\s*/).includes("#" + number)) {
               return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
             }
-          } else if (candidate.releasePr !== null || candidate.releaseUrl !== null) {
+          } else if (candidate.releasePrNotCreated !== true) {
             return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
           }
           // If candidate creation was blocked before a release PR existed, retry
