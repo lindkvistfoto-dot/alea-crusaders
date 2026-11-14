@@ -18,6 +18,7 @@ describe('HERMES ALEA CORS preflight',()=>{
     expect(response.status).toBe(204);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe(origin);
     expect(response.headers.get('Access-Control-Allow-Headers')).toContain('authorization');
+    expect(response.headers.get('Access-Control-Allow-Methods')).toContain('POST');
   });
 
   it('rejects lookalike Pages tenants and unrelated sites',async()=>{
