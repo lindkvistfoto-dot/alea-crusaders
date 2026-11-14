@@ -61,7 +61,7 @@ jobs:
           if [[ "$applied" != "t" ]]; then
             supabase migration repair "$version" --status applied --db-url "$DEVELOPMENT_DATABASE_URL"
           fi
-          if ! plan="$(supabase db push --dry-run --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"; then
+          if ! plan="$(supabase db push --dry-run --include-all --db-url "$DEVELOPMENT_DATABASE_URL" 2>&1)"; then
             printf '%s\n' "$plan"
             echo "::error::DEV migration dry-run failed; no migrations were pushed."
             exit 1
@@ -82,4 +82,4 @@ jobs:
             echo "::error::Baseline still appears pending after registration; no schema migration was pushed."
             exit 1
           fi
-          supabase db push --db-url "$DEVELOPMENT_DATABASE_URL"
+          supabase db push --include-all --db-url "$DEVELOPMENT_DATABASE_URL"
