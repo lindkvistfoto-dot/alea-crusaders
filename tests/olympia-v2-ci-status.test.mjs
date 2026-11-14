@@ -6,7 +6,7 @@ const helper=readFileSync(new URL('../supabase/functions/_shared/olympia-ci.js',
 const browserHelper=readFileSync(new URL('../olympia-v2/ci-validation.js',import.meta.url),'utf8');
 describe('OLYMPIA V2 real CI status',()=>{
  it('ships the browser CI evaluator loaded by OLYMPIA',()=>{
-  expect(ui).toContain('<script src="./ci-validation.js"></script>');
+  expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v1"></script>');
   expect(browserHelper).toContain('root.olympiaCiValidation = Object.freeze({ assess });');
   expect(browserHelper).toContain('REQUIRED_CHECKS = [/^check$/i, /^guard$/i, /^preview$/i, /^Cloudflare Pages$/i]');
  });
@@ -15,9 +15,11 @@ describe('OLYMPIA V2 real CI status',()=>{
   expect(edge).toContain("combinedStatusState: String(status.state || 'unknown')");
  });
  it('uses the common evaluator in both listing and approval',()=>{
-  expect(ui).toContain('window.olympiaCiValidation.assess(checks,status,sha)');
+  expect(ui).toContain('const assess=window.olympiaCiValidation?.assess');
+  expect(ui).toContain('CI-bedömningsmodulen kunde inte laddas');
   expect(edge).toContain('assessCi(checks, status, data.pullRequestHeadSha)');
  });
+ it('version-busts the generated evaluator asset',()=>{expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v1"></script>');});
  it('defines the four required check names and accepted conclusions once',()=>{
   expect(helper).toContain('REQUIRED_CHECKS = [/^check$/i, /^guard$/i, /^preview$/i, /^Cloudflare Pages$/i]');
   expect(helper).toContain('new Set(["success", "neutral", "skipped"])');
