@@ -212,9 +212,15 @@ const baseLabel="btn.textContent=activeGameSession?(activeGameSession.status==='
 if (!live.includes(liveLabel) || live.replace(liveLabel,baseLabel)!==base) process.exit(2);
 NODE
                 then
-                  git -C "$DEV_DIR" show "$PR_PATCH_SHA:$changed" > "$SOURCE_DIR/$changed"
+                  SOURCE_SESSION="$OUTPUT_DIR/pr-$PR_NUMBER-source-sessions.js"
+                  git -C "$DEV_DIR" show "$PR_PATCH_SHA:$changed" > "$SOURCE_SESSION"
+                  node "$DEV_DIR/scripts/olympia/reconcile-chronicle-live-conflicts.mjs" sessions \
+                    "$BASE_SESSION" "$SOURCE_SESSION" "$SOURCE_DIR/$changed" || {
+                      echo "blocked_reason=LIVE-sessionpanelen kunde inte bevara det granskade Spelmöte-API:t." >> "$GITHUB_OUTPUT"
+                      exit 1
+                    }
                   git -C "$SOURCE_DIR" add -- "$changed"
-                  echo "PR #$PR_NUMBER: replaced sessions.js after verifying LIVE differed only by the approved Spelmöte terminology change."
+                  echo "PR #$PR_NUMBER: reconciled the reviewed Spelmöte V2 module and preserved the LIVE API and paused indicator."
                   continue
                 fi
               fi
@@ -267,9 +273,10 @@ NODE
                   if [[ "$CONFLICTS" == "index.html" && -n "$CANDIDATE_INDEX_BEFORE" ]]; then
                     git -C "$SOURCE_DIR" update-index --force-remove -- index.html
                     cp "$CANDIDATE_INDEX_BEFORE" "$SOURCE_DIR/index.html"
-                    if node "$DEV_DIR/scripts/olympia/reconcile-index-asset-versions.mjs" "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" --merge-html-three-way; then
+                    if node "$DEV_DIR/scripts/olympia/reconcile-chronicle-live-conflicts.mjs" index \
+                      "$BASE_INDEX" "$SOURCE_INDEX" "$SOURCE_DIR/index.html" "${FEATURE_FILES[@]}"; then
                       git -C "$SOURCE_DIR" add -- index.html
-                      echo "PR #$PR_NUMBER: independent HTML edits reconciled; overlapping edits remain blocked."
+                      echo "PR #$PR_NUMBER: reconciled the reviewed Spelmöte labels and cache references while preserving LIVE markup."
                     else
                       MERGE_STATUS=$?
                       if [[ "$MERGE_STATUS" -eq 2 ]]; then
