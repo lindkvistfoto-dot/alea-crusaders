@@ -228,8 +228,10 @@ async function reserveDevDecision(token: string, number: number, headSha: string
       lock = await readDevDecisionLock(token, number, headSha);
     }
   }
-  if (String(lock?.object?.sha || "").toLowerCase() !== selectedSha) throw new Error("DEV_DECISION_ALREADY_SELECTED");
-  return { name, selectedSha };
+  const lockSha = String(lock?.object?.sha || "").toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(lockSha)) throw new Error("DEV_DECISION_LOCK_INVALID");
+  if ((lockSha === headSha.toLowerCase()) !== devOnly) throw new Error("DEV_DECISION_ALREADY_SELECTED");
+  return { name, selectedSha: lockSha };
 }
 async function isDevOnlyDecision(token: string, number: number, headSha: string) {
   const lock = await readDevDecisionLock(token, number, headSha);
