@@ -12,7 +12,7 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
   // The deployed GitHub Pages app and previews for this Pages project are DEV-only
   // exceptions. Authentication and target authorization remain mandatory.
   if(env('SUPABASE_URL')===DEV_PROJECT_URL && (DEV_FIXED_ORIGINS.has(origin)||DEV_PAGES_ORIGIN.test(origin)))allowed.push(origin);
-  const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:'null','Access-Control-Allow-Headers':'authorization,apikey,content-type','Vary':'Origin'};
+  const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:'null','Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'authorization,apikey,content-type','Vary':'Origin'};
   const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,'Content-Type':'application/json'}});
   if(origin&&!allowed.includes(origin)){
    // Origins are public host identifiers; logging this lets us diagnose deployment
