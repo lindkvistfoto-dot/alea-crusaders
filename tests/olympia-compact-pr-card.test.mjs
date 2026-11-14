@@ -9,6 +9,8 @@ test('PR list is a compact disclosure with date, status, and process stages', ()
   expect(html).toMatch(/class="panel pr-disclosure"/);
   for (const stage of ['Ready', 'Test', 'DEV', 'LIVE']) expect(html).toContain("step('" + stage + "'");
   expect(html).toContain("toLocaleDateString('sv-SE')");
+  expect(html).toContain("x.status==='completed'&&x.conclusion==='success'");
+  expect(html).toContain("String(x.head_sha||'').toLowerCase()===String(sha).toLowerCase()");
   expect(html).toMatch(/pr-summary h2\{[^}]*text-overflow:ellipsis/);
 });
 
