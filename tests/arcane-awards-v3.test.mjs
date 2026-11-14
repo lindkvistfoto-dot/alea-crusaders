@@ -9,7 +9,8 @@ describe('ARCANE AWARDS V3',()=>{
   const room=read('features/trophy-room/room.js');
   for(const tier of ['bronze','silver','gold']) expect(renderer).toContain(`${tier}: 'arcane-award-frame-${tier}'`);
   expect(admin).toContain('const AWARD_FRAME_KEYS = awardRenderer?.AWARD_FRAME_KEYS');
-  expect(room).toContain('root.ArcaneAwardRenderer?.awardRenderLayers');
+  expect(room).toContain('awardRenderer?.awardRenderLayers');
+  expect(room).toContain('awardRenderer.mountAward');
   expect(room).not.toContain('assetMap.get(d.badge_frame_assets?.[tier])');
  });
 
