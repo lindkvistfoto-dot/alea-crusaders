@@ -1,36 +1,35 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { test, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 
 const html = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
 
 test('compact PR list remains a disclosure with process steps', () => {
-  assert.match(html, /class="panel pr-disclosure"/);
-  for (const stage of ['Ready', 'Test', 'DEV', 'LIVE']) assert.ok(html.includes("step('"+stage+"'"));
-  assert.match(html, /pr-summary h2\{[^}]*text-overflow:ellipsis/);
+  expect(html).toMatch(/class="panel pr-disclosure"/);
+  for (const stage of ['Ready', 'Test', 'DEV', 'LIVE']) expect(html).toContain("step('" + stage + "'");
+  expect(html).toMatch(/pr-summary h2\{[^}]*text-overflow:ellipsis/);
 });
 
 test('DEV and LIVE stay side-by-side with aligned decision slots', () => {
-  assert.match(html, /\.pr-disclosure \.lanes\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
-  assert.match(html, /\.pr-disclosure \.lane\{display:grid;grid-template-rows:/);
-  assert.match(html, /data-dev-approve/);
-  assert.match(html, /Godkänn LIVE/);
+  expect(html).toMatch(/\.pr-disclosure \.lanes\{grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
+  expect(html).toMatch(/\.pr-disclosure \.lane\{display:grid;grid-template-rows:/);
+  expect(html).toMatch(/data-dev-approve/);
+  expect(html).toMatch(/Godkänn LIVE/);
 });
 
 test('shared feedback and history are present without enabling unimplemented DEV-only action', () => {
-  assert.match(html, /data-pr-feedback/);
-  assert.match(html, /class="pr-activity"/);
-  assert.match(html, /class="pr-log"/);
-  assert.match(html, /type="checkbox" disabled> Enbart DEV/);
+  expect(html).toMatch(/data-pr-feedback/);
+  expect(html).toMatch(/class="pr-activity"/);
+  expect(html).toMatch(/class="pr-log"/);
+  expect(html).toMatch(/type="checkbox" disabled> Enbart DEV/);
 });
 
 test('candidate state indicators retain four visual states', () => {
   for (const state of ['success','pending','failed','unknown']) {
-    assert.match(html, new RegExp('status-light\\.'+state));
+    expect(html).toMatch(new RegExp('status-light\\.' + state));
   }
 });
 
 test('expanded card keeps valid DEV/LIVE lane container markup', () => {
-  assert.match(html, /<div class="lanes"><section class="lane"><h3>DEV/);
-  assert.doesNotMatch(html, /<div class="lanes"<section/);
+  expect(html).toMatch(/<div class="lanes"><section class="lane"><h3>DEV/);
+  expect(html).not.toMatch(/<div class="lanes"<section/);
 });
