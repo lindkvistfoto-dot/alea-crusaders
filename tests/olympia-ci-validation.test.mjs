@@ -51,7 +51,7 @@ describe('OLYMPIA DEV approval API contract', () => {
     const ui = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
     expect(vite).toContain('resolve("supabase/functions/_shared/olympia-ci.js")');
     expect(vite).toContain('resolve("dist/olympia-v2/ci-validation.js")');
-    expect(ui).toContain('<script src="./ci-validation.js"></script>');
+    expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v1"></script>');
   });
   it('requests CI read scopes only for the DEV merge token', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
