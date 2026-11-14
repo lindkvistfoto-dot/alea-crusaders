@@ -452,8 +452,8 @@ async function loadTrophyRoomImage(){
  trophyRoomImagePending=true;
  if(img.dataset.trophyImageEvents!=='true'){
   img.dataset.trophyImageEvents='true';
-  img.addEventListener('load',()=>{const status=byId('trophyRoomStatus');if(status)status.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});
-  img.addEventListener('error',()=>{const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'});
+  img.addEventListener('load',()=>{trophyRoomImagePending=false;const status=byId('trophyRoomStatus');if(status)status.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});
+  img.addEventListener('error',()=>{trophyRoomImagePending=false;const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'});
  }
  try{
   const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));
@@ -461,8 +461,7 @@ async function loadTrophyRoomImage(){
   if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');
   const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');
   img.src=url;
- }catch(error){console.warn('Trophy room HERMES image unavailable',error);const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'}
- finally{trophyRoomImagePending=false}
+ }catch(error){trophyRoomImagePending=false;console.warn('Trophy room HERMES image unavailable',error);const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'}
 }
 function open(){const p=page();if(!p)return;ensureScene();void loadTrophyRoomImage();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
