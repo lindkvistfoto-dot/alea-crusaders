@@ -79,7 +79,7 @@ async function githubToken(decision: string) {
   const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
     : decision === "pull_request_list" || decision === "pull_request_status"
-    ? { pull_requests: "read", checks: "read", statuses: "read" }
+    ? { pull_requests: "read" }
     : decision === "idea_verify_live"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
@@ -91,9 +91,9 @@ async function githubToken(decision: string) {
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
-    ? { pull_requests: "read", checks: "read", statuses: "read", issues: "write", contents: "write" }
+    ? { pull_requests: "read", issues: "write", contents: "write" }
     : decision === "approve_and_merge_dev"
-    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }
+    ? { pull_requests: "write", issues: "write", contents: "write" }
     : decision === "set_pull_request_draft"
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
@@ -1422,8 +1422,8 @@ async function handleRequest(req: Request): Promise<Response> {
         const token = await githubToken("pull_request_status");
         const [pr, status, checks] = await Promise.all([
           gh(token, path + "/pulls/" + data.pullRequestNumber),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
         ]);
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
         return json({
@@ -1484,13 +1484,15 @@ async function handleRequest(req: Request): Promise<Response> {
         const path = "/repos/" + OWNER + "/" + REPO;
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
-        // Retry only transient GitHub transport errors; never retry a failed CI verdict.
+        // CI runs are publicly readable for this public repo; keep Checks and
+        // Commit-status permissions off the merge token. Retry only transient
+        // public API failures, never a failed or pending CI verdict.
         const readCi = async (endpoint: string) => {
           for (let attempt = 0; attempt < 3; attempt++) {
-            try { return await gh(token, endpoint); }
+            try { return await ghPublic(endpoint); }
             catch (error) {
               const message = error instanceof Error ? error.message : "";
-              if (!/GITHUB_REQUEST_FAILED_(502|503|504)$/.test(message) || attempt === 2) throw error;
+              if (!/GITHUB_PUBLIC_REQUEST_FAILED_(?:NETWORK|502|503|504)$/.test(message) || attempt === 2) throw error;
               await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
             }
           }
@@ -1565,6 +1567,13 @@ async function handleRequest(req: Request): Promise<Response> {
         };
         const ciApiMessages: Record<string, string> = {
           GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
+          GITHUB_PUBLIC_RATE_LIMITED: "GitHub begränsade offentlig CI-läsning. Vänta och försök igen; ingen merge genomfördes.",
+          GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub nekade offentlig CI-läsning (403). Ingen merge genomfördes.",
+          GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub begränsade CI-läsningen (429). Vänta och försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-tjänst är tillfälligt otillgänglig (503). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub CI-tjänst kunde inte nås. Försök igen.",
           GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403). Kontrollera GitHub App-behörigheterna; ingen merge genomfördes.",
           GITHUB_REQUEST_FAILED_429: "GitHub CI-tjänst begränsade anropen (429). Vänta och försök igen.",
           GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
@@ -1583,7 +1592,7 @@ async function handleRequest(req: Request): Promise<Response> {
           : apiMessages[code] || messages[code] ||
             "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
         const responseStatus = code === "GITHUB_REQUEST_FAILED_409" ? 409
-          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") ? 503
+          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") || code === "GITHUB_PUBLIC_RATE_LIMITED" ? 503
           : 502;
         return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);
       }
@@ -1626,8 +1635,8 @@ async function handleRequest(req: Request): Promise<Response> {
           return fail("Överlappande ändringar har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
         }
 
-        const checkResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
-        const statusResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/status");
+        const checkResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
+        const statusResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/status");
         const checkRuns = Array.isArray(checkResponse.check_runs) ? checkResponse.check_runs : [];
         const statuses = Array.isArray(statusResponse.statuses) ? statusResponse.statuses : [];
         if ((!checkRuns.length && !statuses.length) ||

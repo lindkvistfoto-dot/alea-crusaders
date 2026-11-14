@@ -260,8 +260,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain(': { issues: "write", contents: "write" }');
     expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });');
-    expect(edge).toContain('checks: "read"');
-    expect(edge).toContain('statuses: "read"');
+    expect(edge).not.toContain('checks: "read"');
+    expect(edge).not.toContain('statuses: "read"');
     expect(edge).toContain('async function ghPublic(path: string)');
     expect(edge).toContain('const [checks, status] = await Promise.all([');
     expect(edge).toContain('/commits/" + pr.head.sha + "/check-runs?per_page=100');
@@ -376,7 +376,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const tokenCode=edge.slice(start,end);
     expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
     expect(tokenCode).toContain(': decision === "approve_and_merge_dev"');
-    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
     expect(tokenCode).toContain(': decision === "set_pull_request_draft"\n    ? { pull_requests: "write", issues: "write", contents: "write" }');
     expect(tokenCode).toContain('? { pull_requests: "write" }');
   });

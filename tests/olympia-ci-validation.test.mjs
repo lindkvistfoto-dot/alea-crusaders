@@ -53,10 +53,15 @@ describe('OLYMPIA DEV approval API contract', () => {
     expect(vite).toContain('resolve("dist/olympia-v2/ci-validation.js")');
     expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v1"></script>');
   });
-  it('requests CI read scopes only for the DEV merge token', () => {
+  it('keeps CI read scopes off the DEV merge token and reads public CI data separately', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('decision === "approve_and_merge_dev"');
-    expect(edge).toContain('checks: "read", statuses: "read"');
+    const start = edge.indexOf('decision === "approve_and_merge_dev"');
+    const end = edge.indexOf('decision === "set_pull_request_draft"', start);
+    const profile = edge.slice(start, end);
+    expect(profile).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(profile).not.toContain('checks: "read"');
+    expect(edge).toContain('try { return await ghPublic(endpoint); }');
+    expect(edge).toContain('ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
   });
   it('does not translate GitHub API failures into a failed CI verdict', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
