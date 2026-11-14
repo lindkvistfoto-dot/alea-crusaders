@@ -29,3 +29,8 @@ test('candidate state indicators retain four visual states', () => {
     assert.match(html, new RegExp('status-light\\.'+state));
   }
 });
+
+test('expanded card keeps valid DEV/LIVE lane container markup', () => {
+  assert.match(html, /<div class="lanes"><section class="lane"><h3>DEV/);
+  assert.doesNotMatch(html, /<div class="lanes"<section/);
+});
