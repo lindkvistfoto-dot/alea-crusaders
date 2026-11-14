@@ -1428,7 +1428,7 @@ async function handleRequest(req: Request): Promise<Response> {
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
         return json({
           ok: true,
-          pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
+          pullRequest: { state: pr.state, draft: pr.draft, baseRef: String(pr.base?.ref || ""), headSha: String(pr.head?.sha || ""), mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
           statuses: Array.isArray(status.statuses) ? status.statuses : [],
           combinedStatusState: String(status.state || 'unknown'),
           statusSha: String(status.sha || ''),
@@ -1588,10 +1588,13 @@ async function handleRequest(req: Request): Promise<Response> {
           GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
           GITHUB_REQUEST_FAILED_504: "GitHub API svarade inte i tid (504). Försök igen.",
         };
-        const errorMessage = stage === "ci_validation" ? ciApiMessages[code]
+        const errorMessage = stage === "ci_validation" ? ciApiMessages[code] || messages[code] ||
+          "GitHub CI kunde inte verifieras säkert. Ingen merge genomfördes; uppdatera status och försök igen."
           : apiMessages[code] || messages[code] ||
             "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
-        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" ? 409
+        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" || code === "CI_PENDING" || code === "CI_FAILED" ||
+          code === "CI_CHECKS_MISSING" || code === "CI_CHECKS_INCOMPLETE" || code === "CI_SHA_MISMATCH" ||
+          code === "CI_SHA_INVALID" || code === "CI_STATUS_UNKNOWN" ? 409
           : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") || code === "GITHUB_PUBLIC_RATE_LIMITED" ? 503
           : 502;
         return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);

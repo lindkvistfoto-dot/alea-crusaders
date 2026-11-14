@@ -16,4 +16,17 @@ describe('OLYMPIA DEV CI validation',()=>{
   expect(edge).not.toContain('checks: "read", statuses: "read"');
 
  });
+ it('rechecks the exact PR head immediately before asking Zeus to approve',()=>{
+  const approval=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
+  const preflight=approval.indexOf("action:'pull_request_status'");
+  const confirm=approval.indexOf("confirm('Godkänn PR #",preflight);
+  const merge=approval.indexOf("action:'approve_and_merge_dev'",confirm);
+  expect(preflight).toBeGreaterThan(-1);
+  expect(confirm).toBeGreaterThan(preflight);
+  expect(merge).toBeGreaterThan(confirm);
+  expect(approval).toContain("assessment.state!=='success'");
+  expect(approval).toContain('window.olympiaV2RefreshPrStatus?.(number,sha)');
+  expect(approval).toContain("latest.pullRequest?.baseRef!=='development'");
+  expect(approval).toContain('latest.pullRequest?.headSha!==sha');
+ });
 });

@@ -51,7 +51,7 @@ describe('OLYMPIA DEV approval API contract', () => {
     const ui = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
     expect(vite).toContain('resolve("supabase/functions/_shared/olympia-ci.js")');
     expect(vite).toContain('resolve("dist/olympia-v2/ci-validation.js")');
-    expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v1"></script>');
+    expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v2-fresh-approval"></script>');
   });
   it('keeps CI read scopes off the DEV merge token and reads public CI data separately', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
@@ -71,5 +71,11 @@ describe('OLYMPIA DEV approval API contract', () => {
     expect(edge).toContain('GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504)');
     expect(edge).toContain('CI_PENDING: "CI körs fortfarande.');
     expect(edge).not.toContain('CI_NOT_GREEN');
+  });
+  it('returns pending or failed CI as a decision conflict with a defined message', () => {
+    const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
+    expect(edge).toContain('ciApiMessages[code] || messages[code]');
+    expect(edge).toContain('code === "CI_PENDING" || code === "CI_FAILED"');
+    expect(edge).toContain('headSha: String(pr.head?.sha || "")');
   });
 });
