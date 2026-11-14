@@ -102,3 +102,42 @@ it('reports progress and completes only after verification and finalize',async()
  await h.client.upload({targetKind:'definition',target,file:new Blob(['source'],{type:'image/png'}),onStatus:s=>stages.push(s)});
  expect(stages).toEqual(['preparing','uploading','verifying','activating','completed']);
 });
+
+it('resumes the caller\'s exact pending upload when a fresh intent hits staging quota',async()=>{
+ const calls=[],requests=[];
+ let meta;
+ const pending={id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',state:'uploading',source_path:'user/pending/original',output_path:'trophy/pending.webp'};
+ const client=createHermesAleaClient({
+  storage:null,
+  targetPolicies:{definition:{}},
+  convert:async()=>new Blob(['webp'],{type:'image/webp'}),
+  rpc:async(name,args)=>{
+   calls.push(name);
+   if(name==='hermes_alea_begin'){meta=args.request;throw Error('STAGING_QUOTA_EXCEEDED');}
+   if(name==='hermes_alea_finalize')return {id:pending.id,state:'activated',result_revision:1};
+   if(name==='hermes_alea_report_staging_block')throw Error('must not report a recoverable matching job');
+   throw Error('UNEXPECTED_RPC_'+name);
+  },
+  request:async(path,options)=>{
+   requests.push({path,options});
+   if(path==='/auth/v1/user')return Response.json({id:'caller-user'});
+   if(path.startsWith('/rest/v1/hermes_alea_jobs?')){
+    const params=new URL('https://supabase.test'+path).searchParams;
+    expect(params.get('requested_by')).toBe('eq.caller-user');
+    expect(params.get('target_id')).toBe('eq.'+target.id);
+    expect(params.get('state')).toBe('eq.uploading');
+    expect(params.get('source_sha256')).toBe('eq.'+meta.source_sha256);
+    expect(params.get('output_sha256')).toBe('eq.'+meta.output_sha256);
+    return Response.json([pending]);
+   }
+   if(path.startsWith('/storage/v1/object/'))return new Response(null,{status:409});
+   if(path==='/functions/v1/hermes-alea')return Response.json({verified:true});
+   throw Error('UNEXPECTED_REQUEST_'+path);
+  }
+ });
+ const result=await client.upload({targetKind:'definition',target,file:new Blob(['original'],{type:'image/png'})});
+ expect(result).toMatchObject({state:'activated',id:pending.id});
+ expect(calls).toEqual(['hermes_alea_begin','hermes_alea_finalize']);
+ expect(requests.map(x=>x.path).filter(x=>x==='/functions/v1/hermes-alea')).toHaveLength(1);
+ expect(requests.filter(x=>x.path.startsWith('/storage/v1/object/'))).toHaveLength(2);
+});
