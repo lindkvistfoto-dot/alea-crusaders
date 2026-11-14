@@ -45,6 +45,7 @@ export function renderHonorsAdmin(root, options = {}) {
   const onPublishVariant = options.onPublishVariant;
   const onArchiveVariant = options.onArchiveVariant;
   const imageFor = typeof options.resolveImage === 'function' ? options.resolveImage : createHonorImageResolver(imageAssets);
+  const earnedStarsAvailable = options.earnedStarsAvailable !== false;
   let selected = '';
   let editing = null;
   let query = '';
@@ -284,7 +285,7 @@ export function renderHonorsAdmin(root, options = {}) {
         (category === 'badge' ? '<div class="honors-badge-grid" data-badge-grid></div>' : '<div class="honors-table-wrap"><table class="honors-table"><thead><tr><th>Namn</th><th>Typ</th><th>Status</th><th>Tilldelade</th><th>Åtgärder</th></tr></thead><tbody data-list></tbody></table></div>') +
       '</div>' +
       '<div data-panel="recipients"' + (tab !== 'recipients' ? ' hidden' : '') + '><label>Utmärkelse<select data-honor-select><option value="">Välj utmärkelse</option>' + definitions.map(d => '<option value="' + esc(d.id) + '"' + (String(selected) === String(d.id) ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select></label><ul data-recipients></ul>' +
-        '<form data-grant-form><label>Rollperson<select name="characterId" required>' + characters.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('') + '</select></label><label>Motivering<textarea name="reason"></textarea></label><button type="submit">Tilldela manuellt</button></form></div>' +
+        '<form data-grant-form><label>Rollperson<select name="characterId" required>' + characters.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('') + '</select></label><label data-earned-stars-control hidden>Uppnådda guldstjärnor<select name="earned_gold_stars"' + (earnedStarsAvailable ? '' : ' disabled') + '><option value="0">0 stjärnor</option><option value="1">1 stjärna</option><option value="2">2 stjärnor</option><option value="3">3 stjärnor</option></select>' + (earnedStarsAvailable ? '' : '<small>Stjärnnivån aktiveras när databasmigreringen är tillämpad.</small>') + '</label><label>Motivering<textarea name="reason"></textarea></label><button type="submit">Tilldela manuellt</button></form></div>' +
       '<div class="honors-editor" data-editor hidden><div class="honors-editor-card"><header><h3 data-editor-title>Utmärkelse</h3><button type="button" data-close aria-label="Stäng redigering">×</button></header><div data-definition-image></div><form data-honor-form><div class="honors-editor-fields" data-fields></div><footer><button type="button" data-cancel>Avbryt</button><button type="submit">Spara post</button></footer></form><div data-variants></div></div></div>' +
       '<p role="status" aria-live="polite" data-notice></p></section>';
 
@@ -421,7 +422,11 @@ export function renderHonorsAdmin(root, options = {}) {
     try {
       if (!selected) throw Error('Välj utmärkelse.');
       if (!onGrant) throw Error('Databaskoppling saknas.');
-      const result=await onGrant({honorId:selected,...formData(event.currentTarget)});
+      const definition=definitions.find(d=>String(d.id)===String(selected));
+      if(getCategory(definition)==='badge'&&!earnedStarsAvailable) throw Error('Databasstödet för uppnådda stjärnor väntar på migreringen.');
+      const data=formData(event.currentTarget);
+      data.earned_gold_stars=getCategory(definition)==='badge'?Number(data.earned_gold_stars||0):0;
+      const result=await onGrant({honorId:selected,...data});
       const saved=Array.isArray(result)?result[0]:result;
       if (saved) grants.unshift(saved);
       draw(); notice('Manuell tilldelning sparad.');
@@ -431,6 +436,8 @@ export function renderHonorsAdmin(root, options = {}) {
     const select=root.querySelector('[data-honor-select]');
     if (!select) return;
     selected=select.value;
+    const starControl=root.querySelector('[data-earned-stars-control]');
+    if(starControl) starControl.hidden=getCategory(definitions.find(d=>String(d.id)===String(selected)))!=='badge';
     const list=root.querySelector('[data-recipients]');
     list.replaceChildren();
     const matching=grants.filter(g=>String(g.honor_id)===String(selected));
