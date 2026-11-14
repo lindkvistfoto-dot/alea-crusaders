@@ -258,11 +258,12 @@ async function renderAwards(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
-   const count=counts.get(String(d.id))||1,tier='bronze'; // Tier rules require explicit domain criteria, not grant-count guessing.
+   const count=counts.get(String(d.id))||1,tier='bronze'; // Grants have no award-tier field; retain the current bronze fallback and count.
    const art=document.createElement('div');art.className='trophy-room-badge-art';
-   const asset=assetMap.get(d.image_asset_id);
+   const award=root.ArcaneAwardRenderer?.awardRenderLayers(d.image_asset_id,tier)||{imageAssetId:d.image_asset_id||null,frameAssetKey:'arcane-award-frame-'+tier};
+   const asset=assetMap.get(award.imageAssetId);
    const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
-   const frameAsset=assetMap.get(d.badge_frame_assets?.[tier]);
+   const frameAsset=assetMap.get(award.frameAssetKey);
    const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
    if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
