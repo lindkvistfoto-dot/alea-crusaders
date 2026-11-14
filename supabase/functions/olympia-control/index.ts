@@ -1110,8 +1110,8 @@ async function handleRequest(req: Request): Promise<Response> {
               ).sort((a: any, b: any) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
               const body = String(latest?.body || "");
               if (/^- Status: BLOCKED$/mi.test(body)) {
-                const reason = body.match(/^- Felorsak:\\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
-                const workflowRunUrl = body.match(/https:\\/\\/github\\.com\\/[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+\\/actions\\/runs\\/\\d+/)?.[0] || null;
+                const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
+                const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
                 candidate = {
                   ready: false,
                   blocked: true,
