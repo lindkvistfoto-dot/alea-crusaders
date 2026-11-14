@@ -204,7 +204,6 @@ jobs:
                 git -C "$DEV_DIR" show "$PR_PATCH_BASE_SHA:$changed" > "$BASE_SESSION"
                 cp "$SOURCE_DIR/$changed" "$LIVE_SESSION"
                 if node --input-type=module -e "$(printf '%s' 'aW1wb3J0IGZzIGZyb20gIm5vZGU6ZnMiO2NvbnN0IGJhc2U9ZnMucmVhZEZpbGVTeW5jKHByb2Nlc3MuYXJndlsxXSwidXRmOCIpLGxpdmU9ZnMucmVhZEZpbGVTeW5jKHByb2Nlc3MuYXJndlsyXSwidXRmOCIpLGxpdmVMYWJlbD0iYnRuLnRleHRDb250ZW50PWFjdGl2ZUdhbWVTZXNzaW9uPyhhY3RpdmVHYW1lU2Vzc2lvbi5zdGF0dXM9PT0ncGF1c2VkJz8nXHV7MjNmOH0gU3BlbG1cdXtmNn10ZSc6J1x1ezFmM2IyfSBTcGVsbVx1e2Y2fXRlIFx1e2I3fSBQXHV7ZTV9Z1x1e2U1fXInKTonXHV7MWYzYjJ9IFNwZWxtXHV7ZjZ9dGUnOyIsYmFzZUxhYmVsPSJidG4udGV4dENvbnRlbnQ9YWN0aXZlR2FtZVNlc3Npb24/KGFjdGl2ZUdhbWVTZXNzaW9uLnN0YXR1cz09PSdwYXVzZWQnPydcdXsyM2Y4fSBTZXNzaW9uJzonXHV7MWYzYjJ9IFNlc3Npb24gXHV7Yjd9IFBcdXtlNX1nXHV7ZTV9cicpOidcdXsxZjNiMn0gU2Vzc2lvbic7IjtpZighbGl2ZS5pbmNsdWRlcyhsaXZlTGFiZWwpfHxsaXZlLnJlcGxhY2UobGl2ZUxhYmVsLGJhc2VMYWJlbCkhPT1iYXNlKXByb2Nlc3MuZXhpdCgyKTs=' | base64 --decode)" "$BASE_SESSION" "$LIVE_SESSION"; then
-                then
                   SOURCE_SESSION="$OUTPUT_DIR/pr-$PR_NUMBER-source-sessions.js"
                   git -C "$DEV_DIR" show "$PR_PATCH_SHA:$changed" > "$SOURCE_SESSION"
                   node "$DEV_DIR/scripts/olympia/reconcile-chronicle-live-conflicts.mjs" sessions \
