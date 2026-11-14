@@ -203,15 +203,7 @@ jobs:
                 LIVE_SESSION="$OUTPUT_DIR/pr-$PR_NUMBER-live-sessions.js"
                 git -C "$DEV_DIR" show "$PR_PATCH_BASE_SHA:$changed" > "$BASE_SESSION"
                 cp "$SOURCE_DIR/$changed" "$LIVE_SESSION"
-                if node --input-type=module - "$BASE_SESSION" "$LIVE_SESSION" <<'NODE'
-import fs from 'node:fs';
-const base=fs.readFileSync(process.argv[2],'utf8');
-const live=fs.readFileSync(process.argv[3],'utf8');
-const liveLabel="btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Spelmöte':'🎲 Spelmöte · Pågår'):'🎲 Spelmöte';";
-const baseLabel="btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Session':'🎲 Session · Pågår'):'🎲 Session';";
-if (!live.includes(liveLabel) || live.replace(liveLabel,baseLabel)!==base) process.exit(2);
-NODE
-                then
+                if node --input-type=module -e "import fs from 'node:fs'; const base=fs.readFileSync(process.argv[1],'utf8'); const live=fs.readFileSync(process.argv[2],'utf8'); const liveLabel=\"btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Spelmöte':'🎲 Spelmöte · Pågår'):'🎲 Spelmöte';\"; const baseLabel=\"btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Session':'🎲 Session · Pågår'):'🎲 Session';\"; if (!live.includes(liveLabel) || live.replace(liveLabel,baseLabel)!==base) process.exit(2);" "$BASE_SESSION" "$LIVE_SESSION"; then
                   SOURCE_SESSION="$OUTPUT_DIR/pr-$PR_NUMBER-source-sessions.js"
                   git -C "$DEV_DIR" show "$PR_PATCH_SHA:$changed" > "$SOURCE_SESSION"
                   node "$DEV_DIR/scripts/olympia/reconcile-chronicle-live-conflicts.mjs" sessions \
