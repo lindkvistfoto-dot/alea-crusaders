@@ -20,7 +20,6 @@ describe('Trophy Inspector schema release',()=>{
     expect(migration).toContain("d.category in ('award', 'badge')");
     expect(migration).toContain('security_barrier = true');
     expect(policyMigration).toContain('security_invoker = true');
-    expect(policyMigration).toContain('security_invoker = true');
     expect(policyMigration).not.toMatch(/\b(create|drop)\s+policy\b/i);
   });
 
@@ -40,7 +39,6 @@ describe('Trophy Inspector schema release',()=>{
     expect(privateMigration).toContain('security invoker');
     expect(privateMigration).not.toMatch(/\bdrop\s+(function|view|table|policy)\b/i);
     expect(privateMigration).not.toMatch(/\b(delete\s+from|truncate|alter\s+table\s+.*drop)\b/i);
-  }); 
   });
 
   it('uses additive, non-destructive and idempotent schema changes',()=>{
