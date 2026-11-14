@@ -15,6 +15,12 @@ describe('LIVE Trophy Inspector recovery',()=>{
     expect(room).toContain("kind==='award'?'Utmärkelse':'Badge'");
   });
 
+  it('loads the shared Trophy Room scene after authenticated startup',()=>{
+    expect(room).toContain('async function loadTrophyRoomImage()');
+    expect(room).toContain("!root.activeUser?.()")
+    expect(room).toContain('void loadTrophyRoomImage()');
+  });
+
   it('uses actual persisted badge progress and clamps it to zero through three',()=>{
     expect(room).toContain('earned_gold_stars');
     expect(room).toContain('earnedGoldStars(grantByHonor.get(String(d.id))?.earned_gold_stars)');
