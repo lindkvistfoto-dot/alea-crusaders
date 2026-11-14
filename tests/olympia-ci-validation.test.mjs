@@ -74,7 +74,8 @@ describe('OLYMPIA DEV approval API contract', () => {
   });
   it('returns pending or failed CI as a decision conflict with a defined message', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('ciApiMessages[code] || messages[code]');
+    expect(edge).toContain('ciApiMessages[messageCode] || messages[messageCode]');
+    expect(edge).toContain('code.startsWith("GITHUB_RATE_LIMITED_") ? "GITHUB_RATE_LIMITED" : code');
     expect(edge).toContain('code === "CI_PENDING" || code === "CI_FAILED"');
     expect(edge).toContain('headSha: String(pr.head?.sha || "")');
   });

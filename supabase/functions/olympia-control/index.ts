@@ -1588,9 +1588,10 @@ async function handleRequest(req: Request): Promise<Response> {
           GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
           GITHUB_REQUEST_FAILED_504: "GitHub API svarade inte i tid (504). Försök igen.",
         };
-        const errorMessage = stage === "ci_validation" ? ciApiMessages[code] || messages[code] ||
+        const messageCode = code.startsWith("GITHUB_RATE_LIMITED_") ? "GITHUB_RATE_LIMITED" : code;
+        const errorMessage = stage === "ci_validation" ? ciApiMessages[messageCode] || messages[messageCode] ||
           "GitHub CI kunde inte verifieras säkert. Ingen merge genomfördes; uppdatera status och försök igen."
-          : apiMessages[code] || messages[code] ||
+          : apiMessages[messageCode] || messages[messageCode] ||
             "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
         const responseStatus = code === "GITHUB_REQUEST_FAILED_409" || code === "CI_PENDING" || code === "CI_FAILED" ||
           code === "CI_CHECKS_MISSING" || code === "CI_CHECKS_INCOMPLETE" || code === "CI_SHA_MISMATCH" ||
