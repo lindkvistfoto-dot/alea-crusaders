@@ -179,7 +179,7 @@ async function ghPublic(path: string) {
       (remaining === "0" || /API rate limit exceeded/i.test(reason));
     console.error(
       rateLimited ? "OLYMPIA GitHub public API rate limited" : "OLYMPIA GitHub public API request rejected",
-      JSON.stringify({ path, status: res.status, reason, remaining, reset }),
+      JSON.stringify({ path, status: res.status, remaining, reset }),
     );
     if (rateLimited) throw new Error("GITHUB_PUBLIC_RATE_LIMITED");
     throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
