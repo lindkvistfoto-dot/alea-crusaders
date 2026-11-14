@@ -71,7 +71,7 @@ body.game-session-open{overflow:hidden}
 .chronicle-history summary em{color:#c7a875;font-size:.76rem;font-style:normal}
 .chronicle-history details>div{padding:0 12px 10px;color:#bcae98;font-size:.85rem;white-space:pre-wrap}
 .chronicle-history p{margin:6px 0}
-.alea-app-header::before{filter:var(--alea-phase-filter,none);transition:filter .8s ease}
+@media(prefers-reduced-motion:reduce){.alea-app-header .alea-phase-banner-image{transition:none}}
 @media(max-width:700px){
  .game-session-dialog{width:100%;padding:17px 15px}
  .chronicle-section{padding:13px}
@@ -83,4 +83,4 @@ body.game-session-open{overflow:hidden}
  .arcane-dial-phase{font-size:.66rem;min-height:72px}
  .arcane-dial-mark{width:33px;height:33px;font-size:16px}
 }
-@media(prefers-reduced-motion:reduce){.arcane-dial-mark,.alea-app-header::before{transition:none}}
+@media(prefers-reduced-motion:reduce){.arcane-dial-mark{transition:none}}
