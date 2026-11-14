@@ -593,5 +593,5 @@ export function renderHonorsAdmin(root, options = {}) {
     });
   }
   draw();
-  return { destroy: () => root.replaceChildren(), refresh: draw };
+  return { destroy: () => root.replaceChildren(), refresh: () => { if (!editing) draw(); } };
 }
