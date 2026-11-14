@@ -81,6 +81,55 @@
   }
   mountChronicleDraft();
 
+  // Reuse the existing domain resolvers and the equipment-view figure source.
+  async function hydrateChronicleImages() {
+    const host = el('arcaneChronicleDraft');
+    if (!host || typeof dbJson !== 'function') return;
+    const cards = host.querySelectorAll('.arcane-chronicle-card');
+    if (cards.length !== 4) return;
+    function paint(index, url, alt) {
+      if (!url) return;
+      const stage = cards[index].querySelector('.arcane-chronicle-art');
+      if (!stage) return;
+      const img = document.createElement('img');
+      img.alt = alt;
+      img.loading = 'lazy';
+      img.className = 'arcane-chronicle-real-image';
+      img.addEventListener('load', () => stage.replaceChildren(img), {once:true});
+      img.src = url;
+    }
+    try {
+      const spells = await dbJson('rule_spells?select=name,illustration_path,image_path&name=ilike.BESKYDDARE&limit=1');
+      const spell = spells?.[0];
+      // The illustration bucket is resolved through the app's existing magic-art adapter.
+      const spellPath = spell?.illustration_path || spell?.image_path;
+      const magicResolvers = [window.aleaSpellArt,window.aleaMagicArt,window.aleaSpellIllustrations];
+      for (const resolver of magicResolvers) {
+        const url = resolver?.src?.(spellPath) || resolver?.url?.(spellPath);
+        if (url) { paint(1,url,'Beskyddare'); break; }
+      }
+    } catch (error) { console.warn('Chronicle spell image unavailable',error); }
+    try {
+      const weapons = await dbJson('rule_weapons?select=name,image_path,image_asset_id&name=ilike.Tvåhandssvärd&limit=1');
+      const weapon = weapons?.[0];
+      paint(2,window.aleaEquipmentArt?.src?.(weapon?.image_asset_id || weapon?.image_path),'Tvåhandssvärd');
+    } catch (error) { console.warn('Chronicle weapon image unavailable',error); }
+    try {
+      const evalin = typeof chars !== 'undefined' && Array.isArray(chars)
+        ? chars.find(c => /evalin hugger/i.test(c.name || ''))
+        : null;
+      const image = evalin?.figureImages?.base;
+      if (typeof image === 'string' && /^data:image\\/(png|jpeg|webp);base64,/.test(image)) paint(0,image,'Evalin Hugger — helfigur');
+    } catch (error) { console.warn('Chronicle character image unavailable',error); }
+    // Honor artwork intentionally remains unresolved until its authoritative
+    // published asset is identified; never substitute a fabricated medal.
+  }
+  window.aleaChronicleRefreshImages = hydrateChronicleImages;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !landing.classList.contains('hidden')) hydrateChronicleImages();
+  });
+
+
 
   function activeSections() {
     return Array.from(document.querySelectorAll('main > section[id]'));
@@ -153,6 +202,7 @@
     hideOtherPages('landing');
     hideSection(landing, false);
     pickRandomImage();
+    hydrateChronicleImages();
     setNavigation();
     window.scrollTo?.(0, 0);
   }
