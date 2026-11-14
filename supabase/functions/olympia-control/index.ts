@@ -1027,89 +1027,92 @@ async function handleRequest(req: Request): Promise<Response> {
     if (data.action === "auto_candidate_diagnostics") {
       if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
           typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
-        return fail("Ange giltigt PR-nummer och fullständig testad DEV-SHA.", 400);
+        return fail("Ange giltigt PR-nummer och fullständig DEV-merge-SHA.", 400);
       }
       try {
         const token = await githubToken("auto_candidate_diagnostics");
         const number = data.pullRequestNumber;
-        const sha = data.testedDevSha.toLowerCase();
+        const sourceMergeSha = data.testedDevSha.toLowerCase();
         const repoPath = "/repos/" + OWNER + "/" + REPO;
-        const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + sha;
-        let locked = false;
-        try {
-          const lock = await gh(token, repoPath + "/git/ref/heads/" + lockBranch);
-          locked = true;
-          if (String(lock.object?.sha || "").toLowerCase() !== sha) {
-            return json({ ok: true, state: "inconsistent", locked: true, message: "Kandidatlåset pekar på fel commit. Manuell granskning krävs." });
-          }
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
-        }
         const appLogin = await appBotLogin();
-        let issue: any = null;
+        const item = await workItem(token, "PR-" + number);
+        // The PR card sends the source PR's merge SHA. Candidate preparation records
+        // the tested DEV tip SHA in its decision issue. Resolve that SHA from the
+        // verified journal instead of looking for a lock keyed by the wrong SHA.
+        if (String(item.dev_sha || "").toLowerCase() !== sourceMergeSha) {
+          return fail("DEV-PR:ens merge-SHA har ändrats. Uppdatera OLYMPIA.", 409);
+        }
+
+        const candidateIssues: any[] = [];
         let scanComplete = false;
         for (let page = 1; page <= 20; page++) {
           const issues = await gh(token, repoPath + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(appLogin));
           if (!Array.isArray(issues)) throw new Error("CANDIDATE_DIAGNOSTICS_ISSUES_INVALID");
-          issue = issues.find((candidate: any) => {
-            const body = String(candidate.body || "");
-            return !candidate.pull_request && body.includes("- Beslut: PANDORAS ASK") &&
-              body.includes("- Ärende-ID: PR-" + number) &&
-              body.includes("- Testad DEV-commit (full SHA): " + sha);
-          });
-          if (issue || issues.length < 100) { scanComplete = true; break; }
+          for (const candidateIssue of issues) {
+            const body = String(candidateIssue.body || "");
+            if (!candidateIssue.pull_request && candidateIssue.user?.login === appLogin &&
+                candidateIssue.state === "open" &&
+                body.includes("- Beslut: PANDORAS ASK") &&
+                body.includes("- Ärende-ID: PR-" + number)) {
+              const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
+              if (testedMatch) candidateIssues.push({ issue: candidateIssue, testedDevSha: testedMatch[1].toLowerCase() });
+            }
+          }
+          if (issues.length < 100) { scanComplete = true; break; }
         }
-        if (!scanComplete) return json({ ok: true, state: "unknown", locked, message: "Journalen kunde inte genomsökas fullständigt. Ingen återställning tillåten." });
-        let requestPresent = false;
-        if (issue) {
+        if (!scanComplete) return json({ ok: true, state: "unknown", locked: false, message: "Journalen kunde inte genomsökas fullständigt. Ingen återställning tillåten." });
+        candidateIssues.sort((a, b) => Date.parse(b.issue.created_at || "") - Date.parse(a.issue.created_at || ""));
+
+        let unlockedIssue: any = null;
+        for (const entry of candidateIssues) {
+          const issue = entry.issue;
+          const testedDevSha = entry.testedDevSha;
+          const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + testedDevSha;
+          let lock: any = null;
+          try {
+            lock = await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent(lockBranch));
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+            unlockedIssue ||= issue;
+            continue;
+          }
+          if (String(lock.object?.sha || "").toLowerCase() !== testedDevSha) {
+            return json({ ok: true, state: "inconsistent", locked: true, issue: { number: issue.number, url: issue.html_url }, message: "Kandidatlåset pekar på fel commit. Manuell granskning krävs." });
+          }
+          let requestPresent = false;
           try {
             await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent("olympia/release-requests/decision-" + issue.number));
             requestPresent = true;
           } catch (error) {
             if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
           }
-        }
-        // Resolve the actual release candidate through the existing server verifier.
-        // This is read-only; never infer readiness from the existence of an issue.
-        let candidate: any = null;
-        if (requestPresent && issue) {
-          try {
-            const item = await workItem(token, "PR-" + number);
-            candidate = await inspectCandidate(token, item, issue.number, sha);
-          } catch (error) {
-            // Candidate diagnostics must survive preview lookup errors.
-            // Never infer readiness or permit LIVE approval from a fallback.
-            console.warn("OLYMPIA preview diagnostics unavailable", error instanceof Error ? error.message : "unknown");
-            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Förhandsvisningen kunde inte verifieras; LIVE-beslut förblir låsta." };
+          if (!requestPresent) {
+            return json({ ok: true, state: "needs_review", locked: true, requestPresent: false,
+              issue: { number: issue.number, url: issue.html_url },
+              message: "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." });
           }
-        }
-        if (issue && (!candidate || candidate.blocked === false)) {
+
+          let candidate: any = null;
           try {
-            const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
-            if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
-            const latest = comments.filter((comment: any) => String(comment.body || "").includes("## OLYMPIA release candidate")).at(-1);
-            const body = String(latest?.body || "");
-            if (/Status:\s*BLOCKED\b/i.test(body)) {
-              const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
-              const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
-              candidate = {
-                ready: false,
-                blocked: true,
-                message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
-                workflowRunUrl
-              };
-            }
+            candidate = await inspectCandidate(token, item, issue.number, testedDevSha);
           } catch (error) {
-            console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
+            console.warn("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "unknown");
+            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Kandidatens aktuella status kunde inte verifieras; LIVE-beslut förblir låsta." };
           }
+          return json({
+            ok: true, state: "requested", locked: true, requestPresent: true, candidate,
+            issue: { number: issue.number, url: issue.html_url },
+            testedDevSha,
+            message: "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut.",
+          });
         }
-        const state = locked ? (requestPresent ? "requested" : "needs_review") : (issue ? "unlocked_issue" : "not_started");
-        return json({ ok: true, state, locked, requestPresent, candidate,
-          issue: issue ? { number: issue.number, url: issue.html_url } : null,
-          message: state === "needs_review" ? "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." :
-            state === "requested" ? "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut." :
-            state === "unlocked_issue" ? "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." :
-            "Ingen automatisk kandidatbegäran hittades." });
+
+        return json(unlockedIssue
+          ? { ok: true, state: "unlocked_issue", locked: false, requestPresent: false,
+              issue: { number: unlockedIssue.number, url: unlockedIssue.html_url },
+              message: "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." }
+          : { ok: true, state: "not_started", locked: false, requestPresent: false, issue: null,
+              message: "Ingen automatisk kandidatbegäran hittades." });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA candidate diagnostics failed", code);
