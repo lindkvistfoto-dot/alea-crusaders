@@ -20,7 +20,8 @@ let instance;
 let openSequence=0;
 
 const definitionFields='id,name,type,category,description,requirement_text,tier_criteria,badge_frame_assets,frame_family,preview_variant_id,published_variant_id,visibility,grant_mode,status,campaign_id,adventure_id,image_asset_id,created_by,created_at,updated_at';
-const grantFields='id,honor_id,character_id,granted_by,granted_at,reason,source_event_id,revoked_at,revoked_by,revocation_reason';
+const grantFields='id,honor_id,character_id,granted_by,granted_at,reason,source_event_id,revoked_at,revoked_by,revocation_reason,earned_gold_stars';
+const legacyGrantFields='id,honor_id,character_id,granted_by,granted_at,reason,source_event_id,revoked_at,revoked_by,revocation_reason';
 const variantFields='id,honor_id,name,material,image_asset_id,status,allow_overhang,created_by,created_at,updated_at';
 const characterFields='id,name,campaign_id';
 const assetFields='asset_key,label,asset_path,app_sha256,app_bytes,width,height,alpha_preserved';
@@ -73,9 +74,19 @@ window.openArcaneHonorsAdmin = async () => {
 
   setNotice(mount,'Laddar Honors-registret…');
   try {
+    let earnedStarsAvailable=true;
+    const loadGrants=async()=>{
+      try{return await window.dbJson('honor_grants?select='+grantFields+'&order=granted_at.desc');}
+      catch(error){
+        const detail=String(error?.message||error);
+        if(!detail.includes('earned_gold_stars')) throw error;
+        earnedStarsAvailable=false;
+        return window.dbJson('honor_grants?select='+legacyGrantFields+'&order=granted_at.desc');
+      }
+    };
     const [definitions,grants,characters,imageAssets,variants]=await Promise.all([
       window.dbJson('honor_definitions?select='+definitionFields+'&order=name.asc'),
-      window.dbJson('honor_grants?select='+grantFields+'&order=granted_at.desc'),
+      loadGrants(),
       window.dbJson('characters?select='+characterFields+'&order=name.asc'),
       window.dbJson('arcane_system_assets?select='+assetFields+'&order=asset_key.asc'),
       window.dbJson('honor_relief_variants?select='+variantFields+'&order=created_at.asc')
@@ -184,15 +195,20 @@ window.openArcaneHonorsAdmin = async () => {
         method:'PATCH',body:JSON.stringify({status:'archived',updated_at:new Date().toISOString()})
       });
     };
-    const grant=async ({honorId,characterId,reason})=>{
+    const grant=async ({honorId,characterId,reason,earned_gold_stars})=>{
       const definition=(Array.isArray(definitions)?definitions:[]).find(d=>String(d.id)===String(honorId));
       if(!definition) throw Error('Utmärkelsen finns inte i ditt behörighetsområde.');
       if(definition.status!=='active') throw Error('Endast aktiva utmärkelser kan tilldelas.');
       if(definition.grant_mode==='automatic') throw Error('Automatiska utmärkelser kan inte tilldelas manuellt.');
+      const isBadge=definition.category==='badge';
+      if(isBadge&&!earnedStarsAvailable) throw Error('Databasstödet för uppnådda stjärnor väntar på migreringen.');
+      const stars=Number(earned_gold_stars||0);
+      if(isBadge&&(!Number.isInteger(stars)||stars<0||stars>3)) throw Error('Välj 0–3 uppnådda guldstjärnor.');
       return window.dbJson('honor_grants',{
         method:'POST',body:JSON.stringify({
           honor_id:honorId,character_id:characterId,granted_by:user.id,
-          reason:String(reason||'').trim()||null
+          reason:String(reason||'').trim()||null,
+          ...(isBadge?{earned_gold_stars:stars}:{})
         })
       });
     };
@@ -215,6 +231,7 @@ window.openArcaneHonorsAdmin = async () => {
       onPublishVariant:publishVariant,
       onArchiveVariant:archiveVariant,
       onSelectBadgeFrame:selectBadgeFrame,
+      earnedStarsAvailable,
       onGrant:grant
     });
   } catch(error) {

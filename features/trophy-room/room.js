@@ -115,7 +115,54 @@ function enableBadgeCalibration(){
  draw();
 }
 
+
+/* Independent award/badge inspector. Medal implementation remains unchanged. */
+let honorDialog=null,honorFocus=null,honorRequest=0;
+function openHonorInspector(kind,data,trigger){
+ if(!honorDialog){
+  const d=document.createElement('dialog');d.id='arcaneHonorInspector';d.className='arcane-medal-dialog';d.setAttribute('aria-labelledby','arcaneHonorInspectorTitle');
+  const frame=makeElement('div','arcane-medal-display'),cushion=makeElement('section','arcane-medal-display-cushion');
+  const art=makeElement('div','arcane-honor-inspector-art');cushion.append(art);
+  const parchment=makeElement('section','arcane-medal-display-parchment'),story=makeElement('div','arcane-medal-display-story');
+  const title=makeElement('h2','arcane-medal-display-title');title.id='arcaneHonorInspectorTitle';
+  story.append(title,makeElement('p','arcane-medal-display-type'),makeElement('p','arcane-medal-display-description'),makeElement('p','arcane-medal-display-reason'));
+  parchment.append(story);frame.append(cushion,parchment);
+  const close=makeElement('button','arcane-medal-display-close','×');close.type='button';close.setAttribute('aria-label','Stäng visning');close.addEventListener('click',()=>d.close());
+  d.append(close,frame);d.addEventListener('click',e=>{if(e.target===d)d.close()});
+  d.addEventListener('cancel',e=>{e.preventDefault();d.close()});
+  d.addEventListener('close',()=>{honorRequest++;honorFocus?.focus?.();honorFocus=null});
+  document.body.append(d);honorDialog=d;
+ }
+ const d=honorDialog,request=++honorRequest;honorFocus=trigger;
+ d.querySelector('#arcaneHonorInspectorTitle').textContent=data.name||'';
+ d.querySelector('.arcane-medal-display-type').textContent=kind==='award'?'Utmärkelse':'Badge';
+ d.querySelector('.arcane-medal-display-description').textContent=data.description||'';
+ d.querySelector('.arcane-medal-display-reason').textContent=kind==='award'?'Antal: '+data.count:'Guldstjärnor: '+data.stars;
+ const art=d.querySelector('.arcane-honor-inspector-art');art.replaceChildren();
+ const clone=data.art.cloneNode(true);clone.classList.add('arcane-honor-inspector-object');clone.removeAttribute('style');art.append(clone);
+ if(kind==='badge'&&data.stars>0){const stars=makeElement('span','arcane-honor-inspector-stars','★'.repeat(Math.min(3,data.stars)));stars.setAttribute('aria-label',data.stars+' guldstjärnor');art.append(stars)}
+ d.dataset.honorKind=kind;
+ const frame=d.querySelector('.arcane-medal-display');frame.style.removeProperty('--medal-frame-image');frame.style.removeProperty('--medal-frame-ratio');
+ if(!d.open)d.showModal();
+ if(typeof root.dbJson!=='function')return;
+ const key='arcane-badge-frame-velvet-'+(kind==='award'?'green':'blue');
+ void root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(key)).then(assets=>{
+  if(request!==honorRequest||!d.open)return;
+  const url=medalFrameUrl((assets||[]).find(a=>a.asset_key===key));if(!url)return;
+  frame.style.setProperty('--medal-frame-image','url("'+url+'")');
+  const probe=new Image();probe.onload=()=>{if(request===honorRequest&&d.open)frame.style.setProperty('--medal-frame-ratio',probe.naturalWidth+' / '+probe.naturalHeight)};probe.src=url;
+ }).catch(error=>console.warn('Honor velvet box unavailable',error));
+}
+function activateHonorSlot(slot,kind,data){
+ slot.tabIndex=0;slot.setAttribute('role','button');slot.setAttribute('aria-label','Visa '+data.name);
+ slot.style.pointerEvents='auto';slot.style.cursor='pointer';
+ const open=e=>{e.stopPropagation();openHonorInspector(kind,data,slot)};
+ slot.addEventListener('click',open);
+ slot.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(e)}});
+}
+
 let badgeSequence=0;
+const earnedGoldStars=value=>{const level=Number(value);return Number.isInteger(level)?clamp(level,0,3):0};
 async function renderBadges(){
  const wall=byId('trophyRoomBadgeWall'),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
  const seq=++badgeSequence;wall.replaceChildren();wall.hidden=true;
@@ -124,16 +171,16 @@ async function renderBadges(){
  if(!dbId||typeof root.dbJson!=='function')return;
  try{
   const [grants,definitions,variants,assets]=await Promise.all([
-   root.dbJson('honor_grants?select=honor_id,character_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
-   root.dbJson('honor_definitions?select=id,name,description,category,status,published_variant_id,preview_variant_id,image_asset_id,badge_frame_assets,tier_criteria&category=eq.badge'),
-   root.dbJson('honor_relief_variants?select=id,honor_id,status,allow_overhang,image_asset_id'),
+   root.dbJson('arcane_trophy_public_grants?select=honor_id,character_id,earned_gold_stars&character_id=eq.'+encodeURIComponent(dbId)),
+   root.dbJson('arcane_trophy_public_definitions?select=id,name,description,category,status,visibility,published_variant_id,image_asset_id,badge_frame_assets&category=eq.badge'),
+   root.dbJson('arcane_trophy_public_variants?select=id,honor_id,status,allow_overhang,image_asset_id'),
    root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*')
   ]);
   if(seq!==badgeSequence)return;
-  const active=new Set((grants||[]).map(g=>String(g.honor_id)));
+  const grantByHonor=new Map((grants||[]).map(g=>[String(g.honor_id),g]));
   const assetMap=new Map((assets||[]).map(a=>[a.asset_key,a]));
   const variantsById=new Map((variants||[]).map(v=>[String(v.id),v]));
-  const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
+  const awarded=(definitions||[]).filter(d=>grantByHonor.has(String(d.id))&&d.category==='badge'&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
   // Reserve nine positions; render each awarded badge only once.
   for(let index=0;index<9;index++){
    // Fill each row right-to-left, while preserving the nine fixed perspective slots.
@@ -142,7 +189,7 @@ async function renderBadges(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');slot.setAttribute('aria-hidden','true');wall.append(slot);continue}
    slot.title=d.name;
-   const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
+   const selected=d.published_variant_id;
    const variant=variantsById.get(String(selected));
    const frameKey=d.badge_frame_assets?.[selected];
    const relief=assetMap.get(variant?.image_asset_id||d.image_asset_id);
@@ -154,20 +201,90 @@ async function renderBadges(){
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
    if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
    slot.append(art);
-   const stars=Math.max(0,Math.min(3,Number(d.tier_criteria?.gold_stars||0)));
+   const stars=earnedGoldStars(grantByHonor.get(String(d.id))?.earned_gold_stars);
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
+   activateHonorSlot(slot,'badge',{name:d.name,description:d.description,stars,art});
    wall.append(slot);
   }
   wall.hidden=awarded.length===0;draw();
  }catch(error){if(seq!==badgeSequence)return;console.warn('Trophy badge wall unavailable',error)}
 }
+
+/* Left award wall: same four-corner homography and nine independent 3D planes
+   as the right badge wall, with Zeus-approved background-image coordinates. */
+const AWARD_CORNERS=[[0.08039355216408267,0.1925328947368421],[0.22767280361757103,0.27137746710526317],[0.23017098675710596,0.6094737199036002],[0.07971222948966411,0.5934375356930739]];
+let awardSequence=0;
+function ensureAwardWall(){
+ const v=viewport();if(!v)return null;
+ let wall=byId('trophyRoomAwardWall');
+ if(!wall){wall=document.createElement('div');wall.id='trophyRoomAwardWall';wall.className='trophy-room-badge-wall trophy-room-award-wall';wall.setAttribute('aria-label','Vänstra väggen: utmärkelser i 3 gånger 3');v.append(wall)}
+ return wall;
+}
+function positionAwardWall(v){
+ const wall=byId('trophyRoomAwardWall');if(!wall||wall.hidden)return;
+ const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;
+ const homography=solveHomography(AWARD_CORNERS);if(!homography)return;
+ const project=(u,t)=>{const [a,b,c,d,e,f,g,h]=homography,den=g*u+h*t+1;return [(a*u+b*t+c)/den,(d*u+e*t+f)/den]};
+ wall.style.left='0px';wall.style.top='0px';wall.style.width=W+'px';wall.style.height=H+'px';wall.style.transform='none';wall.style.pointerEvents='none';wall.style.display='block';
+ const tile=256,margin=.11;
+ [...wall.querySelectorAll('.trophy-room-award-slot')].forEach((slot,n)=>{
+  const col=n%3,row=Math.floor(n/3),u0=(col+margin)/3,u1=(col+1-margin)/3,v0=(row+margin)/3,v1=(row+1-margin)/3;
+  const quad=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]].map(([u,t])=>{const p=project(u,t);return [W*(.5+(p[0]-.5)*scale)+x,H*(.5+(p[1]-.5)*scale)+y]});
+  const matrix=solveHomography(quad.map(p=>[p[0]/W,p[1]/H]));if(!matrix)return;
+  const [a,b,c,d,e,f,g,h]=matrix,m=[a*W/tile,d*H/tile,0,g/tile,b*W/tile,e*H/tile,0,h/tile,0,0,1,0,c*W,f*H,0,1];
+  if(!m.every(Number.isFinite))return;
+  slot.style.position='absolute';slot.style.left='0px';slot.style.top='0px';slot.style.width=tile+'px';slot.style.height=tile+'px';slot.style.transformOrigin='0 0';slot.style.transform='matrix3d('+m.join(',')+')';
+ });
+}
+async function renderAwards(){
+ const wall=ensureAwardWall(),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
+ const seq=++awardSequence;wall.replaceChildren();wall.hidden=true;
+ const character=availableCharacters().find(c=>String(c.id)===picker.value);
+ const dbId=character?._dbId||character?.dbId||character?.data?.id||character?.id;
+ if(!dbId||typeof root.dbJson!=='function')return;
+ try{
+  const [grants,definitions,assets,managedAssets]=await Promise.all([
+   root.dbJson('arcane_trophy_public_grants?select=honor_id,character_id,earned_gold_stars&character_id=eq.'+encodeURIComponent(dbId)),
+   root.dbJson('arcane_trophy_public_definitions?select=id,name,description,category,status,visibility,image_asset_id,badge_frame_assets&category=eq.award'),
+   root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*'),
+   root.aleaHermesAleaImages?.loadAssets?.()||[]
+  ]);
+  if(seq!==awardSequence)return;
+  const counts=new Map();for(const grant of grants||[])counts.set(String(grant.honor_id),(counts.get(String(grant.honor_id))||0)+1);
+  const assetMap=new Map([...(assets||[]),...(managedAssets||[])].map(a=>[a.asset_key,a]));
+  const awarded=(definitions||[]).filter(d=>counts.has(String(d.id))&&d.category==='award'&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
+  for(let index=0;index<9;index++){
+   const row=Math.floor(index/3),col=index%3;
+   // Mirror the right wall's right-to-left row filling.
+   const d=awarded[row*3+col];
+   const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
+   if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
+   slot.title=d.name;
+   const count=counts.get(String(d.id))||1,tier='bronze'; // Tier rules require explicit domain criteria, not grant-count guessing.
+   const art=document.createElement('div');art.className='trophy-room-badge-art';
+   const asset=assetMap.get(d.image_asset_id);
+   const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
+   const frameAsset=assetMap.get(d.badge_frame_assets?.[tier]);
+   const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
+   if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
+   else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
+   if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
+   slot.append(art);
+   if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
+   activateHonorSlot(slot,'award',{name:d.name,description:d.description,count,art});
+   wall.append(slot);
+  }
+  wall.hidden=awarded.length===0;positionAwardWall(viewport());
+ }catch(error){if(seq!==awardSequence)return;console.warn('Trophy award wall unavailable',error)}
+}
+
 function medalInteractionReady(){return !cameraMotion&&scale>=2.24}
 function updateMedalInteraction(){const ready=medalInteractionReady();const v=viewport();if(v)v.classList.toggle('trophy-room-medals-active',ready);for(const button of document.querySelectorAll('#trophyRoomMedalWall .trophy-room-medal-trigger')){button.disabled=!ready;button.tabIndex=ready?0:-1}}
 function draw(){clampCamera();
  const v=viewport();if(!v)return;
  const scene=byId('trophyRoomScene'),hero=byId('trophyRoomCharacterLayer');
  v.style.setProperty('--pan-x',x+'px');v.style.setProperty('--pan-y',y+'px');v.style.setProperty('--zoom',String(scale));
- if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';positionMedalWall(v);positionBadgeWall(v);
+ if(scene)scene.style.transform='translate3d('+x+'px,'+y+'px,0) scale('+scale+')';positionMedalWall(v);positionBadgeWall(v);positionAwardWall(v);
  if(hero){
   const width=v.clientWidth,height=v.clientHeight;
   const heroWidth=hero.offsetWidth||width*.30;
@@ -329,12 +446,12 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}if(background.parentElement!==scene)scene.append(background);if(wall.parentElement!==v)v.append(wall);const badgeWall=byId('trophyRoomBadgeWall');if(badgeWall&&badgeWall.parentElement!==v)v.append(badgeWall)}
-function open(){const p=page();if(!p)return;ensureScene();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
+function open(){const p=page();if(!p)return;ensureScene();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
  v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion||scale>=1.5)return;const rect=v.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width;focusWall(px<.36?'left':px>.64?'right':'center')});
  v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='ArrowLeft'&&scale<1.5){e.preventDefault();focusWall('left')}else if(e.key==='ArrowRight'&&scale<1.5){e.preventDefault();focusWall('right')}else if(e.key==='0')reset()});
 }
-window.addEventListener('resize',draw,{passive:true});const img=image();if(img){img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'});void(async()=>{try{if(typeof root.dbJson!=='function'){await new Promise(resolve=>setTimeout(resolve,700));if(typeof root.dbJson!=='function')throw Error('HERMES-registret är inte tillgängligt');}const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));const asset=Array.isArray(assets)?assets.find(row=>row.asset_key===KEY):null;const path=asset?.asset_path;if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');img.src=url}catch(error){console.warn('Trophy room HERMES image unavailable',error);const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'}})()}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();void renderBadges();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
+window.addEventListener('resize',draw,{passive:true});const img=image();if(img){img.addEventListener('load',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});img.addEventListener('error',()=>{const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'});void(async()=>{try{if(typeof root.dbJson!=='function'){await new Promise(resolve=>setTimeout(resolve,700));if(typeof root.dbJson!=='function')throw Error('HERMES-registret är inte tillgängligt');}const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));const asset=Array.isArray(assets)?assets.find(row=>row.asset_key===KEY):null;const path=asset?.asset_path;if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');img.src=url}catch(error){console.warn('Trophy room HERMES image unavailable',error);const s=byId('trophyRoomStatus');if(s)s.textContent='HERMES-publiceringen är inte aktiv ännu.'}})()}const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();void renderBadges();void renderAwards();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
  const actor=root.activeUser?.();
  if(!(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm'))return;
  open();
@@ -358,6 +475,6 @@ window.addEventListener('resize',draw,{passive:true});const img=image();if(img){
  const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='trophy-room-honor-preview-close';closeButton.textContent='Tillbaka till ARCANE HONORS';
  closeButton.addEventListener('click',()=>{layer.hidden=true;root.openArcaneHonorsAdmin?.()});layer.append(closeButton);layer.hidden=false;
 }
-root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges()});
+root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges();void renderAwards()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
 root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyBadgeExport=exportBadgeCorners;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});/* Deep links are handled after authentication and route restoration in enterApp. */})(window);
