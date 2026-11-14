@@ -1210,7 +1210,7 @@ async function handleRequest(req: Request): Promise<Response> {
         ]);
         if (!Array.isArray(issues)) throw new Error("CANDIDATE_ISSUES_INVALID");
         const body = String(issue.body || "");
-        const journalSha = body.match(/^- Testad DEV-commit \\(full SHA\\): ([0-9a-f]{40})$/mi)?.[1]?.toLowerCase() || "";
+        const journalSha = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi)?.[1]?.toLowerCase() || "";
         const requestedSha = data.testedDevSha.toLowerCase();
         const sourceMergeSha = String(item.dev_sha || "").toLowerCase();
         // Older OLYMPIA clients pass the source PR merge SHA. Resolve it only
