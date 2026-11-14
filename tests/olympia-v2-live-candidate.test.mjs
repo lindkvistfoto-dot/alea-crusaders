@@ -34,4 +34,8 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(html).toContain('slice(0,12)');
   expect(html).toContain('overflow-wrap:anywhere');
  });
+ it('resumes blocked candidates with the journaled tested DEV tip SHA',()=>{
+  expect(js).toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:result.testedDevSha,candidateIssue:result.issue.number");
+  expect(js).not.toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number");
+ });
 });
