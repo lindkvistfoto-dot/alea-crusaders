@@ -255,3 +255,5 @@ main:has(> #landing:not(.hidden)){max-width:1540px;padding:clamp(10px,1.8vw,28px
 .arcane-chronicle-dialog p{font:16px/1.6 Georgia,serif}
 .arcane-chronicle-dialog button{background:#503824;border:1px solid #c39b65;color:#f4e4c8;padding:10px 20px;border-radius:6px;cursor:pointer}
 @media(max-width:700px){.arcane-chronicle-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.arcane-chronicle-art{height:clamp(130px,38vw,190px);font-size:clamp(80px,23vw,115px)}.arcane-chronicle-copy{padding:10px}.arcane-chronicle-copy .title{font-size:17px}.arcane-chronicle-copy .subtitle{font-size:11px}}
+
+.arcane-chronicle-art .arcane-chronicle-real-image{display:block;width:100%;height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 6px 9px #0008)}
