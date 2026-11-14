@@ -11,8 +11,8 @@ describe('OLYMPIA DEV CI validation',()=>{
   expect(section).not.toContain('ghPublic(');
   expect(section).toContain('GITHUB_REQUEST_FAILED_(502|503|504)');
   expect(section).toContain('attempt < 3');
-  expect(section).toContain('CI_NOT_GREEN');
-  expect(section).toContain('Number(checks.total_count) > runs.length');
-  expect(section).toContain('check.status !== "completed"');
+  expect(section).toContain('assessCi(checks, status, data.pullRequestHeadSha)');
+  expect(edge).toContain('contents: "write", checks: "read", statuses: "read"');
+
  });
 });

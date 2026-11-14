@@ -375,7 +375,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const end=edge.indexOf('async function gh(',start);
     const tokenCode=edge.slice(start,end);
     expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
-    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(tokenCode).toContain(': decision === "approve_and_merge_dev"');
+    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+    expect(tokenCode).toContain(': decision === "set_pull_request_draft"\n    ? { pull_requests: "write", issues: "write", contents: "write" }');
     expect(tokenCode).toContain('? { pull_requests: "write" }');
   });
 

@@ -1,4 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+import "../_shared/olympia-ci.js";
+
+const assessCi = (globalThis as any).olympiaCiValidation.assess;
 
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
@@ -87,7 +90,9 @@ async function githubToken(decision: string) {
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
     ? { pull_requests: "read", checks: "read", statuses: "read", issues: "write", contents: "write" }
-    : (decision === "set_pull_request_draft" || decision === "approve_and_merge_dev")
+    : decision === "approve_and_merge_dev"
+    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }
+    : decision === "set_pull_request_draft"
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
@@ -1312,6 +1317,9 @@ async function handleRequest(req: Request): Promise<Response> {
           pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
           statuses: Array.isArray(status.statuses) ? status.statuses : [],
           combinedStatusState: String(status.state || 'unknown'),
+          statusSha: String(status.sha || ''),
+          checkRunSha: String(checks.sha || ''),
+          checkRunsTotalCount: Number(checks.total_count || 0),
           checkRuns: Array.isArray(checks.check_runs) ? checks.check_runs : [],
         });
       } catch (error) {
@@ -1378,14 +1386,8 @@ async function handleRequest(req: Request): Promise<Response> {
           readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
           readCi(path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
-        const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
-        const statuses = Array.isArray(status.statuses) ? status.statuses : [];
-        if ((!runs.length && !statuses.length) || Number(checks.total_count) > runs.length ||
-            runs.some((check: any) => check.status !== "completed" ||
-              !["success", "neutral", "skipped"].includes(check.conclusion)) ||
-            (statuses.length > 0 && status.state !== "success")) {
-          throw new Error("CI_NOT_GREEN");
-        }
+        const assessment = assessCi(checks, status, data.pullRequestHeadSha);
+        if (assessment.state !== "success") throw new Error(assessment.code);
         stage = "github_merge";
         let mergeSha = "";
         try {
@@ -1437,10 +1439,39 @@ async function handleRequest(req: Request): Promise<Response> {
           PR_HEAD_CHANGED: "PR:en har ändrats sedan den visades. Uppdatera OLYMPIA och granska den nya versionen.",
           PR_MERGEABILITY_UNKNOWN: "GitHub kunde inte fastställa mergebarheten efter flera uppdateringar. Försök igen om en stund.",
           PR_HAS_CONFLICTS: "PR:en har konflikter och behöver rättas innan DEV-merge.",
-          CI_NOT_GREEN: "CI är inte färdig eller godkänd. Vänta in kontrollerna och försök igen.",
+          CI_PENDING: "CI körs fortfarande. Vänta in kontrollerna och försök igen.",
+          CI_FAILED: "En eller flera obligatoriska CI-kontroller har underkänts. Ingen merge genomfördes.",
+          CI_CHECKS_MISSING: "Obligatoriska CI-kontroller saknas. Ingen merge genomfördes.",
+          CI_CHECKS_INCOMPLETE: "GitHub returnerade inte alla CI-kontroller. Uppdatera status och försök igen.",
+          CI_SHA_MISMATCH: "CI-kontrollerna gäller inte den aktuella PR-versionen. Uppdatera status och granska igen.",
+          CI_SHA_INVALID: "PR-versionen kunde inte verifieras. Ingen merge genomfördes.",
+          CI_STATUS_UNKNOWN: "GitHub-status kunde inte verifieras. Ingen merge genomfördes.",
+          GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter. Ge appen läsbehörighet för kontroller och statusar; ingen merge genomfördes.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
-        return json({ ok: false, stage, errorCode: code, message: (messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.") + " (Steg: " + stage + ")" }, code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
+        const ciApiMessages: Record<string, string> = {
+          GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403). Kontrollera GitHub App-behörigheterna; ingen merge genomfördes.",
+          GITHUB_REQUEST_FAILED_429: "GitHub CI-tjänst begränsade anropen (429). Vänta och försök igen.",
+          GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
+          GITHUB_REQUEST_FAILED_503: "GitHub CI-tjänst är tillfälligt otillgänglig (503). Försök igen.",
+          GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504). Försök igen.",
+        };
+        const apiMessages: Record<string, string> = {
+          GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). Kontrollera GitHub App-behörigheterna.",
+          GITHUB_REQUEST_FAILED_429: "GitHub API begränsade anropen (429). Vänta och försök igen.",
+          GITHUB_REQUEST_FAILED_502: "GitHub API är tillfälligt otillgängligt (502). Försök igen.",
+          GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
+          GITHUB_REQUEST_FAILED_504: "GitHub API svarade inte i tid (504). Försök igen.",
+        };
+        const errorMessage = stage === "ci_validation" ? ciApiMessages[code]
+          : apiMessages[code] || messages[code] ||
+            "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
+        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" ? 409
+          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") ? 503
+          : 502;
+        return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);
       }
     }
     if (data.action === "prepare_merged_dev_candidate") {
