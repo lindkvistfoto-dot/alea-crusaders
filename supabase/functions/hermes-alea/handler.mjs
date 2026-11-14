@@ -1,6 +1,7 @@
 import {validatePair} from './validation.mjs';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DEV_PROJECT_URL='https://wkiuyklzzroavclnsxna.supabase.co';
+const DEV_FIXED_ORIGINS=new Set(['https://lindkvistfoto-dot.github.io']);
 // Cloudflare Pages preview URLs can have nested labels. Keep the match anchored
 // to this Pages project so other *.pages.dev tenants are never admitted.
 const DEV_PAGES_ORIGIN=/^https:\/\/(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*alea-crusaders\.pages\.dev$/;
@@ -8,9 +9,9 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
  return async request=>{
   const origin=request.headers.get('Origin')||'';
   const allowed=(env('HERMES_ALEA_ALLOWED_ORIGINS')||'').split(',').map(x=>x.trim()).filter(Boolean);
-  // DEV previews belong to the same Cloudflare Pages project. Do not add
-  // per-PR exceptions; authentication and target authorization remain mandatory.
-  if(env('SUPABASE_URL')===DEV_PROJECT_URL && DEV_PAGES_ORIGIN.test(origin))allowed.push(origin);
+  // The deployed GitHub Pages app and previews for this Pages project are DEV-only
+  // exceptions. Authentication and target authorization remain mandatory.
+  if(env('SUPABASE_URL')===DEV_PROJECT_URL && (DEV_FIXED_ORIGINS.has(origin)||DEV_PAGES_ORIGIN.test(origin)))allowed.push(origin);
   const cors={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:'null','Access-Control-Allow-Headers':'authorization,apikey,content-type','Vary':'Origin'};
   const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,'Content-Type':'application/json'}});
   if(origin&&!allowed.includes(origin)){
