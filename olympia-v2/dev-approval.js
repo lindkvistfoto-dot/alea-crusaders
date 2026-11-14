@@ -71,7 +71,7 @@ document.addEventListener('click',async event=>{
 },false);
 
 // LIVE candidate workflow reuses the existing server-side Zeus decision bridge.
-// No client action merges to main; final LIVE approval remains disabled.
+// The visible action stays locked until exact candidate, CI, and preview SHAs verify.
 const candidateRequests=new Set();
 const candidateCacheUntil=new Map();
 window.olympiaV2CheckCandidateStatuses=async()=>{
@@ -94,6 +94,9 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      node.replaceChildren();
      const candidate=result.candidate;
      const candidateLightState=candidate?.published===true||candidate?.ready===true?'success':candidate?.blocked===true?'failed':result.state==='requested'?'pending':'unknown';
+     const liveCiState=candidate?.published===true||candidate?.ready===true?'success':candidate?.blocked===true?'failed':result.state==='requested'?'pending':'unknown';
+     const liveCi=node.parentElement?.querySelector('[data-live-ci]');
+     if(liveCi){const ciLight=liveCi.querySelector('.status-light'),ciLabel=liveCi.querySelector('strong');if(ciLight)ciLight.className='status-light '+liveCiState;if(ciLabel){ciLabel.className=liveCiState==='success'?'good':liveCiState==='failed'?'bad':liveCiState==='pending'?'wait':'muted';ciLabel.textContent=liveCiState==='success'?'Godkänd':liveCiState==='failed'?'Underkänd':liveCiState==='pending'?'Pågår':'Ej startad'}}
      const candidateLight=document.createElement('i');candidateLight.className='status-light '+candidateLightState;
      candidateLight.setAttribute('aria-label','LIVE-kandidatstatus: '+candidateLightState);
      node.append(candidateLight);
@@ -116,6 +119,8 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
        }
       }
      }
+     const livePreview=node.closest('[data-pr]')?.querySelector('[data-live-preview]');
+     if(livePreview&&candidate?.previewUrl){try{const verifiedUrl=new URL(candidate.previewUrl);if(verifiedUrl.protocol==='https:'&&verifiedUrl.hostname.endsWith('.alea-crusaders.pages.dev')&&verifiedUrl.hostname!=='alea-crusaders.pages.dev'){const previewLink=document.createElement('a');previewLink.className='action';previewLink.href=verifiedUrl.href;previewLink.target='_blank';previewLink.rel='noopener noreferrer';previewLink.textContent='Preview LIVE ↗';livePreview.replaceWith(previewLink)}}catch(_){}}
      if(candidate?.published===true){
       line.className='good';line.textContent='Publicerad i LIVE · verifierad'+(candidate.liveMergeSha?' · '+candidate.liveMergeSha.slice(0,10):'');
      }else if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){

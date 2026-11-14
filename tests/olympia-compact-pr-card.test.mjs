@@ -19,6 +19,10 @@ test('DEV and LIVE stay side-by-side with fixed aligned action slots', () => {
   expect(html).toMatch(/Godkänn LIVE/);
   expect(html).toMatch(/Preview DEV/);
   expect(html).toMatch(/Fler LIVE-åtgärder/);
+  expect(html).toMatch(/class="live-status"/);
+  expect(html).toMatch(/data-live-ci/);
+  expect(html).toMatch(/data-live-preview/);
+  expect(html).toMatch(/link\(previewDevUrl,'Preview DEV'\)/);
 });
 
 test('Enbart DEV requires an interactive checkbox and a server action', () => {
