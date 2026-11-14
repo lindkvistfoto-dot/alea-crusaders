@@ -31,7 +31,10 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" status --porcelain');
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
-  expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+  expect(workflow).toContain('patch-hunks-overlap.mjs');
+  expect(workflow).toContain('A later DEV change overlaps the accepted PR');
+  expect(workflow).toContain('could not safely compare the accepted and later patch ranges');
+  expect(workflow).toContain('issue_number=$ISSUE_NUMBER');
   expect(workflow).toContain('Wait for release PR CI and mergeability');
   expect(workflow).toContain('checks: read');
   expect(workflow).toContain('statuses: read');

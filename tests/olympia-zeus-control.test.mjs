@@ -508,7 +508,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
-    expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+    expect(workflow).toContain('patch-hunks-overlap.mjs');
+    expect(workflow).toContain('A later DEV change overlaps the accepted PR');
   });
 });
 
