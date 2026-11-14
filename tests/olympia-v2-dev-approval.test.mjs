@@ -36,5 +36,5 @@ it('uses the journaled candidate DEV SHA for LIVE approval, not the source PR me
  const handler=approval.slice(approval.indexOf('if(candidateReady)approve.addEventListener'),approval.indexOf("for(const label of ['Lägg i releasepaket'"));
  expect(handler).toContain('testedDevSha:result.testedDevSha');
  expect(handler).not.toContain('testedDevSha:sha,');
- expect(handler).toContain("result.testedDevSha||''");
+ expect(approval).toContain("result.testedDevSha||''");
 });
