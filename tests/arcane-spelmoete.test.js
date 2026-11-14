@@ -4,6 +4,8 @@ import {describe,expect,it} from 'vitest';
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const migration=read('../supabase/migrations/20261112222237_arcane_spelmoete_day_time.sql');
 const panel=read('../features/chronicle/sessions.js');
+const panelCss=read('../features/chronicle/sessions.css');
+const headerCss=read('../features/home/topbar.css');
 const app=read('../legacy/app.js');
 
 describe('ARCANE Spelmöte',()=>{
@@ -22,6 +24,21 @@ describe('ARCANE Spelmöte',()=>{
   expect(migration).toContain("where time_of_day='midday'");
   expect(panel).toContain('setCampaignTimeOfDay(');
   expect(panel).toContain('Dygnsfasen är ett fristående tillstånd');
+ });
+ it('maps every shared phase to its registered HERMES CORE banner and crossfades without a reload',()=>{
+  for(const [key,label] of [['dawn','gryning'],['morning','formiddag'],['afternoon','eftermiddag'],['evening','skymning'],['night','natt']]){
+   expect(panel).toContain("key:'"+key+"'");
+   expect(panel).toContain("banner:'arcane-banner-"+label+"'");
+  }
+  expect(panel).toContain("arcane_system_assets?select=asset_key,asset_path&asset_key=in.");
+  expect(panel).toContain("/storage/v1/object/public/'+BANNER_BUCKET");
+  expect(panel).toContain("header.dataset.dayPhase=item.tone");
+  expect(headerCss).toContain('.alea-app-header .alea-phase-banner-image.is-visible {opacity:1}');
+  expect(headerCss).toContain('.alea-app-header .alea-phase-banner.is-fallback .alea-phase-banner-image {opacity:0}');
+  expect(headerCss).toContain('.alea-app-header .alea-phase-banner-image.is-visible{opacity:1}');
+  expect(headerCss).toContain('top:0;right:0;left:0;bottom:auto;height:116px');
+  expect(headerCss).toContain('object-fit:cover');
+  expect(panelCss).not.toContain('--alea-phase-filter');
  });
  it('provides separate day and rest actions with the existing rest thresholds',()=>{
   expect(panel).toContain("rpc/set_campaign_day_number");

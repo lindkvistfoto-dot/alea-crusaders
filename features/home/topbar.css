@@ -230,6 +230,9 @@
 }
 
 
+/* Phase artwork replaces the banner image only where the illustrated header is shown. */
+.alea-app-header .alea-phase-banner {display:none}
+
 /* v0.35.109: desktop-only illustrated banner.
    The image contains only the landscape and frame; all navigation elements
    remain separate, interactive HTML so both icons and future logos can change. */
@@ -246,6 +249,26 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, .6);
     padding: 16px clamp(24px, 3vw, 44px);
   }
+  .alea-app-header .alea-phase-banner {
+    display:block;
+    position:absolute;
+    z-index:0;
+    inset:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .alea-app-header .alea-phase-banner-image {
+    position:absolute;
+    inset:0;
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:fill;
+    opacity:0;
+    transition:opacity .85s ease;
+  }
+  .alea-app-header .alea-phase-banner.is-fallback .alea-phase-banner-image {opacity:0}
+  .alea-app-header .alea-phase-banner-image.is-visible {opacity:1}
   .alea-app-header > .bar {
     position: relative;
     z-index: 1;
@@ -302,6 +325,12 @@
     transform: translateX(-50%);
     background: url("../../assets/alea-desktop-header.avif") center / 100% 100% no-repeat;
     pointer-events: none;
+  }
+  .alea-app-header .alea-phase-banner {
+    left:50%;
+    right:auto;
+    width:min(var(--alea-desktop-grid-width), calc(100% - var(--alea-desktop-grid-gutters)));
+    transform:translateX(-50%);
   }
 
   .alea-app-header > .bar {
@@ -547,3 +576,45 @@ body::before{
   letter-spacing:.08em;
   line-height:1.2;
 }
+
+/* The phone header keeps the phase landscape as a shallow strip behind navigation. */
+@media(max-width:700px){
+  .alea-app-header{isolation:isolate}
+  .alea-app-header::before{
+    content:"";
+    position:absolute;
+    z-index:0;
+    top:0;right:0;left:0;height:116px;
+    background:url("../../assets/alea-desktop-header.avif") center/100% 100% no-repeat;
+    pointer-events:none;
+  }
+  .alea-app-header>.bar{position:relative;z-index:1}
+  .alea-app-header .alea-phase-banner{
+    display:block;
+    position:absolute;
+    z-index:0;
+    top:0;right:0;left:0;bottom:auto;height:116px;
+    overflow:hidden;
+    pointer-events:none;
+    transform:none;
+  }
+  .alea-app-header .alea-phase-banner-image{
+    position:absolute;
+    inset:0;
+    display:block;
+    width:100%;height:100%;
+    object-fit:cover;
+    object-position:center;
+    opacity:0;
+    transition:opacity .85s ease;
+  }
+  .alea-app-header .alea-phase-banner::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,#08060520 0%,#100e0c55 70%,#100e0c 100%);
+  }
+  .alea-app-header .alea-phase-banner.is-fallback .alea-phase-banner-image{opacity:0}
+  .alea-app-header .alea-phase-banner-image.is-visible{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){.alea-app-header .alea-phase-banner-image{transition:none}}

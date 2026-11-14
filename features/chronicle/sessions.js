@@ -3,12 +3,14 @@
 let activeGameSession=null,sessionUiBusy=false,sessionTimer=null;
 const $id=id=>document.getElementById(id);
 const PHASES=[
- {key:'dawn',icon:'🌅',name:'Soluppgång',tone:'dawn'},
- {key:'morning',icon:'🌤️',name:'Förmiddag',tone:'morning'},
- {key:'afternoon',icon:'☀️',name:'Eftermiddag',tone:'afternoon'},
- {key:'evening',icon:'🌆',name:'Skymning',tone:'evening'},
- {key:'night',icon:'🌙',name:'Natt',tone:'night'}
+ {key:'dawn',icon:'🌅',name:'Soluppgång',tone:'dawn',banner:'arcane-banner-gryning'},
+ {key:'morning',icon:'🌤️',name:'Förmiddag',tone:'morning',banner:'arcane-banner-formiddag'},
+ {key:'afternoon',icon:'☀️',name:'Eftermiddag',tone:'afternoon',banner:'arcane-banner-eftermiddag'},
+ {key:'evening',icon:'🌆',name:'Skymning',tone:'evening',banner:'arcane-banner-skymning'},
+ {key:'night',icon:'🌙',name:'Natt',tone:'night',banner:'arcane-banner-natt'}
 ];
+const BANNER_BUCKET='alea-hermes-public';
+let bannerAssetsPromise=null,bannerSwap=0,bannerFront=0,bannerRequestedPhase='morning';
 function canManage(){try{return !!(activeUser()?.admin||centralCampaignRole==='gm')}catch(_){return false}}
 function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function localDateTime(value=new Date()){
@@ -19,15 +21,65 @@ function localDate(){return localDateTime().slice(0,10)}
 function localTime(){return localDateTime().slice(11,16)}
 function characters(){try{return (chars||[]).filter(c=>c?._dbId&&c.ownerId!=='SLP').sort((a,b)=>String(a.identity?.namn||'').localeCompare(String(b.identity?.namn||''),'sv'))}catch(_){return []}}
 function phase(value){return PHASES.find(item=>item.key===value)||PHASES[1]}
+function ensureBannerLayers(header){
+ let layer=header.querySelector('.alea-phase-banner');
+ if(!layer){
+  layer=document.createElement('div');layer.className='alea-phase-banner is-fallback';layer.setAttribute('aria-hidden','true');
+  layer.innerHTML='<img class="alea-phase-banner-image" alt="" decoding="async"><img class="alea-phase-banner-image" alt="" decoding="async">';
+  header.insertBefore(layer,header.firstChild)
+ }
+ return layer
+}
+function bannerAssetUrl(path,key){
+ if(typeof path!=='string'||!new RegExp('^hermes/system-asset/'+key+'/[a-f0-9]{64}\\.webp$').test(path))return null;
+ let base='';try{base=typeof SUPABASE_URL==='string'?SUPABASE_URL:(window.ALEA_SUPABASE_CONFIG?.url||'')}catch(_){base=window.ALEA_SUPABASE_CONFIG?.url||''}
+ try{
+  const origin=new URL(base);if(origin.protocol!=='https:'||origin.username||origin.password||origin.pathname!=='/'||origin.search||origin.hash)return null;
+  return origin.origin+'/storage/v1/object/public/'+BANNER_BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')
+ }catch(_){return null}
+}
+async function loadBannerAssets(){
+ if(bannerAssetsPromise)return bannerAssetsPromise;
+ bannerAssetsPromise=(async()=>{
+  const keys=PHASES.map(item=>item.banner);
+  const rows=await dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=in.('+keys.join(',')+')');
+  const urls=new Map();
+  for(const row of Array.isArray(rows)?rows:[]){
+   const item=PHASES.find(candidate=>candidate.banner===row?.asset_key),url=item&&bannerAssetUrl(row.asset_path,item.banner);
+   if(url)urls.set(item.key,url)
+  }
+  await Promise.all([...urls.values()].map(url=>new Promise(resolve=>{
+   const image=new Image();image.onload=resolve;image.onerror=resolve;image.src=url;
+   if(image.complete)resolve()
+  })));
+  return urls
+ })().catch(error=>{console.warn('ARCANE-bannerbilder kunde inte läsas från HERMES CORE',error);bannerAssetsPromise=null;return new Map()});
+ return bannerAssetsPromise
+}
+function showBannerImage(layer,url,request){
+ const images=layer.querySelectorAll('.alea-phase-banner-image');
+ if(images.length!==2)return;
+ const current=images[bannerFront],nextIndex=1-bannerFront,next=images[nextIndex];
+ if(current?.dataset.url===url){layer.classList.remove('is-fallback');current.classList.add('is-visible');return}
+ next.onload=()=>{
+  if(request!==bannerSwap)return;
+  next.dataset.url=url;layer.classList.remove('is-fallback');next.classList.add('is-visible');current?.classList.remove('is-visible');bannerFront=nextIndex
+ };
+ next.onerror=()=>{if(request===bannerSwap){layer.classList.add('is-fallback');next.classList.remove('is-visible')}};
+ next.dataset.url='';next.src=url;
+ if(next.complete&&next.naturalWidth)next.onload()
+}
 function setBannerPhase(value){
  const item=phase(value),header=document.querySelector('.alea-app-header');
- if(header){header.dataset.dayPhase=item.tone;header.style.setProperty('--alea-phase-filter',({
-  dawn:'sepia(.14) saturate(1.2) hue-rotate(-8deg)',
-  morning:'sepia(.04) saturate(1.1) hue-rotate(5deg)',
-  afternoon:'sepia(.08) saturate(1.18) hue-rotate(18deg)',
-  evening:'sepia(.28) saturate(1.35) hue-rotate(-12deg)',
-  night:'brightness(.62) saturate(.85) hue-rotate(18deg)'
- })[item.tone])}
+ if(!header)return;
+ header.dataset.dayPhase=item.tone;bannerRequestedPhase=item.key;
+ const layer=ensureBannerLayers(header),request=++bannerSwap;
+ void loadBannerAssets().then(urls=>{
+  if(request!==bannerSwap||bannerRequestedPhase!==item.key)return;
+  const url=urls.get(item.key);
+  if(url)showBannerImage(layer,url,request);
+  else{layer.classList.add('is-fallback');layer.querySelectorAll('.alea-phase-banner-image').forEach(image=>image.classList.remove('is-visible'))}
+ })
 }
 window.aleaSetBannerTimePhase=setBannerPhase;
 async function refreshActive(){
