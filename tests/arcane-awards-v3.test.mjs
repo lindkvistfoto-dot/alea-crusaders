@@ -23,11 +23,11 @@ describe('ARCANE AWARDS V3',()=>{
   expect(admin).toContain('äkta RGBA-transparens utanför cirkeln');
  });
 
- it('records the verified DEV frame references and the LIVE availability gap',()=>{
+ it('records the verified DEV and LIVE frame references and defers criteria',()=>{
   const doc=read('docs/arcane-honors/ARCANE_AWARDS_V3.md');
   for(const tier of ['bronze','silver','gold']) expect(doc).toContain(`arcane-award-frame-${tier}`);
-  expect(doc).toContain('were not present');
+  expect(doc).toContain('published to LIVE through HERMES CORE');
   expect(doc).toContain('No schema migration is required.');
-  expect(doc).toContain('has no award-tier field');
+  expect(doc).toContain('Award tier criteria and tier assignment are deferred to the next phase.');
  });
 });
