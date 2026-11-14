@@ -15,3 +15,15 @@ describe('OLYMPIA GitHub installation token permission compatibility',()=>{
   expect(edge).toMatch(/decision === "resume_stale_candidate"\s*\?\s*\{[^}]*pull_requests: "read"/);
  });
 });
+
+describe('OLYMPIA release candidate source SHA resolution',()=>{
+ it('uses the PR merge SHA only to verify the source PR',()=>{
+  expect(edge).toContain('String(item.dev_sha || "").toLowerCase() !== sourceMergeSha');
+ });
+ it('resolves candidate locks and reports using the journaled DEV test SHA',()=>{
+  expect(edge).toContain('const testedDevSha = entry.testedDevSha;');
+  expect(edge).toContain('"olympia/auto-candidates/pr-" + number + "-" + testedDevSha');
+  expect(edge).toContain('inspectCandidate(token, item, issue.number, testedDevSha)');
+  expect(edge).toContain('testedDevSha,');
+ });
+});
