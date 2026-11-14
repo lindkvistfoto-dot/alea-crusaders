@@ -38,4 +38,7 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(js).toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:result.testedDevSha,candidateIssue:result.issue.number");
   expect(js).not.toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number");
  });
+ it('cache-busts the OLYMPIA client after changing recovery payload semantics',()=>{
+  expect(html).toContain('<script src="./dev-approval.js?v=20261114-resume-tested-dev-sha-v1">');
+ });
 });
