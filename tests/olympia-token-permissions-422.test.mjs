@@ -14,4 +14,10 @@ describe('OLYMPIA GitHub installation token permission compatibility',()=>{
  it('grants blocked-candidate recovery write access only where required',()=>{
   expect(edge).toMatch(/decision === "resume_stale_candidate"\s*\?\s*\{[^}]*pull_requests: "read"/);
  });
+ it('separates candidate write scopes from CI read scopes',()=>{
+  expect(edge).toMatch(/decision === "prepare_merged_dev_candidate_write"\s*\?\s*\{[^}]*contents: "write"[^}]*issues: "write"[^}]*pull_requests: "read"/);
+  expect(edge).toContain('const writeToken = await githubToken("prepare_merged_dev_candidate_write")');
+  expect(edge).toContain('const token = await githubToken("pull_request_list")');
+  expect(edge).not.toContain('const writeToken = await githubToken("approve_and_merge_dev")');
+ });
 });
