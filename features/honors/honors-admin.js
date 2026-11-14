@@ -171,23 +171,37 @@ export function renderHonorsAdmin(root, options = {}) {
       '</fieldset>') + '</div>';
   }
 
+  function bindAwardPreviews(definition) {
+    if (!definition || getCategory(definition) !== 'award') return;
+    const renderer = root.ownerDocument?.defaultView?.ArcaneAwardRenderer || globalThis.ArcaneAwardRenderer;
+    if (!renderer?.mountAward) return;
+    const motifUrl = assetImage(definition.image_asset_id);
+    root.querySelectorAll('[data-award-tier]').forEach(node => {
+      renderer.mountAward(node, {
+        imageAssetId: definition.image_asset_id,
+        motifUrl,
+        motifAlt: definition.name || 'Utmärkelsemotiv',
+        motifLabel: motifUrl ? '' : (definition.image_asset_id ? 'Förhandsvisning saknas' : 'Ladda upp bild ovan'),
+        tier: node.dataset.awardTier,
+        accent: definition.badge_frame_assets?.accent_color,
+        resolveAsset: key => assetImage(key)
+      });
+    });
+  }
+
   function renderVariantPanel(definition) {
     // Awards have one canonical image on the definition, not material-based relief variants.
     // Existing relief rows remain untouched in storage for backwards compatibility.
     if (definition && getCategory(definition) === 'award') {
       const image = assetImage(definition.image_asset_id);
       const tiers = AWARD_TIERS.map(tier => [tier, ({bronze:'Brons',silver:'Silver',gold:'Guld'})[tier]]);
-      const previews = tiers.map(([metal, label]) => {
-        const frame = assetImage(AWARD_FRAME_KEYS[metal]);
-        return '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
-          '<div class="honors-preview-art">' +
-          (image ? '<img class="honors-preview-relief" src="' + esc(image) + '" alt="Utmärkelsens bild">' : '<span class="honors-preview-empty">Ladda upp bild ovan</span>') +
-          (frame ? '<img class="honors-preview-frame" src="' + esc(frame) + '" alt="' + label + 'ram">' : '') +
-          '</div></div>';
-      }).join('');
+      const previews = tiers.map(([metal, label]) =>
+        '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
+          '<div class="honors-preview-art arcane-award-mount" data-award-tier="' + metal + '"></div></div>'
+      ).join('');
       return '<section class="honors-variant-library honors-award-single-image">' +
         '<h4>En bild · tre ramar</h4>' +
-        '<p>En motivbild används för alla valörer. Systemet väljer automatiskt den låsta V2.1-lagerkransramen.</p>' +
+        '<p>Samma motiv monteras i valörens låsta ram med ädelstenar och kronbakgrund.</p>' +
         '<div class="honors-preview-tiers">' + previews + '</div></section>';
     }
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
@@ -395,6 +409,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const badgeEditor=definition?getCategory(definition)==='badge':category==='badge';
     root.querySelector('[data-definition-image]').innerHTML = badgeEditor?'':imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
     root.querySelector('[data-variants]').innerHTML = renderVariantPanel(definition);
+    bindAwardPreviews(definition);
     bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
     const cat = root.querySelector('[data-fields] [name="category"]');
