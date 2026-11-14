@@ -86,6 +86,8 @@ async function githubToken(decision: string) {
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "resume_stale_candidate"
     ? { contents: "write", issues: "write", pull_requests: "read" }
+    : decision === "prepare_merged_dev_candidate_write"
+    ? { contents: "write", issues: "write", pull_requests: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
@@ -1519,9 +1521,9 @@ async function handleRequest(req: Request): Promise<Response> {
         return fail("Ange ett giltigt DEV-PR-nummer.", 400);
       }
       try {
-        // Reuse the existing least-privilege read and write token profiles.
-        // The installation may reject a combined checks/statuses plus write scope.
-        const writeToken = await githubToken("approve_and_merge_dev");
+        // Read CI with the read-only token below; keep candidate writes on the
+        // minimal write profile so unsupported checks/statuses scopes cannot reject token creation.
+        const writeToken = await githubToken("prepare_merged_dev_candidate_write");
         const token = await githubToken("pull_request_list");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
