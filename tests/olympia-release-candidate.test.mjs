@@ -52,6 +52,16 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).not.toContain('ITEM_ID" == "PILOT-001"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
  });
+ it('reuses only byte-identical migrations already present in LIVE',()=>{
+  const workflow=read('.github/workflows/olympia-release-candidate.yml');
+  expect(workflow).toContain('if [[ "$changed" == supabase/migrations/*.sql ]]');
+  expect(workflow).toContain('LIVE_MIGRATION_BLOB');
+  expect(workflow).toContain('DEV_MIGRATION_BLOB');
+  expect(workflow).toContain('"$LIVE_MIGRATION_BLOB" == "$DEV_MIGRATION_BLOB"');
+  expect(workflow).toContain('reusing byte-identical migration already present in LIVE');
+  expect(workflow).toContain('Candidate migration is new or differs from LIVE');
+  expect(workflow).toContain('[[ -z "$MIGRATIONS" ]]');
+ });
  it('retries the same decision from current DEV while preserving the request attempt',()=>{
   const edge=read('supabase/functions/olympia-control/index.ts');
   expect(edge).toContain('attempt = Math.max(1, Number(previous.attempt) || 1) + 1;');

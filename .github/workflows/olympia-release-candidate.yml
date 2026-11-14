@@ -194,6 +194,17 @@ jobs:
               if [[ "$INDEX_HANDLED" == "true" && "$changed" == "index.html" ]]; then
                 continue
               fi
+              if [[ "$changed" == supabase/migrations/*.sql ]]; then
+                LIVE_MIGRATION_BLOB="$(git -C "$SOURCE_DIR" rev-parse "HEAD:$changed" 2>/dev/null || true)"
+                DEV_MIGRATION_BLOB="$(git -C "$DEV_DIR" rev-parse "$PR_MERGE_SHA:$changed" 2>/dev/null || true)"
+                if [[ "$LIVE_MIGRATION_BLOB" =~ ^[0-9a-f]{40}$ && "$LIVE_MIGRATION_BLOB" == "$DEV_MIGRATION_BLOB" ]]; then
+                  echo "PR #$PR_NUMBER: reusing byte-identical migration already present in LIVE."
+                  continue
+                fi
+                echo "blocked_reason=Kandidaten innehåller en migration som inte redan finns byte-identiskt i LIVE; separat migrationsgranskning krävs." >> "$GITHUB_OUTPUT"
+                echo "::error::Candidate migration is new or differs from LIVE; separate migration review is required."
+                exit 1
+              fi
               if ! git -C "$SOURCE_DIR" cat-file -e "HEAD:$changed" 2>/dev/null; then
                 if ! git -C "$DEV_DIR" cat-file -e "$PR_MERGE_SHA:$changed" 2>/dev/null; then
                   echo "blocked_reason=PR #$PR_NUMBER deletes '$changed', which is absent from the current LIVE baseline. No LIVE change can be produced for this deletion." >> "$GITHUB_OUTPUT"
