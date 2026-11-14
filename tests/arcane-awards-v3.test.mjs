@@ -19,6 +19,8 @@ describe('ARCANE AWARDS V3',()=>{
   expect(admin).toContain("(isAward ? '' : '<label class=\"honors-wide\">Bildresurs-ID (HERMES)");
   expect(admin).toContain("(isAward ? '' : '<fieldset class=\"honors-frames honors-wide\">");
   expect(admin).toContain('En motivbild används för alla valörer.');
+  expect(admin).toContain('illustrationen inom 80 % av diametern');
+  expect(admin).toContain('äkta RGBA-transparens utanför cirkeln');
  });
 
  it('records the verified DEV frame references and the LIVE availability gap',()=>{
