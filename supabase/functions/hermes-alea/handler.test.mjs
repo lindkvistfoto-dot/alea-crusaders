@@ -9,6 +9,7 @@ describe('HERMES ALEA CORS preflight',()=>{
     'https://alea-crusaders.pages.dev',
     'https://commit.alea-crusaders.pages.dev',
     'https://branch.commit.alea-crusaders.pages.dev',
+    'https://lindkvistfoto-dot.github.io',
   ])('accepts the DEV Pages project origin %s',async origin=>{
     const handler=createVerifyHandler({env:envFor(),decode:async()=>new Uint8Array()});
     const response=await handler(new Request('https://supabase.test/functions/v1/hermes-alea',{
