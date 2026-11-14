@@ -237,7 +237,7 @@ NODE
                 fi
                 # No filesystem path traversal or symlink import from a PR.
                 [[ "$changed" != /* && "$changed" != *../* && "$changed" != ../* ]] || exit 1
-                [[ "$(git -C "$DEV_DIR" ls-tree "$PR_MERGE_SHA" -- "$changed" | awk '{print $1}')" == "100644" ]] || {
+                [[ "$(git -C "$DEV_DIR" ls-tree "$PR_PATCH_SHA" -- "$changed" | awk '{print $1}')" == "100644" ]] || {
                   echo "::error::Only ordinary approved files can be introduced to LIVE: $changed"
                   exit 1
                 }
