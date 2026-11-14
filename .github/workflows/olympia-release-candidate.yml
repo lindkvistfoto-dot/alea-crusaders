@@ -109,15 +109,6 @@ jobs:
 
           CURRENT_DEV_SHA="$(git -C "$DEV_DIR" rev-parse HEAD)"
           git -C "$DEV_DIR" merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA" || { echo "::error::The accepted DEV version is no longer in the development history."; exit 1; }
-          TESTED_IMAGES="$(git -C "$DEV_DIR" show "$TESTED_SHA:olympia/work-items.json" | jq -cS --arg item "$ITEM_ID" '[.items[] | select(.id==$item) | (.images // [])] | .[0] // []')"
-          CURRENT_IMAGES="$(jq -cS '.images // []' <<< "$ITEM_JSON")"
-          [[ "$TESTED_IMAGES" == "$CURRENT_IMAGES" ]] || { echo "::error::The image inventory changed after Zeus accepted this DEV version. Refresh OLYMPIA and review the updated images before release."; exit 1; }
-          if git -C "$DEV_DIR" diff --name-only "$TESTED_SHA..$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}" | grep -q .; then
-            echo "::error::The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again."
-            echo "blocked_reason=Godkända DEV-filer har ändrats efter acceptansen. Granska aktuell version i OLYMPIA." >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-
           echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
           echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
           echo "primary_pr=$PRIMARY_PR" >> "$GITHUB_OUTPUT"
@@ -128,6 +119,9 @@ jobs:
           echo "source_pr_sha=$SOURCE_PR_SHA" >> "$GITHUB_OUTPUT"
           SOURCE_PRS_CSV="$(IFS=,; echo "${SOURCE_PRS[*]}")"
           echo "source_prs=$SOURCE_PRS_CSV" >> "$GITHUB_OUTPUT"
+          TESTED_IMAGES="$(git -C "$DEV_DIR" show "$TESTED_SHA:olympia/work-items.json" | jq -cS --arg item "$ITEM_ID" '[.items[] | select(.id==$item) | (.images // [])] | .[0] // []')"
+          CURRENT_IMAGES="$(jq -cS '.images // []' <<< "$ITEM_JSON")"
+          [[ "$TESTED_IMAGES" == "$CURRENT_IMAGES" ]] || { echo "::error::The image inventory changed after Zeus accepted this DEV version. Refresh OLYMPIA and review the updated images before release."; exit 1; }
 
           RUNNING_WORKFLOW_SHA="$(git -C "$REQUEST_DIR" rev-parse "$GITHUB_SHA:.github/workflows/olympia-release-candidate.yml" 2>/dev/null || true)"
           CURRENT_WORKFLOW_SHA="$(git -C "$DEV_DIR" rev-parse "HEAD:.github/workflows/olympia-release-candidate.yml" 2>/dev/null || true)"
@@ -165,6 +159,28 @@ jobs:
             git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA" || { echo "::error::Accepted DEV version does not contain source PR #$PR_NUMBER."; exit 1; }
             CHANGED_FILES="$(git -C "$DEV_DIR" diff --name-only "$PR_PATCH_BASE_SHA" "$PR_PATCH_SHA" -- "${ALLOWED_FILES[@]}")"
             [[ -n "$CHANGED_FILES" ]] || { echo "::error::PR #$PR_NUMBER contains no changes in the approved source scope."; exit 1; }
+            LATER_FILES="$(git -C "$DEV_DIR" diff --name-only "$TESTED_SHA" "$CURRENT_DEV_SHA" -- "${ALLOWED_FILES[@]}")"
+            while IFS= read -r later_file; do
+              [[ -z "$later_file" ]] && continue
+              grep -Fxq "$later_file" <<< "$CHANGED_FILES" || continue
+              APPROVED_PATCH="$OUTPUT_DIR/pr-$PR_NUMBER-approved.patch"
+              LATER_PATCH="$OUTPUT_DIR/pr-$PR_NUMBER-later.patch"
+              git -C "$DEV_DIR" diff --no-ext-diff --unified=0 "$PR_PATCH_BASE_SHA" "$PR_PATCH_SHA" -- "$later_file" > "$APPROVED_PATCH"
+              git -C "$DEV_DIR" diff --no-ext-diff --unified=0 "$TESTED_SHA" "$CURRENT_DEV_SHA" -- "$later_file" > "$LATER_PATCH"
+              set +e
+              node "$DEV_DIR/scripts/olympia/patch-hunks-overlap.mjs" "$APPROVED_PATCH" "$LATER_PATCH"
+              OVERLAP_STATUS=$?
+              set -e
+              if [[ "$OVERLAP_STATUS" -eq 2 ]]; then
+                echo "::error::A later DEV change overlaps the accepted PR #$PR_NUMBER patch in $later_file. Zeus must review the updated feature before release."
+                echo "blocked_reason=En senare DEV-ändring överlappar den Zeus-godkända ändringen. Granska den aktuella versionen i OLYMPIA." >> "$GITHUB_OUTPUT"
+                exit 1
+              elif [[ "$OVERLAP_STATUS" -ne 0 ]]; then
+                echo "::error::OLYMPIA could not safely compare the accepted and later patch ranges in $later_file."
+                echo "blocked_reason=Ändringsområdena kunde inte jämföras säkert. Granska aktuell DEV-version i OLYMPIA." >> "$GITHUB_OUTPUT"
+                exit 1
+              fi
+            done <<< "$LATER_FILES"
             while IFS= read -r changed; do
               [[ -z "$changed" ]] && continue
               grep -Fxq "$changed" <<< "$ALLOWED_FILES_TEXT" || { echo "::error::PR #$PR_NUMBER changes an unapproved candidate file: $changed"; exit 1; }

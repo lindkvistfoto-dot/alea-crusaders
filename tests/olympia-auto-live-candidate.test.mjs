@@ -21,7 +21,8 @@ describe('OLYMPIA safe automatic LIVE candidate staging',()=>{
   expect(edge).toContain('PR-CI är inte helt godkänd');
   expect(edge).toContain('recordDevAcceptance(token, data.pullRequestNumber');
   expect(edge).toContain('autoPrepareLiveCandidate(token, data.pullRequestNumber');
-  expect(edge).toContain('Berörda filer har ändrats efter DEV-mergen');
+  expect(edge).toContain('laterChangesOverlapAcceptedPatch(token, item, changedSourceFiles)');
+  expect(edge).toContain('Överlappande ändringar har ändrats efter DEV-mergen');
   expect(edge).toContain('LIVE är oförändrat.');
  });
  it('reuses existing candidate bridge and avoids LIVE publication',()=>{

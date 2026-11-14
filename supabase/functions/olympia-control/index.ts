@@ -352,6 +352,59 @@ async function verifyReleaseSources(token: string, item: any, testedSha: string)
   const primary = sourcePRs.find(pr => Number(pr.number) === item.pr_number);
   return !!primary && primary.merge_commit_sha?.toLowerCase() === String(item.dev_sha).toLowerCase();
 }
+function parsePatchRanges(patch: unknown) {
+  if (typeof patch !== "string" || !patch.length) return null;
+  const ranges: Array<{ start: number; end: number; insertion: boolean }> = [];
+  const pattern = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(patch))) {
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(count)) return null;
+    ranges.push({ start, end: count === 0 ? start : start + count - 1, insertion: count === 0 });
+  }
+  return ranges.length ? ranges : null;
+}
+function patchRangesOverlap(approvedPatch: unknown, laterPatch: unknown) {
+  const approved = parsePatchRanges(approvedPatch);
+  const later = parsePatchRanges(laterPatch);
+  if (!approved || !later) return null;
+  for (const a of approved) for (const b of later) {
+    if (a.insertion || b.insertion) {
+      const point = a.insertion ? a.start : b.start;
+      const region = a.insertion ? b : a;
+      if (point >= region.start - 1 && point <= region.end + 1) return true;
+    } else if (a.start <= b.end && b.start <= a.end) return true;
+  }
+  return false;
+}
+async function laterChangesOverlapAcceptedPatch(token: string, item: any, laterFiles: any[]) {
+  const protectedPaths = new Set(Array.isArray(item.features) ? item.features : []);
+  const relevant = laterFiles.filter(file => protectedPaths.has(String(file.filename || "")));
+  if (!relevant.length) return false;
+  const approvedPatches = new Map<string, string[]>();
+  for (const number of item.release_source_prs || []) {
+    const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number + "/files?per_page=100");
+    if (!Array.isArray(files) || files.length >= 100) return true;
+    for (const file of files) {
+      if (protectedPaths.has(String(file.filename || "")) && typeof file.patch === "string") {
+        const patches = approvedPatches.get(file.filename) || [];
+        patches.push(file.patch);
+        approvedPatches.set(file.filename, patches);
+      }
+    }
+  }
+  for (const file of relevant) {
+    const laterPatch = file.patch;
+    const accepted = approvedPatches.get(file.filename) || [];
+    if (typeof laterPatch !== "string" || !accepted.length) return true;
+    for (const acceptedPatch of accepted) {
+      const overlap = patchRangesOverlap(acceptedPatch, laterPatch);
+      if (overlap !== false) return true;
+    }
+  }
+  return false;
+}
 async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any, currentSha: string) {
   const acceptedIssues = issues.filter(issue => {
     const body = String(issue.body || "");
@@ -365,7 +418,8 @@ async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any
     if (tested === currentSha) return true;
     const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + tested + "..." + currentSha);
     if (comparison.status !== "ahead" || comparison.ahead_by > 100 || !Array.isArray(comparison.files) || comparison.files.length >= 300) continue;
-    if (!comparison.files.some((file: any) => protectedPaths.has(file.filename))) return true;
+    const relevantFiles = comparison.files.filter((file: any) => protectedPaths.has(file.filename));
+    if (!relevantFiles.length || !await laterChangesOverlapAcceptedPatch(token, item, relevantFiles)) return true;
   }
   return false;
 }
@@ -1567,8 +1621,9 @@ async function handleRequest(req: Request): Promise<Response> {
           return fail("DEV-historiken efter PR-merge kunde inte verifieras fullständigt. Ingen LIVE-kandidat skapades.", 409);
         }
         const sourceFiles = new Set(item.features || []);
-        if (comparison.files.some((file: any) => sourceFiles.has(String(file.filename || "")))) {
-          return fail("Berörda filer har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
+        const changedSourceFiles = comparison.files.filter((file: any) => sourceFiles.has(String(file.filename || "")));
+        if (changedSourceFiles.length && await laterChangesOverlapAcceptedPatch(token, item, changedSourceFiles)) {
+          return fail("Överlappande ändringar har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
         }
 
         const checkResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
