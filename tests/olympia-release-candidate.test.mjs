@@ -22,7 +22,8 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base "$PR_HEAD_SHA" "$PR_MERGE_PARENT_SHA"');
   expect(workflow).toContain('git -C "$DEV_DIR" diff --binary --full-index "$PR_PATCH_BASE_SHA" "$PR_PATCH_SHA"');
   expect(workflow).toContain('live.replace(liveLabel,baseLabel)!==base');
-  expect(workflow).toContain('replaced sessions.js after verifying LIVE differed only by the approved Spelmöte terminology change.');
+  expect(workflow).toContain('reconciled the reviewed Spelmöte V2 module and preserved the LIVE API and paused indicator.');
+  expect(workflow).toContain('reconcile-chronicle-live-conflicts.mjs');
   expect(workflow).toContain('git -C "$SOURCE_DIR" add -A');
   expect(workflow).toContain('EXPECTED_TREE: ${{ steps.candidate.outputs.candidate_tree }}');
   expect(workflow).toContain('ACTUAL_TREE="$(git -C "$SOURCE_DIR" write-tree)"');
