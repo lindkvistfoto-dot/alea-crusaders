@@ -258,7 +258,7 @@ async function renderAwards(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
-   const count=counts.get(String(d.id))||1,tier='bronze'; // Award tier policy remains the existing grant-level policy.
+   const count=counts.get(String(d.id))||1,tier='bronze'; // Grants have no award-tier field; retain the current bronze fallback and count.
    const art=document.createElement('div');art.className='trophy-room-badge-art';
    const award=root.ArcaneAwardRenderer?.awardRenderLayers(d.image_asset_id,tier)||{imageAssetId:d.image_asset_id||null,frameAssetKey:'arcane-award-frame-'+tier};
    const asset=assetMap.get(award.imageAssetId);

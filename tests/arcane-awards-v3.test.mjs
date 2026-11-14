@@ -28,5 +28,6 @@ describe('ARCANE AWARDS V3',()=>{
   for(const tier of ['bronze','silver','gold']) expect(doc).toContain(`arcane-award-frame-${tier}`);
   expect(doc).toContain('were not present');
   expect(doc).toContain('No schema migration is required.');
+  expect(doc).toContain('has no award-tier field');
  });
 });

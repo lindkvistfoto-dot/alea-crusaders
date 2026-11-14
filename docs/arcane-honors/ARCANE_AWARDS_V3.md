@@ -16,6 +16,7 @@ All three DEV records are 2048 × 2048. The LIVE Supabase project was queried du
 
 - `honor_definitions.image_asset_id` remains the single active award motif pointer.
 - Existing definitions and `honor_grants` are unchanged. No schema migration is required.
+- `honor_grants` has no award-tier field or structured criteria evaluator. The current Trophy Room therefore retains its bronze fallback and assignment-count marker; this change does not invent tier thresholds or alter grant history.
 - Award image upload and replacement continue through the existing HERMES ALEA `definition` target. Activation updates the reference only after upload verification succeeds; a failed upload leaves the old reference intact.
 - Existing relief rows and legacy frame metadata are retained in storage. They are not exposed as award configuration and are not deleted by this change.
 - No database migration or asset deletion is included.
