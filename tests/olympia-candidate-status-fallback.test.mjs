@@ -16,13 +16,13 @@ describe('OLYMPIA candidate status survives preview verification failure',()=>{
  it('keeps a failed Pandoras Ask visible with its reason and workflow run',()=>{
   expect(diagnostic).toContain('BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: ');
   expect(diagnostic).toContain('workflowRunUrl');
-  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished)');
+  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished && !devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase()))');
  });
  it('marks a merged candidate published only when its merge is in deployed main',()=>{
   expect(edge).toContain('liveMergePublicationStatus(candidateToken, mergeMatch[1])');
   expect(edge).toContain('await verifyPublishedManifest("main", liveSha)');
   expect(edge).toContain('["ahead", "identical"].includes(String(comparison.status || ""))');
-  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished)');
+  expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished && !devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase()))');
   expect(edge).toContain('livePublished');
   expect(html).toContain('Publicerad i LIVE · verifierad');
   expect(ui).toContain("candidate?.published===true");

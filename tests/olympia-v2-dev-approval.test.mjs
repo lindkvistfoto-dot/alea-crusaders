@@ -33,8 +33,8 @@ it('reads PR and CI through the authenticated ALEA backend',()=>{
  expect(approval).toContain('window.olympiaV2Request');
 });
 it('uses the journaled candidate DEV SHA for LIVE approval, not the source PR merge SHA',()=>{
- const handler=approval.slice(approval.indexOf('if(candidateReady)approve.addEventListener'),approval.indexOf("for(const label of ['Lägg i releasepaket'"));
- expect(handler).toContain('testedDevSha:result.testedDevSha');
- expect(handler).not.toContain('testedDevSha:sha,');
+ expect(approval).toContain('testedDevSha:result.testedDevSha');
+ expect(approval).toContain('testedDevSha:data.testedDevSha');
+ expect(approval).not.toContain('testedDevSha:sha,');
  expect(approval).toContain("result.testedDevSha||''");
 });

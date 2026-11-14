@@ -213,7 +213,7 @@ async function readDevDecisionLock(token: string, number: number, headSha: strin
 }
 async function reserveDevDecision(token: string, number: number, headSha: string, devOnly: boolean, devBaseSha: string) {
   const selectedSha = (devOnly ? headSha : devBaseSha).toLowerCase();
-  if (!/^[0-9a-f]{40}$/.test(selectedSha) || selectedSha === headSha.toLowerCase()) throw new Error("DEV_DECISION_LOCK_INVALID");
+  if (!/^[0-9a-f]{40}$/.test(selectedSha) || (!devOnly && selectedSha === headSha.toLowerCase())) throw new Error("DEV_DECISION_LOCK_INVALID");
   const repoPath = "/repos/" + OWNER + "/" + REPO;
   const name = devDecisionRefName(number, headSha);
   let lock = await readDevDecisionLock(token, number, headSha);
@@ -1327,10 +1327,15 @@ async function handleRequest(req: Request): Promise<Response> {
         const candidateToken = await githubToken("auto_candidate_diagnostics");
         const devOnlyRefs = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/git/matching-refs/heads/olympia/dev-decisions/pr-");
         if (!Array.isArray(devOnlyRefs)) throw new Error("GITHUB_DEV_DECISION_REFS_INVALID");
-        const devOnlyByNumber = new Map<number, string>();
+        const devOnlyHeadsByNumber = new Map<number, Set<string>>();
         for (const entry of devOnlyRefs) {
           const match = String(entry.ref || "").match(/^refs\/heads\/olympia\/dev-decisions\/pr-([1-9][0-9]*)-([0-9a-f]{40})$/i);
-          if (match && String(entry.object?.sha || "").toLowerCase() === match[2].toLowerCase()) devOnlyByNumber.set(Number(match[1]), match[2].toLowerCase());
+          if (match && String(entry.object?.sha || "").toLowerCase() === match[2].toLowerCase()) {
+            const number = Number(match[1]);
+            const heads = devOnlyHeadsByNumber.get(number) || new Set<string>();
+            heads.add(match[2].toLowerCase());
+            devOnlyHeadsByNumber.set(number, heads);
+          }
         }
         const botLogin = await appBotLogin();
         const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(botLogin));
@@ -1371,8 +1376,8 @@ async function handleRequest(req: Request): Promise<Response> {
               ...pr,
               livePublished,
               liveMergeSha: livePublished ? publishedCandidatePrs.get(number) : null,
-              devOnly: Boolean(pr.merged_at && devOnlyByNumber.get(number) === String(pr.head?.sha || "").toLowerCase()),
-              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished && devOnlyByNumber.get(number) !== String(pr.head?.sha || "").toLowerCase()),
+              devOnly: Boolean(pr.merged_at && devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase())),
+              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished && !devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase())),
             };
           })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
