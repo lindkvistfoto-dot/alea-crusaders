@@ -25,6 +25,13 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(js).toContain('Skapa ny LIVE-kandidat från aktuell LIVE');
   expect(js).toContain('Ingen ändring publiceras till LIVE.');
  });
+ it('retries the same blocked Zeus journal when candidate creation produced no LIVE PR',()=>{
+  const resume=edge.slice(edge.indexOf('if (data.action === "resume_stale_candidate")'));
+  expect(resume).toContain('if (releaseNumber > 0)');
+  expect(resume).toContain('candidate.releasePr !== null || candidate.releaseUrl !== null');
+  expect(resume).toContain('startCandidateRequest(token, data.candidateIssue, item');
+  expect(resume).toContain('reuses its decision');
+ });
  it('keeps final LIVE approval bound to a separate explicit action',()=>{
   expect(js).toContain("decision:'final_approval'");
   expect(js).toContain('LIVE-beslut är låsta.');
