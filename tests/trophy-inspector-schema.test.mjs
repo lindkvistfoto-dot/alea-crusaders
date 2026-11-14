@@ -20,15 +20,15 @@ describe('Trophy Inspector schema release',()=>{
     expect(migration).toContain("d.category in ('award', 'badge')");
     expect(migration).toContain('security_barrier = true');
     expect(policyMigration).toContain('security_invoker = true');
-    expect(policyMigration).toContain('honor_grants_trophy_public_select');
-    expect(policyMigration).toContain("category in ('award', 'badge')");
+    expect(policyMigration).toContain('security_invoker = true');
+    expect(policyMigration).not.toMatch(/\b(create|drop)\s+policy\b/i);
   });
 
   it('keeps grant reasons and administrative columns out of public reads',()=>{
     expect(functionMigration).toContain('security definer');
     expect(functionMigration).toContain("set search_path = ''");
     expect(functionMigration).toContain('earned_gold_stars smallint');
-    expect(functionMigration).toContain('drop policy if exists honor_grants_trophy_public_select');
+    expect(functionMigration).not.toMatch(/\bdrop\s+policy\b/i);
     expect(functionMigration).toContain('select g.honor_id, g.character_id, g.granted_at, g.earned_gold_stars');
     expect(functionMigration).not.toMatch(/select g\.[^\n]*reason/);
   });
@@ -40,5 +40,14 @@ describe('Trophy Inspector schema release',()=>{
     expect(privateMigration).toContain('security invoker');
     expect(privateMigration).not.toMatch(/\bdrop\s+(function|view|table|policy)\b/i);
     expect(privateMigration).not.toMatch(/\b(delete\s+from|truncate|alter\s+table\s+.*drop)\b/i);
+  }); 
+  });
+
+  it('uses additive, non-destructive and idempotent schema changes',()=>{
+    const all=[migration,policyMigration,functionMigration,privateMigration].join('\n');
+    expect(migration).toContain('add column if not exists earned_gold_stars');
+    expect(migration).toContain('if existing_definition is null then');
+    expect(all).not.toMatch(/\bdrop\s+(constraint|policy|function|view|table)\b/i);
+    expect(all).not.toMatch(/\b(delete\s+from|truncate\s+table)\b/i);
   });
 });
