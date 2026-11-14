@@ -5,11 +5,28 @@
 alter table public.honor_grants
   add column if not exists earned_gold_stars smallint not null default 0;
 
-alter table public.honor_grants
-  drop constraint if exists honor_grants_earned_gold_stars_range;
-alter table public.honor_grants
-  add constraint honor_grants_earned_gold_stars_range
-  check (earned_gold_stars between 0 and 3);
+-- Add the range check only when it is absent. If the named constraint exists
+-- with a different definition, stop safely instead of replacing it.
+do $migration$
+declare
+  existing_definition text;
+begin
+  select regexp_replace(lower(pg_get_constraintdef(c.oid)), '[[:space:]()]', '', 'g')
+    into existing_definition
+  from pg_constraint c
+  where c.conrelid = 'public.honor_grants'::regclass
+    and c.conname = 'honor_grants_earned_gold_stars_range'
+    and c.contype = 'c';
+
+  if existing_definition is null then
+    alter table public.honor_grants
+      add constraint honor_grants_earned_gold_stars_range
+      check (earned_gold_stars between 0 and 3);
+  elsif existing_definition <> 'checkearned_gold_stars>=0andearned_gold_stars<=3' then
+    raise exception 'Existing honor_grants_earned_gold_stars_range has an unexpected definition: %', existing_definition;
+  end if;
+end
+$migration$;
 
 create or replace view public.arcane_trophy_public_definitions
 with (security_barrier = true)
