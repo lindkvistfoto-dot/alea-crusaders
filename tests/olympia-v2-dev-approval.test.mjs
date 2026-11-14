@@ -1,40 +1,555 @@
+import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {it,expect} from 'vitest';
-const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
-const approval=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
-const ci=readFileSync(new URL('../supabase/functions/_shared/olympia-ci.js',import.meta.url),'utf8');
-it('verifies Zeus session before DEV approval',()=>{
- expect(approval).toContain("action:'session_check'");
- expect(approval).toContain("action:'approve_and_merge_dev'");
- expect(approval).toContain('pullRequestHeadSha:sha');
- expect(approval).toContain('result.merged!==true');
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+
+describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
+  it('preserves a versioned baseline and the full captured PR history',()=>{
+    const baseline=JSON.parse(read('olympia/baseline-001.json'));
+    const inventory=JSON.parse(read('olympia/history/pr-inventory-001.json'));
+    expect(baseline.baseline_id).toBe('OLYMPIA-BASELINE-001');
+    expect(baseline.refs.development.sha).toMatch(/^[a-f0-9]{40}$/);
+    expect(baseline.refs.live.sha).toMatch(/^[a-f0-9]{40}$/);
+    expect(inventory.complete).toBe(true);
+    expect(inventory.pull_requests).toHaveLength(baseline.pull_requests.total);
+    expect(baseline.approvals.zeus_product_acceptances).toEqual([]);
+  });
+
+  it('shows the verified Astrid pilot ready without claiming human approval',()=>{
+    const queue=JSON.parse(read('olympia/work-items.json'));
+    expect(queue.items.map(x=>x.id)).toEqual(['PILOT-001','PILOT-002','PILOT-003']);
+    expect(queue.items[0].ready_for_human_acceptance).toBe(true);
+    expect(queue.items[0].pr_number).toBe(385);
+    expect(queue.items[0].dev_sha).toMatch(/^[a-f0-9]{40}$/);
+    expect(queue.items[0].acceptance.decision).toBeNull();
+  });
+
+  it('tracks PILOT-002 image publication and allows visual acceptance after all images are verified in DEV',()=>{
+    const queue=JSON.parse(read('olympia/work-items.json'));
+    const pilot=queue.items.find(x=>x.id==='PILOT-002');
+    expect(pilot.image_count).toBe(3);
+    expect(pilot.images).toHaveLength(3);
+    expect(new Set(pilot.images.map(image=>image.asset_key)).size).toBe(3);
+    expect(pilot.images.every(image=>image.alpha===true&&image.width===1143&&image.height===1376)).toBe(true);
+    expect(pilot.images.every(image=>image.dev_publication_status==='verified')).toBe(true);
+    expect(pilot.image_status).toBe('published');
+    expect(pilot.release_source_prs).toEqual([432,434,435,436,437,448]);
+    expect(pilot.dev_sha).toBe('53701a734a4f7eb971d446c5fe0c816fc176cb15');
+    expect(pilot.ready_for_human_acceptance).toBe(true);
+    expect(pilot.features).toEqual(['features/trophy-room/room.css','features/trophy-room/room.js','index.html']);
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('imagesReady=imageCount===0||item.image_status==="published"');
+    expect(page).toContain('Bilder: ');
+  });
+
+  it('shows the four mobile-first views and gates decisions on a ready DEV version',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('PR-flöde');
+    expect(page).toContain('data-panel="images"');
+    expect(page).toContain('data-panel="storage"');
+    expect(page).toContain('Historik');
+    expect(page).toContain('ready_for_human_acceptance');
+    expect(page).toContain('/^[0-9a-f]{40}$/i.test(testedSha)');
+    expect(page).toContain('i.user.type==="Bot"');
+    expect(page).toContain('github.com/"+owner+"/"+repo+"/issues/new');
+    const script=page.split('<script>')[1]?.split('</script>')[0]||'';
+    expect(script.length).toBeGreaterThan(0);
+    expect(()=>new Function(script)).not.toThrow();
+    expect(page).toContain('data-preview-toggle');
+    expect(page).toContain('data-preview-fullscreen');
+    expect(page).toContain('class="steps" aria-label="Ändringens steg"');
+    expect(page).toContain("esc(item.purpose||item.expected_result||\"\")+'</p>'+stepHtml");
+  });
+
+  it('provides honest preview states and a single swipeable mobile workspace',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('touchstart');
+    expect(page).toContain('Math.abs(dx)<Math.abs(dy)*1.5');
+    expect(page).toContain('olympia-preview');
+    expect(page).toContain('function cloudflarePreview(sha,pullRequestNumber)');
+    expect(page).toContain('latest.state==="success"&&latest.url');
+    expect(page).toContain('events.sort(function(a,b){var ar=');
+    expect(page).toContain('result.state==="failed"');
+    expect(page).toContain('previewMarkup(candidateStatus.releasePrSha,"LIVE-kandidat",candidateStatus.releasePr)');
+    expect(page).toContain('.pages\\.dev');
+    expect(page).toContain('data-pr-approve');
+    expect(page).toContain('aria-busy');
+    expect(page).toContain('Registrerat · behandlar…');
+    expect(page).toContain('Slutgodkänn LIVE');
+    expect(page).toContain('Visa i LIVE');
+  });
+
+  it('copies the OLYMPIA static pages into the Pages build output',()=>{
+    const vite=read('vite.config.js');
+    expect(vite).toContain('copyStaticTree("alea-copy-olympia", "olympia", "olympia")');
+  });
+
+  it('uses only the exact Cloudflare Pages check summary URL for a successful queried SHA',async()=>{
+    const page=read('olympia/zeus-control.html');
+    const helperStart=page.indexOf('function pagesPreviewUrl(value){');
+    const functionStart=page.indexOf('async function cloudflarePreview(sha,pullRequestNumber){',helperStart);
+    const functionEnd=page.indexOf('function previewMarkup(sha,label,pullRequestNumber){',functionStart);
+    const source=page.slice(helperStart,functionEnd);
+    const sha='a'.repeat(40);
+    const url='https://ca4ed2b2.alea-crusaders.pages.dev/';
+    const check=(overrides={})=>({name:'Cloudflare Pages',head_sha:sha,status:'completed',conclusion:'success',created_at:'2026-11-01T12:01:00Z',completed_at:'2026-11-01T12:02:00Z',details_url:'https://dash.cloudflare.com/deployments/logs',output:{summary:'<strong>Preview URL:</strong> '+url+'<br>Branch Preview URL: https://codex-preview.alea-crusaders.pages.dev'},...overrides});
+    const previewFor=(status,checks)=>{
+      const window={olympiaAuthenticatedRequest:async()=>({response:{ok:true},result:{ok:true,statuses:status,checkRuns:checks}})};
+      const run=new Function('window','previewBySha','previewRequests',`${source}; return cloudflarePreview;`);
+      return run(window,{},{});
+    };
+    await expect(previewFor([],[check()])(sha,457)).resolves.toEqual({state:'ready',url,sha});
+    await expect(previewFor([],[check({head_sha:'b'.repeat(40)})])(sha,457)).resolves.toEqual({state:'missing',sha});
+    await expect(previewFor([],[check({conclusion:'failure'})])(sha,457)).resolves.toEqual({state:'failed',sha});
+    await expect(previewFor([],[check({output:{summary:'Deployment finished without a preview URL'}})])(sha,457)).resolves.toEqual({state:'missing',sha});
+    await expect(previewFor([],[check({output:{summary:'Preview URL: https://example.com/abc.pages.dev'}})])(sha,457)).resolves.toEqual({state:'missing',sha});
+    await expect(previewFor([],[check({status:'in_progress',conclusion:null,output:{summary:'Building'}})])(sha,457)).resolves.toEqual({state:'pending',sha});
+    await expect(previewFor([{context:'Cloudflare Pages',state:'pending',target_url:url,updated_at:'2026-11-01T12:03:00Z'}],[check()])(sha,457)).resolves.toEqual({state:'pending',sha});
+  });
+  it('routes ordinary merged DEV PRs through the same Zeus decision flow',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(page).toContain('id:"PR-"+Number(pr.number)');
+    expect(page).toContain('prWorkItem(sourcePr)');
+    expect(edge).toContain('const generic = itemId.match(/^PR-([1-9][0-9]*)$/)');
+    expect(edge).toContain('action === "approve_and_merge_dev"');
+    expect(edge).toContain('merge_method: "squash"');
+    expect(edge).toContain('data.pullRequestHeadSha');
+    expect(edge).toContain('event: "APPROVE"');
+    expect(edge).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(edge).not.toContain('PILOT-003');
+    expect(workflow).toContain('PILOT-[0-9]{3}|PR-[1-9][0-9]*');
+    expect(workflow).not.toContain('PILOT-003');
+    expect(workflow).toContain('gh api --paginate "repos/$REPOSITORY/pulls/$PRIMARY_PR/files?per_page=100"');
+    expect(edge).toContain('if (data.decision === "final_approval")');
+  });
+
+  it('keeps the main flow compact and orders decisions before active work',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('function itemPriority(item)');
+    expect(page).toContain('.sort(function(a,b){return itemPriority(a)-itemPriority(b)})');
+    expect(page).toContain('if(candidateStatus&&candidateStatus.candidateReady)return 0');
+    expect(page).toContain('if(ready||accepted)return 0');
+    expect(page).toContain('if(published)return 3');
+    expect(page).toContain('class="auth-status"');
+    expect(page).toContain('authBox.dataset.state');
+    expect(page).toContain('.step.skipped');
+    expect(page).toContain("rejected?'skipped'");
+    expect(page).toContain('var registered=new Set(items.flatMap');
+    expect(page).toContain('var listed=(openPullRequests||[]).filter(function(pr){return !registered.has(Number(pr.number))})');
+    expect(page).toContain('if(published.length)html+=\'<details class="details"><summary>Publicerade');
+    expect(page).not.toContain('id="live-pr-list"');
+    expect(page).toContain('Klart för granskning');
+    expect(page).toContain('Klart för LIVE');
+    expect(page).not.toContain('id="zeus-auth" class="notice"');
+  });
+
+  it('requires the live decision snapshot to include the current PR and image scope',async()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('async function verifyLiveScope(item,testedSha){');
+    const end=page.indexOf('async function renderRefs()',start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const source=page.slice(start,end);
+    let historical;
+    const response=()=>({encoding:'base64',content:Buffer.from(JSON.stringify(historical),'utf8').toString('base64')});
+    const verify=new Function('api','json',source+';return verifyLiveScope;')('https://api.github.com/repos/example/repo',async()=>response());
+    const current=JSON.parse(read('olympia/work-items.json')).items.find(item=>item.id==='PILOT-002');
+    historical={items:[JSON.parse(JSON.stringify(current))]};
+    await expect(verify(current,current.dev_sha)).resolves.toBe(true);
+    const partial=JSON.parse(JSON.stringify(current));
+    partial.release_source_prs=[432];
+    partial.images=[];
+    partial.image_count=0;
+    partial.image_status='published';
+    historical={items:[partial]};
+    await expect(verify(current,current.dev_sha)).resolves.toBe(false);
+    historical=null;
+    await expect(verify(current,current.dev_sha)).resolves.toBe(false);
+  });
+
+  it('does not represent unresolved database or deployment evidence as release-ready',()=>{
+    const baseline=JSON.parse(read('olympia/baseline-001.json'));
+    expect(baseline.database.reconciliation).toBe('VERIFIED_CORE_SCHEMA_MATCH_WITH_ENVIRONMENT_DIFFERENCES');
+    expect(baseline.database.core_schema_audit.status).toBe('VERIFIED_CORE_SCHEMA_MATCH');
+    expect(baseline.database.core_schema_audit.environment_differences).toHaveLength(2);
+    expect(baseline.deployments.verification_policy).toContain('source_sha');
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(page).toContain('window.olympiaReleasePreflightReady=lines.length===0&&!unknown');
+    expect(edge).toContain('pr.base?.sha !== live.sha');
+    expect(edge).toContain('new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"])');
+    expect(edge).toContain('function configuredWorkItem(item: any)');
+    expect(edge).toContain('async function verifyReleaseSources');
+    expect(edge).not.toContain('item.pr_number !== 385');
+    expect(edge).not.toContain('item.id !== "PILOT-001"');
+    expect(page).not.toContain('candidatePr.base.sha===liveMatch[1]');
+    expect(page).not.toContain('exactScope');
+    expect(page).toContain('VERIFIED_CORE_SCHEMA_MATCH');
+    expect(edge).toContain('CANDIDATE_SCOPE_NOT_ALLOWED');
+    expect(edge).toContain('verifyPublishedManifest("main", live.sha)');
+    expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
+    expect(edge).toContain('pr.base?.sha !== live.sha');
+    expect(edge).toContain('DEPLOYMENT_MANIFEST_UNVERIFIED');
+    expect(page).toContain('if(renderId!==decisionRenderSequence)return;');
+    expect(page).toContain('data-release-refresh');
+    expect(page).toContain('Kontrollen kunde inte hämtas:');
+    expect(page).toContain('candidateBlocked=!!(cachedCandidate&&cachedCandidate.blocked===true)');
+    expect(page).not.toContain('||!!candidate&&!candidateReady');
+    expect(page).toContain('Kandidatstatus kunde inte hämtas.');
+    expect(baseline.database.core_schema_audit.environment_differences[0]).toContain('endast i LIVE');
+    expect(baseline.completeness.commit_history).toContain('100');
+  });
+  it('integrates OLYMPIA in ALEA admin and reuses the ALEA session',()=>{
+    const app=read('index.html');
+    const legacy=read('legacy/app.js');
+    const page=read('olympia/zeus-control.html');
+    expect(app).toContain("openAdminSection('olympia')");
+    expect(app).toContain('data-admin-section="olympia"');
+    expect(legacy).toContain("olympia:['OLYMPIA'");
+    expect(page).toContain('localStorage.getItem("alea_supabase_session")');
+    expect(app).toContain('admin-olympia-fullscreen');
+    expect(app).toContain('src="./olympia-v2/?v=20261114-ci-status-module-v1"');
+    expect(app).toContain('<b>OLYMPIA 2.0</b>');
+    expect(app).not.toContain('src="./olympia/zeus-control.html?v=20261101-repair-pr-list-fullscreen-v1"');
+    expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
+    expect(page).toContain('session_check');
+    expect(page).toContain('window.olympiaAuthVerified');
+    expect(page).not.toContain('type="module"');
+    expect(page).not.toContain('supabase.auth.setSession');
+    expect(page).not.toContain('signInWithPassword');
+    expect(page).not.toContain('signInWithOAuth');
+  });
+
+  it('routes deployment and candidate checks through the ALEA-authenticated bridge',()=>{
+    const page=read('olympia/zeus-control.html');
+    const outerScript=page.split('<script>')[1]?.split('</script>')[0]||'';
+    expect(page).toContain('window.olympiaAuthenticatedRequest=async function(payload)');
+    expect(outerScript).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
+    expect(page).toContain('data-decision="candidate_check"');
+    expect(page).toContain('request({action:"candidate_check",candidateIssue:Number(button.dataset.candidateIssue)');
+    expect(outerScript).toContain('action:"approve_and_merge_dev"');
+    const inlineScripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+    expect(inlineScripts.length).toBeGreaterThanOrEqual(2);
+    for(const script of inlineScripts)expect(()=>new Function(script)).not.toThrow();
+  });
+
+  it('uses the authenticated candidate check as the sole status source',()=>{
+    const page=read('olympia/zeus-control.html');
+    const decisions=page.slice(page.indexOf('async function renderDecisions()'),page.indexOf('function renderHistory()'));
+    expect(decisions).not.toContain('window.olympiaAuthenticatedRequest({action:"candidate_check"');
+    expect(decisions).toContain('window.olympiaCandidateCheckCache[String(i.number)]');
+    expect(decisions).not.toContain('i.comments_url');
+    expect(decisions).not.toContain('candidateRows=');
+    expect(decisions).toContain('candidateMessage=cachedCandidate?(cachedCandidate.message||cachedCandidate.error||"")');
+    expect(decisions).toContain('candidateCheckUnknown=!!(cachedCandidate&&cachedCandidate.error)');
+  });
+
+  it('keeps Zeus decisions locked until the server verifies ALEA admin access',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(page).toContain('!!window.olympiaAuthVerified');
+    expect(page).toContain('request({action:"session_check"},session)');
+    expect(page).toContain('setTimeout(()=>controller.abort(),timeoutMs)');
+    expect(page).toContain('timeoutMs=20000');
+    expect(page).toContain('pullRequestHeadSha:sha},session,20000');
+    expect(edge).toContain('data.action === "session_check"');
+    expect(edge).toContain('async function githubToken(decision: string)');
+    expect(edge).toContain('decision === "deployment_check"');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(edge).toContain(': { issues: "write", contents: "write" }');
+    expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read" }');
+    expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });');
+    expect(edge).toContain('checks: "read"');
+    expect(edge).toContain('statuses: "read"');
+    expect(edge).toContain('async function ghPublic(path: string)');
+    expect(edge).toContain('const [checks, status] = await Promise.all([');
+    expect(edge).toContain('/commits/" + pr.head.sha + "/check-runs?per_page=100');
+    expect(edge).toContain('/commits/" + pr.head.sha + "/status');
+    expect(edge).toContain('const requiredChecks = [/^check$/i, /^guard$/i, /^preview$/i]');
+    expect(edge).toContain('githubToken(data.decision)');
+    expect(edge).toContain('pr.mergeable !== true');
+    expect(edge).toContain('pr.user?.login !== appLogin');
+    expect(edge).toContain('const appLogin = await appBotLogin();');
+    expect(edge).toContain('CANDIDATE_CHECKS_NOT_GREEN');
+    expect(edge.indexOf('user.email?.toLowerCase() !== allowedEmail')).toBeLessThan(edge.indexOf('data.action === "session_check"'));
+  });
+
+  it('reads the ALEA DEV session from the namespaced storage used inside its iframe',()=>{
+    const page=read('olympia/zeus-control.html');
+    const scope=read('dev-storage-scope.js');
+    expect(page).toContain('src="../dev-storage-scope.js');
+    expect(scope).toContain("var prefix='alea:dev:'");
+    expect(page).toContain('localStorage.getItem("alea_supabase_session_dev")');
+  });
+
+  it('isolates DEV auth storage from the LIVE ALEA session',()=>{
+    const legacy=read('legacy/app.js');
+    const page=read('olympia/zeus-control.html');
+    expect(legacy).toContain("sessionKey:'alea_supabase_session_dev'");
+    expect(legacy).toContain("const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;");
+    expect(legacy).toContain('function sessionBelongsToProject(session)');
+    expect(legacy).toContain('return payload.iss===SUPABASE_URL');
+    expect(legacy).toContain('function projectSession()');
+    expect(page).toContain('localStorage.getItem("alea_supabase_session_dev")');
+    expect(page).toContain('function sessionBelongsToDev(session)');
+    expect(page).toContain('return payload.iss===url+"/auth/v1"');
+    expect(page).toContain('ALEA-sessionen gäller inte DEV.');
+  });
+
+  it('reads current branch SHAs through the authenticated ALEA bridge',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"current_refs"})');
+    expect(page).not.toContain('api+"/branches/development"');
+    expect(page).not.toContain('api+"/branches/main"');
+    expect(page).toContain('is:pr is:open');
+    expect(page).toContain('is:pr is:merged');
+    expect(page).toContain('currentDevSha=sha;');
+    expect(page).toContain('Promise.allSettled([');
+    expect(page).toContain('currentDevSha=String(devSha);renderTrial();');
+    expect(page).toContain('Övrig GitHub-status kunde inte hämtas');
+    expect(page).toContain('Aktuell GitHub-status OKÄND');
+    expect(page).toContain('window.olympiaRefreshRefs=renderRefs;');
+    expect(page).toContain('if(window.olympiaRefreshRefs)await window.olympiaRefreshRefs();');
+  });
+
+  it('lists current open GitHub PRs and checks selected PR CI and mergeability on demand',()=>{
+    const page=read('olympia/zeus-control.html');
+    const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('window.olympiaRefreshTrial=renderTrial'));
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
+    expect(page).toContain('finally{pullRequestsRefresh=null}');
+    expect(page).toContain('GitHub-listan kunde inte uppdateras. Registrerade DEV-godkännanden visas ovan');
+    expect(trial).toContain('var open=(!openPullRequestError?listed:[])');
+    expect(trial).not.toContain('Visar senast hämtade öppna PR');
+    expect(page).toContain('data-pr-status');
+    expect(page).toContain('action:"pull_request_status"');
+    expect(page).toContain('pr.mergeable===true');
+    expect(page).toContain('Status är OKÄND');
+    const cloudflare=page.slice(page.indexOf('async function cloudflarePreview'),page.indexOf('function itemPriority'));
+    expect(cloudflare).toContain('action:"pull_request_status"');
+    expect(cloudflare).not.toContain('json(api+"/commits/');
+    expect(page).not.toContain('json(api+"/pulls/"+number)');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('decision === "deployment_check" || decision === "current_refs"');
+    expect(edge).toContain('data.action === "current_refs"');
+    expect(edge).toContain('OLYMPIA GitHub branch status failed');
+    expect(edge).toContain('data.action === "pull_request_status"');
+    expect(edge).toContain('OLYMPIA GitHub PR status failed');
+    expect(edge).toContain('decision === "pull_request_list"');
+    expect(edge).toContain('data.action === "pull_request_list"');
+    expect(edge).toContain('pull_requests: "read"');
+    expect(edge).toContain('/pulls?state=open&per_page=100&sort=updated&direction=desc');
+    expect(edge).toContain('/pulls?state=closed&base=development&per_page=100&page=');
+    expect(edge).toContain('Boolean(pr.merged_at) && pr.base?.ref === "development"');
+    expect(edge).toContain('for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr)');
+    expect(edge).toContain('const recentClosed = await gh(token');
+    expect(edge).not.toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
+  });
+
+  it('rechecks unknown mergeability and persists the same PR as a DEV-accepted work item',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const page=read('olympia/zeus-control.html');
+    expect(edge).toContain('async function currentDevPullRequest(token: string, number: number, headSha: string)');
+    expect(edge).toContain('pr.mergeable !== null');
+    expect(edge).toContain('await new Promise(resolve => setTimeout(resolve, 500))');
+    expect(edge).toContain('PR_MERGEABILITY_UNKNOWN');
+    expect(edge).toContain('PR_HAS_CONFLICTS');
+    expect(edge).toContain('merge_method: "squash"');
+    expect(edge).toContain('if (refreshed.merged === true && refreshed.base?.ref === "development"');
+    expect(edge).toContain('async function recordDevAcceptance(token: string, number: number, actor: string)');
+    expect(edge).toContain('body.includes("- Ärende-ID: PR-" + number)');
+    expect(edge).toContain('message: acceptanceWarning || "PR #" + data.pullRequestNumber + " squash-mergad till DEV. LIVE-förberedelse: " + liveCandidate.state');
+    expect(edge).toContain('acceptanceWarning');
+    expect(page).toContain('await window.olympiaRefreshPullRequests()');
+    expect(page).toContain('window.olympiaRefreshRefs()');
+    expect(page).toContain('PR #"+number+" mergad till DEV');
+    expect(page).toContain('data-pr-approve-feedback');
+    expect(page).toContain('Godkännande stoppat: ALEA DEV-session saknas');
+    expect(page).toContain('result.acceptanceWarning');
+    expect(page).toContain('olympia-pr-flow-cache-v1');
+  });
+
+  it('requests contents write only for the DEV merge token',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('async function githubToken(');
+    const end=edge.indexOf('async function gh(',start);
+    const tokenCode=edge.slice(start,end);
+    expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
+    expect(tokenCode).toContain(': decision === "approve_and_merge_dev"');
+    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+    expect(tokenCode).toContain(': decision === "set_pull_request_draft"\n    ? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(tokenCode).toContain('? { pull_requests: "write" }');
+  });
+
+  it('shows DEV accepted PRs first even when GitHub list refresh fails',()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('function renderTrial()');
+    const end=page.indexOf('// Preserve expanded PR cards',start);
+    const view=page.slice(start,end);
+    expect(view).toContain('Klart för LIVE');
+    expect(view).toContain('Klart för granskning');
+    expect(view.indexOf('Klart för LIVE')).toBeLessThan(view.indexOf('Klart för granskning'));
+    expect(view).toContain('html+=fallback.map(renderQueueItem).join("")');
+    expect(view).toContain('acceptedNumbers');
+    expect(view).toContain('fallback');
+  });
+
+  it('loads recent merged DEV PRs without unbounded pagination',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('if (data.action === "pull_request_list")');
+    const end=edge.indexOf('if (data.action === "current_refs")',start);
+    const section=edge.slice(start,end);
+    expect(section).toContain('pulls?state=closed&base=development&per_page=100&page=1');
+    expect(section).not.toContain('page <= 100');
+    expect(section).toContain('const pullRequests = [...byNumber.values()]');
+  });
+
+  it('uses existing release actions for accepted PRs and excludes published PRs',()=>{
+    const page=read('olympia/zeus-control.html');
+    const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('// Preserve expanded PR cards',page.indexOf('function renderTrial()')));
+    expect(trial).toContain('html+=fallback.map(renderQueueItem).join("")');
+    expect(trial).toContain('!window.olympiaLivePublishedByItem["PR-"+Number(match[1])]');
+    expect(trial).toContain('id:"PR-"+number');
+    expect(page).toContain('data-decision="pandoras_ask"');
+  });
+
+  it('allows PR-backed release candidates without PILOT-only naming',()=>{
+    const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+    expect(bridge).toContain('const genericPr = request.itemId.match(/^PR-([1-9][0-9]*)$/)');
+    expect(bridge).toContain('SOURCE_PR_NOT_MERGED_TO_DEV');
+    expect(bridge).toContain('SOURCE_PR_NOT_IN_DEV');
+    expect(bridge).toContain('if (!validWorkItem(item)');
+    expect(bridge).not.toContain('!/^PILOT-[0-9]{3}$/.test(request.itemId)');
+  });
+
+  it('checks candidate status using a journal-backed PR when the PR list is unavailable',()=>{
+    const page=read('olympia/zeus-control.html');
+    const start=page.indexOf('async function renderDecisions()');
+    const end=page.indexOf('var testedSha=fieldValue',start);
+    const section=page.slice(start,end);
+    expect(section).toContain('fieldValue("Verifierad ärende-SHA")');
+    expect(section).toContain('item={id:"PR-"+sourceNumber');
+    expect(page).toContain('data-decision="candidate_check"');
+    expect(page).toContain('action:"candidate_check",candidateIssue:Number(button.dataset.candidateIssue),itemId:button.dataset.item,testedDevSha:button.dataset.sha');
+  });
+
+  it('uses the ordinary PR button for one verified DEV merge with visible feedback',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('data-pr-approve=');
+    expect(page).toContain('result.merged!==true');
+    expect(page).toContain('data-pr-approve-feedback');
+    expect(page).toContain('pullRequestHeadSha:sha},session,20000');
+    expect(page).not.toContain('pr486-merge-test.html');
+  });
+
+  it('captures approval clicks before other handlers and immediately reports progress',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('event.stopImmediatePropagation()');
+    expect(page).toContain('report("Klick registrerat. Kontrollerar DEV-session…")');
+    expect(page).toContain('},true);\\nasync function renderBlockers()'.replace('\\n','\n'));
+  });
+
+  it('persists and restores DEV approval feedback after mobile navigation',()=>{
+    const page=read('olympia/zeus-control.html');
+    expect(page).toContain('sessionStorage.setItem("olympia-dev-approval-"+number');
+    expect(page).toContain('sessionStorage.getItem("olympia-dev-approval-"+n)');
+    expect(page).toContain('savedApproval');
+  });
+
+  it('retries GitHub mergeability when it is temporarily unknown',async()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const start=edge.indexOf('async function currentDevPullRequest(');
+    const end=edge.indexOf('const devDecisionRefName',start);
+    const source=edge.slice(start,end).replace('token: string, number: number, headSha: string','token, number, headSha').replace('): Promise<any> {',') {').replace('let pr: any = null;','let pr = null;');
+    const sha='a'.repeat(40);
+    let calls=0;
+    const fakeGh=async()=>({state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:[null,null,true][calls++]});
+    const resolve=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(fakeGh,fn=>fn(),'owner','repo');
+    await expect(resolve('token',42,sha)).resolves.toMatchObject({mergeable:true});
+    expect(calls).toBe(3);
+    calls=0;
+    const remainsUnknown=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(async()=>{calls++;return {state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:null}},fn=>fn(),'owner','repo');
+    await expect(remainsUnknown('token',42,sha)).resolves.toMatchObject({mergeable:null});
+    expect(calls).toBe(4);
+  });
+
+  it('opens the existing OLYMPIA admin section across the full viewport on mobile',()=>{
+    const app=read('index.html');
+    const styles=read('src/styles/app.css');
+    expect(app).toContain('class="adminbox admin-detail admin-olympia-fullscreen hidden"');
+    expect(app).toContain('class="admin-olympia-frame"');
+    expect(styles).toContain('#adminOlympia.admin-olympia-fullscreen{position:fixed;inset:0');
+    expect(styles).toContain('width:100vw;height:100vh;height:100dvh');
+    expect(styles).toContain('#adminOlympia .admin-olympia-frame{display:block;width:100%;height:100%');
+  });
+
+
+  it('preserves Zeus approval across unrelated DEV changes but requires feature-file freshness',()=>{
+    const page=read('olympia/zeus-control.html');
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(page).toContain('currentDevSha');
+    expect(page).toContain('Godkänn DEV');
+    expect(page).not.toContain('Godkänn Astrid');
+    expect(page).not.toContain('testedSha===item.dev_sha');
+    expect(page).toContain('action:"candidate_check"');
+    expect(edge).toContain('async function inspectCandidate');
+    expect(edge).toContain('verifyCandidate(token, item, {');
+    expect(edge).toContain('decision === "candidate_check"');
+    expect(page).not.toContain('candidatePr.mergeable===true');
+    expect(page).not.toContain('liveBranch.commit.sha===liveMatch[1]');
+    expect(page).toContain('data-sha="\'+esc(currentDevSha)+\'"');
+    expect(edge).toContain('/git/ref/heads/development');
+    expect(edge).toContain('ref.object?.sha !== data.testedDevSha');
+    expect(edge).toContain('async function hasAcceptedFeatureVersion');
+    expect(edge).toContain('compare/\" + tested + \"...\" + currentSha');
+    expect(edge).toContain('protectedPaths.has(file.filename)');
+    expect(edge).toContain('Om berörda filer har ändrats sedan godkännandet');
+    expect(workflow).toContain('CURRENT_DEV_SHA=');
+    expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
+    expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
+    expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+  });
 });
-it('keeps merged PR visible in the same card',()=>{
- expect(page).toContain('if(pr.merged_at)');
- expect(page).toContain("action:'pull_request_list'");
- expect(page).toContain('För publicering');
- expect(page).toContain('data-dev-approve');
+
+
+describe('OLYMPIA LIVE decision semantics',()=>{
+  it('reuses an unchanged Astrid Pandora decision after OLYMPIA-only DEV changes',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('const previousTestedSha = previousBody.match');
+    expect(edge).toContain('hasAcceptedFeatureVersion(token, issues as any[], item, previousTestedSha)');
+    expect(edge).toContain('testedDevSha: previousTestedSha');
+    expect(edge).toContain('workflowBlobSha,');
+  });
+  it('queues release-package decisions without starting a LIVE candidate',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    expect(edge).toContain('if (data.decision === "pandoras_ask") {');
+    expect(edge).toContain('Ändringen lades i releasepaketet. Ingen LIVE-PR har startats.');
+    expect(edge).toContain('Pandoras ask registrerades. En selektiv LIVE-PR förbereds från verifierad kod; inget publiceras ännu.');
+  });
+  it('lets only Pandoras Ask start the one-item LIVE candidate workflow',()=>{
+    const workflow=read('.github/workflows/olympia-release-candidate.yml');
+    expect(workflow).toContain('Only a Pandoras Ask start order can create a single-item LIVE PR candidate.');
+    expect(workflow).not.toContain('DECISION" == "pandoras_ask" || "$DECISION" == "release_package"');
+  });
 });
-it('offers a gated recovery action for merged DEV PRs without publishing LIVE',()=>{
- expect(page).toContain('data-prepare-live');
- expect(page).toContain("action:'prepare_merged_dev_candidate'");
- expect(page).toContain('window.olympiaV2ZeusVerified');
- expect(page).toContain('Detta publicerar inte till LIVE.');
-});
-it('does not treat an empty legacy commit status as pending CI',()=>{
- expect(ci).toContain('statuses.length > 0 && status.state === "pending"');
- expect(ci).toContain('status.state !== "success"');
- expect(page).toContain('DEV-beslut kräver verifierad Zeus-session och godkänd CI');
-});
-it('reads PR and CI through the authenticated ALEA backend',()=>{
- expect(page).toContain("action:'pull_request_list'");
- expect(page).toContain("action:'pull_request_status'");
- expect(approval).toContain('function belongsToDev');
- expect(approval).toContain('window.olympiaV2Request');
-});
-it('uses the journaled candidate DEV SHA for LIVE approval, not the source PR merge SHA',()=>{
- expect(approval).toContain('testedDevSha:result.testedDevSha');
- expect(approval).toContain('testedDevSha:data.testedDevSha');
- expect(approval).not.toContain('testedDevSha:sha,');
- expect(approval).toContain("result.testedDevSha||''");
+
+
+describe('OLYMPIA server-side deployment preflight',()=>{
+  it('verifies DEV and LIVE through the authenticated read-only decision bridge',()=>{
+    const edge=read('supabase/functions/olympia-control/index.ts');
+    const page=read('olympia/zeus-control.html');
+    const block=page.slice(page.indexOf('async function renderBlockers(){'),page.indexOf('async function renderDecisions(){'));
+    expect(edge).toContain('data.action === "deployment_check"');
+    expect(edge).toContain('githubToken("deployment_check")');
+    expect(edge).toContain('verifyPublishedManifest("main", liveSha)');
+    expect(edge).toContain('verifyPublishedManifest("development", developmentSha)');
+    expect(edge).toContain('? { contents: "read" }');
+    expect(block).toContain('window.olympiaAuthenticatedRequest({action:"deployment_check"})');
+    expect(block).not.toContain('json(api+"/branches/main")');
+    expect(block).not.toContain('json(api+"/branches/development")');
+    expect(edge).toContain('data.action === "candidate_check"');
+    expect(edge).toContain('githubToken("candidate_check")');
+    expect(page).toContain('if(window.olympiaRefreshBlockers)await window.olympiaRefreshBlockers()');
+  });
 });
