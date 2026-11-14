@@ -1200,7 +1200,6 @@ async function handleRequest(req: Request): Promise<Response> {
       try {
         const token = await githubToken("resume_stale_candidate");
         const number = data.pullRequestNumber;
-        const sha = data.testedDevSha.toLowerCase();
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const [appLogin, item, issue, issues] = await Promise.all([
           appBotLogin(),
