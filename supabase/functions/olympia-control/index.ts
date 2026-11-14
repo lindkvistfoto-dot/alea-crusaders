@@ -199,6 +199,57 @@ async function currentDevPullRequest(token: string, number: number, headSha: str
   if (pr.head?.sha !== headSha) throw new Error("PR_HEAD_CHANGED");
   return pr;
 }
+
+const devDecisionRefName = (number: number, headSha: string) =>
+  "olympia/dev-decisions/pr-" + number + "-" + headSha.toLowerCase();
+async function readDevDecisionLock(token: string, number: number, headSha: string) {
+  const name = devDecisionRefName(number, headSha);
+  try {
+    return await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/" + encodeURIComponent(name));
+  } catch (error) {
+    if (error instanceof Error && error.message === "GITHUB_REQUEST_FAILED_404") return null;
+    throw error;
+  }
+}
+async function reserveDevDecision(token: string, number: number, headSha: string, devOnly: boolean, devBaseSha: string) {
+  const selectedSha = (devOnly ? headSha : devBaseSha).toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(selectedSha) || (!devOnly && selectedSha === headSha.toLowerCase())) throw new Error("DEV_DECISION_LOCK_INVALID");
+  const repoPath = "/repos/" + OWNER + "/" + REPO;
+  const name = devDecisionRefName(number, headSha);
+  let lock = await readDevDecisionLock(token, number, headSha);
+  if (!lock) {
+    try {
+      lock = await gh(token, repoPath + "/git/refs", {
+        method: "POST",
+        body: JSON.stringify({ ref: "refs/heads/" + name, sha: selectedSha }),
+      });
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_422") throw error;
+      lock = await readDevDecisionLock(token, number, headSha);
+    }
+  }
+  const lockSha = String(lock?.object?.sha || "").toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(lockSha)) throw new Error("DEV_DECISION_LOCK_INVALID");
+  if ((lockSha === headSha.toLowerCase()) !== devOnly) throw new Error("DEV_DECISION_ALREADY_SELECTED");
+  return { name, selectedSha: lockSha };
+}
+async function isDevOnlyDecision(token: string, number: number, headSha: string) {
+  const lock = await readDevDecisionLock(token, number, headSha);
+  return Boolean(lock && String(lock.object?.sha || "").toLowerCase() === headSha.toLowerCase());
+}
+async function recordDevOnlyCompletion(token: string, number: number, headSha: string, mergeSha: string, actor: string) {
+  const marker = "<!-- OLYMPIA_DEV_ONLY:PR-" + number + ":HEAD-" + headSha.toLowerCase() + ":MERGE-" + mergeSha.toLowerCase() + " -->";
+  const comments = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + number + "/comments?per_page=100&sort=created&direction=desc");
+  if (!Array.isArray(comments)) throw new Error("DEV_ONLY_HISTORY_UNAVAILABLE");
+  let comment = comments.find((item: any) => String(item.body || "").includes(marker));
+  if (!comment) {
+    comment = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues/" + number + "/comments", {
+      method: "POST",
+      body: JSON.stringify({ body: marker + "\n\nOLYMPIA: PR #" + number + " slutfördes som **Enbart DEV**.\n- DEV-merge-SHA: " + mergeSha + "\n- PR head-SHA: " + headSha + "\n- Beslut av: " + actor + "\n- LIVE-kandidat skapades inte." }),
+    });
+  }
+  return { url: comment.html_url || null, id: comment.id || null, mergeSha, headSha, devOnly: true };
+}
 async function recordDevAcceptance(token: string, number: number, actor: string) {
   const item = await workItem(token, "PR-" + number);
   const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/development");
@@ -1079,6 +1130,11 @@ async function handleRequest(req: Request): Promise<Response> {
         const number = data.pullRequestNumber;
         const sourceMergeSha = data.testedDevSha.toLowerCase();
         const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const sourcePr = await gh(token, repoPath + "/pulls/" + number);
+        if (sourcePr.merged === true && sourcePr.base?.ref === "development" &&
+            await isDevOnlyDecision(token, number, String(sourcePr.head?.sha || ""))) {
+          return json({ ok: true, state: "dev_only", locked: true, message: "PR:en är avslutad som Enbart DEV. Ingen LIVE-kandidat finns eller kan skapas." });
+        }
         const appLogin = await appBotLogin();
         const item = await workItem(token, "PR-" + number);
         // The PR card sends the source PR's merge SHA. Candidate preparation records
@@ -1269,6 +1325,18 @@ async function handleRequest(req: Request): Promise<Response> {
         const byNumber = new Map<number, any>();
         for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
         const candidateToken = await githubToken("auto_candidate_diagnostics");
+        const devOnlyRefs = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/git/matching-refs/heads/olympia/dev-decisions/pr-");
+        if (!Array.isArray(devOnlyRefs)) throw new Error("GITHUB_DEV_DECISION_REFS_INVALID");
+        const devOnlyHeadsByNumber = new Map<number, Set<string>>();
+        for (const entry of devOnlyRefs) {
+          const match = String(entry.ref || "").match(/^refs\/heads\/olympia\/dev-decisions\/pr-([1-9][0-9]*)-([0-9a-f]{40})$/i);
+          if (match && String(entry.object?.sha || "").toLowerCase() === match[2].toLowerCase()) {
+            const number = Number(match[1]);
+            const heads = devOnlyHeadsByNumber.get(number) || new Set<string>();
+            heads.add(match[2].toLowerCase());
+            devOnlyHeadsByNumber.set(number, heads);
+          }
+        }
         const botLogin = await appBotLogin();
         const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(botLogin));
         if (!Array.isArray(candidateIssues)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
@@ -1308,7 +1376,8 @@ async function handleRequest(req: Request): Promise<Response> {
               ...pr,
               livePublished,
               liveMergeSha: livePublished ? publishedCandidatePrs.get(number) : null,
-              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished),
+              devOnly: Boolean(pr.merged_at && devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase())),
+              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished && !devOnlyHeadsByNumber.get(number)?.has(String(pr.head?.sha || "").toLowerCase())),
             };
           })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
@@ -1400,7 +1469,8 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     if (data.action === "approve_and_merge_dev") {
       if (!Number.isInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
-          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha)) {
+          typeof data.pullRequestHeadSha !== "string" || !/^[0-9a-f]{40}$/i.test(data.pullRequestHeadSha) ||
+          (data.devOnly !== undefined && typeof data.devOnly !== "boolean")) {
         return fail("PR-nummer eller versions-SHA saknas.", 400);
       }
       let stage = "github_auth";
@@ -1408,6 +1478,18 @@ async function handleRequest(req: Request): Promise<Response> {
         const token = await githubToken("approve_and_merge_dev");
         stage = "pr_validation";
         const path = "/repos/" + OWNER + "/" + REPO;
+        const devOnly = data.devOnly === true;
+        const existingPr = await gh(token, path + "/pulls/" + data.pullRequestNumber);
+        const existingLock = await readDevDecisionLock(token, data.pullRequestNumber, data.pullRequestHeadSha);
+        if (existingPr.merged === true && existingPr.base?.ref === "development" && existingPr.head?.sha === data.pullRequestHeadSha && existingLock) {
+          const isRecordedDevOnly = String(existingLock.object?.sha || "").toLowerCase() === data.pullRequestHeadSha.toLowerCase();
+          if (isRecordedDevOnly !== devOnly) throw new Error("DEV_DECISION_ALREADY_SELECTED");
+          if (devOnly) {
+            const completion = await recordDevOnlyCompletion(token, data.pullRequestNumber, data.pullRequestHeadSha, String(existingPr.merge_commit_sha || ""), user.email || "Zeus");
+            return json({ ok: true, merged: true, sha: existingPr.merge_commit_sha, devOnly: true, completion, alreadyCompleted: true, liveCandidate: { state: "not_created" }, message: "Enbart DEV är redan genomfört. Ingen LIVE-kandidat skapades." });
+          }
+          return json({ ok: true, merged: true, sha: existingPr.merge_commit_sha, alreadyMerged: true, message: "GitHub bekräftar att PR:en redan är mergad till DEV. Ingen ny merge genomfördes." });
+        }
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
         // Retry only transient GitHub transport errors; never retry a failed CI verdict.
@@ -1428,6 +1510,11 @@ async function handleRequest(req: Request): Promise<Response> {
         ]);
         const assessment = assessCi(checks, status, data.pullRequestHeadSha);
         if (assessment.state !== "success") throw new Error(assessment.code);
+        stage = "decision_lock";
+        const devRef = await gh(token, path + "/git/ref/heads/development");
+        const devBaseSha = String(devRef.object?.sha || "");
+        if (!/^[0-9a-f]{40}$/i.test(devBaseSha)) throw new Error("DEV_DECISION_BASE_SHA_UNVERIFIED");
+        await reserveDevDecision(token, data.pullRequestNumber, data.pullRequestHeadSha, devOnly, devBaseSha);
         stage = "github_merge";
         let mergeSha = "";
         try {
@@ -1448,6 +1535,11 @@ async function handleRequest(req: Request): Promise<Response> {
             }
             throw mergeError;
           }
+        }
+        if (devOnly) {
+          stage = "dev_only_history";
+          const completion = await recordDevOnlyCompletion(token, data.pullRequestNumber, data.pullRequestHeadSha, mergeSha, user.email || "Zeus");
+          return json({ ok: true, merged: true, sha: mergeSha, devOnly: true, completion, liveCandidate: { state: "not_created" }, message: "PR #" + data.pullRequestNumber + " är mergad till DEV och avslutad som Enbart DEV. Ingen LIVE-kandidat skapades." });
         }
         stage = "dev_acceptance_record";
         let acceptance: any = null;
@@ -1474,6 +1566,9 @@ async function handleRequest(req: Request): Promise<Response> {
         console.error("OLYMPIA DEV merge failed", JSON.stringify({ pr: data.pullRequestNumber, stage, code }));
         const messages: Record<string, string> = {
           PR_NOT_OPEN: "PR:en är inte längre öppen. Uppdatera OLYMPIA för aktuell status.",
+          DEV_DECISION_ALREADY_SELECTED: "Ett annat DEV-beslut har redan reserverats för den här PR-versionen. Uppdatera OLYMPIA och kontrollera historiken.",
+          DEV_DECISION_LOCK_INVALID: "DEV-beslutet kunde inte låsas säkert. Ingen merge genomfördes.",
+          DEV_DECISION_BASE_SHA_UNVERIFIED: "Aktuell DEV-version kunde inte verifieras. Ingen merge genomfördes.",
           PR_IS_DRAFT: "PR:en är fortfarande ett utkast och kan inte godkännas.",
           PR_NOT_TARGETING_DEV: "PR:en riktar sig inte till development.",
           PR_HEAD_CHANGED: "PR:en har ändrats sedan den visades. Uppdatera OLYMPIA och granska den nya versionen.",
@@ -1523,8 +1618,12 @@ async function handleRequest(req: Request): Promise<Response> {
         // The installation may reject a combined checks/statuses plus write scope.
         const writeToken = await githubToken("approve_and_merge_dev");
         const token = await githubToken("pull_request_list");
+        const decisionToken = await githubToken("auto_candidate_diagnostics");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
+        if (pr.merged === true && pr.base?.ref === "development" && await isDevOnlyDecision(decisionToken, data.pullRequestNumber, String(pr.head?.sha || ""))) {
+          return fail("PR:en är avslutad som Enbart DEV. Ingen LIVE-kandidat kan skapas för den.", 409);
+        }
         if (pr.merged !== true || pr.base?.ref !== "development" ||
             !/^[0-9a-f]{40}$/i.test(String(pr.merge_commit_sha || "")) ||
             !/^[0-9a-f]{40}$/i.test(String(pr.head?.sha || ""))) {
