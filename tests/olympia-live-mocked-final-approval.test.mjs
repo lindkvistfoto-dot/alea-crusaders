@@ -8,7 +8,7 @@ if (start < 0 || end < 0) throw new Error('LIVE decision branch not found');
 // Execute the actual production decision branch, replacing only a TS-only type annotation.
 const branch = source.slice(start, end).replace('const messages: Record<string, string> =', 'const messages =');
 const makeRunner = new Function('deps', `return async function run(data) {
- const {token,item,user,verifyCandidate,verifiedCandidatePreview,gh,title,issueBody,json,fail,OWNER,REPO} = deps;
+ const {token,item,user,verifyCandidate,verifiedCandidatePreview,isTransientCandidateReadError,gh,title,issueBody,json,fail,OWNER,REPO} = deps;
  ${branch}
 }`);
 const classifierStart = source.indexOf('function isTransientCandidateReadError(');
