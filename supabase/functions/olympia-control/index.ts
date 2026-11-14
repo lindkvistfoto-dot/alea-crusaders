@@ -1237,19 +1237,26 @@ async function handleRequest(req: Request): Promise<Response> {
         }
         if (blockedRun) {
           const releaseNumber = Number(candidate.releasePr || 0);
-          if (!Number.isSafeInteger(releaseNumber) || releaseNumber < 1) {
+          if (releaseNumber > 0) {
+            if (!Number.isSafeInteger(releaseNumber)) {
+              return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
+            }
+            const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
+            const releaseBody = String(releasePr.body || "");
+            const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+            if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
+                releasePr.user?.login !== appLogin ||
+                !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
+                !releaseBody.includes("- Approved DEV test version: " + sha) ||
+                !sources.split(/\s*,\s*/).includes("#" + number)) {
+              return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
+            }
+          } else if (candidate.releasePr !== null || candidate.releaseUrl !== null) {
             return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
           }
-          const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
-          const releaseBody = String(releasePr.body || "");
-          const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
-          if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
-              releasePr.user?.login !== appLogin ||
-              !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
-              !releaseBody.includes("- Approved DEV test version: " + sha) ||
-              !sources.split(/\s*,\s*/).includes("#" + number)) {
-            return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
-          }
+          // If candidate creation was blocked before a release PR existed, retry
+          // the same journaled request. startCandidateRequest reuses its decision
+          // branch and increments its attempt instead of creating a second decision.
         }
         const requestBranch = await startCandidateRequest(token, data.candidateIssue, item, {
           decision: "pandoras_ask",
