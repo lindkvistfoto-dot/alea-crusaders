@@ -22,3 +22,65 @@
 .game-session-error{color:#ffb7aa}
 body.game-session-open{overflow:hidden}
 @media(max-width:700px){.game-session-backdrop{padding:10px;align-items:end}.game-session-dialog{max-height:88vh;border-radius:17px 17px 10px 10px;padding:19px}.game-session-nav{font-size:.74rem}}
+
+/* ARCANE Spelmöte: shared chronicle panel */
+.game-session-dialog{width:min(820px,100%);max-height:min(90vh,980px);padding:clamp(18px,3vw,28px)}
+.game-session-dialog h2{font-size:1.75rem}
+.game-session-dialog h3{margin:0;color:#f2dfbd;font:600 1.16rem/1.25 Georgia,serif}
+.game-session-dialog h4{margin:0;color:#e3c48e;font:600 1rem/1.3 Georgia,serif}
+.game-session-dialog #gameSessionBody{display:grid;gap:14px}
+.chronicle-section{border:1px solid rgba(200,158,96,.28);border-radius:14px;padding:17px;background:linear-gradient(145deg,rgba(42,31,21,.74),rgba(19,15,12,.8))}
+.chronicle-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.chronicle-section-head>div{display:grid;gap:5px}
+.world-day{font:600 1rem/1.2 Georgia,serif;color:#dfbf84;border:1px solid #ad854c66;border-radius:20px;padding:8px 12px}
+.game-session-status-pill{font:600 .74rem/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#c7b49a;border:1px solid #8d785766;border-radius:20px;padding:8px 11px}
+.game-session-status-pill.is-active{color:#d4e4b0;border-color:#81975c;background:#81975c1c}
+.chronicle-session-title{font:600 1.25rem/1.25 Georgia,serif;color:#f4e5c8}
+.chronicle-session-timing,.chronicle-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.chronicle-session-timing>div,.chronicle-card{display:grid;gap:5px;border:1px solid #8e704533;border-radius:10px;padding:10px;background:#100d0b66}
+.chronicle-session-timing span,.chronicle-card span{color:#bba98d;font-size:.76rem}
+.chronicle-session-timing strong,.chronicle-card strong{color:#efdfc2;font-size:.94rem}
+.chronicle-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.game-session-field textarea{box-sizing:border-box;width:100%;resize:vertical;border:1px solid #8e704577;border-radius:9px;background:#100d0b;color:#f5ead8;padding:11px 12px;font:inherit}
+.chronicle-controls{display:grid;grid-template-columns:minmax(130px,.8fr) auto minmax(160px,1fr) auto auto;gap:8px;align-items:end}
+.chronicle-controls .game-session-field{margin:7px 0}
+.chronicle-rest{border-top:1px solid #8e704544;margin-top:15px;padding-top:15px}
+.chronicle-rest>p{color:#bcae98;font-size:.86rem;line-height:1.45;margin:7px 0 12px}
+.chronicle-rest-action{display:flex;align-items:end;gap:10px;flex-wrap:wrap}
+.chronicle-rest-action .game-session-field{width:min(180px,100%);margin:0}
+.arcane-dial-wrap{padding:9px 0 4px}
+.arcane-dial{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.arcane-dial::before{content:"";position:absolute;top:21px;left:9%;right:9%;height:1px;background:linear-gradient(90deg,transparent,#b38a50aa 12%,#b38a50aa 88%,transparent);pointer-events:none}
+.arcane-dial-phase{position:relative;z-index:1;min-height:81px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;padding:3px 2px 7px;border:0;background:transparent;color:#c8b69a;font:500 .76rem/1.15 system-ui,sans-serif;cursor:pointer}
+.arcane-dial-phase:disabled{cursor:default;opacity:.62}
+.arcane-dial-mark{display:grid;place-items:center;width:38px;height:38px;border:1px solid #997545aa;border-radius:50%;background:radial-gradient(circle at 35% 30%,#503a25,#17120e 75%);box-shadow:0 3px 10px #0008;font-size:19px;transition:transform .18s,border-color .18s,box-shadow .18s}
+.arcane-dial-phase.selected{color:#f5dfb4;font-weight:700}
+.arcane-dial-phase.selected .arcane-dial-mark{transform:scale(1.12);border-color:#f1ca83;box-shadow:0 0 0 3px #d6aa5b26,0 0 18px #d5a74b66}
+.arcane-dial-phase:not(:disabled):hover .arcane-dial-mark{transform:translateY(-2px);border-color:#e0bd7e}
+.phase-dawn .arcane-dial-mark{box-shadow:inset 0 0 15px #d18d4755,0 3px 10px #0008}
+.phase-morning .arcane-dial-mark{box-shadow:inset 0 0 15px #b8c68d3b,0 3px 10px #0008}
+.phase-afternoon .arcane-dial-mark{box-shadow:inset 0 0 15px #e1bb5b4a,0 3px 10px #0008}
+.phase-evening .arcane-dial-mark{box-shadow:inset 0 0 15px #bc6a4a4f,0 3px 10px #0008}
+.phase-night .arcane-dial-mark{box-shadow:inset 0 0 15px #586bbf55,0 3px 10px #0008}
+.arcane-dial-note{margin:5px 0;color:#aa997e;font-size:.78rem;line-height:1.4;text-align:center}
+.chronicle-summary{border-left:2px solid #bd955d;padding:4px 12px;color:#d8c8ad}
+.chronicle-summary p{white-space:pre-wrap;margin:5px 0}
+.chronicle-history{display:grid;gap:7px;margin-top:12px}
+.chronicle-history details{border:1px solid #8e704533;border-radius:9px;background:#100d0b55}
+.chronicle-history summary{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;color:#e5d2b2;cursor:pointer}
+.chronicle-history summary em{color:#c7a875;font-size:.76rem;font-style:normal}
+.chronicle-history details>div{padding:0 12px 10px;color:#bcae98;font-size:.85rem;white-space:pre-wrap}
+.chronicle-history p{margin:6px 0}
+.alea-app-header::before{filter:var(--alea-phase-filter,none);transition:filter .8s ease}
+@media(max-width:700px){
+ .game-session-dialog{width:100%;padding:17px 15px}
+ .chronicle-section{padding:13px}
+ .chronicle-grid,.chronicle-session-timing{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .chronicle-start-grid{grid-template-columns:1fr}
+ .chronicle-controls{grid-template-columns:1fr 1fr}
+ .chronicle-controls .game-session-field{grid-column:1/-1}
+ .arcane-dial{gap:0}
+ .arcane-dial-phase{font-size:.66rem;min-height:72px}
+ .arcane-dial-mark{width:33px;height:33px;font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){.arcane-dial-mark,.alea-app-header::before{transition:none}}
