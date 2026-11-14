@@ -13,6 +13,11 @@ describe('DEV database migration deployment', () => {
     expect(workflow).toContain("grep -q 'development_schema_baseline' <<< \"$plan\"");
   });
 
+  it('includes older local migrations explicitly during both plan and push', () => {
+    expect(workflow).toContain('supabase db push --dry-run --include-all --db-url');
+    expect(workflow).toContain('supabase db push --include-all --db-url');
+  });
+
   it('accepts an auth trigger migration already recorded in DEV history', () => {
     expect(workflow).toContain("-name '*_restore_auth_user_profile_trigger.sql'");
     expect(workflow).toContain('auth_applied="$(psql');
