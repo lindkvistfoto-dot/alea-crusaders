@@ -8,9 +8,14 @@ if (start < 0 || end < 0) throw new Error('LIVE decision branch not found');
 // Execute the actual production decision branch, replacing only a TS-only type annotation.
 const branch = source.slice(start, end).replace('const messages: Record<string, string> =', 'const messages =');
 const makeRunner = new Function('deps', `return async function run(data) {
- const {token,item,user,verifyCandidate,verifiedCandidatePreview,gh,title,issueBody,json,fail,OWNER,REPO} = deps;
+ const {token,item,user,verifyCandidate,verifiedCandidatePreview,isTransientCandidateReadError,gh,title,issueBody,json,fail,OWNER,REPO} = deps;
  ${branch}
 }`);
+const classifierStart = source.indexOf('function isTransientCandidateReadError(');
+const classifierEnd = source.indexOf('\n}', classifierStart) + 2;
+const classifierSource = source.slice(classifierStart, classifierEnd).replace('(code: string)', '(code)');
+if (classifierStart < 0 || classifierEnd < 2) throw new Error('Transient candidate error classifier not found');
+const isTransientCandidateReadError = new Function(classifierSource + '; return isTransientCandidateReadError')();
 const SHA = 'a'.repeat(40);
 const LIVE = 'b'.repeat(40);
 function harness({preview='https://candidate.alea-crusaders.pages.dev/', baseline=LIVE, releaseHead=SHA, rejectCandidate=false, mergeResult=true, journalFailure=false}={}) {
@@ -30,7 +35,8 @@ function harness({preview='https://candidate.alea-crusaders.pages.dev/', baselin
  });
  const deps={
   token:'mock-only',item:{id:'PR-567'},user:{email:'zeus@example.invalid'},
-  verifyCandidate:vi.fn(async()=>{if(rejectCandidate)throw Error('CANDIDATE_NOT_READY');return candidate}),
+  verifyCandidate:vi.fn(async()=>{if(rejectCandidate)throw Error(typeof rejectCandidate==='string'?rejectCandidate:'CANDIDATE_NOT_READY');return candidate}),
+  isTransientCandidateReadError,
   verifiedCandidatePreview:vi.fn(async()=>preview),
   gh,title:()=> 'Approval',issueBody:()=> 'Mock journal',
   json:(value)=>({status:200,...value}),
@@ -64,6 +70,18 @@ describe('OLYMPIA LIVE decisions: executable mocked server branch',()=>{
   const h=harness({releaseHead:'d'.repeat(40)});
   expect((await h.run(data)).status).toBe(409);
   expect(h.writes.some(x=>x.path.endsWith('/merge'))).toBe(false);
+ });
+ it('keeps a GitHub rate limit fail-closed but reports it as retryable service unavailability',async()=>{
+  const h=harness({rejectCandidate:'GITHUB_PUBLIC_RATE_LIMITED'});
+  const result=await h.run(data);
+  expect(result.status).toBe(503);
+  expect(result.message).toContain('GitHub');
+  expect(h.writes).toEqual([]);
+ });
+ it('classifies GitHub API outages separately from actual CI failures',()=>{
+  expect(isTransientCandidateReadError('GITHUB_PUBLIC_RATE_LIMITED')).toBe(true);
+  expect(isTransientCandidateReadError('GITHUB_PUBLIC_REQUEST_FAILED_502')).toBe(true);
+  expect(isTransientCandidateReadError('CANDIDATE_CHECKS_NOT_GREEN')).toBe(false);
  });
  it('does not claim success if GitHub refuses merge',async()=>{
   const h=harness({mergeResult:false});expect((await h.run(data)).status).toBe(502);
