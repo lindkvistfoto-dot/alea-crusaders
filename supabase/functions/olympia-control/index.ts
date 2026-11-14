@@ -1210,10 +1210,21 @@ async function handleRequest(req: Request): Promise<Response> {
         ]);
         if (!Array.isArray(issues)) throw new Error("CANDIDATE_ISSUES_INVALID");
         const body = String(issue.body || "");
+        const journalSha = body.match(/^- Testad DEV-commit \\(full SHA\\): ([0-9a-f]{40})$/mi)?.[1]?.toLowerCase() || "";
+        const requestedSha = data.testedDevSha.toLowerCase();
+        const sourceMergeSha = String(item.dev_sha || "").toLowerCase();
+        // Older OLYMPIA clients pass the source PR merge SHA. Resolve it only
+        // through this exact PANDORAS ASK journal entry; downstream checks use
+        // the recorded and accepted DEV tip SHA, never the client alias.
+        const sha = requestedSha === journalSha
+          ? journalSha
+          : requestedSha === sourceMergeSha
+          ? journalSha
+          : "";
         if (issue.user?.login !== appLogin || issue.pull_request ||
             !body.includes("- Beslut: PANDORAS ASK") ||
             !body.includes("- Ärende-ID: PR-" + number) ||
-            !body.includes("- Testad DEV-commit (full SHA): " + sha)) {
+            !/^[0-9a-f]{40}$/.test(journalSha) || !sha) {
           return fail("Kandidatbeslutet matchar inte den valda DEV-ändringen.", 409);
         }
         if (!await hasAcceptedFeatureVersion(token, issues, item, sha)) {
