@@ -23,7 +23,7 @@ export function createVerifyHandler({env,decode,fetcher=fetch}){
   if(request.method!=='POST')return reply({error:'METHOD_NOT_ALLOWED'},405);
   const url=env('SUPABASE_URL'),key=env('SUPABASE_ANON_KEY'),service=env('SUPABASE_SERVICE_ROLE_KEY');
   const authorization=request.headers.get('Authorization')||'';
-  if(!/^Bearer \\S+$/.test(authorization))return reply({error:'UNAUTHORIZED'},401);
+  if(!/^Bearer \S+$/.test(authorization))return reply({error:'UNAUTHORIZED'},401);
   const headers={apikey:key,Authorization:authorization,'Content-Type':'application/json'};
   const trusted={apikey:service,Authorization:'Bearer '+service,'Content-Type':'application/json'};
   async function json(path,options={}){
