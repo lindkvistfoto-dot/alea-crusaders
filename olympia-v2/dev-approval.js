@@ -16,8 +16,59 @@ function showConnection(message,good){renderConnection(message,good)}
 function explainConnection(error){const msg=String(error?.message||error||'');if(/GITHUB_RATE_LIMITED/i.test(msg))return 'GitHubs API-läsgräns är nådd. OLYMPIA väntar tills kvoten återställs; inloggning och Zeus-behörighet fungerar.';if(/GITHUB_APP_TOKEN_FAILED_422/i.test(msg))return 'GitHub App nekar begärda behörigheter (422). DEV-inloggningen fungerar. Kontrollera GitHub App-installationen.';if(/GITHUB_APP_TOKEN_FAILED_/i.test(msg))return 'GitHub App kunde inte skapa en installationstoken. DEV-inloggningen fungerar.';if(/session|invalid.jwt|expired.jwt/i.test(msg))return 'ALEA DEV-sessionen saknas eller har gått ut. Logga in igen.';if(/403|auktoriser|behörighet/i.test(msg))return 'Åtkomst nekad (403). Kontrollera Zeus-behörighet och GitHub App.';if(/401/i.test(msg))return 'Inloggning nekad (401). Logga in i ALEA DEV igen.';if(/429/i.test(msg))return 'GitHub begränsar anropen (429). Försök senare.';if(/502|503|504|fetch|timeout|abort/i.test(msg))return 'Supabase eller GitHub kunde inte nås. Försök uppdatera igen.';return msg||'Okänt anslutningsfel.'}
 window.olympiaV2Request=async action=>{const current=session();if(!current){connectionStages.session='error';connectionStages.zeus='pending';connectionStages.github='pending';showConnection('ALEA DEV-session saknas. Logga in igen.',false);throw Error('Giltig ALEA DEV-session saknas')}const readAction=githubReadActions.has(action.action);if(readAction&&Date.now()<githubReadBlockedUntil)throw Error('GITHUB_RATE_LIMITED_'+Math.floor(githubReadBlockedUntil/1000));try{const {response,result}=await call(action,current,action.action==='auto_candidate_diagnostics'?60000:20000);if(!response.ok||result.ok!==true)throw Error(result.message||'Supabase HTTP '+response.status);if(action.action==='pull_request_list'){connectionStages.github='ok';showConnection('GitHub svarade: '+(result.pullRequests||[]).length+' PR mottagna.',true)};return result}catch(error){const match=String(error?.message||error).match(/GITHUB_RATE_LIMITED(?:_([0-9]+))?/i);if(readAction&&match){githubReadBlockedUntil=Math.max(Date.now()+60000,Number(match[1]||0)*1000)}if(action.action==='pull_request_list')connectionStages.github='error';showConnection(explainConnection(error),false);throw error}};
 async function verify(){const current=session();if(!current){connectionStages.session='error';connectionStages.zeus='pending';connectionStages.github='pending';status.textContent='ALEA DEV-session saknas. Logga in i ALEA DEV och öppna OLYMPIA 2.0 från Admin.';showConnection('ALEA DEV-session saknas. Logga in igen.',false);return}connectionStages.session='ok';try{const {response,result}=await call({action:'session_check'},current);verified=response.ok&&result.ok===true;window.olympiaV2ZeusVerified=verified;connectionStages.zeus=verified?'ok':'error';status.textContent=verified?'Zeus-behörighet verifierad · DEV-beslut tillgängliga':'DEV-beslut låsta: '+(result.message||'sessionen kunde inte verifieras');if(verified){showConnection('Zeus-session verifierad. Kontrollerar PR-listan…',true);await window.olympiaV2Refresh?.()}else showConnection(explainConnection(result.message),false)}catch(error){connectionStages.zeus='error';status.textContent='DEV-beslut låsta: '+(error.message||'anslutningsfel');showConnection(explainConnection(error),false)}}
-function feedback(button,message){const card=button.closest('[data-pr]');let target=card.querySelector('[data-dev-result]');if(!target){target=document.createElement('p');target.className='notice';target.setAttribute('data-dev-result','');target.setAttribute('role','status');button.closest('.lane').append(target)}target.textContent=message;try{sessionStorage.setItem('olympia-v2-approval-'+card.dataset.pr,JSON.stringify({sha:button.dataset.headSha,message,at:Date.now()}))}catch(_){}}
-document.addEventListener('click',async event=>{const button=event.target.closest('[data-dev-approve]');if(!button||busy)return;const number=Number(button.dataset.devApprove),sha=button.dataset.headSha;feedback(button,'Klick registrerat · kontrollerar DEV-godkännande…');if(!verified){feedback(button,'Stopp: Zeus-session inte verifierad.');return}if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){feedback(button,'Stopp: ogiltigt PR-nummer eller SHA.');return}if(!confirm('Godkänn PR #'+number+' och squash-merga till development?')){feedback(button,'DEV-godkännande avbrutet.');return}busy=true;button.disabled=true;feedback(button,'PR #'+number+' · merging to DEV, please wait…');try{const {response,result}=await call({action:'approve_and_merge_dev',pullRequestNumber:number,pullRequestHeadSha:sha},session());if(!response.ok||result.ok!==true||result.merged!==true||!/^[a-f0-9]{40}$/i.test(result.sha||''))throw Error('HTTP '+response.status+' · '+(result.stage||'server')+' · '+(result.message||'GitHub bekräftade ingen merge'));feedback(button,'DEV-merge bekräftad av GitHub · '+result.sha);button.textContent='DEV godkänd ✓';await window.olympiaV2Refresh?.()}catch(error){feedback(button,'Ingen bekräftad merge: '+(error.name==='AbortError'?'Timeout, kontrollera PR-status innan nytt försök':error.message));button.disabled=false}finally{busy=false}},false);
+function feedback(button,message){const card=button.closest('[data-pr]');let target=card?.querySelector('[data-pr-feedback]');if(!target){target=document.querySelector('#global')}if(target){target.textContent=message;target.setAttribute('aria-live','polite')}try{sessionStorage.setItem('olympia-v2-approval-'+card.dataset.pr,JSON.stringify({sha:button.dataset.headSha,message,at:Date.now()}))}catch(_){}}
+document.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-dev-approve]');
+ if(!button||busy)return;
+ const card=button.closest('[data-pr]'),number=Number(button.dataset.devApprove),sha=button.dataset.headSha;
+ const choice=card?.querySelector('[data-dev-only-choice]'),devOnly=choice?.checked===true;
+ feedback(button,devOnly?'Enbart DEV är valt. Bekräfta avslut efter DEV-mergen.':'Klick registrerat · kontrollerar DEV-godkännande…');
+ if(!verified){feedback(button,'Stopp: Zeus-session inte verifierad.');return}
+ if(!Number.isSafeInteger(number)||number<1||!/^[a-f0-9]{40}$/i.test(sha)){feedback(button,'Stopp: ogiltigt PR-nummer eller SHA.');return}
+ const question=devOnly
+  ?'Godkänn PR #'+number+' och squash-merga till development? Ärendet avslutas efteråt. Ingen LIVE-kandidat skapas eller kan förberedas.'
+  :'Godkänn PR #'+number+' och squash-merga till development? OLYMPIA kan därefter förbereda en separat LIVE-kandidat.';
+ if(!confirm(question)){feedback(button,'DEV-godkännande avbrutet.');return}
+ busy=true;button.disabled=true;if(choice)choice.disabled=true;
+ feedback(button,devOnly?'PR #'+number+' · verifierar DEV-only-beslut och CI…':'PR #'+number+' · verifierar DEV-beslut och CI…');
+ try{
+  const {response,result}=await call({action:'approve_and_merge_dev',pullRequestNumber:number,pullRequestHeadSha:sha,devOnly},session());
+  if(!response.ok||result.ok!==true||result.merged!==true||!/^[a-f0-9]{40}$/i.test(result.sha||''))throw Error('HTTP '+response.status+' · '+(result.stage||'server')+' · '+(result.message||'GitHub bekräftade ingen merge'));
+  if(devOnly&&result.devOnly!==true)throw Error('GitHub bekräftade DEV-mergen, men DEV-only-avslutet kunde inte verifieras. Kontrollera historiken före nytt försök.');
+  feedback(button,devOnly?'Enbart DEV bekräftat av GitHub · '+result.sha+' · LIVE-kandidat skapades inte.':result.alreadyMerged?'DEV-merge redan bekräftad av GitHub · '+result.sha:result.acceptanceWarning||('DEV-merge bekräftad av GitHub · '+result.sha));
+  button.textContent=devOnly?'DEV-only avslutat ✓':'DEV godkänd ✓';
+  await window.olympiaV2Refresh?.();
+ }catch(error){
+  feedback(button,'Ingen obekräftad åtgärd rapporteras: '+(error.name==='AbortError'?'Timeout, kontrollera PR-status innan nytt försök':error.message));
+  button.disabled=false;if(choice)choice.disabled=!verified;
+ }finally{busy=false}
+},false);
+
+document.addEventListener('click',async event=>{
+ const button=event.target.closest('[data-live-approve]');
+ if(!button||button.disabled||busy)return;
+ if(!verified){feedback(button,'LIVE-godkännande låst: Zeus-session saknas.');return}
+ let data;
+ try{data=JSON.parse(button.dataset.candidateDecision||'{}')}catch(_){data={}}
+ const number=Number(button.dataset.liveApprove);
+ const valid=Number.isSafeInteger(number)&&number>0&&Number.isSafeInteger(data.candidateIssue)&&data.candidateIssue>0&&
+   /^[a-f0-9]{40}$/i.test(data.testedDevSha||'')&&/^[a-f0-9]{40}$/i.test(data.candidateTreeSha||'')&&
+   /^[a-f0-9]{40}$/i.test(data.releasePrSha||'');
+ if(!valid){feedback(button,'LIVE-godkännande låst: verifierad kandidatstatus saknas. Uppdatera status.');button.disabled=true;return}
+ if(!confirm('Godkänn LIVE-kandidat för PR #'+number+'? Detta squash-mergar releaseförslaget till main och startar verklig LIVE-publicering. Åtgärden kan inte ångras automatiskt.'))return;
+ busy=true;button.disabled=true;feedback(button,'Verifierar LIVE-kandidat och publiceringsvillkor…');
+ try{
+  const {response,result}=await call({action:'decision',decision:'final_approval',itemId:'PR-'+number,testedDevSha:data.testedDevSha,candidateIssue:data.candidateIssue,candidateTreeSha:data.candidateTreeSha,releasePrSha:data.releasePrSha},session(),60000);
+  if(!response.ok||result.ok!==true||!/^[a-f0-9]{40}$/i.test(result.mergeSha||''))throw Error(result.message||'GitHub har inte bekräftat LIVE-mergen');
+  feedback(button,'GitHub bekräftade LIVE-merge · '+result.mergeSha+'. Publicering verifieras separat.');
+  button.textContent='Godkänn LIVE · genomförd ✓';
+  button.dataset.candidateDecision='';
+  await window.olympiaV2Refresh?.();
+ }catch(error){
+  feedback(button,'Ingen obekräftad LIVE-merge rapporteras: '+(error.name==='AbortError'?'Timeout – kontrollera status innan nytt försök':error.message));
+  // Keep disabled until the current candidate and LIVE baseline are fetched again.
+ }finally{busy=false}
+},false);
 
 // LIVE candidate workflow reuses the existing server-side Zeus decision bridge.
 // No client action merges to main; final LIVE approval remains disabled.
@@ -41,8 +92,12 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      const result=await window.olympiaV2Request({action:'auto_candidate_diagnostics',pullRequestNumber:number,testedDevSha:sha});
      if(!node.isConnected)return;
      node.replaceChildren();
-     const line=document.createElement('p');node.append(line);
      const candidate=result.candidate;
+     const candidateLightState=candidate?.published===true||candidate?.ready===true?'success':candidate?.blocked===true?'failed':result.state==='requested'?'pending':'unknown';
+     const candidateLight=document.createElement('i');candidateLight.className='status-light '+candidateLightState;
+     candidateLight.setAttribute('aria-label','LIVE-kandidatstatus: '+candidateLightState);
+     node.append(candidateLight);
+     const line=document.createElement('p');node.append(line);
      // Link only a candidate returned by the verified server diagnostic.
      // Do not infer parentage from PR titles, branch names, or numbers.
      if(Number.isSafeInteger(candidate?.releasePr)&&candidate.releasePr>0){
@@ -57,7 +112,7 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
         childCard.dataset.parentPr=String(number);
         const heading=childCard.querySelector('.pr-summary small');
         if(heading)heading.textContent='Child LIVE #'+candidate.releasePr+' · Parent DEV #'+number;
-        parentCard.insertAdjacentElement('afterend',childCard);
+        parentCard.querySelector('.pr-body')?.append(childCard);
        }
       }
      }
@@ -82,24 +137,9 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       const note=document.createElement('p');note.className='muted';note.textContent=candidate.previewUrl?'Förhandsvisning och kandidatkontroller är verifierade. LIVE-godkännande kräver separat bekräftelse.':'Kandidatens tester är godkända. En versionsbunden förhandsvisning saknas ännu. LIVE-beslut är låsta.';review.append(note);
       const decisions=document.createElement('div');decisions.className='actions';
       const candidateReady=Number.isInteger(number)&&number>0&&Number.isInteger(candidate.releasePr)&&candidate.releasePr>0&&result.issue?.number>0&&/^[a-f0-9]{40}$/i.test(result.testedDevSha||'')&&/^[a-f0-9]{40}$/i.test(candidate.candidateTreeSha||'')&&/^[a-f0-9]{40}$/i.test(candidate.releasePrSha||'')&&Boolean(candidate.previewUrl);
-      const approve=document.createElement('button');approve.type='button';approve.textContent='Godkänn LIVE';approve.disabled=!candidateReady;decisions.append(approve);
-      if(candidateReady)approve.addEventListener('click',async()=>{
-       if(busy||!verified)return;
-       const confirmed=confirm('Godkänn LIVE-kandidat #'+candidate.releasePr+' för PR #'+number+'? Detta squash-mergar releaseförslaget till main och startar verklig LIVE-publicering. Åtgärden kan inte ångras automatiskt.');
-       if(!confirmed)return;
-       busy=true;approve.disabled=true;feedback(approve,'Verifierar LIVE-kandidat och publiceringsvillkor…');
-       try{
-        const {response:reply,result:outcome}=await call({action:'decision',decision:'final_approval',itemId:'PR-'+number,testedDevSha:result.testedDevSha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha,releasePrSha:candidate.releasePrSha},session(),60000);
-        if(!reply.ok||outcome.ok!==true)throw Error(outcome.message||'LIVE-godkännandet kunde inte verifieras');
-        feedback(approve,'GitHub bekräftade LIVE-merge · '+(outcome.mergeSha||'')+'. Publicering verifieras separat.');
-        approve.textContent='LIVE-merge genomförd ✓';
-        await window.olympiaV2Refresh?.();
-       }catch(error){
-        feedback(approve,'Ingen bekräftad LIVE-merge: '+(error.name==='AbortError'?'Timeout – kontrollera status innan nytt försök':error.message));
-        // Do not enable retries without refreshing candidate and baseline status.
-       }finally{busy=false}
-      });
-      for(const label of ['Lägg i releasepaket','Omarbeta','Kasta']){
+      const approve=node.closest('[data-pr]')?.querySelector('[data-live-approve]');
+      if(approve){approve.disabled=!candidateReady;approve.dataset.candidateDecision=candidateReady?JSON.stringify({testedDevSha:result.testedDevSha,candidateIssue:result.issue.number,candidateTreeSha:candidate.candidateTreeSha,releasePrSha:candidate.releasePrSha}):''}
+            for(const label of ['Lägg i releasepaket','Omarbeta','Kasta']){
        const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);
       }
       review.append(decisions);node.append(review);
@@ -140,7 +180,8 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       details.append(summary);
       while(node.firstChild)details.append(node.firstChild);
       const compact=document.createElement('p');compact.className=line.className||'muted';compact.textContent=summaryText;
-      node.append(compact,details);
+      const compactLight=candidateLight.cloneNode(true);
+      node.append(compactLight,compact,details);
      }
     }catch(error){candidateCacheUntil.delete(requestKey);if(node.isConnected)node.textContent='LIVE-status kunde inte hämtas eller verifieras ('+(error.name==='AbortError'?'timeout':String(error.message||'anslutningsfel').slice(0,140))+'). Inget LIVE-godkännande är tillgängligt.'}
     finally{candidateRequests.delete(requestKey)}
