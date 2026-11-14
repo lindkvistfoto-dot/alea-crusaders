@@ -148,12 +148,42 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   }
   return data;
 }
+function isTransientCandidateReadError(code: string) {
+  return code === "GITHUB_PUBLIC_RATE_LIMITED" ||
+    code === "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" ||
+    code === "GITHUB_PUBLIC_RESPONSE_INVALID" ||
+    /^GITHUB_PUBLIC_REQUEST_FAILED_(?:403|429|502|503|504)$/.test(code);
+}
 async function ghPublic(path: string) {
-  const res = await fetch("https://api.github.com" + path, {
-    headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
+  let res: Response;
+  try {
+    res = await fetch("https://api.github.com" + path, {
+      headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    });
+  } catch (_error) {
+    console.error("OLYMPIA GitHub public API request failed", JSON.stringify({ path, code: "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" }));
+    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_NETWORK");
+  }
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (_error) {
+    console.error("OLYMPIA GitHub public API response invalid", JSON.stringify({ path, status: res.status }));
+    throw new Error("GITHUB_PUBLIC_RESPONSE_INVALID");
+  }
+  if (!res.ok) {
+    const reason = String(data.message || "unknown").slice(0, 180);
+    const remaining = res.headers.get("x-ratelimit-remaining");
+    const reset = res.headers.get("x-ratelimit-reset");
+    const rateLimited = res.status === 403 &&
+      (remaining === "0" || /API rate limit exceeded/i.test(reason));
+    console.error(
+      rateLimited ? "OLYMPIA GitHub public API rate limited" : "OLYMPIA GitHub public API request rejected",
+      JSON.stringify({ path, status: res.status, reason, remaining, reset }),
+    );
+    if (rateLimited) throw new Error("GITHUB_PUBLIC_RATE_LIMITED");
+    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
+  }
   return data;
 }
 async function currentDevPullRequest(token: string, number: number, headSha: string) {
@@ -711,7 +741,12 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     };
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
+    const transientReadFailure = isTransientCandidateReadError(code);
+    console.warn("OLYMPIA candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
     const messages: Record<string, string> = {
+      GITHUB_PUBLIC_RATE_LIMITED: "GitHub API-begränsningen hindrar CI-verifiering just nu. LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub API kunde inte nås under CI-verifieringen. LIVE-beslut är låsta; uppdatera status och försök igen.",
+      GITHUB_PUBLIC_RESPONSE_INVALID: "GitHub returnerade ett ogiltigt CI-svar. LIVE-beslut är låsta; uppdatera status och försök igen.",
       CANDIDATE_NOT_READY: "Kandidatrapporten är inte klar. LIVE är oförändrat.",
       CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
       LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. En ny kandidat behövs.",
@@ -723,10 +758,15 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
       CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
+      GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub API kunde inte verifiera CI-kontrollerna (403). LIVE-beslut är låsta; kontrollera GitHub-status och försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-kontrollerna svarade inte i tid (504). LIVE-beslut är låsta; försök igen.",
     };
     return {
       ready: false,
-      blocked: true,
+      blocked: !transientReadFailure,
       reasonCode: code || "CANDIDATE_VERIFICATION_FAILED",
       message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
       candidateTreeSha: releasePrTreeSha,
@@ -1651,6 +1691,10 @@ async function handleRequest(req: Request): Promise<Response> {
         candidate = await verifyCandidate(token, item, data);
       } catch (error) {
         const code = error instanceof Error ? error.message : "";
+        console.error("OLYMPIA LIVE final approval candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
+        if (isTransientCandidateReadError(code)) {
+          return fail("GitHub kunde inte verifiera releasekontrollerna just nu. Ingen LIVE-ändring gjordes; uppdatera status och försök igen.", 503);
+        }
         const messages: Record<string, string> = {
           CANDIDATE_INPUT_INVALID: "Kandidatens ID eller SHA saknas.",
           CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till det här ärendet.",
