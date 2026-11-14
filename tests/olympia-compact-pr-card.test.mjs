@@ -51,6 +51,8 @@ test('shared feedback and collapsed verified history stay available', () => {
   expect(html).toMatch(/class="pr-log"/);
   expect(html).toMatch(/Öppna PR-historik/);
   expect(approval).toMatch(/data-pr-feedback/);
+  expect(approval).toContain("diagnosticDetails.className='pr-log'");
+  expect(approval).toContain("Tekniska LIVE-detaljer");
   expect(approval).toMatch(/window\.olympiaV2Feedback=feedback/);
   expect(html).toMatch(/Klick registrerat · uppdaterar PR-status hos GitHub/);
   expect(approval).toMatch(/data-pr-feedback/);

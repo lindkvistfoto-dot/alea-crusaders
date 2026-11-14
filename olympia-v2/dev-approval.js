@@ -102,6 +102,9 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
      candidateLight.setAttribute('aria-label','LIVE-kandidatstatus: '+candidateLightState);
      node.append(candidateLight);
      const line=document.createElement('p');node.append(line);
+     const diagnosticDetails=document.createElement('details');diagnosticDetails.className='pr-log';
+     const diagnosticSummary=document.createElement('summary');diagnosticSummary.textContent='Tekniska LIVE-detaljer';
+     const diagnosticBody=document.createElement('div');diagnosticDetails.append(diagnosticSummary,diagnosticBody);node.append(diagnosticDetails);
      // Link only a candidate returned by the verified server diagnostic.
      // Do not infer parentage from PR titles, branch names, or numbers.
      if(Number.isSafeInteger(candidate?.releasePr)&&candidate.releasePr>0){
@@ -126,8 +129,8 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
       line.className='good';line.textContent='Publicerad i LIVE · verifierad'+(candidate.liveMergeSha?' · '+candidate.liveMergeSha.slice(0,10):'');
      }else if(candidate?.ready===true&&candidate.releasePr&&candidate.releaseUrl){
       line.className='good';line.textContent='LIVE-kandidat #'+candidate.releasePr+' · verifierad och redo för granskning.';
-      const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kontroller verifierade för aktuell SHA '+candidate.releasePrSha;node.append(checks);
-      const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;node.append(link);
+      const checks=document.createElement('p');checks.className='good';checks.textContent='✓ Kontroller verifierade för aktuell SHA '+candidate.releasePrSha;diagnosticBody.append(checks);
+      const link=document.createElement('a');link.className='action';link.href=candidate.releaseUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Visa verifierad LIVE-kandidat #'+candidate.releasePr;diagnosticBody.append(link);
       // A release PR is not a deploy preview. Never guess a Cloudflare URL.
       const review=document.createElement('div');review.className='live-review';
       const heading=document.createElement('strong');heading.textContent='LIVE · Förhandsgranskning';review.append(heading);
@@ -148,11 +151,11 @@ window.olympiaV2CheckCandidateStatuses=async()=>{
             for(const label of ['Lägg i releasepaket','Omarbeta','Kasta']){
        const control=document.createElement('button');control.type='button';control.disabled=true;control.textContent=label;decisions.append(control);
       }
-      review.append(decisions);node.append(review);
+      review.append(decisions);diagnosticBody.append(review);
      }else if(candidate?.blocked){
       line.className='bad';line.textContent=candidate.message||'BLOCKERAD – LIVE-kandidat kunde inte skapas.';
       if(candidate.workflowRunUrl&&/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+$/.test(candidate.workflowRunUrl)){
-       const run=document.createElement('a');run.className='action';run.href=candidate.workflowRunUrl;run.target='_blank';run.rel='noopener noreferrer';run.textContent='Visa misslyckad körning';node.append(run);
+       const run=document.createElement('a');run.className='action';run.href=candidate.workflowRunUrl;run.target='_blank';run.rel='noopener noreferrer';run.textContent='Visa misslyckad körning';diagnosticBody.append(run);
       }
       const staleBaseline=candidate.reasonCode==='LIVE_BASELINE_CHANGED';
       const blockedRun=candidate.reasonCode==='CANDIDATE_WORKFLOW_BLOCKED';
