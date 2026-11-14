@@ -119,8 +119,3 @@ grant select on public.arcane_trophy_public_definitions to authenticated;
 grant select on public.arcane_trophy_public_grants to authenticated;
 grant select on public.arcane_trophy_public_variants to authenticated;
 
--- Remove the temporary table-level row policy: it would expose every column
--- of honor_grants for matching rows, including grant and revocation reasons.
-drop policy if exists honor_definitions_trophy_public_select on public.honor_definitions;
-drop policy if exists honor_grants_trophy_public_select on public.honor_grants;
-drop policy if exists honor_relief_variants_trophy_public_select on public.honor_relief_variants;
