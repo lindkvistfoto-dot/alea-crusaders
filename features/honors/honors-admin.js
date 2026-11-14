@@ -201,7 +201,7 @@ export function renderHonorsAdmin(root, options = {}) {
       ).join('');
       return '<section class="honors-variant-library honors-award-single-image">' +
         '<h4>En bild · tre ramar</h4>' +
-        '<p>Samma motiv monteras i valörens låsta ram med ädelstenar och kronbakgrund.</p>' +
+        '<p>En motivbild används för alla valörer. Samma motiv monteras i valörens låsta ram med ädelstenar och kronbakgrund.</p>' +
         '<div class="honors-preview-tiers">' + previews + '</div></section>';
     }
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
