@@ -35,6 +35,9 @@ describe('ARCANE Spelmöte',()=>{
   expect(panel).toContain("header.dataset.dayPhase=item.tone");
   expect(headerCss).toContain('.alea-app-header .alea-phase-banner-image.is-visible {opacity:1}');
   expect(headerCss).toContain('.alea-app-header .alea-phase-banner.is-fallback .alea-phase-banner-image {opacity:0}');
+  expect(headerCss).toContain('.alea-app-header .alea-phase-banner-image.is-visible{opacity:1}');
+  expect(headerCss).toContain('top:0;right:0;left:0;bottom:auto;height:116px');
+  expect(headerCss).toContain('object-fit:cover');
   expect(panelCss).not.toContain('--alea-phase-filter');
  });
  it('provides separate day and rest actions with the existing rest thresholds',()=>{
