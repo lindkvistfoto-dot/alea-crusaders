@@ -63,3 +63,37 @@ test('DEV-only child PRs render under the parent and malformed lane markup is ab
   expect(html).toMatch(/<div class="lanes"><section class="lane"><h3>DEV/);
   expect(html).not.toMatch(/<div class="lanes"<section/);
 });
+
+
+test('DEV-only and ordinary DEV decision locks are idempotent and mutually exclusive', async () => {
+  const start = edge.indexOf('const devDecisionRefName');
+  const end = edge.indexOf('async function isDevOnlyDecision', start);
+  const source = edge.slice(start, end).replaceAll(': number', '').replaceAll(': string', '').replaceAll(': boolean', '');
+  const refs = new Map();
+  const gh = async (_token, path, options) => {
+    if (path.endsWith('/git/refs') && options?.method === 'POST') {
+      const request = JSON.parse(options.body);
+      const name = request.ref.replace(/^refs\/heads\//, '');
+      if (refs.has(name)) throw new Error('GITHUB_REQUEST_FAILED_422');
+      refs.set(name, request.sha);
+      return { object: { sha: request.sha } };
+    }
+    const match = path.match(/\/git\/ref\/heads\/(.+)$/);
+    if (match) {
+      const sha = refs.get(decodeURIComponent(match[1]));
+      if (!sha) throw new Error('GITHUB_REQUEST_FAILED_404');
+      return { object: { sha } };
+    }
+    throw new Error('unexpected GitHub path');
+  };
+  const reserve = new Function('gh', 'OWNER', 'REPO', source + '; return reserveDevDecision;')(gh, 'owner', 'repo');
+  const sha = letter => letter.repeat(40);
+
+  await expect(reserve('token', 42, sha('a'), true, sha('c'))).resolves.toMatchObject({ selectedSha: sha('a') });
+  await expect(reserve('token', 42, sha('a'), true, sha('d'))).resolves.toMatchObject({ selectedSha: sha('a') });
+  await expect(reserve('token', 42, sha('a'), false, sha('c'))).rejects.toThrow('DEV_DECISION_ALREADY_SELECTED');
+
+  await expect(reserve('token', 43, sha('b'), false, sha('d'))).resolves.toMatchObject({ selectedSha: sha('d') });
+  await expect(reserve('token', 43, sha('b'), false, sha('e'))).resolves.toMatchObject({ selectedSha: sha('d') });
+  await expect(reserve('token', 43, sha('b'), true, sha('d'))).rejects.toThrow('DEV_DECISION_ALREADY_SELECTED');
+});
