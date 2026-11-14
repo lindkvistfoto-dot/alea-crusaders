@@ -18,7 +18,7 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).toContain('reconcile-index-asset-versions.mjs');
   expect(workflow).toContain('No candidate PR was created.');
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
-  expect(workflow).toContain('PR_HEAD_SHA="$(jq -r \' .head.sha\' <<< "$PR_JSON")"'.replace(" \' .head.sha"," .head.sha"));
+  expect(workflow).toContain("PR_HEAD_SHA=\"$(jq -r '.head.sha' <<< \"$PR_JSON\")\"");
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base "$PR_HEAD_SHA" "$PR_MERGE_PARENT_SHA"');
   expect(workflow).toContain('git -C "$DEV_DIR" diff --binary --full-index "$PR_PATCH_BASE_SHA" "$PR_PATCH_SHA"');
   expect(workflow).toContain('live.replace(liveLabel,baseLabel)!==base');
