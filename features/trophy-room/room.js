@@ -258,15 +258,25 @@ async function renderAwards(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot trophy-room-award-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
-   const count=counts.get(String(d.id))||1,tier='bronze'; // Tier rules require explicit domain criteria, not grant-count guessing.
+   const count=counts.get(String(d.id))||1;
+   const requestedTier=d.highest_tier||d.awarded_tier||d.badge_frame_assets?.highest_tier;
+   const tier=['bronze','silver','gold'].includes(String(requestedTier||'').toLowerCase())?String(requestedTier).toLowerCase():'bronze';
    const art=document.createElement('div');art.className='trophy-room-badge-art';
    const asset=assetMap.get(d.image_asset_id);
    const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
-   const frameAsset=assetMap.get(d.badge_frame_assets?.[tier]);
-   const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
-   if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
+   const mount=root.ArcaneAwardMount;
+   if(mount){
+    const metalKey=mount.frameAssetKey(tier),frameAsset=assetMap.get(metalKey);
+    const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
+    const accent=mount.validAccent(d.badge_frame_assets?.accent_color);
+    const gemUrls={};
+    for(const form of ['diamond','round'])for(const color of mount.ACCENTS){
+     const key=mount.gemAssetKey(form,color),gem=assetMap.get(key);
+     if(gem?.asset_path)gemUrls[key]=systemAssetUrl(gem.asset_path);
+    }
+    mount.mountAward(art,{metal:tier,accent,motifUrl:reliefUrl,motifAlt:d.name,motifLabel:d.name,frameUrl,gemUrls});
+   }else if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
-   if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
    slot.append(art);
    if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
    activateHonorSlot(slot,'award',{name:d.name,description:d.description,count,art});
