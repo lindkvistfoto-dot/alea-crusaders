@@ -42,7 +42,13 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(list).not.toContain('liveMergePublicationStatus');
     expect(list).not.toContain('verifyPublishedManifest');
     expect(list).not.toContain('check-runs');
+    expect(list).toContain('data.includeCandidateParents === false');
+    expect(list).toContain('fetchActiveCandidateParents(token, botLogin)');
+    expect(list).toContain('OLYMPIA legacy candidate relation unavailable');
+    expect(list).toContain('return []');
     expect(refresh).toContain("action:'pull_request_candidate_parents'");
+    expect(refresh).toContain("action:'pull_request_list',includeCandidateParents:false");
+    expect(frontend).toContain("action:'pull_request_list',includeCandidateParents:false");
     expect(refresh).toContain("global.textContent+=' · LIVE-kandidatstatus ej verifierad'");
   });
 

@@ -83,7 +83,7 @@ async function refresh(preloadedPrList=null){
  try{
   if(!window.olympiaV2Request)throw Error('ALEA DEV-anslutningen är inte klar');
   const registryPromise=window.olympiaV2Request({action:'idea_list'}).then(value=>({ok:true,value})).catch(error=>({ok:false,error}));
-  const data=await (preloadedPrList||window.olympiaV2Request({action:'pull_request_list'}));
+  const data=await (preloadedPrList||window.olympiaV2Request({action:'pull_request_list',includeCandidateParents:false}));
   writeCachedPrList(data.pullRequests||[]);
   const cachedHidden=Array.isArray(window.olympiaV2HiddenPrNumbers)?window.olympiaV2HiddenPrNumbers:[];
   const hidden=new Set(cachedHidden.map(Number));

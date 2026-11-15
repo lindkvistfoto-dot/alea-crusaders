@@ -257,7 +257,7 @@ if(!window.olympiaAuthVerified||typeof window.olympiaAuthenticatedRequest!=="fun
 if(pullRequestsRefresh)return pullRequestsRefresh;
 pullRequestsRefresh=(async function(){
 try{
- var response=await window.olympiaAuthenticatedRequest({action:"pull_request_list"});
+ var response=await window.olympiaAuthenticatedRequest({action:"pull_request_list",includeCandidateParents:false});
  if(!response.response.ok||!response.result.ok)throw new Error(response.result.message||"HTTP "+response.response.status);
  var prs=response.result.pullRequests;
  if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");

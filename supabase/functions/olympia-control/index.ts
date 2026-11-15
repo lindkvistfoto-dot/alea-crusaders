@@ -836,6 +836,46 @@ function title(item: any, decision: string) {
   };
   return "[OLYMPIA " + label[decision] + "] " + item.id + " · " + item.title;
 }
+async function fetchActiveCandidateParents(token: string, botLogin: string) {
+  const repoPath = "/repos/" + OWNER + "/" + REPO;
+  const query = new URLSearchParams({
+    q: "repo:" + OWNER + "/" + REPO + " is:issue is:open creator:" + botLogin + ' "PANDORAS ASK"',
+    per_page: "100",
+  });
+  const candidateIssues: any[] = [];
+  let candidateIssueTotal = 0;
+  for (let page = 1; page <= 10; page++) {
+    query.set("page", String(page));
+    const search = await ghReadWithRetry(token, "/search/issues?" + query.toString());
+    if (!Array.isArray(search.items)) throw new Error("GITHUB_CANDIDATE_SEARCH_INVALID");
+    candidateIssueTotal = Number(search.total_count || 0);
+    candidateIssues.push(...search.items);
+    if (search.items.length < 100) break;
+    if (page === 10 && candidateIssues.length < candidateIssueTotal) {
+      throw new Error("GITHUB_CANDIDATE_SEARCH_INCOMPLETE");
+    }
+  }
+  const parentNumbers = [...new Set(candidateIssues
+    .filter((issue: any) => !issue.pull_request && issue.user?.login === botLogin &&
+      String(issue.body || "").includes("- Beslut: PANDORAS ASK"))
+    .map((issue: any) => Number(String(issue.body || "").match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m)?.[1] || 0))
+    .filter((number: number) => Number.isSafeInteger(number) && number > 0))];
+  const parents: any[] = [];
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(4, parentNumbers.length) }, async () => {
+    while (cursor < parentNumbers.length) {
+      const number = parentNumbers[cursor++];
+      const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + number);
+      if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development") {
+        parents.push({ ...pr, liveCandidateActive: true });
+      }
+    }
+  });
+  await Promise.all(workers);
+  parents.sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+  return parents;
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
   const response = await handleRequest(req);
@@ -1343,12 +1383,26 @@ async function handleRequest(req: Request): Promise<Response> {
           }
           return pullRequests;
         };
-        const [developmentPrs, livePrs] = await Promise.all([
+        // Old DEV frontends expect active candidate parents in this response.
+        // New frontends opt out and load that relation in a separate request.
+        const candidateParentsPromise = data.includeCandidateParents === false
+          ? Promise.resolve([])
+          : appBotLogin().then(botLogin => fetchActiveCandidateParents(token, botLogin)).catch(error => {
+            const code = error instanceof Error ? error.message : "UNKNOWN";
+            console.warn("OLYMPIA legacy candidate relation unavailable", JSON.stringify({ requestId, code }));
+            return [];
+          });
+        const [developmentPrs, livePrs, candidateParents] = await Promise.all([
           fetchOpenPrs("development"),
           fetchOpenPrs("main"),
+          candidateParentsPromise,
         ]);
         const open = [...developmentPrs, ...livePrs];
-        const pullRequests = open
+        const byNumber = new Map<number, any>(open.map((pr: any) => [Number(pr.number), pr]));
+        for (const parent of candidateParents) {
+          if (!byNumber.has(Number(parent.number))) byNumber.set(Number(parent.number), parent);
+        }
+        const pullRequests = [...byNumber.values()]
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
         console.info("OLYMPIA PR list completed", JSON.stringify({
           requestId,
@@ -1371,42 +1425,7 @@ async function handleRequest(req: Request): Promise<Response> {
           githubToken("auto_candidate_diagnostics"),
           appBotLogin(),
         ]);
-        const repoPath = "/repos/" + OWNER + "/" + REPO;
-        const query = new URLSearchParams({
-          q: "repo:" + OWNER + "/" + REPO + " is:issue is:open creator:" + botLogin + ' "PANDORAS ASK"',
-          per_page: "100",
-        });
-        const candidateIssues: any[] = [];
-        let candidateIssueTotal = 0;
-        for (let page = 1; page <= 10; page++) {
-          query.set("page", String(page));
-          const search = await ghReadWithRetry(token, "/search/issues?" + query.toString());
-          if (!Array.isArray(search.items)) throw new Error("GITHUB_CANDIDATE_SEARCH_INVALID");
-          candidateIssueTotal = Number(search.total_count || 0);
-          candidateIssues.push(...search.items);
-          if (search.items.length < 100) break;
-          if (page === 10 && candidateIssues.length < candidateIssueTotal) {
-            throw new Error("GITHUB_CANDIDATE_SEARCH_INCOMPLETE");
-          }
-        }
-        const parentNumbers = [...new Set(candidateIssues
-          .filter((issue: any) => !issue.pull_request && issue.user?.login === botLogin &&
-            String(issue.body || "").includes("- Beslut: PANDORAS ASK"))
-          .map((issue: any) => Number(String(issue.body || "").match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m)?.[1] || 0))
-          .filter((number: number) => Number.isSafeInteger(number) && number > 0))];
-        const parents: any[] = [];
-        let cursor = 0;
-        const workers = Array.from({ length: Math.min(4, parentNumbers.length) }, async () => {
-          while (cursor < parentNumbers.length) {
-            const number = parentNumbers[cursor++];
-            const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + number);
-            if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development") {
-              parents.push({ ...pr, liveCandidateActive: true });
-            }
-          }
-        });
-        await Promise.all(workers);
-        parents.sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+        const parents = await fetchActiveCandidateParents(token, botLogin);
         console.info("OLYMPIA candidate parents completed", JSON.stringify({
           requestId,
           elapsedMs: Math.round(performance.now() - candidateStartedAt),
