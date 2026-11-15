@@ -80,6 +80,13 @@ async function detectAwardAccent(file) {
   }
 }
 
+
+async function detectAwardAccentFromUrl(url) {
+  const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+  if (!response.ok) throw new Error('Kunde inte läsa utmärkelsebilden för färganalys.');
+  return detectAwardAccent(await response.blob());
+}
+
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
 const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || laurelFrameKeys[metal];
@@ -253,6 +260,15 @@ export function renderHonorsAdmin(root, options = {}) {
         resolveAsset: key => assetImage(key)
       });
     });
+    // Existing uploads gain an accent on first admin preview without requiring another upload.
+    if (motifUrl && !definition.badge_frame_assets?.accent_color && typeof options.onSaveAccent === 'function') {
+      const imageId = definition.image_asset_id;
+      void detectAwardAccentFromUrl(motifUrl).then(async accent => {
+        if (definition.image_asset_id !== imageId || definition.badge_frame_assets?.accent_color || imageBusy) return;
+        await options.onSaveAccent(definition, accent);
+        if (editing === definition && definition.image_asset_id === imageId) bindAwardPreviews(definition);
+      }).catch(error => console.warn('Honor accent detection skipped', error));
+    }
   }
 
   function renderVariantPanel(definition) {
