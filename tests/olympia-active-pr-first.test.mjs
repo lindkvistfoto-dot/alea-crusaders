@@ -38,6 +38,7 @@ it('Draft PRs do not trigger CI and a cached green expires into a disabled appro
 });
 
 it('CI reads use authenticated App endpoints for display and approval',()=>{
+ expect(page).not.toContain('api.github.com');
  expect(status).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/status")');
  expect(status).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
  expect(status).not.toContain('ghPublic');
