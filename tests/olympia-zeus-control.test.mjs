@@ -459,7 +459,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('retries GitHub mergeability when it is temporarily unknown',async()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('async function currentDevPullRequest(');
-    const end=edge.indexOf('async function recordDevAcceptance(',start);
+    const end=edge.indexOf('const devDecisionRefName',start);
     const source=edge.slice(start,end).replace('token: string, number: number, headSha: string','token, number, headSha').replace('): Promise<any> {',') {').replace('let pr: any = null;','let pr = null;');
     const sha='a'.repeat(40);
     let calls=0;
