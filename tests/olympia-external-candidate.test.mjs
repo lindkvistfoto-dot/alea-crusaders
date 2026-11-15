@@ -132,6 +132,7 @@ describe('OLYMPIA separately built LIVE candidates',()=>{
   it('keeps external registration behind Zeus auth and final approval re-verifies it',()=>{
     expect(edge.indexOf('if (data.action === "register_external_candidate")')).toBeGreaterThan(edge.indexOf('user.email_confirmed_at'));
     expect(edge).toContain('githubToken("register_external_candidate")');
+    expect(edge).toContain('decision === "register_external_candidate"\n    ? { contents: "read", issues: "write", pull_requests: "read" }');
     expect(edge).toContain('reportBody.includes("- Candidate source: OLYMPIA-registered external PR #" + prMatch[1])');
     expect(edge).toContain('candidateBody.includes("- Exact candidate tree: " + currentTreeSha)');
     expect(edge).toContain('candidate = await verifyCandidate(token, item, data)');
