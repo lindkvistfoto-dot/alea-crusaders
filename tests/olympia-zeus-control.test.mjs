@@ -316,7 +316,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('lists current open GitHub PRs and checks selected PR CI and mergeability on demand',()=>{
     const page=read('olympia/zeus-control.html');
     const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('window.olympiaRefreshTrial=renderTrial'));
-    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list",includeCandidateParents:false})');
     expect(page).toContain('finally{pullRequestsRefresh=null}');
     expect(page).toContain('GitHub-listan kunde inte uppdateras. Registrerade DEV-godkännanden visas ovan');
     expect(trial).toContain('var open=(!openPullRequestError?listed:[])');
