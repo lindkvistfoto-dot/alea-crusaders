@@ -21,6 +21,13 @@ describe('OLYMPIA automatic candidate read-only diagnostics',()=>{
   expect(diagnostics).toContain('"needs_review"');
   expect(diagnostics).toContain('Ingen återställning tillåten');
  });
+ it('shows the verified journal reason when a candidate workflow is blocked',()=>{
+  const report=['- Status: BLOCKED','- Felorsak: En konflikt mellan DEV och LIVE kräver manuell granskning: features/trophy-room/room.js .'].join(String.fromCharCode(10));
+  const reason=report.match(/^- Felorsak:\s*(.+)$/im)?.[1]?.trim();
+  expect(reason).toBe('En konflikt mellan DEV och LIVE kräver manuell granskning: features/trophy-room/room.js .');
+  expect(edge).toContain('const blockedReasonMatch = body.match(');
+  expect(edge).toContain('blockedReasonMatch?.[1]?.trim()');
+ });
  it('uses only read permissions and never calls final approval',()=>{
   expect(edge).toContain('decision === "candidate_check" || decision === "auto_candidate_diagnostics"');
   expect(diagnostics).not.toContain('final_approval');

@@ -86,6 +86,10 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(html).toContain('writeCachedPrList(data.pullRequests||[],freshCandidateParents)');
   expect(html).toContain('activePrCountLabel(updatedPrs.length,updatedFilter.visibleRows.length)');
  });
+ it('lets slow candidate-parent verification finish outside the fast PR-list path',()=>{
+  expect(js).toContain("const timeout=['auto_candidate_diagnostics','pull_request_candidate_parents'].includes(action.action)?60000:20000;");
+  expect(js).toContain("action:'pull_request_list',includeCandidateParents:false");
+ });
  it('keeps candidate lookup separate from PR-list rendering and replaces cached parents only on a successful response',()=>{
   expect(html).toContain("action:'pull_request_list',includeCandidateParents:false");
   expect(html).toContain("candidateData?.ok!==true||!Array.isArray(candidateData.pullRequests)");
