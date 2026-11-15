@@ -5,12 +5,14 @@ const frontend = readFileSync(new URL('../olympia-v2/dev-approval.js', import.me
 const page = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
 const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
 const refresh = page.slice(page.indexOf('async function refresh('), page.indexOf('let refreshing=false'));
-const list = edge.slice(edge.indexOf('if (data.action === "pull_request_list")'), edge.indexOf('if (data.action === "pull_request_history")'));
+const list = edge.slice(edge.indexOf('if (data.action === "pull_request_list")'), edge.indexOf('if (data.action === "pull_request_candidate_parents")'));
 
 describe('OLYMPIA instant PR-list recovery', () => {
-  it('starts the authenticated PR-list read concurrently with session verification', () => {
+  it('uses the authenticated PR-list response as the normal Zeus verification and checks session separately only after list failure', () => {
     const verify = frontend.slice(frontend.indexOf('async function verify()'), frontend.indexOf('function feedback'));
-    expect(verify.indexOf("window.olympiaV2Request({action:'pull_request_list'})")).toBeLessThan(verify.indexOf("call({action:'session_check'}"));
+    expect(verify.indexOf("window.olympiaV2Request({action:'pull_request_list'})")).toBeLessThan(verify.indexOf('await prListPromise'));
+    expect(verify.indexOf("call({action:'session_check'}")).toBeGreaterThan(verify.indexOf('catch(listError)'));
+    expect(verify).toContain('Zeus verifierades av servern vid den skyddade PR-listan.');
     expect(verify).toContain('window.olympiaV2Refresh?.(prListPromise)');
     expect(frontend).toContain('new AbortController()');
   });
@@ -31,6 +33,27 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(page).toContain('showCachedPrList();');
     expect(page).toContain("sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:projected,verifiedAt:Date.now()}))");
     expect(page).toContain('const ready=state===\'success\'&&mergeable&&eligible&&fresh');
+  });
+
+  it('returns the PR list without waiting for candidate or LIVE publication diagnostics', () => {
+    expect(list).toContain('/pulls?state=open&per_page=100&page=');
+    expect(list).not.toContain('/issues?');
+    expect(list).not.toContain('/search/issues');
+    expect(list).not.toContain('liveMergePublicationStatus');
+    expect(list).not.toContain('verifyPublishedManifest');
+    expect(list).not.toContain('check-runs');
+    expect(refresh).toContain("action:'pull_request_candidate_parents'");
+    expect(refresh).toContain("global.textContent+=' · LIVE-kandidatstatus ej verifierad'");
+  });
+
+  it('keeps list rendering independent of session classification when the list fails', () => {
+    const verify = frontend.slice(frontend.indexOf('async function verify()'), frontend.indexOf('function feedback'));
+    expect(verify.indexOf('window.olympiaV2Refresh?.(prListPromise)')).toBeLessThan(verify.indexOf("call({action:'session_check'}"));
+    expect(verify).toContain('await listDisplay');
+    expect(verify).toContain('detta bekräftar inte att behörighet saknas');
+    expect(page).toContain("data-status-ready=\"'+String(ready)+'\"");
+    expect(page).toContain('window.olympiaV2SetZeusVerified=verified=>');
+    expect(page).toContain('now-Number(button.dataset.ciVerifiedAt)<120000');
   });
 
   it('records correlated client and server timings without changing authorization gates', () => {

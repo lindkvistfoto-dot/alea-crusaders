@@ -68,7 +68,7 @@ var owner="lindkvistfoto-dot",repo="alea-crusaders",api="https://api.github.com/
 var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
 var get=function(id){return document.getElementById(id)};
 function cachedOpenPullRequests(){try{var value=JSON.parse(sessionStorage.getItem("olympia-pr-flow-cache-v1")||"null");return Array.isArray(value)?value:null}catch(_){return null}}
-var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=true,openPullRequestErrorMessage="Aktuella PR kräver en verifierad ALEA DEV-session.",pullRequestsRefresh=null,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};window.olympiaLiveUnverifiedByItem={};
+var baseline=null,queue=null,inventory=[],openPullRequests=cachedOpenPullRequests(),openPullRequestError=true,openPullRequestErrorMessage="Aktuella PR kräver en verifierad ALEA DEV-session.",pullRequestsRefresh=null,candidateParentsSequence=0,currentDevSha=null,decisionRenderSequence=0,preflightRequestSequence=0,previewBySha={},previewRequests={};window.olympiaDecisionsLoaded=false;window.olympiaLivePublishedByItem={};window.olympiaLiveUnverifiedByItem={};
 window.olympiaAuthVerified=false;window.olympiaCandidateCheckCache=window.olympiaCandidateCheckCache||{};
 function panel(id){document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("active",t.dataset.panel===id)});document.querySelectorAll(".panel").forEach(function(p){p.classList.toggle("active",p.id==="panel-"+id)})}
 document.querySelectorAll(".tab").forEach(function(t){t.addEventListener("click",function(){panel(t.dataset.panel)})});
@@ -262,6 +262,21 @@ try{
  var prs=response.result.pullRequests;
  if(!Array.isArray(prs))throw new Error("Ogiltigt PR-svar");
  openPullRequests=prs;openPullRequestError=false;openPullRequestErrorMessage="";try{sessionStorage.setItem("olympia-pr-flow-cache-v1",JSON.stringify(openPullRequests))}catch(_){}
+ var candidateCycle=++candidateParentsSequence;
+ var candidatePromise=window.olympiaAuthenticatedRequest({action:"pull_request_candidate_parents"});
+ candidatePromise.then(function(candidateResponse){
+  if(candidateCycle!==candidateParentsSequence||!candidateResponse.response.ok||!candidateResponse.result.ok)return;
+  var existing=new Set(openPullRequests.map(function(pr){return Number(pr.number)}));
+  (candidateResponse.result.pullRequests||[]).forEach(function(pr){
+   if(pr&&pr.base&&pr.base.ref==="development"&&pr.merged_at&&pr.liveCandidateActive&&!existing.has(Number(pr.number))){
+    existing.add(Number(pr.number));openPullRequests.push(pr);
+   }
+  });
+  openPullRequests.sort(function(a,b){return Date.parse(b.updated_at||"")-Date.parse(a.updated_at||"")});
+  try{sessionStorage.setItem("olympia-pr-flow-cache-v1",JSON.stringify(openPullRequests))}catch(_){}
+  renderTrial();
+  if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();
+ }).catch(function(){});
 }catch(error){openPullRequestError=true;openPullRequestErrorMessage=error&&error.message?String(error.message):"GitHub-status kunde inte läsas."}
 renderTrial();
 if(window.olympiaRefreshDecisions)window.olympiaRefreshDecisions();

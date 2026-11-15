@@ -3,18 +3,28 @@ import {it,expect} from 'vitest';
 const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 const approval=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
-const list=edge.slice(edge.indexOf('if (data.action === "pull_request_list")'),edge.indexOf('if (data.action === "pull_request_history")'));
+const list=edge.slice(edge.indexOf('if (data.action === "pull_request_list")'),edge.indexOf('if (data.action === "pull_request_candidate_parents")'));
+const candidateParents=edge.slice(edge.indexOf('if (data.action === "pull_request_candidate_parents")'),edge.indexOf('if (data.action === "pull_request_history")'));
 const history=edge.slice(edge.indexOf('if (data.action === "pull_request_history")'),edge.indexOf('if (data.action === "current_refs")'));
 const status=edge.slice(edge.indexOf('if (data.action === "pull_request_status")'),edge.indexOf('if (data.action === "deployment_check")'));
 const merge=edge.slice(edge.indexOf('if (data.action === "approve_and_merge_dev")'),edge.indexOf('if (data.action === "prepare_merged_dev_candidate")'));
 
-it('normal PR listing fetches only paginated open PR and targeted active candidate parents',()=>{
+it('normal PR listing fetches only the open DEV/LIVE PRs',()=>{
  expect(list).toContain('/pulls?state=open&per_page=100&page=');
  expect(list).not.toContain('/pulls?state=closed');
  expect(list).not.toContain('/pulls?state=all');
- expect(list).toContain('activeCandidatePrs');
- expect(list).toContain('repoPath + "/pulls/" + number');
+ expect(list).not.toContain('/issues?');
+ expect(list).not.toContain('liveMergePublicationStatus');
+ expect(list).not.toContain('verifyPublishedManifest');
  expect(list).toContain('GITHUB_PR_LIST_INCOMPLETE');
+});
+
+it('loads active candidate parent relations after the PR list and does not verify publication there',()=>{
+ expect(candidateParents).toContain('PANDORAS ASK');
+ expect(candidateParents).toContain('repoPath + "/pulls/" + number');
+ expect(candidateParents).toContain('liveCandidateActive: true');
+ expect(candidateParents).not.toContain('liveMergePublicationStatus');
+ expect(candidateParents).not.toContain('verifyPublishedManifest');
 });
 
 it('history is a separate paginated server action and never requests CI',()=>{
@@ -67,6 +77,6 @@ it('transport aborts do not masquerade as Zeus or GitHub permission failures',()
  expect(approval).toContain("connectionStages.zeus=isTransportFailure(error)?'pending':'error'");
  expect(approval).toContain("verified=false;window.olympiaV2ZeusVerified=false");
  expect(approval).toContain('Zeus-behörighet och GitHub-status är inte verifierade; besluten förblir låsta.');
- expect(approval).toContain("action.action==='pull_request_list'||action.action==='auto_candidate_diagnostics'?60000:20000");
+ expect(approval).toContain("action.action==='auto_candidate_diagnostics'?60000:20000");
  expect(approval).toContain("if(timedOut)throw Error('OLYMPIA_REQUEST_TIMEOUT')");
 });

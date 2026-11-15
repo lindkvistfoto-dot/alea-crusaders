@@ -12,7 +12,7 @@ it('verifies Zeus session before DEV approval',()=>{
 it('keeps merged PR visible in the same card',()=>{
  expect(page).toContain('if(pr.merged_at)');
  expect(page).toContain("action:'pull_request_list'");
- expect(page).toContain('För publicering');
+ expect(page).toContain('LIVE-status kontrolleras');
  expect(page).toContain('data-dev-approve');
 });
 it('offers a gated recovery action for merged DEV PRs without publishing LIVE',()=>{
