@@ -74,8 +74,11 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(frontend).toContain('assessment.state!==\'success\'');
   });
 
-  it('uses the existing allowlisted, origin-reflecting CORS path for OPTIONS and POST', () => {
-    expect(edge).toContain('if (!origin || !ALLOWED_ORIGINS.has(origin))');
+  it('allows only this Cloudflare Pages preview host pattern through the existing CORS gate', () => {
+    expect(edge).toContain('const PR_PREVIEW_ORIGIN = /^https:\\/\\/[a-f0-9]{8}\\.alea-crusaders\\.pages\\.dev$/;');
+    expect(edge).toContain('const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || PR_PREVIEW_ORIGIN.test(origin);');
+    expect(edge).toContain('if (!origin || !isAllowedOrigin(origin))');
+    expect(edge).toContain('if (!isAllowedOrigin(req.headers.get("Origin") || ""))');
     expect(edge).toContain('Access-Control-Allow-Origin", origin');
     expect(edge).toContain('Access-Control-Allow-Methods": "POST, OPTIONS"');
   });

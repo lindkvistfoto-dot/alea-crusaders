@@ -8,6 +8,8 @@ const REPO = "alea-crusaders";
 const ALLOWED_ORIGIN = "https://lindkvistfoto-dot.github.io";
 const DEV_ORIGIN = "https://development.alea-crusaders.pages.dev";
 const ALLOWED_ORIGINS = new Set([ALLOWED_ORIGIN, DEV_ORIGIN]);
+const PR_PREVIEW_ORIGIN = /^https:\/\/[a-f0-9]{8}\.alea-crusaders\.pages\.dev$/;
+const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || PR_PREVIEW_ORIGIN.test(origin);
 const PAGES_BASE = ALLOWED_ORIGIN + "/alea-crusaders";
 const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix", "final_approval"]);
 const responseHeaders = {
@@ -837,7 +839,7 @@ function title(item: any, decision: string) {
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
   const response = await handleRequest(req);
-  if (origin && ALLOWED_ORIGINS.has(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
+  if (origin && isAllowedOrigin(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
   return response;
 });
 
@@ -845,11 +847,11 @@ async function handleRequest(req: Request): Promise<Response> {
   const requestStartedAt = performance.now();
   if (req.method === "OPTIONS") {
     const origin = req.headers.get("Origin");
-    if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
+    if (!origin || !isAllowedOrigin(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
     return new Response("ok", { headers: { ...responseHeaders, "Access-Control-Allow-Origin": origin } });
   }
   if (req.method !== "POST") return fail("Endast POST stöds.", 405);
-  if (!ALLOWED_ORIGINS.has(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
+  if (!isAllowedOrigin(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
 
   try {
     const auth = req.headers.get("Authorization") || "";
