@@ -6,7 +6,7 @@ const ci = readFileSync(new URL('../supabase/functions/_shared/olympia-ci.js', i
 
 test('poll pending CI every 30 seconds and settled CI every 120 seconds', () => {
   expect(html).toMatch(/pendingChecks\?30000:120000/);
-  expect(html).toContain('const ttl=cached?.pending?30000:300000');
+  expect(html).toContain('const ttl=cached?.pending?30000:120000');
   expect(html).toContain('mapLimit(shown,5,card)');
 });
 

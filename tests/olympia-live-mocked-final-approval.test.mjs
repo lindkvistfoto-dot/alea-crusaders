@@ -72,15 +72,15 @@ describe('OLYMPIA LIVE decisions: executable mocked server branch',()=>{
   expect(h.writes.some(x=>x.path.endsWith('/merge'))).toBe(false);
  });
  it('keeps a GitHub rate limit fail-closed but reports it as retryable service unavailability',async()=>{
-  const h=harness({rejectCandidate:'GITHUB_PUBLIC_RATE_LIMITED'});
+  const h=harness({rejectCandidate:'GITHUB_RATE_LIMITED_1794698006'});
   const result=await h.run(data);
   expect(result.status).toBe(503);
   expect(result.message).toContain('GitHub');
   expect(h.writes).toEqual([]);
  });
  it('classifies GitHub API outages separately from actual CI failures',()=>{
-  expect(isTransientCandidateReadError('GITHUB_PUBLIC_RATE_LIMITED')).toBe(true);
-  expect(isTransientCandidateReadError('GITHUB_PUBLIC_REQUEST_FAILED_502')).toBe(true);
+  expect(isTransientCandidateReadError('GITHUB_RATE_LIMITED_1794698006')).toBe(true);
+  expect(isTransientCandidateReadError('GITHUB_REQUEST_FAILED_502')).toBe(true);
   expect(isTransientCandidateReadError('CANDIDATE_CHECKS_NOT_GREEN')).toBe(false);
  });
  it('does not claim success if GitHub refuses merge',async()=>{

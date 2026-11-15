@@ -78,7 +78,11 @@ async function githubToken(decision: string) {
   const jwt = await appJwt(appId, privateKey);
   const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
-    : decision === "pull_request_list" || decision === "pull_request_status"
+    : decision === "pull_request_list"
+    ? { pull_requests: "read", issues: "read" }
+    : decision === "pull_request_history"
+    ? { pull_requests: "read", issues: "read" }
+    : decision === "pull_request_status"
     ? { pull_requests: "read" }
     : decision === "idea_verify_live"
     ? { contents: "read", issues: "read", pull_requests: "read" }
@@ -98,20 +102,11 @@ async function githubToken(decision: string) {
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
-  const readOnlyPrAction = decision === "pull_request_list" || decision === "pull_request_status";
   const tokenUrl = "https://api.github.com/app/installations/" + encodeURIComponent(installationId) + "/access_tokens";
   const tokenHeaders = { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + jwt, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" };
-  const requestToken = (body: Record<string, unknown>) => fetch(tokenUrl, {
-    method: "POST", headers: tokenHeaders, body: JSON.stringify(body),
+  const res = await fetch(tokenUrl, {
+    method: "POST", headers: tokenHeaders, body: JSON.stringify({ permissions, repository_ids: [1403008145] }),
   });
-  let res = await requestToken({ permissions, repository_ids: [1403008145] });
-  if (res.status === 422 && readOnlyPrAction) {
-    // An installation may lack the explicitly requested checks/statuses scope.
-    // For read-only PR actions, use the installation's existing permissions
-    // without requesting any new permissions. Write actions never fall back.
-    console.warn("OLYMPIA read-only GitHub token: requested permission subset unavailable; using installed permissions");
-    res = await requestToken({ repository_ids: [1403008145] });
-  }
   if (!res.ok) {
     const failure = await res.json().catch(() => ({}));
     console.error("OLYMPIA GitHub installation token rejected", res.status, String(failure.message || "").slice(0, 180));
@@ -122,10 +117,15 @@ async function githubToken(decision: string) {
   return data.token as string;
 }
 async function gh(token: string, path: string, init: RequestInit = {}) {
-  const res = await fetch("https://api.github.com" + path, {
-    ...init,
-    headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", ...(init.headers || {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch("https://api.github.com" + path, {
+      ...init,
+      headers: { "Accept": "application/vnd.github+json", "Authorization": "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json", ...(init.headers || {}) },
+    });
+  } catch (_error) {
+    throw new Error("GITHUB_REQUEST_FAILED_NETWORK");
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const rateLimitReset = res.headers.get("x-ratelimit-reset");
@@ -150,43 +150,30 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   }
   return data;
 }
-function isTransientCandidateReadError(code: string) {
-  return code === "GITHUB_PUBLIC_RATE_LIMITED" ||
-    code === "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" ||
-    code === "GITHUB_PUBLIC_RESPONSE_INVALID" ||
-    /^GITHUB_PUBLIC_REQUEST_FAILED_(?:403|429|502|503|504)$/.test(code);
+async function ghReadWithRetry(token: string, path: string, maxRetries = 2) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await gh(token, path);
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "";
+      const rateLimit = code.match(/^GITHUB_RATE_LIMITED_(\d+)$/);
+      const transient = error instanceof TypeError || /GITHUB_REQUEST_FAILED_(?:NETWORK|429|502|503|504)$/.test(code) || Boolean(rateLimit);
+      if (!transient || attempt === maxRetries) throw error;
+      if (rateLimit) {
+        const resetAt = Number(rateLimit[1]) * 1000;
+        const waitMs = resetAt - Date.now();
+        if (waitMs > 2000) throw error;
+        await new Promise(resolve => setTimeout(resolve, Math.max(200, waitMs)));
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 250 * (attempt + 1)));
+      }
+    }
+  }
+  throw new Error("GITHUB_READ_UNAVAILABLE");
 }
-async function ghPublic(path: string) {
-  let res: Response;
-  try {
-    res = await fetch("https://api.github.com" + path, {
-      headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-    });
-  } catch (_error) {
-    console.error("OLYMPIA GitHub public API request failed", JSON.stringify({ path, code: "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" }));
-    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_NETWORK");
-  }
-  let data: any;
-  try {
-    data = await res.json();
-  } catch (_error) {
-    console.error("OLYMPIA GitHub public API response invalid", JSON.stringify({ path, status: res.status }));
-    throw new Error("GITHUB_PUBLIC_RESPONSE_INVALID");
-  }
-  if (!res.ok) {
-    const reason = String(data.message || "unknown").slice(0, 180);
-    const remaining = res.headers.get("x-ratelimit-remaining");
-    const reset = res.headers.get("x-ratelimit-reset");
-    const rateLimited = res.status === 403 &&
-      (remaining === "0" || /API rate limit exceeded/i.test(reason));
-    console.error(
-      rateLimited ? "OLYMPIA GitHub public API rate limited" : "OLYMPIA GitHub public API request rejected",
-      JSON.stringify({ path, status: res.status, remaining, reset }),
-    );
-    if (rateLimited) throw new Error("GITHUB_PUBLIC_RATE_LIMITED");
-    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
-  }
-  return data;
+function isTransientCandidateReadError(code: string) {
+  return code.startsWith("GITHUB_RATE_LIMITED_") ||
+    /^GITHUB_REQUEST_FAILED_(?:NETWORK|429|502|503|504)$/.test(code);
 }
 async function currentDevPullRequest(token: string, number: number, headSha: string) {
   let pr: any = null;
@@ -199,6 +186,8 @@ async function currentDevPullRequest(token: string, number: number, headSha: str
   if (pr.draft) throw new Error("PR_IS_DRAFT");
   if (pr.base?.ref !== "development") throw new Error("PR_NOT_TARGETING_DEV");
   if (pr.head?.sha !== headSha) throw new Error("PR_HEAD_CHANGED");
+  if (pr.mergeable === null) throw new Error("PR_MERGEABILITY_UNKNOWN");
+  if (pr.mergeable !== true || pr.mergeable_state !== "clean") throw new Error("PR_NOT_MERGEABLE");
   return pr;
 }
 async function recordDevAcceptance(token: string, number: number, actor: string) {
@@ -613,8 +602,8 @@ async function verifyCandidate(token: string, item: any, data: any) {
     throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
   }
   const [checks, status] = await Promise.all([
-    ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
-    ghPublic("/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status"),
+    ghReadWithRetry(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
+    ghReadWithRetry(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha + "/status"),
   ]);
   const checkRuns = Array.isArray(checks.check_runs) ? checks.check_runs : [];
   const requiredChecks = [/^check$/i, /^guard$/i, /^preview$/i];
@@ -801,9 +790,9 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     const transientReadFailure = isTransientCandidateReadError(code);
     console.warn("OLYMPIA candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
     const messages: Record<string, string> = {
-      GITHUB_PUBLIC_RATE_LIMITED: "GitHub API-begränsningen hindrar CI-verifiering just nu. LIVE-beslut är låsta; försök igen senare.",
-      GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub API kunde inte nås under CI-verifieringen. LIVE-beslut är låsta; uppdatera status och försök igen.",
-      GITHUB_PUBLIC_RESPONSE_INVALID: "GitHub returnerade ett ogiltigt CI-svar. LIVE-beslut är låsta; uppdatera status och försök igen.",
+      GITHUB_RATE_LIMITED: "GitHub API-begränsningen hindrar CI-verifiering just nu. LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_REQUEST_FAILED_NETWORK: "GitHub API kunde inte nås under CI-verifieringen. LIVE-beslut är låsta; uppdatera status och försök igen.",
+
       CANDIDATE_NOT_READY: "Kandidatrapporten är inte klar. LIVE är oförändrat.",
       CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
       LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. En ny kandidat behövs.",
@@ -815,11 +804,12 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
       CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
-      GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub API kunde inte verifiera CI-kontrollerna (403). LIVE-beslut är låsta; kontrollera GitHub-status och försök igen.",
-      GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
-      GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
-      GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
-      GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-kontrollerna svarade inte i tid (504). LIVE-beslut är låsta; försök igen.",
+      GITHUB_REQUEST_FAILED_403: "GitHub nekade åtkomst till kandidatens CI-kontroller. LIVE-beslut är låsta.",
+      GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token. LIVE-beslut är låsta tills åtkomsten kan verifieras.",
+      GITHUB_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
+      GITHUB_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
+      GITHUB_REQUEST_FAILED_504: "GitHub CI-kontrollerna svarade inte i tid (504). LIVE-beslut är låsta; försök igen.",
     };
     return {
       ready: false,
@@ -1333,46 +1323,66 @@ async function handleRequest(req: Request): Promise<Response> {
     if (data.action === "pull_request_list") {
       try {
         const token = await githubToken("pull_request_list");
-        const open = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&per_page=100&sort=updated&direction=desc");
-        if (!Array.isArray(open)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        // Only recent merged DEV PRs are needed for the active decision queue.
-        // Older accepted items remain visible from the persistent Zeus decision journal.
-        const recentClosed = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=development&per_page=100&page=1&sort=updated&direction=desc");
-        if (!Array.isArray(recentClosed)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-        const closed = recentClosed.filter((pr: any) => Boolean(pr.merged_at) && pr.base?.ref === "development");
-        const byNumber = new Map<number, any>();
-        for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr);
-        const candidateToken = await githubToken("auto_candidate_diagnostics");
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const open: any[] = [];
+        for (let page = 1; page <= 100; page++) {
+          const batch = await ghReadWithRetry(token, repoPath + "/pulls?state=open&per_page=100&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+          open.push(...batch);
+          if (batch.length < 100) break;
+          if (page === 100) throw new Error("GITHUB_PR_LIST_INCOMPLETE");
+        }
         const botLogin = await appBotLogin();
-        const candidateIssues = await gh(candidateToken, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(botLogin));
-        if (!Array.isArray(candidateIssues)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
+        const candidateIssues: any[] = [];
+        for (let page = 1; page <= 100; page++) {
+          const batch = await ghReadWithRetry(token, repoPath + "/issues?state=open&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
+          if (!Array.isArray(batch)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
+          candidateIssues.push(...batch.filter((issue: any) => !issue.pull_request));
+          if (batch.length < 100) break;
+          if (page === 100) throw new Error("GITHUB_CANDIDATE_ISSUES_INCOMPLETE");
+        }
         const candidateIssueByNumber = new Map<number, any>();
         const activeCandidatePrs = new Set<number>();
         for (const issue of candidateIssues) {
-          if (issue.pull_request) continue;
           candidateIssueByNumber.set(Number(issue.number), issue);
           const body = String(issue.body || "");
-          if (issue.state !== "open" || !body.includes("- Beslut: PANDORAS ASK")) continue;
+          if (!body.includes("- Beslut: PANDORAS ASK")) continue;
           const match = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
           if (match) activeCandidatePrs.add(Number(match[1]));
         }
         const publishedCandidatePrs = new Map<number, string>();
+        const publicationChecks: Array<{ number: number; mergeSha: string }> = [];
         for (const issue of candidateIssues) {
-          if (issue.pull_request) continue;
           const body = String(issue.body || "");
           if (issue.user?.login !== botLogin || !body.includes("- Beslut: SLUTGODKÄNNANDE LIVE")) continue;
           const prMatch = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
           const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
           const candidateMatch = body.match(/^- Kandidatärende: #([1-9][0-9]*)$/m);
           const mergeMatch = body.match(/^- Merge SHA: ([0-9a-f]{40})$/mi);
-          if (!prMatch || !testedMatch || !candidateMatch || !mergeMatch) continue;
-          const candidateIssue = candidateIssueByNumber.get(Number(candidateMatch[1]));
+          const candidateIssue = candidateIssueByNumber.get(Number(candidateMatch?.[1] || 0));
           const candidateBody = String(candidateIssue?.body || "");
-          if (!candidateIssue || !candidateBody.includes("- Beslut: PANDORAS ASK") ||
+          if (!prMatch || !testedMatch || !candidateMatch || !mergeMatch ||
+              !candidateBody.includes("- Beslut: PANDORAS ASK") ||
               !candidateBody.includes("- Ärende-ID: PR-" + prMatch[1]) ||
               !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
-          const publication = await liveMergePublicationStatus(candidateToken, mergeMatch[1]);
-          if (publication.published) publishedCandidatePrs.set(Number(prMatch[1]), mergeMatch[1]);
+          publicationChecks.push({ number: Number(prMatch[1]), mergeSha: mergeMatch[1] });
+        }
+        if (publicationChecks.length) {
+          const publicationToken = await githubToken("auto_candidate_diagnostics");
+          for (const item of publicationChecks) {
+            const publication = await liveMergePublicationStatus(publicationToken, item.mergeSha);
+            if (publication.published) publishedCandidatePrs.set(item.number, item.mergeSha);
+          }
+        }
+        const byNumber = new Map<number, any>();
+        for (const pr of open) {
+          if (["development", "main"].includes(String(pr.base?.ref || ""))) byNumber.set(Number(pr.number), pr);
+        }
+        const targetedParents = new Set([...activeCandidatePrs, ...publishedCandidatePrs.keys()]);
+        for (const number of targetedParents) {
+          if (byNumber.has(number)) continue;
+          const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + number);
+          if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development") byNumber.set(number, pr);
         }
         const pullRequests = [...byNumber.values()]
           .map((pr: any) => {
@@ -1391,6 +1401,44 @@ async function handleRequest(req: Request): Promise<Response> {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA GitHub PR list failed", code);
         return fail("GitHub PR-listan kunde inte hämtas (" + code + ").", 502);
+      }
+    }
+    if (data.action === "pull_request_history") {
+      const query = typeof data.query === "string" ? data.query.trim().slice(0, 100) : "";
+      const page = Number.isSafeInteger(data.page) && data.page > 0 ? Math.min(data.page, query ? 20 : 1000) : 1;
+      try {
+        const token = await githubToken("pull_request_history");
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        if (!query) {
+          const pullRequests = await ghReadWithRetry(token, repoPath + "/pulls?state=closed&per_page=50&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(pullRequests)) throw new Error("GITHUB_PR_HISTORY_INVALID_RESPONSE");
+          return json({ ok: true, pullRequests, page, totalCount: null, hasMore: pullRequests.length === 50 && page < 20 });
+        }
+        const numberQuery = query.replace(/^#/, "");
+        if (/^[1-9][0-9]*$/.test(numberQuery)) {
+          const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + Number(numberQuery));
+          const pullRequests = pr.state === "closed" ? [pr] : [];
+          return json({ ok: true, pullRequests, page: 1, hasMore: false, totalCount: pullRequests.length });
+        }
+        const searchQuery = "repo:" + OWNER + "/" + REPO + " is:pr is:closed in:title \"" + query.replace(/[\\\"]/g, "\\$&") + "\"";
+        const params = new URLSearchParams({ q: searchQuery, sort: "updated", order: "desc", per_page: "50", page: String(page) });
+        const result = await ghReadWithRetry(token, "/search/issues?" + params.toString());
+        if (!Array.isArray(result.items)) throw new Error("GITHUB_PR_HISTORY_INVALID_RESPONSE");
+        const pullRequests = result.items.filter((item: any) => item.pull_request).map((item: any) => ({
+          number: item.number,
+          title: item.title,
+          state: item.state,
+          updated_at: item.updated_at,
+          html_url: item.html_url,
+          base: { ref: "history" },
+          pull_request: item.pull_request,
+        }));
+        const totalCount = Number(result.total_count || 0);
+        return json({ ok: true, pullRequests, page, totalCount, hasMore: page < 20 && page * 50 < Math.min(totalCount, 1000) });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA GitHub PR history search failed", code);
+        return fail("Historiska PR kunde inte sökas just nu. Försök igen senare.", 502);
       }
     }
     if (data.action === "current_refs") {
@@ -1421,14 +1469,14 @@ async function handleRequest(req: Request): Promise<Response> {
         const path = "/repos/" + OWNER + "/" + REPO;
         const token = await githubToken("pull_request_status");
         const [pr, status, checks] = await Promise.all([
-          gh(token, path + "/pulls/" + data.pullRequestNumber),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
-          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghReadWithRetry(token, path + "/pulls/" + data.pullRequestNumber),
+          ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
         ]);
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
         return json({
           ok: true,
-          pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
+          pullRequest: { state: pr.state, draft: pr.draft, baseRef: String(pr.base?.ref || ""), headSha: String(pr.head?.sha || ""), mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
           statuses: Array.isArray(status.statuses) ? status.statuses : [],
           combinedStatusState: String(status.state || 'unknown'),
           statusSha: String(status.sha || ''),
@@ -1439,7 +1487,11 @@ async function handleRequest(req: Request): Promise<Response> {
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA GitHub PR status failed", code);
-        return fail("GitHub PR-status kunde inte hämtas (" + code + ").", 502);
+        if (code === "GITHUB_APP_TOKEN_FAILED_422") return fail("GitHub avvisade skapandet av en installations-token. CI kunde inte verifieras; ingen merge genomfördes.", 503);
+        if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail("GitHubs API-gräns är tillfälligt nådd. CI är inte verifierad; försök igen när gränsen återställts.", 503);
+        if (code === "GITHUB_REQUEST_FAILED_403") return fail("GitHub nekade åtkomst till aktuell PR- eller CI-status. CI är inte verifierad.", 503);
+        if (/GITHUB_REQUEST_FAILED_(?:NETWORK|429|502|503|504)$/.test(code) || error instanceof TypeError) return fail("GitHub CI kunde inte nås tillfälligt. CI är inte verifierad.", 503);
+        return fail("GitHub PR-status kunde inte verifieras säkert. CI är inte verifierad.", 502);
       }
     }
     if (data.action === "deployment_check") {
@@ -1484,23 +1536,9 @@ async function handleRequest(req: Request): Promise<Response> {
         const path = "/repos/" + OWNER + "/" + REPO;
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
-        // CI runs are publicly readable for this public repo; keep Checks and
-        // Commit-status permissions off the merge token. Retry only transient
-        // public API failures, never a failed or pending CI verdict.
-        const readCi = async (endpoint: string) => {
-          for (let attempt = 0; attempt < 3; attempt++) {
-            try { return await ghPublic(endpoint); }
-            catch (error) {
-              const message = error instanceof Error ? error.message : "";
-              if (!/GITHUB_PUBLIC_REQUEST_FAILED_(?:NETWORK|502|503|504)$/.test(message) || attempt === 2) throw error;
-              await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
-            }
-          }
-          throw new Error("GITHUB_CI_UNAVAILABLE");
-        };
         const [checks, status] = await Promise.all([
-          readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
-          readCi(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
         const assessment = assessCi(checks, status, data.pullRequestHeadSha);
         if (assessment.state !== "success") throw new Error(assessment.code);
@@ -1555,6 +1593,7 @@ async function handleRequest(req: Request): Promise<Response> {
           PR_HEAD_CHANGED: "PR:en har ändrats sedan den visades. Uppdatera OLYMPIA och granska den nya versionen.",
           PR_MERGEABILITY_UNKNOWN: "GitHub kunde inte fastställa mergebarheten efter flera uppdateringar. Försök igen om en stund.",
           PR_HAS_CONFLICTS: "PR:en har konflikter och behöver rättas innan DEV-merge.",
+          PR_NOT_MERGEABLE: "GitHub bekräftar inte att PR:en är mergebar. Kontrollera obligatoriska kontroller och branch protection.",
           CI_PENDING: "CI körs fortfarande. Vänta in kontrollerna och försök igen.",
           CI_FAILED: "En eller flera obligatoriska CI-kontroller har underkänts. Ingen merge genomfördes.",
           CI_CHECKS_MISSING: "Obligatoriska CI-kontroller saknas. Ingen merge genomfördes.",
@@ -1562,18 +1601,18 @@ async function handleRequest(req: Request): Promise<Response> {
           CI_SHA_MISMATCH: "CI-kontrollerna gäller inte den aktuella PR-versionen. Uppdatera status och granska igen.",
           CI_SHA_INVALID: "PR-versionen kunde inte verifieras. Ingen merge genomfördes.",
           CI_STATUS_UNKNOWN: "GitHub-status kunde inte verifieras. Ingen merge genomfördes.",
-          GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter. Ge appen läsbehörighet för kontroller och statusar; ingen merge genomfördes.",
+          GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token. Kontrollera OLYMPIA-appens befintliga behörigheter; ingen merge genomfördes.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
         const ciApiMessages: Record<string, string> = {
           GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
-          GITHUB_PUBLIC_RATE_LIMITED: "GitHub begränsade offentlig CI-läsning. Vänta och försök igen; ingen merge genomfördes.",
-          GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub nekade offentlig CI-läsning (403). Ingen merge genomfördes.",
-          GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub begränsade CI-läsningen (429). Vänta och försök igen.",
-          GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
-          GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-tjänst är tillfälligt otillgänglig (503). Försök igen.",
-          GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504). Försök igen.",
-          GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub CI-tjänst kunde inte nås. Försök igen.",
+
+
+
+
+
+
+
           GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403). Kontrollera GitHub App-behörigheterna; ingen merge genomfördes.",
           GITHUB_REQUEST_FAILED_429: "GitHub CI-tjänst begränsade anropen (429). Vänta och försök igen.",
           GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
@@ -1582,17 +1621,21 @@ async function handleRequest(req: Request): Promise<Response> {
         };
         const apiMessages: Record<string, string> = {
           GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
-          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). Kontrollera GitHub App-behörigheterna.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). CI kunde inte verifieras; kontrollera GitHub App-åtkomsten.",
           GITHUB_REQUEST_FAILED_429: "GitHub API begränsade anropen (429). Vänta och försök igen.",
           GITHUB_REQUEST_FAILED_502: "GitHub API är tillfälligt otillgängligt (502). Försök igen.",
           GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
           GITHUB_REQUEST_FAILED_504: "GitHub API svarade inte i tid (504). Försök igen.",
         };
-        const errorMessage = stage === "ci_validation" ? ciApiMessages[code]
-          : apiMessages[code] || messages[code] ||
+        const messageCode = code.startsWith("GITHUB_RATE_LIMITED_") ? "GITHUB_RATE_LIMITED" : code;
+        const errorMessage = stage === "ci_validation" ? ciApiMessages[messageCode] || messages[messageCode] ||
+          "GitHub CI kunde inte verifieras säkert. Ingen merge genomfördes; uppdatera status och försök igen."
+          : apiMessages[messageCode] || messages[messageCode] ||
             "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
-        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" ? 409
-          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") || code === "GITHUB_PUBLIC_RATE_LIMITED" ? 503
+        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" || code === "CI_PENDING" || code === "CI_FAILED" ||
+          code === "CI_CHECKS_MISSING" || code === "CI_CHECKS_INCOMPLETE" || code === "CI_SHA_MISMATCH" ||
+          code === "CI_SHA_INVALID" || code === "CI_STATUS_UNKNOWN" ? 409
+          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED")  ? 503
           : 502;
         return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);
       }
@@ -1602,10 +1645,10 @@ async function handleRequest(req: Request): Promise<Response> {
         return fail("Ange ett giltigt DEV-PR-nummer.", 400);
       }
       try {
-        // Read CI with the read-only token below; keep candidate writes on the
-        // minimal write profile so unsupported checks/statuses scopes cannot reject token creation.
+        // Keep candidate writes on their minimal write profile. Public-repository
+        // CI reads use the existing read-only App token without requesting new scopes.
         const writeToken = await githubToken("prepare_merged_dev_candidate_write");
-        const token = await githubToken("pull_request_list");
+        const token = await githubToken("pull_request_status");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
         if (pr.merged !== true || pr.base?.ref !== "development" ||
@@ -1635,8 +1678,10 @@ async function handleRequest(req: Request): Promise<Response> {
           return fail("Överlappande ändringar har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
         }
 
-        const checkResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
-        const statusResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/status");
+        const [checkResponse, statusResponse] = await Promise.all([
+          ghReadWithRetry(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
+          ghReadWithRetry(token, repoPath + "/commits/" + pr.head.sha + "/status"),
+        ]);
         const checkRuns = Array.isArray(checkResponse.check_runs) ? checkResponse.check_runs : [];
         const statuses = Array.isArray(statusResponse.statuses) ? statusResponse.statuses : [];
         if ((!checkRuns.length && !statuses.length) ||
