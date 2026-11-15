@@ -525,24 +525,45 @@ async function verifyPublishedManifest(environment: "main" | "development", sour
     throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
   }
 }
-async function liveMergePublicationStatus(token: string, mergeSha: string) {
-  if (!/^[0-9a-f]{40}$/i.test(mergeSha || "")) return { onMain: false, published: false };
+async function liveMergePublicationStatuses(token: string, mergeShas: string[]) {
+  const statuses = new Map<string, { onMain: boolean; published: boolean }>();
+  const uniqueShas = [...new Set(mergeShas.filter(sha => /^[0-9a-f]{40}$/i.test(sha || "")))];
+  if (!uniqueShas.length) return statuses;
+
+  let liveSha = "";
   try {
-    const ref = await gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main");
-    const liveSha = String(ref.object?.sha || "");
-    if (!/^[0-9a-f]{40}$/i.test(liveSha)) return { onMain: false, published: false };
-    const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + mergeSha + "..." + liveSha);
-    const onMain = ["ahead", "identical"].includes(String(comparison.status || ""));
-    if (!onMain) return { onMain: false, published: false };
-    try {
-      await verifyPublishedManifest("main", liveSha);
-      return { onMain: true, published: true };
-    } catch (_) {
-      return { onMain: true, published: false };
-    }
+    const ref = await ghReadWithRetry(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main");
+    liveSha = String(ref.object?.sha || "");
+    if (!/^[0-9a-f]{40}$/i.test(liveSha)) return statuses;
   } catch (_) {
-    return { onMain: false, published: false };
+    return statuses;
   }
+
+  let manifestVerified = false;
+  try {
+    await verifyPublishedManifest("main", liveSha);
+    manifestVerified = true;
+  } catch (_) {
+    // A failed or stale manifest must never be reported as published.
+  }
+
+  let cursor = 0;
+  const results = new Array<{ sha: string; onMain: boolean; published: boolean }>(uniqueShas.length);
+  await Promise.all(Array.from({ length: Math.min(4, uniqueShas.length) }, async () => {
+    while (cursor < uniqueShas.length) {
+      const index = cursor++;
+      const sha = uniqueShas[index];
+      try {
+        const comparison = await ghReadWithRetry(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + sha + "..." + liveSha);
+        const onMain = ["ahead", "identical"].includes(String(comparison.status || ""));
+        results[index] = { sha, onMain, published: onMain && manifestVerified };
+      } catch (_) {
+        results[index] = { sha, onMain: false, published: false };
+      }
+    }
+  }));
+  for (const result of results) statuses.set(result.sha, { onMain: result.onMain, published: result.published });
+  return statuses;
 }
 
 async function verifyCandidate(token: string, item: any, data: any) {
@@ -1375,13 +1396,28 @@ async function handleRequest(req: Request): Promise<Response> {
               !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
           publicationChecks.push({ number: Number(prMatch[1]), mergeSha: mergeMatch[1] });
         }
+        const publicationStartedAt = performance.now();
         if (publicationChecks.length) {
-          const publicationToken = await githubToken("auto_candidate_diagnostics");
-          for (const item of publicationChecks) {
-            const publication = await liveMergePublicationStatus(publicationToken, item.mergeSha);
-            if (publication.published) publishedCandidatePrs.set(item.number, item.mergeSha);
+          try {
+            const publicationToken = await githubToken("auto_candidate_diagnostics");
+            const publicationStatuses = await liveMergePublicationStatuses(
+              publicationToken,
+              publicationChecks.map(item => item.mergeSha),
+            );
+            for (const item of publicationChecks) {
+              if (publicationStatuses.get(item.mergeSha)?.published) {
+                publishedCandidatePrs.set(item.number, item.mergeSha);
+              }
+            }
+          } catch (error) {
+            console.warn("OLYMPIA LIVE publication status deferred", JSON.stringify({
+              requestId,
+              checks: publicationChecks.length,
+              code: error instanceof Error ? error.message : "UNKNOWN",
+            }));
           }
         }
+        const publicationElapsedMs = Math.round(performance.now() - publicationStartedAt);
         const byNumber = new Map<number, any>();
         for (const pr of open) {
           if (["development", "main"].includes(String(pr.base?.ref || ""))) byNumber.set(Number(pr.number), pr);
@@ -1404,7 +1440,7 @@ async function handleRequest(req: Request): Promise<Response> {
             };
           })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
-        console.info("OLYMPIA PR list completed", JSON.stringify({ requestId, authElapsedMs: Math.round(listStartedAt - requestStartedAt), credentialSetupElapsedMs, openPrElapsedMs, issueListElapsedMs, diagnosticsElapsedMs: Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs - issueListElapsedMs, totalElapsedMs: Math.round(performance.now() - requestStartedAt), openPrCount: open.length, returnedCount: pullRequests.length }));
+        console.info("OLYMPIA PR list completed", JSON.stringify({ requestId, authElapsedMs: Math.round(listStartedAt - requestStartedAt), credentialSetupElapsedMs, openPrElapsedMs, issueListElapsedMs, diagnosticsElapsedMs: Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs - issueListElapsedMs, publicationElapsedMs, publicationChecks: publicationChecks.length, totalElapsedMs: Math.round(performance.now() - requestStartedAt), openPrCount: open.length, returnedCount: pullRequests.length }));
         return json({ ok: true, pullRequests });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";

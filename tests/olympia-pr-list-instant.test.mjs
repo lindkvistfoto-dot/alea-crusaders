@@ -50,6 +50,16 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(frontend).toContain('assessment.state!==\'success\'');
   });
 
+  it('shares current LIVE verification and bounds candidate comparisons outside serial per-candidate manifest checks', () => {
+    expect(edge).toContain('async function liveMergePublicationStatuses(token: string, mergeShas: string[])');
+    expect(edge).toContain('await verifyPublishedManifest("main", liveSha)');
+    expect(edge).toContain('Math.min(4, uniqueShas.length)');
+    expect(list).toContain('liveMergePublicationStatuses(');
+    expect(list).toContain('publicationElapsedMs, publicationChecks: publicationChecks.length');
+    expect(list).not.toContain('await liveMergePublicationStatus(');
+    expect(edge).toContain('if (publicationStatuses.get(item.mergeSha)?.published)');
+  });
+
   it('uses the existing allowlisted, origin-reflecting CORS path for OPTIONS and POST', () => {
     expect(edge).toContain('if (!origin || !ALLOWED_ORIGINS.has(origin))');
     expect(edge).toContain('Access-Control-Allow-Origin", origin');
