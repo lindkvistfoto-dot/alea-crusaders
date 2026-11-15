@@ -43,7 +43,8 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   const cacheSource=html.slice(start,end);
   const storage=new Map();
   const sessionStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
-  const state=new Function('sessionStorage',cacheSource+';return {cachedActiveCandidateParents,writeCachedPrList,activePrRows,activePrFilterState,activePrCountLabel};')(sessionStorage);
+  const filter={value:'all',innerHTML:''};
+  const state=new Function('sessionStorage','filter','safe',cacheSource+';return {cachedActiveCandidateParents,writeCachedPrList,activePrRows,activePrFilterState,activePrCountLabel,syncPrFilter};')(sessionStorage,filter,value=>String(value));
   const parent={number:867,title:'Troférum',base:{ref:'development'},head:{sha:'a'.repeat(40)},state:'closed',merged_at:'2026-11-15T13:57:21Z',merge_commit_sha:'b'.repeat(40),liveCandidateActive:true};
   const openPr={number:900,title:'Open DEV PR',base:{ref:'development'},head:{sha:'c'.repeat(40)},state:'open'};
   const devOnly={number:866,title:'DEV-only',base:{ref:'development'},head:{sha:'d'.repeat(40)},state:'closed',merged_at:'2026-11-15T13:00:00Z',liveCandidateActive:false};
@@ -68,7 +69,11 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   const filtered=state.activePrFilterState(rows,'900');
   expect(filtered.selected).toBe('900');
   expect(filtered.visibleRows.map(pr=>pr.number)).toEqual([900]);
-  expect(state.activePrCountLabel(rows.length,filtered.visibleRows.length)).toBe('1 av 2 aktiva DEV/LIVE-ärenden');
+  const renderedFilter=state.syncPrFilter(rows,'900');
+  expect(filter.innerHTML).toContain('#867');
+  expect(renderedFilter.selected).toBe('900');
+  expect(renderedFilter.visibleRows.map(pr=>pr.number)).toEqual([900]);
+  expect(state.activePrCountLabel(rows.length,renderedFilter.visibleRows.length)).toBe('1 av 2 aktiva DEV/LIVE-ärenden');
 
   // 5. A confirmed closed LIVE process is removed; 6. a DEV-only merge
   // has no active journal and stays out of the list.
@@ -76,6 +81,7 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   rows=state.activePrRows([openPr,devOnly],state.cachedActiveCandidateParents(),[867]);
   expect(rows.map(pr=>pr.number)).not.toContain(867);
   expect(rows.map(pr=>pr.number)).not.toContain(866);
+  expect(state.syncPrFilter(rows,'867').selected).toBe('all');
   expect(html).toContain('activePrRows(cached.pullRequests,[],window.olympiaV2HiddenPrNumbers||[])');
   expect(html).toContain('writeCachedPrList(data.pullRequests||[],freshCandidateParents)');
   expect(html).toContain('activePrCountLabel(updatedPrs.length,updatedFilter.visibleRows.length)');
