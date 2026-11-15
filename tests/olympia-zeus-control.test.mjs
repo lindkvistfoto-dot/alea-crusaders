@@ -260,9 +260,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain(': { issues: "write", contents: "write" }');
     expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });');
-    expect(edge).not.toContain('checks: "read"');
-    expect(edge).not.toContain('statuses: "read"');
-    expect(edge).toContain('async function ghPublic(path: string)');
+    expect(edge).toContain('checks: "read"');
+    expect(edge).toContain('statuses: "read"');
+    expect(edge).not.toContain('ghPublic(');
     expect(edge).toContain('const [checks, status] = await Promise.all([');
     expect(edge).toContain('/commits/" + pr.head.sha + "/check-runs?per_page=100');
     expect(edge).toContain('/commits/" + pr.head.sha + "/status');
@@ -338,11 +338,11 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('decision === "pull_request_list"');
     expect(edge).toContain('data.action === "pull_request_list"');
     expect(edge).toContain('pull_requests: "read"');
-    expect(edge).toContain('/pulls?state=open&per_page=100&sort=updated&direction=desc');
-    expect(edge).toContain('/pulls?state=closed&base=development&per_page=100&page=');
-    expect(edge).toContain('Boolean(pr.merged_at) && pr.base?.ref === "development"');
-    expect(edge).toContain('for (const pr of [...open, ...closed]) byNumber.set(Number(pr.number), pr)');
-    expect(edge).toContain('const recentClosed = await gh(token');
+    expect(edge).toContain('/pulls?state=open&per_page=100&page=');
+    expect(edge).not.toContain('/pulls?state=closed&base=development');
+    expect(edge).toContain('targetedParents');
+    expect(edge).toContain('activeCandidatePrs');
+    expect(edge).toContain('if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development")');
     expect(edge).not.toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
   });
 
@@ -376,7 +376,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const tokenCode=edge.slice(start,end);
     expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
     expect(tokenCode).toContain(': decision === "approve_and_merge_dev"');
-    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
     expect(tokenCode).toContain(': decision === "set_pull_request_draft"\n    ? { pull_requests: "write", issues: "write", contents: "write" }');
     expect(tokenCode).toContain('? { pull_requests: "write" }');
   });
@@ -394,14 +394,17 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(view).toContain('fallback');
   });
 
-  it('loads recent merged DEV PRs without unbounded pagination',()=>{
+  it('loads historical PRs only when requested and targets active LIVE parents selectively',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('if (data.action === "pull_request_list")');
-    const end=edge.indexOf('if (data.action === "current_refs")',start);
+    const end=edge.indexOf('if (data.action === "pull_request_history")',start);
     const section=edge.slice(start,end);
-    expect(section).toContain('pulls?state=closed&base=development&per_page=100&page=1');
-    expect(section).not.toContain('page <= 100');
-    expect(section).toContain('const pullRequests = [...byNumber.values()]');
+    expect(section).toContain('/pulls?state=open&per_page=100&page=');
+    expect(section).not.toContain('/pulls?state=closed');
+    expect(section).toContain('targetedParents');
+    expect(section).toContain('for (let page = 1; page <= 100; page++)');
+    expect(edge).toContain('/pulls?state=closed&per_page=50&page=');
+    expect(edge).toContain('if (data.action === "pull_request_history")');
   });
 
   it('uses existing release actions for accepted PRs and excludes published PRs',()=>{
@@ -463,13 +466,13 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const source=edge.slice(start,end).replace('token: string, number: number, headSha: string','token, number, headSha').replace('): Promise<any> {',') {').replace('let pr: any = null;','let pr = null;');
     const sha='a'.repeat(40);
     let calls=0;
-    const fakeGh=async()=>({state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:[null,null,true][calls++]});
+    const fakeGh=async()=>({state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:[null,null,true][calls++],mergeable_state:'clean'});
     const resolve=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(fakeGh,fn=>fn(),'owner','repo');
     await expect(resolve('token',42,sha)).resolves.toMatchObject({mergeable:true});
     expect(calls).toBe(3);
     calls=0;
     const remainsUnknown=new Function('gh','setTimeout','OWNER','REPO',source+';return currentDevPullRequest;')(async()=>{calls++;return {state:'open',draft:false,base:{ref:'development'},head:{sha},mergeable:null}},fn=>fn(),'owner','repo');
-    await expect(remainsUnknown('token',42,sha)).resolves.toMatchObject({mergeable:null});
+    await expect(remainsUnknown('token',42,sha)).rejects.toThrow('PR_MERGEABILITY_UNKNOWN');
     expect(calls).toBe(4);
   });
 

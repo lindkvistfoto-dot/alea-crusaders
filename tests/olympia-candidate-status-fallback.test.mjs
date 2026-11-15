@@ -19,12 +19,12 @@ describe('OLYMPIA candidate status survives preview verification failure',()=>{
   expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished)');
  });
  it('marks a merged candidate published only when its merge is in deployed main',()=>{
-  expect(edge).toContain('liveMergePublicationStatus(candidateToken, mergeMatch[1])');
+  expect(edge).toContain('liveMergePublicationStatus(publicationToken, item.mergeSha)');
   expect(edge).toContain('await verifyPublishedManifest("main", liveSha)');
   expect(edge).toContain('["ahead", "identical"].includes(String(comparison.status || ""))');
   expect(edge).toContain('liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished)');
   expect(edge).toContain('livePublished');
-  expect(html).toContain('Publicerad i LIVE · verifierad');
+  expect(ui).toContain('Publicerad i LIVE · verifierad');
   expect(ui).toContain("candidate?.published===true");
  });
  it('does not turn a failed journal or lock check into success',()=>{
