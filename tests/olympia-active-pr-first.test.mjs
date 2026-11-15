@@ -44,7 +44,11 @@ it('CI reads use authenticated App endpoints for display and approval',()=>{
  expect(status).not.toContain('ghPublic');
  expect(merge).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
  expect(merge).not.toContain('ghPublic');
- expect(edge).toContain('checks: "read", statuses: "read"');
+ const tokenStart=edge.indexOf('async function githubToken(');
+ const tokenEnd=edge.indexOf('async function gh(',tokenStart);
+ const tokenProfiles=edge.slice(tokenStart,tokenEnd);
+ expect(tokenProfiles).not.toContain('checks: "read"');
+ expect(tokenProfiles).not.toContain('statuses: "read"');
  expect(edge).toContain('mergeable_state !== "clean"');
 });
 

@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 describe('OLYMPIA DEV CI validation',()=>{
- it('reads exact-SHA CI with authenticated App permissions',()=>{
+ it('reads exact-SHA public CI through the existing authenticated App token without adding scopes',()=>{
   const start=edge.indexOf('if (data.action === "approve_and_merge_dev")');
   const end=edge.indexOf('stage = "github_merge"',start);
   const section=edge.slice(start,end);
@@ -11,7 +11,12 @@ describe('OLYMPIA DEV CI validation',()=>{
   expect(section).not.toContain('ghPublic');
   expect(section).toContain('ghReadWithRetry(token');
   expect(section).toContain('assessCi(checks, status, data.pullRequestHeadSha)');
-  expect(edge).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+  const tokenStart=edge.indexOf('async function githubToken(');
+  const tokenEnd=edge.indexOf('async function gh(',tokenStart);
+  const tokenProfiles=edge.slice(tokenStart,tokenEnd);
+  expect(tokenProfiles).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+  expect(tokenProfiles).not.toContain('checks: "read"');
+  expect(tokenProfiles).not.toContain('statuses: "read"');
 
  });
  it('rechecks the exact PR head immediately before asking Zeus to approve',()=>{

@@ -83,11 +83,11 @@ async function githubToken(decision: string) {
     : decision === "pull_request_history"
     ? { pull_requests: "read", issues: "read" }
     : decision === "pull_request_status"
-    ? { pull_requests: "read", checks: "read", statuses: "read" }
+    ? { pull_requests: "read" }
     : decision === "idea_verify_live"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
-    ? { contents: "read", issues: "read", pull_requests: "read", checks: "read", statuses: "read" }
+    ? { contents: "read", issues: "read", pull_requests: "read" }
     : decision === "resume_stale_candidate"
     ? { contents: "write", issues: "write", pull_requests: "read" }
     : decision === "prepare_merged_dev_candidate_write"
@@ -97,7 +97,7 @@ async function githubToken(decision: string) {
     : decision === "prepare_merged_dev_candidate"
     ? { pull_requests: "read", issues: "write", contents: "write" }
     : decision === "approve_and_merge_dev"
-    ? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }
+    ? { pull_requests: "write", issues: "write", contents: "write" }
     : decision === "set_pull_request_draft"
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
@@ -804,8 +804,8 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
       CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
-      GITHUB_REQUEST_FAILED_403: "GitHub App saknar läsbehörighet för CI-kontrollerna. LIVE-beslut är låsta.",
-      GITHUB_APP_TOKEN_FAILED_422: "GitHub App-installationen saknar Checks- eller Commit statuses-läsbehörighet. LIVE-beslut är låsta tills behörigheten godkänts.",
+      GITHUB_REQUEST_FAILED_403: "GitHub nekade åtkomst till kandidatens CI-kontroller. LIVE-beslut är låsta.",
+      GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token. LIVE-beslut är låsta tills åtkomsten kan verifieras.",
       GITHUB_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
       GITHUB_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
       GITHUB_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
@@ -1487,9 +1487,9 @@ async function handleRequest(req: Request): Promise<Response> {
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA GitHub PR status failed", code);
-        if (code === "GITHUB_APP_TOKEN_FAILED_422") return fail("GitHub App saknar Checks- eller Commit statuses-läsbehörighet. Ingen merge kan godkännas förrän installationens behörigheter uppdaterats.", 503);
+        if (code === "GITHUB_APP_TOKEN_FAILED_422") return fail("GitHub avvisade skapandet av en installations-token. CI kunde inte verifieras; ingen merge genomfördes.", 503);
         if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail("GitHubs API-gräns är tillfälligt nådd. CI är inte verifierad; försök igen när gränsen återställts.", 503);
-        if (code === "GITHUB_REQUEST_FAILED_403") return fail("GitHub App saknar läsbehörighet för PR- eller CI-status. CI är inte verifierad.", 503);
+        if (code === "GITHUB_REQUEST_FAILED_403") return fail("GitHub nekade åtkomst till aktuell PR- eller CI-status. CI är inte verifierad.", 503);
         if (/GITHUB_REQUEST_FAILED_(?:NETWORK|429|502|503|504)$/.test(code) || error instanceof TypeError) return fail("GitHub CI kunde inte nås tillfälligt. CI är inte verifierad.", 503);
         return fail("GitHub PR-status kunde inte verifieras säkert. CI är inte verifierad.", 502);
       }
@@ -1601,7 +1601,7 @@ async function handleRequest(req: Request): Promise<Response> {
           CI_SHA_MISMATCH: "CI-kontrollerna gäller inte den aktuella PR-versionen. Uppdatera status och granska igen.",
           CI_SHA_INVALID: "PR-versionen kunde inte verifieras. Ingen merge genomfördes.",
           CI_STATUS_UNKNOWN: "GitHub-status kunde inte verifieras. Ingen merge genomfördes.",
-          GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter. Ge appen läsbehörighet för kontroller och statusar; ingen merge genomfördes.",
+          GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token. Kontrollera OLYMPIA-appens befintliga behörigheter; ingen merge genomfördes.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
         const ciApiMessages: Record<string, string> = {
@@ -1621,7 +1621,7 @@ async function handleRequest(req: Request): Promise<Response> {
         };
         const apiMessages: Record<string, string> = {
           GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
-          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). Kontrollera GitHub App-behörigheterna.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). CI kunde inte verifieras; kontrollera GitHub App-åtkomsten.",
           GITHUB_REQUEST_FAILED_429: "GitHub API begränsade anropen (429). Vänta och försök igen.",
           GITHUB_REQUEST_FAILED_502: "GitHub API är tillfälligt otillgängligt (502). Försök igen.",
           GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
@@ -1645,8 +1645,8 @@ async function handleRequest(req: Request): Promise<Response> {
         return fail("Ange ett giltigt DEV-PR-nummer.", 400);
       }
       try {
-        // Keep candidate writes on their minimal write profile. CI is read with
-        // the existing read-only PR token, which now requests Checks/Statuses.
+        // Keep candidate writes on their minimal write profile. Public-repository
+        // CI reads use the existing read-only App token without requesting new scopes.
         const writeToken = await githubToken("prepare_merged_dev_candidate_write");
         const token = await githubToken("pull_request_status");
         const repoPath = "/repos/" + OWNER + "/" + REPO;

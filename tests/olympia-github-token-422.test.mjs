@@ -3,11 +3,17 @@ import { describe,it,expect } from 'vitest';
 const server=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const ui=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
 describe('OLYMPIA GitHub installation token 422',()=>{
- it('fails closed when the requested App permissions are not installed',()=>{
+ it('does not make CI reads depend on additional App token scopes',()=>{
   expect(server).not.toContain('readOnlyPrAction');
   expect(server).not.toContain('requestToken({ repository_ids: [1403008145] })');
   expect(server).toContain('GITHUB_APP_TOKEN_FAILED_' + '422');
-  expect(server).toContain('checks: "read", statuses: "read"');
+  const start=server.indexOf('async function githubToken(');
+  const end=server.indexOf('async function gh(',start);
+  const profiles=server.slice(start,end);
+  expect(profiles).not.toContain('checks: "read"');
+  expect(profiles).not.toContain('statuses: "read"');
+  expect(server).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
+  expect(server).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/status")');
  });
  it('keeps GitHub token server-side and never retries writes',()=>{
   expect(server).toContain('OLYMPIA_GITHUB_APP_PRIVATE_KEY');

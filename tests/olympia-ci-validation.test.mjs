@@ -53,18 +53,20 @@ describe('OLYMPIA DEV approval API contract', () => {
     expect(vite).toContain('resolve("dist/olympia-v2/ci-validation.js")');
     expect(ui).toContain('<script src="./ci-validation.js?v=20261114-ci-status-module-v2-fresh-approval"></script>');
   });
-  it('requests authenticated Checks and Statuses reads for DEV approval', () => {
+  it('uses the existing DEV App token for exact-SHA CI reads without adding permission scopes', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
     const start = edge.indexOf('decision === "approve_and_merge_dev"');
     const end = edge.indexOf('decision === "set_pull_request_draft"', start);
     const profile = edge.slice(start, end);
-    expect(profile).toContain('? { pull_requests: "write", issues: "write", contents: "write", checks: "read", statuses: "read" }');
+    expect(profile).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(profile).not.toContain('checks: "read"');
+    expect(profile).not.toContain('statuses: "read"');
     expect(edge).toContain('ghReadWithRetry(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100")');
     expect(edge).not.toContain('ghPublic(');
   });
   it('does not translate GitHub API failures into a failed CI verdict', () => {
     const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
-    expect(edge).toContain('GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter.');
+    expect(edge).toContain('GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token.');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403)');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502)');
     expect(edge).toContain('GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504)');
