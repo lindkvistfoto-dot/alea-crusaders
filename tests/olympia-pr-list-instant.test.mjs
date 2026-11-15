@@ -32,7 +32,7 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(page).toContain('function writeCachedPrList(pullRequests,activeCandidateParents)');
     expect(page).toContain('CI och mergebarhet kontrolleras på nytt');
     expect(page).toContain('showCachedPrList();');
-    expect(page).toContain("sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:projected,verifiedAt:Date.now()}))");
+    expect(page).toContain("sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:[...unique.values()],verifiedAt:Date.now()}))");
     expect(page).toContain('const ready=state===\'success\'&&mergeable&&eligible&&fresh');
   });
 
