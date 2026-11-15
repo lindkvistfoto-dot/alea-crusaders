@@ -23,11 +23,11 @@ All three records are 2048 × 2048 and preserve true alpha. The fixed assets hav
 
 ## Shared award mounting
 
-The same `ArcaneAwardRenderer` mount is used in administration previews and the Trophy Room. The motif is inset to 80% of the frame diameter; the fixed colored diamond and round gem assets sit above the motif and below the frame. A tinted crown background is rendered under the round gem. Accent color reads existing `badge_frame_assets.accent_color` metadata when present and falls back to red; no award-specific image options or schema changes are added.
+The same `ArcaneAwardRenderer` mount is used in administration previews and the Trophy Room. The motif is inset to 80% of the frame diameter; the fixed colored diamond and round gem assets sit above the motif and below the frame. A tinted crown background is aligned beneath the round gem. New HERMES ALEA award uploads are color-sampled in the browser, mapped to the existing accent palette, and saved in the existing `badge_frame_assets.accent_color` JSON metadata. No award-specific image controls or schema changes are added.
 
 The existing HERMES CORE DEV gem family is resolved by these asset key patterns:
 
 - `arcane-award-gem-diamond-{red,blue,green,yellow,orange,purple,pink,turquoise,cyan,black,white,brown,light-gray,dark-gray,amber}`
 - `arcane-award-gem-round-{red,blue,green,yellow,orange,purple,pink,turquoise,cyan,black,white,brown,light-gray,dark-gray,amber}`
 
-Gem originals and color variants are already registered in DEV. This visual correction does not publish additional assets to LIVE.
+Gem originals and color variants are already registered in DEV. The crown fill is a small CSS layer beneath the round gem asset, not a separate image file. This visual correction does not publish additional assets to LIVE.
