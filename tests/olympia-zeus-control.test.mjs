@@ -407,7 +407,10 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(section).not.toContain('targetedParents');
     expect(section).toContain('for (let page = 1; page <= 100; page++)');
     const candidates=edge.slice(end,edge.indexOf('if (data.action === "pull_request_history")',end));
-    expect(candidates).toContain('liveCandidateActive: true');
+    const candidateHelper=edge.slice(edge.indexOf('async function fetchActiveCandidateParents'),edge.indexOf('Deno.serve'));
+    expect(candidates).toContain('fetchActiveCandidateParents(token, botLogin)');
+    expect(candidateHelper).toContain('liveCandidateActive: true');
+    expect(section).toContain('data.includeCandidateParents === false');
 
     expect(edge).toContain('/pulls?state=closed&per_page=50&page=');
     expect(edge).toContain('if (data.action === "pull_request_history")');

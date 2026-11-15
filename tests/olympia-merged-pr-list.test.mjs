@@ -4,6 +4,7 @@ const code=readFileSync(new URL('../supabase/functions/olympia-control/index.ts'
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 const list=code.slice(code.indexOf('if (data.action === "pull_request_list")'),code.indexOf('if (data.action === "pull_request_candidate_parents")'));
 const candidates=code.slice(code.indexOf('if (data.action === "pull_request_candidate_parents")'),code.indexOf('if (data.action === "pull_request_history")'));
+const candidateHelper=code.slice(code.indexOf('async function fetchActiveCandidateParents'),code.indexOf('Deno.serve'));
 const history=code.slice(code.indexOf('if (data.action === "pull_request_history")'),code.indexOf('if (data.action === "current_refs")'));
 describe('OLYMPIA active-first PR list and lazy history',()=>{
  it('normal listing contains only paginated open DEV/LIVE PRs',()=>{
@@ -15,10 +16,14 @@ describe('OLYMPIA active-first PR list and lazy history',()=>{
   expect(list).not.toContain('verifyPublishedManifest');
 
  });
- it('loads active LIVE parent PRs in a separate request',()=>{
-  expect(candidates).toContain('PANDORAS ASK');
-  expect(candidates).toContain('repoPath + "/pulls/" + number');
-  expect(candidates).toContain('liveCandidateActive: true');
+ it('keeps legacy parent compatibility while the new page opts into separate loading',()=>{
+  expect(list).toContain('data.includeCandidateParents === false');
+  expect(list).toContain('fetchActiveCandidateParents(token, botLogin)');
+  expect(candidateHelper).toContain('PANDORAS ASK');
+  expect(candidateHelper).toContain('repoPath + "/pulls/" + number');
+  expect(candidateHelper).toContain('liveCandidateActive: true');
+  expect(candidates).toContain('fetchActiveCandidateParents(token, botLogin)');
+  expect(page).toContain("action:'pull_request_list',includeCandidateParents:false");
  });
  it('keeps closed PR reads inside the separately invoked history action',()=>{
   expect(history).toContain('/pulls?state=closed&per_page=50&page=');

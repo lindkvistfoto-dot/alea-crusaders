@@ -4,6 +4,7 @@ const edge=readFileSync(new URL('../supabase/functions/olympia-control/index.ts'
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 const approval=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
 const list=edge.slice(edge.indexOf('if (data.action === "pull_request_list")'),edge.indexOf('if (data.action === "pull_request_candidate_parents")'));
+const candidateHelper=edge.slice(edge.indexOf('async function fetchActiveCandidateParents'),edge.indexOf('Deno.serve'));
 const candidateParents=edge.slice(edge.indexOf('if (data.action === "pull_request_candidate_parents")'),edge.indexOf('if (data.action === "pull_request_history")'));
 const history=edge.slice(edge.indexOf('if (data.action === "pull_request_history")'),edge.indexOf('if (data.action === "current_refs")'));
 const status=edge.slice(edge.indexOf('if (data.action === "pull_request_status")'),edge.indexOf('if (data.action === "deployment_check")'));
@@ -19,12 +20,17 @@ it('normal PR listing fetches only the open DEV/LIVE PRs',()=>{
  expect(list).toContain('GITHUB_PR_LIST_INCOMPLETE');
 });
 
-it('loads active candidate parent relations after the PR list and does not verify publication there',()=>{
- expect(candidateParents).toContain('PANDORAS ASK');
- expect(candidateParents).toContain('repoPath + "/pulls/" + number');
- expect(candidateParents).toContain('liveCandidateActive: true');
+it('keeps legacy candidate-parent compatibility while new clients opt into the fast list path',()=>{
+ expect(list).toContain('data.includeCandidateParents === false');
+ expect(list).toContain('fetchActiveCandidateParents(token, botLogin)');
+ expect(candidateHelper).toContain('PANDORAS ASK');
+ expect(candidateHelper).toContain('repoPath + "/pulls/" + number');
+ expect(candidateHelper).toContain('liveCandidateActive: true');
+ expect(candidateParents).toContain('fetchActiveCandidateParents(token, botLogin)');
  expect(candidateParents).not.toContain('liveMergePublicationStatus');
  expect(candidateParents).not.toContain('verifyPublishedManifest');
+ expect(page).toContain("action:'pull_request_list',includeCandidateParents:false");
+ expect(approval).toContain("action:'pull_request_list',includeCandidateParents:false");
 });
 
 it('history is a separate paginated server action and never requests CI',()=>{
