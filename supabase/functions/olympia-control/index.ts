@@ -839,7 +839,7 @@ function title(item: any, decision: string) {
 async function fetchActiveCandidateParents(token: string, botLogin: string) {
   const repoPath = "/repos/" + OWNER + "/" + REPO;
   const query = new URLSearchParams({
-    q: "repo:" + OWNER + "/" + REPO + " is:issue is:open creator:" + botLogin + ' "PANDORAS ASK"',
+    q: "repo:" + OWNER + "/" + REPO + " is:issue is:open PANDORAS",
     per_page: "100",
   });
   const candidateIssues: any[] = [];
