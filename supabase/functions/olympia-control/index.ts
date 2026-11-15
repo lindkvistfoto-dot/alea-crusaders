@@ -88,6 +88,8 @@ async function githubToken(decision: string) {
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
     ? { contents: "read", issues: "read", pull_requests: "read" }
+    : decision === "register_external_candidate"
+    ? { contents: "read", issues: "write", pull_requests: "read" }
     : decision === "resume_stale_candidate"
     ? { contents: "write", issues: "write", pull_requests: "read" }
     : decision === "prepare_merged_dev_candidate_write"
@@ -564,7 +566,7 @@ async function verifyCandidate(token: string, item: any, data: any) {
   const report = (comments as any[])
     .filter(comment => {
       const body = String(comment.body || "");
-      return comment.user?.login === "github-actions[bot]" &&
+      return ["github-actions[bot]", appLogin].includes(String(comment.user?.login || "")) &&
         body.includes("## OLYMPIA release candidate") &&
         body.includes("- Verified DEV SHA: " + data.testedDevSha);
     })
@@ -588,13 +590,29 @@ async function verifyCandidate(token: string, item: any, data: any) {
     verifyPublishedManifest("development", developmentSha),
   ]);
   const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1]);
-  if (pr.state !== "open" || pr.base?.ref !== "main" || pr.base?.sha !== live.sha ||
-      pr.user?.login !== appLogin || pr.mergeable !== true) throw new Error("RELEASE_PR_NOT_VALID");
+  const reportBody = String(report.body || "");
+  const externalRegistration = report.user?.login === appLogin &&
+    reportBody.includes("- Candidate source: OLYMPIA-registered external PR #" + prMatch[1]);
+  if (pr.state !== "open" || pr.draft || pr.base?.ref !== "main" || pr.base?.sha !== live.sha ||
+      (pr.user?.login !== appLogin && !externalRegistration) || pr.mergeable !== true || pr.mergeable_state !== "clean") {
+    throw new Error("RELEASE_PR_NOT_VALID");
+  }
   if (!String(pr.body || "").includes("Zeus decision journal: #" + data.candidateIssue)) throw new Error("RELEASE_PR_DECISION_MISMATCH");
   const headCommit = await gh(token, "/repos/" + OWNER + "/" + REPO + "/commits/" + pr.head.sha);
   const currentTreeSha = String(headCommit.commit?.tree?.sha || "");
   if (pr.head.sha !== data.releasePrSha || !/^[0-9a-f]{40}$/i.test(currentTreeSha) ||
       currentTreeSha !== data.candidateTreeSha) throw new Error("CANDIDATE_HEAD_CHANGED");
+  if (externalRegistration) {
+    const candidateBody = String(pr.body || "");
+    const sourcePrs = (Array.isArray(item.release_source_prs) ? item.release_source_prs : []).map((number: number) => "#" + number).join(", ");
+    if (!candidateBody.includes("- Prepared from LIVE baseline: " + live.sha) ||
+        !candidateBody.includes("- Source DEV PRs: " + sourcePrs) ||
+        !candidateBody.includes("- Approved DEV test version: " + data.testedDevSha) ||
+        !candidateBody.includes("- Exact candidate tree: " + currentTreeSha) ||
+        !reportBody.includes("- Candidate tree SHA: " + currentTreeSha)) {
+      throw new Error("CANDIDATE_REPORT_INCOMPLETE");
+    }
+  }
   const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + prMatch[1] + "/files?per_page=100");
   const allowedFiles = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
   const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")) : [];
@@ -617,6 +635,85 @@ async function verifyCandidate(token: string, item: any, data: any) {
     throw new Error("CANDIDATE_STATUS_NOT_GREEN");
   }
   return { issue, pr, report, liveSha: live.sha, candidateTreeSha: currentTreeSha };
+}
+
+async function registerExternalCandidate(token: string, item: any, issueNumber: number, testedDevSha: string, prNumber: number) {
+  const appLogin = await appBotLogin();
+  const repoPath = "/repos/" + OWNER + "/" + REPO;
+  const [issue, live, development, pr] = await Promise.all([
+    gh(token, repoPath + "/issues/" + issueNumber),
+    gh(token, repoPath + "/commits/main"),
+    gh(token, repoPath + "/git/ref/heads/development"),
+    gh(token, repoPath + "/pulls/" + prNumber),
+  ]);
+  const issueBody = String(issue.body || "");
+  if (issue.user?.login !== appLogin || issue.state !== "open" || issue.pull_request ||
+      !issueBody.includes("- Beslut: PANDORAS ASK") ||
+      !issueBody.includes("- Ärende-ID: " + item.id) ||
+      !issueBody.includes("- Testad DEV-commit (full SHA): " + testedDevSha)) {
+    throw new Error("CANDIDATE_DECISION_MISMATCH");
+  }
+  const devSha = String(development.object?.sha || "");
+  if (!/^[0-9a-f]{40}$/i.test(devSha) || !/^[0-9a-f]{40}$/i.test(String(live.sha || ""))) {
+    throw new Error("DEPLOYMENT_MANIFEST_UNVERIFIED");
+  }
+  await Promise.all([verifyPublishedManifest("main", live.sha), verifyPublishedManifest("development", devSha)]);
+  if (pr.state !== "open" || pr.draft || pr.base?.ref !== "main" || pr.base?.sha !== live.sha ||
+      pr.mergeable !== true || pr.mergeable_state !== "clean" || !/^[0-9a-f]{40}$/i.test(String(pr.head?.sha || ""))) {
+    throw new Error("RELEASE_PR_NOT_VALID");
+  }
+  const headCommit = await gh(token, repoPath + "/commits/" + pr.head.sha);
+  const treeSha = String(headCommit.commit?.tree?.sha || "");
+  if (!/^[0-9a-f]{40}$/i.test(treeSha)) throw new Error("CANDIDATE_HEAD_CHANGED");
+  const sourcePrs = (Array.isArray(item.release_source_prs) ? item.release_source_prs : []).map((number: number) => "#" + number).join(", ");
+  const candidateBody = String(pr.body || "");
+  if (!candidateBody.includes("- Prepared from LIVE baseline: " + live.sha) ||
+      !candidateBody.includes("- Source DEV PRs: " + sourcePrs) ||
+      !candidateBody.includes("- Approved DEV test version: " + testedDevSha) ||
+      !candidateBody.includes("- Exact candidate tree: " + treeSha) ||
+      !candidateBody.includes("- Zeus decision journal: #" + issueNumber)) {
+    throw new Error("RELEASE_PR_DECISION_MISMATCH");
+  }
+  const files = await gh(token, repoPath + "/pulls/" + prNumber + "/files?per_page=100");
+  const allowedFiles = new Set([...(Array.isArray(item.features) ? item.features : []), "tests/arcane-trophy-room.test.mjs"]);
+  const actualFiles = Array.isArray(files) ? files.map((file: any) => String(file.filename || "")) : [];
+  if (!actualFiles.length || actualFiles.some((filename: string) => !allowedFiles.has(filename))) {
+    throw new Error("CANDIDATE_SCOPE_NOT_ALLOWED");
+  }
+  const [checks, status] = await Promise.all([
+    ghReadWithRetry(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100"),
+    ghReadWithRetry(token, repoPath + "/commits/" + pr.head.sha + "/status"),
+  ]);
+  if (assessCi(checks, status, pr.head.sha).state !== "success") throw new Error("CANDIDATE_CHECKS_NOT_GREEN");
+  const previewUrl = await verifiedCandidatePreview(token, pr.head.sha);
+  if (!previewUrl) throw new Error("CANDIDATE_PREVIEW_UNVERIFIED");
+
+  const comments = await gh(token, repoPath + "/issues/" + issueNumber + "/comments?per_page=100");
+  const existing = (comments as any[]).find(comment => comment.user?.login === appLogin &&
+    String(comment.body || "").includes("- Candidate source: OLYMPIA-registered external PR #" + prNumber) &&
+    String(comment.body || "").includes("- Release PR SHA: " + pr.head.sha));
+  if (!existing) {
+    const report = [
+      "## OLYMPIA release candidate",
+      "",
+      "- Status: READY_FOR_ZEUS_FINAL_APPROVAL",
+      "- Candidate source: OLYMPIA-registered external PR #" + prNumber,
+      "- Pilot: " + item.id + " · source PRs " + sourcePrs,
+      "- Verified DEV SHA: " + testedDevSha,
+      "- LIVE rollback baseline: " + live.sha,
+      "- Candidate tree SHA: " + treeSha,
+      "- Release PR: #" + prNumber + " · " + pr.html_url,
+      "- Release PR SHA: " + pr.head.sha,
+      "- Tests: required GitHub checks passed on the exact candidate SHA.",
+      "- Release PR checks: all required checks passed; PR is mergeable.",
+      "- Cloudflare preview: " + previewUrl,
+      "- LIVE publication: NOT PERFORMED.",
+    ].join("\n");
+    await gh(token, repoPath + "/issues/" + issueNumber + "/comments", {
+      method: "POST", body: JSON.stringify({ body: report }),
+    });
+  }
+  return { issue: { number: issueNumber, url: issue.html_url }, releasePr: { number: prNumber, url: pr.html_url }, releasePrSha: pr.head.sha, candidateTreeSha: treeSha, previewUrl };
 }
 async function verifiedCandidatePreview(token: string, releasePrSha: string) {
   // First reuse any exact-SHA GitHub deployment already verified by OLYMPIA.
@@ -697,7 +794,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
   const report = (comments as any[])
     .filter(comment => {
       const body = String(comment.body || "");
-      return comment.user?.login === "github-actions[bot]" &&
+      return ["github-actions[bot]", appLogin].includes(String(comment.user?.login || "")) &&
         body.includes("## OLYMPIA release candidate") &&
         body.includes("- Verified DEV SHA: " + testedDevSha);
     })
@@ -739,7 +836,8 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
   const mergedReleaseIsForThisCandidate = Boolean(
     candidatePr?.merged_at &&
     candidatePr.base?.ref === "main" &&
-    candidatePr.user?.login === appLogin &&
+    (candidatePr.user?.login === appLogin ||
+      report.user?.login === appLogin && body.includes("- Candidate source: OLYMPIA-registered external PR #" + candidatePrMatch?.[1])) &&
     candidatePr.head?.sha === releasePrSha &&
     candidatePr.merge_commit_sha &&
     sourcePrNumber > 0 &&
@@ -1191,7 +1289,7 @@ async function handleRequest(req: Request): Promise<Response> {
             console.warn("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "unknown");
             candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Kandidatens aktuella status kunde inte verifieras; LIVE-beslut förblir låsta." };
           }
-          if (!candidate || candidate.blocked === false) {
+          if (!candidate || (!candidate.ready && candidate.blocked === false)) {
             try {
               const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
               if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
@@ -1638,6 +1736,39 @@ async function handleRequest(req: Request): Promise<Response> {
           : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED")  ? 503
           : 502;
         return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);
+      }
+    }
+    if (data.action === "register_external_candidate") {
+      if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          !Number.isSafeInteger(data.candidateIssue) || data.candidateIssue < 1 ||
+          !Number.isSafeInteger(data.candidatePrNumber) || data.candidatePrNumber < 1 ||
+          typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
+        return fail("Ange giltigt DEV-PR, Zeus-beslut, kandidat-PR och fullständig DEV-SHA.", 400);
+      }
+      try {
+        const token = await githubToken("register_external_candidate");
+        const item = await workItem(token, "PR-" + data.pullRequestNumber);
+        if (!item.ready_for_human_acceptance || !configuredWorkItem(item) ||
+            !await verifyReleaseSources(token, item, data.testedDevSha)) {
+          return fail("DEV-beslutet eller dess käll-PR kunde inte verifieras.", 409);
+        }
+        const registered = await registerExternalCandidate(token, item, data.candidateIssue, data.testedDevSha, data.candidatePrNumber);
+        return json({ ok: true, message: "Den separata LIVE-kandidaten är kopplad till Zeus-beslutet och verifierad i OLYMPIA. Ingen LIVE-publicering har skett.", ...registered });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.warn("OLYMPIA external candidate registration failed", JSON.stringify({ code }));
+        const messages: Record<string, string> = {
+          CANDIDATE_DECISION_MISMATCH: "Zeus-beslutet hör inte till denna PR eller DEV-version.",
+          DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
+          RELEASE_PR_NOT_VALID: "Kandidat-PR måste vara öppen, mergebar och baserad på aktuell main.",
+          RELEASE_PR_DECISION_MISMATCH: "Kandidat-PR saknar korrekt koppling till Zeus-beslutet, DEV-källan eller LIVE-baslinjen.",
+          CANDIDATE_HEAD_CHANGED: "Kandidatens commit eller tree kunde inte verifieras.",
+          CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidat-PR innehåller filer utanför det godkända ärendet.",
+          CANDIDATE_CHECKS_NOT_GREEN: "Kandidatens aktuella obligatoriska CI-kontroller är inte godkända.",
+          CANDIDATE_PREVIEW_UNVERIFIED: "Cloudflare-preview för exakt kandidat-SHA kunde inte verifieras.",
+        };
+        if (isTransientCandidateReadError(code)) return fail("GitHub kunde inte verifiera kandidaten just nu. Ingen LIVE-ändring gjordes; försök igen.", 503);
+        return fail(messages[code] || "Den separata kandidaten kunde inte verifieras. LIVE förblir oförändrat.", 409);
       }
     }
     if (data.action === "prepare_merged_dev_candidate") {
