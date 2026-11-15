@@ -60,19 +60,22 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   rows=state.activePrRows([openPr],state.cachedActiveCandidateParents(),[867]);
   expect(rows.map(pr=>pr.number)).toContain(867);
 
-  // 4–5. A successful journal response refreshes the cache; closure removes it.
+  // 4. A successful journal response keeps the parent in both the full
+  // active count and the filter choices while the user views another PR.
   state.writeCachedPrList([openPr],[parent]);
-  expect(state.activePrRows([openPr],state.cachedActiveCandidateParents(),[867]).map(pr=>pr.number)).toContain(867);
-  state.writeCachedPrList([openPr],[]);
   rows=state.activePrRows([openPr,devOnly],state.cachedActiveCandidateParents(),[867]);
-  expect(rows.map(pr=>pr.number)).not.toContain(867);
-
-  // 6. A merged DEV-only PR has no active journal and stays out of the list.
-  expect(rows.map(pr=>pr.number)).not.toContain(866);
+  expect(rows.map(pr=>pr.number)).toContain(867);
   const filtered=state.activePrFilterState(rows,'900');
   expect(filtered.selected).toBe('900');
   expect(filtered.visibleRows.map(pr=>pr.number)).toEqual([900]);
-  expect(state.activePrCountLabel(rows.length,filtered.visibleRows.length)).toBe('1 av 1 aktiva DEV/LIVE-ärenden');
+  expect(state.activePrCountLabel(rows.length,filtered.visibleRows.length)).toBe('1 av 2 aktiva DEV/LIVE-ärenden');
+
+  // 5. A confirmed closed LIVE process is removed; 6. a DEV-only merge
+  // has no active journal and stays out of the list.
+  state.writeCachedPrList([openPr],[]);
+  rows=state.activePrRows([openPr,devOnly],state.cachedActiveCandidateParents(),[867]);
+  expect(rows.map(pr=>pr.number)).not.toContain(867);
+  expect(rows.map(pr=>pr.number)).not.toContain(866);
   expect(html).toContain('activePrRows(cached.pullRequests,[],window.olympiaV2HiddenPrNumbers||[])');
   expect(html).toContain('writeCachedPrList(data.pullRequests||[],freshCandidateParents)');
   expect(html).toContain('activePrCountLabel(updatedPrs.length,updatedFilter.visibleRows.length)');
