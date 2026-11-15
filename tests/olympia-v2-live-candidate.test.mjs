@@ -25,6 +25,14 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(js).toContain('Skapa ny LIVE-kandidat från aktuell LIVE');
   expect(js).toContain('Ingen ändring publiceras till LIVE.');
  });
+ it('retries the same blocked Zeus journal only when the report confirms no LIVE PR was created',()=>{
+  const resume=edge.slice(edge.indexOf('if (data.action === "resume_stale_candidate")'));
+  expect(resume).toContain('if (releaseNumber > 0)');
+  expect(resume).toContain('candidate.releasePrNotCreated !== true');
+  expect(resume).toContain('startCandidateRequest(token, data.candidateIssue, item');
+  expect(resume).toContain('reuses its decision');
+  expect(edge).toContain('releasePrNotCreated: body.includes("- Release PR: #unknown · not created")');
+ });
  it('keeps final LIVE approval bound to a separate explicit action',()=>{
   expect(js).toContain("decision:'final_approval'");
   expect(js).toContain('LIVE-beslut är låsta.');
@@ -33,5 +41,20 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
  it('keeps SHA compact on mobile',()=>{
   expect(html).toContain('slice(0,12)');
   expect(html).toContain('overflow-wrap:anywhere');
+ });
+ it('resumes blocked candidates with the journaled tested DEV tip SHA',()=>{
+  expect(js).toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:result.testedDevSha,candidateIssue:result.issue.number");
+  expect(js).not.toContain("action:'resume_stale_candidate',pullRequestNumber:number,testedDevSha:sha,candidateIssue:result.issue.number");
+ });
+ it('resolves legacy source-merge payloads only through the matching candidate journal',()=>{
+  const resume=edge.slice(edge.indexOf('if (data.action === "resume_stale_candidate")'));
+  expect(resume).toContain('const journalSha = body.match');
+  expect(resume).toContain('const sourceMergeSha = String(item.dev_sha || "").toLowerCase()');
+  expect(resume).toContain('requestedSha === sourceMergeSha');
+  expect(resume).toContain('hasAcceptedFeatureVersion(token, issues, item, sha)');
+  expect(resume).toContain('inspectCandidate(token, item, data.candidateIssue, sha)');
+ });
+ it('cache-busts the OLYMPIA client after changing recovery payload semantics',()=>{
+  expect(html).toContain('<script src="./dev-approval.js?v=20261114-resume-tested-dev-sha-v1">');
  });
 });

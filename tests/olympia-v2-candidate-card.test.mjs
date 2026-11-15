@@ -11,7 +11,7 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(js).not.toContain('const sha=await currentDevSha();');
  });
  it('verifies release readiness on server before presenting candidate',()=>{
-  expect(edge).toContain('candidate = await inspectCandidate(token, item, issue.number, sha)');
+  expect(edge).toContain('candidate = await inspectCandidate(token, item, issue.number, testedDevSha)');
   expect(js).toContain('candidate?.ready===true');
   expect(js).toContain('candidate.releasePr');
   expect(js).toContain('candidate.releaseUrl');

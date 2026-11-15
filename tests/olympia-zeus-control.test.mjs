@@ -209,7 +209,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(legacy).toContain("olympia:['OLYMPIA'");
     expect(page).toContain('localStorage.getItem("alea_supabase_session")');
     expect(app).toContain('admin-olympia-fullscreen');
-    expect(app).toContain('src="./olympia-v2/?v=20261103-uppslag-v1"');
+    expect(app).toContain('src="./olympia-v2/?v=20261114-ci-status-module-v1"');
     expect(app).toContain('<b>OLYMPIA 2.0</b>');
     expect(app).not.toContain('src="./olympia/zeus-control.html?v=20261101-repair-pr-list-fullscreen-v1"');
     expect(page).toContain('event.key==="alea:dev:alea_supabase_session_dev"');
@@ -260,8 +260,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain(': { issues: "write", contents: "write" }');
     expect(edge).toContain('? { contents: "read", issues: "read", pull_requests: "read" }');
     expect(edge).toContain('if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });');
-    expect(edge).toContain('checks: "read"');
-    expect(edge).toContain('statuses: "read"');
+    expect(edge).not.toContain('checks: "read"');
+    expect(edge).not.toContain('statuses: "read"');
     expect(edge).toContain('async function ghPublic(path: string)');
     expect(edge).toContain('const [checks, status] = await Promise.all([');
     expect(edge).toContain('/commits/" + pr.head.sha + "/check-runs?per_page=100');
@@ -375,7 +375,9 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     const end=edge.indexOf('async function gh(',start);
     const tokenCode=edge.slice(start,end);
     expect(tokenCode).toContain('decision === "approve_and_merge_dev"');
+    expect(tokenCode).toContain(': decision === "approve_and_merge_dev"');
     expect(tokenCode).toContain('? { pull_requests: "write", issues: "write", contents: "write" }');
+    expect(tokenCode).toContain(': decision === "set_pull_request_draft"\n    ? { pull_requests: "write", issues: "write", contents: "write" }');
     expect(tokenCode).toContain('? { pull_requests: "write" }');
   });
 
@@ -506,7 +508,8 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(workflow).toContain('CURRENT_DEV_SHA=');
     expect(workflow).toContain('PR_MERGE_SHA" != "$SOURCE_PR_SHA');
     expect(workflow).toContain('merge-base --is-ancestor "$TESTED_SHA" "$CURRENT_DEV_SHA"');
-    expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+    expect(workflow).toContain('patch-hunks-overlap.mjs');
+    expect(workflow).toContain('A later DEV change overlaps the accepted PR');
   });
 });
 

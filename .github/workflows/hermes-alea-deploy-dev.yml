@@ -5,6 +5,7 @@ on:
     branches: [development, fix/hermes-alea-staging-recovery]
     paths:
       - 'supabase/functions/hermes-alea/**'
+      - 'supabase/config.toml'
       - 'scripts/hermes-alea-prepare-edge.mjs'
       - 'package-lock.json'
       - '.github/workflows/hermes-alea-deploy-dev.yml'

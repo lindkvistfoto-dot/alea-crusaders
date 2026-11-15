@@ -14,14 +14,15 @@ describe('OLYMPIA safe automatic LIVE candidate staging',()=>{
  });
  it('recovers safely for a previously merged DEV PR',()=>{
   expect(edge).toContain('data.action === "prepare_merged_dev_candidate"');
-  expect(edge).toContain('const writeToken = await githubToken("approve_and_merge_dev")');
+  expect(edge).toContain('const writeToken = await githubToken("prepare_merged_dev_candidate_write")');
   expect(edge).toContain('const token = await githubToken("pull_request_list")');
   expect(edge).toContain('recordDevAcceptance(writeToken, data.pullRequestNumber');
   expect(edge).toContain('verifyPublishedManifest("development", testedDevSha)');
   expect(edge).toContain('PR-CI är inte helt godkänd');
   expect(edge).toContain('recordDevAcceptance(token, data.pullRequestNumber');
   expect(edge).toContain('autoPrepareLiveCandidate(token, data.pullRequestNumber');
-  expect(edge).toContain('Berörda filer har ändrats efter DEV-mergen');
+  expect(edge).toContain('laterChangesOverlapAcceptedPatch(token, item, changedSourceFiles)');
+  expect(edge).toContain('Överlappande ändringar har ändrats efter DEV-mergen');
   expect(edge).toContain('LIVE är oförändrat.');
  });
  it('reuses existing candidate bridge and avoids LIVE publication',()=>{

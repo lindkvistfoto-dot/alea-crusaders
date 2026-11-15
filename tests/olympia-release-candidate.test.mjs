@@ -18,7 +18,12 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).toContain('reconcile-index-asset-versions.mjs');
   expect(workflow).toContain('No candidate PR was created.');
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" apply "$PATCH_FILE"');
-  expect(workflow).toContain('git -C "$DEV_DIR" diff --binary --full-index "$PR_PARENT_SHA" "$PR_MERGE_SHA"');
+  expect(workflow).toContain("PR_HEAD_SHA=\"$(jq -r '.head.sha' <<< \"$PR_JSON\")\"");
+  expect(workflow).toContain('git -C "$DEV_DIR" merge-base "$PR_HEAD_SHA" "$PR_MERGE_PARENT_SHA"');
+  expect(workflow).toContain('git -C "$DEV_DIR" diff --binary --full-index "$PR_PATCH_BASE_SHA" "$PR_PATCH_SHA"');
+  expect(workflow).toContain('live.replace(liveLabel,baseLabel)!==base');
+  expect(workflow).toContain('reconciled the reviewed Spelmöte V2 module and preserved the LIVE API and paused indicator.');
+  expect(workflow).toContain('reconcile-chronicle-live-conflicts.mjs');
   expect(workflow).toContain('git -C "$SOURCE_DIR" add -A');
   expect(workflow).toContain('EXPECTED_TREE: ${{ steps.candidate.outputs.candidate_tree }}');
   expect(workflow).toContain('ACTUAL_TREE="$(git -C "$SOURCE_DIR" write-tree)"');
@@ -26,7 +31,10 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).not.toContain('git -C "$SOURCE_DIR" status --porcelain');
   expect(workflow).not.toContain('refs/pull/$PR_NUMBER/head');
   expect(workflow).toContain('git -C "$DEV_DIR" merge-base --is-ancestor "$PR_MERGE_SHA" "$TESTED_SHA"');
-  expect(workflow).toContain('The accepted change files changed after Zeus tested this DEV version. Refresh OLYMPIA and test again.');
+  expect(workflow).toContain('patch-hunks-overlap.mjs');
+  expect(workflow).toContain('A later DEV change overlaps the accepted PR');
+  expect(workflow).toContain('could not safely compare the accepted and later patch ranges');
+  expect(workflow).toContain('issue_number=$ISSUE_NUMBER');
   expect(workflow).toContain('Wait for release PR CI and mergeability');
   expect(workflow).toContain('checks: read');
   expect(workflow).toContain('statuses: read');
@@ -51,6 +59,16 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).toContain('-- "${ALLOWED_FILES[@]}"');
   expect(workflow).not.toContain('ITEM_ID" == "PILOT-001"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
+ });
+ it('reuses only byte-identical migrations already present in LIVE',()=>{
+  const workflow=read('.github/workflows/olympia-release-candidate.yml');
+  expect(workflow).toContain('if [[ "$changed" == supabase/migrations/*.sql ]]');
+  expect(workflow).toContain('LIVE_MIGRATION_BLOB');
+  expect(workflow).toContain('DEV_MIGRATION_BLOB');
+  expect(workflow).toContain('"$LIVE_MIGRATION_BLOB" == "$DEV_MIGRATION_BLOB"');
+  expect(workflow).toContain('reusing byte-identical migration already present in LIVE');
+  expect(workflow).toContain('Candidate migration is new or differs from LIVE');
+  expect(workflow).toContain('[[ -z "$MIGRATIONS" ]]');
  });
  it('retries the same decision from current DEV while preserving the request attempt',()=>{
   const edge=read('supabase/functions/olympia-control/index.ts');

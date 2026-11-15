@@ -49,6 +49,30 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   if(!id){id=crypto.randomUUID();attempts.set(key,id);try{storage?.setItem(key,id);}catch{}}
   return id;
  }
+ async function findMatchingPendingJob(meta){
+  const user=await json('/auth/v1/user');
+  if(!user?.id)return null;
+  const query=new URLSearchParams({
+   select:'id,state,source_path,output_path,source_bytes,output_bytes,source_mime',
+   requested_by:'eq.'+user.id,
+   target_kind:'eq.'+meta.target_kind,
+   target_id:'eq.'+meta.target_id,
+   operation:'eq.'+meta.operation,
+   expected_revision:'eq.'+meta.expected_revision,
+   source_mime:'eq.'+meta.source_mime,
+   source_bytes:'eq.'+meta.source_bytes,
+   output_bytes:'eq.'+meta.output_bytes,
+   source_sha256:'eq.'+meta.source_sha256,
+   output_sha256:'eq.'+meta.output_sha256,
+   state:'eq.uploading',
+   order:'created_at.desc',
+   limit:'1'
+  });
+  const rows=await json('/rest/v1/hermes_alea_jobs?'+query.toString());
+  const job=Array.isArray(rows)?rows[0]:null;
+  if(!job||job.state!=='uploading'||!job.source_path||!job.output_path)return null;
+  return job;
+ }
  async function upload({targetKind,target,file,profile={},onStatus=()=>{}}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
   const policy=resolveImageProfile(targetPolicies[targetKind]);
@@ -76,9 +100,12 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
    job=await rpc('hermes_alea_begin',{request:meta});
   }catch(error){
    if(/STAGING_QUOTA_EXCEEDED/.test(String(error?.message||error))){
-    try{await rpc('hermes_alea_report_staging_block',{request:{environment:environment==='LIVE'?'LIVE':'DEV',target_kind:targetKind,target_id:target.id}});}catch{}
-   }
-   throw error;
+    try{job=await findMatchingPendingJob(meta);}catch{}
+    if(!job){
+     try{await rpc('hermes_alea_report_staging_block',{request:{environment:environment==='LIVE'?'LIVE':'DEV',target_kind:targetKind,target_id:target.id}});}catch{}
+     throw error;
+    }
+   }else throw error;
   }
   if(job.state==='activated')return job;
   onStatus('uploading');

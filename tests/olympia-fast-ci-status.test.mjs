@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'vitest';
 
 const html = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
+const ci = readFileSync(new URL('../supabase/functions/_shared/olympia-ci.js', import.meta.url), 'utf8');
 
 test('poll pending CI every 30 seconds and settled CI every 120 seconds', () => {
   expect(html).toMatch(/pendingChecks\?30000:120000/);
@@ -9,8 +10,8 @@ test('poll pending CI every 30 seconds and settled CI every 120 seconds', () => 
   expect(html).toContain('mapLimit(shown,5,card)');
 });
 
-test('pending status names the waiting GitHub check', () => {
-  expect(html).toMatch(/Väntar på:/);
+test('pending status names the waiting GitHub check in the shared evaluator', () => {
+  expect(ci).toContain('Väntar på:');
   expect(html).toMatch(/if\(state==='pending'\)pendingChecks=true/);
 });
 

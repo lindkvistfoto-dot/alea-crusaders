@@ -11,7 +11,7 @@ describe('OLYMPIA candidate status survives preview verification failure',()=>{
  it('keeps the candidate requested and approval locked on verifier errors',()=>{
   expect(diagnostic).toContain('candidate = { ready: false, blocked: false');
   expect(diagnostic).toContain('LIVE-beslut förblir låsta');
-  expect(diagnostic).toContain('state, locked, requestPresent, candidate');
+  expect(diagnostic).toContain('state: "requested", locked: true, requestPresent: true, candidate');
  });
  it('keeps a failed Pandoras Ask visible with its reason and workflow run',()=>{
   expect(diagnostic).toContain('BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: ');

@@ -21,6 +21,14 @@ export default defineConfig({
     copyStaticTree("alea-copy-preview", "preview", "preview"),
     copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
     copyStaticTree("alea-copy-olympia-v2", "olympia-v2", "olympia-v2"),
+    {
+      name: "alea-copy-olympia-ci-validation",
+      apply: "build",
+      async closeBundle() {
+        await mkdir(resolve("dist/olympia-v2"), { recursive: true });
+        await copyFile(resolve("supabase/functions/_shared/olympia-ci.js"), resolve("dist/olympia-v2/ci-validation.js"));
+      },
+    },
     copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
     {
       name: "alea-copy-root-image-assets",

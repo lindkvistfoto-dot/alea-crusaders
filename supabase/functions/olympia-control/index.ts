@@ -1,4 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
+import "../_shared/olympia-ci.js";
+
+const assessCi = (globalThis as any).olympiaCiValidation.assess;
 
 const OWNER = "lindkvistfoto-dot";
 const REPO = "alea-crusaders";
@@ -76,16 +79,22 @@ async function githubToken(decision: string) {
   const permissions: Record<string, string> = decision === "deployment_check" || decision === "current_refs"
     ? { contents: "read" }
     : decision === "pull_request_list" || decision === "pull_request_status"
-    ? { pull_requests: "read", checks: "read", statuses: "read" }
+    ? { pull_requests: "read" }
     : decision === "idea_verify_live"
     ? { contents: "read", issues: "read", pull_requests: "read" }
     : (decision === "candidate_check" || decision === "auto_candidate_diagnostics")
     ? { contents: "read", issues: "read", pull_requests: "read" }
+    : decision === "resume_stale_candidate"
+    ? { contents: "write", issues: "write", pull_requests: "read" }
+    : decision === "prepare_merged_dev_candidate_write"
+    ? { contents: "write", issues: "write", pull_requests: "read" }
     : decision === "review_pull_request"
     ? { pull_requests: "write" }
     : decision === "prepare_merged_dev_candidate"
-    ? { pull_requests: "read", checks: "read", statuses: "read", issues: "write", contents: "write" }
-    : (decision === "set_pull_request_draft" || decision === "approve_and_merge_dev")
+    ? { pull_requests: "read", issues: "write", contents: "write" }
+    : decision === "approve_and_merge_dev"
+    ? { pull_requests: "write", issues: "write", contents: "write" }
+    : decision === "set_pull_request_draft"
     ? { pull_requests: "write", issues: "write", contents: "write" }
     : { issues: "write", contents: "write" };
   if (decision === "final_approval") Object.assign(permissions, { pull_requests: "write" });
@@ -141,12 +150,42 @@ async function gh(token: string, path: string, init: RequestInit = {}) {
   }
   return data;
 }
+function isTransientCandidateReadError(code: string) {
+  return code === "GITHUB_PUBLIC_RATE_LIMITED" ||
+    code === "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" ||
+    code === "GITHUB_PUBLIC_RESPONSE_INVALID" ||
+    /^GITHUB_PUBLIC_REQUEST_FAILED_(?:403|429|502|503|504)$/.test(code);
+}
 async function ghPublic(path: string) {
-  const res = await fetch("https://api.github.com" + path, {
-    headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
+  let res: Response;
+  try {
+    res = await fetch("https://api.github.com" + path, {
+      headers: { "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    });
+  } catch (_error) {
+    console.error("OLYMPIA GitHub public API request failed", JSON.stringify({ path, code: "GITHUB_PUBLIC_REQUEST_FAILED_NETWORK" }));
+    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_NETWORK");
+  }
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (_error) {
+    console.error("OLYMPIA GitHub public API response invalid", JSON.stringify({ path, status: res.status }));
+    throw new Error("GITHUB_PUBLIC_RESPONSE_INVALID");
+  }
+  if (!res.ok) {
+    const reason = String(data.message || "unknown").slice(0, 180);
+    const remaining = res.headers.get("x-ratelimit-remaining");
+    const reset = res.headers.get("x-ratelimit-reset");
+    const rateLimited = res.status === 403 &&
+      (remaining === "0" || /API rate limit exceeded/i.test(reason));
+    console.error(
+      rateLimited ? "OLYMPIA GitHub public API rate limited" : "OLYMPIA GitHub public API request rejected",
+      JSON.stringify({ path, status: res.status, remaining, reset }),
+    );
+    if (rateLimited) throw new Error("GITHUB_PUBLIC_RATE_LIMITED");
+    throw new Error("GITHUB_PUBLIC_REQUEST_FAILED_" + res.status);
+  }
   return data;
 }
 async function currentDevPullRequest(token: string, number: number, headSha: string) {
@@ -313,6 +352,59 @@ async function verifyReleaseSources(token: string, item: any, testedSha: string)
   const primary = sourcePRs.find(pr => Number(pr.number) === item.pr_number);
   return !!primary && primary.merge_commit_sha?.toLowerCase() === String(item.dev_sha).toLowerCase();
 }
+function parsePatchRanges(patch: unknown) {
+  if (typeof patch !== "string" || !patch.length) return null;
+  const ranges: Array<{ start: number; end: number; insertion: boolean }> = [];
+  const pattern = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(patch))) {
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(count)) return null;
+    ranges.push({ start, end: count === 0 ? start : start + count - 1, insertion: count === 0 });
+  }
+  return ranges.length ? ranges : null;
+}
+function patchRangesOverlap(approvedPatch: unknown, laterPatch: unknown) {
+  const approved = parsePatchRanges(approvedPatch);
+  const later = parsePatchRanges(laterPatch);
+  if (!approved || !later) return null;
+  for (const a of approved) for (const b of later) {
+    if (a.insertion || b.insertion) {
+      const point = a.insertion ? a.start : b.start;
+      const region = a.insertion ? b : a;
+      if (point >= region.start - 1 && point <= region.end + 1) return true;
+    } else if (a.start <= b.end && b.start <= a.end) return true;
+  }
+  return false;
+}
+async function laterChangesOverlapAcceptedPatch(token: string, item: any, laterFiles: any[]) {
+  const protectedPaths = new Set(Array.isArray(item.features) ? item.features : []);
+  const relevant = laterFiles.filter(file => protectedPaths.has(String(file.filename || "")));
+  if (!relevant.length) return false;
+  const approvedPatches = new Map<string, string[]>();
+  for (const number of item.release_source_prs || []) {
+    const files = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number + "/files?per_page=100");
+    if (!Array.isArray(files) || files.length >= 100) return true;
+    for (const file of files) {
+      if (protectedPaths.has(String(file.filename || "")) && typeof file.patch === "string") {
+        const patches = approvedPatches.get(file.filename) || [];
+        patches.push(file.patch);
+        approvedPatches.set(file.filename, patches);
+      }
+    }
+  }
+  for (const file of relevant) {
+    const laterPatch = file.patch;
+    const accepted = approvedPatches.get(file.filename) || [];
+    if (typeof laterPatch !== "string" || !accepted.length) return true;
+    for (const acceptedPatch of accepted) {
+      const overlap = patchRangesOverlap(acceptedPatch, laterPatch);
+      if (overlap !== false) return true;
+    }
+  }
+  return false;
+}
 async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any, currentSha: string) {
   const acceptedIssues = issues.filter(issue => {
     const body = String(issue.body || "");
@@ -326,7 +418,8 @@ async function hasAcceptedFeatureVersion(token: string, issues: any[], item: any
     if (tested === currentSha) return true;
     const comparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + tested + "..." + currentSha);
     if (comparison.status !== "ahead" || comparison.ahead_by > 100 || !Array.isArray(comparison.files) || comparison.files.length >= 300) continue;
-    if (!comparison.files.some((file: any) => protectedPaths.has(file.filename))) return true;
+    const relevantFiles = comparison.files.filter((file: any) => protectedPaths.has(file.filename));
+    if (!relevantFiles.length || !await laterChangesOverlapAcceptedPatch(token, item, relevantFiles)) return true;
   }
   return false;
 }
@@ -647,6 +740,7 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
       releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
+      releasePrNotCreated: body.includes("- Release PR: #unknown · not created"),
       releaseUrl: candidatePrMatch?.[2] || null,
       releasePrSha,
     };
@@ -704,7 +798,12 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     };
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
+    const transientReadFailure = isTransientCandidateReadError(code);
+    console.warn("OLYMPIA candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
     const messages: Record<string, string> = {
+      GITHUB_PUBLIC_RATE_LIMITED: "GitHub API-begränsningen hindrar CI-verifiering just nu. LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub API kunde inte nås under CI-verifieringen. LIVE-beslut är låsta; uppdatera status och försök igen.",
+      GITHUB_PUBLIC_RESPONSE_INVALID: "GitHub returnerade ett ogiltigt CI-svar. LIVE-beslut är låsta; uppdatera status och försök igen.",
       CANDIDATE_NOT_READY: "Kandidatrapporten är inte klar. LIVE är oförändrat.",
       CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
       LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. En ny kandidat behövs.",
@@ -716,10 +815,15 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
       DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
       CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
+      GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub API kunde inte verifiera CI-kontrollerna (403). LIVE-beslut är låsta; kontrollera GitHub-status och försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
+      GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-kontrollerna svarade inte i tid (504). LIVE-beslut är låsta; försök igen.",
     };
     return {
       ready: false,
-      blocked: true,
+      blocked: !transientReadFailure,
       reasonCode: code || "CANDIDATE_VERIFICATION_FAILED",
       message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
       candidateTreeSha: releasePrTreeSha,
@@ -1025,89 +1129,116 @@ async function handleRequest(req: Request): Promise<Response> {
     if (data.action === "auto_candidate_diagnostics") {
       if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
           typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
-        return fail("Ange giltigt PR-nummer och fullständig testad DEV-SHA.", 400);
+        return fail("Ange giltigt PR-nummer och fullständig DEV-merge-SHA.", 400);
       }
       try {
         const token = await githubToken("auto_candidate_diagnostics");
         const number = data.pullRequestNumber;
-        const sha = data.testedDevSha.toLowerCase();
+        const sourceMergeSha = data.testedDevSha.toLowerCase();
         const repoPath = "/repos/" + OWNER + "/" + REPO;
-        const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + sha;
-        let locked = false;
-        try {
-          const lock = await gh(token, repoPath + "/git/ref/heads/" + lockBranch);
-          locked = true;
-          if (String(lock.object?.sha || "").toLowerCase() !== sha) {
-            return json({ ok: true, state: "inconsistent", locked: true, message: "Kandidatlåset pekar på fel commit. Manuell granskning krävs." });
-          }
-        } catch (error) {
-          if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
-        }
         const appLogin = await appBotLogin();
-        let issue: any = null;
+        const item = await workItem(token, "PR-" + number);
+        // The PR card sends the source PR's merge SHA. Candidate preparation records
+        // the tested DEV tip SHA in its decision issue. Resolve that SHA from the
+        // verified journal instead of looking for a lock keyed by the wrong SHA.
+        if (String(item.dev_sha || "").toLowerCase() !== sourceMergeSha) {
+          return fail("DEV-PR:ens merge-SHA har ändrats. Uppdatera OLYMPIA.", 409);
+        }
+
+        const candidateIssues: any[] = [];
         let scanComplete = false;
         for (let page = 1; page <= 20; page++) {
           const issues = await gh(token, repoPath + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(appLogin));
           if (!Array.isArray(issues)) throw new Error("CANDIDATE_DIAGNOSTICS_ISSUES_INVALID");
-          issue = issues.find((candidate: any) => {
-            const body = String(candidate.body || "");
-            return !candidate.pull_request && body.includes("- Beslut: PANDORAS ASK") &&
-              body.includes("- Ärende-ID: PR-" + number) &&
-              body.includes("- Testad DEV-commit (full SHA): " + sha);
-          });
-          if (issue || issues.length < 100) { scanComplete = true; break; }
+          for (const candidateIssue of issues) {
+            const body = String(candidateIssue.body || "");
+            if (!candidateIssue.pull_request && candidateIssue.user?.login === appLogin &&
+                candidateIssue.state === "open" &&
+                body.includes("- Beslut: PANDORAS ASK") &&
+                body.includes("- Ärende-ID: PR-" + number)) {
+              const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
+              if (testedMatch) candidateIssues.push({ issue: candidateIssue, testedDevSha: testedMatch[1].toLowerCase() });
+            }
+          }
+          if (issues.length < 100) { scanComplete = true; break; }
         }
-        if (!scanComplete) return json({ ok: true, state: "unknown", locked, message: "Journalen kunde inte genomsökas fullständigt. Ingen återställning tillåten." });
-        let requestPresent = false;
-        if (issue) {
+        if (!scanComplete) return json({ ok: true, state: "unknown", locked: false, message: "Journalen kunde inte genomsökas fullständigt. Ingen återställning tillåten." });
+        candidateIssues.sort((a, b) => Date.parse(b.issue.created_at || "") - Date.parse(a.issue.created_at || ""));
+
+        let unlockedIssue: any = null;
+        for (const entry of candidateIssues) {
+          const issue = entry.issue;
+          const testedDevSha = entry.testedDevSha;
+          const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + testedDevSha;
+          let lock: any = null;
+          try {
+            lock = await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent(lockBranch));
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+            unlockedIssue ||= issue;
+            continue;
+          }
+          if (String(lock.object?.sha || "").toLowerCase() !== testedDevSha) {
+            return json({ ok: true, state: "inconsistent", locked: true, issue: { number: issue.number, url: issue.html_url }, message: "Kandidatlåset pekar på fel commit. Manuell granskning krävs." });
+          }
+          let requestPresent = false;
           try {
             await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent("olympia/release-requests/decision-" + issue.number));
             requestPresent = true;
           } catch (error) {
             if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
           }
-        }
-        // Resolve the actual release candidate through the existing server verifier.
-        // This is read-only; never infer readiness from the existence of an issue.
-        let candidate: any = null;
-        if (requestPresent && issue) {
-          try {
-            const item = await workItem(token, "PR-" + number);
-            candidate = await inspectCandidate(token, item, issue.number, sha);
-          } catch (error) {
-            // Candidate diagnostics must survive preview lookup errors.
-            // Never infer readiness or permit LIVE approval from a fallback.
-            console.warn("OLYMPIA preview diagnostics unavailable", error instanceof Error ? error.message : "unknown");
-            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Förhandsvisningen kunde inte verifieras; LIVE-beslut förblir låsta." };
+          if (!requestPresent) {
+            return json({ ok: true, state: "needs_review", locked: true, requestPresent: false,
+              issue: { number: issue.number, url: issue.html_url },
+              message: "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." });
           }
-        }
-        if (issue && (!candidate || candidate.blocked === false)) {
+
+          let candidate: any = null;
           try {
-            const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
-            if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
-            const latest = comments.filter((comment: any) => String(comment.body || "").includes("## OLYMPIA release candidate")).at(-1);
-            const body = String(latest?.body || "");
-            if (/Status:\s*BLOCKED\b/i.test(body)) {
-              const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
-              const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
-              candidate = {
-                ready: false,
-                blocked: true,
-                message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
-                workflowRunUrl
-              };
+            candidate = await inspectCandidate(token, item, issue.number, testedDevSha);
+          } catch (error) {
+            console.warn("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "unknown");
+            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Kandidatens aktuella status kunde inte verifieras; LIVE-beslut förblir låsta." };
+          }
+          if (!candidate || candidate.blocked === false) {
+            try {
+              const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
+              if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
+              const latest = comments.filter((comment: any) =>
+                comment.user?.login === "github-actions[bot]" &&
+                String(comment.body || "").includes("## OLYMPIA release candidate") &&
+                String(comment.body || "").includes("- Verified DEV SHA: " + testedDevSha)
+              ).sort((a: any, b: any) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
+              const body = String(latest?.body || "");
+              if (/^- Status: BLOCKED$/mi.test(body)) {
+                const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
+                const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
+                candidate = {
+                  ready: false,
+                  blocked: true,
+                  message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
+                  workflowRunUrl,
+                };
+              }
+            } catch (error) {
+              console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
             }
-          } catch (error) {
-            console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
           }
+          return json({
+            ok: true, state: "requested", locked: true, requestPresent: true, candidate,
+            issue: { number: issue.number, url: issue.html_url },
+            testedDevSha,
+            message: "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut.",
+          });
         }
-        const state = locked ? (requestPresent ? "requested" : "needs_review") : (issue ? "unlocked_issue" : "not_started");
-        return json({ ok: true, state, locked, requestPresent, candidate,
-          issue: issue ? { number: issue.number, url: issue.html_url } : null,
-          message: state === "needs_review" ? "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." :
-            state === "requested" ? "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut." :
-            state === "unlocked_issue" ? "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." :
-            "Ingen automatisk kandidatbegäran hittades." });
+
+        return json(unlockedIssue
+          ? { ok: true, state: "unlocked_issue", locked: false, requestPresent: false,
+              issue: { number: unlockedIssue.number, url: unlockedIssue.html_url },
+              message: "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." }
+          : { ok: true, state: "not_started", locked: false, requestPresent: false, issue: null,
+              message: "Ingen automatisk kandidatbegäran hittades." });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA candidate diagnostics failed", code);
@@ -1124,7 +1255,6 @@ async function handleRequest(req: Request): Promise<Response> {
       try {
         const token = await githubToken("resume_stale_candidate");
         const number = data.pullRequestNumber;
-        const sha = data.testedDevSha.toLowerCase();
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const [appLogin, item, issue, issues] = await Promise.all([
           appBotLogin(),
@@ -1134,10 +1264,21 @@ async function handleRequest(req: Request): Promise<Response> {
         ]);
         if (!Array.isArray(issues)) throw new Error("CANDIDATE_ISSUES_INVALID");
         const body = String(issue.body || "");
+        const journalSha = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi)?.[1]?.toLowerCase() || "";
+        const requestedSha = data.testedDevSha.toLowerCase();
+        const sourceMergeSha = String(item.dev_sha || "").toLowerCase();
+        // Older OLYMPIA clients pass the source PR merge SHA. Resolve it only
+        // through this exact PANDORAS ASK journal entry; downstream checks use
+        // the recorded and accepted DEV tip SHA, never the client alias.
+        const sha = requestedSha === journalSha
+          ? journalSha
+          : requestedSha === sourceMergeSha
+          ? journalSha
+          : "";
         if (issue.user?.login !== appLogin || issue.pull_request ||
             !body.includes("- Beslut: PANDORAS ASK") ||
             !body.includes("- Ärende-ID: PR-" + number) ||
-            !body.includes("- Testad DEV-commit (full SHA): " + sha)) {
+            !/^[0-9a-f]{40}$/.test(journalSha) || !sha) {
           return fail("Kandidatbeslutet matchar inte den valda DEV-ändringen.", 409);
         }
         if (!await hasAcceptedFeatureVersion(token, issues, item, sha)) {
@@ -1151,19 +1292,26 @@ async function handleRequest(req: Request): Promise<Response> {
         }
         if (blockedRun) {
           const releaseNumber = Number(candidate.releasePr || 0);
-          if (!Number.isSafeInteger(releaseNumber) || releaseNumber < 1) {
+          if (releaseNumber > 0) {
+            if (!Number.isSafeInteger(releaseNumber)) {
+              return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
+            }
+            const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
+            const releaseBody = String(releasePr.body || "");
+            const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+            if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
+                releasePr.user?.login !== appLogin ||
+                !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
+                !releaseBody.includes("- Approved DEV test version: " + sha) ||
+                !sources.split(/\s*,\s*/).includes("#" + number)) {
+              return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
+            }
+          } else if (candidate.releasePrNotCreated !== true) {
             return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
           }
-          const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
-          const releaseBody = String(releasePr.body || "");
-          const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
-          if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
-              releasePr.user?.login !== appLogin ||
-              !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
-              !releaseBody.includes("- Approved DEV test version: " + sha) ||
-              !sources.split(/\s*,\s*/).includes("#" + number)) {
-            return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
-          }
+          // If candidate creation was blocked before a release PR existed, retry
+          // the same journaled request. startCandidateRequest reuses its decision
+          // branch and increments its attempt instead of creating a second decision.
         }
         const requestBranch = await startCandidateRequest(token, data.candidateIssue, item, {
           decision: "pandoras_ask",
@@ -1274,8 +1422,8 @@ async function handleRequest(req: Request): Promise<Response> {
         const token = await githubToken("pull_request_status");
         const [pr, status, checks] = await Promise.all([
           gh(token, path + "/pulls/" + data.pullRequestNumber),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/status"),
-          gh(token, path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/status"),
+          ghPublic(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
         ]);
         if (pr.head?.sha !== data.pullRequestHeadSha) return fail("PR-versionen har ändrats. Uppdatera listan och hämta status igen.", 409);
         return json({
@@ -1283,6 +1431,9 @@ async function handleRequest(req: Request): Promise<Response> {
           pullRequest: { state: pr.state, draft: pr.draft, mergeable: pr.mergeable, mergeableState: pr.mergeable_state },
           statuses: Array.isArray(status.statuses) ? status.statuses : [],
           combinedStatusState: String(status.state || 'unknown'),
+          statusSha: String(status.sha || ''),
+          checkRunSha: String(checks.sha || ''),
+          checkRunsTotalCount: Number(checks.total_count || 0),
           checkRuns: Array.isArray(checks.check_runs) ? checks.check_runs : [],
         });
       } catch (error) {
@@ -1333,13 +1484,15 @@ async function handleRequest(req: Request): Promise<Response> {
         const path = "/repos/" + OWNER + "/" + REPO;
         const pr = await currentDevPullRequest(token, data.pullRequestNumber, data.pullRequestHeadSha);
         stage = "ci_validation";
-        // Retry only transient GitHub transport errors; never retry a failed CI verdict.
+        // CI runs are publicly readable for this public repo; keep Checks and
+        // Commit-status permissions off the merge token. Retry only transient
+        // public API failures, never a failed or pending CI verdict.
         const readCi = async (endpoint: string) => {
           for (let attempt = 0; attempt < 3; attempt++) {
-            try { return await gh(token, endpoint); }
+            try { return await ghPublic(endpoint); }
             catch (error) {
               const message = error instanceof Error ? error.message : "";
-              if (!/GITHUB_REQUEST_FAILED_(502|503|504)$/.test(message) || attempt === 2) throw error;
+              if (!/GITHUB_PUBLIC_REQUEST_FAILED_(?:NETWORK|502|503|504)$/.test(message) || attempt === 2) throw error;
               await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
             }
           }
@@ -1349,14 +1502,8 @@ async function handleRequest(req: Request): Promise<Response> {
           readCi(path + "/commits/" + data.pullRequestHeadSha + "/check-runs?per_page=100"),
           readCi(path + "/commits/" + data.pullRequestHeadSha + "/status"),
         ]);
-        const runs = Array.isArray(checks.check_runs) ? checks.check_runs : [];
-        const statuses = Array.isArray(status.statuses) ? status.statuses : [];
-        if ((!runs.length && !statuses.length) || Number(checks.total_count) > runs.length ||
-            runs.some((check: any) => check.status !== "completed" ||
-              !["success", "neutral", "skipped"].includes(check.conclusion)) ||
-            (statuses.length > 0 && status.state !== "success")) {
-          throw new Error("CI_NOT_GREEN");
-        }
+        const assessment = assessCi(checks, status, data.pullRequestHeadSha);
+        if (assessment.state !== "success") throw new Error(assessment.code);
         stage = "github_merge";
         let mergeSha = "";
         try {
@@ -1408,10 +1555,46 @@ async function handleRequest(req: Request): Promise<Response> {
           PR_HEAD_CHANGED: "PR:en har ändrats sedan den visades. Uppdatera OLYMPIA och granska den nya versionen.",
           PR_MERGEABILITY_UNKNOWN: "GitHub kunde inte fastställa mergebarheten efter flera uppdateringar. Försök igen om en stund.",
           PR_HAS_CONFLICTS: "PR:en har konflikter och behöver rättas innan DEV-merge.",
-          CI_NOT_GREEN: "CI är inte färdig eller godkänd. Vänta in kontrollerna och försök igen.",
+          CI_PENDING: "CI körs fortfarande. Vänta in kontrollerna och försök igen.",
+          CI_FAILED: "En eller flera obligatoriska CI-kontroller har underkänts. Ingen merge genomfördes.",
+          CI_CHECKS_MISSING: "Obligatoriska CI-kontroller saknas. Ingen merge genomfördes.",
+          CI_CHECKS_INCOMPLETE: "GitHub returnerade inte alla CI-kontroller. Uppdatera status och försök igen.",
+          CI_SHA_MISMATCH: "CI-kontrollerna gäller inte den aktuella PR-versionen. Uppdatera status och granska igen.",
+          CI_SHA_INVALID: "PR-versionen kunde inte verifieras. Ingen merge genomfördes.",
+          CI_STATUS_UNKNOWN: "GitHub-status kunde inte verifieras. Ingen merge genomfördes.",
+          GITHUB_APP_TOKEN_FAILED_422: "GitHub App saknar nödvändiga Checks/Statuses-läsbehörigheter. Ge appen läsbehörighet för kontroller och statusar; ingen merge genomfördes.",
           DEV_ACCEPTANCE_SOURCE_UNVERIFIED: "GitHub bekräftade DEV-merge, men ändringen kunde inte kopplas säkert till DEV. Uppdatera status innan nästa beslut.",
         };
-        return json({ ok: false, stage, errorCode: code, message: (messages[code] || "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.") + " (Steg: " + stage + ")" }, code === "GITHUB_REQUEST_FAILED_409" ? 409 : 502);
+        const ciApiMessages: Record<string, string> = {
+          GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
+          GITHUB_PUBLIC_RATE_LIMITED: "GitHub begränsade offentlig CI-läsning. Vänta och försök igen; ingen merge genomfördes.",
+          GITHUB_PUBLIC_REQUEST_FAILED_403: "GitHub nekade offentlig CI-läsning (403). Ingen merge genomfördes.",
+          GITHUB_PUBLIC_REQUEST_FAILED_429: "GitHub begränsade CI-läsningen (429). Vänta och försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_503: "GitHub CI-tjänst är tillfälligt otillgänglig (503). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504). Försök igen.",
+          GITHUB_PUBLIC_REQUEST_FAILED_NETWORK: "GitHub CI-tjänst kunde inte nås. Försök igen.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade CI-verifieringen (403). Kontrollera GitHub App-behörigheterna; ingen merge genomfördes.",
+          GITHUB_REQUEST_FAILED_429: "GitHub CI-tjänst begränsade anropen (429). Vänta och försök igen.",
+          GITHUB_REQUEST_FAILED_502: "GitHub CI-tjänst är tillfälligt otillgänglig (502). Försök igen.",
+          GITHUB_REQUEST_FAILED_503: "GitHub CI-tjänst är tillfälligt otillgänglig (503). Försök igen.",
+          GITHUB_REQUEST_FAILED_504: "GitHub CI-tjänst svarade inte i tid (504). Försök igen.",
+        };
+        const apiMessages: Record<string, string> = {
+          GITHUB_RATE_LIMITED: "GitHub API-begränsningen är nådd. Vänta tills gränsen återställts och försök igen.",
+          GITHUB_REQUEST_FAILED_403: "GitHub nekade API-anropet (403). Kontrollera GitHub App-behörigheterna.",
+          GITHUB_REQUEST_FAILED_429: "GitHub API begränsade anropen (429). Vänta och försök igen.",
+          GITHUB_REQUEST_FAILED_502: "GitHub API är tillfälligt otillgängligt (502). Försök igen.",
+          GITHUB_REQUEST_FAILED_503: "GitHub API är tillfälligt otillgängligt (503). Försök igen.",
+          GITHUB_REQUEST_FAILED_504: "GitHub API svarade inte i tid (504). Försök igen.",
+        };
+        const errorMessage = stage === "ci_validation" ? ciApiMessages[code]
+          : apiMessages[code] || messages[code] ||
+            "DEV-merge kunde inte bekräftas av GitHub. Ingen lyckad merge rapporteras. Kontrollera status och försök igen.";
+        const responseStatus = code === "GITHUB_REQUEST_FAILED_409" ? 409
+          : /(?:429|502|503|504)$/.test(code) || code.startsWith("GITHUB_RATE_LIMITED") || code === "GITHUB_PUBLIC_RATE_LIMITED" ? 503
+          : 502;
+        return json({ ok: false, stage, errorCode: code, message: errorMessage + " (Steg: " + stage + ")" }, responseStatus);
       }
     }
     if (data.action === "prepare_merged_dev_candidate") {
@@ -1419,9 +1602,9 @@ async function handleRequest(req: Request): Promise<Response> {
         return fail("Ange ett giltigt DEV-PR-nummer.", 400);
       }
       try {
-        // Reuse the existing least-privilege read and write token profiles.
-        // The installation may reject a combined checks/statuses plus write scope.
-        const writeToken = await githubToken("approve_and_merge_dev");
+        // Read CI with the read-only token below; keep candidate writes on the
+        // minimal write profile so unsupported checks/statuses scopes cannot reject token creation.
+        const writeToken = await githubToken("prepare_merged_dev_candidate_write");
         const token = await githubToken("pull_request_list");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const pr = await gh(token, repoPath + "/pulls/" + data.pullRequestNumber);
@@ -1447,12 +1630,13 @@ async function handleRequest(req: Request): Promise<Response> {
           return fail("DEV-historiken efter PR-merge kunde inte verifieras fullständigt. Ingen LIVE-kandidat skapades.", 409);
         }
         const sourceFiles = new Set(item.features || []);
-        if (comparison.files.some((file: any) => sourceFiles.has(String(file.filename || "")))) {
-          return fail("Berörda filer har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
+        const changedSourceFiles = comparison.files.filter((file: any) => sourceFiles.has(String(file.filename || "")));
+        if (changedSourceFiles.length && await laterChangesOverlapAcceptedPatch(token, item, changedSourceFiles)) {
+          return fail("Överlappande ändringar har ändrats efter DEV-mergen. Granska den aktuella DEV-versionen först.", 409);
         }
 
-        const checkResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
-        const statusResponse = await gh(token, repoPath + "/commits/" + pr.head.sha + "/status");
+        const checkResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/check-runs?per_page=100");
+        const statusResponse = await ghPublic(repoPath + "/commits/" + pr.head.sha + "/status");
         const checkRuns = Array.isArray(checkResponse.check_runs) ? checkResponse.check_runs : [];
         const statuses = Array.isArray(statusResponse.statuses) ? statusResponse.statuses : [];
         if ((!checkRuns.length && !statuses.length) ||
@@ -1591,6 +1775,10 @@ async function handleRequest(req: Request): Promise<Response> {
         candidate = await verifyCandidate(token, item, data);
       } catch (error) {
         const code = error instanceof Error ? error.message : "";
+        console.error("OLYMPIA LIVE final approval candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
+        if (isTransientCandidateReadError(code)) {
+          return fail("GitHub kunde inte verifiera releasekontrollerna just nu. Ingen LIVE-ändring gjordes; uppdatera status och försök igen.", 503);
+        }
         const messages: Record<string, string> = {
           CANDIDATE_INPUT_INVALID: "Kandidatens ID eller SHA saknas.",
           CANDIDATE_DECISION_MISMATCH: "Kandidatbeslutet hör inte till det här ärendet.",

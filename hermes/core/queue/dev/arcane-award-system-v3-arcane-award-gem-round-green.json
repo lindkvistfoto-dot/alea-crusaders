@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "kind": "system-asset",
+  "asset_key": "arcane-award-gem-round-green",
+  "label": "ARCANE Award Round Gem Green",
+  "drive_file_id": "1si90OFZM2WrSTT4o805bFB5jOKFRYPFJ",
+  "archive_file_id": "1HPgNtw31itHoL-ThiE37XNNSxLvKHqKh",
+  "source_sha256": "9a4cf75be4bca341ca9c3d93d390afb8d95cf593eecf8c388a2604e3037ab6c6"
+}

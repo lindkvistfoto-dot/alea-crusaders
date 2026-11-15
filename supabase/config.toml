@@ -4,7 +4,10 @@ project_id = "alea-crusaders"
 major_version = 17
 
 [functions.hermes-alea]
-verify_jwt = true
+# The handler validates the caller's Bearer token with Auth and checks ownership
+# of the upload job. Disable only the gateway precheck so browser OPTIONS
+# preflights can reach the handler; it rejects the preflight before user code.
+verify_jwt = false
 entrypoint = "./functions/hermes-alea/index.ts"
 static_files = ["./functions/hermes-alea/magick.wasm"]
 
