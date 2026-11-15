@@ -36,4 +36,26 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(js).toContain("decision:'final_approval',itemId:'PR-'+number");
   expect(html).not.toContain('data-live-accept');
  });
+
+ it('retains merged DEV parents from an open LIVE journal while the fast PR refresh runs',()=>{
+  const start=html.indexOf('const prCacheKey=');
+  const end=html.indexOf('function showCachedPrList()',start);
+  const cacheSource=html.slice(start,end);
+  const storage=new Map();
+  const sessionStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
+  const cache=new Function('sessionStorage',cacheSource+';return {cachedActiveCandidateParents,writeCachedPrList};')(sessionStorage);
+  const parent={number:867,title:'Troférum',base:{ref:'development'},head:{sha:'a'.repeat(40)},state:'closed',merged_at:'2026-11-15T13:57:21Z',merge_commit_sha:'b'.repeat(40),liveCandidateActive:true};
+  const openPr={number:900,title:'Open DEV PR',base:{ref:'development'},head:{sha:'c'.repeat(40)},state:'open'};
+  cache.writeCachedPrList([openPr],[parent]);
+  cache.writeCachedPrList([openPr]);
+  expect(cache.cachedActiveCandidateParents().map(pr=>pr.number)).toEqual([867]);
+  cache.writeCachedPrList([openPr],[]);
+  expect(cache.cachedActiveCandidateParents()).toEqual([]);
+ });
+ it('keeps candidate lookup separate from PR-list rendering and replaces cached parents only on a successful response',()=>{
+  expect(html).toContain("action:'pull_request_list',includeCandidateParents:false");
+  expect(html).toContain("candidateData?.ok!==true||!Array.isArray(candidateData.pullRequests)");
+  expect(html).toContain('writeCachedPrList(data.pullRequests||[],freshCandidateParents)');
+  expect(html).toContain('data-live-parent="true"');
+ });
 });
