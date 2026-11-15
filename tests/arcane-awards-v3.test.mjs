@@ -1,5 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
 describe('ARCANE AWARDS V3',()=>{
@@ -19,9 +20,10 @@ describe('ARCANE AWARDS V3',()=>{
   const admin=read('features/honors/honors-admin.js');
   const entry=read('features/honors/honors-entry.js');
   const roomCss=read('features/trophy-room/room.css');
-  expect(renderer).toContain('arcane-award-gem-diamond-');
-  expect(renderer).toContain('arcane-award-gem-round-');
   expect(renderer).toContain('crown-background');
+  const context={};context.globalThis=context;vm.runInNewContext(renderer,context);
+  expect(context.ArcaneAwardRenderer.awardGemKey('top','blue')).toBe('arcane-award-gem-diamond-blue');
+  expect(context.ArcaneAwardRenderer.awardGemKey('crown','blue')).toBe('arcane-award-gem-round-blue');
   expect(admin).toContain('async function detectAwardAccent(file)');
   expect(entry).toContain('onSaveAccent:async');
   expect(roomCss).toContain('top:77.5%');
