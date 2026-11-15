@@ -114,9 +114,18 @@ async function refresh(preloadedPrList=null){
    const freshCandidateParents=candidateData.pullRequests.filter(isActiveCandidateParent);
    writeCachedPrList(data.pullRequests||[],freshCandidateParents);
    const updatedPrs=activePrRows(data.pullRequests||[],freshCandidateParents,cachedHidden);
-   const updatedFilter=syncPrFilter(updatedPrs,filter.value);
+   const priorSelection=filter.value;
+   const updatedFilter=syncPrFilter(updatedPrs,priorSelection);
    const visibleParents=new Set(updatedFilter.visibleRows.filter(isActiveCandidateParent).map(pr=>Number(pr.number)));
-   cards.querySelectorAll('[data-live-parent]').forEach(node=>{if(!visibleParents.has(Number(node.dataset.pr)))node.remove()});
+   if(updatedFilter.selected!==priorSelection){
+    const rerendered=await mapLimit(updatedFilter.visibleRows,5,async pr=>{
+     let markup;
+     try{markup=await card(pr)}catch(error){markup='<section class="panel" data-pr="'+Number(pr.number)+'">PR #'+Number(pr.number)+': status kunde inte hämtas. '+safe(error?.message||error)+'</section>'}
+     const holder=document.createElement('div');holder.innerHTML=markup;return holder.firstElementChild;
+    });
+    if(candidateCycle!==candidateRefreshCycle)return;
+    cards.replaceChildren(...rerendered.map(result=>result.value).filter(Boolean));
+   }else cards.querySelectorAll('[data-live-parent]').forEach(node=>{if(!visibleParents.has(Number(node.dataset.pr)))node.remove()});
    const candidates=freshCandidateParents.filter(pr=>visibleParents.has(Number(pr.number)));
    for(const pr of candidates){
     const holder=document.createElement('div');
