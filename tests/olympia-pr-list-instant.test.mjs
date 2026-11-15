@@ -29,10 +29,10 @@ describe('OLYMPIA instant PR-list recovery', () => {
   it('renders only a clearly stale, decision-disabled metadata snapshot from session cache', () => {
     expect(page).toContain("const prCacheKey='olympia-v2-pr-list-v1'");
     expect(page).toContain('function readCachedPrList()');
-    expect(page).toContain('function writeCachedPrList(pullRequests)');
+    expect(page).toContain('function writeCachedPrList(pullRequests,activeCandidateParents)');
     expect(page).toContain('CI och mergebarhet kontrolleras på nytt');
     expect(page).toContain('showCachedPrList();');
-    expect(page).toContain("sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:projected,verifiedAt:Date.now()}))");
+    expect(page).toContain("sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:[...unique.values()],verifiedAt:Date.now()}))");
     expect(page).toContain('const ready=state===\'success\'&&mergeable&&eligible&&fresh');
   });
 
