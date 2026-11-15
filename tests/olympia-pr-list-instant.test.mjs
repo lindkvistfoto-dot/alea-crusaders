@@ -6,6 +6,7 @@ const page = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 
 const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
 const refresh = page.slice(page.indexOf('async function refresh('), page.indexOf('let refreshing=false'));
 const list = edge.slice(edge.indexOf('if (data.action === "pull_request_list")'), edge.indexOf('if (data.action === "pull_request_candidate_parents")'));
+const candidateHelper = edge.slice(edge.indexOf('async function fetchActiveCandidateParents'), edge.indexOf('Deno.serve'));
 
 describe('OLYMPIA instant PR-list recovery', () => {
   it('uses the authenticated PR-list response as the normal Zeus verification and checks session separately only after list failure', () => {
@@ -44,6 +45,10 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(list).not.toContain('check-runs');
     expect(list).toContain('data.includeCandidateParents === false');
     expect(list).toContain('fetchActiveCandidateParents(token, botLogin)');
+    expect(candidateHelper).toContain('is:issue is:open PANDORAS');
+    expect(candidateHelper).not.toContain('is:issue is:open creator:');
+    expect(candidateHelper).toContain('issue.user?.login === botLogin');
+    expect(candidateHelper).toContain('includes("- Beslut: PANDORAS ASK")');
     expect(list).toContain('OLYMPIA legacy candidate relation unavailable');
     expect(list).toContain('return []');
     expect(refresh).toContain("action:'pull_request_candidate_parents'");
