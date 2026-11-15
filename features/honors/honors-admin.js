@@ -26,6 +26,60 @@ async function assertSquareBadgeImage(file) {
   }
 }
 
+
+function awardAccentFromHue(hue, brightness) {
+  if (hue < 15 || hue >= 345) return 'red';
+  if (hue < 38) return brightness < .48 ? 'brown' : 'orange';
+  if (hue < 52) return 'amber';
+  if (hue < 72) return 'yellow';
+  if (hue < 150) return 'green';
+  if (hue < 175) return 'turquoise';
+  if (hue < 200) return 'cyan';
+  if (hue < 255) return 'blue';
+  if (hue < 290) return 'purple';
+  return 'pink';
+}
+
+async function detectAwardAccent(file) {
+  if (typeof createImageBitmap !== 'function') return 'red';
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return 'red';
+    context.drawImage(bitmap, 0, 0, 64, 64);
+    const pixels = context.getImageData(0, 0, 64, 64).data;
+    const bins = new Map();
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] < 180) continue;
+      const r = pixels[i] / 255, g = pixels[i + 1] / 255, b = pixels[i + 2] / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+      if (max < .12 || delta < .12) continue;
+      let hue = 0;
+      if (max === r) hue = ((g - b) / delta + 6) % 6;
+      else if (max === g) hue = (b - r) / delta + 2;
+      else hue = (r - g) / delta + 4;
+      hue *= 60;
+      const key = Math.floor(hue / 15);
+      const weight = delta * (.5 + max);
+      const bin = bins.get(key) || { x: 0, y: 0, weight: 0, brightness: 0 };
+      const radians = hue * Math.PI / 180;
+      bin.x += Math.cos(radians) * weight;
+      bin.y += Math.sin(radians) * weight;
+      bin.brightness += max * weight;
+      bin.weight += weight;
+      bins.set(key, bin);
+    }
+    const dominant = [...bins.values()].sort((a, b) => b.weight - a.weight)[0];
+    if (!dominant) return 'red';
+    const hue = (Math.atan2(dominant.y, dominant.x) * 180 / Math.PI + 360) % 360;
+    return awardAccentFromHue(hue, dominant.brightness / dominant.weight);
+  } finally {
+    bitmap.close?.();
+  }
+}
+
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
 const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || laurelFrameKeys[metal];
@@ -96,11 +150,23 @@ export function renderHonorsAdmin(root, options = {}) {
         const status=panel.querySelector('[data-image-status]');status.textContent=file?'Laddar upp och kontrollerar bilden…':'Tar bort bildkopplingen…';
         try{
           if(file&&kind==='relief'&&getCategory(definitions.find(d=>String(d.id)===String(row.honor_id)))==='badge') await assertSquareBadgeImage(file);
+          let detectedAccent=null;
+          if(file&&kind==='definition'&&getCategory(row)==='award'){
+            try{detectedAccent=await detectAwardAccent(file);}catch{detectedAccent='red';}
+          }
           const result=file?await options.onUploadImage(kind,row,file):await options.onRemoveImage(kind,row);
-          Object.assign(row,result);imageBusy=false;draw();openEditor(editing);
+          Object.assign(row,result);
+          if(detectedAccent){
+            row.badge_frame_assets={...(row.badge_frame_assets||{}),accent_color:detectedAccent};
+            if(typeof options.onSaveAccent==='function'){
+              try{await options.onSaveAccent(row,detectedAccent);delete row.image_accent_save_error;}
+              catch(accentError){row.image_accent_save_error=accentError.message||'Accentfärgen kunde inte sparas';}
+            }
+          }
+          imageBusy=false;draw();openEditor(editing);
           const updatedPanel=[...root.querySelectorAll('[data-image-controls]')].find(el=>el.dataset.kind===kind&&el.dataset.id===String(row.id));
-          if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
-          notice(row.image_preview_pending?'Bilden är sparad, men förhandsvisningen kunde inte hämtas. Öppna registret igen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.');
+          if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':row.image_accent_save_error?'Bilden sparades, men accentfärgen kunde inte sparas. Öppna posten igen för att försöka spara färgen.':file?'Bilden och accentfärgen är sparade. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
+          notice(row.image_preview_pending?'Bilden är sparad, men förhandsvisningen kunde inte hämtas. Öppna registret igen.':row.image_accent_save_error?'Bilden sparades, men accentfärgen kunde inte sparas. Öppna posten igen för att försöka spara färgen.':file?'Bilden och accentfärgen är sparade. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.');
         }catch(error){
           panel.querySelector('[data-image-retry]').hidden=false;
           status.textContent='Kunde inte slutföra bildändringen: '+(error.message||'okänt fel')+'. Vid samtidig ändring: stäng och öppna registret igen.';
