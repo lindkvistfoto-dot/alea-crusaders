@@ -316,7 +316,7 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('lists current open GitHub PRs and checks selected PR CI and mergeability on demand',()=>{
     const page=read('olympia/zeus-control.html');
     const trial=page.slice(page.indexOf('function renderTrial()'),page.indexOf('window.olympiaRefreshTrial=renderTrial'));
-    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list"})');
+    expect(page).toContain('window.olympiaAuthenticatedRequest({action:"pull_request_list",includeCandidateParents:false})');
     expect(page).toContain('finally{pullRequestsRefresh=null}');
     expect(page).toContain('GitHub-listan kunde inte uppdateras. Registrerade DEV-godkännanden visas ovan');
     expect(trial).toContain('var open=(!openPullRequestError?listed:[])');
@@ -340,9 +340,12 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
     expect(edge).toContain('pull_requests: "read"');
     expect(edge).toContain('/pulls?state=open&per_page=100&page=');
     expect(edge).not.toContain('/pulls?state=closed&base=development');
-    expect(edge).toContain('targetedParents');
-    expect(edge).toContain('activeCandidatePrs');
+    const primaryList=edge.slice(edge.indexOf('if (data.action === "pull_request_list")'),edge.indexOf('if (data.action === "pull_request_candidate_parents")'));
+    expect(primaryList).not.toContain('targetedParents');
+    expect(primaryList).not.toContain('activeCandidatePrs');
+    expect(edge).toContain('data.action === "pull_request_candidate_parents"');
     expect(edge).toContain('if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development")');
+    expect(read('olympia/zeus-control.html')).toContain('action:"pull_request_candidate_parents"');
     expect(edge).not.toContain('GITHUB_PR_LIST_PAGE_LIMIT_REACHED');
   });
 
@@ -397,12 +400,18 @@ describe('OLYMPIA ZEUS CONTROL baseline and acceptance queue',()=>{
   it('loads historical PRs only when requested and targets active LIVE parents selectively',()=>{
     const edge=read('supabase/functions/olympia-control/index.ts');
     const start=edge.indexOf('if (data.action === "pull_request_list")');
-    const end=edge.indexOf('if (data.action === "pull_request_history")',start);
+    const end=edge.indexOf('if (data.action === "pull_request_candidate_parents")',start);
     const section=edge.slice(start,end);
     expect(section).toContain('/pulls?state=open&per_page=100&page=');
     expect(section).not.toContain('/pulls?state=closed');
-    expect(section).toContain('targetedParents');
+    expect(section).not.toContain('targetedParents');
     expect(section).toContain('for (let page = 1; page <= 100; page++)');
+    const candidates=edge.slice(end,edge.indexOf('if (data.action === "pull_request_history")',end));
+    const candidateHelper=edge.slice(edge.indexOf('async function fetchActiveCandidateParents'),edge.indexOf('Deno.serve'));
+    expect(candidates).toContain('fetchActiveCandidateParents(token, botLogin)');
+    expect(candidateHelper).toContain('liveCandidateActive: true');
+    expect(section).toContain('data.includeCandidateParents === false');
+
     expect(edge).toContain('/pulls?state=closed&per_page=50&page=');
     expect(edge).toContain('if (data.action === "pull_request_history")');
   });

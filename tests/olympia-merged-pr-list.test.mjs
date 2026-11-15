@@ -2,15 +2,28 @@ import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 const code=readFileSync(new URL('../supabase/functions/olympia-control/index.ts',import.meta.url),'utf8');
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
-const list=code.slice(code.indexOf('if (data.action === "pull_request_list")'),code.indexOf('if (data.action === "pull_request_history")'));
+const list=code.slice(code.indexOf('if (data.action === "pull_request_list")'),code.indexOf('if (data.action === "pull_request_candidate_parents")'));
+const candidates=code.slice(code.indexOf('if (data.action === "pull_request_candidate_parents")'),code.indexOf('if (data.action === "pull_request_history")'));
+const candidateHelper=code.slice(code.indexOf('async function fetchActiveCandidateParents'),code.indexOf('Deno.serve'));
 const history=code.slice(code.indexOf('if (data.action === "pull_request_history")'),code.indexOf('if (data.action === "current_refs")'));
 describe('OLYMPIA active-first PR list and lazy history',()=>{
- it('normal listing contains paginated open PRs and targeted LIVE parents only',()=>{
+ it('normal listing contains only paginated open DEV/LIVE PRs',()=>{
   expect(list).toContain('/pulls?state=open&per_page=100&page=');
   expect(list).not.toContain('/pulls?state=closed');
   expect(list).not.toContain('/pulls?state=all');
-  expect(list).toContain('activeCandidatePrs');
-  expect(list).toContain('repoPath + "/pulls/" + number');
+  expect(list).not.toContain('activeCandidatePrs');
+  expect(list).not.toContain('/issues?');
+  expect(list).not.toContain('verifyPublishedManifest');
+
+ });
+ it('keeps legacy parent compatibility while the new page opts into separate loading',()=>{
+  expect(list).toContain('data.includeCandidateParents === false');
+  expect(list).toContain('fetchActiveCandidateParents(token, botLogin)');
+  expect(candidateHelper).toContain('PANDORAS ASK');
+  expect(candidateHelper).toContain('repoPath + "/pulls/" + number');
+  expect(candidateHelper).toContain('liveCandidateActive: true');
+  expect(candidates).toContain('fetchActiveCandidateParents(token, botLogin)');
+  expect(page).toContain("action:'pull_request_list',includeCandidateParents:false");
  });
  it('keeps closed PR reads inside the separately invoked history action',()=>{
   expect(history).toContain('/pulls?state=closed&per_page=50&page=');

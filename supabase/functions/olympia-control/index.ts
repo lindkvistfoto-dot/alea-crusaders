@@ -8,6 +8,8 @@ const REPO = "alea-crusaders";
 const ALLOWED_ORIGIN = "https://lindkvistfoto-dot.github.io";
 const DEV_ORIGIN = "https://development.alea-crusaders.pages.dev";
 const ALLOWED_ORIGINS = new Set([ALLOWED_ORIGIN, DEV_ORIGIN]);
+const PR_PREVIEW_ORIGIN = /^https:\/\/[a-f0-9]{8}\.alea-crusaders\.pages\.dev$/;
+const isAllowedOrigin = (origin: string) => ALLOWED_ORIGINS.has(origin) || PR_PREVIEW_ORIGIN.test(origin);
 const PAGES_BASE = ALLOWED_ORIGIN + "/alea-crusaders";
 const DECISIONS = new Set(["accept", "pandoras_ask", "release_package", "karon", "needs_fix", "final_approval"]);
 const responseHeaders = {
@@ -834,10 +836,50 @@ function title(item: any, decision: string) {
   };
   return "[OLYMPIA " + label[decision] + "] " + item.id + " · " + item.title;
 }
+async function fetchActiveCandidateParents(token: string, botLogin: string) {
+  const repoPath = "/repos/" + OWNER + "/" + REPO;
+  const query = new URLSearchParams({
+    q: "repo:" + OWNER + "/" + REPO + " is:issue is:open PANDORAS",
+    per_page: "100",
+  });
+  const candidateIssues: any[] = [];
+  let candidateIssueTotal = 0;
+  for (let page = 1; page <= 10; page++) {
+    query.set("page", String(page));
+    const search = await ghReadWithRetry(token, "/search/issues?" + query.toString());
+    if (!Array.isArray(search.items)) throw new Error("GITHUB_CANDIDATE_SEARCH_INVALID");
+    candidateIssueTotal = Number(search.total_count || 0);
+    candidateIssues.push(...search.items);
+    if (search.items.length < 100) break;
+    if (page === 10 && candidateIssues.length < candidateIssueTotal) {
+      throw new Error("GITHUB_CANDIDATE_SEARCH_INCOMPLETE");
+    }
+  }
+  const parentNumbers = [...new Set(candidateIssues
+    .filter((issue: any) => !issue.pull_request && issue.user?.login === botLogin &&
+      String(issue.body || "").includes("- Beslut: PANDORAS ASK"))
+    .map((issue: any) => Number(String(issue.body || "").match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m)?.[1] || 0))
+    .filter((number: number) => Number.isSafeInteger(number) && number > 0))];
+  const parents: any[] = [];
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(4, parentNumbers.length) }, async () => {
+    while (cursor < parentNumbers.length) {
+      const number = parentNumbers[cursor++];
+      const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + number);
+      if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development") {
+        parents.push({ ...pr, liveCandidateActive: true });
+      }
+    }
+  });
+  await Promise.all(workers);
+  parents.sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+  return parents;
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
   const response = await handleRequest(req);
-  if (origin && ALLOWED_ORIGINS.has(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
+  if (origin && isAllowedOrigin(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
   return response;
 });
 
@@ -845,11 +887,11 @@ async function handleRequest(req: Request): Promise<Response> {
   const requestStartedAt = performance.now();
   if (req.method === "OPTIONS") {
     const origin = req.headers.get("Origin");
-    if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
+    if (!origin || !isAllowedOrigin(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
     return new Response("ok", { headers: { ...responseHeaders, "Access-Control-Allow-Origin": origin } });
   }
   if (req.method !== "POST") return fail("Endast POST stöds.", 405);
-  if (!ALLOWED_ORIGINS.has(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
+  if (!isAllowedOrigin(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
 
   try {
     const auth = req.headers.get("Authorization") || "";
@@ -1328,88 +1370,72 @@ async function handleRequest(req: Request): Promise<Response> {
     if (data.action === "pull_request_list") {
       try {
         const listStartedAt = performance.now();
-        const [token, botLogin] = await Promise.all([githubToken("pull_request_list"), appBotLogin()]);
-        const credentialSetupElapsedMs = Math.round(performance.now() - listStartedAt);
+        const token = await githubToken("pull_request_list");
         const repoPath = "/repos/" + OWNER + "/" + REPO;
-        const open: any[] = [];
-        for (let page = 1; page <= 100; page++) {
-          const batch = await ghReadWithRetry(token, repoPath + "/pulls?state=open&per_page=100&page=" + page + "&sort=updated&direction=desc");
-          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
-          open.push(...batch);
-          if (batch.length < 100) break;
-          if (page === 100) throw new Error("GITHUB_PR_LIST_INCOMPLETE");
-        }
-        const openPrElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs;
-        const candidateIssues: any[] = [];
-        for (let page = 1; page <= 100; page++) {
-          const batch = await ghReadWithRetry(token, repoPath + "/issues?state=open&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
-          if (!Array.isArray(batch)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
-          candidateIssues.push(...batch.filter((issue: any) => !issue.pull_request));
-          if (batch.length < 100) break;
-          if (page === 100) throw new Error("GITHUB_CANDIDATE_ISSUES_INCOMPLETE");
-        }
-        const issueListElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs;
-        const candidateIssueByNumber = new Map<number, any>();
-        const activeCandidatePrs = new Set<number>();
-        for (const issue of candidateIssues) {
-          candidateIssueByNumber.set(Number(issue.number), issue);
-          const body = String(issue.body || "");
-          if (!body.includes("- Beslut: PANDORAS ASK")) continue;
-          const match = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
-          if (match) activeCandidatePrs.add(Number(match[1]));
-        }
-        const publishedCandidatePrs = new Map<number, string>();
-        const publicationChecks: Array<{ number: number; mergeSha: string }> = [];
-        for (const issue of candidateIssues) {
-          const body = String(issue.body || "");
-          if (issue.user?.login !== botLogin || !body.includes("- Beslut: SLUTGODKÄNNANDE LIVE")) continue;
-          const prMatch = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
-          const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
-          const candidateMatch = body.match(/^- Kandidatärende: #([1-9][0-9]*)$/m);
-          const mergeMatch = body.match(/^- Merge SHA: ([0-9a-f]{40})$/mi);
-          const candidateIssue = candidateIssueByNumber.get(Number(candidateMatch?.[1] || 0));
-          const candidateBody = String(candidateIssue?.body || "");
-          if (!prMatch || !testedMatch || !candidateMatch || !mergeMatch ||
-              !candidateBody.includes("- Beslut: PANDORAS ASK") ||
-              !candidateBody.includes("- Ärende-ID: PR-" + prMatch[1]) ||
-              !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
-          publicationChecks.push({ number: Number(prMatch[1]), mergeSha: mergeMatch[1] });
-        }
-        if (publicationChecks.length) {
-          const publicationToken = await githubToken("auto_candidate_diagnostics");
-          for (const item of publicationChecks) {
-            const publication = await liveMergePublicationStatus(publicationToken, item.mergeSha);
-            if (publication.published) publishedCandidatePrs.set(item.number, item.mergeSha);
+        const fetchOpenPrs = async (base: string) => {
+          const pullRequests: any[] = [];
+          for (let page = 1; page <= 100; page++) {
+            const batch = await ghReadWithRetry(token, repoPath + "/pulls?state=open&per_page=100&page=" + page + "&base=" + encodeURIComponent(base) + "&sort=updated&direction=desc");
+            if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+            pullRequests.push(...batch);
+            if (batch.length < 100) break;
+            if (page === 100) throw new Error("GITHUB_PR_LIST_INCOMPLETE");
           }
-        }
-        const byNumber = new Map<number, any>();
-        for (const pr of open) {
-          if (["development", "main"].includes(String(pr.base?.ref || ""))) byNumber.set(Number(pr.number), pr);
-        }
-        const targetedParents = new Set([...activeCandidatePrs, ...publishedCandidatePrs.keys()]);
-        for (const number of targetedParents) {
-          if (byNumber.has(number)) continue;
-          const pr = await ghReadWithRetry(token, repoPath + "/pulls/" + number);
-          if (pr.state === "closed" && pr.merged_at && pr.base?.ref === "development") byNumber.set(number, pr);
+          return pullRequests;
+        };
+        // Old DEV frontends expect active candidate parents in this response.
+        // New frontends opt out and load that relation in a separate request.
+        const candidateParentsPromise = data.includeCandidateParents === false
+          ? Promise.resolve([])
+          : appBotLogin().then(botLogin => fetchActiveCandidateParents(token, botLogin)).catch(error => {
+            const code = error instanceof Error ? error.message : "UNKNOWN";
+            console.warn("OLYMPIA legacy candidate relation unavailable", JSON.stringify({ requestId, code }));
+            return [];
+          });
+        const [developmentPrs, livePrs, candidateParents] = await Promise.all([
+          fetchOpenPrs("development"),
+          fetchOpenPrs("main"),
+          candidateParentsPromise,
+        ]);
+        const open = [...developmentPrs, ...livePrs];
+        const byNumber = new Map<number, any>(open.map((pr: any) => [Number(pr.number), pr]));
+        for (const parent of candidateParents) {
+          if (!byNumber.has(Number(parent.number))) byNumber.set(Number(parent.number), parent);
         }
         const pullRequests = [...byNumber.values()]
-          .map((pr: any) => {
-            const number = Number(pr.number);
-            const livePublished = Boolean(pr.merged_at && publishedCandidatePrs.has(number));
-            return {
-              ...pr,
-              livePublished,
-              liveMergeSha: livePublished ? publishedCandidatePrs.get(number) : null,
-              liveCandidateActive: Boolean(pr.merged_at && activeCandidatePrs.has(number) && !livePublished),
-            };
-          })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
-        console.info("OLYMPIA PR list completed", JSON.stringify({ requestId, authElapsedMs: Math.round(listStartedAt - requestStartedAt), credentialSetupElapsedMs, openPrElapsedMs, issueListElapsedMs, diagnosticsElapsedMs: Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs - issueListElapsedMs, totalElapsedMs: Math.round(performance.now() - requestStartedAt), openPrCount: open.length, returnedCount: pullRequests.length }));
+        console.info("OLYMPIA PR list completed", JSON.stringify({
+          requestId,
+          listElapsedMs: Math.round(performance.now() - listStartedAt),
+          totalElapsedMs: Math.round(performance.now() - requestStartedAt),
+          openPrCount: open.length,
+          returnedCount: pullRequests.length,
+        }));
         return json({ ok: true, pullRequests });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
         console.error("OLYMPIA GitHub PR list failed", JSON.stringify({ requestId, elapsedMs: Math.round(performance.now() - requestStartedAt), code }));
         return fail("GitHub PR-listan kunde inte hämtas (" + code + ").", 502);
+      }
+    }
+    if (data.action === "pull_request_candidate_parents") {
+      try {
+        const candidateStartedAt = performance.now();
+        const [token, botLogin] = await Promise.all([
+          githubToken("auto_candidate_diagnostics"),
+          appBotLogin(),
+        ]);
+        const parents = await fetchActiveCandidateParents(token, botLogin);
+        console.info("OLYMPIA candidate parents completed", JSON.stringify({
+          requestId,
+          elapsedMs: Math.round(performance.now() - candidateStartedAt),
+          parentCount: parents.length,
+        }));
+        return json({ ok: true, pullRequests: parents });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.warn("OLYMPIA candidate parents unavailable", JSON.stringify({ requestId, code }));
+        return fail("LIVE-kandidatkoppling kunde inte verifieras (" + code + ").", 502);
       }
     }
     if (data.action === "pull_request_history") {
