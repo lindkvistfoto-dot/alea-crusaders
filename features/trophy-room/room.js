@@ -471,7 +471,7 @@ async function loadTrophyRoomImage(){
   if(typeof root.dbJson!=='function')throw Error('HERMES-registret är inte tillgängligt');
   const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));
   const asset=Array.isArray(assets)?assets.find(row=>row.asset_key===KEY):null,path=asset?.asset_path;
-  if(typeof path!=='string'||!/^hermes\\/system-asset\\/arcane-trophy-room-v2\\.2\\/[a-f0-9]{64}\\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');
+  if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');
   const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');
   await new Promise((resolve,reject)=>{
    const probe=new Image();const timeout=setTimeout(()=>reject(Error('Rumsbilden svarade inte inom 15 sekunder')),15000);
