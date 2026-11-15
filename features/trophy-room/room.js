@@ -447,21 +447,40 @@ async function renderMedals(){
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}if(background.parentElement!==scene)scene.append(background);if(wall.parentElement!==v)v.append(wall);const badgeWall=byId('trophyRoomBadgeWall');if(badgeWall&&badgeWall.parentElement!==v)v.append(badgeWall)}
 let trophyRoomImagePending=false;
+function trophyRoomImageFailed(error){
+ trophyRoomImagePending=false;
+ const img=image(),v=viewport();
+ if(img)img.dataset.ready='error';
+ if(v){v.dataset.ready='error';const loading=v.querySelector('.trophy-room-loading');if(loading)loading.textContent='Rumsbilden kunde inte laddas. Öppna Troférum igen för att försöka på nytt.'}
+ const status=byId('trophyRoomStatus');if(status)status.textContent='Rumsbilden kunde inte laddas.';
+ if(error)console.warn('Trophy room HERMES image unavailable',error);
+}
 async function loadTrophyRoomImage(){
- const img=image();if(!img||img.dataset.ready==='true'||trophyRoomImagePending||!root.activeUser?.())return;
+ const img=image(),v=viewport();
+ if(!img||!v||img.dataset.ready==='true'||trophyRoomImagePending||!root.activeUser?.())return;
  trophyRoomImagePending=true;
+ img.dataset.ready='loading';v.dataset.ready='loading';
+ const loading=v.querySelector('.trophy-room-loading');if(loading)loading.textContent='Rumsbilden laddas...';
  if(img.dataset.trophyImageEvents!=='true'){
   img.dataset.trophyImageEvents='true';
-  img.addEventListener('load',()=>{trophyRoomImagePending=false;const status=byId('trophyRoomStatus');if(status)status.textContent='V2.2 · 1280 × 720 · 16:9';viewport().dataset.ready='true'});
-  img.addEventListener('error',()=>{trophyRoomImagePending=false;const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'});
+  img.addEventListener('load',()=>{trophyRoomImagePending=false;img.dataset.ready='true';v.dataset.ready='true';const status=byId('trophyRoomStatus');if(status)status.textContent='V2.2 · 1280 × 720 · 16:9'});
+  img.addEventListener('error',()=>trophyRoomImageFailed(Error('HERMES-bilden kunde inte visas')));
  }
  try{
+  for(let attempt=0;typeof root.dbJson!=='function'&&attempt<20;attempt++)await new Promise(resolve=>setTimeout(resolve,250));
+  if(typeof root.dbJson!=='function')throw Error('HERMES-registret är inte tillgängligt');
   const assets=await root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=eq.'+encodeURIComponent(KEY));
   const asset=Array.isArray(assets)?assets.find(row=>row.asset_key===KEY):null,path=asset?.asset_path;
-  if(typeof path!=='string'||!/^hermes\/system-asset\/arcane-trophy-room-v2\.2\/[a-f0-9]{64}\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');
+  if(typeof path!=='string'||!/^hermes\\/system-asset\\/arcane-trophy-room-v2\\.2\\/[a-f0-9]{64}\\.webp$/.test(path))throw Error('Troférummets HERMES-bild saknas i aktuellt miljöregister');
   const url=systemAssetUrl(path);if(!url)throw Error('Supabase-miljön kunde inte bestämmas');
+  await new Promise((resolve,reject)=>{
+   const probe=new Image();const timeout=setTimeout(()=>reject(Error('Rumsbilden svarade inte inom 15 sekunder')),15000);
+   probe.onload=()=>{clearTimeout(timeout);resolve()};
+   probe.onerror=()=>{clearTimeout(timeout);reject(Error('HERMES-bilden kunde inte hämtas eller avkodas'))};
+   probe.src=url;
+  });
   img.src=url;
- }catch(error){trophyRoomImagePending=false;console.warn('Trophy room HERMES image unavailable',error);const status=byId('trophyRoomStatus');if(status)status.textContent='HERMES-publiceringen är inte aktiv ännu.'}
+ }catch(error){trophyRoomImageFailed(error)}
 }
 function open(){const p=page();if(!p)return;ensureScene();void loadTrophyRoomImage();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
