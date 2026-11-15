@@ -25,6 +25,7 @@ describe('ARCANE AWARDS V3',()=>{
   expect(context.ArcaneAwardRenderer.awardGemKey('top','blue')).toBe('arcane-award-gem-diamond-blue');
   expect(context.ArcaneAwardRenderer.awardGemKey('crown','blue')).toBe('arcane-award-gem-round-blue');
   expect(admin).toContain('async function detectAwardAccent(file)');
+  expect(admin).toContain('async function detectAwardAccentFromUrl(url)');
   expect(entry).toContain('onSaveAccent:async');
   expect(roomCss).toContain('top:77.5%');
  });
