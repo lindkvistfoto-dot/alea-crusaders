@@ -60,3 +60,13 @@ it('DEV approval requires fresh green CI and mergeability and remains disabled a
  expect(approval).toContain("await window.olympiaV2Refresh?.()");
  expect(approval).not.toContain('button.disabled=false;await window.olympiaV2Refresh?.()');
 });
+
+it('transport aborts do not masquerade as Zeus or GitHub permission failures',()=>{
+ expect(approval).toContain("function isTransportFailure(error)");
+ expect(approval).toContain("connectionStages.github=isTransportFailure(error)?'pending':'error'");
+ expect(approval).toContain("connectionStages.zeus=isTransportFailure(error)?'pending':'error'");
+ expect(approval).toContain("verified=false;window.olympiaV2ZeusVerified=false");
+ expect(approval).toContain('Zeus-behörighet och GitHub-status är inte verifierade; besluten förblir låsta.');
+ expect(approval).toContain("action.action==='pull_request_list'||action.action==='auto_candidate_diagnostics'?60000:20000");
+ expect(approval).toContain("if(timedOut)throw Error('OLYMPIA_REQUEST_TIMEOUT')");
+});

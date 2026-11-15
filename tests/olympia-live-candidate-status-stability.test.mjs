@@ -8,7 +8,7 @@ test('preserves in-flight candidate status node across PR refresh',()=>{
  expect(html).toContain("node.dataset.candidateStatus+'|'+node.dataset.mergeSha");
 });
 test('candidate diagnostics have a bounded longer timeout and visible error',()=>{
- expect(js).toContain("action.action==='auto_candidate_diagnostics'?60000:20000");
+ expect(js).toContain("action.action==='pull_request_list'||action.action==='auto_candidate_diagnostics'?60000:20000");
  expect(js).toContain('LIVE-status kunde inte hämtas eller verifieras');
 });
 
