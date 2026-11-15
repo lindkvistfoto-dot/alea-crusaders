@@ -14,6 +14,18 @@ describe('ARCANE AWARDS V3',()=>{
   expect(room).not.toContain('assetMap.get(d.badge_frame_assets?.[tier])');
  });
 
+ it('mounts an automatically detected accent with aligned gemstones and crown backing',()=>{
+  const renderer=read('features/honors/award-renderer.js');
+  const admin=read('features/honors/honors-admin.js');
+  const entry=read('features/honors/honors-entry.js');
+  const roomCss=read('features/trophy-room/room.css');
+  expect(renderer).toContain('arcane-award-gem-diamond-');
+  expect(renderer).toContain('arcane-award-gem-round-');
+  expect(renderer).toContain('crown-background');
+  expect(admin).toContain('async function detectAwardAccent(file)');
+  expect(entry).toContain('onSaveAccent:async');
+  expect(roomCss).toContain('top:77.5%');
+ });
  it('keeps awards to one HERMES ALEA definition image and hides per-award frame editing',()=>{
   const admin=read('features/honors/honors-admin.js');
   expect(admin).toContain("imageControls('definition',definition)");
