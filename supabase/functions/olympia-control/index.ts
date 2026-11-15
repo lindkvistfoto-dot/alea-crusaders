@@ -842,6 +842,7 @@ Deno.serve(async (req: Request) => {
 });
 
 async function handleRequest(req: Request): Promise<Response> {
+  const requestStartedAt = performance.now();
   if (req.method === "OPTIONS") {
     const origin = req.headers.get("Origin");
     if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
@@ -872,6 +873,10 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const data = await req.json();
     if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
+    const requestId = typeof data.diagnostics?.requestId === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(data.diagnostics.requestId)
+      ? data.diagnostics.requestId
+      : "untracked";
+    console.info("OLYMPIA request received", JSON.stringify({ requestId, action: String(data.action || "unknown"), authElapsedMs: Math.round(performance.now() - requestStartedAt) }));
     if (data.action === "session_check") return json({ ok: true });
     if (data.action === "system_alert_list" || data.action === "system_alert_ack") {
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -1322,7 +1327,9 @@ async function handleRequest(req: Request): Promise<Response> {
     }
     if (data.action === "pull_request_list") {
       try {
-        const token = await githubToken("pull_request_list");
+        const listStartedAt = performance.now();
+        const [token, botLogin] = await Promise.all([githubToken("pull_request_list"), appBotLogin()]);
+        const credentialSetupElapsedMs = Math.round(performance.now() - listStartedAt);
         const repoPath = "/repos/" + OWNER + "/" + REPO;
         const open: any[] = [];
         for (let page = 1; page <= 100; page++) {
@@ -1332,7 +1339,7 @@ async function handleRequest(req: Request): Promise<Response> {
           if (batch.length < 100) break;
           if (page === 100) throw new Error("GITHUB_PR_LIST_INCOMPLETE");
         }
-        const botLogin = await appBotLogin();
+        const openPrElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs;
         const candidateIssues: any[] = [];
         for (let page = 1; page <= 100; page++) {
           const batch = await ghReadWithRetry(token, repoPath + "/issues?state=open&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
@@ -1341,6 +1348,7 @@ async function handleRequest(req: Request): Promise<Response> {
           if (batch.length < 100) break;
           if (page === 100) throw new Error("GITHUB_CANDIDATE_ISSUES_INCOMPLETE");
         }
+        const issueListElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs;
         const candidateIssueByNumber = new Map<number, any>();
         const activeCandidatePrs = new Set<number>();
         for (const issue of candidateIssues) {
@@ -1396,10 +1404,11 @@ async function handleRequest(req: Request): Promise<Response> {
             };
           })
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
+        console.info("OLYMPIA PR list completed", JSON.stringify({ requestId, authElapsedMs: Math.round(listStartedAt - requestStartedAt), credentialSetupElapsedMs, openPrElapsedMs, issueListElapsedMs, diagnosticsElapsedMs: Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs - issueListElapsedMs, totalElapsedMs: Math.round(performance.now() - requestStartedAt), openPrCount: open.length, returnedCount: pullRequests.length }));
         return json({ ok: true, pullRequests });
       } catch (error) {
         const code = error instanceof Error ? error.message : "UNKNOWN";
-        console.error("OLYMPIA GitHub PR list failed", code);
+        console.error("OLYMPIA GitHub PR list failed", JSON.stringify({ requestId, elapsedMs: Math.round(performance.now() - requestStartedAt), code }));
         return fail("GitHub PR-listan kunde inte hämtas (" + code + ").", 502);
       }
     }
