@@ -27,8 +27,12 @@ const prCacheKey='olympia-v2-pr-list-v1';
 function readCachedPrList(){try{const item=JSON.parse(sessionStorage.getItem(prCacheKey)||'null');return item&&Array.isArray(item.pullRequests)&&Number.isFinite(item.verifiedAt)?item:null}catch(_){return null}}
 function isActiveCandidateParent(pr){return Number.isSafeInteger(Number(pr?.number))&&(pr.base?.ref||pr.baseRef)==='development'&&Boolean(pr.merged_at)&&pr.liveCandidateActive===true}
 function cachedActiveCandidateParents(){const cached=readCachedPrList();return (cached?.pullRequests||[]).filter(isActiveCandidateParent).map(pr=>({...pr,base:{ref:pr.baseRef},head:{sha:pr.headSha},liveCandidateActive:true}))}
+function activePrRows(pullRequests,candidateParents=[],hiddenNumbers=[]){const hidden=new Set((hiddenNumbers||[]).map(Number)),rows=new Map();for(const pr of pullRequests||[]){const number=Number(pr.number),baseRef=pr.base?.ref||pr.baseRef,activeParent=isActiveCandidateParent(pr),open=pr.state==='open'&&!pr.merged_at;if(!Number.isSafeInteger(number)||!['development','main'].includes(baseRef)||(!activeParent&&hidden.has(number))||(!open&&!activeParent))continue;rows.set(number,pr)}for(const pr of candidateParents||[])if(isActiveCandidateParent(pr))rows.set(Number(pr.number),pr);return [...rows.values()].sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||Number(b.number)-Number(a.number))}
+function activePrFilterState(prs,requested='all'){const selected=prs.some(pr=>String(pr.number)===String(requested))?String(requested):'all';return {selected,visibleRows:prs.filter(pr=>selected==='all'||String(pr.number)===selected)}}
+function activePrCountLabel(total,visible){return visible===total?total+' aktiva DEV/LIVE-ärenden':visible+' av '+total+' aktiva DEV/LIVE-ärenden'}
+function syncPrFilter(prs,requested=filter.value){const state=activePrFilterState(prs,requested);filter.innerHTML='<option value="all">Aktuella DEV- och LIVE-PR</option>'+prs.map(pr=>'<option value="'+Number(pr.number)+'">#'+Number(pr.number)+'  · '+(((pr.base?.ref||pr.baseRef)==='main')?'LIVE':'DEV')+' · '+safe(pr.title)+'</option>').join('');filter.value=state.selected;return state}
 function writeCachedPrList(pullRequests,activeCandidateParents){try{const previous=readCachedPrList()?.pullRequests||[];const retained=activeCandidateParents===undefined?previous.filter(isActiveCandidateParent):activeCandidateParents.filter(isActiveCandidateParent);const unique=new Map();for(const pr of [...pullRequests,...retained]){const projected={number:Number(pr.number),title:String(pr.title||''),html_url:String(pr.html_url||''),baseRef:String(pr.base?.ref||pr.baseRef||''),state:String(pr.state||''),draft:Boolean(pr.draft),merged_at:pr.merged_at||null,updated_at:pr.updated_at||null,headSha:String(pr.head?.sha||pr.headSha||''),merge_commit_sha:String(pr.merge_commit_sha||''),liveCandidateActive:Boolean(pr.liveCandidateActive),livePublished:Boolean(pr.livePublished)};unique.set(projected.number,projected)}sessionStorage.setItem(prCacheKey,JSON.stringify({pullRequests:[...unique.values()],verifiedAt:Date.now()}))}catch(_){}}
-function showCachedPrList(){const cached=readCachedPrList();if(!cached)return false;const hidden=new Set((window.olympiaV2HiddenPrNumbers||[]).map(Number));const prs=cached.pullRequests.filter(pr=>['development','main'].includes(pr.baseRef)&&!hidden.has(pr.number)&&((pr.state==='open'&&!pr.merged_at)||(pr.baseRef==='development'&&pr.merged_at&&pr.liveCandidateActive)));if(!prs.length)return false;cards.replaceChildren();for(const pr of prs){const section=document.createElement('section');section.className='panel';const heading=document.createElement('strong');heading.textContent='PR #'+pr.number+' · '+(pr.baseRef==='main'?'LIVE':'DEV');const title=document.createElement('p');title.textContent=pr.title;const freshness=document.createElement('p');freshness.className='muted';freshness.textContent='Cachad lista · verifierad '+new Date(cached.verifiedAt).toLocaleTimeString('sv-SE')+' · CI och mergebarhet kontrolleras på nytt';section.append(heading,title,freshness);cards.append(section)}global.textContent=prs.length+' PR från senast verifierade cache · uppdaterar GitHub-status…';return true}
+function showCachedPrList(){const cached=readCachedPrList();if(!cached)return false;const prs=activePrRows(cached.pullRequests,[],window.olympiaV2HiddenPrNumbers||[]);if(!prs.length)return false;const state=syncPrFilter(prs,filter.value);cards.replaceChildren();for(const pr of state.visibleRows){const section=document.createElement('section');section.className='panel';section.dataset.pr=String(pr.number);if(isActiveCandidateParent(pr)){section.dataset.liveParent='true';section.dataset.cachedPr='true';}const heading=document.createElement('strong');heading.textContent='PR #'+pr.number+' · '+((pr.baseRef||pr.base?.ref)==='main'?'LIVE':'DEV');const title=document.createElement('p');title.textContent=pr.title;const freshness=document.createElement('p');freshness.className='muted';freshness.textContent='Cachad lista · verifierad '+new Date(cached.verifiedAt).toLocaleTimeString('sv-SE')+' · CI och mergebarhet kontrolleras på nytt';section.append(heading,title,freshness);cards.append(section)}global.textContent=activePrCountLabel(prs.length,state.visibleRows.length)+' från senast verifierade cache · uppdaterar GitHub-status…';return true}
 showCachedPrList();
 function ci(checks,status,sha){const assess=window.olympiaCiValidation?.assess;if(typeof assess!=="function")return ["unknown","CI-bedömningsmodulen kunde inte laddas. Uppdatera sidan."];const result=assess(checks,status,sha);return [result.state,result.label]}
 function step(name,state){return '<div class="step '+state+'">'+safe(name)+'</div>'}
@@ -89,17 +93,10 @@ async function refresh(preloadedPrList=null){
   const cachedParents=cachedActiveCandidateParents();
   writeCachedPrList(data.pullRequests||[]);
   const cachedHidden=Array.isArray(window.olympiaV2HiddenPrNumbers)?window.olympiaV2HiddenPrNumbers:[];
-  const hidden=new Set(cachedHidden.map(Number));
-  const current=(data.pullRequests||[]).filter(p=>['development','main'].includes(p.base?.ref)&&!hidden.has(Number(p.number)));
-  const activeNumbers=new Set(cachedParents.map(p=>Number(p.number)));
-  const combined=new Map(current.map(p=>[Number(p.number),p]));
-  cachedParents.forEach(p=>{if(!combined.has(Number(p.number)))combined.set(Number(p.number),p)});
-  const all=[...combined.values()].sort((a,b)=>Date.parse(b.updated_at||0)-Date.parse(a.updated_at||0)||b.number-a.number);
-  const prs=all.filter(p=>(p.state==='open'&&!p.merged_at)||Boolean(p.base?.ref==='development'&&p.merged_at&&(p.liveCandidateActive||activeNumbers.has(Number(p.number)))));
+  const prs=activePrRows(data.pullRequests||[],cachedParents,cachedHidden);
   const selected=filter.value;
-  filter.innerHTML='<option value="all">Aktuella DEV- och LIVE-PR</option>'+prs.map(p=>'<option value="'+p.number+'">#'+p.number+'  · '+(p.base?.ref==='main'?'LIVE':'DEV')+' · '+safe(p.title)+'</option>').join('');
-  filter.value=prs.some(p=>String(p.number)===selected)?selected:'all';
-  const shown=prs.filter(p=>filter.value==='all'||String(p.number)===filter.value);
+  const filterState=syncPrFilter(prs,selected);
+  const shown=filterState.visibleRows;
   // Render GitHub metadata before requesting per-PR CI and mergeability.
   const previousCandidates=new Map([...cards.querySelectorAll('[data-candidate-status]')].map(node=>[node.dataset.candidateStatus+'|'+node.dataset.mergeSha,node]));
   cards.innerHTML=shown.map(pr=>'<section class="panel" data-pr="'+Number(pr.number)+'"><div class="header"><div><small>PR #'+Number(pr.number)+' · '+safe(pr.base?.ref)+'</small><h2>'+safe(pr.title)+'</h2></div><span class="pill">Status verifieras…</span></div><p class="muted">Färsk PR-information mottagen · aktuell CI och mergebarhet hämtas separat.</p></section>').join('');
@@ -116,25 +113,25 @@ async function refresh(preloadedPrList=null){
    if(candidateCycle!==candidateRefreshCycle||candidateData?.ok!==true||!Array.isArray(candidateData.pullRequests))return;
    const freshCandidateParents=candidateData.pullRequests.filter(isActiveCandidateParent);
    writeCachedPrList(data.pullRequests||[],freshCandidateParents);
-   const freshNumbers=new Set(freshCandidateParents.map(pr=>Number(pr.number)));
-   cards.querySelectorAll('[data-live-parent]').forEach(node=>{if(!freshNumbers.has(Number(node.dataset.pr)))node.remove()});
-   const existing=new Set([...cards.querySelectorAll('[data-pr]')].map(node=>Number(node.dataset.pr)));
-   const candidates=freshCandidateParents.filter(pr=>!existing.has(Number(pr.number)));
-   if(!candidates.length)return;
-   const selected=filter.value;
+   const updatedPrs=activePrRows(data.pullRequests||[],freshCandidateParents,cachedHidden);
+   const updatedFilter=syncPrFilter(updatedPrs,filter.value);
+   const visibleParents=new Set(updatedFilter.visibleRows.filter(isActiveCandidateParent).map(pr=>Number(pr.number)));
+   cards.querySelectorAll('[data-live-parent]').forEach(node=>{if(!visibleParents.has(Number(node.dataset.pr)))node.remove()});
+   const candidates=freshCandidateParents.filter(pr=>visibleParents.has(Number(pr.number)));
    for(const pr of candidates){
-    if(selected!=='all'&&selected!==String(pr.number))continue;
     const holder=document.createElement('div');
-    try{holder.innerHTML=await card(pr)}catch(error){holder.innerHTML='<section class="panel" data-pr="'+Number(pr.number)+'">PR #'+Number(pr.number)+': LIVE-status kunde inte verifieras.</section>'}
+    try{holder.innerHTML=await card(pr)}catch(error){holder.innerHTML='<section class="panel" data-live-parent="true" data-pr="'+Number(pr.number)+'">PR #'+Number(pr.number)+': LIVE-status kunde inte verifieras.</section>'}
     if(candidateCycle!==candidateRefreshCycle)return;
-    const next=holder.firstElementChild;
-    if(next){cards.append(next);const option=document.createElement('option');option.value=String(pr.number);option.textContent='#'+pr.number+' · DEV/LIVE · '+String(pr.title||'');if(![...filter.options].some(item=>item.value===option.value))filter.append(option)}
+    const next=holder.firstElementChild,current=cards.querySelector('[data-pr="'+Number(pr.number)+'"]');
+    if(next&&current?.dataset.cachedPr==='true')current.replaceWith(next);
+    else if(next&&!current)cards.append(next);
    }
+   global.textContent=activePrCountLabel(updatedPrs.length,updatedFilter.visibleRows.length)+' · PR-lista uppdaterad '+new Date().toLocaleTimeString('sv-SE')+' · uppslag hämtas separat';
    window.olympiaV2CheckCandidateStatuses?.();
   }).catch(error=>{
    if(candidateCycle===candidateRefreshCycle)global.textContent+=' · LIVE-kandidatstatus ej verifierad';
   });
-  global.textContent=prs.length+' aktiva DEV/LIVE-ärenden · PR-lista uppdaterad '+new Date().toLocaleTimeString('sv-SE')+' · uppslag hämtas separat';
+  global.textContent=activePrCountLabel(prs.length,shown.length)+' · PR-lista uppdaterad '+new Date().toLocaleTimeString('sv-SE')+' · uppslag hämtas separat';
   registryPromise.then(registryResult=>{if(registryResult.ok){window.olympiaV2HiddenPrNumbers=registryResult.value.hiddenPrNumbers||[];try{sessionStorage.setItem('olympia-v2-hidden-prs',JSON.stringify(window.olympiaV2HiddenPrNumbers))}catch(_){}}else global.textContent+=' · PR-filter kunde inte läsas'});
  }catch(error){cards.querySelectorAll('[data-dev-approve]').forEach(button=>{button.disabled=true;const label=button.closest('.lane')?.querySelector('.ci strong');if(label){label.textContent='Status kunde inte verifieras';label.className='wait'}const light=button.closest('.lane')?.querySelector('.status-light');if(light)light.className='status-light unknown'});global.textContent='PR-listan kunde inte uppdateras: '+error.message+'. DEV-godkännanden är låsta tills aktuell status har verifierats.';}
  finally{refreshButton.disabled=false;refreshing=false;lastRefreshAt=Date.now()}
