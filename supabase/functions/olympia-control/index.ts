@@ -1350,8 +1350,7 @@ async function handleRequest(req: Request): Promise<Response> {
           .sort((a: any, b: any) => Date.parse(b.updated_at || "") - Date.parse(a.updated_at || ""));
         console.info("OLYMPIA PR list completed", JSON.stringify({
           requestId,
-          authElapsedMs: Math.round(performance.now() - requestStartedAt),
-          githubElapsedMs: Math.round(performance.now() - listStartedAt),
+          listElapsedMs: Math.round(performance.now() - listStartedAt),
           totalElapsedMs: Math.round(performance.now() - requestStartedAt),
           openPrCount: open.length,
           returnedCount: pullRequests.length,

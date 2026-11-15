@@ -60,7 +60,8 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(frontend).toContain('diagnostics:{requestId:id,clientStartedAt:new Date().toISOString()}');
     expect(edge).toContain('OLYMPIA request received');
     expect(edge).toContain('OLYMPIA PR list completed');
-    expect(edge).toContain('requestId, authElapsedMs');
+    expect(edge).toContain('authElapsedMs: Math.round(performance.now() - requestStartedAt)');
+    expect(edge).toContain('listElapsedMs: Math.round(performance.now() - listStartedAt)');
     expect(edge).toContain('authError || !user || !user.email_confirmed_at || user.email?.toLowerCase() !== allowedEmail');
   });
 
