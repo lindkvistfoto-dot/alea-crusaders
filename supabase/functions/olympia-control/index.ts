@@ -724,11 +724,12 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
     } catch (_error) { releasePrSha = null; releasePrTreeSha = null; }
   }
   if (!body.includes("READY_FOR_ZEUS_FINAL_APPROVAL") || !treeMatch) {
+    const blockedReasonMatch = body.match(/^- Felorsak:\s*(.+)$/im);
     return {
       ready: false,
       blocked,
       reasonCode: blocked ? "CANDIDATE_WORKFLOW_BLOCKED" : "CANDIDATE_NOT_READY",
-      message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
+      message: blocked ? "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + (blockedReasonMatch?.[1]?.trim() || "Se felande kontroll i workflowloggen.") : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
       releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
       releasePrNotCreated: body.includes("- Release PR: #unknown · not created"),
