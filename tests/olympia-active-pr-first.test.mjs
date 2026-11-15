@@ -83,6 +83,6 @@ it('transport aborts do not masquerade as Zeus or GitHub permission failures',()
  expect(approval).toContain("connectionStages.zeus=isTransportFailure(error)?'pending':'error'");
  expect(approval).toContain("verified=false;window.olympiaV2ZeusVerified=false");
  expect(approval).toContain('Zeus-behörighet och GitHub-status är inte verifierade; besluten förblir låsta.');
- expect(approval).toContain("action.action==='auto_candidate_diagnostics'?60000:20000");
+ expect(approval).toContain("const timeout=['auto_candidate_diagnostics','pull_request_candidate_parents'].includes(action.action)?60000:20000;");
  expect(approval).toContain("if(timedOut)throw Error('OLYMPIA_REQUEST_TIMEOUT')");
 });
