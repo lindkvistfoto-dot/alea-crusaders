@@ -37,20 +37,45 @@ describe('OLYMPIA candidate attached to original PR',()=>{
   expect(html).not.toContain('data-live-accept');
  });
 
- it('retains merged DEV parents from an open LIVE journal while the fast PR refresh runs',()=>{
+ it('keeps the #867 LIVE-parent lifecycle independent of candidate latency and hidden history',()=>{
   const start=html.indexOf('const prCacheKey=');
   const end=html.indexOf('function showCachedPrList()',start);
   const cacheSource=html.slice(start,end);
   const storage=new Map();
   const sessionStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)};
-  const cache=new Function('sessionStorage',cacheSource+';return {cachedActiveCandidateParents,writeCachedPrList};')(sessionStorage);
+  const state=new Function('sessionStorage',cacheSource+';return {cachedActiveCandidateParents,writeCachedPrList,activePrRows,activePrFilterState,activePrCountLabel};')(sessionStorage);
   const parent={number:867,title:'Troférum',base:{ref:'development'},head:{sha:'a'.repeat(40)},state:'closed',merged_at:'2026-11-15T13:57:21Z',merge_commit_sha:'b'.repeat(40),liveCandidateActive:true};
   const openPr={number:900,title:'Open DEV PR',base:{ref:'development'},head:{sha:'c'.repeat(40)},state:'open'};
-  cache.writeCachedPrList([openPr],[parent]);
-  cache.writeCachedPrList([openPr]);
-  expect(cache.cachedActiveCandidateParents().map(pr=>pr.number)).toEqual([867]);
-  cache.writeCachedPrList([openPr],[]);
-  expect(cache.cachedActiveCandidateParents()).toEqual([]);
+  const devOnly={number:866,title:'DEV-only',base:{ref:'development'},head:{sha:'d'.repeat(40)},state:'closed',merged_at:'2026-11-15T13:00:00Z',liveCandidateActive:false};
+  state.writeCachedPrList([openPr],[parent]);
+
+  // 1. Active PANDORAS ASK parent shows despite the UPPSLAG hidden-number list.
+  let rows=state.activePrRows([openPr,devOnly],state.cachedActiveCandidateParents(),[867]);
+  expect(rows.map(pr=>pr.number)).toContain(867);
+  expect(state.activePrRows([parent],[],[867]).map(pr=>pr.number)).toContain(867);
+
+  // 2–3. The fast refresh can render immediately; a pending or failed
+  // candidate-parent request leaves the last verified parent in session cache.
+  state.writeCachedPrList([openPr]);
+  rows=state.activePrRows([openPr],state.cachedActiveCandidateParents(),[867]);
+  expect(rows.map(pr=>pr.number)).toContain(867);
+
+  // 4–5. A successful journal response refreshes the cache; closure removes it.
+  state.writeCachedPrList([openPr],[parent]);
+  expect(state.activePrRows([openPr],state.cachedActiveCandidateParents(),[867]).map(pr=>pr.number)).toContain(867);
+  state.writeCachedPrList([openPr],[]);
+  rows=state.activePrRows([openPr,devOnly],state.cachedActiveCandidateParents(),[867]);
+  expect(rows.map(pr=>pr.number)).not.toContain(867);
+
+  // 6. A merged DEV-only PR has no active journal and stays out of the list.
+  expect(rows.map(pr=>pr.number)).not.toContain(866);
+  const filtered=state.activePrFilterState(rows,'900');
+  expect(filtered.selected).toBe('900');
+  expect(filtered.visibleRows.map(pr=>pr.number)).toEqual([900]);
+  expect(state.activePrCountLabel(rows.length,filtered.visibleRows.length)).toBe('1 av 1 aktiva DEV/LIVE-ärenden');
+  expect(html).toContain('activePrRows(cached.pullRequests,[],window.olympiaV2HiddenPrNumbers||[])');
+  expect(html).toContain('writeCachedPrList(data.pullRequests||[],freshCandidateParents)');
+  expect(html).toContain('activePrCountLabel(updatedPrs.length,updatedFilter.visibleRows.length)');
  });
  it('keeps candidate lookup separate from PR-list rendering and replaces cached parents only on a successful response',()=>{
   expect(html).toContain("action:'pull_request_list',includeCandidateParents:false");
