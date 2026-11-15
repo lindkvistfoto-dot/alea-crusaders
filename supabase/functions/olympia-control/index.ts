@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 30950)
-Total output lines: 1995
-
 import { createClient } from "npm:@supabase/supabase-js@2.58.0";
 import "../_shared/olympia-ci.js";
 
@@ -732,7 +729,657 @@ async function inspectCandidate(token: string, item: any, issueNumber: number, t
       message: blocked ? "Kandidatkontrollen blockerade publiceringen. LIVE är oförändrat." : "Kandidaten väntar på verifierad releasekontroll.",
       candidateRunUrl: runMatch?.[1] || null,
       releasePr: candidatePrMatch ? Number(candidatePrMatch[1]) : null,
-      releasePrNotCreated: body.includes("- Rele…10950 tokens truncated…
+      releasePrNotCreated: body.includes("- Release PR: #unknown · not created"),
+      releaseUrl: candidatePrMatch?.[2] || null,
+      releasePrSha,
+    };
+  }
+  const sourcePrNumber = Number(String(item.id || "").match(/^PR-([1-9][0-9]*)$/)?.[1] || 0);
+  const sourcePrLine = String(candidatePr?.body || "").match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+  const mergedReleaseIsForThisCandidate = Boolean(
+    candidatePr?.merged_at &&
+    candidatePr.base?.ref === "main" &&
+    candidatePr.user?.login === appLogin &&
+    candidatePr.head?.sha === releasePrSha &&
+    candidatePr.merge_commit_sha &&
+    sourcePrNumber > 0 &&
+    sourcePrLine.split(/\s*,\s*/).includes("#" + sourcePrNumber) &&
+    String(candidatePr.body || "").includes("Zeus decision journal: #" + issueNumber) &&
+    releasePrTreeSha === treeMatch[1]
+  );
+  if (mergedReleaseIsForThisCandidate) {
+    const publication = await liveMergePublicationStatus(token, String(candidatePr.merge_commit_sha));
+    if (publication.onMain) {
+      return {
+        ready: false,
+        published: publication.published,
+        blocked: false,
+        message: publication.published ? "Publicerad i LIVE · verifierad." : "LIVE-merge genomförd; inväntar verifierad Pages-publicering.",
+        candidateTreeSha: treeMatch[1],
+        releasePr: Number(candidatePrMatch[1]),
+        releaseUrl: candidatePrMatch[2],
+        releasePrSha,
+        liveMergeSha: String(candidatePr.merge_commit_sha),
+      };
+    }
+  }
+  try {
+    if (!releasePrSha || !releasePrTreeSha) throw new Error("CANDIDATE_HEAD_CHANGED");
+    const verified = await verifyCandidate(token, item, {
+      candidateIssue: issueNumber,
+      candidateTreeSha: releasePrTreeSha,
+      releasePrSha,
+      testedDevSha,
+    });
+    const prMatch = String(report.body || "").match(/- Release PR: #(\d+) · (https:\/\/[^\s]+)/i);
+    if (!prMatch) throw new Error("CANDIDATE_REPORT_INCOMPLETE");
+    return {
+      ready: true,
+      blocked: false,
+      message: "Redo för LIVE – releaseförslag verifierat.",
+      candidateTreeSha: verified.candidateTreeSha,
+      releasePr: Number(prMatch[1]),
+      releaseUrl: prMatch[2],
+      releasePrSha: verified.pr.head.sha,
+      previewUrl: await verifiedCandidatePreview(token, verified.pr.head.sha),
+      candidateRunUrl: runMatch?.[1] || null,
+      liveSha: verified.liveSha,
+    };
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "";
+    const transientReadFailure = isTransientCandidateReadError(code);
+    console.warn("OLYMPIA candidate verification failed", JSON.stringify({ code: code || "UNKNOWN" }));
+    const messages: Record<string, string> = {
+      GITHUB_RATE_LIMITED: "GitHub API-begränsningen hindrar CI-verifiering just nu. LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_REQUEST_FAILED_NETWORK: "GitHub API kunde inte nås under CI-verifieringen. LIVE-beslut är låsta; uppdatera status och försök igen.",
+
+      CANDIDATE_NOT_READY: "Kandidatrapporten är inte klar. LIVE är oförändrat.",
+      CANDIDATE_REPORT_INCOMPLETE: "Kandidatrapporten saknar nödvändiga uppgifter.",
+      LIVE_BASELINE_CHANGED: "LIVE har ändrats sedan kandidaten skapades. En ny kandidat behövs.",
+      RELEASE_PR_NOT_VALID: "Releaseförslaget är inte öppet, mergebart och verifierat mot main.",
+      CANDIDATE_CHECKS_NOT_GREEN: "Releaseförslagets CI-kontroller är inte godkända.",
+      CANDIDATE_STATUS_NOT_GREEN: "Releaseförslagets statuskontroller är inte godkända.",
+      RELEASE_PR_DECISION_MISMATCH: "Releaseförslaget pekar på ett annat Zeus-beslut.",
+      CANDIDATE_HEAD_CHANGED: "Releaseförslaget har ändrats. Aktuell SHA och dess kontroller måste hämtas igen.",
+      CANDIDATE_TREE_MISMATCH: "Releaseförslagets kod avviker från den testade kandidaten.",
+      DEPLOYMENT_MANIFEST_UNVERIFIED: "Aktuell DEV- eller LIVE-publicering kunde inte verifieras.",
+      CANDIDATE_SCOPE_NOT_ALLOWED: "Kandidaten innehåller ändringar utanför ärendets källomfattning.",
+      GITHUB_REQUEST_FAILED_403: "GitHub nekade åtkomst till kandidatens CI-kontroller. LIVE-beslut är låsta.",
+      GITHUB_APP_TOKEN_FAILED_422: "GitHub avvisade skapandet av en installations-token. LIVE-beslut är låsta tills åtkomsten kan verifieras.",
+      GITHUB_REQUEST_FAILED_429: "GitHub CI-kontrollerna är tillfälligt begränsade (429). LIVE-beslut är låsta; försök igen senare.",
+      GITHUB_REQUEST_FAILED_502: "GitHub CI-kontrollerna är tillfälligt otillgängliga (502). LIVE-beslut är låsta; försök igen.",
+      GITHUB_REQUEST_FAILED_503: "GitHub CI-kontrollerna är tillfälligt otillgängliga (503). LIVE-beslut är låsta; försök igen.",
+      GITHUB_REQUEST_FAILED_504: "GitHub CI-kontrollerna svarade inte i tid (504). LIVE-beslut är låsta; försök igen.",
+    };
+    return {
+      ready: false,
+      blocked: !transientReadFailure,
+      reasonCode: code || "CANDIDATE_VERIFICATION_FAILED",
+      message: messages[code] || "Kandidaten kunde inte verifieras. LIVE är oförändrat.",
+      candidateTreeSha: releasePrTreeSha,
+      releasePrSha,
+      candidateRunUrl: runMatch?.[1] || null,
+    };
+  }
+}
+
+function title(item: any, decision: string) {
+  const label: Record<string, string> = {
+    accept: "ACCEPTANS",
+    pandoras_ask: "PANDORAS ASK",
+    release_package: "RELEASEPAKET",
+    karon: "AVVAKTA · TILL KARON",
+    needs_fix: "BEHÖVER RÄTTAS",
+    final_approval: "LIVE APPROVAL",
+  };
+  return "[OLYMPIA " + label[decision] + "] " + item.id + " · " + item.title;
+}
+Deno.serve(async (req: Request) => {
+  const origin = req.headers.get("Origin");
+  const response = await handleRequest(req);
+  if (origin && ALLOWED_ORIGINS.has(origin)) response.headers.set("Access-Control-Allow-Origin", origin);
+  return response;
+});
+
+async function handleRequest(req: Request): Promise<Response> {
+  const requestStartedAt = performance.now();
+  if (req.method === "OPTIONS") {
+    const origin = req.headers.get("Origin");
+    if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403, headers: { Vary: "Origin" } });
+    return new Response("ok", { headers: { ...responseHeaders, "Access-Control-Allow-Origin": origin } });
+  }
+  if (req.method !== "POST") return fail("Endast POST stöds.", 405);
+  if (!ALLOWED_ORIGINS.has(req.headers.get("Origin") || "")) return fail("Origin nekad.", 403);
+
+  try {
+    const auth = req.headers.get("Authorization") || "";
+    const bearer = auth.match(/^Bearer\s+(.+)$/i)?.[1];
+    if (!bearer) return fail("Logga in i ALEA DEV för att registrera beslut.", 401);
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    const allowedEmail = Deno.env.get("OLYMPIA_ZEUS_EMAIL")?.trim().toLowerCase();
+    if (!supabaseUrl || !supabaseKey || !allowedEmail) return fail("Zeus-autentisering är inte konfigurerad i DEV.", 503);
+    const client = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: authData, error: authError } = await client.auth.getUser(bearer);
+    const user = authData?.user;
+    if (authError || !user || !user.email_confirmed_at || user.email?.toLowerCase() !== allowedEmail) {
+      return fail("Kontot är inte auktoriserat att fatta OLYMPIA-beslut.", 403);
+    }
+    const ideaClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: auth } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const data = await req.json();
+    if (!data || typeof data !== "object") return fail("Ogiltig begäran.", 400);
+    const requestId = typeof data.diagnostics?.requestId === "string" && /^[a-zA-Z0-9-]{8,80}$/.test(data.diagnostics.requestId)
+      ? data.diagnostics.requestId
+      : "untracked";
+    console.info("OLYMPIA request received", JSON.stringify({ requestId, action: String(data.action || "unknown"), authElapsedMs: Math.round(performance.now() - requestStartedAt) }));
+    if (data.action === "session_check") return json({ ok: true });
+    if (data.action === "system_alert_list" || data.action === "system_alert_ack") {
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (!serviceRoleKey) return fail("OLYMPIA alert storage is not configured.", 503);
+      const alertClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      if (data.action === "system_alert_list") {
+        const [alertsResult, healthResult] = await Promise.all([
+          alertClient.from("olympia_system_alerts").select("*").order("occurred_at", { ascending: false }).limit(100),
+          alertClient.from("olympia_system_health").select("*").order("updated_at", { ascending: false }).limit(20),
+        ]);
+        if (alertsResult.error || healthResult.error) return fail("OLYMPIA alert data could not be read.", 503);
+        return json({ ok: true, alerts: alertsResult.data || [], health: healthResult.data || [] });
+      }
+      const alertId = String(data.alert_id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(alertId)) return fail("Ogiltigt larm-ID.", 400);
+      const { data: alert, error: ackError } = await alertClient.rpc("olympia_system_alert_ack", {
+        alert_id: alertId, actor_id: user.id,
+      });
+      if (ackError || !alert?.id) return fail("Larmet kunde inte kvitteras.", 409);
+      return json({ ok: true, alert });
+    }
+    if (String(data.action || "").startsWith("idea_")) {
+      const table = ideaClient.from("olympia_ideas");
+      const statuses = new Set(["idea_bank", "to_process", "in_olympia", "done"]);
+      const classifications = new Set(["fully_handled", "partially_handled", "not_handled", "superseded", "uncertain"]);
+      const canonicalPr = (pr: any) => {
+        const number = Number(pr?.number);
+        if (!Number.isSafeInteger(number) || number < 1 || !classifications.has(String(pr?.classification || "")) ||
+            !String(pr?.purpose || "").trim() || !String(pr?.recommendation || "").trim() ||
+            String(pr.purpose).length > 2000 || String(pr.remaining_need || "").length > 4000 || String(pr.recommendation).length > 2000) {
+          throw new Error("HISTORICAL_PR_INVALID");
+        }
+        return { number, url: "https://github.com/" + OWNER + "/" + REPO + "/pull/" + number,
+          purpose: String(pr.purpose).trim(), classification: pr.classification,
+          remaining_need: String(pr.remaining_need || "").trim(), recommendation: String(pr.recommendation).trim(), hidden: pr.hidden === true };
+      };
+      const eventFor = (action: string, actor: string, changes: Record<string, unknown>) => ({ action, actor, at: new Date().toISOString(), changes });
+      const checkedIdea = (value: any) => {
+        if (!value || typeof value !== "object" || !String(value.title || "").trim() || String(value.title).trim().length > 160 ||
+            String(value.description || "").length > 4000 || !Array.isArray(value.historical_prs) || value.historical_prs.length > 38 ||
+            !statuses.has(String(value.status || "idea_bank"))) throw new Error("IDEA_INPUT_INVALID");
+        const prs = value.historical_prs.map(canonicalPr);
+        if (new Set(prs.map((pr: any) => pr.number)).size !== prs.length) throw new Error("DUPLICATE_HISTORICAL_PR");
+        const priority = Number(value.priority ?? 2);
+        if (!Number.isInteger(priority) || priority < 1 || priority > 3) throw new Error("IDEA_INPUT_INVALID");
+        return { title: String(value.title).trim(), description: String(value.description || "").trim(), priority, historical_prs: prs };
+      };
+      const errorText = (error: any) => {
+        const code = String(error?.message || "");
+        const databaseCode = String(error?.code || "");
+        if (databaseCode === "PGRST205" || /could not find the table ['\"]public\.olympia_ideas['\"] in the schema cache/i.test(code)) {
+          return fail("UPPSLAG-tabellen saknas i DEV-databasen. Databasmigrationen behöver driftsättas.", 503);
+        }
+        if (databaseCode === "42501" || /row-level security|permission denied for table/i.test(code)) {
+          return fail("Zeus saknar administratörsbehörighet för UPPSLAG i DEV.", 403);
+        }
+        const messages: Record<string, string> = {
+          IDEA_INPUT_INVALID: "Kontrollera rubrik, beskrivning och uppslagets PR-underlag.",
+          HISTORICAL_PR_INVALID: "Varje historisk PR behöver nummer, syfte, klassning och rekommenderad åtgärd.",
+          DUPLICATE_HISTORICAL_PR: "Samma historiska PR får bara kopplas en gång per uppslag.",
+          IDEA_NOT_FOUND: "Uppslaget finns inte längre. Uppdatera sidan.",
+          IDEA_CHANGED: "Uppslaget har ändrats i en annan vy. Läs in det igen innan du sparar.",
+          HISTORICAL_PR_PROTECTED: "Historiska PR-kopplingar kan inte tas bort.",
+          IDEA_DELETE_PROTECTED: "Historiska uppslag får inte raderas.",
+          ACTIVE_PR_INVALID: "Välj en öppen PR mot development som aktivt utvecklingsärende.",
+          ACTIVE_PR_ALREADY_REGISTERED: "Den aktiva PR:n finns redan som historisk PR på detta uppslag.",
+          IMPORT_UNVERIFIED: "Importfilen behöver vara CLEAN OLYMPUS 2026-11-03, innehålla exakt 38 unika PR:ar och bekräftas efter granskning.",
+          LIVE_NOT_VERIFIED: "LIVE-publicering har inte verifierats. Uppslaget är oförändrat.",
+        };
+        console.error("OLYMPIA UPPSLAG request failed", code.slice(0, 100));
+        return fail(messages[code] || "UPPSLAG kunde inte spara ändringen. Kontrollera anslutningen och försök igen.", code === "IDEA_CHANGED" ? 409 : 400);
+      };
+      try {
+        if (data.action === "idea_list") {
+          const { data: rows, error } = await table.select("*").order("updated_at", { ascending: false });
+          if (error) throw error;
+          const ideas = Array.isArray(rows) ? rows : [];
+          const hiddenPrNumbers = [...new Set(ideas.flatMap((idea: any) => (idea.historical_prs || []).filter((pr: any) => pr.hidden).map((pr: any) => Number(pr.number))))];
+          return json({ ok: true, ideas, hiddenPrNumbers });
+        }
+        if (data.action === "idea_save") {
+          const input = checkedIdea({ ...data, status: "idea_bank" });
+          if (data.id) {
+            const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+            if (readError) throw readError;
+            if (!current) throw new Error("IDEA_NOT_FOUND");
+            if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+            if (current.status === "in_olympia" || current.status === "done") throw new Error("IDEA_CHANGED");
+            if ((current.historical_prs || []).length && input.historical_prs.length < current.historical_prs.length) throw new Error("HISTORICAL_PR_PROTECTED");
+            const history = [...(Array.isArray(current.history) ? current.history : []), eventFor("edit", user.id, { title: input.title, description: input.description, historical_pr_count: input.historical_prs.length })];
+            const { data: saved, error } = await table.update({ ...input, history, updated_by: user.id, updated_at: new Date().toISOString() }).eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+            if (error) throw error;
+            return json({ ok: true, idea: saved });
+          }
+          const now = new Date().toISOString();
+          const row = { ...input, status: "idea_bank", active_pr_number: null, completed_at: null, created_by: user.id, updated_by: user.id, created_at: now, updated_at: now, history: [eventFor("created", user.id, { title: input.title })] };
+          const { data: saved, error } = await table.insert(row).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_delete") {
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          if ((current.historical_prs || []).length || current.import_source || current.active_pr_number) throw new Error("IDEA_DELETE_PROTECTED");
+          const { error } = await table.delete().eq("id", current.id).eq("updated_at", current.updated_at);
+          if (error) throw error;
+          return json({ ok: true, deletedId: current.id });
+        }
+        if (data.action === "idea_set_status") {
+          if (!statuses.has(data.status) || data.status === "done" || data.status === "in_olympia") return fail("Välj Idébank eller Att bearbeta. Pågående och genomfört kräver särskild verifiering.", 400);
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          const { data: saved, error } = await table.update({ status: data.status, active_pr_number: null, completed_at: null,
+            history: [...(current.history || []), eventFor("status_changed", user.id, { from: current.status, to: data.status })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_activate") {
+          const number = Number(data.activePrNumber);
+          if (!Number.isSafeInteger(number) || number < 1) throw new Error("ACTIVE_PR_INVALID");
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          if ((current.historical_prs || []).some((pr: any) => Number(pr.number) === number)) throw new Error("ACTIVE_PR_ALREADY_REGISTERED");
+          const token = await githubToken("pull_request_list");
+          const pr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+          if (pr.state !== "open" || pr.base?.ref !== "development" || pr.draft) throw new Error("ACTIVE_PR_INVALID");
+          const { data: saved, error } = await table.update({ status: "in_olympia", active_pr_number: number, completed_at: null,
+            history: [...(current.history || []), eventFor("activated", user.id, { active_pr_number: number, url: pr.html_url })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved, pullRequest: { number, url: pr.html_url, title: pr.title } });
+        }
+        if (data.action === "idea_hide_historical_pr") {
+          const number = Number(data.number);
+          if (!Number.isSafeInteger(number) || number < 1 || typeof data.hidden !== "boolean") throw new Error("HISTORICAL_PR_INVALID");
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current) throw new Error("IDEA_NOT_FOUND");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          let found = false;
+          const prs = (current.historical_prs || []).map((pr: any) => {
+            if (Number(pr.number) !== number) return pr;
+            found = true;
+            return { ...pr, hidden: data.hidden };
+          });
+          if (!found) throw new Error("IDEA_NOT_FOUND");
+          const { data: saved, error } = await table.update({ historical_prs: prs,
+            history: [...(current.history || []), eventFor("historical_pr_filter_changed", user.id, { number, hidden: data.hidden })], updated_by: user.id, updated_at: new Date().toISOString() })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved });
+        }
+        if (data.action === "idea_import") {
+          const source = data.sourceReport || {};
+          if (data.confirmImport !== true || source.name !== "CLEAN OLYMPUS" || source.date !== "2026-11-03" || source.openPrCount !== 38 || !Array.isArray(data.ideas) || !data.ideas.length || data.ideas.length > 38) throw new Error("IMPORT_UNVERIFIED");
+          const prsSeen = new Set<number>();
+          const rows = data.ideas.map((idea: any) => {
+            const input = checkedIdea({ ...idea, status: "idea_bank" });
+            if (!input.historical_prs.length) throw new Error("IMPORT_UNVERIFIED");
+            for (const pr of input.historical_prs) {
+              if (prsSeen.has(pr.number)) throw new Error("IMPORT_UNVERIFIED");
+              prsSeen.add(pr.number);
+            }
+            const now = new Date().toISOString();
+            return { ...input, status: "idea_bank", active_pr_number: null, completed_at: null, import_source: "CLEAN OLYMPUS · 2026-11-03",
+              created_by: user.id, updated_by: user.id, created_at: now, updated_at: now,
+              history: [eventFor("clean_olympus_import", user.id, { source_report: "CLEAN OLYMPUS · 2026-11-03", historical_pr_count: input.historical_prs.length })] };
+          });
+          if (prsSeen.size !== 38) throw new Error("IMPORT_UNVERIFIED");
+          const { data: existing, error: readError } = await table.select("historical_prs");
+          if (readError) throw readError;
+          const existingNumbers = new Set((existing || []).flatMap((idea: any) => (idea.historical_prs || []).map((pr: any) => Number(pr.number))));
+          if ([...prsSeen].some(number => existingNumbers.has(number))) throw new Error("IMPORT_UNVERIFIED");
+          const { data: saved, error } = await table.insert(rows).select("id,title,status,historical_prs,created_at,updated_at");
+          if (error) throw error;
+          return json({ ok: true, importedCount: saved?.length || 0, ideas: saved });
+        }
+        if (data.action === "idea_verify_live") {
+          const { data: current, error: readError } = await table.select("*").eq("id", data.id).maybeSingle();
+          if (readError) throw readError;
+          if (!current || current.status !== "in_olympia" || !Number.isSafeInteger(Number(current.active_pr_number))) throw new Error("LIVE_NOT_VERIFIED");
+          if (current.updated_at !== data.expectedUpdatedAt) throw new Error("IDEA_CHANGED");
+          const token = await githubToken("idea_verify_live");
+          const number = Number(current.active_pr_number);
+          const sourcePr = await gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls/" + number);
+          if (sourcePr.state !== "closed" || sourcePr.merged !== true || sourcePr.base?.ref !== "development") throw new Error("LIVE_NOT_VERIFIED");
+          const sourceMergeSha = String(sourcePr.merge_commit_sha || "");
+          if (!/^[0-9a-f]{40}$/i.test(sourceMergeSha)) throw new Error("LIVE_NOT_VERIFIED");
+          const botLogin = await appBotLogin();
+          let decision: any = null;
+          for (let page = 1; page <= 20; page++) {
+            const issues = await gh(token, "/repos/" + OWNER + "/" + REPO + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
+            if (!Array.isArray(issues)) throw new Error("LIVE_NOT_VERIFIED");
+            decision = issues.find((issue: any) => {
+              const body = String(issue.body || "");
+              return !issue.pull_request && body.includes("- Ärende-ID: PR-" + number) && body.includes("- PR: #" + number) &&
+                body.includes("- Beslut: PANDORAS ASK") && /^[0-9]+$/.test(String(issue.number));
+            }) || null;
+            if (decision || issues.length < 100) break;
+          }
+          if (!decision) throw new Error("LIVE_NOT_VERIFIED");
+          const testedMatch = String(decision.body || "").match(/- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})/i);
+          if (!testedMatch) throw new Error("LIVE_NOT_VERIFIED");
+          const sourceInTestedDev = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + sourceMergeSha + "..." + testedMatch[1]);
+          const sourceOnDev = sourceInTestedDev.status === "identical" || sourceInTestedDev.status === "ahead" && String(sourceInTestedDev.merge_base_commit?.sha || "").toLowerCase() === sourceMergeSha.toLowerCase();
+          if (!sourceOnDev) throw new Error("LIVE_NOT_VERIFIED");
+          const [closedReleasePrs, live] = await Promise.all([
+            gh(token, "/repos/" + OWNER + "/" + REPO + "/pulls?state=closed&base=main&per_page=100&sort=updated&direction=desc&page=1"),
+            gh(token, "/repos/" + OWNER + "/" + REPO + "/git/ref/heads/main"),
+          ]);
+          if (!Array.isArray(closedReleasePrs)) throw new Error("LIVE_NOT_VERIFIED");
+          const releasePr = closedReleasePrs.find((candidate: any) => candidate.merged_at && candidate.base?.ref === "main" &&
+            String(candidate.body || "").includes("Zeus decision journal: #" + decision.number));
+          if (!releasePr || releasePr.merged !== true) throw new Error("LIVE_NOT_VERIFIED");
+          const releaseMergeSha = String(releasePr.merge_commit_sha || ""), mainSha = String(live.object?.sha || "");
+          if (!/^[0-9a-f]{40}$/i.test(releaseMergeSha) || !/^[0-9a-f]{40}$/i.test(mainSha)) throw new Error("LIVE_NOT_VERIFIED");
+          const releaseComparison = await gh(token, "/repos/" + OWNER + "/" + REPO + "/compare/" + releaseMergeSha + "..." + mainSha);
+          const releaseOnMain = releaseComparison.status === "identical" || releaseComparison.status === "ahead" && String(releaseComparison.merge_base_commit?.sha || "").toLowerCase() === releaseMergeSha.toLowerCase();
+          const manifestResponse = await fetch(PAGES_BASE + "/deployment-manifest.json?ts=" + Date.now(), { headers: { "Accept": "application/json", "Cache-Control": "no-cache" }, signal: AbortSignal.timeout(10000) });
+          const manifest = manifestResponse.ok ? await manifestResponse.json().catch(() => null) : null;
+          if (!releaseOnMain || manifest?.environment !== "main" || manifest?.source_sha !== mainSha) throw new Error("LIVE_NOT_VERIFIED");
+          const verifiedAt = new Date().toISOString();
+          const { data: saved, error } = await table.update({ status: "done", completed_at: verifiedAt,
+            history: [...(current.history || []), eventFor("live_verified", user.id, { active_pr_number: number, source_merge_sha: sourceMergeSha, decision_issue: decision.number, release_pr_number: releasePr.number, release_merge_sha: releaseMergeSha, main_sha: mainSha, manifest_source_sha: manifest.source_sha })], updated_by: user.id, updated_at: verifiedAt })
+            .eq("id", current.id).eq("updated_at", current.updated_at).select("*").single();
+          if (error) throw error;
+          return json({ ok: true, idea: saved, verification: { prNumber: number, decisionIssue: decision.number, releasePrNumber: releasePr.number, releaseMergeSha, mainSha, publishedSha: manifest.source_sha, verifiedAt } });
+        }
+        return fail("UPPSLAG-åtgärden känns inte igen.", 400);
+      } catch (error) {
+        const response = errorText(error);
+        if (response.status !== 400) return response;
+        return response;
+      }
+    }
+    if (data.action === "auto_candidate_diagnostics") {
+      if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
+        return fail("Ange giltigt PR-nummer och fullständig DEV-merge-SHA.", 400);
+      }
+      try {
+        const token = await githubToken("auto_candidate_diagnostics");
+        const number = data.pullRequestNumber;
+        const sourceMergeSha = data.testedDevSha.toLowerCase();
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const appLogin = await appBotLogin();
+        const item = await workItem(token, "PR-" + number);
+        // The PR card sends the source PR's merge SHA. Candidate preparation records
+        // the tested DEV tip SHA in its decision issue. Resolve that SHA from the
+        // verified journal instead of looking for a lock keyed by the wrong SHA.
+        if (String(item.dev_sha || "").toLowerCase() !== sourceMergeSha) {
+          return fail("DEV-PR:ens merge-SHA har ändrats. Uppdatera OLYMPIA.", 409);
+        }
+
+        const candidateIssues: any[] = [];
+        let scanComplete = false;
+        for (let page = 1; page <= 20; page++) {
+          const issues = await gh(token, repoPath + "/issues?state=all&per_page=100&page=" + page + "&creator=" + encodeURIComponent(appLogin));
+          if (!Array.isArray(issues)) throw new Error("CANDIDATE_DIAGNOSTICS_ISSUES_INVALID");
+          for (const candidateIssue of issues) {
+            const body = String(candidateIssue.body || "");
+            if (!candidateIssue.pull_request && candidateIssue.user?.login === appLogin &&
+                candidateIssue.state === "open" &&
+                body.includes("- Beslut: PANDORAS ASK") &&
+                body.includes("- Ärende-ID: PR-" + number)) {
+              const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
+              if (testedMatch) candidateIssues.push({ issue: candidateIssue, testedDevSha: testedMatch[1].toLowerCase() });
+            }
+          }
+          if (issues.length < 100) { scanComplete = true; break; }
+        }
+        if (!scanComplete) return json({ ok: true, state: "unknown", locked: false, message: "Journalen kunde inte genomsökas fullständigt. Ingen återställning tillåten." });
+        candidateIssues.sort((a, b) => Date.parse(b.issue.created_at || "") - Date.parse(a.issue.created_at || ""));
+
+        let unlockedIssue: any = null;
+        for (const entry of candidateIssues) {
+          const issue = entry.issue;
+          const testedDevSha = entry.testedDevSha;
+          const lockBranch = "olympia/auto-candidates/pr-" + number + "-" + testedDevSha;
+          let lock: any = null;
+          try {
+            lock = await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent(lockBranch));
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+            unlockedIssue ||= issue;
+            continue;
+          }
+          if (String(lock.object?.sha || "").toLowerCase() !== testedDevSha) {
+            return json({ ok: true, state: "inconsistent", locked: true, issue: { number: issue.number, url: issue.html_url }, message: "Kandidatlåset pekar på fel commit. Manuell granskning krävs." });
+          }
+          let requestPresent = false;
+          try {
+            await gh(token, repoPath + "/git/ref/heads/" + encodeURIComponent("olympia/release-requests/decision-" + issue.number));
+            requestPresent = true;
+          } catch (error) {
+            if (!(error instanceof Error) || error.message !== "GITHUB_REQUEST_FAILED_404") throw error;
+          }
+          if (!requestPresent) {
+            return json({ ok: true, state: "needs_review", locked: true, requestPresent: false,
+              issue: { number: issue.number, url: issue.html_url },
+              message: "Lås finns men releasebegäran är inte verifierad. Återställ inte automatiskt." });
+          }
+
+          let candidate: any = null;
+          try {
+            candidate = await inspectCandidate(token, item, issue.number, testedDevSha);
+          } catch (error) {
+            console.warn("OLYMPIA candidate diagnostics failed", error instanceof Error ? error.message : "unknown");
+            candidate = { ready: false, blocked: false, message: "Releasebegäran finns. Kandidatens aktuella status kunde inte verifieras; LIVE-beslut förblir låsta." };
+          }
+          if (!candidate || candidate.blocked === false) {
+            try {
+              const comments = await gh(token, repoPath + "/issues/" + issue.number + "/comments?per_page=100");
+              if (!Array.isArray(comments)) throw new Error("CANDIDATE_JOURNAL_INVALID");
+              const latest = comments.filter((comment: any) =>
+                comment.user?.login === "github-actions[bot]" &&
+                String(comment.body || "").includes("## OLYMPIA release candidate") &&
+                String(comment.body || "").includes("- Verified DEV SHA: " + testedDevSha)
+              ).sort((a: any, b: any) => Date.parse(b.created_at || "") - Date.parse(a.created_at || ""))[0];
+              const body = String(latest?.body || "");
+              if (/^- Status: BLOCKED$/mi.test(body)) {
+                const reason = body.match(/^- Felorsak:\s*(.+)$/im)?.[1] || "Se felande kontroll i workflowloggen.";
+                const workflowRunUrl = body.match(/https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/actions\/runs\/\d+/)?.[0] || null;
+                candidate = {
+                  ready: false,
+                  blocked: true,
+                  message: "BLOCKERAD – LIVE-kandidat kunde inte skapas. Felorsak: " + reason,
+                  workflowRunUrl,
+                };
+              }
+            } catch (error) {
+              console.warn("OLYMPIA candidate journal status unavailable", error instanceof Error ? error.message : "unknown");
+            }
+          }
+          return json({
+            ok: true, state: "requested", locked: true, requestPresent: true, candidate,
+            issue: { number: issue.number, url: issue.html_url },
+            testedDevSha,
+            message: "Lås och releasebegäran hittade. Kontrollera kandidatens separata CI innan LIVE-beslut.",
+          });
+        }
+
+        return json(unlockedIssue
+          ? { ok: true, state: "unlocked_issue", locked: false, requestPresent: false,
+              issue: { number: unlockedIssue.number, url: unlockedIssue.html_url },
+              message: "Releaseärende finns utan automatiskt lås. Manuell granskning krävs." }
+          : { ok: true, state: "not_started", locked: false, requestPresent: false, issue: null,
+              message: "Ingen automatisk kandidatbegäran hittades." });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA candidate diagnostics failed", code);
+        if (code.startsWith("GITHUB_RATE_LIMITED_")) return fail(code, 503);
+        return fail("Kandidatens lås eller journal kunde inte verifieras. Ingen ändring gjordes.", 502);
+      }
+    }
+    if (data.action === "resume_stale_candidate") {
+      if (!Number.isSafeInteger(data.pullRequestNumber) || data.pullRequestNumber < 1 ||
+          !Number.isSafeInteger(data.candidateIssue) || data.candidateIssue < 1 ||
+          typeof data.testedDevSha !== "string" || !/^[a-f0-9]{40}$/i.test(data.testedDevSha)) {
+        return fail("Ange giltigt DEV-PR, kandidatärende och fullständig testad DEV-SHA.", 400);
+      }
+      try {
+        const token = await githubToken("resume_stale_candidate");
+        const number = data.pullRequestNumber;
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const [appLogin, item, issue, issues] = await Promise.all([
+          appBotLogin(),
+          workItem(token, "PR-" + number),
+          gh(token, repoPath + "/issues/" + data.candidateIssue),
+          gh(token, repoPath + "/issues?state=all&per_page=100&creator=" + encodeURIComponent(await appBotLogin())),
+        ]);
+        if (!Array.isArray(issues)) throw new Error("CANDIDATE_ISSUES_INVALID");
+        const body = String(issue.body || "");
+        const journalSha = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi)?.[1]?.toLowerCase() || "";
+        const requestedSha = data.testedDevSha.toLowerCase();
+        const sourceMergeSha = String(item.dev_sha || "").toLowerCase();
+        // Older OLYMPIA clients pass the source PR merge SHA. Resolve it only
+        // through this exact PANDORAS ASK journal entry; downstream checks use
+        // the recorded and accepted DEV tip SHA, never the client alias.
+        const sha = requestedSha === journalSha
+          ? journalSha
+          : requestedSha === sourceMergeSha
+          ? journalSha
+          : "";
+        if (issue.user?.login !== appLogin || issue.pull_request ||
+            !body.includes("- Beslut: PANDORAS ASK") ||
+            !body.includes("- Ärende-ID: PR-" + number) ||
+            !/^[0-9a-f]{40}$/.test(journalSha) || !sha) {
+          return fail("Kandidatbeslutet matchar inte den valda DEV-ändringen.", 409);
+        }
+        if (!await hasAcceptedFeatureVersion(token, issues, item, sha)) {
+          return fail("DEV-acceptansen saknas eller berörda filer har ändrats efter godkännandet.", 409);
+        }
+        const candidate = await inspectCandidate(token, item, data.candidateIssue, sha);
+        const staleBaseline = candidate.reasonCode === "LIVE_BASELINE_CHANGED";
+        const blockedRun = candidate.reasonCode === "CANDIDATE_WORKFLOW_BLOCKED" && candidate.blocked === true;
+        if (!staleBaseline && !blockedRun) {
+          return fail("Kandidaten kan byggas om när LIVE-baslinjen ändrats eller dess tidigare releasekontroll blockerats.", 409);
+        }
+        if (blockedRun) {
+          const releaseNumber = Number(candidate.releasePr || 0);
+          if (releaseNumber > 0) {
+            if (!Number.isSafeInteger(releaseNumber)) {
+              return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
+            }
+            const releasePr = await gh(token, repoPath + "/pulls/" + releaseNumber);
+            const releaseBody = String(releasePr.body || "");
+            const sources = releaseBody.match(/^- Source DEV PRs: (.+)$/m)?.[1] || "";
+            if (releasePr.state !== "open" || releasePr.merged_at || releasePr.base?.ref !== "main" ||
+                releasePr.user?.login !== appLogin ||
+                !releaseBody.includes("- Zeus decision journal: #" + data.candidateIssue) ||
+                !releaseBody.includes("- Approved DEV test version: " + sha) ||
+                !sources.split(/\s*,\s*/).includes("#" + number)) {
+              return fail("Den blockerade LIVE-PR:n matchar inte längre samma öppna Zeus-beslut och DEV-version.", 409);
+            }
+          } else if (candidate.releasePrNotCreated !== true) {
+            return fail("Den blockerade kandidatens LIVE-PR kunde inte verifieras.", 409);
+          }
+          // If candidate creation was blocked before a release PR existed, retry
+          // the same journaled request. startCandidateRequest reuses its decision
+          // branch and increments its attempt instead of creating a second decision.
+        }
+        const requestBranch = await startCandidateRequest(token, data.candidateIssue, item, {
+          decision: "pandoras_ask",
+          testedDevSha: sha,
+        });
+        return json({
+          ok: true,
+          message: "Kandidaten återupptogs mot aktuell LIVE-bas. Ingen LIVE-publicering har skett.",
+          issue: { number: issue.number, url: issue.html_url },
+          requestBranch,
+          candidateStarted: true,
+        });
+      } catch (error) {
+        const code = error instanceof Error ? error.message : "UNKNOWN";
+        console.error("OLYMPIA stale LIVE candidate rebuild failed", code);
+        return fail("Kandidaten kunde inte byggas om säkert. LIVE är oförändrat.", 502);
+      }
+    }
+    if (data.action === "pull_request_list") {
+      try {
+        const listStartedAt = performance.now();
+        const [token, botLogin] = await Promise.all([githubToken("pull_request_list"), appBotLogin()]);
+        const credentialSetupElapsedMs = Math.round(performance.now() - listStartedAt);
+        const repoPath = "/repos/" + OWNER + "/" + REPO;
+        const open: any[] = [];
+        for (let page = 1; page <= 100; page++) {
+          const batch = await ghReadWithRetry(token, repoPath + "/pulls?state=open&per_page=100&page=" + page + "&sort=updated&direction=desc");
+          if (!Array.isArray(batch)) throw new Error("GITHUB_PR_LIST_INVALID_RESPONSE");
+          open.push(...batch);
+          if (batch.length < 100) break;
+          if (page === 100) throw new Error("GITHUB_PR_LIST_INCOMPLETE");
+        }
+        const openPrElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs;
+        const candidateIssues: any[] = [];
+        for (let page = 1; page <= 100; page++) {
+          const batch = await ghReadWithRetry(token, repoPath + "/issues?state=open&per_page=100&page=" + page + "&creator=" + encodeURIComponent(botLogin));
+          if (!Array.isArray(batch)) throw new Error("GITHUB_CANDIDATE_ISSUES_INVALID");
+          candidateIssues.push(...batch.filter((issue: any) => !issue.pull_request));
+          if (batch.length < 100) break;
+          if (page === 100) throw new Error("GITHUB_CANDIDATE_ISSUES_INCOMPLETE");
+        }
+        const issueListElapsedMs = Math.round(performance.now() - listStartedAt) - credentialSetupElapsedMs - openPrElapsedMs;
+        const candidateIssueByNumber = new Map<number, any>();
+        const activeCandidatePrs = new Set<number>();
+        for (const issue of candidateIssues) {
+          candidateIssueByNumber.set(Number(issue.number), issue);
+          const body = String(issue.body || "");
+          if (!body.includes("- Beslut: PANDORAS ASK")) continue;
+          const match = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
+          if (match) activeCandidatePrs.add(Number(match[1]));
+        }
+        const publishedCandidatePrs = new Map<number, string>();
+        const publicationChecks: Array<{ number: number; mergeSha: string }> = [];
+        for (const issue of candidateIssues) {
+          const body = String(issue.body || "");
+          if (issue.user?.login !== botLogin || !body.includes("- Beslut: SLUTGODKÄNNANDE LIVE")) continue;
+          const prMatch = body.match(/^- Ärende-ID: PR-([1-9][0-9]*)$/m);
+          const testedMatch = body.match(/^- Testad DEV-commit \(full SHA\): ([0-9a-f]{40})$/mi);
+          const candidateMatch = body.match(/^- Kandidatärende: #([1-9][0-9]*)$/m);
+          const mergeMatch = body.match(/^- Merge SHA: ([0-9a-f]{40})$/mi);
+          const candidateIssue = candidateIssueByNumber.get(Number(candidateMatch?.[1] || 0));
+          const candidateBody = String(candidateIssue?.body || "");
+          if (!prMatch || !testedMatch || !candidateMatch || !mergeMatch ||
+              !candidateBody.includes("- Beslut: PANDORAS ASK") ||
+              !candidateBody.includes("- Ärende-ID: PR-" + prMatch[1]) ||
+              !candidateBody.includes("- Testad DEV-commit (full SHA): " + testedMatch[1])) continue;
+          publicationChecks.push({ number: Number(prMatch[1]), mergeSha: mergeMatch[1] });
+        }
+        if (publicationChecks.length) {
+          const publicationToken = await githubToken("auto_candidate_diagnostics");
+          for (const item of publicationChecks) {
+            const publication = await liveMergePublicationStatus(publicationToken, item.mergeSha);
+            if (publication.published) publishedCandidatePrs.set(item.number, item.mergeSha);
           }
         }
         const byNumber = new Map<number, any>();
