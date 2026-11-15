@@ -3,8 +3,9 @@ import {describe,it,expect} from 'vitest';
 const html=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 describe('OLYMPIA LIVE PR visibility',()=>{
  it('lists DEV and LIVE PRs',()=>{
-  expect(html).toContain("['development','main'].includes(p.base?.ref)");
-  expect(html).toContain("p.base?.ref==='main'?'LIVE':'DEV'");
+  expect(html).toContain("function activePrRows(pullRequests,candidateParents=[],hiddenNumbers=[])");
+  expect(html).toContain("baseRef=pr.base?.ref||pr.baseRef");
+  expect(html).toContain("pr.base?.ref||pr.baseRef");
  });
  it('keeps LIVE PR cards read-only, before any DEV approval markup',()=>{
   const live=html.indexOf("if(pr.base?.ref==='main')return");
