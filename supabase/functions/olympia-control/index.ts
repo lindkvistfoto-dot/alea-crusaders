@@ -1429,7 +1429,6 @@ async function handleRequest(req: Request): Promise<Response> {
         console.info("OLYMPIA candidate parents completed", JSON.stringify({
           requestId,
           elapsedMs: Math.round(performance.now() - candidateStartedAt),
-          issueMatches: candidateIssues.length,
           parentCount: parents.length,
         }));
         return json({ ok: true, pullRequests: parents });
