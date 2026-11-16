@@ -1,0 +1,134 @@
+name: Zeus-approved LIVE migration #904
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/zeus-approved-live-migration-904.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.head_ref == 'work/zeus-approved-live-migration-904-20261116' && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 64dcfe5e64c54b98cabf84cc6103ac520ea0f284
+          fetch-depth: 0
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+
+      - name: Verify exact candidate and LIVE endpoint
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "64dcfe5e64c54b98cabf84cc6103ac520ea0f284"
+          test -n "$LIVE_DATABASE_URL"
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import unquote, urlparse
+          u = urlparse(os.environ["LIVE_DATABASE_URL"])
+          user = unquote(u.username or "")
+          direct = u.hostname == "db.wbmosmkirsitkonejzpg.supabase.co"
+          pooler = bool(u.hostname and u.hostname.endswith(".pooler.supabase.com") and user == "postgres.wbmosmkirsitkonejzpg")
+          if u.scheme not in {"postgres", "postgresql"} or not (direct or pooler):
+              print("::error::Refusing: target is not the explicitly approved LIVE database.")
+              sys.exit(1)
+          print("Candidate SHA verified: 64dcfe5e64c54b98cabf84cc6103ac520ea0f284")
+          print("LIVE project endpoint verified.")
+          PY
+
+      - name: Verify manifest and exact pending set
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("supabase/legacy-migrations/live-history-recovery-manifest.json")
+          m = json.loads(p.read_text())
+          expected = ["20261112170000_combat_weapon_switch_atomic.sql","20261116124230_combat_instance_game_session_link.sql","20261116130510_arcane_system_assets_privileges.sql","20261116131457_shared_product_schema_contract.sql","20261116142033_revoke_anon_table_write_privileges.sql","20261116143000_hermes_alea_shared_contract.sql","20261116143337_public_api_grant_baseline.sql","20261116150313_hermes_core_target_grants.sql"]
+          assert m["live_project_id"] == "wbmosmkirsitkonejzpg"
+          assert m["ledger_entry_count"] == 178
+          assert m["ledger_snapshot_latest"] == "20261114174209"
+          assert m["pending_candidate_migrations"] == expected
+          historical = {h["active_marker"].split("/")[-1] for h in m["historical_migrations"]}
+          active = sorted(x.name for x in Path("supabase/migrations").glob("*.sql") if x.name not in historical)
+          assert active == sorted(expected), (active, expected)
+          print("Manifest: 178 recorded versions; latest 20261114174209; exactly 8 approved pending migrations.")
+          print("\\n".join(expected))
+          PY
+
+      - name: Preflight read-only and enforce exact plan
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase --version
+          supabase db push --dry-run --include-all --db-url "$LIVE_DATABASE_URL" 2>&1 | tee "$RUNNER_TEMP/preflight.txt"
+          python3 - "$RUNNER_TEMP/preflight.txt" <<'PY'
+          import re, sys
+          from pathlib import Path
+          output = Path(sys.argv[1]).read_text()
+          found = sorted(set(re.findall(r"\\b(202611\\d{10}_[A-Za-z0-9_-]+\\.sql)\\b", output)))
+          expected = ["20261112170000_combat_weapon_switch_atomic.sql","20261116124230_combat_instance_game_session_link.sql","20261116130510_arcane_system_assets_privileges.sql","20261116131457_shared_product_schema_contract.sql","20261116142033_revoke_anon_table_write_privileges.sql","20261116143000_hermes_alea_shared_contract.sql","20261116143337_public_api_grant_baseline.sql","20261116150313_hermes_core_target_grants.sql"]
+          if found != sorted(expected):
+              print("::error::Refusing actual migration: dry-run set differs from Zeus-approved set.")
+              print("Observed:", found)
+              print("Expected:", sorted(expected))
+              sys.exit(1)
+          print("Preflight exact-set check passed; applying only the approved pending set.")
+          PY
+
+      - name: Apply approved migrations
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase db push --include-all --db-url "$LIVE_DATABASE_URL" 2>&1 | tee "$RUNNER_TEMP/apply.txt"
+
+      - name: Verify no migration remains pending
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase migration list --db-url "$LIVE_DATABASE_URL" 2>&1 | tee "$RUNNER_TEMP/migration-list.txt"
+          supabase db push --dry-run --include-all --db-url "$LIVE_DATABASE_URL" 2>&1 | tee "$RUNNER_TEMP/postflight.txt"
+          python3 - "$RUNNER_TEMP/postflight.txt" <<'PY'
+          import re, sys
+          from pathlib import Path
+          output = Path(sys.argv[1]).read_text()
+          found = sorted(set(re.findall(r"\\b(202611\\d{10}_[A-Za-z0-9_-]+\\.sql)\\b", output)))
+          if found:
+              print("::error::Post-migration dry-run reports pending migration(s):", found)
+              sys.exit(1)
+          print("Post-migration dry-run reports no pending migrations.")
+          PY
+          {
+            echo '## Zeus-approved LIVE migration #904'
+            echo
+            echo 'Target: wbmosmkirsitkonejzpg'
+            echo 'Candidate: 64dcfe5e64c54b98cabf84cc6103ac520ea0f284'
+            echo 'Applied set: exact dry-run verified eight migrations'
+            echo
+            echo '### Migration list'
+            echo '```text'
+            cat "$RUNNER_TEMP/migration-list.txt"
+            echo '```'
+            echo
+            echo '### Postflight dry-run'
+            echo '```text'
+            cat "$RUNNER_TEMP/postflight.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
