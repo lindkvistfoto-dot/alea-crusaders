@@ -22,7 +22,8 @@
     "system_assets": "config/hermes-system-assets.json",
     "honor_image_resolver": "features/honors/honors-image-resolver.js",
     "image_profiles": "features/hermes-core/contract.json",
-    "profile_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md"
+    "profile_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md",
+    "asset_cleanup": "features/hermes-core/ASSET_CLEANUP.md"
   },
   "targets": {
     "system": {
