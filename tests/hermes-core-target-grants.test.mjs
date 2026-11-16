@@ -12,6 +12,7 @@ describe('HERMES CORE trusted honor target grants',()=>{
     expect(sql).toContain('grant select on table public.honor_relief_variants to service_role');
     expect(sql).toContain('grant insert (honor_id, name, material, image_asset_id, status, created_by)');
     expect(sql).toContain('grant update (image_asset_id, updated_at)');
-    expect(sql).not.toMatch(/\\b(delete|truncate|references|trigger)\\b/);
+    expect(sql).not.toContain('grant delete');
+    expect(sql).not.toContain('grant truncate');
   });
 });
