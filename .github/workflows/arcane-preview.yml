@@ -22,6 +22,8 @@ jobs:
       - name: Unit tests
         run: npm test
       - name: Build isolated PR snapshot
+        env:
+          ALEA_BUILD_ENV: ${{ github.event.pull_request.base.ref == 'development' && 'development' || 'live' }}
         run: npm run build
       - name: Upload preview build
         uses: actions/upload-artifact@v4

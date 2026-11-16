@@ -253,12 +253,12 @@
     <button class="admin-nav-card compact" onclick="openAdminSection('campaigns')"><span class="admin-nav-icon">◆</span><span class="admin-nav-copy"><b>Kampanjer</b><small>Aktuell kampanj och deltagare</small></span><span id="adminCountCampaigns" class="admin-nav-count">0</span></button>
     <button class="admin-nav-card compact" onclick="openAdminSection('users')"><span class="admin-nav-icon">♟</span><span class="admin-nav-copy"><b>Användare</b><small>Konton och adminbehörighet</small></span><span id="adminCountUsers" class="admin-nav-count">0</span></button>
     <button class="admin-nav-card compact" onclick="openAdminSection('data')"><span class="admin-nav-icon">⇅</span><span class="admin-nav-copy"><b>Datahantering</b><small>Import och säkerhetskopia</small></span></button>
-    <button class="admin-nav-card compact" onclick="openAdminSection('olympia')"><span class="admin-nav-icon">⚡</span><span class="admin-nav-copy"><b>OLYMPIA 2.0</b><small>Utveckling, provning och releasekontroll</small></span></button>
+    <button class="admin-nav-card compact" data-dev-only-tool="olympia" onclick="openAdminSection('olympia')"><span class="admin-nav-icon">⚡</span><span class="admin-nav-copy"><b>OLYMPIA 2.0</b><small>Utveckling, provning och releasekontroll</small></span></button>
   </div>
   <div id="adminOverviewVersion" class="admin-overview-version">Version v0.35.239</div>
 </section>
 
-<section id="adminOlympia" class="adminbox admin-detail admin-olympia-fullscreen hidden" data-admin-section="olympia">
+<section id="adminOlympia" class="adminbox admin-detail admin-olympia-fullscreen hidden" data-admin-section="olympia" data-dev-only-tool="olympia">
   <div class="adminsectionhead"><div><h2>OLYMPIA 2.0</h2><p class="muted">Utveckling, granskning och publicering för ALEA.</p></div></div>
   <iframe class="admin-olympia-frame" title="OLYMPIA 2.0 · PR-flöde" src="./olympia-v2/?v=20261114-ci-status-module-v2-fresh-approval" loading="lazy" referrerpolicy="same-origin"></iframe>
 </section>

@@ -129,6 +129,7 @@ function openHonorInspector(kind,data,trigger){
   parchment.append(story);frame.append(cushion,parchment);
   const close=makeElement('button','arcane-medal-display-close','×');close.type='button';close.setAttribute('aria-label','Stäng visning');close.addEventListener('click',()=>d.close());
   d.append(close,frame);d.addEventListener('click',e=>{if(e.target===d)d.close()});
+  d.addEventListener('cancel',e=>{e.preventDefault();d.close()});
   d.addEventListener('close',()=>{honorRequest++;honorFocus?.focus?.();honorFocus=null});
   document.body.append(d);honorDialog=d;
  }
@@ -161,6 +162,7 @@ function activateHonorSlot(slot,kind,data){
 }
 
 let badgeSequence=0;
+const earnedGoldStars=value=>{const level=Number(value);return Number.isInteger(level)?clamp(level,0,3):0};
 async function renderBadges(){
  const wall=byId('trophyRoomBadgeWall'),picker=byId('trophyRoomCharacter');if(!wall||!picker)return;
  const seq=++badgeSequence;wall.replaceChildren();wall.hidden=true;
@@ -169,16 +171,16 @@ async function renderBadges(){
  if(!dbId||typeof root.dbJson!=='function')return;
  try{
   const [grants,definitions,variants,assets]=await Promise.all([
-   root.dbJson('honor_grants?select=honor_id,character_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
-   root.dbJson('honor_definitions?select=id,name,description,category,status,published_variant_id,preview_variant_id,image_asset_id,badge_frame_assets,tier_criteria&category=eq.badge'),
-   root.dbJson('honor_relief_variants?select=id,honor_id,status,allow_overhang,image_asset_id'),
+   root.dbJson('arcane_trophy_public_grants?select=honor_id,character_id,earned_gold_stars&character_id=eq.'+encodeURIComponent(dbId)),
+   root.dbJson('arcane_trophy_public_definitions?select=id,name,description,category,status,visibility,published_variant_id,image_asset_id,badge_frame_assets&category=eq.badge'),
+   root.dbJson('arcane_trophy_public_variants?select=id,honor_id,status,allow_overhang,image_asset_id'),
    root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*')
   ]);
   if(seq!==badgeSequence)return;
-  const active=new Set((grants||[]).map(g=>String(g.honor_id)));
+  const grantByHonor=new Map((grants||[]).map(g=>[String(g.honor_id),g]));
   const assetMap=new Map((assets||[]).map(a=>[a.asset_key,a]));
   const variantsById=new Map((variants||[]).map(v=>[String(v.id),v]));
-  const awarded=(definitions||[]).filter(d=>active.has(String(d.id))&&d.category==='badge').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
+  const awarded=(definitions||[]).filter(d=>grantByHonor.has(String(d.id))&&d.category==='badge'&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
   // Reserve nine positions; render each awarded badge only once.
   for(let index=0;index<9;index++){
    // Fill each row right-to-left, while preserving the nine fixed perspective slots.
@@ -187,7 +189,7 @@ async function renderBadges(){
    const slot=document.createElement('div');slot.className='trophy-room-badge-slot';
    if(!d){slot.classList.add('trophy-room-badge-empty');slot.setAttribute('aria-hidden','true');wall.append(slot);continue}
    slot.title=d.name;
-   const selected=d.published_variant_id||d.preview_variant_id||(variants||[]).find(v=>String(v.honor_id)===String(d.id)&&v.image_asset_id)?.id;
+   const selected=d.published_variant_id;
    const variant=variantsById.get(String(selected));
    const frameKey=d.badge_frame_assets?.[selected];
    const relief=assetMap.get(variant?.image_asset_id||d.image_asset_id);
@@ -199,7 +201,7 @@ async function renderBadges(){
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
    if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
    slot.append(art);
-   const stars=Math.max(0,Math.min(3,Number(d.tier_criteria?.gold_stars||0)));
+   const stars=earnedGoldStars(grantByHonor.get(String(d.id))?.earned_gold_stars);
    if(stars){const marker=document.createElement('span');marker.className='trophy-room-badge-stars';marker.textContent='★'.repeat(stars);marker.setAttribute('aria-label',stars+' guldstjärnor');slot.append(marker)}
    activateHonorSlot(slot,'badge',{name:d.name,description:d.description,stars,art});
    wall.append(slot);
@@ -242,15 +244,15 @@ async function renderAwards(){
  if(!dbId||typeof root.dbJson!=='function')return;
  try{
   const [grants,definitions,assets,managedAssets]=await Promise.all([
-   root.dbJson('honor_grants?select=honor_id,revoked_at&character_id=eq.'+encodeURIComponent(dbId)+'&revoked_at=is.null'),
-   root.dbJson('honor_definitions?select=id,name,description,category,status,image_asset_id,badge_frame_assets&category=eq.award'),
+   root.dbJson('arcane_trophy_public_grants?select=honor_id,character_id,earned_gold_stars&character_id=eq.'+encodeURIComponent(dbId)),
+   root.dbJson('arcane_trophy_public_definitions?select=id,name,description,category,status,visibility,image_asset_id,badge_frame_assets&category=eq.award'),
    root.dbJson('arcane_system_assets?select=asset_key,asset_path&asset_key=like.arcane-*'),
    root.aleaHermesAleaImages?.loadAssets?.()||[]
   ]);
   if(seq!==awardSequence)return;
   const counts=new Map();for(const grant of grants||[])counts.set(String(grant.honor_id),(counts.get(String(grant.honor_id))||0)+1);
   const assetMap=new Map([...(assets||[]),...(managedAssets||[])].map(a=>[a.asset_key,a]));
-  const awarded=(definitions||[]).filter(d=>counts.has(String(d.id))&&d.category==='award').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
+  const awarded=(definitions||[]).filter(d=>counts.has(String(d.id))&&d.category==='award'&&d.status==='active'&&d.visibility==='public').sort((a,b)=>String(a.name).localeCompare(String(b.name),'sv')).slice(0,9);
   for(let index=0;index<9;index++){
    const row=Math.floor(index/3),col=index%3;
    // Mirror the right wall's right-to-left row filling.
@@ -445,7 +447,7 @@ async function renderMedals(){
 }
 function syncCharacters(){const target=byId('trophyRoomCharacter');if(!target)return;const previous=target.value;let list=[];try{if(typeof root.shopEligibleBuyers==='function')list=root.shopEligibleBuyers();else if(typeof shopEligibleBuyers==='function')list=shopEligibleBuyers()}catch(e){console.warn('Trophy room character list unavailable',e)}target.replaceChildren(new Option('Välj rollperson',''));if(Array.isArray(list)&&list.length){for(const c of list){if(c?.id!=null)target.add(new Option(c.identity?.namn||c.name||'Namnlös',String(c.id)))}}else{const source=byId('academyCharacter');if(source)for(const option of source.options){if(option.value&&!option.disabled)target.add(new Option(option.textContent,option.value))}}const options=[...target.options];if(previous&&options.some(o=>o.value===previous)){target.value=previous;return}const astrid=options.find(o=>o.value&&/\bastrid\b/i.test(o.textContent||''));if(astrid)target.value=astrid.value}
 function ensureScene(){const v=viewport(),background=image(),wall=byId('trophyRoomMedalWall');if(!v||!background||!wall)return;let scene=byId('trophyRoomScene');if(!scene){scene=document.createElement('div');scene.id='trophyRoomScene';scene.className='trophy-room-scene';background.before(scene)}if(background.parentElement!==scene)scene.append(background);if(wall.parentElement!==v)v.append(wall);const badgeWall=byId('trophyRoomBadgeWall');if(badgeWall&&badgeWall.parentElement!==v)v.append(badgeWall)}
-function open(){const p=page();if(!p)return;ensureScene();void loadRoomImage();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
+function open(){const p=page();if(!p)return;ensureScene();void loadTrophyRoomImage();const admin=root.activeUser?.();const calibrate=byId('trophyBadgeCalibrate');if(calibrate)calibrate.hidden=!(admin?.admin||admin?.is_admin);document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s!==p));root.aleaJournalClose?.(false);document.body.classList.remove('shop-open','inn-open','academy-open');draw();try{syncCharacters();renderCharacter()}catch(error){console.error('Trophy character loading failed',error)}void renderMedals();void renderBadges();void renderAwards()}function close(){cancelCamera();document.querySelectorAll('main > section[id]').forEach(s=>s.classList.toggle('hidden',s.id!=='landing'))}ensureScene();const v=viewport();if(v){
  v.setAttribute('role','group');v.setAttribute('aria-label','Troférum. Tryck på vänster, mitten eller höger vägg för att åka dit. Välj en medalj för att läsa krönikan. Centrera återgår till helbild.');
  v.addEventListener('click',e=>{if(e.target.closest('button,select,.trophy-room-honor-preview'))return;if(cameraMotion||scale>=1.5)return;const rect=v.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width;focusWall(px<.36?'left':px>.64?'right':'center')});
  v.addEventListener('keydown',e=>{if(e.key==='Escape'&&scale>1.5){e.preventDefault();reset()}else if(e.key==='Escape')close();else if(e.key==='Enter'&&scale<1.5)focusWall();else if(e.key==='ArrowLeft'&&scale<1.5){e.preventDefault();focusWall('left')}else if(e.key==='ArrowRight'&&scale<1.5){e.preventDefault();focusWall('right')}else if(e.key==='0')reset()});
@@ -459,9 +461,9 @@ function roomImageFailure(error){
  roomImageStatus('Rumsbilden kunde inte laddas.');
  if(error)console.warn('Trophy room HERMES image unavailable',error);
 }
-async function loadRoomImage(){
+async function loadTrophyRoomImage(){
  const img=image(),v=viewport();
- if(!img||!v||roomImagePending||v.dataset.ready==='true')return;
+ if(!img||!v||!root.activeUser?.()||roomImagePending||v.dataset.ready==='true')return;
  roomImagePending=true;v.dataset.ready='loading';
  const loading=v.querySelector('.trophy-room-loading');if(loading)loading.textContent='Rumsbilden laddas...';
  try{
@@ -482,8 +484,8 @@ async function loadRoomImage(){
   roomImageStatus('V2.2 · 1280 × 720 · 16:9');
  }catch(error){roomImageFailure(error)}
 }
-void loadRoomImage();
-const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();void renderBadges();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
+void loadTrophyRoomImage();
+const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('change',()=>{renderCharacter();void renderMedals();void renderBadges();void renderAwards();root.dispatchEvent(new CustomEvent('alea:trophy-character-change',{detail:{characterId:picker.value}}))});function showHonorPreview(detail){
  const actor=root.activeUser?.();
  if(!(actor?.admin||actor?.gm||actor?.isGM||actor?.role==='gm'))return;
  open();
@@ -507,6 +509,6 @@ const picker=byId('trophyRoomCharacter');if(picker)picker.addEventListener('chan
  const closeButton=document.createElement('button');closeButton.type='button';closeButton.className='trophy-room-honor-preview-close';closeButton.textContent='Tillbaka till ARCANE HONORS';
  closeButton.addEventListener('click',()=>{layer.hidden=true;root.openArcaneHonorsAdmin?.()});layer.append(closeButton);layer.hidden=false;
 }
-root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges()});
+root.addEventListener('hermes-alea:image-change',()=>{void renderMedals();void renderBadges();void renderAwards()});
 root.addEventListener('arcane-honors:preview',event=>showHonorPreview(event.detail||{}));
 root.openTrophyRoom=open;root.closeTrophyRoom=close;root.trophyRoomZoom=zoom;root.trophyRoomReset=reset;root.trophyBadgeCalibrate=enableBadgeCalibration;root.trophyBadgeExport=exportBadgeCorners;root.trophyRoomFocusWall=focusWall;root.arcaneTrophyRoom=Object.freeze({key:KEY,open,close,zoom,reset});/* Deep links are handled after authentication and route restoration in enterApp. */})(window);
