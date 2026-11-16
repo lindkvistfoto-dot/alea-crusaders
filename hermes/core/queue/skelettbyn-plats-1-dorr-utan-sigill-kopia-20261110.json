@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 1 - dörr utan sigill - kopia.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "049116bc-b8e5-4261-8b46-827e6bccbbe9"
+  },
+  "drive_file_id": "1rl3bKR2XtcT-pzCN4CTurZr5MeVPhIOV",
+  "archive_file_id": "1axtUSVTnnPRkHsyD5Oze4u8VybPU6dtt",
+  "source_sha256": "82ea1da3e7ac85fdd9445c7d94cef0d90f752042cedcae999f17cfd55a40ac18"
+}

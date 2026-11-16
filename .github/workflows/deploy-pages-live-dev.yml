@@ -3,7 +3,6 @@ name: Deploy Alea live and development to GitHub Pages
 on:
   push:
     branches:
-      - development
       - main
     # DEV CORE queue pushes must not redeploy the combined main + development Pages artifact.
     paths-ignore:
@@ -99,6 +98,7 @@ jobs:
           mkdir -p _site/dev
           rsync -a --delete --exclude='.git' live/ _site/
           rsync -a --delete --exclude='.git' development/ _site/dev/
+          node live/scripts/isolate-live-pages.mjs _site
           touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/dev/index.html

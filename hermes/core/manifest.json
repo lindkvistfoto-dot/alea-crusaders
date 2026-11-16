@@ -23,7 +23,8 @@
     "honor_image_resolver": "features/honors/honors-image-resolver.js",
     "image_profiles": "features/hermes-core/contract.json",
     "profile_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md",
-    "asset_cleanup": "features/hermes-core/ASSET_CLEANUP.md"
+    "asset_cleanup": "hermes/core/cleanup/README.md",
+    "asset_cleanup_legacy_reference": "features/hermes-core/ASSET_CLEANUP.md"
   },
   "targets": {
     "system": {
@@ -90,6 +91,7 @@
     "queue_path": "hermes/core/queue/[a-z0-9][a-z0-9-]{0,99}.json (LIVE) or hermes/core/queue/dev/[request].json (DEV)",
     "queue_trigger": "A matching push starts the environment-specific existing workflow; DEV publishes only from development and LIVE only from main.",
     "workflow": ".github/workflows/hermes-core-publish.yml",
+    "cleanup_workflow": ".github/workflows/hermes-core-publish.yml",
     "workflow_owns": [
       "Drive folder and original SHA-256 verification",
       "Profile-specific image validation, conversion and WebP output",
@@ -115,7 +117,8 @@
     "Never accept queue-provided bucket, Storage path, table, column, SQL, or processing code.",
     "Never guess a Drive folder, profile, target UUID, asset key, or alternate upload route.",
     "Inspect the existing queue, commit, Drive files, run, job steps, and logs before retrying an ambiguous or failed request.",
-    "Preserve both Drive originals, previous Storage objects, application references, and historical jobs.",
+    "The publication job preserves Drive originals, previous Storage objects, application references, and historical jobs.",
+    "Exact-object cleanup is separate and allowed only through the approved protocol in hermes/core/cleanup/README.md.",
     "Do not create credentials, permissions, migrations, workflows, or another publication path for routine submissions."
   ],
   "secrets_policy": "Do not place tokens, private keys, service-account credentials, or image bytes in this manifest or GitHub queue requests."

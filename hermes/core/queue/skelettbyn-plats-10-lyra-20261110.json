@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn – Plats 10 - Lyra.png",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "d2c2cec8-7e04-4dc0-873e-405218ace305"
+  },
+  "drive_file_id": "1iuVb49C7baY_Ni2Vbvz8PX-axytw6Lco",
+  "archive_file_id": "1M9KyxwH9iTRj6McWmo3msxAneMNoxLKy",
+  "source_sha256": "d5ac2b005509265ba803b269ffd016effa5c93eebc8a1f629caddcb04feebf13"
+}

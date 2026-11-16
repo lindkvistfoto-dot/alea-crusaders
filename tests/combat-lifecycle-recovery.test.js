@@ -19,10 +19,14 @@ function archiveHarness(resultRows){
 }
 
 describe('Combat reset and close recovery',()=>{
- test('new combat writes only columns present in combat_instances',()=>{
+ test('new combat links to the active game session supported by the shared migration',()=>{
   const creator=runtime.slice(runtime.indexOf('async function combatCreateRuntimeFromScene('),runtime.indexOf('\nasync function combatStartScene(',runtime.indexOf('async function combatCreateRuntimeFromScene(')));
-  expect(creator).not.toContain('session_id');
-  expect(creator).not.toContain('aleaGetActiveGameSessionId');
+  const migration=read('supabase/migrations/20261116124230_combat_instance_game_session_link.sql');
+  expect(creator).toContain('session_id:sessionId');
+  expect(creator).toContain('window.aleaGetActiveGameSessionId?.()');
+  expect(migration).toContain('add column if not exists session_id uuid');
+  expect(migration).toContain('foreign key (session_id, campaign_id)');
+  expect(migration).toContain('references public.game_sessions (id, campaign_id)');
   expect(creator).toContain('event_id:scene.source_event_id||null');
   expect(creator).toContain('campaign_id:centralCampaignId');
  });

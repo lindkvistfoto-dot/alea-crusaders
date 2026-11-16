@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Skelettbyn — Plats 01 Kyrkan — huvudbild",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-location-asset",
+    "id": "e006d0dd-8a63-4fb6-b0f0-4526dc3426c4"
+  },
+  "drive_file_id": "1fmSjMAQ8HBfMRvQB-xfO5HL3Atuid-pi",
+  "archive_file_id": "1UQ9XzR-RUHPZEs87YBsagsOvQi4vpO9z",
+  "source_sha256": "31c7155a9c7cda3b1446a9f2a29b9848fb495d45ff28c9e563843fd6d5e742e1"
+}

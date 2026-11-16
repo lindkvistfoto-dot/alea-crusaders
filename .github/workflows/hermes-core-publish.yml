@@ -5,14 +5,135 @@ on:
     branches: [main]
     paths:
       - 'hermes/core/queue/*.json'
+      - 'hermes/core/cleanup/live/**'
+  workflow_dispatch:
+    inputs:
+      verify_live_credential:
+        description: 'Run only the fixed, read-only LIVE credential check; no publication is started.'
+        required: true
+        type: boolean
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
+  verify-live-credential:
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_live_credential
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Validate existing LIVE key against the fixed LIVE project (read-only)
+        env:
+          KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          key="${KEY:-}"
+          [[ -n "$key" ]] || { echo "::error::Existing LIVE Supabase secret is unavailable."; exit 1; }
+          echo "::add-mask::$key"
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" \
+            --header "Authorization: Bearer $key" \
+            --header "Accept: application/json" \
+            "https://wbmosmkirsitkonejzpg.supabase.co/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
+          [[ "$status" == "200" ]] || { echo "::error::Existing secret failed fixed LIVE read-only validation (HTTP $status)."; exit 1; }
+          unset key
+          echo "Existing LIVE key passed a read-only project-bound registry check."
+
+  detect-changed-requests:
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.route.outputs.publish }}
+      asset_cleanup: ${{ steps.route.outputs.asset_cleanup }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            scripts/hermes_core_workflow_paths_live.mjs
+      - id: route
+        env:
+          HERMES_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${HERMES_BEFORE:-}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid push predecessor."; exit 1; }
+          git fetch --no-tags --depth=1 origin "$HERMES_BEFORE"
+          node scripts/hermes_core_workflow_paths_live.mjs "$HERMES_BEFORE" "$GITHUB_SHA" "$GITHUB_OUTPUT"
+
+  asset-cleanup-live:
+    needs: detect-changed-requests
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main' && needs.detect-changed-requests.outputs.asset_cleanup == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            config/hermes-system-assets.json
+            features/hermes-core/asset-cleanup-live.js
+            scripts/hermes_asset_cleanup_live.mjs
+            hermes/core/cleanup/live
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate the existing LIVE Supabase secret without revealing it
+        env:
+          HERMES_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          key="${HERMES_SUPABASE_SERVICE_ROLE_KEY:-}"
+          [[ -n "$key" ]] || { echo "::error::Existing LIVE Supabase secret is unavailable."; exit 1; }
+          echo "::add-mask::$key"
+          url="https://wbmosmkirsitkonejzpg.supabase.co"
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" --header "Authorization: Bearer $key" --header "Accept: application/json" \
+            "$url/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
+          [[ "$status" == "200" ]] || { echo "::error::Read-only LIVE secret validation failed (HTTP $status)."; exit 1; }
+          printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$key" >> "$GITHUB_ENV"
+          unset key
+          echo "Validated the fixed LIVE project; service key remains masked."
+      - name: Process one exact LIVE cleanup request
+        env:
+          HERMES_TARGET_ENV: LIVE
+          SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+          HERMES_CLEANUP_REPORT_PATH: ${{ runner.temp }}/hermes-asset-cleanup-report.json
+          HERMES_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="${HERMES_BEFORE:-}"
+          [[ "$before" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid push predecessor."; exit 1; }
+          mapfile -t requests < <(git diff --name-only --diff-filter=AM "$before" "$GITHUB_SHA" -- hermes/core/cleanup/live/)
+          [[ "${#requests[@]}" == "1" ]] || { echo "::error::Exactly one LIVE cleanup request file is required."; exit 1; }
+          request="${requests[0]}"
+          [[ "$request" =~ ^hermes/core/cleanup/live/[a-z0-9][a-z0-9-]{0,99}\.json$ ]] || { echo "::error::Invalid LIVE cleanup request path."; exit 1; }
+          deno run --no-config --no-lock --node-modules-dir=none \
+            --allow-env=GITHUB_REPOSITORY,GITHUB_REF,GITHUB_ACTOR,SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,HERMES_TARGET_ENV,HERMES_CLEANUP_REPORT_PATH \
+            --allow-net --allow-read="$request,config/hermes-system-assets.json" --allow-write="$RUNNER_TEMP" \
+            scripts/hermes_asset_cleanup_live.mjs "$request"
+      - name: Save cleanup report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-asset-cleanup-live-${{ github.run_id }}
+          path: ${{ runner.temp }}/hermes-asset-cleanup-report.json
+          if-no-files-found: ignore
   publish:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main'
+    needs: detect-changed-requests
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main' && needs.detect-changed-requests.outputs.publish == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,6 +148,8 @@ jobs:
             hermes/core/queue
             scripts/hermes_system_assets.py
             scripts/hermes_core_prepare.py
+            scripts/hermes_core_publish.ts
+            scripts/hermes_publication_environment.js
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -67,6 +190,6 @@ jobs:
             mkdir -p "$output"
             python scripts/hermes_core_prepare.py "$request" --output "$output"
             deno run --no-config --no-lock --node-modules-dir=none \
-              --allow-env --allow-net --allow-read="$output" \
+              --allow-env --allow-net --allow-read="$output" --allow-write="$output" \
               scripts/hermes_core_publish.ts "$output"
           done
