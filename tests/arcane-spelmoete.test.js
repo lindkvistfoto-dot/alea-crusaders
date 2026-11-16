@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {describe,expect,it} from 'vitest';
 
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
-const migration=read('../supabase/migrations/20261112222237_arcane_spelmoete_day_time.sql');
+const migration=read('../supabase/legacy-migrations/live-candidate-original-migrations/20261112222237_arcane_spelmoete_day_time.sql');
 const panel=read('../features/chronicle/sessions.js');
 const app=read('../legacy/app.js');
 

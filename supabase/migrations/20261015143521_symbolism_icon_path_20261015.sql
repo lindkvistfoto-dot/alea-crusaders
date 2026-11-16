@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261015143521 (symbolism_icon_path_20261015) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

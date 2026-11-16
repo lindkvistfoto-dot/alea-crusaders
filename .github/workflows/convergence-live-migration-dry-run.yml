@@ -1,0 +1,69 @@
+name: ALEA convergence LIVE migration dry-run
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/convergence-live-migration-dry-run.yml'
+      - 'supabase/migrations/**'
+      - 'supabase/legacy-migrations/live-history-recovery-manifest.json'
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && startsWith(github.head_ref, 'convergence/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+
+      - name: Verify exact LIVE endpoint and candidate SHA
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$(git rev-parse HEAD)" == "$CANDIDATE_SHA" ]]
+          [[ -n "$LIVE_DATABASE_URL" ]] || { echo "::error::ALEA_PRODUCTION_DATABASE_URL is unavailable; no migration was applied."; exit 1; }
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import unquote, urlparse
+          u = urlparse(os.environ['LIVE_DATABASE_URL'])
+          username = unquote(u.username or '')
+          direct = u.hostname == 'db.wbmosmkirsitkonejzpg.supabase.co'
+          pooler = bool(u.hostname and u.hostname.endswith('.pooler.supabase.com') and username == 'postgres.wbmosmkirsitkonejzpg')
+          if u.scheme not in {'postgres', 'postgresql'} or not (direct or pooler):
+              print('::error::Refusing migration dry-run: target is not the approved LIVE database.')
+              sys.exit(1)
+          print(f'Candidate SHA: {os.environ["CANDIDATE_SHA"]}')
+          print('Verified LIVE database endpoint; read-only dry-run next.')
+          PY
+
+      - name: Run read-only include-all migration plan
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          supabase --version
+          supabase db push --dry-run --include-all --db-url "$LIVE_DATABASE_URL" 2>&1 | tee "$RUNNER_TEMP/live-migration-dry-run.txt"
+          {
+            echo '## LIVE migration dry-run (read-only)'
+            echo
+            echo 'Target: wbmosmkirsitkonejzpg'
+            echo "Candidate: ${{ github.event.pull_request.head.sha }}"
+            echo
+            echo '```text'
+            cat "$RUNNER_TEMP/live-migration-dry-run.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

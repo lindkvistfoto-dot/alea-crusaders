@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261019222329 (global_npc_service_role_portrait_publisher) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

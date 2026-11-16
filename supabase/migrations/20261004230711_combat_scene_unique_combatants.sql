@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261004230711 (combat_scene_unique_combatants) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261004105652 (reversible_reveal_entire_map) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

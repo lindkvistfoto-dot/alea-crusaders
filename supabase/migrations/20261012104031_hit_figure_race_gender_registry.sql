@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261012104031 (hit_figure_race_gender_registry) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

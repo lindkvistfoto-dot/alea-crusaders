@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261013234253 (spell_cutout_art_v035190) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

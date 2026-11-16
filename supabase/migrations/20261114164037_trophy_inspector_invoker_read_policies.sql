@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261114164037 (trophy_inspector_invoker_read_policies) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

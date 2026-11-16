@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261024062510 (arcane_race_battle_poses) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

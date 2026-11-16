@@ -3,10 +3,11 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
 describe('Trophy Inspector schema release',()=>{
-  const migration=read('supabase/migrations/20261114033030_trophy_inspector_public_projection_and_earned_stars.sql');
-  const policyMigration=read('supabase/migrations/20261114035052_trophy_inspector_invoker_read_policies.sql');
-  const functionMigration=read('supabase/migrations/20261114041919_trophy_inspector_projection_functions.sql');
-  const privateMigration=read('supabase/migrations/20261114104923_trophy_inspector_private_functions.sql');
+  const archive='supabase/legacy-migrations/live-candidate-original-migrations/';
+  const migration=read(archive+'20261114033030_trophy_inspector_public_projection_and_earned_stars.sql');
+  const policyMigration=read(archive+'20261114035052_trophy_inspector_invoker_read_policies.sql');
+  const functionMigration=read(archive+'20261114041919_trophy_inspector_projection_functions.sql');
+  const privateMigration=read(archive+'20261114104923_trophy_inspector_private_functions.sql');
 
   it('stores achieved stars separately from definition maximums',()=>{
     expect(migration).toContain('earned_gold_stars smallint');

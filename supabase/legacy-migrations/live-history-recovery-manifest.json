@@ -1,0 +1,1623 @@
+{
+ "project": "ALEA CRUSADERS",
+ "purpose": "LIVE applied migration history representation only; no historical SQL is executable",
+ "live_project_id": "wbmosmkirsitkonejzpg",
+ "ledger_snapshot_latest": "20261114174209",
+ "ledger_entry_count": 178,
+ "pending_candidate_migrations": [
+  "20261112170000_combat_weapon_switch_atomic.sql",
+  "20261116124230_combat_instance_game_session_link.sql",
+  "20261116130510_arcane_system_assets_privileges.sql",
+  "20261116131457_shared_product_schema_contract.sql",
+  "20261116142033_revoke_anon_table_write_privileges.sql",
+  "20261116143000_hermes_alea_shared_contract.sql",
+  "20261116143337_public_api_grant_baseline.sql",
+  "20261116150313_hermes_core_target_grants.sql"
+ ],
+ "historical_migrations": [
+  {
+   "version": "20261004103716",
+   "name": "reveal_entire_campaign_map",
+   "active_marker": "supabase/migrations/20261004103716_reveal_entire_campaign_map.sql",
+   "marker_sha256": "2f2f1e9c44e53c7e8a4dbab6623b2d1e6a5e370061898d773f01354fd1ce3917",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_reveal_entire_campaign_map.sql",
+   "source_sha256": "a965adb2941a73ae6f725bf819999f8bc2f90db4410b57c16bc26219b3ae6b12",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004103855",
+   "name": "harden_reveal_campaign_map_security",
+   "active_marker": "supabase/migrations/20261004103855_harden_reveal_campaign_map_security.sql",
+   "marker_sha256": "a6d055cd96f40d23a53a760f804b63011dc0b6fb9c4b52d567a6ca76d1b90951",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_harden_reveal_campaign_map_security.sql",
+   "source_sha256": "bd7266cafcbbe2cba28a08d07eae46e11def20ebaadf51c771ece18fed63337a",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004104957",
+   "name": "location_asset_storage",
+   "active_marker": "supabase/migrations/20261004104957_location_asset_storage.sql",
+   "marker_sha256": "6c6d130d48fa01812a816e282913fc90ab297485f83eca2991472757a17da049",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_location_asset_storage.sql",
+   "source_sha256": "7a4c02d2c8ae4bf6a630d9f604aa43c4688a1dd76592ebd79f1e1e9a03ca5ea0",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004105652",
+   "name": "reversible_reveal_entire_map",
+   "active_marker": "supabase/migrations/20261004105652_reversible_reveal_entire_map.sql",
+   "marker_sha256": "49f82f43406153088e3e988366a12177c2c2f0b13f57aef8a114bb49e3cc776f",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_reversible_reveal_entire_map.sql",
+   "source_sha256": "596ecd9196fafe868de878f4ba36b5c78df15b9d0ee350eb54203eae5593aa57",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004134020",
+   "name": "rule_armor_registry",
+   "active_marker": "supabase/migrations/20261004134020_rule_armor_registry.sql",
+   "marker_sha256": "5ec9745224856a58431249e7defcb24c95d6b6ac52d4d383a92638e4ff59c069",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_rule_armor_registry.sql",
+   "source_sha256": "8f2eae8596edbcdc9d0835d259bc4c72a54249ffcec233a3155d403d568eb300",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004135954",
+   "name": "rule_weapon_mechanics",
+   "active_marker": "supabase/migrations/20261004135954_rule_weapon_mechanics.sql",
+   "marker_sha256": "d4cff30531132b321a81b44b04765d9cc754c0bca1a9f91902fbe2117e20c0ed",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_rule_weapon_mechanics.sql",
+   "source_sha256": "d875aae7787dff2f91279844b975645dea54cb5d3ec76dc47d31e6c922d23163",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004142017",
+   "name": "rule_weapon_materials",
+   "active_marker": "supabase/migrations/20261004142017_rule_weapon_materials.sql",
+   "marker_sha256": "a1515e33f459e1dc9de6a0388b61047ee4dce0ea40f4c90915d48b5d8675cf06",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_rule_weapon_materials.sql",
+   "source_sha256": "62f31b2924674c9a23b44606da88b28521919f5061df745f95e53315ae8e92ae",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004144023",
+   "name": "campaign_day_weather_erf",
+   "active_marker": "supabase/migrations/20261004144023_campaign_day_weather_erf.sql",
+   "marker_sha256": "e03d2b4428e52a043bba25931a576a5202d39feb1ded6069301e1bc3efe20f62",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_campaign_day_weather_erf.sql",
+   "source_sha256": "6ee5f73e03a8dafee7cc96692e2b9f970e683f8e2a3a9b3e1f70b3327d512caf",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004144356",
+   "name": "harden_campaign_day_functions",
+   "active_marker": "supabase/migrations/20261004144356_harden_campaign_day_functions.sql",
+   "marker_sha256": "011f7cb3811a170ef8768a88b6d65b7035446e5cf831872190e766613c39f8fc",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_harden_campaign_day_functions.sql",
+   "source_sha256": "f52a7b7ba90c83d8e6b62ea28c8ea9dbc055017aef2234f6473f4a616d7cb63f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004145854",
+   "name": "skill_roll_erf_rewards",
+   "active_marker": "supabase/migrations/20261004145854_skill_roll_erf_rewards.sql",
+   "marker_sha256": "931e945e52a36fd501464ea40fe840e006eeee36168b38a55b3b1e15b60e8c6a",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_skill_roll_erf_rewards.sql",
+   "source_sha256": "c19c19d3e4b62d733d9d3670ccd261c5a010ffde004c9f53974125d37955a603",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004153907",
+   "name": "rest_hours_psy_and_race_erf_reset",
+   "active_marker": "supabase/migrations/20261004153907_rest_hours_psy_and_race_erf_reset.sql",
+   "marker_sha256": "69cc9bfd03a850520ba35d037bc9c4aabc7e479562ca059a489aad34acbff9d5",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_rest_hours_psy_and_race_erf_reset.sql",
+   "source_sha256": "28e593c0b2e1f67e3ce204ca71a6d7f3ebb4ad9e2a7f7f6277377cdc87bf9294",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004160008",
+   "name": "base_chance_skill_erf",
+   "active_marker": "supabase/migrations/20261004160008_base_chance_skill_erf.sql",
+   "marker_sha256": "e75ceda9ff9e37d54dcec756b5a5d717e516487cb4710fa020eb0dc36ff65f58",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_base_chance_skill_erf.sql",
+   "source_sha256": "e53b55dca8450ff7b08a0edace80238b365c1b15b94e3280f580fcf9151acd7f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004160354",
+   "name": "base_chance_skill_award_guard",
+   "active_marker": "supabase/migrations/20261004160354_base_chance_skill_award_guard.sql",
+   "marker_sha256": "0b10abff7bccb506f27c0ab1c093cce6d22f6182f687c6aa650259453a1d802d",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_base_chance_skill_award_guard.sql",
+   "source_sha256": "2141e92bb23cb86854a91756da89ff153c7f2e7038935dfb8385cd0da618f226",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004210243",
+   "name": "event_combat_campaign_integrity",
+   "active_marker": "supabase/migrations/20261004210243_event_combat_campaign_integrity.sql",
+   "marker_sha256": "8a19d83b54bcf8ee4ce5b6d26bc975d642f9c278c6104c06b72f28bacbe1831b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_event_combat_campaign_integrity.sql",
+   "source_sha256": "8a507349be0ffaf2e3a1c76daa0b5142fd50a331c7606ab8a5d278f0eed28337",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004212344",
+   "name": "event_combat_scenes_v1",
+   "active_marker": "supabase/migrations/20261004212344_event_combat_scenes_v1.sql",
+   "marker_sha256": "c707573de9c198e3f3368dcff6636f32285fe96f4755911b31d1542a7f717ed8",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_event_combat_scenes_v1.sql",
+   "source_sha256": "858394684d9f7b47dff81fabcb4b13a6d8e4e2d1ece7ade7fddad1c08fd0f4bd",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004215011",
+   "name": "event_combat_scene_participants",
+   "active_marker": "supabase/migrations/20261004215011_event_combat_scene_participants.sql",
+   "marker_sha256": "486ece767d85f5119b28d340c71de70c068922da3f1905aeb9c52eee6bd63b67",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261004_event_combat_scene_participants.sql",
+   "source_sha256": "e180b3ceb1dea4d067fcb203afb36fb9b4c23766fcf014a9209ef10e93700449",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004225645",
+   "name": "promote_combat_scenes_to_campaign",
+   "active_marker": "supabase/migrations/20261004225645_promote_combat_scenes_to_campaign.sql",
+   "marker_sha256": "5bfb40973dddccd8ccc5b5f80b6e341b2155aa113b22057e65a6e429c31ef683",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_promote_combat_scenes_to_campaign.sql",
+   "source_sha256": "07914bc87c07a0e4cb33b121204e068b1be90de7a4fc72e09fc10f58d70d0560",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261004230711",
+   "name": "combat_scene_unique_combatants",
+   "active_marker": "supabase/migrations/20261004230711_combat_scene_unique_combatants.sql",
+   "marker_sha256": "971a800eba0ec96828a41f91f1b1af634166d7bc4b3660f2be7ba83a6abbe896",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_combat_scene_unique_combatants.sql",
+   "source_sha256": "9f5e238f70fe8976e1fa2a0a26901cf0cc1c6261f832a50b235f997a73679a9c",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005060119",
+   "name": "combat_scene_direct_backgrounds",
+   "active_marker": "supabase/migrations/20261005060119_combat_scene_direct_backgrounds.sql",
+   "marker_sha256": "3f9bbadb5c6969805479efe1af302eba043e6847ae0ea8d4e89e15867ab9bbd0",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_combat_scene_direct_backgrounds.sql",
+   "source_sha256": "4edd48d0342b53684fe8609f32111261ec36dd07b5b95358c029c5bdc44971bf",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005070250",
+   "name": "rule_professions_registry",
+   "active_marker": "supabase/migrations/20261005070250_rule_professions_registry.sql",
+   "marker_sha256": "70a0b0661cdb730c4c1713bedbe8d182d27fa391c31878548673020728eeba5d",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_rule_professions_registry.sql",
+   "source_sha256": "052ebf513659c3cfe93ae120e479ee28f5fd159aebd3662111ab283678a2192e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005071548",
+   "name": "rule_races_registry",
+   "active_marker": "supabase/migrations/20261005071548_rule_races_registry.sql",
+   "marker_sha256": "63e0d3834d09d0c6662e5336e5df0a859d0e2ed2e0bf8da7c988353a0e6dd229",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_rule_races_registry.sql",
+   "source_sha256": "ba1ba47a9805158b67db2e2b78633263e59abedb6f48ba390cb0a65b643f9bd6",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005072319",
+   "name": "elf_rest_threshold_by_race_category",
+   "active_marker": "supabase/migrations/20261005072319_elf_rest_threshold_by_race_category.sql",
+   "marker_sha256": "7a1d284de7fb1c9bca31b524cc53949c07671784346dcb77cea1157dfc5f46b5",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_elf_rest_threshold_by_race_category.sql",
+   "source_sha256": "2b1db6d35f79c4a2b4981557690cc53aef1258dd954760f51ac3d4216d46da49",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005080104",
+   "name": "combat_scene_start_positions",
+   "active_marker": "supabase/migrations/20261005080104_combat_scene_start_positions.sql",
+   "marker_sha256": "0db3ffdcc530635ee68aa70073aa9c150365374f514750b4d8ac45a86e79aef9",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_combat_scene_start_positions.sql",
+   "source_sha256": "8840047249b5d18106e3b0da83d11cc250332a2b907d8d25b3977c8777345602",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005104343",
+   "name": "combat_icon_assets",
+   "active_marker": "supabase/migrations/20261005104343_combat_icon_assets.sql",
+   "marker_sha256": "d8d1264c380c0479a2aafff79d735cae2ad68b24e7c0b100f0e7a6d94c81293e",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_combat_icon_assets.sql",
+   "source_sha256": "f907a3e268851697ef317231b029b7d4debb4653587c61deaa6ffb796523e7b4",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005104816",
+   "name": "character_combat_icon_path",
+   "active_marker": "supabase/migrations/20261005104816_character_combat_icon_path.sql",
+   "marker_sha256": "3d4748649460e7e501ec7395ff14804275602bb00c43338bf280935964285b14",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_character_combat_icon_path.sql",
+   "source_sha256": "4d876416505145eaa70edfc5b39206f8763d6c88d8fca8c1bd2b11b2793efa3e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005145625",
+   "name": "rule_race_attribute_rules",
+   "active_marker": "supabase/migrations/20261005145625_rule_race_attribute_rules.sql",
+   "marker_sha256": "c30ce9d0e0741ff2b2b8facc01069abc8a9eb47f2a88fac118457eac7bc24416",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_rule_race_attribute_rules.sql",
+   "source_sha256": "a908f0fc2d2e7cce8038e2bb0a8c250257e6db48ce810e560f94e7a20431c23e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005145741",
+   "name": "seed_new_race_attribute_rows",
+   "active_marker": "supabase/migrations/20261005145741_seed_new_race_attribute_rows.sql",
+   "marker_sha256": "8d88b1bbebebe225dd8ffa83fc10783cda657d39520aa7b3b6640c73990da4bb",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005_seed_new_race_attribute_rows.sql",
+   "source_sha256": "dd2d797dc083f9949c0325797bf53d873f03b7f861425719320ef054921d9297",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005171018",
+   "name": "enemy_monster_admin_profiles",
+   "active_marker": "supabase/migrations/20261005171018_enemy_monster_admin_profiles.sql",
+   "marker_sha256": "500fd21d8ee9e9e86952b628803af99045645b29d2d6c34108671dcb2cf3be3d",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005171018_enemy_monster_admin_profiles.sql",
+   "source_sha256": "2aaa9447e4e718d7a34abedaec00ba75eb83eccaa95d224b4dc3742313eece9b",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261005184111",
+   "name": "seed_rule_weapons_melee_master",
+   "active_marker": "supabase/migrations/20261005184111_seed_rule_weapons_melee_master.sql",
+   "marker_sha256": "7661024926de3a22e345157250582403614c419f699a5f043b62cf523a5bb06a",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005184111_seed_rule_weapons_melee_master.sql",
+   "source_sha256": "463e0c8936f22b47b999bc4db38bdc7d165b8b79b00529813e84dae3fce60a81",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261005185112",
+   "name": "complete_weapon_master_projectile_thrown",
+   "active_marker": "supabase/migrations/20261005185112_complete_weapon_master_projectile_thrown.sql",
+   "marker_sha256": "50f11ed406e35b25979b56bffd94696bc2032f17822995a794247156a5694fa1",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005185112_complete_weapon_master_projectile_thrown.sql",
+   "source_sha256": "2f6a2025f12464ba1c6586622233182f42c102aa2a8197de0309a13816659828",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261005185623",
+   "name": "backfill_weapon_master_instances",
+   "active_marker": "supabase/migrations/20261005185623_backfill_weapon_master_instances.sql",
+   "marker_sha256": "ac174c19150bfc13c1940f2028b5a2005adfb2c1e56dc6edfceb45b3ef1d2be3",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005185623_backfill_weapon_master_instances.sql",
+   "source_sha256": "b44257e17ab870a885412d350dacb72e810ff10ebedef05791ca6b813e1ded1f",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261005192103",
+   "name": "targans_gille_shop_catalog",
+   "active_marker": "supabase/migrations/20261005192103_targans_gille_shop_catalog.sql",
+   "marker_sha256": "6b140cd3c3cc110e9f4a5813ecac4a171a24a712d3191c00625ab933f858b814",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261005213000_targans_gille_shop_catalog.sql",
+   "source_sha256": "a877542b67372fa567e8ab022c37b91f9c1a109006c485afd9d32e59e88feefc",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261005193225",
+   "name": "normalize_targans_catalog_labels",
+   "active_marker": "supabase/migrations/20261005193225_normalize_targans_catalog_labels.sql",
+   "marker_sha256": "d00da203c6bc4db251909f3b8fc61b6818f5ac0fd13babcffc32752a2f692af5",
+   "source_path": "supabase/legacy-migrations/live-history-recovered-sources/20261005193225_normalize_targans_catalog_labels.sql",
+   "source_sha256": "63f5662ea444e9d4f4e5799d7722194af3c40b337069e0182c82cd4b02deb91d",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261007045327",
+   "name": "link_weapon_master_to_skills",
+   "active_marker": "supabase/migrations/20261007045327_link_weapon_master_to_skills.sql",
+   "marker_sha256": "cb89485fa630f6d78d0a912630b537fbe3652250cd3448c6b757359b29d5b09e",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007045327_link_weapon_master_to_skills.sql",
+   "source_sha256": "e2088804cd3c1345ddce0c3f006ed618ca557f12d267756ac2a758a3abbe79c1",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261007045409",
+   "name": "migrate_character_weapon_fv_to_skills",
+   "active_marker": "supabase/migrations/20261007045409_migrate_character_weapon_fv_to_skills.sql",
+   "marker_sha256": "2e2117551f4ffeca197208f4e7940ba5184931c42fd99adaa3987e87b1622b64",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007045409_migrate_character_weapon_fv_to_skills.sql",
+   "source_sha256": "d42013ed7e3dbc8119d80ff63b795991a9ed5af8a8792397b7c07af5f1fd63d3",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261007050315",
+   "name": "enforce_weapon_skill_link",
+   "active_marker": "supabase/migrations/20261007050315_enforce_weapon_skill_link.sql",
+   "marker_sha256": "da0494733abe536b5d4519fb2e5d3ec27742590b1f871c9320ccc55bffe28979",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007050300_enforce_weapon_skill_link.sql",
+   "source_sha256": "3d61ad583ba4da5d5d6a5482febfa09f7922f2a20a6ae74adae0c71d6938d5a4",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261007210549",
+   "name": "add_weapon_icon_key",
+   "active_marker": "supabase/migrations/20261007210549_add_weapon_icon_key.sql",
+   "marker_sha256": "39e68164e41ead9117d8931b2c519634d8600aca96e064060587e62431d076e3",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007224500_add_weapon_icon_key.sql",
+   "source_sha256": "a66b9c7119c16b9ec921149f0933fbc2ee0f42a1b41f5a8192de62489200ef3d",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261007212545",
+   "name": "expert_armor_shield_master",
+   "active_marker": "supabase/migrations/20261007212545_expert_armor_shield_master.sql",
+   "marker_sha256": "711b3845fc9b265d9fd5579e45f48e2782dd2d19290d3b36b5f56c6ee50222a2",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007232600_expert_armor_shield_master.sql",
+   "source_sha256": "c44dbc2b036d6913db0d7ecc7f290affb8c9828563e60ce2538034b0402b5bf0",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261007212613",
+   "name": "index_rule_shields_skill",
+   "active_marker": "supabase/migrations/20261007212613_index_rule_shields_skill.sql",
+   "marker_sha256": "b29b9a3c2780f3fb5a685681410fdb22d43926e8b9b16b5add5290b43a1a76f1",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261007220452",
+   "name": "armor_shield_svg_icons",
+   "active_marker": "supabase/migrations/20261007220452_armor_shield_svg_icons.sql",
+   "marker_sha256": "bfbdb3e11e0a2cedb711975933f51b14b4987f60cff1ffae2f54de6179cd3302",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261007235900_armor_shield_svg_icons.sql",
+   "source_sha256": "1ed146c7475a1f1a6f44d67f0aebec3df9c2062b05260ad889adec1b9f00abea",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008002411",
+   "name": "add_expert_magic_school_and_spell_registry",
+   "active_marker": "supabase/migrations/20261008002411_add_expert_magic_school_and_spell_registry.sql",
+   "marker_sha256": "50b306a2e4681c4c598cda37ef0ba173f8248ac1232ce27559e78623c3a87eaf",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008005829",
+   "name": "grant_magic_registry_authenticated_access",
+   "active_marker": "supabase/migrations/20261008005829_grant_magic_registry_authenticated_access.sql",
+   "marker_sha256": "e2df9b8c59d01ab210af59c5f093f041687217a1477f5f28538cf6480a3de3a1",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008010928",
+   "name": "add_attack_magic_to_rule_spells",
+   "active_marker": "supabase/migrations/20261008010928_add_attack_magic_to_rule_spells.sql",
+   "marker_sha256": "3774db28157656fc47db92569e4150320390c277029bda656427e1b6bf3ac125",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008011403",
+   "name": "add_spell_damage_and_refine_attack_magic",
+   "active_marker": "supabase/migrations/20261008011403_add_spell_damage_and_refine_attack_magic.sql",
+   "marker_sha256": "af944672f9395fbccbeb75c6eddca2af6ec2168cd5c70d014c7e55fd1cb0d99c",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008022452",
+   "name": "expert_spell_k_f_r_markers",
+   "active_marker": "supabase/migrations/20261008022452_expert_spell_k_f_r_markers.sql",
+   "marker_sha256": "a876df85409156bb147e4c8263e901af6e2ee37cb7de700954370fae83f3ea58",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008022500",
+   "name": "correct_spell_markers_verified_pages",
+   "active_marker": "supabase/migrations/20261008022500_correct_spell_markers_verified_pages.sql",
+   "marker_sha256": "f917468dae92c146e5313e5dfd17aeacdb64791ea5b5bd6197f6b8a2687ed45a",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008051049",
+   "name": "create_effect_registry_and_combatant_effects",
+   "active_marker": "supabase/migrations/20261008051049_create_effect_registry_and_combatant_effects.sql",
+   "marker_sha256": "dcfc977c7b921a61e6e52d8a2d0dfe249469c779945e1f79eb7b14b7ac905425",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008051439",
+   "name": "spell_oka_minska_attribute_effect_parameters",
+   "active_marker": "supabase/migrations/20261008051439_spell_oka_minska_attribute_effect_parameters.sql",
+   "marker_sha256": "c00cbe20efd5718ddc3a811476325fa1023b1818946566c25e1396cb99b2d3cb",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008054535",
+   "name": "varg_effect_metadata",
+   "active_marker": "supabase/migrations/20261008054535_varg_effect_metadata.sql",
+   "marker_sha256": "a5360ed944b1cb475649c33202eb02cae50f223c697ec03c5d06746567895ac2",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008054742",
+   "name": "lo_effect_expiry_timestamp",
+   "active_marker": "supabase/migrations/20261008054742_lo_effect_expiry_timestamp.sql",
+   "marker_sha256": "af2830d25a0679fb5e17b6cf7dab5ff2c26f7798d0380098602850b2a032eb32",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008055117",
+   "name": "bjorn_incapacitation_effects",
+   "active_marker": "supabase/migrations/20261008055117_bjorn_incapacitation_effects.sql",
+   "marker_sha256": "9c696f5b82e093bc240cc00e3e349dff78b1c076c765256a828fde13713e587b",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008061015",
+   "name": "retire_oka_minska_from_expert_registries",
+   "active_marker": "supabase/migrations/20261008061015_retire_oka_minska_from_expert_registries.sql",
+   "marker_sha256": "55aee1c4c58c21aa1d940886f93462c40e1c387d003d5028482a7d566a9415b3",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008061125",
+   "name": "purge_retired_spells_from_character_and_combat_snapshots",
+   "active_marker": "supabase/migrations/20261008061125_purge_retired_spells_from_character_and_combat_snapshots.sql",
+   "marker_sha256": "a04545d3554d8892e4e1c9428429d6aef73eba82d9ac91bb20670c8de64f91d9",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008063517",
+   "name": "tiger_mental_conditions",
+   "active_marker": "supabase/migrations/20261008063517_tiger_mental_conditions.sql",
+   "marker_sha256": "c50f83508346da8bc0148ee04118441ec451bcb6053bdc2f9fdd6de1656112a0",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008093000_tiger_mental_conditions.sql",
+   "source_sha256": "5e51ada41a284d01ccb9d17a3e0abde7f264bf95469f7187ae05df82e069d98b",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008064530",
+   "name": "crocodile_periodic_damage",
+   "active_marker": "supabase/migrations/20261008064530_crocodile_periodic_damage.sql",
+   "marker_sha256": "458965959bd7015f390589bca259de275a8b1b2e9eff5e2a4557376e4ee237bd",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008103000_crocodile_periodic_damage.sql",
+   "source_sha256": "448bb0a9aad72b92d43b992d921ab81c7fc94594298a9dd7ae2688117bdc9924",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008065445",
+   "name": "haj_area_schema",
+   "active_marker": "supabase/migrations/20261008065445_haj_area_schema.sql",
+   "marker_sha256": "fa07709bac1d93c2b6269e2bcd13cf25ceaa7920af8aeb9aa4ee5e377d194713",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008112000_haj_area_schema.sql",
+   "source_sha256": "796ee3ec7f74dfb3f3e1ea130776316973b083d31b9d7a68f3c4b50528488051",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008065602",
+   "name": "haj_area_runtime",
+   "active_marker": "supabase/migrations/20261008065602_haj_area_runtime.sql",
+   "marker_sha256": "8b6d28e0d8f78cafe364092468b20b2c5ac4842fd8d11744889bc65940f9fd7c",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008112100_haj_area_runtime.sql",
+   "source_sha256": "73c71b69875988c66fecf5b0f5c9b5d0d8d96c917bcf4e4faad3922b61097374",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008065925",
+   "name": "haj_undo_safety",
+   "active_marker": "supabase/migrations/20261008065925_haj_undo_safety.sql",
+   "marker_sha256": "4f6fc8a120c74889d2b14e051662b1412a0af5132f2ad2091f4f21489c01f8cd",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008112200_haj_undo_safety.sql",
+   "source_sha256": "3debdaf9d43cef6989eeca0bee7f465b4623deca571e353f50328b532321aa32",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008070136",
+   "name": "haj_path_movement",
+   "active_marker": "supabase/migrations/20261008070136_haj_path_movement.sql",
+   "marker_sha256": "79f0663f6320e3e28f81fa22de8430188e4340094178fdf58fdac92516c0ccd3",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008112300_haj_path_movement.sql",
+   "source_sha256": "a8ddecc112c9b9cab0ab0335fc1039925b9b5cc48ca9c8b330fdba18b8fcdd0b",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008093838",
+   "name": "add_npc_spells_for_magic_arena",
+   "active_marker": "supabase/migrations/20261008093838_add_npc_spells_for_magic_arena.sql",
+   "marker_sha256": "b725ef28050a37e2ea61db257e2e18ed72b443238e56af75deab9fa6e3cec9fb",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008154236",
+   "name": "gandalf_material_foundation_v1",
+   "active_marker": "supabase/migrations/20261008154236_gandalf_material_foundation_v1.sql",
+   "marker_sha256": "4d43ce7e20c471fc0dcb39cf258f29c4b304f884e3f3c64cbb7a1bb564360291",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008155132",
+   "name": "gimli_material_storage_v1",
+   "active_marker": "supabase/migrations/20261008155132_gimli_material_storage_v1.sql",
+   "marker_sha256": "650e8057392ab5c989d30c228bafcf3b110bbb5f2d58b88ba4f8d24ae30cf343",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008162623",
+   "name": "bilbo_archive_guard",
+   "active_marker": "supabase/migrations/20261008162623_bilbo_archive_guard.sql",
+   "marker_sha256": "df23847162d2b1bd6a66ab1336dd0eac78ad63c8c4be91a2320c108077bdb226",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_bilbo_archive_guard.sql",
+   "source_sha256": "4f231fbc276f566491cf002a100bfe3f02d2081852535c15aeed7409d436400f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008164340",
+   "name": "expert_skelett_race",
+   "active_marker": "supabase/migrations/20261008164340_expert_skelett_race.sql",
+   "marker_sha256": "496617f6f0cc16dc0be9e049691b915bed0f1c84ac2598bf6dea6dc36be30f42",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_expert_skelett_race.sql",
+   "source_sha256": "15a17856561654b4d7d0684ec3cc4769cf975c001c453f251980821c0591f22e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008165002",
+   "name": "seed_skelettvakt_enemy",
+   "active_marker": "supabase/migrations/20261008165002_seed_skelettvakt_enemy.sql",
+   "marker_sha256": "faabbe1cc7adff13fc45aa505a3445c9f6b9db4ea969cb87866067039138352c",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_seed_skelettvakt_enemy.sql",
+   "source_sha256": "5214a54e6c0176337c1968e98ecbd3cf17afd1261e76d4922baa89939a658ac4",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008165617",
+   "name": "seed_eldsalamander_summon_npc",
+   "active_marker": "supabase/migrations/20261008165617_seed_eldsalamander_summon_npc.sql",
+   "marker_sha256": "cd7380c448bff9850d352f1df6f83dfc4377b863da70f9238cecc3615f83f2f8",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_seed_eldsalamander_summon_npc.sql",
+   "source_sha256": "08d12425a7d48f13d2f5161b973341a3506851871164486dd8c7cf5a3d3b833c",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008170007",
+   "name": "eldsalamander_summon_unique",
+   "active_marker": "supabase/migrations/20261008170007_eldsalamander_summon_unique.sql",
+   "marker_sha256": "3b428270db4bbcaf50455f8c502de67958e437c18b4b3d32b7eb4f7e0fa577e2",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_eldsalamander_summon_unique.sql",
+   "source_sha256": "4f88571174aab210a134878f0ea3efa8677bda780564d32d22f9ca763328c0ac",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008170810",
+   "name": "aragorn_legacy_material_links",
+   "active_marker": "supabase/migrations/20261008170810_aragorn_legacy_material_links.sql",
+   "marker_sha256": "cf7b1d0cde4c1617e175054fe459fd777d0f52a909e2f5d8689043caffbe101d",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_aragorn_legacy_material_links.sql",
+   "source_sha256": "e75e623222255513e8d4f736961795dc828faa4a4bb0c2915c3e3ed56f059bbf",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008173227",
+   "name": "frodo_presentation_command",
+   "active_marker": "supabase/migrations/20261008173227_frodo_presentation_command.sql",
+   "marker_sha256": "a54f67dbfd57d3f9c8f21d81875313cb1eb8229e3ccc3a19c0a39a3335920e5d",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_frodo_presentation_command.sql",
+   "source_sha256": "9d1d1b41ff47c2a7d2a80c1b77f71d31348458f4a37bc906a6bb8ab602a48a93",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008174128",
+   "name": "sam_player_library_share",
+   "active_marker": "supabase/migrations/20261008174128_sam_player_library_share.sql",
+   "marker_sha256": "2ed38f82de1df39a6fd5d173415f648984b34f0b37aa9816495f34aa8550f447",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_sam_player_library_share.sql",
+   "source_sha256": "f0f4c3b7275c8ac627bb99a8df26e6b76d044adf2fba50098ff9514b5854a042",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008174937",
+   "name": "galadriel_material_realtime_signals",
+   "active_marker": "supabase/migrations/20261008174937_galadriel_material_realtime_signals.sql",
+   "marker_sha256": "af81f95e8f7e72cfc0a5bd28f0d806c60919fb5794e036230f967aa68368d77a",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261008_galadriel_material_realtime_signals.sql",
+   "source_sha256": "41c2bf7535f9636b059123a5815bd8d4e7823a3737047a67feee8b19397dd169",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261008205848",
+   "name": "map_realtime_signals_v03495",
+   "active_marker": "supabase/migrations/20261008205848_map_realtime_signals_v03495.sql",
+   "marker_sha256": "d7f0d9bdfc4d3c157027c975ffffbffc379b80ee6db5c0b2a49c447f11c505a6",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261008214715",
+   "name": "elementar_npc_templates",
+   "active_marker": "supabase/migrations/20261008214715_elementar_npc_templates.sql",
+   "marker_sha256": "e1eda7688081584a8eda9397940eff83b658ca187f0563ebb6e1d265e4a3c794",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009000500_elementar_npc_templates.sql",
+   "source_sha256": "f9082ca871dc78dfa3bed22f2898ca0d8aff7e5994fa81ec32ac88fdf7004144",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261009052457",
+   "name": "food_provisions_day_advance",
+   "active_marker": "supabase/migrations/20261009052457_food_provisions_day_advance.sql",
+   "marker_sha256": "3ce26268373960e2985a7a12760c6526925916e1c2a2969804b3715c9457a1fe",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009071500_food_provisions_day_advance.sql",
+   "source_sha256": "a6b4c95b42d5d9646650b60dd00c43eb4aa70d0aa3dd8a8bcdbf8f9167efaddc",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261009053127",
+   "name": "inn_meal_provisions_coverage",
+   "active_marker": "supabase/migrations/20261009053127_inn_meal_provisions_coverage.sql",
+   "marker_sha256": "5b2ff7f079cd0ba24d9156dea2564f77a8aad81d53f39487bef00a976782f7bc",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009074500_inn_meal_provisions_coverage.sql",
+   "source_sha256": "d46bc67fce0fa7d1cdc255405fcb278e46f08494b045968134214c95b77028e5",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261009061238",
+   "name": "combat_ammunition_registry_v03513",
+   "active_marker": "supabase/migrations/20261009061238_combat_ammunition_registry_v03513.sql",
+   "marker_sha256": "0ac4ffa6857337113c0b7407d051970e03b9c114f3f99c5aa8019ea1f900bfd3",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009061246",
+   "name": "combat_ammunition_recovery_v03513",
+   "active_marker": "supabase/migrations/20261009061246_combat_ammunition_recovery_v03513.sql",
+   "marker_sha256": "763cf92518a6cbe8470bd41247d21e57c343a05e5feb7586674eb3900e376efd",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009061721",
+   "name": "fix_crossbow_legacy_ammo_v03513",
+   "active_marker": "supabase/migrations/20261009061721_fix_crossbow_legacy_ammo_v03513.sql",
+   "marker_sha256": "8dfd4ae23c939ab5dc7dc0cec7b6496ec4af6ae20d2ae79d51c560de5338161e",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009104106",
+   "name": "combat_multihex_footprints_20261009",
+   "active_marker": "supabase/migrations/20261009104106_combat_multihex_footprints_20261009.sql",
+   "marker_sha256": "0431596140b79717dfefbc1246075f64af72e2019208c9db2776ab4fa30eec8b",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009104532",
+   "name": "multihex_area_and_terrain_20261009",
+   "active_marker": "supabase/migrations/20261009104532_multihex_area_and_terrain_20261009.sql",
+   "marker_sha256": "f6dc62f5f6adf8085daad83d056cd8110edae5c5e294ec9fe2706404c1b43107",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009105852",
+   "name": "alea_sound_registry_v03522",
+   "active_marker": "supabase/migrations/20261009105852_alea_sound_registry_v03522.sql",
+   "marker_sha256": "639c4f6adb133c5daddbc11eebe3704f649e0f07cde66d0a7c27340be9e48d8b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009125200_alea_sound_registry_v03522.sql",
+   "source_sha256": "b1bf4294fa0edd94ca90ca2660aecf7689a9d064d185e05eb68ff4ed52d02b2f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261009110846",
+   "name": "alea_shared_audio_v03523",
+   "active_marker": "supabase/migrations/20261009110846_alea_shared_audio_v03523.sql",
+   "marker_sha256": "643bf1e9906f93f640ed69d844bf8270f16d5ba1e15e08a17840c154e4cee300",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009112839",
+   "name": "alea_location_ambience_v03524",
+   "active_marker": "supabase/migrations/20261009112839_alea_location_ambience_v03524.sql",
+   "marker_sha256": "9119a73437b3ca741e3e29ef365398a6b3e4d5a02f6a6123e4eaf6917d0ac645",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009120357",
+   "name": "alea_gandalf_sound_categories_v03526",
+   "active_marker": "supabase/migrations/20261009120357_alea_gandalf_sound_categories_v03526.sql",
+   "marker_sha256": "6af6c15a98f9bf22065ba123c9e66a1e991307d2fd1ed22b348a67ded2f7ea74",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009120439",
+   "name": "alea_gandalf_sound_inventory_v03526",
+   "active_marker": "supabase/migrations/20261009120439_alea_gandalf_sound_inventory_v03526.sql",
+   "marker_sha256": "344276f7bb4cb59568ed8a3b6b211ffd4b027d928f1b9bb35adc927f066a073d",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009192045",
+   "name": "campaign_journal_realtime",
+   "active_marker": "supabase/migrations/20261009192045_campaign_journal_realtime.sql",
+   "marker_sha256": "de2c92a67f6270548a223ea4b014356693be0ba00eacfa6adba6beec67fd1e22",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009192045_campaign_journal_realtime.sql",
+   "source_sha256": "a7f268ded7c066e59ac4f48f9b193c922cedcc477695c52d73b658b3c40b0dd0",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261009192256",
+   "name": "journal_general_dice_events",
+   "active_marker": "supabase/migrations/20261009192256_journal_general_dice_events.sql",
+   "marker_sha256": "c4af365ba70691ecde4bf91ca98e5611b248ddd7364d6dbee315423d792d5ab7",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009192256_journal_general_dice_events.sql",
+   "source_sha256": "92f8fabbdd622df7afee2d840ac144408bbb5f002786c294288a1ebef6f1dfbf",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261009194709",
+   "name": "add_realtime_campaign_time_of_day",
+   "active_marker": "supabase/migrations/20261009194709_add_realtime_campaign_time_of_day.sql",
+   "marker_sha256": "fe89ba833df2838a8996f60c9422289ed98cd3b9417eca67f6383dfa59fbb25f",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261009205014",
+   "name": "seed_alchemy_potions_and_plants",
+   "active_marker": "supabase/migrations/20261009205014_seed_alchemy_potions_and_plants.sql",
+   "marker_sha256": "7657eea6e4709206002ba1cba3a529b6ec1e02cfcd0c5d56ff283786d8042d45",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261009222000_seed_alchemy_potions_and_plants.sql",
+   "source_sha256": "6764a6b28bcfe7de789b09698deacdb8d8f0e2880ed358dc0b927e5e7cfd9e73",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010060656",
+   "name": "add_rule_equipment_art_images_and_storage",
+   "active_marker": "supabase/migrations/20261010060656_add_rule_equipment_art_images_and_storage.sql",
+   "marker_sha256": "d338e0536b2901e5654b4cb307691c461ccabc8d5b873e4cefa4ac1728b8812c",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261010073341",
+   "name": "armor_art_four_anatomical_slots",
+   "active_marker": "supabase/migrations/20261010073341_armor_art_four_anatomical_slots.sql",
+   "marker_sha256": "bb72c9a722cd09da625e627e3c0625f72f076bb08238cb670e8fdf09384d3130",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261010_armor_art_four_anatomical_slots.sql",
+   "source_sha256": "5f34ff49774b0474c33cf6c8ae412932717503d916b6a261dc47025d24308e45",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010200221",
+   "name": "projectile_type_art",
+   "active_marker": "supabase/migrations/20261010200221_projectile_type_art.sql",
+   "marker_sha256": "bd17dc69e3e0dcb56aa556fd7339ad1b4b8e93a0ea5f3e06c3115e2edb667bac",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261010212500_projectile_type_art.sql",
+   "source_sha256": "98715c28d662dea8e31ee741aeb6a227b01bf47e191db52da1b940ba37159f8e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010200404",
+   "name": "fix_projectile_art_storage_name",
+   "active_marker": "supabase/migrations/20261010200404_fix_projectile_art_storage_name.sql",
+   "marker_sha256": "3bc9f07704bbcba623203196b6102510169f0f5606ad864d9940017d419256cd",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261010213500_fix_projectile_art_storage_name.sql",
+   "source_sha256": "1a09e7469cbc6abd19a2a0f41edb5f0c108fcf06eb51881731d968f46d99413c",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010200858",
+   "name": "weapon_projectile_links",
+   "active_marker": "supabase/migrations/20261010200858_weapon_projectile_links.sql",
+   "marker_sha256": "62729847499beb74356951bb33e8b2267854471027a16bb137108bd9f36f7b65",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261010221500_weapon_projectile_links.sql",
+   "source_sha256": "757d3521b1e28a5e4341918df5d3b485361ebbf0a65b9e4df4127a1c88109d30",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010213804",
+   "name": "equipment_master_carry_art",
+   "active_marker": "supabase/migrations/20261010213804_equipment_master_carry_art.sql",
+   "marker_sha256": "16bd930496226747414f9447110798bae6f110074528c1f0af25462883042759",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261010235000_equipment_master_carry_art.sql",
+   "source_sha256": "3c154a8019c45fc578ef0c9af1758c092224251f448297db472ebdb9bfb53228",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261010222014",
+   "name": "combat_visible_npc_portraits",
+   "active_marker": "supabase/migrations/20261010222014_combat_visible_npc_portraits.sql",
+   "marker_sha256": "be54b5ee7cb6a2f4ad0b7e05f78762eeab8f5a8bf01a84f68651fe0745797c88",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261010222044",
+   "name": "preserve_defeated_combatant_portraits",
+   "active_marker": "supabase/migrations/20261010222044_preserve_defeated_combatant_portraits.sql",
+   "marker_sha256": "160d0aaa52cd1c684e18cc2c0c5a4344203c09da446b99347534afe1fc321edb",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261010231011",
+   "name": "magic_artifacts_registry_v03583",
+   "active_marker": "supabase/migrations/20261010231011_magic_artifacts_registry_v03583.sql",
+   "marker_sha256": "81ac5cf9d7385967c25b6140900f180325780c1cff8b4370172102cbe1ab0b4a",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261010234239",
+   "name": "magic_property_powers_v03584",
+   "active_marker": "supabase/migrations/20261010234239_magic_property_powers_v03584.sql",
+   "marker_sha256": "93ed251987014d28f39751105298d6fef986246779b59d3ce28decb58d20310d",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261011005442",
+   "name": "magic_configurator_rules_v03586",
+   "active_marker": "supabase/migrations/20261011005442_magic_configurator_rules_v03586.sql",
+   "marker_sha256": "00bc5dc23fd3bf89f241100b889abd1ba83025aed67244cde47f8c64e958acbb",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261011013558",
+   "name": "character_item_art_owner_storage",
+   "active_marker": "supabase/migrations/20261011013558_character_item_art_owner_storage.sql",
+   "marker_sha256": "58cf921a4d24bef2453e7cf39eed8eb3aee3edb5efa2d84735929d3e9fa8dd7e",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261011074536",
+   "name": "character_water_provisions",
+   "active_marker": "supabase/migrations/20261011074536_character_water_provisions.sql",
+   "marker_sha256": "6440ae6a958b11b39acde790d36ba213c87e66d0246c4ac5a53efba6bc13727c",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261011130000_character_water_provisions.sql",
+   "source_sha256": "0dfb9a1487d1305374fc8dc5fe5dc66a98f51075e76a9d19510fe67262d184c1",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261011131304",
+   "name": "magic_battery_property",
+   "active_marker": "supabase/migrations/20261011131304_magic_battery_property.sql",
+   "marker_sha256": "51c347490d13d25d21a41a4a2182391e20444efc38faa83b437d6e8f7b1e29d1",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261011150000_magic_battery_property.sql",
+   "source_sha256": "70fa65b95ca0195d9dd33e9e33144405b4d034f3dc27dae4f35116cab395a3dc",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261011151724",
+   "name": "academy_skill_category",
+   "active_marker": "supabase/migrations/20261011151724_academy_skill_category.sql",
+   "marker_sha256": "e2e64c2ec6a97549637c911c65be048d435df101289849d78b8618e794c557bd",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261011173000_academy_skill_category.sql",
+   "source_sha256": "b85e26edadaeefb0c413c00cc02db32d2601588bfce7282a1cf3ad8f4af0a1ef",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261011223006",
+   "name": "round_background_gallery_v035124",
+   "active_marker": "supabase/migrations/20261011223006_round_background_gallery_v035124.sql",
+   "marker_sha256": "de2db5216dc863b8c544c4f76d2e73b6ef2e62a3d914b5151e14689775183182",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261011224453",
+   "name": "character_round_background_v035125",
+   "active_marker": "supabase/migrations/20261011224453_character_round_background_v035125.sql",
+   "marker_sha256": "b571989c9b976de1efd02d080fede1930eedca20e2f407fddde3854b0ce978da",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261011225220",
+   "name": "restore_legacy_combat_round_images_v035126",
+   "active_marker": "supabase/migrations/20261011225220_restore_legacy_combat_round_images_v035126.sql",
+   "marker_sha256": "70c265354ac8c89cd9ef02e5a22d8eed91b8d08fa93efdc6f13a4d719c976606",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261012043400",
+   "name": "character_round_live_sync_v035128",
+   "active_marker": "supabase/migrations/20261012043400_character_round_live_sync_v035128.sql",
+   "marker_sha256": "e09dbd8f5a29e1b6f3aa7963b8d8d849a2bc71a7e5b3327a612940a240ced8ca",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261012104031",
+   "name": "hit_figure_race_gender_registry",
+   "active_marker": "supabase/migrations/20261012104031_hit_figure_race_gender_registry.sql",
+   "marker_sha256": "114013a5c0e9f4c807d7b540e31e1581046546a25d802e8eb88566df9264df41",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261012130000_hit_figure_race_gender_registry.sql",
+   "source_sha256": "e7a535abfd990a969f7940597423f9e2596db4a5867d3a99433e2560297e9dca",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261012211650",
+   "name": "combat_equipment_crop_quadrant",
+   "active_marker": "supabase/migrations/20261012211650_combat_equipment_crop_quadrant.sql",
+   "marker_sha256": "188dc95143fced9cf403b19d194723dc77732a52948d70fd7be7064e9697e254",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261012233500_combat_equipment_crop_quadrant.sql",
+   "source_sha256": "b44cf80e53d9fb658575bc00f43df542eafe1f61f75037568e1bcc26fce59e17",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261012221845",
+   "name": "spell_master_art",
+   "active_marker": "supabase/migrations/20261012221845_spell_master_art.sql",
+   "marker_sha256": "1c907c98ed0be3a90b6830c26541021f205f098a1b62fe9c0f35c35071c06659",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261013001000_spell_master_art.sql",
+   "source_sha256": "beb0e907a4763e15891e08f26940cbaa1b0131612ef88baeada13b46dc63acac",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261012223307",
+   "name": "spell_dual_art_square_crop",
+   "active_marker": "supabase/migrations/20261012223307_spell_dual_art_square_crop.sql",
+   "marker_sha256": "2dae4b1fd0ab2191c4c1d2dec223f42e8fc836aee54892ad078e7b6be4326421",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261013012000_spell_dual_art_square_crop.sql",
+   "source_sha256": "8a7d25778f9d1e6fe5b921f37d9e8e2b0b9ac75e294f55d7c3b82381875e6b97",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261013234253",
+   "name": "spell_cutout_art_v035190",
+   "active_marker": "supabase/migrations/20261013234253_spell_cutout_art_v035190.sql",
+   "marker_sha256": "16e79f0cb7c85d72b7bd06359fb2030cb67cc123ab5024d77a6a98203a48a5b6",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261015063300",
+   "name": "enable_pg_net_for_one_time_icon_transfer",
+   "active_marker": "supabase/migrations/20261015063300_enable_pg_net_for_one_time_icon_transfer.sql",
+   "marker_sha256": "d8760a10ae5d748c7eb9f9be8222d44128fb3334ff8ff1dddad7750a92ebfa81",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261015064221",
+   "name": "arcane_ivory_repo_spell_icons",
+   "active_marker": "supabase/migrations/20261015064221_arcane_ivory_repo_spell_icons.sql",
+   "marker_sha256": "6c9796b42ea7c8f5fd03a4cd0c2bef6e7b36cf231d3f3346355aafe4b1b27b62",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015064500_arcane_ivory_repo_spell_icons.sql",
+   "source_sha256": "b659bd93ec45202e49e1c59c8bf1abb1115a538dfea03063c8a7200ee82aaf74",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015083344",
+   "name": "hermes_combat_animations",
+   "active_marker": "supabase/migrations/20261015083344_hermes_combat_animations.sql",
+   "marker_sha256": "85d95be80dcc26e07016ceb122b58780ff38d57aaf286e494625b3b09db66c83",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015105000_hermes_combat_animations.sql",
+   "source_sha256": "bffca9852b48682f70d02fb766ddfea36f7f9bf29b952d30f2f07f2efcd8e34b",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015112824",
+   "name": "hermes_spell_animation_bindings",
+   "active_marker": "supabase/migrations/20261015112824_hermes_spell_animation_bindings.sql",
+   "marker_sha256": "3e7c7c0525996b68dd3f91ea85a59d69b7c2fee14978e957b79ce0ce2dbfd7b6",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015131500_hermes_spell_animation_bindings.sql",
+   "source_sha256": "11e2b8ce00583ccdd9831ed414a29f5aeb4cd218cb1ef15c6f5f5857847afa6f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015123519",
+   "name": "hermes_v2_animation_types",
+   "active_marker": "supabase/migrations/20261015123519_hermes_v2_animation_types.sql",
+   "marker_sha256": "2d5e0946546579ee42a86ae9880f07410ba8a9a2e75cf5c54469f2704b0cdc01",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015152500_hermes_v2_animation_types.sql",
+   "source_sha256": "ed8378efd56f95ccedf9f2823dfcf937d8637536c51eee51f096153349d1571b",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015143521",
+   "name": "symbolism_icon_path_20261015",
+   "active_marker": "supabase/migrations/20261015143521_symbolism_icon_path_20261015.sql",
+   "marker_sha256": "59fa2888ded666d2391e478ed6cc852017b2d1445a18ad653f6538671014882a",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261015151058",
+   "name": "hermes_v2_job_queue_and_storage",
+   "active_marker": "supabase/migrations/20261015151058_hermes_v2_job_queue_and_storage.sql",
+   "marker_sha256": "863776786ceb73ccfbb0998155d336e2c6df540baaf16f64e2060c104b6fbc02",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015170000_hermes_v2_job_queue_and_storage.sql",
+   "source_sha256": "7493966c8f4606e60ab5d78c6e517c60ee897484de43756a2c9a15843a20187e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015152259",
+   "name": "hermes_v2_controlled_rollback_state",
+   "active_marker": "supabase/migrations/20261015152259_hermes_v2_controlled_rollback_state.sql",
+   "marker_sha256": "8ca2cb13698b16b5362b790b9fae47d83ca950e75cea74b2b900769297022474",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015173500_hermes_v2_controlled_rollback_state.sql",
+   "source_sha256": "601b254087b5188ace0ef669f6d05146228efb93098ba863f871679f215376b0",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015160032",
+   "name": "hermes_v2_server_permissions",
+   "active_marker": "supabase/migrations/20261015160032_hermes_v2_server_permissions.sql",
+   "marker_sha256": "52a091e90a01ae026bc94a27b94375b6f112ad47024bd91ca52337bc186a2624",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015180000_hermes_v2_server_permissions.sql",
+   "source_sha256": "cc3d80c4f00b5b8114f00b80a1e4522a6149849293db662b85262a5b49ae8ddd",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015160357",
+   "name": "hermes_v2_spell_icon_constraint",
+   "active_marker": "supabase/migrations/20261015160357_hermes_v2_spell_icon_constraint.sql",
+   "marker_sha256": "bacaacf49c50c19aa97f1ea5e450b23c5b115a34ad9630722813e3968a0e5c8a",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015180500_hermes_v2_spell_icon_constraint.sql",
+   "source_sha256": "c339e793f45b8efb926020d0fa6f3c66d2e6302b1ee45b28ead7ac8abf3c4136",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015173546",
+   "name": "silveralv_round_gallery_static_art",
+   "active_marker": "supabase/migrations/20261015173546_silveralv_round_gallery_static_art.sql",
+   "marker_sha256": "3f79afbf492a18f95415480e76f615ce376824b838f6fef2cff00c07dc524401",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015193000_silveralv_round_gallery_static_art.sql",
+   "source_sha256": "aa5a5a2cbdf981bd84fd0fa0cc790aefe8712ec447b3382151bf79a2f0dedbb7",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261015184324",
+   "name": "hermes21_ci_job_identity",
+   "active_marker": "supabase/migrations/20261015184324_hermes21_ci_job_identity.sql",
+   "marker_sha256": "46beb36e1d225832d65bf61e614a29378d90752f056c5ec86e3429d43ad96994",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261015210000_hermes21_ci_job_identity.sql",
+   "source_sha256": "bbf60e820d3aa6b1adf668b962bdaa404c774954c6f16769b03836bc8b60a2e6",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261016175756",
+   "name": "arcane_gallery_presentation_history",
+   "active_marker": "supabase/migrations/20261016175756_arcane_gallery_presentation_history.sql",
+   "marker_sha256": "21ea639d36a4696256f4b49b63bd24fec139a6402a4b8d9eb9db99fad21049ba",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261017111127",
+   "name": "smart_polygon_atomic_shapes",
+   "active_marker": "supabase/migrations/20261017111127_smart_polygon_atomic_shapes.sql",
+   "marker_sha256": "497fb7b577dc58d5e299a169b15288ef501e20348e571e9d2b08d0935ae5a5e4",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261017130000_smart_polygon_atomic_shapes.sql",
+   "source_sha256": "77f8c487a5fe85725c81836ed68188231dbb683ca351cebbfa8c7d486bae6a7a",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261017115816",
+   "name": "skill_dual_art_admin",
+   "active_marker": "supabase/migrations/20261017115816_skill_dual_art_admin.sql",
+   "marker_sha256": "6d41c93a0223810bf4956636ad821261048d282fdc59419021178341e58bd314",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261017160000_skill_dual_art_admin.sql",
+   "source_sha256": "1ede5465fdfe0210164a4aae76f57ae8861ed94cc85ce8b3b0b1d08dfed74b05",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261017133058",
+   "name": "hermes_skill_icons",
+   "active_marker": "supabase/migrations/20261017133058_hermes_skill_icons.sql",
+   "marker_sha256": "d4145ca2843e27bdff57e186fdc00841524a7d83d51c2c98515dfc30948e0331",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261017173000_hermes_skill_icons.sql",
+   "source_sha256": "494dedb57623ecf24ddf70284363d3c7e057b7d87fc3868e556c674207fb9e29",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261017133403",
+   "name": "hermes_skill_service_role_icon_privileges",
+   "active_marker": "supabase/migrations/20261017133403_hermes_skill_service_role_icon_privileges.sql",
+   "marker_sha256": "66b9a1f4dcbcc1b9c9134e50c93b257a903c1c32b1254fcc0a172c61454ab741",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261017153821",
+   "name": "campaign_image_library",
+   "active_marker": "supabase/migrations/20261017153821_campaign_image_library.sql",
+   "marker_sha256": "d73de127f16dc722795e1ab8944b9fcd3e3d72e43dafb5c636cc81fad1d50d9f",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261017155217",
+   "name": "campaign_image_library_storage_read",
+   "active_marker": "supabase/migrations/20261017155217_campaign_image_library_storage_read.sql",
+   "marker_sha256": "0603508c4a01f1d033b37f98f510d2f7bade1faa33bce9743f88cab1205fb350",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261017212328",
+   "name": "allow_skill_illustration_hermes_jobs",
+   "active_marker": "supabase/migrations/20261017212328_allow_skill_illustration_hermes_jobs.sql",
+   "marker_sha256": "e8f92045b221f6c8c86f762c73d456d669d5e88b52de66e56122353e865d8199",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261017213257",
+   "name": "grant_hermes_skill_illustration_update",
+   "active_marker": "supabase/migrations/20261017213257_grant_hermes_skill_illustration_update.sql",
+   "marker_sha256": "aafa9432338da3f231ec78b40f5ef5a62b46d4f49c86749042fabf48c02117ef",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261018014231",
+   "name": "skill_illustration_wide",
+   "active_marker": "supabase/migrations/20261018014231_skill_illustration_wide.sql",
+   "marker_sha256": "92613abc1e71b052378a59bdd3ddecb9866150c87534e1ed97140fbcc2053e39",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261018025000_skill_illustration_wide.sql",
+   "source_sha256": "0be42787f6f4fa2d26b0703565273fec50194e9663b5c55f8c9e8239772ed1cd",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261018091341",
+   "name": "hermes_skill_illustration_wide",
+   "active_marker": "supabase/migrations/20261018091341_hermes_skill_illustration_wide.sql",
+   "marker_sha256": "2fbe7186b49668e4dfb340b03db0b280da6c363d719415f0f23c5041aa373478",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261018091305_hermes_skill_illustration_wide.sql",
+   "source_sha256": "5657a8d609fe6b800671872eaf3a079c825c643c68c04f5e237de23e6c9c3307",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261018092124",
+   "name": "hermes_wide_publisher_column_grant",
+   "active_marker": "supabase/migrations/20261018092124_hermes_wide_publisher_column_grant.sql",
+   "marker_sha256": "59aee9109148caaecd98081aef9d970d069c41c008958f9c13dd61740850e15f",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261018092128_hermes_wide_publisher_column_grant.sql",
+   "source_sha256": "f79dd30d8f4e3c048d337e25103b112642e5348d60355e2b97248dbf94382629",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261018094131",
+   "name": "spell_illustration_wide",
+   "active_marker": "supabase/migrations/20261018094131_spell_illustration_wide.sql",
+   "marker_sha256": "5d7d7b2dc6b1d8ba7906f50daf362ccf92b047b789976201830186b545e66daa",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261018113000_spell_illustration_wide.sql",
+   "source_sha256": "9bba041b1a052c2feff4f158e2a72a28b72496fdbec4d2ca1e3645dad1e294c5",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261018102501",
+   "name": "spell_square_illustration",
+   "active_marker": "supabase/migrations/20261018102501_spell_square_illustration.sql",
+   "marker_sha256": "85c4b6a4a165bd0f4e0f41dbd56e49b3829f97eba09155e1b612b1bc071ceb30",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261018124500_spell_square_illustration.sql",
+   "source_sha256": "b0ed38bf8a61bb5d553e3b3f01689df07909cff36b880c616950bf3233c9133c",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261019202532",
+   "name": "hermes_spell_cutout",
+   "active_marker": "supabase/migrations/20261019202532_hermes_spell_cutout.sql",
+   "marker_sha256": "3de2c78e2b6ff3d135ae83530705572d9661e7906732ac32c491c040acc08bcf",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261019190000_hermes_spell_cutout.sql",
+   "source_sha256": "69087c405c746ec15c655b1cf2c5890062a98e875878a93c0d2c2f081aa0a409",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261019214247",
+   "name": "global_npc_library_and_campaign_instancing",
+   "active_marker": "supabase/migrations/20261019214247_global_npc_library_and_campaign_instancing.sql",
+   "marker_sha256": "f507ffd4a2cf950d3439663031acb0a7509cf3c6c9304edcf3b908aace7ccbc9",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261019221711",
+   "name": "global_npc_portrait_access",
+   "active_marker": "supabase/migrations/20261019221711_global_npc_portrait_access.sql",
+   "marker_sha256": "350c2d3f922e2954a43b781a920456f69a087ad9792c6733a0566511b57f6996",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261020000100_global_npc_portrait_access.sql",
+   "source_sha256": "cb1b04397852ab3726616b682b8f46758ac27d39bea3d6ee1b6445a153291917",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261019222329",
+   "name": "global_npc_service_role_portrait_publisher",
+   "active_marker": "supabase/migrations/20261019222329_global_npc_service_role_portrait_publisher.sql",
+   "marker_sha256": "10d297b243a845848559ee7dbbc3402fea40e7e2afaf10d35060d145cc71426b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261020000500_global_npc_service_role_portrait_publisher.sql",
+   "source_sha256": "ccac1ad01fcb6e67e9858e75f5b970401e617bf634421daa4e71ca955244f0f4",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261022055403",
+   "name": "arcane_paper_doll_system_assets",
+   "active_marker": "supabase/migrations/20261022055403_arcane_paper_doll_system_assets.sql",
+   "marker_sha256": "e7f3c352ad1c59a56233a13ad75a7188ab20e341a28cdb1584661f078b9e4e3c",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261022043725_arcane_paper_doll_system_assets.sql",
+   "source_sha256": "8a4b1280326986feca387a457fca91b2aa8ae6ff0b1d481c9cad1fcfc7d02faf",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261022100334",
+   "name": "generalize_arcane_system_asset_keys",
+   "active_marker": "supabase/migrations/20261022100334_generalize_arcane_system_asset_keys.sql",
+   "marker_sha256": "c86c1b920ebb917e71690d8b07c4871bac9494865fbb037fcb16e61609595bfb",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261022100344",
+   "name": "generalize_arcane_system_asset_publication",
+   "active_marker": "supabase/migrations/20261022100344_generalize_arcane_system_asset_publication.sql",
+   "marker_sha256": "71d3f8bd3019af3b5c6b3a4ec54e5c63c78e5e201fd95526060ad12689bc021c",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261022210618",
+   "name": "add_weapon_class_to_rule_weapons",
+   "active_marker": "supabase/migrations/20261022210618_add_weapon_class_to_rule_weapons.sql",
+   "marker_sha256": "2b59eb4874bd41e8ebd48564ca8145d82e9e0fd0f8c3ee3bc215cfb0d58f7ea1",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261024062510",
+   "name": "arcane_race_battle_poses",
+   "active_marker": "supabase/migrations/20261024062510_arcane_race_battle_poses.sql",
+   "marker_sha256": "6c2a09a21322e1a0f431ad83e0f1ebcf2f7356aa575f8537edd9dff678da82d6",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024060000_arcane_race_battle_poses.sql",
+   "source_sha256": "9d6e4aa97a41d1aba04db00ff86615627059595411a4d3b4e343f6e8886ea8bd",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024062512",
+   "name": "hermes_race_pose_job_support",
+   "active_marker": "supabase/migrations/20261024062512_hermes_race_pose_job_support.sql",
+   "marker_sha256": "e7e744cc92aa899936f419304e7afae5350c7005adae9533b6ab2230efb656db",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024061000_hermes_race_pose_job_support.sql",
+   "source_sha256": "d14300b9216660de42af9d210b9c3dc087f488e58172a6954ab8c89bec3ad504",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024163509",
+   "name": "arcane_honors_foundation",
+   "active_marker": "supabase/migrations/20261024163509_arcane_honors_foundation.sql",
+   "marker_sha256": "c97cd3f92805f22d5394aa4a6a6c0268c5948a96738116af02e33e288886040b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024190000_arcane_honors_foundation.sql",
+   "source_sha256": "5dbc21c188db57555021aca9a2f960ccb9c7407af2a843b0da79b3d05e7e7e65",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024163525",
+   "name": "arcane_honors_gm_access",
+   "active_marker": "supabase/migrations/20261024163525_arcane_honors_gm_access.sql",
+   "marker_sha256": "8a8ab23a564acc9f5f981080b71194c0846b994c044cf0ac595a31c799d8f219",
+   "source_path": "supabase/legacy-migrations/live-history-recovered-sources/20261024163525_arcane_honors_gm_access.sql",
+   "source_sha256": "49ff28a87d00efbbefaaa5e07f233a318de5dbff20ad2b6b164b3e6a4856d6e0",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261024202243",
+   "name": "hermes_system_asset_registration",
+   "active_marker": "supabase/migrations/20261024202243_hermes_system_asset_registration.sql",
+   "marker_sha256": "65ab47747e56abac78268a26f5800f5a4bb049660c264e0b49ccee5e71ba2966",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261023190000_hermes_system_asset_registration.sql",
+   "source_sha256": "a16f3106d5a6387ed7091f10935aa7eafeed4b6802dbf688a82d76cc8e4dc243",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024202246",
+   "name": "arcane_trophy_room_opaque_scene",
+   "active_marker": "supabase/migrations/20261024202246_arcane_trophy_room_opaque_scene.sql",
+   "marker_sha256": "eb081c195a7d04702456b7da8d8b8cf206ed86c0e65db6781bae21aea983b01b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024200000_arcane_trophy_room_opaque_scene.sql",
+   "source_sha256": "c41c655880de65d26790271a3bcfcf8860d08a31ccf775e2a16fd075bc657fba",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024202603",
+   "name": "hermes_system_asset_trophy_room_key",
+   "active_marker": "supabase/migrations/20261024202603_hermes_system_asset_trophy_room_key.sql",
+   "marker_sha256": "8f6d96ab4e4b797af15e73ee5303fd07274bbd7ed1819c9e66e8c780480ecb0f",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024203000_hermes_system_asset_trophy_room_key.sql",
+   "source_sha256": "409e426311289d21a88e6866820e74ee8a75aa8ca6f3d0641ddfc411f12b2b11",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261024214951",
+   "name": "arcane_honors_adventure_catalog",
+   "active_marker": "supabase/migrations/20261024214951_arcane_honors_adventure_catalog.sql",
+   "marker_sha256": "4710688b7722e466a743f73b81d1ac3b6952149d2223d8cdc660afb8120b7a41",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261024214951_arcane_honors_adventure_catalog.sql",
+   "source_sha256": "54435993e0c7569d290e1ff20108120b598fe55aa305b75678a3d07e57d44de4",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261025031624",
+   "name": "extend_rule_magic_symbols_editor_fields_258",
+   "active_marker": "supabase/migrations/20261025031624_extend_rule_magic_symbols_editor_fields_258.sql",
+   "marker_sha256": "251b6866af96dfe9d97d8cf5b89fefbc6944d61d4b2b05c56c2523e395e0508b",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261025062527",
+   "name": "spell_target_types",
+   "active_marker": "supabase/migrations/20261025062527_spell_target_types.sql",
+   "marker_sha256": "67886ea15776d229caee83e4b187678acf6ba4c68228272e0ac847fe6435f285",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261025062527_spell_target_types.sql",
+   "source_sha256": "c8db7bf5b88c026cf4cf590c56cb1ef47a4a9ebb843cb69e74a62d7d7199b5aa",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261025130811",
+   "name": "hermes_system_asset_registration",
+   "active_marker": "supabase/migrations/20261025130811_hermes_system_asset_registration.sql",
+   "marker_sha256": "cff948ab74caa006e101b3a095cffc217c375a31ea2534b63f7bcba2dcdb0737",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261023190000_hermes_system_asset_registration.sql",
+   "source_sha256": "a16f3106d5a6387ed7091f10935aa7eafeed4b6802dbf688a82d76cc8e4dc243",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261025135349",
+   "name": "honor_relief_variants",
+   "active_marker": "supabase/migrations/20261025135349_honor_relief_variants.sql",
+   "marker_sha256": "675be8e84dc7579247f959b81b1730cdc5436d9d4658e7a679e1ec06400ad8e4",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261025110000_honor_relief_variants.sql",
+   "source_sha256": "9f29ec3dfa2c7dfae574c3149e13571f991a0dbb301c20d824c009e265c6dcc7",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261025135439",
+   "name": "arcane_laurel_frame_family",
+   "active_marker": "supabase/migrations/20261025135439_arcane_laurel_frame_family.sql",
+   "marker_sha256": "e29fa444ebe3099a80dba5ff4be5b9a8872c9432092784407fd46d3da04a5195",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261025113000_arcane_laurel_frame_family.sql",
+   "source_sha256": "4459458019106c1680b860b4df49ac3f7394e3725c1fff0b141e26e55ac93c3e",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261025152057",
+   "name": "honor_global_gm_access",
+   "active_marker": "supabase/migrations/20261025152057_honor_global_gm_access.sql",
+   "marker_sha256": "758cd8c2e96cf04f240c6077d594bc86518218a500fea4909dcf406d54105037",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261025140000_honor_global_gm_access.sql",
+   "source_sha256": "95b1aaa4f930446f295f369c7329bd2d04770981534e3ec76094468542bd315f",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261026140243",
+   "name": "hermes_alea_isolated_pilot",
+   "active_marker": "supabase/migrations/20261026140243_hermes_alea_isolated_pilot.sql",
+   "marker_sha256": "25a611129a1bf06f58d8c20d1d47c57d5d0208e3c6872026f6c450237ed666a4",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261026092330_hermes_alea_isolated_pilot.sql",
+   "source_sha256": "141029038c4ddd672bf4c0a7fd3efed9a99f608ab5faa168e9cac266457eacb5",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261026140259",
+   "name": "hermes_alea_cleanup_reservations",
+   "active_marker": "supabase/migrations/20261026140259_hermes_alea_cleanup_reservations.sql",
+   "marker_sha256": "5ae12e32b98abd1d6f06912bb0f999a5d721cdc7b76313712efcb4a3b4231509",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261026093615_hermes_alea_cleanup_reservations.sql",
+   "source_sha256": "899e4189aa3b30b96e94e874d03989a00195d4c0e7599e1ddaae2c708c111809",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261026162718",
+   "name": "hermes_alea_target_adapter_boundary",
+   "active_marker": "supabase/migrations/20261026162718_hermes_alea_target_adapter_boundary.sql",
+   "marker_sha256": "438b8ef2af79300941f1775472a1110016429fbaa97fe2358a6bf90a178db8a5",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261026172000_hermes_alea_target_adapter_boundary.sql",
+   "source_sha256": "b01958af7c9eb1870096eb237b7efabb88671d401767eee24a4f67b446798de9",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261026180120",
+   "name": "hermes_alea_direct_storage_finalize",
+   "active_marker": "supabase/migrations/20261026180120_hermes_alea_direct_storage_finalize.sql",
+   "marker_sha256": "5eef51bb49fc9f9210ea9b2d9fc99ab944da4a4adc95fd824dde225b3e91dd8b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261026190000_hermes_alea_direct_storage_finalize.sql",
+   "source_sha256": "b7963d083578cd134a55b87c262fea4c259fc484e8bb7bee032378e707b715b3",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261027042234",
+   "name": "hermes_core_system_image_cas",
+   "active_marker": "supabase/migrations/20261027042234_hermes_core_system_image_cas.sql",
+   "marker_sha256": "7cd390c2aee96701e9f73ecb837fb5cb730a262b556a07743cda33805981032e",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261027050000_hermes_core_system_image_cas.sql",
+   "source_sha256": "0fd8cd1af26d15975a92736a4107063e4a516cd55b6a96eab3457a160227e862",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261027053145",
+   "name": "hermes_core_system_image_create",
+   "active_marker": "supabase/migrations/20261027053145_hermes_core_system_image_create.sql",
+   "marker_sha256": "3d6e6a02e4dd971074a6fb5205f1fd5719c678ed4558fb6ccbfd4062bdadfe9b",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261027061000_hermes_core_system_image_create.sql",
+   "source_sha256": "f2baa4ac80d000e3c8361723c2c693ad4f00adbbc58c1408aefb657776db7939",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261027202529",
+   "name": "hermes_alea_cleanup_report_service_role_read",
+   "active_marker": "supabase/migrations/20261027202529_hermes_alea_cleanup_report_service_role_read.sql",
+   "marker_sha256": "5fa8bb10f23b3773570cdaaa2b66b121b7d61fa4e1ab1db7df94421c0214cff7",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261027202529_hermes_alea_cleanup_report_service_role_read.sql",
+   "source_sha256": "386b51da14bee8f1fb6d1b57ccee73318f11dd241243b30b54386b7b3f30bfbb",
+   "source_provenance": "exact-version-source"
+  },
+  {
+   "version": "20261028061927",
+   "name": "hermes_core_honor_image_grants",
+   "active_marker": "supabase/migrations/20261028061927_hermes_core_honor_image_grants.sql",
+   "marker_sha256": "3d6c7d08a3325a09ccd7b156cdf2a04851821a927f337327445b891fa9464900",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261028061810_hermes_core_honor_image_grants.sql",
+   "source_sha256": "35ba38ea7051dcb7324c276b41bbd53ad6f051fe1f59c3ea37f9d131fdcabd39",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261028162728",
+   "name": "allow_opaque_honor_relief_assets",
+   "active_marker": "supabase/migrations/20261028162728_allow_opaque_honor_relief_assets.sql",
+   "marker_sha256": "9b3f2aa79b77f43d1cd7a295a74b1046eeead581ea4e4629503d0e87fd834591",
+   "source_path": null,
+   "source_sha256": null,
+   "source_provenance": "source-not-retained"
+  },
+  {
+   "version": "20261028191604",
+   "name": "badge_frame_library",
+   "active_marker": "supabase/migrations/20261028191604_badge_frame_library.sql",
+   "marker_sha256": "4d30c453e6b815d77030c171208cd4ef077275782247017bb418343bd18c7dd3",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261028192000_badge_frame_library.sql",
+   "source_sha256": "6665630eaf25f8c7afcf036463a561952fb2621ee8a965a758f19ac3f1271efe",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261107051343",
+   "name": "hermes_alea_abandoned_cleanup",
+   "active_marker": "supabase/migrations/20261107051343_hermes_alea_abandoned_cleanup.sql",
+   "marker_sha256": "25b413f5ea9c4411c626d1235767480f094dcbb495602cb7455afd4ec4b89582",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261107050000_hermes_alea_abandoned_cleanup.sql",
+   "source_sha256": "5816a58dc8fc381bfb7d1b18edb095710661930b8cbdfa3850ead44b06f76f9c",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261109212709",
+   "name": "hermes_core_live_map_keys",
+   "active_marker": "supabase/migrations/20261109212709_hermes_core_live_map_keys.sql",
+   "marker_sha256": "09cd52bf7cba562623887ff7d72e96d5a3615230471b8e15b73953fef604a6e3",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261109210000_hermes_core_live_map_keys.sql",
+   "source_sha256": "abfdf39f4d6c89b0b2b4734f66b2230114597bf662af52d551524cfe697a8417",
+   "source_provenance": "unambiguous-name-matched-archive"
+  },
+  {
+   "version": "20261114164032",
+   "name": "trophy_inspector_public_projection_and_earned_stars",
+   "active_marker": "supabase/migrations/20261114164032_trophy_inspector_public_projection_and_earned_stars.sql",
+   "marker_sha256": "748479c4903e8a9857900ba7c47667d4d2f39e0c763c4d5f489ce1f81b5c9237",
+   "source_path": "supabase/legacy-migrations/live-pre-convergence/20261114032504_trophy_inspector_public_projection_and_earned_stars.sql",
+   "source_sha256": "5253e5a24d8650888aef28f7f3a90eb1802587b4974d596a5ca9090b4200f8a2",
+   "source_provenance": "verified-live-only-archive"
+  },
+  {
+   "version": "20261114164037",
+   "name": "trophy_inspector_invoker_read_policies",
+   "active_marker": "supabase/migrations/20261114164037_trophy_inspector_invoker_read_policies.sql",
+   "marker_sha256": "f8fe39bfbbc7f4639660ad2dfe02a9752769901f2d30228a87322e6bb2d04fdb",
+   "source_path": "supabase/legacy-migrations/live-pre-convergence/20261114033214_trophy_inspector_invoker_read_policies.sql",
+   "source_sha256": "13e578d62e9b0302c9affcfa88fa9ce9d03fba857f39dd7f33847aae46edec04",
+   "source_provenance": "verified-live-only-archive"
+  },
+  {
+   "version": "20261114164058",
+   "name": "trophy_inspector_projection_functions",
+   "active_marker": "supabase/migrations/20261114164058_trophy_inspector_projection_functions.sql",
+   "marker_sha256": "1564a58e6763bd97e0585d000fe0c49915cf2fa114af57492586b27dfaa224c8",
+   "source_path": "supabase/legacy-migrations/live-pre-convergence/20261114054000_trophy_inspector_projection_functions.sql",
+   "source_sha256": "c566c2118018916ae50ba5d7ad527f4d73ead11c4a2d67639fc0f8cb011176f3",
+   "source_provenance": "verified-live-only-archive"
+  },
+  {
+   "version": "20261114164126",
+   "name": "trophy_inspector_private_functions",
+   "active_marker": "supabase/migrations/20261114164126_trophy_inspector_private_functions.sql",
+   "marker_sha256": "ac6cdaaa182ea474e8aeb2a1a22443a0771a4b111d9e4624ffa26fa97df1f241",
+   "source_path": "supabase/legacy-migrations/live-pre-convergence/20261114054030_trophy_inspector_private_functions.sql",
+   "source_sha256": "ba8cf48acabe68563c26f0164ffd450305cec1b4c4ea393e32b77306583ba87b",
+   "source_provenance": "verified-live-only-archive"
+  },
+  {
+   "version": "20261114174209",
+   "name": "arcane_spelmoete_day_time",
+   "active_marker": "supabase/migrations/20261114174209_arcane_spelmoete_day_time.sql",
+   "marker_sha256": "2354ab8c97a7b20755db77ace897792c500010300daaaf845eb22aab2c01e422",
+   "source_path": "supabase/legacy-migrations/live-candidate-original-migrations/20261112222237_arcane_spelmoete_day_time.sql",
+   "source_sha256": "9583a80fc3c1d37b7a33e25980cd0b2893f9c4b344c13abb82ba138b4e1541bd",
+   "source_provenance": "unambiguous-name-matched-archive"
+  }
+ ],
+ "historical_sources_retained": 124,
+ "historical_sources_unavailable": 54
+}

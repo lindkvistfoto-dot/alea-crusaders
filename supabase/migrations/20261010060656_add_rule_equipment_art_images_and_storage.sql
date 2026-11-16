@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261010060656 (add_rule_equipment_art_images_and_storage) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.
