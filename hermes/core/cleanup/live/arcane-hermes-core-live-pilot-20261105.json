@@ -1,6 +1,6 @@
 {
   "schema": "hermes-asset-cleanup/v1",
-  "action": "dry_run",
+  "action": "delete",
   "identity": {
     "project_ref": "wbmosmkirsitkonejzpg",
     "bucket": "alea-hermes-public",
@@ -11,5 +11,21 @@
     "sha256": "9a6e0d0f11eaae66b702859d46a9f6a01559d62ae6c80afa19d060213af8341b",
     "bytes": 3142,
     "image_revision": 0
+  },
+  "approval": {
+    "schema": "hermes-asset-cleanup/v1",
+    "identity": {
+      "project_ref": "wbmosmkirsitkonejzpg",
+      "bucket": "alea-hermes-public",
+      "asset_key": "arcane-hermes-core-live-pilot-20261105",
+      "object_path": "hermes/system-asset/arcane-hermes-core-live-pilot-20261105/9a6e0d0f11eaae66b702859d46a9f6a01559d62ae6c80afa19d060213af8341b.webp",
+      "storage_object_id": "495f658d-0aa8-42ab-af84-d5b2a1d167f9",
+      "registry_row_id": "ac8dd8a2-fa0b-48c3-9a40-eea204d298f0",
+      "sha256": "9a6e0d0f11eaae66b702859d46a9f6a01559d62ae6c80afa19d060213af8341b",
+      "bytes": 3142,
+      "image_revision": 0
+    },
+    "expires_at": "2026-11-16T11:03:48.913Z",
+    "plan_sha256": "0094bb3eec777657d82314b541e9384063165cd8f5a4aec568a54846be72974f"
   }
 }
