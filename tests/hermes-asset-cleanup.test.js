@@ -38,7 +38,7 @@ function fixture({references=[],removeMode="success",registryDeleteMode="success
   };
   const referenceScanner={find:vi.fn(async()=>references)};
   const cleanup=createHermesAssetCleanup({projectRef:CLEANUP_DEV_PROJECT,targetEnv:"DEV",registry,storage,references:referenceScanner,now});
-  return {cleanup,registry,storage,referenceScanner,get row(){return row;},get object(){return object;},get deleted(){return deleted;}};
+  return {cleanup,registry,storage,referenceScanner,get row(){return row;},get object(){return object;},get deleted(){return deleted;},mutateStorage(change){object={...object,...change};}};
 }
 
 const dryRun={schema:CLEANUP_SCHEMA,action:"dry_run",identity};
@@ -67,9 +67,19 @@ describe("HERMES CORE asset cleanup",()=>{
   it("fails closed when the approved hash or revision changed",async()=>{
     const f=fixture();
     const approval=await approvalFor(f.cleanup);
-    const changed={...identity,sha256:"0".repeat(64)};
+    const changedSha="0".repeat(64);
+    const changed={...identity,sha256:changedSha,object_path:`hermes/system-asset/${assetKey}/${changedSha}.webp`};
     await expect(f.cleanup.execute({schema:CLEANUP_SCHEMA,action:"delete",identity:changed,approval},approval,"lindkvistfoto-dot"))
       .rejects.toThrow("CLEANUP_APPROVAL_MISMATCH");
+    expect(f.storage.remove).not.toHaveBeenCalled();
+  });
+
+  it("refuses changed object bytes after the dry-run",async()=>{
+    const f=fixture();
+    const approval=await approvalFor(f.cleanup);
+    f.mutateStorage({sha256:"0".repeat(64)});
+    await expect(f.cleanup.execute({schema:CLEANUP_SCHEMA,action:"delete",identity,approval},approval,"lindkvistfoto-dot"))
+      .rejects.toThrow("CLEANUP_STORAGE_CHANGED");
     expect(f.storage.remove).not.toHaveBeenCalled();
   });
 
