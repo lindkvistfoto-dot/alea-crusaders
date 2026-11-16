@@ -1,0 +1,39 @@
+name: ALEA convergence LIVE migration dry-run
+on:
+  push:
+    branches:
+      - work/live-904-migration-dry-run-20261116
+    paths:
+      - .github/workflows/convergence-live-migration-dry-run.yml
+permissions:
+  contents: read
+jobs:
+  live-migration-dry-run:
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/work/live-904-migration-dry-run-20261116'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+      - name: Verify LIVE target and run read-only migration plan
+        shell: bash
+        env:
+          LIVE_DATABASE_URL: ${{ secrets.ALEA_PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          [[ -n "$LIVE_DATABASE_URL" ]] || { echo "::error::ALEA_PRODUCTION_DATABASE_URL is unavailable; no migration was applied."; exit 1; }
+          python3 - <<'PY'
+          import os, sys
+          from urllib.parse import unquote, urlparse
+          u = urlparse(os.environ['LIVE_DATABASE_URL'])
+          username = unquote(u.username or '')
+          direct = u.hostname == 'db.wbmosmkirsitkonejzpg.supabase.co'
+          pooler = bool(u.hostname and u.hostname.endswith('.pooler.supabase.com') and username == 'postgres.wbmosmkirsitkonejzpg')
+          if u.scheme not in {'postgres', 'postgresql'} or not (direct or pooler):
+              print('::error::Refusing migration dry-run: target is not the approved LIVE database.')
+              sys.exit(1)
+          print('Verified LIVE database endpoint; dry-run only.')
+          PY
+          supabase db push --dry-run --include-all --db-url "$LIVE_DATABASE_URL"
