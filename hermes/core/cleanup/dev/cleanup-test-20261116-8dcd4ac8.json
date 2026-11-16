@@ -1,0 +1,15 @@
+{
+  "schema": "hermes-asset-cleanup/v1",
+  "action": "dry_run",
+  "identity": {
+    "project_ref": "wkiuyklzzroavclnsxna",
+    "bucket": "alea-hermes-public",
+    "asset_key": "arcane-hermes-cleanup-test-20261116-8dcd4ac8",
+    "object_path": "hermes/system-asset/arcane-hermes-cleanup-test-20261116-8dcd4ac8/483a15c50ca7186bc5ebca76ca3ebc1ea4929cb537ebc65a117fd1c2c271d107.webp",
+    "storage_object_id": "48f8f61b-1e2e-4845-8552-9d3df3e6d845",
+    "registry_row_id": "7b07c1e2-2b50-4d6b-b0cf-711004fff471",
+    "sha256": "483a15c50ca7186bc5ebca76ca3ebc1ea4929cb537ebc65a117fd1c2c271d107",
+    "bytes": 156,
+    "image_revision": 0
+  }
+}
