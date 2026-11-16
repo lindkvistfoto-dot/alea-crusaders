@@ -233,15 +233,35 @@ jobs:
                 fi
               fi
               if [[ "$changed" == supabase/migrations/*.sql ]]; then
+                [[ "$changed" =~ ^supabase/migrations/[0-9]{14}_[A-Za-z0-9_-]+\.sql$ ]] || {
+                  echo "blocked_reason=En migrationsfil har ett ogiltigt versionsnamn och kan inte ingå i en låst kandidat." >> "$GITHUB_OUTPUT"
+                  echo "::error::Candidate migration filename is not a versioned Supabase migration: $changed"
+                  exit 1
+                }
                 LIVE_MIGRATION_BLOB="$(git -C "$SOURCE_DIR" rev-parse "HEAD:$changed" 2>/dev/null || true)"
                 DEV_MIGRATION_BLOB="$(git -C "$DEV_DIR" rev-parse "$PR_PATCH_SHA:$changed" 2>/dev/null || true)"
+                [[ "$DEV_MIGRATION_BLOB" =~ ^[0-9a-f]{40}$ ]] || {
+                  echo "::error::Reviewed source PR is missing migration $changed at its exact head."
+                  exit 1
+                }
                 if [[ "$LIVE_MIGRATION_BLOB" =~ ^[0-9a-f]{40}$ && "$LIVE_MIGRATION_BLOB" == "$DEV_MIGRATION_BLOB" ]]; then
                   echo "PR #$PR_NUMBER: reusing byte-identical migration already present in LIVE."
                   continue
                 fi
-                echo "blocked_reason=Kandidaten innehåller en migration som inte redan finns byte-identiskt i LIVE; separat migrationsgranskning krävs." >> "$GITHUB_OUTPUT"
-                echo "::error::Candidate migration is new or differs from LIVE; separate migration review is required."
-                exit 1
+                if [[ "$LIVE_MIGRATION_BLOB" =~ ^[0-9a-f]{40}$ ]]; then
+                  echo "blocked_reason=En befintlig LIVE-migration har samma versionsnamn men annat innehåll; kandidatbygget stoppar för att förhindra omskrivning." >> "$GITHUB_OUTPUT"
+                  echo "::error::Candidate migration would overwrite an existing LIVE migration with different content: $changed"
+                  exit 1
+                fi
+                [[ "$(git -C "$DEV_DIR" ls-tree "$PR_PATCH_SHA" -- "$changed" | awk '{print $1}')" == "100644" ]] || {
+                  echo "::error::Only ordinary migration files can be included in a LIVE candidate: $changed"
+                  exit 1
+                }
+                mkdir -p "$SOURCE_DIR/$(dirname "$changed")"
+                git -C "$DEV_DIR" show "$PR_PATCH_SHA:$changed" > "$SOURCE_DIR/$changed"
+                git -C "$SOURCE_DIR" add -- "$changed"
+                echo "PR #$PR_NUMBER: included exact reviewed migration in the candidate: $changed"
+                continue
               fi
               if ! git -C "$SOURCE_DIR" cat-file -e "HEAD:$changed" 2>/dev/null; then
                 if ! git -C "$DEV_DIR" cat-file -e "$PR_PATCH_SHA:$changed" 2>/dev/null; then
@@ -349,12 +369,14 @@ jobs:
           git -C "$SOURCE_DIR" diff --binary --full-index "$LIVE_SHA" > "$OUTPUT_DIR/candidate.patch"
           MIGRATIONS="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- 'supabase/migrations/**')"
           DEPENDENCIES="$(git -C "$OUTPUT_DIR/source" diff --cached --name-only "$LIVE_SHA" -- package.json package-lock.json)"
-          [[ -z "$MIGRATIONS" ]] || { echo "blocked_reason=Kandidaten innehåller Supabase-migrationer; separat migrationsgranskning krävs innan en LIVE-kandidat kan skapas." >> "$GITHUB_OUTPUT"; echo "::error::Candidate contains database migrations; separate migration review is required."; exit 1; }
-          [[ -z "$DEPENDENCIES" ]] || { echo "blocked_reason=Kandidaten ändrar beroendefiler; separat dependency-granskning krävs innan en LIVE-kandidat kan skapas." >> "$GITHUB_OUTPUT"; echo "::error::Candidate changes dependencies; dependency review is required."; exit 1; }
+          MIGRATION_FILES_JSON="$(printf '%s\n' "$MIGRATIONS" | sed '/^$/d' | jq -R . | jq -sc .)"
+          DEPENDENCY_FILES_JSON="$(printf '%s\n' "$DEPENDENCIES" | sed '/^$/d' | jq -R . | jq -sc .)"
 
           echo "live_sha=$LIVE_SHA" >> "$GITHUB_OUTPUT"
           echo "dev_sha=$(jq -r '.testedDevSha' "$OUTPUT_DIR/request.json")" >> "$GITHUB_OUTPUT"
           echo "candidate_tree=$(git -C "$OUTPUT_DIR/source" write-tree)" >> "$GITHUB_OUTPUT"
+          echo "migration_files=$MIGRATION_FILES_JSON" >> "$GITHUB_OUTPUT"
+          echo "dependency_files=$DEPENDENCY_FILES_JSON" >> "$GITHUB_OUTPUT"
 
       - name: Test candidate against LIVE baseline
         working-directory: ${{ runner.temp }}/olympia-candidate/source
@@ -385,6 +407,8 @@ jobs:
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          MIGRATION_FILES: ${{ steps.candidate.outputs.migration_files }}
+          DEPENDENCY_FILES: ${{ steps.candidate.outputs.dependency_files }}
           ITEM_ID: ${{ steps.candidate.outputs.item_id }}
           ISSUE_CREATED_AT: ${{ steps.candidate.outputs.issue_created_at }}
           ATTEMPT: ${{ steps.candidate.outputs.attempt }}
@@ -503,6 +527,8 @@ jobs:
           ITEM_ID: ${{ steps.candidate.outputs.item_id }}
           PRIMARY_PR: ${{ steps.candidate.outputs.primary_pr }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
+          MIGRATION_FILES: ${{ steps.candidate.outputs.migration_files }}
+          DEPENDENCY_FILES: ${{ steps.candidate.outputs.dependency_files }}
           TREE_SHA: ${{ steps.release_pr.outputs.tree }}
           OUTPUT_DIR: ${{ runner.temp }}/olympia-candidate
           RELEASE_PR_NUMBER: ${{ steps.pull_request.outputs.number }}
@@ -519,8 +545,8 @@ jobs:
             tested_dev_sha:process.env.DEV_SHA,
             live_base_sha:process.env.LIVE_SHA,
             candidate_tree_sha:process.env.TREE_SHA,
-            dependency_changes:[],
-            database_migrations:[],
+            dependency_changes:JSON.parse(process.env.DEPENDENCY_FILES||'[]'),
+            database_migrations:JSON.parse(process.env.MIGRATION_FILES||'[]'),
             tests:'npm run check: passed',
             rollback:'Restore the exact LIVE baseline by reverting the eventual release commit based on live_base_sha.',
             publication:'NOT_PERFORMED',
@@ -551,6 +577,8 @@ jobs:
           ISSUE_NUMBER: ${{ steps.candidate.outputs.issue_number }}
           LIVE_SHA: ${{ steps.candidate.outputs.live_sha }}
           DEV_SHA: ${{ steps.candidate.outputs.dev_sha }}
+          MIGRATION_FILES: ${{ steps.candidate.outputs.migration_files }}
+          DEPENDENCY_FILES: ${{ steps.candidate.outputs.dependency_files }}
           ITEM_ID: ${{ steps.candidate.outputs.item_id }}
           PRIMARY_PR: ${{ steps.candidate.outputs.primary_pr }}
           SOURCE_PRS: ${{ steps.candidate.outputs.source_prs }}
@@ -576,8 +604,9 @@ jobs:
                   "- Tests: npm run check passed on candidate assembled from LIVE.",
                   "- Release PR checks: all GitHub checks passed; PR is mergeable.",
                   "- Workflow run: " + context.serverUrl + "/" + context.repo.owner + "/" + context.repo.repo + "/actions/runs/" + context.runId,
-                  "- Dependency changes: none.",
-                  "- Database migrations: none.",
+                  "- Dependency files: " + (JSON.parse(process.env.DEPENDENCY_FILES||"[]").join(", ") || "none"),
+                  "- Database migrations in exact candidate tree: " + (JSON.parse(process.env.MIGRATION_FILES||"[]").join(", ") || "none"),
+                  "- Apply listed LIVE migrations to the exact LIVE project before merging this candidate.",
                   "- LIVE publication: NOT PERFORMED.",
                   "- Artifact: open the successful workflow run to inspect the exact candidate package."
                 ].join("\n")

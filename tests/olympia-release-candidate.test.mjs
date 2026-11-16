@@ -60,15 +60,42 @@ describe('OLYMPIA LIVE candidate',()=>{
   expect(workflow).not.toContain('ITEM_ID" == "PILOT-001"');
   expect(workflow).toContain('source_prs:process.env.SOURCE_PRS.split(",").map(Number)');
  });
- it('reuses only byte-identical migrations already present in LIVE',()=>{
+ it('carries reviewed additive migrations and dependencies in the pinned candidate',()=>{
   const workflow=read('.github/workflows/olympia-release-candidate.yml');
   expect(workflow).toContain('if [[ "$changed" == supabase/migrations/*.sql ]]');
   expect(workflow).toContain('LIVE_MIGRATION_BLOB');
   expect(workflow).toContain('DEV_MIGRATION_BLOB');
   expect(workflow).toContain('"$LIVE_MIGRATION_BLOB" == "$DEV_MIGRATION_BLOB"');
   expect(workflow).toContain('reusing byte-identical migration already present in LIVE');
-  expect(workflow).toContain('Candidate migration is new or differs from LIVE');
-  expect(workflow).toContain('[[ -z "$MIGRATIONS" ]]');
+  expect(workflow).toContain('Candidate migration would overwrite an existing LIVE migration with different content');
+  expect(workflow).toContain('included exact reviewed migration in the candidate');
+  expect(workflow).toContain('migration_files=$MIGRATION_FILES_JSON');
+  expect(workflow).toContain('dependency_files=$DEPENDENCY_FILES_JSON');
+  expect(workflow).not.toContain('Candidate contains database migrations');
+  expect(workflow).not.toContain('Candidate changes dependencies');
+  const bridge=read('supabase/functions/olympia-candidate-bridge/index.ts');
+  expect(bridge).toContain('const migrationFiles = changed.filter(path => path.startsWith("supabase/migrations/"))');
+  expect(bridge).toContain('Apply listed migrations to the exact LIVE project before merging this candidate.');
+  expect(bridge).toContain('Dependency files in the exact candidate tree:');
+  const manifest=workflow.slice(workflow.indexOf('Write candidate manifest'),workflow.indexOf('Upload exact candidate package'));
+  expect(manifest).toContain('MIGRATION_FILES: ${{ steps.candidate.outputs.migration_files }}');
+  expect(manifest).toContain('DEPENDENCY_FILES: ${{ steps.candidate.outputs.dependency_files }}');
+  expect(manifest).toContain('database_migrations:JSON.parse(process.env.MIGRATION_FILES');
+  expect(manifest).toContain('dependency_changes:JSON.parse(process.env.DEPENDENCY_FILES');
+ });
+ it('returns non-OLYMPIA LIVE hotfixes as tested, non-merged DEV PRs',()=>{
+  const workflow=read('.github/workflows/olympia-backport-live-hotfix.yml');
+  expect(workflow).toContain("github.event.pull_request.merged == true && !startsWith(github.event.pull_request.head.ref, 'olympia/')");
+  expect(workflow).toContain('git diff --binary --full-index "$PATCH_BASE" "$MERGE_SHA"');
+  expect(workflow).toContain('git apply --3way --index "$PATCH_FILE"');
+  expect(workflow).toContain('GIT_AUTHOR_DATE="$SOURCE_COMMIT_DATE" GIT_COMMITTER_DATE="$SOURCE_COMMIT_DATE"');
+  expect(workflow).toContain('EXISTING_PR="$(gh api');
+  expect(workflow).toContain('No partial backport branch or PR was published.');
+  expect(workflow).toContain('npm run check');
+  expect(workflow).toContain('-f base=development');
+  expect(workflow).toContain('No automatic DEV merge; CI and the normal DEV approval path remain required.');
+  expect(workflow).not.toContain('pulls/"$PR_NUMBER"/merge');
+  expect(workflow.indexOf('git apply --3way --index')).toBeLessThan(workflow.indexOf('git -c http.extraheader=\"$AUTH\" push'));
  });
  it('retries the same decision from current DEV while preserving the request attempt',()=>{
   const edge=read('supabase/functions/olympia-control/index.ts');
