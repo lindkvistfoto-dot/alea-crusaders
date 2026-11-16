@@ -5,6 +5,7 @@ on:
     branches: [development]
     paths:
       - 'hermes/core/queue/dev/**'
+      - 'hermes/core/cleanup/dev/**'
   pull_request:
     branches: [development]
     paths:
@@ -43,8 +44,70 @@ jobs:
       - run: python -m pip install Pillow==12.3.0
       - run: python -m unittest discover -s tests -p 'test_hermes_core_profiles.py' -v
 
+  asset-cleanup:
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && contains(toJSON(github.event.commits), 'hermes/core/cleanup/dev/') && !contains(toJSON(github.event.commits), 'hermes/core/queue/dev/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            config/hermes-system-assets.json
+            features/hermes-core/asset-cleanup.js
+            scripts/hermes_asset_cleanup.mjs
+            hermes/core/cleanup/dev
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Validate the existing DEV Supabase secret without revealing it
+        env:
+          ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          key="${ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY:-}"
+          [[ -n "$key" ]] || { echo "::error::Existing DEV Supabase secret is unavailable."; exit 1; }
+          echo "::add-mask::$key"
+          url="https://wkiuyklzzroavclnsxna.supabase.co"
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 20 \
+            --header "apikey: $key" --header "Authorization: Bearer $key" --header "Accept: application/json" \
+            "$url/rest/v1/arcane_system_assets?select=asset_key&limit=1")"
+          [[ "$status" == "200" ]] || { echo "::error::Read-only DEV secret validation failed (HTTP $status)."; exit 1; }
+          printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$key" >> "$GITHUB_ENV"
+          unset key
+          echo "Validated the fixed DEV project; service key remains masked."
+      - name: Process one exact cleanup request
+        env:
+          HERMES_TARGET_ENV: DEV
+          SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
+          HERMES_CLEANUP_REPORT_PATH: ${{ runner.temp }}/hermes-asset-cleanup-report.json
+          HERMES_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="${HERMES_BEFORE:-}"
+          [[ "$before" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid push predecessor."; exit 1; }
+          mapfile -t requests < <(git diff --name-only --diff-filter=AM "$before" "$GITHUB_SHA" -- hermes/core/cleanup/dev/)
+          [[ "${#requests[@]}" == "1" ]] || { echo "::error::Exactly one cleanup request file is required."; exit 1; }
+          request="${requests[0]}"
+          [[ "$request" =~ ^hermes/core/cleanup/dev/[a-z0-9][a-z0-9-]{0,99}\.json$ ]] || { echo "::error::Invalid cleanup request path."; exit 1; }
+          deno run --no-config --no-lock --node-modules-dir=none \
+            --allow-env=GITHUB_REPOSITORY,GITHUB_REF,GITHUB_ACTOR,SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,HERMES_TARGET_ENV,HERMES_CLEANUP_REPORT_PATH \
+            --allow-net --allow-read="$request,config/hermes-system-assets.json" --allow-write="$RUNNER_TEMP" \
+            scripts/hermes_asset_cleanup.mjs "$request"
+      - name: Save cleanup report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-asset-cleanup-${{ github.run_id }}
+          path: ${{ runner.temp }}/hermes-asset-cleanup-report.json
+          if-no-files-found: ignore
   publish:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && contains(toJSON(github.event.commits), 'hermes/core/queue/dev/')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
