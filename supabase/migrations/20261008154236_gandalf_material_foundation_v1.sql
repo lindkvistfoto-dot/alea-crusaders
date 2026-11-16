@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261008154236 (gandalf_material_foundation_v1) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

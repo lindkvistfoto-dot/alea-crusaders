@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261011151724 (academy_skill_category) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

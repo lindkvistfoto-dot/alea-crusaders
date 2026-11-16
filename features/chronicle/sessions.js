@@ -51,7 +51,7 @@ function ensureUi(){
 function renderButton(){
  const btn=$id('gameSessionBtn');if(!btn)return;
  btn.disabled=sessionUiBusy;
- btn.textContent=activeGameSession?(activeGameSession.status==='paused'?'⏸ Spelmöte':'🎲 Spelmöte · Pågår'):'🎲 Spelmöte';
+ btn.textContent=activeGameSession?'🎲 Spelmöte · Pågår':'🎲 Spelmöte';
  btn.title=activeGameSession?'Öppna pågående Spelmöte':'Öppna Spelmöte'
 }
 function dialMarkup(){

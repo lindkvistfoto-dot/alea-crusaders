@@ -95,8 +95,8 @@ describe('Sam Gamgi – persistent player material folder',()=>{
   await h.sam.page(1);expect(h.sam.state.page).toBe(1);
  });
  it('both presentation and player folder remain separate data sets',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/20261008_sam_player_library_share.sql',import.meta.url),'utf8');
-  const foundation=readFileSync(new URL('../supabase/migrations/20261008_gandalf_material_foundation.sql',import.meta.url),'utf8');
+  const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_sam_player_library_share.sql',import.meta.url),'utf8');
+  const foundation=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_gandalf_material_foundation.sql',import.meta.url),'utf8');
   const ui=readFileSync(new URL('../features/material/player-folder-ui.js',import.meta.url),'utf8');
   const viewer=readFileSync(new URL('../features/material/viewer.js',import.meta.url),'utf8');
   const bilbo=readFileSync(new URL('../features/material/library.js',import.meta.url),'utf8');

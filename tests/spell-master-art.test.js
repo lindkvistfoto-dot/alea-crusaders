@@ -7,9 +7,9 @@ const runtime=read('features/combat/runtime.js');
 const admin=read('legacy/app.js');
 const css=read('features/combat/spell-art.css');
 const html=read('index.html');
-const originalMigration=read('supabase/migrations/20261013001000_spell_master_art.sql');
-const dualMigration=read('supabase/migrations/20261013012000_spell_dual_art_square_crop.sql');
-const cutoutMigration=read('supabase/migrations/20261014000500_spell_cutout_art.sql');
+const originalMigration=read('supabase/legacy-migrations/pre-baseline/20261013001000_spell_master_art.sql');
+const dualMigration=read('supabase/legacy-migrations/pre-baseline/20261013012000_spell_dual_art_square_crop.sql');
+const cutoutMigration=read('supabase/legacy-migrations/pre-baseline/20261014000500_spell_cutout_art.sql');
 const frameCss=read('features/combat/duel-frames.css');
 const SPELL='11111111-1111-4111-8111-111111111111';
 const FILE='22222222-2222-4222-8222-222222222222';
@@ -190,7 +190,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(row.illustration_path).toBeUndefined();
  });
  it('enforces square illustration HERMES contracts and scoped database column',()=>{
-  const migration=read('supabase/migrations/20261018124500_spell_square_illustration.sql');
+  const migration=read('supabase/legacy-migrations/pre-baseline/20261018124500_spell_square_illustration.sql');
   const prepare=read('scripts/hermes2_prepare.py');
   const publisher=read('scripts/hermes2_publish.ts');
   const intake=read('scripts/hermes_drive_intake.py');
@@ -208,7 +208,7 @@ describe('Tre oberoende besvärjelsebilder',()=>{
   expect(workflow).toContain('GitHub-original publication retired');
  });
  it('defines the WIDE schema and HERMES routing without forcing 16:9',()=>{
-  const migration=read('supabase/migrations/20261018113000_spell_illustration_wide.sql');
+  const migration=read('supabase/legacy-migrations/pre-baseline/20261018113000_spell_illustration_wide.sql');
   const prepare=read('scripts/hermes2_prepare.py');
   const publish=read('scripts/hermes2_publish.ts');
   const intake=read('scripts/hermes_drive_intake.py');

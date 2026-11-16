@@ -115,7 +115,7 @@ describe('v0.34.95 – live player maps',()=>{
   expect(h.statuses.at(-1)[0]).toContain('Reservsynk');
  });
  it('database signals include location changes, map visibility and map switches',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/20261008230000_map_realtime_signals.sql',import.meta.url),'utf8');
+  const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008230000_map_realtime_signals.sql',import.meta.url),'utf8');
   expect(sql).toContain('campaign_map_signals_member_read');
   expect(sql).toContain('private.is_campaign_member(campaign_id)');
   expect(sql).toContain('security definer');

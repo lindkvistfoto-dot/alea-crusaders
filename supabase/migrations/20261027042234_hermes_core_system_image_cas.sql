@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261027042234 (hermes_core_system_image_cas) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const store=read('features/shop/store.js');
-const catalog=read('supabase/migrations/20261005213000_targans_gille_shop_catalog.sql');
+const catalog=read('supabase/legacy-migrations/pre-baseline/20261005213000_targans_gille_shop_catalog.sql');
 const begin=store.indexOf('/* v0.35.12 — only actual food rations');
 const end=store.indexOf('async function shopCheckout(){',begin);
 if(begin<0||end<=begin)throw new Error('Targan provisions purchase handler missing');

@@ -8,7 +8,7 @@ describe('round background repair for preexisting encounters',()=>{
   expect(css).toContain('background-position:center,center,right 25%');
  });
  it('backfills only ongoing combats with missing metadata, preserving history',()=>{
-  const sql=read('supabase/migrations/20261012023000_restore_legacy_combat_round_images.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261012023000_restore_legacy_combat_round_images.sql');
   expect(sql).toContain("ci.status in ('active','paused','setup')");
   expect(sql).toContain("cb.state->>'round_background_source') is null");
   expect(sql).toContain('public.characters ch');

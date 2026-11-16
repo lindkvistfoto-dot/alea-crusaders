@@ -28,6 +28,8 @@ function mapFor(rows,activeId){
   combatMovementPlanningActor:()=>null,
   combatCurrentAttackTargets:()=>new Map(),
   combatAreaPlacementActive:false,
+  combatHexTriggerPlacement:false,
+  combatHexTriggerSelected:[],
   combatCanManage:()=>false,
   combatChosenAction:()=>null,
   combatGmPlacementId:null,

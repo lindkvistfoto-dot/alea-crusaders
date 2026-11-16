@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261024062512 (hermes_race_pose_job_support) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

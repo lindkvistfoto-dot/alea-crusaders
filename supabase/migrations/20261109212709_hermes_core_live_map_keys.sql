@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261109212709 (hermes_core_live_map_keys) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

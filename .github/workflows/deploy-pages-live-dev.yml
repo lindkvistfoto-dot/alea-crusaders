@@ -3,13 +3,17 @@ name: Deploy Alea live and development to GitHub Pages
 on:
   push:
     branches:
-      - development
       - main
+    # DEV CORE queue pushes must not redeploy the combined main + development Pages artifact.
     paths-ignore:
-      - 'hermes/core/queue/*.json'
       - 'hermes/core/queue/dev/**'
       - '.github/workflows/deploy-pages-live-dev.yml'
       - '.github/workflows/hermes-alea.yml'
+      - 'supabase/migrations/**'
+      - '.github/workflows/alea-dev-pages-e2e.yml'
+      - 'scripts/alea-dev-pages-e2e.mjs'
+      - 'scripts/alea-dev-admin-provision.mjs'
+      - 'docs/testing/ALEA_DEV_PAGES_E2E.md'
   workflow_dispatch:
 
 permissions:
@@ -45,11 +49,56 @@ jobs:
           fetch-depth: 100
           persist-credentials: false
 
+      - name: Promote OLYMPIA HERMES CORE images before LIVE Pages deployment
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          LIVE_BEFORE: ${{ github.event.before }}
+          LIVE_SHA: ${{ github.sha }}
+          SUPABASE_DEV_URL: https://wkiuyklzzroavclnsxna.supabase.co
+          SUPABASE_LIVE_URL: https://wbmosmkirsitkonejzpg.supabase.co
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$LIVE_BEFORE" =~ ^[0-9a-fA-F]{40}$ ]] || { echo "::error::LIVE predecessor is unavailable; image promotion cannot be scoped safely."; exit 1; }
+          mapfile -t manifests < <(git -C live diff --diff-filter=AM --name-only "$LIVE_BEFORE" "$LIVE_SHA" -- 'olympia/release-manifests/*.json')
+          if (( ${#manifests[@]} == 0 )); then
+            echo "No OLYMPIA image manifest changed; image promotion skipped."
+            exit 0
+          fi
+          [[ -n "$SUPABASE_ACCESS_TOKEN" ]] || { echo "::error::The existing Supabase management connection is unavailable; LIVE deployment stopped before publication."; exit 1; }
+          resolve_service_key() {
+            local project="$1"
+            local response key
+            response="$(curl --fail --silent --show-error --get \
+              --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              --header "Accept: application/json" \
+              --data-urlencode "reveal=true" \
+              "https://api.supabase.com/v1/projects/$project/api-keys")"
+            key="$(jq -er '[.[] | select(.name == "service_role") | .api_key][0] // empty' <<< "$response")"
+            unset response
+            [[ "$key" == eyJ* ]] || { echo "::error::Supabase did not return the required project service key."; return 1; }
+            echo "$key"
+          }
+          DEV_KEY="$(resolve_service_key wkiuyklzzroavclnsxna)"
+          LIVE_KEY="$(resolve_service_key wbmosmkirsitkonejzpg)"
+          echo "::add-mask::$DEV_KEY"
+          echo "::add-mask::$LIVE_KEY"
+          export SUPABASE_DEV_SERVICE_ROLE_KEY="$DEV_KEY"
+          export SUPABASE_LIVE_SERVICE_ROLE_KEY="$LIVE_KEY"
+          unset DEV_KEY LIVE_KEY
+          ARGS=()
+          for manifest in "${manifests[@]}"; do
+            ARGS+=("live/$manifest")
+          done
+          node "live/scripts/hermes-core/promote-release-assets.mjs" "${ARGS[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Assemble live root and development subpath
         run: |
           mkdir -p _site/dev
           rsync -a --delete --exclude='.git' live/ _site/
           rsync -a --delete --exclude='.git' development/ _site/dev/
+          node live/scripts/isolate-live-pages.mjs _site
           touch _site/.nojekyll
           test -s _site/index.html
           test -s _site/dev/index.html
@@ -114,11 +163,14 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
+          name: github-pages-${{ github.run_attempt }}
           path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
 
       - name: Verify deployed source manifests
         env:

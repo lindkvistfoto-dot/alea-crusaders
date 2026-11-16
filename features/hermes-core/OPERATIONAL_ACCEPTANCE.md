@@ -4,6 +4,8 @@ HERMES CORE is the single image publication path for **ChatGPT, Work and Codex**
 
 The shared [image contract](./contract.json) defines profile-specific source constraints, processing, output metadata, archive folders, Storage policy and approved target adapters. A new image category uses an existing profile or a new declarative profile attached to an approved adapter; it does not add another publisher or workflow.
 
+System asset deletion is separate from publication and follows the [HERMES CORE asset cleanup contract](./ASSET_CLEANUP.md).
+
 ## Safety contract
 
 1. Preserve the exact original in the configured Drive Inbox and a separate configured archive folder; verify both files' folder membership and identical SHA-256 bytes.
@@ -12,7 +14,7 @@ The shared [image contract](./contract.json) defines profile-specific source con
 4. Convert the exact source according to the selected profile, preserve its required alpha, dimensions, framing, metadata and byte budget, and store immutable SHA-addressed WebP output.
 5. Use only the configured public or private bucket. Verify byte-for-byte Storage readback and public or signed URL readback as appropriate.
 6. Activate only the selected existing target through its approved adapter, using compare-and-set protection where available. Preserve prior references and metadata, then read the target back.
-7. Never delete Drive originals, previous Storage objects or historical records.
+7. The publication flow never deletes Drive originals, previous Storage objects or historical records. Exact system asset removal is a separate, explicitly approved operation defined in [ASSET_CLEANUP.md](./ASSET_CLEANUP.md).
 
 | Profile family | Adapter behavior | Readback |
 | --- | --- | --- |
@@ -35,6 +37,6 @@ CORE publishes developer-supplied battle-pose bytes only to existing published r
 
 Round-background publication requires an existing, unarchived, inactive catalog row. Active catalog entries are rejected. The fixed row-ID path is write-once (`upsert: false`); republishing different bytes to the same row safely fails, and CORE never changes `is_active`.
 
-If a target is not covered by a safe adapter, stop that target and report the missing integration; do not fall back to an older publisher. Older workflows remain active until their replacement is verified and separately approved. This release candidate does not publish to LIVE. Any merge or LIVE publication requires separate approval.
+If a target is not covered by a safe adapter, stop that target and report the missing integration; do not fall back to an older publisher. Older workflows remain active until their replacement is verified and separately approved. No LIVE workflow or deployment is part of this DEV change.
 
 The normal success evidence is the DEV Actions run matching the request commit, the emitted `HERMES_CORE_ACTIVE` record, the Storage hash/readback, and the selected target readback.

@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261009061721 (fix_crossbow_legacy_ammo_v03513) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

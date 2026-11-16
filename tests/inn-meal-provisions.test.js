@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const inn=read('features/inn/inn.js');
 const app=read('legacy/app.js');
 const css=read('src/styles/app.css');
-const sql=read('supabase/migrations/20261009074500_inn_meal_provisions_coverage.sql');
+const sql=read('supabase/legacy-migrations/pre-baseline/20261009074500_inn_meal_provisions_coverage.sql');
 const first=inn.indexOf('/* v0.35.10 — Meals eaten at the inn');
 const last=inn.indexOf('async function innCheckout(){',first);
 if(first<0||last<=first)throw new Error('Meal checkout helpers missing');

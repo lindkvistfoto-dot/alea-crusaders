@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const app=read('legacy/app.js');
 const html=read('index.html');
 const css=read('src/styles/app.css');
-const migration=read('supabase/migrations/20261009071500_food_provisions_day_advance.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261009071500_food_provisions_day_advance.sql');
 const begin=app.indexOf('/* v0.35.09 — Food & provisions:');
 const end=app.indexOf('function renderEquipment(){',begin);
 if(begin<0||end<=begin)throw new Error('Provisions renderer not found');

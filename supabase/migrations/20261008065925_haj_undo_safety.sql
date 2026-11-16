@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261008065925 (haj_undo_safety) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

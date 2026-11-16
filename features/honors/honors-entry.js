@@ -4,6 +4,7 @@ import { createHonorImageResolver, verifiedHonorImageUrl } from './honors-image-
 function browserImageClient(){
   return createHermesAleaClient({
     targetPolicies:{definition:{requireAlpha:false},relief:{requireAlpha:true}},
+    environment:window.ALEA_SUPABASE_CONFIG?.name==='live'?'LIVE':'DEV',
     rpc:(name,args)=>window.dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)}),
     request:(path,options={})=>window.authFetch(path,{...options,headers:{Authorization:'Bearer session',...(options.headers||{})}})
   });
@@ -97,15 +98,27 @@ window.openArcaneHonorsAdmin = async () => {
     try{const cap=await client.capabilities();pilotInstalled=true;pilotEnabled=Boolean(cap?.enabled);}catch{/* Not installed or disabled: existing interface remains available. */}
     const assetRows=Array.isArray(imageAssets)?imageAssets:[];
     if(pilotInstalled){
-      const [defs,reliefs,managed]=await Promise.all([
+      const [defs,reliefs]=await Promise.all([
         window.dbJson('honor_definitions?select=id,image_revision'),
-        window.dbJson('honor_relief_variants?select=id,image_revision'),
-        client.loadAssets(window.dbJson)
+        window.dbJson('honor_relief_variants?select=id,image_revision')
       ]);
       for(const row of [...(definitions||[]),...(variants||[])]){
         const revision=[...defs,...reliefs].find(r=>r.id===row.id);row.image_revision=revision?.image_revision||0;
       }
-      assetRows.push(...managed);
+      // The admin can be used as soon as its registry rows are ready. HERMES
+      // signed-preview URLs are hydrated in the background so slow Storage
+      // signing cannot leave the whole page stuck on its loading state.
+      client.loadAssets(window.dbJson).then(managed=>{
+        if(sequence!==openSequence) return;
+        for(const row of managed){
+          const index=assetRows.findIndex(asset=>asset.asset_key===row.asset_key);
+          if(index<0) assetRows.push(row); else assetRows[index]=row;
+        }
+        instance?.refresh?.();
+        window.dispatchEvent(new CustomEvent('hermes-alea:image-change'));
+      }).catch(error=>{
+        console.warn('Honors ALEA image previews could not be loaded',error);
+      });
     }
     const applyImageResult=async(kind,target,file,onStatus)=>{
       const result=file?await client.upload({targetKind:kind,target,file,onStatus:stage=>{

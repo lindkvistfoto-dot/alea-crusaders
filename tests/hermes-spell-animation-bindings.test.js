@@ -16,7 +16,7 @@ describe('HERMES spell animation registry integration',()=>{
   expect(app).toContain("impact_animation_key:$('rspImpactAnimation')?.value||null");
  });
  it('migrates without changing established combat rules',()=>{
-  const sql=read('supabase/migrations/20261015131500_hermes_spell_animation_bindings.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261015131500_hermes_spell_animation_bindings.sql');
   expect(sql).toContain('references public.combat_animation_cues(event_key)');
   expect(sql).toContain("'magic.projectile'");
   expect(sql).toContain("'magic.impact'");

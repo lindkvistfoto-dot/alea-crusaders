@@ -7,7 +7,7 @@ const legacy=read('legacy/app.js');
 const runtime=read('features/combat/runtime.js');
 const css=read('features/combat/equipment-crop-quadrants.css');
 const html=read('index.html');
-const migration=read('supabase/migrations/20261012233500_combat_equipment_crop_quadrant.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261012233500_combat_equipment_crop_quadrant.sql');
 
 describe('Per-master artwork quadrants in the combat Runda panel',()=>{
  it('offers four quadrants and full image in every equipment admin editor',()=>{

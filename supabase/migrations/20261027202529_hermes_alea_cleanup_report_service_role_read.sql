@@ -1,3 +1,3 @@
--- The cleanup report is SECURITY INVOKER and checks references in the honors tables.
--- Keep those base-table reads restricted to the trusted service_role worker.
-grant select on public.honor_definitions, public.honor_relief_variants to service_role;
+-- LIVE migration-history marker only.
+-- Version 20261027202529 (hermes_alea_cleanup_report_service_role_read) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

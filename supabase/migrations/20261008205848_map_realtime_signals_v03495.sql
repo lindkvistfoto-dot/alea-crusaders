@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261008205848 (map_realtime_signals_v03495) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

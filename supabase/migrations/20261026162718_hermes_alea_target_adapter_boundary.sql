@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261026162718 (hermes_alea_target_adapter_boundary) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

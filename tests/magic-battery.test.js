@@ -8,7 +8,7 @@ const projection=read('features/character/item-spells.js');
 const runtime=read('features/combat/runtime.js');
 const characterUI=read('features/character/magic-items.js');
 const artifactUI=read('features/equipment/magic-properties.js');
-const migration=read('supabase/migrations/20261011150000_magic_battery_property.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261011150000_magic_battery_property.sql');
 const spell={id:'eld',name:'ELD (F)',spell_key:'eld',kvick:false,damage_text:'1T6 per EG'};
 const battery={id:'p1',property_key:'magic_battery',kind:'spell',
  battery_grade_mode:'chosen',battery_grade_dice:'1T3',activation:'action',

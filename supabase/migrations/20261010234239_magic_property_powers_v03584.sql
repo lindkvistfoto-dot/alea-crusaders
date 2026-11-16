@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261010234239 (magic_property_powers_v03584) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

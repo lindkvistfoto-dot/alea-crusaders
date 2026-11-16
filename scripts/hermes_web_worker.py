@@ -20,8 +20,21 @@ def user_drive_token():
  import urllib.parse
  body=urllib.parse.urlencode({"client_id":client,"client_secret":secret,"refresh_token":refresh,"grant_type":"refresh_token"}).encode()
  req=urllib.request.Request("https://oauth2.googleapis.com/token",data=body,headers={"Content-Type":"application/x-www-form-urlencoded"},method="POST")
- with urllib.request.urlopen(req,timeout=25) as response:
-  return json.load(response)["access_token"]
+ try:
+  with urllib.request.urlopen(req,timeout=25) as response:
+   return json.load(response)["access_token"]
+ except urllib.error.HTTPError as error:
+  # Google OAuth error codes are safe to log; never print the response body or credentials.
+  allowed={"invalid_grant","invalid_client","unauthorized_client","invalid_request","unsupported_grant_type","access_denied"}
+  code="unknown"
+  try:
+   payload=json.loads(error.read(4096))
+   candidate=payload.get("error") if isinstance(payload,dict) else None
+   if isinstance(candidate,str) and candidate in allowed:
+    code=candidate
+  except (ValueError,UnicodeError):
+   pass
+  raise RuntimeError("HERMES_DRIVE_OAUTH_ERROR status="+str(error.code)+" code="+code) from None
 TOKEN=None
 FOLDER=os.environ.get("HERMES_WEB_ARCHIVE_FOLDER_ID","")
 BASE={"apikey":KEY,"Authorization":"Bearer "+KEY}

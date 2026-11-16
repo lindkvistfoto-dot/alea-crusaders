@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261024202603 (hermes_system_asset_trophy_room_key) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

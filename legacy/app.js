@@ -5,8 +5,33 @@ const defaults=[
 {id:'lyra',icon:'🔥',identity:{namn:'Lyra Gråväv',ras:'Människa',yrke:'Besvärjerska',kon:'Kvinna',alder:'',langd:'',vikt:'',stand:''},base:{Styrka:{v:9,g:''},Fysik:{v:11,g:''},Storlek:{v:10,g:''},Smidighet:{v:13,g:''},Intelligens:{v:16,g:''},'Psykisk kraft':{v:17,g:''},Karisma:{v:12,g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},skills:[{name:'',fv:'',erf:''}],languages:[{name:'',speak:'',readwrite:''}],live:{KP:13,KPmax:13,PSY:17,PSYmax:17,Mynt:24}},
 {id:'evalin',icon:'🦆',identity:{namn:'Evalin Hugger',ras:'Humanoid anka',yrke:'',kon:'Kvinna',alder:'',langd:'120 cm',vikt:''},base:{Styrka:{v:10,g:''},Fysik:{v:12,g:''},Storlek:{v:8,g:''},Smidighet:{v:16,g:''},Intelligens:{v:13,g:''},'Psykisk kraft':{v:12,g:''},Karisma:{v:14,g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},skills:[{name:'',fv:'',erf:''}],languages:[{name:'',speak:'',readwrite:''}],live:{KP:11,KPmax:11,PSY:12,PSYmax:12,Mynt:51}}
 ];
-let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
-const ALEA_SUPABASE_CONFIG=window.ALEA_SUPABASE_CONFIG;const SUPABASE_URL=ALEA_SUPABASE_CONFIG.url;const SUPABASE_KEY=ALEA_SUPABASE_CONFIG.key;const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;
+let chars=JSON.parse(localStorage.getItem('dod_chars_v03a')||'null')||defaults,current=null,editing=false,activeTab='grund';
+let combatWeaponSwitchSession=null,combatWeaponSwitchBusy=false;let adminData=JSON.parse(localStorage.getItem('dod_admin_v014')||'null')||{users:[],campaigns:[],currentCampaignId:''};
+const ALEA_SUPABASE_CONFIG=window.ALEA_SUPABASE_CONFIG||{url:"https://wkiuyklzzroavclnsxna.supabase.co",key:"sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et",sessionKey:'alea_supabase_session_dev',endpoint:function(path){return this.url+(String(path||'').startsWith('/')?'':'/')+String(path||'')}};const SUPABASE_URL=ALEA_SUPABASE_CONFIG.url;
+const SUPABASE_KEY=ALEA_SUPABASE_CONFIG.key;
+const SUPABASE_SESSION_KEY=ALEA_SUPABASE_CONFIG.sessionKey;
+function sessionBelongsToProject(session){
+ try{
+  const part=String(session?.access_token||'').split('.')[1];
+  if(!part)return false;
+  const normalized=part.replace(/-/g,'+').replace(/_/g,'/');
+  const payload=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,'=')),ch=>ch.charCodeAt(0))));
+  return payload.iss===SUPABASE_URL+'/auth/v1';
+ }catch(e){return false}
+}
+function projectSession(){
+ try{
+  const scoped=JSON.parse(localStorage.getItem(SUPABASE_SESSION_KEY)||'null');
+  if(scoped&&sessionBelongsToProject(scoped))return scoped;
+  if(scoped)localStorage.removeItem(SUPABASE_SESSION_KEY);
+  const legacy=JSON.parse(localStorage.getItem('alea_supabase_session')||'null');
+  if(legacy&&sessionBelongsToProject(legacy)){
+   localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(legacy));
+   return legacy;
+  }
+ }catch(e){}
+ return null;
+}
 window.aleaEquipmentArt?.configure(SUPABASE_URL);
 let supabaseSession=null,supabaseProfile=null;
 let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
@@ -227,7 +252,7 @@ async function loadRuleShields(force=false){
 }
 async function loadRuleWeapons(force=false){
  if(ruleWeaponsLoaded&&!force)return ruleWeapons;
- try{return await withRuleRegistryLoad('weapons',async()=>{ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');ruleWeaponsLoaded=true;return ruleWeapons})}catch(e){ruleWeapons=[];ruleWeaponsLoaded=false;return []}
+ try{return await withRuleRegistryLoad('weapons',async()=>{ruleWeapons=await dbJson('rule_weapons?select=*&order=category.asc,sort_order.asc,name.asc');ruleWeaponsLoaded=true;try{await window.aleaHermesAssetResolver?.load()}catch(error){console.warn('Kunde inte läsa HERMES ALEA-bilder just nu',error)}return ruleWeapons})}catch(e){ruleWeapons=[];ruleWeaponsLoaded=false;return []}
 }
 const RULE_WEAPON_ICON_DEFS=[
  {key:'sword',label:'Svärd'},{key:'dagger',label:'Dolk'},{key:'hammer',label:'Hammare'},
@@ -252,7 +277,7 @@ function ruleWeaponIconHtml(rule){
   '<img src="'+escAttr(ruleWeaponIconSrc(key))+'" alt="" aria-hidden="true">'+
   '<small>'+escAttr(def?.label||'SAKNAS')+'</small>'+
  '</span>'
- return window.aleaEquipmentArt?.thumbnail(rule?.image_path,fallback,rule?.name)||fallback;
+ return window.aleaEquipmentArt?.thumbnail(window.aleaHermesAssetResolver?.reference(rule),fallback,rule?.name)||fallback;
 }
 function ruleWeaponIconOptions(selected=''){
  selected=String(selected||'');
@@ -384,7 +409,7 @@ function projectileMasterImagePath(projectile){
  if(!projectile)return null;
  const thrown=projectileThrownWeapon(projectile.projectile_key);
  // A thrown item IS its own ammunition: reuse the weapon's single shared image.
- return thrown?thrown.image_path||null:projectile.image_path||null
+ return thrown?window.aleaHermesAssetResolver?.reference(thrown)||null:projectile.image_path||null
 }
 function projectileImageHtml(key,name){
  const path=projectileMasterImagePath(ruleProjectileFromKey(key));
@@ -540,6 +565,7 @@ function weaponGripLabel(g){
  return g.hands+' '+(g.hands===1?'hand':'händer')
 }
 function refreshEquippedWeaponGrip(c){
+ if(activeCombat?.status==='active'&&!combatWeaponSwitchSession)return false;
  if(!c?.currentEquipment)return false;let eq=c.currentEquipment,refs=[['leftHand',eq.leftHand],['rightHand',eq.rightHand]].filter(x=>x[1]?.kind==='weapon'),changed=false,seen=new Set();
  for(let [slot,ref] of refs){
   let key=ref.itemId;if(seen.has(key))continue;seen.add(key);
@@ -803,8 +829,21 @@ function renderAdminWeapons(){
  el.innerHTML='<div class="ahead">Ikon</div><div class="ahead">Namn</div><div class="ahead">Kategori</div><div class="ahead">Färdighet</div><div class="ahead">Grepp</div><div class="ahead">STY-grupp</div><div class="ahead">Skada</div><div class="ahead">Typ</div><div class="ahead">Magisk</div><div class="ahead">Åtgärd</div>'+
   ruleWeapons.map(r=>{let skill=(ruleSkills||[]).find(s=>s.id===r.skill_id);return '<div class="admin-weapon-icon-cell">'+ruleWeaponIconHtml(r)+'</div><div><b>'+escAttr(r.name||'—')+'</b><small class="admin-weapon-icon-key">'+escAttr(r.icon_key||'—')+'</small></div><div>'+escAttr(ruleWeaponCategoryLabel(r.category))+ruleWeaponProjectileLabel(r)+'</div><div>'+escAttr(skill?.name||'—')+'</div><div>'+escAttr(r.handling||'—')+'</div><div>'+(r.strength_group??'—')+'</div><div>'+escAttr(r.damage||'—')+'</div><div>'+escAttr(r.weapon_type||'—')+'</div><div class="admin-magical-cell">'+(r.is_magical?'✦ Ja':'—')+'</div><div class="adminactions"><button class="smallbtn" onclick="editRuleWeapon(\''+r.id+'\')" title="Redigera">✎</button><button class="deletebtn" onclick="deleteRuleWeapon(\''+r.id+'\')" title="Ta bort">×</button></div>'}).join('')
 }
+let ruleWeaponImageDraft=null,ruleWeaponImagePreviewUrl='';
+function clearRuleWeaponImageDraft(){
+ if(ruleWeaponImagePreviewUrl)URL.revokeObjectURL(ruleWeaponImagePreviewUrl);
+ ruleWeaponImagePreviewUrl='';ruleWeaponImageDraft=null;
+}
+function chooseRuleWeaponImage(file){
+ if(!file)return;
+ if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>12000000){alert('Välj PNG, JPEG eller WebP, högst 12 MB.');return}
+ clearRuleWeaponImageDraft();ruleWeaponImageDraft=file;ruleWeaponImagePreviewUrl=URL.createObjectURL(file);
+ const preview=$('rwImagePreview');if(preview)preview.innerHTML='<img src="'+escAttr(ruleWeaponImagePreviewUrl)+'" alt="Förhandsvisning av vald vapenbild">';
+ const status=$('rwImageStatus');if(status)status.textContent='Ny bild vald. Den laddas upp med HERMES ALEA när du sparar.';
+}
 function editRuleWeapon(id=''){
  if(!activeUser()?.admin)return;let r=id?ruleWeapons.find(x=>x.id===id):null;
+ clearRuleWeaponImageDraft();
  let category=r?.category||'melee',handling=r?.handling||'1H',tags=Array.isArray(r?.tags)?r.tags.join(', '):'';
  $('adminEditorTitle').textContent=r?'Redigera vapen':'Lägg till vapen';
  $('adminEditorBody').innerHTML=
@@ -831,7 +870,7 @@ function editRuleWeapon(id=''){
    '<label class="wide">Noteringar<textarea id="rwNotes">'+escAttr(r?.notes||'')+'</textarea></label>'+ 
    combatCropQuadrantEditor('rwCombatCrop',r)+
    '<label class="wide admincheck"><input id="rwMagical" type="checkbox" '+(r?.is_magical?'checked':'')+'> Magisk vapentyp (gäller själva registerposten)</label>'+
-  (window.aleaEquipmentArt?.start('weapon',r)||'')+
+  '<section class="item-art-editor weapon-hermes-upload wide" aria-label="Vapenbild"><div class="item-art-heading"><strong>Vapenbild</strong><span>Uppladdning, WebP-konvertering och aktivering hanteras av HERMES ALEA.</span></div><div class="item-art-editor-content"><div id="rwImagePreview" class="item-art-preview">'+((r?.image_asset_id||r?.image_path)&&window.aleaEquipmentArt?.src(r?.image_asset_id||r?.image_path)?'<img src="'+escAttr(window.aleaEquipmentArt.src(r?.image_asset_id||r?.image_path))+'" alt="Nuvarande vapenbild">':'<span class="item-art-empty">Ingen bild vald</span>')+'</div><div class="item-art-controls"><label class="item-art-upload">'+((r?.image_asset_id||r?.image_path)?'Ersätt bild':'Välj bild')+'<input type="file" accept="image/png,image/jpeg,image/webp" onchange="chooseRuleWeaponImage(this.files[0]);this.value=\'\'"></label><small id="rwImageStatus">'+((r?.image_asset_id||r?.image_path)?'Befintlig bild visas tills ersättningen har lyckats.':'Ingen bild vald.')+'</small></div></div><details class="weapon-image-guide"><summary>Bildguide (råd)</summary><ul><li>Visa hela vapnet tydligt och lämna lite luft runt spetsar och skaft.</li><li>En enkel bakgrund och bra kontrast brukar göra bilden lättare att läsa.</li><li>En frilagd bild med transparens passar ofta bra, men är inget krav.</li><li>Undvik text, vattenstämplar och andra föremål som skymmer vapnet.</li></ul><small>Rekommendationerna är rådgivande. PNG, JPEG och WebP upp till 12 MB stöds.</small></details></section>'+
   '</div><div class="rule-editor-actions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveRuleWeapon(\''+id+'\')">Spara</button></div>';
  $('adminEditor').classList.remove('hidden');
  for(const fieldId of ['rwCategory','rwName','rwIconKey','rwTags']){
@@ -850,8 +889,9 @@ async function saveRuleWeapon(id=''){
  if(category!=='melee'&&!ruleProjectileFromKey(projectileKey)){
   alert('Välj en giltig projektiltyp innan du sparar avstånds- eller kastvapnet.');return
  }
- const artContext={token:supabaseSession?.access_token,key:SUPABASE_KEY,getToken:freshSupabaseAccessToken};
- let artChange=null;
+ const imageFile=ruleWeaponImageDraft;
+ const oldRecord=id?ruleWeapons.find(x=>String(x.id)===String(id)):null;
+ let saved=false;
  const artId=id||crypto.randomUUID();
  try{
   let payload={
@@ -878,14 +918,23 @@ async function saveRuleWeapon(id=''){
    tags:($('rwTags')?.value||'').split(',').map(x=>x.trim()).filter(Boolean),
    updated_at:new Date().toISOString()
   };
-  artChange=await window.aleaEquipmentArt.prepare('weapon',artId,artContext);
-  payload.image_path=artChange.path;
-  if(!id)payload.id=artId;
-  if(id)await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
-  else await dbJson('rule_weapons',{method:'POST',body:JSON.stringify(payload)});
-  if(artChange.old&&artChange.old!==artChange.path)window.aleaEquipmentArt.removeStored(artChange.old,artContext).catch(e=>console.warn('Föremålsbild kunde inte rensas',e));
+  if(!id){payload.id=artId;payload.image_path=null;await dbJson('rule_weapons',{method:'POST',body:JSON.stringify(payload)});saved=true}
+  else{await dbJson('rule_weapons?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});saved=true}
+  if(imageFile){
+   if(!window.aleaHermesAleaWeapons?.upload)throw Error('HERMES ALEA-klienten är inte tillgänglig. Ladda om sidan och försök igen.');
+   await window.aleaHermesAleaWeapons.upload({target:{id:artId,image_asset_id:oldRecord?.image_asset_id||null,image_revision:oldRecord?.image_revision||0},file:imageFile,onStatus:stage=>{
+    const labels={preparing:'Förbereder bilden…',uploading:'Laddar upp original och WebP…',verifying:'Kontrollerar bilddata…',activating:'Aktiverar bilden…'};
+    if(labels[stage]&&$('rwImageStatus'))$('rwImageStatus').textContent=labels[stage];
+   }});
+   // Finalization has already updated image_asset_id; legacy image_path stays read-only.
+  }
+  clearRuleWeaponImageDraft();
   closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render()
- }catch(e){if(artChange?.uploaded)await window.aleaEquipmentArt.removeStored(artChange.uploaded,artContext).catch(()=>{});alert('Kunde inte spara vapnet: '+e.message)}
+ }catch(e){
+  // Do not delete or overwrite legacy images when HERMES ALEA fails.
+  if(saved){clearRuleWeaponImageDraft();closeAdminEditor();await loadRuleWeapons(true);renderAdminWeapons();renderAdminOverviewCounts();if(current)render();alert('Vapnet sparades, men bilden kunde inte uppdateras: '+e.message)}
+  else alert('Kunde inte spara vapnet: '+e.message)
+ }
 }
 async function deleteRuleWeapon(id){
  if(!activeUser()?.admin)return;let r=ruleWeapons.find(x=>x.id===id);if(!r)return;
@@ -1160,9 +1209,9 @@ async function deleteRuleShield(id){
 
 async function ensureCentralCampaign(){let rows=await dbJson('campaigns?select=id,name,created_by&order=created_at.asc');let c=rows.find(x=>x.name==='Skelettbyns Hemlighet')||rows[0];if(!c&&activeUser()?.admin){let created=await dbJson('campaigns',{method:'POST',body:JSON.stringify({name:'Skelettbyns Hemlighet',description:'Alea Crusaders-kampanj',created_by:supabaseSession.user.id})});c=created&&created[0];if(c)await dbJson('campaign_members',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({campaign_id:c.id,user_id:supabaseSession.user.id,role:'gm'})})}centralCampaignId=c?.id||null;return c}
 async function loadCampaignPlayerProfiles(){try{campaignPlayerProfiles=await dbJson('profiles?select=id,display_name&order=display_name.asc')}catch(e){campaignPlayerProfiles=[];console.warn('Kunde inte läsa kampanjspelare',e)}}
-async function importLocalCharactersToCentral(){if(!centralCampaignId||!activeUser()?.admin||!chars.length)return;let payload=chars.map(c=>({campaign_id:centralCampaignId,owner_id:null,name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c),created_by:supabaseSession.user.id}));let rows=await dbJson('characters',{method:'POST',body:JSON.stringify(payload)});if(rows?.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',_persistedOwnerId:r.owner_id||'SLP'}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));}}
-async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;return}await Promise.all([loadCampaignMapRole(),loadCampaignPlayerProfiles()]);let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,round_background_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',_persistedOwnerId:r.owner_id||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||'',roundBackgroundPath:r.round_background_path||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];const repairedGripIds=new Set();chars.forEach(c=>{ensureEquipmentState(c);if(refreshEquippedWeaponGrip(c)&&c._dbId)repairedGripIds.add(c._dbId);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralCharacterSnapshots=new Map(chars.filter(c=>c._dbId).map(c=>[c._dbId,characterSyncFingerprint(c)]));centralReady=true;if(repairedGripIds.size){repairedGripIds.forEach(id=>centralCharacterSnapshots.delete(id));scheduleCentralSave()}}
-function characterSyncPayload(c){return {name:c.identity?.namn||'Namnlös',is_npc:c.ownerId==='SLP',schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c)}}
+async function importLocalCharactersToCentral(){if(!centralCampaignId||!activeUser()?.admin||!chars.length)return;let payload=chars.map(c=>({campaign_id:centralCampaignId,owner_id:null,name:c.identity?.namn||'Namnlös',is_npc:c.isNpc===true,schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c),created_by:supabaseSession.user.id}));let rows=await dbJson('characters',{method:'POST',body:JSON.stringify(payload)});if(rows?.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',isNpc:r.is_npc===true,_persistedOwnerId:r.owner_id||'SLP'}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));}}
+async function loadCentralData(){centralReady=false;let campaign=await ensureCentralCampaign();if(!campaign){chars=[];centralReady=true;window.aleaCharacterDrawerRefresh?.();return}await Promise.all([loadCampaignMapRole(),loadCampaignPlayerProfiles()]);let rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,owner_id,name,is_npc,schema_version,combat_icon_path,round_background_path,data&order=created_at.asc');if(rows.length){chars=rows.map(r=>({...r.data,_dbId:r.id,ownerId:r.owner_id||'SLP',isNpc:r.is_npc===true,_persistedOwnerId:r.owner_id||'SLP',combatIconPath:r.combat_icon_path||r.data?.combatIconPath||'',roundBackgroundPath:r.round_background_path||''}));localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}else if(activeUser()?.admin){await importLocalCharactersToCentral()}else chars=[];const repairedGripIds=new Set();chars.forEach(c=>{ensureEquipmentState(c);if(refreshEquippedWeaponGrip(c)&&c._dbId)repairedGripIds.add(c._dbId);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};syncCalculated(c)});await preloadCharacterCombatIcons(chars);centralCharacterSnapshots=new Map(chars.filter(c=>c._dbId).map(c=>[c._dbId,characterSyncFingerprint(c)]));centralReady=true;window.aleaCharacterDrawerRefresh?.();if(repairedGripIds.size){repairedGripIds.forEach(id=>centralCharacterSnapshots.delete(id));scheduleCentralSave()}}
+function characterSyncPayload(c){return {name:c.identity?.namn||'Namnlös',is_npc:c.isNpc===true,schema_version:ALEA_SCHEMA_VERSION,combat_icon_path:c.combatIconPath||null,data:cleanCharacterForDb(c)}}
 function characterSyncFingerprint(c){return JSON.stringify(characterSyncPayload(c))}
 async function syncCharacterToCentral(c){
  if(!centralReady||!centralCampaignId||!supabaseSession||!c||!canEditCharacter(c))return;
@@ -1182,15 +1231,16 @@ async function syncCharacterToCentral(c){
  if(c._dbId)centralCharacterSnapshots.set(c._dbId,fingerprint)
 }
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
-function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession)localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(supabaseSession));else localStorage.removeItem(SUPABASE_SESSION_KEY)}
+function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession&&sessionBelongsToProject(supabaseSession))localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(supabaseSession));else{localStorage.removeItem(SUPABASE_SESSION_KEY);supabaseSession=null}}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
 async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
-async function restoreSession(){let raw=localStorage.getItem(SUPABASE_SESSION_KEY);if(!raw)return false;try{supabaseSession=JSON.parse(raw);if(!supabaseSession?.refresh_token)throw 0;let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
+async function restoreSession(){supabaseSession=projectSession();if(!supabaseSession?.refresh_token)return false;try{let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
 async function initLogin(){if(await restoreSession())enterApp();else showLogin()}
 function saveAdmin(){localStorage.setItem('dod_admin_v014',JSON.stringify(adminData))}
 function uid(prefix){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
 function newEquipItemId(kind='item'){return (globalThis.crypto&&typeof crypto.randomUUID==='function')?crypto.randomUUID():'eq_'+kind+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9)}
 function ensureEquipmentState(c){
+ if(activeCombat?.status==='active'&&!combatWeaponSwitchSession)return false;
  if(!c)return false;let changed=false;if(!Array.isArray(c.baseChanceSkills)){c.baseChanceSkills=[];changed=true}
  ['weapons','armor','shields','equipment'].forEach(group=>{c[group]=c[group]||[];c[group].forEach(item=>{if(!item.equipId){item.equipId=newEquipItemId(group);changed=true}if(group==='weapons'){if(!item.materialKey){item.materialKey='standard';changed=true}if(!item.material){item.material='Standard';changed=true}}})});
  if(!c.currentEquipment||typeof c.currentEquipment!=='object'){c.currentEquipment={head:null,torso:null,arms:null,legs:null,leftHand:null,rightHand:null};changed=true}
@@ -1201,8 +1251,8 @@ function ensureEquipmentState(c){
 }
 function equipItemByRef(c,ref){if(!c||!ref)return null;let group={weapon:'weapons',armor:'armor',shield:'shields',equipment:'equipment'}[ref.kind];return group?(c[group]||[]).find(x=>x.equipId===ref.itemId)||null:null}
 function equipRefEquals(a,b){return !!a&&!!b&&a.kind===b.kind&&a.itemId===b.itemId}
-function clearEquippedItemRefs(c,kind,itemId){if(!c?.currentEquipment)return;Object.keys(c.currentEquipment).forEach(slot=>{let r=c.currentEquipment[slot];if(r&&r.kind===kind&&r.itemId===itemId)c.currentEquipment[slot]=null})}
-chars.forEach(c=>{ensureEquipmentState(c);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};if(c.live.heroPoints==null)c.live.heroPoints=0;if(c.live.reputation==null)c.live.reputation=0;if(c.live.bonusExp==null)c.live.bonusExp=0;if(c.ownerId===undefined)c.ownerId='SLP';c.coins=c.coins||{carried:{GM:0,SM:(c.live&&c.live.Mynt)||0,KM:0},stored:{GM:0,SM:0,KM:0}}});const $=id=>document.getElementById(id);function baseGroup(value){let v=Number(value);if(!Number.isFinite(v)||v<0)return '';if(v<=3)return 0;if(v<=8)return 1;if(v<=12)return 2;if(v<=16)return 3;if(v<=20)return 4;if(v<=25)return 5;if(v<=30)return 6;if(v<=40)return 7;if(v<=50)return 8;if(v<=60)return 9;if(v<=70)return 10;if(v<=80)return 11;if(v<=90)return 12;if(v<=100)return 13;if(v<=110)return 14;if(v<=120)return 15;if(v<=130)return 16;if(v<=140)return 17;if(v<=150)return 18;if(v<=160)return 19;if(v<=170)return 20;if(v<=180)return 21;if(v<=190)return 22;if(v<=200)return 23;if(v<=210)return 24;if(v<=220)return 25;if(v<=230)return 26;if(v<=240)return 27;if(v<=250)return 28;if(v<=260)return 29;if(v<=270)return 30;if(v<=280)return 31;if(v<=290)return 32;if(v<=300)return 33;return 33+Math.ceil((v-300)/10)}function damageBonus(c){if(!c||!c.base)return null;let sty=Number(c.base.Styrka&&c.base.Styrka.v),sto=Number(c.base.Storlek&&c.base.Storlek.v);if(!Number.isFinite(sty)||!Number.isFinite(sto))return null;let avg=Math.ceil((sty+sto)/2),dice=0,sides=6;if(avg<=16)return {avg:avg,dice:0,sides:0,modifier:0};if(avg<=20)return {avg:avg,dice:1,sides:4,modifier:0};if(avg<=25)return {avg:avg,dice:1,sides:6,modifier:0};if(avg<=30)return {avg:avg,dice:1,sides:10,modifier:0};if(avg<=40)dice=2;else if(avg<=50)dice=3;else if(avg<=70)dice=4;else if(avg<=90)dice=5;else dice=5+Math.ceil((avg-90)/20);return {avg:avg,dice:dice,sides:sides,modifier:0}}function damageBonusText(c){let d=damageBonus(c);if(!d)return '—';return d.dice===0?'Ingen':d.dice+'T'+d.sides}function movementRaceModifier(race){let r=String(race||'').trim().toLowerCase();if(r.includes('kattman'))return 1;if(r.includes('älvfolk'))return 1;if(r.includes('svartfolk')||r.includes('orch'))return 1;if(r.includes('anka'))return -1;if(r.includes('reptilman'))return -1;if(r.includes('dvärg'))return -2;return 0}function movementSquares(c){let smi=Number(c.base?.Smidighet?.v),fys=Number(c.base?.Fysik?.v),sto=Number(c.base?.Storlek?.v);if(!Number.isFinite(smi)||!Number.isFinite(fys)||!Number.isFinite(sto))return '';let sum=smi+fys+sto,base=sum<=10?8:sum<=20?10:sum<=30?13:sum<=40?16:sum<=50?18:sum<=60?21:sum<=70?24:26;return Math.max(0,base+movementRaceModifier(c.identity?.ras))}function syncCalculated(c){if(!c||!c.base)return;Object.values(c.base).forEach(o=>{o.g=baseGroup(o.v)});c.derived=c.derived||{};c.derived.Skadebonus=damageBonus(c);let fys=Number(c.base.Fysik&&c.base.Fysik.v),sto=Number(c.base.Storlek&&c.base.Storlek.v),sty=Number(c.base.Styrka&&c.base.Styrka.v),psy=Number(c.base['Psykisk kraft']&&c.base['Psykisk kraft'].v);c.live=c.live||{};c.live.KPmax=(Number.isFinite(fys)&&Number.isFinite(sto))?Math.ceil((fys+sto)/2):0;c.live.PSYmax=Number.isFinite(psy)?psy:0;c.derived['Bärförmåga']=Number.isFinite(sty)?sty:'';c.derived['Förflyttning']=movementSquares(c)}function syncBaseGroups(c){syncCalculated(c)}chars.forEach(c=>{if(!c.identity)c.identity={};if(c.identity.stand==null)c.identity.stand='';if(c.lifeGoal==null)c.lifeGoal='';syncBaseGroups(c)});save();function save(){localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));scheduleCentralSave()}function newCharacterId(){return 'char_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}function emptyCharacter(){return {id:newCharacterId(),icon:'👤',ownerId:'SLP',identity:{namn:'Namnlös',ras:'',yrke:'',kon:'',alder:'',langd:'',vikt:'',stand:''},base:{Styrka:{v:'',g:''},Fysik:{v:'',g:''},Storlek:{v:'',g:''},Smidighet:{v:'',g:''},Intelligens:{v:'',g:''},'Psykisk kraft':{v:'',g:''},Karisma:{v:'',g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},background:'',lifeGoal:'',skills:[],baseChanceSkills:[],languages:[],heroAbilities:[],spells:[],magicSchools:[],familiaris:[],weapons:[],projectiles:[],armor:[],shields:[],equipment:[],provisionsDays:0,waterDays:0,artifacts:[],currentEquipment:{head:null,torso:null,arms:null,legs:null,leftHand:null,rightHand:null},coins:{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}},live:{KP:0,KPmax:0,PSY:0,PSYmax:0,heroPoints:0,reputation:0,bonusExp:0}}}function askConfirm(title,text,okLabel='OK',danger=false){return new Promise(resolve=>{window.__confirmResolve=resolve;$('appConfirmTitle').textContent=title;$('appConfirmText').textContent=text;let b=$('appConfirmOk');b.textContent=okLabel;b.classList.toggle('danger',danger);$('appConfirm').classList.remove('hidden')})}function closeAppConfirm(ok){$('appConfirm').classList.add('hidden');let r=window.__confirmResolve;window.__confirmResolve=null;if(r)r(!!ok)}async function createCharacter(){if(!await askConfirm('Ny rollfigur','Vill du skapa en ny rollfigur?','Skapa'))return;let c=emptyCharacter();if(!canManageCharacters())c.ownerId=supabaseSession?.user?.id||'SLP';chars.push(c);save();renderCards();openChar(c.id)}async function deleteCharacter(id,event){if(event)event.stopPropagation();if(!canManageCharacters())return;let c=chars.find(x=>x.id===id);if(!c)return;let name=(c.identity&&c.identity.namn)||'Namnlös';if(!await askConfirm('Ta bort rollfigur','Vill du verkligen ta bort '+name+'? Rollfiguren och all sparad information tas bort.','Ta bort',true))return;let dbid=c._dbId;if(c.combatIconPath)await deleteCombatIconAsset(c.combatIconPath).catch(e=>console.warn('Kunde inte rensa stridsikon',e));chars=chars.filter(x=>x.id!==id);if(current&&current.id===id)current=null;save();if(dbid&&centralReady)dbJson('characters?id=eq.'+encodeURIComponent(dbid),{method:'DELETE',headers:{'Prefer':'return=minimal'}}).catch(console.error);renderCards()}function getPortraitSrc(c){return c.portrait||((c.id==='astrid')?ASTRID_PORTRAIT:'')}function renderCards(){
+function clearEquippedItemRefs(c,kind,itemId){if(activeCombat?.status==='active'&&!combatWeaponSwitchSession)return;if(!c?.currentEquipment)return;Object.keys(c.currentEquipment).forEach(slot=>{let r=c.currentEquipment[slot];if(r&&r.kind===kind&&r.itemId===itemId)c.currentEquipment[slot]=null})}
+chars.forEach(c=>{ensureEquipmentState(c);c.projectiles=c.projectiles||[];c.spells=(Array.isArray(c.spells)?c.spells:[]).filter(sp=>!isRetiredSpellName(sp?.name));c.magicSchools=c.magicSchools||[];c.artifacts=c.artifacts||[];c.live=c.live||{};if(c.live.heroPoints==null)c.live.heroPoints=0;if(c.live.reputation==null)c.live.reputation=0;if(c.live.bonusExp==null)c.live.bonusExp=0;if(c.ownerId===undefined)c.ownerId='SLP';c.coins=c.coins||{carried:{GM:0,SM:(c.live&&c.live.Mynt)||0,KM:0},stored:{GM:0,SM:0,KM:0}}});const $=id=>document.getElementById(id);function baseGroup(value){let v=Number(value);if(!Number.isFinite(v)||v<0)return '';if(v<=3)return 0;if(v<=8)return 1;if(v<=12)return 2;if(v<=16)return 3;if(v<=20)return 4;if(v<=25)return 5;if(v<=30)return 6;if(v<=40)return 7;if(v<=50)return 8;if(v<=60)return 9;if(v<=70)return 10;if(v<=80)return 11;if(v<=90)return 12;if(v<=100)return 13;if(v<=110)return 14;if(v<=120)return 15;if(v<=130)return 16;if(v<=140)return 17;if(v<=150)return 18;if(v<=160)return 19;if(v<=170)return 20;if(v<=180)return 21;if(v<=190)return 22;if(v<=200)return 23;if(v<=210)return 24;if(v<=220)return 25;if(v<=230)return 26;if(v<=240)return 27;if(v<=250)return 28;if(v<=260)return 29;if(v<=270)return 30;if(v<=280)return 31;if(v<=290)return 32;if(v<=300)return 33;return 33+Math.ceil((v-300)/10)}function damageBonus(c){if(!c||!c.base)return null;let sty=Number(c.base.Styrka&&c.base.Styrka.v),sto=Number(c.base.Storlek&&c.base.Storlek.v);if(!Number.isFinite(sty)||!Number.isFinite(sto))return null;let avg=Math.ceil((sty+sto)/2),dice=0,sides=6;if(avg<=16)return {avg:avg,dice:0,sides:0,modifier:0};if(avg<=20)return {avg:avg,dice:1,sides:4,modifier:0};if(avg<=25)return {avg:avg,dice:1,sides:6,modifier:0};if(avg<=30)return {avg:avg,dice:1,sides:10,modifier:0};if(avg<=40)dice=2;else if(avg<=50)dice=3;else if(avg<=70)dice=4;else if(avg<=90)dice=5;else dice=5+Math.ceil((avg-90)/20);return {avg:avg,dice:dice,sides:sides,modifier:0}}function damageBonusText(c){let d=damageBonus(c);if(!d)return '—';return d.dice===0?'Ingen':d.dice+'T'+d.sides}function movementRaceModifier(race){let r=String(race||'').trim().toLowerCase();if(r.includes('kattman'))return 1;if(r.includes('älvfolk'))return 1;if(r.includes('svartfolk')||r.includes('orch'))return 1;if(r.includes('anka'))return -1;if(r.includes('reptilman'))return -1;if(r.includes('dvärg'))return -2;return 0}function movementSquares(c){let smi=Number(c.base?.Smidighet?.v),fys=Number(c.base?.Fysik?.v),sto=Number(c.base?.Storlek?.v);if(!Number.isFinite(smi)||!Number.isFinite(fys)||!Number.isFinite(sto))return '';let sum=smi+fys+sto,base=sum<=10?8:sum<=20?10:sum<=30?13:sum<=40?16:sum<=50?18:sum<=60?21:sum<=70?24:26;return Math.max(0,base+movementRaceModifier(c.identity?.ras))}function syncCalculated(c){if(!c||!c.base)return;Object.values(c.base).forEach(o=>{o.g=baseGroup(o.v)});c.derived=c.derived||{};c.derived.Skadebonus=damageBonus(c);let fys=Number(c.base.Fysik&&c.base.Fysik.v),sto=Number(c.base.Storlek&&c.base.Storlek.v),sty=Number(c.base.Styrka&&c.base.Styrka.v),psy=Number(c.base['Psykisk kraft']&&c.base['Psykisk kraft'].v);c.live=c.live||{};c.live.KPmax=(Number.isFinite(fys)&&Number.isFinite(sto))?Math.ceil((fys+sto)/2):0;c.live.PSYmax=Number.isFinite(psy)?psy:0;c.derived['Bärförmåga']=Number.isFinite(sty)?sty:'';c.derived['Förflyttning']=movementSquares(c)}function syncBaseGroups(c){syncCalculated(c)}chars.forEach(c=>{if(!c.identity)c.identity={};if(c.identity.stand==null)c.identity.stand='';if(c.lifeGoal==null)c.lifeGoal='';syncBaseGroups(c)});save();function save(){if(combatWeaponSwitchSession)return;localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));scheduleCentralSave()}function newCharacterId(){return 'char_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8)}function emptyCharacter(){return {id:newCharacterId(),icon:'👤',ownerId:'SLP',identity:{namn:'Namnlös',ras:'',yrke:'',kon:'',alder:'',langd:'',vikt:'',stand:''},base:{Styrka:{v:'',g:''},Fysik:{v:'',g:''},Storlek:{v:'',g:''},Smidighet:{v:'',g:''},Intelligens:{v:'',g:''},'Psykisk kraft':{v:'',g:''},Karisma:{v:'',g:''}},derived:{Skadebonus:'',Svärdshand:'',Förflyttning:'',Bärförmåga:''},background:'',lifeGoal:'',skills:[],baseChanceSkills:[],languages:[],heroAbilities:[],spells:[],magicSchools:[],familiaris:[],weapons:[],projectiles:[],armor:[],shields:[],equipment:[],provisionsDays:0,waterDays:0,artifacts:[],currentEquipment:{head:null,torso:null,arms:null,legs:null,leftHand:null,rightHand:null},coins:{carried:{GM:0,SM:0,KM:0},stored:{GM:0,SM:0,KM:0}},live:{KP:0,KPmax:0,PSY:0,PSYmax:0,heroPoints:0,reputation:0,bonusExp:0}}}function askConfirm(title,text,okLabel='OK',danger=false){return new Promise(resolve=>{window.__confirmResolve=resolve;$('appConfirmTitle').textContent=title;$('appConfirmText').textContent=text;let b=$('appConfirmOk');b.textContent=okLabel;b.classList.toggle('danger',danger);$('appConfirm').classList.remove('hidden')})}function closeAppConfirm(ok){$('appConfirm').classList.add('hidden');let r=window.__confirmResolve;window.__confirmResolve=null;if(r)r(!!ok)}async function createCharacter(){if(!await askConfirm('Ny rollfigur','Vill du skapa en ny rollfigur?','Skapa'))return;let c=emptyCharacter();if(!canManageCharacters())c.ownerId=supabaseSession?.user?.id||'SLP';chars.push(c);save();renderCards();openChar(c.id)}async function deleteCharacter(id,event){if(event)event.stopPropagation();if(!canManageCharacters())return;let c=chars.find(x=>x.id===id);if(!c)return;let name=(c.identity&&c.identity.namn)||'Namnlös';if(!await askConfirm('Ta bort rollfigur','Vill du verkligen ta bort '+name+'? Rollfiguren och all sparad information tas bort.','Ta bort',true))return;let dbid=c._dbId;if(c.combatIconPath)await deleteCombatIconAsset(c.combatIconPath).catch(e=>console.warn('Kunde inte rensa stridsikon',e));chars=chars.filter(x=>x.id!==id);if(current&&current.id===id)current=null;save();if(dbid&&centralReady)dbJson('characters?id=eq.'+encodeURIComponent(dbid),{method:'DELETE',headers:{'Prefer':'return=minimal'}}).catch(console.error);renderCards()}function getPortraitSrc(c){return c.portrait||((c.id==='astrid')?ASTRID_PORTRAIT:'')}function renderCards(){
  const host=$('cards');
  host.innerHTML=chars.map(c=>{let p=getPortraitSrc(c),name=c.identity.namn||'Namnlös',meta=[c.identity.ras,c.identity.yrke].filter(Boolean).join(' · ');return `<div class="card charcard" onclick="openChar('${c.id}')"><div class="charportrait avatar">${p?`<img src="${p}" alt="${escAttr(name)}">`:c.icon}</div><div class="charinfo"><h2>${name}</h2><div class="muted charmeta">${meta||'Rollfigur'}</div><div class="charstats"><span>❤️ <b>${c.live.KP}</b>/${c.live.KPmax}</span><span>🔮 <b>${c.live.PSY}</b>/${c.live.PSYmax}</span></div><div class="charowner">Ägare: <b>${c.ownerId==='SLP'?'SLP':escAttr(userName(c.ownerId))}</b></div></div><button class="char-delete" onclick="deleteCharacter('${c.id}',event)" title="Ta bort rollfigur" aria-label="Ta bort ${escAttr(name)}">×</button></div>`}).join('');
  if(!canManageCharacters())host.querySelectorAll('.char-delete').forEach(b=>b.remove());
@@ -1234,6 +1284,7 @@ function renderOwner(){let el=$('ownerControl');if(!el)return;let value=current.
 let activeAdminSection='overview';
 const ADMIN_SECTION_META={
  overview:['Administration','Välj vad du vill administrera.'],
+ olympia:['OLYMPIA','Utveckling, provning och releasekontroll i ALEA.'],
  events:['Händelser','Fördefinierade händelser'],
  scenes:['Stridsscener','Kampanjens taktiska stridsscener'],
  people:['Personer','SLP och kampanjpersoner'],
@@ -1249,6 +1300,7 @@ const ADMIN_SECTION_META={
  specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
  arcaneSystem:['ARCANE · Systembibliotek','Återanvändbara grafiska systemkomponenter'],
  paperDollWorkshop:['Arcane Paper Doll · Dockfabriken','Montera återanvändbara spelpjäser från befintliga porträtt'],
+ battlefieldWorkshop:['Battlefield · Objektverkstaden','Skapa återanvändbara hexobjekt med anslutningar och stridsegenskaper'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],
@@ -1332,6 +1384,8 @@ async function openAdminSection(key='overview'){
   window.aleaArcaneSystem?.renderAdmin?.()
  }else if(activeAdminSection==='paperDollWorkshop'){
   await window.aleaPaperDollWorkshop?.mount?.()
+ }else if(activeAdminSection==='battlefieldWorkshop'){
+  await window.aleaBattlefieldObjectWorkshop?.mount?.()
  }else if(activeAdminSection==='events'){
   renderAdminEventList(campaignEvents);
   await refreshAdminEventList()
@@ -1879,7 +1933,7 @@ function currentEquipKindLabel(kind){return {weapon:'Vapen',armor:'Rustning',shi
    Keep equipment slot IDs and mechanics unchanged for future Aragorn/Gimli/Legolas stages. */
 function currentEquipmentItemArtPath(ref,item,slot){
  if(!ref||!item)return null;
- if(ref.kind==='weapon')return item.imageOverridePath||ruleWeaponForItem(item)?.image_path||null;
+ if(ref.kind==='weapon')return item.imageOverridePath||window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item))||null;
  if(ref.kind==='shield')return item.imageOverridePath||characterShieldRule(item)?.image_path||null;
  if(ref.kind==='equipment')return window.aleaEquipmentCatalog?.imagePath(item)||null;
  if(ref.kind==='armor'){
@@ -1940,7 +1994,7 @@ function twoHandDisplayProfile(item){
  return {type,...profiles[type]};
 }
 function gandalfTwoHandSlotHtml(item){
- const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||ruleWeaponForItem(item)?.image_path)||'';
+ const art=window.aleaEquipmentArt?.imageTag(item?.imageOverridePath||window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item)))||'';
  const magical=!!item&&(window.aleaCharacterItemMagic?.magical?.(item)??(item.isMagical===true||item.magic?.enabled===true));
  const magicBadge=magical?'<span class="alea-magic-item-dot" aria-hidden="true"><img src="./features/character/assets/alea-magic-item-sigil.png" alt="" loading="lazy"></span>':'';
  const name=escAttr(item.name||'Vapen');
@@ -1976,7 +2030,7 @@ function currentEquipmentProjectileEntries(character){
    canonicalWeaponProjectileKey(category,master?.name||item.name,master?.icon_key||item.icon_key,master?.tags||item.tags);
   const projectile=ruleProjectileFromKey(key);
   if(!key||!projectile)continue;
-  const imagePath=category==='thrown'?(item.imageOverridePath||master?.image_path||projectileMasterImagePath(projectile)):
+  const imagePath=category==='thrown'?(item.imageOverridePath||window.aleaHermesAssetResolver?.reference(master)||projectileMasterImagePath(projectile)):
    projectileMasterImagePath(projectile);
   const row=byKey.get(key);
   if(row){row.weapons.push(item.name||master?.name||'Vapen');continue}
@@ -2023,23 +2077,30 @@ function currentEquipmentFigureHtml(character){
  if(valid)return '<img class="gandalf-equip-character" src="'+image+'" alt="">';
  return '<div class="gandalf-equip-figure-missing">Helfigur saknas<small>Ladda upp bilden med kläder under fliken Bilder.</small></div>';
 }
+function combatEquipmentIsLocked(slot){
+ if(activeCombat?.status!=='active')return false;
+ const hands=slot==='leftHand'||slot==='rightHand';
+ return !(combatWeaponSwitchSession&&hands&&String(current?._dbId||current?.id)===String(combatWeaponSwitchSession.characterId))
+}
 function renderCurrentEquipment(){
  if(!current)return;ensureEquipmentState(current);
  const el=$('currentEquipmentBody');if(!el)return;
  const eq=current.currentEquipment,left=eq.leftHand,right=eq.rightHand,leftItem=equipItemByRef(current,left);
  const two=leftItem&&left?.kind==='weapon'&&Number(left.hands)===2&&equipRefEquals(left,right);
  const hands=two?gandalfTwoHandSlotHtml(leftItem):currentEquipSlotHtml('leftHand')+currentEquipSlotHtml('rightHand');
- el.innerHTML='<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
+ const combatEquipmentNote=combatWeaponSwitchSession?'<div class="current-equip-combat-note">Byta/dra vapen · Välj vapen eller sköld för vänster och höger hand. Övrig utrustning är låst.</div>':(combatEquipmentIsLocked()?'<div class="current-equip-combat-note">Utrustningen är låst under pågående strid.</div>':'');
+ el.innerHTML=combatEquipmentNote+'<section class="gandalf-equip-scene" aria-label="Aktuell utrustning, grafisk vy">'+
   '<div class="gandalf-equip-center" aria-hidden="true">'+currentEquipmentFigureHtml(current)+'</div>'+
   ['head','arms','torso','legs'].map(currentEquipSlotHtml).join('')+
   hands+
   currentEquipProjectileSlotHtml(current)+
-  '</section><div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>';
+  '</section><div id="currentEquipmentPicker" class="current-equipment-picker hidden"></div>'+(combatWeaponSwitchSession?'<div class="current-equip-combat-actions"><button type="button" class="btn" '+(combatWeaponSwitchBusy?'disabled':'')+' onclick="cancelCombatWeaponSwitch()">Avbryt</button><button type="button" class="btn primary" '+(combatWeaponSwitchBusy?'disabled':'')+' onclick="confirmCombatWeaponSwitch()">'+(combatWeaponSwitchBusy?'Bekräftar…':'Bekräfta vapenbyte · 1 handling')+'</button></div>':'');
  if(currentEquipmentPickerSlot)renderCurrentEquipmentPicker();
 }
-function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);if(refreshEquippedWeaponGrip(current))save();currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
-function closeCurrentEquipment(){currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden')}
+function openCurrentEquipment(){if(!current)return;ensureEquipmentState(current);if(activeCombat?.status!=='active'&&refreshEquippedWeaponGrip(current))save();currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');save()}
+function closeCurrentEquipment(){if(combatWeaponSwitchSession){void cancelCombatWeaponSwitch();return}currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden')}
 function openCurrentEquipmentPicker(slot){
+ if(combatEquipmentIsLocked(slot))return;
  currentEquipmentPickerSlot=slot;renderCurrentEquipment();
  // The master catalogue may still be loading after login.
  window.aleaEquipmentCatalog?.load().then(()=>{
@@ -2071,7 +2132,7 @@ function equipmentChoiceRow(kind,item,slot){
 }
 function renderCurrentEquipmentPicker(){
  let slot=currentEquipmentPickerSlot,el=$('currentEquipmentPicker');if(!slot||!el)return;el.classList.remove('hidden');
- let hand=slot==='leftHand'||slot==='rightHand',groups=hand?[['weapon','Vapen',current.weapons||[]],['shield','Sköldar',current.shields||[]],['equipment','Utrustning som kan bäras',(current.equipment||[]).filter(x=>window.aleaEquipmentCatalog?.canCarry(x))]]:[['armor','Rustning',current.armor||[]]];
+ let hand=slot==='leftHand'||slot==='rightHand',groups=hand?(combatWeaponSwitchSession?[['weapon','Vapen',current.weapons||[]],['shield','Sköldar',current.shields||[]]]:[['weapon','Vapen',current.weapons||[]],['shield','Sköldar',current.shields||[]],['equipment','Utrustning som kan bäras',(current.equipment||[]).filter(x=>window.aleaEquipmentCatalog?.canCarry(x))]]):[['armor','Rustning',current.armor||[]]];
  let html='<div class="current-equipment-pickerhead"><h3>Välj · '+escAttr(CURRENT_EQUIP_LABELS[slot])+'</h3><button class="current-equipment-picker-close" onclick="closeCurrentEquipmentPicker()">×</button></div><button type="button" class="current-equipment-emptybtn" onclick="clearCurrentEquipmentSlot(\''+slot+'\')">— Tomt fält —</button>';
  groups.forEach(([kind,label,items])=>{html+='<div class="current-equipment-group"><h4>'+label+'</h4>'+(items.length?items.map(item=>equipmentChoiceRow(kind,item,slot)).join(''):'<div class="muted">Inget tillagt.</div>')+'</div>'});
  el.innerHTML=html;setTimeout(()=>el.scrollIntoView({block:'nearest',behavior:'smooth'}),0)
@@ -2081,6 +2142,7 @@ function clearTwoHandIfNeeded(){
  if(l&&r&&equipRefEquals(l,r)&&(Number(l.hands)===2||Number(r.hands)===2)){eq.leftHand=null;eq.rightHand=null}
 }
 function chooseCurrentEquipment(slot,kind,itemId,hands=1){
+ if(combatEquipmentIsLocked(slot)||combatWeaponSwitchSession&&!['weapon','shield'].includes(kind))return;
  if(kind==='equipment'&&!window.aleaEquipmentCatalog?.canCarry((current?.equipment||[]).find(x=>x.equipId===itemId))){
   alert('Detta föremål är inte markerat Kan bäras i utrustningsregistret.');return
  }
@@ -2102,10 +2164,47 @@ function chooseCurrentEquipment(slot,kind,itemId,hands=1){
  currentEquipmentPickerSlot=null;save();renderCurrentEquipment()
 }
 function clearCurrentEquipmentSlot(slot){
+ if(combatEquipmentIsLocked(slot))return;
  ensureEquipmentState(current);let eq=current.currentEquipment,ref=eq[slot];
  if((slot==='leftHand'||slot==='rightHand')&&ref&&Number(ref.hands)===2&&equipRefEquals(eq.leftHand,eq.rightHand)){eq.leftHand=null;eq.rightHand=null}else eq[slot]=null;
  currentEquipmentPickerSlot=null;save();renderCurrentEquipment()
 }
+
+async function confirmCombatWeaponSwitch(){
+ const session=combatWeaponSwitchSession;
+ if(!session||combatWeaponSwitchBusy||activeCombat?.status!=='active'||String(activeCombat.id)!==session.combatId)return false;
+ const character=(chars||[]).find(row=>String(row._dbId||row.id)===session.characterId);
+ if(!character||!canEditCharacter(character))return false;
+ combatWeaponSwitchBusy=true;renderCurrentEquipment();
+ try{
+  const committed=await window.combatCommitWeaponSwitch?.({...session,newEquipment:JSON.parse(JSON.stringify(character.currentEquipment))});
+  if(!committed)throw new Error('Handlingen kunde inte bekräftas. Vapenbytet återställdes.');
+  if(character._dbId)centralCharacterSnapshots.set(character._dbId,characterSyncFingerprint(character));
+  localStorage.setItem('dod_chars_v03a',JSON.stringify(chars));combatWeaponSwitchSession=null;currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden');renderCurrentEquipment();return true
+ }catch(error){
+  character.currentEquipment=JSON.parse(JSON.stringify(session.original));
+  combatWeaponSwitchSession=null;currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden');renderCurrentEquipment();
+  alert('Vapenbytet genomfördes inte: '+(error?.message||error));return false
+ }finally{combatWeaponSwitchBusy=false}
+}
+async function cancelCombatWeaponSwitch(){
+ const session=combatWeaponSwitchSession;if(!session||combatWeaponSwitchBusy)return;
+ const character=(chars||[]).find(row=>String(row._dbId||row.id)===session.characterId);
+ if(character)character.currentEquipment=JSON.parse(JSON.stringify(session.original));
+ combatWeaponSwitchSession=null;currentEquipmentPickerSlot=null;$('currentEquipmentModal').classList.add('hidden');renderCurrentEquipment();
+ await window.combatCancelWeaponSwitch?.(session)
+}
+function beginCombatWeaponSwitch(combatant,action){
+ if(!combatant||combatant.source_type!=='character'||!action||action.status!=='planned'||action.source_data?.action_key!=='weapon_switch'||activeCombat?.status!=='active'||!combatCanManage())return false;
+ const character=(chars||[]).find(row=>String(row._dbId||row.id)===String(combatant.source_id));
+ if(!character||!canEditCharacter(character))return false;
+ ensureEquipmentState(character);current=character;
+ combatWeaponSwitchSession={combatId:String(activeCombat.id),roundNumber:Number(activeCombat.round_number)||1,combatantId:String(combatant.id),characterId:String(character._dbId||character.id),actionId:String(action.id),original:JSON.parse(JSON.stringify(character.currentEquipment))};
+ currentEquipmentPickerSlot=null;renderCurrentEquipment();$('currentEquipmentModal').classList.remove('hidden');return true
+}
+window.aleaBeginCombatWeaponSwitch=beginCombatWeaponSwitch;
+window.currentEquipmentCombatWeaponSwitchOpen=()=>!!combatWeaponSwitchSession;
+
 /* v0.35.09 — Food & provisions: whole days, saved per rollperson. */
 /* v0.35.97 — Separate food and drinking-water stores, both in whole days.
    Only the campaign-day database trigger consumes stores. No browser-side deduction. */
@@ -3659,13 +3758,13 @@ async function editLocationContent(id){
   currentLocationContentId=id;
   let rows=await Promise.all([
    dbJson('campaign_location_player_texts?location_id=eq.'+encodeURIComponent(id)+'&select=player_description,player_visible&limit=1'),
-   dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(id)+'&select=gm_description&limit=1'),
+   dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(id)+'&select=gm_description,hidden_discoveries&limit=1'),
    dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(id)+'&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc'),
    dbJson('campaign_location_event_links?location_id=eq.'+encodeURIComponent(id)+'&select=event_id,relation_kind')
   ]);
   let pt=rows[0]||[],gn=rows[1]||[];currentLocationAssets=Array.isArray(rows[2])?rows[2]:[],placeEventLinks=Array.isArray(rows[3])?rows[3]:[],placeEventIds=new Set(placeEventLinks.map(x=>x.event_id));
   $('adminEditorTitle').textContent='Platsinnehåll · '+(l.location_key?l.location_key+'. ':'')+(l.name||'Plats');
-  $('adminEditorBody').innerHTML='<div class="location-content-grid"><label class="wide">Beskrivning för spelare<textarea id="lcPlayerText">'+escAttr(pt[0]&&pt[0].player_description||'')+'</textarea></label><label class="wide admincheck"><input id="lcPlayerVisible" type="checkbox" '+((pt[0]&&pt[0].player_visible)!==false?'checked':'')+'> Beskrivningen är synlig för spelare när platsen är upplåst</label><label class="wide">SL-noteringar<textarea id="lcGmNotes">'+escAttr(gn[0]&&gn[0].gm_description||'')+'</textarea></label><div class="wide"><div class="admin-subsection-head"><h3>Bilder</h3><button class="smallbtn" type="button" onclick="$(\'locationAssetFile\').click()">+ Lägg till bild</button></div><div id="locationAssetList" class="location-assets"></div></div><div class="wide"><div class="admin-subsection-head"><div><h3>Händelser på platsen</h3><p class="muted" style="margin:3px 0 0">Koppla händelser som hör till eller kan startas från denna plats.</p></div></div><div class="location-link-group">'+(campaignEvents.length?campaignEvents.map(function(e){let link=placeEventLinks.find(x=>x.event_id===e.id);return '<label><input type="checkbox" data-location-event="'+e.id+'" '+(placeEventIds.has(e.id)?'checked':'')+'> <span><b>'+escAttr(e.name||'Händelse')+'</b>'+(link&&link.relation_kind==='primary'?'<small> · huvudplats</small>':'')+'</span></label>'}).join(''):'<div class="content-empty">Inga händelser skapade ännu.</div>')+'</div></div></div><div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveLocationContent(\''+id+'\')">Spara platsinnehåll</button></div>';
+  $('adminEditorBody').innerHTML='<div class="location-content-grid"><label class="wide">Beskrivning för spelare<textarea id="lcPlayerText">'+escAttr(pt[0]&&pt[0].player_description||'')+'</textarea></label><label class="wide admincheck"><input id="lcPlayerVisible" type="checkbox" '+((pt[0]&&pt[0].player_visible)!==false?'checked':'')+'> Beskrivningen är synlig för spelare när platsen är upplåst</label><label class="wide">SL-noteringar<textarea id="lcGmNotes">'+escAttr(gn[0]&&gn[0].gm_description||'')+'</textarea></label><label class="wide">Finna dolda ting<textarea id="lcHiddenDiscoveries">'+escAttr(gn[0]&&gn[0].hidden_discoveries||'')+'</textarea></label><div class="wide"><div class="admin-subsection-head"><h3>Bilder</h3><button class="smallbtn" type="button" onclick="$(\'locationAssetFile\').click()">+ Lägg till bild</button></div><div id="locationAssetList" class="location-assets"></div></div><div class="wide"><div class="admin-subsection-head"><div><h3>Händelser på platsen</h3><p class="muted" style="margin:3px 0 0">Koppla händelser som hör till eller kan startas från denna plats.</p></div></div><div class="location-link-group">'+(campaignEvents.length?campaignEvents.map(function(e){let link=placeEventLinks.find(x=>x.event_id===e.id);return '<label><input type="checkbox" data-location-event="'+e.id+'" '+(placeEventIds.has(e.id)?'checked':'')+'> <span><b>'+escAttr(e.name||'Händelse')+'</b>'+(link&&link.relation_kind==='primary'?'<small> · huvudplats</small>':'')+'</span></label>'}).join(''):'<div class="content-empty">Inga händelser skapade ännu.</div>')+'</div></div></div><div class="adminformactions"><button class="btn" onclick="closeAdminEditor()">Avbryt</button><button class="btn primary" onclick="saveLocationContent(\''+id+'\')">Spara platsinnehåll</button></div>';
   $('adminEditor').classList.remove('hidden');await renderLocationAssetList();
  }catch(e){alert('Kunde inte öppna platsinnehållet: '+e.message)}
 }
@@ -3685,10 +3784,10 @@ async function syncLocationEventLinksFromPlace(locationId){
  if(selected.size)await dbJson('campaign_location_event_links',{method:'POST',body:JSON.stringify([...selected].map(eventId=>({campaign_id:centralCampaignId,location_id:locationId,event_id,relation_kind:'related'})))})
 }
 async function saveLocationContent(id){
- let player=$('lcPlayerText')?$('lcPlayerText').value:'',gm=$('lcGmNotes')?$('lcGmNotes').value:'',visible=$('lcPlayerVisible')?$('lcPlayerVisible').checked:true,now=new Date().toISOString();
+ let player=$('lcPlayerText')?$('lcPlayerText').value:'',gm=$('lcGmNotes')?$('lcGmNotes').value:'',hiddenDiscoveries=$('lcHiddenDiscoveries')?$('lcHiddenDiscoveries').value:'',visible=$('lcPlayerVisible')?$('lcPlayerVisible').checked:true,now=new Date().toISOString();
  try{
   await dbJson('campaign_location_player_texts?on_conflict=location_id',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({location_id:id,campaign_id:centralCampaignId,player_description:player,player_visible:visible,updated_at:now})});
-  await dbJson('campaign_location_gm_notes?on_conflict=location_id',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({location_id:id,campaign_id:centralCampaignId,gm_description:gm,updated_at:now})});
+  await dbJson('campaign_location_gm_notes?on_conflict=location_id',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify({location_id:id,campaign_id:centralCampaignId,gm_description:gm,hidden_discoveries:hiddenDiscoveries,updated_at:now})});
   await syncLocationEventLinksFromPlace(id);await loadCampaignPlaceData();
   closeAdminEditor();renderAdminMaps();renderAdminCampaignContent();showBackupToast('✓ Platsinnehåll sparat');
   if(mapSelectedAreaId)openMapLocationInfoByArea(mapSelectedAreaId);
@@ -4204,12 +4303,12 @@ async function openMapLocationInfoByArea(areaId,keepToken){
    dbJson('campaign_location_player_texts?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=player_description,player_visible&limit=1'),
    dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc')
   ];
-  if(canManageCampaignMaps())queries.push(dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=gm_description&limit=1'));
+  if(canManageCampaignMaps())queries.push(dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=gm_description,hidden_discoveries&limit=1'));
   let rows=await Promise.all(queries);if(!keepToken&&token!==mapLocationInfoToken)return;
   let pt=rows[0]||[],assets=(rows[1]||[]).filter(function(x){return !x.asset_type||x.asset_type==='image'}),gm=canManageCampaignMaps()?(rows[2]||[]):[];
-  let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'';
+  let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'',hiddenText=gm[0]&&gm[0].hidden_discoveries||'';
   let editBtn=canManageCampaignMaps()?'<button class="btn" type="button" onclick="editLocationContent(\''+a.location_id+'\')">✎ Redigera innehåll</button>':'';
-  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(canManageCampaignMaps()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(canManageCampaignMaps()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div>':'');
+  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(canManageCampaignMaps()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(canManageCampaignMaps()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div><div class="map-location-section map-location-hidden"><h4>Finna dolda ting</h4>'+mapLocationTextHtml(hiddenText)+'</div>':'');
   // The location panel is rewritten above. Move the gallery only AFTER that rewrite,
   // otherwise innerHTML destroys its DOM node and the gallery cannot render.
   let galleryPanel=$('mapLocationImagesPanel'),infoPanel=$('mapLocationPanel');

@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261005072319 (elf_rest_threshold_by_race_category) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

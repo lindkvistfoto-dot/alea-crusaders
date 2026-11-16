@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 describe('Gandalf sound inventory v0.35.27',()=>{
  it('records 52 sounds with 25 planned future cues without publishing recordings',()=>{
-  const sql=read('supabase/migrations/20261009141000_gandalf_inventory_v03526.sql');
-  const cat=read('supabase/migrations/20261009140000_gandalf_categories_v03526.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261009141000_gandalf_inventory_v03526.sql');
+  const cat=read('supabase/legacy-migrations/pre-baseline/20261009140000_gandalf_categories_v03526.sql');
   expect(sql).toContain("'creature.skeleton'");
   expect(sql).toContain("'ranged.bow_release'");
   expect(sql).toContain("'event.whisper'");

@@ -18,12 +18,13 @@
   "contracts": {
     "operational_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md",
     "queue_and_request_schema": "hermes/core/queue/README.md",
-    "asset_cleanup": "hermes/core/cleanup/README.md",
     "drive_folders": "config/hermes-drive-folders.json",
     "system_assets": "config/hermes-system-assets.json",
     "honor_image_resolver": "features/honors/honors-image-resolver.js",
     "image_profiles": "features/hermes-core/contract.json",
-    "profile_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md"
+    "profile_acceptance": "features/hermes-core/OPERATIONAL_ACCEPTANCE.md",
+    "asset_cleanup": "hermes/core/cleanup/README.md",
+    "asset_cleanup_legacy_reference": "features/hermes-core/ASSET_CLEANUP.md"
   },
   "targets": {
     "system": {

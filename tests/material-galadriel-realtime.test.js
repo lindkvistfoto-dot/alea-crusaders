@@ -129,7 +129,7 @@ describe('Galadriel Lady of Lothlórien – authenticated RLS-aware Realtime',()
   expect(h.status.at(-1).label).toContain('Reservläge');
  });
  it('signal migration does not expose secret file metadata and preserves older publications',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/20261008_galadriel_material_realtime_signals.sql',import.meta.url),'utf8');
+  const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_galadriel_material_realtime_signals.sql',import.meta.url),'utf8');
   expect(sql).toContain('campaign_material_signals_member_read');
   expect(sql).toContain('private.is_campaign_member(campaign_id)');
   expect(sql).toContain('security definer');

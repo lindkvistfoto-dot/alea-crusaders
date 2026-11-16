@@ -18,7 +18,7 @@ export function createGaladriel({
  getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
  onPresentation=()=>{},onFolder=()=>{},onStatus=()=>{},
  makeSocket=url=>new WebSocket(url),clock=()=>Date.now(),
- timers={setInterval,clearInterval}
+ timers={setInterval:(...args)=>globalThis.setInterval(...args),clearInterval:id=>globalThis.clearInterval(id)}
 }){
  const state={started:false,connected:false,connecting:false,scope:'',socket:null,
   sessionToken:'',lastPresentation:-1,lastFolder:-1,joinRef:null,serial:0,ref:0,

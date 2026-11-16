@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261008093838 (add_npc_spells_for_magic_arena) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

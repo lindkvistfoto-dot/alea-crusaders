@@ -42,7 +42,10 @@ function fixture(){
   projectileMasterImagePath:p=>p?.image_path||null,
   canonicalWeaponProjectileKey:()=>'', // test links must use the real master key
   characterProjectileKey:s=>s.projectileKey,
-  window:{aleaEquipmentArt:{src:path=>path?'https://example.test/'+path:''}},
+  window:{
+   aleaEquipmentArt:{src:path=>path?'https://example.test/'+path:''},
+   aleaHermesAssetResolver:{reference:record=>record?.image_asset_id||record?.image_path||null}
+  },
   escAttr:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'),
   showBackupToast:message=>messages.push(message),
   alert:message=>messages.push(message)

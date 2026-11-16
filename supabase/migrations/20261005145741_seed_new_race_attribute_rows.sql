@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261005145741 (seed_new_race_attribute_rows) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

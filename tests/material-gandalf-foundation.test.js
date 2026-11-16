@@ -1,7 +1,7 @@
 import {describe,test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 
-const sql=readFileSync(new URL('../supabase/migrations/20261008_gandalf_material_foundation.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_gandalf_material_foundation.sql',import.meta.url),'utf8');
 const architecture=readFileSync(new URL('../docs/material-gandalf-architecture.md',import.meta.url),'utf8');
 
 describe('Gandalf – campaign material foundation',()=>{

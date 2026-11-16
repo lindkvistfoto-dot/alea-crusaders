@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261004144023 (campaign_day_weather_erf) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

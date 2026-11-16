@@ -4,7 +4,7 @@ import {runInNewContext} from 'node:vm';
 
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const moduleSource=read('features/equipment/magic-properties.js');
-const migration=read('supabase/migrations/20261011024500_magic_property_powers.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261011024500_magic_property_powers.sql');
 const html=read('index.html');
 const app=read('legacy/app.js');
 const css=read('features/equipment/magic-properties.css');

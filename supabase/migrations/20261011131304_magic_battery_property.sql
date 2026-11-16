@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261011131304 (magic_battery_property) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.

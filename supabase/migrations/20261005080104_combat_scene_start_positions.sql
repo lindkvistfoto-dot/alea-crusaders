@@ -1,0 +1,3 @@
+-- LIVE migration-history marker only.
+-- Version 20261005080104 (combat_scene_start_positions) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
+-- This file intentionally contains no executable SQL; original source remains archived.
