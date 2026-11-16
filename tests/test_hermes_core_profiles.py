@@ -7,6 +7,7 @@ from PIL import Image
 
 from scripts.hermes_core_prepare import prepare, valid_core_target_id
 from scripts.hermes_system_assets import system_asset
+from scripts.hermes_core_workflow_paths import route_changed_paths
 
 class CoreImageProfileTests(unittest.TestCase):
     def test_uppercase_arcane_map_system_asset_keys_are_supported(self):
@@ -65,6 +66,37 @@ class CoreImageProfileTests(unittest.TestCase):
             result = prepare(source.getvalue(), Path(directory), "skill-illustration-square")
             self.assertFalse(result["alpha_preserved"])
             self.assertEqual((result["width"], result["height"]), (640, 640))
+
+class CoreWorkflowRoutingTests(unittest.TestCase):
+    def test_dev_queue_request_selects_publish_only(self):
+        routes = route_changed_paths(["hermes/core/queue/dev/submit-test.json"])
+        self.assertEqual(routes, {"publish": True, "asset_cleanup": False})
+
+    def test_dev_cleanup_request_selects_cleanup_only(self):
+        routes = route_changed_paths(["hermes/core/cleanup/dev/cleanup-test.json"])
+        self.assertEqual(routes, {"publish": False, "asset_cleanup": True})
+
+    def test_unrelated_paths_select_neither_job(self):
+        routes = route_changed_paths(["features/hermes-core/asset-cleanup.js"])
+        self.assertEqual(routes, {"publish": False, "asset_cleanup": False})
+
+    def test_mixed_push_routes_each_request_to_its_own_job(self):
+        routes = route_changed_paths([
+            "hermes/core/queue/dev/submit-test.json",
+            "hermes/core/cleanup/dev/cleanup-test.json",
+        ])
+        self.assertEqual(routes, {"publish": True, "asset_cleanup": True})
+
+    def test_workflow_routes_from_git_diff_outputs(self):
+        workflow_path = Path(__file__).resolve().parents[1] / ".github/workflows/hermes-core-publish-dev.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertNotIn("github.event.commits", workflow)
+        self.assertIn("git diff --name-only --diff-filter=AM", workflow)
+        self.assertIn("needs.detect-changed-requests.outputs.publish == 'true'", workflow)
+        self.assertIn("needs.detect-changed-requests.outputs.asset_cleanup == 'true'", workflow)
+        self.assertIn("      - 'hermes/core/queue/dev/**'", workflow)
+        self.assertIn("      - 'hermes/core/cleanup/dev/**'", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
