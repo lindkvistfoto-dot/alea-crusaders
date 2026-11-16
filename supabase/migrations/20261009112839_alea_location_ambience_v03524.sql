@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261009112839 (alea_location_ambience_v03524) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

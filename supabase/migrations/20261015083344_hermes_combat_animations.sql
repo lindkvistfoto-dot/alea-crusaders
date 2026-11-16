@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261015083344 (hermes_combat_animations) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

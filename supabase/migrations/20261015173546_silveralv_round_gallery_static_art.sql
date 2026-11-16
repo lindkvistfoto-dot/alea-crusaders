@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261015173546 (silveralv_round_gallery_static_art) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

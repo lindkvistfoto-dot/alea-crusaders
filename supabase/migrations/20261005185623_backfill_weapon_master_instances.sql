@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261005185623 (backfill_weapon_master_instances) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

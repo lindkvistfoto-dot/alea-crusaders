@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261004145854 (skill_roll_erf_rewards) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

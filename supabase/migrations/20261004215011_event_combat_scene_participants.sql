@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261004215011 (event_combat_scene_participants) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

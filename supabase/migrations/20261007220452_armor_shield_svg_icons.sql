@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261007220452 (armor_shield_svg_icons) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

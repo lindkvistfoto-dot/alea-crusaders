@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261010222044 (preserve_defeated_combatant_portraits) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

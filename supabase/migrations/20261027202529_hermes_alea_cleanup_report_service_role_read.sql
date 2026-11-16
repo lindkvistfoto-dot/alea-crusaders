@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261027202529 (hermes_alea_cleanup_report_service_role_read) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261004153907 (rest_hours_psy_and_race_erf_reset) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

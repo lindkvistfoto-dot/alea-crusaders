@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261009061238 (combat_ammunition_registry_v03513) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

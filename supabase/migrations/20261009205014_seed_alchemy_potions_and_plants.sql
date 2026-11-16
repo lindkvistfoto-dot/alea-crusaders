@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261009205014 (seed_alchemy_potions_and_plants) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

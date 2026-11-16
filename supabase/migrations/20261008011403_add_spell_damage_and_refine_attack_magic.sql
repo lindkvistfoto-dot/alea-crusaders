@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261008011403 (add_spell_damage_and_refine_attack_magic) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

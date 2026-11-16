@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261005060119 (combat_scene_direct_backgrounds) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

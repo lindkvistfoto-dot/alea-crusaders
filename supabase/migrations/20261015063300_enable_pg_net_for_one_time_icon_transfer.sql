@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261015063300 (enable_pg_net_for_one_time_icon_transfer) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

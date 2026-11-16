@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261008010928 (add_attack_magic_to_rule_spells) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

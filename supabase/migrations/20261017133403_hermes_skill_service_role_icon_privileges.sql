@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261017133403 (hermes_skill_service_role_icon_privileges) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

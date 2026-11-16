@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261009105852 (alea_sound_registry_v03522) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

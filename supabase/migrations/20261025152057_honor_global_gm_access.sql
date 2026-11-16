@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261025152057 (honor_global_gm_access) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

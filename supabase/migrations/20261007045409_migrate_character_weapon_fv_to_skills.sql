@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261007045409 (migrate_character_weapon_fv_to_skills) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

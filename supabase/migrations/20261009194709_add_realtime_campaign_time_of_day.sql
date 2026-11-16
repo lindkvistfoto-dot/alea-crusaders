@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261009194709 (add_realtime_campaign_time_of_day) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

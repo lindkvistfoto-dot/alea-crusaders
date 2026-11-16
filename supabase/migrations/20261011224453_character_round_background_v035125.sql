@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261011224453 (character_round_background_v035125) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

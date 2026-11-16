@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261012043400 (character_round_live_sync_v035128) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

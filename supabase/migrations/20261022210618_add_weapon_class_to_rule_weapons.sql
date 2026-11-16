@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261022210618 (add_weapon_class_to_rule_weapons) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

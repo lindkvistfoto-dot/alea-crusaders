@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261005171018 (enemy_monster_admin_profiles) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261011225220 (restore_legacy_combat_round_images_v035126) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

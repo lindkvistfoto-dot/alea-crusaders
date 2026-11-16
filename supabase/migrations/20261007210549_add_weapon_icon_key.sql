@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261007210549 (add_weapon_icon_key) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

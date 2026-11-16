@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261018091341 (hermes_skill_illustration_wide) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

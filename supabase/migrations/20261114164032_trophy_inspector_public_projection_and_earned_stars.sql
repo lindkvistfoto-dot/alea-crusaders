@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261114164032 (trophy_inspector_public_projection_and_earned_stars) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261010231011 (magic_artifacts_registry_v03583) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

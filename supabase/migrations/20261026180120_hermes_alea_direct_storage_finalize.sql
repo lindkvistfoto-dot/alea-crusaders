@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261026180120 (hermes_alea_direct_storage_finalize) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

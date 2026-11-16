@@ -1,2 +1,0 @@
-# Isolated archive verifier / synthetic test dependency; no app runtime changes.
-Pillow==12.3.0

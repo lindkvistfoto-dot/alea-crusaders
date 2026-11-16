@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261011005442 (magic_configurator_rules_v03586) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

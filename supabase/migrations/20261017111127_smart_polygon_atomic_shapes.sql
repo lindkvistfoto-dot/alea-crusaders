@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261017111127 (smart_polygon_atomic_shapes) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

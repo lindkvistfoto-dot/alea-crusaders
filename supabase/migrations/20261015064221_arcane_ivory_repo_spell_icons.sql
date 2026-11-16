@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261015064221 (arcane_ivory_repo_spell_icons) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

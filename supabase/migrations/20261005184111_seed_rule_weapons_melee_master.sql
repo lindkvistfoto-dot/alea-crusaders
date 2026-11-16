@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261005184111 (seed_rule_weapons_melee_master) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261107051343 (hermes_alea_abandoned_cleanup) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.

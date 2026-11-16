@@ -1,3 +1,0 @@
--- LIVE migration-history marker only.
--- Version 20261024202246 (arcane_trophy_room_opaque_scene) is already recorded as applied by LIVE project wbmosmkirsitkonejzpg.
--- This file intentionally contains no executable SQL; original source remains archived.
