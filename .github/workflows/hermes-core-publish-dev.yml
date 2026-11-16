@@ -11,6 +11,7 @@ on:
     paths:
       - 'features/hermes-core/**'
       - 'scripts/hermes_core_prepare.py'
+      - 'scripts/hermes_core_workflow_paths.py'
       - 'tests/test_hermes_core_profiles.py'
       - 'config/hermes-system-assets.json'
       - '.github/workflows/hermes-core-publish-dev.yml'
@@ -37,6 +38,8 @@ jobs:
             features/hermes-core/contract.json
             features/hermes-core/asset-cleanup.js
             scripts/hermes_core_prepare.py
+            scripts/hermes_core_workflow_paths.py
+            .github/workflows/hermes-core-publish-dev.yml
             scripts/hermes_asset_cleanup.mjs
             scripts/hermes_system_assets.py
             tests/test_hermes_core_profiles.py
@@ -50,8 +53,35 @@ jobs:
           deno-version: v2.x
       - run: deno check --no-config --no-lock --node-modules-dir=none scripts/hermes_asset_cleanup.mjs
 
+  detect-changed-requests:
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      publish: ${{ steps.route.outputs.publish }}
+      asset_cleanup: ${{ steps.route.outputs.asset_cleanup }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            hermes/core/queue/dev
+            hermes/core/cleanup/dev
+            scripts/hermes_core_workflow_paths.py
+      - id: route
+        env:
+          HERMES_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${HERMES_BEFORE:-}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::Invalid push predecessor."; exit 1; }
+          git fetch --no-tags --depth=1 origin "$HERMES_BEFORE"
+          python3 scripts/hermes_core_workflow_paths.py --before "$HERMES_BEFORE" --after "$GITHUB_SHA" --output "$GITHUB_OUTPUT"
+
   asset-cleanup:
-    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && contains(toJSON(github.event.commits), 'hermes/core/cleanup/dev/') && !contains(toJSON(github.event.commits), 'hermes/core/queue/dev/')
+    needs: detect-changed-requests
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && needs.detect-changed-requests.outputs.asset_cleanup == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -113,7 +143,8 @@ jobs:
           path: ${{ runner.temp }}/hermes-asset-cleanup-report.json
           if-no-files-found: ignore
   publish:
-    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && contains(toJSON(github.event.commits), 'hermes/core/queue/dev/')
+    needs: detect-changed-requests
+    if: github.event_name == 'push' && github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/development' && needs.detect-changed-requests.outputs.publish == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
