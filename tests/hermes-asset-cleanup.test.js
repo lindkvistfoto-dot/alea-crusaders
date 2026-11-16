@@ -68,7 +68,7 @@ describe("HERMES CORE asset cleanup",()=>{
     const f=fixture();
     const approval=await approvalFor(f.cleanup);
     const changed={...identity,sha256:"0".repeat(64)};
-    await expect(f.cleanup.execute({schema:CLEANUP_SCHEMA,action:"delete",identity:changed},approval,"lindkvistfoto-dot"))
+    await expect(f.cleanup.execute({schema:CLEANUP_SCHEMA,action:"delete",identity:changed,approval},approval,"lindkvistfoto-dot"))
       .rejects.toThrow("CLEANUP_APPROVAL_MISMATCH");
     expect(f.storage.remove).not.toHaveBeenCalled();
   });
