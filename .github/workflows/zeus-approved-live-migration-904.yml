@@ -64,7 +64,7 @@ jobs:
           active = sorted(x.name for x in Path("supabase/migrations").glob("*.sql") if x.name not in historical)
           assert active == sorted(expected), (active, expected)
           print("Manifest: 178 recorded versions; latest 20261114174209; exactly 8 approved pending migrations.")
-          print("\\n".join(expected))
+          print("\n".join(expected))
           PY
 
       - name: Preflight read-only and enforce exact plan
@@ -79,7 +79,7 @@ jobs:
           import re, sys
           from pathlib import Path
           output = Path(sys.argv[1]).read_text()
-          found = sorted(set(re.findall(r"\\b(202611\\d{10}_[A-Za-z0-9_-]+\\.sql)\\b", output)))
+          found = sorted(set(re.findall(r"\b(2026\d{10}_[A-Za-z0-9_-]+\.sql)\b", output)))
           expected = ["20261112170000_combat_weapon_switch_atomic.sql","20261116124230_combat_instance_game_session_link.sql","20261116130510_arcane_system_assets_privileges.sql","20261116131457_shared_product_schema_contract.sql","20261116142033_revoke_anon_table_write_privileges.sql","20261116143000_hermes_alea_shared_contract.sql","20261116143337_public_api_grant_baseline.sql","20261116150313_hermes_core_target_grants.sql"]
           if found != sorted(expected):
               print("::error::Refusing actual migration: dry-run set differs from Zeus-approved set.")
@@ -109,7 +109,7 @@ jobs:
           import re, sys
           from pathlib import Path
           output = Path(sys.argv[1]).read_text()
-          found = sorted(set(re.findall(r"\\b(202611\\d{10}_[A-Za-z0-9_-]+\\.sql)\\b", output)))
+          found = sorted(set(re.findall(r"\b(2026\d{10}_[A-Za-z0-9_-]+\.sql)\b", output)))
           if found:
               print("::error::Post-migration dry-run reports pending migration(s):", found)
               sys.exit(1)
