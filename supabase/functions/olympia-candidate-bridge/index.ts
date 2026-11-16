@@ -248,6 +248,11 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
   if (comparison.status !== "ahead" || !changed.length || changed.some(path => !allowed.has(path))) {
     throw new Error("CANDIDATE_FILE_SCOPE_INVALID");
   }
+  const migrationFiles = changed.filter(path => path.startsWith("supabase/migrations/"));
+  const dependencyFiles = changed.filter(path => path === "package.json" || path === "package-lock.json");
+  if (migrationFiles.some(path => !/^supabase\/migrations\/\d{14}_[A-Za-z0-9_-]+\.sql$/.test(path))) {
+    throw new Error("CANDIDATE_MIGRATION_PATH_INVALID");
+  }
 
   const existing = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/pulls?state=open&base=main&head=" + encodeURIComponent(OWNER + ":" + candidateBranch));
   let pull = Array.isArray(existing) ? existing[0] : null;
@@ -266,8 +271,9 @@ async function createCandidatePullRequest(token: string, claims: Record<string, 
       "- Exact candidate tree: " + candidateTreeSha,
       "- Zeus decision journal: #" + issueNumber,
       "- Tests: npm run check passed on the candidate.",
-      "- Database migrations: none included.",
-      "- Dependency changes: none included.",
+      "- Database migrations in the exact candidate tree: " + (migrationFiles.join(", ") || "none"),
+      "- Apply listed migrations to the exact LIVE project before merging this candidate.",
+      "- Dependency files in the exact candidate tree: " + (dependencyFiles.join(", ") || "none"),
       "- This PR is not approved for LIVE until OLYMPIA final approval is recorded.",
     ].join("\n");
     pull = await gh(tokenForApp, "/repos/" + OWNER + "/" + REPO + "/pulls", {
