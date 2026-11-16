@@ -16,12 +16,12 @@ export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
   ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
   if(limits.requireAlpha&&!rgba.some((value,index)=>index%4===3&&value===0))throw Error('Bildprofilen kräver äkta transparent bakgrund.');
   const output=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.92));
-  if(!output||output.type!=='image/webp'||output.size>limits.maxBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP.');
+  if(!output||output.type!=='image/webp'||output.size>limits.maxOutputBytes)throw Error('Webbläsaren kunde inte skapa en giltig WebP inom bildprofilens storleksgräns.');
   const check=await createImageBitmap(output);try{if(check.width!==bitmap.width||check.height!==bitmap.height)throw Error('Bildens dimensioner ändrades.')}finally{check.close();}
   return output;
  }finally{bitmap.close();}
 }
-export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={}}){
+export function createHermesAleaClient({rpc,request,convert=convertToWebP,storage=globalThis.sessionStorage,targetPolicies={},environment='DEV'}){
  const allowedTargets=new Set(Object.keys(targetPolicies));
  const attempts=new Map();
  function uploadError(data,status){
@@ -49,11 +49,36 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
   if(!id){id=crypto.randomUUID();attempts.set(key,id);try{storage?.setItem(key,id);}catch{}}
   return id;
  }
+ async function findMatchingPendingJob(meta){
+  const user=await json('/auth/v1/user');
+  if(!user?.id)return null;
+  const query=new URLSearchParams({
+   select:'id,state,source_path,output_path,source_bytes,output_bytes,source_mime',
+   requested_by:'eq.'+user.id,
+   target_kind:'eq.'+meta.target_kind,
+   target_id:'eq.'+meta.target_id,
+   operation:'eq.'+meta.operation,
+   expected_revision:'eq.'+meta.expected_revision,
+   source_mime:'eq.'+meta.source_mime,
+   source_bytes:'eq.'+meta.source_bytes,
+   output_bytes:'eq.'+meta.output_bytes,
+   source_sha256:'eq.'+meta.source_sha256,
+   output_sha256:'eq.'+meta.output_sha256,
+   state:'eq.uploading',
+   order:'created_at.desc',
+   limit:'1'
+  });
+  const rows=await json('/rest/v1/hermes_alea_jobs?'+query.toString());
+  const job=Array.isArray(rows)?rows[0]:null;
+  if(!job||job.state!=='uploading'||!job.source_path||!job.output_path)return null;
+  return job;
+ }
  async function upload({targetKind,target,file,profile={},onStatus=()=>{}}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
   const policy=resolveImageProfile(targetPolicies[targetKind]);
   const limits=resolveImageProfile({...policy,...profile,
     maxBytes:Math.min(policy.maxBytes,profile.maxBytes??policy.maxBytes),
+    maxOutputBytes:Math.min(policy.maxOutputBytes,profile.maxOutputBytes??policy.maxOutputBytes),
     maxWidth:Math.min(policy.maxWidth,profile.maxWidth??policy.maxWidth),
     maxHeight:Math.min(policy.maxHeight,profile.maxHeight??policy.maxHeight),
     maxPixels:Math.min(policy.maxPixels,profile.maxPixels??policy.maxPixels),
@@ -64,17 +89,30 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
   onStatus('preparing');
   const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
-  if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxBytes)
+  if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxOutputBytes)
     throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
   const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
   const expected_revision=Number(target.image_revision||0);
   const meta={target_kind:targetKind,target_id:target.id,expected_revision,operation:target.image_asset_id?'REPLACE':'CREATE',source_mime:file.type,source_bytes:file.size,output_bytes:webp.size,source_sha256,output_sha256};
   meta.idempotency_key=idempotency([targetKind,target.id,expected_revision,source_sha256,output_sha256].join(':'));
-  const job=await rpc('hermes_alea_begin',{request:meta});
+  let job;
+  try{
+   job=await rpc('hermes_alea_begin',{request:meta});
+  }catch(error){
+   if(/STAGING_QUOTA_EXCEEDED/.test(String(error?.message||error))){
+    try{job=await findMatchingPendingJob(meta);}catch{}
+    if(!job){
+     try{await rpc('hermes_alea_report_staging_block',{request:{environment:environment==='LIVE'?'LIVE':'DEV',target_kind:targetKind,target_id:target.id}});}catch{}
+     throw error;
+    }
+   }else throw error;
+  }
   if(job.state==='activated')return job;
   onStatus('uploading');
   await uploadBlob(DISPLAY_BUCKET,job.output_path,webp);
   await uploadBlob(SOURCE_BUCKET,job.source_path,file);
+  onStatus('verifying');
+  await json('/functions/v1/hermes-alea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:job.id})});
   onStatus('activating');
   const result=await rpc('hermes_alea_finalize',{job_id:job.id});
   onStatus('completed');

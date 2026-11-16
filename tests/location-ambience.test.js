@@ -4,7 +4,7 @@ import vm from 'node:vm';
 const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 describe('Location sound ambience v0.35.26',()=>{
  it('has campaign-scoped location sound assignments and one current source location',()=>{
-  const sql=read('supabase/migrations/20261009132500_location_ambience_v03524.sql');
+  const sql=read('supabase/legacy-migrations/pre-baseline/20261009132500_location_ambience_v03524.sql');
   expect(sql).toContain('ambience_cue_key text references public.rule_sound_cues');
   expect(sql).toContain('source_location_id uuid references public.campaign_locations');
   expect(sql).toContain("when 'Kyrkan' then 'ambience.crypt'");

@@ -8,7 +8,7 @@ const char=read('features/character/magic-items.js');
 const wizard=read('features/character/magic-create.js');
 const admin=read('features/equipment/magic-properties.js');
 const html=read('index.html');
-const migration=read('supabase/migrations/20261011031000_magic_configurator_rules.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261011031000_magic_configurator_rules.sql');
 function harness(){
  const scope={window:{}};
  runInNewContext(source,scope);

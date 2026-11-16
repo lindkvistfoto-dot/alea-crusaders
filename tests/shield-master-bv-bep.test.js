@@ -4,8 +4,8 @@ import {runInNewContext} from 'node:vm';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const legacy=read('legacy/app.js');
-const sql=read('supabase/migrations/20261008234500_shield_master_bv_bep.sql');
-const shop=read('supabase/migrations/20261005213000_targans_gille_shop_catalog.sql');
+const sql=read('supabase/legacy-migrations/pre-baseline/20261008234500_shield_master_bv_bep.sql');
+const shop=read('supabase/legacy-migrations/pre-baseline/20261005213000_targans_gille_shop_catalog.sql');
 const shieldStart=legacy.indexOf('function renderAdminShields()');
 const shieldEnd=legacy.indexOf('function editRuleShield(',shieldStart);
 if(shieldStart<0||shieldEnd<0)throw new Error('Shield admin function missing');

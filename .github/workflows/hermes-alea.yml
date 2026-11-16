@@ -1,38 +1,31 @@
-name: HERMES ALEA – isolated trophy archive
+name: HERMES ALEA – archive and self-healing cleanup
 on:
+  push:
+    branches: [fix/hermes-alea-staging-recovery]
+    paths: [scripts/hermes_alea_worker.py, .github/workflows/hermes-alea.yml]
   schedule:
     - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
     inputs:
-      archive_target:
-        description: Environment to archive
+      environment:
+        description: Environment for a manual run
         type: choice
-        options: [both, live, dev]
-        default: both
         required: true
-      cleanup_abandoned_job_ids:
-        description: Exact comma-separated LIVE abandoned job IDs; leave blank for report-only
-        type: string
-        required: false
-      authorize_cleanup:
-        description: Explicitly authorize deletion of only the listed abandoned LIVE jobs
-        type: boolean
-        default: false
-        required: true
+        default: DEV
+        options: [DEV, LIVE]
 permissions:
   contents: read
 concurrency:
-  group: hermes-alea-archive
+  group: hermes-alea-archive-${{ github.event_name == 'schedule' && 'scheduled' || inputs.environment }}
   cancel-in-progress: false
 jobs:
   archive-live:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.event_name != 'workflow_dispatch' || inputs.archive_target != 'dev')
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || inputs.environment == 'LIVE')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           filter: blob:none
           sparse-checkout: |
             scripts
@@ -40,7 +33,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
-      - name: Archive and report; optionally clean explicitly approved LIVE abandoned jobs
+      - name: Archive originals and clean qualified abandoned staging jobs
         env:
           SUPABASE_URL: https://wbmosmkirsitkonejzpg.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.HERMES_SUPABASE_SERVICE_ROLE_KEY }}
@@ -48,27 +41,16 @@ jobs:
           HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
           HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
           HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
-          CLEANUP_JOB_IDS: ${{ inputs.cleanup_abandoned_job_ids }}
-          AUTHORIZE_CLEANUP: ${{ inputs.authorize_cleanup }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "${CLEANUP_JOB_IDS}" ]]; then
-            [[ "${AUTHORIZE_CLEANUP}" == "true" ]] || { echo "::error::Explicit cleanup approval is required."; exit 1; }
-            export HERMES_ALEA_CLEANUP_APPROVED=true
-            python scripts/hermes_alea_worker.py --cleanup-abandoned-ids "${CLEANUP_JOB_IDS}"
-          else
-            python scripts/hermes_alea_worker.py
-          fi
-
+          HERMES_ALEA_CLEANUP_APPROVED: 'true'
+          OLYMPIA_ENVIRONMENT: LIVE
+        run: python scripts/hermes_alea_worker.py --execute-cleanup --environment LIVE
   archive-dev:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.event_name != 'workflow_dispatch' || inputs.archive_target != 'live')
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && ((github.ref == 'refs/heads/development' && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV') || (github.ref == 'refs/heads/fix/hermes-alea-staging-recovery' && github.event_name == 'push'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: development
           filter: blob:none
           sparse-checkout: |
             scripts
@@ -76,19 +58,18 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install Pillow==12.0.0
-      - name: Archive and report only
+      - name: Archive queued DEV originals to Drive
         env:
           SUPABASE_URL: https://wkiuyklzzroavclnsxna.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.ALEA_DEVELOPMENT_SUPABASE_SECRET_KEY }}
           HERMES_OAUTH_CLIENT_ID: ${{ secrets.HERMES_OAUTH_CLIENT_ID }}
           HERMES_OAUTH_CLIENT_SECRET: ${{ secrets.HERMES_OAUTH_CLIENT_SECRET }}
           HERMES_OAUTH_REFRESH_TOKEN: ${{ secrets.HERMES_OAUTH_REFRESH_TOKEN }}
-          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
-        # Keep DEV archival and the existing verified retention cleanup on the same schedule.
+          HERMES_ALEA_ARCHIVE_FOLDER_ID: ${{ vars.HERMES_ALEA_DEV_ARCHIVE_FOLDER_ID || vars.HERMES_ALEA_ARCHIVE_FOLDER_ID || '1vPZsU1q371IL4wr6CeDcefjENUDRlAq-' }}
+          OLYMPIA_ENVIRONMENT: DEV
         run: python scripts/hermes_alea_worker.py --environment DEV
-
   cleanup-dev:
-    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && (github.event_name != 'workflow_dispatch' || inputs.archive_target != 'live')
+    if: github.repository == 'lindkvistfoto-dot/alea-crusaders' && ((github.ref == 'refs/heads/fix/hermes-alea-staging-recovery' && github.event_name == 'push') || (github.ref == 'refs/heads/main' && github.event_name == 'schedule') || ((github.ref == 'refs/heads/development' || github.ref == 'refs/heads/main') && github.event_name == 'workflow_dispatch' && inputs.environment == 'DEV'))
     permissions:
       contents: read
       id-token: write
@@ -97,7 +78,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: development
           filter: blob:none
           sparse-checkout: |
             scripts

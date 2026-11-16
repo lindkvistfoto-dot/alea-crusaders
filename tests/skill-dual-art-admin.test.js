@@ -6,7 +6,7 @@ const moduleSource=readFileSync(new URL('../features/skills/admin-art.js',import
 const css=readFileSync(new URL('../features/skills/admin-art.css',import.meta.url),'utf8');
 const main=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const migration=readFileSync(new URL('../supabase/migrations/20261017160000_skill_dual_art_admin.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261017160000_skill_dual_art_admin.sql',import.meta.url),'utf8');
 
 function helper(){const window={};runInNewContext(moduleSource,{window});return window.aleaSkillArt}
 const skillId='klattra';

@@ -8,7 +8,7 @@ const migrations=[
  '20261023173000_dynamic_system_asset_constraints.sql',
  '20261023190000_hermes_system_asset_registration.sql',
  '20261024200000_arcane_trophy_room_opaque_scene.sql',
-].map(name=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8'));
+].map(name=>readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/'+name,import.meta.url),'utf8'));
 
 it('applies the real migration and enforces publication constraints, RLS and column grants in PostgreSQL',async()=>{
  const db=new PGlite();

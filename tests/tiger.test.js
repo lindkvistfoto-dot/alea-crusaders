@@ -2,7 +2,7 @@ import {describe,test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const src=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
-const migration=readFileSync(new URL('../supabase/migrations/20261008093000_tiger_mental_conditions.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008093000_tiger_mental_conditions.sql',import.meta.url),'utf8');
 const from=src.indexOf('function combatMentalEffects('),to=src.indexOf('const COMBAT_EFFECT_ATTRIBUTES=',from);
 const a=src.indexOf('function combatRestrictionFlags('),b=src.indexOf('function combatEffectAttributeDelta(',a);
 if(from<0||to<=from||a<0||b<=a)throw Error('Missing TIGER runtime functions');

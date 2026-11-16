@@ -64,10 +64,11 @@ describe('Stop combat and after-action report', () => {
     expect(html).not.toContain('<script>');
     expect(html).not.toContain('<img src=x');
   });
-  test('completed reports remain accessible and are not deleted by a new scene', () => {
+  test('completed reports remain accessible and active scenes are archived rather than deleted', () => {
     const runtime = read('features/combat/runtime.js');
     expect(runtime).toContain("const previousCombatCompleted=activeCombat?.status==='completed'");
-    expect(runtime).toContain("&&!previousCombatCompleted)await combatDeleteRuntime(previousCombatId)");
+    expect(runtime).toContain("&&!previousCombatCompleted)\n   await combatArchiveRuntime(previousCombatId,previousCombatStatus)");
+    expect(runtime).not.toContain('await combatDeleteRuntime(previousCombatId)');
     expect(runtime).toContain("status=eq.completed&select=*&order=updated_at.desc&limit=1");
     expect(read('index.html')).toContain('features/combat/summary.js');
   });

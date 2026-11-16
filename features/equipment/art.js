@@ -16,8 +16,12 @@
  function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  function configure(url){baseUrl=String(url||'').replace(/\/$/,'')}
  function src(path){
-  if(!VALID_PATH.test(String(path||''))||!baseUrl)return '';
-  return baseUrl+'/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/');
+  const value=String(path||'');
+  if(value.startsWith('hermes-alea:')){
+   return window.aleaHermesAssetResolver?.url(value)||'';
+  }
+  if(!VALID_PATH.test(value)||!baseUrl)return '';
+  return baseUrl+'/storage/v1/object/public/'+BUCKET+'/'+value.split('/').map(encodeURIComponent).join('/');
  }
  function releasePreview(piece){if(piece?.previewUrl)URL.revokeObjectURL(piece.previewUrl)}
  function reset(){

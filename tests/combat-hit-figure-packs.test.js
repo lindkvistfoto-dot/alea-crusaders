@@ -74,7 +74,7 @@ describe('Shared race/gender hit-location image packs',()=>{
  });
  it('has admin routing, persistent RLS table, and eight upload slots',()=>{
   const html=load('index.html'),legacy=load('legacy/app.js'),code=load('features/combat/hit-figures.js');
-  const sql=load('supabase/migrations/20261012130000_hit_figure_race_gender_registry.sql');
+  const sql=load('supabase/legacy-migrations/pre-baseline/20261012130000_hit_figure_race_gender_registry.sql');
   expect(html).toContain('openAdminSection(\'specialImages\')');
   expect(html).toContain('id="adminHitFigures"');
   expect(html).toContain('features/combat/hit-figures.js');

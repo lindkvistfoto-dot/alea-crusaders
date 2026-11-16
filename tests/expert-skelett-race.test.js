@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-const sql=readFileSync(new URL('../supabase/migrations/20261008_expert_skelett_race.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_expert_skelett_race.sql',import.meta.url),'utf8');
 const app=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../src/styles/app.css',import.meta.url),'utf8');
 

@@ -48,17 +48,22 @@ describe('Gemensamma inventariebilder i regelregister',()=>{
   art.reset();
  });
  it('wires all three admin forms and saves image paths to their master tables',()=>{
-  for(const kind of ['weapon','armor','shield']){
+  for(const kind of ['armor','shield']){
    expect(app).toContain("aleaEquipmentArt?.start('"+kind+"',r)");
    expect(app).toContain(kind==='armor'?'aleaEquipmentArt.prepareArmor(' : "aleaEquipmentArt.prepare('"+kind+"'");
   }
+  expect(app).toContain('window.aleaHermesAleaWeapons?.upload');
+  expect(app).toContain('Bildguide (råd)');
+  expect(app).toContain('image_asset_id');
+  expect(app).not.toContain('result.compatibilityPath');
+  expect(html).toContain('features/equipment/weapon-hermes-alea.js?v=20261107-weapon-hermes-v1');
   for(const table of ['rule_weapons','rule_shields','rule_armor_types'])expect(app).toContain(table);
-  expect((app.match(/payload.image_path=artChange.path/g)||[]).length).toBe(2);
+  expect((app.match(/payload.image_path=artChange.path/g)||[]).length).toBe(1);
   expect(app).toContain('Object.assign(payload,artChange.paths)');
   expect((app.match(/aleaEquipmentArt\?\.thumbnail/g)||[]).length).toBe(5);
   expect(app).toContain('function currentEquipmentItemArtPath(');
   expect(app).toContain('characterShieldRule(item)?.image_path');
-  expect(app).toContain('ruleWeaponForItem(item)?.image_path');
+  expect(app).toContain('window.aleaHermesAssetResolver?.reference(ruleWeaponForItem(item))');
   expect(app).toContain('type?.image_path');
   expect(app).toContain('armorImagePathForSlot(type,slot)');
   expect(app).toContain('window.aleaEquipmentArt?.reset()');

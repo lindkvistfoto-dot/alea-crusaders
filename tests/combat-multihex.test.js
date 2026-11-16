@@ -5,7 +5,7 @@ const source=readFileSync(new URL('../features/combat/footprint.js',import.meta.
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const scene=readFileSync(new URL('../features/combat/admin-scenes.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const sql=readFileSync(new URL('../supabase/migrations/20261009164500_multihex_area_and_terrain.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261009164500_multihex_area_and_terrain.sql',import.meta.url),'utf8');
 const geo=runInNewContext(source+`
 this.geo={shape:combatFootprintShape,face:combatFootprintFacing,cells:combatFootprintCells,
  overlap:combatFootprintOverlaps,distance:combatFootprintDistance,area:combatFootprintIntersectsRadius};`,{});

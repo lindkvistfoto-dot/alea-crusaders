@@ -16,7 +16,7 @@ export function mapSignalConfig(campaign){
 export function createMapRealtime({
  getCampaign,getToken,isAuthenticated,supabaseUrl,publishableKey,
  onRefresh=()=>{},onStatus=()=>{},makeSocket=url=>new WebSocket(url),
- clock=()=>Date.now(),timers={setInterval,clearInterval}
+ clock=()=>Date.now(),timers={setInterval:(...args)=>globalThis.setInterval(...args),clearInterval:id=>globalThis.clearInterval(id)}
 }){
  const state={started:false,connected:false,connecting:false,scope:'',socket:null,
   serial:0,ref:0,joinRef:null,sessionToken:'',revision:-1,

@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const app=read('legacy/app.js');
 const runtime=read('features/combat/runtime.js');
-const migration=read('supabase/migrations/20261010221500_weapon_projectile_links.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261010221500_weapon_projectile_links.sql');
 const ammo=[
  {projectile_key:'arrow',name:'Pilar',image_path:'projectile/arrow/a.webp'},
  {projectile_key:'bolt',name:'Skäktor',image_path:'projectile/bolt/b.webp'},
@@ -30,7 +30,10 @@ function fixture(){
  const map=new Map(ammo.map(x=>[x.projectile_key,x]));
  const src=path=>path?'https://example.invalid/'+path:'';
  const ctx={
-  window:{aleaEquipmentArt:{src}},
+  window:{
+   aleaEquipmentArt:{src},
+   aleaHermesAssetResolver:{reference:record=>record?.image_asset_id||record?.image_path||null}
+  },
   ruleWeapons:weapons,
   ruleProjectileTypes:ammo,
   ruleProjectileFromKey:key=>map.get(key),

@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
-const sql=readFileSync(new URL('../supabase/migrations/20261008_seed_eldsalamander_summon_npc.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_seed_eldsalamander_summon_npc.sql',import.meta.url),'utf8');
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
 const legacy=readFileSync(new URL('../legacy/app.js',import.meta.url),'utf8');
 

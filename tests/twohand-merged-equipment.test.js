@@ -15,7 +15,7 @@ function fixture(hands=2){
   armor:[],shields:[],equipment:[],currentEquipment:{head:null,torso:null,arms:null,legs:null,leftHand:null,rightHand:null}};
  let saves=0;
  const context={
-  current,currentEquipmentPickerSlot:null,
+  current,currentEquipmentPickerSlot:null,activeCombat:null,combatWeaponSwitchSession:null,combatWeaponSwitchBusy:false,combatEquipmentIsLocked:()=>false,window:{},
   ensureEquipmentState:()=>{},save:()=>{saves++},renderCurrentEquipment:()=>{},
   equipRefEquals:(a,b)=>!!a&&!!b&&a.kind===b.kind&&a.itemId===b.itemId,
   weaponGripForCharacter:()=>({linked:true,canUse:true,hands,glMultiplier:1,status:'ok'}),
@@ -59,7 +59,7 @@ describe('Sammanhängande tvåhandsruta',()=>{
   const current={weapons:[{equipId:'staff',name:'Stav'}],
    currentEquipment:{leftHand:{kind:'weapon',itemId:'staff',hands:2},rightHand:{kind:'weapon',itemId:'staff',hands:2}}};
   const el={innerHTML:''},ctx={
-   current,currentEquipmentPickerSlot:null,ensureEquipmentState:()=>{},
+   current,currentEquipmentPickerSlot:null,activeCombat:null,combatWeaponSwitchSession:null,combatWeaponSwitchBusy:false,combatEquipmentIsLocked:()=>false,window:{},ensureEquipmentState:()=>{},
    currentEquipProjectileSlotHtml:()=>'<button class="gandalf-equip-projectiles"/>',
    $:()=>el,equipItemByRef:(_c,ref)=>ref?current.weapons[0]:null,
    equipRefEquals:(a,b)=>!!a&&!!b&&a.kind===b.kind&&a.itemId===b.itemId,

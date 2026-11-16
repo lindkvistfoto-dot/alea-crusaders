@@ -1,8 +1,8 @@
 import {it,expect} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
-const race=readFileSync(new URL('../supabase/migrations/20261024060000_arcane_race_battle_poses.sql',import.meta.url),'utf8');
-const jobs=readFileSync(new URL('../supabase/migrations/20261024061000_hermes_race_pose_job_support.sql',import.meta.url),'utf8');
+const race=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261024060000_arcane_race_battle_poses.sql',import.meta.url),'utf8');
+const jobs=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261024061000_hermes_race_pose_job_support.sql',import.meta.url),'utf8');
 it('creates race pose catalog and preserves exactly-one-owner HERMES job constraints',async()=>{
  const db=new PGlite();
  try{

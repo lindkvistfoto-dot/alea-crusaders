@@ -194,7 +194,7 @@ function volumeFor(cue){
 }
 function safeAssetUrl(path){
  if(typeof path!=='string'||!/^[-a-zA-Z0-9_./]+\.(mp3|ogg|wav|webm|m4a)$/i.test(path)||path.includes('..'))return '';
- return 'https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')
+ return 'https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/'+BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/')
 }
 function oscillator(at,freq,end,duration,level,kind='triangle'){
  const node=context.createOscillator(),amp=context.createGain();
@@ -359,8 +359,8 @@ async function uploadCue(cueKey,file){
  if(file.size>8*1024*1024)throw new Error('Maxstorlek för ljud är 8 MB.');
  const token=userToken();if(!token)throw new Error('Du måste vara inloggad.');
  const path='effects/'+cueKey.replace(/[^a-z0-9-]/g,'-')+'-'+(globalThis.crypto?.randomUUID?.()||String(Date.now()))+'.'+ext;
- const upload=await fetch('https://wbmosmkirsitkonejzpg.supabase.co/storage/v1/object/'+BUCKET+'/'+path,{
-  method:'POST',headers:{apikey:'sb_publishable_Tai3eAutU7lDDc9GAy1_rA_elVB5x7o',Authorization:'Bearer '+token,'Content-Type':file.type,'cache-control':'3600'},body:file
+ const upload=await fetch('https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/'+BUCKET+'/'+path,{
+  method:'POST',headers:{apikey:'sb_publishable_LEWEgrZpK5hktEw6UPCAog_zB2R83et',Authorization:'Bearer '+token,'Content-Type':file.type,'cache-control':'3600'},body:file
  });
  if(!upload.ok){const error=await upload.text();throw new Error('Uppladdningen misslyckades: '+error.slice(0,250))}
  await saveCue(cueKey,{asset_path:path})

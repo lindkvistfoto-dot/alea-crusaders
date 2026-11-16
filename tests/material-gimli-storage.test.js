@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const source=readFileSync(new URL('../features/material/storage.js',import.meta.url),'utf8');
-const migration=readFileSync(new URL('../supabase/migrations/20261008_gimli_material_storage.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_gimli_material_storage.sql',import.meta.url),'utf8');
 const cid='123e4567-e89b-42d3-a456-426614174000',id='123e4567-e89b-42d3-a456-426614174001';
 function build(overrides={}){
  const urls=[],writes=[];

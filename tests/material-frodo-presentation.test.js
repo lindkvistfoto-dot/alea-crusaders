@@ -114,7 +114,7 @@ describe('Frodo — explicit live presentation',()=>{
  it('source and SQL include required safeguards and actual UI connections',()=>{
   const ui=readFileSync(new URL('../features/material/frodo-ui.js',import.meta.url),'utf8');
   const lib=readFileSync(new URL('../features/material/library.js',import.meta.url),'utf8');
-  const schema=readFileSync(new URL('../supabase/migrations/20261008_frodo_presentation_command.sql',import.meta.url),'utf8');
+  const schema=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_frodo_presentation_command.sql',import.meta.url),'utf8');
   expect(ui).toContain('frodoShowQueue');
   expect(ui).toContain('frodoStop');
   expect(ui).toContain('autoOpen:true');

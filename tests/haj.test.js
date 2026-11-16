@@ -6,7 +6,7 @@ const src=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),
 const main=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
 const footprint=readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8');
 const placement=src.slice(src.indexOf('function combatMovementOccupied('),src.indexOf('function combatSetMovementPreview('));
-const sql=(name)=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
+const sql=(name)=>readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/'+name,import.meta.url),'utf8');
 const schema=sql('20261008112000_haj_area_schema.sql');
 const events=sql('20261008112100_haj_area_runtime.sql');
 const undo=sql('20261008112200_haj_undo_safety.sql');

@@ -16,7 +16,7 @@ describe('HERMES 2.0 release safety contracts',()=>{
   expect(index).toContain('features/combat/spell-art.js?v=');
  });
  it('uses private original and public immutable WebP buckets with admin RLS',()=>{
-  const migration=read('supabase/migrations/20261015170000_hermes_v2_job_queue_and_storage.sql');
+  const migration=read('supabase/legacy-migrations/pre-baseline/20261015170000_hermes_v2_job_queue_and_storage.sql');
   expect(migration).toContain("'alea-hermes-source','alea-hermes-source',false");
   expect(migration).toContain("'alea-hermes-public','alea-hermes-public',true");
   expect(migration).toContain('private.is_admin()');
@@ -28,8 +28,8 @@ describe('HERMES 2.0 release safety contracts',()=>{
   expect(ui).toContain('freshSupabaseAccessToken');
  });
  it('preserves minimum server privileges and accepts HERMES icon paths in SQL schema',()=>{
-  const grants=read('supabase/migrations/20261015180000_hermes_v2_server_permissions.sql');
-  const paths=read('supabase/migrations/20261015180500_hermes_v2_spell_icon_constraint.sql');
+  const grants=read('supabase/legacy-migrations/pre-baseline/20261015180000_hermes_v2_server_permissions.sql');
+  const paths=read('supabase/legacy-migrations/pre-baseline/20261015180500_hermes_v2_spell_icon_constraint.sql');
   expect(grants).toContain('GRANT SELECT, UPDATE ON TABLE public.rule_magic_symbols TO service_role');
   expect(grants).toContain('GRANT SELECT, INSERT, UPDATE ON TABLE public.hermes_jobs TO service_role');
   expect(grants).not.toContain('TO authenticated');

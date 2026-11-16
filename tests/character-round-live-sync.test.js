@@ -1,7 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const migration=read('supabase/migrations/20261012062000_character_round_live_sync.sql');
+const migration=read('supabase/legacy-migrations/pre-baseline/20261012062000_character_round_live_sync.sql');
 const feature=read('features/character/round-background.js');
 const runtime=read('features/combat/runtime.js');
 describe('live character round backgrounds override saved library fallback',()=>{

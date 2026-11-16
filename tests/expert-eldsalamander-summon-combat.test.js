@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const runtime=readFileSync(new URL('../features/combat/runtime.js',import.meta.url),'utf8');
-const migration=readFileSync(new URL('../supabase/migrations/20261008_eldsalamander_summon_unique.sql',import.meta.url),'utf8');
+const migration=readFileSync(new URL('../supabase/legacy-migrations/pre-baseline/20261008_eldsalamander_summon_unique.sql',import.meta.url),'utf8');
 const start=runtime.indexOf('const ELEMENTAL_SUMMON_TEMPLATES='),end=runtime.indexOf('function combatGmToolboxHtml(',start);
 if(start<0||end<start)throw Error('Missing elemental GM summon controls');
 const helpers=runtime.slice(runtime.indexOf('function combatItemMagicMultiplier('),runtime.indexOf('async function combatRecordItemMagicUse('));

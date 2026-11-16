@@ -55,7 +55,7 @@ describe('Campaign audio soundboard sync',()=>{
  });
  it('keeps audio local, with GM-only writes and no room secrets in the events',()=>{
   const b=text('features/audio/board.js'),engine=text('features/audio/engine.js');
-  const sql=text('supabase/migrations/20261009130500_shared_audio_v03523.sql');
+  const sql=text('supabase/legacy-migrations/pre-baseline/20261009130500_shared_audio_v03523.sql');
   expect(b).toContain('function acceptEvent(row)');
   expect(b).toContain('markSeen(row.id)');
   expect(b).toContain('audio()?.setAmbience(store.ambience)');
