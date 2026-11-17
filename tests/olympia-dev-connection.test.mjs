@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 const edge = readFileSync(new URL('../supabase/functions/olympia-control/index.ts', import.meta.url), 'utf8');
 const v1 = readFileSync(new URL('../olympia/zeus-control.html', import.meta.url), 'utf8');
 const v2 = readFileSync(new URL('../olympia-v2/dev-approval.js', import.meta.url), 'utf8');
+const sessionClient = readFileSync(new URL('../olympia-v2/session-client.js', import.meta.url), 'utf8');
 const v2Html = readFileSync(new URL('../olympia-v2/index.html', import.meta.url), 'utf8');
 describe('OLYMPIA DEV session and CORS contract', () => {
   it('allows only explicit ALEA origins, with origin-specific response header', () => {
@@ -17,7 +18,10 @@ describe('OLYMPIA DEV session and CORS contract', () => {
   });
   it('V1 and V2 use the existing ALEA DEV session key', () => {
     expect(v1).toContain('alea_supabase_session_dev');
-    expect(v2).toContain('alea_supabase_session_dev');
+    expect(sessionClient).toContain('alea_supabase_session_dev');
+    expect(sessionClient).toContain('ALEA_OLYMPIA_SESSION_REQUEST');
+    expect(v2Html).toContain('./session-client.js');
+    expect(v2Html.indexOf('./session-client.js')).toBeLessThan(v2Html.indexOf('./dev-approval.js'));
     expect(v2Html).toContain('../dev-storage-scope.js');
     expect(v2Html.indexOf('../dev-storage-scope.js')).toBeLessThan(v2Html.indexOf('./dev-approval.js'));
     expect(v2).toContain('Anslutningskontroll · ALEA DEV');

@@ -21,6 +21,6 @@ describe('OLYMPIA GitHub installation token 422',()=>{
  });
  it('shows GitHub token failure separately from DEV session failure',()=>{
   expect(ui.indexOf('GITHUB_APP_TOKEN_FAILED_422')).toBeLessThan(ui.indexOf('session|invalid.jwt'));
-  expect(ui).toContain('DEV-inloggningen fungerar');
+  expect(ui).toContain('GitHub avvisade skapandet av en installations-token. CI kunde inte verifieras; inloggningen är kontrollerad separat.');
  });
 });

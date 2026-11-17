@@ -29,7 +29,7 @@ it('does not treat an empty legacy commit status as pending CI',()=>{
 it('reads PR and CI through the authenticated ALEA backend',()=>{
  expect(page).toContain("action:'pull_request_list'");
  expect(page).toContain("action:'pull_request_status'");
- expect(approval).toContain('function belongsToDev');
+ expect(approval).toContain('window.aleaOlympiaSessionClient.getSession()');
  expect(approval).toContain('window.olympiaV2Request');
 });
 it('uses the journaled candidate DEV SHA for LIVE approval, not the source PR merge SHA',()=>{
