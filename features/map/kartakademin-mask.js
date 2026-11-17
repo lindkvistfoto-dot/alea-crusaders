@@ -21,33 +21,136 @@ export function serializeMask({ width, height, cells }) {
   return { width, height, runs };
 }
 
-export function floodMask(mask, rgba, point, tolerance) {
+function colorDistance(rgba, first, second) {
+  const a = first * 4, b = second * 4;
+  return (rgba[a] - rgba[b]) ** 2 + (rgba[a + 1] - rgba[b + 1]) ** 2 + (rgba[a + 2] - rgba[b + 2]) ** 2;
+}
+
+const colorLimit = percent => 3 * (255 * percent / 100) ** 2;
+
+export function wallPixels({ width, height }, rgba, sensitivity) {
+  const ridges = new Uint8Array(width * height);
+  const walls = new Uint8Array(ridges.length);
+  const cutoff = colorLimit(22 - sensitivity * .20);
+  const axes = [[1,0], [0,1], [-1,1], [1,1]];
+  for (let axis = 0; axis < axes.length; axis++) {
+    const [dx, dy] = axes[axis];
+    const step = dy * width + dx;
+    const flag = 1 << axis;
+    for (let y = dy; y < height - dy; y++) for (let x = Math.abs(dx); x < width - Math.abs(dx); x++) {
+      const index = y * width + x;
+      if (colorDistance(rgba, index, index - step) >= cutoff &&
+          colorDistance(rgba, index, index + step) >= cutoff &&
+          colorDistance(rgba, index - step, index + step) < cutoff) ridges[index] |= flag;
+    }
+  }
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const index = y * width + x;
+    if (!ridges[index]) continue;
+    for (let axis = 0; axis < axes.length; axis++) {
+      const flag = 1 << axis;
+      if (!(ridges[index] & flag)) continue;
+      const [dx, dy] = axes[axis];
+      for (const sign of [-1, 1]) {
+        const col = x - sign * dy, row = y + sign * dx;
+        if (col < 0 || col >= width || row < 0 || row >= height) continue;
+        const neighbor = row * width + col;
+        if ((ridges[neighbor] & flag) && colorDistance(rgba, index, neighbor) < cutoff) walls[index] = 1;
+      }
+    }
+  }
+  return walls;
+}
+
+function floodSelection(mask, rgba, point, options, walls) {
   const { width, height, cells, dx, dy } = mask;
+  const selected = new Uint8Array(cells.length);
   const x = Math.floor(point[0] / dx), y = Math.floor(point[1] / dy);
-  if (x < 0 || y < 0 || x >= width || y >= height) return;
-  const start = y * width + x;
-  const visited = new Uint8Array(cells.length);
+  if (x < 0 || y < 0 || x >= width || y >= height) return { selected, seed: -1 };
+  const seed = y * width + x;
   const queue = new Int32Array(cells.length);
   let cursor = 0, end = 0;
-  const limit = 3 * (255 * tolerance / 100) ** 2;
-  function enqueue(index) {
-    if (visited[index]) return;
-    visited[index] = 1;
-    const a = start * 4, b = index * 4;
-    if (rgba[b + 3] === 0 || (rgba[a] - rgba[b]) ** 2 + (rgba[a + 1] - rgba[b + 1]) ** 2 +
-      (rgba[a + 2] - rgba[b + 2]) ** 2 > limit) return;
+  const color = colorLimit(options.colorTolerance);
+  const edge = colorLimit(options.edgeTolerance ?? 100);
+  function enqueue(index, from) {
+    if (selected[index] || walls?.[index] || rgba[index * 4 + 3] === 0) return;
+    if (colorDistance(rgba, seed, index) > color || colorDistance(rgba, from, index) > edge) return;
+    selected[index] = 1;
     queue[end++] = index;
   }
-  enqueue(start);
+  enqueue(seed, seed);
   while (cursor < end) {
     const index = queue[cursor++];
-    cells[index] = 1;
     const col = index % width;
-    if (col > 0) enqueue(index - 1);
-    if (col + 1 < width) enqueue(index + 1);
-    if (index >= width) enqueue(index - width);
-    if (index + width < cells.length) enqueue(index + width);
+    if (col > 0) enqueue(index - 1, index);
+    if (col + 1 < width) enqueue(index + 1, index);
+    if (index >= width) enqueue(index - width, index);
+    if (index + width < cells.length) enqueue(index + width, index);
   }
+  return { selected, seed };
+}
+
+function smoothSelection({ width, height }, selected, seed, passes) {
+  for (let pass = 0; pass < passes; pass++) {
+    const next = selected.slice();
+    for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+      const index = y * width + x;
+      if (!selected[index] || index === seed) continue;
+      const left = selected[index - 1], right = selected[index + 1];
+      const above = selected[index - width], below = selected[index + width];
+      const adjacent = left + right + above + below;
+      const backedCorner = adjacent === 2 && left !== right && above !== below &&
+        selected[index + (left ? -1 : 1) + (above ? -width : width)];
+      if (adjacent <= 1 || backedCorner) next[index] = 0;
+    }
+    selected = next;
+  }
+  return selected;
+}
+
+function fillEnclosed({ width, height }, result, selected, rgba, walls, maximum) {
+  const visited = new Uint8Array(result.length);
+  const queue = new Int32Array(result.length);
+  for (let start = 0; start < result.length; start++) {
+    if (result[start] || visited[start]) continue;
+    let cursor = 0, end = 1, exterior = false, touchesSelection = false, protectedCell = false;
+    visited[start] = 1;
+    queue[0] = start;
+    while (cursor < end) {
+      const index = queue[cursor++], y = Math.floor(index / width), x = index % width;
+      exterior ||= x === 0 || y === 0 || x === width - 1 || y === height - 1;
+      protectedCell ||= !!walls?.[index] || rgba[index * 4 + 3] === 0;
+      for (let row = Math.max(0, y - 1); row <= Math.min(height - 1, y + 1); row++) {
+        for (let col = Math.max(0, x - 1); col <= Math.min(width - 1, x + 1); col++) {
+          const neighbor = row * width + col;
+          if (result[neighbor]) {
+            touchesSelection ||= !!selected[neighbor];
+          } else if (!visited[neighbor]) {
+            visited[neighbor] = 1;
+            queue[end++] = neighbor;
+          }
+        }
+      }
+    }
+    if (!exterior && !protectedCell && touchesSelection && end <= maximum) {
+      for (let i = 0; i < end; i++) result[queue[i]] = 1;
+    }
+  }
+}
+
+export function previewFlood(mask, rgba, point, options, walls) {
+  const detected = options.detectWalls ? walls ?? wallPixels(mask, rgba, options.wallSensitivity) : null;
+  const { selected, seed } = floodSelection(mask, rgba, point, options, detected);
+  const smoothed = smoothSelection(mask, selected, seed, options.smoothing ?? 0);
+  const result = mask.cells.slice();
+  for (let i = 0; i < result.length; i++) result[i] |= smoothed[i];
+  if (options.maxHoleSize > 0 && smoothed[seed]) fillEnclosed(mask, result, smoothed, rgba, detected, options.maxHoleSize);
+  return result;
+}
+
+
+export function floodMask(mask, rgba, point, tolerance) {
+  mask.cells.set(previewFlood(mask, rgba, point, { colorTolerance: tolerance }));
 }
 
 export function paintMask(mask, from, to, radius, value) {

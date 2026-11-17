@@ -1,5 +1,5 @@
 import './kartakademin.css';
-import { createMask, floodMask, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
+import { createMask, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { blockers, canMove, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
@@ -105,6 +105,7 @@ function option(value, text) {
 
 function closeEditor() {
   if (!editor) return;
+  editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.remove();
   editor = null;
@@ -155,7 +156,17 @@ async function openEditor(map, areas, imageUrl) {
       </div>
       <div data-mask-tools class="kartakademin-controls" hidden>
         <label>Fri sikt<select data-mask-mode><option value="flood">Flood fill</option><option value="paint">Pensel</option><option value="erase">Sudd</option><option value="add">Lägg till polygon</option><option value="subtract">Ta bort polygon</option></select></label>
-        <label>Färgtolerans (%)<input data-tolerance type="range" min="0" max="100" value="12"></label>
+        <div data-flood-panel class="kartakademin-controls">
+          <label>Färgtolerans (%)<input data-flood="colorTolerance" type="number" min="0" max="100" value="12" required></label>
+          <label>Kanttolerans (%)<input data-flood="edgeTolerance" type="number" min="0" max="100" value="100" required></label>
+          <label><input data-flood="detectWalls" type="checkbox">Väggdetektering</label>
+          <label>Väggkänslighet (%)<input data-flood="wallSensitivity" type="number" min="0" max="100" value="50" required disabled></label>
+          <label>Kantutjämning (pass)<input data-flood="smoothing" type="number" min="0" max="4" value="0" required></label>
+          <label>Max hålstorlek (maskpixlar)<input data-flood="maxHoleSize" type="number" min="0" max="2359296" value="0" required></label>
+          <button type="button" class="btn" data-flood-accept disabled>Acceptera fyllning</button>
+          <button type="button" class="btn" data-flood-cancel disabled>Avbryt fyllning</button>
+          <output data-flood-status aria-live="polite">Klicka i området du vill fylla.</output>
+        </div>
         <label>Penselradie (kartpixlar)<input data-radius type="number" min="1" max="1000" value="12" required></label>
         <button type="button" class="btn" data-mask-finish>Slutför polygon</button>
         <button type="button" class="btn" data-mask-undo>Ångra</button>
@@ -172,7 +183,7 @@ async function openEditor(map, areas, imageUrl) {
   const get = selector => root.querySelector(selector);
   const body = get('[data-body]'), board = get('.kartakademin-board'), svg = get('svg');
   const menu = get('[data-items]'), tool = get('[data-tool]');
-  const output = get('output');
+  const output = get('output:not([data-flood-status])');
   const announce = message => { output.textContent = message; };
   const lightForm = get('[data-light]'), geoForm = get('[data-geometry]');
   const roster = (Array.isArray(chars) ? chars : []).filter(character => character._dbId && !character.isNpc);
@@ -188,22 +199,95 @@ async function openEditor(map, areas, imageUrl) {
   const maskMode = get('[data-mask-mode]');
   let mask, history, rgba, stroke, pan;
   const maskPoints = [];
+  const floodPanel = get('[data-flood-panel]');
+  const floodInputs = [...floodPanel.querySelectorAll('[data-flood]')];
+  const acceptFlood = get('[data-flood-accept]'), cancelFlood = get('[data-flood-cancel]');
+  const floodStatus = get('[data-flood-status]');
+  let worker, floodPoint, floodPreview, floodTimer, floodRequest = 0;
+
+  function resetFlood() {
+    clearTimeout(floodTimer);
+    floodRequest++;
+    floodPoint = floodPreview = null;
+    acceptFlood.disabled = cancelFlood.disabled = true;
+    floodStatus.textContent = 'Klicka i området du vill fylla.';
+    updateMaskOverlay();
+  }
+
+  state.disposeFlood = () => {
+    clearTimeout(floodTimer);
+    worker?.terminate();
+  };
+
+  function queueFlood() {
+    clearTimeout(floodTimer);
+    get('[data-flood="wallSensitivity"]').disabled = !get('[data-flood="detectWalls"]').checked;
+    if (!floodPoint) return;
+    const request = ++floodRequest;
+    floodPreview = null;
+    acceptFlood.disabled = true;
+    cancelFlood.disabled = false;
+    updateMaskOverlay();
+    if (floodInputs.some(input => !input.validity.valid)) {
+      floodStatus.textContent = 'Kontrollera värdena för fyllningen.';
+      return;
+    }
+    floodStatus.textContent = 'Beräknar förhandsvisning…';
+    floodTimer = setTimeout(() => {
+      try {
+        let image;
+        if (!worker) {
+          image = sampleMap();
+          worker = new Worker(new URL('./kartakademin-flood-worker.js', import.meta.url), { type: 'module' });
+          worker.onmessage = ({ data }) => {
+            if (data.request !== floodRequest || !floodPoint) return;
+            floodPreview = data.cells;
+            acceptFlood.disabled = !floodPreview;
+            floodStatus.textContent = data.error || 'Förhandsvisning. Acceptera eller avbryt.';
+            updateMaskOverlay();
+          };
+          worker.onerror = () => {
+            worker.terminate();
+            worker = null;
+            floodStatus.textContent = 'Förhandsvisningen kunde inte beräknas.';
+          };
+        }
+        const options = Object.fromEntries(floodInputs.map(input => [
+          input.dataset.flood, input.type === 'checkbox' ? input.checked : input.disabled ? 50 : input.valueAsNumber,
+        ]));
+        worker.postMessage({ request, mask, point: floodPoint, options, image });
+      } catch (error) {
+        floodStatus.textContent = error.message;
+      }
+    }, 100);
+  }
+
+  floodPanel.oninput = queueFlood;
+  cancelFlood.onclick = resetFlood;
+  acceptFlood.onclick = () => {
+    if (!floodPreview) return;
+    const before = mask.cells.slice();
+    mask.cells.set(floodPreview);
+    resetFlood();
+    commitMask(before);
+  };
 
   function updateMaskOverlay() {
     const visible = tool.value === 'mask' && !get('[data-player]').checked;
     maskOverlay.hidden = !visible;
-    get('[data-mask-undo]').disabled = !history?.canUndo() && !maskPoints.length;
-    get('[data-mask-redo]').disabled = !history?.canRedo() || !!maskPoints.length;
+    floodPanel.hidden = maskMode.value !== 'flood';
+    get('[data-mask-undo]').disabled = !!floodPoint || (!history?.canUndo() && !maskPoints.length);
+    get('[data-mask-redo]').disabled = !!floodPoint || !history?.canRedo() || !!maskPoints.length;
     get('[data-mask-finish]').disabled = maskPoints.length < 3;
     if (!visible || !mask) return;
     const context = maskOverlay.getContext('2d');
     const pixels = context.createImageData(mask.width, mask.height);
     for (let i = 0; i < mask.cells.length; i++) {
-      if (!mask.cells[i]) continue;
+      if (!(floodPreview ?? mask.cells)[i]) continue;
       const offset = i * 4;
-      pixels.data[offset] = 45;
+      pixels.data[offset] = mask.cells[i] ? 45 : 255;
       pixels.data[offset + 1] = 255;
-      pixels.data[offset + 2] = 190;
+      pixels.data[offset + 2] = mask.cells[i] ? 190 : 40;
       pixels.data[offset + 3] = 90;
     }
     context.putImageData(pixels, 0, 0);
@@ -304,6 +388,7 @@ async function openEditor(map, areas, imageUrl) {
   get('[data-open]').onclick = async () => {
     if (!body.hidden) {
       body.hidden = true;
+      resetFlood();
       dispose(state.view);
       state.view = null;
       return;
@@ -345,9 +430,10 @@ async function openEditor(map, areas, imageUrl) {
   root.onchange = event => {
     const input = event.target;
     if (input === menu) return select(menu.value);
-    if (input === maskMode || input === zoom) return;
+    if (input === maskMode || input === zoom || input.dataset.flood) return;
     if (input === tool) {
       get('[data-player]').checked = false;
+      if (tool.value !== 'pan' && tool.value !== 'mask') resetFlood();
       maskPoints.length = 0;
       return select('');
     }
@@ -421,7 +507,7 @@ async function openEditor(map, areas, imageUrl) {
     zoom.oninput();
     viewport.scrollTo(0, 0);
   };
-  maskMode.onchange = () => { maskPoints.length = 0; draw(); };
+  maskMode.onchange = () => { resetFlood(); maskPoints.length = 0; draw(); };
   get('[data-mask-undo]').onclick = () => {
     if (maskPoints.length) { maskPoints.pop(); draw(); }
     else if (history.undo()) { state.config.freeSight = serializeMask(mask); draw(); }
@@ -477,11 +563,8 @@ async function openEditor(map, areas, imageUrl) {
     get('[data-player]').checked = false;
     if (tool.value === 'mask') {
       if (maskMode.value === 'flood') {
-        try {
-          const before = mask.cells.slice();
-          floodMask(mask, sampleMap(), point, get('[data-tolerance]').valueAsNumber);
-          commitMask(before);
-        } catch (error) { announce(error.message); }
+        floodPoint = point;
+        queueFlood();
       } else if (['add', 'subtract'].includes(maskMode.value)) { maskPoints.push(point); draw(); }
       return;
     }
@@ -501,6 +584,7 @@ async function openEditor(map, areas, imageUrl) {
   };
   get('[data-save]').onclick = async () => {
     if (!state.loaded || state.saving || [...root.querySelectorAll('input[type=number]:enabled')].some(input => !input.reportValidity())) return;
+    if (floodPoint) return announce('Acceptera eller avbryt förhandsvisningen före sparning.');
     if (state.points.length || maskPoints.length || stroke) return announce('Slutför eller ångra den påbörjade formen före sparning.');
     state.saving = true;
     const save = get('[data-save]');
