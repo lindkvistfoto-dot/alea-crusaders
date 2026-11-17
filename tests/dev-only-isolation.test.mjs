@@ -24,11 +24,11 @@ describe('DEV-only OLYMPIA isolation',()=>{
   });
 
   it('deploys only the LIVE GitHub Pages artifact from main',()=>{
-    const trigger=deployment.slice(deployment.indexOf('on:'),deployment.indexOf('\\npermissions:'));
-    expect(trigger).toMatch(/branches:\\s*\\n\\s*- main\\b/);
-    expect(trigger).not.toMatch(/- development\\b/);
+    const trigger=deployment.slice(deployment.indexOf('on:'),deployment.indexOf('\npermissions:'));
+    expect(trigger).toMatch(/branches:\s*\n\s*- main\b/);
+    expect(trigger).not.toMatch(/- development\b/);
     expect(deployment).toContain("if: github.ref == 'refs/heads/main'");
-    expect(deployment).not.toMatch(/rsync[^\\n]*development/);
+    expect(deployment).not.toMatch(/rsync[^\n]*development/);
     expect(deployment).not.toContain('EXPECTED_DEV_SHA');
   });
 
