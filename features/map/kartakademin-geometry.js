@@ -68,6 +68,12 @@ export function resolveOrigin(light, positions) {
   return light.characterId ? positions.find(p => p.character_id === light.characterId)?.position : light.position;
 }
 
+export function roomVisibility(status) {
+  if (status === 'explored') return 'sharp';
+  if (status === 'unexplored') return 'blur';
+  return 'black';
+}
+
 export function knownAreas(areas) {
   return areas.filter(area => area.status === 'explored' || area.status === 'unexplored');
 }

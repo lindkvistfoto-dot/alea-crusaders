@@ -43,3 +43,10 @@ describe('Kartakademins oberoende kartlager', () => {
     expect(directionalReach({ type: 'solljus', range: 12, height: 3, inclination: 45 })).toBeCloseTo(3);
   });
 });
+
+it('assigns separate display treatments without using lighting or room information', async () => {
+  const { roomVisibility } = await import('../features/map/kartakademin-geometry.js');
+  expect(['unknown', 'unexplored', 'explored', undefined].map(roomVisibility)).toEqual([
+    'black', 'blur', 'sharp', 'black',
+  ]);
+});

@@ -1,6 +1,6 @@
-import { Application, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js';
+import { Application, BlurFilter, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js';
 import { isFree, prepareFreeSight } from './kartakademin-mask.js';
-import { blockers, directionalReach, isBlocked, knownAreas, resolveOrigin, visibilityPolygon } from './kartakademin-geometry.js';
+import { blockers, directionalReach, isBlocked, resolveOrigin, roomVisibility, visibilityPolygon } from './kartakademin-geometry.js';
 
 export async function mountLighting(host, map) {
   const app = new Application();
@@ -37,7 +37,20 @@ export async function mountLighting(host, map) {
     const discovery = new Graphics();
     world.addChild(discovery);
     world.mask = discovery;
-    app.stage.addChild(world);
+    const blurLayer = new Container();
+    blurLayer.scale.copyFrom(world.scale);
+    const blurred = new Sprite(imageTexture);
+    blurred.width = map.width;
+    blurred.height = map.height;
+
+    blurred.filters = [new BlurFilter({ strength: 7, quality: 2 })];
+    const unexplored = new Graphics();
+    blurred.tint = 0xdddddd;
+    blurLayer.addChild(blurred, unexplored);
+    blurLayer.mask = unexplored;
+    const unknown = new Graphics();
+    unknown.scale.copyFrom(world.scale);
+    app.stage.addChild(world, blurLayer, unknown);
     const lightmap = new Container();
     lightmap.scale.copyFrom(world.scale);
     const ambient = new Graphics();
@@ -60,10 +73,16 @@ export async function mountLighting(host, map) {
       lightmap.removeChildren(1).forEach(child => child.destroy({ children: true }));
       lights = [];
       discovery.clear();
-      for (const area of previewAll ? [{ shape_type: 'rect', shape_data: { x: 0, y: 0, width: map.width, height: map.height } }] : knownAreas(areas)) {
+      unexplored.clear();
+      unknown.clear();
+      if (previewAll) discovery.rect(0, 0, map.width, map.height).fill(0xffffff);
+      else for (const area of areas) {
+        const presentation = roomVisibility(area.status);
+        const layer = presentation === 'sharp' ? discovery : presentation === 'blur' ? unexplored : unknown;
         const d = area.shape_data;
-        if (area.shape_type === 'rect') discovery.rect(d.x, d.y, d.width, d.height).fill(0xffffff);
-        else if (d?.points?.length >= 3) discovery.poly(d.points.flat()).fill(0xffffff);
+        const color = layer === unknown ? 0 : 0xffffff;
+        if (area.shape_type === 'rect') layer.rect(d.x, d.y, d.width, d.height).fill(color);
+        else if (d?.points?.length >= 3) layer.poly(d.points.flat()).fill(color);
       }
       const level = Math.round(255 * (1 - config.darkness));
       ambient.clear().rect(0, 0, map.width, map.height).fill(level * 0x010101);

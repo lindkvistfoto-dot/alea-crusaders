@@ -13,12 +13,18 @@ const types = {
 const svgNS = 'http://www.w3.org/2000/svg';
 const defaults = () => ({ version: 1, darkness: .7, pixelsPerMeter: 40, environment: 'indoor', lights: [], geometry: [], freeSight: null });
 const filter = id => 'map_id=eq.' + encodeURIComponent(id);
-const ignoredMissingTable = error => /PGRST205|42P01|schema cache|could not find the table/i.test(error.message);
+const ignoredMissingTable = error => /PGRST202|PGRST205|42P01|schema cache|could not find the table/i.test(error.message);
 let editor, current, rendererModule;
 
-async function load(map) {
+async function load(map, manager = canManageCampaignMaps()) {
   let rows;
   try {
+    if (!manager) {
+      const config = await dbJson('rpc/read_campaign_map_academy_player', {
+        method: 'POST', body: JSON.stringify({ p_map_id: map.id }),
+      });
+      return { config, positions: [] };
+    }
     rows = await dbJson('campaign_map_academy?' + filter(map.id) + '&select=configuration,revision');
   } catch (error) {
     if (ignoredMissingTable(error)) return { config: null, positions: [] };
@@ -62,16 +68,17 @@ async function syncCampaign(map, areas, refresh = false) {
     clearCampaign();
     return;
   }
-  if (current?.map.id !== map.id || current.map.image_url !== map.image_url) {
+  const manager = canManageCampaignMaps();
+  if (current?.map.id !== map.id || current.map.image_url !== map.image_url || current.manager !== manager) {
     clearCampaign();
-    current = { map, host };
+    current = { map, host, manager };
   }
   const state = current;
   state.areas = areas;
   const request = state.request = (state.request || 0) + 1;
   try {
     if (!state.data || refresh) {
-      const data = await (refresh ? load(map) : (state.loading ??= load(map)));
+      const data = await (refresh ? load(map, manager) : (state.loading ??= load(map, manager)));
       if (current !== state || state.request !== request) return;
       state.data = data;
       state.loading = null;
@@ -145,6 +152,7 @@ async function openEditor(map, areas, imageUrl) {
         <label>Infallsvinkel (°)<input name="inclination" type="number" min="0" max="90" step="1"></label>
         <label>Bärs av<select name="characterId"></select></label>
         <label><input name="on" type="checkbox"> Tänd</label>
+        <label><input name="playerVisible" type="checkbox"> Dela ljuset i utforskade rum</label>
       </div>
       <div data-geometry class="kartakademin-controls" hidden>
         <label><input name="closed" type="checkbox" checked> Sluten polygon</label>
