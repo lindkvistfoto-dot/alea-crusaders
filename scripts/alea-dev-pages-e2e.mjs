@@ -52,6 +52,27 @@ async function waitForAuthenticatedHome() {
     return Boolean(user?.id);
   }, null, { timeout: 45000 });
 }
+
+async function verifyOlympia() {
+  await page.locator('#adminOverview [data-dev-only-tool="olympia"]').click();
+  const frame = page.frameLocator('iframe.admin-olympia-frame');
+  await frame.locator('#connection-health').waitFor({ state: 'visible', timeout: 60000 });
+  await page.waitForFunction(() => {
+    const doc = document.querySelector('iframe.admin-olympia-frame')?.contentDocument;
+    const health = doc?.querySelector('#connection-health')?.innerText || '';
+    const global = doc?.querySelector('#global')?.innerText || '';
+    return health.includes('DEV-inloggning · fungerar') &&
+      health.includes('Zeus-behörighet · fungerar') &&
+      health.includes('GitHub PR-lista · fungerar') &&
+      global.includes('PR mottagna');
+  }, null, { timeout: 60000 });
+  const health = await frame.locator('#connection-health').innerText();
+  assert(health.includes('DEV-inloggning · fungerar') &&
+    health.includes('Zeus-behörighet · fungerar') &&
+    health.includes('GitHub PR-lista · fungerar'),
+    'OLYMPIA_SESSION_ZEUS_OR_PR_LIST_FAILED');
+  report.checks.olympiaSessionZeusPrList = 'pass';
+}
 async function main() {
   assert(EMAIL && PASSWORD, 'MISSING_ALEA_DEV_TEST_CREDENTIAL_SECRETS');
   assert(PASSWORD.length >= 16, 'DEV_TEST_PASSWORD_TOO_SHORT');
@@ -153,6 +174,8 @@ async function main() {
   assert(adminData.campaignWrite && adminData.gameDataWrite, 'DEV_ADMIN_WRITE_ACCESS_NOT_VERIFIED');
   report.checks.campaignAndGameDataWrite = 'pass';
 
+  await verifyOlympia();
+
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
   await waitForAuthenticatedHome();
   const reloadedUserId = await currentUserId();
@@ -162,6 +185,12 @@ async function main() {
   });
   assert(reloadedUserId === firstUserId && adminAfterReload, 'AUTH_ADMIN_SESSION_DID_NOT_SURVIVE_RELOAD');
   report.checks.sessionReload = 'pass';
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator('#adminNavBtn').click();
+  await page.locator('#adminOverview').waitFor({ state: 'visible', timeout: 15000 });
+  await verifyOlympia();
+  report.checks.olympiaMobileViewport = 'pass';
 
   const logoutState = await page.evaluate(async () => {
     if (typeof logoutUser !== 'function') throw new Error('APP_LOGOUT_UNAVAILABLE');
