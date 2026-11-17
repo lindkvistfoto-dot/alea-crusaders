@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    # DEV CORE queue pushes must not redeploy the combined main + development Pages artifact.
+    # GitHub Pages deploys only the main/LIVE artifact; DEV is built by the Cloudflare development branch.
     paths-ignore:
       - 'hermes/core/queue/dev/**'
       - '.github/workflows/deploy-pages-live-dev.yml'
