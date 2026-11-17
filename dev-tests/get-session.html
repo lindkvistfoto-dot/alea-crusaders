@@ -1,0 +1,14 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DEV getSession isolerat test</title><script src="../dev-storage-scope.js"></script><style>body{background:#191713;color:#f4e7cf;font:16px system-ui;margin:18px}button{padding:10px}pre{white-space:pre-wrap;overflow-wrap:anywhere}h1{font-size:21px}</style></head><body><h1>Isolerat test: getSession()</h1><p>Enbart OLYMPIA:s riktiga sessionsklient. Ingen Zeus-kontroll eller GitHub.</p><button id="run">Testa getSession()</button><pre id="result" role="status">Ej testad</pre><script src="../olympia-v2/session-client.js?v=20261117-shared-session-v1"></script><script>
+const output=document.getElementById('result');
+async function test(){
+ output.textContent='Kontrollerar…';
+ try{
+  const s=await window.aleaOlympiaSessionClient.getSession();
+  if(!s){output.textContent='RESULTAT: NULL – getSession() hittar ingen användbar session.';return}
+  const part=String(s.access_token||'').split('.')[1];
+  const jwt=JSON.parse(atob(part.replace(/-/g,'+').replace(/_/g,'/')));
+  output.textContent='RESULTAT: SESSION FINNS\nJWT issuer korrekt: '+(jwt.iss==='https://wkiuyklzzroavclnsxna.supabase.co/auth/v1')+'\nSekunder till utgång: '+Math.floor(Number(jwt.exp)-Date.now()/1000);
+ }catch(e){output.textContent='RESULTAT: FEL\nFelkod: '+String(e?.message||e).slice(0,160)}
+}
+document.getElementById('run').addEventListener('click',test);test();
+</script></body></html>
