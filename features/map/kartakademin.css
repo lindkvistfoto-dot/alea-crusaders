@@ -10,3 +10,5 @@
 .kartakademin-board img { display:block; width:100%; height:auto }
 .kartakademin-board svg { position:absolute; inset:0; width:100%; height:100%; z-index:2 }
 .kartakademin-board svg circle,.kartakademin-board svg polyline,.kartakademin-board svg polygon { vector-effect:non-scaling-stroke }
+.kartakademin-viewport { overflow:auto; max-height:65vh; overscroll-behavior:contain }
+.kartakademin-board [data-mask-overlay] { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; image-rendering:pixelated }

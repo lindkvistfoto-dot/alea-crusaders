@@ -1,4 +1,5 @@
 import './kartakademin.css';
+import { createMask, floodMask, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { blockers, canMove, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
@@ -10,7 +11,7 @@ const types = {
   magiskt: { name: 'Magiskt sken', color: '#c1a1ff', motion: .13 },
 };
 const svgNS = 'http://www.w3.org/2000/svg';
-const defaults = () => ({ version: 1, darkness: .7, pixelsPerMeter: 40, environment: 'indoor', lights: [], geometry: [] });
+const defaults = () => ({ version: 1, darkness: .7, pixelsPerMeter: 40, environment: 'indoor', lights: [], geometry: [], freeSight: null });
 const filter = id => 'map_id=eq.' + encodeURIComponent(id);
 const ignoredMissingTable = error => /PGRST205|42P01|schema cache|could not find the table/i.test(error.message);
 let editor, current, rendererModule;
@@ -124,7 +125,7 @@ async function openEditor(map, areas, imageUrl) {
         <label><input type="checkbox" data-player checked> Spelarförhandsvisning</label>
       </div>
       <div class="kartakademin-controls">
-        <label>Verktyg<select data-tool><option value="light">Placera eller flytta ljus</option><option value="geometry">Rita eller ersätt geometri</option><option value="position">Flytta rollperson</option></select></label>
+        <label>Verktyg<select data-tool><option value="light">Placera eller flytta ljus</option><option value="mask">Redigera fri sikt</option><option value="pan">Panorera</option><option value="geometry">Rita eller ersätt geometri</option><option value="position">Flytta rollperson</option></select></label>
         <label>Välj<select data-items></select></label>
         <button type="button" class="btn" data-new>Ny</button>
         <button type="button" class="btn" data-duplicate>Duplicera ljus</button>
@@ -152,7 +153,19 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn" data-undo>Ångra punkt</button>
         <button type="button" class="btn" data-finish>Slutför form</button>
       </div>
-      <div class="kartakademin-board"><img alt=""><svg aria-label="Redigeringsyta"></svg></div>
+      <div data-mask-tools class="kartakademin-controls" hidden>
+        <label>Fri sikt<select data-mask-mode><option value="flood">Flood fill</option><option value="paint">Pensel</option><option value="erase">Sudd</option><option value="add">Lägg till polygon</option><option value="subtract">Ta bort polygon</option></select></label>
+        <label>Färgtolerans (%)<input data-tolerance type="range" min="0" max="100" value="12"></label>
+        <label>Penselradie (kartpixlar)<input data-radius type="number" min="1" max="1000" value="12" required></label>
+        <button type="button" class="btn" data-mask-finish>Slutför polygon</button>
+        <button type="button" class="btn" data-mask-undo>Ångra</button>
+        <button type="button" class="btn" data-mask-redo>Gör om</button>
+      </div>
+      <div class="kartakademin-controls">
+        <label>Zoom<input data-zoom type="range" min="1" max="5" step=".25" value="1"></label>
+        <button type="button" class="btn" data-reset-view>Återställ vy</button>
+      </div>
+      <div class="kartakademin-viewport"><div class="kartakademin-board"><img alt=""><canvas data-mask-overlay hidden></canvas><svg aria-label="Redigeringsyta"></svg></div></div>
       <div class="kartakademin-controls"><button type="button" class="btn primary" data-save>Spara Kartakademin</button><output aria-live="polite"></output></div>
     </div>`;
   opener.querySelector('.map-area-editor').append(root);
@@ -169,6 +182,60 @@ async function openEditor(map, areas, imageUrl) {
   get('img').src = imageUrl;
   const state = editor = { root, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false };
 
+  const maskOverlay = get('[data-mask-overlay]');
+  const viewport = get('.kartakademin-viewport');
+  const zoom = get('[data-zoom]');
+  const maskMode = get('[data-mask-mode]');
+  let mask, history, rgba, stroke, pan;
+  const maskPoints = [];
+
+  function updateMaskOverlay() {
+    const visible = tool.value === 'mask' && !get('[data-player]').checked;
+    maskOverlay.hidden = !visible;
+    get('[data-mask-undo]').disabled = !history?.canUndo() && !maskPoints.length;
+    get('[data-mask-redo]').disabled = !history?.canRedo() || !!maskPoints.length;
+    get('[data-mask-finish]').disabled = maskPoints.length < 3;
+    if (!visible || !mask) return;
+    const context = maskOverlay.getContext('2d');
+    const pixels = context.createImageData(mask.width, mask.height);
+    for (let i = 0; i < mask.cells.length; i++) {
+      if (!mask.cells[i]) continue;
+      const offset = i * 4;
+      pixels.data[offset] = 45;
+      pixels.data[offset + 1] = 255;
+      pixels.data[offset + 2] = 190;
+      pixels.data[offset + 3] = 90;
+    }
+    context.putImageData(pixels, 0, 0);
+  }
+
+  function commitMask(before) {
+    history.record(before);
+    state.config.freeSight = serializeMask(mask);
+    draw();
+  }
+
+  function brushPoint(event, clamp = false) {
+    const inverse = svg.getScreenCTM()?.inverse();
+    if (!inverse) return null;
+    const { x, y } = new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
+    if (!clamp && (x < 0 || y < 0 || x >= map.width || y >= map.height)) return null;
+    return [Math.min(map.width - .001, Math.max(0, x)), Math.min(map.height - .001, Math.max(0, y))];
+  }
+
+  function sampleMap() {
+    if (rgba) return rgba;
+    const image = get('img');
+    if (!image.complete || !image.naturalWidth) throw Error('Kartbilden laddas fortfarande.');
+    const canvas = document.createElement('canvas');
+    canvas.width = mask.width;
+    canvas.height = mask.height;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, mask.width, mask.height);
+    rgba = context.getImageData(0, 0, mask.width, mask.height).data;
+    return rgba;
+  }
+
   function refreshList() {
     let elements;
     if (tool.value === 'light') elements = state.config.lights.map(light => option(light.id, light.name));
@@ -176,11 +243,14 @@ async function openEditor(map, areas, imageUrl) {
     else elements = roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId));
     menu.replaceChildren(option('', tool.value === 'position' ? 'Välj rollperson' : 'Ny'), ...elements);
     menu.value = state.selected;
+    const drawingMask = tool.value === 'mask';
+    menu.closest('label').hidden = drawingMask || tool.value === 'pan';
+    get('[data-mask-tools]').hidden = !drawingMask;
     const light = state.config.lights.find(item => item.id === state.selected);
     lightForm.hidden = tool.value !== 'light';
     geoForm.hidden = tool.value !== 'geometry';
     get('[data-duplicate]').disabled = !light;
-    get('[data-new]').disabled = tool.value === 'position';
+    get('[data-new]').disabled = drawingMask || tool.value === 'pan' || tool.value === 'position';
     get('[data-remove]').disabled = !state.selected;
     for (const input of lightForm.querySelectorAll('[name]')) {
       input.disabled = !light;
@@ -193,9 +263,14 @@ async function openEditor(map, areas, imageUrl) {
 
   function draw() {
     state.view?.renderer?.update(state.config, areas, state.positions, !get('[data-player]').checked);
+    updateMaskOverlay();
     svg.replaceChildren();
     const showTools = !get('[data-player]').checked;
     if (!showTools) return;
+    if (tool.value === 'mask' && maskPoints.length) {
+      svg.append(node('polyline', { points: maskPoints.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#53ffc4', 'stroke-width': 2 }));
+      for (const [x,y] of maskPoints) svg.append(node('circle', { cx:x, cy:y, r:map.width / 220, fill:'#53ffc4' }));
+    }
     for (const shape of state.config.geometry) {
       svg.append(node(shape.closed ? 'polygon' : 'polyline', {
         points: shape.points.map(p => p.join(',')).join(' '),
@@ -212,8 +287,9 @@ async function openEditor(map, areas, imageUrl) {
         fill: marker.color, stroke: marker.id === state.selected ? '#fff' : '#36312b', 'stroke-width': 2 }));
     }
     const observer = state.positions.find(p => p.character_id === state.selected);
-    if (tool.value === 'position' && observer && !isBlocked(state.config.geometry, observer.position, 'sight')) {
-      const sight = visibilityPolygon(observer.position, Math.hypot(map.width, map.height), blockers(state.config.geometry, 'sight'));
+    const freeSight = prepareFreeSight(map.width, map.height, state.config.freeSight);
+    if (tool.value === 'position' && observer && freeSight && isFree(freeSight, observer.position) && !isBlocked(state.config.geometry, observer.position, 'sight')) {
+      const sight = visibilityPolygon(observer.position, Math.hypot(map.width, map.height), blockers(state.config.geometry, 'sight'), 0, 360, freeSight);
       svg.prepend(node('polygon', { points: sight.map(p => p.join(',')).join(' '), fill: '#66d8ff22', stroke: '#66d8ff', 'stroke-width': 1 }));
     }
   }
@@ -242,6 +318,11 @@ async function openEditor(map, areas, imageUrl) {
         state.config = data.config ?? defaults();
         state.revision = data.revision ?? 0;
         state.positions = data.positions;
+        mask = createMask(map.width, map.height, state.config.freeSight);
+        history = maskHistory(mask.cells);
+        maskOverlay.width = mask.width;
+        maskOverlay.height = mask.height;
+        state.config.freeSight ??= serializeMask(mask);
         state.loaded = true;
       }
       for (const input of root.querySelectorAll('[data-config]')) {
@@ -264,8 +345,10 @@ async function openEditor(map, areas, imageUrl) {
   root.onchange = event => {
     const input = event.target;
     if (input === menu) return select(menu.value);
+    if (input === maskMode || input === zoom) return;
     if (input === tool) {
       get('[data-player]').checked = false;
+      maskPoints.length = 0;
       return select('');
     }
     const key = input.dataset.config;
@@ -332,14 +415,76 @@ async function openEditor(map, areas, imageUrl) {
     const light = state.config.lights.find(item => item.id === state.selected);
     if (light) addLight(light.position.slice(), light);
   };
-  svg.onclick = event => {
-    if (!state.loaded) return;
-    const inverse = svg.getScreenCTM()?.inverse();
-    if (!inverse) return;
-    const { x, y } = new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
-    if (x < 0 || y < 0 || x > map.width || y > map.height) return;
-    const point = [x, y].map(n => Math.round(n * 10) / 10);
+  zoom.oninput = () => { board.style.width = zoom.valueAsNumber * 100 + '%'; };
+  get('[data-reset-view]').onclick = () => {
+    zoom.value = '1';
+    zoom.oninput();
+    viewport.scrollTo(0, 0);
+  };
+  maskMode.onchange = () => { maskPoints.length = 0; draw(); };
+  get('[data-mask-undo]').onclick = () => {
+    if (maskPoints.length) { maskPoints.pop(); draw(); }
+    else if (history.undo()) { state.config.freeSight = serializeMask(mask); draw(); }
+  };
+  get('[data-mask-redo]').onclick = () => {
+    if (history.redo()) { state.config.freeSight = serializeMask(mask); draw(); }
+  };
+  get('[data-mask-finish]').onclick = () => {
+    if (maskPoints.length < 3) return;
+    const before = mask.cells.slice();
+    polygonMask(mask, maskPoints, Number(maskMode.value === 'add'));
+    maskPoints.length = 0;
+    commitMask(before);
+  };
+  svg.onpointerdown = event => {
+    if (!state.loaded || !event.isPrimary || event.button !== 0) return;
+    if (tool.value === 'pan') {
+      pan = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop };
+      svg.setPointerCapture(event.pointerId);
+      return;
+    }
+    if (tool.value !== 'mask' || !['paint', 'erase'].includes(maskMode.value)) return;
+    const point = brushPoint(event);
+    const size = get('[data-radius]');
+    if (!point || !size.reportValidity()) return;
     get('[data-player]').checked = false;
+    stroke = { before: mask.cells.slice(), point, radius: size.valueAsNumber, value: Number(maskMode.value === 'paint') };
+    svg.setPointerCapture(event.pointerId);
+    paintMask(mask, point, point, stroke.radius, stroke.value);
+    updateMaskOverlay();
+  };
+  svg.onpointermove = event => {
+    if (!event.isPrimary) return;
+    if (pan) viewport.scrollTo(pan.left + pan.x - event.clientX, pan.top + pan.y - event.clientY);
+    if (!stroke) return;
+    const point = brushPoint(event, true);
+    if (!point) return;
+    paintMask(mask, stroke.point, point, stroke.radius, stroke.value);
+    stroke.point = point;
+    updateMaskOverlay();
+  };
+  svg.onpointerup = svg.onlostpointercapture = () => {
+    pan = null;
+    if (!stroke) return;
+    const { before } = stroke;
+    stroke = null;
+    commitMask(before);
+  };
+  svg.onclick = event => {
+    if (!state.loaded || tool.value === 'pan') return;
+    const point = brushPoint(event);
+    if (!point) return;
+    get('[data-player]').checked = false;
+    if (tool.value === 'mask') {
+      if (maskMode.value === 'flood') {
+        try {
+          const before = mask.cells.slice();
+          floodMask(mask, sampleMap(), point, get('[data-tolerance]').valueAsNumber);
+          commitMask(before);
+        } catch (error) { announce(error.message); }
+      } else if (['add', 'subtract'].includes(maskMode.value)) { maskPoints.push(point); draw(); }
+      return;
+    }
     if (tool.value === 'geometry') state.points.push(point);
     else if (tool.value === 'position') {
       if (!state.selected) return announce('Välj en rollperson först.');
@@ -356,7 +501,7 @@ async function openEditor(map, areas, imageUrl) {
   };
   get('[data-save]').onclick = async () => {
     if (!state.loaded || state.saving || [...root.querySelectorAll('input[type=number]:enabled')].some(input => !input.reportValidity())) return;
-    if (state.points.length) return announce('Slutför eller ångra den påbörjade formen före sparning.');
+    if (state.points.length || maskPoints.length || stroke) return announce('Slutför eller ångra den påbörjade formen före sparning.');
     state.saving = true;
     const save = get('[data-save]');
     save.disabled = true;

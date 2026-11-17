@@ -1,4 +1,5 @@
 import { Application, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js';
+import { isFree, prepareFreeSight } from './kartakademin-mask.js';
 import { blockers, directionalReach, isBlocked, knownAreas, resolveOrigin, visibilityPolygon } from './kartakademin-geometry.js';
 
 export async function mountLighting(host, map) {
@@ -66,14 +67,15 @@ export async function mountLighting(host, map) {
       }
       const level = Math.round(255 * (1 - config.darkness));
       ambient.clear().rect(0, 0, map.width, map.height).fill(level * 0x010101);
+      const freeSight = prepareFreeSight(map.width, map.height, config.freeSight);
       const edges = blockers(config.geometry, 'light');
       for (const light of config.lights) {
         const origin = resolveOrigin(light, positions);
-        if (!light.on || !origin || isBlocked(config.geometry, origin, 'light')) continue;
+        if (!light.on || !origin || !freeSight || !isFree(freeSight, origin) || isBlocked(config.geometry, origin, 'light')) continue;
         const range = directionalReach(light) * config.pixelsPerMeter;
         if (range < .01) continue;
         const layer = new Container();
-        const mask = new Graphics().poly(visibilityPolygon(origin, range, edges, light.direction, light.aperture).flat()).fill(0xffffff);
+        const mask = new Graphics().poly(visibilityPolygon(origin, range, edges, light.direction, light.aperture, freeSight).flat()).fill(0xffffff);
         const sprite = new Sprite(lightTexture);
         sprite.anchor.set(0.5);
         sprite.position.set(...origin);

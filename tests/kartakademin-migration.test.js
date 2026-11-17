@@ -30,7 +30,7 @@ it('keeps map settings and party position changes atomic and protects access by 
       grant select on campaign_maps, characters to authenticated;
     `);
     await db.exec(migration);
-    const config = { version: 1, darkness: .7, lights: [], geometry: [] };
+    const config = { version: 1, darkness: .7, lights: [], geometry: [], freeSight: { width: 24, height: 16, runs: [[1, 9], [25, 10]] } };
     const save = (revision, positions, settings = config) => db.query(
       'select save_campaign_map_academy($1,$2,$3,$4,$5) as revision',
       [map, campaign, JSON.stringify(settings), revision, JSON.stringify(positions)],

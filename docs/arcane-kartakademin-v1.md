@@ -16,3 +16,9 @@ Renderaren delar PixiJS 8/WebGL, Container/Graphics-mask och tickerbaserad param
 2. Öppna en inomhuskarta med två rumsområden. Lämna ett okänt, sätt det andra till utforskat. Kontrollera svart respektive grundmörker i spelläge.
 3. Placera två fasta ljus samt ett buret ljus. Rita ett väggsegment och en avgrund. Verifiera skugga och separat rörelseblockering. Flytta rollpersonen och släck den fasta källan. Kontrollera upptäckten efter ändringarna.
 4. Spara och öppna om. Jämför spelarförhandsvisningen med en autentiserad spelarsession. Kontrollera kartbyte, legacy-karta, ikoner, navigering, ett sparat gemensamt rumshörn och att en spelare saknar skrivrättighet.
+
+## Fri sikt och Solid
+
+Välj **Redigera fri sikt** och markera de ytor som ljus och sikt får passera. Flood fill utgår från klickad färg och sammanhängande grannpixlar. Justera toleransen, måla med penseln, sudda eller lägg till och ta bort polygoner. Ångra och Gör om arbetar per färdig operation. Vid zoom kan vyn flyttas med **Panorera**. Penseln använder kartpixlar och håller sin skala vid zoom.
+
+Utan markerad fri sikt är en konfigurerad karta Solid. Masken sparas som pixelintervall i den befintliga kartkonfigurationen. Arbetsrastret använder källbildens upplösning upp till 1 536 pixlar på längsta sidan. Mot större källbilder kan en öppning tunnare än en maskcell behöva breddas i redigeraren. Solid stoppar ljus och sikt oavsett höjd. Rörelseblockering följer de oberoende passageinställningarna. Höjdbaserade objektskuggor hör till ett senare objektuppdrag.

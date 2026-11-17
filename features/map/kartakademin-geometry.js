@@ -1,3 +1,5 @@
+import { traceFree } from './kartakademin-mask.js';
+
 const EPSILON = 1e-7;
 
 export function segments(points, closed = true) {
@@ -32,17 +34,18 @@ function intersection(origin, dx, dy, [[ax, ay], [bx, by]]) {
   return distance >= 0 && along >= -EPSILON && along <= 1 + EPSILON ? distance : Infinity;
 }
 
-export function visibilityPolygon(origin, radius, edges, direction = 0, aperture = 360) {
+export function visibilityPolygon(origin, radius, edges, direction = 0, aperture = 360, freeSight = null) {
   const start = (direction - aperture / 2) * Math.PI / 180;
   const span = aperture * Math.PI / 180;
   const normalize = angle => ((angle - start) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
   const angles = Array.from({ length: 129 }, (_, i) => span * i / 128);
-  const nearby = edges.filter(edge => {
+  const near = edge => {
     const [[ax, ay], [bx, by]] = edge;
     return !(Math.min(ax, bx) > origin[0] + radius || Math.max(ax, bx) < origin[0] - radius ||
       Math.min(ay, by) > origin[1] + radius || Math.max(ay, by) < origin[1] - radius);
-  });
-  for (const edge of nearby) {
+  };
+  const nearby = edges.filter(near);
+  for (const edge of [...nearby, ...(freeSight?.edges ?? []).filter(near)]) {
     for (const [x, y] of edge) {
       const angle = Math.atan2(y - origin[1], x - origin[0]);
       for (const offset of [-EPSILON, 0, EPSILON]) {
@@ -55,6 +58,7 @@ export function visibilityPolygon(origin, radius, edges, direction = 0, aperture
     const dx = Math.cos(start + angle), dy = Math.sin(start + angle);
     let distance = radius;
     for (const edge of nearby) distance = Math.min(distance, intersection(origin, dx, dy, edge));
+    if (freeSight) distance = traceFree(freeSight, origin, dx, dy, distance);
     return [origin[0] + distance * dx, origin[1] + distance * dy];
   });
   return aperture < 360 ? [origin, ...points] : points;
