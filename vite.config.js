@@ -13,7 +13,9 @@ function copyStaticTree(name, from, to) {
 }
 
 const cloudflareBranch = process.env.CF_PAGES === "1" ? process.env.CF_PAGES_BRANCH : "";
-const isDevelopmentBuild = cloudflareBranch ? cloudflareBranch === "development" : process.env.ALEA_BUILD_ENV === "development";
+const isDevelopmentBuild = process.env.CF_PAGES === "1"
+  ? process.env.CF_PAGES_BRANCH === "development"
+  : process.env.ALEA_BUILD_ENV === "development";
 const developmentOnlyBuildPlugins = isDevelopmentBuild
   ? [
       copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
