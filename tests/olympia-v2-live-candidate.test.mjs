@@ -55,6 +55,7 @@ describe('OLYMPIA 2.0 LIVE candidate safety',()=>{
   expect(resume).toContain('inspectCandidate(token, item, data.candidateIssue, sha)');
  });
  it('cache-busts the OLYMPIA client after changing recovery payload semantics',()=>{
-  expect(html).toContain('<script src="./dev-approval.js?v=20261115-active-pr-first-v1">');
+  expect(html).toContain('./dev-approval.js?v=20261117-shared-session-v1');
+  expect(html).toContain('./session-client.js?v=20261117-shared-session-v1');
  });
 });
