@@ -12,7 +12,11 @@ function copyStaticTree(name, from, to) {
   };
 }
 
-const developmentOnlyBuildPlugins = process.env.ALEA_BUILD_ENV === "development"
+const cloudflareBranch = process.env.CF_PAGES === "1" ? process.env.CF_PAGES_BRANCH : "";
+const isDevelopmentBuild = process.env.CF_PAGES === "1"
+  ? process.env.CF_PAGES_BRANCH === "development"
+  : process.env.ALEA_BUILD_ENV === "development";
+const developmentOnlyBuildPlugins = isDevelopmentBuild
   ? [
       copyStaticTree("alea-copy-olympia", "olympia", "olympia"),
       copyStaticTree("alea-copy-olympia-v2", "olympia-v2", "olympia-v2"),
@@ -27,7 +31,7 @@ const developmentOnlyBuildPlugins = process.env.ALEA_BUILD_ENV === "development"
     ]
   : [];
 
-const liveBuildIsolationPlugins = process.env.ALEA_BUILD_ENV === "development"
+const liveBuildIsolationPlugins = isDevelopmentBuild
   ? []
   : [{
       name: "alea-remove-dev-only-admin-tools-from-live",
@@ -38,6 +42,24 @@ const liveBuildIsolationPlugins = process.env.ALEA_BUILD_ENV === "development"
       },
     }];
 
+const cloudflareDeploymentManifestPlugins = process.env.CF_PAGES === "1"
+  ? [{
+      name: "alea-cloudflare-deployment-manifest",
+      apply: "build",
+      generateBundle() {
+        const branch = process.env.CF_PAGES_BRANCH || "";
+        const sourceSha = process.env.CF_PAGES_COMMIT_SHA || "";
+        if (!/^[a-f0-9]{40}$/i.test(sourceSha)) throw new Error("Cloudflare Pages source SHA is unavailable.");
+        const environment = branch === "main" ? "main" : branch === "development" ? "development" : "preview";
+        this.emitFile({
+          type: "asset",
+          fileName: "deployment-manifest.json",
+          source: JSON.stringify({ environment, branch, source_sha: sourceSha, deployment_url: process.env.CF_PAGES_URL || "" }),
+        });
+      },
+    }]
+  : [];
+
 export default defineConfig({
   base: "./",
   publicDir: false,
@@ -46,6 +68,7 @@ export default defineConfig({
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-preview", "preview", "preview"),
     ...developmentOnlyBuildPlugins,
+    ...cloudflareDeploymentManifestPlugins,
     ...liveBuildIsolationPlugins,
     copyStaticTree("alea-copy-navigation-assets", "assets/navigation", "assets/navigation"),
     {

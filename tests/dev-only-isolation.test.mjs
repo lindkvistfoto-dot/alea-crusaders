@@ -23,10 +23,20 @@ describe('DEV-only OLYMPIA isolation',()=>{
     expect(vite).toContain('data-dev-only-tool="olympia"');
   });
 
-  it('does not deploy the combined LIVE and DEV Pages artifact from development pushes',()=>{
+  it('deploys only the LIVE GitHub Pages artifact from main',()=>{
     const trigger=deployment.slice(deployment.indexOf('on:'),deployment.indexOf('\npermissions:'));
     expect(trigger).toMatch(/branches:\s*\n\s*- main\b/);
     expect(trigger).not.toMatch(/- development\b/);
+    expect(deployment).toContain("if: github.ref == 'refs/heads/main'");
+    expect(deployment).not.toMatch(/rsync[^\n]*development/);
+    expect(deployment).not.toContain('EXPECTED_DEV_SHA');
+  });
+
+  it('builds the DEV-only OLYMPIA tree only from the Cloudflare development branch',()=>{
+    expect(vite).toContain('process.env.CF_PAGES === "1" ? process.env.CF_PAGES_BRANCH');
+    expect(vite).toContain('process.env.CF_PAGES_BRANCH === "development"');
+    expect(vite).toContain('CF_PAGES_COMMIT_SHA');
+    expect(vite).toContain('source_sha: sourceSha');
   });
 
   it('removes top-level OLYMPIA files while retaining the /dev copy',()=>{

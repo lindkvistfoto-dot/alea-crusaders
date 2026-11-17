@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import {Script} from 'node:vm';
 import {it,expect} from 'vitest';
 const page=readFileSync(new URL('../olympia-v2/index.html',import.meta.url),'utf8');
 const approval=readFileSync(new URL('../olympia-v2/dev-approval.js',import.meta.url),'utf8');
@@ -37,4 +38,8 @@ it('uses the journaled candidate DEV SHA for LIVE approval, not the source PR me
  expect(handler).toContain('testedDevSha:result.testedDevSha');
  expect(handler).not.toContain('testedDevSha:sha,');
  expect(approval).toContain("result.testedDevSha||''");
+});
+
+it('parses the OLYMPIA DEV approval script before merge',()=>{
+ expect(()=>new Script(approval,{filename:'olympia-v2/dev-approval.js'})).not.toThrow();
 });
