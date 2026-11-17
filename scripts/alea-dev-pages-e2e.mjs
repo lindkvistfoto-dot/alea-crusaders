@@ -54,6 +54,12 @@ async function waitForAuthenticatedHome() {
 }
 
 async function verifyOlympia() {
+  const overview = page.locator('#adminOverview');
+  if (!(await overview.isVisible())) {
+    const backToOverview = page.locator('#adminOverviewBtn');
+    if (await backToOverview.isVisible()) await backToOverview.click();
+  }
+  await page.locator('#adminOverview [data-dev-only-tool="olympia"]').waitFor({ state: 'visible', timeout: 15000 });
   await page.locator('#adminOverview [data-dev-only-tool="olympia"]').click();
   const frame = page.frameLocator('iframe.admin-olympia-frame');
   await frame.locator('#connection-health').waitFor({ state: 'visible', timeout: 60000 });
